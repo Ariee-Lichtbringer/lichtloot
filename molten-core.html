@@ -10,16 +10,13 @@
       --bg2: #111c33;
       --panel: rgba(20, 32, 55, 0.92);
       --gold: #facc15;
-      --blue: #60a5fa;
       --text: #f8fafc;
       --muted: #cbd5e1;
       --line: rgba(255, 255, 255, 0.13);
       --shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -57,9 +54,7 @@
       background: rgba(255,255,255,.04);
     }
 
-    .headline {
-      text-align: center;
-    }
+    .headline { text-align: center; }
 
     .headline h1 {
       margin: 0;
@@ -112,7 +107,7 @@
       border: 0;
       cursor: pointer;
       font-weight: 800;
-      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, opacity 140ms ease;
     }
 
     .class-btn {
@@ -122,6 +117,10 @@
       font-size: 16px;
       text-align: left;
       box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+
+    .class-btn.empty-class {
+      opacity: .45;
     }
 
     .class-btn:hover,
@@ -139,9 +138,7 @@
     .mage { background: #69ccf0; }
     .druid { background: #ff7d0a; }
 
-    .items-panel {
-      padding: 18px;
-    }
+    .items-panel { padding: 18px; }
 
     .items {
       display: grid;
@@ -213,10 +210,6 @@
       font-weight: 800;
     }
 
-    .wowhead-link:hover {
-      background: rgba(250,204,21,.16);
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -242,9 +235,7 @@
       font-weight: 750;
     }
 
-    tr:last-child td {
-      border-bottom: 0;
-    }
+    tr:last-child td { border-bottom: 0; }
 
     .empty {
       padding: 18px;
@@ -268,42 +259,9 @@
     }
 
     @media (max-width: 1120px) {
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .items {
-        grid-template-columns: 1fr;
-      }
-
-      .details {
-        min-height: auto;
-      }
-    }
-
-    @media (max-width: 620px) {
-      header {
-        grid-template-columns: 52px 1fr 20px;
-        padding: 14px;
-      }
-
-      .back {
-        width: 42px;
-        height: 42px;
-      }
-
-      main {
-        width: min(100% - 20px, 1580px);
-        gap: 16px;
-      }
-
-      .details-header {
-        display: block;
-      }
-
-      .wowhead-link {
-        margin-top: 12px;
-      }
+      main { grid-template-columns: 1fr; }
+      .items { grid-template-columns: 1fr; }
+      .details { min-height: auto; }
     }
   </style>
 </head>
@@ -321,7 +279,7 @@
     <section class="panel classes" id="classButtons" aria-label="Klassen"></section>
 
     <section class="panel items-panel" aria-label="Items">
-      <h2 class="panel-title" id="itemsTitle">Items</h2>
+      <h2 class="panel-title" id="itemsTitle">MC P0 Items</h2>
       <div class="items" id="itemButtons"></div>
     </section>
 
@@ -331,9 +289,7 @@
         <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
       </div>
       <div id="itemContent"></div>
-      <div class="hint">
-        P0-Daten werden automatisch aus dem Google Sheet geladen. Wichtig: Im Sheet muss in der Spalte <strong>Raid</strong> der Wert <strong>MC</strong> stehen.
-      </div>
+      <div class="hint">P0-Daten werden automatisch aus dem Google Sheet geladen. Im Sheet muss in der Spalte <strong>Raid</strong> der Wert <strong>MC</strong> stehen.</div>
     </section>
   </main>
 
@@ -341,16 +297,7 @@
     const CURRENT_RAID = "MC";
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=0";
 
-    const classOrder = [
-      "Krieger",
-      "Jäger",
-      "Priester",
-      "Hexenmeister",
-      "Paladin",
-      "Schurke",
-      "Magier",
-      "Druide"
-    ];
+    const classOrder = ["Krieger", "Jäger", "Priester", "Hexenmeister", "Paladin", "Schurke", "Magier", "Druide"];
 
     const classCss = {
       "Krieger": "warrior",
@@ -391,7 +338,7 @@
 
     let p0Data = {};
     let itemsByClass = {};
-    let selectedClass = "";
+    let selectedClass = "Krieger";
     let selectedItem = "";
 
     async function loadP0DataFromSheet() {
@@ -406,7 +353,6 @@
         }
 
         const header = rows.shift().map(h => h.trim().toLowerCase());
-
         const raidIndex = header.indexOf("raid");
         const klasseIndex = header.indexOf("klasse");
         const itemIndex = header.indexOf("item");
@@ -432,10 +378,7 @@
           }
         });
 
-        const availableClasses = getOrderedClasses();
-        selectedClass = availableClasses[0] || "";
-        selectedItem = selectedClass ? itemsByClass[selectedClass][0] : "";
-
+        selectedItem = itemsByClass[selectedClass]?.[0] || "";
         renderAll();
       } catch (error) {
         console.error("Fehler beim Laden der Sheet-Daten:", error);
@@ -486,53 +429,29 @@
       return rows;
     }
 
-    function getOrderedClasses() {
-      return classOrder.filter(className => {
-        return itemsByClass[className];
-      }).concat(
-        Object.keys(itemsByClass).filter(className => !classOrder.includes(className))
-      ).sort((a, b) => {
-        const aIndex = classOrder.indexOf(a);
-        const bIndex = classOrder.indexOf(b);
-        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
-        return aIndex - bIndex;
-      });
-    }
-
     function renderClasses() {
       const wrapper = document.getElementById("classButtons");
-      const classNames = getOrderedClasses();
-
-      if (classNames.length === 0) {
-        wrapper.innerHTML = '<h2 class="panel-title">Klasse wählen</h2>' + classOrder.map(className => `
-          <button class="class-btn ${classCss[className] || ""}">
+      wrapper.innerHTML = '<h2 class="panel-title">Klasse wählen</h2>' + classOrder.map(className => {
+        const hasItems = !!itemsByClass[className]?.length;
+        return `
+          <button class="class-btn ${classCss[className] || ""} ${className === selectedClass ? "active" : ""} ${hasItems ? "" : "empty-class"}" onclick="selectClass('${className}')">
             ${className}
           </button>
-        `).join("");
-        return;
-      }
-
-      wrapper.innerHTML = '<h2 class="panel-title">Klasse wählen</h2>' + classOrder.map(className => `
-        <button class="class-btn ${classCss[className] || ""} ${className === selectedClass ? "active" : ""}" onclick="selectClass('${className}')">
-          ${className}
-        </button>
-      `).join("");
+        `;
+      }).join("");
     }
 
     function renderItems() {
       const wrapper = document.getElementById("itemButtons");
       const title = document.getElementById("itemsTitle");
+      title.textContent = selectedClass + " · MC P0 Items";
 
-      if (!selectedClass) {
-        title.textContent = "MC P0 Items";
-        wrapper.innerHTML = "";
+      const items = itemsByClass[selectedClass] || [];
+
+      if (!items.length) {
+        wrapper.innerHTML = '<div class="empty">Für diese Klasse gibt es aktuell keine MC-P0-Einträge im Sheet.</div>';
         return;
       }
-
-      title.textContent = selectedClass + " · MC P0 Items";
-      const items = itemsByClass[selectedClass] || [];
 
       wrapper.innerHTML = items.map(item => `
         <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${item}\`)">
@@ -548,7 +467,7 @@
 
       if (!selectedItem) {
         itemTitle.textContent = "Kein Item ausgewählt";
-        content.innerHTML = '<div class="empty">Im Sheet sind für MC noch keine P0-Einträge vorhanden.</div>';
+        content.innerHTML = '<div class="empty">Wähle eine Klasse mit vorhandenen P0-Einträgen aus.</div>';
         link.style.display = "none";
         return;
       }
@@ -563,7 +482,6 @@
       }
 
       const entries = p0Data[selectedItem] || [];
-
       content.innerHTML = `
         <table>
           <thead>
@@ -588,7 +506,7 @@
 
     function selectClass(className) {
       selectedClass = className;
-      selectedItem = itemsByClass[className][0];
+      selectedItem = itemsByClass[className]?.[0] || "";
       renderAll();
     }
 
@@ -607,3 +525,4 @@
   </script>
 </body>
 </html>
+
