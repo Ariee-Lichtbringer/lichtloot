@@ -1,201 +1,514 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lichtbringer – BWL Prio</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lichtbringer – Blackwing Lair Prio 0 Plus</title>
   <style>
-    body{
-      margin:0;
-      font-family:Arial, Helvetica, sans-serif;
-      background:#0b1020;
-      color:white;
+    :root {
+      --bg: #090d19;
+      --bg-soft: #11182d;
+      --card: #151f38;
+      --card-hover: #1c2947;
+      --text: #f5f7fb;
+      --muted: #a9b4cc;
+      --gold: #facc15;
+      --blue: #7aa2ff;
+      --red: #ef4444;
+      --green: #22c55e;
+      --border: rgba(255, 255, 255, 0.12);
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
     }
 
-    header{
-      padding:40px 20px;
-      text-align:center;
-      background:linear-gradient(180deg,#11182d,#0b1020);
-      border-bottom:1px solid rgba(255,255,255,0.1);
+    * {
+      box-sizing: border-box;
     }
 
-    h1{
-      margin:0;
-      font-size:52px;
+    html {
+      scroll-behavior: smooth;
     }
 
-    h2{
-      color:#7aa2ff;
-      margin-top:10px;
-      font-weight:normal;
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(250, 204, 21, 0.16), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(122, 162, 255, 0.14), transparent 28%),
+        var(--bg);
     }
 
-    .back{
-      display:inline-block;
-      margin-top:20px;
-      color:#facc15;
-      text-decoration:none;
-      font-weight:bold;
+    header {
+      padding: 42px 20px 30px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(17, 24, 45, 0.95), rgba(9, 13, 25, 0.65));
     }
 
-    main{
-      max-width:1200px;
-      margin:auto;
-      padding:30px 20px;
+    .topline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 14px;
+      margin-bottom: 16px;
     }
 
-    .boss{
-      background:#151f38;
-      border:1px solid rgba(255,255,255,0.1);
-      border-radius:18px;
-      padding:20px;
-      margin-bottom:24px;
+    h1 {
+      margin: 0;
+      font-size: clamp(36px, 6vw, 72px);
+      letter-spacing: -1px;
     }
 
-    .boss h3{
-      margin-top:0;
-      color:#facc15;
-      font-size:28px;
+    h2 {
+      margin: 12px 0 0;
+      color: var(--gold);
+      font-size: clamp(20px, 3vw, 32px);
+      font-weight: 500;
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:15px;
+    .intro {
+      max-width: 820px;
+      margin: 18px auto 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 16px;
     }
 
-    th{
-      background:#1d2a47;
-      padding:14px;
-      text-align:left;
+    .back {
+      display: inline-block;
+      margin-top: 22px;
+      color: var(--gold);
+      text-decoration: none;
+      font-weight: bold;
     }
 
-    td{
-      padding:12px;
-      border-top:1px solid rgba(255,255,255,0.08);
+    .back:hover {
+      text-decoration: underline;
     }
 
-    tr:hover{
-      background:rgba(255,255,255,0.04);
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(9, 13, 25, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
     }
 
-    .prio{
-      color:#7aa2ff;
-      font-weight:bold;
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 4px;
     }
 
-    footer{
-      text-align:center;
-      padding:30px;
-      color:#8b96b3;
+    .nav-inner a {
+      flex: 0 0 auto;
+      color: var(--text);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 14px;
     }
 
-    @media(max-width:800px){
+    .nav-inner a:hover {
+      border-color: rgba(250, 204, 21, 0.55);
+      color: var(--gold);
+    }
 
-      table,
-      thead,
-      tbody,
-      th,
-      td,
-      tr{
-        display:block;
+    main {
+      width: min(1200px, calc(100% - 32px));
+      margin: 30px auto 60px;
+    }
+
+    .notice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .notice {
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--gold);
+      font-size: 17px;
+    }
+
+    .notice span {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .boss {
+      margin-bottom: 26px;
+      padding: 22px;
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025)), var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .boss-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .boss h3 {
+      margin: 0 0 8px;
+      color: var(--gold);
+      font-size: 28px;
+    }
+
+    .boss p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(122, 162, 255, 0.12);
+      border: 1px solid rgba(122, 162, 255, 0.35);
+      color: var(--blue);
+      font-weight: bold;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.18);
+    }
+
+    th {
+      background: rgba(122, 162, 255, 0.12);
+      color: var(--text);
+      padding: 13px 12px;
+      text-align: left;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 13px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      color: var(--muted);
+      vertical-align: top;
+      line-height: 1.4;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .item {
+      color: var(--text);
+      font-weight: bold;
+    }
+
+    .prio0 {
+      color: var(--gold);
+      font-weight: bold;
+    }
+
+    .prio1 {
+      color: var(--blue);
+      font-weight: bold;
+    }
+
+    .prio2 {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .note {
+      color: #d1d7e8;
+    }
+
+    footer {
+      padding: 28px 20px 42px;
+      text-align: center;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .notice-grid {
+        grid-template-columns: 1fr;
       }
 
-      th{
-        display:none;
+      .boss-header {
+        display: block;
       }
 
-      td{
-        border:none;
-        padding:10px 0;
+      .tag {
+        margin-top: 12px;
       }
 
-      .boss{
-        padding:18px;
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+
+      tr:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        border: none;
+        padding: 6px 0;
+      }
+
+      td::before {
+        content: attr(data-label) ": ";
+        color: var(--gold);
+        font-weight: bold;
       }
     }
   </style>
 </head>
-
 <body>
+  <header>
+    <div class="topline">✨ Lichtbringer · Prio 0 Plus</div>
+    <h1>Blackwing Lair</h1>
+    <h2>BWL Loot- und Prio-Übersicht</h2>
+    <p class="intro">
+      Diese Seite dient als transparente Übersicht für wichtige BWL-Items, Prioritäten und Hinweise zur Lootvergabe.
+      Die Einträge sind als Vorlage angelegt und können jederzeit an eure tatsächlichen Gildenregeln angepasst werden.
+    </p>
+    <a class="back" href="index.html">← Zurück zur Übersicht</a>
+  </header>
 
-<header>
-  <h1>🐉 Blackwing Lair</h1>
-  <h2>Lichtbringer – Prio 0 Plus</h2>
+  <nav>
+    <div class="nav-inner">
+      <a href="#razorgore">Razorgore</a>
+      <a href="#vael">Vaelastrasz</a>
+      <a href="#broodlord">Broodlord</a>
+      <a href="#firemaw">Firemaw</a>
+      <a href="#ebonroc">Ebonroc</a>
+      <a href="#flamegor">Flamegor</a>
+      <a href="#chromaggus">Chromaggus</a>
+      <a href="#nefarian">Nefarian</a>
+    </div>
+  </nav>
 
-  <a class="back" href="index.html">
-    ← Zurück zur Übersicht
-  </a>
-</header>
+  <main>
+    <section class="notice-grid">
+      <div class="notice">
+        <strong>Prio 0</strong>
+        <span>Absolute Kernitems für bestimmte Rollen, Builds oder Raidfunktionen.</span>
+      </div>
+      <div class="notice">
+        <strong>Prio 1</strong>
+        <span>Sehr starke Upgrades mit hoher Relevanz für Progress, Tankstabilität oder Raid-DPS.</span>
+      </div>
+      <div class="notice">
+        <strong>Prio 2</strong>
+        <span>Solide Upgrades, Nebenprioritäten oder Items für spätere Verteilung.</span>
+      </div>
+    </section>
 
-<main>
+    <section class="boss" id="razorgore">
+      <div class="boss-header">
+        <div>
+          <h3>Razorgore der Ungezähmte</h3>
+          <p>Erster Boss in BWL. Fokus auf kontrollierten Start, sichere Adds und saubere Übergabe in Phase 2.</p>
+        </div>
+        <span class="tag">Boss 1</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Armschienen der arkanen Genauigkeit</td><td data-label="Klasse / Rolle">Caster DPS</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">Starkes Caster-Item, besonders bei Hit-Bedarf.</td></tr>
+          <tr><td data-label="Item" class="item">Schultern des Zorns</td><td data-label="Klasse / Rolle">Krieger Tank</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Teil, relevant für Tank-Setaufbau.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-  <section class="boss">
-    <h3>Razorgore</h3>
+    <section class="boss" id="vael">
+      <div class="boss-header">
+        <div>
+          <h3>Vaelastrasz der Verdorbene</h3>
+          <p>DPS-Race mit hoher Aggro-Relevanz. Loot mit starkem Fokus auf Schadensklassen und Tank-Performance.</p>
+        </div>
+        <span class="tag">Boss 2</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Drachenzahn-Talisman</td><td data-label="Klasse / Rolle">Melee DPS / Tank nach Absprache</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Extrem starkes Melee-Trinket. Vergabe unbedingt klar regeln.</td></tr>
+          <tr><td data-label="Item" class="item">Gürtel der Transzendenz</td><td data-label="Klasse / Rolle">Priester Heiler</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Teil für Heiler-Set.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-    <table>
-      <tr>
-        <th>Item</th>
-        <th>Klasse</th>
-        <th>Priorität</th>
-      </tr>
+    <section class="boss" id="broodlord">
+      <div class="boss-header">
+        <div>
+          <h3>Brutwächter Dreschbringer</h3>
+          <p>Wichtiger Boss für starke Waffen- und Rüstungsteile. Tank- und Melee-Items sollten sauber priorisiert werden.</p>
+        </div>
+        <span class="tag">Boss 3</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Brutlord-Verteidiger</td><td data-label="Klasse / Rolle">Tank</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">Defensives Item für Tanks.</td></tr>
+          <tr><td data-label="Item" class="item">Schwarzascheschulterstücke</td><td data-label="Klasse / Rolle">Caster / Heiler nach Bedarf</td><td data-label="Priorität" class="prio2">Prio 2</td><td data-label="Hinweis" class="note">Gutes Übergangs- oder Situationsitem.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-      <tr>
-        <td>Example Loot Item</td>
-        <td>Warrior</td>
-        <td class="prio">Prio 1</td>
-      </tr>
+    <section class="boss" id="firemaw">
+      <div class="boss-header">
+        <div>
+          <h3>Feuerschwinge</h3>
+          <p>Hier sind Resistenzen, Positionierung und kontrollierte Heilung entscheidend.</p>
+        </div>
+        <span class="tag">Boss 4</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Ring des schwarzen Felssturms</td><td data-label="Klasse / Rolle">Melee DPS</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">Starkes physisches DPS-Item.</td></tr>
+          <tr><td data-label="Item" class="item">Handschuhe des Zorns</td><td data-label="Klasse / Rolle">Krieger Tank</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Tankteil.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-      <tr>
-        <td>Example Healer Item</td>
-        <td>Priest / Paladin</td>
-        <td class="prio">Prio 2</td>
-      </tr>
-    </table>
-  </section>
+    <section class="boss" id="ebonroc">
+      <div class="boss-header">
+        <div>
+          <h3>Schattenschwinge</h3>
+          <p>Boss mit Tankwechsel und Heilfokus. Loot kann je nach Gildensituation stark rollenabhängig sein.</p>
+        </div>
+        <span class="tag">Boss 5</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms</td><td data-label="Klasse / Rolle">Melee DPS / Tank nach Regelwerk</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Sehr begehrtes Waffenitem. Vorab klare Vergaberegeln festlegen.</td></tr>
+          <tr><td data-label="Item" class="item">Brustplatte des Zorns</td><td data-label="Klasse / Rolle">Krieger Tank</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Brust für Tank-Set.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-  <section class="boss">
-    <h3>Vaelastrasz</h3>
+    <section class="boss" id="flamegor">
+      <div class="boss-header">
+        <div>
+          <h3>Flammenmaul</h3>
+          <p>Klassischer Drachenboss mit Heil- und Dispel-Fokus. Interessante Drops für mehrere Rollen.</p>
+        </div>
+        <span class="tag">Boss 6</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Rejuvenating Gem</td><td data-label="Klasse / Rolle">Heiler</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Sehr starkes Heiler-Trinket. Vergabe nach Heil-Setup und Aktivität.</td></tr>
+          <tr><td data-label="Item" class="item">Gürtel des Zorns</td><td data-label="Klasse / Rolle">Krieger Tank</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Gürtel für Tanks.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-    <table>
-      <tr>
-        <th>Item</th>
-        <th>Klasse</th>
-        <th>Priorität</th>
-      </tr>
+    <section class="boss" id="chromaggus">
+      <div class="boss-header">
+        <div>
+          <h3>Chromaggus</h3>
+          <p>Mechanisch anspruchsvoll durch Atemfähigkeiten und Debuffs. Sehr relevante Loot-Tabelle.</p>
+        </div>
+        <span class="tag">Boss 7</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Chromatisch gehärtetes Schwert</td><td data-label="Klasse / Rolle">Melee DPS / Tank nach Regelwerk</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Sehr starkes Waffenitem, vorherige Absprache empfohlen.</td></tr>
+          <tr><td data-label="Item" class="item">Elementiumverstärkte Bollwerk</td><td data-label="Klasse / Rolle">Main Tank</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Defensives Kernitem für den Tank-Aufbau.</td></tr>
+          <tr><td data-label="Item" class="item">Schultern der Transzendenz</td><td data-label="Klasse / Rolle">Priester Heiler</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">T2-Setteil.</td></tr>
+        </tbody>
+      </table>
+    </section>
 
-      <tr>
-        <td>Example DPS Item</td>
-        <td>Rogue / Fury</td>
-        <td class="prio">Prio 1</td>
-      </tr>
-    </table>
-  </section>
+    <section class="boss" id="nefarian">
+      <div class="boss-header">
+        <div>
+          <h3>Nefarian</h3>
+          <p>Endboss von Blackwing Lair. Hier droppen einige der wichtigsten BWL-Items und Set-Tokens.</p>
+        </div>
+        <span class="tag">Endboss</span>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Klasse / Rolle</th><th>Priorität</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr><td data-label="Item" class="item">Neltharions Träne</td><td data-label="Klasse / Rolle">Caster DPS</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Extrem starkes Caster-Trinket. Klare Prio-Regel sinnvoll.</td></tr>
+          <tr><td data-label="Item" class="item">Ashkandi, Großschwert der Bruderschaft</td><td data-label="Klasse / Rolle">Melee DPS / PvP nach Regelwerk</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">Sehr begehrtes Zweihand-Schwert.</td></tr>
+          <tr><td data-label="Item" class="item">Mish'undare, Reif des Gedankenschinders</td><td data-label="Klasse / Rolle">Caster DPS / Heiler nach Absprache</td><td data-label="Priorität" class="prio0">Prio 0</td><td data-label="Hinweis" class="note">Starker Kopfslot, besonders für Caster sehr relevant.</td></tr>
+          <tr><td data-label="Item" class="item">Kopf von Nefarian</td><td data-label="Klasse / Rolle">Quest / Gildenregel</td><td data-label="Priorität" class="prio1">Prio 1</td><td data-label="Hinweis" class="note">Abgabe nach interner Absprache.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
 
-  <section class="boss">
-    <h3>Broodlord Lashlayer</h3>
-
-    <table>
-      <tr>
-        <th>Item</th>
-        <th>Klasse</th>
-        <th>Priorität</th>
-      </tr>
-
-      <tr>
-        <td>Example Tank Item</td>
-        <td>Protection Warrior</td>
-        <td class="prio">Prio 1</td>
-      </tr>
-    </table>
-  </section>
-
-</main>
-
-<footer>
-  Lichtbringer · Blackwing Lair · Prio 0 Plus
-</footer>
-
+  <footer>
+    Lichtbringer · Blackwing Lair · Prio 0 Plus
+  </footer>
 </body>
 </html>
