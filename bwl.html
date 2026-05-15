@@ -6,17 +6,18 @@
   <title>Lichtbringer – Prio 0 Blackwing Lair</title>
   <style>
     :root {
-      --bg: #101828;
-      --top: #0b1220;
-      --panel: #1e293b;
-      --button: #24324a;
-      --button-hover: #334763;
-      --line: rgba(255,255,255,.14);
-      --text: #f4f4f4;
-      --muted: #cfcfcf;
-      --red: #facc15;
+      --bg: #08111f;
+      --bg2: #111c33;
+      --panel: rgba(20, 32, 55, 0.92);
+      --panel-light: rgba(35, 53, 86, 0.94);
+      --gold: #facc15;
+      --gold-soft: rgba(250, 204, 21, 0.18);
       --blue: #60a5fa;
-      --glow: rgba(250,204,21,.28);
+      --blue-soft: rgba(96, 165, 250, 0.18);
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --line: rgba(255, 255, 255, 0.13);
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
     }
 
     * { box-sizing: border-box; }
@@ -25,72 +26,110 @@
       margin: 0;
       min-height: 100vh;
       font-family: Arial, Helvetica, sans-serif;
-      background:
-        radial-gradient(circle at top left, rgba(250,204,21,.16), transparent 32%),
-        radial-gradient(circle at bottom right, rgba(96,165,250,.16), transparent 30%),
-        var(--bg);
       color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(250, 204, 21, 0.22), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.22), transparent 32%),
+        linear-gradient(135deg, var(--bg), var(--bg2));
     }
 
     header {
-      height: 72px;
+      position: relative;
+      min-height: 110px;
       display: grid;
       grid-template-columns: 80px 1fr 80px;
       align-items: center;
-      padding: 0 18px;
-      background: linear-gradient(90deg, #0b1220, #172554, #0b1220);
-      border-bottom: 1px solid var(--line);
-    }
-
-    header h1 {
-      margin: 0;
-      text-align: center;
-      font-size: 26px;
-      font-weight: 800;
+      padding: 18px 24px;
+      background:
+        linear-gradient(90deg, rgba(8, 17, 31, 0.98), rgba(30, 64, 175, 0.88), rgba(8, 17, 31, 0.98));
+      border-bottom: 1px solid rgba(250, 204, 21, 0.32);
+      box-shadow: var(--shadow);
     }
 
     .back {
-      color: var(--text);
+      width: 48px;
+      height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      color: var(--gold);
       text-decoration: none;
-      font-size: 36px;
-      line-height: 1;
+      font-size: 34px;
+      border: 1px solid rgba(250, 204, 21, 0.35);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .headline { text-align: center; }
+
+    .headline h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 42px);
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      text-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+    }
+
+    .headline p {
+      margin: 8px 0 0;
+      color: #dbeafe;
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
 
     main {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 28px 16px;
+      width: min(1580px, calc(100% - 32px));
+      margin: 28px auto 52px;
       display: grid;
-      grid-template-columns: 235px 1fr 1fr;
-      gap: 28px;
-      min-height: calc(100vh - 72px);
+      grid-template-columns: 235px 1fr 1.05fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
     }
 
     .classes {
+      padding: 16px;
       display: grid;
       gap: 10px;
-      align-self: start;
-      margin-top: 245px;
+    }
+
+    .panel-title {
+      margin: 0 0 14px;
+      color: var(--gold);
+      font-size: 15px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
 
     .class-btn,
     .item-btn {
-      border: none;
-      border-radius: 8px;
+      border: 0;
       cursor: pointer;
       font-weight: 800;
-      box-shadow: 0 8px 18px rgba(0,0,0,.28);
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
     }
 
     .class-btn {
-      padding: 13px 12px;
-      color: #111;
+      padding: 13px 14px;
+      border-radius: 13px;
+      color: #111827;
       font-size: 16px;
+      text-align: left;
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
     }
 
+    .class-btn:hover,
     .class-btn.active {
-      outline: 3px solid #fff;
-      transform: translateX(4px);
+      transform: translateX(5px);
+      box-shadow: 0 0 0 3px rgba(250,204,21,.25), 0 10px 22px rgba(0,0,0,.28);
     }
 
     .warrior { background: #c79c6e; }
@@ -102,97 +141,161 @@
     .mage { background: #69ccf0; }
     .druid { background: #ff7d0a; }
 
+    .items-panel {
+      padding: 18px;
+    }
+
     .items {
-      align-self: start;
-      margin-top: 245px;
       display: grid;
-      grid-template-columns: repeat(2, minmax(245px, 1fr));
-      gap: 10px 28px;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 12px;
     }
 
     .item-btn {
-      min-height: 50px;
-      padding: 10px 18px;
-      background: var(--button);
+      min-height: 60px;
+      padding: 13px 16px;
+      border-radius: 16px;
       color: var(--text);
-      font-size: 17px;
-      border-left: 6px solid var(--red);
-      border-right: 1px solid rgba(250,204,21,.18);
-      text-align: center;
+      background:
+        linear-gradient(180deg, rgba(37, 56, 91, 0.98), rgba(22, 34, 58, 0.98));
+      border: 1px solid rgba(255,255,255,.11);
+      border-left: 5px solid var(--gold);
+      text-align: left;
+      line-height: 1.25;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+    }
+
+    .item-btn::before {
+      content: "✦";
+      color: var(--gold);
+      margin-right: 8px;
     }
 
     .item-btn:hover,
     .item-btn.active {
-      background: var(--button-hover);
-      outline: 2px solid var(--glow);
+      background:
+        linear-gradient(180deg, rgba(59, 86, 135, 0.98), rgba(30, 47, 79, 0.98));
+      box-shadow: 0 0 0 2px rgba(250,204,21,.28), 0 13px 28px rgba(0,0,0,.30);
+      transform: translateY(-2px);
     }
 
     .details {
-      align-self: start;
-      margin-top: 20px;
-      min-height: 720px;
-      background: var(--panel);
-      border-radius: 8px;
-      padding: 18px;
+      padding: 22px;
+      min-height: 640px;
+      background:
+        linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
+    }
+
+    .details-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(250,204,21,.18);
     }
 
     .details h2 {
-      margin: 0 0 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--line);
-      font-size: 27px;
+      margin: 0;
+      color: var(--gold);
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.15;
     }
+
+    .wowhead-link {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--gold);
+      text-decoration: none;
+      border: 1px solid rgba(250,204,21,.35);
+      background: rgba(250,204,21,.08);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .wowhead-link:hover { background: rgba(250,204,21,.16); }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 16px;
+      overflow: hidden;
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
     }
 
     th {
-      padding: 11px 10px;
-      background: linear-gradient(90deg, rgba(250,204,21,.22), rgba(96,165,250,.14));
+      padding: 12px 11px;
+      background: linear-gradient(90deg, rgba(250,204,21,.28), rgba(96,165,250,.18));
+      color: var(--text);
       text-align: left;
-      font-weight: 800;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
     }
 
     td {
-      padding: 10px;
-      border-bottom: 1px solid var(--line);
+      padding: 13px 11px;
+      border-bottom: 1px solid rgba(255,255,255,.09);
       color: var(--muted);
-      font-weight: 700;
+      font-weight: 750;
     }
 
+    tr:last-child td { border-bottom: 0; }
+
     .empty {
+      padding: 18px;
+      border: 1px dashed rgba(250,204,21,.32);
+      border-radius: 16px;
       color: var(--muted);
-      padding: 16px 0;
+      background: rgba(250,204,21,.055);
+      line-height: 1.5;
       font-weight: 700;
     }
 
     .hint {
-      margin-top: 16px;
-      color: #aaa;
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(96,165,250,.08);
+      color: #dbeafe;
       font-size: 13px;
-      line-height: 1.4;
+      line-height: 1.45;
+      border: 1px solid rgba(96,165,250,.18);
     }
 
-    @media (max-width: 1100px) {
+    @media (max-width: 1120px) {
+      main { grid-template-columns: 1fr; }
+      .items { grid-template-columns: 1fr; }
+      .details { min-height: auto; }
+    }
+
+    @media (max-width: 620px) {
+      header {
+        grid-template-columns: 52px 1fr 20px;
+        padding: 14px;
+      }
+
+      .back {
+        width: 42px;
+        height: 42px;
+      }
+
       main {
-        grid-template-columns: 1fr;
+        width: min(100% - 20px, 1580px);
+        gap: 16px;
       }
 
-      .classes,
-      .items,
-      .details {
-        margin-top: 0;
+      .details-header {
+        display: block;
       }
 
-      .items {
-        grid-template-columns: 1fr;
-      }
-
-      .details {
-        min-height: auto;
+      .wowhead-link {
+        margin-top: 12px;
       }
     }
   </style>
@@ -200,18 +303,30 @@
 <body>
   <header>
     <a class="back" href="index.html">←</a>
-    <h1>✨ Lichtbringer · Prio 0 Blackwing Lair</h1>
+    <div class="headline">
+      <h1>✨ Lichtbringer · Prio 0 Blackwing Lair</h1>
+      <p>Lootübersicht der Gilde Lichtbringer</p>
+    </div>
     <div></div>
   </header>
 
   <main>
-    <section class="classes" id="classButtons" aria-label="Klassen"></section>
-    <section class="items" id="itemButtons" aria-label="Items"></section>
+    <section class="panel classes" id="classButtons" aria-label="Klassen">
+      <h2 class="panel-title">Klasse wählen</h2>
+    </section>
 
-    <section class="details" aria-label="P0-Liste">
-      <h2 id="itemTitle">Item auswählen</h2>
+    <section class="panel items-panel" aria-label="Items">
+      <h2 class="panel-title" id="itemsTitle">Items</h2>
+      <div class="items" id="itemButtons"></div>
+    </section>
+
+    <section class="panel details" aria-label="P0-Liste">
+      <div class="details-header">
+        <h2 id="itemTitle">Item auswählen</h2>
+        <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
+      </div>
       <div id="itemContent"></div>
-      <div class="hint">Hinweis: Spieler und Anzahl können unten im JavaScript-Bereich bei <strong>p0Data</strong> gepflegt werden.</div>
+      <div class="hint">Spieler und Anzahl können im Code im Bereich <strong>p0Data</strong> gepflegt werden. Die Itemlisten pro Klasse liegen im Bereich <strong>itemsByClass</strong>.</div>
     </section>
   </main>
 
@@ -318,11 +433,25 @@
       "Chromatische Stiefel": "https://www.wowhead.com/classic/item=19387/chromatic-boots",
       "Runenverzierte Klinge des schwarzen Drachenschwarms": "https://www.wowhead.com/classic/item=19351/maladath-runed-blade-of-the-black-flight",
       "Edelstein des Gedankensprungs": "https://www.wowhead.com/classic/item=19339/mind-quickening-gem",
-      "Stiefel des reinen Gedankens": "https://www.wowhead.com/classic/item=19438/ringo-of-spell-power",
+      "Stiefel des reinen Gedankens": "https://www.wowhead.com/classic/item=19437/boots-of-pure-thought",
       "Neltharions Träne": "https://www.wowhead.com/classic/item=19379/neltharions-tear",
       "Prestor's Talisman of Connivery": "https://www.wowhead.com/classic/item=19377/prestors-talisman-of-connivery",
       "Edelstein der Verjüngung": "https://www.wowhead.com/classic/item=19395/rejuvenating-gem",
-      "Ebenholzfarbene Flammenhandschuhe": "https://www.wowhead.com/classic/item=19407/ebony-flame-gloves"
+      "Ebenholzfarbene Flammenhandschuhe": "https://www.wowhead.com/classic/item=19407/ebony-flame-gloves",
+      "Elementiumverstärktes Bollwerk": "https://www.wowhead.com/classic/item=19349/elementium-reinforced-bulwark",
+      "Ashkandi, Großschwert der Bruderschaft": "https://www.wowhead.com/classic/item=19364/ashkandi-greatsword-of-the-brotherhood",
+      "Klaue des schwarzen Drachen": "https://www.wowhead.com/classic/item=19365/claw-of-the-black-drake",
+      "Doom's Edge": "https://www.wowhead.com/classic/item=19362/dooms-edge",
+      "Spineshatter": "https://www.wowhead.com/classic/item=19335/spineshatter",
+      "Cloak of Draconic Might": "https://www.wowhead.com/classic/item=19436/cloak-of-draconic-might",
+      "Ashjre'thul, Armbrust der Pein": "https://www.wowhead.com/classic/item=19361/ashjrethul-crossbow-of-smiting",
+      "Drake Talon Cleaver": "https://www.wowhead.com/classic/item=19353/drake-talon-cleaver",
+      "Band of Forced Concentration": "https://www.wowhead.com/classic/item=19403/band-of-forced-concentration",
+      "Lok'amir il Romathis": "https://www.wowhead.com/classic/item=19360/lokamir-il-romathis",
+      "Mish'undare, Reif des Gedankenschinders": "https://www.wowhead.com/classic/item=19375/mishundare-circlet-of-the-mind-flayer",
+      "Reines Elementiumband": "https://www.wowhead.com/classic/item=19382/pure-elementium-band",
+      "Chromatically Tempered Sword": "https://www.wowhead.com/classic/item=19352/chromatically-tempered-sword",
+      "Shadow Wing Focus Staff": "https://www.wowhead.com/classic/item=19355/shadow-wing-focus-staff"
     };
 
     const p0Data = {
@@ -340,7 +469,7 @@
 
     function renderClasses() {
       const wrapper = document.getElementById("classButtons");
-      wrapper.innerHTML = classes.map(cls => `
+      wrapper.innerHTML = '<h2 class="panel-title">Klasse wählen</h2>' + classes.map(cls => `
         <button class="class-btn ${cls.css} ${cls.key === selectedClass ? "active" : ""}" onclick="selectClass('${cls.key}')">
           ${cls.key}
         </button>
@@ -348,21 +477,29 @@
     }
 
     function renderItems() {
+      document.getElementById("itemsTitle").textContent = selectedClass + " · BWL Items";
       const wrapper = document.getElementById("itemButtons");
       const items = itemsByClass[selectedClass] || [];
 
       wrapper.innerHTML = items.map(item => `
-        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem('${escapeApostrophe(item)}')">
+        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${item}\`)">
           ${item}
         </button>
       `).join("");
     }
 
     function renderDetails() {
+      document.getElementById("itemTitle").textContent = selectedItem;
       const wowhead = wowheadLinks[selectedItem];
-      document.getElementById("itemTitle").innerHTML = wowhead
-        ? `${selectedItem} <a href="${wowhead}" target="_blank" style="font-size:14px;color:#facc15;text-decoration:none;margin-left:10px;">[Wowhead]</a>`
-        : selectedItem;
+      const link = document.getElementById("wowheadLink");
+
+      if (wowhead) {
+        link.href = wowhead;
+        link.style.display = "inline-flex";
+      } else {
+        link.style.display = "none";
+      }
+
       const entries = p0Data[selectedItem] || [];
       const content = document.getElementById("itemContent");
 
@@ -377,7 +514,7 @@
             <tr>
               <th>Spieler</th>
               <th>Klasse</th>
-              <th>Anzahl</th>
+              <th>P0 gesetzt</th>
             </tr>
           </thead>
           <tbody>
@@ -385,7 +522,7 @@
               <tr>
                 <td>${entry.spieler}</td>
                 <td>${entry.klasse}</td>
-                <td>${entry.anzahl}</td>
+                <td>${entry.anzahl}x</td>
               </tr>
             `).join("")}
           </tbody>
@@ -402,10 +539,6 @@
     function selectItem(itemName) {
       selectedItem = itemName;
       renderAll();
-    }
-
-    function escapeApostrophe(text) {
-      return text.replace(/'/g, "\'");
     }
 
     function renderAll() {
