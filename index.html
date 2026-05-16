@@ -45,26 +45,12 @@
 
     .header{
       text-align:center;
-      margin-bottom:50px;
+      margin-bottom:40px;
 
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-    }
-
-    .logo{
-      width:130px;
-      height:130px;
-      border-radius:50%;
-      object-fit:cover;
-      border:4px solid var(--gold);
-
-      box-shadow:
-        0 0 30px rgba(250,204,21,.35),
-        0 0 60px rgba(250,204,21,.15);
-
-      margin-bottom:20px;
     }
 
     h1{
@@ -86,6 +72,40 @@
 
       width:100%;
       text-align:center;
+    }
+
+    .info-box{
+      width:min(1100px,100%);
+      margin:0 auto 40px;
+
+      padding:28px;
+
+      border-radius:24px;
+
+      background:rgba(12,18,32,.84);
+
+      border:1px solid rgba(250,204,21,.18);
+
+      backdrop-filter:blur(10px);
+
+      box-shadow:0 15px 40px rgba(0,0,0,.35);
+    }
+
+    .info-box h2{
+      color:#facc15;
+      margin-bottom:18px;
+      font-size:28px;
+    }
+
+    .info-box p{
+      color:#dbeafe;
+      line-height:1.7;
+      margin-bottom:14px;
+      font-size:15px;
+    }
+
+    .info-box p:last-child{
+      margin-bottom:0;
     }
 
     .raid-grid{
@@ -290,6 +310,32 @@
         Prio 0 Plus
       </div>
 
+    </div>
+
+    <div class="info-box">
+      <h2>📜 P0+ Regelung</h2>
+
+      <p>
+        Die P0 muss spätestens <strong>30 Minuten vor Raidbeginn</strong>
+        im Discord im Channel <strong>„Raidanmeldung“</strong> gepostet werden.
+      </p>
+
+      <p>
+        Für jede erfolgreiche Raidteilnahme erhält der Spieler
+        auf das gesetzte Item einen <strong>P0+ Punkt</strong>.
+      </p>
+
+      <p>
+        Die Vergabe der Items im <strong>P0+ System</strong>
+        richtet sich nach der Anzahl der gesammelten Pluspunkte.
+      </p>
+
+      <p>
+        Ein P0+ Punkt kann erst gesammelt werden,
+        wenn eine gültige <strong>P0-Freigabe</strong> vorliegt.
+        Die Voraussetzungen hierfür stehen in den
+        <strong>Raidregeln der Lichtbringer</strong> im Discord.
+      </p>
     </div>
 
     <div class="raid-grid">
