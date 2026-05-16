@@ -9,11 +9,7 @@
       --bg: #08111f;
       --bg2: #111c33;
       --panel: rgba(20, 32, 55, 0.92);
-      --panel-light: rgba(35, 53, 86, 0.94);
       --gold: #facc15;
-      --gold-soft: rgba(250, 204, 21, 0.18);
-      --blue: #60a5fa;
-      --blue-soft: rgba(96, 165, 250, 0.18);
       --text: #f8fafc;
       --muted: #cbd5e1;
       --line: rgba(255, 255, 255, 0.13);
@@ -34,15 +30,13 @@
     }
 
     header {
-      position: relative;
       min-height: 110px;
       display: grid;
       grid-template-columns: 80px 1fr 80px;
       align-items: center;
       padding: 18px 24px;
-      background:
-        linear-gradient(90deg, rgba(8, 17, 31, 0.98), rgba(30, 64, 175, 0.88), rgba(8, 17, 31, 0.98));
-      border-bottom: 1px solid rgba(250, 204, 21, 0.32);
+      background: linear-gradient(90deg, rgba(8,17,31,.98), rgba(30,64,175,.88), rgba(8,17,31,.98));
+      border-bottom: 1px solid rgba(250,204,21,.32);
       box-shadow: var(--shadow);
     }
 
@@ -56,8 +50,8 @@
       color: var(--gold);
       text-decoration: none;
       font-size: 34px;
-      border: 1px solid rgba(250, 204, 21, 0.35);
-      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(250,204,21,.35);
+      background: rgba(255,255,255,.04);
     }
 
     .headline { text-align: center; }
@@ -66,15 +60,14 @@
       margin: 0;
       font-size: clamp(25px, 4vw, 42px);
       font-weight: 900;
-      letter-spacing: 0.3px;
-      text-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+      text-shadow: 0 0 18px rgba(250,204,21,.25);
     }
 
     .headline p {
       margin: 8px 0 0;
       color: #dbeafe;
       font-size: 13px;
-      letter-spacing: 0.18em;
+      letter-spacing: .18em;
       text-transform: uppercase;
     }
 
@@ -95,7 +88,7 @@
       backdrop-filter: blur(12px);
     }
 
-    .classes {
+    .slots {
       padding: 16px;
       display: grid;
       gap: 10px;
@@ -106,10 +99,10 @@
       color: var(--gold);
       font-size: 15px;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: .12em;
     }
 
-    .class-btn,
+    .slot-btn,
     .item-btn {
       border: 0;
       cursor: pointer;
@@ -117,29 +110,23 @@
       transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
     }
 
-    .class-btn {
+    .slot-btn {
       padding: 13px 14px;
       border-radius: 13px;
-      color: #111827;
+      color: var(--text);
       font-size: 16px;
       text-align: left;
+      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
+      border-left: 5px solid rgba(250,204,21,.7);
       box-shadow: 0 8px 18px rgba(0,0,0,.22);
     }
 
-    .class-btn:hover,
-    .class-btn.active {
+    .slot-btn:hover,
+    .slot-btn.active {
       transform: translateX(5px);
       box-shadow: 0 0 0 3px rgba(250,204,21,.25), 0 10px 22px rgba(0,0,0,.28);
+      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
     }
-
-    .warrior { background: #c79c6e; }
-    .hunter { background: #abd473; }
-    .priest { background: #ffffff; }
-    .warlock { background: #9482c9; }
-    .paladin { background: #f58cba; }
-    .rogue { background: #fff569; }
-    .mage { background: #69ccf0; }
-    .druid { background: #ff7d0a; }
 
     .items-panel { padding: 18px; }
 
@@ -154,8 +141,7 @@
       padding: 13px 16px;
       border-radius: 16px;
       color: var(--text);
-      background:
-        linear-gradient(180deg, rgba(37, 56, 91, 0.98), rgba(22, 34, 58, 0.98));
+      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
       border: 1px solid rgba(255,255,255,.11);
       border-left: 5px solid var(--gold);
       text-align: left;
@@ -171,17 +157,23 @@
 
     .item-btn:hover,
     .item-btn.active {
-      background:
-        linear-gradient(180deg, rgba(59, 86, 135, 0.98), rgba(30, 47, 79, 0.98));
+      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
       box-shadow: 0 0 0 2px rgba(250,204,21,.28), 0 13px 28px rgba(0,0,0,.30);
       transform: translateY(-2px);
+    }
+
+    .item-meta {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .details {
       padding: 22px;
       min-height: 640px;
-      background:
-        linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
+      background: linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
     }
 
     .details-header {
@@ -216,7 +208,12 @@
       font-weight: 800;
     }
 
-    .wowhead-link:hover { background: rgba(250,204,21,.16); }
+    .eligible {
+      margin: -4px 0 16px;
+      color: #dbeafe;
+      font-size: 14px;
+      line-height: 1.45;
+    }
 
     table {
       width: 100%;
@@ -271,14 +268,6 @@
       .items { grid-template-columns: 1fr; }
       .details { min-height: auto; }
     }
-
-    @media (max-width: 620px) {
-      header { grid-template-columns: 52px 1fr 20px; padding: 14px; }
-      .back { width: 42px; height: 42px; }
-      main { width: min(100% - 20px, 1580px); gap: 16px; }
-      .details-header { display: block; }
-      .wowhead-link { margin-top: 12px; }
-    }
   </style>
 </head>
 <body>
@@ -286,15 +275,13 @@
     <a class="back" href="index.html">←</a>
     <div class="headline">
       <h1>✨ Lichtbringer · Prio 0 AQ40</h1>
-      <p>Lootübersicht der Gilde Lichtbringer</p>
+      <p>vollautomatisch aus dem Google Sheet</p>
     </div>
     <div></div>
   </header>
 
   <main>
-    <section class="panel classes" id="classButtons" aria-label="Klassen">
-      <h2 class="panel-title">Klasse wählen</h2>
-    </section>
+    <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots"></section>
 
     <section class="panel items-panel" aria-label="Items">
       <h2 class="panel-title" id="itemsTitle">Items</h2>
@@ -306,174 +293,118 @@
         <h2 id="itemTitle">Item auswählen</h2>
         <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
       </div>
+      <div class="eligible" id="eligibleClasses"></div>
       <div id="itemContent"></div>
-      <div class="hint">Die Itemlisten sind fest hinterlegt. Die P0-Spieler werden automatisch aus dem Google Sheet geladen. Im Sheet muss bei Raid <strong>AQ40</strong> stehen.</div>
+      <div class="hint">Slots, Items, Klassen, Spieler und Anzahl werden vollständig aus dem Google Sheet geladen. Neue Einträge erscheinen automatisch nach dem Aktualisieren der Seite.</div>
     </section>
   </main>
 
   <script>
-    const classes = [
-      { key: "Krieger", css: "warrior" },
-      { key: "Jäger", css: "hunter" },
-      { key: "Priester", css: "priest" },
-      { key: "Hexenmeister", css: "warlock" },
-      { key: "Paladin", css: "paladin" },
-      { key: "Schurke", css: "rogue" },
-      { key: "Magier", css: "mage" },
-      { key: "Druide", css: "druid" }
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=1620604090";
+    const CURRENT_RAID = "AQ40";
+
+    const preferredSlotOrder = [
+      "Kopf", "Hals", "Schulter", "Rücken", "Brust", "Handgelenke", "Hände",
+      "Taille", "Beine", "Füße", "Finger", "Schmuck", "Schmuckstück", "Waffe", "Distanzwaffe"
     ];
 
-    const itemsByClass = {
-      "Krieger": [
-        "Death's Sting",
-        "Ancient Qiraji Ripper",
-        "Crul'shorukh, Edge of Chaos",
-        "Qiraji Execution Bracers",
-        "Badge of the Swarmguard",
-        "Gauntlets of Annihilation",
-        "Belt of Never-ending Agony",
-        "Ring of Emperor Vek'lor",
-        "Dark Edge of Insanity",
-        "Kalims Brustplatte"
-      ],
-      "Jäger": [
-        "Crossbow of Imminent Doom",
-        "Badge of the Swarmguard",
-        "Barb of the Sand Reaver",
-        "Belt of Never-ending Agony",
-        "Cloak of Concentrated Hatred",
-        "Ring of Emperor Vek'lor",
-        "Hive Defiler Wristguards",
-        "Qiraji Execution Bracers"
-      ],
-      "Priester": [
-        "Scepter of the False Prophet",
-        "Amulet of Vek'nilash",
-        "Ring of the Martyr",
-        "Cloak of Clarity",
-        "Robes of the Guardian Saint",
-        "Barrage Shoulders",
-        "Boots of the Redeemed Prophecy",
-        "Angelista's Charm"
-      ],
-      "Hexenmeister": [
-        "Royal Scepter of Vek'lor",
-        "Femur of the Great Sandworm",
-        "Eye of C'Thun",
-        "Dark Storm Gauntlets",
-        "Cloak of the Devoured",
-        "Ring of the Fallen God",
-        "Scepter of the False Prophet",
-        "Leggings of the Festering Swarm"
-      ],
-      "Paladin": [
-        "Scepter of the False Prophet",
-        "Ring of the Martyr",
-        "Cloak of Clarity",
-        "Robes of the Guardian Saint",
-        "Boots of the Redeemed Prophecy",
-        "Amulet of Vek'nilash",
-        "Dark Edge of Insanity",
-        "Gauntlets of Annihilation"
-      ],
-      "Schurke": [
-        "Death's Sting",
-        "Ancient Qiraji Ripper",
-        "Belt of Never-ending Agony",
-        "Badge of the Swarmguard",
-        "Cloak of Concentrated Hatred",
-        "Qiraji Execution Bracers",
-        "Hive Defiler Wristguards",
-        "Ring of Emperor Vek'lor"
-      ],
-      "Magier": [
-        "Royal Scepter of Vek'lor",
-        "Femur of the Great Sandworm",
-        "Eye of C'Thun",
-        "Dark Storm Gauntlets",
-        "Cloak of the Devoured",
-        "Ring of the Fallen God",
-        "Scepter of the False Prophet",
-        "Leggings of the Festering Swarm"
-      ],
-      "Druide": [
-        "Scepter of the False Prophet",
-        "Ring of the Martyr",
-        "Cloak of Clarity",
-        "Robes of the Guardian Saint",
-        "Boots of the Redeemed Prophecy",
-        "Amulet of Vek'nilash",
-        "Angelista's Charm",
-        "Belt of Never-ending Agony"
-      ]
-    };
+    const wowheadLinks = {};
 
-    const wowheadLinks = {
-      "Death's Sting": "https://www.wowhead.com/classic/item=21126/deaths-sting",
-      "Ancient Qiraji Ripper": "https://www.wowhead.com/classic/item=21650/ancient-qiraji-ripper",
-      "Crul'shorukh, Edge of Chaos": "https://www.wowhead.com/classic/item=19363/crulshorukh-edge-of-chaos",
-      "Qiraji Execution Bracers": "https://www.wowhead.com/classic/item=21602/qiraji-execution-bracers",
-      "Badge of the Swarmguard": "https://www.wowhead.com/classic/item=21670/badge-of-the-swarmguard",
-      "Gauntlets of Annihilation": "https://www.wowhead.com/classic/item=21581/gauntlets-of-annihilation",
-      "Belt of Never-ending Agony": "https://www.wowhead.com/classic/item=21586/belt-of-never-ending-agony",
-      "Ring of Emperor Vek'lor": "https://www.wowhead.com/classic/item=21601/ring-of-emperor-veklor",
-      "Dark Edge of Insanity": "https://www.wowhead.com/classic/item=21134/dark-edge-of-insanity",
-      "Crossbow of Imminent Doom": "https://www.wowhead.com/classic/item=21459/crossbow-of-imminent-doom",
-      "Barb of the Sand Reaver": "https://www.wowhead.com/classic/item=21635/barb-of-the-sand-reaver",
-      "Cloak of Concentrated Hatred": "https://www.wowhead.com/classic/item=21701/cloak-of-concentrated-hatred",
-      "Hive Defiler Wristguards": "https://www.wowhead.com/classic/item=21618/hive-defiler-wristguards",
-      "Scepter of the False Prophet": "https://www.wowhead.com/classic/item=21839/scepter-of-the-false-prophet",
-      "Amulet of Vek'nilash": "https://www.wowhead.com/classic/item=21608/amulet-of-veknilash",
-      "Ring of the Martyr": "https://www.wowhead.com/classic/item=21620/ring-of-the-martyr",
-      "Cloak of Clarity": "https://www.wowhead.com/classic/item=21583/cloak-of-clarity",
-      "Robes of the Guardian Saint": "https://www.wowhead.com/classic/item=21663/robes-of-the-guardian-saint",
-      "Boots of the Redeemed Prophecy": "https://www.wowhead.com/classic/item=21704/boots-of-the-redeemed-prophecy",
-      "Angelista's Charm": "https://www.wowhead.com/classic/item=21690/angelistas-charm",
-      "Royal Scepter of Vek'lor": "https://www.wowhead.com/classic/item=21597/royal-scepter-of-veklor",
-      "Femur of the Great Sandworm": "https://www.wowhead.com/classic/item=21679/femur-of-the-great-sandworm",
-      "Eye of C'Thun": "https://www.wowhead.com/classic/item=21221/eye-of-cthun",
-      "Dark Storm Gauntlets": "https://www.wowhead.com/classic/item=21585/dark-storm-gauntlets",
-      "Cloak of the Devoured": "https://www.wowhead.com/classic/item=22731/cloak-of-the-devoured",
-      "Ring of the Fallen God": "https://www.wowhead.com/classic/item=21709/ring-of-the-fallen-god",
-      "Leggings of the Festering Swarm": "https://www.wowhead.com/classic/item=21676/leggings-of-the-festering-swarm",
-      "Barrage Shoulders": "https://www.wowhead.com/classic/item=21665/barrage-shoulders"
-    };
+    let rowsFromSheet = [];
+    let selectedSlot = "";
+    let selectedItem = "";
 
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=0";
+    function normalizeHeader(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/ä/g, "ae")
+        .replace(/ö/g, "oe")
+        .replace(/ü/g, "ue")
+        .replace(/ß/g, "ss")
+        .replace(/\s+/g, "")
+        .trim();
+    }
 
-    let p0Data = {};
+    function getField(row, names) {
+      for (const name of names) {
+        if (row[name] !== undefined) return row[name];
+      }
+      return "";
+    }
 
-    async function loadP0DataFromSheet() {
+    async function loadRowsFromSheet() {
       try {
-        const response = await fetch(SHEET_CSV_URL);
+        const separator = SHEET_CSV_URL.includes("?") ? "&" : "?";
+        const response = await fetch(SHEET_CSV_URL + separator + "cachebust=" + Date.now());
         const csvText = await response.text();
-        const rows = parseCSV(csvText);
+        const table = parseCSV(csvText);
 
-        if (!rows.length) return;
+        if (!table.length) return;
 
-        const header = rows.shift().map(h => h.trim().toLowerCase());
-        const raidIndex = header.indexOf("raid");
-        const klasseIndex = header.indexOf("klasse");
-        const itemIndex = header.indexOf("item");
-        const spielerIndex = header.indexOf("spieler");
-        const anzahlIndex = header.indexOf("anzahl");
+        const headers = table.shift().map(header => normalizeHeader(header));
 
-        rows.forEach(row => {
-          const raid = row[raidIndex]?.trim();
-          const klasse = row[klasseIndex]?.trim();
-          const item = row[itemIndex]?.trim();
-          const spieler = row[spielerIndex]?.trim();
-          const anzahl = row[anzahlIndex]?.trim() || "1";
-
-          if (!raid || !klasse || !item || !spieler) return;
-          if (raid.toLowerCase() !== "aq40") return;
-
-          if (!p0Data[item]) p0Data[item] = [];
-          p0Data[item].push({ spieler, klasse, anzahl });
+        rowsFromSheet = table.map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = (row[index] || "").trim();
+          });
+          return obj;
+        }).filter(row => {
+          const raid = getField(row, ["raid"]);
+          const item = getField(row, ["item"]);
+          const slot = getField(row, ["slot", "platz", "ausruestungsslot"]);
+          return item && slot && (!raid || raid.toLowerCase() === CURRENT_RAID.toLowerCase());
         });
+
+        const slots = getSlots();
+        selectedSlot = slots[0] || "";
+        selectedItem = selectedSlot ? getItemsBySlot(selectedSlot)[0] : "";
       } catch (error) {
         console.error("Fehler beim Laden der Google-Sheet-Daten:", error);
       }
+    }
+
+    function getSlots() {
+      const slots = [...new Set(rowsFromSheet.map(row => getField(row, ["slot", "platz", "ausruestungsslot"])))]
+        .filter(Boolean);
+
+      return slots.sort((a, b) => {
+        const aIndex = preferredSlotOrder.indexOf(a);
+        const bIndex = preferredSlotOrder.indexOf(b);
+        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+    }
+
+    function getItemsBySlot(slot) {
+      return [...new Set(
+        rowsFromSheet
+          .filter(row => getField(row, ["slot", "platz", "ausruestungsslot"]) === slot)
+          .map(row => getField(row, ["item"]))
+          .filter(Boolean)
+      )];
+    }
+
+    function getEligibleClasses(item) {
+      return [...new Set(
+        rowsFromSheet
+          .filter(row => getField(row, ["item"]) === item)
+          .map(row => getField(row, ["klasse", "class"]))
+          .filter(Boolean)
+      )];
+    }
+
+    function getP0Entries(item) {
+      return rowsFromSheet
+        .filter(row => getField(row, ["item"]) === item)
+        .map(row => ({
+          spieler: getField(row, ["spieler", "player", "name"]),
+          klasse: getField(row, ["klasse", "class"]),
+          anzahl: getField(row, ["anzahl", "p0", "prio", "count"]) || "1"
+        }))
+        .filter(entry => entry.spieler);
     }
 
     function parseCSV(text) {
@@ -481,6 +412,7 @@
       let currentRow = [];
       let currentValue = "";
       let insideQuotes = false;
+      const delimiter = detectDelimiter(text);
 
       for (let i = 0; i < text.length; i++) {
         const char = text[i];
@@ -491,7 +423,7 @@
           i++;
         } else if (char === '"') {
           insideQuotes = !insideQuotes;
-        } else if (char === "," && !insideQuotes) {
+        } else if (char === delimiter && !insideQuotes) {
           currentRow.push(currentValue);
           currentValue = "";
         } else if ((char === "\n" || char === "\r") && !insideQuotes) {
@@ -515,75 +447,89 @@
       return rows;
     }
 
-    let selectedClass = "Krieger";
-    let selectedItem = itemsByClass[selectedClass][0];
+    function detectDelimiter(text) {
+      const firstLine = text.split(/\r?\n/)[0] || "";
+      const commas = (firstLine.match(/,/g) || []).length;
+      const semicolons = (firstLine.match(/;/g) || []).length;
+      return semicolons > commas ? ";" : ",";
+    }
 
-    function renderClasses() {
-      const wrapper = document.getElementById("classButtons");
-      wrapper.innerHTML = '<h2 class="panel-title">Klasse wählen</h2>' + classes.map(cls => `
-        <button class="class-btn ${cls.css} ${cls.key === selectedClass ? "active" : ""}" onclick="selectClass('${cls.key}')">
-          ${cls.key}
-        </button>
+    function renderSlots() {
+      const wrapper = document.getElementById("slotButtons");
+      const slots = getSlots();
+
+      if (!slots.length) {
+        wrapper.innerHTML = '<h2 class="panel-title">Slot wählen</h2><div class="empty">Keine AQ40-Daten im Sheet gefunden.</div>';
+        return;
+      }
+
+      wrapper.innerHTML = '<h2 class="panel-title">Slot wählen</h2>' + slots.map(slot => `
+        <button class="slot-btn ${slot === selectedSlot ? "active" : ""}" onclick="selectSlot('${slot}')">${slot}</button>
       `).join("");
     }
 
     function renderItems() {
-      document.getElementById("itemsTitle").textContent = selectedClass + " · AQ40 Items";
+      document.getElementById("itemsTitle").textContent = selectedSlot ? selectedSlot + " · AQ40 Items" : "AQ40 Items";
       const wrapper = document.getElementById("itemButtons");
-      const items = itemsByClass[selectedClass] || [];
+      const items = selectedSlot ? getItemsBySlot(selectedSlot) : [];
+
+      if (!items.length) {
+        wrapper.innerHTML = '<div class="empty">Für diesen Slot gibt es aktuell keine Items im Sheet.</div>';
+        return;
+      }
 
       wrapper.innerHTML = items.map(item => `
-        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${item}\`)">
+        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${String(item).replace(/`/g, "\\`")}\`)">
           ${item}
+          <span class="item-meta">${getEligibleClasses(item).join(", ")}</span>
         </button>
       `).join("");
     }
 
     function renderDetails() {
-      document.getElementById("itemTitle").textContent = selectedItem;
-      const wowhead = wowheadLinks[selectedItem];
+      const title = document.getElementById("itemTitle");
+      const eligible = document.getElementById("eligibleClasses");
+      const content = document.getElementById("itemContent");
       const link = document.getElementById("wowheadLink");
 
-      if (wowhead) {
-        link.href = wowhead;
+      if (!selectedItem) {
+        title.textContent = "Item auswählen";
+        eligible.innerHTML = "";
+        content.innerHTML = '<div class="empty">Bitte wähle links einen Slot und anschließend ein Item aus.</div>';
+        link.style.display = "none";
+        return;
+      }
+
+      title.textContent = selectedItem;
+      eligible.innerHTML = `<strong>Klassen:</strong> ${getEligibleClasses(selectedItem).join(", ") || "—"}`;
+
+      if (wowheadLinks[selectedItem]) {
+        link.href = wowheadLinks[selectedItem];
         link.style.display = "inline-flex";
       } else {
         link.style.display = "none";
       }
 
-      const entries = p0Data[selectedItem] || [];
-      const content = document.getElementById("itemContent");
+      const entries = getP0Entries(selectedItem);
 
-      if (entries.length === 0) {
+      if (!entries.length) {
         content.innerHTML = '<div class="empty">Für dieses Item ist aktuell noch kein Spieler mit P0 eingetragen.</div>';
         return;
       }
 
       content.innerHTML = `
         <table>
-          <thead>
-            <tr>
-              <th>Spieler</th>
-              <th>Klasse</th>
-              <th>P0 gesetzt</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Spieler</th><th>Klasse</th><th>P0 gesetzt</th></tr></thead>
           <tbody>
-            ${entries.map(entry => `
-              <tr>
-                <td>${entry.spieler}</td>
-                <td>${entry.klasse}</td>
-                <td>${entry.anzahl}x</td>
-              </tr>
-            `).join("")}
+            ${entries.map(entry => `<tr><td>${entry.spieler}</td><td>${entry.klasse}</td><td>${entry.anzahl}x</td></tr>`).join("")}
           </tbody>
         </table>
       `;
     }
 
-    function selectClass(className) {
-      selectedClass = className;
-      selectedItem = itemsByClass[className][0];
+    function selectSlot(slot) {
+      selectedSlot = slot;
+      selectedItem = getItemsBySlot(slot)[0] || "";
       renderAll();
     }
 
@@ -593,12 +539,12 @@
     }
 
     function renderAll() {
-      renderClasses();
+      renderSlots();
       renderItems();
       renderDetails();
     }
 
-    loadP0DataFromSheet().then(() => renderAll());
+    loadRowsFromSheet().then(() => renderAll());
   </script>
 </body>
 </html>
