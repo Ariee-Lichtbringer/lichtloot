@@ -4,300 +4,522 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lichtbringer – Prio 0 Naxxramas</title>
+
   <style>
-    :root {
-      --bg: #08111f;
-      --bg2: #111c33;
-      --panel: rgba(20, 32, 55, 0.92);
-      --gold: #facc15;
-      --text: #f8fafc;
-      --muted: #cbd5e1;
-      --line: rgba(255, 255, 255, 0.13);
-      --shadow: 0 18px 45px rgba(0, 0, 0, 0.38);
+    :root{
+      --gold:#facc15;
+      --gold-soft:rgba(250,204,21,.18);
+      --blue:#60a5fa;
+      --blue-soft:rgba(96,165,250,.18);
+      --bg:#08111f;
+      --panel:rgba(12,18,32,.82);
+      --panel-strong:rgba(15,23,42,.92);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --line:rgba(255,255,255,.11);
+      --shadow:0 22px 55px rgba(0,0,0,.48);
     }
 
-    * { box-sizing: border-box; }
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, Helvetica, sans-serif;
-      color: var(--text);
+    body{
+      min-height:100vh;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
       background:
-        radial-gradient(circle at top left, rgba(250, 204, 21, 0.22), transparent 28%),
-        radial-gradient(circle at bottom right, rgba(96, 165, 250, 0.22), transparent 32%),
-        linear-gradient(135deg, var(--bg), var(--bg2));
+        linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.92)),
+        url('https://cdn.discordapp.com/attachments/1470114311794987201/1505009929394851981/Screenshot_2026-03-04_231132.jpeg?ex=6a091138&is=6a07bfb8&hm=a1ec0a102aa2326db202409acb16c86f8cb9a702be6ef1507c8f420e0635c669');
+      background-size:cover;
+      background-position:center;
+      background-repeat:no-repeat;
+      background-attachment:fixed;
     }
 
-    header {
-      min-height: 110px;
-      display: grid;
-      grid-template-columns: 80px 1fr 80px;
-      align-items: center;
-      padding: 18px 24px;
-      background: linear-gradient(90deg, rgba(8,17,31,.98), rgba(30,64,175,.88), rgba(8,17,31,.98));
-      border-bottom: 1px solid rgba(250,204,21,.32);
-      box-shadow: var(--shadow);
+    .page{
+      min-height:100vh;
+      backdrop-filter:blur(3px);
+      padding:28px 24px 70px;
     }
 
-    .back {
-      width: 48px;
-      height: 48px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 999px;
-      color: var(--gold);
-      text-decoration: none;
-      font-size: 34px;
-      border: 1px solid rgba(250,204,21,.35);
-      background: rgba(255,255,255,.04);
+    .topbar{
+      width:min(1500px,100%);
+      margin:0 auto 28px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .headline { text-align: center; }
-
-    .headline h1 {
-      margin: 0;
-      font-size: clamp(25px, 4vw, 42px);
-      font-weight: 900;
-      text-shadow: 0 0 18px rgba(250,204,21,.25);
+    .back{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:46px;
+      padding:0 18px;
+      border-radius:999px;
+      color:var(--gold);
+      text-decoration:none;
+      font-weight:900;
+      background:rgba(12,18,32,.78);
+      border:1px solid rgba(250,204,21,.25);
+      box-shadow:0 10px 28px rgba(0,0,0,.35);
+      transition:.18s ease;
     }
 
-    .headline p {
-      margin: 8px 0 0;
-      color: #dbeafe;
-      font-size: 13px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
+    .back:hover{
+      transform:translateY(-2px);
+      border-color:rgba(250,204,21,.55);
+      background:rgba(250,204,21,.10);
     }
 
-    main {
-      width: min(1580px, calc(100% - 32px));
-      margin: 28px auto 52px;
-      display: grid;
-      grid-template-columns: 235px 1fr 1.05fr;
-      gap: 24px;
-      align-items: start;
+    .status-pill{
+      padding:12px 16px;
+      border-radius:999px;
+      color:#dbeafe;
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background:rgba(12,18,32,.78);
+      border:1px solid rgba(96,165,250,.22);
+      box-shadow:0 10px 28px rgba(0,0,0,.28);
     }
 
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
+    .hero{
+      width:min(1500px,100%);
+      margin:0 auto 34px;
+      position:relative;
+      overflow:hidden;
+      min-height:330px;
+      border-radius:34px;
+      border:1px solid rgba(250,204,21,.22);
+      background:
+        linear-gradient(120deg, rgba(8,17,31,.90), rgba(22,101,52,.30)),
+        url('https://cdn.discordapp.com/attachments/1499098348865720360/1505188595533877351/naxx.jpg?ex=6a09b79e&is=6a08661e&hm=ac1c05757fa472f83bcda21199e954d68fcb094d6efdf8ea99d807b7c9a525c8');
+      background-size:cover;
+      background-position:center;
+      box-shadow:var(--shadow);
+      display:flex;
+      align-items:flex-end;
     }
 
-    .slots {
-      padding: 16px;
-      display: grid;
-      gap: 10px;
+    .hero::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(250,204,21,.20), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(34,197,94,.16), transparent 28%),
+        linear-gradient(to top, rgba(8,17,31,.98), rgba(8,17,31,.16));
+      pointer-events:none;
     }
 
-    .panel-title {
-      margin: 0 0 14px;
-      color: var(--gold);
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
+    .hero-content{
+      position:relative;
+      z-index:2;
+      padding:38px;
+      width:100%;
+      display:flex;
+      align-items:flex-end;
+      gap:24px;
     }
 
-    .slot-btn,
-    .item-btn {
-      border: 0;
-      cursor: pointer;
-      font-weight: 800;
-      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+    .hero-icon{
+      width:150px;
+      height:150px;
+      flex:0 0 auto;
+      border-radius:50%;
+      object-fit:cover;
+      border:4px solid var(--gold);
+      background:#111827;
+      box-shadow:
+        0 0 35px rgba(250,204,21,.38),
+        0 18px 45px rgba(0,0,0,.55);
     }
 
-    .slot-btn {
-      padding: 13px 14px;
-      border-radius: 13px;
-      color: var(--text);
-      font-size: 16px;
-      text-align: left;
-      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
-      border-left: 5px solid rgba(250,204,21,.7);
-      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    .hero-text h1{
+      font-size:clamp(36px,5vw,70px);
+      line-height:1;
+      font-weight:950;
+      letter-spacing:.4px;
+      text-shadow:0 0 24px rgba(250,204,21,.28);
+    }
+
+    .hero-tags{
+      margin-top:18px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+
+    .tag{
+      padding:8px 12px;
+      border-radius:999px;
+      color:#f8fafc;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background:rgba(250,204,21,.13);
+      border:1px solid rgba(250,204,21,.22);
+    }
+
+    .layout{
+      width:min(1500px,100%);
+      margin:auto;
+      display:grid;
+      grid-template-columns:260px minmax(360px,1fr) minmax(400px,1.1fr);
+      gap:24px;
+      align-items:start;
+    }
+
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
+    }
+
+    .panel-head{
+      padding:20px 20px 0;
+    }
+
+    .panel-title{
+      color:var(--gold);
+      font-size:14px;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      font-weight:950;
+    }
+
+    .slots{
+      padding:18px;
+      display:grid;
+      gap:10px;
+    }
+
+    .slot-btn{
+      width:100%;
+      padding:14px 15px;
+      border:0;
+      cursor:pointer;
+      border-radius:16px;
+      color:var(--text);
+      text-align:left;
+      font-size:15px;
+      font-weight:900;
+      background:linear-gradient(135deg, rgba(37,56,91,.98), rgba(16,25,45,.98));
+      border-left:5px solid rgba(250,204,21,.58);
+      box-shadow:0 8px 22px rgba(0,0,0,.26);
+      transition:.16s ease;
     }
 
     .slot-btn:hover,
-    .slot-btn.active {
-      transform: translateX(5px);
-      box-shadow: 0 0 0 3px rgba(250,204,21,.25), 0 10px 22px rgba(0,0,0,.28);
-      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
+    .slot-btn.active{
+      transform:translateX(5px);
+      background:linear-gradient(135deg, rgba(59,86,135,.98), rgba(25,39,68,.98));
+      box-shadow:0 0 0 3px rgba(250,204,21,.20), 0 12px 28px rgba(0,0,0,.32);
     }
 
-    .items-panel { padding: 18px; }
-
-    .items {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(220px, 1fr));
-      gap: 12px;
+    .items-panel{
+      padding:20px;
     }
 
-    .item-btn {
-      min-height: 60px;
-      padding: 13px 16px;
-      border-radius: 16px;
-      color: var(--text);
-      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
-      border: 1px solid rgba(255,255,255,.11);
-      border-left: 5px solid var(--gold);
-      text-align: left;
-      line-height: 1.25;
-      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+    .items-title-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:18px;
     }
 
-    .item-btn::before {
-      content: "✦";
-      color: var(--gold);
-      margin-right: 8px;
+    .item-count{
+      color:#dbeafe;
+      font-size:12px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(96,165,250,.12);
+      border:1px solid rgba(96,165,250,.18);
+      white-space:nowrap;
     }
 
-    .item-btn:hover,
-    .item-btn.active {
-      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
-      box-shadow: 0 0 0 2px rgba(250,204,21,.28), 0 13px 28px rgba(0,0,0,.30);
-      transform: translateY(-2px);
+    .items{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:14px;
     }
 
-    .item-meta {
-      display: block;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
+    .item-card{
+      min-height:118px;
+      padding:18px;
+      border:0;
+      cursor:pointer;
+      border-radius:22px;
+      color:var(--text);
+      text-align:left;
+      background:
+        radial-gradient(circle at top left, rgba(250,204,21,.13), transparent 35%),
+        linear-gradient(180deg, rgba(37,56,91,.98), rgba(16,25,45,.98));
+      border:1px solid rgba(255,255,255,.11);
+      box-shadow:0 12px 28px rgba(0,0,0,.28);
+      transition:.18s ease;
+      position:relative;
+      overflow:hidden;
     }
 
-    .details {
-      padding: 22px;
-      min-height: 640px;
-      background: linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
+    .item-card::before{
+      content:'✦';
+      color:var(--gold);
+      font-size:18px;
+      position:absolute;
+      right:16px;
+      top:14px;
+      opacity:.9;
     }
 
-    .details-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: flex-start;
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid rgba(250,204,21,.18);
+    .item-card:hover,
+    .item-card.active{
+      transform:translateY(-4px);
+      border-color:rgba(250,204,21,.42);
+      box-shadow:0 0 0 2px rgba(250,204,21,.18), 0 18px 38px rgba(0,0,0,.42);
     }
 
-    .details h2 {
-      margin: 0;
-      color: var(--gold);
-      font-size: clamp(24px, 3vw, 34px);
-      line-height: 1.15;
+    .item-name{
+      display:block;
+      padding-right:24px;
+      font-size:17px;
+      font-weight:950;
+      line-height:1.28;
     }
 
-    .wowhead-link {
-      flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 8px 12px;
-      border-radius: 999px;
-      color: var(--gold);
-      text-decoration: none;
-      border: 1px solid rgba(250,204,21,.35);
-      background: rgba(250,204,21,.08);
-      font-size: 14px;
-      font-weight: 800;
+    .item-meta{
+      display:block;
+      margin-top:12px;
+      color:#dbeafe;
+      font-size:12px;
+      font-weight:800;
+      line-height:1.45;
+      opacity:.9;
     }
 
-    .eligible {
-      margin: -4px 0 16px;
-      color: #dbeafe;
-      font-size: 14px;
-      line-height: 1.45;
+    .details{
+      padding:24px;
+      min-height:610px;
+      background:
+        radial-gradient(circle at top left, rgba(250,204,21,.10), transparent 30%),
+        var(--panel-strong);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border-radius: 14px;
-      background: rgba(255,255,255,.035);
+    .details-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      padding-bottom:18px;
+      margin-bottom:18px;
+      border-bottom:1px solid rgba(250,204,21,.18);
     }
 
-    th {
-      padding: 12px 11px;
-      background: linear-gradient(90deg, rgba(250,204,21,.28), rgba(96,165,250,.18));
-      color: var(--text);
-      text-align: left;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
+    .details h2{
+      color:var(--gold);
+      font-size:clamp(25px,3vw,38px);
+      line-height:1.12;
+      font-weight:950;
     }
 
-    td {
-      padding: 13px 11px;
-      border-bottom: 1px solid rgba(255,255,255,.09);
-      color: var(--muted);
-      font-weight: 750;
+    .wowhead-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:999px;
+      color:var(--gold);
+      text-decoration:none;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(250,204,21,.08);
+      font-size:13px;
+      font-weight:950;
+      transition:.16s ease;
     }
 
-    tr:last-child td { border-bottom: 0; }
-
-    .empty {
-      padding: 18px;
-      border: 1px dashed rgba(250,204,21,.32);
-      border-radius: 16px;
-      color: var(--muted);
-      background: rgba(250,204,21,.055);
-      line-height: 1.5;
-      font-weight: 700;
+    .wowhead-link:hover{
+      background:rgba(250,204,21,.16);
+      transform:translateY(-2px);
     }
 
-    .hint {
-      margin-top: 18px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      background: rgba(96,165,250,.08);
-      color: #dbeafe;
-      font-size: 13px;
-      line-height: 1.45;
-      border: 1px solid rgba(96,165,250,.18);
+    .eligible{
+      margin-bottom:18px;
+      padding:14px 16px;
+      border-radius:18px;
+      color:#dbeafe;
+      font-size:14px;
+      line-height:1.45;
+      background:rgba(96,165,250,.09);
+      border:1px solid rgba(96,165,250,.16);
     }
 
-    @media (max-width: 1120px) {
-      main { grid-template-columns: 1fr; }
-      .items { grid-template-columns: 1fr; }
-      .details { min-height: auto; }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:18px;
+      background:rgba(255,255,255,.035);
+    }
+
+    th{
+      padding:14px 13px;
+      background:linear-gradient(90deg, rgba(250,204,21,.28), rgba(96,165,250,.18));
+      color:var(--text);
+      text-align:left;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    td{
+      padding:15px 13px;
+      border-bottom:1px solid rgba(255,255,255,.09);
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    tr:last-child td{
+      border-bottom:0;
+    }
+
+    .prio-badge{
+      display:inline-flex;
+      min-width:42px;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      color:var(--gold);
+      background:rgba(250,204,21,.10);
+      border:1px solid rgba(250,204,21,.24);
+      font-weight:950;
+    }
+
+    .empty{
+      padding:20px;
+      border:1px dashed rgba(250,204,21,.32);
+      border-radius:20px;
+      color:var(--muted);
+      background:rgba(250,204,21,.055);
+      line-height:1.55;
+      font-weight:800;
+    }
+
+    @media(max-width:1180px){
+      .layout{
+        grid-template-columns:1fr;
+      }
+
+      .hero-content{
+        align-items:center;
+      }
+    }
+
+    @media(max-width:700px){
+      .page{
+        padding:18px 14px 50px;
+      }
+
+      .topbar{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .hero{
+        min-height:420px;
+        border-radius:26px;
+      }
+
+      .hero-content{
+        flex-direction:column;
+        align-items:flex-start;
+        padding:26px;
+      }
+
+      .hero-icon{
+        width:116px;
+        height:116px;
+      }
+
+      .items{
+        grid-template-columns:1fr;
+      }
+
+      .details-header{
+        display:block;
+      }
+
+      .wowhead-link{
+        margin-top:14px;
+      }
     }
   </style>
 </head>
+
 <body>
-  <header>
-    <a class="back" href="index.html">←</a>
-    <div class="headline">
-      <h1>✨ Lichtbringer · Prio 0 Naxxramas</h1>
-      <p>vollautomatisch aus dem Google Sheet</p>
+  <div class="page">
+
+    <div class="topbar">
+      <a class="back" href="index.html">← Zur Startseite</a>
+      <div class="status-pill">Naxxramas · Prio 0 Plus</div>
     </div>
-    <div></div>
-  </header>
 
-  <main>
-    <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots"></section>
+    <section class="hero">
+      <div class="hero-content">
+        <img
+          class="hero-icon"
+          src="https://cdn.discordapp.com/attachments/1499098348865720360/1505188595533877351/naxx.jpg?ex=6a09b79e&is=6a08661e&hm=ac1c05757fa472f83bcda21199e954d68fcb094d6efdf8ea99d807b7c9a525c8"
+          alt="Naxx Icon"
+        />
 
-    <section class="panel items-panel" aria-label="Items">
-      <h2 class="panel-title" id="itemsTitle">Items</h2>
-      <div class="items" id="itemButtons"></div>
-    </section>
-
-    <section class="panel details" aria-label="P0-Liste">
-      <div class="details-header">
-        <h2 id="itemTitle">Item auswählen</h2>
-        <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
+        <div class="hero-text">
+          <h1>Naxxramas</h1>
+          <div class="hero-tags">
+            <span class="tag">NAXX</span>
+            <span class="tag">Sheet Sync</span>
+            <span class="tag">Prio 0 Plus</span>
+          </div>
+        </div>
       </div>
-      <div class="eligible" id="eligibleClasses"></div>
-      <div id="itemContent"></div>
-      <div class="hint">Slots, Items, Klassen, Spieler und Anzahl werden vollständig aus dem Google Sheet geladen. Neue Einträge erscheinen automatisch nach dem Aktualisieren der Seite.</div>
     </section>
-  </main>
+
+    <main class="layout">
+      <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots"></section>
+
+      <section class="panel items-panel" aria-label="Items">
+        <div class="items-title-row">
+          <h2 class="panel-title" id="itemsTitle">Items</h2>
+          <div class="item-count" id="itemCount">0 Items</div>
+        </div>
+        <div class="items" id="itemButtons"></div>
+      </section>
+
+      <section class="panel details" aria-label="P0-Liste">
+        <div class="details-header">
+          <h2 id="itemTitle">Item auswählen</h2>
+          <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
+        </div>
+        <div class="eligible" id="eligibleClasses"></div>
+        <div id="itemContent"></div>
+      </section>
+    </main>
+
+  </div>
 
   <script>
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=1000361718";
@@ -314,132 +536,131 @@
     let selectedSlot = "";
     let selectedItem = "";
 
-    function normalizeHeader(text) {
+    function normalizeHeader(text){
       return String(text || "")
         .toLowerCase()
-        .replace(/ä/g, "ae")
-        .replace(/ö/g, "oe")
-        .replace(/ü/g, "ue")
-        .replace(/ß/g, "ss")
-        .replace(/\s+/g, "")
+        .replace(/ä/g,"ae")
+        .replace(/ö/g,"oe")
+        .replace(/ü/g,"ue")
+        .replace(/ß/g,"ss")
+        .replace(/\s+/g,"")
         .trim();
     }
 
-    function getField(row, names) {
-      for (const name of names) {
-        if (row[name] !== undefined) return row[name];
+    function getField(row,names){
+      for(const name of names){
+        if(row[name] !== undefined) return row[name];
       }
       return "";
     }
 
-    async function loadRowsFromSheet() {
-      try {
+    async function loadRowsFromSheet(){
+      try{
         const separator = SHEET_CSV_URL.includes("?") ? "&" : "?";
         const response = await fetch(SHEET_CSV_URL + separator + "cachebust=" + Date.now());
         const csvText = await response.text();
         const table = parseCSV(csvText);
 
-        if (!table.length) return;
+        if(!table.length) return;
 
         const headers = table.shift().map(header => normalizeHeader(header));
 
         rowsFromSheet = table.map(row => {
           const obj = {};
-          headers.forEach((header, index) => {
+          headers.forEach((header,index) => {
             obj[header] = (row[index] || "").trim();
           });
           return obj;
         }).filter(row => {
-          const raid = getField(row, ["raid"]);
-          const item = getField(row, ["item"]);
-          const slot = getField(row, ["slot", "platz", "ausruestungsslot"]);
+          const raid = getField(row,["raid"]);
+          const item = getField(row,["item"]);
+          const slot = getField(row,["slot","platz","ausruestungsslot"]);
           return item && slot && (!raid || raid.toLowerCase() === CURRENT_RAID.toLowerCase());
         });
 
         const slots = getSlots();
         selectedSlot = slots[0] || "";
         selectedItem = selectedSlot ? getItemsBySlot(selectedSlot)[0] : "";
-      } catch (error) {
+      }catch(error){
         console.error("Fehler beim Laden der Google-Sheet-Daten:", error);
       }
     }
 
-    function getSlots() {
-      const slots = [...new Set(rowsFromSheet.map(row => getField(row, ["slot", "platz", "ausruestungsslot"])))]
-        .filter(Boolean);
+    function getSlots(){
+      const slots = [...new Set(rowsFromSheet.map(row => getField(row,["slot","platz","ausruestungsslot"])))].filter(Boolean);
 
-      return slots.sort((a, b) => {
+      return slots.sort((a,b) => {
         const aIndex = preferredSlotOrder.indexOf(a);
         const bIndex = preferredSlotOrder.indexOf(b);
-        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-        if (aIndex === -1) return 1;
-        if (bIndex === -1) return -1;
+        if(aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if(aIndex === -1) return 1;
+        if(bIndex === -1) return -1;
         return aIndex - bIndex;
       });
     }
 
-    function getItemsBySlot(slot) {
+    function getItemsBySlot(slot){
       return [...new Set(
         rowsFromSheet
-          .filter(row => getField(row, ["slot", "platz", "ausruestungsslot"]) === slot)
-          .map(row => getField(row, ["item"]))
+          .filter(row => getField(row,["slot","platz","ausruestungsslot"]) === slot)
+          .map(row => getField(row,["item"]))
           .filter(Boolean)
       )];
     }
 
-    function getEligibleClasses(item) {
+    function getEligibleClasses(item){
       return [...new Set(
         rowsFromSheet
-          .filter(row => getField(row, ["item"]) === item)
-          .map(row => getField(row, ["klasse", "class"]))
+          .filter(row => getField(row,["item"]) === item)
+          .map(row => getField(row,["klasse","class"]))
           .filter(Boolean)
       )];
     }
 
-    function getP0Entries(item) {
+    function getP0Entries(item){
       return rowsFromSheet
-        .filter(row => getField(row, ["item"]) === item)
+        .filter(row => getField(row,["item"]) === item)
         .map(row => ({
-          spieler: getField(row, ["spieler", "player", "name"]),
-          klasse: getField(row, ["klasse", "class"]),
-          anzahl: getField(row, ["anzahl", "p0", "prio", "count"]) || "1"
+          spieler:getField(row,["spieler","player","name"]),
+          klasse:getField(row,["klasse","class"]),
+          anzahl:getField(row,["anzahl","p0","prio","count"]) || "1"
         }))
         .filter(entry => entry.spieler);
     }
 
-    function parseCSV(text) {
+    function parseCSV(text){
       const rows = [];
       let currentRow = [];
       let currentValue = "";
       let insideQuotes = false;
       const delimiter = detectDelimiter(text);
 
-      for (let i = 0; i < text.length; i++) {
+      for(let i=0;i<text.length;i++){
         const char = text[i];
-        const nextChar = text[i + 1];
+        const nextChar = text[i+1];
 
-        if (char === '"' && insideQuotes && nextChar === '"') {
+        if(char === '"' && insideQuotes && nextChar === '"'){
           currentValue += '"';
           i++;
-        } else if (char === '"') {
+        }else if(char === '"'){
           insideQuotes = !insideQuotes;
-        } else if (char === delimiter && !insideQuotes) {
+        }else if(char === delimiter && !insideQuotes){
           currentRow.push(currentValue);
           currentValue = "";
-        } else if ((char === "\n" || char === "\r") && !insideQuotes) {
-          if (currentValue || currentRow.length) {
+        }else if((char === "\n" || char === "\r") && !insideQuotes){
+          if(currentValue || currentRow.length){
             currentRow.push(currentValue);
             rows.push(currentRow);
           }
           currentRow = [];
           currentValue = "";
-          if (char === "\r" && nextChar === "\n") i++;
-        } else {
+          if(char === "\r" && nextChar === "\n") i++;
+        }else{
           currentValue += char;
         }
       }
 
-      if (currentValue || currentRow.length) {
+      if(currentValue || currentRow.length){
         currentRow.push(currentValue);
         rows.push(currentRow);
       }
@@ -447,52 +668,54 @@
       return rows;
     }
 
-    function detectDelimiter(text) {
+    function detectDelimiter(text){
       const firstLine = text.split(/\r?\n/)[0] || "";
       const commas = (firstLine.match(/,/g) || []).length;
       const semicolons = (firstLine.match(/;/g) || []).length;
       return semicolons > commas ? ";" : ",";
     }
 
-    function renderSlots() {
+    function renderSlots(){
       const wrapper = document.getElementById("slotButtons");
       const slots = getSlots();
 
-      if (!slots.length) {
-        wrapper.innerHTML = '<h2 class="panel-title">Slot wählen</h2><div class="empty">Keine Naxx-Daten im Sheet gefunden.</div>';
+      if(!slots.length){
+        wrapper.innerHTML = '<div class="panel-head"><h2 class="panel-title">Slot wählen</h2></div><div class="slots"><div class="empty">Keine Naxx-Daten im Sheet gefunden.</div></div>';
         return;
       }
 
-      wrapper.innerHTML = '<h2 class="panel-title">Slot wählen</h2>' + slots.map(slot => `
+      wrapper.innerHTML = '<div class="panel-head"><h2 class="panel-title">Slot wählen</h2></div><div class="slots">' + slots.map(slot => `
         <button class="slot-btn ${slot === selectedSlot ? "active" : ""}" onclick="selectSlot('${slot}')">${slot}</button>
-      `).join("");
+      `).join("") + '</div>';
     }
 
-    function renderItems() {
-      document.getElementById("itemsTitle").textContent = selectedSlot ? selectedSlot + " · Naxx Items" : "Naxx Items";
-      const wrapper = document.getElementById("itemButtons");
+    function renderItems(){
       const items = selectedSlot ? getItemsBySlot(selectedSlot) : [];
+      document.getElementById("itemsTitle").textContent = selectedSlot ? selectedSlot + " · Naxx Items" : "Naxx Items";
+      document.getElementById("itemCount").textContent = items.length === 1 ? "1 Item" : items.length + " Items";
 
-      if (!items.length) {
+      const wrapper = document.getElementById("itemButtons");
+
+      if(!items.length){
         wrapper.innerHTML = '<div class="empty">Für diesen Slot gibt es aktuell keine Items im Sheet.</div>';
         return;
       }
 
       wrapper.innerHTML = items.map(item => `
-        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${String(item).replace(/`/g, "\\`")}\`)">
-          ${item}
+        <button class="item-card ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${String(item).replace(/`/g,"\\`")}\`)">
+          <span class="item-name">${item}</span>
           <span class="item-meta">${getEligibleClasses(item).join(", ")}</span>
         </button>
       `).join("");
     }
 
-    function renderDetails() {
+    function renderDetails(){
       const title = document.getElementById("itemTitle");
       const eligible = document.getElementById("eligibleClasses");
       const content = document.getElementById("itemContent");
       const link = document.getElementById("wowheadLink");
 
-      if (!selectedItem) {
+      if(!selectedItem){
         title.textContent = "Item auswählen";
         eligible.innerHTML = "";
         content.innerHTML = '<div class="empty">Bitte wähle links einen Slot und anschließend ein Item aus.</div>';
@@ -503,42 +726,54 @@
       title.textContent = selectedItem;
       eligible.innerHTML = `<strong>Klassen:</strong> ${getEligibleClasses(selectedItem).join(", ") || "—"}`;
 
-      if (wowheadLinks[selectedItem]) {
+      if(wowheadLinks[selectedItem]){
         link.href = wowheadLinks[selectedItem];
         link.style.display = "inline-flex";
-      } else {
+      }else{
         link.style.display = "none";
       }
 
       const entries = getP0Entries(selectedItem);
 
-      if (!entries.length) {
+      if(!entries.length){
         content.innerHTML = '<div class="empty">Für dieses Item ist aktuell noch kein Spieler mit P0 eingetragen.</div>';
         return;
       }
 
       content.innerHTML = `
         <table>
-          <thead><tr><th>Spieler</th><th>Klasse</th><th>P0 gesetzt</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P0+</th>
+            </tr>
+          </thead>
           <tbody>
-            ${entries.map(entry => `<tr><td>${entry.spieler}</td><td>${entry.klasse}</td><td>${entry.anzahl}x</td></tr>`).join("")}
+            ${entries.map(entry => `
+              <tr>
+                <td>${entry.spieler}</td>
+                <td>${entry.klasse}</td>
+                <td><span class="prio-badge">${entry.anzahl}x</span></td>
+              </tr>
+            `).join("")}
           </tbody>
         </table>
       `;
     }
 
-    function selectSlot(slot) {
+    function selectSlot(slot){
       selectedSlot = slot;
       selectedItem = getItemsBySlot(slot)[0] || "";
       renderAll();
     }
 
-    function selectItem(itemName) {
+    function selectItem(itemName){
       selectedItem = itemName;
       renderAll();
     }
 
-    function renderAll() {
+    function renderAll(){
       renderSlots();
       renderItems();
       renderDetails();
