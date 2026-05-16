@@ -30,15 +30,13 @@
     }
 
     header {
-      position: relative;
       min-height: 110px;
       display: grid;
       grid-template-columns: 80px 1fr 80px;
       align-items: center;
       padding: 18px 24px;
-      background:
-        linear-gradient(90deg, rgba(8, 17, 31, 0.98), rgba(30, 64, 175, 0.88), rgba(8, 17, 31, 0.98));
-      border-bottom: 1px solid rgba(250, 204, 21, 0.32);
+      background: linear-gradient(90deg, rgba(8,17,31,.98), rgba(30,64,175,.88), rgba(8,17,31,.98));
+      border-bottom: 1px solid rgba(250,204,21,.32);
       box-shadow: var(--shadow);
     }
 
@@ -52,8 +50,8 @@
       color: var(--gold);
       text-decoration: none;
       font-size: 34px;
-      border: 1px solid rgba(250, 204, 21, 0.35);
-      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(250,204,21,.35);
+      background: rgba(255,255,255,.04);
     }
 
     .headline { text-align: center; }
@@ -62,15 +60,14 @@
       margin: 0;
       font-size: clamp(25px, 4vw, 42px);
       font-weight: 900;
-      letter-spacing: 0.3px;
-      text-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
+      text-shadow: 0 0 18px rgba(250,204,21,.25);
     }
 
     .headline p {
       margin: 8px 0 0;
       color: #dbeafe;
       font-size: 13px;
-      letter-spacing: 0.18em;
+      letter-spacing: .18em;
       text-transform: uppercase;
     }
 
@@ -102,7 +99,7 @@
       color: var(--gold);
       font-size: 15px;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
+      letter-spacing: .12em;
     }
 
     .slot-btn,
@@ -119,7 +116,7 @@
       color: var(--text);
       font-size: 16px;
       text-align: left;
-      background: linear-gradient(180deg, rgba(37, 56, 91, 0.98), rgba(22, 34, 58, 0.98));
+      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
       border-left: 5px solid rgba(250,204,21,.7);
       box-shadow: 0 8px 18px rgba(0,0,0,.22);
     }
@@ -128,7 +125,7 @@
     .slot-btn.active {
       transform: translateX(5px);
       box-shadow: 0 0 0 3px rgba(250,204,21,.25), 0 10px 22px rgba(0,0,0,.28);
-      background: linear-gradient(180deg, rgba(59, 86, 135, 0.98), rgba(30, 47, 79, 0.98));
+      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
     }
 
     .items-panel { padding: 18px; }
@@ -144,8 +141,7 @@
       padding: 13px 16px;
       border-radius: 16px;
       color: var(--text);
-      background:
-        linear-gradient(180deg, rgba(37, 56, 91, 0.98), rgba(22, 34, 58, 0.98));
+      background: linear-gradient(180deg, rgba(37,56,91,.98), rgba(22,34,58,.98));
       border: 1px solid rgba(255,255,255,.11);
       border-left: 5px solid var(--gold);
       text-align: left;
@@ -161,8 +157,7 @@
 
     .item-btn:hover,
     .item-btn.active {
-      background:
-        linear-gradient(180deg, rgba(59, 86, 135, 0.98), rgba(30, 47, 79, 0.98));
+      background: linear-gradient(180deg, rgba(59,86,135,.98), rgba(30,47,79,.98));
       box-shadow: 0 0 0 2px rgba(250,204,21,.28), 0 13px 28px rgba(0,0,0,.30);
       transform: translateY(-2px);
     }
@@ -178,8 +173,7 @@
     .details {
       padding: 22px;
       min-height: 640px;
-      background:
-        linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
+      background: linear-gradient(180deg, rgba(30,41,59,.96), rgba(15,23,42,.97));
     }
 
     .details-header {
@@ -213,8 +207,6 @@
       font-size: 14px;
       font-weight: 800;
     }
-
-    .wowhead-link:hover { background: rgba(250,204,21,.16); }
 
     .eligible {
       margin: -4px 0 16px;
@@ -276,14 +268,6 @@
       .items { grid-template-columns: 1fr; }
       .details { min-height: auto; }
     }
-
-    @media (max-width: 620px) {
-      header { grid-template-columns: 52px 1fr 20px; padding: 14px; }
-      .back { width: 42px; height: 42px; }
-      main { width: min(100% - 20px, 1580px); gap: 16px; }
-      .details-header { display: block; }
-      .wowhead-link { margin-top: 12px; }
-    }
   </style>
 </head>
 <body>
@@ -297,9 +281,7 @@
   </header>
 
   <main>
-    <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots">
-      <h2 class="panel-title">Slot wählen</h2>
-    </section>
+    <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots"></section>
 
     <section class="panel items-panel" aria-label="Items">
       <h2 class="panel-title" id="itemsTitle">Items</h2>
@@ -313,81 +295,67 @@
       </div>
       <div class="eligible" id="eligibleClasses"></div>
       <div id="itemContent"></div>
-      <div class="hint">Die Items sind nach Ausrüstungsslot sortiert. Die P0-Spieler werden automatisch aus dem Google Sheet geladen. Im Sheet muss bei Raid <strong>BWL</strong> stehen.</div>
+      <div class="hint">Die Items sind nach Ausrüstungsslot sortiert. P0-Spieler und Anzahl werden aus dem Google Sheet geladen.</div>
     </section>
   </main>
 
   <script>
-    const slotOrder = [
-      "Kopf",
-      "Hals",
-      "Schulter",
-      "Rücken",
-      "Brust",
-      "Handgelenke",
-      "Hände",
-      "Taille",
-      "Beine",
-      "Füße",
-      "Finger",
-      "Schmuck",
-      "Schmuckstück",
-      "Waffe",
-      "Distanzwaffe"
-    ];
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=0";
+
+    const slotOrder = ["Kopf", "Hals", "Schulter", "Rücken", "Brust", "Handgelenke", "Hände", "Taille", "Beine", "Füße", "Finger", "Schmuck", "Schmuckstück", "Waffe", "Distanzwaffe"];
 
     const itemRows = [
-      { raid: "BWL", klasse: "Magier", item: "Neltharions Träne", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Neltharions Träne", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Magier", item: "Mantel der Pechschwingenkabale", slot: "Schulter" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Mantel der Pechschwingenkabale", slot: "Schulter" },
-      { raid: "BWL", klasse: "Priester", item: "Stiefel des reinen Gedankens", slot: "Füße" },
-      { raid: "BWL", klasse: "Paladin", item: "Stiefel des reinen Gedankens", slot: "Füße" },
-      { raid: "BWL", klasse: "Druide", item: "Stiefel des reinen Gedankens", slot: "Füße" },
-      { raid: "BWL", klasse: "Magier", item: "Edelstein des Gedankensprungs", slot: "Schmuckstück" },
-      { raid: "BWL", klasse: "Krieger", item: "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms", slot: "Waffe" },
-      { raid: "BWL", klasse: "Schurke", item: "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms", slot: "Waffe" },
-      { raid: "BWL", klasse: "Magier", item: "Armschienen der arkanen Präzision", slot: "Handgelenke" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Armschienen der arkanen Präzision", slot: "Handgelenke" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Band der dunklen Herrschaft", slot: "Finger" },
-      { raid: "BWL", klasse: "Magier", item: "Ringos Blizzardstiefel", slot: "Füße" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Ebenholzfarbene Flammenhandschuhe", slot: "Hände" },
-      { raid: "BWL", klasse: "Priester", item: "Edelstein der Verjüngung", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Paladin", item: "Edelstein der Verjüngung", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Druide", item: "Edelstein der Verjüngung", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Krieger", item: "Drachenfangzahn-Talisman", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Schurke", item: "Drachenfangzahn-Talisman", slot: "Schmuck" },
-      { raid: "BWL", klasse: "Magier", item: "Band der erzwungenen Konzentration", slot: "Finger" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Band der erzwungenen Konzentration", slot: "Finger" },
-      { raid: "BWL", klasse: "Priester", item: "Schleier des reinen Gedankens", slot: "Rücken" },
-      { raid: "BWL", klasse: "Paladin", item: "Schleier des reinen Gedankens", slot: "Rücken" },
-      { raid: "BWL", klasse: "Druide", item: "Schleier des reinen Gedankens", slot: "Rücken" },
-      { raid: "BWL", klasse: "Druide", item: "Gehärteter Drachenledergürtel", slot: "Taille" },
-      { raid: "BWL", klasse: "Druide", item: "Malfurions gesegnetes Bollwerk", slot: "Brust" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Angelistas Gespür", slot: "Taille" },
-      { raid: "BWL", klasse: "Priester", item: "Energieerfüllte Gamaschen", slot: "Beine" },
-      { raid: "BWL", klasse: "Paladin", item: "Energieerfüllte Gamaschen", slot: "Beine" },
-      { raid: "BWL", klasse: "Druide", item: "Energieerfüllte Gamaschen", slot: "Beine" },
-      { raid: "BWL", klasse: "Krieger", item: "Chromatische Stiefel", slot: "Füße" },
-      { raid: "BWL", klasse: "Jäger", item: "Ashjre'thul, Armbrust der Pein", slot: "Distanzwaffe" },
-      { raid: "BWL", klasse: "Krieger", item: "Chromatisch gehärtetes Schwert", slot: "Waffe" },
-      { raid: "BWL", klasse: "Schurke", item: "Chromatisch gehärtetes Schwert", slot: "Waffe" },
-      { raid: "BWL", klasse: "Priester", item: "Lok'amir il Romathis", slot: "Waffe" },
-      { raid: "BWL", klasse: "Paladin", item: "Lok'amir il Romathis", slot: "Waffe" },
-      { raid: "BWL", klasse: "Druide", item: "Lok'amir il Romathis", slot: "Waffe" },
-      { raid: "BWL", klasse: "Magier", item: "Stab der Schattenflamme", slot: "Waffe" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Stab der Schattenflamme", slot: "Waffe" },
-      { raid: "BWL", klasse: "Magier", item: "Mish'undare, Reif des Gedankenschinders", slot: "Kopf" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Mish'undare, Reif des Gedankenschinders", slot: "Kopf" },
-      { raid: "BWL", klasse: "Jäger", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
-      { raid: "BWL", klasse: "Schurke", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
-      { raid: "BWL", klasse: "Druide", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
-      { raid: "BWL", klasse: "Magier", item: "Umhang des Brutlords", slot: "Rücken" },
-      { raid: "BWL", klasse: "Hexenmeister", item: "Umhang des Brutlords", slot: "Rücken" },
-      { raid: "BWL", klasse: "Druide", item: "Stiefel der Schattenflamme", slot: "Füße" },
-      { raid: "BWL", klasse: "Priester", item: "Band aus reinem Elementium", slot: "Finger" },
-      { raid: "BWL", klasse: "Paladin", item: "Band aus reinem Elementium", slot: "Finger" },
-      { raid: "BWL", klasse: "Druide", item: "Band aus reinem Elementium", slot: "Finger" }
+      { klasse: "Magier", item: "Neltharions Träne", slot: "Schmuck" },
+      { klasse: "Hexenmeister", item: "Neltharions Träne", slot: "Schmuck" },
+      { klasse: "Magier", item: "Mantel der Pechschwingenkabale", slot: "Schulter" },
+      { klasse: "Hexenmeister", item: "Mantel der Pechschwingenkabale", slot: "Schulter" },
+      { klasse: "Priester", item: "Stiefel des reinen Gedankens", slot: "Füße" },
+      { klasse: "Paladin", item: "Stiefel des reinen Gedankens", slot: "Füße" },
+      { klasse: "Druide", item: "Stiefel des reinen Gedankens", slot: "Füße" },
+      { klasse: "Magier", item: "Edelstein des Gedankensprungs", slot: "Schmuckstück" },
+      { klasse: "Krieger", item: "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms", slot: "Waffe" },
+      { klasse: "Schurke", item: "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms", slot: "Waffe" },
+      { klasse: "Magier", item: "Armschienen der arkanen Präzision", slot: "Handgelenke" },
+      { klasse: "Hexenmeister", item: "Armschienen der arkanen Präzision", slot: "Handgelenke" },
+      { klasse: "Hexenmeister", item: "Band der dunklen Herrschaft", slot: "Finger" },
+      { klasse: "Magier", item: "Ringos Blizzardstiefel", slot: "Füße" },
+      { klasse: "Hexenmeister", item: "Ebenholzfarbene Flammenhandschuhe", slot: "Hände" },
+      { klasse: "Priester", item: "Edelstein der Verjüngung", slot: "Schmuck" },
+      { klasse: "Paladin", item: "Edelstein der Verjüngung", slot: "Schmuck" },
+      { klasse: "Druide", item: "Edelstein der Verjüngung", slot: "Schmuck" },
+      { klasse: "Krieger", item: "Drachenfangzahn-Talisman", slot: "Schmuck" },
+      { klasse: "Schurke", item: "Drachenfangzahn-Talisman", slot: "Schmuck" },
+      { klasse: "Magier", item: "Band der erzwungenen Konzentration", slot: "Finger" },
+      { klasse: "Hexenmeister", item: "Band der erzwungenen Konzentration", slot: "Finger" },
+      { klasse: "Priester", item: "Schleier des reinen Gedankens", slot: "Rücken" },
+      { klasse: "Paladin", item: "Schleier des reinen Gedankens", slot: "Rücken" },
+      { klasse: "Druide", item: "Schleier des reinen Gedankens", slot: "Rücken" },
+      { klasse: "Druide", item: "Gehärteter Drachenledergürtel", slot: "Taille" },
+      { klasse: "Druide", item: "Malfurions gesegnetes Bollwerk", slot: "Brust" },
+      { klasse: "Hexenmeister", item: "Angelistas Gespür", slot: "Taille" },
+      { klasse: "Priester", item: "Energieerfüllte Gamaschen", slot: "Beine" },
+      { klasse: "Paladin", item: "Energieerfüllte Gamaschen", slot: "Beine" },
+      { klasse: "Druide", item: "Energieerfüllte Gamaschen", slot: "Beine" },
+      { klasse: "Krieger", item: "Chromatische Stiefel", slot: "Füße" },
+      { klasse: "Jäger", item: "Ashjre'thul, Armbrust der Pein", slot: "Distanzwaffe" },
+      { klasse: "Krieger", item: "Chromatisch gehärtetes Schwert", slot: "Waffe" },
+      { klasse: "Schurke", item: "Chromatisch gehärtetes Schwert", slot: "Waffe" },
+      { klasse: "Priester", item: "Lok'amir il Romathis", slot: "Waffe" },
+      { klasse: "Paladin", item: "Lok'amir il Romathis", slot: "Waffe" },
+      { klasse: "Druide", item: "Lok'amir il Romathis", slot: "Waffe" },
+      { klasse: "Magier", item: "Stab der Schattenflamme", slot: "Waffe" },
+      { klasse: "Hexenmeister", item: "Stab der Schattenflamme", slot: "Waffe" },
+      { klasse: "Magier", item: "Mish'undare, Reif des Gedankenschinders", slot: "Kopf" },
+      { klasse: "Hexenmeister", item: "Mish'undare, Reif des Gedankenschinders", slot: "Kopf" },
+      { klasse: "Jäger", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
+      { klasse: "Schurke", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
+      { klasse: "Druide", item: "Prestors Talisman der Verschwörung", slot: "Hals" },
+      { klasse: "Magier", item: "Umhang des Brutlords", slot: "Rücken" },
+      { klasse: "Hexenmeister", item: "Umhang des Brutlords", slot: "Rücken" },
+      { klasse: "Druide", item: "Stiefel der Schattenflamme", slot: "Füße" },
+      { klasse: "Priester", item: "Band aus reinem Elementium", slot: "Finger" },
+      { klasse: "Paladin", item: "Band aus reinem Elementium", slot: "Finger" },
+      { klasse: "Druide", item: "Band aus reinem Elementium", slot: "Finger" }
     ];
 
     const wowheadLinks = {
@@ -398,15 +366,15 @@
       "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms": "https://www.wowhead.com/classic/item=19351/maladath-runed-blade-of-the-black-flight",
       "Armschienen der arkanen Präzision": "https://www.wowhead.com/classic/item=19374/bracers-of-arcane-accuracy",
       "Band der dunklen Herrschaft": "https://www.wowhead.com/classic/item=19434/band-of-dark-dominion",
-      "Ringos Blizzardstiefel": "https://www.wowhead.com/classic/item=19438/ringo's-blizzard-boots",
+      "Ringos Blizzardstiefel": "https://www.wowhead.com/classic/item=19438/ringos-blizzard-boots",
       "Ebenholzfarbene Flammenhandschuhe": "https://www.wowhead.com/classic/item=19407/ebony-flame-gloves",
       "Edelstein der Verjüngung": "https://www.wowhead.com/classic/item=19395/rejuvenating-gem",
       "Drachenfangzahn-Talisman": "https://www.wowhead.com/classic/item=19406/drake-fang-talisman",
       "Band der erzwungenen Konzentration": "https://www.wowhead.com/classic/item=19403/band-of-forced-concentration",
       "Schleier des reinen Gedankens": "https://www.wowhead.com/classic/item=19430/shroud-of-pure-thought",
       "Gehärteter Drachenledergürtel": "https://www.wowhead.com/classic/item=19396/taut-dragonhide-belt",
-      "Malfurions gesegnetes Bollwerk": "https://www.wowhead.com/classic/item=19405/malfurion's-blessed-bulwark",
-      "Angelistas Gespür": "https://www.wowhead.com/classic/item=19388/angelista's-grasp",
+      "Malfurions gesegnetes Bollwerk": "https://www.wowhead.com/classic/item=19405/malfurions-blessed-bulwark",
+      "Angelistas Gespür": "https://www.wowhead.com/classic/item=19388/angelistas-grasp",
       "Energieerfüllte Gamaschen": "https://www.wowhead.com/classic/item=19385/empowered-leggings",
       "Chromatische Stiefel": "https://www.wowhead.com/classic/item=19387/chromatic-boots",
       "Ashjre'thul, Armbrust der Pein": "https://www.wowhead.com/classic/item=19361/ashjrethul-crossbow-of-smiting",
@@ -420,38 +388,52 @@
       "Band aus reinem Elementium": "https://www.wowhead.com/classic/item=19382/pure-elementium-band"
     };
 
-    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=0";
-
     let p0Data = {};
     let selectedSlot = "Kopf";
     let selectedItem = "Mish'undare, Reif des Gedankenschinders";
 
+    function normalizeText(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/ä/g, "ae")
+        .replace(/ö/g, "oe")
+        .replace(/ü/g, "ue")
+        .replace(/ß/g, "ss")
+        .replace(/[’'`´]/g, "")
+        .replace(/[-–—]/g, " ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function findCanonicalItemName(sheetItemName) {
+      const knownItems = [...new Set(itemRows.map(row => row.item))];
+      const normalizedSheetName = normalizeText(sheetItemName);
+      return knownItems.find(item => normalizeText(item) === normalizedSheetName) || sheetItemName;
+    }
+
     function getItemsBySlot(slot) {
       const items = [];
-      itemRows
-        .filter(row => row.slot === slot)
-        .forEach(row => {
-          if (!items.includes(row.item)) items.push(row.item);
-        });
+      itemRows.filter(row => row.slot === slot).forEach(row => {
+        if (!items.includes(row.item)) items.push(row.item);
+      });
       return items;
     }
 
     function getEligibleClasses(item) {
       const classes = [];
-      itemRows
-        .filter(row => row.item === item)
-        .forEach(row => {
-          if (!classes.includes(row.klasse)) classes.push(row.klasse);
-        });
+      itemRows.filter(row => row.item === item).forEach(row => {
+        if (!classes.includes(row.klasse)) classes.push(row.klasse);
+      });
       return classes;
     }
 
     async function loadP0DataFromSheet() {
       try {
-        const response = await fetch(SHEET_CSV_URL + "&cachebust=" + Date.now());
+        const separator = SHEET_CSV_URL.includes("?") ? "&" : "?";
+        const response = await fetch(SHEET_CSV_URL + separator + "cachebust=" + Date.now());
         const csvText = await response.text();
         const rows = parseCSV(csvText);
-
         if (!rows.length) return;
 
         const header = rows.shift().map(h => h.trim().toLowerCase());
@@ -463,16 +445,15 @@
 
         rows.forEach(row => {
           const raid = raidIndex >= 0 ? row[raidIndex]?.trim() : "BWL";
-          const klasse = row[klasseIndex]?.trim();
-          const itemRaw = row[itemIndex]?.trim();
-          const spieler = row[spielerIndex]?.trim();
-          const anzahl = row[anzahlIndex]?.trim() || "1";
+          const klasse = klasseIndex >= 0 ? row[klasseIndex]?.trim() : "";
+          const itemRaw = itemIndex >= 0 ? row[itemIndex]?.trim() : "";
+          const spieler = spielerIndex >= 0 ? row[spielerIndex]?.trim() : "";
+          const anzahl = anzahlIndex >= 0 ? row[anzahlIndex]?.trim() || "1" : "1";
 
-          if (!klasse || !itemRaw || !spieler) return;
+          if (!itemRaw || !spieler) return;
           if (raid && raid.toLowerCase() !== "bwl") return;
 
-          const item = findMatchingItemName(itemRaw);
-
+          const item = findCanonicalItemName(itemRaw);
           if (!p0Data[item]) p0Data[item] = [];
           p0Data[item].push({ spieler, klasse, anzahl });
         });
@@ -486,6 +467,7 @@
       let currentRow = [];
       let currentValue = "";
       let insideQuotes = false;
+      const delimiter = detectDelimiter(text);
 
       for (let i = 0; i < text.length; i++) {
         const char = text[i];
@@ -496,7 +478,7 @@
           i++;
         } else if (char === '"') {
           insideQuotes = !insideQuotes;
-        } else if (char === "," && !insideQuotes) {
+        } else if (char === delimiter && !insideQuotes) {
           currentRow.push(currentValue);
           currentValue = "";
         } else if ((char === "\n" || char === "\r") && !insideQuotes) {
@@ -520,12 +502,17 @@
       return rows;
     }
 
+    function detectDelimiter(text) {
+      const firstLine = text.split(/\r?\n/)[0] || "";
+      const commas = (firstLine.match(/,/g) || []).length;
+      const semicolons = (firstLine.match(/;/g) || []).length;
+      return semicolons > commas ? ";" : ",";
+    }
+
     function renderSlots() {
       const wrapper = document.getElementById("slotButtons");
       wrapper.innerHTML = '<h2 class="panel-title">Slot wählen</h2>' + slotOrder.map(slot => `
-        <button class="slot-btn ${slot === selectedSlot ? "active" : ""}" onclick="selectSlot('${slot}')">
-          ${slot}
-        </button>
+        <button class="slot-btn ${slot === selectedSlot ? "active" : ""}" onclick="selectSlot('${slot}')">${slot}</button>
       `).join("");
     }
 
@@ -533,27 +520,21 @@
       document.getElementById("itemsTitle").textContent = selectedSlot + " · BWL Items";
       const wrapper = document.getElementById("itemButtons");
       const items = getItemsBySlot(selectedSlot);
-
-      wrapper.innerHTML = items.map(item => {
-        const classes = getEligibleClasses(item).join(", ");
-        return `
-          <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${item}\`)">
-            ${item}
-            <span class="item-meta">${classes}</span>
-          </button>
-        `;
-      }).join("");
+      wrapper.innerHTML = items.map(item => `
+        <button class="item-btn ${item === selectedItem ? "active" : ""}" onclick="selectItem(\`${item}\`)">
+          ${item}
+          <span class="item-meta">${getEligibleClasses(item).join(", ")}</span>
+        </button>
+      `).join("");
     }
 
     function renderDetails() {
       document.getElementById("itemTitle").textContent = selectedItem;
       document.getElementById("eligibleClasses").innerHTML = `<strong>Klassen:</strong> ${getEligibleClasses(selectedItem).join(", ")}`;
 
-      const wowhead = wowheadLinks[selectedItem];
       const link = document.getElementById("wowheadLink");
-
-      if (wowhead) {
-        link.href = wowhead;
+      if (wowheadLinks[selectedItem]) {
+        link.href = wowheadLinks[selectedItem];
         link.style.display = "inline-flex";
       } else {
         link.style.display = "none";
@@ -562,28 +543,16 @@
       const entries = p0Data[selectedItem] || [];
       const content = document.getElementById("itemContent");
 
-      if (entries.length === 0) {
+      if (!entries.length) {
         content.innerHTML = '<div class="empty">Für dieses Item ist aktuell noch kein Spieler mit P0 eingetragen.</div>';
         return;
       }
 
       content.innerHTML = `
         <table>
-          <thead>
-            <tr>
-              <th>Spieler</th>
-              <th>Klasse</th>
-              <th>P0 gesetzt</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Spieler</th><th>Klasse</th><th>P0 gesetzt</th></tr></thead>
           <tbody>
-            ${entries.map(entry => `
-              <tr>
-                <td>${entry.spieler}</td>
-                <td>${entry.klasse}</td>
-                <td>${entry.anzahl}x</td>
-              </tr>
-            `).join("")}
+            ${entries.map(entry => `<tr><td>${entry.spieler}</td><td>${entry.klasse}</td><td>${entry.anzahl}x</td></tr>`).join("")}
           </tbody>
         </table>
       `;
