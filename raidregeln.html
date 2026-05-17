@@ -8,13 +8,8 @@
   <style>
     :root{
       --gold:#facc15;
-      --gold-soft:rgba(250,204,21,.16);
-      --blue:#60a5fa;
-      --blue-soft:rgba(96,165,250,.14);
-      --green:#22c55e;
-      --orange:#fb923c;
       --bg:#08111f;
-      --panel:rgba(12,18,32,.84);
+      --panel:rgba(12,18,32,.86);
       --panel-strong:rgba(15,23,42,.94);
       --text:#f8fafc;
       --muted:#cbd5e1;
@@ -29,7 +24,7 @@
       font-family:Arial, Helvetica, sans-serif;
       color:var(--text);
       background:
-        linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.94)),
+        linear-gradient(rgba(8,17,31,.82), rgba(8,17,31,.94)),
         url('https://cdn.discordapp.com/attachments/1470114311794987201/1505009929394851981/Screenshot_2026-03-04_231132.jpeg?ex=6a091138&is=6a07bfb8&hm=a1ec0a102aa2326db202409acb16c86f8cb9a702be6ef1507c8f420e0635c669');
       background-size:cover;
       background-position:center;
@@ -44,8 +39,8 @@
     }
 
     .topbar{
-      width:min(1500px,100%);
-      margin:0 auto 28px;
+      width:min(1100px,100%);
+      margin:0 auto 24px;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -56,7 +51,6 @@
       display:inline-flex;
       align-items:center;
       justify-content:center;
-      gap:8px;
       min-height:46px;
       padding:0 18px;
       border-radius:999px;
@@ -89,49 +83,36 @@
     }
 
     .hero{
-      width:min(1500px,100%);
-      margin:0 auto 28px;
+      width:min(1100px,100%);
+      margin:0 auto 24px;
       position:relative;
       overflow:hidden;
-      min-height:320px;
-      border-radius:34px;
+      border-radius:30px;
       border:1px solid rgba(250,204,21,.22);
       background:
-        linear-gradient(120deg, rgba(8,17,31,.90), rgba(30,64,175,.36), rgba(146,64,14,.25)),
-        url('https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1600&q=80');
+        linear-gradient(120deg, rgba(8,17,31,.92), rgba(30,64,175,.28)),
+        url('https://cdn.discordapp.com/attachments/1494701087763075222/1505571044684206192/loot.jpg?ex=6a0b1bcd&is=6a09ca4d&hm=9307058f220ca607f4cf99e3bedb04485d8923923585aa891ff210e21c1bad22');
       background-size:cover;
       background-position:center;
       box-shadow:var(--shadow);
-      display:flex;
-      align-items:flex-end;
     }
 
     .hero::after{
       content:'';
       position:absolute;
       inset:0;
-      background:
-        radial-gradient(circle at 15% 20%, rgba(250,204,21,.22), transparent 30%),
-        radial-gradient(circle at 85% 25%, rgba(96,165,250,.15), transparent 28%),
-        linear-gradient(to top, rgba(8,17,31,.98), rgba(8,17,31,.18));
+      background:linear-gradient(to top, rgba(8,17,31,.98), rgba(8,17,31,.42));
       pointer-events:none;
     }
 
     .hero-content{
       position:relative;
       z-index:2;
-      padding:38px;
-      width:100%;
-      display:flex;
-      flex-direction:column;
-      align-items:flex-start;
-      gap:18px;
+      padding:36px;
     }
 
     .eyebrow{
       display:inline-flex;
-      align-items:center;
-      gap:8px;
       padding:8px 12px;
       border-radius:999px;
       color:var(--gold);
@@ -141,43 +122,38 @@
       font-weight:950;
       letter-spacing:.12em;
       text-transform:uppercase;
+      margin-bottom:16px;
     }
 
     h1{
-      font-size:clamp(36px,5vw,72px);
+      font-size:clamp(34px,5vw,64px);
       line-height:1;
       font-weight:950;
-      color:var(--text);
       text-shadow:0 0 24px rgba(250,204,21,.25);
     }
 
     .hero-text{
-      max-width:900px;
+      max-width:820px;
+      margin-top:14px;
       color:#dbeafe;
       line-height:1.65;
       font-size:16px;
       font-weight:650;
     }
 
-    .controls{
-      width:min(1500px,100%);
-      margin:0 auto 24px;
-      display:grid;
-      grid-template-columns:1fr;
-      gap:14px;
-      padding:18px;
-      border-radius:28px;
+    .content{
+      width:min(1100px,100%);
+      margin:0 auto;
       background:var(--panel);
       border:1px solid var(--line);
+      border-radius:28px;
       box-shadow:var(--shadow);
       backdrop-filter:blur(14px);
+      padding:22px;
     }
 
-    .search-row{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:12px;
-      align-items:center;
+    .search-box{
+      margin-bottom:22px;
     }
 
     #ruleSearch{
@@ -189,159 +165,27 @@
       color:var(--text);
       font-size:16px;
       font-weight:850;
-      box-shadow:0 12px 28px rgba(0,0,0,.26);
     }
 
     #ruleSearch:focus{
       outline:none;
       border-color:rgba(250,204,21,.78);
-      box-shadow:0 0 0 3px rgba(250,204,21,.18), 0 12px 28px rgba(0,0,0,.36);
-    }
-
-    .sync-state{
-      white-space:nowrap;
-      padding:12px 14px;
-      border-radius:999px;
-      color:#dbeafe;
-      background:rgba(96,165,250,.10);
-      border:1px solid rgba(96,165,250,.20);
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.08em;
-    }
-
-    .filter-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-    }
-
-    .filter-btn{
-      border:0;
-      cursor:pointer;
-      border-radius:999px;
-      padding:10px 14px;
-      color:var(--text);
-      background:linear-gradient(135deg, rgba(37,56,91,.98), rgba(16,25,45,.98));
-      border:1px solid rgba(255,255,255,.11);
-      font-weight:950;
-      transition:.16s ease;
-    }
-
-    .filter-btn:hover,
-    .filter-btn.active{
-      transform:translateY(-2px);
-      background:rgba(250,204,21,.16);
-      border-color:rgba(250,204,21,.42);
-      box-shadow:0 0 0 2px rgba(250,204,21,.12), 0 12px 24px rgba(0,0,0,.28);
-    }
-
-    .layout{
-      width:min(1500px,100%);
-      margin:auto;
-      display:grid;
-      grid-template-columns:300px 1fr;
-      gap:24px;
-      align-items:start;
-    }
-
-    .sidebar,
-    .content-panel{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      backdrop-filter:blur(14px);
-    }
-
-    .sidebar{
-      position:sticky;
-      top:18px;
-      padding:20px;
-    }
-
-    .panel-title{
-      color:var(--gold);
-      font-size:14px;
-      letter-spacing:.15em;
-      text-transform:uppercase;
-      font-weight:950;
-      margin-bottom:14px;
-    }
-
-    .toc{
-      display:grid;
-      gap:9px;
-    }
-
-    .toc a{
-      display:block;
-      padding:11px 12px;
-      border-radius:14px;
-      color:var(--muted);
-      text-decoration:none;
-      font-weight:850;
-      background:rgba(255,255,255,.045);
-      border:1px solid rgba(255,255,255,.07);
-      transition:.16s ease;
-    }
-
-    .toc a:hover{
-      color:var(--text);
-      background:rgba(250,204,21,.10);
-      border-color:rgba(250,204,21,.28);
-      transform:translateX(3px);
-    }
-
-    .content-panel{
-      padding:22px;
-      min-height:520px;
-    }
-
-    .summary-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-      gap:14px;
-      margin-bottom:22px;
-    }
-
-    .summary-card{
-      border-radius:22px;
-      padding:18px;
-      background:rgba(15,23,42,.72);
-      border:1px solid rgba(255,255,255,.09);
-      box-shadow:0 10px 26px rgba(0,0,0,.24);
-    }
-
-    .summary-card strong{
-      display:block;
-      color:var(--gold);
-      font-size:28px;
-      line-height:1;
-      margin-bottom:8px;
-    }
-
-    .summary-card span{
-      color:var(--muted);
-      font-size:13px;
-      font-weight:850;
-      text-transform:uppercase;
-      letter-spacing:.08em;
+      box-shadow:0 0 0 3px rgba(250,204,21,.18);
     }
 
     .section{
-      margin-bottom:22px;
-      border-radius:26px;
+      margin-bottom:18px;
+      border-radius:22px;
       overflow:hidden;
-      background:rgba(15,23,42,.78);
+      background:var(--panel-strong);
       border:1px solid rgba(255,255,255,.10);
-      box-shadow:0 14px 32px rgba(0,0,0,.30);
     }
 
+    .section:last-child{ margin-bottom:0; }
+
     .section-head{
-      padding:18px 20px;
-      background:linear-gradient(90deg, rgba(250,204,21,.18), rgba(96,165,250,.12));
+      padding:17px 20px;
+      background:linear-gradient(90deg, rgba(250,204,21,.20), rgba(96,165,250,.10));
       border-bottom:1px solid rgba(255,255,255,.10);
     }
 
@@ -352,50 +196,27 @@
       font-weight:950;
     }
 
-    .section-body{
+    .rule-list{
+      padding:18px;
       display:grid;
       gap:12px;
-      padding:18px;
     }
 
     .rule-card{
       padding:15px 16px;
-      border-radius:18px;
+      border-radius:16px;
       background:rgba(255,255,255,.045);
       border:1px solid rgba(255,255,255,.08);
       color:var(--muted);
-      font-size:15px;
       line-height:1.55;
+      font-size:15px;
       font-weight:760;
-    }
-
-    .rule-card.important{
-      border-color:rgba(250,204,21,.25);
-      background:rgba(250,204,21,.07);
-    }
-
-    .rule-card .label{
-      display:inline-flex;
-      margin-bottom:8px;
-      padding:5px 9px;
-      border-radius:999px;
-      color:#111827;
-      background:var(--gold);
-      font-size:11px;
-      font-weight:950;
-      letter-spacing:.08em;
-      text-transform:uppercase;
-    }
-
-    .rule-text{
       white-space:pre-wrap;
     }
 
-    mark{
-      background:rgba(250,204,21,.28);
-      color:var(--text);
-      border-radius:5px;
-      padding:0 2px;
+    .rule-card.important{
+      border-color:rgba(250,204,21,.28);
+      background:rgba(250,204,21,.075);
     }
 
     .empty{
@@ -408,18 +229,18 @@
       font-weight:800;
     }
 
-    @media(max-width:1050px){
-      .layout{ grid-template-columns:1fr; }
-      .sidebar{ position:relative; top:auto; }
+    mark{
+      background:rgba(250,204,21,.28);
+      color:var(--text);
+      border-radius:5px;
+      padding:0 2px;
     }
 
     @media(max-width:700px){
       .page{ padding:18px 14px 50px; }
       .topbar{ flex-direction:column; align-items:stretch; }
-      .hero{ min-height:360px; border-radius:26px; }
-      .hero-content{ padding:26px; }
-      .search-row{ grid-template-columns:1fr; }
-      .sync-state{ width:100%; text-align:center; }
+      .hero-content{ padding:28px; }
+      .content{ padding:16px; }
     }
   </style>
 </head>
@@ -436,62 +257,43 @@
         <span class="eyebrow">Lichtbringer · Regelwerk</span>
         <h1>Loot- und Raidregeln</h1>
         <p class="hero-text">
-          Übersichtliche Darstellung der aktuellen Lichtbringer-Regeln aus dem Google Sheet.
-          Änderungen im Sheet werden beim Neuladen der Seite automatisch übernommen.
+          Die wichtigsten Regeln für Raidteilnahme, P0/P0+, Lootvergabe und Vorbereitung.
+          Die Inhalte werden beim Neuladen direkt aus dem Google Sheet übernommen.
         </p>
       </div>
     </section>
 
-    <section class="controls">
-      <div class="search-row">
-        <input id="ruleSearch" type="search" placeholder="Regeln durchsuchen: z. B. Prio0, BWL, Consumables, Verzauberungen …" />
-        <div class="sync-state" id="syncState">Lade Sheet …</div>
+    <main class="content">
+      <div class="search-box">
+        <input id="ruleSearch" type="search" placeholder="Regeln durchsuchen …" />
       </div>
-      <div class="filter-row" id="filterButtons">
-        <button class="filter-btn active" data-filter="alle">Alle</button>
-        <button class="filter-btn" data-filter="mc">MC</button>
-        <button class="filter-btn" data-filter="bwl">BWL</button>
-        <button class="filter-btn" data-filter="aq40">AQ40</button>
-        <button class="filter-btn" data-filter="naxx">Naxx</button>
-        <button class="filter-btn" data-filter="zg">ZG</button>
-        <button class="filter-btn" data-filter="prio">Prio / Loot</button>
-        <button class="filter-btn" data-filter="verbrauch">Consumables</button>
-        <button class="filter-btn" data-filter="verzauberung">Verzauberungen</button>
-        <button class="filter-btn" data-filter="invite">Invite / Ersatzbank</button>
+
+      <div id="rulesContent">
+        <div class="empty">Lade Regeln aus dem Sheet …</div>
       </div>
-    </section>
-
-    <main class="layout">
-      <aside class="sidebar">
-        <h2 class="panel-title">Abschnitte</h2>
-        <nav class="toc" id="toc"></nav>
-      </aside>
-
-      <section class="content-panel">
-        <div class="summary-grid">
-          <div class="summary-card"><strong id="sectionCount">0</strong><span>Abschnitte</span></div>
-          <div class="summary-card"><strong id="ruleCount">0</strong><span>Regelpunkte</span></div>
-          <div class="summary-card"><strong id="visibleCount">0</strong><span>Sichtbar</span></div>
-        </div>
-        <div id="rulesContent"></div>
-      </section>
     </main>
   </div>
 
   <script>
     const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1Fzc5PFcw0MYbPIOzHJprLqrccfhN7QaaeIG3bK67RS8/export?format=csv&gid=0";
 
-    let rawRows = [];
-    let sections = [];
-    let activeFilter = "alle";
+    const CORE_KEYWORDS = [
+      "prio", "p0", "p0+", "loot", "raid", "invite", "ersatzbank", "anmeldung",
+      "verbrauch", "consum", "verzauber", "vz", "worldbuff", "buff", "vorbereitung",
+      "main", "twink", "freigabe", "teilnahme", "raidbeginn", "discord"
+    ];
 
-    const searchInput = document.getElementById("ruleSearch");
-    const syncState = document.getElementById("syncState");
+    const SECTION_TITLES = {
+      loot:"Loot & Prio-System",
+      raid:"Raidteilnahme & Anmeldung",
+      prep:"Vorbereitung: Buffs, Consumables & Verzauberungen",
+      orga:"Organisation & Verhalten"
+    };
+
+    let allRules = [];
+
     const rulesContent = document.getElementById("rulesContent");
-    const toc = document.getElementById("toc");
-    const sectionCount = document.getElementById("sectionCount");
-    const ruleCount = document.getElementById("ruleCount");
-    const visibleCount = document.getElementById("visibleCount");
+    const searchInput = document.getElementById("ruleSearch");
 
     function normalize(text){
       return String(text || "")
@@ -512,8 +314,11 @@
         .replace(/'/g,"&#039;");
     }
 
-    function slugify(text){
-      return normalize(text).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "abschnitt";
+    function highlight(text, query){
+      const safe = escapeHTML(text);
+      if(!query) return safe;
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return safe.replace(new RegExp(`(${escapedQuery})`, "gi"), "<mark>$1</mark>");
     }
 
     async function loadRules(){
@@ -521,14 +326,12 @@
         const separator = SHEET_CSV_URL.includes("?") ? "&" : "?";
         const response = await fetch(SHEET_CSV_URL + separator + "cachebust=" + Date.now());
         const csvText = await response.text();
-        rawRows = parseCSV(csvText);
-        sections = buildSections(rawRows);
-        syncState.textContent = "Sheet geladen";
-        renderAll();
+        const rows = parseCSV(csvText);
+        allRules = extractCoreRules(rows);
+        renderRules();
       }catch(error){
-        console.error("Fehler beim Laden der Raidregeln:", error);
-        syncState.textContent = "Sheet nicht erreichbar";
-        rulesContent.innerHTML = '<div class="empty">Die Raidregeln konnten nicht geladen werden. Bitte prüfe, ob das Google Sheet öffentlich lesbar ist.</div>';
+        console.error("Fehler beim Laden der Regeln:", error);
+        rulesContent.innerHTML = '<div class="empty">Die Regeln konnten nicht geladen werden. Bitte prüfe, ob das Google Sheet öffentlich lesbar ist.</div>';
       }
     }
 
@@ -586,146 +389,67 @@
         .map(cells => cells.join("\n"));
     }
 
-    function isHeading(text){
-      const n = normalize(text);
-      if(!n || n.length < 3) return false;
-      return (
-        n.includes("raidregeln") ||
-        n.startsWith("besonderheiten") ||
-        n.includes("verbrauchsmaterial") ||
-        n.includes("anforderung") ||
-        n.includes("verzauberungen") ||
-        n.includes("ersatzbank") ||
-        n.includes("invite") ||
-        n.includes("leistung im raid") ||
-        n.includes("klassenleiter") ||
-        n.includes("prio 0") ||
-        n.includes("prio 1-3") ||
-        /^[A-ZÄÖÜ0-9\s\-–:]+$/.test(text) && text.length <= 60
-      );
+    function extractCoreRules(rows){
+      const lines = flattenRows(rows);
+      const seen = new Set();
+
+      return lines
+        .map(line => line.replace(/\s+/g," ").trim())
+        .filter(line => line.length > 20)
+        .filter(line => CORE_KEYWORDS.some(keyword => normalize(line).includes(keyword)))
+        .map(line => ({ text:line, group:getGroup(line), important:isImportant(line) }))
+        .filter(rule => {
+          const key = normalize(rule.text);
+          if(seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0,40);
     }
 
-    function buildSections(rows){
-      const lines = flattenRows(rows);
-      const result = [];
-      let current = { title:"Allgemeine Regeln", rules:[] };
+    function getGroup(text){
+      const n = normalize(text);
+      if(n.includes("prio") || n.includes("loot") || n.includes("p0")) return "loot";
+      if(n.includes("verbrauch") || n.includes("consum") || n.includes("verzauber") || n.includes("vz") || n.includes("buff")) return "prep";
+      if(n.includes("invite") || n.includes("ersatzbank") || n.includes("anmeldung") || n.includes("raidbeginn") || n.includes("teilnahme")) return "raid";
+      return "orga";
+    }
 
-      lines.forEach(line => {
-        const cleaned = line.replace(/^\d+\s*$/g, "").trim();
-        if(!cleaned) return;
+    function isImportant(text){
+      const n = normalize(text);
+      return n.includes("30 minuten") || n.includes("p0") || n.includes("verzauber") || n.includes("verbrauch") || n.includes("invite") || n.includes("ersatzbank");
+    }
 
-        if(isHeading(cleaned)){
-          if(current.rules.length || current.title !== "Allgemeine Regeln"){
-            result.push(current);
-          }
-          current = { title:cleaned, rules:[] };
-        }else{
-          current.rules.push(cleaned);
-        }
+    function renderRules(){
+      const query = normalize(searchInput.value);
+      const groups = { loot:[], raid:[], prep:[], orga:[] };
+
+      allRules.forEach(rule => {
+        const matches = !query || normalize(rule.text).includes(query);
+        if(matches) groups[rule.group].push(rule);
       });
 
-      if(current.rules.length || current.title !== "Allgemeine Regeln"){
-        result.push(current);
-      }
-
-      return result.filter(section => section.title || section.rules.length);
-    }
-
-    function matchesFilter(section, rule){
-      if(activeFilter === "alle") return true;
-      const text = normalize(section.title + " " + rule);
-
-      const groups = {
-        mc:["mc", "molten", "mcrraid", "mcraid"],
-        bwl:["bwl", "pechschwingen", "nef", "vael", "firemaw"],
-        aq40:["aq40", "ahnqiraj", "naturresi", "skarabaen", "goetzen"],
-        naxx:["naxx", "naxxramas", "naxxkader"],
-        zg:["zg", "zandalar", "goetze"],
-        prio:["prio", "loot", "ffa", "roll", "p0", "p1", "p2", "p3"],
-        verbrauch:["verbrauch", "consum", "traenke", "elixier", "manaoel", "zauberoel", "runen", "verband", "wetzstein"],
-        verzauberung:["verzauber", "vz", "schulter vz", "item-slot"],
-        invite:["invite", "ersatzbank", "angemeldet", "raidkader", "raidplaner", "pull", "sahne"]
-      };
-
-      return (groups[activeFilter] || []).some(keyword => text.includes(keyword));
-    }
-
-    function highlight(text, query){
-      const safe = escapeHTML(text);
-      if(!query) return safe;
-
-      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      if(!escapedQuery) return safe;
-
-      return safe.replace(new RegExp(`(${escapedQuery})`, "gi"), "<mark>$1</mark>");
-    }
-
-    function renderAll(){
-      const query = normalize(searchInput.value);
-      let visibleRules = 0;
-      let totalRules = sections.reduce((sum, section) => sum + section.rules.length, 0);
-
-      sectionCount.textContent = sections.length;
-      ruleCount.textContent = totalRules;
-
-      const renderedSections = sections.map((section, index) => {
-        const filteredRules = section.rules.filter(rule => {
-          const fullText = normalize(section.title + " " + rule);
-          const searchMatch = !query || fullText.includes(query);
-          const filterMatch = matchesFilter(section, rule);
-          return searchMatch && filterMatch;
-        });
-
-        if(!filteredRules.length) return "";
-
-        visibleRules += filteredRules.length;
-        const id = slugify(section.title) + "-" + index;
-
-        return `
-          <section class="section" id="${id}" data-title="${escapeHTML(section.title)}">
+      const html = Object.entries(groups)
+        .filter(([,rules]) => rules.length)
+        .map(([group,rules]) => `
+          <section class="section">
             <div class="section-head">
-              <h2>${highlight(section.title, query)}</h2>
+              <h2>${SECTION_TITLES[group]}</h2>
             </div>
-            <div class="section-body">
-              ${filteredRules.map(rule => `
-                <article class="rule-card ${isImportantRule(rule) ? "important" : ""}">
-                  ${isImportantRule(rule) ? '<span class="label">Wichtig</span>' : ''}
-                  <div class="rule-text">${highlight(rule, query)}</div>
+            <div class="rule-list">
+              ${rules.map(rule => `
+                <article class="rule-card ${rule.important ? "important" : ""}">
+                  ${highlight(rule.text, query)}
                 </article>
               `).join("")}
             </div>
           </section>
-        `;
-      }).join("");
+        `).join("");
 
-      visibleCount.textContent = visibleRules;
-      rulesContent.innerHTML = renderedSections || '<div class="empty">Keine passenden Regeln gefunden. Bitte Suche oder Filter anpassen.</div>';
-      renderToc();
+      rulesContent.innerHTML = html || '<div class="empty">Keine passenden Kerninformationen gefunden.</div>';
     }
 
-    function renderToc(){
-      const visibleSections = [...document.querySelectorAll(".section")];
-      toc.innerHTML = visibleSections.length
-        ? visibleSections.map(section => `<a href="#${section.id}">${escapeHTML(section.dataset.title)}</a>`).join("")
-        : '<div class="empty">Keine Abschnitte sichtbar.</div>';
-    }
-
-    function isImportantRule(rule){
-      const text = normalize(rule);
-      return text.includes("prio0") || text.includes("prio 0") || text.includes("30 minuten") || text.includes("15uhr") || text.includes("verzauber") || text.includes("verbrauch") || text.includes("ersatzbank");
-    }
-
-    document.querySelectorAll(".filter-btn").forEach(button => {
-      button.addEventListener("click", () => {
-        document.querySelectorAll(".filter-btn").forEach(btn => btn.classList.remove("active"));
-        button.classList.add("active");
-        activeFilter = button.dataset.filter;
-        renderAll();
-      });
-    });
-
-    searchInput.addEventListener("input", renderAll);
-
+    searchInput.addEventListener("input", renderRules);
     loadRules();
   </script>
 </body>
