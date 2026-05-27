@@ -299,8 +299,18 @@
     .slot-btn:hover,
     .slot-btn.active{
       transform:translateX(5px);
-      background:linear-gradient(135deg, rgba(59,86,135,.98), rgba(25,39,68,.98));
-      box-shadow:0 0 0 3px rgba(250,204,21,.20), 0 12px 28px rgba(0,0,0,.32);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(250,204,21,.38),
+          rgba(120,80,10,.88)
+        );
+      border-left:5px solid #facc15;
+      color:#fff7cc;
+      box-shadow:
+        0 0 0 3px rgba(250,204,21,.25),
+        0 0 22px rgba(250,204,21,.35),
+        0 12px 28px rgba(0,0,0,.32);
     }
 
     .items-panel{ padding:20px; }
@@ -363,8 +373,23 @@
     .item-card:hover,
     .item-card.active{
       transform:translateY(-4px);
-      border-color:rgba(250,204,21,.42);
-      box-shadow:0 0 0 2px rgba(250,204,21,.18), 0 18px 38px rgba(0,0,0,.42);
+      background:
+        radial-gradient(
+          circle at top left,
+          rgba(255,220,120,.35),
+          transparent 35%
+        ),
+        linear-gradient(
+          180deg,
+          rgba(180,120,20,.95),
+          rgba(90,55,5,.96)
+        );
+      border-color:rgba(250,204,21,.85);
+      color:#fff7cc;
+      box-shadow:
+        0 0 0 2px rgba(250,204,21,.30),
+        0 0 28px rgba(250,204,21,.28),
+        0 18px 38px rgba(0,0,0,.42);
     }
 
     .item-name{
