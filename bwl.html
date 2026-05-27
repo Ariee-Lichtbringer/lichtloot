@@ -18,11 +18,7 @@
       --shadow:0 22px 55px rgba(0,0,0,.48);
     }
 
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-    }
+    *{ margin:0; padding:0; box-sizing:border-box; }
 
     body{
       min-height:100vh;
@@ -265,9 +261,7 @@
       backdrop-filter:blur(14px);
     }
 
-    .panel-head{
-      padding:20px 20px 0;
-    }
+    .panel-head{ padding:20px 20px 0; }
 
     .panel-title{
       color:var(--gold);
@@ -302,23 +296,11 @@
     .slot-btn:hover,
     .slot-btn.active{
       transform:translateX(5px);
-      background:
-        linear-gradient(
-          135deg,
-          rgba(250,204,21,.38),
-          rgba(120,80,10,.88)
-        );
-      border-left:5px solid #facc15;
-      color:#fff7cc;
-      box-shadow:
-        0 0 0 3px rgba(250,204,21,.25),
-        0 0 22px rgba(250,204,21,.35),
-        0 12px 28px rgba(0,0,0,.32);
+      background:linear-gradient(135deg, rgba(59,86,135,.98), rgba(25,39,68,.98));
+      box-shadow:0 0 0 3px rgba(250,204,21,.20), 0 12px 28px rgba(0,0,0,.32);
     }
 
-    .items-panel{
-      padding:20px;
-    }
+    .items-panel{ padding:20px; }
 
     .items-title-row{
       display:flex;
@@ -378,30 +360,585 @@
     .item-card:hover,
     .item-card.active{
       transform:translateY(-4px);
+      border-color:rgba(250,204,21,.42);
+      box-shadow:0 0 0 2px rgba(250,204,21,.18), 0 18px 38px rgba(0,0,0,.42);
+    }
+
+    .item-name{
+      display:block;
+      padding-right:24px;
+      font-size:17px;
+      font-weight:950;
+      line-height:1.28;
+    }
+
+    .details{
+      padding:24px;
+      min-height:610px;
       background:
-        radial-gradient(
-          circle at top left,
-          rgba(255,220,120,.35),
-          transparent 35%
-        ),
-        linear-gradient(
-          180deg,
-          rgba(180,120,20,.95),
-          rgba(90,55,5,.96)
-        );
-      border-color:rgba(250,204,21,.85);
-      color:#fff7cc;
-      box-shadow:
-        0 0 0 2px rgba(250,204,21,.30),
-        0 0 28px rgba(250,204,21,.28),
-        0 18px 38px rgba(0,0,0,.42);
+        radial-gradient(circle at top left, rgba(250,204,21,.10), transparent 30%),
+        var(--panel-strong);
+    }
+
+    .details-header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      padding-bottom:18px;
+      margin-bottom:18px;
+      border-bottom:1px solid rgba(250,204,21,.18);
+    }
+
+    .details h2{
+      color:var(--gold);
+      font-size:clamp(25px,3vw,38px);
+      line-height:1.12;
+      font-weight:950;
+    }
+
+    .wowhead-link{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:10px 14px;
+      border-radius:999px;
+      color:var(--gold);
+      text-decoration:none;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(250,204,21,.08);
+      font-size:13px;
+      font-weight:950;
+      transition:.16s ease;
+    }
+
+    .wowhead-link:hover{
+      background:rgba(250,204,21,.16);
+      transform:translateY(-2px);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:18px;
+      background:rgba(255,255,255,.035);
+    }
+
+    th{
+      padding:14px 13px;
+      background:linear-gradient(90deg, rgba(250,204,21,.28), rgba(96,165,250,.18));
+      color:var(--text);
+      text-align:left;
+      font-size:13px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    td{
+      padding:15px 13px;
+      border-bottom:1px solid rgba(255,255,255,.09);
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    tr:last-child td{ border-bottom:0; }
+
+    .prio-badge{
+      display:inline-flex;
+      min-width:42px;
+      align-items:center;
+      justify-content:center;
+      padding:6px 10px;
+      border-radius:999px;
+      color:var(--gold);
+      background:rgba(250,204,21,.10);
+      border:1px solid rgba(250,204,21,.24);
+      font-weight:950;
+    }
+
+    .empty{
+      padding:20px;
+      border:1px dashed rgba(250,204,21,.32);
+      border-radius:20px;
+      color:var(--muted);
+      background:rgba(250,204,21,.055);
+      line-height:1.55;
+      font-weight:800;
+    }
+
+    @media(max-width:1180px){
+      .layout{ grid-template-columns:1fr; }
+      .hero-content{ align-items:center; }
+    }
+
+    @media(max-width:700px){
+      .page{ padding:18px 14px 50px; }
+      .topbar{ flex-direction:column; align-items:stretch; }
+      .hero{ min-height:460px; border-radius:26px; }
+      .hero::after{ border-radius:26px; }
+      .hero-content{ flex-direction:column; align-items:flex-start; padding:26px; }
+      .hero-icon{ width:116px; height:116px; }
+      .search-results{ position:relative; top:auto; }
+      .items{ grid-template-columns:1fr; }
+      .details-header{ display:block; }
+      .wowhead-link{ margin-top:14px; }
     }
   </style>
 </head>
 
 <body>
   <div class="page">
-    TEST
+
+    <div class="topbar">
+      <a class="back" href="index.html">← Zur Startseite</a>
+      <div class="status-pill">Blackwing Lair · Prio 0 Plus</div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-content">
+        <img
+          class="hero-icon"
+          src="./images/bwl.jpg"
+          alt="BWL Icon"
+        />
+
+        <div class="hero-text">
+          <h1>Blackwing Lair</h1>
+
+          <div class="hero-tags">
+            <span class="tag">BWL</span>
+            <span class="tag">Sheet Sync</span>
+            <span class="tag">Prio 0 Plus</span>
+          </div>
+
+          <div class="hero-search">
+            <input
+              id="globalSearch"
+              type="text"
+              placeholder="Item oder Spieler suchen ..."
+              autocomplete="off"
+            />
+            <div id="searchResults" class="search-results"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="panel slots" id="slotButtons" aria-label="Ausrüstungsslots"></section>
+
+      <section class="panel items-panel" aria-label="Items">
+        <div class="items-title-row">
+          <h2 class="panel-title" id="itemsTitle">Items</h2>
+          <div class="item-count" id="itemCount">0 Items</div>
+        </div>
+        <div class="items" id="itemButtons"></div>
+      </section>
+
+      <section class="panel details" aria-label="P0-Liste">
+        <div class="details-header">
+          <h2 id="itemTitle">Item auswählen</h2>
+          <a id="wowheadLink" class="wowhead-link" href="#" target="_blank" rel="noopener">Wowhead</a>
+        </div>
+        <div id="itemContent"></div>
+      </section>
+    </main>
+
   </div>
+
+  <script>
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/export?format=csv&gid=1857830583";
+    const CURRENT_RAID = "BWL";
+
+    const preferredSlotOrder = [
+      "Kopf", "Hals", "Schulter", "Rücken", "Brust", "Handgelenke", "Hände",
+      "Taille", "Beine", "Füße", "Finger", "Schmuck", "Schmuckstück", "Waffe", "Distanzwaffe"
+    ];
+
+    const wowheadLinks = {
+      "Neltharions Träne": "https://www.wowhead.com/classic/item=19379/neltharions-tear",
+      "Drachenfangzahn-Talisman": "https://www.wowhead.com/classic/item=19406/drake-fang-talisman",
+      "Ashjre'thul, Armbrust der Pein": "https://www.wowhead.com/classic/item=19361/ashjrethul-crossbow-of-smiting",
+      "Chromatisch gehärtetes Schwert": "https://www.wowhead.com/classic/item=19352/chromatically-tempered-sword",
+      "Lok'amir il Romathis": "https://www.wowhead.com/classic/item=19360/lokamir-il-romathis",
+      "Stab der Schattenflamme": "https://www.wowhead.com/classic/item=19356/staff-of-the-shadow-flame"
+    };
+
+    let rowsFromSheet = [];
+    let selectedSlot = "";
+    let selectedItem = "";
+
+    function normalizeHeader(text){
+      return String(text || "")
+        .toLowerCase()
+        .replace(/ä/g,"ae")
+        .replace(/ö/g,"oe")
+        .replace(/ü/g,"ue")
+        .replace(/ß/g,"ss")
+        .replace(/\s+/g,"")
+        .trim();
+    }
+
+    function normalizeSearch(text){
+      return String(text || "")
+        .toLowerCase()
+        .replace(/ä/g,"ae")
+        .replace(/ö/g,"oe")
+        .replace(/ü/g,"ue")
+        .replace(/ß/g,"ss")
+        .trim();
+    }
+
+    function getField(row,names){
+      for(const name of names){
+        if(row[name] !== undefined) return row[name];
+      }
+      return "";
+    }
+
+    function escapeHTML(value){
+      return String(value || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+    }
+
+    async function loadRowsFromSheet(){
+      try{
+        const separator = SHEET_CSV_URL.includes("?") ? "&" : "?";
+        const response = await fetch(SHEET_CSV_URL + separator + "cachebust=" + Date.now());
+        const csvText = await response.text();
+        const table = parseCSV(csvText);
+
+        if(!table.length) return;
+
+        const headers = table.shift().map(header => normalizeHeader(header));
+
+        rowsFromSheet = table.map(row => {
+          const obj = {};
+          headers.forEach((header,index) => {
+            obj[header] = (row[index] || "").trim();
+          });
+          return obj;
+        }).filter(row => {
+          const raid = getField(row,["raid"]);
+          const item = getField(row,["item"]);
+          const slot = getField(row,["slot","platz","ausruestungsslot"]);
+          return item && slot && (!raid || raid.toLowerCase() === CURRENT_RAID.toLowerCase());
+        });
+
+        const slots = getSlots();
+        selectedSlot = slots[0] || "";
+        selectedItem = selectedSlot ? getItemsBySlot(selectedSlot)[0] : "";
+      }catch(error){
+        console.error("Fehler beim Laden der Google-Sheet-Daten:", error);
+      }
+    }
+
+    function getSlots(){
+      const slots = [...new Set(rowsFromSheet.map(row => getField(row,["slot","platz","ausruestungsslot"])))].filter(Boolean);
+
+      return slots.sort((a,b) => {
+        const aIndex = preferredSlotOrder.indexOf(a);
+        const bIndex = preferredSlotOrder.indexOf(b);
+        if(aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if(aIndex === -1) return 1;
+        if(bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+    }
+
+    function getItemsBySlot(slot){
+      return [...new Set(
+        rowsFromSheet
+          .filter(row => getField(row,["slot","platz","ausruestungsslot"]) === slot)
+          .map(row => getField(row,["item"]))
+          .filter(Boolean)
+      )];
+    }
+
+    function getP0Entries(item){
+      return rowsFromSheet
+        .filter(row => getField(row,["item"]) === item)
+        .map(row => ({
+          spieler:getField(row,["spieler","player","name"]),
+          anzahl:getField(row,["anzahl","p0","prio","count"]) || "1"
+        }))
+        .filter(entry => entry.spieler);
+    }
+
+    function parseCSV(text){
+      const rows = [];
+      let currentRow = [];
+      let currentValue = "";
+      let insideQuotes = false;
+      const delimiter = detectDelimiter(text);
+
+      for(let i=0;i<text.length;i++){
+        const char = text[i];
+        const nextChar = text[i+1];
+
+        if(char === '"' && insideQuotes && nextChar === '"'){
+          currentValue += '"';
+          i++;
+        }else if(char === '"'){
+          insideQuotes = !insideQuotes;
+        }else if(char === delimiter && !insideQuotes){
+          currentRow.push(currentValue);
+          currentValue = "";
+        }else if((char === "\n" || char === "\r") && !insideQuotes){
+          if(currentValue || currentRow.length){
+            currentRow.push(currentValue);
+            rows.push(currentRow);
+          }
+          currentRow = [];
+          currentValue = "";
+          if(char === "\r" && nextChar === "\n") i++;
+        }else{
+          currentValue += char;
+        }
+      }
+
+      if(currentValue || currentRow.length){
+        currentRow.push(currentValue);
+        rows.push(currentRow);
+      }
+
+      return rows;
+    }
+
+    function detectDelimiter(text){
+      const firstLine = text.split(/\r?\n/)[0] || "";
+      const commas = (firstLine.match(/,/g) || []).length;
+      const semicolons = (firstLine.match(/;/g) || []).length;
+      return semicolons > commas ? ";" : ",";
+    }
+
+    function renderSlots(){
+      const wrapper = document.getElementById("slotButtons");
+      const slots = getSlots();
+
+      if(!slots.length){
+        wrapper.innerHTML = '<div class="panel-head"><h2 class="panel-title">Slot wählen</h2></div><div class="slots"><div class="empty">Keine BWL-Daten im Sheet gefunden.</div></div>';
+        return;
+      }
+
+      wrapper.innerHTML = '<div class="panel-head"><h2 class="panel-title">Slot wählen</h2></div><div class="slots">' + slots.map(slot => `
+        <button class="slot-btn ${slot === selectedSlot ? "active" : ""}" onclick="selectSlot('${escapeHTML(slot)}')">${escapeHTML(slot)}</button>
+      `).join("") + '</div>';
+    }
+
+    function renderItems(){
+      const items = selectedSlot ? getItemsBySlot(selectedSlot) : [];
+      document.getElementById("itemsTitle").textContent = selectedSlot ? selectedSlot + " · BWL Items" : "BWL Items";
+      document.getElementById("itemCount").textContent = items.length === 1 ? "1 Item" : items.length + " Items";
+
+      const wrapper = document.getElementById("itemButtons");
+
+      if(!items.length){
+        wrapper.innerHTML = '<div class="empty">Für diesen Slot gibt es aktuell keine Items im Sheet.</div>';
+        return;
+      }
+
+      wrapper.innerHTML = items.map(item => `
+        <button class="item-card ${item === selectedItem ? "active" : ""}" onclick="selectItemByValue(this.dataset.item)" data-item="${escapeHTML(item)}">
+          <span class="item-name">${escapeHTML(item)}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderDetails(){
+      const title = document.getElementById("itemTitle");
+      const content = document.getElementById("itemContent");
+      const link = document.getElementById("wowheadLink");
+
+      if(!selectedItem){
+        title.textContent = "Item auswählen";
+        content.innerHTML = '<div class="empty">Bitte wähle links einen Slot und anschließend ein Item aus.</div>';
+        link.style.display = "none";
+        return;
+      }
+
+      title.textContent = selectedItem;
+
+      if(wowheadLinks[selectedItem]){
+        link.href = wowheadLinks[selectedItem];
+        link.style.display = "inline-flex";
+      }else{
+        link.style.display = "none";
+      }
+
+      const entries = getP0Entries(selectedItem);
+
+      if(!entries.length){
+        content.innerHTML = '<div class="empty">Für dieses Item ist aktuell noch kein Spieler mit P0 eingetragen.</div>';
+        return;
+      }
+
+      content.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>P0+</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${entries.map(entry => `
+              <tr>
+                <td>${escapeHTML(entry.spieler)}</td>
+                <td><span class="prio-badge">${escapeHTML(entry.anzahl)}x</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function selectSlot(slot){
+      selectedSlot = slot;
+      selectedItem = getItemsBySlot(slot)[0] || "";
+      renderAll();
+    }
+
+    function selectItem(itemName){
+      selectedItem = itemName;
+      renderAll();
+    }
+
+    function selectItemByValue(itemName){
+      selectItem(itemName);
+    }
+
+    function findSlotByItem(item){
+      const row = rowsFromSheet.find(row => getField(row,["item"]) === item);
+      return row ? getField(row,["slot","platz","ausruestungsslot"]) : "";
+    }
+
+    function jumpToItem(item){
+      const slot = findSlotByItem(item);
+      if(!slot) return;
+
+      selectedSlot = slot;
+      selectedItem = item;
+      renderAll();
+      closeSearchResults();
+
+      const details = document.querySelector(".details");
+      if(details){
+        details.scrollIntoView({ behavior:"smooth", block:"start" });
+      }
+    }
+
+    function getSearchEntries(){
+      const itemEntries = [...new Set(
+        rowsFromSheet
+          .map(row => getField(row,["item"]))
+          .filter(Boolean)
+      )].map(item => ({
+        label:item,
+        item:item,
+        meta:"Item auswählen"
+      }));
+
+      const playerEntries = rowsFromSheet
+        .map(row => ({
+          spieler:getField(row,["spieler","player","name"]),
+          item:getField(row,["item"]),
+          slot:getField(row,["slot","platz","ausruestungsslot"]),
+          anzahl:getField(row,["anzahl","p0","prio","count"]) || "1"
+        }))
+        .filter(entry => entry.spieler && entry.item)
+        .map(entry => ({
+          label:entry.spieler + " → " + entry.item,
+          item:entry.item,
+          meta:[entry.slot, "P0+ " + entry.anzahl + "x"].filter(Boolean).join(" · ")
+        }));
+
+      return [...itemEntries, ...playerEntries];
+    }
+
+    function renderGlobalSearch(){
+      const input = document.getElementById("globalSearch");
+      const results = document.getElementById("searchResults");
+      if(!input || !results) return;
+
+      const query = normalizeSearch(input.value);
+
+      if(!query){
+        closeSearchResults();
+        return;
+      }
+
+      const matches = getSearchEntries()
+        .filter(entry => normalizeSearch(entry.label + " " + entry.meta).includes(query))
+        .slice(0,18);
+
+      if(!matches.length){
+        results.innerHTML = '<div class="search-empty">Keine Treffer gefunden.</div>';
+        results.style.display = "block";
+        return;
+      }
+
+      results.innerHTML = matches.map((entry,index) => `
+        <button class="search-result-btn" type="button" data-search-index="${index}">
+          ${escapeHTML(entry.label)}
+          <span class="search-small">${escapeHTML(entry.meta)}</span>
+        </button>
+      `).join("");
+
+      results.querySelectorAll(".search-result-btn").forEach((button,index) => {
+        button.addEventListener("click", () => {
+          const entry = matches[index];
+          jumpToItem(entry.item);
+        });
+      });
+
+      results.style.display = "block";
+    }
+
+    function closeSearchResults(){
+      const results = document.getElementById("searchResults");
+      if(results){
+        results.style.display = "none";
+        results.innerHTML = "";
+      }
+    }
+
+    function setupGlobalSearch(){
+      const input = document.getElementById("globalSearch");
+      if(!input) return;
+
+      input.addEventListener("input", renderGlobalSearch);
+      input.addEventListener("keydown", event => {
+        if(event.key === "Escape"){
+          input.value = "";
+          closeSearchResults();
+        }
+      });
+
+      document.addEventListener("click", event => {
+        const searchBox = document.querySelector(".hero-search");
+        if(searchBox && !searchBox.contains(event.target)){
+          closeSearchResults();
+        }
+      });
+    }
+
+    function renderAll(){
+      renderSlots();
+      renderItems();
+      renderDetails();
+    }
+
+    loadRowsFromSheet().then(() => {
+      renderAll();
+      setupGlobalSearch();
+    });
+  </script>
 </body>
 </html>
