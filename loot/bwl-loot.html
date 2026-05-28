@@ -12,23 +12,19 @@
   --text:#f8fafc;
   --muted:#cbd5e1;
   --line:rgba(255,255,255,.12);
+  --danger:#ef4444;
+  --green:#22c55e;
 }
 
-*{
-  box-sizing:border-box;
-  margin:0;
-  padding:0;
-}
+*{box-sizing:border-box;margin:0;padding:0}
 
 body{
   min-height:100vh;
-  font-family:Arial,sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   color:var(--text);
-
   background:
     linear-gradient(rgba(8,17,31,.80), rgba(8,17,31,.94)),
     url('../images/bwl.jpg');
-
   background-size:cover;
   background-position:center;
   background-attachment:fixed;
@@ -43,15 +39,15 @@ body{
 .topbar{
   width:min(1600px,100%);
   margin:0 auto 28px;
-
   display:flex;
   justify-content:space-between;
+  align-items:center;
   gap:16px;
   flex-wrap:wrap;
 }
 
 .back{
-  color:white;
+  color:var(--text);
   text-decoration:none;
   font-weight:800;
   border:1px solid var(--line);
@@ -60,6 +56,8 @@ body{
   background:rgba(12,18,32,.72);
 }
 
+.back:hover{border-color:rgba(250,204,21,.45)}
+
 .header{
   width:min(1600px,100%);
   margin:0 auto 28px;
@@ -67,6 +65,7 @@ body{
   border-radius:24px;
   background:var(--panel);
   border:1px solid rgba(250,204,21,.22);
+  box-shadow:0 20px 45px rgba(0,0,0,.45);
 }
 
 h1{
@@ -94,6 +93,7 @@ h1{
   border:1px solid var(--line);
   border-radius:22px;
   padding:22px;
+  box-shadow:0 18px 40px rgba(0,0,0,.38);
 }
 
 h2{
@@ -102,23 +102,58 @@ h2{
   font-size:22px;
 }
 
+h3{
+  color:var(--gold);
+  margin:22px 0 10px;
+  font-size:18px;
+}
+
 label{
   display:block;
-  color:#cbd5e1;
+  color:var(--muted);
   font-size:12px;
   font-weight:800;
   margin:14px 0 7px;
   text-transform:uppercase;
+  letter-spacing:.08em;
 }
 
-input,select{
+input, select{
   width:100%;
   padding:12px 13px;
   border-radius:12px;
   border:1px solid rgba(255,255,255,.16);
   background:rgba(2,6,23,.82);
-  color:white;
+  color:var(--text);
   font-size:14px;
+}
+
+.search-box{
+  margin-bottom:14px;
+  position:relative;
+}
+
+.search-box input{
+  padding-left:38px;
+  border-color:rgba(250,204,21,.25);
+  background:rgba(2,6,23,.88);
+}
+
+.search-icon{
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#facc15;
+  font-size:15px;
+  pointer-events:none;
+}
+
+.search-hint{
+  color:var(--muted);
+  font-size:12px;
+  margin:-6px 0 12px;
+  line-height:1.4;
 }
 
 .btn{
@@ -128,9 +163,15 @@ input,select{
   border-radius:14px;
   border:1px solid rgba(250,204,21,.25);
   background:linear-gradient(135deg,rgba(250,204,21,.28),rgba(96,165,250,.18));
-  color:white;
+  color:var(--text);
   font-weight:900;
   cursor:pointer;
+  transition:.18s;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  border-color:rgba(250,204,21,.55);
 }
 
 .status{
@@ -139,30 +180,14 @@ input,select{
   border-radius:14px;
   border:1px solid var(--line);
   background:rgba(2,6,23,.55);
+  color:#dbeafe;
   line-height:1.6;
   font-size:13px;
 }
 
-.ok{color:#22c55e;font-weight:900}
-.bad{color:#ef4444;font-weight:900}
-.warn{color:#facc15;font-weight:900}
-
-.search-box{
-  margin-bottom:14px;
-  position:relative;
-}
-
-.search-box input{
-  padding-left:38px;
-}
-
-.search-icon{
-  position:absolute;
-  left:13px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#facc15;
-}
+.ok{color:var(--green);font-weight:900}
+.bad{color:var(--danger);font-weight:900}
+.warn{color:var(--gold);font-weight:900}
 
 .loot-list{
   display:flex;
@@ -170,6 +195,7 @@ input,select{
   gap:8px;
   max-height:700px;
   overflow:auto;
+  padding-right:4px;
 }
 
 .loot-item-row{
@@ -181,6 +207,13 @@ input,select{
   border-radius:12px;
   background:rgba(2,6,23,.72);
   border:1px solid rgba(255,255,255,.10);
+  transition:.18s;
+}
+
+.loot-item-row:hover{
+  transform:translateX(4px);
+  border-color:rgba(250,204,21,.45);
+  background:rgba(15,23,42,.92);
 }
 
 .loot-name{
@@ -193,6 +226,7 @@ input,select{
   display:flex;
   gap:6px;
   flex-wrap:wrap;
+  justify-content:flex-end;
 }
 
 .mini-btn{
@@ -204,10 +238,32 @@ input,select{
   font-size:10px;
   font-weight:900;
   cursor:pointer;
+  transition:.15s;
+}
+
+.mini-btn:hover{
+  background:rgba(250,204,21,.22);
+  border-color:rgba(250,204,21,.55);
+  transform:translateY(-1px);
 }
 
 .mini-btn.plus{
   color:#facc15;
+  border-color:rgba(250,204,21,.40);
+}
+
+.mini-btn.active{
+  background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));
+  color:#111827;
+  border-color:#facc15;
+  box-shadow:0 0 14px rgba(250,204,21,.45);
+}
+
+.mini-btn.p0active{
+  background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));
+  color:white;
+  border-color:#facc15;
+  box-shadow:0 0 16px rgba(168,85,247,.55);
 }
 
 .epic{color:#c084fc}
@@ -223,8 +279,11 @@ input,select{
   border-radius:8px;
   background:linear-gradient(rgba(7,12,31,.96), rgba(2,6,23,.98));
   border:1px solid rgba(148,163,184,.75);
-  box-shadow:0 0 28px rgba(0,0,0,.85);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.10),
+    0 0 28px rgba(0,0,0,.85);
   pointer-events:none;
+  font-family:Arial, Helvetica, sans-serif;
   font-size:11px;
   line-height:1.3;
 }
@@ -240,18 +299,67 @@ input,select{
 .tooltip-title.uncommon{color:#1eff00}
 .tooltip-title.legendary{color:#ff8000}
 
-.tooltip-stat{
-  margin-top:3px;
-  color:white;
+.tooltip-ilvl{
+  color:#ffd100;
+  font-size:12px;
+  font-weight:900;
+  margin-bottom:6px;
 }
 
-.hidden{
-  display:none;
+.tooltip-bind,
+.tooltip-row,
+.tooltip-stat{
+  color:#ffffff;
+  font-size:11px;
+  font-weight:800;
+  margin-top:3px;
 }
+
+.tooltip-row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+}
+
+.tooltip-equip{
+  color:#1eff00;
+  font-size:11px;
+  font-weight:900;
+  margin-top:6px;
+}
+
+.tooltip-price{
+  color:#ffffff;
+  font-size:11px;
+  font-weight:800;
+  margin-top:6px;
+}
+
+.tooltip-p0{
+  margin-top:9px;
+  padding-top:8px;
+  border-top:1px solid rgba(255,255,255,.18);
+  color:#dbeafe;
+}
+
+.tooltip-p0 strong{
+  color:#facc15;
+  font-size:11px;
+}
+
+.tooltip ul{
+  margin-top:5px;
+  padding-left:18px;
+  line-height:1.45;
+  font-size:11px;
+}
+
+.hidden{display:none}
 
 .table-scroll{
-  max-height:620px;
+  max-height:520px;
   overflow:auto;
+  padding-right:4px;
 }
 
 table{
@@ -261,38 +369,44 @@ table{
   font-size:12px;
 }
 
-th, td{
+th,td{
   padding:8px 6px;
   border-bottom:1px solid rgba(255,255,255,.10);
   text-align:left;
+  vertical-align:top;
 }
 
 th{
   color:#facc15;
   text-transform:uppercase;
   font-size:10px;
+  letter-spacing:.06em;
 }
 
-.check{
-  color:#22c55e;
-  font-weight:900;
-}
-
-.cross{
-  color:#ef4444;
-  font-weight:900;
-}
+.check{color:#22c55e;font-weight:900;font-size:16px}
+.cross{color:#ef4444;font-weight:900;font-size:16px}
 
 .class-druide{color:#ff7c0a;font-weight:900}
 .class-hexenmeister{color:#8788ee;font-weight:900}
-.class-jäger{color:#aad372;font-weight:900}
 .class-jaeger{color:#aad372;font-weight:900}
+.class-jäger{color:#aad372;font-weight:900}
 .class-krieger{color:#c69b6d;font-weight:900}
 .class-magier{color:#3fc7eb;font-weight:900}
 .class-paladin{color:#f48cba;font-weight:900}
 .class-priester{color:#ffffff;font-weight:900}
 .class-schurke{color:#fff468;font-weight:900}
 .class-schamane{color:#0070dd;font-weight:900}
+
+@media(max-width:1250px){
+  .grid{grid-template-columns:390px 1fr}
+  .info-card{grid-column:1 / -1}
+}
+
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .loot-item-row{grid-template-columns:1fr}
+  .prio-buttons{justify-content:flex-start}
+}
 </style>
 </head>
 
@@ -300,122 +414,122 @@ th{
 
 <div class="overlay">
 
-<div class="topbar">
-<a class="back" href="../index.html">← Zurück zur Startseite</a>
-<a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
-</div>
+  <div class="topbar">
+    <a class="back" href="../index.html">← Zurück zur Startseite</a>
+    <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
+  </div>
 
-<div class="header">
-<h1>Blackwing Lair – Prio-Auswahl</h1>
-<div class="subtitle">
-Die Lootdaten und Tooltip-Werte werden direkt aus dem Lichtbringer-Google-Sheet geladen.
-</div>
-</div>
+  <div class="header">
+    <h1>Blackwing Lair – Prio-Auswahl</h1>
+    <div class="subtitle">
+      Die Lootdaten und Tooltip-Werte werden direkt aus dem Lichtbringer-Google-Sheet geladen.
+    </div>
+  </div>
 
-<div class="grid">
+  <div class="grid">
 
-<div class="card">
+    <div class="card">
 
-<h2>Spieler-Eingabe</h2>
+      <h2>Spieler-Eingabe</h2>
 
-<label>Raid-PIN</label>
-<input id="raidPin" type="password" placeholder="Raid-PIN eingeben">
+      <label>Raid-PIN</label>
+      <input id="raidPin" type="password" placeholder="Raid-PIN eingeben">
 
-<label>Charaktername</label>
-<input id="playerName" type="text" placeholder="z. B. Milkshake">
+      <label>Charaktername</label>
+      <input id="playerName" type="text" placeholder="z. B. Milkshake" oninput="loadPlayerData()">
 
-<label>Klasse</label>
+      <label>Klasse</label>
+      <select id="playerClass" onchange="autoSaveDraft()">
+        <option value="">Klasse auswählen</option>
+        <option>Krieger</option>
+        <option>Paladin</option>
+        <option>Jäger</option>
+        <option>Schurke</option>
+        <option>Priester</option>
+        <option>Schamane</option>
+        <option>Magier</option>
+        <option>Hexenmeister</option>
+        <option>Druide</option>
+      </select>
 
-<select id="playerClass">
-<option value="">Klasse auswählen</option>
-<option>Krieger</option>
-<option>Paladin</option>
-<option>Jäger</option>
-<option>Schurke</option>
-<option>Priester</option>
-<option>Schamane</option>
-<option>Magier</option>
-<option>Hexenmeister</option>
-<option>Druide</option>
-</select>
+      <label>P1</label>
+      <select id="p1" onchange="manualSelectChanged()"></select>
 
-<label>P1</label>
-<select id="p1"></select>
+      <label>P2</label>
+      <select id="p2" onchange="manualSelectChanged()"></select>
 
-<label>P2</label>
-<select id="p2"></select>
+      <label>P3</label>
+      <select id="p3" onchange="manualSelectChanged()"></select>
 
-<label>P3</label>
-<select id="p3"></select>
+      <button class="btn" onclick="savePrio()">Prios speichern</button>
 
-<button class="btn" onclick="savePrio()">
-Prios speichern
-</button>
+      <div id="playerStatus" class="status">
+        Status: Lootdaten werden geladen …
+      </div>
 
-<div id="playerStatus" class="status">
-Status: Lootdaten werden geladen …
-</div>
+    </div>
 
-</div>
+    <div class="card">
 
-<div class="card">
+      <h2>Möglicher Loot</h2>
 
-<h2>Möglicher Loot</h2>
+      <div class="search-box">
+        <span class="search-icon">🔎</span>
+        <input id="itemSearch" type="text" placeholder="Item suchen..." oninput="renderLootList()">
+      </div>
 
-<div class="search-box">
-<span class="search-icon">🔎</span>
-<input
-  id="itemSearch"
-  type="text"
-  placeholder="Item suchen..."
-  oninput="renderLootList()"
->
-</div>
+      <div class="search-hint">
+        Suche nach Itemname, Slot, Typ, Boss oder Kategorie.
+      </div>
 
-<div id="lootList" class="loot-list">
-<div class="status">
-Lade Loot aus Google Sheet …
-</div>
-</div>
+      <div id="lootList" class="loot-list">
+        <div class="status">Lade Loot aus Google Sheet …</div>
+      </div>
 
-</div>
+    </div>
 
-<div class="card">
+    <div class="card info-card">
 
-<h2>Aktuelle Prioliste</h2>
+      <h2>Raidlead Zugang</h2>
 
-<div id="publishedStatus" class="status">
-Lade Prioliste…
-</div>
+      <label>LeadPIN</label>
+      <input id="leadPinInput" type="password" placeholder="LeadPIN eingeben">
 
-<div class="table-scroll">
+      <button class="btn" onclick="openRaidleadPage()">Raidlead öffnen</button>
 
-<table>
+      <div class="status">
+        Mit dem gültigen LeadPIN wird direkt das Raidlead-Panel geöffnet.
+      </div>
 
-<thead>
-<tr>
-<th>Spieler</th>
-<th>Klasse</th>
-<th>P1</th>
-<th>P2</th>
-<th>P3</th>
-<th>P0+</th>
-</tr>
-</thead>
+      <h3>Aktuelle Prioliste</h3>
 
-<tbody id="publishedTable">
-<tr>
-<td colspan="6">Noch keine Daten geladen.</td>
-</tr>
-</tbody>
+      <div id="publishedStatus" class="status">
+        Lade Prioliste …
+      </div>
 
-</table>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P1</th>
+              <th>P2</th>
+              <th>P3</th>
+              <th>P0+</th>
+            </tr>
+          </thead>
+          <tbody id="publishedTable">
+            <tr>
+              <td colspan="6">Noch keine Daten geladen.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-</div>
+    </div>
 
-</div>
-
-</div>
+  </div>
 
 </div>
 
@@ -429,3 +543,724 @@ const APPS_SCRIPT_URL =
 
 const LOOT_CSV_URL =
 "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+
+let bwlLoot = [];
+
+const classOrder = [
+  "Krieger",
+  "Paladin",
+  "Jäger",
+  "Schurke",
+  "Priester",
+  "Schamane",
+  "Magier",
+  "Hexenmeister",
+  "Druide"
+];
+
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let value = "";
+  let insideQuotes = false;
+
+  for(let i = 0; i < text.length; i++){
+    const char = text[i];
+    const next = text[i + 1];
+
+    if(char === '"' && insideQuotes && next === '"'){
+      value += '"';
+      i++;
+    }else if(char === '"'){
+      insideQuotes = !insideQuotes;
+    }else if(char === "," && !insideQuotes){
+      row.push(value);
+      value = "";
+    }else if((char === "\n" || char === "\r") && !insideQuotes){
+      if(value || row.length){
+        row.push(value);
+        rows.push(row);
+        row = [];
+        value = "";
+      }
+      if(char === "\r" && next === "\n") i++;
+    }else{
+      value += char;
+    }
+  }
+
+  if(value || row.length){
+    row.push(value);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function normalizeQuality(value){
+  const q = String(value || "").trim().toLowerCase();
+
+  if(q.includes("legend")) return "legendary";
+  if(q.includes("episch") || q.includes("epic")) return "epic";
+  if(q.includes("selten") || q.includes("rare")) return "rare";
+  if(q.includes("ungewöhnlich") || q.includes("uncommon")) return "uncommon";
+
+  return "epic";
+}
+
+function p0FromText(text){
+  if(!text) return [];
+
+  return String(text)
+    .split(";")
+    .map(entry => entry.trim())
+    .filter(Boolean);
+}
+
+function getFirstFilled(obj, names){
+  for(const name of names){
+    if(obj[name] && String(obj[name]).trim()){
+      return String(obj[name]).trim();
+    }
+  }
+
+  return "";
+}
+
+function collectStats(obj){
+  const stats = [];
+
+  const statColumns = [
+    "Schaden",
+    "Tempo",
+    "DPS",
+    "Stat1",
+    "Stat2",
+    "Stat3",
+    "Stat4",
+    "Stat5",
+    "Stat6",
+    "Benötigt",
+    "Eigenschaften",
+    "Stats",
+    "Werte",
+    "Effekt",
+    "Beschreibung"
+  ];
+
+  statColumns.forEach(col => {
+    if(obj[col] && String(obj[col]).trim()){
+      const raw = String(obj[col]).trim();
+
+      raw.split(/;|\n|\|/).forEach(part => {
+        const clean = part.trim();
+
+        if(clean){
+          stats.push(clean);
+        }
+      });
+    }
+  });
+
+  if(obj.Kategorie){
+    stats.push("Kategorie: " + obj.Kategorie);
+  }
+
+  if(obj.Boss){
+    stats.push("Quelle: " + obj.Boss);
+  }
+
+  return stats;
+}
+
+async function loadLootFromSheet(){
+  const status = document.getElementById("playerStatus");
+  const list = document.getElementById("lootList");
+
+  try{
+    const response = await fetch(LOOT_CSV_URL + "&t=" + Date.now());
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+
+    const headers = rows.shift().map(h => h.trim());
+
+    bwlLoot = rows
+      .map(row => {
+        const obj = {};
+
+        headers.forEach((header, index) => {
+          obj[header] = row[index] || "";
+        });
+
+        return {
+          name: obj.Item || "",
+          itemId: obj.ItemID || "",
+          quality: normalizeQuality(obj["Qualität"]),
+          ilvl: obj.ItemLevel || obj.Gegenstandsstufe || (obj.ItemID ? "ItemID: " + obj.ItemID : "Blackwing Lair"),
+          bind: obj.Bindung || "Wird beim Aufheben gebunden",
+          slot: obj.Slot || "",
+          type: obj.Typ || "",
+          damage: obj.Schaden || "",
+          speed: obj.Tempo || "",
+          dps: obj.DPS || "",
+          boss: obj.Boss || "",
+          category: obj.Kategorie || "",
+          wowhead: obj.WowheadLink || "",
+          p0: p0FromText(obj.P0Spieler),
+          stats: collectStats(obj),
+          equip: getFirstFilled(obj, ["Anlegen", "Equip", "Benutzen", "Use"]),
+          price: getFirstFilled(obj, ["Verkaufspreis", "Preis", "SellPrice"])
+        };
+      })
+      .filter(item => item.name);
+
+    fillItems();
+    renderLootList();
+
+    status.innerHTML = `<span class="ok">✓ Lootdaten aus dem Google Sheet geladen.</span>`;
+
+    await loadPublishedPrios();
+
+  }catch(error){
+    console.error(error);
+
+    list.innerHTML = `
+      <div class="status">
+        <span class="bad">Lootdaten konnten nicht geladen werden.</span><br>
+        Bitte prüfen, ob das Sheet öffentlich freigegeben ist.
+      </div>
+    `;
+
+    status.innerHTML = `<span class="bad">Fehler beim Laden des Google Sheets.</span>`;
+  }
+}
+
+function fillItems(){
+  ["p1","p2","p3"].forEach(id => {
+    const select = document.getElementById(id);
+    select.innerHTML = `<option value="">Item auswählen</option>`;
+
+    bwlLoot.forEach(item => {
+      const option = document.createElement("option");
+      option.value = item.name;
+      option.textContent = item.name;
+      select.appendChild(option);
+    });
+  });
+}
+
+function renderLootList(){
+  const list = document.getElementById("lootList");
+  const searchInput = document.getElementById("itemSearch");
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  list.innerHTML = "";
+
+  const filteredLoot = bwlLoot.filter(item => {
+    const haystack = [
+      item.name,
+      item.slot,
+      item.type,
+      item.boss,
+      item.category,
+      item.quality
+    ].join(" ").toLowerCase();
+
+    return haystack.includes(query);
+  });
+
+  if(filteredLoot.length === 0){
+    list.innerHTML = `<div class="status">Keine Items gefunden.</div>`;
+    return;
+  }
+
+  filteredLoot.forEach(item => {
+    const row = document.createElement("div");
+    row.className = "loot-item-row";
+
+    const name = document.createElement("div");
+    name.className = `loot-name ${item.quality}`;
+    name.textContent = item.name;
+
+    name.addEventListener("mouseenter", event => showTooltip(event, item));
+    name.addEventListener("mousemove", event => moveTooltip(event));
+    name.addEventListener("mouseleave", hideTooltip);
+
+    const buttons = document.createElement("div");
+    buttons.className = "prio-buttons";
+
+    buttons.innerHTML = `
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
+      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
+    `;
+
+    row.appendChild(name);
+    row.appendChild(buttons);
+    list.appendChild(row);
+  });
+
+  updateActiveButtons();
+}
+
+function escapeQuotes(text){
+  return String(text).replace(/'/g, "\\'");
+}
+
+function htmlSafe(text){
+  return String(text).replace(/"/g, "&quot;");
+}
+
+function cssEscape(text){
+  return String(text).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function setPrio(slot, itemName){
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+
+  const otherSlots = {
+    p1:[p2,p3],
+    p2:[p1,p3],
+    p3:[p1,p2]
+  };
+
+  if(otherSlots[slot].includes(itemName)){
+    document.getElementById("playerStatus").innerHTML = `
+      <span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>
+    `;
+    return;
+  }
+
+  document.getElementById(slot).value = itemName;
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>
+  `;
+
+  autoSaveDraft();
+  updateActiveButtons();
+}
+
+function setP0Plus(itemName){
+  document.getElementById("p1").value = itemName;
+  document.getElementById("p2").value = itemName;
+  document.getElementById("p3").value = itemName;
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="ok">✓ ${itemName} wurde als P0+ gesetzt.</span><br>
+    Für den Export wird das Item automatisch als P1, P2 und P3 übernommen.
+  `;
+
+  autoSaveDraft();
+  updateActiveButtons();
+}
+
+function manualSelectChanged(){
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+
+  if((p1 && p2 && p1 === p2) || (p1 && p3 && p1 === p3) || (p2 && p3 && p2 === p3)){
+    document.getElementById("playerStatus").innerHTML = `
+      <span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>
+    `;
+  }
+
+  autoSaveDraft();
+  updateActiveButtons();
+}
+
+function updateActiveButtons(){
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+
+  document.querySelectorAll(".mini-btn").forEach(btn => {
+    btn.classList.remove("active");
+    btn.classList.remove("p0active");
+  });
+
+  if(p1 && p1 === p2 && p2 === p3){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`).forEach(btn => {
+      btn.classList.add("p0active");
+    });
+
+    return;
+  }
+
+  if(p1){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`).forEach(btn => btn.classList.add("active"));
+  }
+
+  if(p2){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn => btn.classList.add("active"));
+  }
+
+  if(p3){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn => btn.classList.add("active"));
+  }
+}
+
+function getPlayerKey(){
+  const player = document.getElementById("playerName").value.trim().toLowerCase();
+
+  if(!player){
+    return null;
+  }
+
+  return "bwl_prio_" + player;
+}
+
+function autoSaveDraft(){
+  const key = getPlayerKey();
+
+  if(!key){
+    return;
+  }
+
+  const data = {
+    player:document.getElementById("playerName").value.trim(),
+    class:document.getElementById("playerClass").value,
+    p1:document.getElementById("p1").value,
+    p2:document.getElementById("p2").value,
+    p3:document.getElementById("p3").value,
+    timestamp:new Date().toLocaleString("de-DE")
+  };
+
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function loadPlayerData(){
+  const key = getPlayerKey();
+
+  if(!key){
+    return;
+  }
+
+  const saved = localStorage.getItem(key);
+
+  if(!saved){
+    updateActiveButtons();
+    return;
+  }
+
+  const data = JSON.parse(saved);
+
+  document.getElementById("playerClass").value = data.class || "";
+  document.getElementById("p1").value = data.p1 || "";
+  document.getElementById("p2").value = data.p2 || "";
+  document.getElementById("p3").value = data.p3 || "";
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>
+  `;
+
+  updateActiveButtons();
+}
+
+async function savePrio(){
+  const pin = document.getElementById("raidPin").value.trim();
+  const player = document.getElementById("playerName").value.trim();
+  const playerClass = document.getElementById("playerClass").value;
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+  const status = document.getElementById("playerStatus");
+
+  if(!pin){
+    status.innerHTML = `<span class="bad">Bitte Raid-PIN eingeben.</span>`;
+    return;
+  }
+
+  if(!player || !playerClass || !p1 || !p2 || !p3){
+    status.innerHTML = `<span class="bad">Bitte alles vollständig ausfüllen.</span>`;
+    return;
+  }
+
+  if(!(p1 === p2 && p2 === p3) && (p1 === p2 || p1 === p3 || p2 === p3)){
+    status.innerHTML = `<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
+    return;
+  }
+
+  status.innerHTML = `<span class="warn">Speichere Prios im Sheet …</span>`;
+
+  const url =
+    APPS_SCRIPT_URL +
+    "?action=savePrio" +
+    "&raid=" + encodeURIComponent(RAID_NAME) +
+    "&playerPin=" + encodeURIComponent(pin) +
+    "&player=" + encodeURIComponent(player) +
+    "&className=" + encodeURIComponent(playerClass) +
+    "&p1=" + encodeURIComponent(p1) +
+    "&p2=" + encodeURIComponent(p2) +
+    "&p3=" + encodeURIComponent(p3) +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url);
+    const result = await response.json();
+
+    if(result.error){
+      status.innerHTML = `<span class="bad">${result.error}</span>`;
+      return;
+    }
+
+    autoSaveDraft();
+
+    status.innerHTML = `
+      <span class="ok">✓ Deine Prios wurden gespeichert.</span><br>
+      Der Eintrag wurde in den Tab PRIOS geschrieben.
+    `;
+
+    await loadPublishedPrios();
+
+  }catch(error){
+    console.error(error);
+
+    status.innerHTML = `
+      <span class="bad">Fehler beim Speichern.</span><br>
+      Bitte Apps-Script-Bereitstellung prüfen.
+    `;
+  }
+}
+
+function openRaidleadPage(){
+  const leadPin = document.getElementById("leadPinInput").value.trim();
+
+  if(!leadPin){
+    alert("Bitte LeadPIN eingeben.");
+    return;
+  }
+
+  window.location.href =
+    `raidlead.html?raid=BWL&leadPin=${encodeURIComponent(leadPin)}`;
+}
+
+async function loadPublishedPrios(){
+  const table = document.getElementById("publishedTable");
+  const status = document.getElementById("publishedStatus");
+  const pin = document.getElementById("raidPin").value.trim();
+
+  if(!pin){
+    status.innerHTML = `<span class="warn">Kein Raid-PIN vorhanden. Nutze den Raidlink oder gib den Raid-PIN ein.</span>`;
+    table.innerHTML = `<tr><td colspan="6">Noch keine Prioliste geladen.</td></tr>`;
+    return;
+  }
+
+  try{
+    const url =
+      APPS_SCRIPT_URL +
+      "?action=getPublishedPrios" +
+      "&raid=" + encodeURIComponent(RAID_NAME) +
+      "&playerPin=" + encodeURIComponent(pin) +
+      "&t=" + Date.now();
+
+    const response = await fetch(url);
+    const result = await response.json();
+
+    if(result.error){
+      status.innerHTML = `<span class="bad">${result.error}</span>`;
+      table.innerHTML = `<tr><td colspan="6">Keine Daten verfügbar.</td></tr>`;
+      return;
+    }
+
+    const prios = sortPrios(result.prios || []);
+
+    if(prios.length === 0){
+      status.innerHTML = result.published
+        ? `<span class="ok">✓ Prios veröffentlicht, aber noch keine Einträge vorhanden.</span>`
+        : `<span class="warn">Prios noch nicht veröffentlicht.</span>`;
+
+      table.innerHTML = `<tr><td colspan="6">Noch keine Einträge vorhanden.</td></tr>`;
+      return;
+    }
+
+    if(result.published){
+      status.innerHTML = `<span class="ok">✓ Prios veröffentlicht. Items werden angezeigt.</span>`;
+      renderPublishedItems(prios);
+    }else{
+      status.innerHTML = `<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0+ eingetragen wurden.`;
+      renderPublishedChecks(prios);
+    }
+
+  }catch(error){
+    console.error(error);
+    status.innerHTML = `<span class="bad">Fehler beim Laden der Prioliste.</span>`;
+  }
+}
+
+function renderPublishedChecks(prios){
+  const table = document.getElementById("publishedTable");
+  table.innerHTML = "";
+
+  prios.forEach(prio => {
+    table.innerHTML += `
+      <tr>
+        <td>${safe(prio.Spieler)}</td>
+        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
+        <td>${prio.P1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+        <td>${prio.P2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+        <td>${prio.P3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+        <td>${String(prio.P0Plus).toLowerCase() === "ja" ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+      </tr>
+    `;
+  });
+}
+
+function renderPublishedItems(prios){
+  const table = document.getElementById("publishedTable");
+  table.innerHTML = "";
+
+  prios.forEach(prio => {
+    table.innerHTML += `
+      <tr>
+        <td>${safe(prio.Spieler)}</td>
+        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
+        <td>${safe(prio.P1)}</td>
+        <td>${safe(prio.P2)}</td>
+        <td>${safe(prio.P3)}</td>
+        <td>${String(prio.P0Plus).toLowerCase() === "ja" ? '<span class="warn">ja</span>' : 'nein'}</td>
+      </tr>
+    `;
+  });
+}
+
+function sortPrios(prios){
+  return [...prios].sort((a,b) => {
+    const classA = classOrder.indexOf(a.Klasse);
+    const classB = classOrder.indexOf(b.Klasse);
+
+    const orderA = classA === -1 ? 999 : classA;
+    const orderB = classB === -1 ? 999 : classB;
+
+    if(orderA !== orderB){
+      return orderA - orderB;
+    }
+
+    return String(a.Spieler || "").localeCompare(String(b.Spieler || ""), "de");
+  });
+}
+
+function classColor(className){
+  const key = String(className || "")
+    .toLowerCase()
+    .replace("ä","ae")
+    .replace("ö","oe")
+    .replace("ü","ue");
+
+  if(key === "jaeger") return "class-jäger";
+
+  return "class-" + String(className || "").toLowerCase();
+}
+
+function showTooltip(event, item){
+  const tooltip = document.getElementById("tooltip");
+
+  const statLines = [];
+
+  if(item.damage || item.speed){
+    statLines.push(`
+      <div class="tooltip-row">
+        <span>${item.damage || ""}</span>
+        <span>${item.speed || ""}</span>
+      </div>
+    `);
+  }
+
+  if(item.dps){
+    statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
+  }
+
+  item.stats.forEach(stat => {
+    statLines.push(`<div class="tooltip-stat">${stat}</div>`);
+  });
+
+  const p0Html = item.p0.length
+    ? item.p0.map(player => `<li>${player}</li>`).join("")
+    : `<li>Keine P0+ gesetzt</li>`;
+
+  tooltip.innerHTML = `
+    <div class="tooltip-title ${item.quality}">${item.name}</div>
+
+    <div class="tooltip-ilvl">${item.ilvl}</div>
+
+    <div class="tooltip-bind">${item.bind}</div>
+
+    <div class="tooltip-row">
+      <span>${item.slot}</span>
+      <span>${item.type || ""}</span>
+    </div>
+
+    ${statLines.join("")}
+
+    ${item.equip ? `<div class="tooltip-equip">Anlegen: ${item.equip}</div>` : ""}
+
+    ${item.price ? `<div class="tooltip-price">Verkaufspreis: ${item.price}</div>` : ""}
+
+    <div class="tooltip-p0">
+      <strong>Gesetzte P0+</strong>
+      <ul>${p0Html}</ul>
+    </div>
+  `;
+
+  moveTooltip(event);
+  tooltip.classList.remove("hidden");
+}
+
+function moveTooltip(event){
+  const tooltip = document.getElementById("tooltip");
+
+  const padding = 18;
+  const tooltipWidth = tooltip.offsetWidth || 330;
+  const tooltipHeight = tooltip.offsetHeight || 260;
+
+  let left = event.clientX + 20;
+  let top = event.clientY + 20;
+
+  if(left + tooltipWidth + padding > window.innerWidth){
+    left = event.clientX - tooltipWidth - 20;
+  }
+
+  if(top + tooltipHeight + padding > window.innerHeight){
+    top = event.clientY - tooltipHeight - 20;
+  }
+
+  if(left < padding){
+    left = padding;
+  }
+
+  if(top < padding){
+    top = padding;
+  }
+
+  tooltip.style.left = left + "px";
+  tooltip.style.top = top + "px";
+}
+
+function hideTooltip(){
+  document.getElementById("tooltip").classList.add("hidden");
+}
+
+function safe(value){
+  return String(value || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+const params = new URLSearchParams(window.location.search);
+const pinFromUrl = params.get("pin");
+
+if(pinFromUrl){
+  document.getElementById("raidPin").value = pinFromUrl;
+}
+
+loadLootFromSheet();
+</script>
+
+</body>
+</html>
