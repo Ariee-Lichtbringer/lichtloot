@@ -25,9 +25,7 @@
 
     body{
       min-height:100vh;
-
       font-family:Arial, Helvetica, sans-serif;
-
       color:var(--text);
 
       background:
@@ -91,17 +89,13 @@
 
     h1{
       color:var(--gold);
-
       font-size:clamp(34px,5vw,56px);
-
       margin-bottom:8px;
     }
 
     .subtitle{
       color:#dbeafe;
-
       line-height:1.7;
-
       font-size:15px;
     }
 
@@ -129,17 +123,13 @@
 
     h2{
       color:var(--gold);
-
       margin-bottom:16px;
-
       font-size:22px;
     }
 
     h3{
       color:var(--gold);
-
       margin:22px 0 10px;
-
       font-size:18px;
     }
 
@@ -287,18 +277,14 @@
 
     .stat-number{
       color:var(--gold);
-
       font-size:28px;
       font-weight:900;
-
       margin-bottom:4px;
     }
 
     .stat-label{
       color:var(--muted);
-
       font-size:12px;
-
       line-height:1.4;
     }
 
@@ -334,6 +320,7 @@
       grid-template-columns:repeat(2,1fr);
       gap:10px;
       margin-top:16px;
+      margin-bottom:20px;
     }
 
     .hidden{
@@ -448,6 +435,28 @@
       </button>
 
       <div id="newRaidBox" class="raid-card hidden"></div>
+
+      <h3>Prio3 Reforged Export</h3>
+
+      <div class="export-grid">
+
+        <button class="btn secondary" onclick="downloadExport('csv')">
+          CSV
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('csvshort')">
+          CSV SHORT
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('txt')">
+          TXT
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('lua')">
+          LUA
+        </button>
+
+      </div>
 
     </div>
 
@@ -792,30 +801,50 @@ function escapeQuotes(text){
 
 }
 
-const params =
-  new URLSearchParams(window.location.search);
+function downloadExport(type){
 
-const autoRaid =
-  params.get("raid");
+  if(!currentPrios.length){
 
-const autoLeadPin =
-  params.get("leadPin");
+    alert("Keine Priolisten geladen.");
 
-if(autoRaid){
-  document.getElementById("raidSelect").value =
-    autoRaid;
-}
+    return;
 
-if(autoLeadPin){
+  }
 
-  document.getElementById("leadPin").value =
-    autoLeadPin;
+  let content = "";
+  let filename = "bwl-prios";
+  let mime = "text/plain;charset=utf-8;";
 
-  loadRaidData();
+  if(type === "csv"){
 
-}
+    filename += ".csv";
 
-</script>
+    mime = "text/csv;charset=utf-8;";
 
-</body>
-</html>
+    content = [
+      ["Player","Class","Raid","P1","P2","P3","P0Plus"]
+    ]
+    .concat(
+      currentPrios.map(p => [
+        p.Spieler,
+        p.Klasse,
+        currentRaid.Raid,
+        p.P1,
+        p.P2,
+        p.P3,
+        p.P0Plus
+      ])
+    )
+    .map(
+      row =>
+        row.map(v => `"${v}"`).join(",")
+    )
+    .join("\n");
+
+  }
+
+  if(type === "csvshort"){
+
+    filename += "-short.csv";
+
+    mime = "text/c
