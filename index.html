@@ -15,7 +15,11 @@
       --shadow:0 20px 45px rgba(0,0,0,.45);
     }
 
-    *{margin:0;padding:0;box-sizing:border-box}
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+    }
 
     body{
       min-height:100vh;
@@ -56,6 +60,17 @@
       text-transform:uppercase;
     }
 
+    .section-title{
+      width:min(1500px,100%);
+      margin:0 auto 18px;
+      color:#facc15;
+      font-size:22px;
+      font-weight:900;
+      text-align:center;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
     .raid-grid{
       width:min(1500px,100%);
       margin:auto;
@@ -76,16 +91,34 @@
     .raid-card{
       position:relative;
       overflow:hidden;
+      min-height:460px;
       border-radius:24px;
       border:1px solid var(--line);
-      background:var(--panel);
-      backdrop-filter:blur(12px);
+      background-size:cover;
+      background-position:center top;
+      background-repeat:no-repeat;
       box-shadow:var(--shadow);
-      transition:transform .22s ease, box-shadow .22s ease, border .22s ease;
+      transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        border .22s ease;
     }
 
     .raid-card.small{
+      min-height:340px;
       border-radius:20px;
+    }
+
+    .raid-card::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(
+          rgba(8,17,31,.68),
+          rgba(8,17,31,.96)
+        );
+      z-index:1;
     }
 
     .raid-card:hover{
@@ -96,56 +129,29 @@
         0 20px 45px rgba(0,0,0,.52);
     }
 
-    .raid-banner{
-      height:170px;
-      overflow:hidden;
-      position:relative;
-    }
-
-    .raid-card.small .raid-banner{
-      height:125px;
-    }
-
-    .raid-banner img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      object-position:center top;
-      transition:transform .4s ease;
-    }
-
-    .raid-card:hover .raid-banner img{
-      transform:scale(1.06);
-    }
-
-    .raid-banner::after{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:linear-gradient(to top,rgba(8,17,31,.98),rgba(8,17,31,.15));
-    }
-
     .raid-content{
-      padding:20px;
+      min-height:460px;
+      padding:28px 20px 20px;
       position:relative;
       z-index:2;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
     }
 
     .raid-card.small .raid-content{
-      padding:16px;
+      min-height:340px;
+      padding:22px 16px 16px;
     }
 
     .raid-icon{
-      width:85px;
-      height:85px;
+      width:95px;
+      height:95px;
       object-fit:cover;
       object-position:center top;
       border-radius:50%;
       border:3px solid var(--gold);
-      margin-top:-58px;
-      margin-bottom:16px;
-      position:relative;
-      z-index:5;
+      margin-bottom:18px;
       background:#111827;
       box-shadow:
         0 0 20px rgba(250,204,21,.30),
@@ -153,9 +159,8 @@
     }
 
     .raid-card.small .raid-icon{
-      width:68px;
-      height:68px;
-      margin-top:-46px;
+      width:72px;
+      height:72px;
       margin-bottom:12px;
     }
 
@@ -164,6 +169,7 @@
       font-weight:900;
       margin-bottom:10px;
       color:var(--gold);
+      text-shadow:0 2px 12px rgba(0,0,0,.8);
     }
 
     .raid-card.small .raid-title{
@@ -175,6 +181,7 @@
       line-height:1.6;
       font-size:14px;
       margin-bottom:18px;
+      text-shadow:0 2px 10px rgba(0,0,0,.85);
     }
 
     .raid-card.small .raid-description{
@@ -195,8 +202,13 @@
       justify-content:center;
       padding:12px 16px;
       border-radius:12px;
-      background:linear-gradient(135deg,rgba(250,204,21,.22),rgba(96,165,250,.15));
-      border:1px solid rgba(250,204,21,.20);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(250,204,21,.24),
+          rgba(96,165,250,.18)
+        );
+      border:1px solid rgba(250,204,21,.24);
       color:var(--text);
       text-decoration:none;
       font-weight:800;
@@ -204,6 +216,7 @@
       letter-spacing:.02em;
       transition:all .18s ease;
       cursor:pointer;
+      backdrop-filter:blur(5px);
     }
 
     .raid-card.small .raid-btn{
@@ -213,23 +226,34 @@
 
     .raid-btn:hover{
       transform:translateY(-2px);
-      background:linear-gradient(135deg,rgba(250,204,21,.36),rgba(96,165,250,.22));
-      border-color:rgba(250,204,21,.45);
+      background:
+        linear-gradient(
+          135deg,
+          rgba(250,204,21,.40),
+          rgba(96,165,250,.26)
+        );
+      border-color:rgba(250,204,21,.50);
     }
 
     .loot-btn{
-      background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(250,204,21,.12));
+      background:
+        linear-gradient(
+          135deg,
+          rgba(96,165,250,.26),
+          rgba(250,204,21,.14)
+        );
     }
 
     .pin-input{
       width:100%;
       padding:12px;
       border-radius:12px;
-      border:1px solid rgba(250,204,21,.25);
-      background:rgba(2,6,23,.82);
+      border:1px solid rgba(250,204,21,.30);
+      background:rgba(2,6,23,.76);
       color:white;
       font-size:14px;
       outline:none;
+      backdrop-filter:blur(5px);
     }
 
     .raid-card.small .pin-input{
@@ -238,23 +262,12 @@
     }
 
     .pin-input:focus{
-      border-color:rgba(250,204,21,.60);
-      box-shadow:0 0 0 2px rgba(250,204,21,.12);
+      border-color:rgba(250,204,21,.70);
+      box-shadow:0 0 0 2px rgba(250,204,21,.14);
     }
 
     .pin-input::placeholder{
-      color:#94a3b8;
-    }
-
-    .section-title{
-      width:min(1500px,100%);
-      margin:0 auto 18px;
-      color:#facc15;
-      font-size:22px;
-      font-weight:900;
-      text-align:center;
-      letter-spacing:.08em;
-      text-transform:uppercase;
+      color:#cbd5e1;
     }
 
     .footer{
@@ -268,12 +281,20 @@
     }
 
     @media(max-width:1200px){
-      .raid-grid{grid-template-columns:repeat(2,1fr)}
-      .small-raid-grid{grid-template-columns:repeat(3,1fr)}
+      .raid-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .small-raid-grid{
+        grid-template-columns:repeat(3,1fr);
+      }
     }
 
     @media(max-width:800px){
-      .raid-grid,.small-raid-grid{grid-template-columns:1fr}
+      .raid-grid,
+      .small-raid-grid{
+        grid-template-columns:1fr;
+      }
     }
   </style>
 </head>
@@ -287,111 +308,253 @@
     <div class="subtitle">Prio 0 Plus & Lootsystem</div>
   </div>
 
+  <div class="section-title">40er Raids</div>
+
   <div class="raid-grid">
 
     <!-- MC -->
-    <div class="raid-card">
-      <div class="raid-banner"><img src="./images/mc.jpg" alt="MC"/></div>
+    <div
+      class="raid-card"
+      style="background-image:url('./images/mc.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/mc.jpg" alt="MC Icon"/>
+
         <div class="raid-title">Molten Core</div>
-        <div class="raid-description">P0+ Übersicht und neue Prio-Auswahl für Molten Core.</div>
-        <div class="raid-buttons">
-          <a class="raid-btn" href="molten-core.html">P0+ Übersicht öffnen</a>
-          <input class="pin-input" id="pin-mc" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'mc')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('mc')">Prio öffnen</button>
+
+        <div class="raid-description">
+          P0+ Übersicht und neue Prio-Auswahl für Molten Core.
         </div>
+
+        <div class="raid-buttons">
+          <a class="raid-btn" href="molten-core.html">
+            P0+ Übersicht öffnen
+          </a>
+
+          <input
+            class="pin-input"
+            id="pin-mc"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'mc')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('mc')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- BWL -->
-    <div class="raid-card">
-      <div class="raid-banner"><img src="./images/bwl.jpg" alt="BWL"/></div>
+    <div
+      class="raid-card"
+      style="background-image:url('./images/bwl.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/bwl.jpg" alt="BWL Icon"/>
+
         <div class="raid-title">Blackwing Lair</div>
-        <div class="raid-description">P0+ Übersicht und neue Prio-Auswahl für Blackwing Lair.</div>
-        <div class="raid-buttons">
-          <a class="raid-btn" href="bwl.html">P0+ Übersicht öffnen</a>
-          <input class="pin-input" id="pin-bwl" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'bwl')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('bwl')">Prio öffnen</button>
+
+        <div class="raid-description">
+          P0+ Übersicht und neue Prio-Auswahl für Blackwing Lair.
         </div>
+
+        <div class="raid-buttons">
+          <a class="raid-btn" href="bwl.html">
+            P0+ Übersicht öffnen
+          </a>
+
+          <input
+            class="pin-input"
+            id="pin-bwl"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'bwl')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('bwl')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- AQ40 -->
-    <div class="raid-card">
-      <div class="raid-banner"><img src="./images/aq40.jpg" alt="AQ40"/></div>
+    <div
+      class="raid-card"
+      style="background-image:url('./images/aq40.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/aq40.jpg" alt="AQ40 Icon"/>
+
         <div class="raid-title">Ahn'Qiraj 40</div>
-        <div class="raid-description">P0+ Übersicht und neue Prio-Auswahl für AQ40.</div>
-        <div class="raid-buttons">
-          <a class="raid-btn" href="aq.html">P0+ Übersicht öffnen</a>
-          <input class="pin-input" id="pin-aq40" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'aq40')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('aq40')">Prio öffnen</button>
+
+        <div class="raid-description">
+          P0+ Übersicht und neue Prio-Auswahl für AQ40.
         </div>
+
+        <div class="raid-buttons">
+          <a class="raid-btn" href="aq.html">
+            P0+ Übersicht öffnen
+          </a>
+
+          <input
+            class="pin-input"
+            id="pin-aq40"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'aq40')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('aq40')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- NAXX -->
-    <div class="raid-card">
-      <div class="raid-banner"><img src="./images/naxx.jpg" alt="Naxx"/></div>
+    <div
+      class="raid-card"
+      style="background-image:url('./images/naxx.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/naxx.jpg" alt="Naxx Icon"/>
+
         <div class="raid-title">Naxxramas</div>
-        <div class="raid-description">P0+ Übersicht und neue Prio-Auswahl für Naxxramas.</div>
-        <div class="raid-buttons">
-          <a class="raid-btn" href="naxxramas.html">P0+ Übersicht öffnen</a>
-          <input class="pin-input" id="pin-naxx" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'naxx')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('naxx')">Prio öffnen</button>
+
+        <div class="raid-description">
+          P0+ Übersicht und neue Prio-Auswahl für Naxxramas.
         </div>
+
+        <div class="raid-buttons">
+          <a class="raid-btn" href="naxxramas.html">
+            P0+ Übersicht öffnen
+          </a>
+
+          <input
+            class="pin-input"
+            id="pin-naxx"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'naxx')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('naxx')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
   </div>
 
+  <div class="section-title">20er & Onyxia</div>
+
   <div class="small-raid-grid">
 
     <!-- ZG20 -->
-    <div class="raid-card small">
-      <div class="raid-banner"><img src="./images/zg.jpg" alt="ZG20"/></div>
+    <div
+      class="raid-card small"
+      style="background-image:url('./images/zg.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/zg.jpg" alt="ZG20 Icon"/>
+
         <div class="raid-title">ZG 20</div>
-        <div class="raid-description">Prio-Auswahl für Zul'Gurub.</div>
-        <div class="raid-buttons">
-          <input class="pin-input" id="pin-zg" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'zg')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('zg')">Prio öffnen</button>
+
+        <div class="raid-description">
+          Prio-Auswahl für Zul'Gurub.
         </div>
+
+        <div class="raid-buttons">
+          <input
+            class="pin-input"
+            id="pin-zg"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'zg')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('zg')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- AQ20 -->
-    <div class="raid-card small">
-      <div class="raid-banner"><img src="./images/aq20.jpg" alt="AQ20"/></div>
+    <div
+      class="raid-card small"
+      style="background-image:url('./images/aq20.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/aq20.jpg" alt="AQ20 Icon"/>
+
         <div class="raid-title">AQ 20</div>
-        <div class="raid-description">Prio-Auswahl für AQ20.</div>
-        <div class="raid-buttons">
-          <input class="pin-input" id="pin-aq20" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'aq20')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('aq20')">Prio öffnen</button>
+
+        <div class="raid-description">
+          Prio-Auswahl für AQ20.
         </div>
+
+        <div class="raid-buttons">
+          <input
+            class="pin-input"
+            id="pin-aq20"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'aq20')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('aq20')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
     <!-- ONY -->
-    <div class="raid-card small">
-      <div class="raid-banner"><img src="./images/ony.jpg" alt="Onyxia"/></div>
+    <div
+      class="raid-card small"
+      style="background-image:url('./images/ony.jpg')"
+    >
       <div class="raid-content">
+
         <img class="raid-icon" src="./images/ony.jpg" alt="Onyxia Icon"/>
+
         <div class="raid-title">Onyxia</div>
-        <div class="raid-description">Prio-Auswahl für Onyxias Hort.</div>
-        <div class="raid-buttons">
-          <input class="pin-input" id="pin-ony" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'ony')">
-          <button class="raid-btn loot-btn" onclick="openLootWithPin('ony')">Prio öffnen</button>
+
+        <div class="raid-description">
+          Prio-Auswahl für Onyxias Hort.
         </div>
+
+        <div class="raid-buttons">
+          <input
+            class="pin-input"
+            id="pin-ony"
+            type="text"
+            placeholder="Prio PIN eingeben"
+            onkeydown="handlePinEnter(event,'ony')"
+          >
+
+          <button class="raid-btn loot-btn" onclick="openLootWithPin('ony')">
+            Prio öffnen
+          </button>
+        </div>
+
       </div>
     </div>
 
