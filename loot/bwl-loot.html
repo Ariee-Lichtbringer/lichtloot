@@ -84,7 +84,7 @@
       width:min(1500px,100%);
       margin:auto;
       display:grid;
-      grid-template-columns:390px 1fr 520px;
+      grid-template-columns:390px 1fr 420px;
       gap:22px;
     }
 
@@ -100,12 +100,6 @@
       color:var(--gold);
       margin-bottom:16px;
       font-size:22px;
-    }
-
-    h3{
-      color:var(--gold);
-      margin:18px 0 10px;
-      font-size:17px;
     }
 
     label{
@@ -172,31 +166,6 @@
     .btn:hover{
       transform:translateY(-2px);
       border-color:rgba(250,204,21,.55);
-    }
-
-    .btn.secondary{
-      background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(250,204,21,.10));
-    }
-
-    .btn.danger{
-      background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(250,204,21,.08));
-      border-color:rgba(239,68,68,.35);
-    }
-
-    .delete-btn{
-      padding:6px 8px;
-      border-radius:8px;
-      border:1px solid rgba(239,68,68,.45);
-      background:rgba(127,29,29,.55);
-      color:#fecaca;
-      font-size:10px;
-      font-weight:900;
-      cursor:pointer;
-    }
-
-    .delete-btn:hover{
-      background:rgba(239,68,68,.32);
-      color:white;
     }
 
     .status{
@@ -379,96 +348,30 @@
       font-size:11px;
     }
 
-    .lead-stats{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
+    .info-list{
+      display:flex;
+      flex-direction:column;
       gap:10px;
-      margin-bottom:14px;
+      color:#dbeafe;
+      font-size:13px;
+      line-height:1.6;
     }
 
-    .stat-box{
-      background:rgba(2,6,23,.62);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:14px;
-      padding:12px;
-    }
-
-    .stat-number{
-      color:var(--gold);
-      font-size:24px;
-      font-weight:900;
-      margin-bottom:3px;
-    }
-
-    .stat-label{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:12px;
-      font-size:12px;
-    }
-
-    th,td{
-      padding:8px 6px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      text-align:left;
-      vertical-align:top;
-    }
-
-    th{
-      color:var(--gold);
-      text-transform:uppercase;
-      font-size:10px;
-      letter-spacing:.06em;
-    }
-
-    .lead-scroll{
-      max-height:360px;
-      overflow:auto;
-      padding-right:4px;
-    }
-
-    .full-list-scroll{
-      max-height:330px;
-      overflow:auto;
-      padding-right:4px;
-      margin-top:10px;
-      border:1px solid rgba(255,255,255,.08);
-      border-radius:14px;
-      background:rgba(2,6,23,.35);
-    }
-
-    .export-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      margin-top:12px;
-    }
-
-    .small-note{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
-      margin-top:10px;
+    .info-list strong{
+      color:#facc15;
     }
 
     .hidden{display:none}
 
     @media(max-width:1250px){
       .grid{grid-template-columns:390px 1fr}
-      .lead-card{grid-column:1 / -1}
+      .info-card{grid-column:1 / -1}
     }
 
     @media(max-width:900px){
       .grid{grid-template-columns:1fr}
       .loot-item-row{grid-template-columns:1fr}
       .prio-buttons{justify-content:flex-start}
-      .lead-stats{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -485,7 +388,7 @@
   <div class="header">
     <h1>Blackwing Lair – Prio-Auswahl</h1>
     <div class="subtitle">
-      Die Lootdaten und Tooltip-Werte werden direkt aus dem Lichtbringer-Google-Sheet geladen.
+      Die Lootdaten kommen aus dem Google Sheet. Gespeicherte Prios werden über Apps Script direkt in den Tab PRIOS geschrieben.
     </div>
   </div>
 
@@ -556,98 +459,30 @@
 
     </div>
 
-    <div class="card lead-card">
+    <div class="card info-card">
 
-      <h2>Raidlead-Panel</h2>
+      <h2>Live-System</h2>
 
-      <label>Raidlead-PIN</label>
-      <input id="leadPin" type="password" placeholder="Raidlead-PIN eingeben">
+      <div class="info-list">
 
-      <button class="btn secondary" onclick="openLeadPanel()">Raidlead-Panel öffnen</button>
-
-      <div id="leadPanel" class="hidden">
-
-        <div class="lead-stats">
-          <div class="stat-box">
-            <div id="statPlayers" class="stat-number">0</div>
-            <div class="stat-label">Spieler eingetragen</div>
-          </div>
-
-          <div class="stat-box">
-            <div id="statComplete" class="stat-number">0</div>
-            <div class="stat-label">vollständig</div>
-          </div>
-
-          <div class="stat-box">
-            <div id="statP0" class="stat-number">0</div>
-            <div class="stat-label">P0+ gesetzt</div>
-          </div>
-
-          <div class="stat-box">
-            <div id="statClasses" class="stat-number">0</div>
-            <div class="stat-label">Klassen vertreten</div>
-          </div>
+        <div>
+          <strong>Spieler-PIN:</strong><br>
+          Wird im Tab RAIDS geprüft. Nur offene Raids akzeptieren Einträge.
         </div>
 
-        <button class="btn secondary" onclick="refreshLeadStatus()">Status aktualisieren</button>
-        <button class="btn" onclick="showFullPrioList()">Vollständige Prioliste anzeigen</button>
-
-        <div class="status">
-          <span class="warn">Raidlead-Status:</span><br>
-          Der Status zeigt nur, wer fertig ist. Die vollständige Prioliste wird erst nach Klick sichtbar.
+        <div>
+          <strong>Speicherung:</strong><br>
+          Beim Speichern wird die Prioliste direkt in den Tab PRIOS geschrieben.
         </div>
 
-        <div class="lead-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Spieler</th>
-                <th>Klasse</th>
-                <th>Status</th>
-                <th>P0+</th>
-                <th>Letzte Änderung</th>
-                <th>Löschen</th>
-              </tr>
-            </thead>
-            <tbody id="leadTable"></tbody>
-          </table>
+        <div>
+          <strong>P0+:</strong><br>
+          Wenn ein Item über P0+ gesetzt wird, erscheint es automatisch als P1, P2 und P3 im Export.
         </div>
 
-        <div id="fullPrioBox" class="hidden">
-
-          <h3>Geöffnete Prioliste</h3>
-
-          <div class="full-list-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Spieler</th>
-                  <th>Klasse</th>
-                  <th>P1</th>
-                  <th>P2</th>
-                  <th>P3</th>
-                  <th>P0+</th>
-                </tr>
-              </thead>
-              <tbody id="fullPrioTable"></tbody>
-            </table>
-          </div>
-
-        </div>
-
-        <h2 style="margin-top:18px;">Export</h2>
-
-        <div class="export-grid">
-          <button class="btn secondary" onclick="downloadExport('csv')">CSV</button>
-          <button class="btn secondary" onclick="downloadExport('csvshort')">CSV SHORT</button>
-          <button class="btn secondary" onclick="downloadExport('txt')">TXT</button>
-          <button class="btn secondary" onclick="downloadExport('lua')">LUA</button>
-        </div>
-
-        <button class="btn danger" onclick="resetAllData()">Alle Testdaten löschen</button>
-
-        <div class="small-note">
-          Aktuell werden Spieler-Prios noch lokal im Browser gespeichert. Der Loot kommt bereits aus dem Google Sheet.
+        <div>
+          <strong>Raidlead:</strong><br>
+          Die echte Raidlead-Übersicht bauen wir danach als eigene Seite mit MasterPIN.
         </div>
 
       </div>
@@ -662,8 +497,9 @@
 
 <script>
 
-const RAID_PIN = "bwl";
-const LEAD_PIN = "lead";
+const RAID_NAME = "BWL";
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
 
@@ -1045,7 +881,7 @@ function loadPlayerData(){
   updateActiveButtons();
 }
 
-function savePrio(){
+async function savePrio(){
   const pin = document.getElementById("raidPin").value.trim();
   const player = document.getElementById("playerName").value.trim();
   const playerClass = document.getElementById("playerClass").value;
@@ -1054,8 +890,8 @@ function savePrio(){
   const p3 = document.getElementById("p3").value;
   const status = document.getElementById("playerStatus");
 
-  if(pin !== RAID_PIN){
-    status.innerHTML = `<span class="bad">Falscher Raid-PIN.</span>`;
+  if(!pin){
+    status.innerHTML = `<span class="bad">Bitte Raid-PIN eingeben.</span>`;
     return;
   }
 
@@ -1069,231 +905,49 @@ function savePrio(){
     return;
   }
 
-  autoSaveDraft();
+  status.innerHTML = `<span class="warn">Speichere Prios im Sheet …</span>`;
 
-  status.innerHTML = `<span class="ok">✓ Deine Prios wurden gespeichert.</span>`;
-}
+  const payload = {
+    action:"savePrio",
+    raid:RAID_NAME,
+    playerPin:pin,
+    player:player,
+    className:playerClass,
+    p1:p1,
+    p2:p2,
+    p3:p3
+  };
 
-function getAllPrioEntries(){
-  const entries = [];
-
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-
-    if(key && key.startsWith("bwl_prio_")){
-      try{
-        const entry = JSON.parse(localStorage.getItem(key));
-        entries.push(entry);
-      }catch(e){}
-    }
-  }
-
-  entries.sort((a,b) => a.player.localeCompare(b.player));
-  return entries;
-}
-
-function isComplete(entry){
-  return entry.player && entry.class && entry.p1 && entry.p2 && entry.p3;
-}
-
-function isP0Plus(entry){
-  return entry.p1 && entry.p1 === entry.p2 && entry.p2 === entry.p3;
-}
-
-function openLeadPanel(){
-  const pin = document.getElementById("leadPin").value.trim();
-
-  if(pin !== LEAD_PIN){
-    alert("Falscher Raidlead-PIN.");
-    return;
-  }
-
-  document.getElementById("leadPanel").classList.remove("hidden");
-  refreshLeadStatus();
-}
-
-function refreshLeadStatus(){
-  renderLeadPanel();
-  document.getElementById("fullPrioBox").classList.add("hidden");
-}
-
-function showFullPrioList(){
-  renderLeadPanel();
-  renderFullPrioList();
-  document.getElementById("fullPrioBox").classList.remove("hidden");
-}
-
-function renderLeadPanel(){
-  const entries = getAllPrioEntries();
-
-  const complete = entries.filter(isComplete).length;
-  const p0 = entries.filter(isP0Plus).length;
-  const classes = new Set(entries.map(e => e.class).filter(Boolean)).size;
-
-  document.getElementById("statPlayers").textContent = entries.length;
-  document.getElementById("statComplete").textContent = complete;
-  document.getElementById("statP0").textContent = p0;
-  document.getElementById("statClasses").textContent = classes;
-
-  const table = document.getElementById("leadTable");
-  table.innerHTML = "";
-
-  entries.forEach(entry => {
-    const completeStatus = isComplete(entry)
-      ? `<span class="ok">fertig</span>`
-      : `<span class="bad">offen</span>`;
-
-    const p0Status = isP0Plus(entry)
-      ? `<span class="warn">ja</span>`
-      : `nein`;
-
-    table.innerHTML += `
-      <tr>
-        <td>${entry.player || "–"}</td>
-        <td>${entry.class || "–"}</td>
-        <td>${completeStatus}</td>
-        <td>${p0Status}</td>
-        <td>${entry.timestamp || "–"}</td>
-        <td>
-          <button class="delete-btn" onclick="deletePlayerEntry('${escapeQuotes(entry.player || "")}')">
-            Löschen
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-function renderFullPrioList(){
-  const entries = getAllPrioEntries().filter(isComplete);
-  const table = document.getElementById("fullPrioTable");
-
-  table.innerHTML = "";
-
-  entries.forEach(entry => {
-    table.innerHTML += `
-      <tr>
-        <td>${entry.player}</td>
-        <td>${entry.class}</td>
-        <td>${entry.p1}</td>
-        <td>${entry.p2}</td>
-        <td>${entry.p3}</td>
-        <td>${isP0Plus(entry) ? '<span class="warn">ja</span>' : 'nein'}</td>
-      </tr>
-    `;
-  });
-}
-
-function deletePlayerEntry(playerName){
-  if(!playerName) return;
-
-  const confirmed = confirm(
-    "Soll die Prioliste von " + playerName + " wirklich gelöscht werden?"
-  );
-
-  if(!confirmed) return;
-
-  const key = "bwl_prio_" + playerName.trim().toLowerCase();
-
-  localStorage.removeItem(key);
-
-  renderLeadPanel();
-
-  if(!document.getElementById("fullPrioBox").classList.contains("hidden")){
-    renderFullPrioList();
-  }
-
-  document.getElementById("playerStatus").innerHTML = `
-    <span class="warn">Prioliste von ${playerName} wurde durch den Raidlead gelöscht.</span>
-  `;
-}
-
-function downloadExport(type){
-  const entries = getAllPrioEntries().filter(isComplete);
-
-  if(entries.length === 0){
-    alert("Keine vollständigen Einträge vorhanden.");
-    return;
-  }
-
-  let content = "";
-  let filename = "bwl-prios";
-  let mime = "text/plain;charset=utf-8;";
-
-  if(type === "csv"){
-    filename += ".csv";
-    mime = "text/csv;charset=utf-8;";
-    content = [
-      ["Player","Class","Raid","P1","P2","P3","P0Plus"]
-    ]
-    .concat(entries.map(e => [
-      e.player,
-      e.class,
-      "BWL",
-      e.p1,
-      e.p2,
-      e.p3,
-      isP0Plus(e) ? "YES" : "NO"
-    ]))
-    .map(row => row.map(v => `"${v}"`).join(","))
-    .join("\n");
-  }
-
-  if(type === "csvshort"){
-    filename += "-short.csv";
-    mime = "text/csv;charset=utf-8;";
-    content = entries
-      .map(e => `"${e.player}","${e.p1}","${e.p2}","${e.p3}"`)
-      .join("\n");
-  }
-
-  if(type === "txt"){
-    filename += ".txt";
-    content = entries.map(e => {
-      return `${e.player} (${e.class})\nP1: ${e.p1}\nP2: ${e.p2}\nP3: ${e.p3}\nP0+: ${isP0Plus(e) ? "JA" : "NEIN"}\n`;
-    }).join("\n");
-  }
-
-  if(type === "lua"){
-    filename += ".lua";
-    content = "LichtbringerBWL = {\n";
-
-    entries.forEach(e => {
-      content += `  ["${e.player}"] = { class = "${e.class}", p1 = "${e.p1}", p2 = "${e.p2}", p3 = "${e.p3}", p0plus = ${isP0Plus(e) ? "true" : "false"} },\n`;
+  try{
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method:"POST",
+      headers:{
+        "Content-Type":"text/plain;charset=utf-8"
+      },
+      body:JSON.stringify(payload)
     });
 
-    content += "}\n";
-  }
+    const result = await response.json();
 
-  const blob = new Blob([content], {type:mime});
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function resetAllData(){
-  if(!confirm("Alle lokalen BWL-Testdaten löschen?")) return;
-
-  const keys = [];
-
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-    if(key && key.startsWith("bwl_prio_")){
-      keys.push(key);
+    if(result.error){
+      status.innerHTML = `<span class="bad">${result.error}</span>`;
+      return;
     }
+
+    autoSaveDraft();
+
+    status.innerHTML = `
+      <span class="ok">✓ Deine Prios wurden gespeichert.</span><br>
+      Der Eintrag wurde in den Tab PRIOS geschrieben.
+    `;
+
+  }catch(error){
+    console.error(error);
+    status.innerHTML = `
+      <span class="bad">Fehler beim Speichern.</span><br>
+      Bitte Apps-Script-Bereitstellung prüfen.
+    `;
   }
-
-  keys.forEach(key => localStorage.removeItem(key));
-
-  renderLeadPanel();
-  renderFullPrioList();
-
-  alert("Testdaten gelöscht.");
 }
 
 function showTooltip(event, item){
@@ -1352,8 +1006,32 @@ function showTooltip(event, item){
 
 function moveTooltip(event){
   const tooltip = document.getElementById("tooltip");
-  tooltip.style.left = (event.clientX + 20) + "px";
-  tooltip.style.top = (event.clientY + 20) + "px";
+
+  const padding = 18;
+  const tooltipWidth = tooltip.offsetWidth || 330;
+  const tooltipHeight = tooltip.offsetHeight || 260;
+
+  let left = event.clientX + 20;
+  let top = event.clientY + 20;
+
+  if(left + tooltipWidth + padding > window.innerWidth){
+    left = event.clientX - tooltipWidth - 20;
+  }
+
+  if(top + tooltipHeight + padding > window.innerHeight){
+    top = event.clientY - tooltipHeight - 20;
+  }
+
+  if(left < padding){
+    left = padding;
+  }
+
+  if(top < padding){
+    top = padding;
+  }
+
+  tooltip.style.left = left + "px";
+  tooltip.style.top = top + "px";
 }
 
 function hideTooltip(){
