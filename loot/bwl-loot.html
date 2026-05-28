@@ -38,7 +38,7 @@
     }
 
     .topbar{
-      width:min(1400px,100%);
+      width:min(1500px,100%);
       margin:0 auto 28px;
       display:flex;
       justify-content:space-between;
@@ -57,12 +57,10 @@
       background:rgba(12,18,32,.72);
     }
 
-    .back:hover{
-      border-color:rgba(250,204,21,.45);
-    }
+    .back:hover{border-color:rgba(250,204,21,.45)}
 
     .header{
-      width:min(1400px,100%);
+      width:min(1500px,100%);
       margin:0 auto 28px;
       padding:30px;
       border-radius:24px;
@@ -84,10 +82,10 @@
     }
 
     .grid{
-      width:min(1400px,100%);
+      width:min(1500px,100%);
       margin:auto;
       display:grid;
-      grid-template-columns:420px 1fr;
+      grid-template-columns:390px 1fr 470px;
       gap:22px;
     }
 
@@ -95,41 +93,40 @@
       background:var(--panel);
       border:1px solid var(--line);
       border-radius:22px;
-      padding:24px;
+      padding:22px;
       box-shadow:0 18px 40px rgba(0,0,0,.38);
     }
 
     h2{
       color:var(--gold);
       margin-bottom:16px;
-      font-size:24px;
+      font-size:22px;
     }
 
     label{
       display:block;
       color:var(--muted);
-      font-size:13px;
+      font-size:12px;
       font-weight:800;
       margin:14px 0 7px;
       text-transform:uppercase;
       letter-spacing:.08em;
     }
 
-    input,
-    select{
+    input, select{
       width:100%;
-      padding:13px 14px;
+      padding:12px 13px;
       border-radius:12px;
       border:1px solid rgba(255,255,255,.16);
       background:rgba(2,6,23,.82);
       color:var(--text);
-      font-size:15px;
+      font-size:14px;
     }
 
     .btn{
       width:100%;
-      margin-top:16px;
-      padding:14px 18px;
+      margin-top:14px;
+      padding:13px 16px;
       border-radius:14px;
       border:1px solid rgba(250,204,21,.25);
       background:linear-gradient(135deg,rgba(250,204,21,.28),rgba(96,165,250,.18));
@@ -144,15 +141,24 @@
       border-color:rgba(250,204,21,.55);
     }
 
+    .btn.secondary{
+      background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(250,204,21,.10));
+    }
+
+    .btn.danger{
+      background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(250,204,21,.08));
+      border-color:rgba(239,68,68,.35);
+    }
+
     .status{
-      margin-top:16px;
-      padding:14px;
+      margin-top:14px;
+      padding:13px;
       border-radius:14px;
       border:1px solid var(--line);
       background:rgba(2,6,23,.55);
       color:#dbeafe;
       line-height:1.6;
-      font-size:14px;
+      font-size:13px;
     }
 
     .ok{color:var(--green);font-weight:900}
@@ -188,7 +194,7 @@
 
     .loot-name{
       font-weight:800;
-      font-size:15px;
+      font-size:14px;
       cursor:pointer;
     }
 
@@ -205,7 +211,7 @@
       border:1px solid rgba(250,204,21,.24);
       background:rgba(15,23,42,.9);
       color:#f8fafc;
-      font-size:11px;
+      font-size:10px;
       font-weight:900;
       cursor:pointer;
       transition:.15s;
@@ -317,12 +323,86 @@
       font-size:11px;
     }
 
+    .lead-stats{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .stat-box{
+      background:rgba(2,6,23,.62);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      padding:12px;
+    }
+
+    .stat-number{
+      color:var(--gold);
+      font-size:24px;
+      font-weight:900;
+      margin-bottom:3px;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+      font-size:12px;
+    }
+
+    th,td{
+      padding:8px 6px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{
+      color:var(--gold);
+      text-transform:uppercase;
+      font-size:10px;
+      letter-spacing:.06em;
+    }
+
+    .lead-scroll{
+      max-height:430px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .export-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .small-note{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.55;
+      margin-top:10px;
+    }
+
     .hidden{display:none}
 
-    @media(max-width:1000px){
+    @media(max-width:1250px){
+      .grid{grid-template-columns:390px 1fr}
+      .lead-card{grid-column:1 / -1}
+    }
+
+    @media(max-width:900px){
       .grid{grid-template-columns:1fr}
       .loot-item-row{grid-template-columns:1fr}
       .prio-buttons{justify-content:flex-start}
+      .lead-stats{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -339,7 +419,7 @@
   <div class="header">
     <h1>Blackwing Lair – Prio-Auswahl</h1>
     <div class="subtitle">
-      Spieler können ihre P1-, P2- und P3-Prioritäten eintragen. Neben jedem Item kann direkt P1, P2, P3 oder P0+ gewählt werden.
+      Spieler setzen ihre Prios. Der Raidlead sieht zunächst nur den Abgabestatus und kann Exporte erstellen.
     </div>
   </div>
 
@@ -380,8 +460,6 @@
 
       <button class="btn" onclick="savePrio()">Prios speichern</button>
 
-      <button class="btn" onclick="downloadCSV()">CSV Export</button>
-
       <div id="playerStatus" class="status">
         Status: Bitte Raid-PIN eingeben und Prios auswählen.
       </div>
@@ -396,6 +474,78 @@
 
     </div>
 
+    <div class="card lead-card">
+
+      <h2>Raidlead-Panel</h2>
+
+      <label>Raidlead-PIN</label>
+      <input id="leadPin" type="password" placeholder="Raidlead-PIN eingeben">
+
+      <button class="btn secondary" onclick="openLeadPanel()">Panel öffnen / aktualisieren</button>
+
+      <div id="leadPanel" class="hidden">
+
+        <div class="lead-stats">
+          <div class="stat-box">
+            <div id="statPlayers" class="stat-number">0</div>
+            <div class="stat-label">Spieler eingetragen</div>
+          </div>
+
+          <div class="stat-box">
+            <div id="statComplete" class="stat-number">0</div>
+            <div class="stat-label">vollständig</div>
+          </div>
+
+          <div class="stat-box">
+            <div id="statP0" class="stat-number">0</div>
+            <div class="stat-label">P0+ gesetzt</div>
+          </div>
+
+          <div class="stat-box">
+            <div id="statClasses" class="stat-number">0</div>
+            <div class="stat-label">Klassen vertreten</div>
+          </div>
+        </div>
+
+        <div class="status">
+          <span class="warn">Raidlead-Status:</span><br>
+          Du siehst hier, wer vollständig eingetragen hat. Die Prios bleiben für normale Spieler verborgen.
+        </div>
+
+        <div class="lead-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Spieler</th>
+                <th>Klasse</th>
+                <th>Status</th>
+                <th>P0+</th>
+                <th>Letzte Änderung</th>
+              </tr>
+            </thead>
+            <tbody id="leadTable"></tbody>
+          </table>
+        </div>
+
+        <h2 style="margin-top:18px;">Export</h2>
+
+        <div class="export-grid">
+          <button class="btn secondary" onclick="downloadExport('csv')">CSV</button>
+          <button class="btn secondary" onclick="downloadExport('csvshort')">CSV SHORT</button>
+          <button class="btn secondary" onclick="downloadExport('txt')">TXT</button>
+          <button class="btn secondary" onclick="downloadExport('lua')">LUA</button>
+        </div>
+
+        <button class="btn danger" onclick="resetAllData()">Testdaten löschen</button>
+
+        <div class="small-note">
+          Hinweis: Diese Version speichert noch lokal im Browser. Für echte Spieler-Einträge über verschiedene Geräte brauchen wir danach Supabase oder Google Apps Script.
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
 
 </div>
@@ -405,6 +555,7 @@
 <script>
 
 const RAID_PIN = "bwl";
+const LEAD_PIN = "lead";
 
 const bwlLoot = [
 
@@ -546,6 +697,10 @@ function htmlSafe(text){
   return text.replace(/"/g, "&quot;");
 }
 
+function cssEscape(text){
+  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 function setPrio(slot, itemName){
   const p1 = document.getElementById("p1").value;
   const p2 = document.getElementById("p2").value;
@@ -593,7 +748,7 @@ function manualSelectChanged(){
   const p2 = document.getElementById("p2").value;
   const p3 = document.getElementById("p3").value;
 
-  if(p1 && p2 && p1 === p2 || p1 && p3 && p1 === p3 || p2 && p3 && p2 === p3){
+  if((p1 && p2 && p1 === p2) || (p1 && p3 && p1 === p3) || (p2 && p3 && p2 === p3)){
     document.getElementById("playerStatus").innerHTML = `
       <span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>
     `;
@@ -633,10 +788,6 @@ function updateActiveButtons(){
   }
 }
 
-function cssEscape(text){
-  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-}
-
 function getPlayerKey(){
   const player = document.getElementById("playerName").value.trim().toLowerCase();
   if(!player) return null;
@@ -652,7 +803,8 @@ function autoSaveDraft(){
     class:document.getElementById("playerClass").value,
     p1:document.getElementById("p1").value,
     p2:document.getElementById("p2").value,
-    p3:document.getElementById("p3").value
+    p3:document.getElementById("p3").value,
+    timestamp:new Date().toLocaleString("de-DE")
   };
 
   localStorage.setItem(key, JSON.stringify(data));
@@ -712,34 +864,164 @@ function savePrio(){
   status.innerHTML = `<span class="ok">✓ Deine Prios wurden gespeichert.</span>`;
 }
 
-function downloadCSV(){
-  const player = document.getElementById("playerName").value.trim();
-  const playerClass = document.getElementById("playerClass").value;
-  const p1 = document.getElementById("p1").value;
-  const p2 = document.getElementById("p2").value;
-  const p3 = document.getElementById("p3").value;
+function getAllPrioEntries(){
+  const entries = [];
 
-  if(!player || !playerClass || !p1 || !p2 || !p3){
-    alert("Bitte erst Charakter, Klasse und Prios vollständig ausfüllen.");
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+
+    if(key && key.startsWith("bwl_prio_")){
+      try{
+        const entry = JSON.parse(localStorage.getItem(key));
+        entries.push(entry);
+      }catch(e){}
+    }
+  }
+
+  entries.sort((a,b) => a.player.localeCompare(b.player));
+  return entries;
+}
+
+function isComplete(entry){
+  return entry.player && entry.class && entry.p1 && entry.p2 && entry.p3;
+}
+
+function isP0Plus(entry){
+  return entry.p1 && entry.p1 === entry.p2 && entry.p2 === entry.p3;
+}
+
+function openLeadPanel(){
+  const pin = document.getElementById("leadPin").value.trim();
+
+  if(pin !== LEAD_PIN){
+    alert("Falscher Raidlead-PIN.");
     return;
   }
 
-  const csv = [
-    ["Player","Class","Raid","P1","P2","P3"],
-    [player,playerClass,"BWL",p1,p2,p3]
-  ]
-  .map(row => row.map(value => `"${value}"`).join(","))
-  .join("\n");
+  document.getElementById("leadPanel").classList.remove("hidden");
+  renderLeadPanel();
+}
 
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+function renderLeadPanel(){
+  const entries = getAllPrioEntries();
+
+  const complete = entries.filter(isComplete).length;
+  const p0 = entries.filter(isP0Plus).length;
+  const classes = new Set(entries.map(e => e.class).filter(Boolean)).size;
+
+  document.getElementById("statPlayers").textContent = entries.length;
+  document.getElementById("statComplete").textContent = complete;
+  document.getElementById("statP0").textContent = p0;
+  document.getElementById("statClasses").textContent = classes;
+
+  const table = document.getElementById("leadTable");
+  table.innerHTML = "";
+
+  entries.forEach(entry => {
+    const completeStatus = isComplete(entry)
+      ? `<span class="ok">fertig</span>`
+      : `<span class="bad">offen</span>`;
+
+    const p0Status = isP0Plus(entry)
+      ? `<span class="warn">ja</span>`
+      : `nein`;
+
+    table.innerHTML += `
+      <tr>
+        <td>${entry.player || "–"}</td>
+        <td>${entry.class || "–"}</td>
+        <td>${completeStatus}</td>
+        <td>${p0Status}</td>
+        <td>${entry.timestamp || "–"}</td>
+      </tr>
+    `;
+  });
+}
+
+function downloadExport(type){
+  const entries = getAllPrioEntries().filter(isComplete);
+
+  if(entries.length === 0){
+    alert("Keine vollständigen Einträge vorhanden.");
+    return;
+  }
+
+  let content = "";
+  let filename = "bwl-prios";
+  let mime = "text/plain;charset=utf-8;";
+
+  if(type === "csv"){
+    filename += ".csv";
+    mime = "text/csv;charset=utf-8;";
+    content = [
+      ["Player","Class","Raid","P1","P2","P3","P0Plus"]
+    ]
+    .concat(entries.map(e => [
+      e.player,
+      e.class,
+      "BWL",
+      e.p1,
+      e.p2,
+      e.p3,
+      isP0Plus(e) ? "YES" : "NO"
+    ]))
+    .map(row => row.map(v => `"${v}"`).join(","))
+    .join("\n");
+  }
+
+  if(type === "csvshort"){
+    filename += "-short.csv";
+    mime = "text/csv;charset=utf-8;";
+    content = entries
+      .map(e => `"${e.player}","${e.p1}","${e.p2}","${e.p3}"`)
+      .join("\n");
+  }
+
+  if(type === "txt"){
+    filename += ".txt";
+    content = entries.map(e => {
+      return `${e.player} (${e.class})\nP1: ${e.p1}\nP2: ${e.p2}\nP3: ${e.p3}\nP0+: ${isP0Plus(e) ? "JA" : "NEIN"}\n`;
+    }).join("\n");
+  }
+
+  if(type === "lua"){
+    filename += ".lua";
+    content = "LichtbringerBWL = {\n";
+
+    entries.forEach(e => {
+      content += `  ["${e.player}"] = { class = "${e.class}", p1 = "${e.p1}", p2 = "${e.p2}", p3 = "${e.p3}", p0plus = ${isP0Plus(e) ? "true" : "false"} },\n`;
+    });
+
+    content += "}\n";
+  }
+
+  const blob = new Blob([content], {type:mime});
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "bwl-prio-" + player + ".csv";
+  a.download = filename;
   a.click();
 
   URL.revokeObjectURL(url);
+}
+
+function resetAllData(){
+  if(!confirm("Alle lokalen BWL-Testdaten löschen?")) return;
+
+  const keys = [];
+
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith("bwl_prio_")){
+      keys.push(key);
+    }
+  }
+
+  keys.forEach(key => localStorage.removeItem(key));
+
+  renderLeadPanel();
+  alert("Testdaten gelöscht.");
 }
 
 function showTooltip(event, item){
@@ -803,4 +1085,3 @@ renderLootList();
 
 </body>
 </html>
-
