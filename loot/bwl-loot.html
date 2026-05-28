@@ -1040,6 +1040,51 @@ function hideTooltip(){
 
 loadLootFromSheet();
 
+  function openRaidleadPage(){
+
+  const leadPin =
+    document.getElementById("leadPinInput")
+    .value
+    .trim();
+
+  if(!leadPin){
+
+    alert("Bitte LeadPIN eingeben.");
+
+    return;
+
+  }
+
+  window.location.href =
+    `raidlead.html?raid=BWL&leadPin=${encodeURIComponent(leadPin)}`;
+
+}
+  <!-- RAIDLEAD ZUGANG -->
+
+<div class="card info-card">
+
+  <h2>Raidlead Zugang</h2>
+
+  <label>LeadPIN</label>
+
+  <input
+    id="leadPinInput"
+    type="password"
+    placeholder="LeadPIN eingeben"
+  >
+
+  <button
+    class="btn"
+    onclick="openRaidleadPage()"
+  >
+    Raidlead öffnen
+  </button>
+
+  <div class="status">
+    Mit dem gültigen LeadPIN wird direkt das Raidlead-Panel geöffnet.
+  </div>
+
+</div>
 </script>
 
 </body>
