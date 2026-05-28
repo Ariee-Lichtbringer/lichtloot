@@ -1,1149 +1,816 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lichtbringer – BWL Prio-Auswahl</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lichtbringer P0+ Übersicht</title>
 
   <style>
-    :root{
-      --gold:#facc15;
-      --panel:rgba(12,18,32,.88);
-      --text:#f8fafc;
-      --muted:#cbd5e1;
-      --line:rgba(255,255,255,.12);
-      --danger:#ef4444;
-      --green:#22c55e;
+    :root {
+      --bg: #0d0b08;
+      --panel: #17120d;
+      --panel2: #20170f;
+      --gold: #d6a93d;
+      --gold2: #ffdd75;
+      --text: #f3ead7;
+      --muted: #b9aa8b;
+      --border: rgba(214, 169, 61, 0.35);
+      --danger: #b94a48;
+      --green: #6fbf73;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0}
+    * {
+      box-sizing: border-box;
+    }
 
-    body{
-      min-height:100vh;
-      font-family:Arial, Helvetica, sans-serif;
-      color:var(--text);
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
       background:
-        linear-gradient(rgba(8,17,31,.80), rgba(8,17,31,.94)),
-        url('../images/bwl.jpg');
-      background-size:cover;
-      background-position:center;
-      background-attachment:fixed;
+        radial-gradient(circle at top, rgba(214, 169, 61, 0.12), transparent 35%),
+        var(--bg);
+      color: var(--text);
     }
 
-    .overlay{
-      min-height:100vh;
-      padding:36px 22px 60px;
-      backdrop-filter:blur(3px);
+    header {
+      padding: 32px 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.35);
     }
 
-    .topbar{
-      width:min(1500px,100%);
-      margin:0 auto 28px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:16px;
-      flex-wrap:wrap;
+    header h1 {
+      margin: 0;
+      color: var(--gold2);
+      font-size: 34px;
+      letter-spacing: 1px;
     }
 
-    .back{
-      color:var(--text);
-      text-decoration:none;
-      font-weight:800;
-      border:1px solid var(--line);
-      padding:12px 16px;
-      border-radius:14px;
-      background:rgba(12,18,32,.72);
+    header p {
+      margin: 10px auto 0;
+      max-width: 900px;
+      color: var(--muted);
+      line-height: 1.5;
     }
 
-    .back:hover{border-color:rgba(250,204,21,.45)}
-
-    .header{
-      width:min(1500px,100%);
-      margin:0 auto 28px;
-      padding:30px;
-      border-radius:24px;
-      background:var(--panel);
-      border:1px solid rgba(250,204,21,.22);
-      box-shadow:0 20px 45px rgba(0,0,0,.45);
+    main {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 24px;
     }
 
-    h1{
-      color:var(--gold);
-      font-size:clamp(34px,5vw,58px);
-      margin-bottom:8px;
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 22px;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
     }
 
-    .subtitle{
-      color:#dbeafe;
-      line-height:1.7;
-      font-size:15px;
+    .toolbar-left,
+    .toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
     }
 
-    .grid{
-      width:min(1500px,100%);
-      margin:auto;
-      display:grid;
-      grid-template-columns:390px 1fr 500px;
-      gap:22px;
+    button,
+    select,
+    input {
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #100c08;
+      color: var(--text);
+      padding: 10px 14px;
+      font-size: 14px;
     }
 
-    .card{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:22px;
-      padding:22px;
-      box-shadow:0 18px 40px rgba(0,0,0,.38);
+    button {
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
     }
 
-    h2{
-      color:var(--gold);
-      margin-bottom:16px;
-      font-size:22px;
+    button:hover {
+      background: rgba(214, 169, 61, 0.18);
+      border-color: var(--gold2);
     }
 
-    label{
-      display:block;
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      margin:14px 0 7px;
-      text-transform:uppercase;
-      letter-spacing:.08em;
+    .primary {
+      background: linear-gradient(135deg, #8f641b, #d6a93d);
+      color: #17100a;
+      border-color: var(--gold2);
     }
 
-    input, select{
-      width:100%;
-      padding:12px 13px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.16);
-      background:rgba(2,6,23,.82);
-      color:var(--text);
-      font-size:14px;
+    .danger {
+      border-color: rgba(185, 74, 72, 0.7);
+      color: #ffd0ce;
     }
 
-    .btn{
-      width:100%;
-      margin-top:14px;
-      padding:13px 16px;
-      border-radius:14px;
-      border:1px solid rgba(250,204,21,.25);
-      background:linear-gradient(135deg,rgba(250,204,21,.28),rgba(96,165,250,.18));
-      color:var(--text);
-      font-weight:900;
-      cursor:pointer;
-      transition:.18s;
+    .status {
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    .btn:hover{
-      transform:translateY(-2px);
-      border-color:rgba(250,204,21,.55);
+    .grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
     }
 
-    .btn.secondary{
-      background:linear-gradient(135deg,rgba(96,165,250,.24),rgba(250,204,21,.10));
+    .sidebar,
+    .content-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
     }
 
-    .btn.danger{
-      background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(250,204,21,.08));
-      border-color:rgba(239,68,68,.35);
+    .sidebar h2,
+    .content-box h2 {
+      margin-top: 0;
+      color: var(--gold2);
     }
 
-    .delete-btn{
-      padding:6px 8px;
-      border-radius:8px;
-      border:1px solid rgba(239,68,68,.45);
-      background:rgba(127,29,29,.55);
-      color:#fecaca;
-      font-size:10px;
-      font-weight:900;
-      cursor:pointer;
+    .slot-list,
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .delete-btn:hover{
-      background:rgba(239,68,68,.32);
-      color:white;
+    .slot-btn,
+    .item-card {
+      width: 100%;
+      text-align: left;
+      background: var(--panel2);
+      border: 1px solid rgba(214, 169, 61, 0.22);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 12px;
     }
 
-    .status{
-      margin-top:14px;
-      padding:13px;
-      border-radius:14px;
-      border:1px solid var(--line);
-      background:rgba(2,6,23,.55);
-      color:#dbeafe;
-      line-height:1.6;
-      font-size:13px;
+    .slot-btn.active {
+      background: linear-gradient(135deg, rgba(214, 169, 61, 0.42), rgba(255, 221, 117, 0.18));
+      border-color: var(--gold2);
+      box-shadow: 0 0 18px rgba(214, 169, 61, 0.25);
+      color: #fff2bf;
     }
 
-    .ok{color:var(--green);font-weight:900}
-    .bad{color:var(--danger);font-weight:900}
-    .warn{color:var(--gold);font-weight:900}
-
-    .loot-list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      max-height:760px;
-      overflow:auto;
-      padding-right:4px;
-    }
-
-    .loot-item-row{
-      display:grid;
-      grid-template-columns:1fr auto;
-      gap:10px;
-      align-items:center;
-      padding:10px 12px;
-      border-radius:12px;
-      background:rgba(2,6,23,.72);
-      border:1px solid rgba(255,255,255,.10);
-      transition:.18s;
-    }
-
-    .loot-item-row:hover{
-      transform:translateX(4px);
-      border-color:rgba(250,204,21,.45);
-      background:rgba(15,23,42,.92);
-    }
-
-    .loot-name{
-      font-weight:800;
-      font-size:14px;
-      cursor:pointer;
-    }
-
-    .prio-buttons{
-      display:flex;
-      gap:6px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .mini-btn{
-      padding:6px 8px;
-      border-radius:8px;
-      border:1px solid rgba(250,204,21,.24);
-      background:rgba(15,23,42,.9);
-      color:#f8fafc;
-      font-size:10px;
-      font-weight:900;
-      cursor:pointer;
-      transition:.15s;
-    }
-
-    .mini-btn:hover{
-      background:rgba(250,204,21,.22);
-      border-color:rgba(250,204,21,.55);
-      transform:translateY(-1px);
-    }
-
-    .mini-btn.plus{
-      color:#facc15;
-      border-color:rgba(250,204,21,.40);
-    }
-
-    .mini-btn.active{
-      background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));
-      color:#111827;
-      border-color:#facc15;
-      box-shadow:0 0 14px rgba(250,204,21,.45);
-    }
-
-    .mini-btn.p0active{
-      background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));
-      color:white;
-      border-color:#facc15;
-      box-shadow:0 0 16px rgba(168,85,247,.55);
-    }
-
-    .epic{color:#c084fc}
-    .rare{color:#60a5fa}
-    .uncommon{color:#4ade80}
-    .legendary{color:#fb923c}
-
-    .tooltip{
-      position:fixed;
-      z-index:9999;
-      width:290px;
-      padding:12px;
-      border-radius:8px;
-      background:linear-gradient(rgba(7,12,31,.96), rgba(2,6,23,.98));
-      border:1px solid rgba(148,163,184,.75);
+    .item-card.active {
+      background: linear-gradient(135deg, rgba(214, 169, 61, 0.55), rgba(255, 221, 117, 0.22));
+      border-color: var(--gold2);
       box-shadow:
-        0 0 0 1px rgba(255,255,255,.10),
-        0 0 28px rgba(0,0,0,.85);
-      pointer-events:none;
-      font-family:Arial, Helvetica, sans-serif;
-      font-size:11px;
-      line-height:1.3;
+        0 0 0 2px rgba(255, 221, 117, 0.35),
+        0 0 24px rgba(214, 169, 61, 0.35);
     }
 
-    .tooltip-title{
-      font-size:15px;
-      font-weight:900;
-      margin-bottom:3px;
+    .item-title {
+      font-weight: bold;
+      color: var(--gold2);
+      margin-bottom: 6px;
     }
 
-    .tooltip-title.epic{color:#a335ee}
-    .tooltip-title.rare{color:#0070dd}
-    .tooltip-title.uncommon{color:#1eff00}
-    .tooltip-title.legendary{color:#ff8000}
-
-    .tooltip-ilvl{
-      color:#ffd100;
-      font-size:11px;
-      font-weight:900;
-      margin-bottom:6px;
+    .item-meta {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
     }
 
-    .tooltip-bind,
-    .tooltip-row,
-    .tooltip-stat{
-      color:#ffffff;
-      font-size:11px;
-      font-weight:800;
-      margin-top:3px;
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) 1fr;
+      gap: 20px;
     }
 
-    .tooltip-row{
-      display:flex;
-      justify-content:space-between;
-      gap:14px;
+    .prio-panel {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      min-height: 300px;
     }
 
-    .tooltip-equip{
-      color:#1eff00;
-      font-size:11px;
-      font-weight:900;
-      margin-top:6px;
+    .prio-panel h3 {
+      margin-top: 0;
+      color: var(--gold2);
     }
 
-    .tooltip-p0{
-      margin-top:9px;
-      padding-top:8px;
-      border-top:1px solid rgba(255,255,255,.18);
-      color:#dbeafe;
+    .empty {
+      color: var(--muted);
+      padding: 18px;
+      text-align: center;
+      border: 1px dashed rgba(214, 169, 61, 0.3);
+      border-radius: 14px;
     }
 
-    .tooltip-p0 strong{
-      color:#facc15;
-      font-size:11px;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 14px;
+      font-size: 14px;
     }
 
-    .tooltip ul{
-      margin-top:5px;
-      padding-left:18px;
-      line-height:1.45;
-      font-size:11px;
+    th,
+    td {
+      border-bottom: 1px solid rgba(214, 169, 61, 0.18);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
     }
 
-    .lead-stats{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:10px;
-      margin-bottom:14px;
+    th {
+      color: var(--gold2);
+      background: rgba(0, 0, 0, 0.28);
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
 
-    .stat-box{
-      background:rgba(2,6,23,.62);
-      border:1px solid rgba(255,255,255,.10);
-      border-radius:14px;
-      padding:12px;
+    tr:hover td {
+      background: rgba(214, 169, 61, 0.08);
     }
 
-    .stat-number{
-      color:var(--gold);
-      font-size:24px;
-      font-weight:900;
-      margin-bottom:3px;
+    .pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(214, 169, 61, 0.15);
+      border: 1px solid rgba(214, 169, 61, 0.35);
+      color: var(--gold2);
+      font-size: 12px;
+      margin: 2px 4px 2px 0;
     }
 
-    .stat-label{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.35;
+    .delete-btn {
+      padding: 6px 9px;
+      border-radius: 9px;
+      color: #ffd0ce;
+      border: 1px solid rgba(185, 74, 72, 0.65);
+      background: rgba(185, 74, 72, 0.12);
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:12px;
-      font-size:12px;
+    .rules {
+      margin-top: 26px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      line-height: 1.6;
     }
 
-    th,td{
-      padding:8px 6px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      text-align:left;
-      vertical-align:top;
+    .rules h2 {
+      margin-top: 0;
+      color: var(--gold2);
     }
 
-    th{
-      color:var(--gold);
-      text-transform:uppercase;
-      font-size:10px;
-      letter-spacing:.06em;
+    .hidden {
+      display: none;
     }
 
-    .lead-scroll{
-      max-height:430px;
-      overflow:auto;
-      padding-right:4px;
-    }
-
-    .export-grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:8px;
-      margin-top:12px;
-    }
-
-    .small-note{
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
-      margin-top:10px;
-    }
-
-    .hidden{display:none}
-
-    @media(max-width:1250px){
-      .grid{grid-template-columns:390px 1fr}
-      .lead-card{grid-column:1 / -1}
-    }
-
-    @media(max-width:900px){
-      .grid{grid-template-columns:1fr}
-      .loot-item-row{grid-template-columns:1fr}
-      .prio-buttons{justify-content:flex-start}
-      .lead-stats{grid-template-columns:1fr}
+    @media (max-width: 1000px) {
+      .grid,
+      .layout {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 
 <body>
+  <header>
+    <h1>Lichtbringer P0+ Übersicht</h1>
+    <p>
+      Raidlead-Ansicht für aktuelle Priolisten, Itemauswahl, P0+-Punkte und lokale Korrekturen fehlerhafter Einträge.
+    </p>
+  </header>
 
-<div class="overlay">
-
-  <div class="topbar">
-    <a class="back" href="../index.html">← Zurück zur Startseite</a>
-    <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
-  </div>
-
-  <div class="header">
-    <h1>Blackwing Lair – Prio-Auswahl</h1>
-    <div class="subtitle">
-      Die Lootdaten werden direkt aus dem Lichtbringer-Google-Sheet geladen.
-    </div>
-  </div>
-
-  <div class="grid">
-
-    <div class="card">
-
-      <h2>Spieler-Eingabe</h2>
-
-      <label>Raid-PIN</label>
-      <input id="raidPin" type="password" placeholder="Raid-PIN eingeben">
-
-      <label>Charaktername</label>
-      <input id="playerName" type="text" placeholder="z. B. Milkshake" oninput="loadPlayerData()">
-
-      <label>Klasse</label>
-      <select id="playerClass" onchange="autoSaveDraft()">
-        <option value="">Klasse auswählen</option>
-        <option>Krieger</option>
-        <option>Paladin</option>
-        <option>Jäger</option>
-        <option>Schurke</option>
-        <option>Priester</option>
-        <option>Schamane</option>
-        <option>Magier</option>
-        <option>Hexenmeister</option>
-        <option>Druide</option>
-      </select>
-
-      <label>P1</label>
-      <select id="p1" onchange="manualSelectChanged()"></select>
-
-      <label>P2</label>
-      <select id="p2" onchange="manualSelectChanged()"></select>
-
-      <label>P3</label>
-      <select id="p3" onchange="manualSelectChanged()"></select>
-
-      <button class="btn" onclick="savePrio()">Prios speichern</button>
-
-      <div id="playerStatus" class="status">
-        Status: Lootdaten werden geladen …
+  <main>
+    <section class="toolbar">
+      <div class="toolbar-left">
+        <button class="primary" onclick="loadData()">Daten aktualisieren</button>
+        <button onclick="togglePrioList()">Prioliste öffnen / schließen</button>
+        <button class="danger" onclick="resetLocalDeletes()">Gelöschte Einträge zurücksetzen</button>
+        <span id="status" class="status">Noch keine Daten geladen.</span>
       </div>
 
-    </div>
-
-    <div class="card">
-
-      <h2>Möglicher Loot</h2>
-
-      <div id="lootList" class="loot-list">
-        <div class="status">Lade Loot aus Google Sheet …</div>
+      <div class="toolbar-right">
+        <input id="searchInput" type="text" placeholder="Item oder Spieler suchen..." oninput="renderAll()" />
+        <select id="classFilter" onchange="renderAll()">
+          <option value="">Alle Klassen</option>
+        </select>
       </div>
+    </section>
 
-    </div>
+    <section class="grid">
+      <aside class="sidebar">
+        <h2>Slots</h2>
+        <div id="slotList" class="slot-list">
+          <div class="empty">Nach dem Aktualisieren erscheinen hier die Slots.</div>
+        </div>
+      </aside>
 
-    <div class="card lead-card">
+      <section class="content-box">
+        <h2>Items</h2>
 
-      <h2>Raidlead-Panel</h2>
-
-      <label>Raidlead-PIN</label>
-      <input id="leadPin" type="password" placeholder="Raidlead-PIN eingeben">
-
-      <button class="btn secondary" onclick="openLeadPanel()">Panel öffnen / aktualisieren</button>
-
-      <div id="leadPanel" class="hidden">
-
-        <div class="lead-stats">
-          <div class="stat-box">
-            <div id="statPlayers" class="stat-number">0</div>
-            <div class="stat-label">Spieler eingetragen</div>
+        <div class="layout">
+          <div>
+            <div id="itemList" class="item-list">
+              <div class="empty">Wähle nach dem Laden einen Slot oder suche nach einem Item.</div>
+            </div>
           </div>
 
-          <div class="stat-box">
-            <div id="statComplete" class="stat-number">0</div>
-            <div class="stat-label">vollständig</div>
-          </div>
-
-          <div class="stat-box">
-            <div id="statP0" class="stat-number">0</div>
-            <div class="stat-label">P0+ gesetzt</div>
-          </div>
-
-          <div class="stat-box">
-            <div id="statClasses" class="stat-number">0</div>
-            <div class="stat-label">Klassen vertreten</div>
+          <div class="prio-panel">
+            <h3>Ausgewählte Prioliste</h3>
+            <div id="selectedInfo" class="empty">
+              Öffne ein Item, um die gesetzten P0s und P0+-Punkte zu sehen.
+            </div>
           </div>
         </div>
+      </section>
+    </section>
 
-        <div class="status">
-          <span class="warn">Raidlead-Status:</span><br>
-          Hier können fehlerhafte oder doppelte Priolisten gezielt gelöscht werden.
-        </div>
+    <section id="fullPrioSection" class="content-box hidden" style="margin-top: 22px;">
+      <h2>Geladene Prioliste</h2>
+      <div id="fullPrioList"></div>
+    </section>
 
-        <div class="lead-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Spieler</th>
-                <th>Klasse</th>
-                <th>Status</th>
-                <th>P0+</th>
-                <th>Letzte Änderung</th>
-                <th>Löschen</th>
-              </tr>
-            </thead>
-            <tbody id="leadTable"></tbody>
-          </table>
-        </div>
+    <section class="rules">
+      <h2>P0+ Regeln der Lichtbringer</h2>
+      <p>
+        Die P0 muss spätestens 30 Minuten vor Raidbeginn im Discord im Channel
+        <strong>Raidanmeldung</strong> gepostet sein.
+      </p>
+      <p>
+        Für jede Raidteilnahme erhält der Spieler für das gesetzte Item einen P0+-Punkt,
+        sofern er für dieses Item P0 gesetzt hat, das Item aber nicht erhalten hat oder es nicht gedroppt ist.
+      </p>
+      <p>
+        Die Vergabe der Items im P0+-System richtet sich nach der Anzahl der Pluspunkte.
+        Bei Gleichstand wird zwischen den betroffenen Spielerinnen und Spielern gerollt.
+      </p>
+      <p>
+        P0+-Punkte können erst gesammelt werden, wenn eine P0-Freigabe vorliegt.
+        Die Voraussetzungen dafür stehen in den Raidregeln der Lichtbringer im Discord.
+      </p>
+    </section>
+  </main>
 
-        <h2 style="margin-top:18px;">Export</h2>
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/export?format=csv&gid=0";
 
-        <div class="export-grid">
-          <button class="btn secondary" onclick="downloadExport('csv')">CSV</button>
-          <button class="btn secondary" onclick="downloadExport('csvshort')">CSV SHORT</button>
-          <button class="btn secondary" onclick="downloadExport('txt')">TXT</button>
-          <button class="btn secondary" onclick="downloadExport('lua')">LUA</button>
-        </div>
+    let rawRows = [];
+    let entries = [];
+    let selectedSlot = "";
+    let selectedItem = "";
+    let prioOpen = false;
 
-        <button class="btn danger" onclick="resetAllData()">Alle Testdaten löschen</button>
+    const deletedKey = "lichtbringer_deleted_prios_v1";
 
-        <div class="small-note">
-          Aktuell werden Spieler-Prios noch lokal im Browser gespeichert. Der Loot kommt bereits aus dem Google Sheet.
-        </div>
+    function getDeletedIds() {
+      try {
+        return JSON.parse(localStorage.getItem(deletedKey)) || [];
+      } catch {
+        return [];
+      }
+    }
 
-      </div>
+    function setDeletedIds(ids) {
+      localStorage.setItem(deletedKey, JSON.stringify(ids));
+    }
 
-    </div>
+    function makeId(entry) {
+      return [
+        entry.spieler,
+        entry.klasse,
+        entry.slot,
+        entry.item,
+        entry.punkte,
+        entry.eigenschaft,
+        entry.bemerkung
+      ].join("||");
+    }
 
-  </div>
+    async function loadData() {
+      const status = document.getElementById("status");
+      status.textContent = "Daten werden geladen...";
 
-</div>
+      try {
+        const response = await fetch(CSV_URL + "&cacheBust=" + Date.now());
 
-<div id="tooltip" class="tooltip hidden"></div>
+        if (!response.ok) {
+          throw new Error("CSV konnte nicht geladen werden.");
+        }
 
-<script>
+        const text = await response.text();
+        rawRows = parseCSV(text);
 
-const RAID_PIN = "bwl";
-const LEAD_PIN = "lead";
+        if (!rawRows.length) {
+          throw new Error("Die CSV-Datei enthält keine Daten.");
+        }
 
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+        entries = normalizeRows(rawRows).filter(e => !getDeletedIds().includes(makeId(e)));
 
-let bwlLoot = [];
+        selectedSlot = "";
+        selectedItem = "";
 
-function parseCSV(text){
-  const rows = [];
-  let row = [];
-  let value = "";
-  let insideQuotes = false;
+        buildClassFilter();
+        renderAll();
 
-  for(let i = 0; i < text.length; i++){
-    const char = text[i];
-    const next = text[i + 1];
+        status.textContent = entries.length + " Einträge geladen.";
+      } catch (error) {
+        console.error(error);
+        status.textContent = "Fehler beim Laden. Prüfe Freigabe und CSV-Veröffentlichung.";
+      }
+    }
 
-    if(char === '"' && insideQuotes && next === '"'){
-      value += '"';
-      i++;
-    }else if(char === '"'){
-      insideQuotes = !insideQuotes;
-    }else if(char === "," && !insideQuotes){
-      row.push(value);
-      value = "";
-    }else if((char === "\n" || char === "\r") && !insideQuotes){
-      if(value || row.length){
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let insideQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (char === '"' && insideQuotes && next === '"') {
+          value += '"';
+          i++;
+        } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+          row.push(value);
+          value = "";
+        } else if ((char === "\n" || char === "\r") && !insideQuotes) {
+          if (value || row.length) {
+            row.push(value);
+            rows.push(row);
+            row = [];
+            value = "";
+          }
+          if (char === "\r" && next === "\n") i++;
+        } else {
+          value += char;
+        }
+      }
+
+      if (value || row.length) {
         row.push(value);
         rows.push(row);
-        row = [];
-        value = "";
       }
-      if(char === "\r" && next === "\n") i++;
-    }else{
-      value += char;
+
+      return rows;
     }
-  }
 
-  if(value || row.length){
-    row.push(value);
-    rows.push(row);
-  }
+    function normalizeRows(rows) {
+      const headers = rows[0].map(h => clean(h));
+      const dataRows = rows.slice(1);
 
-  return rows;
-}
+      return dataRows
+        .map(row => {
+          const obj = {};
+          headers.forEach((header, index) => {
+            obj[header] = clean(row[index] || "");
+          });
 
-function normalizeQuality(value){
-  const q = String(value || "").trim().toLowerCase();
+          return {
+            spieler: pick(obj, ["spieler", "name", "player", "char", "charakter"]),
+            klasse: pick(obj, ["klasse", "class"]),
+            slot: pick(obj, ["slot", "platz", "itemslot", "rüstungsslot"]),
+            item: pick(obj, ["item", "gegenstand", "itemname", "loot"]),
+            punkte: pick(obj, ["p0+", "punkte", "pluspunkte", "prio+", "p0 plus", "p0plus"]),
+            eigenschaft: pick(obj, ["eigenschaft", "typ", "stats", "werte", "itemeigenschaft", "beschreibung"]),
+            bemerkung: pick(obj, ["bemerkung", "notiz", "hinweis", "kommentar"]),
+            raid: pick(obj, ["raid", "instanz"]),
+            datum: pick(obj, ["datum", "date"])
+          };
+        })
+        .filter(e => e.item || e.spieler);
+    }
 
-  if(q.includes("legend")) return "legendary";
-  if(q.includes("episch") || q.includes("epic")) return "epic";
-  if(q.includes("selten") || q.includes("rare")) return "rare";
-  if(q.includes("ungewöhnlich") || q.includes("uncommon")) return "uncommon";
+    function clean(value) {
+      return String(value || "")
+        .replace(/\uFEFF/g, "")
+        .trim();
+    }
 
-  return "epic";
-}
+    function pick(obj, names) {
+      const keys = Object.keys(obj);
+      for (const name of names) {
+        const found = keys.find(k => k.toLowerCase() === name.toLowerCase());
+        if (found && obj[found]) return obj[found];
+      }
 
-function p0FromText(text){
-  if(!text) return [];
+      for (const name of names) {
+        const found = keys.find(k => k.toLowerCase().includes(name.toLowerCase()));
+        if (found && obj[found]) return obj[found];
+      }
 
-  return String(text)
-    .split(";")
-    .map(entry => entry.trim())
-    .filter(Boolean);
-}
+      return "";
+    }
 
-async function loadLootFromSheet(){
-  const status = document.getElementById("playerStatus");
-  const list = document.getElementById("lootList");
+    function buildClassFilter() {
+      const select = document.getElementById("classFilter");
+      const current = select.value;
 
-  try{
-    const response = await fetch(LOOT_CSV_URL);
-    const csvText = await response.text();
-    const rows = parseCSV(csvText);
+      const classes = [...new Set(entries.map(e => e.klasse).filter(Boolean))].sort();
 
-    const headers = rows.shift().map(h => h.trim());
+      select.innerHTML = '<option value="">Alle Klassen</option>';
+      classes.forEach(cls => {
+        const option = document.createElement("option");
+        option.value = cls;
+        option.textContent = cls;
+        select.appendChild(option);
+      });
 
-    bwlLoot = rows
-      .map(row => {
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = row[index] || "";
-        });
+      select.value = current;
+    }
 
-        return {
-          name: obj.Item || "",
-          quality: normalizeQuality(obj["Qualität"]),
-          ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Blackwing Lair",
-          bind: "Wird beim Aufheben gebunden",
-          slot: obj.Slot || "",
-          type: obj.Typ || "",
-          boss: obj.Boss || "",
-          category: obj.Kategorie || "",
-          wowhead: obj.WowheadLink || "",
-          p0: p0FromText(obj.P0Spieler),
-          stats: [
-            obj.Kategorie ? "Kategorie: " + obj.Kategorie : "",
-            obj.Boss ? "Quelle: " + obj.Boss : ""
-          ].filter(Boolean),
-          equip: obj.WowheadLink ? "Wowhead-Link im Sheet hinterlegt." : ""
+    function renderAll() {
+      renderSlots();
+      renderItems();
+      renderSelectedInfo();
+      renderFullPrioList();
+    }
+
+    function getFilteredEntries() {
+      const search = clean(document.getElementById("searchInput").value).toLowerCase();
+      const cls = document.getElementById("classFilter").value;
+
+      return entries.filter(e => {
+        const matchesSearch =
+          !search ||
+          e.item.toLowerCase().includes(search) ||
+          e.spieler.toLowerCase().includes(search) ||
+          e.slot.toLowerCase().includes(search);
+
+        const matchesClass = !cls || e.klasse === cls;
+
+        return matchesSearch && matchesClass;
+      });
+    }
+
+    function renderSlots() {
+      const container = document.getElementById("slotList");
+      const filtered = getFilteredEntries();
+      const slots = [...new Set(filtered.map(e => e.slot || "Ohne Slot"))].sort();
+
+      if (!slots.length) {
+        container.innerHTML = '<div class="empty">Keine Slots gefunden.</div>';
+        return;
+      }
+
+      container.innerHTML = "";
+
+      const allBtn = document.createElement("button");
+      allBtn.className = "slot-btn" + (!selectedSlot ? " active" : "");
+      allBtn.textContent = "Alle Slots";
+      allBtn.onclick = () => {
+        selectedSlot = "";
+        selectedItem = "";
+        renderAll();
+      };
+      container.appendChild(allBtn);
+
+      slots.forEach(slot => {
+        const btn = document.createElement("button");
+        btn.className = "slot-btn" + (selectedSlot === slot ? " active" : "");
+        btn.textContent = slot;
+        btn.onclick = () => {
+          selectedSlot = slot;
+          selectedItem = "";
+          renderAll();
         };
-      })
-      .filter(item => item.name);
-
-    fillItems();
-    renderLootList();
-
-    status.innerHTML = `<span class="ok">✓ Lootdaten aus dem Google Sheet geladen.</span>`;
-
-  }catch(error){
-    console.error(error);
-    list.innerHTML = `<div class="status"><span class="bad">Lootdaten konnten nicht geladen werden.</span><br>Bitte prüfen, ob das Sheet öffentlich freigegeben ist.</div>`;
-    status.innerHTML = `<span class="bad">Fehler beim Laden des Google Sheets.</span>`;
-  }
-}
-
-function fillItems(){
-  ["p1","p2","p3"].forEach(id => {
-    const select = document.getElementById(id);
-    select.innerHTML = `<option value="">Item auswählen</option>`;
-
-    bwlLoot.forEach(item => {
-      const option = document.createElement("option");
-      option.value = item.name;
-      option.textContent = item.name;
-      select.appendChild(option);
-    });
-  });
-}
-
-function renderLootList(){
-  const list = document.getElementById("lootList");
-  list.innerHTML = "";
-
-  bwlLoot.forEach(item => {
-    const row = document.createElement("div");
-    row.className = "loot-item-row";
-
-    const name = document.createElement("div");
-    name.className = `loot-name ${item.quality}`;
-    name.textContent = item.name;
-
-    name.addEventListener("mouseenter", event => showTooltip(event, item));
-    name.addEventListener("mousemove", event => moveTooltip(event));
-    name.addEventListener("mouseleave", hideTooltip);
-
-    const buttons = document.createElement("div");
-    buttons.className = "prio-buttons";
-
-    buttons.innerHTML = `
-      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
-      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
-      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
-      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
-    `;
-
-    row.appendChild(name);
-    row.appendChild(buttons);
-    list.appendChild(row);
-  });
-
-  updateActiveButtons();
-}
-
-function escapeQuotes(text){
-  return String(text).replace(/'/g, "\\'");
-}
-
-function htmlSafe(text){
-  return String(text).replace(/"/g, "&quot;");
-}
-
-function cssEscape(text){
-  return String(text).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-}
-
-function setPrio(slot, itemName){
-  const p1 = document.getElementById("p1").value;
-  const p2 = document.getElementById("p2").value;
-  const p3 = document.getElementById("p3").value;
-
-  const otherSlots = {
-    p1:[p2,p3],
-    p2:[p1,p3],
-    p3:[p1,p2]
-  };
-
-  if(otherSlots[slot].includes(itemName)){
-    document.getElementById("playerStatus").innerHTML = `
-      <span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>
-    `;
-    return;
-  }
-
-  document.getElementById(slot).value = itemName;
-
-  document.getElementById("playerStatus").innerHTML = `
-    <span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>
-  `;
-
-  autoSaveDraft();
-  updateActiveButtons();
-}
-
-function setP0Plus(itemName){
-  document.getElementById("p1").value = itemName;
-  document.getElementById("p2").value = itemName;
-  document.getElementById("p3").value = itemName;
-
-  document.getElementById("playerStatus").innerHTML = `
-    <span class="ok">✓ ${itemName} wurde als P0+ gesetzt.</span><br>
-    Für den Export wird das Item automatisch als P1, P2 und P3 übernommen.
-  `;
-
-  autoSaveDraft();
-  updateActiveButtons();
-}
-
-function manualSelectChanged(){
-  const p1 = document.getElementById("p1").value;
-  const p2 = document.getElementById("p2").value;
-  const p3 = document.getElementById("p3").value;
-
-  if((p1 && p2 && p1 === p2) || (p1 && p3 && p1 === p3) || (p2 && p3 && p2 === p3)){
-    document.getElementById("playerStatus").innerHTML = `
-      <span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>
-    `;
-  }
-
-  autoSaveDraft();
-  updateActiveButtons();
-}
-
-function updateActiveButtons(){
-  const p1 = document.getElementById("p1").value;
-  const p2 = document.getElementById("p2").value;
-  const p3 = document.getElementById("p3").value;
-
-  document.querySelectorAll(".mini-btn").forEach(btn => {
-    btn.classList.remove("active");
-    btn.classList.remove("p0active");
-  });
-
-  if(p1 && p1 === p2 && p2 === p3){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`).forEach(btn => {
-      btn.classList.add("p0active");
-    });
-    return;
-  }
-
-  if(p1){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`).forEach(btn => btn.classList.add("active"));
-  }
-
-  if(p2){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn => btn.classList.add("active"));
-  }
-
-  if(p3){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn => btn.classList.add("active"));
-  }
-}
-
-function getPlayerKey(){
-  const player = document.getElementById("playerName").value.trim().toLowerCase();
-  if(!player) return null;
-  return "bwl_prio_" + player;
-}
-
-function autoSaveDraft(){
-  const key = getPlayerKey();
-  if(!key) return;
-
-  const data = {
-    player:document.getElementById("playerName").value.trim(),
-    class:document.getElementById("playerClass").value,
-    p1:document.getElementById("p1").value,
-    p2:document.getElementById("p2").value,
-    p3:document.getElementById("p3").value,
-    timestamp:new Date().toLocaleString("de-DE")
-  };
-
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-function loadPlayerData(){
-  const key = getPlayerKey();
-  if(!key) return;
-
-  const saved = localStorage.getItem(key);
-
-  if(!saved){
-    updateActiveButtons();
-    return;
-  }
-
-  const data = JSON.parse(saved);
-
-  document.getElementById("playerClass").value = data.class || "";
-  document.getElementById("p1").value = data.p1 || "";
-  document.getElementById("p2").value = data.p2 || "";
-  document.getElementById("p3").value = data.p3 || "";
-
-  document.getElementById("playerStatus").innerHTML = `
-    <span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>
-  `;
-
-  updateActiveButtons();
-}
-
-function savePrio(){
-  const pin = document.getElementById("raidPin").value.trim();
-  const player = document.getElementById("playerName").value.trim();
-  const playerClass = document.getElementById("playerClass").value;
-  const p1 = document.getElementById("p1").value;
-  const p2 = document.getElementById("p2").value;
-  const p3 = document.getElementById("p3").value;
-  const status = document.getElementById("playerStatus");
-
-  if(pin !== RAID_PIN){
-    status.innerHTML = `<span class="bad">Falscher Raid-PIN.</span>`;
-    return;
-  }
-
-  if(!player || !playerClass || !p1 || !p2 || !p3){
-    status.innerHTML = `<span class="bad">Bitte alles vollständig ausfüllen.</span>`;
-    return;
-  }
-
-  if(!(p1 === p2 && p2 === p3) && (p1 === p2 || p1 === p3 || p2 === p3)){
-    status.innerHTML = `<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
-    return;
-  }
-
-  autoSaveDraft();
-
-  status.innerHTML = `<span class="ok">✓ Deine Prios wurden gespeichert.</span>`;
-}
-
-function getAllPrioEntries(){
-  const entries = [];
-
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-
-    if(key && key.startsWith("bwl_prio_")){
-      try{
-        const entry = JSON.parse(localStorage.getItem(key));
-        entries.push(entry);
-      }catch(e){}
+        container.appendChild(btn);
+      });
     }
-  }
 
-  entries.sort((a,b) => a.player.localeCompare(b.player));
-  return entries;
-}
+    function renderItems() {
+      const container = document.getElementById("itemList");
+      let filtered = getFilteredEntries();
 
-function isComplete(entry){
-  return entry.player && entry.class && entry.p1 && entry.p2 && entry.p3;
-}
+      if (selectedSlot) {
+        filtered = filtered.filter(e => (e.slot || "Ohne Slot") === selectedSlot);
+      }
 
-function isP0Plus(entry){
-  return entry.p1 && entry.p1 === entry.p2 && entry.p2 === entry.p3;
-}
+      const grouped = groupByItem(filtered);
 
-function openLeadPanel(){
-  const pin = document.getElementById("leadPin").value.trim();
+      if (!grouped.length) {
+        container.innerHTML = '<div class="empty">Keine Items gefunden.</div>';
+        return;
+      }
 
-  if(pin !== LEAD_PIN){
-    alert("Falscher Raidlead-PIN.");
-    return;
-  }
+      container.innerHTML = "";
 
-  document.getElementById("leadPanel").classList.remove("hidden");
-  renderLeadPanel();
-}
+      grouped.forEach(group => {
+        const card = document.createElement("button");
+        card.className = "item-card" + (selectedItem === group.item ? " active" : "");
 
-function renderLeadPanel(){
-  const entries = getAllPrioEntries();
+        const topPlayers = group.entries
+          .slice()
+          .sort((a, b) => Number(b.punkte || 0) - Number(a.punkte || 0))
+          .slice(0, 3)
+          .map(e => e.spieler ? `${e.spieler}${e.punkte ? " (" + e.punkte + ")" : ""}` : "")
+          .filter(Boolean)
+          .join(", ");
 
-  const complete = entries.filter(isComplete).length;
-  const p0 = entries.filter(isP0Plus).length;
-  const classes = new Set(entries.map(e => e.class).filter(Boolean)).size;
+        const eigenschaften = [...new Set(group.entries.map(e => e.eigenschaft).filter(Boolean))];
 
-  document.getElementById("statPlayers").textContent = entries.length;
-  document.getElementById("statComplete").textContent = complete;
-  document.getElementById("statP0").textContent = p0;
-  document.getElementById("statClasses").textContent = classes;
+        card.innerHTML = `
+          <div class="item-title">${escapeHTML(group.item)}</div>
+          <div class="item-meta">
+            <div><strong>Slot:</strong> ${escapeHTML(group.slot || "Nicht angegeben")}</div>
+            <div><strong>P0s:</strong> ${group.entries.length}</div>
+            ${topPlayers ? `<div><strong>Top:</strong> ${escapeHTML(topPlayers)}</div>` : ""}
+            ${eigenschaften.length ? `<div><strong>Eigenschaft:</strong> ${escapeHTML(eigenschaften.join(" / "))}</div>` : ""}
+          </div>
+        `;
 
-  const table = document.getElementById("leadTable");
-  table.innerHTML = "";
+        card.onclick = () => {
+          selectedItem = group.item;
+          renderAll();
+        };
 
-  entries.forEach(entry => {
-    const completeStatus = isComplete(entry)
-      ? `<span class="ok">fertig</span>`
-      : `<span class="bad">offen</span>`;
-
-    const p0Status = isP0Plus(entry)
-      ? `<span class="warn">ja</span>`
-      : `nein`;
-
-    table.innerHTML += `
-      <tr>
-        <td>${entry.player || "–"}</td>
-        <td>${entry.class || "–"}</td>
-        <td>${completeStatus}</td>
-        <td>${p0Status}</td>
-        <td>${entry.timestamp || "–"}</td>
-        <td>
-          <button class="delete-btn" onclick="deletePlayerEntry('${escapeQuotes(entry.player || "")}')">
-            Löschen
-          </button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-function deletePlayerEntry(playerName){
-  if(!playerName) return;
-
-  const confirmed = confirm(
-    "Soll die Prioliste von " + playerName + " wirklich gelöscht werden?"
-  );
-
-  if(!confirmed) return;
-
-  const key = "bwl_prio_" + playerName.trim().toLowerCase();
-
-  localStorage.removeItem(key);
-
-  renderLeadPanel();
-
-  document.getElementById("playerStatus").innerHTML = `
-    <span class="warn">Prioliste von ${playerName} wurde durch den Raidlead gelöscht.</span>
-  `;
-}
-
-function downloadExport(type){
-  const entries = getAllPrioEntries().filter(isComplete);
-
-  if(entries.length === 0){
-    alert("Keine vollständigen Einträge vorhanden.");
-    return;
-  }
-
-  let content = "";
-  let filename = "bwl-prios";
-  let mime = "text/plain;charset=utf-8;";
-
-  if(type === "csv"){
-    filename += ".csv";
-    mime = "text/csv;charset=utf-8;";
-    content = [
-      ["Player","Class","Raid","P1","P2","P3","P0Plus"]
-    ]
-    .concat(entries.map(e => [
-      e.player,
-      e.class,
-      "BWL",
-      e.p1,
-      e.p2,
-      e.p3,
-      isP0Plus(e) ? "YES" : "NO"
-    ]))
-    .map(row => row.map(v => `"${v}"`).join(","))
-    .join("\n");
-  }
-
-  if(type === "csvshort"){
-    filename += "-short.csv";
-    mime = "text/csv;charset=utf-8;";
-    content = entries
-      .map(e => `"${e.player}","${e.p1}","${e.p2}","${e.p3}"`)
-      .join("\n");
-  }
-
-  if(type === "txt"){
-    filename += ".txt";
-    content = entries.map(e => {
-      return `${e.player} (${e.class})\nP1: ${e.p1}\nP2: ${e.p2}\nP3: ${e.p3}\nP0+: ${isP0Plus(e) ? "JA" : "NEIN"}\n`;
-    }).join("\n");
-  }
-
-  if(type === "lua"){
-    filename += ".lua";
-    content = "LichtbringerBWL = {\n";
-
-    entries.forEach(e => {
-      content += `  ["${e.player}"] = { class = "${e.class}", p1 = "${e.p1}", p2 = "${e.p2}", p3 = "${e.p3}", p0plus = ${isP0Plus(e) ? "true" : "false"} },\n`;
-    });
-
-    content += "}\n";
-  }
-
-  const blob = new Blob([content], {type:mime});
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
-
-function resetAllData(){
-  if(!confirm("Alle lokalen BWL-Testdaten löschen?")) return;
-
-  const keys = [];
-
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-    if(key && key.startsWith("bwl_prio_")){
-      keys.push(key);
+        container.appendChild(card);
+      });
     }
-  }
 
-  keys.forEach(key => localStorage.removeItem(key));
+    function groupByItem(list) {
+      const map = new Map();
 
-  renderLeadPanel();
-  alert("Testdaten gelöscht.");
-}
+      list.forEach(entry => {
+        const item = entry.item || "Ohne Item";
+        if (!map.has(item)) {
+          map.set(item, {
+            item,
+            slot: entry.slot,
+            entries: []
+          });
+        }
+        map.get(item).entries.push(entry);
+      });
 
-function showTooltip(event, item){
-  const tooltip = document.getElementById("tooltip");
+      return Array.from(map.values()).sort((a, b) => a.item.localeCompare(b.item));
+    }
 
-  const statsHtml = item.stats
-    .map(stat => `<div class="tooltip-stat">${stat}</div>`)
-    .join("");
+    function renderSelectedInfo() {
+      const container = document.getElementById("selectedInfo");
 
-  const p0Html = item.p0.length
-    ? item.p0.map(player => `<li>${player}</li>`).join("")
-    : `<li>Keine P0+ gesetzt</li>`;
+      if (!selectedItem) {
+        container.innerHTML = '<div class="empty">Öffne ein Item, um die gesetzten P0s und P0+-Punkte zu sehen.</div>';
+        return;
+      }
 
-  tooltip.innerHTML = `
-    <div class="tooltip-title ${item.quality}">${item.name}</div>
-    <div class="tooltip-ilvl">${item.ilvl}</div>
-    <div class="tooltip-bind">${item.bind}</div>
+      const list = entries
+        .filter(e => e.item === selectedItem)
+        .sort((a, b) => Number(b.punkte || 0) - Number(a.punkte || 0));
 
-    <div class="tooltip-row">
-      <span>${item.slot}</span>
-      <span>${item.type || ""}</span>
-    </div>
+      if (!list.length) {
+        container.innerHTML = '<div class="empty">Keine Einträge für dieses Item gefunden.</div>';
+        return;
+      }
 
-    ${item.stats.length ? statsHtml : ""}
+      const eigenschaften = [...new Set(list.map(e => e.eigenschaft).filter(Boolean))];
+      const bemerkungen = [...new Set(list.map(e => e.bemerkung).filter(Boolean))];
 
-    ${item.equip ? `<div class="tooltip-equip">${item.equip}</div>` : ""}
+      let html = `
+        <h3>${escapeHTML(selectedItem)}</h3>
+        <div style="margin-bottom: 12px;">
+          ${eigenschaften.map(e => `<span class="pill">${escapeHTML(e)}</span>`).join("")}
+          ${bemerkungen.map(e => `<span class="pill">${escapeHTML(e)}</span>`).join("")}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P0+</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
-    <div class="tooltip-p0">
-      <strong>Gesetzte P0+</strong>
-      <ul>${p0Html}</ul>
-    </div>
-  `;
+      list.forEach(entry => {
+        html += `
+          <tr>
+            <td>${escapeHTML(entry.spieler || "-")}</td>
+            <td>${escapeHTML(entry.klasse || "-")}</td>
+            <td>${escapeHTML(entry.punkte || "0")}</td>
+            <td><button class="delete-btn" onclick='deleteEntry(${JSON.stringify(makeId(entry))})'>Eintrag löschen</button></td>
+          </tr>
+        `;
+      });
 
-  moveTooltip(event);
-  tooltip.classList.remove("hidden");
-}
+      html += `
+          </tbody>
+        </table>
+      `;
 
-function moveTooltip(event){
-  const tooltip = document.getElementById("tooltip");
-  tooltip.style.left = (event.clientX + 20) + "px";
-  tooltip.style.top = (event.clientY + 20) + "px";
-}
+      container.innerHTML = html;
+    }
 
-function hideTooltip(){
-  document.getElementById("tooltip").classList.add("hidden");
-}
+    function renderFullPrioList() {
+      const container = document.getElementById("fullPrioList");
 
-loadLootFromSheet();
+      if (!prioOpen) return;
 
-</script>
+      const list = getFilteredEntries();
 
+      if (!list.length) {
+        container.innerHTML = '<div class="empty">Keine Einträge gefunden.</div>';
+        return;
+      }
+
+      let html = `
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>Slot</th>
+              <th>Item</th>
+              <th>P0+</th>
+              <th>Eigenschaft</th>
+              <th>Bemerkung</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      list.forEach(entry => {
+        html += `
+          <tr>
+            <td>${escapeHTML(entry.spieler || "-")}</td>
+            <td>${escapeHTML(entry.klasse || "-")}</td>
+            <td>${escapeHTML(entry.slot || "-")}</td>
+            <td>${escapeHTML(entry.item || "-")}</td>
+            <td>${escapeHTML(entry.punkte || "0")}</td>
+            <td>${escapeHTML(entry.eigenschaft || "-")}</td>
+            <td>${escapeHTML(entry.bemerkung || "-")}</td>
+            <td><button class="delete-btn" onclick='deleteEntry(${JSON.stringify(makeId(entry))})'>Löschen</button></td>
+          </tr>
+        `;
+      });
+
+      html += `
+          </tbody>
+        </table>
+      `;
+
+      container.innerHTML = html;
+    }
+
+    function togglePrioList() {
+      prioOpen = !prioOpen;
+      document.getElementById("fullPrioSection").classList.toggle("hidden", !prioOpen);
+      renderFullPrioList();
+    }
+
+    function deleteEntry(id) {
+      const ids = getDeletedIds();
+
+      if (!ids.includes(id)) {
+        ids.push(id);
+        setDeletedIds(ids);
+      }
+
+      entries = entries.filter(e => makeId(e) !== id);
+
+      if (selectedItem && !entries.some(e => e.item === selectedItem)) {
+        selectedItem = "";
+      }
+
+      renderAll();
+      document.getElementById("status").textContent = "Eintrag lokal gelöscht. Das Google Sheet selbst bleibt unverändert.";
+    }
+
+    function resetLocalDeletes() {
+      localStorage.removeItem(deletedKey);
+      document.getElementById("status").textContent = "Lokale Löschungen zurückgesetzt. Bitte Daten aktualisieren.";
+    }
+
+    function escapeHTML(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("status").textContent = "Bereit. Bitte auf „Daten aktualisieren“ klicken.";
+    });
+  </script>
 </body>
 </html>
