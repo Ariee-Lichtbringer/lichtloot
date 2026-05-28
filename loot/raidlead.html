@@ -560,6 +560,8 @@ async function loadRaidData(){
 
     const result = await response.json();
 
+    console.log(result);
+
     if(result.error){
 
       status.innerHTML =
@@ -733,27 +735,26 @@ async function deletePrio(player){
 async function createRaid(){
 
   const masterPin =
-    document.getElementById("masterPin").value.trim();
+    document.getElementById("masterPin")
+    .value
+    .trim();
 
   const box =
     document.getElementById("newRaidBox");
 
   try{
 
-    const response =
-      await fetch(APPS_SCRIPT_URL, {
-        method:"POST",
-        headers:{
-          "Content-Type":"text/plain;charset=utf-8"
-        },
-        body:JSON.stringify({
-          action:"createRaid",
-          masterPin:masterPin,
-          raid:"BWL"
-        })
-      });
+    const url =
+      APPS_SCRIPT_URL +
+      "?action=createRaid" +
+      "&masterPin=" + encodeURIComponent(masterPin) +
+      "&raid=BWL";
 
-    const result = await response.json();
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
 
     if(result.error){
 
@@ -847,4 +848,6 @@ function downloadExport(type){
 
     filename += "-short.csv";
 
-    mime = "text/c
+    mime = "text/csv;charset=utf-8;";
+
+    content
