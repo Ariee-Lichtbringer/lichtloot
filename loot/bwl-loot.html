@@ -46,7 +46,7 @@
     }
 
     .topbar{
-      width:min(1200px,100%);
+      width:min(1400px,100%);
       margin:0 auto 28px;
 
       display:flex;
@@ -75,7 +75,7 @@
     }
 
     .header{
-      width:min(1200px,100%);
+      width:min(1400px,100%);
       margin:0 auto 28px;
 
       padding:30px;
@@ -102,11 +102,11 @@
     }
 
     .grid{
-      width:min(1200px,100%);
+      width:min(1400px,100%);
       margin:auto;
 
       display:grid;
-      grid-template-columns:1.1fr .9fr;
+      grid-template-columns:420px 1fr;
       gap:22px;
     }
 
@@ -218,61 +218,110 @@
       font-weight:900;
     }
 
+    .loot-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+
+      max-height:900px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .loot-item{
+      padding:10px 14px;
+      border-radius:12px;
+      background:rgba(2,6,23,.72);
+      border:1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+      transition:.18s;
+      font-weight:700;
+      font-size:15px;
+    }
+
+    .loot-item:hover{
+      transform:translateX(4px);
+      border-color:rgba(250,204,21,.45);
+      background:rgba(15,23,42,.92);
+    }
+
+    .epic{
+      color:#c084fc;
+    }
+
+    .rare{
+      color:#60a5fa;
+    }
+
+    .uncommon{
+      color:#4ade80;
+    }
+
+    .legendary{
+      color:#fb923c;
+    }
+
+    .tooltip{
+      position:fixed;
+      z-index:9999;
+
+      width:340px;
+
+      padding:16px;
+
+      border-radius:14px;
+
+      background:rgba(5,10,20,.98);
+
+      border:1px solid rgba(250,204,21,.35);
+
+      box-shadow:
+        0 0 25px rgba(0,0,0,.65),
+        0 0 18px rgba(250,204,21,.12);
+
+      pointer-events:none;
+    }
+
+    .tooltip-title{
+      font-size:18px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
+
+    .tooltip-quality{
+      color:#facc15;
+      font-size:13px;
+      margin-bottom:10px;
+      text-transform:uppercase;
+    }
+
+    .tooltip-stat{
+      color:#dbeafe;
+      margin-bottom:12px;
+      line-height:1.5;
+    }
+
+    .tooltip-p0{
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,.12);
+    }
+
+    .tooltip-p0 strong{
+      color:#facc15;
+    }
+
+    .tooltip ul{
+      margin-top:8px;
+      padding-left:18px;
+      line-height:1.7;
+    }
+
     .hidden{
       display:none;
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:12px;
-      font-size:14px;
-    }
-
-    th,
-    td{
-      padding:10px;
-      border-bottom:1px solid rgba(255,255,255,.10);
-      text-align:left;
-    }
-
-    th{
-      color:var(--gold);
-      font-size:12px;
-      text-transform:uppercase;
-    }
-
-    .item-preview{
-      display:none;
-
-      margin-top:10px;
-
-      padding:14px;
-
-      border-radius:14px;
-
-      background:rgba(2,6,23,.88);
-
-      border:1px solid rgba(250,204,21,.35);
-
-      box-shadow:0 0 22px rgba(250,204,21,.18);
-
-      color:#dbeafe;
-
-      line-height:1.6;
-      font-size:14px;
-    }
-
-    .item-preview strong{
-      color:#facc15;
-    }
-
-    .item-preview ul{
-      margin-top:8px;
-      padding-left:18px;
-    }
-
-    @media(max-width:900px){
+    @media(max-width:1000px){
 
       .grid{
         grid-template-columns:1fr;
@@ -305,14 +354,14 @@
 
     <div class="subtitle">
       Spieler können ihre P1-, P2- und P3-Prioritäten eintragen.
-      Die Liste bleibt bis zur Freigabe verborgen.
+      Beim Hover über ein Item werden Werte und P0+-Spieler angezeigt.
     </div>
 
   </div>
 
   <div class="grid">
 
-    <!-- SPIELER -->
+    <!-- LINKE SEITE -->
 
     <div class="card">
 
@@ -339,44 +388,14 @@
         <option>Druide</option>
       </select>
 
-      <!-- P1 -->
-
       <label>P1</label>
-
-      <select
-        id="p1"
-        onmouseenter="showItemInfo('p1','p1Info')"
-        onmouseleave="hideItemInfo('p1Info')"
-        onchange="showItemInfo('p1','p1Info')"
-      ></select>
-
-      <div id="p1Info" class="item-preview"></div>
-
-      <!-- P2 -->
+      <select id="p1"></select>
 
       <label>P2</label>
-
-      <select
-        id="p2"
-        onmouseenter="showItemInfo('p2','p2Info')"
-        onmouseleave="hideItemInfo('p2Info')"
-        onchange="showItemInfo('p2','p2Info')"
-      ></select>
-
-      <div id="p2Info" class="item-preview"></div>
-
-      <!-- P3 -->
+      <select id="p2"></select>
 
       <label>P3</label>
-
-      <select
-        id="p3"
-        onmouseenter="showItemInfo('p3','p3Info')"
-        onmouseleave="hideItemInfo('p3Info')"
-        onchange="showItemInfo('p3','p3Info')"
-      ></select>
-
-      <div id="p3Info" class="item-preview"></div>
+      <select id="p3"></select>
 
       <button class="btn" onclick="savePrio()">
         Prios speichern
@@ -388,38 +407,61 @@
 
     </div>
 
-    <!-- RAIDLEAD -->
+    <!-- RECHTE SEITE -->
 
     <div class="card">
 
-      <h2>Raidlead-Bereich</h2>
+      <h2>Möglicher Loot</h2>
 
-      <label>Raidlead-PIN</label>
-      <input id="leadPin" type="password" placeholder="Raidlead-PIN">
+      <div class="loot-list">
 
-      <button class="btn" onclick="openLeadPanel()">
-        Raidlead-Panel öffnen
-      </button>
+        <div
+          class="loot-item epic"
+          onmouseenter="showTooltip(event,'Neltharions Träne','Episch','+44 Zauberschaden',['Milkshake – 6 Punkte','Ariee – 4 Punkte','Burny – 2 Punkte'])"
+          onmouseleave="hideTooltip()"
+        >
+          Neltharions Träne
+        </div>
 
-      <div id="leadPanel" class="hidden">
+        <div
+          class="loot-item epic"
+          onmouseenter="showTooltip(event,'Drake Fang Talisman','Episch','+56 Angriffskraft',['Mala – 8 Punkte','Setsunai – 5 Punkte','Protekta – 3 Punkte'])"
+          onmouseleave="hideTooltip()"
+        >
+          Drake Fang Talisman
+        </div>
 
-        <table>
+        <div
+          class="loot-item rare"
+          onmouseenter="showTooltip(event,'Chromatisch gehärtetes Schwert','Selten','+20 Stärke',['Bimmi – 3 Punkte','Enno – 1 Punkt'])"
+          onmouseleave="hideTooltip()"
+        >
+          Chromatisch gehärtetes Schwert
+        </div>
 
-          <thead>
+        <div
+          class="loot-item legendary"
+          onmouseenter="showTooltip(event,'Ashkandi, Großschwert der Bruderschaft','Legendär','Großschwert',['Bimmi – 7 Punkte','Enno – 4 Punkte'])"
+          onmouseleave="hideTooltip()"
+        >
+          Ashkandi, Großschwert der Bruderschaft
+        </div>
 
-            <tr>
-              <th>Spieler</th>
-              <th>Klasse</th>
-              <th>P1</th>
-              <th>P2</th>
-              <th>P3</th>
-            </tr>
+        <div
+          class="loot-item epic"
+          onmouseenter="showTooltip(event,'Mish\'undare, Reif des Gedankenschinders','Episch','Kopf',['Ariee – 3 Punkte','Burny – 1 Punkt'])"
+          onmouseleave="hideTooltip()"
+        >
+          Mish'undare, Reif des Gedankenschinders
+        </div>
 
-          </thead>
-
-          <tbody id="leadTable"></tbody>
-
-        </table>
+        <div
+          class="loot-item epic"
+          onmouseenter="showTooltip(event,'Lok\'amir il Romathis','Episch','Streitkolben',['Mala – 6 Punkte'])"
+          onmouseleave="hideTooltip()"
+        >
+          Lok'amir il Romathis
+        </div>
 
       </div>
 
@@ -429,45 +471,24 @@
 
 </div>
 
+<!-- TOOLTIP -->
+
+<div id="tooltip" class="tooltip hidden"></div>
+
 <script>
 
 const RAID_PIN = "bwl";
-const LEAD_PIN = "lead";
 
 const bwlItems = [
 
   "Neltharions Träne",
-  "Klaue von Chromaggus",
-  "Ashkandi, Großschwert der Bruderschaft",
   "Drake Fang Talisman",
-  "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+  "Chromatisch gehärtetes Schwert",
+  "Ashkandi, Großschwert der Bruderschaft",
   "Mish'undare, Reif des Gedankenschinders",
-  "Lok'amir il Romathis",
-  "Band des Peinigers",
-  "Blutreißer"
+  "Lok'amir il Romathis"
 
 ];
-
-const p0PlusData = {
-
-  "Neltharions Träne": [
-    { player:"Milkshake", points:6 },
-    { player:"Ariee", points:4 },
-    { player:"Burny", points:2 }
-  ],
-
-  "Drake Fang Talisman": [
-    { player:"Mala", points:8 },
-    { player:"Setsunai", points:5 },
-    { player:"Protekta", points:3 }
-  ],
-
-  "Ashkandi, Großschwert der Bruderschaft": [
-    { player:"Bimmi", points:7 },
-    { player:"Enno", points:4 }
-  ]
-
-};
 
 function fillItems(){
 
@@ -489,73 +510,6 @@ function fillItems(){
     });
 
   });
-
-}
-
-function showItemInfo(selectId, infoId){
-
-  const item = document.getElementById(selectId).value;
-
-  const box = document.getElementById(infoId);
-
-  if(!item){
-
-    box.style.display = "block";
-
-    box.innerHTML = "Bitte zuerst ein Item auswählen.";
-
-    return;
-
-  }
-
-  const entries = p0PlusData[item] || [];
-
-  if(entries.length === 0){
-
-    box.style.display = "block";
-
-    box.innerHTML = `
-      <strong>${item}</strong><br>
-      Keine P0+-Einträge vorhanden.
-    `;
-
-    return;
-
-  }
-
-  let html = `<strong>${item}</strong><br>P0+ Übersicht:<ul>`;
-
-  entries.forEach(entry => {
-
-    html += `
-      <li>${entry.player} – ${entry.points} Punkte</li>
-    `;
-
-  });
-
-  html += `</ul>`;
-
-  box.style.display = "block";
-
-  box.innerHTML = html;
-
-}
-
-function hideItemInfo(infoId){
-
-  document.getElementById(infoId).style.display = "none";
-
-}
-
-function getData(){
-
-  return JSON.parse(localStorage.getItem("bwl_prios") || "[]");
-
-}
-
-function setData(data){
-
-  localStorage.setItem("bwl_prios", JSON.stringify(data));
 
 }
 
@@ -595,22 +549,6 @@ function savePrio(){
 
   }
 
-  let data = getData();
-
-  data = data.filter(
-    entry => entry.player.toLowerCase() !== player.toLowerCase()
-  );
-
-  data.push({
-    player,
-    class:playerClass,
-    p1,
-    p2,
-    p3
-  });
-
-  setData(data);
-
   status.innerHTML = `
     <span class="ok">
       ✓ Deine Prios wurden gespeichert.
@@ -619,45 +557,54 @@ function savePrio(){
 
 }
 
-function openLeadPanel(){
+function showTooltip(event, title, quality, stat, players){
 
-  const pin = document.getElementById("leadPin").value.trim();
+  const tooltip = document.getElementById("tooltip");
 
-  if(pin !== LEAD_PIN){
+  let playerHtml = "";
 
-    alert("Falscher Raidlead-PIN.");
+  players.forEach(player => {
 
-    return;
+    playerHtml += `<li>${player}</li>`;
 
-  }
+  });
 
-  document.getElementById("leadPanel").classList.remove("hidden");
+  tooltip.innerHTML = `
 
-  renderLeadTable();
+    <div class="tooltip-title">
+      ${title}
+    </div>
+
+    <div class="tooltip-quality">
+      ${quality}
+    </div>
+
+    <div class="tooltip-stat">
+      ${stat}
+    </div>
+
+    <div class="tooltip-p0">
+
+      <strong>P0+ Übersicht</strong>
+
+      <ul>
+        ${playerHtml}
+      </ul>
+
+    </div>
+
+  `;
+
+  tooltip.style.left = (event.clientX + 20) + "px";
+  tooltip.style.top = (event.clientY + 20) + "px";
+
+  tooltip.classList.remove("hidden");
 
 }
 
-function renderLeadTable(){
+function hideTooltip(){
 
-  const data = getData();
-
-  const tbody = document.getElementById("leadTable");
-
-  tbody.innerHTML = "";
-
-  data.forEach(entry => {
-
-    tbody.innerHTML += `
-      <tr>
-        <td>${entry.player}</td>
-        <td>${entry.class}</td>
-        <td>${entry.p1}</td>
-        <td>${entry.p2}</td>
-        <td>${entry.p3}</td>
-      </tr>
-    `;
-
-  });
+  document.getElementById("tooltip").classList.add("hidden");
 
 }
 
@@ -667,3 +614,4 @@ fillItems();
 
 </body>
 </html>
+
