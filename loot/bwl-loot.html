@@ -8,7 +8,6 @@
   <style>
     :root{
       --gold:#facc15;
-      --blue:#60a5fa;
       --panel:rgba(12,18,32,.88);
       --text:#f8fafc;
       --muted:#cbd5e1;
@@ -85,7 +84,7 @@
       width:min(1500px,100%);
       margin:auto;
       display:grid;
-      grid-template-columns:390px 1fr 470px;
+      grid-template-columns:390px 1fr 500px;
       gap:22px;
     }
 
@@ -148,6 +147,22 @@
     .btn.danger{
       background:linear-gradient(135deg,rgba(239,68,68,.32),rgba(250,204,21,.08));
       border-color:rgba(239,68,68,.35);
+    }
+
+    .delete-btn{
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid rgba(239,68,68,.45);
+      background:rgba(127,29,29,.55);
+      color:#fecaca;
+      font-size:10px;
+      font-weight:900;
+      cursor:pointer;
+    }
+
+    .delete-btn:hover{
+      background:rgba(239,68,68,.32);
+      color:white;
     }
 
     .status{
@@ -419,7 +434,7 @@
   <div class="header">
     <h1>Blackwing Lair – Prio-Auswahl</h1>
     <div class="subtitle">
-      Spieler setzen ihre Prios. Der Raidlead sieht zunächst nur den Abgabestatus und kann Exporte erstellen.
+      Die Lootdaten werden direkt aus dem Lichtbringer-Google-Sheet geladen.
     </div>
   </div>
 
@@ -461,7 +476,7 @@
       <button class="btn" onclick="savePrio()">Prios speichern</button>
 
       <div id="playerStatus" class="status">
-        Status: Bitte Raid-PIN eingeben und Prios auswählen.
+        Status: Lootdaten werden geladen …
       </div>
 
     </div>
@@ -470,7 +485,9 @@
 
       <h2>Möglicher Loot</h2>
 
-      <div id="lootList" class="loot-list"></div>
+      <div id="lootList" class="loot-list">
+        <div class="status">Lade Loot aus Google Sheet …</div>
+      </div>
 
     </div>
 
@@ -509,7 +526,7 @@
 
         <div class="status">
           <span class="warn">Raidlead-Status:</span><br>
-          Du siehst hier, wer vollständig eingetragen hat. Die Prios bleiben für normale Spieler verborgen.
+          Hier können fehlerhafte oder doppelte Priolisten gezielt gelöscht werden.
         </div>
 
         <div class="lead-scroll">
@@ -521,6 +538,7 @@
                 <th>Status</th>
                 <th>P0+</th>
                 <th>Letzte Änderung</th>
+                <th>Löschen</th>
               </tr>
             </thead>
             <tbody id="leadTable"></tbody>
@@ -536,10 +554,10 @@
           <button class="btn secondary" onclick="downloadExport('lua')">LUA</button>
         </div>
 
-        <button class="btn danger" onclick="resetAllData()">Testdaten löschen</button>
+        <button class="btn danger" onclick="resetAllData()">Alle Testdaten löschen</button>
 
         <div class="small-note">
-          Hinweis: Diese Version speichert noch lokal im Browser. Für echte Spieler-Einträge über verschiedene Geräte brauchen wir danach Supabase oder Google Apps Script.
+          Aktuell werden Spieler-Prios noch lokal im Browser gespeichert. Der Loot kommt bereits aus dem Google Sheet.
         </div>
 
       </div>
@@ -557,89 +575,118 @@
 const RAID_PIN = "bwl";
 const LEAD_PIN = "lead";
 
-const bwlLoot = [
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
 
-  {
-    name:"Neltharions Träne",
-    quality:"epic",
-    ilvl:"Gegenstandsstufe 83",
-    bind:"Wird beim Aufheben gebunden",
-    slot:"Schmuckstück",
-    type:"",
-    stats:[
-      "+44 Zauberschaden und Heilung"
-    ],
-    equip:"Anlegen: Erhöht Eure Chance, mit Zaubern kritisch zu treffen, um 2%.",
-    p0:[
-      "Milkshake – 6 Punkte",
-      "Ariee – 4 Punkte",
-      "Burny – 2 Punkte"
-    ]
-  },
+let bwlLoot = [];
 
-  {
-    name:"Drake Fang Talisman",
-    quality:"epic",
-    ilvl:"Gegenstandsstufe 75",
-    bind:"Wird beim Aufheben gebunden",
-    slot:"Schmuckstück",
-    type:"",
-    stats:[
-      "+56 Angriffskraft"
-    ],
-    equip:"Anlegen: Erhöht Eure Trefferchance um 2% und Eure Ausweichchance um 1%.",
-    p0:[
-      "Mala – 8 Punkte",
-      "Setsunai – 5 Punkte",
-      "Protekta – 3 Punkte"
-    ]
-  },
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let value = "";
+  let insideQuotes = false;
 
-  {
-    name:"Ashkandi, Großschwert der Bruderschaft",
-    quality:"epic",
-    ilvl:"Gegenstandsstufe 81",
-    bind:"Wird beim Aufheben gebunden",
-    slot:"Zweihand",
-    type:"Schwert",
-    damage:"229 - 344 Schaden",
-    speed:"Tempo 3.50",
-    dps:"(81.9 Schaden pro Sekunde)",
-    stats:[
-      "+33 Ausdauer"
-    ],
-    equip:"Anlegen: +86 Angriffskraft.",
-    p0:[
-      "Bimmi – 7 Punkte",
-      "Enno – 4 Punkte"
-    ]
-  },
+  for(let i = 0; i < text.length; i++){
+    const char = text[i];
+    const next = text[i + 1];
 
-  {
-    name:"Armbrust der bevorstehenden Verdammnis",
-    quality:"epic",
-    ilvl:"Gegenstandsstufe 72",
-    bind:"Wird beim Aufheben gebunden",
-    slot:"Distanz",
-    type:"Armbrust",
-    damage:"103 - 155 Schaden",
-    speed:"Tempo 3.10",
-    dps:"(41.61 Schaden pro Sekunde)",
-    stats:[
-      "+5 Stärke",
-      "+7 Beweglichkeit",
-      "+5 Ausdauer",
-      "Haltbarkeit 90 / 90",
-      "Benötigt Stufe 60"
-    ],
-    equip:"Anlegen: Verbessert Eure Trefferchance um 1%.",
-    p0:[
-      "Crunchycat – 3 Punkte",
-      "Bergstolz – 2 Punkte"
-    ]
+    if(char === '"' && insideQuotes && next === '"'){
+      value += '"';
+      i++;
+    }else if(char === '"'){
+      insideQuotes = !insideQuotes;
+    }else if(char === "," && !insideQuotes){
+      row.push(value);
+      value = "";
+    }else if((char === "\n" || char === "\r") && !insideQuotes){
+      if(value || row.length){
+        row.push(value);
+        rows.push(row);
+        row = [];
+        value = "";
+      }
+      if(char === "\r" && next === "\n") i++;
+    }else{
+      value += char;
+    }
   }
 
-];
+  if(value || row.length){
+    row.push(value);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function normalizeQuality(value){
+  const q = String(value || "").trim().toLowerCase();
+
+  if(q.includes("legend")) return "legendary";
+  if(q.includes("episch") || q.includes("epic")) return "epic";
+  if(q.includes("selten") || q.includes("rare")) return "rare";
+  if(q.includes("ungewöhnlich") || q.includes("uncommon")) return "uncommon";
+
+  return "epic";
+}
+
+function p0FromText(text){
+  if(!text) return [];
+
+  return String(text)
+    .split(";")
+    .map(entry => entry.trim())
+    .filter(Boolean);
+}
+
+async function loadLootFromSheet(){
+  const status = document.getElementById("playerStatus");
+  const list = document.getElementById("lootList");
+
+  try{
+    const response = await fetch(LOOT_CSV_URL);
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+
+    const headers = rows.shift().map(h => h.trim());
+
+    bwlLoot = rows
+      .map(row => {
+        const obj = {};
+        headers.forEach((header, index) => {
+          obj[header] = row[index] || "";
+        });
+
+        return {
+          name: obj.Item || "",
+          quality: normalizeQuality(obj["Qualität"]),
+          ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Blackwing Lair",
+          bind: "Wird beim Aufheben gebunden",
+          slot: obj.Slot || "",
+          type: obj.Typ || "",
+          boss: obj.Boss || "",
+          category: obj.Kategorie || "",
+          wowhead: obj.WowheadLink || "",
+          p0: p0FromText(obj.P0Spieler),
+          stats: [
+            obj.Kategorie ? "Kategorie: " + obj.Kategorie : "",
+            obj.Boss ? "Quelle: " + obj.Boss : ""
+          ].filter(Boolean),
+          equip: obj.WowheadLink ? "Wowhead-Link im Sheet hinterlegt." : ""
+        };
+      })
+      .filter(item => item.name);
+
+    fillItems();
+    renderLootList();
+
+    status.innerHTML = `<span class="ok">✓ Lootdaten aus dem Google Sheet geladen.</span>`;
+
+  }catch(error){
+    console.error(error);
+    list.innerHTML = `<div class="status"><span class="bad">Lootdaten konnten nicht geladen werden.</span><br>Bitte prüfen, ob das Sheet öffentlich freigegeben ist.</div>`;
+    status.innerHTML = `<span class="bad">Fehler beim Laden des Google Sheets.</span>`;
+  }
+}
 
 function fillItems(){
   ["p1","p2","p3"].forEach(id => {
@@ -690,15 +737,15 @@ function renderLootList(){
 }
 
 function escapeQuotes(text){
-  return text.replace(/'/g, "\\'");
+  return String(text).replace(/'/g, "\\'");
 }
 
 function htmlSafe(text){
-  return text.replace(/"/g, "&quot;");
+  return String(text).replace(/"/g, "&quot;");
 }
 
 function cssEscape(text){
-  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return String(text).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
 function setPrio(slot, itemName){
@@ -933,9 +980,34 @@ function renderLeadPanel(){
         <td>${completeStatus}</td>
         <td>${p0Status}</td>
         <td>${entry.timestamp || "–"}</td>
+        <td>
+          <button class="delete-btn" onclick="deletePlayerEntry('${escapeQuotes(entry.player || "")}')">
+            Löschen
+          </button>
+        </td>
       </tr>
     `;
   });
+}
+
+function deletePlayerEntry(playerName){
+  if(!playerName) return;
+
+  const confirmed = confirm(
+    "Soll die Prioliste von " + playerName + " wirklich gelöscht werden?"
+  );
+
+  if(!confirmed) return;
+
+  const key = "bwl_prio_" + playerName.trim().toLowerCase();
+
+  localStorage.removeItem(key);
+
+  renderLeadPanel();
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="warn">Prioliste von ${playerName} wurde durch den Raidlead gelöscht.</span>
+  `;
 }
 
 function downloadExport(type){
@@ -1045,16 +1117,7 @@ function showTooltip(event, item){
       <span>${item.type || ""}</span>
     </div>
 
-    ${item.damage ? `
-      <div class="tooltip-row">
-        <span>${item.damage}</span>
-        <span>${item.speed || ""}</span>
-      </div>
-    ` : ""}
-
-    ${item.dps ? `<div class="tooltip-stat">${item.dps}</div>` : ""}
-
-    ${statsHtml}
+    ${item.stats.length ? statsHtml : ""}
 
     ${item.equip ? `<div class="tooltip-equip">${item.equip}</div>` : ""}
 
@@ -1078,8 +1141,7 @@ function hideTooltip(){
   document.getElementById("tooltip").classList.add("hidden");
 }
 
-fillItems();
-renderLootList();
+loadLootFromSheet();
 
 </script>
 
