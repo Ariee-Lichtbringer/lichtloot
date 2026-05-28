@@ -9,7 +9,6 @@
     :root{
       --gold:#facc15;
       --blue:#60a5fa;
-      --bg:#08111f;
       --panel:rgba(12,18,32,.88);
       --text:#f8fafc;
       --muted:#cbd5e1;
@@ -18,11 +17,7 @@
       --green:#22c55e;
     }
 
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-    }
+    *{box-sizing:border-box;margin:0;padding:0}
 
     body{
       min-height:100vh;
@@ -160,15 +155,9 @@
       font-size:14px;
     }
 
-    .ok{
-      color:var(--green);
-      font-weight:900;
-    }
-
-    .bad{
-      color:var(--danger);
-      font-weight:900;
-    }
+    .ok{color:var(--green);font-weight:900}
+    .bad{color:var(--danger);font-weight:900}
+    .warn{color:var(--gold);font-weight:900}
 
     .loot-list{
       display:flex;
@@ -233,21 +222,24 @@
       border-color:rgba(250,204,21,.40);
     }
 
-    .epic{
-      color:#c084fc;
+    .mini-btn.active{
+      background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));
+      color:#111827;
+      border-color:#facc15;
+      box-shadow:0 0 14px rgba(250,204,21,.45);
     }
 
-    .rare{
-      color:#60a5fa;
+    .mini-btn.p0active{
+      background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));
+      color:white;
+      border-color:#facc15;
+      box-shadow:0 0 16px rgba(168,85,247,.55);
     }
 
-    .uncommon{
-      color:#4ade80;
-    }
-
-    .legendary{
-      color:#fb923c;
-    }
+    .epic{color:#c084fc}
+    .rare{color:#60a5fa}
+    .uncommon{color:#4ade80}
+    .legendary{color:#fb923c}
 
     .tooltip{
       position:fixed;
@@ -255,8 +247,7 @@
       width:290px;
       padding:12px;
       border-radius:8px;
-      background:
-        linear-gradient(rgba(7,12,31,.96), rgba(2,6,23,.98));
+      background:linear-gradient(rgba(7,12,31,.96), rgba(2,6,23,.98));
       border:1px solid rgba(148,163,184,.75);
       box-shadow:
         0 0 0 1px rgba(255,255,255,.10),
@@ -273,10 +264,10 @@
       margin-bottom:3px;
     }
 
-    .tooltip-title.epic{color:#a335ee;}
-    .tooltip-title.rare{color:#0070dd;}
-    .tooltip-title.uncommon{color:#1eff00;}
-    .tooltip-title.legendary{color:#ff8000;}
+    .tooltip-title.epic{color:#a335ee}
+    .tooltip-title.rare{color:#0070dd}
+    .tooltip-title.uncommon{color:#1eff00}
+    .tooltip-title.legendary{color:#ff8000}
 
     .tooltip-ilvl{
       color:#ffd100;
@@ -285,27 +276,19 @@
       margin-bottom:6px;
     }
 
-    .tooltip-bind{
+    .tooltip-bind,
+    .tooltip-row,
+    .tooltip-stat{
       color:#ffffff;
       font-size:11px;
       font-weight:800;
+      margin-top:3px;
     }
 
     .tooltip-row{
       display:flex;
       justify-content:space-between;
       gap:14px;
-      color:#ffffff;
-      font-size:11px;
-      font-weight:800;
-      margin-top:2px;
-    }
-
-    .tooltip-stat{
-      color:#ffffff;
-      font-size:11px;
-      font-weight:800;
-      margin-top:3px;
     }
 
     .tooltip-equip{
@@ -334,22 +317,12 @@
       font-size:11px;
     }
 
-    .hidden{
-      display:none;
-    }
+    .hidden{display:none}
 
     @media(max-width:1000px){
-      .grid{
-        grid-template-columns:1fr;
-      }
-
-      .loot-item-row{
-        grid-template-columns:1fr;
-      }
-
-      .prio-buttons{
-        justify-content:flex-start;
-      }
+      .grid{grid-template-columns:1fr}
+      .loot-item-row{grid-template-columns:1fr}
+      .prio-buttons{justify-content:flex-start}
     }
   </style>
 </head>
@@ -359,26 +332,15 @@
 <div class="overlay">
 
   <div class="topbar">
-
-    <a class="back" href="../index.html">
-      ← Zurück zur Startseite
-    </a>
-
-    <a class="back" href="../bwl.html">
-      P0+ Übersicht öffnen
-    </a>
-
+    <a class="back" href="../index.html">← Zurück zur Startseite</a>
+    <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
   </div>
 
   <div class="header">
-
     <h1>Blackwing Lair – Prio-Auswahl</h1>
-
     <div class="subtitle">
-      Spieler können ihre P1-, P2- und P3-Prioritäten eintragen.
-      Neben jedem Item kann direkt P1, P2, P3 oder P0+ gewählt werden.
+      Spieler können ihre P1-, P2- und P3-Prioritäten eintragen. Neben jedem Item kann direkt P1, P2, P3 oder P0+ gewählt werden.
     </div>
-
   </div>
 
   <div class="grid">
@@ -391,11 +353,10 @@
       <input id="raidPin" type="password" placeholder="Raid-PIN eingeben">
 
       <label>Charaktername</label>
-      <input id="playerName" type="text" placeholder="z. B. Milkshake">
+      <input id="playerName" type="text" placeholder="z. B. Milkshake" oninput="loadPlayerData()">
 
       <label>Klasse</label>
-
-      <select id="playerClass">
+      <select id="playerClass" onchange="autoSaveDraft()">
         <option value="">Klasse auswählen</option>
         <option>Krieger</option>
         <option>Paladin</option>
@@ -409,21 +370,17 @@
       </select>
 
       <label>P1</label>
-      <select id="p1"></select>
+      <select id="p1" onchange="manualSelectChanged()"></select>
 
       <label>P2</label>
-      <select id="p2"></select>
+      <select id="p2" onchange="manualSelectChanged()"></select>
 
       <label>P3</label>
-      <select id="p3"></select>
+      <select id="p3" onchange="manualSelectChanged()"></select>
 
-      <button class="btn" onclick="savePrio()">
-        Prios speichern
-      </button>
+      <button class="btn" onclick="savePrio()">Prios speichern</button>
 
-      <button class="btn" onclick="downloadCSV()">
-        CSV Export
-      </button>
+      <button class="btn" onclick="downloadCSV()">CSV Export</button>
 
       <div id="playerStatus" class="status">
         Status: Bitte Raid-PIN eingeben und Prios auswählen.
@@ -534,36 +491,24 @@ const bwlLoot = [
 ];
 
 function fillItems(){
-
   ["p1","p2","p3"].forEach(id => {
-
     const select = document.getElementById(id);
-
     select.innerHTML = `<option value="">Item auswählen</option>`;
 
     bwlLoot.forEach(item => {
-
       const option = document.createElement("option");
-
       option.value = item.name;
       option.textContent = item.name;
-
       select.appendChild(option);
-
     });
-
   });
-
 }
 
 function renderLootList(){
-
   const list = document.getElementById("lootList");
-
   list.innerHTML = "";
 
   bwlLoot.forEach(item => {
-
     const row = document.createElement("div");
     row.className = "loot-item-row";
 
@@ -579,26 +524,45 @@ function renderLootList(){
     buttons.className = "prio-buttons";
 
     buttons.innerHTML = `
-      <button class="mini-btn" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
-      <button class="mini-btn" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
-      <button class="mini-btn" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
-      <button class="mini-btn plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
+      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
     `;
 
     row.appendChild(name);
     row.appendChild(buttons);
-
     list.appendChild(row);
-
   });
 
+  updateActiveButtons();
 }
 
 function escapeQuotes(text){
   return text.replace(/'/g, "\\'");
 }
 
+function htmlSafe(text){
+  return text.replace(/"/g, "&quot;");
+}
+
 function setPrio(slot, itemName){
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+
+  const otherSlots = {
+    p1:[p2,p3],
+    p2:[p1,p3],
+    p3:[p1,p2]
+  };
+
+  if(otherSlots[slot].includes(itemName)){
+    document.getElementById("playerStatus").innerHTML = `
+      <span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>
+    `;
+    return;
+  }
 
   document.getElementById(slot).value = itemName;
 
@@ -606,10 +570,11 @@ function setPrio(slot, itemName){
     <span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>
   `;
 
+  autoSaveDraft();
+  updateActiveButtons();
 }
 
 function setP0Plus(itemName){
-
   document.getElementById("p1").value = itemName;
   document.getElementById("p2").value = itemName;
   document.getElementById("p3").value = itemName;
@@ -619,54 +584,135 @@ function setP0Plus(itemName){
     Für den Export wird das Item automatisch als P1, P2 und P3 übernommen.
   `;
 
+  autoSaveDraft();
+  updateActiveButtons();
 }
 
-function savePrio(){
-
-  const pin = document.getElementById("raidPin").value.trim();
-
-  const player = document.getElementById("playerName").value.trim();
-
-  const playerClass = document.getElementById("playerClass").value;
-
+function manualSelectChanged(){
   const p1 = document.getElementById("p1").value;
   const p2 = document.getElementById("p2").value;
   const p3 = document.getElementById("p3").value;
 
+  if(p1 && p2 && p1 === p2 || p1 && p3 && p1 === p3 || p2 && p3 && p2 === p3){
+    document.getElementById("playerStatus").innerHTML = `
+      <span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>
+    `;
+  }
+
+  autoSaveDraft();
+  updateActiveButtons();
+}
+
+function updateActiveButtons(){
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
+
+  document.querySelectorAll(".mini-btn").forEach(btn => {
+    btn.classList.remove("active");
+    btn.classList.remove("p0active");
+  });
+
+  if(p1 && p1 === p2 && p2 === p3){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`).forEach(btn => {
+      btn.classList.add("p0active");
+    });
+    return;
+  }
+
+  if(p1){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`).forEach(btn => btn.classList.add("active"));
+  }
+
+  if(p2){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn => btn.classList.add("active"));
+  }
+
+  if(p3){
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn => btn.classList.add("active"));
+  }
+}
+
+function cssEscape(text){
+  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function getPlayerKey(){
+  const player = document.getElementById("playerName").value.trim().toLowerCase();
+  if(!player) return null;
+  return "bwl_prio_" + player;
+}
+
+function autoSaveDraft(){
+  const key = getPlayerKey();
+  if(!key) return;
+
+  const data = {
+    player:document.getElementById("playerName").value.trim(),
+    class:document.getElementById("playerClass").value,
+    p1:document.getElementById("p1").value,
+    p2:document.getElementById("p2").value,
+    p3:document.getElementById("p3").value
+  };
+
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function loadPlayerData(){
+  const key = getPlayerKey();
+  if(!key) return;
+
+  const saved = localStorage.getItem(key);
+
+  if(!saved){
+    updateActiveButtons();
+    return;
+  }
+
+  const data = JSON.parse(saved);
+
+  document.getElementById("playerClass").value = data.class || "";
+  document.getElementById("p1").value = data.p1 || "";
+  document.getElementById("p2").value = data.p2 || "";
+  document.getElementById("p3").value = data.p3 || "";
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>
+  `;
+
+  updateActiveButtons();
+}
+
+function savePrio(){
+  const pin = document.getElementById("raidPin").value.trim();
+  const player = document.getElementById("playerName").value.trim();
+  const playerClass = document.getElementById("playerClass").value;
+  const p1 = document.getElementById("p1").value;
+  const p2 = document.getElementById("p2").value;
+  const p3 = document.getElementById("p3").value;
   const status = document.getElementById("playerStatus");
 
   if(pin !== RAID_PIN){
-
     status.innerHTML = `<span class="bad">Falscher Raid-PIN.</span>`;
-
     return;
-
   }
 
   if(!player || !playerClass || !p1 || !p2 || !p3){
-
     status.innerHTML = `<span class="bad">Bitte alles vollständig ausfüllen.</span>`;
-
     return;
-
   }
 
-  const data = {
-    player,
-    class:playerClass,
-    p1,
-    p2,
-    p3
-  };
+  if(!(p1 === p2 && p2 === p3) && (p1 === p2 || p1 === p3 || p2 === p3)){
+    status.innerHTML = `<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
+    return;
+  }
 
-  localStorage.setItem("bwl_prio_" + player.toLowerCase(), JSON.stringify(data));
+  autoSaveDraft();
 
   status.innerHTML = `<span class="ok">✓ Deine Prios wurden gespeichert.</span>`;
-
 }
 
 function downloadCSV(){
-
   const player = document.getElementById("playerName").value.trim();
   const playerClass = document.getElementById("playerClass").value;
   const p1 = document.getElementById("p1").value;
@@ -694,11 +740,9 @@ function downloadCSV(){
   a.click();
 
   URL.revokeObjectURL(url);
-
 }
 
 function showTooltip(event, item){
-
   const tooltip = document.getElementById("tooltip");
 
   const statsHtml = item.stats
@@ -710,17 +754,9 @@ function showTooltip(event, item){
     : `<li>Keine P0+ gesetzt</li>`;
 
   tooltip.innerHTML = `
-    <div class="tooltip-title ${item.quality}">
-      ${item.name}
-    </div>
-
-    <div class="tooltip-ilvl">
-      ${item.ilvl}
-    </div>
-
-    <div class="tooltip-bind">
-      ${item.bind}
-    </div>
+    <div class="tooltip-title ${item.quality}">${item.name}</div>
+    <div class="tooltip-ilvl">${item.ilvl}</div>
+    <div class="tooltip-bind">${item.bind}</div>
 
     <div class="tooltip-row">
       <span>${item.slot}</span>
@@ -734,50 +770,30 @@ function showTooltip(event, item){
       </div>
     ` : ""}
 
-    ${item.dps ? `
-      <div class="tooltip-stat">
-        ${item.dps}
-      </div>
-    ` : ""}
+    ${item.dps ? `<div class="tooltip-stat">${item.dps}</div>` : ""}
 
     ${statsHtml}
 
-    ${item.equip ? `
-      <div class="tooltip-equip">
-        ${item.equip}
-      </div>
-    ` : ""}
+    ${item.equip ? `<div class="tooltip-equip">${item.equip}</div>` : ""}
 
     <div class="tooltip-p0">
-
       <strong>Gesetzte P0+</strong>
-
-      <ul>
-        ${p0Html}
-      </ul>
-
+      <ul>${p0Html}</ul>
     </div>
   `;
 
   moveTooltip(event);
-
   tooltip.classList.remove("hidden");
-
 }
 
 function moveTooltip(event){
-
   const tooltip = document.getElementById("tooltip");
-
   tooltip.style.left = (event.clientX + 20) + "px";
   tooltip.style.top = (event.clientY + 20) + "px";
-
 }
 
 function hideTooltip(){
-
   document.getElementById("tooltip").classList.add("hidden");
-
 }
 
 fillItems();
@@ -787,5 +803,4 @@ renderLootList();
 
 </body>
 </html>
-
 
