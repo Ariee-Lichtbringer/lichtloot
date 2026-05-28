@@ -143,6 +143,11 @@ input,select{
   border-color:rgba(34,197,94,.45);
 }
 
+.btn.close{
+  background:linear-gradient(135deg,rgba(239,68,68,.30),rgba(250,204,21,.10));
+  border-color:rgba(239,68,68,.45);
+}
+
 .delete-btn{
   padding:6px 8px;
   border-radius:8px;
@@ -249,9 +254,7 @@ th{
   font-weight:800;
 }
 
-.copy-link:hover{
-  color:#facc15;
-}
+.copy-link:hover{color:#facc15}
 
 .check{
   color:#22c55e;
@@ -294,12 +297,12 @@ th{
 
   <div class="topbar">
     <a class="back" href="../index.html">← Zurück zur Startseite</a>
-    <a class="back" href="bwl-loot.html">Zur BWL-Prioseite</a>
+    <a class="back" id="playerPageLink" href="bwl-loot.html">Zur Prioseite</a>
   </div>
 
   <div class="header">
     <h1>Lichtbringer – Raidlead Panel</h1>
-    <div class="subtitle">Live-Raidverwaltung, Priolisten, Exporte und Raidsteuerung.</div>
+    <div class="subtitle">Live-Raidverwaltung, Priolisten, Exporte und Raidsteuerung für alle Raids.</div>
   </div>
 
   <div class="grid">
@@ -308,7 +311,7 @@ th{
       <h2>Raidlead Login</h2>
 
       <label>Raid</label>
-      <select id="raidSelect">
+      <select id="raidSelect" onchange="onRaidChange()">
         <option value="MC">MC</option>
         <option value="BWL" selected>BWL</option>
         <option value="AQ40">AQ40</option>
@@ -363,6 +366,10 @@ th{
         Prios veröffentlichen / Items anzeigen
       </button>
 
+      <button class="btn close" onclick="closePrios()">
+        Prios wieder schließen
+      </button>
+
       <div id="publishStatus" class="status">
         Aktuell sieht der Raidlead nur, ob P1/P2/P3/P0+ eingetragen wurden. Die Items werden erst nach Veröffentlichung angezeigt.
       </div>
@@ -395,7 +402,6 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh
 
 const LOOT_SHEET_BASE =
 "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=";
-
 let currentRaid = null;
 let currentPrios = [];
 let itemIdMap = {};
@@ -443,89 +449,177 @@ function getLootPageForRaid(raid){
   return map[raid] || "bwl-loot.html";
 }
 
+function onRaidChange(){
+
+  const raid = getSelectedRaid();
+
+  document.getElementById("playerPageLink").href =
+    getLootPageForRaid(raid);
+
+}
+
 async function loadLootIds(){
+
   try{
-    const raid = getSelectedRaid();
-    const sheetName = getLootSheetName(raid);
-    const lootUrl = LOOT_SHEET_BASE + encodeURIComponent(sheetName) + "&t=" + Date.now();
 
-    const response = await fetch(lootUrl);
-    const csvText = await response.text();
-    const rows = parseCSV(csvText);
+    const raid =
+      getSelectedRaid();
 
-    if(!rows.length) return;
+    const sheetName =
+      getLootSheetName(raid);
 
-    const headers = rows.shift().map(h => h.trim());
-    const itemCol = headers.indexOf("Item");
-    const idCol = headers.indexOf("ItemID");
+    const lootUrl =
+      LOOT_SHEET_BASE +
+      encodeURIComponent(sheetName) +
+      "&t=" +
+      Date.now();
+
+    const response =
+      await fetch(lootUrl);
+
+    const csvText =
+      await response.text();
+
+    const rows =
+      parseCSV(csvText);
+
+    if(!rows.length){
+      return;
+    }
+
+    const headers =
+      rows.shift().map(h => h.trim());
+
+    const itemCol =
+      headers.indexOf("Item");
+
+    const idCol =
+      headers.indexOf("ItemID");
 
     itemIdMap = {};
 
     rows.forEach(row => {
-      const item = row[itemCol] ? String(row[itemCol]).trim() : "";
-      const id = row[idCol] ? String(row[idCol]).trim() : "";
+
+      const item =
+        row[itemCol]
+          ? String(row[itemCol]).trim()
+          : "";
+
+      const id =
+        row[idCol]
+          ? String(row[idCol]).trim()
+          : "";
 
       if(item && id){
-        itemIdMap[normalizeItemName(item)] = id;
+
+        itemIdMap[
+          normalizeItemName(item)
+        ] = id;
+
       }
+
     });
+
   }catch(error){
-    console.error("ItemIDs konnten nicht geladen werden:", error);
+
+    console.error(
+      "ItemIDs konnten nicht geladen werden:",
+      error
+    );
+
   }
+
 }
 
 function parseCSV(text){
+
   const rows = [];
+
   let row = [];
   let value = "";
   let insideQuotes = false;
 
   for(let i = 0; i < text.length; i++){
+
     const char = text[i];
     const next = text[i + 1];
 
     if(char === '"' && insideQuotes && next === '"'){
+
       value += '"';
       i++;
+
     }else if(char === '"'){
+
       insideQuotes = !insideQuotes;
+
     }else if(char === "," && !insideQuotes){
+
       row.push(value);
       value = "";
+
     }else if((char === "\n" || char === "\r") && !insideQuotes){
+
       if(value || row.length){
+
         row.push(value);
         rows.push(row);
+
         row = [];
         value = "";
+
       }
-      if(char === "\r" && next === "\n") i++;
+
+      if(char === "\r" && next === "\n"){
+        i++;
+      }
+
     }else{
+
       value += char;
+
     }
+
   }
 
   if(value || row.length){
+
     row.push(value);
     rows.push(row);
+
   }
 
   return rows;
+
 }
 
 async function loadRaidData(){
-  const raid = getSelectedRaid();
-  const leadPin = document.getElementById("leadPin").value.trim();
-  const status = document.getElementById("loginStatus");
+
+  const raid =
+    getSelectedRaid();
+
+  const leadPin =
+    document.getElementById("leadPin")
+      .value
+      .trim();
+
+  const status =
+    document.getElementById("loginStatus");
 
   if(!leadPin){
-    status.innerHTML = `<span class="bad">Bitte LeadPIN eingeben.</span>`;
+
+    status.innerHTML =
+      `<span class="bad">Bitte LeadPIN eingeben.</span>`;
+
     return;
+
   }
 
-  status.innerHTML = `<span class="warn">Lade Raiddaten…</span>`;
+  status.innerHTML =
+    `<span class="warn">Lade Raiddaten…</span>`;
 
   try{
+
     await loadLootIds();
 
     const url =
@@ -535,58 +629,117 @@ async function loadRaidData(){
       "&leadPin=" + encodeURIComponent(leadPin) +
       "&t=" + Date.now();
 
-    const response = await fetch(url);
-    const result = await response.json();
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
 
     if(result.error){
-      status.innerHTML = `<span class="bad">${result.error}</span>`;
+
+      status.innerHTML =
+        `<span class="bad">${result.error}</span>`;
+
       return;
+
     }
 
-    currentRaid = result.raid;
-    currentPrios = sortPrios(result.prios || []);
+    currentRaid =
+      result.raid;
 
-    priosPublished = String(currentRaid.Freigegeben || "").toLowerCase() === "ja";
+    currentPrios =
+      sortPrios(result.prios || []);
+
+    priosPublished =
+      String(currentRaid.Freigegeben || "")
+        .toLowerCase() === "ja";
 
     renderRaidData();
 
-    status.innerHTML = `<span class="ok">✓ Raid erfolgreich geladen.</span>`;
+    status.innerHTML =
+      `<span class="ok">✓ Raid erfolgreich geladen.</span>`;
+
   }catch(error){
+
     console.error(error);
-    status.innerHTML = `<span class="bad">Fehler beim Laden des Raids.</span>`;
+
+    status.innerHTML =
+      `<span class="bad">Fehler beim Laden des Raids.</span>`;
+
   }
+
 }
 
 function sortPrios(prios){
-  return [...prios].sort((a,b) => {
-    const classA = classOrder.indexOf(a.Klasse);
-    const classB = classOrder.indexOf(b.Klasse);
 
-    const orderA = classA === -1 ? 999 : classA;
-    const orderB = classB === -1 ? 999 : classB;
+  return [...prios].sort((a,b) => {
+
+    const classA =
+      classOrder.indexOf(a.Klasse);
+
+    const classB =
+      classOrder.indexOf(b.Klasse);
+
+    const orderA =
+      classA === -1 ? 999 : classA;
+
+    const orderB =
+      classB === -1 ? 999 : classB;
 
     if(orderA !== orderB){
+
       return orderA - orderB;
+
     }
 
-    return String(a.Spieler || "").localeCompare(String(b.Spieler || ""), "de");
+    return String(a.Spieler || "")
+      .localeCompare(
+        String(b.Spieler || ""),
+        "de"
+      );
+
   });
+
 }
 
 function renderRaidData(){
-  const table = document.getElementById("prioTable");
-  const head = document.getElementById("prioTableHead");
+
+  const table =
+    document.getElementById("prioTable");
+
+  const head =
+    document.getElementById("prioTableHead");
 
   table.innerHTML = "";
 
-  document.getElementById("statPlayers").textContent = currentPrios.length;
-  document.getElementById("statComplete").textContent = currentPrios.length;
+  document.getElementById("statPlayers")
+    .textContent =
+      currentPrios.length;
 
-  const p0 = currentPrios.filter(p => String(p.P0Plus).toLowerCase() === "ja").length;
-  document.getElementById("statP0").textContent = p0;
+  document.getElementById("statComplete")
+    .textContent =
+      currentPrios.length;
 
-  const classes = new Set(currentPrios.map(p => p.Klasse).filter(Boolean)).size;
-  document.getElementById("statClasses").textContent = classes;
+  const p0 =
+    currentPrios.filter(
+      p =>
+        String(p.P0Plus).toLowerCase() === "ja"
+    ).length;
+
+  document.getElementById("statP0")
+    .textContent =
+      p0;
+
+  const classes =
+    new Set(
+      currentPrios
+        .map(p => p.Klasse)
+        .filter(Boolean)
+    ).size;
+
+  document.getElementById("statClasses")
+    .textContent =
+      classes;
 
   head.innerHTML = `
     <tr>
@@ -601,68 +754,171 @@ function renderRaidData(){
   `;
 
   if(priosPublished){
-    document.getElementById("publishStatus").innerHTML =
-      `<span class="ok">✓ Prios veröffentlicht. Items werden angezeigt.</span>`;
+
+    document.getElementById("publishStatus")
+      .innerHTML =
+        `<span class="ok">✓ Prios veröffentlicht. Items werden angezeigt.</span>`;
+
   }else{
-    document.getElementById("publishStatus").innerHTML =
-      `<span class="warn">Noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0+ eingetragen wurden.`;
+
+    document.getElementById("publishStatus")
+      .innerHTML =
+        `<span class="warn">Noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0+ eingetragen wurden.`;
+
   }
 
   if(currentPrios.length === 0){
-    table.innerHTML = `<tr><td colspan="7">Keine Priolisten vorhanden.</td></tr>`;
+
+    table.innerHTML =
+      `<tr><td colspan="7">Keine Priolisten vorhanden.</td></tr>`;
+
     return;
+
   }
 
   currentPrios.forEach(prio => {
+
     if(priosPublished){
+
       table.innerHTML += `
         <tr>
+
           <td>${safe(prio.Spieler)}</td>
-          <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
+
+          <td>
+            <span class="${classColor(prio.Klasse)}">
+              ${safe(prio.Klasse)}
+            </span>
+          </td>
+
           <td>${safe(formatItemWithId(prio.P1))}</td>
+
           <td>${safe(formatItemWithId(prio.P2))}</td>
+
           <td>${safe(formatItemWithId(prio.P3))}</td>
-          <td>${String(prio.P0Plus).toLowerCase() === "ja" ? '<span class="warn">ja</span>' : 'nein'}</td>
-          <td><button class="delete-btn" onclick="deletePrio('${escapeQuotes(prio.Spieler)}')">Löschen</button></td>
+
+          <td>
+            ${
+              String(prio.P0Plus).toLowerCase() === "ja"
+              ? '<span class="warn">ja</span>'
+              : 'nein'
+            }
+          </td>
+
+          <td>
+            <button
+              class="delete-btn"
+              onclick="deletePrio('${escapeQuotes(prio.Spieler)}')"
+            >
+              Löschen
+            </button>
+          </td>
+
         </tr>
       `;
+
     }else{
+
       table.innerHTML += `
         <tr>
+
           <td>${safe(prio.Spieler)}</td>
-          <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-          <td>${prio.P1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${prio.P2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${prio.P3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${String(prio.P0Plus).toLowerCase() === "ja" ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td><button class="delete-btn" onclick="deletePrio('${escapeQuotes(prio.Spieler)}')">Löschen</button></td>
+
+          <td>
+            <span class="${classColor(prio.Klasse)}">
+              ${safe(prio.Klasse)}
+            </span>
+          </td>
+
+          <td>
+            ${
+              prio.P1
+              ? '<span class="check">✓</span>'
+              : '<span class="cross">✗</span>'
+            }
+          </td>
+
+          <td>
+            ${
+              prio.P2
+              ? '<span class="check">✓</span>'
+              : '<span class="cross">✗</span>'
+            }
+          </td>
+
+          <td>
+            ${
+              prio.P3
+              ? '<span class="check">✓</span>'
+              : '<span class="cross">✗</span>'
+            }
+          </td>
+
+          <td>
+            ${
+              String(prio.P0Plus).toLowerCase() === "ja"
+              ? '<span class="check">✓</span>'
+              : '<span class="cross">✗</span>'
+            }
+          </td>
+
+          <td>
+            <button
+              class="delete-btn"
+              onclick="deletePrio('${escapeQuotes(prio.Spieler)}')"
+            >
+              Löschen
+            </button>
+          </td>
+
         </tr>
       `;
+
     }
+
   });
+
 }
 
 function classColor(className){
-  const key = String(className || "")
-    .toLowerCase()
-    .replace("ä","ae")
-    .replace("ö","oe")
-    .replace("ü","ue");
 
-  if(key === "jaeger") return "class-jäger";
-  return "class-" + String(className || "").toLowerCase();
+  const key =
+    String(className || "")
+      .toLowerCase()
+      .replace("ä","ae")
+      .replace("ö","oe")
+      .replace("ü","ue");
+
+  if(key === "jaeger"){
+    return "class-jäger";
+  }
+
+  return "class-" +
+    String(className || "")
+      .toLowerCase();
+
 }
 
 async function publishPrios(){
+
   if(!currentRaid){
+
     alert("Bitte zuerst Raid laden.");
+
     return;
+
   }
 
-  const leadPin = document.getElementById("leadPin").value.trim();
-  const raid = getSelectedRaid();
+  const leadPin =
+    document.getElementById("leadPin")
+      .value
+      .trim();
+
+  const raid =
+    getSelectedRaid();
 
   try{
+
     const url =
       APPS_SCRIPT_URL +
       "?action=publishRaid" +
@@ -670,12 +926,18 @@ async function publishPrios(){
       "&leadPin=" + encodeURIComponent(leadPin) +
       "&t=" + Date.now();
 
-    const response = await fetch(url);
-    const result = await response.json();
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
 
     if(result.error){
+
       alert(result.error);
+
       return;
+
     }
 
     priosPublished = true;
@@ -685,30 +947,106 @@ async function publishPrios(){
     }
 
     renderRaidData();
+
   }catch(error){
+
     console.error(error);
+
     alert("Fehler beim Veröffentlichen.");
+
   }
+
+}
+
+async function closePrios(){
+
+  if(!currentRaid){
+
+    alert("Bitte zuerst Raid laden.");
+
+    return;
+
+  }
+
+  const leadPin =
+    document.getElementById("leadPin")
+      .value
+      .trim();
+
+  const raid =
+    getSelectedRaid();
+
+  try{
+
+    const url =
+      APPS_SCRIPT_URL +
+      "?action=closeRaid" +
+      "&raid=" + encodeURIComponent(raid) +
+      "&leadPin=" + encodeURIComponent(leadPin) +
+      "&t=" + Date.now();
+
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
+
+    if(result.error){
+
+      alert(result.error);
+
+      return;
+
+    }
+
+    priosPublished = false;
+
+    if(result.raid){
+      currentRaid = result.raid;
+    }
+
+    renderRaidData();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Fehler beim Schließen.");
+
+  }
+
 }
 
 async function refreshRaid(){
+
   await loadRaidData();
+
 }
 
 async function deletePrio(player){
+
   if(!currentRaid){
+
     alert("Bitte zuerst Raid laden.");
+
     return;
+
   }
 
   if(!confirm(`Soll die Prioliste von ${player} gelöscht werden?`)){
     return;
   }
 
-  const leadPin = document.getElementById("leadPin").value.trim();
-  const raid = getSelectedRaid();
+  const leadPin =
+    document.getElementById("leadPin")
+      .value
+      .trim();
+
+  const raid =
+    getSelectedRaid();
 
   try{
+
     const url =
       APPS_SCRIPT_URL +
       "?action=deletePrio" +
@@ -717,36 +1055,61 @@ async function deletePrio(player){
       "&player=" + encodeURIComponent(player) +
       "&t=" + Date.now();
 
-    const response = await fetch(url);
-    const result = await response.json();
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
 
     if(result.error){
+
       alert(result.error);
+
       return;
+
     }
 
     await loadRaidData();
-  }catch(error){
-    console.error(error);
-    alert("Fehler beim Löschen.");
-  }
-}
 
-async function createRaid(){
-  const masterPin = document.getElementById("masterPin").value.trim();
-  const box = document.getElementById("newRaidBox");
-  const raid = getSelectedRaid();
+  }catch(error){
+
+    console.error(error);
+
+    alert("Fehler beim Löschen.");
+
+  }
+
+}async function createRaid(){
+
+  const masterPin =
+    document.getElementById("masterPin")
+      .value
+      .trim();
+
+  const box =
+    document.getElementById("newRaidBox");
+
+  const raid =
+    getSelectedRaid();
 
   if(!masterPin){
+
     box.classList.remove("hidden");
-    box.innerHTML = `<span class="bad">Bitte MasterPIN eingeben.</span>`;
+
+    box.innerHTML =
+      `<span class="bad">Bitte MasterPIN eingeben.</span>`;
+
     return;
+
   }
 
   box.classList.remove("hidden");
-  box.innerHTML = `<span class="warn">Erzeuge Raid…</span>`;
+
+  box.innerHTML =
+    `<span class="warn">Erzeuge Raid…</span>`;
 
   try{
+
     const url =
       APPS_SCRIPT_URL +
       "?action=createRaid" +
@@ -754,15 +1117,26 @@ async function createRaid(){
       "&raid=" + encodeURIComponent(raid) +
       "&t=" + Date.now();
 
-    const response = await fetch(url);
-    const result = await response.json();
+    const response =
+      await fetch(url);
+
+    const result =
+      await response.json();
 
     if(result.error){
-      box.innerHTML = `<span class="bad">${result.error}</span>`;
+
+      box.innerHTML =
+        `<span class="bad">${result.error}</span>`;
+
       return;
+
     }
 
-    const playerLink = buildPlayerLink(raid, result.playerPin);
+    const playerLink =
+      buildPlayerLink(
+        raid,
+        result.playerPin
+      );
 
     box.innerHTML = `
       <strong>Neuer Raid erstellt</strong><br><br>
@@ -780,101 +1154,177 @@ async function createRaid(){
       ${safe(result.leadPin)}<br><br>
 
       <strong>Direkter Spielerlink:</strong>
-      <a class="copy-link" href="${playerLink}" target="_blank">${playerLink}</a>
+      <a
+        class="copy-link"
+        href="${playerLink}"
+        target="_blank"
+      >
+        ${playerLink}
+      </a>
     `;
 
-    document.getElementById("leadPin").value = result.leadPin || "";
+    document.getElementById("leadPin").value =
+      result.leadPin || "";
+
   }catch(error){
+
     console.error(error);
-    box.innerHTML = `<span class="bad">Fehler beim Erstellen des Raids.</span>`;
+
+    box.innerHTML =
+      `<span class="bad">Fehler beim Erstellen des Raids.</span>`;
+
   }
+
 }
 
 function buildPlayerLink(raid, playerPin){
-  const currentPath = window.location.pathname;
-  const targetPage = getLootPageForRaid(raid);
-  const basePath = currentPath.replace(/raidlead\.html$/i, targetPage);
 
-  return window.location.origin + basePath + "?pin=" + encodeURIComponent(playerPin || "");
+  const currentPath =
+    window.location.pathname;
+
+  const targetPage =
+    getLootPageForRaid(raid);
+
+  const basePath =
+    currentPath.replace(
+      /raidlead\.html$/i,
+      targetPage
+    );
+
+  return (
+    window.location.origin +
+    basePath +
+    "?pin=" +
+    encodeURIComponent(playerPin || "")
+  );
+
 }
 
 function downloadExport(type){
+
   if(!currentPrios.length){
+
     alert("Keine Priolisten geladen.");
+
     return;
+
   }
 
   let content = "";
-  let filename = `${String(getSelectedRaid()).toLowerCase()}-prios`;
-  let mime = "text/plain;charset=utf-8;";
+
+  let filename =
+    `${String(getSelectedRaid()).toLowerCase()}-prios`;
+
+  let mime =
+    "text/plain;charset=utf-8;";
 
   if(type === "tsv"){
+
     filename += "-prio3.txt";
-    content = currentPrios.map(p =>
-      [
-        p.Spieler || "",
-        p.Klasse || "",
-        "",
-        formatItemWithId(p.P1),
-        formatItemWithId(p.P2),
-        formatItemWithId(p.P3)
-      ].join("\t")
-    ).join("\n");
+
+    content =
+      currentPrios
+        .map(p =>
+          [
+            p.Spieler || "",
+            p.Klasse || "",
+            "",
+            formatItemWithId(p.P1),
+            formatItemWithId(p.P2),
+            formatItemWithId(p.P3)
+          ].join("\t")
+        )
+        .join("\n");
+
   }
 
   if(type === "csv"){
+
     filename += ".csv";
-    mime = "text/csv;charset=utf-8;";
-    content = currentPrios.map(p =>
-      [
-        p.Spieler || "",
-        p.Klasse || "",
-        "",
-        formatItemWithId(p.P1),
-        formatItemWithId(p.P2),
-        formatItemWithId(p.P3)
-      ].map(csvSafe).join(",")
-    ).join("\n");
+
+    mime =
+      "text/csv;charset=utf-8;";
+
+    content =
+      currentPrios
+        .map(p =>
+          [
+            p.Spieler || "",
+            p.Klasse || "",
+            "",
+            formatItemWithId(p.P1),
+            formatItemWithId(p.P2),
+            formatItemWithId(p.P3)
+          ].map(csvSafe).join(",")
+        )
+        .join("\n");
+
   }
 
   if(type === "txt"){
+
     filename += ".txt";
-    content = currentPrios.map(p =>
-      [
-        p.Spieler || "",
-        p.Klasse || "",
-        "",
-        formatItemWithId(p.P1),
-        formatItemWithId(p.P2),
-        formatItemWithId(p.P3)
-      ].join("\t")
-    ).join("\n");
+
+    content =
+      currentPrios
+        .map(p =>
+          [
+            p.Spieler || "",
+            p.Klasse || "",
+            "",
+            formatItemWithId(p.P1),
+            formatItemWithId(p.P2),
+            formatItemWithId(p.P3)
+          ].join("\t")
+        )
+        .join("\n");
+
   }
 
   if(type === "lua"){
+
     filename += ".lua";
-    content = `Lichtbringer${getSelectedRaid()} = {\n`;
+
+    content =
+      `Lichtbringer${getSelectedRaid()} = {\n`;
 
     currentPrios.forEach(p => {
-      content += `  ["${luaSafe(p.Spieler)}"] = { class = "${luaSafe(p.Klasse)}", p1 = "${luaSafe(formatItemWithId(p.P1))}", p2 = "${luaSafe(formatItemWithId(p.P2))}", p3 = "${luaSafe(formatItemWithId(p.P3))}" },\n`;
+
+      content +=
+        `  ["${luaSafe(p.Spieler)}"] = { class = "${luaSafe(p.Klasse)}", p1 = "${luaSafe(formatItemWithId(p.P1))}", p2 = "${luaSafe(formatItemWithId(p.P2))}", p3 = "${luaSafe(formatItemWithId(p.P3))}" },\n`;
+
     });
 
     content += "}\n";
+
   }
 
-  const blob = new Blob([content], {type:mime});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
+  const blob =
+    new Blob(
+      [content],
+      {type:mime}
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
 
   a.href = url;
+
   a.download = filename;
+
   a.click();
 
   URL.revokeObjectURL(url);
+
 }
 
 function formatItemWithId(itemName){
-  const name = String(itemName || "").trim();
+
+  const name =
+    String(itemName || "").trim();
 
   if(!name){
     return "";
@@ -884,50 +1334,91 @@ function formatItemWithId(itemName){
     return name;
   }
 
-  const id = itemIdMap[normalizeItemName(name)];
+  const id =
+    itemIdMap[
+      normalizeItemName(name)
+    ];
 
-  return id ? `${name}-${id}` : name;
+  return id
+    ? `${name}-${id}`
+    : name;
+
 }
 
 function normalizeItemName(name){
+
   return String(name || "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
+
 }
 
 function safe(value){
+
   return String(value || "")
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;");
+
 }
 
 function csvSafe(value){
+
   return `"${String(value || "").replace(/"/g,'""')}"`;
+
 }
 
 function escapeQuotes(value){
-  return String(value || "").replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'");
+
 }
 
 function luaSafe(value){
-  return String(value || "").replace(/\\/g,"\\\\").replace(/"/g,'\\"');
+
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/"/g,'\\"');
+
 }
 
-const params = new URLSearchParams(window.location.search);
-const autoRaid = params.get("raid");
-const autoLeadPin = params.get("leadPin");
+const params =
+  new URLSearchParams(
+    window.location.search
+  );
+
+const autoRaid =
+  params.get("raid");
+
+const autoLeadPin =
+  params.get("leadPin");
 
 if(autoRaid){
-  document.getElementById("raidSelect").value = autoRaid;
+
+  document.getElementById("raidSelect").value =
+    autoRaid;
+
+  onRaidChange();
+
 }
 
 if(autoLeadPin){
-  document.getElementById("leadPin").value = autoLeadPin;
+
+  document.getElementById("leadPin").value =
+    autoLeadPin;
+
   loadRaidData();
+
+}else{
+
+  onRaidChange();
+
 }
+
 </script>
 
 </body>
