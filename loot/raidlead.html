@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lichtbringer – Raidlead Panel</title>
+
+  <style>
+
+    :root{
+      --gold:#facc15;
+      --panel:rgba(12,18,32,.92);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --line:rgba(255,255,255,.10);
+      --danger:#ef4444;
+      --green:#22c55e;
+      --blue:#60a5fa;
+    }
+
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    body{
+      min-height:100vh;
+
+      font-family:Arial, Helvetica, sans-serif;
+
+      color:var(--text);
+
+      background:
+        linear-gradient(rgba(8,17,31,.84), rgba(8,17,31,.96)),
+        url('../images/bwl.jpg');
+
+      background-size:cover;
+      background-position:center;
+      background-attachment:fixed;
+    }
+
+    .overlay{
+      min-height:100vh;
+      padding:34px 22px 60px;
+      backdrop-filter:blur(4px);
+    }
+
+    .topbar{
+      width:min(1600px,100%);
+      margin:0 auto 28px;
+
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:16px;
+    }
+
+    .back{
+      color:var(--text);
+      text-decoration:none;
+      font-weight:800;
+
+      border:1px solid var(--line);
+
+      padding:12px 16px;
+
+      border-radius:14px;
+
+      background:rgba(12,18,32,.72);
+    }
+
+    .back:hover{
+      border-color:rgba(250,204,21,.45);
+    }
+
+    .header{
+      width:min(1600px,100%);
+      margin:0 auto 28px;
+
+      padding:30px;
+
+      border-radius:24px;
+
+      background:var(--panel);
+
+      border:1px solid rgba(250,204,21,.22);
+
+      box-shadow:0 20px 45px rgba(0,0,0,.45);
+    }
+
+    h1{
+      color:var(--gold);
+      font-size:clamp(34px,5vw,56px);
+      margin-bottom:8px;
+    }
+
+    .subtitle{
+      color:#dbeafe;
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .grid{
+      width:min(1600px,100%);
+      margin:auto;
+
+      display:grid;
+      grid-template-columns:420px 1fr;
+      gap:22px;
+    }
+
+    .card{
+      background:var(--panel);
+
+      border:1px solid var(--line);
+
+      border-radius:22px;
+
+      padding:22px;
+
+      box-shadow:0 18px 40px rgba(0,0,0,.38);
+    }
+
+    h2{
+      color:var(--gold);
+      margin-bottom:16px;
+      font-size:22px;
+    }
+
+    h3{
+      color:var(--gold);
+      margin:22px 0 10px;
+      font-size:18px;
+    }
+
+    label{
+      display:block;
+
+      color:var(--muted);
+
+      font-size:12px;
+      font-weight:800;
+
+      margin:14px 0 7px;
+
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    input, select{
+      width:100%;
+
+      padding:12px 13px;
+
+      border-radius:12px;
+
+      border:1px solid rgba(255,255,255,.16);
+
+      background:rgba(2,6,23,.82);
+
+      color:var(--text);
+
+      font-size:14px;
+    }
+
+    .btn{
+      width:100%;
+
+      margin-top:14px;
+
+      padding:13px 16px;
+
+      border-radius:14px;
+
+      border:1px solid rgba(250,204,21,.25);
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(250,204,21,.28),
+          rgba(96,165,250,.18)
+        );
+
+      color:var(--text);
+
+      font-weight:900;
+
+      cursor:pointer;
+
+      transition:.18s;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      border-color:rgba(250,204,21,.55);
+    }
+
+    .btn.secondary{
+      background:
+        linear-gradient(
+          135deg,
+          rgba(96,165,250,.24),
+          rgba(250,204,21,.10)
+        );
+    }
+
+    .btn.danger{
+      background:
+        linear-gradient(
+          135deg,
+          rgba(239,68,68,.32),
+          rgba(250,204,21,.08)
+        );
+
+      border-color:rgba(239,68,68,.35);
+    }
+
+    .delete-btn{
+      padding:6px 8px;
+
+      border-radius:8px;
+
+      border:1px solid rgba(239,68,68,.45);
+
+      background:rgba(127,29,29,.55);
+
+      color:#fecaca;
+
+      font-size:10px;
+      font-weight:900;
+
+      cursor:pointer;
+    }
+
+    .delete-btn:hover{
+      background:rgba(239,68,68,.32);
+      color:white;
+    }
+
+    .status{
+      margin-top:14px;
+
+      padding:13px;
+
+      border-radius:14px;
+
+      border:1px solid var(--line);
+
+      background:rgba(2,6,23,.55);
+
+      color:#dbeafe;
+
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .ok{
+      color:var(--green);
+      font-weight:900;
+    }
+
+    .bad{
+      color:var(--danger);
+      font-weight:900;
+    }
+
+    .warn{
+      color:var(--gold);
+      font-weight:900;
+    }
+
+    .stats-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:20px;
+    }
+
+    .stat-box{
+      background:rgba(2,6,23,.62);
+
+      border:1px solid rgba(255,255,255,.10);
+
+      border-radius:14px;
+
+      padding:14px;
+    }
+
+    .stat-number{
+      color:var(--gold);
+
+      font-size:28px;
+      font-weight:900;
+
+      margin-bottom:4px;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:12px;
+      font-size:12px;
+    }
+
+    th, td{
+      padding:9px 7px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+      vertical-align:top;
+    }
+
+    th{
+      color:var(--gold);
+      text-transform:uppercase;
+      font-size:10px;
+      letter-spacing:.06em;
+    }
+
+    .table-scroll{
+      max-height:520px;
+      overflow:auto;
+      padding-right:4px;
+    }
+
+    .export-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .hidden{
+      display:none;
+    }
+
+    .raid-card{
+      background:rgba(2,6,23,.62);
+
+      border:1px solid rgba(255,255,255,.10);
+
+      border-radius:14px;
+
+      padding:14px;
+
+      margin-top:12px;
+    }
+
+    .raid-card strong{
+      color:var(--gold);
+    }
+
+    @media(max-width:1200px){
+
+      .grid{
+        grid-template-columns:1fr;
+      }
+
+      .stats-grid{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+    }
+
+    @media(max-width:700px){
+
+      .stats-grid{
+        grid-template-columns:1fr;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+  <div class="topbar">
+
+    <a class="back" href="../index.html">
+      ← Zurück zur Startseite
+    </a>
+
+    <a class="back" href="bwl-loot.html">
+      Zur BWL-Prioseite
+    </a>
+
+  </div>
+
+  <div class="header">
+
+    <h1>Lichtbringer – Raidlead Panel</h1>
+
+    <div class="subtitle">
+      Live-Raidverwaltung, Priolisten, Exporte und Raidsteuerung.
+    </div>
+
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+
+      <h2>Raidlead Login</h2>
+
+      <label>Raid</label>
+
+      <select id="raidSelect">
+        <option value="BWL">BWL</option>
+      </select>
+
+      <label>LeadPIN</label>
+
+      <input
+        id="leadPin"
+        type="password"
+        placeholder="LeadPIN eingeben"
+      >
+
+      <button class="btn" onclick="loadRaidData()">
+        Raid laden
+      </button>
+
+      <div id="loginStatus" class="status">
+        Bitte Raid und LeadPIN eingeben.
+      </div>
+
+      <h3>Neuen Raid erzeugen</h3>
+
+      <label>MasterPIN</label>
+
+      <input
+        id="masterPin"
+        type="password"
+        placeholder="MasterPIN"
+      >
+
+      <button class="btn secondary" onclick="createRaid()">
+        Neuen Raid erzeugen
+      </button>
+
+      <div id="newRaidBox" class="raid-card hidden"></div>
+
+      <h3>Export</h3>
+
+      <div class="export-grid">
+
+        <button class="btn secondary" onclick="downloadExport('csv')">
+          CSV
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('csvshort')">
+          CSV SHORT
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('txt')">
+          TXT
+        </button>
+
+        <button class="btn secondary" onclick="downloadExport('lua')">
+          LUA
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h2>Live Prioliste</h2>
+
+      <div class="stats-grid">
+
+        <div class="stat-box">
+          <div id="statPlayers" class="stat-number">0</div>
+          <div class="stat-label">Spieler</div>
+        </div>
+
+        <div class="stat-box">
+          <div id="statComplete" class="stat-number">0</div>
+          <div class="stat-label">vollständig</div>
+        </div>
+
+        <div class="stat-box">
+          <div id="statP0" class="stat-number">0</div>
+          <div class="stat-label">P0+</div>
+        </div>
+
+        <div class="stat-box">
+          <div id="statClasses" class="stat-number">0</div>
+          <div class="stat-label">Klassen</div>
+        </div>
+
+      </div>
+
+      <button class="btn secondary" onclick="refreshRaid()">
+        Aktualisieren
+      </button>
+
+      <div class="table-scroll">
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P1</th>
+              <th>P2</th>
+              <th>P3</th>
+              <th>P0+</th>
+              <th>Löschen</th>
+            </tr>
+          </thead>
+
+          <tbody id="prioTable"></tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const APPS_SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+
+let currentRaid = null;
+let currentPrios = [];
+
+async function loadRaidData(){
+
+  const raid =
+    document.getElementById("raidSelect").value;
+
+  const leadPin =
+    document.getElementById("leadPin").value.trim();
+
+  const status =
+    document.getElementById("loginStatus");
+
+  if(!leadPin){
+
+    status.innerHTML =
+      `<span class="bad">Bitte LeadPIN eingeben.</span>`;
+
+    return;
+
+  }
+
+  status.innerHTML =
+    `<span class="warn">Lade Raiddaten…</span>`;
+
+  try{
+
+    const response =
+      await fetch(
+        `${APPS_SCRIPT_URL}?action=getLeadPrios&raid=${encodeURIComponent(raid)}&leadPin=${encodeURIComponent(leadPin)}`
+      );
+
+    const result = await response.json();
+
+    if(result.error){
+
+      status.innerHTML =
+        `<span class="bad">${result.error}</span>`;
+
+      return;
+
+    }
+
+    currentRaid = result.raid;
+    currentPrios = result.prios || [];
+
+    renderRaidData();
+
+    status.innerHTML =
+      `<span class="ok">✓ Raid erfolgreich geladen.</span>`;
+
+  }catch(error){
+
+    console.error(error);
+
+    status.innerHTML =
+      `<span class="bad">Fehler beim Laden des Raids.</span>`;
+
+  }
+
+}
+
+function renderRaidData(){
+
+  const table =
+    document.getElementById("prioTable");
+
+  table.innerHTML = "";
+
+  const complete =
+    currentPrios.length;
+
+  const p0 =
+    currentPrios.filter(
+      p => String(p.P0Plus).toLowerCase() === "ja"
+    ).length;
+
+  const classes =
+    new Set(
+      currentPrios.map(p => p.Klasse)
+    ).size;
+
+  document.getElementById("statPlayers").textContent =
+    currentPrios.length;
+
+  document.getElementById("statComplete").textContent =
+    complete;
+
+  document.getElementById("statP0").textContent =
+    p0;
+
+  document.getElementById("statClasses").textContent =
+    classes;
+
+  currentPrios.forEach(prio => {
+
+    table.innerHTML += `
+      <tr>
+        <td>${prio.Spieler || ""}</td>
+        <td>${prio.Klasse || ""}</td>
+        <td>${prio.P1 || ""}</td>
+        <td>${prio.P2 || ""}</td>
+        <td>${prio.P3 || ""}</td>
+        <td>
+          ${
+            String(prio.P0Plus).toLowerCase() === "ja"
+            ? '<span class="warn">ja</span>'
+            : 'nein'
+          }
+        </td>
+        <td>
+          <button
+            class="delete-btn"
+            onclick="deletePrio('${escapeQuotes(prio.Spieler)}')"
+          >
+            Löschen
+          </button>
+        </td>
+      </tr>
+    `;
+
+  });
+
+}
+
+async function refreshRaid(){
+
+  if(!currentRaid){
+
+    return;
+
+  }
+
+  await loadRaidData();
+
+}
+
+async function deletePrio(player){
+
+  if(!currentRaid){
+
+    return;
+
+  }
+
+  const confirmed =
+    confirm(
+      `Soll die Prioliste von ${player} gelöscht werden?`
+    );
+
+  if(!confirmed){
+
+    return;
+
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        `${APPS_SCRIPT_URL}?action=deletePrio&raid=${encodeURIComponent(currentRaid.Raid)}&leadPin=${encodeURIComponent(currentRaid.LeadPIN)}&player=${encodeURIComponent(player)}`
+      );
+
+    const result = await response.json();
+
+    if(result.error){
+
+      alert(result.error);
+
+      return;
+
+    }
+
+    await refreshRaid();
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Fehler beim Löschen.");
+
+  }
+
+}
+
+async function createRaid(){
+
+  const masterPin =
+    document.getElementById("masterPin").value.trim();
+
+  const box =
+    document.getElementById("newRaidBox");
+
+  try{
+
+    const response =
+      await fetch(APPS_SCRIPT_URL, {
+        method:"POST",
+        headers:{
+          "Content-Type":"text/plain;charset=utf-8"
+        },
+        body:JSON.stringify({
+          action:"createRaid",
+          masterPin:masterPin,
+          raid:"BWL"
+        })
+      });
+
+    const result = await response.json();
+
+    if(result.error){
+
+      box.classList.remove("hidden");
+
+      box.innerHTML =
+        `<span class="bad">${result.error}</span>`;
+
+      return;
+
+    }
+
+    box.classList.remove("hidden");
+
+    box.innerHTML = `
+      <strong>Neuer Raid erstellt</strong><br><br>
+
+      <strong>RaidID:</strong><br>
+      ${result.raidId}<br><br>
+
+      <strong>SpielerPIN:</strong><br>
+      ${result.playerPin}<br><br>
+
+      <strong>LeadPIN:</strong><br>
+      ${result.leadPin}
+    `;
+
+  }catch(error){
+
+    console.error(error);
+
+    box.classList.remove("hidden");
+
+    box.innerHTML =
+      `<span class="bad">Fehler beim Erstellen des Raids.</span>`;
+
+  }
+
+}
+
+function escapeQuotes(text){
+
+  return String(text)
+    .replace(/'/g, "\\'");
+
+}
+
+function downloadExport(type){
+
+  if(!currentPrios.length){
+
+    alert("Keine Priolisten geladen.");
+
+    return;
+
+  }
+
+  let content = "";
+  let filename = "bwl-prios";
+  let mime = "text/plain;charset=utf-8;";
+
+  if(type === "csv"){
+
+    filename += ".csv";
+    mime = "text/csv;charset=utf-8;";
+
+    content = [
+      ["Player","Class","Raid","P1","P2","P3","P0Plus"]
+    ]
+    .concat(
+      currentPrios.map(p => [
+        p.Spieler,
+        p.Klasse,
+        currentRaid.Raid,
+        p.P1,
+        p.P2,
+        p.P3,
+        p.P0Plus
+      ])
+    )
+    .map(
+      row =>
+        row.map(v => `"${v}"`).join(",")
+    )
+    .join("\n");
+
+  }
+
+  if(type === "csvshort"){
+
+    filename += "-short.csv";
+    mime = "
