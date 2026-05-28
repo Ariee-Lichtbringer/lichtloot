@@ -33,7 +33,7 @@
         url('./images/back.jpeg');
 
       background-size:cover;
-      background-position:center;
+      background-position:center top;
       background-repeat:no-repeat;
       background-attachment:fixed;
     }
@@ -80,8 +80,8 @@
       margin:auto;
 
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
-      gap:28px;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:20px;
 
       margin-bottom:50px;
     }
@@ -90,7 +90,7 @@
       position:relative;
       overflow:hidden;
 
-      border-radius:28px;
+      border-radius:24px;
       border:1px solid var(--line);
 
       background:var(--panel);
@@ -106,17 +106,17 @@
     }
 
     .raid-card:hover{
-      transform:translateY(-8px);
+      transform:translateY(-6px);
 
       border-color:rgba(250,204,21,.45);
 
       box-shadow:
         0 0 0 2px rgba(250,204,21,.14),
-        0 25px 55px rgba(0,0,0,.52);
+        0 20px 45px rgba(0,0,0,.52);
     }
 
     .raid-banner{
-      height:230px;
+      height:170px;
       overflow:hidden;
       position:relative;
     }
@@ -125,6 +125,7 @@
       width:100%;
       height:100%;
       object-fit:cover;
+      object-position:center top;
       transition:transform .4s ease;
     }
 
@@ -146,22 +147,23 @@
     }
 
     .raid-content{
-      padding:24px;
+      padding:20px;
       position:relative;
       z-index:2;
     }
 
     .raid-icon{
-      width:115px;
-      height:115px;
+      width:85px;
+      height:85px;
       object-fit:cover;
+      object-position:center top;
 
       border-radius:50%;
 
       border:3px solid var(--gold);
 
-      margin-top:-82px;
-      margin-bottom:18px;
+      margin-top:-58px;
+      margin-bottom:16px;
 
       position:relative;
       z-index:5;
@@ -169,12 +171,12 @@
       background:#111827;
 
       box-shadow:
-        0 0 25px rgba(250,204,21,.30),
-        0 10px 30px rgba(0,0,0,.45);
+        0 0 20px rgba(250,204,21,.30),
+        0 10px 25px rgba(0,0,0,.45);
     }
 
     .raid-title{
-      font-size:32px;
+      font-size:24px;
       font-weight:900;
       margin-bottom:10px;
       color:var(--gold);
@@ -183,27 +185,26 @@
     .raid-description{
       color:var(--muted);
       line-height:1.6;
-      font-size:15px;
-      margin-bottom:22px;
+      font-size:14px;
+      margin-bottom:18px;
     }
 
     .raid-buttons{
       display:flex;
-      flex-wrap:wrap;
-      gap:12px;
+      flex-direction:column;
+      gap:10px;
     }
 
     .raid-btn{
-      flex:1;
-      min-width:130px;
+      width:100%;
 
       display:flex;
       align-items:center;
       justify-content:center;
 
-      padding:14px 18px;
+      padding:12px 16px;
 
-      border-radius:14px;
+      border-radius:12px;
 
       background:
         linear-gradient(
@@ -218,6 +219,7 @@
 
       text-decoration:none;
       font-weight:800;
+      font-size:14px;
       letter-spacing:.02em;
 
       transition:all .18s ease;
@@ -236,13 +238,31 @@
       border-color:rgba(250,204,21,.45);
     }
 
+    .loot-btn{
+      background:
+        linear-gradient(
+          135deg,
+          rgba(96,165,250,.22),
+          rgba(250,204,21,.12)
+        );
+    }
+
+    .loot-btn:hover{
+      background:
+        linear-gradient(
+          135deg,
+          rgba(96,165,250,.34),
+          rgba(250,204,21,.20)
+        );
+    }
+
     .info-box{
       width:min(1100px,100%);
       margin:0 auto 40px;
 
-      padding:32px;
+      padding:28px;
 
-      border-radius:24px;
+      border-radius:22px;
 
       background:rgba(12,18,32,.84);
 
@@ -256,46 +276,24 @@
     .info-box h2{
       color:#facc15;
       margin-bottom:18px;
-      font-size:30px;
+      font-size:28px;
     }
 
     .info-box p{
       color:#dbeafe;
       line-height:1.8;
       margin-bottom:14px;
-      font-size:15px;
-    }
-
-    .info-box p:last-child{
-      margin-bottom:0;
+      font-size:14px;
     }
 
     .footer{
       text-align:center;
       margin-top:60px;
       color:#cbd5e1;
-      font-size:13px;
+      font-size:12px;
       opacity:.7;
       letter-spacing:.12em;
       text-transform:uppercase;
-    }
-
-    @media(max-width:700px){
-
-      .raid-banner{
-        height:190px;
-      }
-
-      .raid-icon{
-        width:95px;
-        height:95px;
-        margin-top:-70px;
-      }
-
-      .raid-title{
-        font-size:26px;
-      }
-
     }
 
   </style>
@@ -310,83 +308,79 @@
       <h1>Lichtbringer</h1>
 
       <div class="subtitle">
-        Prio 0 Plus
+        Prio 0 Plus & Lootsystem
       </div>
 
     </div>
 
-    <!-- RAIDS OBEN -->
-
     <div class="raid-grid">
-
-      <!-- BWL -->
-      <div class="raid-card">
-
-        <div class="raid-banner">
-          <img
-            src="./images/bwl.jpg"
-            alt="BWL"
-          />
-        </div>
-
-        <div class="raid-content">
-
-          <img
-            class="raid-icon"
-            src="./images/bwl.jpg"
-            alt="BWL Icon"
-          />
-
-          <div class="raid-title">
-            Blackwing Lair
-          </div>
-
-          <div class="raid-description">
-            Vollautomatische Prio-0 Übersicht für Blackwing Lair
-            inklusive Suchfunktion und Klassenübersicht.
-          </div>
-
-          <div class="raid-buttons">
-            <a class="raid-btn" href="bwl.html">
-              BWL öffnen
-            </a>
-          </div>
-
-        </div>
-
-      </div>
 
       <!-- MC -->
       <div class="raid-card">
 
         <div class="raid-banner">
-          <img
-            src="./images/mc.jpg"
-            alt="MC"
-          />
+          <img src="./images/mc.jpg" alt="MC"/>
         </div>
 
         <div class="raid-content">
 
-          <img
-            class="raid-icon"
-            src="./images/mc.jpg"
-            alt="MC Icon"
-          />
+          <img class="raid-icon" src="./images/mc.jpg" alt="MC Icon"/>
 
           <div class="raid-title">
             Molten Core
           </div>
 
           <div class="raid-description">
-            Übersicht aller Prio-0 Items aus Molten Core
-            inklusive automatischer Synchronisierung.
+            P0+ Übersicht und neue Prio-Auswahl
+            für Molten Core.
           </div>
 
           <div class="raid-buttons">
+
             <a class="raid-btn" href="molten-core.html">
-              MC öffnen
+              P0+ Übersicht öffnen
             </a>
+
+            <a class="raid-btn loot-btn" href="loot/mc-loot.html">
+              Prio-Auswahl öffnen
+            </a>
+
+          </div>
+
+        </div>
+
+      </div>
+      
+      <!-- BWL -->
+      <div class="raid-card">
+
+        <div class="raid-banner">
+          <img src="./images/bwl.jpg" alt="BWL"/>
+        </div>
+
+        <div class="raid-content">
+
+          <img class="raid-icon" src="./images/bwl.jpg" alt="BWL Icon"/>
+
+          <div class="raid-title">
+            Blackwing Lair
+          </div>
+
+          <div class="raid-description">
+            P0+ Übersicht und neue Prio-Auswahl
+            für Blackwing Lair.
+          </div>
+
+          <div class="raid-buttons">
+
+            <a class="raid-btn" href="bwl.html">
+              P0+ Übersicht öffnen
+            </a>
+
+            <a class="raid-btn loot-btn" href="loot/bwl-loot.html">
+              Prio-Auswahl öffnen
+            </a>
+
           </div>
 
         </div>
@@ -397,70 +391,68 @@
       <div class="raid-card">
 
         <div class="raid-banner">
-          <img
-            src="./images/aq40.jpg"
-            alt="AQ40"
-          />
+          <img src="./images/aq40.jpg" alt="AQ40"/>
         </div>
 
         <div class="raid-content">
 
-          <img
-            class="raid-icon"
-            src="./images/aq40.jpg"
-            alt="AQ40 Icon"
-          />
+          <img class="raid-icon" src="./images/aq40.jpg" alt="AQ40 Icon"/>
 
           <div class="raid-title">
             Ahn'Qiraj 40
           </div>
 
           <div class="raid-description">
-            Dynamische AQ40 Lootübersicht mit automatischer
-            Anzeige aller gesetzten P0s.
+            P0+ Übersicht und neue Prio-Auswahl
+            für AQ40.
           </div>
 
           <div class="raid-buttons">
+
             <a class="raid-btn" href="aq.html">
-              AQ40 öffnen
+              P0+ Übersicht öffnen
             </a>
+
+            <a class="raid-btn loot-btn" href="loot/aq40-loot.html">
+              Prio-Auswahl öffnen
+            </a>
+
           </div>
 
         </div>
 
       </div>
 
-      <!-- Naxx -->
+      <!-- NAXX -->
       <div class="raid-card">
 
         <div class="raid-banner">
-          <img
-            src="./images/naxx.jpg"
-            alt="Naxx"
-          />
+          <img src="./images/naxx.jpg" alt="Naxx"/>
         </div>
 
         <div class="raid-content">
 
-          <img
-            class="raid-icon"
-            src="./images/naxx.jpg"
-            alt="Naxx Icon"
-          />
+          <img class="raid-icon" src="./images/naxx.jpg" alt="Naxx Icon"/>
 
           <div class="raid-title">
             Naxxramas
           </div>
 
           <div class="raid-description">
-            Raidübersicht für Naxxramas mit vollständiger
-            Sheet-Integration und Suchfunktion.
+            P0+ Übersicht und neue Prio-Auswahl
+            für Naxxramas.
           </div>
 
           <div class="raid-buttons">
+
             <a class="raid-btn" href="naxxramas.html">
-              Naxx öffnen
+              P0+ Übersicht öffnen
             </a>
+
+            <a class="raid-btn loot-btn" href="loot/naxx-loot.html">
+              Prio-Auswahl öffnen
+            </a>
+
           </div>
 
         </div>
@@ -468,97 +460,7 @@
       </div>
 
     </div>
-
-    <!-- REGELN UNTEN -->
-
-    <div class="info-box">
-
-      <h2>📜 P0+ Regelung</h2>
-
-      <p>
-        Sobald ihr <strong>P0-berechtigt</strong> seid,
-        könnt ihr wie gewohnt eure P0 setzen.
-      </p>
-
-      <p>
-        Für jede Woche, in der ihr auf ein Item P0 gesetzt habt,
-        das Item jedoch entweder nicht gedroppt ist
-        oder ihr es nicht erhalten habt,
-        erhaltet ihr einen <strong>P0+ Punkt</strong>
-        auf dieses Item.
-      </p>
-
-      <p>
-        Bei zukünftigen Drops wird geschaut,
-        wer auf das jeweilige Item die meisten
-        <strong>P0+ Punkte</strong> gesammelt hat.
-      </p>
-
-      <p>
-        Das Item geht an die Person
-        mit den meisten P0+ Punkten.
-        Bei Gleichstand wird zwischen den betroffenen
-        Spielern gerollt.
-      </p>
-
-      <p>
-        Dadurch können auch Spieler,
-        die aktuell noch nicht vorne liegen,
-        bereits Punkte sammeln und nachvollziehen,
-        wann sie voraussichtlich an der Reihe sind.
-      </p>
-
-      <hr style="margin:24px 0; border:0; border-top:1px solid rgba(255,255,255,.12);">
-
-      <h2>🪑 Regelung für Bench-Spieler</h2>
-
-      <p>
-        Auch Spieler, die für einen Raid gebencht sind,
-        können weiterhin P0+ Punkte sammeln.
-      </p>
-
-      <p>
-        <strong>Aktive Raidteilnahme = 1 P0+ Punkt</strong><br>
-        <strong>Bench = 0,5 P0+ Punkt</strong>
-      </p>
-
-      <p>
-        Wichtig:
-        Damit der Punkt angerechnet wird,
-        muss der Spieler spätestens
-        <strong>15 Minuten vor Raidstart</strong>
-        sowohl im Discord als auch ingame
-        dem Raidlead mitteilen,
-        dass er invitebereit ist.
-      </p>
-
-      <p>
-        Die Bench-Situation muss entweder
-        mit dem Raidlead abgesprochen
-        oder direkt durch den Raidlead festgelegt worden sein.
-      </p>
-
-      <p>
-        Nur dann wird der entsprechende
-        <strong>P0+ Punkt</strong> angerechnet.
-      </p>
-
-      <hr style="margin:24px 0; border:0; border-top:1px solid rgba(255,255,255,.12);">
-
-      <p>
-        Falls es Fragen zum System gibt,
-        könnt ihr diese gerne im entsprechenden Channel stellen.
-      </p>
-
-      <p>
-        Die Verwaltung der P0+ Übersicht erfolgt durch
-        <strong>Milkshake</strong>.
-        Bei Fragen zu euren Punkten
-        bitte direkt an Milkshake wenden.
-      </p>
-
-    </div>
-
+    
     <div class="footer">
       Lichtbringer • Classic WoW • Prio 0 Plus
     </div>
@@ -566,3 +468,4 @@
   </div>
 
 </body>
+</html>
