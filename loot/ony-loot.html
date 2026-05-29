@@ -88,7 +88,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div class="header">
-<h1>Blackwing Lair – Prio-Auswahl</h1>
+<h1>Onyxia – Prio-Auswahl</h1>
 <div class="subtitle">Die Lootdaten und Tooltip-Werte werden direkt aus dem Lichtbringer-Google-Sheet geladen.</div>
 </div>
 
@@ -271,7 +271,7 @@ async function loadLootFromSheet(){
         name:obj.Item||"",
         itemId:obj.ItemID||"",
         quality:normalizeQuality(obj["Qualität"]),
-        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Blackwing Lair"),
+        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Onyxia"),
         bind:obj.Bindung||"Wird beim Aufheben gebunden",
         slot:obj.Slot||"",
         type:obj.Typ||"",
