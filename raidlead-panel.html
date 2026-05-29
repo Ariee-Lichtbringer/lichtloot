@@ -232,3 +232,390 @@
   <div id="raidGrid" class="grid"></div>
 
 </div>
+<!-- TEIL 2/2 -->
+<script>
+const raids = {
+  mc:{
+    name:"Molten Core",
+    short:"MC",
+    role:"mc-bwl",
+    dataKey:"mc_prios",
+    releaseKey:"mc_released",
+    historyKey:"mc_raid_history",
+    activeKey:"mc_active_raid",
+    lootPage:"loot/mc-loot.html",
+    overviewPage:"molten-core.html"
+  },
+  bwl:{
+    name:"Blackwing Lair",
+    short:"BWL",
+    role:"mc-bwl",
+    dataKey:"bwl_prios",
+    releaseKey:"bwl_released",
+    historyKey:"bwl_raid_history",
+    activeKey:"bwl_active_raid",
+    lootPage:"loot/bwl-loot.html",
+    overviewPage:"bwl.html"
+  },
+  aq40:{
+    name:"Ahn'Qiraj 40",
+    short:"AQ40",
+    role:"aq40",
+    dataKey:"aq40_prios",
+    releaseKey:"aq40_released",
+    historyKey:"aq40_raid_history",
+    activeKey:"aq40_active_raid",
+    lootPage:"loot/aq40-loot.html",
+    overviewPage:"aq.html"
+  },
+  naxx:{
+    name:"Naxxramas",
+    short:"NAXX",
+    role:"naxx",
+    dataKey:"naxx_prios",
+    releaseKey:"naxx_released",
+    historyKey:"naxx_raid_history",
+    activeKey:"naxx_active_raid",
+    lootPage:"loot/naxx-loot.html",
+    overviewPage:"naxxramas.html"
+  },
+  zg:{
+    name:"ZG 20",
+    short:"ZG",
+    role:"zg-aq20",
+    dataKey:"zg_prios",
+    releaseKey:"zg_released",
+    historyKey:"zg_raid_history",
+    activeKey:"zg_active_raid",
+    lootPage:"loot/zg-loot.html",
+    overviewPage:"zg.html"
+  },
+  aq20:{
+    name:"AQ 20",
+    short:"AQ20",
+    role:"zg-aq20",
+    dataKey:"aq20_prios",
+    releaseKey:"aq20_released",
+    historyKey:"aq20_raid_history",
+    activeKey:"aq20_active_raid",
+    lootPage:"loot/aq20-loot.html",
+    overviewPage:"aq20.html"
+  },
+  ony:{
+    name:"Onyxia",
+    short:"ONY",
+    role:"ony",
+    dataKey:"ony_prios",
+    releaseKey:"ony_released",
+    historyKey:"ony_raid_history",
+    activeKey:"ony_active_raid",
+    lootPage:"loot/ony-loot.html",
+    overviewPage:"ony.html"
+  }
+};
+
+function checkLogin(){
+  const isLoggedIn = sessionStorage.getItem("raidlead");
+  const role = sessionStorage.getItem("raidleadRole");
+
+  if(isLoggedIn !== "true" || !role){
+    alert("Bitte zuerst über die Startseite einloggen.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("roleInfo").innerHTML =
+    `<span class="ok">Login aktiv.</span> Rolle: <strong>${role}</strong>`;
+
+  renderRaids(role);
+}
+
+function canAccessRaid(role, raid){
+  return role === "master" || raids[raid].role === role;
+}
+
+function getData(raid){
+  return JSON.parse(localStorage.getItem(raids[raid].dataKey) || "[]");
+}
+
+function getHistory(raid){
+  return JSON.parse(localStorage.getItem(raids[raid].historyKey) || "[]");
+}
+
+function getActiveRaid(raid){
+  return JSON.parse(localStorage.getItem(raids[raid].activeKey) || "null");
+}
+
+function isReleased(raid){
+  return localStorage.getItem(raids[raid].releaseKey) === "true";
+}
+
+function randomCode(length){
+  return Math.random().toString(36).substring(2, 2 + length);
+}
+
+function createRaidId(raid){
+  const now = new Date();
+  const date =
+    now.getFullYear() + "-" +
+    String(now.getMonth() + 1).padStart(2,"0") + "-" +
+    String(now.getDate()).padStart(2,"0") + "-" +
+    String(now.getHours()).padStart(2,"0") +
+    String(now.getMinutes()).padStart(2,"0") +
+    String(now.getSeconds()).padStart(2,"0");
+
+  return raids[raid].short + "-" + date;
+}
+
+function getBaseUrl(){
+  return window.location.origin +
+    window.location.pathname.replace("raidlead-panel.html", "");
+}
+
+function renderRaids(role){
+  const grid = document.getElementById("raidGrid");
+  grid.innerHTML = "";
+
+  Object.keys(raids).forEach(raid => {
+    if(!canAccessRaid(role, raid)) return;
+
+    const r = raids[raid];
+    const data = getData(raid);
+    const history = getHistory(raid);
+    const activeRaid = getActiveRaid(raid);
+    const released = isReleased(raid);
+
+    grid.innerHTML += `
+      <div class="card">
+        <h2>${r.name}</h2>
+
+        <div class="status">
+          Aktiver Raid: <strong>${activeRaid ? activeRaid.raidId : "Noch kein aktiver Raid"}</strong><br>
+          Eingetragene Spieler: <strong>${data.length}</strong><br>
+          Erstellte Raids: <strong>${history.length}</strong><br>
+          Prioliste: ${
+            released
+            ? '<span class="ok">geöffnet / veröffentlicht</span>'
+            : '<span class="warn">geschlossen / verborgen</span>'
+          }
+        </div>
+
+        <h3>Raidverwaltung</h3>
+        <div class="button-grid">
+          <button class="btn primary" onclick="createNewRaid('${raid}')">Neuen Raid erstellen</button>
+          <button class="btn neutral" onclick="openPrio('${raid}')">Prioseite öffnen</button>
+        </div>
+
+        <div id="newRaidBox-${raid}">
+          ${activeRaid ? renderNewRaidBox(activeRaid) : ""}
+        </div>
+
+        <h3>Übersicht</h3>
+        <div class="button-grid">
+          <button class="btn neutral" onclick="openOverview('${raid}')">P0+ Übersicht öffnen</button>
+        </div>
+
+        <h3>Prioliste</h3>
+        <div class="button-grid">
+          <button class="btn success" onclick="releaseList('${raid}')">Prioliste öffnen</button>
+          <button class="btn warning" onclick="closeList('${raid}')">Prioliste schließen</button>
+        </div>
+
+        <h3>Export</h3>
+        <div class="button-grid">
+          <button class="btn neutral" onclick="downloadExport('${raid}','csv')">CSV Export</button>
+          <button class="btn neutral" onclick="downloadExport('${raid}','txt')">TXT Export</button>
+          <button class="btn neutral" onclick="downloadExport('${raid}','lua')">LUA Export</button>
+        </div>
+
+        <h3>Gefahrenzone</h3>
+        <div class="button-grid">
+          <button class="btn danger" onclick="resetCurrentEntries('${raid}')">Aktuelle Einträge löschen</button>
+        </div>
+
+        <h3>Aktuelle Einträge</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P1</th>
+              <th>P2</th>
+              <th>P3</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${renderRows(raid)}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+}
+
+function renderNewRaidBox(data){
+  return `
+    <div class="new-raid-box">
+      <h3>Neuer Raid erstellt</h3>
+
+      <p><strong>Raid:</strong><br>${data.raidName}</p>
+      <p><strong>RaidID:</strong><br>${data.raidId}</p>
+      <p><strong>SpielerPIN:</strong><br>${data.playerPin}</p>
+      <p><strong>LeadPIN:</strong><br>${data.leadPin}</p>
+
+      <p><strong>Direkter Spielerlink:</strong><br>
+      <a href="${data.playerLink}" target="_blank">${data.playerLink}</a></p>
+    </div>
+  `;
+}
+
+function renderRows(raid){
+  const data = getData(raid);
+
+  if(data.length === 0){
+    return `
+      <tr>
+        <td colspan="5">Noch keine Einträge vorhanden.</td>
+      </tr>
+    `;
+  }
+
+  return data.map(entry => `
+    <tr>
+      <td>${entry.player || "-"}</td>
+      <td>${entry.class || "-"}</td>
+      <td>${entry.p1 || "-"}</td>
+      <td>${entry.p2 || "-"}</td>
+      <td>${entry.p3 || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+function createNewRaid(raid){
+  const r = raids[raid];
+
+  const raidId = createRaidId(raid);
+  const playerPin = raid + "-" + randomCode(5);
+  const leadPin = "lead-" + randomCode(5);
+
+  const playerLink =
+    getBaseUrl() +
+    r.lootPage +
+    "?pin=" +
+    encodeURIComponent(playerPin);
+
+  const raidData = {
+    raid:raid,
+    raidName:r.name,
+    raidId:raidId,
+    playerPin:playerPin,
+    leadPin:leadPin,
+    playerLink:playerLink,
+    createdAt:new Date().toISOString()
+  };
+
+  const history = getHistory(raid);
+  history.push(raidData);
+
+  localStorage.setItem(r.historyKey, JSON.stringify(history));
+  localStorage.setItem(r.activeKey, JSON.stringify(raidData));
+  localStorage.setItem(r.releaseKey, "false");
+
+  document.getElementById("newRaidBox-" + raid).innerHTML =
+    renderNewRaidBox(raidData);
+
+  renderRaids(sessionStorage.getItem("raidleadRole"));
+}
+
+function openPrio(raid){
+  window.location.href = raids[raid].lootPage;
+}
+
+function openOverview(raid){
+  window.location.href = raids[raid].overviewPage;
+}
+
+function releaseList(raid){
+  localStorage.setItem(raids[raid].releaseKey, "true");
+  renderRaids(sessionStorage.getItem("raidleadRole"));
+}
+
+function closeList(raid){
+  localStorage.setItem(raids[raid].releaseKey, "false");
+  renderRaids(sessionStorage.getItem("raidleadRole"));
+}
+
+function resetCurrentEntries(raid){
+  if(confirm("Nur die aktuellen Einträge für " + raids[raid].name + " löschen? Die Raid-Historie bleibt erhalten.")){
+    localStorage.removeItem(raids[raid].dataKey);
+    localStorage.setItem(raids[raid].releaseKey, "false");
+    renderRaids(sessionStorage.getItem("raidleadRole"));
+  }
+}
+
+function downloadExport(raid,type){
+  const data = getData(raid);
+  const activeRaid = getActiveRaid(raid);
+  let content = "";
+  let filename = raid + "-prios";
+  let mime = "text/plain";
+
+  if(activeRaid){
+    filename = activeRaid.raidId + "-prios";
+  }
+
+  if(type === "csv"){
+    filename += ".csv";
+    mime = "text/csv";
+    content = "RaidID,Player,Class,P1,P2,P3\n";
+    data.forEach(e => {
+      content += `"${activeRaid ? activeRaid.raidId : ""}","${e.player}","${e.class}","${e.p1}","${e.p2}","${e.p3}"\n`;
+    });
+  }
+
+  if(type === "txt"){
+    filename += ".txt";
+    if(activeRaid){
+      content += `RaidID: ${activeRaid.raidId}\n`;
+      content += `Raid: ${activeRaid.raidName}\n\n`;
+    }
+
+    data.forEach(e => {
+      content += `${e.player} (${e.class})\nP1: ${e.p1}\nP2: ${e.p2}\nP3: ${e.p3}\n\n`;
+    });
+  }
+
+  if(type === "lua"){
+    filename += ".lua";
+    content = "Lichtbringer_" + raid.toUpperCase() + " = {\n";
+    if(activeRaid){
+      content += `  raidId = "${activeRaid.raidId}",\n`;
+    }
+    data.forEach(e => {
+      content += `  ["${e.player}"] = { class = "${e.class}", p1 = "${e.p1}", p2 = "${e.p2}", p3 = "${e.p3}" },\n`;
+    });
+    content += "}\n";
+  }
+
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function logout(){
+  sessionStorage.removeItem("raidlead");
+  sessionStorage.removeItem("raidleadRole");
+  window.location.href = "index.html";
+}
+
+checkLogin();
+</script>
+
+</body>
+</html>
