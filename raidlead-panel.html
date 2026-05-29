@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lichtbringer – Raidlead Panel</title>
+
+  <style>
+    :root{
+      --gold:#facc15;
+      --blue:#60a5fa;
+      --panel:rgba(12,18,32,.88);
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --line:rgba(255,255,255,.12);
+      --danger:#ef4444;
+      --green:#22c55e;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      min-height:100vh;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:
+        linear-gradient(rgba(8,17,31,.82), rgba(8,17,31,.94)),
+        url('./images/back.jpeg');
+      background-size:cover;
+      background-position:center top;
+      background-attachment:fixed;
+    }
+
+    .overlay{
+      min-height:100vh;
+      padding:36px 22px 70px;
+      backdrop-filter:blur(3px);
+    }
+
+    .topbar{
+      width:min(1300px,100%);
+      margin:0 auto 28px;
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .btn-link,
+    .btn{
+      color:var(--text);
+      text-decoration:none;
+      font-weight:900;
+      border:1px solid var(--line);
+      padding:12px 16px;
+      border-radius:14px;
+      background:rgba(12,18,32,.72);
+      cursor:pointer;
+      display:inline-block;
+      text-align:center;
+    }
+
+    .btn-link:hover,
+    .btn:hover{
+      border-color:rgba(250,204,21,.55);
+      transform:translateY(-1px);
+    }
+
+    .header{
+      width:min(1300px,100%);
+      margin:0 auto 28px;
+      padding:30px;
+      border-radius:24px;
+      background:var(--panel);
+      border:1px solid rgba(250,204,21,.22);
+      box-shadow:0 20px 45px rgba(0,0,0,.45);
+    }
+
+    h1{
+      color:var(--gold);
+      font-size:clamp(34px,5vw,58px);
+      margin-bottom:8px;
+    }
+
+    .subtitle{
+      color:#dbeafe;
+      line-height:1.7;
+      font-size:15px;
+    }
+
+    .grid{
+      width:min(1300px,100%);
+      margin:auto;
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:22px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:24px;
+      box-shadow:0 18px 40px rgba(0,0,0,.38);
+    }
+
+    h2{
+      color:var(--gold);
+      margin-bottom:10px;
+      font-size:25px;
+    }
+
+    .small{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      margin-bottom:16px;
+    }
+
+    .status{
+      margin:14px 0;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(2,6,23,.55);
+      color:#dbeafe;
+      line-height:1.6;
+      font-size:14px;
+    }
+
+    .ok{color:var(--green);font-weight:900}
+    .warn{color:var(--gold);font-weight:900}
+    .bad{color:var(--danger);font-weight:900}
+
+    .button-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .btn.gold{
+      background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(96,165,250,.18));
+    }
+
+    .btn.blue{
+      background:linear-gradient(135deg,rgba(96,165,250,.28),rgba(250,204,21,.12));
+    }
+
+    .btn.red{
+      background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(250,204,21,.10));
+      border-color:rgba(239,68,68,.35);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:14px;
+      font-size:14px;
+    }
+
+    th,td{
+      padding:9px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      text-align:left;
+    }
+
+    th{
+      color:var(--gold);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+
+    .hidden{display:none}
+
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .button-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+  <div class="topbar">
+    <a class="btn-link" href="index.html">← Zurück zur Startseite</a>
+    <button class="btn red" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="header">
+    <h1>Raidlead Panel</h1>
+    <div class="subtitle">
+      Zentrale Verwaltung der Priolisten. Je nach Raidlead-PIN werden nur die freigegebenen Raidbereiche angezeigt.
+    </div>
+    <div id="roleInfo" class="status"></div>
+  </div>
+
+  <div id="raidGrid" class="grid"></div>
+
+</div>
+
+<script>
+const raids = {
+  mc:{
+    name:"Molten Core",
+    role:"mc-bwl",
+    dataKey:"mc_prios",
+    releaseKey:"mc_released",
+    lootPage:"loot/mc-loot.html",
+    overviewPage:"molten-core.html"
+  },
+  bwl:{
+    name:"Blackwing Lair",
+    role:"mc-bwl",
+    dataKey:"bwl_prios",
+    releaseKey:"bwl_released",
+    lootPage:"loot/bwl-loot.html",
+    overviewPage:"bwl.html"
+  },
+  aq40:{
+    name:"Ahn'Qiraj 40",
+    role:"aq40",
+    dataKey:"aq40_prios",
+    releaseKey:"aq40_released",
+    lootPage:"loot/aq40-loot.html",
+    overviewPage:"aq.html"
+  },
+  naxx:{
+    name:"Naxxramas",
+    role:"naxx",
+    dataKey:"naxx_prios",
+    releaseKey:"naxx_released",
+    lootPage:"loot/naxx-loot.html",
+    overviewPage:"naxxramas.html"
+  },
+  zg:{
+    name:"ZG 20",
+    role:"zg-aq20",
+    dataKey:"zg_prios",
+    releaseKey:"zg_released",
+    lootPage:"loot/zg-loot.html",
+    overviewPage:"zg.html"
+  },
+  aq20:{
+    name:"AQ 20",
+    role:"zg-aq20",
+    dataKey:"aq20_prios",
+    releaseKey:"aq20_released",
+    lootPage:"loot/aq20-loot.html",
+    overviewPage:"aq20.html"
+  },
+  ony:{
+    name:"Onyxia",
+    role:"ony",
+    dataKey:"ony_prios",
+    releaseKey:"ony_released",
+    lootPage:"loot/ony-loot.html",
+    overviewPage:"ony.html"
+  }
+};
+
+function checkLogin(){
+  const isLoggedIn = sessionStorage.getItem("raidlead");
+  const role = sessionStorage.getItem("raidleadRole");
+
+  if(isLoggedIn !== "true" || !role){
+    alert("Bitte zuerst über die Startseite einloggen.");
+    window.location.href = "index.html";
+    return;
+  }
+
+  document.getElementById("roleInfo").innerHTML =
+    `<span class="ok">Login aktiv.</span> Rolle: <strong>${role}</strong>`;
+
+  renderRaids(role);
+}
+
+function canAccessRaid(role, raid){
+  return role === "master" || raids[raid].role === role;
+}
+
+function getData(raid){
+  return JSON.parse(localStorage.getItem(raids[raid].dataKey) || "[]");
+}
+
+function isReleased(raid){
+  return localStorage.getItem(raids[raid].releaseKey) === "true";
+}
+
+function renderRaids(role){
+  const grid = document.getElementById("raidGrid");
+  grid.innerHTML = "";
+
+  Object.keys(raids).forEach(raid => {
+    if(!canAccessRaid(role, raid)) return;
+
+    const r = raids[raid];
+    const data = getData(raid);
+    const released = isReleased(raid);
+
+    grid.innerHTML += `
+      <div class="card">
+        <h2>${r.name}</h2>
+
+        <div class="small">
+          Eingetragene Spieler: <strong>${data.length}</strong><br>
+          Prioliste: ${
+            released
+            ? '<span class="ok">geöffnet / veröffentlicht</span>'
+            : '<span class="warn">geschlossen / verborgen</span>'
+          }
+        </div>
+
+        <div class="button-grid">
+          <button class="btn gold" onclick="openPrio('${raid}')">Prioseite öffnen</button>
+          <button class="btn blue" onclick="openOverview('${raid}')">P0+ Übersicht</button>
+          <button class="btn gold" onclick="releaseList('${raid}')">Prioliste öffnen</button>
+          <button class="btn red" onclick="closeList('${raid}')">Prioliste schließen</button>
+        </div>
+
+        <div class="button-grid">
+          <button class="btn blue" onclick="downloadExport('${raid}','csv')">CSV Export</button>
+          <button class="btn blue" onclick="downloadExport('${raid}','txt')">TXT Export</button>
+          <button class="btn blue" onclick="downloadExport('${raid}','lua')">LUA Export</button>
+          <button class="btn red" onclick="resetRaid('${raid}')">Daten löschen</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Klasse</th>
+              <th>P1</th>
+              <th>P2</th>
+              <th>P3</th>
+            </tr>
+          </thead>
+          <tbody id="table-${raid}">
+            ${renderRows(raid)}
+          </tbody>
+        </table>
+      </div>
+    `;
+  });
+}
+
+function renderRows(raid){
+  const data = getData(raid);
+
+  if(data.length === 0){
+    return `
+      <tr>
+        <td colspan="5">Noch keine Einträge vorhanden.</td>
+      </tr>
+    `;
+  }
+
+  return data.map(entry => `
+    <tr>
+      <td>${entry.player || "-"}</td>
+      <td>${entry.class || "-"}</td>
+      <td>${entry.p1 || "-"}</td>
+      <td>${entry.p2 || "-"}</td>
+      <td>${entry.p3 || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+function openPrio(raid){
+  window.location.href = raids[raid].lootPage;
+}
+
+function openOverview(raid){
+  window.location.href = raids[raid].overviewPage;
+}
+
+function releaseList(raid){
+  localStorage.setItem(raids[raid].releaseKey, "true");
+  alert(raids[raid].name + " Prioliste wurde geöffnet/veröffentlicht.");
+  renderRaids(sessionStorage.getItem("raidleadRole"));
+}
+
+function closeList(raid){
+  localStorage.setItem(raids[raid].releaseKey, "false");
+  alert(raids[raid].name + " Prioliste wurde geschlossen/verborgen.");
+  renderRaids(sessionStorage.getItem("raidleadRole"));
+}
+
+function resetRaid(raid){
+  if(confirm("Alle Priodaten für " + raids[raid].name + " wirklich löschen?")){
+    localStorage.removeItem(raids[raid].dataKey);
+    localStorage.removeItem(raids[raid].releaseKey);
+    renderRaids(sessionStorage.getItem("raidleadRole"));
+  }
+}
+
+function downloadExport(raid,type){
+  const data = getData(raid);
+  let content = "";
+  let filename = raid + "-prios";
+  let mime = "text/plain";
+
+  if(type === "csv"){
+    filename += ".csv";
+    mime = "text/csv";
+    content = "Player,Class,P1,P2,P3\n";
+    data.forEach(e => {
+      content += `"${e.player}","${e.class}","${e.p1}","${e.p2}","${e.p3}"\n`;
+    });
+  }
+
+  if(type === "txt"){
+    filename += ".txt";
+    data.forEach(e => {
+      content += `${e.player} (${e.class})\nP1: ${e.p1}\nP2: ${e.p2}\nP3: ${e.p3}\n\n`;
+    });
+  }
+
+  if(type === "lua"){
+    filename += ".lua";
+    content = "Lichtbringer_" + raid.toUpperCase() + " = {\n";
+    data.forEach(e => {
+      content += `  ["${e.player}"] = { class = "${e.class}", p1 = "${e.p1}", p2 = "${e.p2}", p3 = "${e.p3}" },\n`;
+    });
+    content += "}\n";
+  }
+
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function logout(){
+  sessionStorage.removeItem("raidlead");
+  sessionStorage.removeItem("raidleadRole");
+  window.location.href = "index.html";
+}
+
+checkLogin();
+</script>
+
+</body>
+</html>
