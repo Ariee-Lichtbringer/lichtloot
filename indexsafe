@@ -33,7 +33,14 @@
       background-repeat:no-repeat;
       background-attachment:fixed;
     }
-
+    .logo-banner{
+      display:block;
+      margin:0 auto;
+      max-width:700px;
+      width:100%;
+      height:auto;
+      filter:drop-shadow(0 0 20px rgba(250,204,21,.35));
+}
     .overlay{
       min-height:100vh;
       backdrop-filter:blur(3px);
@@ -293,9 +300,12 @@
 <div class="overlay">
 
   <div class="header">
-    <h1>Lichtbringer</h1>
-    <div class="subtitle">Prio 0 Plus & Lootsystem</div>
-  </div>
+  <img
+    src="images/content.png"
+    alt="Lichtbringer Lootsystem"
+    class="logo-banner"
+  >
+</div>
 
   <div class="section-title">40er Raids</div>
 
