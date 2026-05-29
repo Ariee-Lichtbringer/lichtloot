@@ -591,9 +591,15 @@ function setPublishedMode(isPublished){
   const playerCard=document.getElementById("playerCard");
   const lootCard=document.getElementById("lootCard");
 
-  playerCard.classList.remove("hidden");
-  lootCard.classList.remove("hidden");
-  grid.classList.remove("published-mode");
+  if(isPublished){
+    playerCard.classList.add("hidden");
+    lootCard.classList.add("hidden");
+    grid.classList.add("published-mode");
+  }else{
+    playerCard.classList.remove("hidden");
+    lootCard.classList.remove("hidden");
+    grid.classList.remove("published-mode");
+  }
 }
 
 function renderPublishedChecks(prios){
