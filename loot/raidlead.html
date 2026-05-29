@@ -525,7 +525,9 @@ function renderRows(raid, released){
       </tr>
     `;
   }).join("");
-}async function saveRaidToSheet(raidData){
+}
+
+async function saveRaidToSheet(raidData){
   try{
     await fetch(RAID_API_URL,{
       method:"POST",
