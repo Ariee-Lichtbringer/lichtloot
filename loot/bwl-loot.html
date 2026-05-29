@@ -19,6 +19,9 @@ h1{color:var(--gold);font-size:clamp(34px,5vw,58px);margin-bottom:8px}
 .grid{display:grid;grid-template-columns:390px 1fr 520px;gap:22px}
 .grid.published-mode{grid-template-columns:1fr}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px}
+.grid.published-mode .info-card{grid-column:1 / -1}
+.grid.published-mode #prioCard{min-height:70vh}
+.grid.published-mode .table-scroll{max-height:none}
 h2{color:var(--gold);margin-bottom:16px;font-size:22px}
 h3{color:var(--gold);margin:22px 0 10px;font-size:18px}
 label{display:block;color:var(--muted);font-size:12px;font-weight:800;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.08em}
@@ -51,6 +54,8 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
 table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
+.grid.published-mode table{font-size:15px}
+.grid.published-mode th,.grid.published-mode td{padding:12px 10px}
 th,td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;vertical-align:top}
 th{color:#facc15;text-transform:uppercase;font-size:10px}
 .check{color:#22c55e;font-weight:900;font-size:16px}.cross{color:#ef4444;font-weight:900;font-size:16px}
@@ -74,15 +79,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
     id="raidleadPin"
     type="password"
     placeholder="Raidlead PIN"
-    style="
-      width:180px;
-      padding:12px 13px;
-      border-radius:14px;
-      border:1px solid rgba(250,204,21,.35);
-      background:rgba(2,6,23,.82);
-      color:white;
-      font-weight:800;
-    "
+    style="width:180px;padding:12px 13px;border-radius:14px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.82);color:white;font-weight:800;"
     onkeydown="raidleadEnter(event)"
   >
 
@@ -164,12 +161,13 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div id="tooltip" class="tooltip hidden"></div>
-<script>
+  <script>
 const RAID_NAME = "BWL";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
 
 let bwlLoot = [];
+let autoRefreshTimer = null;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
@@ -385,8 +383,7 @@ function updateActiveButtons(){
   if(p2) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn=>btn.classList.add("active"));
   if(p3) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn=>btn.classList.add("active"));
 }
-
-function getPlayerKey(){
+    function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   return player ? "bwl_prio_"+player : null;
 }
@@ -418,12 +415,12 @@ function loadPlayerData(){
   document.getElementById("playerStatus").innerHTML=`<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
   updateActiveButtons();
 }
+
 function updateLocalRaidleadData(player,playerClass,p1,p2,p3){
   let data=JSON.parse(localStorage.getItem("bwl_prios")||"[]");
 
-  data=data.filter(entry =>
-    String(entry.player||"").toLowerCase() !==
-    String(player||"").toLowerCase()
+  data=data.filter(entry=>
+    String(entry.player||"").toLowerCase()!==String(player||"").toLowerCase()
   );
 
   data.push({
@@ -724,8 +721,14 @@ if(pinFromUrl){
 }
 
 loadLootFromSheet();
+
+autoRefreshTimer=setInterval(()=>{
+  const pin=document.getElementById("raidPin").value.trim();
+  if(pin){
+    loadPublishedPrios();
+  }
+},5000);
 </script>
 
 </body>
 </html>
-  
