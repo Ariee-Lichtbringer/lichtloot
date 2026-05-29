@@ -8,7 +8,7 @@
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/zg.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -73,7 +73,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
 
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-  <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
+  <a class="back" href="../zg.html">P0+ Übersicht öffnen</a>
 
   <input
     id="raidleadPin"
@@ -175,7 +175,7 @@ const RAID_NAME = "ZG";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG";
 
-let bwlLoot = [];
+let zgLoot = [];
 let autoRefreshTimer = null;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
@@ -266,7 +266,7 @@ async function loadLootFromSheet(){
     const rows=parseCSV(csvText);
     const headers=rows.shift().map(h=>h.trim());
 
-    bwlLoot=rows.map(row=>{
+    zgLoot=rows.map(row=>{
       const obj={};
       headers.forEach((header,index)=>obj[header]=row[index]||"");
       return {
@@ -306,7 +306,7 @@ function fillItems(){
   ["p1","p2","p3"].forEach(id=>{
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
-    bwlLoot.forEach(item=>{
+    zgLoot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -320,7 +320,7 @@ function renderLootList(){
   const query=document.getElementById("itemSearch").value.trim().toLowerCase();
   list.innerHTML="";
 
-  const filteredLoot=bwlLoot.filter(item=>{
+  const filteredLoot=zgLoot.filter(item=>{
     return [item.name,item.slot,item.type,item.boss,item.category,item.quality].join(" ").toLowerCase().includes(query);
   });
 
@@ -419,7 +419,7 @@ function updateActiveButtons(){
     function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
-  return player ? "bwl_prio_"+server+"_"+player : null;
+  return player ? "zg_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -458,7 +458,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
-  let data=JSON.parse(localStorage.getItem("bwl_prios")||"[]");
+  let data=JSON.parse(localStorage.getItem("zg_prios")||"[]");
 
   data=data.filter(entry=>
     !(
@@ -477,7 +477,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("bwl_prios",JSON.stringify(data));
+  localStorage.setItem("zg_prios",JSON.stringify(data));
 }
 
 async function savePrio(){
