@@ -68,8 +68,25 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
 
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-<a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
-<button class="back" onclick="openRaidleadPanel()">Raidlead Login</button>
+  <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
+
+  <input
+    id="raidleadPin"
+    type="password"
+    placeholder="Raidlead PIN"
+    style="
+      width:180px;
+      padding:12px 13px;
+      border-radius:14px;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(2,6,23,.82);
+      color:white;
+      font-weight:800;
+    "
+    onkeydown="raidleadEnter(event)"
+  >
+
+  <button class="back" onclick="raidleadLogin()">Raidlead Login</button>
 </div>
 </div>
 
@@ -468,11 +485,31 @@ function updateLocalRaidleadData(player,playerClass,p1,p2,p3){
   }
 }
 
-function openRaidleadPanel(){
-  if(sessionStorage.getItem("raidlead")==="true"){
-    window.location.href="../raidlead-panel.html";
-  }else{
-    window.location.href="../index.html";
+const raidleadAccounts = {
+  "Lichtbringer-master":"master",
+  "LB-S7XK29":"mc-bwl",
+  "LB-Q4PM18":"naxx",
+  "LB-T9DN52":"zg-aq20",
+  "LB-AQ40-Lead":"aq40"
+};
+
+function raidleadLogin(){
+  const pin = document.getElementById("raidleadPin").value.trim();
+
+  if(!raidleadAccounts[pin]){
+    alert("Falsche Raidlead-PIN.");
+    return;
+  }
+
+  sessionStorage.setItem("raidlead","true");
+  sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+
+  window.location.href = "../raidlead-panel.html";
+}
+
+function raidleadEnter(event){
+  if(event.key === "Enter"){
+    raidleadLogin();
   }
 }
 
