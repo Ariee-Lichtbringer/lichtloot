@@ -9,7 +9,7 @@
     :root{
       --gold:#facc15;
       --blue:#60a5fa;
-      --panel:rgba(12,18,32,.88);
+      --panel:rgba(12,18,32,.90);
       --text:#f8fafc;
       --muted:#cbd5e1;
       --line:rgba(255,255,255,.12);
@@ -59,6 +59,7 @@
       cursor:pointer;
       display:inline-block;
       text-align:center;
+      transition:.18s;
     }
 
     .btn-link:hover,
@@ -111,6 +112,15 @@
       font-size:25px;
     }
 
+    h3{
+      color:#dbeafe;
+      font-size:14px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-top:20px;
+      margin-bottom:10px;
+    }
+
     .small{
       color:var(--muted);
       font-size:13px;
@@ -137,20 +147,32 @@
       display:grid;
       grid-template-columns:repeat(2,1fr);
       gap:10px;
-      margin-top:14px;
+      margin-top:10px;
     }
 
-    .btn.gold{
-      background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(96,165,250,.18));
+    .btn.primary{
+      background:linear-gradient(135deg,rgba(250,204,21,.32),rgba(96,165,250,.18));
+      border-color:rgba(250,204,21,.35);
     }
 
-    .btn.blue{
-      background:linear-gradient(135deg,rgba(96,165,250,.28),rgba(250,204,21,.12));
+    .btn.neutral{
+      background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(15,23,42,.65));
+      border-color:rgba(96,165,250,.25);
     }
 
-    .btn.red{
-      background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(250,204,21,.10));
-      border-color:rgba(239,68,68,.35);
+    .btn.success{
+      background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(15,23,42,.65));
+      border-color:rgba(34,197,94,.35);
+    }
+
+    .btn.warning{
+      background:linear-gradient(135deg,rgba(250,204,21,.24),rgba(15,23,42,.65));
+      border-color:rgba(250,204,21,.35);
+    }
+
+    .btn.danger{
+      background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(15,23,42,.65));
+      border-color:rgba(239,68,68,.40);
     }
 
     table{
@@ -173,8 +195,6 @@
       letter-spacing:.08em;
     }
 
-    .hidden{display:none}
-
     @media(max-width:900px){
       .grid{grid-template-columns:1fr}
       .button-grid{grid-template-columns:1fr}
@@ -188,13 +208,13 @@
 
   <div class="topbar">
     <a class="btn-link" href="index.html">← Zurück zur Startseite</a>
-    <button class="btn red" onclick="logout()">Logout</button>
+    <button class="btn danger" onclick="logout()">Logout</button>
   </div>
 
   <div class="header">
     <h1>Raidlead Panel</h1>
     <div class="subtitle">
-      Zentrale Verwaltung der Priolisten. Je nach Raidlead-PIN werden nur die freigegebenen Raidbereiche angezeigt.
+      Zentrale Verwaltung der Priolisten. Neue Raids können gestartet, Priolisten geöffnet oder geschlossen und Exporte erstellt werden.
     </div>
     <div id="roleInfo" class="status"></div>
   </div>
@@ -210,6 +230,7 @@ const raids = {
     role:"mc-bwl",
     dataKey:"mc_prios",
     releaseKey:"mc_released",
+    raidKey:"mc_current_raid",
     lootPage:"loot/mc-loot.html",
     overviewPage:"molten-core.html"
   },
@@ -218,6 +239,7 @@ const raids = {
     role:"mc-bwl",
     dataKey:"bwl_prios",
     releaseKey:"bwl_released",
+    raidKey:"bwl_current_raid",
     lootPage:"loot/bwl-loot.html",
     overviewPage:"bwl.html"
   },
@@ -226,6 +248,7 @@ const raids = {
     role:"aq40",
     dataKey:"aq40_prios",
     releaseKey:"aq40_released",
+    raidKey:"aq40_current_raid",
     lootPage:"loot/aq40-loot.html",
     overviewPage:"aq.html"
   },
@@ -234,6 +257,7 @@ const raids = {
     role:"naxx",
     dataKey:"naxx_prios",
     releaseKey:"naxx_released",
+    raidKey:"naxx_current_raid",
     lootPage:"loot/naxx-loot.html",
     overviewPage:"naxxramas.html"
   },
@@ -242,6 +266,7 @@ const raids = {
     role:"zg-aq20",
     dataKey:"zg_prios",
     releaseKey:"zg_released",
+    raidKey:"zg_current_raid",
     lootPage:"loot/zg-loot.html",
     overviewPage:"zg.html"
   },
@@ -250,6 +275,7 @@ const raids = {
     role:"zg-aq20",
     dataKey:"aq20_prios",
     releaseKey:"aq20_released",
+    raidKey:"aq20_current_raid",
     lootPage:"loot/aq20-loot.html",
     overviewPage:"aq20.html"
   },
@@ -258,6 +284,7 @@ const raids = {
     role:"ony",
     dataKey:"ony_prios",
     releaseKey:"ony_released",
+    raidKey:"ony_current_raid",
     lootPage:"loot/ony-loot.html",
     overviewPage:"ony.html"
   }
@@ -291,6 +318,10 @@ function isReleased(raid){
   return localStorage.getItem(raids[raid].releaseKey) === "true";
 }
 
+function getCurrentRaid(raid){
+  return localStorage.getItem(raids[raid].raidKey) || "Noch kein Raid erstellt";
+}
+
 function renderRaids(role){
   const grid = document.getElementById("raidGrid");
   grid.innerHTML = "";
@@ -301,12 +332,14 @@ function renderRaids(role){
     const r = raids[raid];
     const data = getData(raid);
     const released = isReleased(raid);
+    const currentRaid = getCurrentRaid(raid);
 
     grid.innerHTML += `
       <div class="card">
         <h2>${r.name}</h2>
 
-        <div class="small">
+        <div class="status">
+          Aktueller Raid: <strong>${currentRaid}</strong><br>
           Eingetragene Spieler: <strong>${data.length}</strong><br>
           Prioliste: ${
             released
@@ -315,18 +348,33 @@ function renderRaids(role){
           }
         </div>
 
+        <h3>Raidverwaltung</h3>
         <div class="button-grid">
-          <button class="btn gold" onclick="openPrio('${raid}')">Prioseite öffnen</button>
-          <button class="btn blue" onclick="openOverview('${raid}')">P0+ Übersicht</button>
-          <button class="btn gold" onclick="releaseList('${raid}')">Prioliste öffnen</button>
-          <button class="btn red" onclick="closeList('${raid}')">Prioliste schließen</button>
+          <button class="btn primary" onclick="createNewRaid('${raid}')">Neuen Raid erstellen</button>
+          <button class="btn neutral" onclick="openPrio('${raid}')">Prioseite öffnen</button>
         </div>
 
+        <h3>Übersicht</h3>
         <div class="button-grid">
-          <button class="btn blue" onclick="downloadExport('${raid}','csv')">CSV Export</button>
-          <button class="btn blue" onclick="downloadExport('${raid}','txt')">TXT Export</button>
-          <button class="btn blue" onclick="downloadExport('${raid}','lua')">LUA Export</button>
-          <button class="btn red" onclick="resetRaid('${raid}')">Daten löschen</button>
+          <button class="btn neutral" onclick="openOverview('${raid}')">P0+ Übersicht öffnen</button>
+        </div>
+
+        <h3>Prioliste</h3>
+        <div class="button-grid">
+          <button class="btn success" onclick="releaseList('${raid}')">Prioliste öffnen</button>
+          <button class="btn warning" onclick="closeList('${raid}')">Prioliste schließen</button>
+        </div>
+
+        <h3>Export</h3>
+        <div class="button-grid">
+          <button class="btn neutral" onclick="downloadExport('${raid}','csv')">CSV Export</button>
+          <button class="btn neutral" onclick="downloadExport('${raid}','txt')">TXT Export</button>
+          <button class="btn neutral" onclick="downloadExport('${raid}','lua')">LUA Export</button>
+        </div>
+
+        <h3>Gefahrenzone</h3>
+        <div class="button-grid">
+          <button class="btn danger" onclick="resetRaid('${raid}')">Daten löschen</button>
         </div>
 
         <table>
@@ -339,7 +387,7 @@ function renderRaids(role){
               <th>P3</th>
             </tr>
           </thead>
-          <tbody id="table-${raid}">
+          <tbody>
             ${renderRows(raid)}
           </tbody>
         </table>
@@ -368,6 +416,28 @@ function renderRows(raid){
       <td>${entry.p3 || "-"}</td>
     </tr>
   `).join("");
+}
+
+function createNewRaid(raid){
+  const r = raids[raid];
+
+  const raidName = prompt(
+    "Name oder Datum für den neuen Raid eingeben:",
+    r.name + " " + new Date().toLocaleDateString("de-DE")
+  );
+
+  if(!raidName){
+    return;
+  }
+
+  if(confirm("Neuen Raid erstellen? Die aktuelle Prioliste für " + r.name + " wird zurückgesetzt.")){
+    localStorage.setItem(r.raidKey, raidName);
+    localStorage.removeItem(r.dataKey);
+    localStorage.setItem(r.releaseKey, "false");
+
+    alert("Neuer Raid wurde erstellt: " + raidName);
+    renderRaids(sessionStorage.getItem("raidleadRole"));
+  }
 }
 
 function openPrio(raid){
