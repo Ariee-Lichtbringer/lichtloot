@@ -543,15 +543,17 @@ async function createNewRaid(raid){
   localStorage.setItem(r.releaseKey, "false");
 
   await saveRaidToSheet({
-    raidId:raidData.raidId,
-    raid:raidData.raid,
-    raidName:raidData.raidName,
-    playerPin:raidData.playerPin,
-    leadPin:raidData.leadPin,
-    playerLink:raidData.playerLink,
-    createdAt:raidData.createdAt,
-    status:"geschlossen"
-  });
+  action:"createRaid",
+
+  raidId:raidData.raidId,
+  raid:raidData.raid,
+  raidName:raidData.raidName,
+  playerPin:raidData.playerPin,
+  leadPin:raidData.leadPin,
+  playerLink:raidData.playerLink,
+  createdAt:raidData.createdAt,
+  status:"geschlossen"
+});
 
   renderRaids(sessionStorage.getItem("raidleadRole"));
 }
