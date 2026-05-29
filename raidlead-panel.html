@@ -138,9 +138,7 @@
       box-shadow:0 0 0 1px rgba(250,204,21,.08);
     }
 
-    .new-raid-box strong{
-      color:var(--gold);
-    }
+    .new-raid-box strong{color:var(--gold)}
 
     .new-raid-box a{
       color:#93c5fd;
@@ -195,6 +193,7 @@
       padding:9px;
       border-bottom:1px solid rgba(255,255,255,.10);
       text-align:left;
+      vertical-align:top;
     }
 
     th{
@@ -202,6 +201,18 @@
       font-size:12px;
       text-transform:uppercase;
       letter-spacing:.08em;
+    }
+
+    .check{
+      color:var(--green);
+      font-weight:900;
+      font-size:17px;
+    }
+
+    .cross{
+      color:var(--danger);
+      font-weight:900;
+      font-size:17px;
     }
 
     @media(max-width:900px){
@@ -223,7 +234,7 @@
   <div class="header">
     <h1>Raidlead Panel</h1>
     <div class="subtitle">
-      Zentrale Verwaltung der Priolisten. Neue Raids erzeugen eigene RaidIDs, Spieler-PINs und Lead-PINs. Bestehende Raids werden nicht gelöscht.
+      Zentrale Verwaltung der Priolisten. Bei geschlossener Liste sieht der Raidlead nur, ob P1/P2/P3 gesetzt wurden. Erst nach Öffnung werden die Items sichtbar.
     </div>
     <div id="roleInfo" class="status"></div>
   </div>
@@ -231,7 +242,7 @@
   <div id="raidGrid" class="grid"></div>
 
 </div>
-<script>
+  <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 
@@ -357,6 +368,7 @@ function randomCode(length){
 
 function createRaidId(raid){
   const now = new Date();
+
   const date =
     now.getFullYear() + "-" +
     String(now.getMonth() + 1).padStart(2,"0") + "-" +
@@ -396,8 +408,8 @@ function renderRaids(role){
           Erstellte Raids: <strong>${history.length}</strong><br>
           Prioliste: ${
             released
-            ? '<span class="ok">geöffnet / veröffentlicht</span>'
-            : '<span class="warn">geschlossen / verborgen</span>'
+            ? '<span class="ok">geöffnet / Items sichtbar</span>'
+            : '<span class="warn">geschlossen / nur Haken sichtbar</span>'
           }
         </div>
 
@@ -435,6 +447,14 @@ function renderRaids(role){
         </div>
 
         <h3>Aktuelle Einträge</h3>
+        <div class="status">
+          ${
+            released
+            ? "Die Prioliste ist geöffnet. Die Itemnamen sind sichtbar."
+            : "Die Prioliste ist geschlossen. Es wird nur angezeigt, ob P1/P2/P3 gesetzt wurden."
+          }
+        </div>
+
         <table>
           <thead>
             <tr>
@@ -446,7 +466,7 @@ function renderRaids(role){
             </tr>
           </thead>
           <tbody>
-            ${renderRows(raid)}
+            ${renderRows(raid, released)}
           </tbody>
         </table>
       </div>
@@ -470,7 +490,7 @@ function renderNewRaidBox(data){
   `;
 }
 
-function renderRows(raid){
+function renderRows(raid, released){
   const data = getData(raid);
 
   if(data.length === 0){
@@ -481,18 +501,31 @@ function renderRows(raid){
     `;
   }
 
-  return data.map(entry => `
-    <tr>
-      <td>${entry.player || "-"}</td>
-      <td>${entry.class || "-"}</td>
-      <td>${entry.p1 || "-"}</td>
-      <td>${entry.p2 || "-"}</td>
-      <td>${entry.p3 || "-"}</td>
-    </tr>
-  `).join("");
-}
+  return data.map(entry => {
+    if(!released){
+      return `
+        <tr>
+          <td>${entry.player || "-"}</td>
+          <td>${entry.class || "-"}</td>
+          <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+          <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+          <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+        </tr>
+      `;
+    }
 
-async function saveRaidToSheet(raidData){
+    return `
+      <tr>
+        <td>${entry.player || "-"}</td>
+        <td>${entry.class || "-"}</td>
+        <td>${entry.p1 || "-"}</td>
+        <td>${entry.p2 || "-"}</td>
+        <td>${entry.p3 || "-"}</td>
+      </tr>
+    `;
+  }).join("");
+}
+    async function saveRaidToSheet(raidData){
   try{
     await fetch(RAID_API_URL,{
       method:"POST",
@@ -543,17 +576,16 @@ async function createNewRaid(raid){
   localStorage.setItem(r.releaseKey, "false");
 
   await saveRaidToSheet({
-  action:"createRaid",
-
-  raidId:raidData.raidId,
-  raid:raidData.raid,
-  raidName:raidData.raidName,
-  playerPin:raidData.playerPin,
-  leadPin:raidData.leadPin,
-  playerLink:raidData.playerLink,
-  createdAt:raidData.createdAt,
-  status:"geschlossen"
-});
+    action:"createRaid",
+    raidId:raidData.raidId,
+    raid:raidData.raid,
+    raidName:raidData.raidName,
+    playerPin:raidData.playerPin,
+    leadPin:raidData.leadPin,
+    playerLink:raidData.playerLink,
+    createdAt:raidData.createdAt,
+    status:"geschlossen"
+  });
 
   renderRaids(sessionStorage.getItem("raidleadRole"));
 }
@@ -566,13 +598,51 @@ function openOverview(raid){
   window.location.href = raids[raid].overviewPage;
 }
 
-function releaseList(raid){
+async function releaseList(raid){
+  const activeRaid = getActiveRaid(raid);
+
+  if(!activeRaid){
+    alert("Es gibt keinen aktiven Raid.");
+    return;
+  }
+
   localStorage.setItem(raids[raid].releaseKey, "true");
+
+  const url =
+    RAID_API_URL +
+    "?action=setRaidStatus" +
+    "&raidId=" + encodeURIComponent(activeRaid.raidId) +
+    "&status=" + encodeURIComponent("geöffnet") +
+    "&t=" + Date.now();
+
+  await fetch(url);
+
+  alert("Prioliste wurde geöffnet.");
+
   renderRaids(sessionStorage.getItem("raidleadRole"));
 }
 
-function closeList(raid){
+async function closeList(raid){
+  const activeRaid = getActiveRaid(raid);
+
+  if(!activeRaid){
+    alert("Es gibt keinen aktiven Raid.");
+    return;
+  }
+
   localStorage.setItem(raids[raid].releaseKey, "false");
+
+  const url =
+    RAID_API_URL +
+    "?action=setRaidStatus" +
+    "&raidId=" + encodeURIComponent(activeRaid.raidId) +
+    "&status=" + encodeURIComponent("geschlossen") +
+    "&t=" + Date.now();
+
+  await fetch(url);
+
+  alert("Prioliste wurde geschlossen.");
+
   renderRaids(sessionStorage.getItem("raidleadRole"));
 }
 
@@ -642,6 +712,7 @@ function downloadExport(raid,type){
 function logout(){
   sessionStorage.removeItem("raidlead");
   sessionStorage.removeItem("raidleadRole");
+  sessionStorage.removeItem("raidleadRaidId");
   window.location.href = "index.html";
 }
 
