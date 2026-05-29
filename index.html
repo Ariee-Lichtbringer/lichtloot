@@ -41,7 +41,8 @@
       height:auto;
       filter:drop-shadow(0 0 20px rgba(250,204,21,.35));
 }
-    .raidlead-login{
+   
+.raidlead-login{
   position:absolute;
   top:25px;
   right:25px;
@@ -52,17 +53,18 @@
 }
 
 .raidlead-login input{
-  width:160px;
+  width:180px;
   padding:10px 12px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid rgba(250,204,21,.35);
   background:rgba(2,6,23,.85);
   color:white;
+  font-weight:700;
 }
 
 .raidlead-login button{
   padding:10px 16px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid rgba(250,204,21,.35);
   background:linear-gradient(
     135deg,
@@ -72,6 +74,10 @@
   color:white;
   font-weight:800;
   cursor:pointer;
+}
+
+.raidlead-login button:hover{
+  border-color:rgba(250,204,21,.70);
 }
     .overlay{
       min-height:100vh;
@@ -326,11 +332,54 @@
     }
   </style>
 </head>
+<script>
 
+const raidleadAccounts = {
+  "Lichtbringer-master":"master",
+
+  "LB-S7XK29":"mc-bwl",
+  "LB-Q4PM18":"naxx",
+  "LB-T9DN52":"zg-aq20",
+  "LB-AQ40-Lead":"aq40"
+};
+
+function raidleadLogin(){
+
+  const pin =
+    document.getElementById("raidleadPin")
+    .value
+    .trim();
+
+  if(!raidleadAccounts[pin]){
+    alert("Falsche Raidlead-PIN.");
+    return;
+  }
+
+  sessionStorage.setItem(
+    "raidlead",
+    "true"
+  );
+
+  sessionStorage.setItem(
+    "raidleadRole",
+    raidleadAccounts[pin]
+  );
+
+  window.location.href =
+    "raidlead-panel.html";
+}
+
+function raidleadEnter(event){
+  if(event.key === "Enter"){
+    raidleadLogin();
+  }
+}
+
+</script>
 <body>
 
 <div class="overlay">
-  <div class="raidlead-login">
+<div class="raidlead-login">
 
   <input
     type="password"
