@@ -1,4 +1,3 @@
-<!-- TEIL 1/2 -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -224,7 +223,7 @@
   <div class="header">
     <h1>Raidlead Panel</h1>
     <div class="subtitle">
-      Zentrale Verwaltung der Priolisten. Neue Raids erzeugen eigene RaidIDs, Spieler-PINs und Lead-PINs. Bestehende Raids werden dabei nicht gelöscht.
+      Zentrale Verwaltung der Priolisten. Neue Raids erzeugen eigene RaidIDs, Spieler-PINs und Lead-PINs. Bestehende Raids werden nicht gelöscht.
     </div>
     <div id="roleInfo" class="status"></div>
   </div>
@@ -232,8 +231,10 @@
   <div id="raidGrid" class="grid"></div>
 
 </div>
-<!-- TEIL 2/2 -->
 <script>
+const RAID_API_URL =
+  "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+
 const raids = {
   mc:{
     name:"Molten Core",
@@ -456,7 +457,7 @@ function renderRaids(role){
 function renderNewRaidBox(data){
   return `
     <div class="new-raid-box">
-      <h3>Neuer Raid erstellt</h3>
+      <h3>Aktiver Raid</h3>
 
       <p><strong>Raid:</strong><br>${data.raidName}</p>
       <p><strong>RaidID:</strong><br>${data.raidId}</p>
@@ -491,7 +492,26 @@ function renderRows(raid){
   `).join("");
 }
 
-function createNewRaid(raid){
+async function saveRaidToSheet(raidData){
+  try{
+    await fetch(RAID_API_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify(raidData)
+    });
+
+    return true;
+
+  }catch(error){
+    console.error("Fehler beim Speichern im Sheet:", error);
+    return false;
+  }
+}
+
+async function createNewRaid(raid){
   const r = raids[raid];
 
   const raidId = createRaidId(raid);
@@ -511,7 +531,8 @@ function createNewRaid(raid){
     playerPin:playerPin,
     leadPin:leadPin,
     playerLink:playerLink,
-    createdAt:new Date().toISOString()
+    createdAt:new Date().toISOString(),
+    status:"geschlossen"
   };
 
   const history = getHistory(raid);
@@ -521,8 +542,16 @@ function createNewRaid(raid){
   localStorage.setItem(r.activeKey, JSON.stringify(raidData));
   localStorage.setItem(r.releaseKey, "false");
 
-  document.getElementById("newRaidBox-" + raid).innerHTML =
-    renderNewRaidBox(raidData);
+  await saveRaidToSheet({
+    raidId:raidData.raidId,
+    raid:raidData.raid,
+    raidName:raidData.raidName,
+    playerPin:raidData.playerPin,
+    leadPin:raidData.leadPin,
+    playerLink:raidData.playerLink,
+    createdAt:raidData.createdAt,
+    status:"geschlossen"
+  });
 
   renderRaids(sessionStorage.getItem("raidleadRole"));
 }
