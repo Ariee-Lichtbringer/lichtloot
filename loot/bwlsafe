@@ -12,7 +12,7 @@ body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);b
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.back{color:white;text-decoration:none;font-weight:800;border:1px solid var(--line);padding:12px 16px;border-radius:14px;background:rgba(12,18,32,.72)}
+.back{color:white;text-decoration:none;font-weight:800;border:1px solid var(--line);padding:12px 16px;border-radius:14px;background:rgba(12,18,32,.72);cursor:pointer}
 .header{margin-bottom:28px;padding:30px;border-radius:24px;background:var(--panel);border:1px solid rgba(250,204,21,.22)}
 h1{color:var(--gold);font-size:clamp(34px,5vw,58px);margin-bottom:8px}
 .subtitle{color:#dbeafe;line-height:1.7;font-size:15px}
@@ -66,7 +66,28 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <div class="topbar">
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
-<a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
+
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
+
+  <input
+    id="raidleadPin"
+    type="password"
+    placeholder="Raidlead PIN"
+    style="
+      width:180px;
+      padding:12px 13px;
+      border-radius:14px;
+      border:1px solid rgba(250,204,21,.35);
+      background:rgba(2,6,23,.82);
+      color:white;
+      font-weight:800;
+    "
+    onkeydown="raidleadEnter(event)"
+  >
+
+  <button class="back" onclick="raidleadLogin()">Raidlead Login</button>
+</div>
 </div>
 
 <div class="header">
@@ -116,16 +137,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div id="prioCard" class="card info-card">
-<h2>Raidlead Zugang</h2>
-
-<label>LeadPIN</label>
-<input id="leadPinInput" type="password" placeholder="LeadPIN eingeben">
-
-<button class="btn" onclick="openRaidleadPage()">Raidlead öffnen</button>
-
-<div class="status">Mit dem gültigen LeadPIN wird direkt das Raidlead-Panel geöffnet.</div>
-
-<h3>Aktuelle Prioliste</h3>
+<h2>Aktuelle Prioliste</h2>
 
 <div id="publishedStatus" class="status">Lade Prioliste …</div>
 
@@ -152,7 +164,6 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div id="tooltip" class="tooltip hidden"></div>
-
 <script>
 const RAID_NAME = "BWL";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
@@ -407,6 +418,25 @@ function loadPlayerData(){
   document.getElementById("playerStatus").innerHTML=`<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
   updateActiveButtons();
 }
+function updateLocalRaidleadData(player,playerClass,p1,p2,p3){
+  let data=JSON.parse(localStorage.getItem("bwl_prios")||"[]");
+
+  data=data.filter(entry =>
+    String(entry.player||"").toLowerCase() !==
+    String(player||"").toLowerCase()
+  );
+
+  data.push({
+    player:player,
+    class:playerClass,
+    p1:p1,
+    p2:p2,
+    p3:p3,
+    timestamp:new Date().toISOString()
+  });
+
+  localStorage.setItem("bwl_prios",JSON.stringify(data));
+}
 
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
@@ -447,6 +477,7 @@ async function savePrio(){
     }
 
     autoSaveDraft();
+    updateLocalRaidleadData(player,playerClass,p1,p2,p3);
     status.innerHTML=`<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>Der Eintrag wurde in den Tab PRIOS geschrieben.`;
     await loadPublishedPrios();
 
@@ -456,10 +487,48 @@ async function savePrio(){
   }
 }
 
-function openRaidleadPage(){
-  const leadPin=document.getElementById("leadPinInput").value.trim();
-  if(!leadPin){alert("Bitte LeadPIN eingeben.");return;}
-  window.location.href=`raidlead.html?raid=BWL&leadPin=${encodeURIComponent(leadPin)}`;
+const raidleadAccounts = {
+  "Lichtbringer-master":"master",
+  "LB-S7XK29":"mc-bwl",
+  "LB-Q4PM18":"naxx",
+  "LB-T9DN52":"zg-aq20",
+  "LB-AQ40-Lead":"aq40"
+};
+
+async function raidleadLogin(){
+  const pin = document.getElementById("raidleadPin").value.trim();
+
+  if(raidleadAccounts[pin]){
+    sessionStorage.setItem("raidlead","true");
+    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    window.location.href = "../raidlead-panel.html";
+    return;
+  }
+
+  const url =
+    APPS_SCRIPT_URL +
+    "?action=validateLeadPin" +
+    "&leadPin=" + encodeURIComponent(pin) +
+    "&t=" + Date.now();
+
+  const response = await fetch(url);
+  const result = await response.json();
+
+  if(result.success){
+    sessionStorage.setItem("raidlead","true");
+    sessionStorage.setItem("raidleadRole","master");
+    sessionStorage.setItem("raidleadRaidId",result.raidId);
+    window.location.href = "../raidlead-panel.html";
+    return;
+  }
+
+  alert("Falsche Raidlead-PIN.");
+}
+
+function raidleadEnter(event){
+  if(event.key === "Enter"){
+    raidleadLogin();
+  }
 }
 
 async function loadPublishedPrios(){
@@ -659,3 +728,4 @@ loadLootFromSheet();
 
 </body>
 </html>
+  
