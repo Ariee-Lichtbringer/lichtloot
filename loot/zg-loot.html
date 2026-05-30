@@ -782,7 +782,7 @@ function renderPublishedChecks(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  rios.forEach((prio,index)=>{
+  Prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
