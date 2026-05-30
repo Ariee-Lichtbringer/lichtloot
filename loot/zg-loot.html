@@ -34,7 +34,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15}
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
-.loot-name{font-weight:400;font-size:14px;cursor:pointer}
+.loot-name{font-weight:800;font-size:14px;cursor:pointer}
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
@@ -223,7 +223,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0</th>
+<th>P0+</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
@@ -368,7 +368,7 @@ function itemHtml(itemName){
   return `
     <span
       class="${item.quality}"
-      style="font-weight:400;cursor:pointer"
+      style="font-weight:900;cursor:pointer"
       onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
@@ -787,15 +787,15 @@ function renderPublishedChecks(prios){
 
     table.innerHTML+=`
       <tr>
-  <td>${index + 1}</td>
-  <td>${playerText}</td>
-  <td>${classText}</td>
-  <td>${itemHtml(prio.P1)}</td>
-  <td>${itemHtml(prio.P2)}</td>
-  <td>${itemHtml(prio.P3)}</td>
-  <td>${p0Text}</td>
-</tr>
-      `;
+        <td>${index + 1}</td>
+        <td>${playerText}</td>
+        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
+        <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+        <td>${prio.P2?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+        <td>${prio.P3?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+      </tr>
+    `;
   });
 }
 
@@ -805,20 +805,15 @@ function renderPublishedItems(prios){
 
   prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
-const playerText =
-  `${safe(prio.Spieler || "-")} – ${safe(prio.Server || "-")}`;
 
-const classText =
-  `<span class="${getClassClass(prio.Klasse)}">${safe(prio.Klasse || "-")}</span>`;
     table.innerHTML+=`
-     <tr>
-    <td>${index + 1}</td>
-    <td>${playerText}</td>
-    <td>${classText}</td>
-    <td>${itemHtml(prio.P1)}</td>
-    <td>${itemHtml(prio.P2)}</td>
-    <td>${itemHtml(prio.P3)}</td>
-    <td>${String(prio.P0).toLowerCase()==="ja"?'<span class="warn">ja</span>':'nein'}</td>
+      <tr>
+        <td>${playerText}</td>
+        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
+        <td>${itemHtml(prio.P1)}</td>
+        <td>${itemHtml(prio.P2)}</td>
+        <td>${itemHtml(prio.P3)}</td>
+        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="warn">ja</span>':'nein'}</td>
       </tr>
     `;
   });
