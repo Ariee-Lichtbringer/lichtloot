@@ -280,7 +280,7 @@ function checkLogin(){
   }
 
   document.getElementById("roleInfo").innerHTML =
-    `<span class="ok">Login aktiv.</span> Rolle: <strong>${role}</strong>`;
+    `<span class="ok">Raid geladen.</span> ${raids[currentRaidKey].name} · Raidlead PIN: <strong>${pin}</strong>`;
 
   const savedPin =
     sessionStorage.getItem("raidleadPrioPin") ||
@@ -385,9 +385,25 @@ async function loadPriosFromSheet(playerPin){
       currentReleased = false;
       return;
     }
+currentRaidData.raidId = result.raidId || currentRaidData.raidId;
+currentRaidData.playerPin =
+  result.playerPin ||
+  result.prioPin ||
+  result.PrioPIN ||
+  result.PlayerPIN ||
+  currentRaidData.playerPin;
 
-    currentRaidData.raidId = result.raidId || currentRaidData.raidId;
-    currentReleased = Boolean(result.published);
+currentRaidData.leadPin =
+  result.leadPin ||
+  result.LeadPIN ||
+  result.raidleadPin ||
+  result.RaidleadPIN ||
+  currentRaidData.leadPin;
+
+currentReleased = Boolean(result.published);
+    if(currentRaidData.leadPin === ""){
+  currentRaidData.leadPin = playerPin;
+}
 
     currentPrios = (result.prios || []).map(p => ({
       player: p.Spieler || "",
