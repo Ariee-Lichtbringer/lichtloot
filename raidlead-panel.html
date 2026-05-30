@@ -213,6 +213,15 @@ const raids = {
   zg:{name:"ZG 20",short:"ZG",role:"zg-aq20",dataKey:"zg_prios",releaseKey:"zg_released",historyKey:"zg_raid_history",activeKey:"zg_active_raid",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
   aq20:{name:"AQ 20",short:"AQ20",role:"zg-aq20",dataKey:"aq20_prios",releaseKey:"aq20_released",historyKey:"aq20_raid_history",activeKey:"aq20_active_raid",lootPage:"loot/aq20-loot.html",overviewPage:"aq20.html"},
   ony:{name:"Onyxia",short:"ONY",role:"ony",dataKey:"ony_prios",releaseKey:"ony_released",historyKey:"ony_raid_history",activeKey:"ony_active_raid",lootPage:"loot/ony-loot.html",overviewPage:"ony.html"}
+    const LOOT_CSV_URLS = {
+  mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
+  bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
+  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
+  naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
+  zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
+  aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
+  ony:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ONY"
+  let itemIdMap = {};
 };
 
 let currentRaidKey = null;
@@ -349,18 +358,6 @@ const leadPin = randomCode(4);
     createdAt:new Date().toISOString(),
     status:"geschlossen"
   };
-
-  const LOOT_CSV_URLS = {
-  mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
-  bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
-  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
-  naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
-  zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
-  aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
-  ony:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ONY"
-};
-
-let itemIdMap = {};
   
   const history=getHistory(raid);
   history.push(raidData);
@@ -497,8 +494,13 @@ async function loadPriosFromSheet(playerPin){
     <div class="button-grid">
       <button class="btn success" onclick="releaseList()">Prioliste öffnen</button>
       <button class="btn warning" onclick="closeList()">Prioliste schließen</button>
-      <button class="btn neutral" onclick="downloadExport('csv')">CSV Export</button>
-      <button class="btn neutral" onclick="downloadExport('txt')">TXT Export</button>
+<h3>Export</h3>
+<div class="button-grid">
+  <button class="btn neutral"
+          onclick="downloadPrio3ReforgedExport()">
+    Prio3 Reforged Export
+  </button>
+</div>
     </div>
 
     <h3>Aktuelle Einträge</h3>
@@ -807,20 +809,6 @@ async function downloadPrio3ReforgedExport(){
   const filename =
     (currentRaidData.raidId || currentRaidKey || "raid") +
     "-prio3-reforged.txt";
-
-  const blob = new Blob([content], {
-    type: "text/plain;charset=utf-8"
-  });
-
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-
-  a.href = url;
-  a.download = filename;
-  a.click();
-
-  URL.revokeObjectURL(url);
-}
 
   const blob=new Blob([content],{type:mime});
   const url=URL.createObjectURL(blob);
