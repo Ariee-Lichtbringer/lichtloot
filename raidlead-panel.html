@@ -97,7 +97,7 @@ input,select{
 }
 .control-grid{
   display:grid;
-  grid-template-columns:220px 1fr auto;
+  grid-template-columns:1fr auto;
   gap:14px;
   align-items:end;
 }
@@ -158,23 +158,18 @@ th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.08e
   </div>
   <div id="roleInfo" class="status"></div>
 <div class="status">
-  <label>Raid / PrioPIN</label>
+  <label>PrioPIN</label>
   <div class="control-grid">
-    <div>
-      <select id="raidSelect"></select>
-    </div>
-
     <div>
       <input id="raidPinInput" type="text" placeholder="PrioPIN eingeben">
     </div>
 
-    <button class="btn neutral" onclick="loadRaidByPin()">RaidPIN laden</button>
+    <button class="btn neutral" onclick="loadRaidByPin()">PrioPIN laden</button>
   </div>
 
   <div id="controlStatus" style="margin-top:10px">
-    Bitte Raid auswählen und PrioPIN eingeben.
+    Bitte PrioPIN eingeben.
   </div>
-</div>
 </div>
   
       <label>SpielerPIN / RaidPIN</label>
