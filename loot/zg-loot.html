@@ -223,11 +223,11 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0+</th>
+<th>P0</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
-<tr><td colspan="6">Noch keine Daten geladen.</td></tr>
+<tr><td colspan="7">Noch keine Daten geladen.</td></tr>
 </tbody>
 </table>
 </div>
@@ -368,14 +368,13 @@ function itemHtml(itemName){
   return `
     <span
       class="${item.quality}"
-      style="font-weight:900;cursor:pointer"
+      style="font-weight:400;cursor:pointer"
       onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
     >${safe(item.name)}</span>
   `;
 }
-
 async function loadLootFromSheet(){
   const status=document.getElementById("playerStatus");
   const list=document.getElementById("lootList");
@@ -412,9 +411,10 @@ async function loadLootFromSheet(){
 
     await loadP0PlusFromSheet();
 
-fillItems();
-renderLootList();
-    status.innerHTML=`<span class="ok">✓ Lootdaten aus geladen.</span>`;
+    fillItems();
+    renderLootList();
+
+    status.innerHTML=`<span class="ok">✓ Lootdaten geladen.</span>`;
     await loadPublishedPrios();
 
   }catch(error){
@@ -480,19 +480,9 @@ function renderLootList(){
 }
 
 function setPrio(slot,itemName){
-  const p1=document.getElementById("p1").value;
-  const p2=document.getElementById("p2").value;
-  const p3=document.getElementById("p3").value;
-
-  const otherSlots={p1:[p2,p3],p2:[p1,p3],p3:[p1,p2]};
-
-  if(otherSlots[slot].includes(itemName)){
-    document.getElementById("playerStatus").innerHTML=`<span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>`;
-    return;
-  }
-
   document.getElementById(slot).value=itemName;
-  document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
+  document.getElementById("playerStatus").innerHTML=
+    `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -507,14 +497,6 @@ function setP0Plus(itemName){
 }
 
 function manualSelectChanged(){
-  const p1=document.getElementById("p1").value;
-  const p2=document.getElementById("p2").value;
-  const p3=document.getElementById("p3").value;
-
-  if((p1&&p2&&p1===p2)||(p1&&p3&&p1===p3)||(p2&&p3&&p2===p3)){
-    document.getElementById("playerStatus").innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>`;
-  }
-
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -538,7 +520,8 @@ function updateActiveButtons(){
   if(p2) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn=>btn.classList.add("active"));
   if(p3) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn=>btn.classList.add("active"));
 }
-    function getPlayerKey(){
+
+function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
   return player ? "zg_prio_"+server+"_"+player : null;
@@ -614,10 +597,6 @@ async function savePrio(){
 
   if(!pin){status.innerHTML=`<span class="bad">Bitte Prio-PIN eingeben.</span>`;return;}
   if(!player||!server||!playerClass||!p1||!p2||!p3){status.innerHTML=`<span class="bad">Bitte Charakter, Server, Klasse und Prios vollständig ausfüllen.</span>`;return;}
-  if(!(p1===p2&&p2===p3)&&(p1===p2||p1===p3||p2===p3)){
-    status.innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
-    return;
-  }
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
@@ -704,15 +683,14 @@ async function refreshPrios(){
   const status=document.getElementById("publishedStatus");
   status.innerHTML += `<br><span class="ok">✓ Aktualisiert. Deine Eingaben bleiben erhalten.</span>`;
 }
-
 async function loadPublishedPrios(){
   const table=document.getElementById("publishedTable");
   const status=document.getElementById("publishedStatus");
   const pin=document.getElementById("raidPin").value.trim();
 
   if(!pin){
-    status.innerHTML=`<span class="warn">Kein Prio-PIN vorhanden. Nutze den Raidlink oder gib den Raid-PIN ein.</span>`;
-    table.innerHTML=`<tr><td colspan="6">Noch keine Prioliste geladen.</td></tr>`;
+    status.innerHTML=`<span class="warn">Kein Prio-PIN vorhanden. Nutze den Raidlink oder gib die Prio-PIN ein.</span>`;
+    table.innerHTML=`<tr><td colspan="7">Noch keine Prioliste geladen.</td></tr>`;
     setPublishedMode(false);
     return;
   }
@@ -729,7 +707,7 @@ async function loadPublishedPrios(){
 
     if(result.error){
       status.innerHTML=`<span class="bad">${result.error}</span>`;
-      table.innerHTML=`<tr><td colspan="6">Keine Daten verfügbar.</td></tr>`;
+      table.innerHTML=`<tr><td colspan="7">Keine Daten verfügbar.</td></tr>`;
       setPublishedMode(false);
       return;
     }
@@ -740,7 +718,7 @@ async function loadPublishedPrios(){
       status.innerHTML=result.published
         ? `<span class="ok">✓ Prios veröffentlicht, aber noch keine Einträge vorhanden.</span>`
         : `<span class="warn">Prios noch nicht veröffentlicht.</span>`;
-      table.innerHTML=`<tr><td colspan="6">Noch keine Einträge vorhanden.</td></tr>`;
+      table.innerHTML=`<tr><td colspan="7">Noch keine Einträge vorhanden.</td></tr>`;
       setPublishedMode(Boolean(result.published));
       return;
     }
@@ -750,7 +728,7 @@ async function loadPublishedPrios(){
       renderPublishedItems(prios);
       setPublishedMode(true);
     }else{
-      status.innerHTML=`<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0+ eingetragen wurden.`;
+      status.innerHTML=`<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0 eingetragen wurden.`;
       renderPublishedChecks(prios);
       setPublishedMode(false);
     }
@@ -808,6 +786,7 @@ function renderPublishedItems(prios){
 
     table.innerHTML+=`
       <tr>
+        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${itemHtml(prio.P1)}</td>
@@ -848,17 +827,18 @@ function showTooltip(event,item){
 
   if(item.dps) statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
   item.stats.forEach(stat=>statLines.push(`<div class="tooltip-stat">${stat}</div>`));
-const p0List =
-  p0PlusData[p0Key(item.name)] || [];
 
-const p0Html =
-  p0List.length
-    ? p0List
-        .sort((a,b) => Number(b.count) - Number(a.count))
-        .map(entry => `<li>${safe(entry.player)}: <strong>${safe(entry.count)}</strong></li>`)
-        .join("")
-    : `<li>Keine P0+ Punkte</li>`;
-  
+  const p0List =
+    p0PlusData[p0Key(item.name)] || [];
+
+  const p0Html =
+    p0List.length
+      ? p0List
+          .sort((a,b) => Number(b.count) - Number(a.count))
+          .map(entry => `<li>${safe(entry.player)}: <strong>${safe(entry.count)}</strong></li>`)
+          .join("")
+      : `<li>Keine P0+ Punkte</li>`;
+
   tooltip.innerHTML=`
     <div class="tooltip-title ${item.quality}">${safe(item.name)}</div>
     <div class="tooltip-ilvl">${safe(item.ilvl)}</div>
@@ -915,29 +895,19 @@ if(pinFromUrl){
 }
 
 function saveCharacterProfile(){
-
-  const player =
-    document.getElementById("playerName").value.trim();
-
-  const playerClass =
-    document.getElementById("playerClass").value;
-
-  const server =
-    document.getElementById("playerServer").value;
+  const player=document.getElementById("playerName").value.trim();
+  const playerClass=document.getElementById("playerClass").value;
+  const server=document.getElementById("playerServer").value;
 
   if(!player || !playerClass || !server){
     return;
   }
 
-  let chars =
-    JSON.parse(
-      localStorage.getItem("zg_characters") || "[]"
-    );
+  let chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
 
-  chars =
-    chars.filter(c =>
-      c.player.toLowerCase() !== player.toLowerCase()
-    );
+  chars=chars.filter(c =>
+    c.player.toLowerCase() !== player.toLowerCase()
+  );
 
   chars.push({
     player,
@@ -945,133 +915,86 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem(
-    "zg_characters",
-    JSON.stringify(chars)
-  );
-
+  localStorage.setItem("zg_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
 function renderCharacterButtons(){
-
-  const container =
-    document.getElementById("characterButtons");
-
+  const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars =
-    JSON.parse(
-      localStorage.getItem("zg_characters") || "[]"
-    );
+  const chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
 
-  container.className =
-    "character-list";
-
-  container.innerHTML = "";
+  container.className="character-list";
+  container.innerHTML="";
 
   if(chars.length === 0){
-    container.innerHTML =
-      `<div class="status">Noch keine Charaktere gespeichert.</div>`;
+    container.innerHTML=`<div class="status">Noch keine Charaktere gespeichert.</div>`;
     return;
   }
 
   chars.forEach(char => {
+    const wrapper=document.createElement("div");
+    wrapper.style.display="flex";
+    wrapper.style.gap="4px";
+    wrapper.style.alignItems="center";
 
-    const wrapper =
-      document.createElement("div");
+    const btn=document.createElement("button");
 
-    wrapper.style.display = "flex";
-    wrapper.style.gap = "4px";
-    wrapper.style.alignItems = "center";
-
-    const btn =
-      document.createElement("button");
-
-    btn.className =
+    btn.className=
       "character-btn character-" +
       char.playerClass.toLowerCase()
         .replace("ä","ae")
         .replace("ö","oe")
         .replace("ü","ue");
 
-    btn.textContent =
-      `${char.player} (${char.server})`;
+    btn.textContent=`${char.player} (${char.server})`;
 
-    btn.onclick = () => {
-
-      document.getElementById("playerName").value =
-        char.player;
-
-      document.getElementById("playerClass").value =
-        char.playerClass;
-
-      document.getElementById("playerServer").value =
-        char.server;
-
+    btn.onclick=()=>{
+      document.getElementById("playerName").value=char.player;
+      document.getElementById("playerClass").value=char.playerClass;
+      document.getElementById("playerServer").value=char.server;
       loadPlayerData();
     };
 
-    const deleteBtn =
-      document.createElement("button");
+    const deleteBtn=document.createElement("button");
+    deleteBtn.textContent="✕";
+    deleteBtn.style.border="1px solid rgba(239,68,68,.55)";
+    deleteBtn.style.background="rgba(239,68,68,.25)";
+    deleteBtn.style.color="white";
+    deleteBtn.style.borderRadius="10px";
+    deleteBtn.style.padding="8px 10px";
+    deleteBtn.style.fontWeight="900";
+    deleteBtn.style.cursor="pointer";
 
-    deleteBtn.textContent = "✕";
-
-    deleteBtn.style.border = "1px solid rgba(239,68,68,.55)";
-    deleteBtn.style.background = "rgba(239,68,68,.25)";
-    deleteBtn.style.color = "white";
-    deleteBtn.style.borderRadius = "10px";
-    deleteBtn.style.padding = "8px 10px";
-    deleteBtn.style.fontWeight = "900";
-    deleteBtn.style.cursor = "pointer";
-
-    deleteBtn.onclick = (event) => {
-
+    deleteBtn.onclick=(event)=>{
       event.stopPropagation();
-
-      deleteCharacterProfile(
-        char.player,
-        char.server
-      );
-
+      deleteCharacterProfile(char.player,char.server);
     };
 
     wrapper.appendChild(btn);
     wrapper.appendChild(deleteBtn);
     container.appendChild(wrapper);
-
   });
-
 }
-function deleteCharacterProfile(player, server){
 
+function deleteCharacterProfile(player, server){
   if(!confirm("Charakter " + player + " wirklich löschen?")){
     return;
   }
 
-  let chars =
-    JSON.parse(
-      localStorage.getItem("zg_characters") || "[]"
-    );
+  let chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
 
-  chars =
-    chars.filter(c =>
-      !(
-        String(c.player || "").toLowerCase() ===
-        String(player || "").toLowerCase()
-        &&
-        String(c.server || "").toLowerCase() ===
-        String(server || "").toLowerCase()
-      )
-    );
-
-  localStorage.setItem(
-    "zg_characters",
-    JSON.stringify(chars)
+  chars=chars.filter(c =>
+    !(
+      String(c.player || "").toLowerCase() === String(player || "").toLowerCase()
+      &&
+      String(c.server || "").toLowerCase() === String(server || "").toLowerCase()
+    )
   );
 
+  localStorage.setItem("zg_characters",JSON.stringify(chars));
   renderCharacterButtons();
-
 }
 
 function p0Key(value){
@@ -1082,7 +1005,7 @@ function p0Key(value){
     .replace(/[-–—]/g," ")
     .replace(/\s+/g," ");
 }
-    
+
 function loadP0PlusFromSheet(){
   return new Promise((resolve) => {
     p0PlusData = {};
@@ -1140,7 +1063,7 @@ function loadP0PlusFromSheet(){
     document.body.appendChild(script);
   });
 }
-          
+
 loadLootFromSheet();
 renderCharacterButtons();
 
