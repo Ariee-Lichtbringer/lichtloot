@@ -1044,44 +1044,21 @@ function p0Key(value){
     .replace(/[-–—]/g," ")
     .replace(/\s+/g," ");
 }
+function loadP0PlusFromSheet(){
+  return new Promise((resolve) => {
+    p0PlusData = {};
 
-async function loadP0PlusFromSheet(){
-  p0PlusData = {};
+    const callbackName =
+      "receiveP0Plus_" + Date.now();
 
-  try{
-    const response = await fetch(
-      P0PLUS_API_URL +
-      "?action=getP0Plus" +
-      "&raid=BWL" +
-      "&t=" + Date.now()
-    );
+    window[callbackName] = function(result){
 
-    const result = await response.json();
+      if(result && result.success && result.entries){
 
-    if(!result.success){
-      console.error("P0+ API Fehler:", result);
-      return;
-    }
-
-    result.entries.forEach(entry => {
-      const key = p0Key(entry.item);
-
-      if(!p0PlusData[key]){
-        p0PlusData[key] = [];
-      }
-
-      p0PlusData[key].push({
-        player: entry.player,
-        count: entry.count
-      });
-    });
-
-    console.log("P0+ geladen:", p0PlusData);
-
-  }catch(error){
-    console.error("P0+ Punkte konnten nicht geladen werden:", error);
-  }
-}
+        result.entries.forEach(entry => {
+          const key =
+            p0Key
+          
 loadLootFromSheet();
 renderCharacterButtons();
 
