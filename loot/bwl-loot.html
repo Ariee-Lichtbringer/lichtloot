@@ -303,7 +303,19 @@ function formatStatLine(text){
 }
 function collectStats(obj){
   const stats=[];
-  ["Schaden","Tempo","DPS","Stat1","Stat2","Stat3","Stat4","Stat5","Stat6","Benötigt","Eigenschaften","Stats","Werte","Effekt","Beschreibung"].forEach(col=>{
+  [
+  "Stat1",
+  "Stat2",
+  "Stat3",
+  "Stat4",
+  "Stat5",
+  "Stat6",
+  "Benötigt",
+  "Eigenschaften",
+  "Stats",
+  "Werte",
+  "Effekt",
+  "Beschreibung"].forEach(col=>{
     if(obj[col] && String(obj[col]).trim()){
       String(obj[col]).trim().split(/;|\n|\|/).forEach(part=>{
         const clean=part.trim();
