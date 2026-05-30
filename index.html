@@ -340,9 +340,17 @@ body{
       <button onclick="toggleP0PlusOverview()">✕</button>
     </div>
 
-    <div id="p0plusContent" class="p0plus-content">
-      Lade P0Plus Punkte …
-    </div>
+  <input
+  id="p0plusSearch"
+  type="text"
+  placeholder="Item suchen..."
+  oninput="renderP0PlusOverview(window.p0plusEntries || [])"
+  style="width:100%;margin-bottom:12px;"
+>
+
+<div id="p0plusContent" class="p0plus-content">
+  Lade P0Plus Punkte …
+</div>
   </div>
 </div>
 <div class="overlay">
@@ -668,8 +676,8 @@ function loadP0PlusOverview(){
       cleanup();
       return;
     }
-
-    renderP0PlusOverview(result.entries || []);
+window.p0plusEntries = result.entries || [];
+renderP0PlusOverview(window.p0plusEntries);
     cleanup();
   };
 
@@ -697,6 +705,22 @@ function loadP0PlusOverview(){
 }
 
 function renderP0PlusOverview(entries){
+  const search =
+  document.getElementById("p0plusSearch")
+    ?.value
+    .trim()
+    .toLowerCase() || "";
+
+if(search){
+  entries = entries.filter(entry =>
+    [
+      entry.item,
+      entry.player,
+      entry.raid,
+      entry.slot
+    ].join(" ").toLowerCase().includes(search)
+  );
+}
   const content = document.getElementById("p0plusContent");
 
   if(!entries.length){
