@@ -213,9 +213,9 @@ th{
   <div id="roleInfo" class="status"></div>
 
   <div class="status">
-    <label>PrioPIN</label>
+    <label>Raidlead PIN</label>
     <div class="pin-grid">
-      <input id="raidPinInput" type="text" placeholder="RaidPIN / PrioPIN eingeben">
+      <input id="raidPinInput" type="text" placeholder="Raidlead Pin eingeben">
       <button class="btn neutral" onclick="loadRaidByPin()">PrioPIN laden</button>
     </div>
 
@@ -256,6 +256,19 @@ let currentRaidData = null;
 let currentPrios = [];
 let currentReleased = false;
 let itemIdMap = {};
+function raidKeyFromRaidId(raidId){
+  const id = String(raidId || "").toUpperCase();
+
+  if(id.startsWith("ZG-")) return "zg";
+  if(id.startsWith("AQ20-")) return "aq20";
+  if(id.startsWith("AQ40-")) return "aq40";
+  if(id.startsWith("BWL-")) return "bwl";
+  if(id.startsWith("MC-")) return "mc";
+  if(id.startsWith("NAXX-")) return "naxx";
+  if(id.startsWith("ONY-")) return "ony";
+
+  return null;
+}
 function checkLogin(){
   const isLoggedIn = sessionStorage.getItem("raidlead");
   const role = sessionStorage.getItem("raidleadRole");
@@ -339,9 +352,18 @@ async function tryLoadRaidByPin(pin, raidKey){
 
   await loadPriosFromSheet(pin);
 
-  if(currentRaidData.raidId || currentPrios.length > 0){
-    return true;
-  }
+const realRaidKey =
+  raidKeyFromRaidId(currentRaidData.raidId);
+
+if(realRaidKey && realRaidKey !== raidKey){
+  currentRaidKey = realRaidKey;
+  currentRaidData.raid = realRaidKey;
+  currentRaidData.raidName = raids[realRaidKey].name;
+}
+
+if(currentRaidData.raidId || currentPrios.length > 0){
+  return true;
+}
 
   return false;
 }
@@ -400,8 +422,8 @@ function renderRaidView(){
 
     <div class="status">
       Aktiver Raid: <strong>${currentRaidData.raidId || "über PrioPIN geladen"}</strong><br>
-      PrioPIN: <strong>${currentRaidData.playerPin || "-"}</strong><br>
-      LeadPIN: <strong>${currentRaidData.leadPin || "-"}</strong><br>
+      PrioPIN für Spieler: <strong>${currentRaidData.playerPin || "-"}</strong><br>
+      Raidlead PIN: <strong>${currentRaidData.leadPin || "-"}</strong><br>
       Eingetragene Spieler: <strong>${currentPrios.length}</strong><br>
       Prioliste: ${
         currentReleased
