@@ -6,6 +6,90 @@
 <title>Lichtbringer – Raid Übersicht</title>
 
 <style>
+.p0plus-open-btn{
+  position:absolute;
+  top:25px;
+  left:25px;
+  z-index:1000;
+  padding:10px 16px;
+  border-radius:12px;
+  border:1px solid rgba(250,204,21,.35);
+  background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(96,165,250,.20));
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.p0plus-overlay{
+  position:absolute;
+  top:75px;
+  left:25px;
+  z-index:1200;
+  width:min(760px,calc(100vw - 50px));
+}
+
+.p0plus-box{
+  background:rgba(12,18,32,.96);
+  border:1px solid rgba(250,204,21,.35);
+  border-radius:18px;
+  box-shadow:0 20px 45px rgba(0,0,0,.55);
+  padding:18px;
+}
+
+.p0plus-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.p0plus-head h2{
+  color:#facc15;
+  margin:0;
+}
+
+.p0plus-head button{
+  border:1px solid rgba(239,68,68,.55);
+  background:rgba(239,68,68,.25);
+  color:white;
+  border-radius:10px;
+  padding:8px 12px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.p0plus-content{
+  max-height:520px;
+  overflow:auto;
+  font-size:14px;
+}
+
+.p0plus-raid{
+  margin-top:14px;
+  color:#facc15;
+  font-size:18px;
+  font-weight:900;
+}
+
+.p0plus-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:8px;
+}
+
+.p0plus-table th,
+.p0plus-table td{
+  padding:8px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  text-align:left;
+}
+
+.p0plus-table th{
+  color:#facc15;
+  font-size:12px;
+  text-transform:uppercase;
+}
 :root{
   --gold:#facc15;
   --panel:rgba(12,18,32,.82);
@@ -245,6 +329,22 @@ body{
 </head>
 
 <body>
+  <button class="p0plus-open-btn" onclick="toggleP0PlusOverview()">
+  P0Plus Übersicht
+</button>
+
+<div id="p0plusOverlay" class="p0plus-overlay hidden">
+  <div class="p0plus-box">
+    <div class="p0plus-head">
+      <h2>P0Plus Übersicht</h2>
+      <button onclick="toggleP0PlusOverview()">✕</button>
+    </div>
+
+    <div id="p0plusContent" class="p0plus-content">
+      Lade P0Plus Punkte …
+    </div>
+  </div>
+</div>
 <div class="overlay">
 
 <div class="top-tools">
@@ -543,6 +643,121 @@ function handlePinEnter(event,raid){
   if(event.key==="Enter"){
     openLootWithPin(raid);
   }
+}
+  const P0PLUS_API_URL =
+  "https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
+
+function toggleP0PlusOverview(){
+  const overlay = document.getElementById("p0plusOverlay");
+  overlay.classList.toggle("hidden");
+
+  if(!overlay.classList.contains("hidden")){
+    loadP0PlusOverview();
+  }
+}
+
+function loadP0PlusOverview(){
+  const content = document.getElementById("p0plusContent");
+  content.innerHTML = "Lade P0Plus Punkte …";
+
+  const callbackName = "receiveP0PlusOverview_" + Date.now();
+
+  window[callbackName] = function(result){
+    if(!result || !result.success){
+      content.innerHTML = `<span class="bad">P0Plus Punkte konnten nicht geladen werden.</span>`;
+      cleanup();
+      return;
+    }
+
+    renderP0PlusOverview(result.entries || []);
+    cleanup();
+  };
+
+  const script = document.createElement("script");
+
+  script.src =
+    P0PLUS_API_URL +
+    "?action=getP0Plus" +
+    "&callback=" + callbackName +
+    "&t=" + Date.now();
+
+  script.onerror = function(){
+    content.innerHTML = `<span class="bad">P0Plus API konnte nicht geladen werden.</span>`;
+    cleanup();
+  };
+
+  function cleanup(){
+    delete window[callbackName];
+    if(script && script.parentNode){
+      script.parentNode.removeChild(script);
+    }
+  }
+
+  document.body.appendChild(script);
+}
+
+function renderP0PlusOverview(entries){
+  const content = document.getElementById("p0plusContent");
+
+  if(!entries.length){
+    content.innerHTML = "Keine P0Plus Punkte vorhanden.";
+    return;
+  }
+
+  const grouped = {};
+
+  entries.forEach(entry => {
+    const raid = entry.raid || "Unbekannt";
+
+    if(!grouped[raid]){
+      grouped[raid] = [];
+    }
+
+    grouped[raid].push(entry);
+  });
+
+  let html = "";
+
+  Object.keys(grouped).sort().forEach(raid => {
+    html += `<div class="p0plus-raid">${raid}</div>`;
+    html += `
+      <table class="p0plus-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Slot</th>
+            <th>Spieler</th>
+            <th>Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    grouped[raid]
+      .sort((a,b) => String(a.item).localeCompare(String(b.item),"de"))
+      .forEach(entry => {
+        html += `
+          <tr>
+            <td>${safeHtml(entry.item)}</td>
+            <td>${safeHtml(entry.slot)}</td>
+            <td>${safeHtml(entry.player)}</td>
+            <td><strong>${safeHtml(entry.count)}</strong></td>
+          </tr>
+        `;
+      });
+
+    html += `</tbody></table>`;
+  });
+
+  content.innerHTML = html;
+}
+
+function safeHtml(value){
+  return String(value || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
 }
 </script>
 
