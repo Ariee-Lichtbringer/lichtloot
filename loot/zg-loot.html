@@ -223,7 +223,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0+</th>
+<th>P0</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
@@ -787,14 +787,14 @@ function renderPublishedChecks(prios){
 
     table.innerHTML+=`
       <tr>
-        <td>${index + 1}</td>
-        <td>${playerText}</td>
-        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-        <td>${prio.P2?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-        <td>${prio.P3?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-      </tr>
+  <td>${index + 1}</td>
+  <td>${playerText}</td>
+  <td>${classText}</td>
+  <td>${itemHtml(prio.P1)}</td>
+  <td>${itemHtml(prio.P2)}</td>
+  <td>${itemHtml(prio.P3)}</td>
+  <td>${p0Text}</td>
+</tr>
     `;
   });
 }
@@ -807,13 +807,14 @@ function renderPublishedItems(prios){
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
-      <tr>
-        <td>${playerText}</td>
-        <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="warn">ja</span>':'nein'}</td>
+     <tr>
+    <td>${index + 1}</td>
+    <td>${playerText}</td>
+    <td>${classText}</td>
+    <td>${itemHtml(prio.P1)}</td>
+    <td>${itemHtml(prio.P2)}</td>
+    <td>${itemHtml(prio.P3)}</td>
+    <td>${String(prio.P0).toLowerCase()==="ja"?'<span class="warn">ja</span>':'nein'}</td>
       </tr>
     `;
   });
