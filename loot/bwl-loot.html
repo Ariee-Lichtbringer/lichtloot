@@ -1040,6 +1040,8 @@ function p0Key(value){
   return String(value || "")
     .toLowerCase()
     .trim()
+    .replace(/['’`´]/g,"")
+    .replace(/[-–—]/g," ")
     .replace(/\s+/g," ");
 }
 
