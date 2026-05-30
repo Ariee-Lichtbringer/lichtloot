@@ -217,7 +217,6 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <table>
 <thead>
 <tr>
-<th>#</th>
 <th>Spieler</th>
 <th>Klasse</th>
 <th>P1</th>
@@ -782,12 +781,11 @@ function renderPublishedChecks(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  Prios.forEach((prio,index)=>{
+  prios.forEach(prio=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
       <tr>
-        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
@@ -803,12 +801,11 @@ function renderPublishedItems(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  prios.forEach((prio,index)=>{
+  prios.forEach(prio=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
       <tr>
-        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${itemHtml(prio.P1)}</td>
