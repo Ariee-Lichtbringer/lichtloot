@@ -1044,20 +1044,64 @@ function p0Key(value){
     .replace(/[-–—]/g," ")
     .replace(/\s+/g," ");
 }
+    
 function loadP0PlusFromSheet(){
   return new Promise((resolve) => {
     p0PlusData = {};
 
-    const callbackName =
-      "receiveP0Plus_" + Date.now();
+    const callbackName = "receiveP0Plus_" + Date.now();
 
     window[callbackName] = function(result){
-
       if(result && result.success && result.entries){
-
         result.entries.forEach(entry => {
-          const key =
-            p0Key
+          const key = p0Key(entry.item);
+
+          if(!p0PlusData[key]){
+            p0PlusData[key] = [];
+          }
+
+          p0PlusData[key].push({
+            player: entry.player,
+            count: entry.count
+          });
+        });
+      }
+
+      console.log("P0+ geladen:", p0PlusData);
+
+      delete window[callbackName];
+
+      if(script && script.parentNode){
+        script.parentNode.removeChild(script);
+      }
+
+      resolve();
+    };
+
+    const script = document.createElement("script");
+
+    script.src =
+      P0PLUS_API_URL +
+      "?action=getP0Plus" +
+      "&raid=BWL" +
+      "&callback=" + callbackName +
+      "&t=" + Date.now();
+
+    script.onerror = function(){
+      console.error("P0+ JSONP konnte nicht geladen werden.");
+
+      delete window[callbackName];
+
+      if(script && script.parentNode){
+        script.parentNode.removeChild(script);
+      }
+
+      resolve();
+    };
+
+    document.body.appendChild(script);
+  });
+}
           
 loadLootFromSheet();
 renderCharacterButtons();
