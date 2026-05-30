@@ -27,8 +27,15 @@ body{
   background-position:center top;
   background-attachment:fixed;
 }
-.overlay{min-height:100vh;padding:36px 22px 70px;backdrop-filter:blur(3px)}
-.topbar,.header,.control-card,.raid-card{width:min(1300px,100%);margin:auto}
+.overlay{
+  min-height:100vh;
+  padding:36px 22px 70px;
+  backdrop-filter:blur(3px);
+}
+.topbar,.header,.raid-card{
+  width:min(1300px,100%);
+  margin:auto;
+}
 .topbar{
   margin-bottom:28px;
   display:flex;
@@ -49,7 +56,9 @@ body{
   display:inline-block;
   text-align:center;
 }
-.btn:hover,.btn-link:hover{border-color:rgba(250,204,21,.55)}
+.btn:hover,.btn-link:hover{
+  border-color:rgba(250,204,21,.55);
+}
 .header{
   margin-bottom:22px;
   padding:30px;
@@ -58,9 +67,17 @@ body{
   border:1px solid rgba(250,204,21,.22);
   box-shadow:0 20px 45px rgba(0,0,0,.45);
 }
-h1{color:var(--gold);font-size:clamp(34px,5vw,58px);margin-bottom:8px}
-.subtitle{color:#dbeafe;line-height:1.7;font-size:15px}
-.control-card,.raid-card{
+h1{
+  color:var(--gold);
+  font-size:clamp(34px,5vw,58px);
+  margin-bottom:8px;
+}
+.subtitle{
+  color:#dbeafe;
+  line-height:1.7;
+  font-size:15px;
+}
+.raid-card{
   margin-bottom:22px;
   background:var(--panel);
   border:1px solid var(--line);
@@ -68,7 +85,11 @@ h1{color:var(--gold);font-size:clamp(34px,5vw,58px);margin-bottom:8px}
   padding:24px;
   box-shadow:0 18px 40px rgba(0,0,0,.38);
 }
-h2{color:var(--gold);margin-bottom:14px;font-size:25px}
+h2{
+  color:var(--gold);
+  margin-bottom:14px;
+  font-size:25px;
+}
 h3{
   color:#dbeafe;
   font-size:14px;
@@ -86,7 +107,7 @@ label{
   text-transform:uppercase;
   letter-spacing:.08em;
 }
-input,select{
+input{
   width:100%;
   padding:12px 13px;
   border-radius:12px;
@@ -95,9 +116,9 @@ input,select{
   color:white;
   font-size:14px;
 }
-.control-grid{
+.pin-grid{
   display:grid;
-  grid-template-columns:1fr 1fr auto auto;
+  grid-template-columns:1fr auto;
   gap:14px;
   align-items:end;
 }
@@ -120,20 +141,52 @@ input,select{
   gap:10px;
   margin-top:10px;
 }
-.btn.primary{background:linear-gradient(135deg,rgba(250,204,21,.32),rgba(96,165,250,.18));border-color:rgba(250,204,21,.35)}
-.btn.neutral{background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(15,23,42,.65));border-color:rgba(96,165,250,.25)}
-.btn.success{background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(15,23,42,.65));border-color:rgba(34,197,94,.35)}
-.btn.warning{background:linear-gradient(135deg,rgba(250,204,21,.24),rgba(15,23,42,.65));border-color:rgba(250,204,21,.35)}
-.btn.danger{background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(15,23,42,.65));border-color:rgba(239,68,68,.40)}
-.btn.small-btn{padding:8px 10px;border-radius:10px;font-size:12px;margin-top:0;width:auto}
-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:14px}
-th,td{padding:9px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;vertical-align:top}
-th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.btn.neutral{
+  background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(15,23,42,.65));
+  border-color:rgba(96,165,250,.25);
+}
+.btn.success{
+  background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(15,23,42,.65));
+  border-color:rgba(34,197,94,.35);
+}
+.btn.warning{
+  background:linear-gradient(135deg,rgba(250,204,21,.24),rgba(15,23,42,.65));
+  border-color:rgba(250,204,21,.35);
+}
+.btn.danger{
+  background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(15,23,42,.65));
+  border-color:rgba(239,68,68,.40);
+}
+.btn.small-btn{
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:12px;
+  margin-top:0;
+  width:auto;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:14px;
+  font-size:14px;
+}
+th,td{
+  padding:9px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+  text-align:left;
+  vertical-align:top;
+}
+th{
+  color:var(--gold);
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
 .check{color:var(--green);font-weight:900;font-size:17px}
 .cross{color:var(--danger);font-weight:900;font-size:17px}
 .hidden{display:none!important}
 @media(max-width:1000px){
-  .control-grid{grid-template-columns:1fr}
+  .pin-grid{grid-template-columns:1fr}
   .button-grid{grid-template-columns:1fr}
 }
 </style>
@@ -154,31 +207,21 @@ th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.08e
 <div class="header">
   <h1>Raidlead Panel</h1>
   <div class="subtitle">
-    Wähle einen Raid aus, lade ihn über den SpielerPIN und verwalte die aktuelle Prioliste.
+    Lade den Raid über die PrioPIN und verwalte die aktuelle Prioliste.
   </div>
+
   <div id="roleInfo" class="status"></div>
-</div>
 
-<div class="control-card">
-  <h2>Raid auswählen</h2>
-
-  <div class="control-grid">
-    <div>
-      <label>Raid</label>
-      <select id="raidSelect"></select>
+  <div class="status">
+    <label>PrioPIN</label>
+    <div class="pin-grid">
+      <input id="raidPinInput" type="text" placeholder="RaidPIN / PrioPIN eingeben">
+      <button class="btn neutral" onclick="loadRaidByPin()">PrioPIN laden</button>
     </div>
 
-    <div>
-      <label>SpielerPIN / RaidPIN</label>
-      <input id="raidPinInput" type="text" placeholder="z. B. K7M">
+    <div id="controlStatus" style="margin-top:10px">
+      Bitte PrioPIN eingeben.
     </div>
-
-    <button class="btn neutral" onclick="loadRaidByPin()">Raid laden</button>
-    <button class="btn primary" onclick="createNewRaidFromSelection()">Neuen Raid erstellen</button>
-  </div>
-
-  <div id="controlStatus" class="status">
-    Bitte Raid auswählen und vorhandenen SpielerPIN laden oder neuen Raid erstellen.
   </div>
 </div>
 
@@ -226,127 +269,66 @@ function checkLogin(){
   document.getElementById("roleInfo").innerHTML =
     `<span class="ok">Login aktiv.</span> Rolle: <strong>${role}</strong>`;
 
-  fillRaidSelect(role);
+  const savedPin =
+    sessionStorage.getItem("raidleadPrioPin") ||
+    sessionStorage.getItem("raidleadPlayerPin") ||
+    "";
+
+  if(savedPin){
+    document.getElementById("raidPinInput").value = savedPin;
+    loadRaidByPin();
+  }
 }
 
 function canAccessRaid(role, raid){
   return role === "master" || raids[raid].role === role;
 }
 
-function fillRaidSelect(role){
-  const select = document.getElementById("raidSelect");
-  select.innerHTML = "";
-
-  Object.keys(raids).forEach(key => {
-    if(!canAccessRaid(role, key)) return;
-
-    const option = document.createElement("option");
-    option.value = key;
-    option.textContent = raids[key].name;
-    select.appendChild(option);
-  });
-
-  if(select.options.length){
-    currentRaidKey = select.value;
-  }
-}
-
-function randomCode(length){
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let result = "";
-
-  for(let i = 0; i < length; i++){
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  return result;
-}
-
-function createRaidId(raid){
-  const now = new Date();
-
-  const date =
-    now.getFullYear() + "-" +
-    String(now.getMonth() + 1).padStart(2,"0") + "-" +
-    String(now.getDate()).padStart(2,"0") + "-" +
-    String(now.getHours()).padStart(2,"0") +
-    String(now.getMinutes()).padStart(2,"0") +
-    String(now.getSeconds()).padStart(2,"0");
-
-  return raids[raid].short + "-" + date;
-}
-
-async function saveRaidToSheet(raidData){
-  await fetch(RAID_API_URL,{
-    method:"POST",
-    mode:"no-cors",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(raidData)
-  });
-}
-
-async function createNewRaidFromSelection(){
-  const raid = document.getElementById("raidSelect").value;
-  await createNewRaid(raid);
-}
-
-async function createNewRaid(raid){
-  const r = raids[raid];
-
-  const raidId = createRaidId(raid);
-  const playerPin = randomCode(3);
-  const leadPin = randomCode(4);
-
-  const raidData = {
-    raid: raid,
-    raidName: r.name,
-    raidId: raidId,
-    playerPin: playerPin,
-    leadPin: leadPin,
-    playerLink: "",
-    createdAt: new Date().toISOString(),
-    status: "geschlossen"
-  };
-
-  await saveRaidToSheet({
-    action:"createRaid",
-    raidId:raidData.raidId,
-    raid:raidData.raid,
-    raidName:raidData.raidName,
-    playerPin:raidData.playerPin,
-    leadPin:raidData.leadPin,
-    playerLink:"",
-    createdAt:raidData.createdAt,
-    status:"geschlossen"
-  });
-
-  document.getElementById("raidPinInput").value = playerPin;
-  document.getElementById("controlStatus").innerHTML =
-    `<span class="ok">Neuer Raid erstellt.</span> SpielerPIN: <strong>${playerPin}</strong> · LeadPIN: <strong>${leadPin}</strong>`;
-
-  currentRaidKey = raid;
-  currentRaidData = raidData;
-  currentPrios = [];
-  currentReleased = false;
-
-  renderRaidView();
-}
-
 async function loadRaidByPin(){
-  const raid = document.getElementById("raidSelect").value;
   const pin = document.getElementById("raidPinInput").value.trim();
 
   if(!pin){
     document.getElementById("controlStatus").innerHTML =
-      `<span class="bad">Bitte SpielerPIN eingeben.</span>`;
+      `<span class="bad">Bitte PrioPIN eingeben.</span>`;
     return;
   }
 
-  currentRaidKey = raid;
+  document.getElementById("controlStatus").innerHTML =
+    `<span class="warn">Raid wird geladen …</span>`;
+
+  const role = sessionStorage.getItem("raidleadRole") || "master";
+  const possibleRaids = Object.keys(raids).filter(key => canAccessRaid(role,key));
+
+  currentRaidKey = null;
+  currentRaidData = null;
+  currentPrios = [];
+  currentReleased = false;
+
+  for(const raidKey of possibleRaids){
+    const found = await tryLoadRaidByPin(pin, raidKey);
+
+    if(found){
+      sessionStorage.setItem("raidleadPrioPin", pin);
+
+      document.getElementById("controlStatus").innerHTML =
+        `<span class="ok">Raid geladen.</span> ${raids[raidKey].name} · PrioPIN: <strong>${pin}</strong>`;
+
+      renderRaidView();
+      return;
+    }
+  }
+
+  document.getElementById("raidView").classList.add("hidden");
+  document.getElementById("controlStatus").innerHTML =
+    `<span class="bad">Kein Raid zu dieser PrioPIN gefunden.</span>`;
+}
+
+async function tryLoadRaidByPin(pin, raidKey){
+  currentRaidKey = raidKey;
 
   currentRaidData = {
-    raid: raid,
-    raidName: raids[raid].name,
+    raid: raidKey,
+    raidName: raids[raidKey].name,
     raidId: "",
     playerPin: pin,
     leadPin: "",
@@ -357,10 +339,11 @@ async function loadRaidByPin(){
 
   await loadPriosFromSheet(pin);
 
-  document.getElementById("controlStatus").innerHTML =
-    `<span class="ok">Raid geladen.</span> PIN: <strong>${pin}</strong>`;
+  if(currentRaidData.raidId || currentPrios.length > 0){
+    return true;
+  }
 
-  renderRaidView();
+  return false;
 }
 
 async function loadPriosFromSheet(playerPin){
@@ -416,8 +399,8 @@ function renderRaidView(){
     <h2>${r.name}</h2>
 
     <div class="status">
-      Aktiver Raid: <strong>${currentRaidData.raidId || "über PIN geladen"}</strong><br>
-      SpielerPIN: <strong>${currentRaidData.playerPin || "-"}</strong><br>
+      Aktiver Raid: <strong>${currentRaidData.raidId || "über PrioPIN geladen"}</strong><br>
+      PrioPIN: <strong>${currentRaidData.playerPin || "-"}</strong><br>
       LeadPIN: <strong>${currentRaidData.leadPin || "-"}</strong><br>
       Eingetragene Spieler: <strong>${currentPrios.length}</strong><br>
       Prioliste: ${
@@ -446,7 +429,7 @@ function renderRaidView(){
       ${
         currentReleased
           ? "Die Prioliste ist geöffnet. Die Itemnamen sind sichtbar."
-          : "Die Prioliste ist geschlossen. Es wird nur angezeigt, ob P1/P2/P3/P0+ gesetzt wurden."
+          : "Die Prioliste ist geschlossen. Es wird nur angezeigt, ob P1/P2/P3/P0 gesetzt wurden."
       }
     </div>
 
@@ -460,7 +443,7 @@ function renderRaidView(){
           <th>P1</th>
           <th>P2</th>
           <th>P3</th>
-          <th>P0+</th>
+          <th>P0</th>
           <th>Aktion</th>
         </tr>
       </thead>
@@ -473,7 +456,7 @@ function renderRaidView(){
 
 function renderRows(){
   if(currentPrios.length === 0){
-    return `<tr><td colspan="8">Noch keine Einträge vorhanden.</td></tr>`;
+    return `<tr><td colspan="9">Noch keine Einträge vorhanden.</td></tr>`;
   }
 
   return currentPrios.map((entry,index)=>{
@@ -500,6 +483,7 @@ function renderRows(){
 
     return `
       <tr>
+        <td>${index + 1}</td>
         <td>${safe(entry.player || "-")}</td>
         <td>${safe(entry.server || "-")}</td>
         <td>${safe(entry.class || "-")}</td>
@@ -545,7 +529,7 @@ function openOverview(){
 
 async function releaseList(){
   if(!currentRaidData || !currentRaidData.raidId){
-    alert("Bitte zuerst einen gültigen Raid laden oder neu erstellen.");
+    alert("Bitte zuerst einen gültigen Raid laden.");
     return;
   }
 
@@ -570,7 +554,7 @@ async function releaseList(){
 
 async function closeList(){
   if(!currentRaidData || !currentRaidData.raidId){
-    alert("Bitte zuerst einen gültigen Raid laden oder neu erstellen.");
+    alert("Bitte zuerst einen gültigen Raid laden.");
     return;
   }
 
@@ -790,6 +774,8 @@ function logout(){
   sessionStorage.removeItem("raidlead");
   sessionStorage.removeItem("raidleadRole");
   sessionStorage.removeItem("raidleadRaidId");
+  sessionStorage.removeItem("raidleadPrioPin");
+  sessionStorage.removeItem("raidleadPlayerPin");
   window.location.href = "index.html";
 }
 
