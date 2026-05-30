@@ -795,7 +795,7 @@ function renderPublishedChecks(prios){
   <td>${itemHtml(prio.P3)}</td>
   <td>${p0Text}</td>
 </tr>
-    `;
+      `;
   });
 }
 
@@ -805,7 +805,11 @@ function renderPublishedItems(prios){
 
   prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
+const playerText =
+  `${safe(prio.Spieler || "-")} – ${safe(prio.Server || "-")}`;
 
+const classText =
+  `<span class="${getClassClass(prio.Klasse)}">${safe(prio.Klasse || "-")}</span>`;
     table.innerHTML+=`
      <tr>
     <td>${index + 1}</td>
