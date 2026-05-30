@@ -302,16 +302,55 @@ function formatStatLine(text){
   return clean;
 }
 function collectStats(obj){
-  const stats=[];
-  ["Schaden","Tempo","DPS","Stat1","Stat2","Stat3","Stat4","Stat5","Stat6","Benötigt","Eigenschaften","Stats","Werte","Effekt","Beschreibung"].forEach(col=>{
+  const stats = [];
+  const seen = new Set();
+
+  function addStat(value){
+    const clean = String(value || "").trim();
+
+    if(!clean) return;
+
+    const formatted = formatStatLine(clean);
+    const key = formatted
+      .toLowerCase()
+      .replace(/\s+/g," ")
+      .trim();
+
+    if(seen.has(key)) return;
+
+    seen.add(key);
+    stats.push(formatted);
+  }
+
+  [
+    "Schaden",
+    "Tempo",
+    "DPS",
+    "Stat1",
+    "Stat2",
+    "Stat3",
+    "Stat4",
+    "Stat5",
+    "Stat6",
+    "Benötigt",
+    "Eigenschaften",
+    "Stats",
+    "Werte",
+    "Effekt",
+    "Beschreibung"
+  ].forEach(col => {
     if(obj[col] && String(obj[col]).trim()){
-      String(obj[col]).trim().split(/;|\n|\|/).forEach(part=>{
-        const clean=part.trim();
-        if(clean) stats.push(formatStatLine(clean));
-      });
+      String(obj[col])
+        .trim()
+        .split(/;|\n|\|/)
+        .forEach(part => addStat(part));
     }
   });
-  if(obj.Kategorie) stats.push("Kategorie: "+obj.Kategorie);
+
+  if(obj.Kategorie){
+    addStat("Kategorie: " + obj.Kategorie);
+  }
+
   return stats;
 }
 
