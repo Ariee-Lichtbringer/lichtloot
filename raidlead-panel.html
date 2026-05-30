@@ -453,6 +453,7 @@ function renderRaidView(){
     <table>
       <thead>
         <tr>
+          <th>#</th>
           <th>Spieler</th>
           <th>Server</th>
           <th>Klasse</th>
@@ -475,7 +476,7 @@ function renderRows(){
     return `<tr><td colspan="8">Noch keine Einträge vorhanden.</td></tr>`;
   }
 
-  return currentPrios.map(entry => {
+  return currentPrios.map((entry,index)=>{
     const isP0Plus =
       entry.p1 &&
       entry.p1 === entry.p2 &&
@@ -484,6 +485,7 @@ function renderRows(){
     if(!currentReleased){
       return `
         <tr>
+          <td>${index + 1}</td>
           <td>${safe(entry.player || "-")}</td>
           <td>${safe(entry.server || "-")}</td>
           <td>${safe(entry.class || "-")}</td>
