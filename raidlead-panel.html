@@ -313,8 +313,8 @@ async function createNewRaid(raid){
   const r=raids[raid];
 
   const raidId=createRaidId(raid);
-  const playerPin=raid+"-"+randomCode(3);
-  const leadPin="lead-"+randomCode(4);
+const playerPin = randomCode(3);
+const leadPin = randomCode(4);
 
   const playerLink=
     getBaseUrl()+
