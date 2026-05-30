@@ -240,6 +240,10 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 const RAID_NAME = "BWL";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+const P0PLUS_CSV_URL =
+"https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/gviz/tq?tqx=out:csv&gid=1533758005";
+
+let p0PlusData = {};
 
 let bwlLoot = [];
 let autoRefreshTimer = null;
@@ -369,8 +373,10 @@ async function loadLootFromSheet(){
       };
     }).filter(item=>item.name);
 
-    fillItems();
-    renderLootList();
+    await loadP0PlusFromSheet();
+
+fillItems();
+renderLootList();
     status.innerHTML=`<span class="ok">✓ Lootdaten aus dem Google Sheet geladen.</span>`;
     await loadPublishedPrios();
 
@@ -805,8 +811,17 @@ function showTooltip(event,item){
   if(item.dps) statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
   item.stats.forEach(stat=>statLines.push(`<div class="tooltip-stat">${stat}</div>`));
 
-  const p0Html=item.p0.length ? item.p0.map(player=>`<li>${safe(player)}</li>`).join("") : `<li>Keine P0+ gesetzt</li>`;
+  const p0List =
+  p0PlusData[String(item.name || "").toLowerCase()] || [];
 
+const p0Html =
+  p0List.length
+    ? p0List
+        .sort((a,b) => Number(b.count) - Number(a.count))
+        .map(entry => `<li>${safe(entry.player)}: <strong>${safe(entry.count)}</strong></li>`)
+        .join("")
+    : `<li>Keine P0+ Punkte</li>`;
+  
   tooltip.innerHTML=`
     <div class="tooltip-title ${item.quality}">${safe(item.name)}</div>
     <div class="tooltip-ilvl">${safe(item.ilvl)}</div>
@@ -815,7 +830,7 @@ function showTooltip(event,item){
     ${statLines.join("")}
     ${item.equip?`<div class="tooltip-equip">Anlegen: ${safe(item.equip)}</div>`:""}
     ${item.price?`<div class="tooltip-price">Verkaufspreis: ${safe(item.price)}</div>`:""}
-    <div class="tooltip-p0"><strong>Gesetzte P0+</strong><ul>${p0Html}</ul></div>
+    <div class="tooltip-p0"><strong>P0+ Punkte</strong><ul>${p0Html}</ul></div>
   `;
 
   moveTooltip(event);
@@ -1020,6 +1035,43 @@ function deleteCharacterProfile(player, server){
 
   renderCharacterButtons();
 
+}
+
+async function loadP0PlusFromSheet(){
+  p0PlusData = {};
+
+  try{
+    const response = await fetch(P0PLUS_CSV_URL + "&t=" + Date.now());
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+    const headers = rows.shift().map(h => h.trim());
+
+    rows.forEach(row => {
+      const obj = {};
+      headers.forEach((header,index) => obj[header] = row[index] || "");
+
+      const raid = String(obj.Raid || "").toUpperCase();
+      const item = String(obj.Item || "").trim();
+      const player = String(obj.Spieler || "").trim();
+      const count = String(obj.Anzahl || "").trim();
+
+      if(raid !== "BWL" || !item || !player || !count) return;
+
+      const key = item.toLowerCase();
+
+      if(!p0PlusData[key]){
+        p0PlusData[key] = [];
+      }
+
+      p0PlusData[key].push({
+        player: player,
+        count: count
+      });
+    });
+
+  }catch(error){
+    console.error("P0+ Punkte konnten nicht geladen werden:", error);
+  }
 }
 loadLootFromSheet();
 renderCharacterButtons();
