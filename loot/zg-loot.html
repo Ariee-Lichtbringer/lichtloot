@@ -34,7 +34,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15}
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
-.loot-name{font-weight:800;font-size:14px;cursor:pointer}
+.loot-name{font-weight:400;font-size:14px;cursor:pointer}
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
@@ -368,7 +368,7 @@ function itemHtml(itemName){
   return `
     <span
       class="${item.quality}"
-      style="font-weight:900;cursor:pointer"
+      style="font-weight:400;cursor:pointer"
       onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
