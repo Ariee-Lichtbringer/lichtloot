@@ -757,11 +757,12 @@ function renderPublishedChecks(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  prios.forEach(prio=>{
+  prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
       <tr>
+        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
@@ -777,7 +778,7 @@ function renderPublishedItems(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  prios.forEach(prio=>{
+  prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
