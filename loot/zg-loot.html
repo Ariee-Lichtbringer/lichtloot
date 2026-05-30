@@ -478,6 +478,18 @@ function renderLootList(){
   updateActiveButtons();
 }
 
+function setPrio(slot,itemName){
+  const p1=document.getElementById("p1").value;
+  const p2=document.getElementById("p2").value;
+  const p3=document.getElementById("p3").value;
+
+  const otherSlots={p1:[p2,p3],p2:[p1,p3],p3:[p1,p2]};
+
+  if(otherSlots[slot].includes(itemName)){
+    document.getElementById("playerStatus").innerHTML=`<span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>`;
+    return;
+  }
+
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
   autoSaveDraft();
@@ -497,6 +509,10 @@ function manualSelectChanged(){
   const p1=document.getElementById("p1").value;
   const p2=document.getElementById("p2").value;
   const p3=document.getElementById("p3").value;
+
+  if((p1&&p2&&p1===p2)||(p1&&p3&&p1===p3)||(p2&&p3&&p2===p3)){
+    document.getElementById("playerStatus").innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>`;
+  }
 
   autoSaveDraft();
   updateActiveButtons();
