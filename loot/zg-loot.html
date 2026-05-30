@@ -141,7 +141,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   <input
     id="raidleadPin"
     type="text"
-    placeholder="Raidlead PIN"
+    placeholder="PrioPIN"
     style="width:180px;padding:12px 13px;border-radius:14px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.82);color:white;font-weight:800;"
     onkeydown="raidleadEnter(event)"
   >
@@ -612,7 +612,7 @@ async function savePrio(){
   const p3=document.getElementById("p3").value;
   const status=document.getElementById("playerStatus");
 
-  if(!pin){status.innerHTML=`<span class="bad">Bitte Raid-PIN eingeben.</span>`;return;}
+  if(!pin){status.innerHTML=`<span class="bad">Bitte Prio-PIN eingeben.</span>`;return;}
   if(!player||!server||!playerClass||!p1||!p2||!p3){status.innerHTML=`<span class="bad">Bitte Charakter, Server, Klasse und Prios vollständig ausfüllen.</span>`;return;}
   if(!(p1===p2&&p2===p3)&&(p1===p2||p1===p3||p2===p3)){
     status.innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
@@ -711,7 +711,7 @@ async function loadPublishedPrios(){
   const pin=document.getElementById("raidPin").value.trim();
 
   if(!pin){
-    status.innerHTML=`<span class="warn">Kein Raid-PIN vorhanden. Nutze den Raidlink oder gib den Raid-PIN ein.</span>`;
+    status.innerHTML=`<span class="warn">Kein Prio-PIN vorhanden. Nutze den Raidlink oder gib den Raid-PIN ein.</span>`;
     table.innerHTML=`<tr><td colspan="6">Noch keine Prioliste geladen.</td></tr>`;
     setPublishedMode(false);
     return;
