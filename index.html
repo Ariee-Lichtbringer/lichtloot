@@ -422,7 +422,7 @@ body{
   <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Raid jetzt erstellen</button>
 
   <div id="createRaidResult" class="status">
-    SpielerPIN und LeadPIN werden nach dem Erstellen angezeigt.
+    Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.
   </div>
 </div>
 
@@ -598,7 +598,7 @@ async function createRaidFromStart(){
       <strong>Raid:</strong><br>
       ${r.name}<br><br>
 
-      <strong>SpielerPIN:</strong>
+      <strong>Prio PIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
         <button class="copy-btn" onclick="copyText('newPlayerPin')">Kopieren</button>
