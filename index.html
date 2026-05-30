@@ -141,8 +141,18 @@ body{
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
-.overlay{min-height:100vh;backdrop-filter:blur(3px);padding:40px 24px 70px}
-.logo-banner{display:block;margin:0 auto;max-width:700px;width:100%;height:auto;filter:drop-shadow(0 0 20px rgba(250,204,21,.35))}
+.overlay{
+  min-height:100vh;
+  backdrop-filter:blur(3px);
+  padding:24px 24px 40px;
+}
+.logo-banner{
+  display:block;
+  margin:0 auto;
+  width:min(420px,55vw);
+  max-height:120px;
+  object-fit:contain;
+}
 .top-tools{
   position:absolute;
   top:25px;
@@ -225,7 +235,10 @@ body{
 .ok{color:var(--green);font-weight:900}
 .bad{color:var(--danger);font-weight:900}
 .warn{color:var(--gold);font-weight:900}
-.header{text-align:center;margin-bottom:40px}
+.header{
+  text-align:center;
+  margin-bottom:18px;
+}
 .section-title{
   width:min(1500px,100%);
   margin:0 auto 18px;
