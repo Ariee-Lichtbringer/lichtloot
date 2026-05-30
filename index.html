@@ -373,7 +373,7 @@ body{
 
 <body>
   <button class="p0plus-open-btn" onclick="toggleP0PlusOverview()">
-  P0+ Übersicht
+  P0Plus Übersicht
 </button>
 
 <div id="p0plusOverlay" class="p0plus-overlay hidden">
@@ -414,15 +414,15 @@ body{
     <option value="bwl">Blackwing Lair</option>
     <option value="aq40">Ahn'Qiraj 40</option>
     <option value="naxx">Naxxramas</option>
-    <option value="zg">Zul Gurub</option>
-    <option value="aq20">Ahn'Qiraj 20</option>
+    <option value="zg">ZG 20</option>
+    <option value="aq20">AQ 20</option>
     <option value="ony">Onyxia</option>
   </select>
 
   <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Raid jetzt erstellen</button>
 
   <div id="createRaidResult" class="status">
-    Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.
+    SpielerPIN und LeadPIN werden nach dem Erstellen angezeigt.
   </div>
 </div>
 
@@ -598,7 +598,7 @@ async function createRaidFromStart(){
       <strong>Raid:</strong><br>
       ${r.name}<br><br>
 
-      <strong>Prio PIN:</strong>
+      <strong>SpielerPIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
         <button class="copy-btn" onclick="copyText('newPlayerPin')">Kopieren</button>
