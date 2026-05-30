@@ -240,8 +240,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 const RAID_NAME = "BWL";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
-const P0PLUS_CSV_URL =
-"https://docs.google.com/spreadsheets/d/1t7P5T6t7OCWRY3kGCWIYHWDNXgXmdvpAM1xIj2U4TRw/gviz/tq?tqx=out:csv&gid=1533758005";
+const P0PLUS_API_URL =
+"https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
 
 let p0PlusData = {};
 
@@ -810,9 +810,8 @@ function showTooltip(event,item){
 
   if(item.dps) statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
   item.stats.forEach(stat=>statLines.push(`<div class="tooltip-stat">${stat}</div>`));
-
-  const p0List =
-  p0PlusData[String(item.name || "").toLowerCase()] || [];
+const p0List =
+  p0PlusData[p0Key(item.name)] || [];
 
 const p0Html =
   p0List.length
@@ -1037,37 +1036,45 @@ function deleteCharacterProfile(player, server){
 
 }
 
+function p0Key(value){
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g," ");
+}
+
 async function loadP0PlusFromSheet(){
   p0PlusData = {};
 
   try{
-    const response = await fetch(P0PLUS_CSV_URL + "&t=" + Date.now());
-    const csvText = await response.text();
-    const rows = parseCSV(csvText);
-    const headers = rows.shift().map(h => h.trim());
+    const response = await fetch(
+      P0PLUS_API_URL +
+      "?action=getP0Plus" +
+      "&raid=BWL" +
+      "&t=" + Date.now()
+    );
 
-    rows.forEach(row => {
-      const obj = {};
-      headers.forEach((header,index) => obj[header] = row[index] || "");
+    const result = await response.json();
 
-      const raid = String(obj.Raid || "").toUpperCase();
-      const item = String(obj.Item || "").trim();
-      const player = String(obj.Spieler || "").trim();
-      const count = String(obj.Anzahl || "").trim();
+    if(!result.success){
+      console.error("P0+ API Fehler:", result);
+      return;
+    }
 
-      if(raid !== "BWL" || !item || !player || !count) return;
-
-      const key = item.toLowerCase();
+    result.entries.forEach(entry => {
+      const key = p0Key(entry.item);
 
       if(!p0PlusData[key]){
         p0PlusData[key] = [];
       }
 
       p0PlusData[key].push({
-        player: player,
-        count: count
+        player: entry.player,
+        count: entry.count
       });
     });
+
+    console.log("P0+ geladen:", p0PlusData);
 
   }catch(error){
     console.error("P0+ Punkte konnten nicht geladen werden:", error);
