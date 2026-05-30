@@ -97,7 +97,7 @@ input,select{
 }
 .control-grid{
   display:grid;
-  grid-template-columns:1fr 1fr auto auto;
+  grid-template-columns:220px 1fr auto;
   gap:14px;
   align-items:end;
 }
@@ -157,18 +157,26 @@ th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.08e
     Wähle einen Raid aus, lade ihn über den SpielerPIN und verwalte die aktuelle Prioliste.
   </div>
   <div id="roleInfo" class="status"></div>
-</div>
-
-<div class="control-card">
-  <h2>Raid auswählen</h2>
-
+<div class="status">
+  <label>Raid / PrioPIN</label>
   <div class="control-grid">
     <div>
-      <label>Raid</label>
       <select id="raidSelect"></select>
     </div>
 
     <div>
+      <input id="raidPinInput" type="text" placeholder="PrioPIN eingeben">
+    </div>
+
+    <button class="btn neutral" onclick="loadRaidByPin()">RaidPIN laden</button>
+  </div>
+
+  <div id="controlStatus" style="margin-top:10px">
+    Bitte Raid auswählen und PrioPIN eingeben.
+  </div>
+</div>
+</div>
+  
       <label>SpielerPIN / RaidPIN</label>
       <input id="raidPinInput" type="text" placeholder="z. B. K7M">
     </div>
