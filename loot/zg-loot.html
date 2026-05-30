@@ -312,7 +312,6 @@ function collectStats(obj){
     }
   });
   if(obj.Kategorie) stats.push("Kategorie: "+obj.Kategorie);
-  const stats = [...new Set(stats)];
   return stats;
 }
 
