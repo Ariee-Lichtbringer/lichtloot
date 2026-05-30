@@ -147,8 +147,26 @@ th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.08e
 <div class="overlay">
 
 <div class="topbar">
-  <a class="btn-link" href="index.html">← Zurück zur Startseite</a>
-  <button class="btn danger" onclick="logout()">Logout</button>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+
+    <a class="btn-link" href="index.html">
+      ← Zurück zur Startseite
+    </a>
+
+    <button
+      class="btn-link"
+      onclick="backToRaidPrio()"
+    >
+      ← Zurück zur Prio-Auswahl
+    </button>
+
+  </div>
+
+  <button class="btn danger" onclick="logout()">
+    Logout
+  </button>
+
 </div>
 
 <div class="header">
@@ -671,6 +689,30 @@ function downloadExport(type){
   URL.revokeObjectURL(url);
 }
 
+    function backToRaidPrio(){
+
+  if(!currentRaidKey){
+    alert("Kein Raid geladen.");
+    return;
+  }
+
+  if(!currentRaidData){
+    alert("Kein Raid geladen.");
+    return;
+  }
+
+  const lootPage =
+    raids[currentRaidKey].lootPage;
+
+  const pin =
+    currentRaidData.playerPin || "";
+
+  window.location.href =
+    lootPage +
+    "?pin=" +
+    encodeURIComponent(pin);
+
+}
 function logout(){
   sessionStorage.removeItem("raidlead");
   sessionStorage.removeItem("raidleadRole");
