@@ -16,7 +16,9 @@
   --danger:#ef4444;
   --green:#22c55e;
 }
+
 *{box-sizing:border-box;margin:0;padding:0}
+
 body{
   min-height:100vh;
   font-family:Arial,Helvetica,sans-serif;
@@ -28,15 +30,20 @@ body{
   background-position:center top;
   background-attachment:fixed;
 }
+
 .overlay{
   min-height:100vh;
   padding:36px 22px 70px;
   backdrop-filter:blur(3px);
 }
-.topbar,.header,.raid-card{
+
+.topbar,
+.header,
+.raid-card{
   width:min(1300px,100%);
   margin:auto;
 }
+
 .topbar{
   margin-bottom:28px;
   display:flex;
@@ -45,7 +52,9 @@ body{
   align-items:center;
   flex-wrap:wrap;
 }
-.btn-link,.btn{
+
+.btn-link,
+.btn{
   color:var(--text);
   text-decoration:none;
   font-weight:900;
@@ -57,9 +66,12 @@ body{
   display:inline-block;
   text-align:center;
 }
-.btn:hover,.btn-link:hover{
+
+.btn:hover,
+.btn-link:hover{
   border-color:rgba(250,204,21,.55);
 }
+
 .header{
   margin-bottom:22px;
   padding:30px;
@@ -68,16 +80,19 @@ body{
   border:1px solid rgba(250,204,21,.22);
   box-shadow:0 20px 45px rgba(0,0,0,.45);
 }
+
 h1{
   color:var(--gold);
   font-size:clamp(34px,5vw,58px);
   margin-bottom:8px;
 }
+
 .subtitle{
   color:#dbeafe;
   line-height:1.7;
   font-size:15px;
 }
+
 .raid-card{
   margin-bottom:22px;
   background:var(--panel);
@@ -86,11 +101,13 @@ h1{
   padding:24px;
   box-shadow:0 18px 40px rgba(0,0,0,.38);
 }
+
 h2{
   color:var(--gold);
   margin-bottom:14px;
   font-size:25px;
 }
+
 h3{
   color:#dbeafe;
   font-size:14px;
@@ -99,6 +116,7 @@ h3{
   margin-top:20px;
   margin-bottom:10px;
 }
+
 label{
   display:block;
   color:var(--muted);
@@ -108,6 +126,7 @@ label{
   text-transform:uppercase;
   letter-spacing:.08em;
 }
+
 input{
   width:100%;
   padding:12px 13px;
@@ -117,12 +136,14 @@ input{
   color:white;
   font-size:14px;
 }
+
 .pin-grid{
   display:grid;
   grid-template-columns:1fr auto;
   gap:14px;
   align-items:end;
 }
+
 .status{
   margin:14px 0;
   padding:14px;
@@ -133,59 +154,74 @@ input{
   line-height:1.6;
   font-size:14px;
 }
+
 .ok{color:var(--green);font-weight:900}
 .warn{color:var(--gold);font-weight:900}
 .bad{color:var(--danger);font-weight:900}
+
 .button-grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:10px;
   margin-top:10px;
 }
+
 .btn.neutral{
   background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(15,23,42,.65));
   border-color:rgba(96,165,250,.25);
 }
+
 .btn.success{
   background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(15,23,42,.65));
   border-color:rgba(34,197,94,.35);
 }
+
 .btn.warning{
   background:linear-gradient(135deg,rgba(250,204,21,.24),rgba(15,23,42,.65));
   border-color:rgba(250,204,21,.35);
 }
+
 .btn.danger{
   background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(15,23,42,.65));
   border-color:rgba(239,68,68,.40);
 }
+
 .btn.small-btn{
   padding:8px 10px;
   border-radius:10px;
   font-size:12px;
   margin-top:0;
   width:auto;
+  margin-right:6px;
+  margin-bottom:6px;
 }
+
 table{
   width:100%;
   border-collapse:collapse;
   margin-top:14px;
   font-size:14px;
 }
+
 th,td{
   padding:9px;
   border-bottom:1px solid rgba(255,255,255,.10);
   text-align:left;
   vertical-align:top;
 }
+
 th{
   color:var(--gold);
   font-size:12px;
   text-transform:uppercase;
   letter-spacing:.08em;
 }
+
 .check{color:var(--green);font-weight:900;font-size:17px}
 .cross{color:var(--danger);font-weight:900;font-size:17px}
+
 .hidden{display:none!important}
+
 @media(max-width:1000px){
   .pin-grid{grid-template-columns:1fr}
   .button-grid{grid-template-columns:1fr}
@@ -208,7 +244,7 @@ th{
 <div class="header">
   <h1>Raidlead Panel</h1>
   <div class="subtitle">
-    Lade den Raid über die PrioPIN und verwalte die aktuelle Prioliste.
+    Lade den Raid über die Raidlead PIN und verwalte die aktuelle Prioliste.
   </div>
 
   <div id="roleInfo" class="status"></div>
@@ -216,12 +252,12 @@ th{
   <div class="status">
     <label>Raidlead PIN</label>
     <div class="pin-grid">
-      <input id="raidPinInput" type="text" placeholder="Raidlead Pin eingeben">
-      <button class="btn neutral" onclick="loadRaidByPin()">PrioPIN laden</button>
+      <input id="raidPinInput" type="text" placeholder="Raidlead PIN eingeben">
+      <button class="btn neutral" onclick="loadRaidByPin()">Raid laden</button>
     </div>
 
     <div id="controlStatus" style="margin-top:10px">
-      Bitte PrioPIN eingeben.
+      Bitte Raidlead PIN eingeben.
     </div>
   </div>
 </div>
@@ -231,6 +267,8 @@ th{
 <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+
+const MASTER_CODE = "Lichtbringer-Master";
 
 const raids = {
   mc:{name:"Molten Core",short:"MC",role:"mc-bwl",lootPage:"loot/mc-loot.html",overviewPage:"molten-core.html"},
@@ -270,6 +308,7 @@ function raidKeyFromRaidId(raidId){
 
   return null;
 }
+
 function checkLogin(){
   const isLoggedIn = sessionStorage.getItem("raidlead");
   const role = sessionStorage.getItem("raidleadRole");
@@ -281,7 +320,7 @@ function checkLogin(){
   }
 
   document.getElementById("roleInfo").innerHTML =
-    `<span class="ok">Raid geladen.</span> ${raids[currentRaidKey].name} · Raidlead PIN: <strong>${pin}</strong>`;
+    `<span class="ok">Login aktiv.</span> Rolle: <strong>${role}</strong>`;
 
   const savedPin =
     sessionStorage.getItem("raidleadPrioPin") ||
@@ -298,12 +337,16 @@ function canAccessRaid(role, raid){
   return role === "master" || raids[raid].role === role;
 }
 
+function isAllowedP0Raid(){
+  return ["mc","bwl","aq40","naxx"].includes(currentRaidKey);
+}
+
 async function loadRaidByPin(){
   const pin = document.getElementById("raidPinInput").value.trim();
 
   if(!pin){
     document.getElementById("controlStatus").innerHTML =
-      `<span class="bad">Bitte PrioPIN eingeben.</span>`;
+      `<span class="bad">Bitte Raidlead PIN eingeben.</span>`;
     return;
   }
 
@@ -325,7 +368,7 @@ async function loadRaidByPin(){
       sessionStorage.setItem("raidleadPrioPin", pin);
 
       document.getElementById("controlStatus").innerHTML =
-  `<span class="ok">Raid geladen.</span>`;
+        `<span class="ok">Raid geladen.</span>`;
 
       renderRaidView();
       return;
@@ -334,7 +377,7 @@ async function loadRaidByPin(){
 
   document.getElementById("raidView").classList.add("hidden");
   document.getElementById("controlStatus").innerHTML =
-    `<span class="bad">Kein Raid zu dieser PrioPIN gefunden.</span>`;
+    `<span class="bad">Kein Raid zu dieser Raidlead PIN gefunden.</span>`;
 }
 
 async function tryLoadRaidByPin(pin, raidKey){
@@ -344,8 +387,8 @@ async function tryLoadRaidByPin(pin, raidKey){
     raid: raidKey,
     raidName: raids[raidKey].name,
     raidId: "",
-    playerPin: pin,
-    leadPin: "",
+    playerPin: "",
+    leadPin: pin,
     playerLink: "",
     createdAt: "",
     status: ""
@@ -353,18 +396,17 @@ async function tryLoadRaidByPin(pin, raidKey){
 
   await loadPriosFromSheet(pin);
 
-const realRaidKey =
-  raidKeyFromRaidId(currentRaidData.raidId);
+  const realRaidKey = raidKeyFromRaidId(currentRaidData.raidId);
 
-if(realRaidKey && realRaidKey !== raidKey){
-  currentRaidKey = realRaidKey;
-  currentRaidData.raid = realRaidKey;
-  currentRaidData.raidName = raids[realRaidKey].name;
-}
+  if(realRaidKey && realRaidKey !== raidKey){
+    currentRaidKey = realRaidKey;
+    currentRaidData.raid = realRaidKey;
+    currentRaidData.raidName = raids[realRaidKey].name;
+  }
 
-if(currentRaidData.raidId || currentPrios.length > 0){
-  return true;
-}
+  if(currentRaidData.raidId || currentPrios.length > 0){
+    return true;
+  }
 
   return false;
 }
@@ -386,25 +428,24 @@ async function loadPriosFromSheet(playerPin){
       currentReleased = false;
       return;
     }
-currentRaidData.raidId = result.raidId || currentRaidData.raidId;
-currentRaidData.playerPin =
-  result.playerPin ||
-  result.prioPin ||
-  result.PrioPIN ||
-  result.PlayerPIN ||
-  currentRaidData.playerPin;
 
-currentRaidData.leadPin =
-  result.leadPin ||
-  result.LeadPIN ||
-  result.raidleadPin ||
-  result.RaidleadPIN ||
-  currentRaidData.leadPin;
+    currentRaidData.raidId = result.raidId || currentRaidData.raidId;
 
-currentReleased = Boolean(result.published);
-    if(currentRaidData.leadPin === ""){
-  currentRaidData.leadPin = playerPin;
-}
+    currentRaidData.playerPin =
+      result.playerPin ||
+      result.prioPin ||
+      result.PrioPIN ||
+      result.PlayerPIN ||
+      currentRaidData.playerPin;
+
+    currentRaidData.leadPin =
+      result.leadPin ||
+      result.LeadPIN ||
+      result.raidleadPin ||
+      result.RaidleadPIN ||
+      currentRaidData.leadPin;
+
+    currentReleased = Boolean(result.published);
 
     currentPrios = (result.prios || []).map(p => ({
       player: p.Spieler || "",
@@ -438,7 +479,7 @@ function renderRaidView(){
     <h2>${r.name}</h2>
 
     <div class="status">
-      Aktiver Raid: <strong>${currentRaidData.raidId || "über PrioPIN geladen"}</strong><br>
+      Aktiver Raid: <strong>${currentRaidData.raidId || "über Raidlead PIN geladen"}</strong><br>
       PrioPIN für Spieler: <strong>${currentRaidData.playerPin || "-"}</strong><br>
       Raidlead PIN: <strong>${currentRaidData.leadPin || "-"}</strong><br>
       Eingetragene Spieler: <strong>${currentPrios.length}</strong><br>
@@ -500,9 +541,23 @@ function renderRows(){
 
   return currentPrios.map((entry,index)=>{
     const isP0Plus =
-      entry.p1 &&
-      entry.p1 === entry.p2 &&
-      entry.p2 === entry.p3;
+      String(entry.p0Plus || "").toLowerCase() === "ja";
+
+    const p0Button =
+      currentReleased && isP0Plus && isAllowedP0Raid()
+        ? `<button class="btn warning small-btn"
+             onclick="awardP0Plus('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
+             P0+ erhalten
+           </button>`
+        : "";
+
+    const actionButtons = `
+      <button class="btn danger small-btn"
+        onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
+        Löschen
+      </button>
+      ${p0Button}
+    `;
 
     if(!currentReleased){
       return `
@@ -515,7 +570,7 @@ function renderRows(){
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${isP0Plus ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td><button class="btn danger small-btn" onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">Löschen</button></td>
+          <td>${actionButtons}</td>
         </tr>
       `;
     }
@@ -530,18 +585,18 @@ function renderRows(){
         <td>${safe(entry.p2 || "-")}</td>
         <td>${safe(entry.p3 || "-")}</td>
         <td>${isP0Plus ? '<span class="warn">ja</span>' : 'nein'}</td>
-        <td><button class="btn danger small-btn" onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">Löschen</button></td>
+        <td>${actionButtons}</td>
       </tr>
     `;
   }).join("");
 }
 async function reloadCurrentRaid(){
-  if(!currentRaidData || !currentRaidData.playerPin){
+  if(!currentRaidData || !currentRaidData.leadPin){
     alert("Kein Raid geladen.");
     return;
   }
 
-  await loadPriosFromSheet(currentRaidData.playerPin);
+  await loadPriosFromSheet(currentRaidData.leadPin);
   renderRaidView();
 }
 
@@ -643,6 +698,70 @@ async function deleteSinglePrio(player,server){
   }
 
   await reloadCurrentRaid();
+}
+
+async function awardP0Plus(winnerPlayer,winnerServer,itemName){
+  if(!currentRaidData || !currentRaidData.raidId){
+    alert("Kein aktiver Raid geladen.");
+    return;
+  }
+
+  if(!isAllowedP0Raid()){
+    alert("P0+ Übertragung ist nur für MC, BWL, AQ40 und Naxx möglich.");
+    return;
+  }
+
+  const masterCode = prompt("Master-Code eingeben:");
+
+  if(masterCode !== MASTER_CODE){
+    alert("Falscher Master-Code.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "P0+ für Item vergeben?\n\n" +
+    "Item: " + itemName + "\n" +
+    "Erhalten von: " + winnerPlayer + "\n\n" +
+    "Alle anderen P0+ Spieler auf dieses Item erhalten +1 Punkt."
+  );
+
+  if(!confirmed){
+    return;
+  }
+
+  const url =
+    RAID_API_URL +
+    "?action=awardP0Plus" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&raid=" + encodeURIComponent(currentRaidKey) +
+    "&winner=" + encodeURIComponent(winnerPlayer) +
+    "&winnerServer=" + encodeURIComponent(winnerServer || "") +
+    "&item=" + encodeURIComponent(itemName) +
+    "&masterCode=" + encodeURIComponent(masterCode) +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url);
+    const result = await response.json();
+
+    if(result.error){
+      alert(result.error);
+      return;
+    }
+
+    alert(
+      "P0+ wurde übertragen.\n\n" +
+      "Item: " + itemName + "\n" +
+      "Gewinner: " + winnerPlayer + "\n" +
+      "Punkte vergeben: " + (result.awarded || 0)
+    );
+
+    await reloadCurrentRaid();
+
+  }catch(error){
+    console.error(error);
+    alert("Fehler bei der P0+ Übertragung.");
+  }
 }
 
 function parseCSV(text){
@@ -838,4 +957,5 @@ checkLogin();
 </div>
 </body>
 </html>
+
   
