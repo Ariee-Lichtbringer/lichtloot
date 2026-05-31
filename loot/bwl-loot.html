@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot-BWL</title>
+<title>Lichtloot - bwl</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/BWL.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -30,13 +30,13 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .btn{width:100%;margin-top:14px;padding:13px 16px;border-radius:14px;border:1px solid rgba(250,204,21,.25);background:linear-gradient(135deg,rgba(250,204,21,.28),rgba(96,165,250,.18));color:white;font-weight:900;cursor:pointer}
 .status{margin-top:14px;padding:13px;border-radius:14px;border:1px solid var(--line);background:rgba(2,6,23,.55);color:#dbeafe;line-height:1.6;font-size:13px}
 .ok{color:var(--green);font-weight:900}.bad{color:var(--danger);font-weight:900}.warn{color:var(--gold);font-weight:900}
+
 .search-box{margin-bottom:14px;position:relative}
 .search-box input{padding-left:38px}
 .search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15}
+
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
-.loot-name{font-weight:800;font-size:14px;cursor:pointer}
-
 .loot-name{font-weight:800;font-size:14px;cursor:pointer}
 
 .item-icon{
@@ -44,6 +44,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
   height:24px;
   border-radius:4px;
   border:1px solid rgba(250,204,21,.35);
+  object-fit:cover;
   flex-shrink:0;
 }
 
@@ -52,33 +53,27 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
   align-items:center;
   gap:8px;
 }
+
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
 .mini-btn.active{background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));color:#111827;border-color:#facc15}
 .mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));color:white;border-color:#facc15}
+
 .epic{color:#c084fc}.rare{color:#60a5fa}.uncommon{color:#4ade80}.legendary{color:#fb923c}
+
 .tooltip{position:fixed;z-index:9999;width:330px;padding:12px;border-radius:8px;background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));border:1px solid rgba(148,163,184,.75);box-shadow:0 0 28px rgba(0,0,0,.85);pointer-events:none;font-size:11px;line-height:1.3}
 .tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
 .tooltip-title.epic{color:#a335ee}.tooltip-title.rare{color:#0070dd}.tooltip-title.uncommon{color:#1eff00}.tooltip-title.legendary{color:#ff8000}
 .tooltip-ilvl{color:#ffd100;font-size:12px;font-weight:900;margin-bottom:6px}
-.tooltip-bind,.tooltip-row,.tooltip-stat{
-  color:white;
-  font-size:11px;
-  font-weight:400;
-  margin-top:3px;
-}
+.tooltip-bind,.tooltip-row,.tooltip-stat{color:white;font-size:11px;font-weight:400;margin-top:3px}
 .tooltip-row{display:flex;justify-content:space-between;gap:14px}
-.tooltip-equip{
-  color:#1eff00;
-  font-size:11px;
-  font-weight:400;
-  margin-top:6px;
-}
+.tooltip-equip{color:#1eff00;font-size:11px;font-weight:400;margin-top:6px}
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
 .tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
 .tooltip-p0 strong{color:#facc15;font-size:11px}
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
+
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
 table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
 .grid.published-mode table{font-size:15px}
@@ -86,63 +81,24 @@ table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
 th,td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;vertical-align:top}
 th{color:#facc15;text-transform:uppercase;font-size:10px}
 .check{color:#22c55e;font-weight:900;font-size:16px}.cross{color:#ef4444;font-weight:900;font-size:16px}
+
 .class-druide{color:#ff7c0a;font-weight:900}.class-hexenmeister{color:#8788ee;font-weight:900}.class-jaeger,.class-jäger{color:#aad372;font-weight:900}.class-krieger{color:#c69b6d;font-weight:900}.class-magier{color:#3fc7eb;font-weight:900}.class-paladin{color:#f48cba;font-weight:900}.class-priester{color:#fff;font-weight:900}.class-schurke{color:#fff468;font-weight:900}.class-schamane{color:#0070dd;font-weight:900}
 .hidden{display:none!important}
+
 @media(max-width:1250px){.grid{grid-template-columns:390px 1fr}.info-card{grid-column:1 / -1}.grid.published-mode{grid-template-columns:1fr}}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.loot-item-row{grid-template-columns:1fr}.prio-buttons{justify-content:flex-start}}
-  .character-list{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:10px;
-}
 
-.character-btn{
-  border:none;
-  border-radius:12px;
-  padding:8px 12px;
-  font-weight:900;
-  cursor:pointer;
-  color:white;
-}
-
-.character-priester{
-  background:#ffffff;
-  color:#111827;
-}
-
-.character-paladin{
-  background:#f48cba;
-}
-
-.character-krieger{
-  background:#c69b6d;
-}
-
-.character-jaeger{
-  background:#aad372;
-}
-
-.character-schurke{
-  background:#fff468;
-  color:#111827;
-}
-
-.character-magier{
-  background:#3fc7eb;
-}
-
-.character-hexenmeister{
-  background:#8788ee;
-}
-
-.character-schamane{
-  background:#0070dd;
-}
-
-.character-druide{
-  background:#ff7c0a;
-}
+.character-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.character-btn{border:none;border-radius:12px;padding:8px 12px;font-weight:900;cursor:pointer;color:white}
+.character-priester{background:#ffffff;color:#111827}
+.character-paladin{background:#f48cba}
+.character-krieger{background:#c69b6d}
+.character-jaeger{background:#aad372}
+.character-schurke{background:#fff468;color:#111827}
+.character-magier{background:#3fc7eb}
+.character-hexenmeister{background:#8788ee}
+.character-schamane{background:#0070dd}
+.character-druide{background:#ff7c0a}
 </style>
 </head>
 
@@ -153,12 +109,12 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
 
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-  <a class="back" href="../BWL.html">P0+ Übersicht öffnen</a>
+  <a class="back" href="../bwl.html">P0+ Übersicht öffnen</a>
 
   <input
     id="raidleadPin"
     type="text"
-    placeholder="Raidlead Pin"
+    placeholder="Raidlead PIN"
     style="width:180px;padding:12px 13px;border-radius:14px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.82);color:white;font-weight:800;"
     onkeydown="raidleadEnter(event)"
   >
@@ -168,10 +124,9 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div class="header">
-<h1>Blackwing Lair – Prio-Auswahl</h1>
-<div class="subtitle">Die Lootdaten und Tooltip-Werte werden direkt aus dem Lichtbringer-Google-Sheet geladen.</div>
+<h1>bwlramas – Prio-Auswahl</h1>
+<div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 </div>
-
 <div id="mainGrid" class="grid">
 
 <div id="playerCard" class="card">
@@ -182,8 +137,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <label>Charaktername</label>
 <input id="playerName" type="text" placeholder="z. B. Lichtiloot" oninput="loadPlayerData()">
-  <h3>Gespeicherte Charaktere</h3>
 
+<h3>Gespeicherte Charaktere</h3>
 <div id="characterButtons"></div>
 
 <label>Server</label>
@@ -196,7 +151,15 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <label>Klasse</label>
 <select id="playerClass" onchange="autoSaveDraft()">
 <option value="">Klasse auswählen</option>
-<option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option>
+<option>Krieger</option>
+<option>Paladin</option>
+<option>Jäger</option>
+<option>Schurke</option>
+<option>Priester</option>
+<option>Schamane</option>
+<option>Magier</option>
+<option>Hexenmeister</option>
+<option>Druide</option>
 </select>
 
 <label>P1</label><select id="p1" onchange="manualSelectChanged()"></select>
@@ -254,33 +217,58 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div id="tooltip" class="tooltip hidden"></div>
-  <script>
-const RAID_NAME = "BWL";
+
+<script>
+const RAID_NAME = "bwl";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_bwl";
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
 
 let p0PlusData = {};
-
-let BWLLoot = [];
+let bwlLoot = [];
 let autoRefreshTimer = null;
+
+window.p0PlusWasClicked = false;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 function parseCSV(text){
-  const rows=[];let row=[];let value="";let insideQuotes=false;
+  const rows=[];
+  let row=[];
+  let value="";
+  let insideQuotes=false;
+
   for(let i=0;i<text.length;i++){
-    const char=text[i];const next=text[i+1];
-    if(char === '"' && insideQuotes && next === '"'){value+='"';i++;}
-    else if(char === '"'){insideQuotes=!insideQuotes;}
-    else if(char === "," && !insideQuotes){row.push(value);value="";}
-    else if((char === "\n" || char === "\r") && !insideQuotes){
-      if(value || row.length){row.push(value);rows.push(row);row=[];value="";}
+    const char=text[i];
+    const next=text[i+1];
+
+    if(char === '"' && insideQuotes && next === '"'){
+      value+='"';
+      i++;
+    }else if(char === '"'){
+      insideQuotes=!insideQuotes;
+    }else if(char === "," && !insideQuotes){
+      row.push(value);
+      value="";
+    }else if((char === "\n" || char === "\r") && !insideQuotes){
+      if(value || row.length){
+        row.push(value);
+        rows.push(row);
+        row=[];
+        value="";
+      }
       if(char === "\r" && next === "\n") i++;
-    }else{value+=char;}
+    }else{
+      value+=char;
+    }
   }
-  if(value || row.length){row.push(value);rows.push(row);}
+
+  if(value || row.length){
+    row.push(value);
+    rows.push(row);
+  }
+
   return rows;
 }
 
@@ -319,20 +307,17 @@ function formatStatLine(text){
 
   return clean;
 }
+
 function collectStats(obj){
   const stats = [];
   const seen = new Set();
 
   function addStat(value){
     const clean = String(value || "").trim();
-
     if(!clean) return;
 
     const formatted = formatStatLine(clean);
-    const key = formatted
-      .toLowerCase()
-      .replace(/\s+/g," ")
-      .trim();
+    const key = formatted.toLowerCase().replace(/\s+/g," ").trim();
 
     if(seen.has(key)) return;
 
@@ -341,19 +326,19 @@ function collectStats(obj){
   }
 
   [
-  "Stat1",
-  "Stat2",
-  "Stat3",
-  "Stat4",
-  "Stat5",
-  "Stat6",
-  "Benötigt",
-  "Eigenschaften",
-  "Stats",
-  "Werte",
-  "Effekt",
-  "Beschreibung"
-].forEach(col => {
+    "Stat1",
+    "Stat2",
+    "Stat3",
+    "Stat4",
+    "Stat5",
+    "Stat6",
+    "Benötigt",
+    "Eigenschaften",
+    "Stats",
+    "Werte",
+    "Effekt",
+    "Beschreibung"
+  ].forEach(col => {
     if(obj[col] && String(obj[col]).trim()){
       String(obj[col])
         .trim()
@@ -370,11 +355,10 @@ function collectStats(obj){
 }
 
 function findLootItem(itemName){
-  return BWLLoot.find(item =>
+  return bwlLoot.find(item =>
     String(item.name || "").toLowerCase() === String(itemName || "").toLowerCase()
   ) || null;
 }
-
 function itemHtml(itemName){
   const item=findLootItem(itemName);
 
@@ -383,26 +367,26 @@ function itemHtml(itemName){
   }
 
   return `
-  <span
-    class="item-with-icon"
-    onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
-    onmousemove="moveTooltip(event)"
-    onmouseleave="hideTooltip()"
-  >
-    <img
-      class="item-icon"
-      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
-      alt=""
-      loading="lazy"
-    >
     <span
-      class="${item.quality}"
-      style="font-weight:400;cursor:pointer"
-    >${safe(item.name)}</span>
-  </span>
-`;
-  }
-    
+      class="item-with-icon"
+      onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
+      onmousemove="moveTooltip(event)"
+      onmouseleave="hideTooltip()"
+    >
+      <img
+        class="item-icon"
+        src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+        alt=""
+        loading="lazy"
+      >
+      <span
+        class="${item.quality}"
+        style="font-weight:400;cursor:pointer"
+      >${safe(item.name)}</span>
+    </span>
+  `;
+}
+
 async function loadLootFromSheet(){
   const status=document.getElementById("playerStatus");
   const list=document.getElementById("lootList");
@@ -413,15 +397,16 @@ async function loadLootFromSheet(){
     const rows=parseCSV(csvText);
     const headers=rows.shift().map(h=>h.trim());
 
-    BWLLoot=rows.map(row=>{
+    bwlLoot=rows.map(row=>{
       const obj={};
       headers.forEach((header,index)=>obj[header]=row[index]||"");
+
       return {
         name:obj.Item||"",
         itemId:obj.ItemID||"",
         icon:obj.Icon||"",
         quality:normalizeQuality(obj["Qualität"]),
-        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Blackwing Lair"),
+        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"bwlramas"),
         bind:obj.Bindung||"Wird beim Aufheben gebunden",
         slot:obj.Slot||"",
         type:obj.Typ||"",
@@ -457,7 +442,8 @@ function fillItems(){
   ["p1","p2","p3"].forEach(id=>{
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
-    BWLLoot.forEach(item=>{
+
+    bwlLoot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -469,10 +455,18 @@ function fillItems(){
 function renderLootList(){
   const list=document.getElementById("lootList");
   const query=document.getElementById("itemSearch").value.trim().toLowerCase();
+
   list.innerHTML="";
 
-  const filteredLoot=BWLLoot.filter(item=>{
-    return [item.name,item.slot,item.type,item.boss,item.category,item.quality].join(" ").toLowerCase().includes(query);
+  const filteredLoot=bwlLoot.filter(item=>{
+    return [
+      item.name,
+      item.slot,
+      item.type,
+      item.boss,
+      item.category,
+      item.quality
+    ].join(" ").toLowerCase().includes(query);
   });
 
   if(filteredLoot.length===0){
@@ -487,16 +481,17 @@ function renderLootList(){
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
     name.innerHTML = `
-  <div class="item-with-icon">
-    <img
-      class="item-icon"
-      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
-      alt=""
-      loading="lazy"
-    >
-    <span>${safe(item.name)}</span>
-  </div>
-`;
+      <div class="item-with-icon">
+        <img
+          class="item-icon"
+          src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+          alt=""
+          loading="lazy"
+        >
+        <span>${safe(item.name)}</span>
+      </div>
+    `;
+
     name.addEventListener("mouseenter",event=>showTooltip(event,item));
     name.addEventListener("mousemove",event=>moveTooltip(event));
     name.addEventListener("mouseleave",hideTooltip);
@@ -519,23 +514,32 @@ function renderLootList(){
 }
 
 function setPrio(slot,itemName){
+  window.p0PlusWasClicked = false;
+
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML=
     `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
+
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function setP0Plus(itemName){
+  window.p0PlusWasClicked = true;
+
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
   document.getElementById("p3").value=itemName;
-  document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde als P0+ gesetzt.</span>`;
+
+  document.getElementById("playerStatus").innerHTML=
+    `<span class="ok">✓ ${itemName} wurde aktiv als P0+ gesetzt.</span>`;
+
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function manualSelectChanged(){
+  window.p0PlusWasClicked = false;
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -550,20 +554,37 @@ function updateActiveButtons(){
     btn.classList.remove("p0active");
   });
 
-  if(p1&&p1===p2&&p2===p3){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`).forEach(btn=>btn.classList.add("p0active"));
+  if(window.p0PlusWasClicked && p1 && p1===p2 && p2===p3){
+    document
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
+      .forEach(btn=>btn.classList.add("p0active"));
     return;
   }
 
-  if(p1) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`).forEach(btn=>btn.classList.add("active"));
-  if(p2) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn=>btn.classList.add("active"));
-  if(p3) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn=>btn.classList.add("active"));
+  if(p1){
+    document
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`)
+      .forEach(btn=>btn.classList.add("active"));
+  }
+
+  if(p2){
+    document
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`)
+      .forEach(btn=>btn.classList.add("active"));
+  }
+
+  if(p3){
+    document
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`)
+      .forEach(btn=>btn.classList.add("active"));
+  }
 }
 
 function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
-  return player ? "BWL_prio_"+server+"_"+player : null;
+
+  return player ? "bwl_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -577,6 +598,7 @@ function autoSaveDraft(){
     p1:document.getElementById("p1").value,
     p2:document.getElementById("p2").value,
     p3:document.getElementById("p3").value,
+    p0PlusWasClicked:window.p0PlusWasClicked,
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -588,21 +610,29 @@ function loadPlayerData(){
   if(!key) return;
 
   const saved=localStorage.getItem(key);
-  if(!saved){updateActiveButtons();return;}
+
+  if(!saved){
+    updateActiveButtons();
+    return;
+  }
 
   const data=JSON.parse(saved);
+
   document.getElementById("playerServer").value=data.server||"";
   document.getElementById("playerClass").value=data.class||"";
   document.getElementById("p1").value=data.p1||"";
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
-  document.getElementById("playerStatus").innerHTML=`<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
+  window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+
+  document.getElementById("playerStatus").innerHTML=
+    `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
 
   updateActiveButtons();
 }
 
-function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
-  let data=JSON.parse(localStorage.getItem("BWL_prios")||"[]");
+function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
+  let data=JSON.parse(localStorage.getItem("bwl_prios")||"[]");
 
   data=data.filter(entry=>
     !(
@@ -618,10 +648,11 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
     p1:p1,
     p2:p2,
     p3:p3,
+    p0Plus:p0Plus,
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("BWL_prios",JSON.stringify(data));
+  localStorage.setItem("bwl_prios",JSON.stringify(data));
 }
 
 async function savePrio(){
@@ -634,8 +665,21 @@ async function savePrio(){
   const p3=document.getElementById("p3").value;
   const status=document.getElementById("playerStatus");
 
-  if(!pin){status.innerHTML=`<span class="bad">Bitte Prio-PIN eingeben.</span>`;return;}
-  if(!player||!server||!playerClass||!p1||!p2||!p3){status.innerHTML=`<span class="bad">Bitte Charakter, Server, Klasse und Prios vollständig ausfüllen.</span>`;return;}
+  const isP0Plus =
+    Boolean(window.p0PlusWasClicked) &&
+    p1 &&
+    p1 === p2 &&
+    p2 === p3;
+
+  if(!pin){
+    status.innerHTML=`<span class="bad">Bitte Prio-PIN eingeben.</span>`;
+    return;
+  }
+
+  if(!player||!server||!playerClass||!p1||!p2||!p3){
+    status.innerHTML=`<span class="bad">Bitte Charakter, Server, Klasse und Prios vollständig ausfüllen.</span>`;
+    return;
+  }
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
@@ -649,6 +693,7 @@ async function savePrio(){
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
+    "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein")+
     "&t="+Date.now();
 
   try{
@@ -662,8 +707,9 @@ async function savePrio(){
 
     autoSaveDraft();
     saveCharacterProfile();
-    updateLocalRaidleadData(player,server,playerClass,p1,p2,p3);
-    status.innerHTML=`<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>Der Eintrag wurde in den Tab PRIOS geschrieben.`;
+    updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,isP0Plus ? "ja" : "nein");
+
+    status.innerHTML=`<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong>`;
     await loadPublishedPrios();
 
   }catch(error){
@@ -674,9 +720,9 @@ async function savePrio(){
 
 const raidleadAccounts = {
   "Lichtbringer-master":"master",
-  "LB-S7XK29":"mc-BWL",
-  "LB-Q4PM18":"naxx",
-  "LB-T9DN52":"BWL-aq20",
+  "LB-S7XK29":"mc-bwl",
+  "LB-Q4PM18":"bwl",
+  "LB-T9DN52":"zg-aq20",
   "LB-AQ40-Lead":"aq40"
 };
 
@@ -703,6 +749,7 @@ async function raidleadLogin(){
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadRaidId",result.raidId);
+    sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
     window.location.href = "../raidlead-panel.html";
     return;
   }
@@ -722,6 +769,7 @@ async function refreshPrios(){
   const status=document.getElementById("publishedStatus");
   status.innerHTML += `<br><span class="ok">✓ Aktualisiert. Deine Eingaben bleiben erhalten.</span>`;
 }
+
 async function loadPublishedPrios(){
   const table=document.getElementById("publishedTable");
   const status=document.getElementById("publishedStatus");
@@ -861,14 +909,18 @@ function showTooltip(event,item){
   const statLines=[];
 
   if(item.damage||item.speed){
-    statLines.push(`<div class="tooltip-row"><span>${item.damage||""}</span><span>${item.speed||""}</span></div>`);
+    statLines.push(`<div class="tooltip-row"><span>${safe(item.damage||"")}</span><span>${safe(item.speed||"")}</span></div>`);
   }
 
-  if(item.dps) statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
-  item.stats.forEach(stat=>statLines.push(`<div class="tooltip-stat">${stat}</div>`));
+  if(item.dps){
+    statLines.push(`<div class="tooltip-stat">${safe(item.dps)}</div>`);
+  }
 
-  const p0List =
-    p0PlusData[p0Key(item.name)] || [];
+  item.stats.forEach(stat=>{
+    statLines.push(`<div class="tooltip-stat">${safe(stat)}</div>`);
+  });
+
+  const p0List = p0PlusData[p0Key(item.name)] || [];
 
   const p0Html =
     p0List.length
@@ -898,6 +950,7 @@ function moveTooltip(event){
   const padding=18;
   const tooltipWidth=tooltip.offsetWidth||330;
   const tooltipHeight=tooltip.offsetHeight||260;
+
   let left=event.clientX+20;
   let top=event.clientY+20;
 
@@ -922,9 +975,19 @@ function safe(value){
     .replace(/"/g,"&quot;");
 }
 
-function escapeQuotes(text){return String(text).replace(/'/g,"\\'")}
-function htmlSafe(text){return String(text).replace(/"/g,"&quot;")}
-function cssEscape(text){return String(text).replace(/\\/g,"\\\\").replace(/"/g,'\\"')}
+function escapeQuotes(text){
+  return String(text).replace(/'/g,"\\'");
+}
+
+function htmlSafe(text){
+  return String(text).replace(/"/g,"&quot;");
+}
+
+function cssEscape(text){
+  return String(text)
+    .replace(/\\/g,"\\\\")
+    .replace(/"/g,'\\"');
+}
 
 const params=new URLSearchParams(window.location.search);
 const pinFromUrl=params.get("pin");
@@ -942,7 +1005,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("BWL_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -954,7 +1017,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("BWL_characters",JSON.stringify(chars));
+  localStorage.setItem("bwl_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -962,7 +1025,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("BWL_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -1022,7 +1085,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("BWL_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -1032,7 +1095,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("BWL_characters",JSON.stringify(chars));
+  localStorage.setItem("bwl_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -1067,8 +1130,6 @@ function loadP0PlusFromSheet(){
         });
       }
 
-      console.log("P0+ geladen:", p0PlusData);
-
       delete window[callbackName];
 
       if(script && script.parentNode){
@@ -1083,13 +1144,11 @@ function loadP0PlusFromSheet(){
     script.src =
       P0PLUS_API_URL +
       "?action=getP0Plus" +
-      "&raid=BWL" +
+      "&raid=bwl" +
       "&callback=" + callbackName +
       "&t=" + Date.now();
 
     script.onerror = function(){
-      console.error("P0+ JSONP konnte nicht geladen werden.");
-
       delete window[callbackName];
 
       if(script && script.parentNode){
