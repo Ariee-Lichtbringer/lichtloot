@@ -324,7 +324,7 @@ async function loadRaidByPin(){
       sessionStorage.setItem("raidleadPrioPin", pin);
 
       document.getElementById("controlStatus").innerHTML =
-        `<span class="ok">Raid geladen.</span> ${raids[raidKey].name} · PrioPIN: <strong>${pin}</strong>`;
+  `<span class="ok">Raid geladen.</span>`;
 
       renderRaidView();
       return;
