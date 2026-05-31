@@ -874,8 +874,15 @@ Promise.all(
 });
 return;
 window.p0plusEntries = result.entries || [];
-renderP0PlusOverview(window.p0plusEntries);
-    cleanup();
+
+Promise.all(
+  Object.keys(LOOT_CSV_URLS).map(raid => loadLootDataForRaid(raid))
+).then(()=>{
+  renderP0PlusOverview(window.p0plusEntries);
+});
+
+cleanup();
+return;
   };
 
   const script = document.createElement("script");
@@ -900,8 +907,15 @@ renderP0PlusOverview(window.p0plusEntries);
 
   document.body.appendChild(script);
 }
-
 function renderP0PlusOverview(entries){
+  entries = entries || window.p0plusEntries || [];
+
+  const search =
+    document.getElementById("p0plusSearch")
+      ?.value
+      .trim()
+      .toLowerCase() || "";
+  
   const search =
   document.getElementById("p0plusSearch")
     ?.value
