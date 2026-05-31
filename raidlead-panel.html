@@ -475,6 +475,11 @@ function renderRaidView(){
   const r = raids[currentRaidKey];
   view.classList.remove("hidden");
 
+  const transferButton =
+    currentReleased && isAllowedP0Raid()
+      ? `<button class="btn warning" onclick="transferP0PlusPoints()">P0+ Punkte übertragen</button>`
+      : `<button class="btn warning" disabled style="opacity:.45;cursor:not-allowed">P0+ Punkte übertragen</button>`;
+
   view.innerHTML = `
     <h2>${r.name}</h2>
 
@@ -501,6 +506,7 @@ function renderRaidView(){
     <div class="button-grid">
       <button class="btn success" onclick="releaseList()">Prioliste öffnen</button>
       <button class="btn warning" onclick="closeList()">Prioliste schließen</button>
+      ${transferButton}
       <button class="btn neutral" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
     </div>
 
@@ -508,7 +514,7 @@ function renderRaidView(){
     <div class="status">
       ${
         currentReleased
-          ? "Die Prioliste ist geöffnet. Die Itemnamen sind sichtbar."
+          ? "Die Prioliste ist geöffnet. Mit „P0+ Punkte übertragen“ erhalten alle gesetzten P0+ Einträge +1 Punkt."
           : "Die Prioliste ist geschlossen. Es wird nur angezeigt, ob P1/P2/P3/P0 gesetzt wurden."
       }
     </div>
@@ -543,10 +549,10 @@ function renderRows(){
     const isP0Plus =
       String(entry.p0Plus || "").toLowerCase() === "ja";
 
-    const p0Button =
+    const clearButton =
       currentReleased && isP0Plus && isAllowedP0Raid()
         ? `<button class="btn warning small-btn"
-             onclick="awardP0Plus('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
+             onclick="clearP0PlusForPlayer('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.p1)}')">
              P0+ erhalten
            </button>`
         : "";
@@ -556,7 +562,7 @@ function renderRows(){
         onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
         Löschen
       </button>
-      ${p0Button}
+      ${clearButton}
     `;
 
     if(!currentReleased){
@@ -700,14 +706,83 @@ async function deleteSinglePrio(player,server){
   await reloadCurrentRaid();
 }
 
-async function awardP0Plus(winnerPlayer,winnerServer,itemName){
+async function transferP0PlusPoints(){
   if(!currentRaidData || !currentRaidData.raidId){
     alert("Kein aktiver Raid geladen.");
     return;
   }
 
   if(!isAllowedP0Raid()){
-    alert("P0+ Übertragung ist nur für MC, BWL, AQ40 und Naxx möglich.");
+    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx übertragen werden.");
+    return;
+  }
+
+  const masterCode = prompt("Master-Code eingeben:");
+
+  if(masterCode !== MASTER_CODE){
+    alert("Falscher Master-Code.");
+    return;
+  }
+
+  const p0Count = currentPrios.filter(entry =>
+    String(entry.p0Plus || "").toLowerCase() === "ja"
+  ).length;
+
+  if(p0Count === 0){
+    alert("Es gibt keine gesetzten P0+ Einträge in diesem Raid.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "P0+ Punkte übertragen?\n\n" +
+    "Raid: " + raids[currentRaidKey].name + "\n" +
+    "Anzahl gesetzter P0+ Einträge: " + p0Count + "\n\n" +
+    "Alle Spieler mit P0+ erhalten +1 Punkt auf ihr gesetztes Item."
+  );
+
+  if(!confirmed){
+    return;
+  }
+
+  const url =
+    RAID_API_URL +
+    "?action=transferP0PlusPoints" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&raid=" + encodeURIComponent(currentRaidKey) +
+    "&masterCode=" + encodeURIComponent(masterCode) +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url);
+    const result = await response.json();
+
+    if(result.error){
+      alert(result.error);
+      return;
+    }
+
+    alert(
+      "P0+ Punkte wurden übertragen.\n\n" +
+      "Übertragen: " + (result.awarded || 0) + "\n" +
+      "Gefundene P0+ Einträge: " + (result.candidates || 0)
+    );
+
+    await reloadCurrentRaid();
+
+  }catch(error){
+    console.error(error);
+    alert("Fehler beim Übertragen der P0+ Punkte.");
+  }
+}
+
+async function clearP0PlusForPlayer(player,server,itemName){
+  if(!currentRaidData || !currentRaidData.raidId){
+    alert("Kein aktiver Raid geladen.");
+    return;
+  }
+
+  if(!isAllowedP0Raid()){
+    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx gelöscht werden.");
     return;
   }
 
@@ -719,10 +794,10 @@ async function awardP0Plus(winnerPlayer,winnerServer,itemName){
   }
 
   const confirmed = confirm(
-    "P0+ für Item vergeben?\n\n" +
-    "Item: " + itemName + "\n" +
-    "Erhalten von: " + winnerPlayer + "\n\n" +
-    "Alle anderen P0+ Spieler auf dieses Item erhalten +1 Punkt."
+    "P0+ Punkte löschen?\n\n" +
+    "Spieler: " + player + "\n" +
+    "Item: " + itemName + "\n\n" +
+    "Alle gesammelten P0+ Punkte dieses Spielers auf dieses Item werden gelöscht."
   );
 
   if(!confirmed){
@@ -731,11 +806,10 @@ async function awardP0Plus(winnerPlayer,winnerServer,itemName){
 
   const url =
     RAID_API_URL +
-    "?action=awardP0Plus" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "?action=clearP0PlusForPlayer" +
     "&raid=" + encodeURIComponent(currentRaidKey) +
-    "&winner=" + encodeURIComponent(winnerPlayer) +
-    "&winnerServer=" + encodeURIComponent(winnerServer || "") +
+    "&player=" + encodeURIComponent(player) +
+    "&server=" + encodeURIComponent(server || "") +
     "&item=" + encodeURIComponent(itemName) +
     "&masterCode=" + encodeURIComponent(masterCode) +
     "&t=" + Date.now();
@@ -750,17 +824,17 @@ async function awardP0Plus(winnerPlayer,winnerServer,itemName){
     }
 
     alert(
-      "P0+ wurde übertragen.\n\n" +
+      "P0+ Punkte gelöscht.\n\n" +
+      "Spieler: " + player + "\n" +
       "Item: " + itemName + "\n" +
-      "Gewinner: " + winnerPlayer + "\n" +
-      "Punkte vergeben: " + (result.awarded || 0)
+      "Gelöschte Zeilen: " + (result.deleted || 0)
     );
 
     await reloadCurrentRaid();
 
   }catch(error){
     console.error(error);
-    alert("Fehler bei der P0+ Übertragung.");
+    alert("Fehler beim Löschen der P0+ Punkte.");
   }
 }
 
@@ -957,5 +1031,3 @@ checkLogin();
 </div>
 </body>
 </html>
-
-  
