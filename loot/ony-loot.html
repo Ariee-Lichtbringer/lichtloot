@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtbringer – Ony Prio-Auswahl</title>
+<title>Lichtloot-ony</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
@@ -35,6 +36,22 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
 .loot-name{font-weight:800;font-size:14px;cursor:pointer}
+
+.loot-name{font-weight:800;font-size:14px;cursor:pointer}
+
+.item-icon{
+  width:24px;
+  height:24px;
+  border-radius:4px;
+  border:1px solid rgba(250,204,21,.35);
+  flex-shrink:0;
+}
+
+.item-with-icon{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
@@ -45,9 +62,19 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
 .tooltip-title.epic{color:#a335ee}.tooltip-title.rare{color:#0070dd}.tooltip-title.uncommon{color:#1eff00}.tooltip-title.legendary{color:#ff8000}
 .tooltip-ilvl{color:#ffd100;font-size:12px;font-weight:900;margin-bottom:6px}
-.tooltip-bind,.tooltip-row,.tooltip-stat{color:white;font-size:11px;font-weight:800;margin-top:3px}
+.tooltip-bind,.tooltip-row,.tooltip-stat{
+  color:white;
+  font-size:11px;
+  font-weight:400;
+  margin-top:3px;
+}
 .tooltip-row{display:flex;justify-content:space-between;gap:14px}
-.tooltip-equip{color:#1eff00;font-size:11px;font-weight:900;margin-top:6px}
+.tooltip-equip{
+  color:#1eff00;
+  font-size:11px;
+  font-weight:400;
+  margin-top:6px;
+}
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
 .tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
 .tooltip-p0 strong{color:#facc15;font-size:11px}
@@ -63,6 +90,59 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .hidden{display:none!important}
 @media(max-width:1250px){.grid{grid-template-columns:390px 1fr}.info-card{grid-column:1 / -1}.grid.published-mode{grid-template-columns:1fr}}
 @media(max-width:900px){.grid{grid-template-columns:1fr}.loot-item-row{grid-template-columns:1fr}.prio-buttons{justify-content:flex-start}}
+  .character-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.character-btn{
+  border:none;
+  border-radius:12px;
+  padding:8px 12px;
+  font-weight:900;
+  cursor:pointer;
+  color:white;
+}
+
+.character-priester{
+  background:#ffffff;
+  color:#111827;
+}
+
+.character-paladin{
+  background:#f48cba;
+}
+
+.character-krieger{
+  background:#c69b6d;
+}
+
+.character-jaeger{
+  background:#aad372;
+}
+
+.character-schurke{
+  background:#fff468;
+  color:#111827;
+}
+
+.character-magier{
+  background:#3fc7eb;
+}
+
+.character-hexenmeister{
+  background:#8788ee;
+}
+
+.character-schamane{
+  background:#0070dd;
+}
+
+.character-druide{
+  background:#ff7c0a;
+}
 </style>
 </head>
 
@@ -77,8 +157,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
   <input
     id="raidleadPin"
-    type="password"
-    placeholder="Raidlead PIN"
+    type="text"
+    placeholder="Raidlead Pin"
     style="width:180px;padding:12px 13px;border-radius:14px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.82);color:white;font-weight:800;"
     onkeydown="raidleadEnter(event)"
   >
@@ -97,11 +177,14 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <div id="playerCard" class="card">
 <h2>Spieler-Eingabe</h2>
 
-<label>Raid-PIN</label>
-<input id="raidPin" type="password" placeholder="Raid-PIN eingeben" oninput="loadPublishedPrios()">
+<label>Prio-PIN</label>
+<input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="loadPublishedPrios()">
 
 <label>Charaktername</label>
-<input id="playerName" type="text" placeholder="z. B. Milkshake" oninput="loadPlayerData()">
+<input id="playerName" type="text" placeholder="z. B. Lichtiloot" oninput="loadPlayerData()">
+  <h3>Gespeicherte Charaktere</h3>
+
+<div id="characterButtons"></div>
 
 <label>Server</label>
 <select id="playerServer" onchange="autoSaveDraft()">
@@ -117,6 +200,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </select>
 
 <label>P1</label><select id="p1" onchange="manualSelectChanged()"></select>
+<label>P2</label><select id="p2" onchange="manualSelectChanged()"></select>
+<label>P3</label><select id="p3" onchange="manualSelectChanged()"></select>
 
 <button class="btn" onclick="savePrio()">Prios speichern</button>
 
@@ -149,16 +234,17 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <table>
 <thead>
 <tr>
+<th>#</th>
 <th>Spieler</th>
 <th>Klasse</th>
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0+</th>
+<th>P0</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
-<tr><td colspan="6">Noch keine Daten geladen.</td></tr>
+<tr><td colspan="7">Noch keine Daten geladen.</td></tr>
 </tbody>
 </table>
 </div>
@@ -172,6 +258,10 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 const RAID_NAME = "ony";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ony";
+const P0PLUS_API_URL =
+"https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
+
+let p0PlusData = {};
 
 let onyLoot = [];
 let autoRefreshTimer = null;
@@ -200,7 +290,7 @@ function normalizeQuality(value){
   if(q.includes("episch") || q.includes("epic")) return "epic";
   if(q.includes("selten") || q.includes("rare")) return "rare";
   if(q.includes("ungewöhnlich") || q.includes("uncommon")) return "uncommon";
-  return "epic";
+  return "uncommon";
 }
 
 function p0FromText(text){
@@ -215,18 +305,67 @@ function getFirstFilled(obj,names){
   return "";
 }
 
+function formatStatLine(text){
+  const clean = String(text || "").trim();
+
+  if(!clean) return "";
+  if(clean.startsWith("+")) return clean;
+
+  const match = clean.match(/^([A-Za-zÄÖÜäöüß ]+)\s+(\d+)$/);
+
+  if(match){
+    return "+" + match[2] + " " + match[1].trim();
+  }
+
+  return clean;
+}
 function collectStats(obj){
-  const stats=[];
-  ["Schaden","Tempo","DPS","Stat1","Stat2","Stat3","Stat4","Stat5","Stat6","Benötigt","Eigenschaften","Stats","Werte","Effekt","Beschreibung"].forEach(col=>{
+  const stats = [];
+  const seen = new Set();
+
+  function addStat(value){
+    const clean = String(value || "").trim();
+
+    if(!clean) return;
+
+    const formatted = formatStatLine(clean);
+    const key = formatted
+      .toLowerCase()
+      .replace(/\s+/g," ")
+      .trim();
+
+    if(seen.has(key)) return;
+
+    seen.add(key);
+    stats.push(formatted);
+  }
+
+  [
+  "Stat1",
+  "Stat2",
+  "Stat3",
+  "Stat4",
+  "Stat5",
+  "Stat6",
+  "Benötigt",
+  "Eigenschaften",
+  "Stats",
+  "Werte",
+  "Effekt",
+  "Beschreibung"
+].forEach(col => {
     if(obj[col] && String(obj[col]).trim()){
-      String(obj[col]).trim().split(/;|\n|\|/).forEach(part=>{
-        const clean=part.trim();
-        if(clean) stats.push(clean);
-      });
+      String(obj[col])
+        .trim()
+        .split(/;|\n|\|/)
+        .forEach(part => addStat(part));
     }
   });
-  if(obj.Kategorie) stats.push("Kategorie: "+obj.Kategorie);
-  if(obj.Boss) stats.push("Quelle: "+obj.Boss);
+
+  if(obj.Kategorie){
+    addStat("Kategorie: " + obj.Kategorie);
+  }
+
   return stats;
 }
 
@@ -244,16 +383,26 @@ function itemHtml(itemName){
   }
 
   return `
+  <span
+    class="item-with-icon"
+    onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
+    onmousemove="moveTooltip(event)"
+    onmouseleave="hideTooltip()"
+  >
+    <img
+      class="item-icon"
+      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+      alt=""
+      loading="lazy"
+    >
     <span
       class="${item.quality}"
-      style="font-weight:900;cursor:pointer"
-      onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
-      onmousemove="moveTooltip(event)"
-      onmouseleave="hideTooltip()"
+      style="font-weight:400;cursor:pointer"
     >${safe(item.name)}</span>
-  `;
-}
-
+  </span>
+`;
+  }
+    
 async function loadLootFromSheet(){
   const status=document.getElementById("playerStatus");
   const list=document.getElementById("lootList");
@@ -270,6 +419,7 @@ async function loadLootFromSheet(){
       return {
         name:obj.Item||"",
         itemId:obj.ItemID||"",
+        icon:obj.Icon||"",
         quality:normalizeQuality(obj["Qualität"]),
         ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Onyxia"),
         bind:obj.Bindung||"Wird beim Aufheben gebunden",
@@ -288,9 +438,12 @@ async function loadLootFromSheet(){
       };
     }).filter(item=>item.name);
 
+    await loadP0PlusFromSheet();
+
     fillItems();
     renderLootList();
-    status.innerHTML=`<span class="ok">✓ Lootdaten aus dem Google Sheet geladen.</span>`;
+
+    status.innerHTML=`<span class="ok">✓ Lootdaten geladen.</span>`;
     await loadPublishedPrios();
 
   }catch(error){
@@ -301,7 +454,7 @@ async function loadLootFromSheet(){
 }
 
 function fillItems(){
-  ["p1"].forEach(id=>{
+  ["p1","p2","p3"].forEach(id=>{
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
     onyLoot.forEach(item=>{
@@ -333,7 +486,17 @@ function renderLootList(){
 
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
-    name.textContent=item.name;
+    name.innerHTML = `
+  <div class="item-with-icon">
+    <img
+      class="item-icon"
+      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+      alt=""
+      loading="lazy"
+    >
+    <span>${safe(item.name)}</span>
+  </div>
+`;
     name.addEventListener("mouseenter",event=>showTooltip(event,item));
     name.addEventListener("mousemove",event=>moveTooltip(event));
     name.addEventListener("mouseleave",hideTooltip);
@@ -342,6 +505,9 @@ function renderLootList(){
     buttons.className="prio-buttons";
     buttons.innerHTML=`
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
+      <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
+      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
     `;
 
     row.appendChild(name);
@@ -353,40 +519,31 @@ function renderLootList(){
 }
 
 function setPrio(slot,itemName){
-  const p1=document.getElementById("p1").value;
-
-  const otherSlots={p1:[p2,p3],p2:[p1,p3],p3:[p1,p2]};
-
-  if(otherSlots[slot].includes(itemName)){
-    document.getElementById("playerStatus").innerHTML=`<span class="bad">Dieses Item wurde bereits gewählt. Bitte jedes Item nur einmal setzen.</span>`;
-    return;
-  }
-
   document.getElementById(slot).value=itemName;
-  document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
+  document.getElementById("playerStatus").innerHTML=
+    `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function setP0Plus(itemName){
   document.getElementById("p1").value=itemName;
+  document.getElementById("p2").value=itemName;
+  document.getElementById("p3").value=itemName;
+  document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde als P0+ gesetzt.</span>`;
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function manualSelectChanged(){
-  const p1=document.getElementById("p1").value;
-
-  if((p1&&p2&&p1===p2)||(p1&&p3&&p1===p3)||(p2&&p3&&p2===p3)){
-    document.getElementById("playerStatus").innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+ Button.</span>`;
-  }
-
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function updateActiveButtons(){
   const p1=document.getElementById("p1").value;
+  const p2=document.getElementById("p2").value;
+  const p3=document.getElementById("p3").value;
 
   document.querySelectorAll(".mini-btn").forEach(btn=>{
     btn.classList.remove("active");
@@ -399,8 +556,11 @@ function updateActiveButtons(){
   }
 
   if(p1) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`).forEach(btn=>btn.classList.add("active"));
+  if(p2) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`).forEach(btn=>btn.classList.add("active"));
+  if(p3) document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`).forEach(btn=>btn.classList.add("active"));
 }
-    function getPlayerKey(){
+
+function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
   return player ? "ony_prio_"+server+"_"+player : null;
@@ -415,6 +575,8 @@ function autoSaveDraft(){
     server:document.getElementById("playerServer").value,
     class:document.getElementById("playerClass").value,
     p1:document.getElementById("p1").value,
+    p2:document.getElementById("p2").value,
+    p3:document.getElementById("p3").value,
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -432,6 +594,8 @@ function loadPlayerData(){
   document.getElementById("playerServer").value=data.server||"";
   document.getElementById("playerClass").value=data.class||"";
   document.getElementById("p1").value=data.p1||"";
+  document.getElementById("p2").value=data.p2||"";
+  document.getElementById("p3").value=data.p3||"";
   document.getElementById("playerStatus").innerHTML=`<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
 
   updateActiveButtons();
@@ -466,14 +630,12 @@ async function savePrio(){
   const server=document.getElementById("playerServer").value;
   const playerClass=document.getElementById("playerClass").value;
   const p1=document.getElementById("p1").value;
+  const p2=document.getElementById("p2").value;
+  const p3=document.getElementById("p3").value;
   const status=document.getElementById("playerStatus");
 
-  if(!pin){status.innerHTML=`<span class="bad">Bitte Raid-PIN eingeben.</span>`;return;}
+  if(!pin){status.innerHTML=`<span class="bad">Bitte Prio-PIN eingeben.</span>`;return;}
   if(!player||!server||!playerClass||!p1||!p2||!p3){status.innerHTML=`<span class="bad">Bitte Charakter, Server, Klasse und Prios vollständig ausfüllen.</span>`;return;}
-  if(!(p1===p2&&p2===p3)&&(p1===p2||p1===p3||p2===p3)){
-    status.innerHTML=`<span class="bad">Bitte jedes Item nur einmal wählen. Ausnahme: P0+.</span>`;
-    return;
-  }
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
@@ -499,6 +661,7 @@ async function savePrio(){
     }
 
     autoSaveDraft();
+    saveCharacterProfile();
     updateLocalRaidleadData(player,server,playerClass,p1,p2,p3);
     status.innerHTML=`<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>Der Eintrag wurde in den Tab PRIOS geschrieben.`;
     await loadPublishedPrios();
@@ -513,7 +676,7 @@ const raidleadAccounts = {
   "Lichtbringer-master":"master",
   "LB-S7XK29":"mc-ony",
   "LB-Q4PM18":"naxx",
-  "LB-T9DN52":"zg-aq20",
+  "LB-T9DN52":"ony-aq20",
   "LB-AQ40-Lead":"aq40"
 };
 
@@ -559,15 +722,14 @@ async function refreshPrios(){
   const status=document.getElementById("publishedStatus");
   status.innerHTML += `<br><span class="ok">✓ Aktualisiert. Deine Eingaben bleiben erhalten.</span>`;
 }
-
 async function loadPublishedPrios(){
   const table=document.getElementById("publishedTable");
   const status=document.getElementById("publishedStatus");
   const pin=document.getElementById("raidPin").value.trim();
 
   if(!pin){
-    status.innerHTML=`<span class="warn">Kein Raid-PIN vorhanden. Nutze den Raidlink oder gib den Raid-PIN ein.</span>`;
-    table.innerHTML=`<tr><td colspan="6">Noch keine Prioliste geladen.</td></tr>`;
+    status.innerHTML=`<span class="warn">Kein Prio-PIN vorhanden. Nutze den Raidlink oder gib die Prio-PIN ein.</span>`;
+    table.innerHTML=`<tr><td colspan="7">Noch keine Prioliste geladen.</td></tr>`;
     setPublishedMode(false);
     return;
   }
@@ -584,7 +746,7 @@ async function loadPublishedPrios(){
 
     if(result.error){
       status.innerHTML=`<span class="bad">${result.error}</span>`;
-      table.innerHTML=`<tr><td colspan="6">Keine Daten verfügbar.</td></tr>`;
+      table.innerHTML=`<tr><td colspan="7">Keine Daten verfügbar.</td></tr>`;
       setPublishedMode(false);
       return;
     }
@@ -595,7 +757,7 @@ async function loadPublishedPrios(){
       status.innerHTML=result.published
         ? `<span class="ok">✓ Prios veröffentlicht, aber noch keine Einträge vorhanden.</span>`
         : `<span class="warn">Prios noch nicht veröffentlicht.</span>`;
-      table.innerHTML=`<tr><td colspan="6">Noch keine Einträge vorhanden.</td></tr>`;
+      table.innerHTML=`<tr><td colspan="7">Noch keine Einträge vorhanden.</td></tr>`;
       setPublishedMode(Boolean(result.published));
       return;
     }
@@ -605,7 +767,7 @@ async function loadPublishedPrios(){
       renderPublishedItems(prios);
       setPublishedMode(true);
     }else{
-      status.innerHTML=`<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0+ eingetragen wurden.`;
+      status.innerHTML=`<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0 eingetragen wurden.`;
       renderPublishedChecks(prios);
       setPublishedMode(false);
     }
@@ -637,11 +799,12 @@ function renderPublishedChecks(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  prios.forEach(prio=>{
+  prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
       <tr>
+        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
@@ -657,11 +820,12 @@ function renderPublishedItems(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
 
-  prios.forEach(prio=>{
+  prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
 
     table.innerHTML+=`
       <tr>
+        <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
         <td>${itemHtml(prio.P1)}</td>
@@ -703,7 +867,16 @@ function showTooltip(event,item){
   if(item.dps) statLines.push(`<div class="tooltip-stat">${item.dps}</div>`);
   item.stats.forEach(stat=>statLines.push(`<div class="tooltip-stat">${stat}</div>`));
 
-  const p0Html=item.p0.length ? item.p0.map(player=>`<li>${safe(player)}</li>`).join("") : `<li>Keine P0+ gesetzt</li>`;
+  const p0List =
+    p0PlusData[p0Key(item.name)] || [];
+
+  const p0Html =
+    p0List.length
+      ? p0List
+          .sort((a,b) => Number(b.count) - Number(a.count))
+          .map(entry => `<li>${safe(entry.player)}: <strong>${safe(entry.count)}</strong></li>`)
+          .join("")
+      : `<li>Keine P0+ Punkte</li>`;
 
   tooltip.innerHTML=`
     <div class="tooltip-title ${item.quality}">${safe(item.name)}</div>
@@ -711,9 +884,9 @@ function showTooltip(event,item){
     <div class="tooltip-bind">${safe(item.bind)}</div>
     <div class="tooltip-row"><span>${safe(item.slot)}</span><span>${safe(item.type||"")}</span></div>
     ${statLines.join("")}
-    ${item.equip?`<div class="tooltip-equip">Anlegen: ${safe(item.equip)}</div>`:""}
+    ${item.equip?`<div class="tooltip-equip">${safe(item.equip)}</div>`:""}
     ${item.price?`<div class="tooltip-price">Verkaufspreis: ${safe(item.price)}</div>`:""}
-    <div class="tooltip-p0"><strong>Gesetzte P0+</strong><ul>${p0Html}</ul></div>
+    <div class="tooltip-p0"><strong>P0+ Punkte</strong><ul>${p0Html}</ul></div>
   `;
 
   moveTooltip(event);
@@ -760,7 +933,178 @@ if(pinFromUrl){
   document.getElementById("raidPin").value=pinFromUrl;
 }
 
+function saveCharacterProfile(){
+  const player=document.getElementById("playerName").value.trim();
+  const playerClass=document.getElementById("playerClass").value;
+  const server=document.getElementById("playerServer").value;
+
+  if(!player || !playerClass || !server){
+    return;
+  }
+
+  let chars=JSON.parse(localStorage.getItem("ony_characters") || "[]");
+
+  chars=chars.filter(c =>
+    c.player.toLowerCase() !== player.toLowerCase()
+  );
+
+  chars.push({
+    player,
+    playerClass,
+    server
+  });
+
+  localStorage.setItem("ony_characters",JSON.stringify(chars));
+  renderCharacterButtons();
+}
+
+function renderCharacterButtons(){
+  const container=document.getElementById("characterButtons");
+  if(!container) return;
+
+  const chars=JSON.parse(localStorage.getItem("ony_characters") || "[]");
+
+  container.className="character-list";
+  container.innerHTML="";
+
+  if(chars.length === 0){
+    container.innerHTML=`<div class="status">Noch keine Charaktere gespeichert.</div>`;
+    return;
+  }
+
+  chars.forEach(char => {
+    const wrapper=document.createElement("div");
+    wrapper.style.display="flex";
+    wrapper.style.gap="4px";
+    wrapper.style.alignItems="center";
+
+    const btn=document.createElement("button");
+
+    btn.className=
+      "character-btn character-" +
+      char.playerClass.toLowerCase()
+        .replace("ä","ae")
+        .replace("ö","oe")
+        .replace("ü","ue");
+
+    btn.textContent=`${char.player} (${char.server})`;
+
+    btn.onclick=()=>{
+      document.getElementById("playerName").value=char.player;
+      document.getElementById("playerClass").value=char.playerClass;
+      document.getElementById("playerServer").value=char.server;
+      loadPlayerData();
+    };
+
+    const deleteBtn=document.createElement("button");
+    deleteBtn.textContent="✕";
+    deleteBtn.style.border="1px solid rgba(239,68,68,.55)";
+    deleteBtn.style.background="rgba(239,68,68,.25)";
+    deleteBtn.style.color="white";
+    deleteBtn.style.borderRadius="10px";
+    deleteBtn.style.padding="8px 10px";
+    deleteBtn.style.fontWeight="900";
+    deleteBtn.style.cursor="pointer";
+
+    deleteBtn.onclick=(event)=>{
+      event.stopPropagation();
+      deleteCharacterProfile(char.player,char.server);
+    };
+
+    wrapper.appendChild(btn);
+    wrapper.appendChild(deleteBtn);
+    container.appendChild(wrapper);
+  });
+}
+
+function deleteCharacterProfile(player, server){
+  if(!confirm("Charakter " + player + " wirklich löschen?")){
+    return;
+  }
+
+  let chars=JSON.parse(localStorage.getItem("ony_characters") || "[]");
+
+  chars=chars.filter(c =>
+    !(
+      String(c.player || "").toLowerCase() === String(player || "").toLowerCase()
+      &&
+      String(c.server || "").toLowerCase() === String(server || "").toLowerCase()
+    )
+  );
+
+  localStorage.setItem("ony_characters",JSON.stringify(chars));
+  renderCharacterButtons();
+}
+
+function p0Key(value){
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/['’`´]/g,"")
+    .replace(/[-–—]/g," ")
+    .replace(/\s+/g," ");
+}
+
+function loadP0PlusFromSheet(){
+  return new Promise((resolve) => {
+    p0PlusData = {};
+
+    const callbackName = "receiveP0Plus_" + Date.now();
+
+    window[callbackName] = function(result){
+      if(result && result.success && result.entries){
+        result.entries.forEach(entry => {
+          const key = p0Key(entry.item);
+
+          if(!p0PlusData[key]){
+            p0PlusData[key] = [];
+          }
+
+          p0PlusData[key].push({
+            player: entry.player,
+            count: entry.count
+          });
+        });
+      }
+
+      console.log("P0+ geladen:", p0PlusData);
+
+      delete window[callbackName];
+
+      if(script && script.parentNode){
+        script.parentNode.removeChild(script);
+      }
+
+      resolve();
+    };
+
+    const script = document.createElement("script");
+
+    script.src =
+      P0PLUS_API_URL +
+      "?action=getP0Plus" +
+      "&raid=ony" +
+      "&callback=" + callbackName +
+      "&t=" + Date.now();
+
+    script.onerror = function(){
+      console.error("P0+ JSONP konnte nicht geladen werden.");
+
+      delete window[callbackName];
+
+      if(script && script.parentNode){
+        script.parentNode.removeChild(script);
+      }
+
+      resolve();
+    };
+
+    document.body.appendChild(script);
+  });
+}
+
 loadLootFromSheet();
+renderCharacterButtons();
 
 autoRefreshTimer=setInterval(()=>{
   const pin=document.getElementById("raidPin").value.trim();
