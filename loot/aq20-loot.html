@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot-ZG</title>
+<title>Lichtloot-aq20</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/zg.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq20.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -153,7 +153,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
 
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-  <a class="back" href="../zg.html">P0+ Übersicht öffnen</a>
+  <a class="back" href="../aq20.html">P0+ Übersicht öffnen</a>
 
   <input
     id="raidleadPin"
@@ -255,15 +255,15 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <div id="tooltip" class="tooltip hidden"></div>
   <script>
-const RAID_NAME = "zg";
+const RAID_NAME = "aq20";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_zg";
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_aq20";
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
 
 let p0PlusData = {};
 
-let zgLoot = [];
+let aq20Loot = [];
 let autoRefreshTimer = null;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
@@ -370,7 +370,7 @@ function collectStats(obj){
 }
 
 function findLootItem(itemName){
-  return zgLoot.find(item =>
+  return aq20Loot.find(item =>
     String(item.name || "").toLowerCase() === String(itemName || "").toLowerCase()
   ) || null;
 }
@@ -413,7 +413,7 @@ async function loadLootFromSheet(){
     const rows=parseCSV(csvText);
     const headers=rows.shift().map(h=>h.trim());
 
-    zgLoot=rows.map(row=>{
+    aq20Loot=rows.map(row=>{
       const obj={};
       headers.forEach((header,index)=>obj[header]=row[index]||"");
       return {
@@ -457,7 +457,7 @@ function fillItems(){
   ["p1","p2","p3"].forEach(id=>{
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
-    zgLoot.forEach(item=>{
+    aq20Loot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -471,7 +471,7 @@ function renderLootList(){
   const query=document.getElementById("itemSearch").value.trim().toLowerCase();
   list.innerHTML="";
 
-  const filteredLoot=zgLoot.filter(item=>{
+  const filteredLoot=aq20Loot.filter(item=>{
     return [item.name,item.slot,item.type,item.boss,item.category,item.quality].join(" ").toLowerCase().includes(query);
   });
 
@@ -563,7 +563,7 @@ function updateActiveButtons(){
 function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
-  return player ? "zg_prio_"+server+"_"+player : null;
+  return player ? "aq20_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -602,7 +602,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
-  let data=JSON.parse(localStorage.getItem("zg_prios")||"[]");
+  let data=JSON.parse(localStorage.getItem("aq20_prios")||"[]");
 
   data=data.filter(entry=>
     !(
@@ -621,7 +621,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("zg_prios",JSON.stringify(data));
+  localStorage.setItem("aq20_prios",JSON.stringify(data));
 }
 
 async function savePrio(){
@@ -674,9 +674,9 @@ async function savePrio(){
 
 const raidleadAccounts = {
   "Lichtbringer-master":"master",
-  "LB-S7XK29":"mc-zg",
+  "LB-S7XK29":"mc-aq20",
   "LB-Q4PM18":"naxx",
-  "LB-T9DN52":"zg-aq20",
+  "LB-T9DN52":"aq20-aq20",
   "LB-AQ40-Lead":"aq40"
 };
 
@@ -942,7 +942,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("aq20_characters") || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -954,7 +954,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("zg_characters",JSON.stringify(chars));
+  localStorage.setItem("aq20_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -962,7 +962,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem("aq20_characters") || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -1022,7 +1022,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("zg_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("aq20_characters") || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -1032,7 +1032,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("zg_characters",JSON.stringify(chars));
+  localStorage.setItem("aq20_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -1083,7 +1083,7 @@ function loadP0PlusFromSheet(){
     script.src =
       P0PLUS_API_URL +
       "?action=getP0Plus" +
-      "&raid=zg" +
+      "&raid=aq20" +
       "&callback=" + callbackName +
       "&t=" + Date.now();
 
