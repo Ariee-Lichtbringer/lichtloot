@@ -7,6 +7,39 @@
 <title>Lichtloot</title>
 
 <style>
+.p0plus-item{
+  font-weight:400;
+  cursor:pointer;
+}
+
+.p0plus-item.epic{color:#c084fc}
+.p0plus-item.rare{color:#60a5fa}
+.p0plus-item.uncommon{color:#4ade80}
+.p0plus-item.legendary{color:#fb923c}
+
+.tooltip{
+  position:fixed;
+  z-index:9999;
+  width:330px;
+  padding:12px;
+  border-radius:8px;
+  background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));
+  border:1px solid rgba(148,163,184,.75);
+  box-shadow:0 0 28px rgba(0,0,0,.85);
+  pointer-events:none;
+  font-size:11px;
+  line-height:1.3;
+}
+
+.tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
+.tooltip-title.epic{color:#a335ee}
+.tooltip-title.rare{color:#0070dd}
+.tooltip-title.uncommon{color:#1eff00}
+.tooltip-title.legendary{color:#ff8000}
+.tooltip-ilvl{color:#ffd100;font-weight:900;margin-bottom:6px}
+.tooltip-row{display:flex;justify-content:space-between;gap:14px;color:white;margin-top:3px}
+.tooltip-stat,.tooltip-bind,.tooltip-equip{color:white;margin-top:3px}
+.tooltip-equip{color:#1eff00;margin-top:6px}
 .p0plus-search-box{
   margin-bottom:14px;
   position:relative;
@@ -514,6 +547,8 @@ body{
 
 </div>
 
+<div id="tooltip" class="tooltip hidden"></div>
+  
 <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
@@ -536,6 +571,128 @@ const raids = {
   ony:{name:"Onyxia",short:"ONY",lootPage:"loot/ony-loot.html"}
 };
 
+const LOOT_CSV_URLS = {
+  mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
+  bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
+  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
+  naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
+  zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
+  aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
+  ony:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ONY"
+};
+
+let lootDataByRaid = {};
+
+function normalizeQuality(value){
+  const q=String(value||"").trim().toLowerCase();
+  if(q.includes("legend")) return "legendary";
+  if(q.includes("episch") || q.includes("epic")) return "epic";
+  if(q.includes("selten") || q.includes("rare")) return "rare";
+  if(q.includes("ungewöhnlich") || q.includes("uncommon")) return "uncommon";
+  return "uncommon";
+}
+
+function parseCSV(text){
+  const rows=[];let row=[];let value="";let insideQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const char=text[i];const next=text[i+1];
+    if(char === '"' && insideQuotes && next === '"'){value+='"';i++;}
+    else if(char === '"'){insideQuotes=!insideQuotes;}
+    else if(char === "," && !insideQuotes){row.push(value);value="";}
+    else if((char === "\n" || char === "\r") && !insideQuotes){
+      if(value || row.length){row.push(value);rows.push(row);row=[];value="";}
+      if(char === "\r" && next === "\n") i++;
+    }else{value+=char;}
+  }
+  if(value || row.length){row.push(value);rows.push(row);}
+  return rows;
+}
+
+async function loadLootDataForRaid(raid){
+  if(lootDataByRaid[raid]) return lootDataByRaid[raid];
+
+  const url = LOOT_CSV_URLS[raid];
+  if(!url) return [];
+
+  const response = await fetch(url + "&t=" + Date.now());
+  const csvText = await response.text();
+  const rows = parseCSV(csvText);
+  const headers = rows.shift().map(h=>String(h).trim());
+
+  const data = rows.map(row=>{
+    const obj={};
+    headers.forEach((header,index)=>obj[header]=row[index]||"");
+
+    return {
+      name:obj.Item||"",
+      quality:normalizeQuality(obj["Qualität"]),
+      ilvl:obj.ItemLevel||obj.Gegenstandsstufe||"",
+      bind:obj.Bindung||"",
+      slot:obj.Slot||"",
+      type:obj.Typ||"",
+      damage:obj.Schaden||"",
+      speed:obj.Tempo||"",
+      dps:obj.DPS||"",
+      stats:[obj.Stat1,obj.Stat2,obj.Stat3,obj.Stat4,obj.Stat5].filter(Boolean),
+      needed:obj["Benötigt"]||"",
+      equip:obj.Anlegen||""
+    };
+  }).filter(item=>item.name);
+
+  lootDataByRaid[raid] = data;
+  return data;
+}
+
+function findP0PlusItem(raid,itemName){
+  const list = lootDataByRaid[String(raid||"").toLowerCase()] || [];
+  return list.find(item =>
+    String(item.name).toLowerCase().trim() === String(itemName||"").toLowerCase().trim()
+  );
+}
+
+function showP0PlusTooltip(event,raid,itemName){
+  const item = findP0PlusItem(raid,itemName);
+  if(!item) return;
+
+  const tooltip=document.getElementById("tooltip");
+  const statHtml = [];
+
+  if(item.damage || item.speed){
+    statHtml.push(`<div class="tooltip-row"><span>${safeHtml(item.damage)}</span><span>${safeHtml(item.speed)}</span></div>`);
+  }
+
+  if(item.dps) statHtml.push(`<div class="tooltip-stat">${safeHtml(item.dps)}</div>`);
+  item.stats.forEach(stat=>statHtml.push(`<div class="tooltip-stat">${safeHtml(stat)}</div>`));
+  if(item.needed) statHtml.push(`<div class="tooltip-stat">${safeHtml(item.needed)}</div>`);
+
+  tooltip.innerHTML=`
+    <div class="tooltip-title ${item.quality}">${safeHtml(item.name)}</div>
+    ${item.ilvl?`<div class="tooltip-ilvl">${safeHtml(item.ilvl)}</div>`:""}
+    ${item.bind?`<div class="tooltip-bind">${safeHtml(item.bind)}</div>`:""}
+    <div class="tooltip-row"><span>${safeHtml(item.slot)}</span><span>${safeHtml(item.type)}</span></div>
+    ${statHtml.join("")}
+    ${item.equip?`<div class="tooltip-equip">${safeHtml(item.equip)}</div>`:""}
+  `;
+
+  moveP0PlusTooltip(event);
+  tooltip.classList.remove("hidden");
+}
+
+function moveP0PlusTooltip(event){
+  const tooltip=document.getElementById("tooltip");
+  let left=event.clientX+20;
+  let top=event.clientY+20;
+
+  if(left+350>window.innerWidth) left=event.clientX-350;
+  if(top+280>window.innerHeight) top=event.clientY-280;
+
+  tooltip.style.left=left+"px";
+  tooltip.style.top=top+"px";
+}
+
+function hideP0PlusTooltip(){
+  document.getElementById("tooltip").classList.add("hidden");
+}
 function randomCode(length){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result="";
@@ -710,6 +867,12 @@ function loadP0PlusOverview(){
       cleanup();
       return;
     }
+Promise.all(
+  Object.keys(LOOT_CSV_URLS).map(raid => loadLootDataForRaid(raid))
+).then(()=>{
+  renderP0PlusOverview(window.p0plusEntries);
+});
+return;
 window.p0plusEntries = result.entries || [];
 renderP0PlusOverview(window.p0plusEntries);
     cleanup();
@@ -796,7 +959,7 @@ if(search){
       .forEach(entry => {
         html += `
           <tr>
-            <td>${safeHtml(entry.item)}</td>
+            <td>${p0PlusItemHtml(entry)}</td>
             <td>${safeHtml(entry.slot)}</td>
             <td>${safeHtml(entry.player)}</td>
             <td><strong>${safeHtml(entry.count)}</strong></td>
@@ -810,6 +973,28 @@ if(search){
   content.innerHTML = html;
 }
 
+  function p0PlusItemHtml(entry){
+  const raid = String(entry.raid || "").toLowerCase();
+  const item = findP0PlusItem(raid, entry.item);
+  const quality = item ? item.quality : "";
+
+  return `
+    <span
+      class="p0plus-item ${quality}"
+      onmouseenter="showP0PlusTooltip(event,'${safeAttr(raid)}','${safeAttr(entry.item)}')"
+      onmousemove="moveP0PlusTooltip(event)"
+      onmouseleave="hideP0PlusTooltip()"
+    >${safeHtml(entry.item)}</span>
+  `;
+}
+
+function safeAttr(value){
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/"/g,"&quot;");
+}
+  
 function safeHtml(value){
   return String(value || "")
     .replace(/&/g,"&amp;")
