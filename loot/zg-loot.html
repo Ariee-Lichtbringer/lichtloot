@@ -36,6 +36,22 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
 .loot-name{font-weight:800;font-size:14px;cursor:pointer}
+
+.loot-name{font-weight:800;font-size:14px;cursor:pointer}
+
+.item-icon{
+  width:24px;
+  height:24px;
+  border-radius:4px;
+  border:1px solid rgba(250,204,21,.35);
+  flex-shrink:0;
+}
+
+.item-with-icon{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
@@ -367,15 +383,24 @@ function itemHtml(itemName){
   }
 
   return `
+  <span
+    class="item-with-icon"
+    onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
+    onmousemove="moveTooltip(event)"
+    onmouseleave="hideTooltip()"
+  >
+    <img
+      class="item-icon"
+      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+      alt=""
+      loading="lazy"
+    >
     <span
       class="${item.quality}"
       style="font-weight:400;cursor:pointer"
-      onmouseenter="showTooltip(event, findLootItem('${escapeQuotes(item.name)}'))"
-      onmousemove="moveTooltip(event)"
-      onmouseleave="hideTooltip()"
     >${safe(item.name)}</span>
-  `;
-}
+  </span>
+`;
 async function loadLootFromSheet(){
   const status=document.getElementById("playerStatus");
   const list=document.getElementById("lootList");
@@ -392,6 +417,7 @@ async function loadLootFromSheet(){
       return {
         name:obj.Item||"",
         itemId:obj.ItemID||"",
+        icon:obj.Icon||"",
         quality:normalizeQuality(obj["Qualität"]),
         ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Zul Gurub"),
         bind:obj.Bindung||"Wird beim Aufheben gebunden",
@@ -458,7 +484,17 @@ function renderLootList(){
 
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
-    name.textContent=item.name;
+    name.innerHTML = `
+  <div class="item-with-icon">
+    <img
+      class="item-icon"
+      src="https://wow.zamimg.com/images/wow/icons/large/${item.icon || "inv_misc_questionmark"}.jpg"
+      alt=""
+      loading="lazy"
+    >
+    <span>${safe(item.name)}</span>
+  </div>
+`;
     name.addEventListener("mouseenter",event=>showTooltip(event,item));
     name.addEventListener("mousemove",event=>moveTooltip(event));
     name.addEventListener("mouseleave",hideTooltip);
