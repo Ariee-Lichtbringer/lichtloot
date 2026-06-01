@@ -648,17 +648,23 @@ async function savePrio(){
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
-  const url=APPS_SCRIPT_URL+
-    "?action=savePrio"+
-    "&raid="+encodeURIComponent(RAID_NAME)+
-    "&playerPin="+encodeURIComponent(pin)+
-    "&player="+encodeURIComponent(player)+
-    "&server="+encodeURIComponent(server)+
-    "&className="+encodeURIComponent(playerClass)+
-    "&p1="+encodeURIComponent(p1)+
-    "&p2="+encodeURIComponent(p2)+
-    "&p3="+encodeURIComponent(p3)+
-    "&t="+Date.now();
+const isP0 =
+  p1 &&
+  p1 === p2 &&
+  p2 === p3;
+
+const url =
+  APPS_SCRIPT_URL +
+  "?action=savePrio" +
+  "&raid=" + encodeURIComponent(RAID_NAME) +
+  "&playerPin=" + encodeURIComponent(pin) +
+  "&player=" + encodeURIComponent(player) +
+  "&className=" + encodeURIComponent(playerClass) +
+  "&p1=" + encodeURIComponent(p1) +
+  "&p2=" + encodeURIComponent(p2) +
+  "&p3=" + encodeURIComponent(p3) +
+  "&p0Plus=" + encodeURIComponent(isP0 ? "ja" : "nein") +
+  "&t=" + Date.now();
 
   try{
     const response=await fetch(url);
