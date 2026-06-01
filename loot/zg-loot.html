@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot-ZG</title>
+<title>Lichtloot-zg</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
@@ -507,7 +507,7 @@ function renderLootList(){
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
-      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>
+      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>
     `;
 
     row.appendChild(name);
@@ -526,13 +526,22 @@ function setPrio(slot,itemName){
   updateActiveButtons();
 }
 
-function setP0Plus(itemName){
-  document.getElementById("p1").value=itemName;
-  document.getElementById("p2").value=itemName;
-  document.getElementById("p3").value=itemName;
-  document.getElementById("playerStatus").innerHTML=`<span class="ok">✓ ${itemName} wurde als P0+ gesetzt.</span>`;
+function setP0(itemName){
+
+  document.getElementById("p1").value = itemName;
+  document.getElementById("p2").value = itemName;
+  document.getElementById("p3").value = itemName;
+
+  document.getElementById("playerStatus").innerHTML = `
+    <span class="ok">
+      ✓ ${itemName} wurde als P0 gesetzt.
+    </span>
+  `;
+
   autoSaveDraft();
+
   updateActiveButtons();
+
 }
 
 function manualSelectChanged(){
@@ -551,7 +560,7 @@ function updateActiveButtons(){
   });
 
   if(p1&&p1===p2&&p2===p3){
-    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`).forEach(btn=>btn.classList.add("p0active"));
+    document.querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0"]`).forEach(btn=>btn.classList.add("p0active"));
     return;
   }
 
@@ -639,17 +648,23 @@ async function savePrio(){
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
-  const url=APPS_SCRIPT_URL+
-    "?action=savePrio"+
-    "&raid="+encodeURIComponent(RAID_NAME)+
-    "&playerPin="+encodeURIComponent(pin)+
-    "&player="+encodeURIComponent(player)+
-    "&server="+encodeURIComponent(server)+
-    "&className="+encodeURIComponent(playerClass)+
-    "&p1="+encodeURIComponent(p1)+
-    "&p2="+encodeURIComponent(p2)+
-    "&p3="+encodeURIComponent(p3)+
-    "&t="+Date.now();
+const isP0 =
+  p1 &&
+  p1 === p2 &&
+  p2 === p3;
+
+const url =
+  APPS_SCRIPT_URL +
+  "?action=savePrio" +
+  "&raid=" + encodeURIComponent(RAID_NAME) +
+  "&playerPin=" + encodeURIComponent(pin) +
+  "&player=" + encodeURIComponent(player) +
+  "&className=" + encodeURIComponent(playerClass) +
+  "&p1=" + encodeURIComponent(p1) +
+  "&p2=" + encodeURIComponent(p2) +
+  "&p3=" + encodeURIComponent(p3) +
+  "&p0Plus=" + encodeURIComponent(isP0 ? "ja" : "nein") +
+  "&t=" + Date.now();
 
   try{
     const response=await fetch(url);
@@ -676,7 +691,7 @@ const raidleadAccounts = {
   "Lichtbringer-master":"master",
   "LB-S7XK29":"mc-zg",
   "LB-Q4PM18":"naxx",
-  "LB-T9DN52":"zg-aq20",
+  "LB-T9DN52":"zg-zg",
   "LB-AQ40-Lead":"aq40"
 };
 
