@@ -508,6 +508,10 @@ function renderRaidView(){
       <button class="btn warning" onclick="closeList()">Prioliste schließen</button>
       ${transferButton}
       <button class="btn neutral" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
+      <button class="btn neutral" onclick="downloadAddonExport()">
+  Addon Export
+</button>
+
     </div>
 
     <h3>Aktuelle Einträge</h3>
@@ -988,6 +992,41 @@ async function downloadPrio3ReforgedExport(){
   a.click();
 
   URL.revokeObjectURL(url);
+}
+
+function downloadAddonExport(){
+
+  if(!currentPrios || currentPrios.length === 0){
+    alert("Keine Priodaten vorhanden.");
+    return;
+  }
+
+  let exportText =
+    "Raid;Item;Spieler;Punkte\n";
+
+  currentPrios.forEach(entry => {
+
+    const player = entry.player || "";
+
+    if(
+      String(entry.p0Plus || "").toLowerCase() === "ja"
+      && entry.p1
+    ){
+      exportText +=
+        raids[currentRaidKey].name + ";" +
+        entry.p1 + ";" +
+        player + ";" +
+        "1\n";
+    }
+
+  });
+
+  navigator.clipboard.writeText(exportText);
+
+  alert(
+    "Addon Export wurde in die Zwischenablage kopiert.\n\n" +
+    exportText
+  );
 }
 
 function backToRaidPrio(){
