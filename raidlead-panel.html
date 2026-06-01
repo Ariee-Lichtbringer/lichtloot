@@ -994,15 +994,67 @@ async function downloadPrio3ReforgedExport(){
   URL.revokeObjectURL(url);
 }
 
-function downloadAddonExport(){
+async function downloadAddonExport(){
 
   if(!currentPrios || currentPrios.length === 0){
     alert("Keine Priodaten vorhanden.");
     return;
   }
 
+  let addonItemInfoMap = {};
+
+async function loadLootDataForAddonExport(){
+  addonItemInfoMap = {};
+
+  const url = LOOT_CSV_URLS[currentRaidKey];
+
+  if(!url){
+    return;
+  }
+
+  try{
+    const response = await fetch(url + "&t=" + Date.now());
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+
+    if(!rows.length){
+      return;
+    }
+
+    const headers = rows.shift().map(h => String(h || "").trim());
+
+    rows.forEach(row => {
+      const obj = {};
+
+      headers.forEach((header,index) => {
+        obj[header] = row[index] || "";
+      });
+
+      const item =
+        obj.Item ||
+        obj.item ||
+        obj.Name ||
+        obj.name ||
+        "";
+
+      if(!item) return;
+
+      addonItemInfoMap[itemKey(item)] = {
+        boss: obj.Boss || obj.boss || "",
+        slot: obj.Slot || obj.slot || "",
+        typ: obj.Typ || obj.Type || obj.Kategorie || obj.typ || obj.type || ""
+      };
+    });
+
+  }catch(error){
+    console.error(error);
+    alert("Iteminfos konnten nicht vollständig geladen werden. Export wird ohne Boss/Slot/Typ erstellt.");
+  }
+}
+  await loadLootDataForAddonExport();
+
   let exportText =
-    "Raid;Item;Spieler;Punkte\n";
+    "Raid;Boss;Slot;Typ;Item;Spieler;Punkte\n";
 
   currentPrios.forEach(entry => {
 
@@ -1012,8 +1064,13 @@ function downloadAddonExport(){
       String(entry.p0Plus || "").toLowerCase() === "ja"
       && entry.p1
     ){
+      const info = addonItemInfoMap[itemKey(entry.p1)] || {};
+
       exportText +=
         raids[currentRaidKey].name + ";" +
+        (info.boss || "") + ";" +
+        (info.slot || "") + ";" +
+        (info.typ || info.type || "") + ";" +
         entry.p1 + ";" +
         player + ";" +
         "1\n";
@@ -1028,7 +1085,7 @@ function downloadAddonExport(){
     exportText
   );
 }
-
+  
 function backToRaidPrio(){
   if(!currentRaidKey || !currentRaidData){
     alert("Kein Raid geladen.");
