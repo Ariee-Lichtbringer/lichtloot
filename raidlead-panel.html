@@ -1039,11 +1039,13 @@ async function loadLootDataForAddonExport(){
 
       if(!item) return;
 
-      addonItemInfoMap[itemKey(item)] = {
-        boss: obj.Boss || obj.boss || "",
-        slot: obj.Slot || obj.slot || "",
-        typ: obj.Typ || obj.Type || obj.Kategorie || obj.typ || obj.type || ""
-      };
+    addonItemInfoMap[itemKey(item)] = {
+  boss: obj.Boss || obj.boss || "",
+  slot: obj.Slot || obj.slot || "",
+  typ: obj.Typ || obj.Type || obj.Kategorie || obj.typ || obj.type || "",
+  icon: obj.Icon || obj.icon || "",
+  itemId: obj.ItemID || obj.itemId || obj.ID || obj.id || ""
+};
     });
 
   }catch(error){
