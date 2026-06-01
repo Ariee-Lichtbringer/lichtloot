@@ -461,8 +461,22 @@ body{
   letter-spacing:.12em;
   text-transform:uppercase;
 }
+.site-footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 40px;
+  color: #999;
+}
 
-@media(max-width:1200px){
+.site-footer a {
+  color: #d4af37;
+  text-decoration: none;
+  margin: 0 8px;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}@media(max-width:1200px){
   .raid-grid{grid-template-columns:repeat(2,1fr)}
   .small-raid-grid{grid-template-columns:repeat(3,1fr)}
 }
@@ -1192,6 +1206,11 @@ function safeAttr(value){
     .replace(/"/g,"&quot;");
 }
 </script>
+
+  <footer class="site-footer">
+  <a href="impressum.html">Impressum</a> |
+  <a href="datenschutz.html">Datenschutz</a>
+</footer>
 
 </body>
 </html>
