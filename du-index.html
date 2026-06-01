@@ -1,1 +1,432 @@
-kshaldöjkhlöjkahldkklhswjöpdf
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DU Original Barbecue Saucen</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #050505;
+      color: #fff;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .page {
+      max-width: 1500px;
+      margin: 0 auto;
+      background: #050505;
+    }
+
+    /* NAVIGATION */
+
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      padding: 18px 90px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    nav {
+      display: flex;
+      gap: 38px;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    nav a {
+      color: #ddd;
+      padding-bottom: 8px;
+    }
+
+    nav a.active,
+    nav a:hover {
+      color: #d49a22;
+      border-bottom: 2px solid #d49a22;
+    }
+
+    .logo {
+      position: absolute;
+      left: 50%;
+      top: 10px;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .logo img {
+      width: 160px;
+    }
+
+    .login {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 14px;
+      color: #eee;
+    }
+
+    .cart {
+      color: #d49a22;
+      font-size: 24px;
+    }
+
+    /* HERO */
+
+    .hero {
+      min-height: 690px;
+      background:
+        linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.15) 75%),
+        url("hero.jpg") center/cover no-repeat;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 120px 90px 60px;
+    }
+
+    .hero-content {
+      max-width: 520px;
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+      font-weight: 900;
+    }
+
+    .hero h1 span {
+      color: #d49a22;
+    }
+
+    .hero p {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #e6e6e6;
+      margin-bottom: 34px;
+    }
+
+    .btn {
+      display: inline-block;
+      background: #d49a22;
+      color: #070707;
+      padding: 16px 42px;
+      font-weight: 900;
+      text-transform: uppercase;
+      border: 2px solid #d49a22;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      background: transparent;
+      color: #d49a22;
+    }
+
+    /* INFO LEISTE */
+
+    .features {
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #222;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: #080808;
+      padding: 28px 90px;
+      gap: 30px;
+    }
+
+    .feature {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      border-right: 1px solid #333;
+      padding-right: 30px;
+    }
+
+    .feature:last-child {
+      border-right: none;
+    }
+
+    .feature-icon {
+      font-size: 48px;
+      color: #d49a22;
+    }
+
+    .feature h3 {
+      color: #d49a22;
+      font-size: 16px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .feature p {
+      color: #ddd;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* BESTSELLER */
+
+    .bestseller {
+      padding: 35px 90px 70px;
+      background: #050505;
+    }
+
+    .section-title {
+      text-align: center;
+      color: #d49a22;
+      font-size: 30px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+
+    .product-card {
+      min-height: 350px;
+      border: 1px solid #242424;
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.82)),
+        url("product-bg.jpg") center/cover no-repeat;
+      position: relative;
+      display: flex;
+      align-items: center;
+      padding: 28px;
+    }
+
+    .product-card img {
+      width: 42%;
+      max-height: 280px;
+      object-fit: contain;
+      z-index: 2;
+    }
+
+    .product-info {
+      width: 58%;
+      z-index: 2;
+      padding-left: 20px;
+    }
+
+    .product-info h3 {
+      font-size: 34px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      line-height: 1.1;
+    }
+
+    .product-info p {
+      color: #ddd;
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .small-btn {
+      display: inline-block;
+      padding: 12px 20px;
+      border: 2px solid #d49a22;
+      color: #d49a22;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .small-btn:hover {
+      background: #d49a22;
+      color: #050505;
+    }
+
+    footer {
+      border-top: 1px solid #222;
+      padding: 30px 90px;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+    }
+
+    @media (max-width: 950px) {
+      header {
+        position: relative;
+        padding: 20px;
+        flex-direction: column;
+        gap: 20px;
+        background: #050505;
+      }
+
+      .logo {
+        position: static;
+        transform: none;
+      }
+
+      nav {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero {
+        padding: 70px 25px;
+        min-height: 560px;
+      }
+
+      .hero h1 {
+        font-size: 42px;
+      }
+
+      .features,
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .features,
+      .bestseller {
+        padding-left: 25px;
+        padding-right: 25px;
+      }
+
+      .feature {
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding-bottom: 20px;
+      }
+
+      .product-card {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .product-card img,
+      .product-info {
+        width: 100%;
+        padding-left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <header>
+      <nav>
+        <a href="index.html" class="active">Start</a>
+        <a href="shop.html">Shop</a>
+        <a href="ueber-uns.html">Über uns</a>
+        <a href="kontakt.html">Kontakt</a>
+      </nav>
+
+      <div class="logo">
+        <img src="logo.png" alt="DU Original Barbecue Saucen">
+      </div>
+
+      <div class="login">
+        <span>Anmelden</span>
+        <span class="cart">🛒</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-content">
+        <h1>
+          BBQ Saucen,<br>
+          <span>die du so noch<br>nie erlebt hast.</span>
+        </h1>
+        <p>
+          Keine Massenware. Keine künstlichen Zusätze.<br>
+          Handgemacht für echten Geschmack.
+        </p>
+        <a href="shop.html" class="btn">Zum Shop</a>
+      </div>
+    </section>
+
+    <section class="features">
+      <div class="feature">
+        <div class="feature-icon">🔥</div>
+        <div>
+          <h3>Handgemacht</h3>
+          <p>Jede Sauce wird in kleinen Chargen mit viel Liebe hergestellt.</p>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">🍎</div>
+        <div>
+          <h3>Echte Zutaten</h3>
+          <p>Mit hohem Fruchtanteil und ausgewählten Zutaten.</p>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">🇩🇪</div>
+        <div>
+          <h3>Hergestellt in Deutschland</h3>
+          <p>Aus regionalen Zutaten – für höchsten Genuss.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="bestseller">
+      <h2 class="section-title">Unsere Bestseller</h2>
+
+      <div class="product-grid">
+
+        <div class="product-card">
+          <img src="sauce-himbeere.png" alt="Himbeere Sauce">
+          <div class="product-info">
+            <h3>Himbeere</h3>
+            <p>Fruchtig. Süß. Intensiv.</p>
+            <a href="shop.html" class="small-btn">Jetzt entdecken</a>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <img src="sauce-extra-scharf.png" alt="Extra Scharf Sauce">
+          <div class="product-info">
+            <h3>Extra Scharf</h3>
+            <p>Für alle, die es gern scharf mögen.</p>
+            <a href="shop.html" class="small-btn">Jetzt entdecken</a>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <img src="sauce-erdbeere.png" alt="Erdbeere Balsamico Sauce">
+          <div class="product-info">
+            <h3>Erdbeere<br>Balsamico</h3>
+            <p>Fruchtig. Mild. Einzigartig.</p>
+            <a href="shop.html" class="small-btn">Jetzt entdecken</a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <footer>
+      © 2026 DU Original Barbecue Saucen · Impressum · Datenschutz
+    </footer>
+
+  </div>
+</body>
+</html>
