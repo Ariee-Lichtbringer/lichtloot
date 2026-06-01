@@ -222,6 +222,45 @@ th{
 
 .hidden{display:none!important}
 
+/* Klassenfarben */
+.class-badge{
+  display:inline-block;
+  font-weight:900;
+  padding:3px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  white-space:nowrap;
+}
+
+.class-warrior{color:#c79c6e;border-color:rgba(199,156,110,.45);background:rgba(199,156,110,.10)}
+.class-paladin{color:#f58cba;border-color:rgba(245,140,186,.45);background:rgba(245,140,186,.10)}
+.class-hunter{color:#abd473;border-color:rgba(171,212,115,.45);background:rgba(171,212,115,.10)}
+.class-rogue{color:#fff569;border-color:rgba(255,245,105,.45);background:rgba(255,245,105,.10)}
+.class-priest{color:#ffffff;border-color:rgba(255,255,255,.45);background:rgba(255,255,255,.10)}
+.class-shaman{color:#0070de;border-color:rgba(0,112,222,.55);background:rgba(0,112,222,.14)}
+.class-mage{color:#69ccf0;border-color:rgba(105,204,240,.50);background:rgba(105,204,240,.12)}
+.class-warlock{color:#9482c9;border-color:rgba(148,130,201,.50);background:rgba(148,130,201,.12)}
+.class-druid{color:#ff7d0a;border-color:rgba(255,125,10,.50);background:rgba(255,125,10,.12)}
+
+/* Itemfarben */
+.item-link,
+.item-name{
+  font-weight:800;
+  text-decoration:none;
+  text-shadow:0 0 10px rgba(0,0,0,.55);
+}
+
+.item-link:hover{text-decoration:underline}
+.item-poor{color:#9d9d9d}
+.item-common{color:#ffffff}
+.item-uncommon{color:#1eff00}
+.item-rare{color:#0070dd}
+.item-epic{color:#a335ee}
+.item-legendary{color:#ff8000}
+.item-artifact{color:#e6cc80}
+.item-heirloom{color:#00ccff}
+
 @media(max-width:1000px){
   .pin-grid{grid-template-columns:1fr}
   .button-grid{grid-template-columns:1fr}
@@ -295,6 +334,8 @@ let currentRaidData = null;
 let currentPrios = [];
 let currentReleased = false;
 let itemIdMap = {};
+let itemVisualMap = {};
+
 function raidKeyFromRaidId(raidId){
   const id = String(raidId || "").toUpperCase();
 
@@ -308,7 +349,6 @@ function raidKeyFromRaidId(raidId){
 
   return null;
 }
-
 function checkLogin(){
   const isLoggedIn = sessionStorage.getItem("raidlead");
   const role = sessionStorage.getItem("raidleadRole");
@@ -360,12 +400,15 @@ async function loadRaidByPin(){
   currentRaidData = null;
   currentPrios = [];
   currentReleased = false;
+  itemVisualMap = {};
 
   for(const raidKey of possibleRaids){
     const found = await tryLoadRaidByPin(pin, raidKey);
 
     if(found){
       sessionStorage.setItem("raidleadPrioPin", pin);
+
+      await loadItemVisualData();
 
       document.getElementById("controlStatus").innerHTML =
         `<span class="ok">Raid geladen.</span>`;
@@ -508,10 +551,7 @@ function renderRaidView(){
       <button class="btn warning" onclick="closeList()">Prioliste schließen</button>
       ${transferButton}
       <button class="btn neutral" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
-      <button class="btn neutral" onclick="downloadAddonExport()">
-  Addon Export
-</button>
-
+      <button class="btn neutral" onclick="downloadAddonExport()">Addon Export</button>
     </div>
 
     <h3>Aktuelle Einträge</h3>
@@ -575,7 +615,7 @@ function renderRows(){
           <td>${index + 1}</td>
           <td>${safe(entry.player || "-")}</td>
           <td>${safe(entry.server || "-")}</td>
-          <td>${safe(entry.class || "-")}</td>
+          <td>${renderClass(entry.class)}</td>
           <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
@@ -590,16 +630,17 @@ function renderRows(){
         <td>${index + 1}</td>
         <td>${safe(entry.player || "-")}</td>
         <td>${safe(entry.server || "-")}</td>
-        <td>${safe(entry.class || "-")}</td>
-        <td>${safe(entry.p1 || "-")}</td>
-        <td>${safe(entry.p2 || "-")}</td>
-        <td>${safe(entry.p3 || "-")}</td>
+        <td>${renderClass(entry.class)}</td>
+        <td>${renderItem(entry.p1)}</td>
+        <td>${renderItem(entry.p2)}</td>
+        <td>${renderItem(entry.p3)}</td>
         <td>${isP0Plus ? '<span class="warn">ja</span>' : 'nein'}</td>
         <td>${actionButtons}</td>
       </tr>
     `;
   }).join("");
 }
+
 async function reloadCurrentRaid(){
   if(!currentRaidData || !currentRaidData.leadPin){
     alert("Kein Raid geladen.");
@@ -607,6 +648,7 @@ async function reloadCurrentRaid(){
   }
 
   await loadPriosFromSheet(currentRaidData.leadPin);
+  await loadItemVisualData();
   renderRaidView();
 }
 
@@ -680,7 +722,6 @@ async function closeList(){
   currentReleased = false;
   await reloadCurrentRaid();
 }
-
 async function deleteSinglePrio(player,server){
   if(!currentRaidData || !currentRaidData.raidId){
     alert("Kein aktiver Raid gefunden.");
@@ -890,6 +931,155 @@ function itemKey(value){
     .replace(/\s+/g," ");
 }
 
+function normalizeQuality(value){
+  const q = String(value || "").toLowerCase().trim();
+
+  if(q.includes("legendary") || q.includes("legendär") || q.includes("orange")) return "legendary";
+  if(q.includes("epic") || q.includes("episch") || q.includes("lila")) return "epic";
+  if(q.includes("rare") || q.includes("selten") || q.includes("blau")) return "rare";
+  if(q.includes("uncommon") || q.includes("ungewöhnlich") || q.includes("grün") || q.includes("gruen")) return "uncommon";
+  if(q.includes("common") || q.includes("gewöhnlich") || q.includes("weiß") || q.includes("weiss")) return "common";
+  if(q.includes("poor") || q.includes("schlecht") || q.includes("grau")) return "poor";
+  if(q.includes("artifact") || q.includes("artefakt")) return "artifact";
+  if(q.includes("heirloom")) return "heirloom";
+
+  return "";
+}
+
+async function loadItemVisualData(){
+  itemVisualMap = {};
+  itemIdMap = {};
+
+  const url = LOOT_CSV_URLS[currentRaidKey];
+
+  if(!url){
+    return;
+  }
+
+  try{
+    const response = await fetch(url + "&t=" + Date.now());
+    const csvText = await response.text();
+    const rows = parseCSV(csvText);
+
+    if(!rows.length){
+      return;
+    }
+
+    const headers = rows.shift().map(h => String(h || "").trim());
+
+    rows.forEach(row => {
+      const obj = {};
+
+      headers.forEach((header,index) => {
+        obj[header] = row[index] || "";
+      });
+
+      const item =
+        obj.Item ||
+        obj.item ||
+        obj.Name ||
+        obj.name ||
+        obj.Itemname ||
+        obj.itemname ||
+        "";
+
+      const itemId =
+        obj.ItemID ||
+        obj.itemId ||
+        obj.ID ||
+        obj.id ||
+        "";
+
+      const quality =
+        obj.Qualität ||
+        obj.Quality ||
+        obj.quality ||
+        obj.Q ||
+        obj.Rarity ||
+        obj.rarity ||
+        "";
+
+      if(!item) return;
+
+      const key = itemKey(item);
+      const normalizedQuality = normalizeQuality(quality);
+
+      itemVisualMap[key] = {
+        itemId: String(itemId || "").trim(),
+        quality: normalizedQuality || "epic"
+      };
+
+      if(itemId){
+        itemIdMap[key] = String(itemId || "").trim();
+      }
+    });
+
+  }catch(error){
+    console.error(error);
+  }
+}
+
+function getClassColorClass(className){
+  const c = String(className || "").toLowerCase();
+
+  if(c.includes("krieger") || c.includes("warrior")) return "class-warrior";
+  if(c.includes("paladin")) return "class-paladin";
+  if(c.includes("jäger") || c.includes("jaeger") || c.includes("hunter")) return "class-hunter";
+  if(c.includes("schurke") || c.includes("rogue")) return "class-rogue";
+  if(c.includes("priester") || c.includes("priest")) return "class-priest";
+  if(c.includes("schamane") || c.includes("shaman")) return "class-shaman";
+  if(c.includes("magier") || c.includes("mage")) return "class-mage";
+  if(c.includes("hexenmeister") || c.includes("warlock")) return "class-warlock";
+  if(c.includes("druide") || c.includes("druid")) return "class-druid";
+
+  return "";
+}
+
+function renderClass(className){
+  const name = String(className || "").trim();
+
+  if(!name){
+    return "-";
+  }
+
+  return `
+    <span class="class-badge ${getClassColorClass(name)}">
+      ${safe(name)}
+    </span>
+  `;
+}
+
+function renderItem(itemName){
+  const name = String(itemName || "").trim();
+
+  if(!name){
+    return "-";
+  }
+
+  const info = itemVisualMap[itemKey(name)] || {};
+  const quality = info.quality || "epic";
+  const itemId = info.itemId || "";
+
+  const className = "item-" + quality;
+
+  if(itemId){
+    return `
+      <a class="item-link ${className}"
+         href="https://www.wowhead.com/classic/item=${safe(itemId)}"
+         target="_blank"
+         rel="noopener noreferrer">
+        ${safe(name)}
+      </a>
+    `;
+  }
+
+  return `
+    <span class="item-name ${className}">
+      ${safe(name)}
+    </span>
+  `;
+}
+
 async function loadItemIdsForExport(){
   itemIdMap = {};
 
@@ -1059,8 +1249,8 @@ async function downloadAddonExport(){
       const info = addonItemInfoMap[itemKey(entry.p1)] || {};
 
       if(exportText){
-  exportText += "||";
-}
+        exportText += "||";
+      }
 
       exportText +=
         raids[currentRaidKey].name + ";" +
