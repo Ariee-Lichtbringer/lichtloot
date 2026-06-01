@@ -1055,8 +1055,15 @@ async function loadLootDataForAddonExport(){
 }
   await loadLootDataForAddonExport();
 
-  let exportText =
-    "Raid;Boss;Slot;Typ;Item;Spieler;Punkte\n";
+  let exportText +=
+  raids[currentRaidKey].name + ";" +
+  (info.boss || "") + ";" +
+  (info.slot || "") + ";" +
+  (info.typ || info.type || "") + ";" +
+  entry.p1 + ";" +
+  (info.icon || "") + ";" +
+  player + ";" +
+  "1\n";
 
   currentPrios.forEach(entry => {
 
