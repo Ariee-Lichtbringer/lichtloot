@@ -994,32 +994,20 @@ async function downloadPrio3ReforgedExport(){
   URL.revokeObjectURL(url);
 }
 
-async function downloadAddonExport(){
-
-  if(!currentPrios || currentPrios.length === 0){
-    alert("Keine Priodaten vorhanden.");
-    return;
-  }
-
-  let addonItemInfoMap = {};
+let addonItemInfoMap = {};
 
 async function loadLootDataForAddonExport(){
   addonItemInfoMap = {};
 
   const url = LOOT_CSV_URLS[currentRaidKey];
-
-  if(!url){
-    return;
-  }
+  if(!url) return;
 
   try{
     const response = await fetch(url + "&t=" + Date.now());
     const csvText = await response.text();
     const rows = parseCSV(csvText);
 
-    if(!rows.length){
-      return;
-    }
+    if(!rows.length) return;
 
     const headers = rows.shift().map(h => String(h || "").trim());
 
@@ -1030,40 +1018,35 @@ async function loadLootDataForAddonExport(){
         obj[header] = row[index] || "";
       });
 
-      const item =
-        obj.Item ||
-        obj.item ||
-        obj.Name ||
-        obj.name ||
-        "";
-
+      const item = obj.Item || obj.item || obj.Name || obj.name || "";
       if(!item) return;
 
-    addonItemInfoMap[itemKey(item)] = {
-  boss: obj.Boss || obj.boss || "",
-  slot: obj.Slot || obj.slot || "",
-  typ: obj.Typ || obj.Type || obj.Kategorie || obj.typ || obj.type || "",
-  icon: obj.Icon || obj.icon || "",
-  itemId: obj.ItemID || obj.itemId || obj.ID || obj.id || ""
-};
+      addonItemInfoMap[itemKey(item)] = {
+        boss: obj.Boss || obj.boss || "",
+        slot: obj.Slot || obj.slot || "",
+        typ: obj.Typ || obj.Type || obj.Kategorie || obj.typ || obj.type || "",
+        icon: obj.Icon || obj.icon || "",
+        itemId: obj.ItemID || obj.itemId || obj.ID || obj.id || ""
+      };
     });
 
   }catch(error){
     console.error(error);
-    alert("Iteminfos konnten nicht vollständig geladen werden. Export wird ohne Boss/Slot/Typ erstellt.");
+    alert("Iteminfos konnten nicht vollständig geladen werden.");
   }
 }
+
+async function downloadAddonExport(){
+
+  if(!currentPrios || currentPrios.length === 0){
+    alert("Keine Priodaten vorhanden.");
+    return;
+  }
+
   await loadLootDataForAddonExport();
 
-  let exportText +=
-  raids[currentRaidKey].name + ";" +
-  (info.boss || "") + ";" +
-  (info.slot || "") + ";" +
-  (info.typ || info.type || "") + ";" +
-  entry.p1 + ";" +
-  (info.icon || "") + ";" +
-  player + ";" +
-  "1\n";
+  let exportText =
+    "Raid;Boss;Slot;Typ;Item;Icon;Spieler;Punkte\n";
 
   currentPrios.forEach(entry => {
 
@@ -1079,8 +1062,9 @@ async function loadLootDataForAddonExport(){
         raids[currentRaidKey].name + ";" +
         (info.boss || "") + ";" +
         (info.slot || "") + ";" +
-        (info.typ || info.type || "") + ";" +
+        (info.typ || "") + ";" +
         entry.p1 + ";" +
+        (info.icon || "") + ";" +
         player + ";" +
         "1\n";
     }
