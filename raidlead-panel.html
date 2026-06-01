@@ -1046,7 +1046,7 @@ async function downloadAddonExport(){
   await loadLootDataForAddonExport();
 
   let exportText =
-    "Raid;Boss;Slot;Typ;Item;Icon;Spieler;Punkte\n";
+  "Raid;Boss;Slot;Typ;Item;Icon;Spieler;Punkte";
 
   currentPrios.forEach(entry => {
 
@@ -1058,6 +1058,10 @@ async function downloadAddonExport(){
     ){
       const info = addonItemInfoMap[itemKey(entry.p1)] || {};
 
+      if(exportText){
+  exportText += "||";
+}
+
       exportText +=
         raids[currentRaidKey].name + ";" +
         (info.boss || "") + ";" +
@@ -1066,7 +1070,7 @@ async function downloadAddonExport(){
         entry.p1 + ";" +
         (info.icon || "") + ";" +
         player + ";" +
-        "1\n";
+        "1";
     }
 
   });
