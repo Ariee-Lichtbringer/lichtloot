@@ -399,6 +399,55 @@ function itemHtml(itemName){
 }
 
 function fillItems(){
+
+  async function loadLootFromSheet(){
+  const status=document.getElementById("playerStatus");
+  const list=document.getElementById("lootList");
+
+  try{
+    const response=await fetch(LOOT_CSV_URL+"&t="+Date.now());
+    const csvText=await response.text();
+    const rows=parseCSV(csvText);
+    const headers=rows.shift().map(h=>h.trim());
+
+    mcLoot=rows.map(row=>{
+      const obj={};
+      headers.forEach((header,index)=>obj[header]=row[index]||"");
+
+      return {
+        name:obj.Item||"",
+        itemId:obj.ItemID||"",
+        icon:obj.Icon||"",
+        quality:normalizeQuality(obj["Qualität"]),
+        ilvl:obj.ItemLevel||"",
+        bind:obj.Bindung||"",
+        slot:obj.Slot||"",
+        type:obj.Typ||"",
+        boss:obj.Boss||"",
+        category:obj.Kategorie||"",
+        wowhead:obj.WowheadLink||""
+      };
+    }).filter(item=>item.name);
+
+    await loadP0PlusFromSheet();
+
+    fillItems();
+    renderLootList();
+
+    status.innerHTML=`<span class="ok">✓ Lootdaten geladen.</span>`;
+
+    await loadPublishedPrios();
+
+  }catch(error){
+    console.error(error);
+
+    list.innerHTML=
+      `<div class="status"><span class="bad">Lootdaten konnten nicht geladen werden.</span></div>`;
+
+    status.innerHTML=
+      `<span class="bad">Fehler beim Laden des Google Sheets.</span>`;
+  }
+}
   ["p1","p2","p3"].forEach(id=>{
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
