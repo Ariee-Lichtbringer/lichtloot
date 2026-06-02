@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LichtLoot MC Tooltips + Prioritäten</title>
+
+  <script>
+    const whTooltips = {
+      colorLinks: true,
+      iconizeLinks: true,
+      renameLinks: false
+    };
+  </script>
+  <script src="https://wow.zamimg.com/js/tooltips.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #0f0b07;
+      color: #f4e7c5;
+      font-family: Arial, sans-serif;
+      padding: 24px;
+    }
+
+    h1 {
+      color: #f0c75e;
+      margin-bottom: 16px;
+    }
+
+    .lichtloot-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .lichtloot-item-card {
+      border: 1px solid rgba(240, 199, 94, 0.35);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(54, 38, 20, 0.95), rgba(20, 14, 9, 0.95));
+      padding: 12px 14px;
+      box-shadow: 0 0 14px rgba(0, 0, 0, 0.35);
+    }
+
+    .lichtloot-item-top {
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .lichtloot-item-meta {
+      color: #b9a984;
+      font-size: 13px;
+      font-weight: normal;
+    }
+
+    .lichtloot-prio-box {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .prio-line strong {
+      color: #f0c75e;
+    }
+
+    .prio-empty,
+    .lichtloot-loading,
+    .lichtloot-error {
+      color: #b9a984;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <h1>Molten Core – Tooltips + Sheet-Prios</h1>
+  <div id="mc-items" class="lichtloot-grid"></div>
+
+  <script src="mc-items-with-prios.js"></script>
+  <script>
+    renderMCItemsWithPriorities('#mc-items');
+  </script>
+</body>
+</html>
