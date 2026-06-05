@@ -134,6 +134,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <label>Prio-PIN</label>
 <input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="loadPublishedPrios()">
+<label>Spieler-PIN</label>
+<input id="playerPin" type="password" placeholder="Eigene Spieler-PIN">
 
 <label>Charaktername</label>
 <input id="playerName" type="text" placeholder="z. B. Lichtiloot" oninput="loadPlayerData()">
@@ -203,7 +205,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0</th>
+<th>P0+</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
@@ -665,6 +667,9 @@ async function savePrio(){
   const p3=document.getElementById("p3").value;
   const status=document.getElementById("playerStatus");
 
+  const playerPin =
+  document.getElementById("playerPin").value.trim();
+  
   const isP0Plus =
     Boolean(window.p0PlusWasClicked) &&
     p1 &&
@@ -686,7 +691,8 @@ async function savePrio(){
   const url=APPS_SCRIPT_URL+
     "?action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
-    "&playerPin="+encodeURIComponent(pin)+
+    "&raidPin="+encodeURIComponent(pin)+
+    "&playerPin="+encodeURIComponent(playerPin)+
     "&player="+encodeURIComponent(player)+
     "&server="+encodeURIComponent(server)+
     "&className="+encodeURIComponent(playerClass)+
@@ -858,7 +864,15 @@ function renderPublishedChecks(prios){
         <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
         <td>${prio.P2?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
         <td>${prio.P3?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+        <td>
+${
+ String(prio.P0Plus).toLowerCase()==="ja"
+ ?
+ '<span class="warn">'+safe(prio.P1)+'</span>'
+ :
+ '<span class="cross">✗</span>'
+}
+</td>
       </tr>
     `;
   });
