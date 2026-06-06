@@ -688,6 +688,11 @@ async function savePrio(){
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
+  if(!playerPin){
+  status.innerHTML=`<span class="bad">Bitte eigenen Spieler-PIN eingeben.</span>`;
+  return;
+} 
+  
   const url=APPS_SCRIPT_URL+
     "?action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
@@ -788,6 +793,10 @@ async function loadPublishedPrios(){
     return;
   }
 
+  if(!playerPin){
+  status.innerHTML=`<span class="bad">Bitte eigenen Spieler-PIN eingeben.</span>`;
+  return;
+}
   try{
     const url=APPS_SCRIPT_URL+
       "?action=getPublishedPrios"+
