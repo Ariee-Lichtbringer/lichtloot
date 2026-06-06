@@ -551,6 +551,16 @@ body{
   <button class="tool-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
 </div>
 
+  <div class="playerpin-box">
+  <h2>Spieler-PIN</h2>
+
+  <div class="result-row">
+    <div id="fixedPlayerPin" class="pin-output">----</div>
+    <button class="copy-btn" onclick="copyText('fixedPlayerPin')">
+      Kopieren
+    </button>
+  </div>
+
 <div id="raidCreateBox" class="raid-create-box hidden">
   <h2>Neuen Raid erstellen</h2>
 
@@ -569,15 +579,6 @@ body{
 
   <div id="createRaidResult" class="status">
     Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.
-  </div>
-  <div class="playerpin-box">
-  <h2>Spieler-PIN</h2>
-
-  <div class="result-row">
-    <div id="fixedPlayerPin" class="pin-output">----</div>
-    <button class="copy-btn" onclick="copyText('fixedPlayerPin')">
-      Kopieren
-    </button>
   </div>
 
   <button
