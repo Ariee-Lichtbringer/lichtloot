@@ -99,6 +99,35 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .character-hexenmeister{background:#8788ee}
 .character-schamane{background:#0070dd}
 .character-druide{background:#ff7c0a}
+
+.myprios-box{
+  position:fixed;
+  top:82px;
+  right:24px;
+  width:min(760px,calc(100vw - 48px));
+  max-height:calc(100vh - 110px);
+  overflow:auto;
+  padding:18px;
+  border-radius:18px;
+  background:rgba(12,18,32,.96);
+  border:1px solid rgba(250,204,21,.28);
+  box-shadow:0 20px 45px rgba(0,0,0,.55);
+  z-index:10000;
+}
+.myprios-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.myprios-head h2{color:var(--gold);font-size:20px;margin:0}
+.myprios-close{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
+.myprios-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
+.myprios-form label{margin:0 0 6px}
+.myprios-results{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.myprio-card{border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.55);border-radius:16px;padding:14px}
+.myprio-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#facc15;font-weight:900;margin-bottom:8px}
+.myprio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;line-height:1.45}
+.myprio-label{color:#cbd5e1;font-weight:900}.myprio-value{color:#f8fafc}
+.myprio-p0-list{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.55}
+.myprio-p0-list strong{color:#facc15}
+@media(max-width:900px){.myprios-box{position:fixed;top:12px;left:12px;right:12px;width:auto}.myprios-form{grid-template-columns:1fr}}
+
 </style>
 </head>
 
@@ -109,6 +138,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <a class="back" href="../index.html">← Zurück zur Startseite</a>
 
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <button class="back" onclick="toggleMyPrios()">Meine Prios</button>
   <a class="back" href="../aq40.html">P0+ Übersicht öffnen</a>
 
   <input
@@ -133,16 +163,18 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <h2>Spieler-Eingabe</h2>
 
 <label>Prio-PIN</label>
-<input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="loadPublishedPrios()">
+<input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="loadPublishedPrios(); ensureVisibleRaidPlayerPin()">
+<label>Spieler-PIN</label>
+<input id="playerPin" type="text" placeholder="SpielerPin eingeben oder automatisch erstellen" oninput="loadPlayerByPin(); autoSaveDraft()">
 
 <label>Charaktername</label>
-<input id="playerName" type="text" placeholder="z. B. Lichtiloot" oninput="loadPlayerData()">
+<input id="playerName" type="text" placeholder="z. B. Lichtiloot" oninput="loadPlayerData(); ensureVisibleRaidPlayerPin()">
 
 <h3>Gespeicherte Charaktere</h3>
 <div id="characterButtons"></div>
 
 <label>Server</label>
-<select id="playerServer" onchange="autoSaveDraft()">
+<select id="playerServer" onchange="autoSaveDraft(); ensureVisibleRaidPlayerPin()">
 <option value="">Server auswählen</option>
 <option>Lakeshire</option>
 <option>Everlook</option>
@@ -182,7 +214,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <div class="status">Suche nach Itemname, Slot, Typ, Boss oder Kategorie.</div>
 
 <div id="lootList" class="loot-list">
-<div class="status">Lade Loot aus Google Sheet …</div>
+<div class="status">Lade…</div>
 </div>
 </div>
 
@@ -190,6 +222,16 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <h2>Aktuelle Prioliste</h2>
 
 <button class="btn" onclick="refreshPrios()">Prioliste aktualisieren</button>
+
+<div class="search-box" style="margin-top:14px">
+  <span class="search-icon">🔎</span>
+  <input
+    id="prioSearch"
+    type="text"
+    placeholder="Prioliste nach Spieler, Klasse oder Item suchen..."
+    oninput="renderCurrentPrios()"
+  >
+</div>
 
 <div id="publishedStatus" class="status">Lade Prioliste …</div>
 
@@ -203,7 +245,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>P0</th>
+<th>P0+</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
@@ -218,6 +260,29 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <div id="tooltip" class="tooltip hidden"></div>
 
+<div id="myPriosBox" class="myprios-box hidden">
+  <div class="myprios-head">
+    <h2>Meine Prios</h2>
+    <button class="myprios-close" onclick="toggleMyPrios()">✕</button>
+  </div>
+
+  <div class="myprios-form">
+    <div>
+      <label>Charaktername</label>
+      <input id="myPriosChar" type="text" placeholder="z. B. Ariee" onkeydown="myPriosEnter(event)">
+    </div>
+    <div>
+      <label>Master-SpielerPin</label>
+      <input id="myPriosPin" type="password" placeholder="SpielerPin" onkeydown="myPriosEnter(event)">
+    </div>
+    <button class="btn" style="margin-top:0" onclick="loadMyPrios()">Anzeigen</button>
+  </div>
+
+  <div id="myPriosStatus" class="status">Gib deinen Charakter und deinen Master-SpielerPin ein.</div>
+  <div id="myPriosResults" class="myprios-results"></div>
+</div>
+
+
 <script>
 const RAID_NAME = "aq40";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
@@ -228,6 +293,8 @@ const P0PLUS_API_URL =
 let p0PlusData = {};
 let aq40Loot = [];
 let autoRefreshTimer = null;
+let currentPublishedPrios = [];
+let currentPublishedMode = false;
 
 window.p0PlusWasClicked = false;
 
@@ -406,7 +473,7 @@ async function loadLootFromSheet(){
         itemId:obj.ItemID||"",
         icon:obj.Icon||"",
         quality:normalizeQuality(obj["Qualität"]),
-        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"aq40ramas"),
+        ilvl:obj.ItemLevel||obj.Gegenstandsstufe||(obj.ItemID?"ItemID: "+obj.ItemID:"Ahn'Qiraj 40"),
         bind:obj.Bindung||"Wird beim Aufheben gebunden",
         slot:obj.Slot||"",
         type:obj.Typ||"",
@@ -598,6 +665,7 @@ function autoSaveDraft(){
     p1:document.getElementById("p1").value,
     p2:document.getElementById("p2").value,
     p3:document.getElementById("p3").value,
+    playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
     timestamp:new Date().toLocaleString("de-DE")
   };
@@ -623,6 +691,7 @@ function loadPlayerData(){
   document.getElementById("p1").value=data.p1||"";
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
+  if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML=
@@ -655,6 +724,272 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
   localStorage.setItem("aq40_prios",JSON.stringify(data));
 }
 
+
+function getRaidSpecificPlayerPinKey(){
+  const raidPin=document.getElementById("raidPin").value.trim();
+  const player=document.getElementById("playerName").value.trim().toLowerCase();
+  const server=document.getElementById("playerServer").value.trim().toLowerCase();
+
+  if(!raidPin || !player || !server){
+    return "";
+  }
+
+  return "lichtloot_raid_player_pin_"+RAID_NAME+"_"+raidPin+"_"+server+"_"+player;
+}
+
+function createSimplePlayerPin(){
+  return "T" + String(Math.floor(100 + Math.random() * 900));
+}
+
+function getSavedRaidSpecificPlayerPin(){
+  const key = getRaidSpecificPlayerPinKey();
+  if(!key) return "";
+  return localStorage.getItem(key) || "";
+}
+
+function isTemporaryPlayerPin(pin){
+  const value = String(pin || "").trim().toUpperCase();
+  return /^T\d{3}$/.test(value);
+}
+
+function loadRaidSpecificPlayerPin(){
+  const key=getRaidSpecificPlayerPinKey();
+  if(!key) return;
+
+  const savedPin=localStorage.getItem(key);
+
+  if(savedPin && !document.getElementById("playerPin").value.trim()){
+    document.getElementById("playerPin").value=savedPin;
+    document.getElementById("playerStatus").innerHTML=
+      `<span class="ok">✓ Gespeicherter SpielerPin für diesen Raid wurde geladen.</span>`;
+  }
+}
+
+async function fetchRaidTemporaryPinForCurrentCharacter(){
+  const raidPin=document.getElementById("raidPin").value.trim();
+  const player=document.getElementById("playerName").value.trim();
+  const server=document.getElementById("playerServer").value.trim();
+
+  if(!raidPin || !player || !server){
+    return "";
+  }
+
+  try{
+    const url=APPS_SCRIPT_URL+
+      "?action=getRaidTemporaryPin"+
+      "&raidPin="+encodeURIComponent(raidPin)+
+      "&char="+encodeURIComponent(player)+
+      "&server="+encodeURIComponent(server)+
+      "&t="+Date.now();
+
+    const response=await fetch(url);
+    const result=await response.json();
+
+    if(result && result.success && result.pin){
+      return String(result.pin).trim();
+    }
+  }catch(error){
+    console.error(error);
+  }
+
+  return "";
+}
+
+
+async function createRaidTemporaryPinForCurrentCharacter(){
+  const raidPin=document.getElementById("raidPin").value.trim();
+  const player=document.getElementById("playerName").value.trim();
+  const server=document.getElementById("playerServer").value.trim();
+
+  if(!raidPin || !player || !server){
+    return "";
+  }
+
+  try{
+    const url=APPS_SCRIPT_URL+
+      "?action=createRaidTemporaryPin"+
+      "&raidPin="+encodeURIComponent(raidPin)+
+      "&char="+encodeURIComponent(player)+
+      "&server="+encodeURIComponent(server)+
+      "&t="+Date.now();
+
+    const response=await fetch(url);
+    const result=await response.json();
+
+    if(result && result.success && result.pin){
+      return String(result.pin).trim().toUpperCase();
+    }
+  }catch(error){
+    console.error(error);
+  }
+
+  return "";
+}
+
+async function ensureVisibleRaidPlayerPin(){
+  const key=getRaidSpecificPlayerPinKey();
+  const field=document.getElementById("playerPin");
+
+  if(!key || !field){
+    return;
+  }
+
+  if(field.value.trim()){
+    return;
+  }
+
+  const sheetPin=await fetchRaidTemporaryPinForCurrentCharacter();
+
+  if(sheetPin){
+    field.value=sheetPin;
+    localStorage.setItem(key,sheetPin);
+    document.getElementById("playerStatus").innerHTML=
+      `<span class="ok">✓ Temporärer SpielerPin für diesen Raid wurde aus dem Sheet geladen:</span><br><strong>${sheetPin}</strong>`;
+    return;
+  }
+
+  const newPin=await createRaidTemporaryPinForCurrentCharacter();
+
+  if(newPin){
+    field.value=newPin;
+    localStorage.setItem(key,newPin);
+    document.getElementById("playerStatus").innerHTML=
+      `<span class="warn">Neuer temporärer SpielerPin für diesen Raid wurde erstellt:</span><br><strong>${newPin}</strong><br>Bitte notieren. Du brauchst ihn, wenn du deine Prio später ändern willst.`;
+    autoSaveDraft();
+    return;
+  }
+
+  document.getElementById("playerStatus").innerHTML=
+    `<span class="bad">Temporärer SpielerPin konnte nicht erstellt werden. Bitte Prio-PIN, Charakter und Server prüfen.</span>`;
+}
+
+async function ensurePlayerPinForSave(){
+  await ensureVisibleRaidPlayerPin();
+
+  const playerPin=document.getElementById("playerPin").value.trim();
+
+  return {
+    pin:playerPin,
+    generated:false
+  };
+}
+
+
+let playerPinLookupTimer = null;
+
+function loadPlayerByPin(){
+  clearTimeout(playerPinLookupTimer);
+
+  playerPinLookupTimer = setTimeout(async ()=>{
+    const playerPin=document.getElementById("playerPin").value.trim();
+    const raidPin=document.getElementById("raidPin").value.trim();
+
+    if(!playerPin || playerPin.length < 4){
+      return;
+    }
+
+    const status=document.getElementById("playerStatus");
+    status.innerHTML=`<span class="warn">SpielerPin wird geprüft …</span>`;
+
+    const url=APPS_SCRIPT_URL+
+      "?action=getPlayerByPin"+
+      "&pin="+encodeURIComponent(playerPin)+
+      "&raidPin="+encodeURIComponent(raidPin)+
+      "&t="+Date.now();
+
+    try{
+      const response=await fetch(url);
+      const result=await response.json();
+
+      if(!result.success){
+        if(isTemporaryPlayerPin(playerPin)){
+          status.innerHTML=`<span class="warn">Temporärer SpielerPin ist bereit. Wenn du damit schon gespeichert hast, bitte Prio-PIN prüfen.</span>`;
+        }else{
+          status.innerHTML=`<span class="bad">${safe(result.error || "SpielerPin wurde nicht gefunden.")}</span>`;
+        }
+        return;
+      }
+
+      document.getElementById("playerName").value=result.char || "";
+      document.getElementById("playerServer").value=result.server || "";
+      document.getElementById("playerClass").value=result.className || "";
+
+      if(result.p1) document.getElementById("p1").value=result.p1;
+      if(result.p2) document.getElementById("p2").value=result.p2;
+      if(result.p3) document.getElementById("p3").value=result.p3;
+
+      window.p0PlusWasClicked =
+        String(result.p0Plus || "").toLowerCase() === "ja";
+
+      updateActiveButtons();
+      autoSaveDraft();
+      saveCharacterProfile();
+
+      status.innerHTML=`<span class="ok">✓ Charakterdaten wurden über den SpielerPin geladen.</span>`;
+
+    }catch(error){
+      console.error(error);
+      status.innerHTML=`<span class="bad">SpielerPin konnte nicht geprüft werden.</span>`;
+    }
+  }, 450);
+}
+
+function buildSavePrioUrl(savePin, oldPin){
+  const pin=document.getElementById("raidPin").value.trim();
+  const player=document.getElementById("playerName").value.trim();
+  const server=document.getElementById("playerServer").value;
+  const playerClass=document.getElementById("playerClass").value;
+  const p1=document.getElementById("p1").value;
+  const p2=document.getElementById("p2").value;
+  const p3=document.getElementById("p3").value;
+
+  const isP0Plus =
+    Boolean(window.p0PlusWasClicked) &&
+    p1 &&
+    p1 === p2 &&
+    p2 === p3;
+
+  let url=APPS_SCRIPT_URL+
+    "?action=savePrio"+
+    "&raid="+encodeURIComponent(RAID_NAME)+
+    "&raidPin="+encodeURIComponent(pin)+
+    "&characterPin="+encodeURIComponent(savePin)+
+    "&playerPin="+encodeURIComponent(savePin)+
+    "&player="+encodeURIComponent(player)+
+    "&server="+encodeURIComponent(server)+
+    "&className="+encodeURIComponent(playerClass)+
+    "&p1="+encodeURIComponent(p1)+
+    "&p2="+encodeURIComponent(p2)+
+    "&p3="+encodeURIComponent(p3)+
+    "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
+
+  if(oldPin && oldPin !== savePin){
+    url +=
+      "&oldCharacterPin="+encodeURIComponent(oldPin)+
+      "&oldPlayerPin="+encodeURIComponent(oldPin)+
+      "&tempCharacterPin="+encodeURIComponent(oldPin)+
+      "&masterCharacterPin="+encodeURIComponent(savePin);
+  }
+
+  return url + "&t="+Date.now();
+}
+
+async function submitPrioWithPin(savePin, oldPin){
+  const response=await fetch(buildSavePrioUrl(savePin, oldPin));
+  return await response.json();
+}
+
+function isPinConflictError(result){
+  const message=String((result && (result.error || result.message)) || "").toLowerCase();
+
+  return (
+    message.includes("anderen pin") ||
+    message.includes("anderem pin") ||
+    message.includes("anderer pin") ||
+    message.includes("bereits") && message.includes("pin") && message.includes("gesch")
+  );
+}
+
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
   const player=document.getElementById("playerName").value.trim();
@@ -664,6 +999,10 @@ async function savePrio(){
   const p2=document.getElementById("p2").value;
   const p3=document.getElementById("p3").value;
   const status=document.getElementById("playerStatus");
+
+  const pinInfo = await ensurePlayerPinForSave();
+  const playerPin = pinInfo.pin;
+  const savedRaidPin = getSavedRaidSpecificPlayerPin();
 
   const isP0Plus =
     Boolean(window.p0PlusWasClicked) &&
@@ -683,25 +1022,12 @@ async function savePrio(){
 
   status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
-  const url=APPS_SCRIPT_URL+
-    "?action=savePrio"+
-    "&raid="+encodeURIComponent(RAID_NAME)+
-    "&playerPin="+encodeURIComponent(pin)+
-    "&player="+encodeURIComponent(player)+
-    "&server="+encodeURIComponent(server)+
-    "&className="+encodeURIComponent(playerClass)+
-    "&p1="+encodeURIComponent(p1)+
-    "&p2="+encodeURIComponent(p2)+
-    "&p3="+encodeURIComponent(p3)+
-    "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein")+
-    "&t="+Date.now();
-
   try{
-    const response=await fetch(url);
-    const result=await response.json();
+    let result=await submitPrioWithPin(playerPin, "");
+    let usedFallbackPin=false;
 
     if(result.error){
-      status.innerHTML=`<span class="bad">${result.error}</span>`;
+      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
       return;
     }
 
@@ -709,7 +1035,14 @@ async function savePrio(){
     saveCharacterProfile();
     updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,isP0Plus ? "ja" : "nein");
 
-    status.innerHTML=`<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong>`;
+    const displayedPin = result.tempPin || result.characterPin || playerPin;
+    const pinLabel = isTemporaryPlayerPin(displayedPin) ? "Temporärer SpielerPin für diesen Raid" : "SpielerPin für diesen Raid";
+
+    status.innerHTML =
+      `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
+      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
+      `<span class="warn">${pinLabel}:</span> <strong>${displayedPin}</strong><br>`+
+      `Bitte notieren. Du brauchst ihn, wenn du deine Prio später ändern willst.`;
     await loadPublishedPrios();
 
   }catch(error){
@@ -718,9 +1051,10 @@ async function savePrio(){
   }
 }
 
+
 const raidleadAccounts = {
   "Lichtbringer-master":"master",
-  "LB-S7XK29":"mc-aq40",
+  "LB-S7XK29":"mc-bwl",
   "LB-Q4PM18":"aq40",
   "LB-T9DN52":"zg-aq20",
   "LB-AQ40-Lead":"aq40"
@@ -778,11 +1112,12 @@ async function loadPublishedPrios(){
   if(!pin){
     status.innerHTML=`<span class="warn">Kein Prio-PIN vorhanden. Nutze den Raidlink oder gib die Prio-PIN ein.</span>`;
     table.innerHTML=`<tr><td colspan="7">Noch keine Prioliste geladen.</td></tr>`;
+    currentPublishedPrios=[];
+    currentPublishedMode=false;
     setPublishedMode(false);
     return;
   }
-
-  try{
+try{
     const url=APPS_SCRIPT_URL+
       "?action=getPublishedPrios"+
       "&raid="+encodeURIComponent(RAID_NAME)+
@@ -795,6 +1130,8 @@ async function loadPublishedPrios(){
     if(result.error){
       status.innerHTML=`<span class="bad">${result.error}</span>`;
       table.innerHTML=`<tr><td colspan="7">Keine Daten verfügbar.</td></tr>`;
+      currentPublishedPrios=[];
+      currentPublishedMode=false;
       setPublishedMode(false);
       return;
     }
@@ -806,17 +1143,22 @@ async function loadPublishedPrios(){
         ? `<span class="ok">✓ Prios veröffentlicht, aber noch keine Einträge vorhanden.</span>`
         : `<span class="warn">Prios noch nicht veröffentlicht.</span>`;
       table.innerHTML=`<tr><td colspan="7">Noch keine Einträge vorhanden.</td></tr>`;
+      currentPublishedPrios=[];
+      currentPublishedMode=Boolean(result.published);
       setPublishedMode(Boolean(result.published));
       return;
     }
 
+    currentPublishedPrios = prios;
+    currentPublishedMode = Boolean(result.published);
+
     if(result.published){
       status.innerHTML=`<span class="ok">✓ Prios veröffentlicht. Items werden angezeigt.</span>`;
-      renderPublishedItems(prios);
+      renderCurrentPrios();
       setPublishedMode(true);
     }else{
       status.innerHTML=`<span class="warn">Prios noch nicht veröffentlicht.</span><br>Es wird nur angezeigt, ob P1/P2/P3/P0 eingetragen wurden.`;
-      renderPublishedChecks(prios);
+      renderCurrentPrios();
       setPublishedMode(false);
     }
 
@@ -843,9 +1185,46 @@ function setPublishedMode(isPublished){
   }
 }
 
+
+function renderCurrentPrios(){
+  const prios = filterPriosBySearch(currentPublishedPrios || []);
+
+  if(currentPublishedMode){
+    renderPublishedItems(prios);
+  }else{
+    renderPublishedChecks(prios);
+  }
+}
+
+function filterPriosBySearch(prios){
+  const searchInput=document.getElementById("prioSearch");
+  const query=searchInput ? searchInput.value.trim().toLowerCase() : "";
+
+  if(!query){
+    return prios;
+  }
+
+  return prios.filter(prio=>{
+    return [
+      prio.Spieler,
+      prio.Server,
+      prio.Klasse,
+      prio.P1,
+      prio.P2,
+      prio.P3,
+      String(prio.P0Plus).toLowerCase()==="ja" ? prio.P1 : ""
+    ].join(" ").toLowerCase().includes(query);
+  });
+}
+
 function renderPublishedChecks(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
+
+  if(!prios.length){
+    table.innerHTML=`<tr><td colspan="7">Keine Treffer für die Suche.</td></tr>`;
+    return;
+  }
 
   prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
@@ -858,7 +1237,15 @@ function renderPublishedChecks(prios){
         <td>${prio.P1?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
         <td>${prio.P2?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
         <td>${prio.P3?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="check">✓</span>':'<span class="cross">✗</span>'}</td>
+        <td>
+${
+ String(prio.P0Plus).toLowerCase()==="ja"
+ ?
+ itemHtml(prio.P1)
+ :
+ '<span class="cross">✗</span>'
+}
+</td>
       </tr>
     `;
   });
@@ -867,6 +1254,11 @@ function renderPublishedChecks(prios){
 function renderPublishedItems(prios){
   const table=document.getElementById("publishedTable");
   table.innerHTML="";
+
+  if(!prios.length){
+    table.innerHTML=`<tr><td colspan="7">Keine Treffer für die Suche.</td></tr>`;
+    return;
+  }
 
   prios.forEach((prio,index)=>{
     const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
@@ -879,7 +1271,7 @@ function renderPublishedItems(prios){
         <td>${itemHtml(prio.P1)}</td>
         <td>${itemHtml(prio.P2)}</td>
         <td>${itemHtml(prio.P3)}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?'<span class="warn">ja</span>':'nein'}</td>
+        <td>${String(prio.P0Plus).toLowerCase()==="ja"?itemHtml(prio.P1):'nein'}</td>
       </tr>
     `;
   });
@@ -994,6 +1386,7 @@ const pinFromUrl=params.get("pin");
 
 if(pinFromUrl){
   document.getElementById("raidPin").value=pinFromUrl;
+  setTimeout(ensureVisibleRaidPlayerPin, 300);
 }
 
 function saveCharacterProfile(){
@@ -1057,6 +1450,7 @@ function renderCharacterButtons(){
       document.getElementById("playerClass").value=char.playerClass;
       document.getElementById("playerServer").value=char.server;
       loadPlayerData();
+      ensureVisibleRaidPlayerPin();
     };
 
     const deleteBtn=document.createElement("button");
@@ -1171,6 +1565,119 @@ autoRefreshTimer=setInterval(()=>{
     loadPublishedPrios();
   }
 },5000);
+
+function toggleMyPrios(){
+  const box=document.getElementById("myPriosBox");
+  if(!box) return;
+  box.classList.toggle("hidden");
+}
+
+function myPriosEnter(event){
+  if(event.key === "Enter") loadMyPrios();
+}
+
+async function loadMyPrios(){
+  const charName=document.getElementById("myPriosChar").value.trim();
+  const pin=document.getElementById("myPriosPin").value.trim();
+  const status=document.getElementById("myPriosStatus");
+  const results=document.getElementById("myPriosResults");
+
+  if(!charName || !pin){
+    status.innerHTML='<span class="bad">Bitte Charaktername und Master-SpielerPin eingeben.</span>';
+    return;
+  }
+
+  status.innerHTML='<span class="warn">Lade deine Prios …</span>';
+  results.innerHTML='';
+
+  try{
+    const url=APPS_SCRIPT_URL+
+      '?action=getPlayerPrioHistory'+
+      '&char='+encodeURIComponent(charName)+
+      '&pin='+encodeURIComponent(pin)+
+      '&t='+Date.now();
+
+    const response=await fetch(url);
+    const data=await response.json();
+
+    if(!data.success){
+      status.innerHTML='<span class="bad">'+safe(data.error || 'Prios konnten nicht geladen werden.')+'</span>';
+      return;
+    }
+
+    renderMyPrios(data);
+  }catch(error){
+    console.error(error);
+    status.innerHTML='<span class="bad">Fehler beim Laden deiner Prios.</span>';
+  }
+}
+
+function renderMyPrios(data){
+  const status=document.getElementById("myPriosStatus");
+  const results=document.getElementById("myPriosResults");
+  const entries=data.entries || [];
+  const ownP0=data.ownP0PlusPoints || [];
+
+  status.innerHTML='<span class="ok">✓ Prios für '+safe(data.player || '')+' – '+safe(data.server || '')+' geladen.</span>';
+
+  if(!entries.length && !ownP0.length){
+    results.innerHTML='<div class="status">Keine Prios oder P0+ Punkte gefunden.</div>';
+    return;
+  }
+
+  let html='';
+
+  if(entries.length){
+    html+='<h3 style="color:#facc15;margin-top:4px">Aktuelle Prios und letzte 5 Raids</h3>';
+    entries.forEach(entry=>{
+      const p0List=(entry.ownP0PlusPoints || []).length
+        ? (entry.ownP0PlusPoints || []).map(point=>'<div>• '+safe(point.item)+' <strong>'+safe(point.count)+'</strong>'+(point.slot ? ' <span class="myprio-label">('+safe(point.slot)+')</span>' : '')+'</div>').join('')
+        : '<div>Keine eigenen P0+ Punkte für diesen Raid.</div>';
+
+      html+=`<div class="myprio-card">
+        <div class="myprio-title">
+          <span>${safe(entry.raidName || entry.raid || 'Raid')}</span>
+          <span>${entry.current ? 'Aktuell' : 'Vergangen'} · ${safe(entry.pinType || '')}</span>
+        </div>
+        <div class="myprio-grid">
+          <div><span class="myprio-label">Datum:</span> <span class="myprio-value">${safe(formatMyPrioDate(entry.createdAt))}</span></div>
+          <div><span class="myprio-label">P0+:</span> <span class="myprio-value">${safe(entry.p0Plus || 'nein')}</span></div>
+          <div><span class="myprio-label">P1:</span> <span class="myprio-value">${safe(entry.p1 || '-')}</span></div>
+          <div><span class="myprio-label">P2:</span> <span class="myprio-value">${safe(entry.p2 || '-')}</span></div>
+          <div><span class="myprio-label">P3:</span> <span class="myprio-value">${safe(entry.p3 || '-')}</span></div>
+        </div>
+        <div class="myprio-p0-list"><strong>Eigene P0+ Punkte:</strong>${p0List}</div>
+      </div>`;
+    });
+  }
+
+  if(ownP0.length){
+    html+='<h3 style="color:#facc15;margin-top:10px">Alle eigenen P0+ Punkte</h3>';
+    const byRaid={};
+    ownP0.forEach(point=>{
+      const raid=point.raid || 'Raid';
+      if(!byRaid[raid]) byRaid[raid]=[];
+      byRaid[raid].push(point);
+    });
+    Object.keys(byRaid).sort().forEach(raid=>{
+      html+=`<div class="myprio-card"><div class="myprio-title"><span>${safe(raid)}</span></div><div class="myprio-p0-list">`;
+      byRaid[raid].forEach(point=>{
+        html+=`<div>• ${safe(point.item)} <strong>${safe(point.count)}</strong>${point.slot ? ' <span class="myprio-label">('+safe(point.slot)+')</span>' : ''}</div>`;
+      });
+      html+='</div></div>';
+    });
+  }
+
+  results.innerHTML=html;
+}
+
+function formatMyPrioDate(value){
+  if(!value) return '-';
+  const date=new Date(value);
+  if(isNaN(date.getTime())) return value;
+  return date.toLocaleString('de-DE');
+}
+
 </script>
 
 </body>
