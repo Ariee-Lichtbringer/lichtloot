@@ -1284,7 +1284,7 @@ function renderPublishedChecks(prios){
   }
 
   prios.forEach((prio,index)=>{
-    const playerText=`${safe(prio.Spieler)}${prio.Server ? " – "+safe(prio.Server) : ""}`;
+    const playerText = safe(prio.Spieler);
 
     table.innerHTML+=`
       <tr>
