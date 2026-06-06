@@ -500,6 +500,16 @@ body{
     margin-bottom:18px;
     width:100%;
   }
+  .playerpin-box{
+  position:absolute;
+  top:25px;
+  left:180px;
+  width:260px;
+  padding:18px;
+  border-radius:18px;
+  background:rgba(12,18,32,.94);
+  border:1px solid rgba(250,204,21,.28);
+}
 }
 </style>
 </head>
@@ -560,6 +570,28 @@ body{
   <div id="createRaidResult" class="status">
     Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.
   </div>
+  <div class="playerpin-box">
+  <h2>Spieler-PIN</h2>
+
+  <div class="result-row">
+    <div id="fixedPlayerPin" class="pin-output">----</div>
+    <button class="copy-btn" onclick="copyText('fixedPlayerPin')">
+      Kopieren
+    </button>
+  </div>
+
+  <button
+    class="tool-btn"
+    style="width:100%;margin-top:10px"
+    onclick="generateFixedPlayerPin()"
+  >
+    Spieler-PIN erstellen
+  </button>
+
+  <div class="status">
+    Dieser PIN kann für alle Raids verwendet werden.
+  </div>
+</div>
 </div>
 
 <div class="header">
@@ -811,6 +843,30 @@ function copyText(id){
   const text=document.getElementById(id).textContent.trim();
   navigator.clipboard.writeText(text);
 }
+function generateFixedPlayerPin(){
+  const pin =
+    String(Math.floor(1000 + Math.random() * 9000));
+
+  localStorage.setItem(
+    "lichtloot_player_pin",
+    pin
+  );
+
+  document.getElementById("fixedPlayerPin").textContent =
+    pin;
+}
+
+function loadFixedPlayerPin(){
+  const pin =
+    localStorage.getItem("lichtloot_player_pin");
+
+  if(pin){
+    document.getElementById("fixedPlayerPin").textContent =
+      pin;
+  }
+}
+
+loadFixedPlayerPin();
 
 async function raidleadLogin(){
   const pin=document.getElementById("raidleadPin").value.trim();
