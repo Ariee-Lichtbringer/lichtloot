@@ -846,9 +846,9 @@ async function createRaidFromLootPage(){
   }
 }
 
-const RAID_NAME = "ony";
+const RAID_NAME = "ONY";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ony";
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ONY";
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 
@@ -1307,7 +1307,7 @@ function collectStats(obj){
 }
 
 function findLootItem(itemName){
-  return onyLoot.find(item =>
+  return ONYLoot.find(item =>
     String(item.name || "").toLowerCase() === String(itemName || "").toLowerCase()
   ) || null;
 }
@@ -1392,7 +1392,7 @@ function fillItems(){
   const select=document.getElementById("p1");
   select.innerHTML=`<option value="">Item auswählen</option>`;
 
-  onyLoot.forEach(item=>{
+  ONYLoot.forEach(item=>{
     const option=document.createElement("option");
     option.value=item.name;
     option.textContent=item.name;
