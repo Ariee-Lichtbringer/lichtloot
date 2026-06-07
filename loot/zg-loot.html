@@ -58,7 +58,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
 .mini-btn.plus{color:#facc15}
 .mini-btn.active{background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));color:#111827;border-color:#facc15}
-.mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));color:white;border-color:#facc15}
+.mini-btn.P0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));color:white;border-color:#facc15}
 
 .raidtime-box{margin-top:16px;padding:14px 16px;border-radius:16px;border:1px solid rgba(250,204,21,.25);background:rgba(2,6,23,.55);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;color:#dbeafe;font-size:14px;line-height:1.45}
 .raidtime-box strong{color:#facc15}
@@ -77,8 +77,8 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip-row{display:flex;justify-content:space-between;gap:14px}
 .tooltip-equip{color:#1eff00;font-size:11px;font-weight:400;margin-top:6px}
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
-.tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
-.tooltip-p0 strong{color:#facc15;font-size:11px}
+.tooltip-P0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
+.tooltip-P0 strong{color:#facc15;font-size:11px}
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
 
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
@@ -131,8 +131,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .myprio-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#facc15;font-weight:900;margin-bottom:8px}
 .myprio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;line-height:1.45}
 .myprio-label{color:#cbd5e1;font-weight:900}.myprio-value{color:#f8fafc}
-.myprio-p0-list{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.55}
-.myprio-p0-list strong{color:#facc15}
+.myprio-P0-list{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.55}
+.myprio-P0-list strong{color:#facc15}
 @media(max-width:900px){.myprios-box{position:fixed;top:12px;left:12px;right:12px;width:auto}.myprios-form{grid-template-columns:1fr}}
 
 
@@ -247,7 +247,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .pin-output{padding:11px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.12);font-weight:900;color:#facc15;letter-spacing:.12em}
 .copy-btn,.tool-btn{padding:10px 16px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(96,165,250,.20));color:white;font-weight:800;cursor:pointer}
 
-.p0plus-overlay{
+.P0plus-overlay{
   position:fixed;
   top:78px;
   left:25px;
@@ -257,7 +257,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   filter:none;
 }
 
-.p0plus-box{
+.P0plus-box{
   background:rgba(12,18,32,.96);
   border:1px solid rgba(250,204,21,.35);
   border-radius:18px;
@@ -269,19 +269,19 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   text-rendering:geometricPrecision;
 }
 
-.p0plus-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-.p0plus-head h2{color:#facc15;margin:0}
-.p0plus-head button{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
-.p0plus-search-box{margin-bottom:14px;position:relative}
-.p0plus-search-box input{width:100%;padding:12px 13px 12px 38px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(2,6,23,.82);color:white;font-size:14px;font-weight:700}
-.p0plus-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15;z-index:2}
-.p0plus-content{max-height:520px;overflow:auto;font-size:14px}
-.p0plus-raid{margin-top:14px;color:#facc15;font-size:18px;font-weight:900}
-.p0plus-table{width:100%;border-collapse:collapse;margin-top:8px}
-.p0plus-table th,.p0plus-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
-.p0plus-table th{color:#facc15;font-size:12px;text-transform:uppercase}
-.p0plus-item{font-weight:400;cursor:pointer}
-.p0plus-item.epic{color:#c084fc}.p0plus-item.rare{color:#60a5fa}.p0plus-item.uncommon{color:#4ade80}.p0plus-item.legendary{color:#fb923c}
+.P0plus-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.P0plus-head h2{color:#facc15;margin:0}
+.P0plus-head button{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
+.P0plus-search-box{margin-bottom:14px;position:relative}
+.P0plus-search-box input{width:100%;padding:12px 13px 12px 38px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(2,6,23,.82);color:white;font-size:14px;font-weight:700}
+.P0plus-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15;z-index:2}
+.P0plus-content{max-height:520px;overflow:auto;font-size:14px}
+.P0plus-raid{margin-top:14px;color:#facc15;font-size:18px;font-weight:900}
+.P0plus-table{width:100%;border-collapse:collapse;margin-top:8px}
+.P0plus-table th,.P0plus-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
+.P0plus-table th{color:#facc15;font-size:12px;text-transform:uppercase}
+.P0plus-item{font-weight:400;cursor:pointer}
+.P0plus-item.epic{color:#c084fc}.P0plus-item.rare{color:#60a5fa}.P0plus-item.uncommon{color:#4ade80}.P0plus-item.legendary{color:#fb923c}
 
 .tooltip{z-index:20000!important}
 
@@ -323,13 +323,13 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .myprio-table .prio-col{min-width:170px}
 .myprio-table .date-col{white-space:nowrap;color:#cbd5e1}
 .myprio-table .status-col{white-space:nowrap}
-.my-own-p0-block{border:1px solid rgba(250,204,21,.28);border-radius:16px;background:rgba(2,6,23,.45);margin-top:12px;padding:0;overflow:hidden}
-.my-own-p0-block .p0plus-raid{margin:0;padding:12px 12px 4px}
-.my-own-p0-block .p0plus-table{table-layout:fixed;margin:0 0 10px}
-.my-own-p0-block .p0plus-table th,.my-own-p0-block .p0plus-table td{padding:8px 12px;vertical-align:top}
-.my-own-p0-block .p0plus-table th:nth-child(1),.my-own-p0-block .p0plus-table td:nth-child(1){width:58%}
-.my-own-p0-block .p0plus-table th:nth-child(2),.my-own-p0-block .p0plus-table td:nth-child(2){width:27%}
-.my-own-p0-block .p0plus-table th:nth-child(3),.my-own-p0-block .p0plus-table td:nth-child(3){width:15%;text-align:right}
+.my-own-P0-block{border:1px solid rgba(250,204,21,.28);border-radius:16px;background:rgba(2,6,23,.45);margin-top:12px;padding:0;overflow:hidden}
+.my-own-P0-block .P0plus-raid{margin:0;padding:12px 12px 4px}
+.my-own-P0-block .P0plus-table{table-layout:fixed;margin:0 0 10px}
+.my-own-P0-block .P0plus-table th,.my-own-P0-block .P0plus-table td{padding:8px 12px;vertical-align:top}
+.my-own-P0-block .P0plus-table th:nth-child(1),.my-own-P0-block .P0plus-table td:nth-child(1){width:58%}
+.my-own-P0-block .P0plus-table th:nth-child(2),.my-own-P0-block .P0plus-table td:nth-child(2){width:27%}
+.my-own-P0-block .P0plus-table th:nth-child(3),.my-own-P0-block .P0plus-table td:nth-child(3){width:15%;text-align:right}
 .delete-prio-btn{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.22);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 .delete-prio-btn:hover{background:rgba(239,68,68,.35)}
 
@@ -347,7 +347,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   .raid-create-box{left:24px;right:24px;margin-left:0;width:auto}
 }
 
-.item-p0plus-line{margin-top:6px;font-size:11px;color:#facc15;font-weight:900;line-height:1.35}
+.item-P0plus-line{margin-top:6px;font-size:11px;color:#facc15;font-weight:900;line-height:1.35}
 
 /* === Raidlead-Öffnung: kompakte veröffentlichte Prioliste === */
 .grid.published-mode #prioCard{
@@ -374,25 +374,25 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <body>
 
-<div id="p0plusOverlay" class="p0plus-overlay hidden">
-  <div class="p0plus-box">
-    <div class="p0plus-head">
-      <h2>p0 Übersicht</h2>
+<div id="P0plusOverlay" class="P0plus-overlay hidden">
+  <div class="P0plus-box">
+    <div class="P0plus-head">
+      <h2>P0+ Übersicht</h2>
       <button onclick="toggleP0PlusOverview()">✕</button>
     </div>
 
-    <div class="p0plus-search-box">
-      <span class="p0plus-search-icon">🔎</span>
+    <div class="P0plus-search-box">
+      <span class="P0plus-search-icon">🔎</span>
       <input
-        id="p0plusSearch"
+        id="P0plusSearch"
         type="text"
         placeholder="Item, Spieler, Raid oder Slot suchen..."
-        oninput="renderP0PlusOverview(window.p0plusEntries || [])"
+        oninput="renderP0PlusOverview(window.P0plusEntries || [])"
       >
     </div>
 
-    <div id="p0plusContent" class="p0plus-content">
-      Lade p0 Punkte …
+    <div id="P0plusContent" class="P0plus-content">
+      Lade P0 Punkte …
     </div>
   </div>
 </div>
@@ -405,7 +405,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <nav class="main-nav" aria-label="LichtLoot Navigation">
   <a class="nav-btn" href="../index.html">Startseite</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
-  <button class="nav-btn" onclick="toggleP0PlusOverview()">p0 Übersicht</button>
+  <button class="nav-btn" onclick="toggleP0PlusOverview()">P0 Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
     <input id="raidleadPin" type="text" placeholder="Raidlead PIN" onkeydown="raidleadEnter(event)">
@@ -445,11 +445,11 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <div class="header">
 <h1>Zul Gurub – Prio-Auswahl</h1>
-<div class="subtitle">p0 zählt nur, wenn der p0-Button aktiv gewählt wurde.</div>
+<div class="subtitle">P0 zählt nur, wenn der P0-Button aktiv gewählt wurde.</div>
 <div id="raidTimeBox" class="raidtime-box">
   <div><strong>Raiddatum:</strong> <span id="raidDateDisplay">wird geladen …</span></div>
   <div><strong>Raidstart:</strong> <span id="raidTimeDisplay">wird geladen …</span></div>
-  <div class="raidtime-status" id="p0DeadlineDisplay">p0-Frist wird geladen …</div>
+  <div class="raidtime-status" id="P0DeadlineDisplay">P0-Frist wird geladen …</div>
 </div>
 </div>
 <div id="mainGrid" class="grid">
@@ -540,7 +540,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <th>P1</th>
 <th>P2</th>
 <th>P3</th>
-<th>p0</th>
+<th>P0</th>
 </tr>
 </thead>
 <tbody id="publishedTable">
@@ -705,16 +705,16 @@ const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiS
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
 
-let p0PlusData = {};
+let P0PlusData = {};
 let zgLoot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
 let currentRaidDate = "";
 let currentRaidTime = "";
-let p0DeadlineTimer = null;
+let P0DeadlineTimer = null;
 
-window.p0PlusWasClicked = false;
+window.P0PlusWasClicked = false;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
@@ -782,11 +782,11 @@ function isP0DeadlineClosed(){
 function getP0DeadlineClosedMessage(){
   const deadline=getP0Deadline();
   if(!deadline){
-    return "p0 kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
+    return "P0 kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
   }
 
   const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-  return "p0 ist bereits geschlossen. p0 konnte nur bis " + deadlineText + " gesetzt werden.";
+  return "P0 ist bereits geschlossen. P0 konnte nur bis " + deadlineText + " gesetzt werden.";
 }
 
 function formatRaidDate(value){
@@ -815,7 +815,7 @@ function formatDuration(ms){
 function updateRaidTimeDisplay(){
   const dateEl=document.getElementById("raidDateDisplay");
   const timeEl=document.getElementById("raidTimeDisplay");
-  const deadlineEl=document.getElementById("p0DeadlineDisplay");
+  const deadlineEl=document.getElementById("P0DeadlineDisplay");
   if(!dateEl || !timeEl || !deadlineEl) return;
 
   dateEl.textContent=formatRaidDate(currentRaidDate);
@@ -823,7 +823,7 @@ function updateRaidTimeDisplay(){
 
   const deadline=getP0Deadline();
   if(!deadline){
-    deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> p0 bleibt vorerst auswählbar.';
+    deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> P0 bleibt vorerst auswählbar.';
     return;
   }
 
@@ -831,9 +831,9 @@ function updateRaidTimeDisplay(){
   const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
 
   if(now <= deadline){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 p0 möglich bis '+deadlineText+'</span><br>Noch offen: '+formatDuration(deadline-now);
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 möglich bis '+deadlineText+'</span><br>Noch offen: '+formatDuration(deadline-now);
   }else{
-    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 p0 geschlossen</span><br>p0 konnte nur bis '+deadlineText+' gesetzt werden.';
+    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0 geschlossen</span><br>P0 konnte nur bis '+deadlineText+' gesetzt werden.';
   }
 
   updateActiveButtons();
@@ -1068,15 +1068,15 @@ function getP0PlusEntriesForItem(itemName){
     });
   }
 
-  if(Array.isArray(window.p0plusEntries)) addList(window.p0plusEntries);
-  if(Array.isArray(window.p0PlusEntries)) addList(window.p0PlusEntries);
-  if(Array.isArray(window.p0PlusData)) addList(window.p0PlusData);
+  if(Array.isArray(window.P0plusEntries)) addList(window.P0plusEntries);
+  if(Array.isArray(window.P0PlusEntries)) addList(window.P0PlusEntries);
+  if(Array.isArray(window.P0PlusData)) addList(window.P0PlusData);
 
-  Object.values(window.p0PlusData || {}).forEach(value => {
+  Object.values(window.P0PlusData || {}).forEach(value => {
     if(Array.isArray(value)) addList(value);
   });
 
-  Object.values(window.p0plusData || {}).forEach(value => {
+  Object.values(window.P0plusData || {}).forEach(value => {
     if(Array.isArray(value)) addList(value);
   });
 
@@ -1096,8 +1096,8 @@ function renderP0PlusBelowItem(itemName){
   entries.sort((a,b) => Number(getP0Points(b) || 0) - Number(getP0Points(a) || 0));
 
   return `
-    <div class="item-p0plus-line">
-      p0: ${entries.map(e => `${safe(getP0Player(e) || "?")} (${safe(getP0Points(e) || 0)})`).join(", ")}
+    <div class="item-P0plus-line">
+      P0: ${entries.map(e => `${safe(getP0Player(e) || "?")} (${safe(getP0Points(e) || 0)})`).join(", ")}
     </div>
   `;
 }
@@ -1124,7 +1124,7 @@ function renderTooltipLines(text){
   }).join("");
 }
 
-function p0FromText(text){
+function P0FromText(text){
   if(!text) return [];
   return String(text).split(";").map(e=>e.trim()).filter(Boolean);
 }
@@ -1250,7 +1250,7 @@ function itemHtml(itemName){
   const item=findAnyKnownLootItem(itemName, RAID_NAME);
 
   if(!item){
-    return `<span class="p0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>`;
+    return `<span class="P0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>`;
   }
 
   return `
@@ -1303,7 +1303,7 @@ async function loadLootFromSheet(){
         boss: obj.Boss || "",
         category: "",
         wowhead: "",
-        p0: [],
+        P0: [],
         stats: String(obj.Stats_DE || "")
           .split("|")
           .map(s => s.trim())
@@ -1395,7 +1395,7 @@ function renderLootList(){
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>
       <button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>
-      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">p0</button>
+      <button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="P0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0</button>
     `;
 
     row.appendChild(name);
@@ -1407,7 +1407,7 @@ function renderLootList(){
 }
 
 function setPrio(slot,itemName){
-  window.p0PlusWasClicked = false;
+  window.P0PlusWasClicked = false;
 
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML=
@@ -1419,28 +1419,28 @@ function setPrio(slot,itemName){
 
 function setP0Plus(itemName){
   if(isP0DeadlineClosed()){
-    window.p0PlusWasClicked = false;
+    window.P0PlusWasClicked = false;
     document.getElementById("playerStatus").innerHTML=
       `<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     updateActiveButtons();
     return;
   }
 
-  window.p0PlusWasClicked = true;
+  window.P0PlusWasClicked = true;
 
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
   document.getElementById("p3").value=itemName;
 
   document.getElementById("playerStatus").innerHTML=
-    `<span class="ok">✓ ${itemName} wurde aktiv als p0 gesetzt.</span>`;
+    `<span class="ok">✓ ${itemName} wurde aktiv als P0 gesetzt.</span>`;
 
   autoSaveDraft();
   updateActiveButtons();
 }
 
 function manualSelectChanged(){
-  window.p0PlusWasClicked = false;
+  window.P0PlusWasClicked = false;
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -1450,24 +1450,24 @@ function updateActiveButtons(){
   const p2=document.getElementById("p2").value;
   const p3=document.getElementById("p3").value;
 
-  const p0Closed=isP0DeadlineClosed();
+  const P0Closed=isP0DeadlineClosed();
 
   document.querySelectorAll(".mini-btn").forEach(btn=>{
     btn.classList.remove("active");
-    btn.classList.remove("p0active");
+    btn.classList.remove("P0active");
 
-    if(btn.dataset && btn.dataset.prio === "p0plus"){
-      btn.disabled = p0Closed;
-      btn.style.opacity = p0Closed ? ".35" : "";
-      btn.style.cursor = p0Closed ? "not-allowed" : "pointer";
-      btn.title = p0Closed ? getP0DeadlineClosedMessage() : "";
+    if(btn.dataset && btn.dataset.prio === "P0plus"){
+      btn.disabled = P0Closed;
+      btn.style.opacity = P0Closed ? ".35" : "";
+      btn.style.cursor = P0Closed ? "not-allowed" : "pointer";
+      btn.title = P0Closed ? getP0DeadlineClosedMessage() : "";
     }
   });
 
-  if(window.p0PlusWasClicked && p1 && p1===p2 && p2===p3){
+  if(window.P0PlusWasClicked && p1 && p1===p2 && p2===p3){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
-      .forEach(btn=>btn.classList.add("p0active"));
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="P0plus"]`)
+      .forEach(btn=>btn.classList.add("P0active"));
     return;
   }
 
@@ -1509,7 +1509,7 @@ function autoSaveDraft(){
     p2:document.getElementById("p2").value,
     p3:document.getElementById("p3").value,
     playerPin:document.getElementById("playerPin").value,
-    p0PlusWasClicked:window.p0PlusWasClicked,
+    P0PlusWasClicked:window.P0PlusWasClicked,
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -1535,7 +1535,7 @@ function loadPlayerData(){
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
-  window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.P0PlusWasClicked = Boolean(data.P0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
@@ -1543,7 +1543,7 @@ function loadPlayerData(){
   updateActiveButtons();
 }
 
-function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
+function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,P0Plus){
   let data=JSON.parse(localStorage.getItem("zg_prios")||"[]");
 
   data=data.filter(entry=>
@@ -1560,7 +1560,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     p1:p1,
     p2:p2,
     p3:p3,
-    p0Plus:p0Plus,
+    P0Plus:P0Plus,
     timestamp:new Date().toISOString()
   });
 
@@ -1761,8 +1761,8 @@ function loadPlayerByPin(){
       if(result.p2) document.getElementById("p2").value=result.p2;
       if(result.p3) document.getElementById("p3").value=result.p3;
 
-      window.p0PlusWasClicked =
-        String(result.p0Plus || "").toLowerCase() === "ja";
+      window.P0PlusWasClicked =
+        String(result.P0Plus || "").toLowerCase() === "ja";
 
       updateActiveButtons();
       autoSaveDraft();
@@ -1787,7 +1787,7 @@ function buildSavePrioUrl(savePin, oldPin){
   const p3=document.getElementById("p3").value;
 
   const isP0Plus =
-    Boolean(window.p0PlusWasClicked) &&
+    Boolean(window.P0PlusWasClicked) &&
     p1 &&
     p1 === p2 &&
     p2 === p3;
@@ -1804,7 +1804,7 @@ function buildSavePrioUrl(savePin, oldPin){
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
-    "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
+    "&P0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
 
   if(oldPin && oldPin !== savePin){
     url +=
@@ -1848,7 +1848,7 @@ async function savePrio(){
   const savedRaidPin = getSavedRaidSpecificPlayerPin();
 
   const isP0Plus =
-    Boolean(window.p0PlusWasClicked) &&
+    Boolean(window.P0PlusWasClicked) &&
     p1 &&
     p1 === p2 &&
     p2 === p3;
@@ -1888,7 +1888,7 @@ async function savePrio(){
 
     status.innerHTML =
       `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
-      `p0: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
+      `P0: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
       `<span class="warn">${pinLabel}:</span> <strong>${displayedPin}</strong><br>`+
       `Bitte notieren. Du brauchst ihn, wenn du deine Prio später ändern willst.`;
     await loadPublishedPrios();
@@ -2019,8 +2019,8 @@ async function loadPublishedPrios(){
     currentRaidDate = result.raidDate || result.datum || result.Datum || "";
     currentRaidTime = result.raidTime || result.uhrzeit || result.Uhrzeit || "";
     updateRaidTimeDisplay();
-    if(p0DeadlineTimer) clearInterval(p0DeadlineTimer);
-    p0DeadlineTimer=setInterval(updateRaidTimeDisplay,30000);
+    if(P0DeadlineTimer) clearInterval(P0DeadlineTimer);
+    P0DeadlineTimer=setInterval(updateRaidTimeDisplay,30000);
 
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
@@ -2184,18 +2184,18 @@ function showTooltip(event,item){
   if(!tooltip) return;
 
   const lines = item.tooltipText ? renderTooltipLines(item.tooltipText) : "";
-  const p0Entries = getP0PlusEntriesForItem(item.name);
+  const P0Entries = getP0PlusEntriesForItem(item.name);
 
   tooltip.innerHTML = `
     <div class="tooltip-title ${item.quality || "epic"}">${safe(item.name || "")}</div>
     <div class="tooltip-ilvl">${safe(item.ilvl || "")}</div>
-    ${item.dropchance ? `<div class="tooltip-p0"><strong>Dropchance:</strong> ${safe(item.dropchance)}%</div>` : ""}
-    ${p0Entries.length ? `<div class="tooltip-p0"><strong>p0 Punkte:</strong><ul>${p0Entries.map(e=>`<li>${safe(getP0Player(e) || "?")}: ${safe(getP0Points(e) || 0)}</li>`).join("")}</ul></div>` : ""}
+    ${item.dropchance ? `<div class="tooltip-P0"><strong>Dropchance:</strong> ${safe(item.dropchance)}%</div>` : ""}
+    ${P0Entries.length ? `<div class="tooltip-P0"><strong>P0 Punkte:</strong><ul>${P0Entries.map(e=>`<li>${safe(getP0Player(e) || "?")}: ${safe(getP0Points(e) || 0)}</li>`).join("")}</ul></div>` : ""}
     ${lines || `
       ${item.slot ? `<div class="tooltip-row">${safe(item.slot)} ${safe(item.type || "")}</div>` : ""}
       ${(item.stats || []).map(stat=>`<div class="tooltip-equip">${safe(stat)}</div>`).join("")}
     `}
-    ${item.boss ? `<div class="tooltip-p0"><strong>Boss:</strong> ${safe(item.boss)}</div>` : ""}
+    ${item.boss ? `<div class="tooltip-P0"><strong>Boss:</strong> ${safe(item.boss)}</div>` : ""}
   `;
 
   tooltip.classList.remove("hidden");
@@ -2358,7 +2358,7 @@ function deleteCharacterProfile(player, server){
   renderCharacterButtons();
 }
 
-function p0Key(value){
+function P0Key(value){
   return String(value || "")
     .toLowerCase()
     .trim()
@@ -2369,20 +2369,20 @@ function p0Key(value){
 
 function loadP0PlusFromSheet(){
   return new Promise((resolve) => {
-    p0PlusData = {};
+    P0PlusData = {};
 
     const callbackName = "receiveP0Plus_" + Date.now();
 
     window[callbackName] = function(result){
       if(result && result.success && result.entries){
         result.entries.forEach(entry => {
-          const key = p0Key(entry.item);
+          const key = P0Key(entry.item);
 
-          if(!p0PlusData[key]){
-            p0PlusData[key] = [];
+          if(!P0PlusData[key]){
+            P0PlusData[key] = [];
           }
 
-          p0PlusData[key].push({
+          P0PlusData[key].push({
             player: entry.player,
             count: entry.count
           });
@@ -2487,7 +2487,7 @@ function renderMyPrios(data){
   status.innerHTML='<span class="ok">✓ Prios für '+safe(data.player || '')+' – '+safe(data.server || '')+' geladen.</span>';
 
   if(!entries.length && !ownP0.length){
-    results.innerHTML='<div class="status">Keine Prios oder p0 Punkte gefunden.</div>';
+    results.innerHTML='<div class="status">Keine Prios oder P0 Punkte gefunden.</div>';
     return;
   }
 
@@ -2496,9 +2496,9 @@ function renderMyPrios(data){
   if(entries.length){
     html+='<h3 style="color:#facc15;margin-top:4px">Aktuelle Prios und letzte 5 Raids</h3>';
     entries.forEach(entry=>{
-      const p0List=(entry.ownP0PlusPoints || []).length
+      const P0List=(entry.ownP0PlusPoints || []).length
         ? (entry.ownP0PlusPoints || []).map(point=>'<div>• '+safe(point.item)+' <strong>'+safe(point.count)+'</strong>'+(point.slot ? ' <span class="myprio-label">('+safe(point.slot)+')</span>' : '')+'</div>').join('')
-        : '<div>Keine eigenen p0 Punkte für diesen Raid.</div>';
+        : '<div>Keine eigenen P0 Punkte für diesen Raid.</div>';
 
       html+=`<div class="myprio-card">
         <div class="myprio-title">
@@ -2507,18 +2507,18 @@ function renderMyPrios(data){
         </div>
         <div class="myprio-grid">
           <div><span class="myprio-label">Datum:</span> <span class="myprio-value">${safe(formatMyPrioDate(entry.createdAt))}</span></div>
-          <div><span class="myprio-label">p0:</span> <span class="myprio-value">${safe(entry.p0Plus || 'nein')}</span></div>
+          <div><span class="myprio-label">P0:</span> <span class="myprio-value">${safe(entry.P0Plus || 'nein')}</span></div>
           <div><span class="myprio-label">P1:</span> <span class="myprio-value">${safe(entry.p1 || '-')}</span></div>
           <div><span class="myprio-label">P2:</span> <span class="myprio-value">${safe(entry.p2 || '-')}</span></div>
           <div><span class="myprio-label">P3:</span> <span class="myprio-value">${safe(entry.p3 || '-')}</span></div>
         </div>
-        <div class="myprio-p0-list"><strong>Eigene p0 Punkte:</strong>${p0List}</div>
+        <div class="myprio-P0-list"><strong>Eigene P0 Punkte:</strong>${P0List}</div>
       </div>`;
     });
   }
 
   if(ownP0.length){
-    html+='<h3 style="color:#facc15;margin-top:10px">Alle eigenen p0 Punkte</h3>';
+    html+='<h3 style="color:#facc15;margin-top:10px">Alle eigenen P0 Punkte</h3>';
     const byRaid={};
     ownP0.forEach(point=>{
       const raid=point.raid || 'Raid';
@@ -2526,7 +2526,7 @@ function renderMyPrios(data){
       byRaid[raid].push(point);
     });
     Object.keys(byRaid).sort().forEach(raid=>{
-      html+=`<div class="myprio-card"><div class="myprio-title"><span>${safe(raid)}</span></div><div class="myprio-p0-list">`;
+      html+=`<div class="myprio-card"><div class="myprio-title"><span>${safe(raid)}</span></div><div class="myprio-P0-list">`;
       byRaid[raid].forEach(point=>{
         html+=`<div>• ${safe(point.item)} <strong>${safe(point.count)}</strong>${point.slot ? ' <span class="myprio-label">('+safe(point.slot)+')</span>' : ''}</div>`;
       });
@@ -2663,7 +2663,7 @@ async function createRaidFromLootPage(){
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
       <strong>Raid:</strong><br>${r.name}<br><br>
       <strong>Raidstart:</strong><br>${formatRaidDateForCreate(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/p0 möglich bis ${formatP0DeadlineForCreate(raidDate,raidTime)} Uhr.</span><br><br>
+      <span class="warn">P0/P0 möglich bis ${formatP0DeadlineForCreate(raidDate,raidTime)} Uhr.</span><br><br>
       <strong>Prio PIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
@@ -2700,12 +2700,12 @@ function safeAttr(value){
 }
 
 
-/* === Gemeinsame Datenquellen für Mein LichtLoot/p0 === */
+/* === Gemeinsame Datenquellen für Mein LichtLoot/P0 === */
 var RAID_API_URL = APPS_SCRIPT_URL;
 var lootDataByRaid = {};
 window.lootDataByRaid = lootDataByRaid;
-window.p0plusEntries = window.p0plusEntries || [];
-    if(typeof renderLootList === 'function') renderLootList(); // refresh after p0 load
+window.P0plusEntries = window.P0plusEntries || [];
+    if(typeof renderLootList === 'function') renderLootList(); // refresh after P0 load
 var LOOT_CSV_URLS = {
   mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
   zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_zg",
@@ -2988,7 +2988,7 @@ async function addTwinkToPlayerPin(){
 
 
 function toggleP0PlusOverview(){
-  const overlay = document.getElementById("p0plusOverlay");
+  const overlay = document.getElementById("P0plusOverlay");
   overlay.classList.toggle("hidden");
 
   if(!overlay.classList.contains("hidden")){
@@ -2997,28 +2997,28 @@ function toggleP0PlusOverview(){
 }
 
 function loadP0PlusOverview(){
-  const content = document.getElementById("p0plusContent");
-  content.innerHTML = "Lade p0 Punkte …";
+  const content = document.getElementById("P0plusContent");
+  content.innerHTML = "Lade P0 Punkte …";
 
   const callbackName = "receiveP0PlusOverview_" + Date.now();
 
   window[callbackName] = function(result){
     if(!result || !result.success){
-      content.innerHTML = `<span class="bad">p0 Punkte konnten nicht geladen werden.</span>`;
+      content.innerHTML = `<span class="bad">P0 Punkte konnten nicht geladen werden.</span>`;
       cleanup();
       return;
     }
 
-    window.p0plusEntries = result.entries || [];
+    window.P0plusEntries = result.entries || [];
 
     Promise.all(
       Object.keys(LOOT_CSV_URLS).map(raid => loadLootDataForRaid(raid))
     ).then(()=>{
-      renderP0PlusOverview(window.p0plusEntries);
+      renderP0PlusOverview(window.P0plusEntries);
       cleanup();
     }).catch(error=>{
       console.error(error);
-      renderP0PlusOverview(window.p0plusEntries);
+      renderP0PlusOverview(window.P0plusEntries);
       cleanup();
     });
   };
@@ -3032,7 +3032,7 @@ function loadP0PlusOverview(){
     "&t=" + Date.now();
 
   script.onerror = function(){
-    content.innerHTML = `<span class="bad">p0 API konnte nicht geladen werden.</span>`;
+    content.innerHTML = `<span class="bad">P0 API konnte nicht geladen werden.</span>`;
     cleanup();
   };
 
@@ -3047,11 +3047,11 @@ function loadP0PlusOverview(){
 }
 
 function renderP0PlusOverview(entries){
-  entries = entries || window.p0plusEntries || [];
+  entries = entries || window.P0plusEntries || [];
 
-  const content = document.getElementById("p0plusContent");
+  const content = document.getElementById("P0plusContent");
   const search =
-    document.getElementById("p0plusSearch")
+    document.getElementById("P0plusSearch")
       ?.value
       .trim()
       .toLowerCase() || "";
@@ -3068,7 +3068,7 @@ function renderP0PlusOverview(entries){
   }
 
   if(!entries.length){
-    content.innerHTML = "Keine p0 Punkte vorhanden.";
+    content.innerHTML = "Keine P0 Punkte vorhanden.";
     return;
   }
 
@@ -3087,9 +3087,9 @@ function renderP0PlusOverview(entries){
   let html = "";
 
   Object.keys(grouped).sort().forEach(raid => {
-    html += `<div class="p0plus-raid">${safeHtml(raid)}</div>`;
+    html += `<div class="P0plus-raid">${safeHtml(raid)}</div>`;
     html += `
-      <table class="p0plus-table">
+      <table class="P0plus-table">
         <thead>
           <tr>
             <th>Item</th>
@@ -3106,7 +3106,7 @@ function renderP0PlusOverview(entries){
       .forEach(entry => {
         html += `
           <tr>
-            <td>${p0PlusItemHtml(entry)}</td>
+            <td>${P0PlusItemHtml(entry)}</td>
             <td>${safeHtml(entry.slot)}</td>
             <td>${safeHtml(entry.player)}</td>
             <td><strong>${safeHtml(entry.count)}</strong></td>
@@ -3160,7 +3160,7 @@ function getP0PlusEntriesForItem(itemName){
   const key = String(itemName || "").trim().toLowerCase();
   const entries = [];
 
-  Object.values(window.p0PlusData || {}).forEach(list => {
+  Object.values(window.P0PlusData || {}).forEach(list => {
     (list || []).forEach(entry => {
       const entryItem = String(entry.item || entry.Item || entry.itemName || "").trim().toLowerCase();
       if(entryItem === key){
@@ -3169,7 +3169,7 @@ function getP0PlusEntriesForItem(itemName){
     });
   });
 
-  (window.p0plusEntries || []).forEach(entry => {
+  (window.P0plusEntries || []).forEach(entry => {
     const entryItem = String(entry.item || entry.Item || entry.itemName || "").trim().toLowerCase();
     if(entryItem === key){
       entries.push(entry);
@@ -3197,7 +3197,7 @@ function renderP0PlusBelowItem(itemName){
 
   return `
     <div style="margin-top:6px;font-size:11px;color:#facc15;font-weight:900;line-height:1.35">
-      p0: ${entries.map(e => `${safe(e.player || e.Spieler || "?")} (${safe(e.points || e.count || e.Punkte || 0)})`).join(", ")}
+      P0: ${entries.map(e => `${safe(e.player || e.Spieler || "?")} (${safe(e.points || e.count || e.Punkte || 0)})`).join(", ")}
     </div>
   `;
 }
@@ -3331,7 +3331,7 @@ function findP0PlusItem(raid,itemName){
   return findAnyKnownLootItem(itemName, raid);
 }
 
-function p0PlusItemHtml(entry){
+function P0PlusItemHtml(entry){
   const raidKey = raidKeyFromEntryRaid(entry.raid);
   const itemName = entry.item || entry.Item || entry.Itemname || entry.Itemname_DE || "";
   const item = findP0PlusItem(entry.raid, itemName);
@@ -3339,7 +3339,7 @@ function p0PlusItemHtml(entry){
 
   return `
     <span
-      class="p0plus-item ${quality}"
+      class="P0plus-item ${quality}"
       onmouseenter="showP0PlusTooltip(event,'${safeAttr(raidKey)}','${safeAttr(itemName)}')"
       onmousemove="moveP0PlusTooltip(event)"
       onmouseleave="hideP0PlusTooltip()"
@@ -3363,7 +3363,7 @@ function showP0PlusTooltip(event,raid,itemName){
   if(!tooltip) return;
 
   const lines = item.tooltipText ? renderTooltipLines(item.tooltipText) : "";
-  const p0Entries = getP0PlusEntriesForItem(item.name);
+  const P0Entries = getP0PlusEntriesForItem(item.name);
   const statHtml = [];
 
   if(item.damage || item.speed){
@@ -3389,9 +3389,9 @@ function showP0PlusTooltip(event,raid,itemName){
     ${(item.slot || item.type)?`<div class="tooltip-row"><span>${safeHtml(item.slot)}</span><span>${safeHtml(item.type)}</span></div>`:""}
     ${lines || statHtml.join("")}
     ${item.equip?`<div class="tooltip-equip">${safeHtml(item.equip)}</div>`:""}
-    ${item.dropchance ? `<div class="tooltip-p0"><strong>Dropchance:</strong> ${safeHtml(item.dropchance)}%</div>` : ""}
-    ${item.boss ? `<div class="tooltip-p0"><strong>Boss:</strong> ${safeHtml(item.boss)}</div>` : ""}
-    ${p0Entries.length ? `<div class="tooltip-p0"><strong>p0 Punkte:</strong><ul>${p0Entries.map(e=>`<li>${safeHtml(getP0Player(e) || "?")}: ${safeHtml(getP0Points(e) || 0)}</li>`).join("")}</ul></div>` : ""}
+    ${item.dropchance ? `<div class="tooltip-P0"><strong>Dropchance:</strong> ${safeHtml(item.dropchance)}%</div>` : ""}
+    ${item.boss ? `<div class="tooltip-P0"><strong>Boss:</strong> ${safeHtml(item.boss)}</div>` : ""}
+    ${P0Entries.length ? `<div class="tooltip-P0"><strong>P0 Punkte:</strong><ul>${P0Entries.map(e=>`<li>${safeHtml(getP0Player(e) || "?")}: ${safeHtml(getP0Points(e) || 0)}</li>`).join("")}</ul></div>` : ""}
   `;
 
   moveP0PlusTooltip(event);
@@ -3651,7 +3651,7 @@ async function loadMyPrios(){
   }
 
   document.getElementById("myPriosChar").value=charName;
-  status.innerHTML='<span class="warn">Lade Prios und P0/p0 für '+safeHtml(charName)+' …</span>';
+  status.innerHTML='<span class="warn">Lade Prios und P0/P0 für '+safeHtml(charName)+' …</span>';
   results.innerHTML='';
 
   try{
@@ -3692,14 +3692,14 @@ function renderMyPrios(data){
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
   if(!entries.length && !ownP0.length){
-    results.innerHTML='<div class="status">Für diesen Charakter wurden keine Prios aus aktuellen oder den letzten 5 Raids und keine P0/p0 Punkte gefunden.</div>';
+    results.innerHTML='<div class="status">Für diesen Charakter wurden keine Prios aus aktuellen oder den letzten 5 Raids und keine P0/P0 Punkte gefunden.</div>';
     return;
   }
 
   let html='';
 
   if(ownP0.length){
-    html+='<h3 style="color:#facc15;margin:4px 0 10px">Eigene P0/p0 Punkte</h3>';
+    html+='<h3 style="color:#facc15;margin:4px 0 10px">Eigene P0/P0 Punkte</h3>';
     html+=renderOwnP0PlusOverviewTable(ownP0);
   }
 
@@ -3712,7 +3712,7 @@ function renderMyPrios(data){
       '<th class="prio-col">P1</th>'+
       '<th class="prio-col">P2</th>'+
       '<th class="prio-col">P3</th>'+
-      '<th>P0/p0</th>'+
+      '<th>P0/P0</th>'+
       '<th>Aktion</th>'+
       '</tr></thead><tbody>';
 
@@ -3735,7 +3735,7 @@ function renderMyPrios(data){
         <td>${myPrioItemHtml(entry, entry.p1)}</td>
         <td>${myPrioItemHtml(entry, entry.p2)}</td>
         <td>${myPrioItemHtml(entry, entry.p3)}</td>
-        <td><strong>${safeHtml(entry.p0Plus || 'nein')}</strong></td>
+        <td><strong>${safeHtml(entry.P0Plus || 'nein')}</strong></td>
         <td><button class="delete-prio-btn" onclick='deleteOwnPrio(${deletePayload})'>🗑️ Löschen</button></td>
       </tr>`;
     });
@@ -3755,7 +3755,7 @@ function myPrioItemHtml(entry,itemName){
   const quality=item ? item.quality : '';
   const tooltipRaid=item && item.raidKey ? item.raidKey : raidKey;
 
-  return `<span class="p0plus-item ${quality}" onmouseenter="showP0PlusTooltip(event,'${safeAttr(tooltipRaid)}','${safeAttr(name)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safeHtml(name)}</span>`;
+  return `<span class="P0plus-item ${quality}" onmouseenter="showP0PlusTooltip(event,'${safeAttr(tooltipRaid)}','${safeAttr(name)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safeHtml(name)}</span>`;
 }
 
 function findItemInAnyRaid(itemName){
@@ -3781,11 +3781,11 @@ function renderOwnP0PlusOverviewTable(points){
     byRaid[raid].push(point);
   });
 
-  let html='<div class="my-own-p0-block">';
+  let html='<div class="my-own-P0-block">';
 
   Object.keys(byRaid).sort().forEach(raid=>{
-    html+=`<div class="p0plus-raid">${safeHtml(raid)}</div>`;
-    html+=`<table class="p0plus-table">
+    html+=`<div class="P0plus-raid">${safeHtml(raid)}</div>`;
+    html+=`<table class="P0plus-table">
       <thead>
         <tr>
           <th>Item</th>
@@ -3799,7 +3799,7 @@ function renderOwnP0PlusOverviewTable(points){
       .sort((a,b)=>String(a.item || '').localeCompare(String(b.item || ''),'de'))
       .forEach(point=>{
         html+=`<tr>
-          <td>${p0PlusItemHtml({raid:raid,item:point.item})}</td>
+          <td>${P0PlusItemHtml({raid:raid,item:point.item})}</td>
           <td>${safeHtml(point.slot || '')}</td>
           <td><strong>${safeHtml(point.count || 0)}</strong></td>
         </tr>`;
