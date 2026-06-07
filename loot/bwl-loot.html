@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot - Ahn'Qiraj 40</title>
+<title>Lichtloot - Blackwing Lair</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq40.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -421,7 +421,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
   <label>Raid auswählen</label>
   <select id="createRaidSelect">
-    <option value="aq40" selected>Ahn'Qiraj 40</option>
+    <option value="bwl" selected>Blackwing Lair</option>
     <option value="mc">Molten Core</option>
     <option value="bwl">Blackwing Lair</option>
     <option value="naxx">Naxxramas</option>
@@ -444,7 +444,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div class="header">
-<h1>Ahn'Qiraj 40 – Prio-Auswahl</h1>
+<h1>Blackwing Lair – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 <div id="raidTimeBox" class="raidtime-box">
   <div><strong>Raiddatum:</strong> <span id="raidDateDisplay">wird geladen …</span></div>
@@ -699,14 +699,14 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 
 <script>
-const RAID_NAME = "aq40";
+const RAID_NAME = "bwl";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40";
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_bwl";
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbwkqlrvXzp8wnh_mhzAW71GDjv2ng3rSavXiuaCp3xunfKHzxVmXjB0I7-QHk6PEulGjQ/exec";
 
 let p0PlusData = {};
-let aq40Loot = [];
+let bwlLoot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
@@ -992,7 +992,7 @@ async function fetchWowheadIconByItemId(itemId){
 }
 
 async function hydrateLootIcons(){
-  const missing = aq40Loot.filter(item => item.itemId && (!item.icon || /^\d+$/.test(String(item.icon))));
+  const missing = bwlLoot.filter(item => item.itemId && (!item.icon || /^\d+$/.test(String(item.icon))));
 
   await Promise.all(missing.map(async item => {
     const icon = await fetchWowheadIconByItemId(item.itemId);
@@ -1213,7 +1213,7 @@ function findLootItem(itemName){
   const wanted = normalizeItemName(itemName);
   if(!wanted) return null;
 
-  return aq40Loot.find(item =>
+  return bwlLoot.find(item =>
     normalizeItemName(item.name) === wanted
   ) || null;
 }
@@ -1284,7 +1284,7 @@ async function loadLootFromSheet(){
     const rows=parseCSV(csvText);
     const headers=rows.shift().map(h=>h.trim());
 
-    aq40Loot=rows.map(row=>{
+    bwlLoot=rows.map(row=>{
       const obj={};
       headers.forEach((header,index)=>obj[header]=row[index]||"");
 
@@ -1293,7 +1293,7 @@ async function loadLootFromSheet(){
         itemId: obj.ItemID || "",
         icon: getSheetIconName(obj),
         quality: normalizeQuality(obj["Qualität"]),
-        ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Ahn'Qiraj 40",
+        ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Blackwing Lair",
         bind: "",
         slot: obj.Slot_DE || "",
         type: obj.Typ_DE || "",
@@ -1335,7 +1335,7 @@ function fillItems(){
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
 
-    aq40Loot.forEach(item=>{
+    bwlLoot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -1350,7 +1350,7 @@ function renderLootList(){
 
   list.innerHTML="";
 
-  const filteredLoot=aq40Loot.filter(item=>{
+  const filteredLoot=bwlLoot.filter(item=>{
     return [
       item.name,
       item.slot,
@@ -1494,7 +1494,7 @@ function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
 
-  return player ? "aq40_prio_"+server+"_"+player : null;
+  return player ? "bwl_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -1544,7 +1544,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  let data=JSON.parse(localStorage.getItem("aq40_prios")||"[]");
+  let data=JSON.parse(localStorage.getItem("bwl_prios")||"[]");
 
   data=data.filter(entry=>
     !(
@@ -1564,7 +1564,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("aq40_prios",JSON.stringify(data));
+  localStorage.setItem("bwl_prios",JSON.stringify(data));
 }
 
 
@@ -1903,9 +1903,9 @@ async function savePrio(){
 const raidleadAccounts = {
   "Lichtbringer-master":"master",
   "LB-S7XK29":"mc-bwl",
-  "LB-Q4PM18":"aq40",
+  "LB-Q4PM18":"bwl",
   "LB-T9DN52":"zg-aq20",
-  "LB-AQ40-Lead":"aq40"
+  "LB-bwl-Lead":"bwl"
 };
 
 async function raidleadLogin(){
@@ -2263,7 +2263,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -2275,7 +2275,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem("bwl_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -2283,7 +2283,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -2344,7 +2344,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem("bwl_characters") || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -2354,7 +2354,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem("bwl_characters",JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -2403,7 +2403,7 @@ function loadP0PlusFromSheet(){
     script.src =
       P0PLUS_API_URL +
       "?action=getP0Plus" +
-      "&raid=aq40" +
+      "&raid=bwl" +
       "&callback=" + callbackName +
       "&t=" + Date.now();
 
@@ -2551,7 +2551,7 @@ function formatMyPrioDate(value){
 const CREATE_RAIDS = {
   mc:{name:"Molten Core",short:"MC"},
   bwl:{name:"Blackwing Lair",short:"BWL"},
-  aq40:{name:"Ahn'Qiraj 40",short:"AQ40"},
+  bwl:{name:"Blackwing Lair",short:"bwl"},
   naxx:{name:"Naxxramas",short:"NAXX"},
   zg:{name:"ZG 20",short:"ZG"},
   aq20:{name:"AQ 20",short:"AQ20"},
@@ -2709,7 +2709,7 @@ window.p0plusEntries = window.p0plusEntries || [];
 var LOOT_CSV_URLS = {
   mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
   bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
-  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
+  bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_bwl",
   naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
   zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
   aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
@@ -3318,7 +3318,7 @@ function raidKeyFromEntryRaid(raid){
 
   if(value.includes("mc") || value.includes("molten")) return "mc";
   if(value.includes("bwl") || value.includes("blackwing")) return "bwl";
-  if(value.includes("aq40")) return "aq40";
+  if(value.includes("bwl")) return "bwl";
   if(value.includes("naxx")) return "naxx";
   if(value.includes("zg") || value.includes("zul")) return "zg";
   if(value.includes("aq20")) return "aq20";
@@ -3813,12 +3813,12 @@ function renderOwnP0PlusOverviewTable(points){
 }
 
 function renderMyP0Summary(points){
-  const raidsOrder=['MC','BWL','AQ40','NAXX','ZG','AQ20','ONY'];
+  const raidsOrder=['MC','BWL','bwl','NAXX','ZG','AQ20','ONY'];
   const sums={};
 
   (points || []).forEach(point=>{
     const raid=String(point.raid || 'Raid').toUpperCase();
-    const key=raid.includes('MOLTEN') ? 'MC' : raid.includes('BLACKWING') ? 'BWL' : raid.includes('NAXX') ? 'NAXX' : raid.includes('ZUL') ? 'ZG' : raid.includes('ONY') ? 'ONY' : raid.includes('AQ20') ? 'AQ20' : raid.includes('AQ40') ? 'AQ40' : raid;
+    const key=raid.includes('MOLTEN') ? 'MC' : raid.includes('BLACKWING') ? 'BWL' : raid.includes('NAXX') ? 'NAXX' : raid.includes('ZUL') ? 'ZG' : raid.includes('ONY') ? 'ONY' : raid.includes('AQ20') ? 'AQ20' : raid.includes('bwl') ? 'bwl' : raid;
     const count=Number(String(point.count || '0').replace(',', '.')) || 0;
     sums[key]=(sums[key] || 0)+count;
   });
