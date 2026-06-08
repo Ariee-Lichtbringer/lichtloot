@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot - Naxxramas</title>
+<title>Lichtloot - Blackwing Lair</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
@@ -542,7 +542,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div class="header">
-<h1>Naxxramas – Prio-Auswahl</h1>
+<h1>Blackwing Lair – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 <div id="raidTimeBox" class="raidtime-box">
   <div><strong>Raiddatum:</strong> <span id="raidDateDisplay">wird geladen …</span></div>
@@ -797,9 +797,9 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 
 <script>
-const RAID_NAME = "naxx";
+const RAID_NAME = "bwl";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX";
+const LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
@@ -1392,7 +1392,7 @@ async function loadLootFromSheet(){
         itemId: obj.ItemID || "",
         icon: getSheetIconName(obj),
         quality: normalizeQuality(obj["Qualität"]),
-        ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Naxxramas",
+        ilvl: obj.ItemID ? "ItemID: " + obj.ItemID : "Blackwing Lair",
         bind: "",
         slot: obj.Slot_DE || "",
         type: obj.Typ_DE || "",
@@ -2744,7 +2744,7 @@ function formatMyPrioDate(value){
 const CREATE_RAIDS = {
   mc:{name:"Molten Core",short:"MC"},
   bwl:{name:"Blackwing Lair",short:"BWL"},
-  aq40:{name:"Naxxramas",short:"AQ40"},
+  aq40:{name:"AQ 40",short:"AQ40"},
   naxx:{name:"Naxxramas",short:"NAXX"},
   zg:{name:"ZG 20",short:"ZG"},
   aq20:{name:"AQ 20",short:"AQ20"},
@@ -2902,7 +2902,7 @@ window.p0plusEntries = window.p0plusEntries || [];
 var LOOT_CSV_URLS = {
   mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
   bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
-  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
+  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
   naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
   zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
   aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
