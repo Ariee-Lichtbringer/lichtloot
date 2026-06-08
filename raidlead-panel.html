@@ -835,12 +835,12 @@ function renderP0PlusPoints(itemName,isActiveP0Plus){
   const entries = getP0PlusEntriesForItem(itemName);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>Aktiv gesetzt</strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong></strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
   }
 
   return `
     <div class="p0plus-points-list">
-      ${isActiveP0Plus ? '<strong>Aktiv gesetzt</strong>' : '<strong>Punkte</strong>'}
+      ${isActiveP0Plus ? '<strong>Preraid</strong>' : '<strong>Punkte</strong>'}
       ${entries.map(entry => `<div class="player-row">${safe(entry.player)}: ${safe(entry.points)}</div>`).join("")}
     </div>
   `;
