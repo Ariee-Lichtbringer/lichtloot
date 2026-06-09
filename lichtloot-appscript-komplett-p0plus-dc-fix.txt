@@ -1,0 +1,2760 @@
+const RAID_SHEET = "Raids";
+const PRIO_SHEET = "Prios";
+const P0PLUS_SHEET = "P0Plus";
+const PLAYERPIN_SHEET = "PLAYERPINS";
+const TEMP_PLAYERPIN_SHEET = "TEMP_PLAYERPINS";
+
+var __LICHTLOOT_CALLBACK = "";
+
+const MASTER_CODE = "Lichtbringer-Master";
+
+const LOOT_SHEETS = {
+  MC: "LOOT_MC",
+  BWL: "LOOT_BWL",
+  ZG: "LOOT_ZG",
+  AQ20: "LOOT_AQ20",
+  AQ40: "LOOT_AQ40",
+  NAXX: "LOOT_NAXX",
+  ONY: "LOOT_ONY"
+};
+
+/**
+ * LichtLoot / Lichtbringer Raid API
+ *
+ * Wichtige URLs nach dem Veröffentlichen als Web-App:
+ *
+ * Test:
+ * ?action=ping
+ *
+ * Addon-Export aus P0Plus:
+ * ?action=getAddonExport
+ * ?action=getAddonExport&raid=ZG
+ *
+ * Vollständiger Loot-Datenbank-Export aller Raid-Sheets:
+ * ?action=getFullExport
+ *
+ * Vollständiger Export nur für einen Raid:
+ * ?action=getFullExport&raid=ZG
+ *
+ * Gesamtimport-Text für LichtLoot-Addon:
+ * ?action=getFullExportText
+ * ?action=getFullExportText&raid=AQ40
+ */
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents || "{}");
+
+    if (data.action === "createRaid") return createRaid(data);
+    if (data.action === "savePrio") return savePrio(data);
+
+    throw new Error("Unbekannte POST-Aktion.");
+  } catch (error) {
+    return jsonOutput({ success: false, error: error.message });
+  }
+}
+
+function doGet(e) {
+  try {
+    e = e || { parameter: {} };
+    const action = String(e.parameter.action || "ping");
+    const callback = e.parameter.callback || "";
+    __LICHTLOOT_CALLBACK = callback;
+
+    if (action === "ping") {
+      return jsonOrJsonp({
+        success: true,
+        message: "LichtLoot API läuft.",
+        actions: [
+          "getFullExport",
+          "getFullExportText",
+          "getAddonExport",
+          "getP0Plus",
+          "getPublishedPrios",
+          "savePrio",
+          "getPlayerPin",
+          "createPlayerPin",
+          "resetPlayerPin",
+          "getPlayerByPin",
+          "getRaidTemporaryPin",
+          "createRaidTemporaryPin",
+          "getPlayerPrioHistory",
+          "getCharactersByPin",
+          "getRaidByDateTime",
+          "setP0PlusOverride"
+        ]
+      }, callback);
+    }
+
+    if (action === "savePrio") {
+      return savePrio({
+        raidPin: e.parameter.raidPin || e.parameter.playerPin,
+        characterPin: e.parameter.characterPin || e.parameter.playerPin,
+        raid: e.parameter.raid,
+        player: e.parameter.player,
+        server: e.parameter.server,
+        className: e.parameter.className,
+        p1: e.parameter.p1,
+        p2: e.parameter.p2,
+        p3: e.parameter.p3,
+        p0: e.parameter.p0 || e.parameter.p0Item || e.parameter.p0PlusItem,
+        p0Plus: e.parameter.p0Plus,
+        createdAt: new Date().toISOString()
+      });
+    }
+
+    if (action === "getPlayerPin") return getPlayerPin(e);
+    if (action === "createPlayerPin") return createPlayerPin(e);
+    if (action === "addTwink") return addTwink(e);
+    if (action === "resetPlayerPin") return resetPlayerPin(e);
+    if (action === "getPlayerByPin") return getPlayerByPin(e);
+    if (action === "getRaidTemporaryPin") return getRaidTemporaryPin(e);
+    if (action === "createRaidTemporaryPin") return createRaidTemporaryPin(e);
+    if (action === "getPlayerPrioHistory") return getPlayerPrioHistory(e);
+    if (action === "getCharactersByPin") return getCharactersByPin(e);
+
+    if (action === "getPublishedPrios") return getPublishedPrios(e);
+    if (action === "validateLeadPin") return validateLeadPin(e);
+    if (action === "setRaidStatus") return setRaidStatus(e);
+    if (action === "setP0PlusOverride") return setP0PlusOverride(e);
+    if (action === "getRaidByDateTime") return getRaidByDateTime(e);
+    if (action === "deletePrio") return deletePrio(e);
+    if (action === "transferP0PlusPoints") return transferP0PlusPoints(e);
+    if (action === "clearP0PlusForPlayer") return clearP0PlusForPlayer(e);
+    if (action === "getAddonExport") return getAddonExport(e);
+    if (action === "getFullExport") return getFullExport(e);
+    if (action === "getFullExportText") return getFullExportText(e);
+
+    if (action === "getP0Plus") {
+      return jsonOrJsonp(getP0PlusData(e), callback);
+    }
+
+    return jsonOutput({ success: false, error: "Unbekannte GET-Aktion: " + action });
+
+  } catch (error) {
+    return jsonOutput({ success: false, error: error.message });
+  }
+}
+
+/* =========================================================
+   RAIDS / PRIORITÄTEN
+   ========================================================= */
+
+function createRaid(data) {
+  const sheet = getRequiredSheet(RAID_SHEET);
+
+  sheet.appendRow([
+    data.raidId || "",
+    data.raid || "",
+    data.raidName || "",
+    data.raidDate || "",
+    data.raidTime || "",
+    data.playerPin || "",
+    data.leadPin || "",
+    data.playerLink || "",
+    data.createdAt || new Date().toISOString(),
+    data.status || "geschlossen",
+    data.p0PlusFreigabe || "nein"
+  ]);
+
+  return jsonOutput({ success: true, message: "Raid gespeichert." });
+}
+
+function savePrio(data) {
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+
+  const raidPin = String(data.raidPin || data.playerPin || "").trim();
+  const characterPin = normalizePlayerPin(data.characterPin || "");
+
+  if (!raidPin) throw new Error("Prio-PIN fehlt.");
+  if (!characterPin) throw new Error("SpielerPin fehlt.");
+
+  const raidInfo = findRaidByPin(raidPin);
+  if (!raidInfo || !raidInfo.raidId) {
+    throw new Error("Prio-PIN keinem Raid zugeordnet.");
+  }
+
+  const raidDate = String(raidInfo.raidDate || "").trim();
+  const raidTime = String(raidInfo.raidTime || "").trim();
+  const p0PlusFreigabe = String(raidInfo.p0PlusFreigabe || "nein").trim().toLowerCase();
+  const p0OverrideActive = p0PlusFreigabe === "ja" || p0PlusFreigabe === "true" || p0PlusFreigabe === "aktiv" || p0PlusFreigabe === "freigeschaltet";
+
+  const p0Requested =
+    String(data.p0 || data.p0Item || data.p0PlusItem || "").trim() !== "" ||
+    String(data.p0Plus || "").toLowerCase() === "ja";
+
+  if (p0Requested) {
+    const deadlineCheck = getP0DeadlineCheck_(raidDate, raidTime);
+
+    if (deadlineCheck.hasRaidTime && deadlineCheck.closed && !p0OverrideActive) {
+      throw new Error("P0/P0+ Anmeldungen sind 30 Minuten vor Raidstart geschlossen.");
+    }
+  }
+
+  const raidId = raidInfo.raidId;
+  const raidName = raidInfo.raidName;
+  const raidShort = raidInfo.raidShort;
+
+  const player = String(data.player || "").trim();
+  const server = String(data.server || "").trim();
+
+  if (!player || !server) throw new Error("Spieler oder Server fehlt.");
+
+  const registeredPin = normalizePlayerPin(findPlayerPin(player, server));
+  const tempEntry = findTempPlayerPinEntry(raidId, player, server);
+  const tempPin = tempEntry ? normalizePlayerPin(tempEntry.tempPin) : "";
+
+  const isMasterPin = Boolean(registeredPin && registeredPin === characterPin);
+  const isTemporaryPin = isTemporaryPlayerPin(characterPin);
+  const isCorrectTempPin = Boolean(tempPin && tempPin === characterPin);
+  const isNewTempPin = Boolean(!tempPin && isTemporaryPin);
+
+  const existing = prioSheet.getDataRange().getValues();
+  let existingRowFound = false;
+  let existingRowPin = "";
+
+  for (let i = existing.length - 1; i >= 1; i--) {
+    const rowRaidId = String(existing[i][0] || "");
+    const rowPlayer = String(existing[i][3] || "").trim().toLowerCase();
+    const rowServer = String(existing[i][4] || "").trim().toLowerCase();
+
+    if (
+      rowRaidId === String(raidId) &&
+      rowPlayer === normalizeName(player) &&
+      rowServer === normalizeName(server)
+    ) {
+      existingRowFound = true;
+      existingRowPin = normalizePlayerPin(existing[i][10] || "");
+      break;
+    }
+  }
+
+  let allowed = false;
+
+  if (existingRowFound) {
+    const existingWasSavedWithMasterPin = Boolean(registeredPin && existingRowPin === registeredPin);
+    const existingWasSavedWithTempPin = isTemporaryPlayerPin(existingRowPin);
+
+    if (existingWasSavedWithMasterPin) {
+      // Eine mit Master-SpielerPin erstellte Prio darf nur mit genau diesem Master-SpielerPin geändert werden.
+      allowed = isMasterPin;
+
+      if (!allowed) {
+        throw new Error("Diese Prio wurde mit dem Master-SpielerPin erstellt und kann nicht mit einem temporären SpielerPin überschrieben werden.");
+      }
+    } else if (existingWasSavedWithTempPin) {
+      // Eine temporäre Prio darf mit demselben Temp-Pin oder jederzeit mit dem Master-SpielerPin geändert werden.
+      allowed = isMasterPin || existingRowPin === characterPin || isCorrectTempPin;
+
+      if (!allowed) {
+        throw new Error("Dieser Charakter ist für diesen Raid bereits durch einen anderen temporären SpielerPin geschützt.");
+      }
+    } else {
+      // Fallback für alte Einträge ohne sauberes Pin-Format.
+      allowed = (existingRowPin && existingRowPin === characterPin) || isMasterPin;
+
+      if (!allowed) {
+        throw new Error("Dieser Charakter ist für diesen Raid bereits durch einen anderen SpielerPin geschützt.");
+      }
+    }
+  } else {
+    if (registeredPin) {
+      // Neuer Eintrag: Master-Pin ist erlaubt. Temp-Pin ist nur erlaubt, wenn er korrekt zum Raid/Spieler passt oder neu angelegt wird.
+      allowed = isMasterPin || isCorrectTempPin || isNewTempPin;
+    } else {
+      allowed = isCorrectTempPin || isNewTempPin;
+    }
+
+    if (!allowed) {
+      if (registeredPin) {
+        throw new Error("Falscher SpielerPin für diesen Charakter.");
+      }
+      throw new Error("Ungültiger temporärer SpielerPin. Temporäre Pins müssen mit T beginnen und genau drei Zahlen enthalten, z. B. T123.");
+    }
+  }
+
+  if (isTemporaryPin) {
+    ensureTempPlayerPinRegistered(raidId, raidPin, player, server, characterPin);
+  }
+
+  for (let i = existing.length - 1; i >= 1; i--) {
+    const rowRaidId = String(existing[i][0] || "");
+    const rowPlayer = String(existing[i][3] || "").trim().toLowerCase();
+    const rowServer = String(existing[i][4] || "").trim().toLowerCase();
+
+    if (
+      rowRaidId === String(raidId) &&
+      rowPlayer === normalizeName(player) &&
+      rowServer === normalizeName(server)
+    ) {
+      prioSheet.deleteRow(i + 1);
+    }
+  }
+
+  const p0Plus = String(data.p0Plus || "").toLowerCase() === "ja" ? "ja" : "nein";
+
+  prioSheet.appendRow([
+    raidId,
+    raidName,
+    raidShort,
+    player,
+    server,
+    data.className || "",
+    data.p1 || "",
+    data.p2 || "",
+    data.p3 || "",
+    p0Plus,
+    characterPin,
+    data.createdAt || new Date().toISOString()
+  ]);
+
+  return jsonOutput({
+    success: true,
+    raidId: raidId,
+    characterPin: characterPin,
+    tempPin: isTemporaryPin ? characterPin : tempPin
+  });
+}
+
+function getPublishedPrios(e) {
+  const inputPin = e.parameter.playerPin || e.parameter.leadPin || e.parameter.raidleadPin || e.parameter.raidPin || e.parameter.pin || "";
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+
+  const raids = raidSheet.getDataRange().getValues();
+  const prios = prioSheet.getDataRange().getValues();
+
+  let raidId = "";
+  let raidShort = "";
+  let raidName = "";
+  let raidDate = "";
+  let raidTime = "";
+  let playerPin = "";
+  let leadPin = "";
+  let status = "geschlossen";
+  let p0PlusFreigabe = "nein";
+
+  for (let i = 1; i < raids.length; i++) {
+    const rowRaidId = String(raids[i][0] || "").trim();
+    const rowPlayerPin = String(raids[i][5] || "").trim();
+    const rowLeadPin = String(raids[i][6] || "").trim();
+
+    if (
+      rowPlayerPin === String(inputPin) ||
+      rowRaidId === String(inputPin) ||
+      rowLeadPin === String(inputPin)
+    ) {
+      raidShort = String(raids[i][1] || "").trim();
+      raidName = String(raids[i][2] || "").trim();
+      raidDate = String(raids[i][3] || "").trim();
+      raidTime = String(raids[i][4] || "").trim();
+      playerPin = rowPlayerPin;
+      leadPin = rowLeadPin;
+      status = String(raids[i][9] || "geschlossen").toLowerCase();
+      p0PlusFreigabe = String(raids[i][10] || "nein").trim().toLowerCase();
+      raidId = ensureRaidIdForRaidRow(raidSheet, i + 1, rowRaidId, raidShort, raidDate, raidTime);
+      migrateBlankPrioRowsToRaidId(prioSheet, raidId, raidShort);
+      break;
+    }
+  }
+
+  if (!raidId) return jsonOutput({ success: false, error: "Kein Raid gefunden." });
+
+  const published =
+    status === "geöffnet" ||
+    status === "offen" ||
+    status === "published" ||
+    status === "true";
+
+  const result = [];
+
+  for (let i = 1; i < prios.length; i++) {
+    if (String(prios[i][0]) === String(raidId)) {
+      result.push({
+        Spieler: prios[i][3],
+        Server: prios[i][4],
+        Klasse: prios[i][5],
+        P1: prios[i][6],
+        P2: prios[i][7],
+        P3: prios[i][8],
+        P0Plus: prios[i][9]
+      });
+    }
+  }
+
+  return jsonOutput({
+    success: true,
+    published: published,
+    raidId: raidId,
+    raid: raidShort,
+    raidName: raidName,
+    raidDate: raidDate,
+    raidTime: raidTime,
+    playerPin: playerPin,
+    leadPin: leadPin,
+    p0PlusFreigabe: p0PlusFreigabe,
+    p0PlusOverride: p0PlusFreigabe === "ja" || p0PlusFreigabe === "true" || p0PlusFreigabe === "aktiv" || p0PlusFreigabe === "freigeschaltet",
+    prios: result
+  });
+}
+
+function validateLeadPin(e) {
+  const leadPin = e.parameter.leadPin || e.parameter.raidleadPin || e.parameter.pin || "";
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const raids = raidSheet.getDataRange().getValues();
+
+  for (let i = 1; i < raids.length; i++) {
+    if (String(raids[i][6]).trim() === String(leadPin).trim()) {
+      const raidShort = String(raids[i][1] || "").trim();
+      const raidId = ensureRaidIdForRaidRow(
+        raidSheet,
+        i + 1,
+        String(raids[i][0] || "").trim(),
+        raidShort,
+        String(raids[i][3] || "").trim(),
+        String(raids[i][4] || "").trim()
+      );
+      migrateBlankPrioRowsToRaidId(getRequiredSheet(PRIO_SHEET), raidId, raidShort);
+
+      return jsonOutput({
+        success: true,
+        raidId: raidId,
+        raid: raidShort,
+        raidName: raids[i][2],
+        raidDate: raids[i][3],
+        raidTime: raids[i][4],
+        playerPin: raids[i][5],
+        leadPin: raids[i][6],
+        status: raids[i][9] || "geschlossen",
+        p0PlusFreigabe: raids[i][10] || "nein",
+        p0PlusOverride: String(raids[i][10] || "nein").trim().toLowerCase() === "ja",
+        role: "generated-lead"
+      });
+    }
+  }
+
+  return jsonOutput({ success: false, error: "LeadPIN nicht gefunden." });
+}
+
+function setRaidStatus(e) {
+  let raidId = String(e.parameter.raidId || "").trim();
+  const leadPin = String(e.parameter.leadPin || e.parameter.raidleadPin || e.parameter.pin || "").trim();
+  const status = e.parameter.status || "geschlossen";
+  const sheet = getRequiredSheet(RAID_SHEET);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowLeadPin = String(values[i][6] || "").trim();
+
+    if ((raidId && rowRaidId === raidId) || (!raidId && leadPin && rowLeadPin === leadPin)) {
+      const raidShort = String(values[i][1] || "").trim();
+      raidId = ensureRaidIdForRaidRow(
+        sheet,
+        i + 1,
+        rowRaidId,
+        raidShort,
+        String(values[i][3] || "").trim(),
+        String(values[i][4] || "").trim()
+      );
+      migrateBlankPrioRowsToRaidId(getRequiredSheet(PRIO_SHEET), raidId, raidShort);
+      sheet.getRange(i + 1, 10).setValue(status);
+      return jsonOutput({ success: true, raidId: raidId, status: status });
+    }
+  }
+
+  return jsonOutput({ success: false, error: "RaidID oder LeadPIN nicht gefunden." });
+}
+
+
+function setP0PlusOverride(e) {
+  let raidId = String(e.parameter.raidId || "").trim();
+  const leadPin = String(e.parameter.leadPin || e.parameter.raidleadPin || e.parameter.pin || "").trim();
+  const enabledRaw = String(e.parameter.enabled || e.parameter.value || e.parameter.p0PlusFreigabe || "").trim().toLowerCase();
+  const enabled = enabledRaw === "true" || enabledRaw === "ja" || enabledRaw === "1" || enabledRaw === "aktiv" || enabledRaw === "freigeschaltet";
+
+  const sheet = getRequiredSheet(RAID_SHEET);
+  ensureRaidSheetP0PlusColumn_(sheet);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowLeadPin = String(values[i][6] || "").trim();
+
+    if ((raidId && rowRaidId === raidId) || (!raidId && leadPin && rowLeadPin === leadPin)) {
+      const raidShort = String(values[i][1] || "").trim();
+      raidId = ensureRaidIdForRaidRow(
+        sheet,
+        i + 1,
+        rowRaidId,
+        raidShort,
+        String(values[i][3] || "").trim(),
+        String(values[i][4] || "").trim()
+      );
+
+      sheet.getRange(i + 1, 11).setValue(enabled ? "ja" : "nein");
+
+      return jsonOutput({
+        success: true,
+        raidId: raidId,
+        p0PlusFreigabe: enabled ? "ja" : "nein",
+        enabled: enabled
+      });
+    }
+  }
+
+  return jsonOutput({ success: false, error: "RaidID oder LeadPIN nicht gefunden." });
+}
+
+function getRaidByDateTime(e) {
+  const raid = String(e.parameter.raid || "").trim().toUpperCase();
+  const date = String(e.parameter.date || e.parameter.raidDate || "").trim();
+  const time = String(e.parameter.time || e.parameter.raidTime || "").trim();
+
+  const sheet = getRequiredSheet(RAID_SHEET);
+  ensureRaidSheetP0PlusColumn_(sheet);
+  const values = sheet.getDataRange().getValues();
+
+  const targetDate = normalizeRaidDateForCompare_(date);
+  const targetTime = normalizeRaidTimeForCompare_(time);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowRaid = String(values[i][1] || "").trim().toUpperCase();
+    const rowDate = normalizeRaidDateForCompare_(values[i][3] || "");
+    const rowTime = normalizeRaidTimeForCompare_(values[i][4] || "");
+
+    if (rowRaid === raid && rowDate === targetDate && rowTime === targetTime) {
+      const finalRaidId = ensureRaidIdForRaidRow(
+        sheet,
+        i + 1,
+        rowRaidId,
+        rowRaid,
+        values[i][3],
+        values[i][4]
+      );
+
+      const p0PlusFreigabe = String(values[i][10] || "nein").trim().toLowerCase();
+
+      return jsonOutput({
+        success: true,
+        raidId: finalRaidId,
+        raid: rowRaid,
+        raidName: values[i][2],
+        raidDate: values[i][3],
+        raidTime: values[i][4],
+        playerPin: values[i][5],
+        leadPin: values[i][6],
+        status: values[i][9] || "geschlossen",
+        p0PlusFreigabe: p0PlusFreigabe || "nein",
+        p0PlusOverride: p0PlusFreigabe === "ja" || p0PlusFreigabe === "true" || p0PlusFreigabe === "aktiv" || p0PlusFreigabe === "freigeschaltet"
+      });
+    }
+  }
+
+  return jsonOutput({
+    success: false,
+    error: "Kein passender LichtLoot-Raid gefunden für " + raid + " " + date + " " + time
+  });
+}
+
+function normalizeRaidDateForCompare_(value) {
+  const parts = parseRaidDateParts_(value);
+  if (!parts) return String(value || "").trim();
+  return String(parts.day).padStart(2, "0") + "." +
+         String(parts.month).padStart(2, "0") + "." +
+         String(parts.year);
+}
+
+function normalizeRaidTimeForCompare_(value) {
+  const parts = parseRaidTimeParts_(value);
+  if (!parts) return String(value || "").trim();
+  return String(parts.hour).padStart(2, "0") + ":" +
+         String(parts.minute).padStart(2, "0");
+}
+
+function ensureRaidSheetP0PlusColumn_(sheet) {
+  const lastColumn = sheet.getLastColumn();
+  if (lastColumn < 11) {
+    sheet.getRange(1, 11).setValue("P0PlusFreigabe");
+    return;
+  }
+
+  const header = String(sheet.getRange(1, 11).getValue() || "").trim();
+  if (!header) {
+    sheet.getRange(1, 11).setValue("P0PlusFreigabe");
+  }
+}
+
+function ensureRaidIdForRaidRow(sheet, rowNumber, existingRaidId, raidShort, raidDate, raidTime) {
+  const current = String(existingRaidId || "").trim();
+  if (current) return current;
+
+  const raid = String(raidShort || "RAID").trim().toUpperCase() || "RAID";
+  const datePart = String(raidDate || "").trim().replace(/[^0-9]/g, "").slice(0, 8) || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyyMMdd");
+  const timePart = String(raidTime || "").trim().replace(/[^0-9]/g, "").slice(0, 4) || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "HHmm");
+  const generated = raid + "-" + datePart + "-" + timePart + "-" + Utilities.getUuid().slice(0, 6).toUpperCase();
+
+  sheet.getRange(rowNumber, 1).setValue(generated);
+  return generated;
+}
+
+function migrateBlankPrioRowsToRaidId(prioSheet, raidId, raidShort) {
+  if (!raidId) return;
+
+  const shortValue = String(raidShort || "").trim().toUpperCase();
+  const values = prioSheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowRaidShort = String(values[i][2] || "").trim().toUpperCase();
+
+    if (!rowRaidId && (!shortValue || rowRaidShort === shortValue)) {
+      prioSheet.getRange(i + 1, 1).setValue(raidId);
+    }
+  }
+}
+
+function deletePrio(e) {
+  const raidId = e.parameter.raidId || "";
+  const player = String(e.parameter.player || "").toLowerCase();
+  const server = String(e.parameter.server || "").toLowerCase();
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+  const values = prioSheet.getDataRange().getValues();
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaidId = String(values[i][0] || "");
+    const rowPlayer = String(values[i][3] || "").toLowerCase();
+    const rowServer = String(values[i][4] || "").toLowerCase();
+
+    if (
+      rowRaidId === String(raidId) &&
+      rowPlayer === player &&
+      (!server || rowServer === server)
+    ) {
+      prioSheet.deleteRow(i + 1);
+      return jsonOutput({ success: true, message: "Prio gelöscht." });
+    }
+  }
+
+  return jsonOutput({ success: false, error: "Prio nicht gefunden." });
+}
+
+
+
+
+function findRaidByPin(inputPin) {
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const raids = raidSheet.getDataRange().getValues();
+  const pin = String(inputPin || "").trim();
+
+  for (let i = 1; i < raids.length; i++) {
+    const rowRaidId = String(raids[i][0] || "").trim();
+    const rowPlayerPin = String(raids[i][5] || "").trim();
+    const rowLeadPin = String(raids[i][6] || "").trim();
+
+    if (rowPlayerPin === pin || rowRaidId === pin || rowLeadPin === pin) {
+      const raidShort = String(raids[i][1] || "").trim();
+      const finalRaidId = ensureRaidIdForRaidRow(
+        raidSheet,
+        i + 1,
+        rowRaidId,
+        raidShort,
+        String(raids[i][3] || "").trim(),
+        String(raids[i][4] || "").trim()
+      );
+      migrateBlankPrioRowsToRaidId(getRequiredSheet(PRIO_SHEET), finalRaidId, raidShort);
+
+      return {
+        raidId: finalRaidId,
+        raidShort: raidShort,
+        raidName: String(raids[i][2] || ""),
+        raidDate: String(raids[i][3] || ""),
+        raidTime: String(raids[i][4] || ""),
+        raidPin: rowPlayerPin,
+        leadPin: rowLeadPin,
+        p0PlusFreigabe: String(raids[i][10] || "nein").trim() || "nein"
+      };
+    }
+  }
+
+  return null;
+}
+
+function getTempPlayerPinSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(TEMP_PLAYERPIN_SHEET);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(TEMP_PLAYERPIN_SHEET);
+    sheet.appendRow(["RaidID", "PrioPin", "Spieler", "Server", "TempPin", "CreatedAt"]);
+  }
+
+  return sheet;
+}
+
+function findTempPlayerPinEntry(raidId, charName, server) {
+  const sheet = getTempPlayerPinSheet();
+  const values = sheet.getDataRange().getValues();
+  const targetRaidId = String(raidId || "").trim();
+  const targetChar = normalizeName(charName || "");
+  const targetServer = normalizeName(server || "");
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowChar = String(values[i][2] || "").trim().toLowerCase();
+    const rowServer = String(values[i][3] || "").trim().toLowerCase();
+
+    if (rowRaidId === targetRaidId && rowChar === targetChar && rowServer === targetServer) {
+      return {
+        row: i + 1,
+        raidId: rowRaidId,
+        prioPin: String(values[i][1] || "").trim(),
+        player: String(values[i][2] || "").trim(),
+        server: String(values[i][3] || "").trim(),
+        tempPin: normalizePlayerPin(values[i][4] || "")
+      };
+    }
+  }
+
+  return null;
+}
+
+function findTempPlayerPinOwner(raidId, tempPin) {
+  const sheet = getTempPlayerPinSheet();
+  const values = sheet.getDataRange().getValues();
+  const targetRaidId = String(raidId || "").trim();
+  const targetPin = normalizePlayerPin(tempPin);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaidId = String(values[i][0] || "").trim();
+    const rowPin = normalizePlayerPin(values[i][4] || "");
+
+    if (rowRaidId === targetRaidId && rowPin === targetPin) {
+      return {
+        row: i + 1,
+        raidId: rowRaidId,
+        player: String(values[i][2] || "").trim(),
+        server: String(values[i][3] || "").trim(),
+        tempPin: rowPin
+      };
+    }
+  }
+
+  return null;
+}
+
+function ensureTempPlayerPinRegistered(raidId, raidPin, charName, server, tempPin) {
+  const pin = normalizePlayerPin(tempPin);
+
+  if (!isTemporaryPlayerPin(pin)) {
+    throw new Error("Ungültiger temporärer SpielerPin. Temporäre Pins müssen mit T beginnen und genau drei Zahlen enthalten, z. B. T123.");
+  }
+
+  const existingForPlayer = findTempPlayerPinEntry(raidId, charName, server);
+
+  if (existingForPlayer) {
+    if (normalizePlayerPin(existingForPlayer.tempPin) !== pin) {
+      throw new Error("Dieser Charakter hat für diesen Raid bereits einen anderen temporären SpielerPin.");
+    }
+    return existingForPlayer;
+  }
+
+  const owner = findTempPlayerPinOwner(raidId, pin);
+
+  if (owner) {
+    throw new Error("Dieser temporäre SpielerPin ist in diesem Raid bereits vergeben. Bitte Seite neu laden oder neuen Temp-Pin erzeugen.");
+  }
+
+  const sheet = getTempPlayerPinSheet();
+  sheet.appendRow([
+    raidId,
+    raidPin,
+    charName,
+    server,
+    pin,
+    new Date().toISOString()
+  ]);
+
+  return {
+    raidId: raidId,
+    prioPin: raidPin,
+    player: charName,
+    server: server,
+    tempPin: pin
+  };
+}
+
+function createRaidTemporaryPin(e) {
+  const raidPin = String(e.parameter.raidPin || "").trim();
+  const charName = String(e.parameter.char || e.parameter.player || "").trim();
+  const server = String(e.parameter.server || "").trim();
+
+  if (!raidPin || !charName || !server) {
+    return jsonOutput({ success: false, error: "Prio-PIN, Charaktername oder Server fehlt." });
+  }
+
+  const raidInfo = findRaidByPin(raidPin);
+  if (!raidInfo || !raidInfo.raidId) {
+    return jsonOutput({ success: false, error: "Prio-PIN keinem Raid zugeordnet." });
+  }
+
+  const registeredPin = normalizePlayerPin(findPlayerPin(charName, server));
+  const latestPrio = findLatestPrioForPlayerAndRaidPin(charName, server, raidPin);
+  const latestPrioPin = latestPrio ? normalizePlayerPin(latestPrio.characterPin || "") : "";
+
+  // Master-Prio bleibt Master-Prio: Danach wird kein neuer Temp-Pin mehr für diesen Eintrag erzeugt.
+  if (registeredPin && latestPrioPin === registeredPin) {
+    return jsonOutput({
+      success: false,
+      error: "Diese Prio ist bereits durch den Master-SpielerPin geschützt. Bitte nutze deinen Master-SpielerPin zum Ändern.",
+      protectedByMaster: true
+    });
+  }
+
+  // Wenn die aktuelle Prio schon temporär gespeichert wurde, denselben Temp-Pin wieder ausgeben.
+  if (latestPrioPin && isTemporaryPlayerPin(latestPrioPin)) {
+    ensureTempPlayerPinRegistered(raidInfo.raidId, raidPin, charName, server, latestPrioPin);
+
+    return jsonOutput({
+      success: true,
+      exists: true,
+      pin: latestPrioPin,
+      raidId: raidInfo.raidId
+    });
+  }
+
+  const existing = findTempPlayerPinEntry(raidInfo.raidId, charName, server);
+  if (existing && existing.tempPin) {
+    return jsonOutput({
+      success: true,
+      exists: true,
+      pin: existing.tempPin,
+      raidId: raidInfo.raidId
+    });
+  }
+
+  let pin = "";
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    pin = createTempPinT3();
+    if (!findTempPlayerPinOwner(raidInfo.raidId, pin)) break;
+    pin = "";
+  }
+
+  if (!pin) {
+    return jsonOutput({ success: false, error: "Kein freier temporärer SpielerPin verfügbar." });
+  }
+
+  ensureTempPlayerPinRegistered(raidInfo.raidId, raidPin, charName, server, pin);
+
+  return jsonOutput({
+    success: true,
+    exists: false,
+    pin: pin,
+    raidId: raidInfo.raidId
+  });
+}
+
+function createTempPinT3() {
+  return "T" + String(Math.floor(100 + Math.random() * 900));
+}
+
+
+function getP0DeadlineCheck_(raidDate, raidTime) {
+  const raidStart = parseRaidStartDateTime_(raidDate, raidTime);
+
+  if (!raidStart || isNaN(raidStart.getTime())) {
+    return { hasRaidTime: false, closed: false, raidStart: null, deadline: null };
+  }
+
+  const deadline = new Date(raidStart.getTime() - (30 * 60 * 1000));
+
+  return {
+    hasRaidTime: true,
+    closed: new Date().getTime() > deadline.getTime(),
+    raidStart: raidStart,
+    deadline: deadline
+  };
+}
+
+function parseRaidStartDateTime_(raidDate, raidTime) {
+  const dateParts = parseRaidDateParts_(raidDate);
+  const timeParts = parseRaidTimeParts_(raidTime);
+
+  if (!dateParts || !timeParts) return null;
+
+  return new Date(
+    dateParts.year,
+    dateParts.month - 1,
+    dateParts.day,
+    timeParts.hour,
+    timeParts.minute,
+    0,
+    0
+  );
+}
+
+function parseRaidDateParts_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  let match = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (match) {
+    return { year: Number(match[3]), month: Number(match[2]), day: Number(match[1]) };
+  }
+
+  match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (match) {
+    return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+  }
+
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+    return { year: value.getFullYear(), month: value.getMonth() + 1, day: value.getDate() };
+  }
+
+  const parsed = new Date(raw);
+  if (!isNaN(parsed.getTime())) {
+    return { year: parsed.getFullYear(), month: parsed.getMonth() + 1, day: parsed.getDate() };
+  }
+
+  return null;
+}
+
+function parseRaidTimeParts_(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  let match = raw.match(/(\d{1,2})[:.](\d{2})/);
+  if (match) {
+    return { hour: Number(match[1]), minute: Number(match[2]) };
+  }
+
+  if (Object.prototype.toString.call(value) === "[object Date]" && !isNaN(value.getTime())) {
+    return { hour: value.getHours(), minute: value.getMinutes() };
+  }
+
+  const parsed = new Date(raw);
+  if (!isNaN(parsed.getTime())) {
+    return { hour: parsed.getHours(), minute: parsed.getMinutes() };
+  }
+
+  return null;
+}
+
+/* =========================================================
+   PLAYERPINS
+   ========================================================= */
+
+
+
+function getCharactersByPin(e) {
+  const pin = normalizePlayerPin(e.parameter.pin || e.parameter.playerPin || "");
+
+  if (!pin) {
+    return jsonOutput({
+      success: false,
+      error: "SpielerPin fehlt."
+    });
+  }
+
+  if (isTemporaryPlayerPin(pin)) {
+    return jsonOutput({
+      success: false,
+      error: "Für Mein LichtLoot brauchst du deinen Master-SpielerPin."
+    });
+  }
+
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+  const characters = [];
+  const seen = {};
+
+  for (let i = 1; i < values.length; i++) {
+    const rowPin = normalizePlayerPin(getPlayerPinFromRow(values[i]));
+
+    if (rowPin !== pin) continue;
+
+    const charName = String(values[i][0] || "").trim();
+    const server = String(values[i][1] || "").trim();
+    const className = getPlayerClassFromRow(values[i]);
+
+    if (!charName || !server) continue;
+
+    const key = normalizeName(charName) + "|" + normalizeName(server);
+    if (seen[key]) continue;
+    seen[key] = true;
+
+    characters.push({
+      char: charName,
+      player: charName,
+      server: server,
+      className: className || "",
+      mainChar: getMainCharFromRow(values[i]) || "",
+      accountId: getAccountIdFromRow(values[i]) || ""
+    });
+  }
+
+  characters.sort(function(a, b) {
+    const mainA = normalizeName(a.mainChar || a.char);
+    const mainB = normalizeName(b.mainChar || b.char);
+
+    if (mainA !== mainB) return mainA.localeCompare(mainB);
+
+    return normalizeName(a.char).localeCompare(normalizeName(b.char));
+  });
+
+  if (!characters.length) {
+    return jsonOutput({
+      success: false,
+      error: "Zu diesem SpielerPin wurden keine Charaktere gefunden."
+    });
+  }
+
+  return jsonOutput({
+    success: true,
+    count: characters.length,
+    characters: characters
+  });
+}
+
+
+function getPlayerPrioHistory(e) {
+  const charName = String(e.parameter.char || e.parameter.player || "").trim();
+  const playerPin = normalizePlayerPin(e.parameter.pin || e.parameter.playerPin || "");
+
+  if (!charName || !playerPin) {
+    return jsonOutput({
+      success: false,
+      error: "Charaktername oder SpielerPin fehlt."
+    });
+  }
+
+  if (isTemporaryPlayerPin(playerPin)) {
+    return jsonOutput({
+      success: false,
+      error: "Für diese Übersicht brauchst du deinen Master-SpielerPin. Temporäre Raid-Pins zeigen nur einen einzelnen Raid."
+    });
+  }
+
+  const pinOwner = findPlayerPinEntryByPinAndChar(playerPin, charName);
+
+  if (!pinOwner) {
+    return jsonOutput({
+      success: false,
+      error: "Dieser Charakter gehört nicht zu diesem SpielerPin."
+    });
+  }
+
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+  const raids = raidSheet.getDataRange().getValues();
+  const prios = prioSheet.getDataRange().getValues();
+
+  const raidMap = {};
+
+  for (let i = 1; i < raids.length; i++) {
+    const raidId = String(raids[i][0] || "").trim();
+    if (!raidId) continue;
+
+    const status = String(raids[i][9] || "geschlossen").trim().toLowerCase();
+    const isCurrent =
+      status === "geöffnet" ||
+      status === "offen" ||
+      status === "published" ||
+      status === "true";
+
+    raidMap[raidId] = {
+      raidId: raidId,
+      raid: String(raids[i][1] || "").trim(),
+      raidName: String(raids[i][2] || "").trim(),
+      raidDate: String(raids[i][3] || "").trim(),
+      raidTime: String(raids[i][4] || "").trim(),
+      prioPin: String(raids[i][5] || "").trim(),
+      leadPin: String(raids[i][6] || "").trim(),
+      createdAt: String(raids[i][8] || "").trim(),
+      status: status,
+      current: isCurrent
+    };
+  }
+
+  const targetChar = normalizeName(pinOwner.charName);
+  const targetServer = normalizeName(pinOwner.server);
+  const result = [];
+
+  for (let i = 1; i < prios.length; i++) {
+    const rowRaidId = String(prios[i][0] || "").trim();
+    const rowChar = normalizeName(prios[i][3] || "");
+    const rowServer = normalizeName(prios[i][4] || "");
+    const rowPin = normalizePlayerPin(prios[i][10] || "");
+
+    if (rowChar !== targetChar || rowServer !== targetServer) continue;
+
+    const wasOwnMasterPin = rowPin === playerPin;
+    const wasOwnTempPin = isTemporaryPlayerPin(rowPin);
+
+    /*
+      Der Charakter wurde bereits über den Master-SpielerPin verifiziert.
+      Deshalb dürfen hier ALLE Prios dieses Charakters angezeigt werden.
+      Wichtig: Ältere oder raidbezogene Einträge wurden oft mit temporärem Pin gespeichert.
+      Diese dürfen in "Mein LichtLoot" trotzdem erscheinen.
+    */
+
+    const raidInfo = raidMap[rowRaidId] || {};
+    const createdAt = String(prios[i][11] || raidInfo.createdAt || "").trim();
+
+    result.push({
+      raidId: rowRaidId,
+      raid: raidInfo.raid || String(prios[i][2] || ""),
+      raidName: raidInfo.raidName || String(prios[i][1] || ""),
+      raidDate: raidInfo.raidDate || "",
+      raidTime: raidInfo.raidTime || "",
+      status: raidInfo.status || "",
+      current: Boolean(raidInfo.current),
+      createdAt: createdAt,
+      player: String(prios[i][3] || ""),
+      server: String(prios[i][4] || ""),
+      className: String(prios[i][5] || ""),
+      p1: String(prios[i][6] || ""),
+      p2: String(prios[i][7] || ""),
+      p3: String(prios[i][8] || ""),
+      p0Plus: String(prios[i][9] || "nein"),
+      pinType: wasOwnMasterPin ? "Master" : (wasOwnTempPin ? "Temporär" : "Alt")
+    });
+  }
+
+  result.sort(function(a, b) {
+    const dateA = Date.parse(a.createdAt || "") || 0;
+    const dateB = Date.parse(b.createdAt || "") || 0;
+    return dateB - dateA;
+  });
+
+  const currentEntries = result.filter(entry => entry.current);
+  const lastEntries = result.filter(entry => !entry.current).slice(0, 5);
+  const combined = [];
+  const seen = {};
+
+  currentEntries.concat(lastEntries).forEach(entry => {
+    const key = entry.raidId || (entry.raidName + "_" + entry.createdAt);
+    if (seen[key]) return;
+    seen[key] = true;
+    combined.push(entry);
+  });
+
+  const ownP0PlusPoints = getOwnP0PlusPointsForPlayer(pinOwner.charName);
+
+  combined.forEach(function(entry) {
+    const raidKey = normalizeRaidForP0(entry.raid || entry.raidName || "");
+    entry.ownP0PlusPoints = ownP0PlusPoints.filter(function(point) {
+      return normalizeRaidForP0(point.raid || "") === raidKey;
+    });
+  });
+
+  return jsonOutput({
+    success: true,
+    player: pinOwner.charName,
+    server: pinOwner.server,
+    className: pinOwner.className || "",
+    count: combined.length,
+    currentCount: currentEntries.length,
+    entries: combined,
+    ownP0PlusPoints: ownP0PlusPoints
+  });
+}
+
+function getOwnP0PlusPointsForPlayer(playerName) {
+  const p0Sheet = getRequiredSheet(P0PLUS_SHEET);
+  const values = p0Sheet.getDataRange().getValues();
+  const targetPlayer = itemKey(playerName);
+  const result = [];
+
+  for (let i = 1; i < values.length; i++) {
+    const raid = normalizeRaidForP0(values[i][0] || "");
+    const item = String(values[i][1] || "").trim();
+    const slot = String(values[i][2] || "").trim();
+    const player = String(values[i][3] || "").trim();
+    const count = Number(values[i][4] || 0);
+
+    if (!raid || !item || !player || !count) continue;
+    if (itemKey(player) !== targetPlayer) continue;
+
+    result.push({
+      raid: raid,
+      item: item,
+      slot: slot,
+      player: player,
+      count: count
+    });
+  }
+
+  result.sort(function(a, b) {
+    if (String(a.raid) !== String(b.raid)) return String(a.raid).localeCompare(String(b.raid));
+    return Number(b.count || 0) - Number(a.count || 0);
+  });
+
+  return result;
+}
+
+function getPlayerPin(e) {
+  const charName = String(e.parameter.char || "").trim();
+  const server = String(e.parameter.server || "").trim();
+
+  if (!charName || !server) {
+    return jsonOutput({
+      success: false,
+      error: "Charaktername oder Server fehlt."
+    });
+  }
+
+  const entry = findPlayerPinEntry(charName, server);
+
+  if (entry) {
+    return jsonOutput({
+      success: true,
+      exists: true,
+      className: entry.className || ""
+    });
+  }
+
+  return jsonOutput({
+    success: true,
+    exists: false
+  });
+}
+
+function getPlayerByPin(e) {
+  const pin = normalizePlayerPin(e.parameter.pin || "");
+  const raidPin = String(e.parameter.raidPin || "").trim();
+
+  if (!pin) {
+    return jsonOutput({
+      success: false,
+      error: "SpielerPin fehlt."
+    });
+  }
+
+  const entry = findPlayerByPin(pin);
+
+  if (entry) {
+    const result = {
+      success: true,
+      char: entry.charName,
+      server: entry.server,
+      className: entry.className || ""
+    };
+
+    if (raidPin) {
+      const prio = findLatestPrioForPlayerAndRaidPin(entry.charName, entry.server, raidPin);
+
+      if (prio) {
+        result.p1 = prio.p1 || "";
+        result.p2 = prio.p2 || "";
+        result.p3 = prio.p3 || "";
+        result.p0Plus = prio.p0Plus || "nein";
+        result.raidId = prio.raidId || "";
+      }
+    }
+
+    return jsonOutput(result);
+  }
+
+  if (raidPin && isTemporaryPlayerPin(pin)) {
+    const tempPrio = findLatestPrioByRaidPinAndCharacterPin(raidPin, pin);
+
+    if (tempPrio) {
+      return jsonOutput({
+        success: true,
+        char: tempPrio.charName,
+        server: tempPrio.server,
+        className: tempPrio.className || "",
+        p1: tempPrio.p1 || "",
+        p2: tempPrio.p2 || "",
+        p3: tempPrio.p3 || "",
+        p0Plus: tempPrio.p0Plus || "nein",
+        raidId: tempPrio.raidId || ""
+      });
+    }
+  }
+
+  return jsonOutput({
+    success: false,
+    error: "SpielerPin wurde nicht gefunden."
+  });
+}
+
+function getRaidTemporaryPin(e) {
+  const raidPin = String(e.parameter.raidPin || "").trim();
+  const charName = String(e.parameter.char || e.parameter.player || "").trim();
+  const server = String(e.parameter.server || "").trim();
+
+  if (!raidPin || !charName || !server) {
+    return jsonOutput({
+      success: false,
+      error: "Prio-PIN, Charaktername oder Server fehlt."
+    });
+  }
+
+  const raidInfo = findRaidByPin(raidPin);
+  if (!raidInfo || !raidInfo.raidId) {
+    return jsonOutput({ success: false, error: "Prio-PIN keinem Raid zugeordnet." });
+  }
+
+  const registeredPin = normalizePlayerPin(findPlayerPin(charName, server));
+  const latestPrio = findLatestPrioForPlayerAndRaidPin(charName, server, raidPin);
+  const latestPrioPin = latestPrio ? normalizePlayerPin(latestPrio.characterPin || "") : "";
+
+  // Wenn die aktuelle Prio mit Master-SpielerPin gespeichert wurde, wird kein Temp-Pin ausgeliefert.
+  // Damit kann eine Master-Prio später nicht versehentlich per Temp-Pin überschrieben werden.
+  if (registeredPin && latestPrioPin === registeredPin) {
+    return jsonOutput({
+      success: true,
+      exists: false,
+      pin: "",
+      protectedByMaster: true,
+      message: "Diese Prio ist durch den Master-SpielerPin geschützt."
+    });
+  }
+
+  // Wenn die aktuelle Prio mit Temp-Pin gespeichert wurde, darf dieser Temp-Pin angezeigt werden.
+  if (latestPrioPin && isTemporaryPlayerPin(latestPrioPin)) {
+    ensureTempPlayerPinRegistered(raidInfo.raidId, raidPin, charName, server, latestPrioPin);
+
+    return jsonOutput({
+      success: true,
+      exists: true,
+      pin: latestPrioPin,
+      raidId: latestPrio.raidId || raidInfo.raidId
+    });
+  }
+
+  const tempEntry = findTempPlayerPinEntry(raidInfo.raidId, charName, server);
+
+  if (tempEntry && tempEntry.tempPin) {
+    return jsonOutput({
+      success: true,
+      exists: true,
+      pin: normalizePlayerPin(tempEntry.tempPin),
+      raidId: raidInfo.raidId
+    });
+  }
+
+  return jsonOutput({
+    success: true,
+    exists: false,
+    pin: ""
+  });
+}
+
+function createPlayerPin(e) {
+  const charName = String(e.parameter.char || "").trim();
+  const server = String(e.parameter.server || "").trim();
+  const className = String(e.parameter.className || "").trim();
+  const requestedPin = normalizePlayerPin(e.parameter.customPin || e.parameter.newPin || e.parameter.pin || "");
+
+  if (!charName || !server || !className) {
+    return jsonOutput({
+      success: false,
+      error: "Charaktername, Server oder Klasse fehlt."
+    });
+  }
+
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowChar = normalizeName(values[i][0] || "");
+    const rowServer = normalizeName(values[i][1] || "");
+
+    if (
+      rowChar === normalizeName(charName) &&
+      rowServer === normalizeName(server)
+    ) {
+      return jsonOutput({
+        success: false,
+        error: "Für diesen Charakter existiert bereits ein SpielerPin."
+      });
+    }
+  }
+
+  const pin = requestedPin || createUniqueMasterPlayerPin();
+  const validation = validateMasterPlayerPin(pin, charName, server);
+
+  if (!validation.success) {
+    return jsonOutput(validation);
+  }
+
+  sheet.appendRow([
+    charName,
+    server,
+    className,
+    pin
+  ]);
+
+  return jsonOutput({
+    success: true,
+    exists: true,
+    pin: pin
+  });
+}
+
+
+function addTwink(e) {
+  const pin = normalizePlayerPin(e.parameter.pin || e.parameter.playerPin || "");
+  const charName = String(e.parameter.char || e.parameter.player || "").trim();
+  const server = String(e.parameter.server || "").trim();
+  const className = String(e.parameter.className || "").trim();
+
+  if (!pin || !charName || !server || !className) {
+    return jsonOutput({
+      success: false,
+      error: "SpielerPin, Charaktername, Server oder Klasse fehlt."
+    });
+  }
+
+  if (isTemporaryPlayerPin(pin)) {
+    return jsonOutput({
+      success: false,
+      error: "Twinks können nur mit dem Master-SpielerPin hinzugefügt werden."
+    });
+  }
+
+  const owner = findPlayerByPin(pin);
+
+  if (!owner) {
+    return jsonOutput({
+      success: false,
+      error: "SpielerPin wurde nicht gefunden."
+    });
+  }
+
+  const existingChar = findPlayerPinEntry(charName, server);
+
+  if (existingChar) {
+    const existingPin = normalizePlayerPin(existingChar.pin || "");
+
+    if (existingPin === pin) {
+      return jsonOutput({
+        success: true,
+        exists: true,
+        message: "Dieser Twink ist bereits mit diesem SpielerPin verknüpft.",
+        char: existingChar.charName,
+        server: existingChar.server,
+        className: existingChar.className || ""
+      });
+    }
+
+    return jsonOutput({
+      success: false,
+      error: "Für diesen Charakter existiert bereits ein anderer SpielerPin."
+    });
+  }
+
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+
+  const mainChar = owner.mainChar || owner.charName || charName;
+  const accountId = owner.accountId || ("ACC-" + pin);
+
+  sheet.appendRow([
+    charName,
+    server,
+    className,
+    pin,
+    mainChar,
+    accountId
+  ]);
+
+  return jsonOutput({
+    success: true,
+    exists: false,
+    message: "Twink wurde gespeichert.",
+    char: charName,
+    server: server,
+    className: className,
+    mainChar: mainChar,
+    accountId: accountId
+  });
+}
+
+
+function resetPlayerPin(e) {
+  const charName = String(e.parameter.char || "").trim();
+  const server = String(e.parameter.server || "").trim();
+  const oldPin = normalizePlayerPin(e.parameter.oldPin || "");
+  const className = String(e.parameter.className || "").trim();
+  const requestedPin = normalizePlayerPin(e.parameter.customPin || e.parameter.newPin || e.parameter.pin || "");
+
+  if (!charName || !server) {
+    return jsonOutput({
+      success: false,
+      error: "Charaktername oder Server fehlt."
+    });
+  }
+
+  if (!oldPin) {
+    return jsonOutput({
+      success: false,
+      error: "Alter SpielerPin fehlt."
+    });
+  }
+
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowChar = normalizeName(values[i][0] || "");
+    const rowServer = normalizeName(values[i][1] || "");
+
+    if (
+      rowChar === normalizeName(charName) &&
+      rowServer === normalizeName(server)
+    ) {
+      const currentPin = normalizePlayerPin(getPlayerPinFromRow(values[i]));
+
+      if (currentPin !== oldPin) {
+        return jsonOutput({
+          success: false,
+          error: "Falscher alter SpielerPin."
+        });
+      }
+
+      const newPin = requestedPin || createUniqueMasterPlayerPin();
+      const validation = validateMasterPlayerPin(newPin, charName, server);
+
+      if (!validation.success) {
+        return jsonOutput(validation);
+      }
+
+      // Neues Format: Char | Server | Klasse | Pin
+      if (values[i].length >= 4) {
+        if (className) sheet.getRange(i + 1, 3).setValue(className);
+        sheet.getRange(i + 1, 4).setValue(newPin);
+      } else {
+        sheet.getRange(i + 1, 3).setValue(className || "");
+        sheet.getRange(i + 1, 4).setValue(newPin);
+      }
+
+      return jsonOutput({
+        success: true,
+        exists: true,
+        pin: newPin
+      });
+    }
+  }
+
+  return jsonOutput({
+    success: false,
+    error: "Charakter nicht gefunden."
+  });
+}
+
+function findPlayerPin(charName, server) {
+  const entry = findPlayerPinEntry(charName, server);
+  return entry ? entry.pin : "";
+}
+
+function findPlayerPinEntry(charName, server) {
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+
+  const targetChar = normalizeName(charName || "");
+  const targetServer = normalizeName(server || "");
+
+  for (let i = 1; i < values.length; i++) {
+    const rowChar = normalizeName(values[i][0] || "");
+    const rowServer = normalizeName(values[i][1] || "");
+
+    if (rowChar === targetChar && rowServer === targetServer) {
+      return {
+        charName: String(values[i][0] || "").trim(),
+        server: String(values[i][1] || "").trim(),
+        className: getPlayerClassFromRow(values[i]),
+        pin: getPlayerPinFromRow(values[i])
+      };
+    }
+  }
+
+  return null;
+}
+
+function findPlayerByPin(pin) {
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+  const targetPin = String(pin || "").trim();
+
+  for (let i = 1; i < values.length; i++) {
+    const rowPin = getPlayerPinFromRow(values[i]);
+
+    if (rowPin === targetPin) {
+      return {
+        charName: String(values[i][0] || "").trim(),
+        server: String(values[i][1] || "").trim(),
+        className: getPlayerClassFromRow(values[i]),
+        pin: rowPin,
+        mainChar: getMainCharFromRow(values[i]),
+        accountId: getAccountIdFromRow(values[i])
+      };
+    }
+  }
+
+  return null;
+}
+
+
+function findPlayerPinEntryByPinAndChar(pin, charName) {
+  const sheet = getRequiredSheet(PLAYERPIN_SHEET);
+  const values = sheet.getDataRange().getValues();
+  const targetPin = normalizePlayerPin(pin);
+  const targetChar = normalizeName(charName);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowPin = normalizePlayerPin(getPlayerPinFromRow(values[i]));
+    const rowChar = normalizeName(values[i][0] || "");
+
+    if (rowPin === targetPin && rowChar === targetChar) {
+      return {
+        charName: String(values[i][0] || "").trim(),
+        server: String(values[i][1] || "").trim(),
+        className: getPlayerClassFromRow(values[i]),
+        pin: rowPin,
+        mainChar: getMainCharFromRow(values[i]),
+        accountId: getAccountIdFromRow(values[i]),
+        mainChar: getMainCharFromRow(values[i]),
+        accountId: getAccountIdFromRow(values[i])
+      };
+    }
+  }
+
+  return null;
+}
+
+function getMainCharFromRow(row) {
+  if (row.length >= 5) {
+    return String(row[4] || "").trim();
+  }
+
+  return "";
+}
+
+function getAccountIdFromRow(row) {
+  if (row.length >= 6) {
+    return String(row[5] || "").trim();
+  }
+
+  return "";
+}
+
+
+function getPlayerClassFromRow(row) {
+  // Neues Format: Char | Server | Klasse | Pin
+  // Altes Format: Char | Server | Pin
+  if (row.length >= 4) {
+    return String(row[2] || "").trim();
+  }
+
+  return "";
+}
+
+function getPlayerPinFromRow(row) {
+  // Neues Format: Char | Server | Klasse | Pin
+  // Altes Format: Char | Server | Pin
+  if (row.length >= 4) {
+    return String(row[3] || "").trim();
+  }
+
+  return String(row[2] || "").trim();
+}
+
+function findLatestPrioForPlayerAndRaidPin(charName, server, raidPin) {
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+
+  const raids = raidSheet.getDataRange().getValues();
+  let raidId = "";
+
+  for (let i = 1; i < raids.length; i++) {
+    if (
+      String(raids[i][5] || "") === String(raidPin) ||
+      String(raids[i][0] || "") === String(raidPin) ||
+      String(raids[i][6] || "") === String(raidPin)
+    ) {
+      raidId = String(raids[i][0] || "");
+      break;
+    }
+  }
+
+  if (!raidId) return null;
+
+  const values = prioSheet.getDataRange().getValues();
+  const targetChar = normalizeName(charName || "");
+  const targetServer = normalizeName(server || "");
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaidId = String(values[i][0] || "");
+    const rowChar = String(values[i][3] || "").trim().toLowerCase();
+    const rowServer = String(values[i][4] || "").trim().toLowerCase();
+
+    if (
+      rowRaidId === raidId &&
+      rowChar === targetChar &&
+      rowServer === targetServer
+    ) {
+      return {
+        raidId: raidId,
+        className: String(values[i][5] || ""),
+        p1: String(values[i][6] || ""),
+        p2: String(values[i][7] || ""),
+        p3: String(values[i][8] || ""),
+        p0Plus: String(values[i][9] || "nein"),
+        characterPin: normalizePlayerPin(values[i][10] || "")
+      };
+    }
+  }
+
+  return null;
+}
+
+function findLatestPrioByCharacterPinAndRaidPin(characterPin, raidPin) {
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+
+  const raids = raidSheet.getDataRange().getValues();
+  let raidId = "";
+
+  for (let i = 1; i < raids.length; i++) {
+    if (
+      String(raids[i][5] || "") === String(raidPin) ||
+      String(raids[i][0] || "") === String(raidPin) ||
+      String(raids[i][6] || "") === String(raidPin)
+    ) {
+      raidId = String(raids[i][0] || "");
+      break;
+    }
+  }
+
+  if (!raidId) return null;
+
+  const values = prioSheet.getDataRange().getValues();
+  const targetPin = normalizePlayerPin(characterPin);
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaidId = String(values[i][0] || "");
+    const rowPin = normalizePlayerPin(values[i][10] || "");
+
+    if (rowRaidId === raidId && rowPin === targetPin) {
+      return {
+        raidId: raidId,
+        charName: String(values[i][3] || "").trim(),
+        server: String(values[i][4] || "").trim(),
+        className: String(values[i][5] || ""),
+        p1: String(values[i][6] || ""),
+        p2: String(values[i][7] || ""),
+        p3: String(values[i][8] || ""),
+        p0Plus: String(values[i][9] || "nein"),
+        characterPin: normalizePlayerPin(values[i][10] || "")
+      };
+    }
+  }
+
+  return null;
+}
+
+function findLatestPrioByRaidPinAndCharacterPin(raidPin, characterPin) {
+  const raidSheet = getRequiredSheet(RAID_SHEET);
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+
+  const raids = raidSheet.getDataRange().getValues();
+  let raidId = "";
+
+  for (let i = 1; i < raids.length; i++) {
+    if (
+      String(raids[i][5] || "") === String(raidPin) ||
+      String(raids[i][0] || "") === String(raidPin) ||
+      String(raids[i][6] || "") === String(raidPin)
+    ) {
+      raidId = String(raids[i][0] || "");
+      break;
+    }
+  }
+
+  if (!raidId) return null;
+
+  const values = prioSheet.getDataRange().getValues();
+  const targetPin = normalizePlayerPin(characterPin);
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaidId = String(values[i][0] || "");
+    const rowPin = normalizePlayerPin(values[i][10] || "");
+
+    if (rowRaidId === raidId && rowPin === targetPin) {
+      return {
+        raidId: raidId,
+        charName: String(values[i][3] || ""),
+        server: String(values[i][4] || ""),
+        className: String(values[i][5] || ""),
+        p1: String(values[i][6] || ""),
+        p2: String(values[i][7] || ""),
+        p3: String(values[i][8] || ""),
+        p0Plus: String(values[i][9] || "nein"),
+        characterPin: rowPin
+      };
+    }
+  }
+
+  return null;
+}
+
+
+function normalizeName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/\s+/g, " ");
+}
+
+function normalizePlayerPin(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function isTemporaryPlayerPin(pin) {
+  const value = normalizePlayerPin(pin);
+
+  // Temporäre Pins haben immer das Format T + drei Zahlen, z. B. T123.
+  return /^T\d{3}$/.test(value);
+}
+
+function createNumericPin4() {
+  return String(Math.floor(1000 + Math.random() * 9000));
+}
+
+function validateMasterPlayerPin(pin, charName, server) {
+  const value = normalizePlayerPin(pin);
+
+  if (!value) {
+    return { success: false, error: "Bitte einen SpielerPin eingeben." };
+  }
+
+  if (value.length < 4 || value.length > 8) {
+    return { success: false, error: "Der Master-SpielerPin muss 4 bis 8 Zeichen lang sein." };
+  }
+
+  if (!/^[A-Z0-9]+$/.test(value)) {
+    return { success: false, error: "Der Master-SpielerPin darf nur Buchstaben und Zahlen enthalten." };
+  }
+
+  if (isTemporaryPlayerPin(value)) {
+    return { success: false, error: "Pins im Format T123 sind für temporäre Raid-Pins reserviert." };
+  }
+
+  const owner = findPlayerByPin(value);
+
+  if (owner) {
+    const sameCharacter =
+      String(owner.charName || "").trim().toLowerCase() === normalizeName(charName || "") &&
+      String(owner.server || "").trim().toLowerCase() === normalizeName(server || "");
+
+    if (!sameCharacter) {
+      return { success: false, error: "Dieser SpielerPin ist bereits vergeben. Bitte wähle einen anderen Pin." };
+    }
+  }
+
+  return { success: true };
+}
+
+function createUniqueMasterPlayerPin() {
+  for (let attempt = 0; attempt < 1000; attempt++) {
+    const pin = createNumericPin4();
+
+    if (!findPlayerByPin(pin)) {
+      return pin;
+    }
+  }
+
+  throw new Error("Es konnte kein freier SpielerPin erzeugt werden.");
+}
+
+/* =========================================================
+   P0PLUS
+   ========================================================= */
+
+function transferP0PlusPoints(e) {
+  const masterCode = String(e.parameter.masterCode || "");
+  let raidId = String(e.parameter.raidId || "").trim();
+  const leadPin = String(e.parameter.leadPin || e.parameter.raidleadPin || e.parameter.pin || "").trim();
+  const raid = normalizeRaidForP0(e.parameter.raid || "");
+
+  if (!raidId && leadPin) {
+    const raidInfo = findRaidByPin(leadPin);
+    raidId = raidInfo ? String(raidInfo.raidId || "").trim() : "";
+  }
+
+  if (masterCode !== MASTER_CODE) {
+    return jsonOutput({ success: false, error: "Master-Code ungültig." });
+  }
+
+  if (!["MC", "BWL", "AQ40", "NAXX"].includes(raid)) {
+    return jsonOutput({ success: false, error: "Raid nicht für P0+ freigegeben." });
+  }
+
+  if (!raidId) {
+    return jsonOutput({ success: false, error: "RaidID fehlt." });
+  }
+
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+  const p0Sheet = getRequiredSheet(P0PLUS_SHEET);
+
+  const prios = prioSheet.getDataRange().getValues();
+  let candidates = 0;
+  let awarded = 0;
+
+  for (let i = 1; i < prios.length; i++) {
+    const rowRaidId = String(prios[i][0] || "");
+    const player = String(prios[i][3] || "").trim();
+    const item = String(prios[i][6] || "").trim();
+    const p0Plus = String(prios[i][9] || "").toLowerCase();
+
+    if (rowRaidId !== raidId) continue;
+    if (p0Plus !== "ja") continue;
+    if (!player || !item) continue;
+
+    candidates++;
+
+    const slot = findSlotForItem(raid, item);
+    const success = addOrUpdateP0PlusPoint(p0Sheet, raid, item, slot, player);
+
+    if (success) awarded++;
+  }
+
+  return jsonOutput({
+    success: true,
+    raid: raid,
+    raidId: raidId,
+    candidates: candidates,
+    awarded: awarded
+  });
+}
+
+function clearP0PlusForPlayer(e) {
+  const masterCode = String(e.parameter.masterCode || "");
+  const raid = normalizeRaidForP0(e.parameter.raid || "");
+  const player = String(e.parameter.player || "").trim();
+  const item = String(e.parameter.item || "").trim();
+
+  if (masterCode !== MASTER_CODE) {
+    return jsonOutput({ success: false, error: "Master-Code ungültig." });
+  }
+
+  if (!["MC", "BWL", "AQ40", "NAXX"].includes(raid)) {
+    return jsonOutput({ success: false, error: "Raid nicht für P0+ freigegeben." });
+  }
+
+  if (!raid || !player || !item) {
+    return jsonOutput({ success: false, error: "Raid, Spieler oder Item fehlt." });
+  }
+
+  const p0Sheet = getRequiredSheet(P0PLUS_SHEET);
+  const values = p0Sheet.getDataRange().getValues();
+  let deleted = 0;
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowRaid = normalizeRaidForP0(values[i][0] || "");
+    const rowItem = String(values[i][1] || "");
+    const rowPlayer = String(values[i][3] || "");
+
+    if (
+      rowRaid === raid &&
+      itemKey(rowItem) === itemKey(item) &&
+      itemKey(rowPlayer) === itemKey(player)
+    ) {
+      p0Sheet.deleteRow(i + 1);
+      deleted++;
+    }
+  }
+
+  return jsonOutput({
+    success: true,
+    raid: raid,
+    item: item,
+    player: player,
+    deleted: deleted
+  });
+}
+
+function getP0PlusData(e) {
+  const raidFilter = normalizeRaidForP0(e.parameter.raid || "");
+  const p0Sheet = getRequiredSheet(P0PLUS_SHEET);
+
+  const values = p0Sheet.getDataRange().getValues();
+  const result = [];
+
+  for (let i = 1; i < values.length; i++) {
+    const raid = normalizeRaidForP0(values[i][0] || "");
+    const item = String(values[i][1] || "").trim();
+    const slot = String(values[i][2] || "").trim();
+    const player = String(values[i][3] || "").trim();
+    const count = Number(values[i][4] || 0);
+
+    if (!raid || !item || !player || !count) continue;
+    if (raidFilter && raid !== raidFilter) continue;
+
+    result.push({
+      raid: raid,
+      item: item,
+      slot: slot,
+      player: player,
+      count: count
+    });
+  }
+
+  return {
+    success: true,
+    raid: raidFilter,
+    count: result.length,
+    entries: result
+  };
+}
+
+function getAddonExport(e) {
+  const p0Sheet = getRequiredSheet(P0PLUS_SHEET);
+
+  const raidFilter = normalizeRaidForP0(e.parameter.raid || "");
+  const p0Values = p0Sheet.getDataRange().getValues();
+  const result = [];
+
+  for (let i = 1; i < p0Values.length; i++) {
+    const raid = normalizeRaidForP0(p0Values[i][0] || "");
+    const item = String(p0Values[i][1] || "").trim();
+    const fallbackSlot = String(p0Values[i][2] || "").trim();
+    const player = String(p0Values[i][3] || "").trim();
+    const points = Number(p0Values[i][4] || 0);
+
+    if (!raid || !item || !player || !points) continue;
+    if (raidFilter && raid !== raidFilter) continue;
+
+    const lootInfo = getLootInfoForAddon(raid, item);
+
+    result.push({
+      raid: raid,
+      boss: lootInfo.boss || "",
+      slot: lootInfo.slot || fallbackSlot || "",
+      typ: lootInfo.typ || "",
+      item: lootInfo.item || item,
+      itemId: lootInfo.itemId || "",
+      icon: lootInfo.icon || "",
+      quality: lootInfo.quality || "",
+      dropchance: lootInfo.dropchance || "",
+      stats: lootInfo.stats || "",
+      tooltip: lootInfo.tooltip || "",
+      itemLink: lootInfo.itemLink || "",
+      player: player,
+      points: points
+    });
+  }
+
+  return jsonOutput({
+    success: true,
+    count: result.length,
+    entries: result
+  });
+}
+
+/* =========================================================
+   FULL LOOT DATABASE EXPORT
+   ========================================================= */
+
+function getFullExport(e) {
+  const raidFilter = normalizeRaidForP0(e.parameter.raid || "");
+  const raids = raidFilter ? [raidFilter] : Object.keys(LOOT_SHEETS);
+
+  const entries = [];
+
+  raids.forEach(raid => {
+    const sheetName = getLootSheetNameByRaid(raid);
+    if (!sheetName) return;
+
+    const sheetEntries = getLootEntriesFromSheet(raid, sheetName);
+    sheetEntries.forEach(entry => entries.push(entry));
+  });
+
+  return jsonOutput({
+    success: true,
+    mode: "full-loot-database-v2",
+    raid: raidFilter || "ALL",
+    count: entries.length,
+    entries: entries
+  });
+}
+
+function getFullExportText(e) {
+  const raidFilter = normalizeRaidForP0(e.parameter.raid || "");
+  const raids = raidFilter ? [raidFilter] : Object.keys(LOOT_SHEETS);
+
+  const lines = [
+    "Raid;Boss;ItemID;Item;Slot;Typ;Qualität;Icon;Dropchance;Stats;Tooltip;ItemLink;Spieler;Punkte"
+  ];
+
+  raids.forEach(raid => {
+    const sheetName = getLootSheetNameByRaid(raid);
+    if (!sheetName) return;
+
+    const sheetEntries = getLootEntriesFromSheet(raid, sheetName);
+
+    sheetEntries.forEach(entry => {
+      lines.push([
+        encodeAddonField(entry.raid),
+        encodeAddonField(entry.boss),
+        encodeAddonField(entry.itemId),
+        encodeAddonField(entry.item),
+        encodeAddonField(entry.slot),
+        encodeAddonField(entry.typ),
+        encodeAddonField(entry.quality),
+        encodeAddonField(entry.icon),
+        encodeAddonField(entry.dropchance),
+        encodeAddonField(entry.stats),
+        encodeAddonField(entry.tooltip),
+        encodeAddonField(entry.itemLink),
+        encodeAddonField(entry.player || "__Datenbank__"),
+        encodeAddonField(entry.points || 0)
+      ].join(";"));
+    });
+  });
+
+  return ContentService
+    .createTextOutput(lines.join("||"))
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+function getLootEntriesFromSheet(raid, sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) return [];
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const headers = values[0].map(h => String(h).trim());
+  const itemCol = findHeaderAny(headers, ["Itemname_DE", "Item", "Itemname", "Name"]);
+
+  if (itemCol === -1) return [];
+
+  const result = [];
+
+  for (let i = 1; i < values.length; i++) {
+    const obj = rowToObject(headers, values[i]);
+    const item = String(values[i][itemCol] || "").trim();
+
+    if (!item) continue;
+
+    result.push(normalizeLootEntryFromObject(raid, obj, item));
+  }
+
+  return result;
+}
+
+/* =========================================================
+   LOOT-INFO / ITEMDATEN
+   ========================================================= */
+
+function getLootInfoForAddon(raid, itemName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = getLootSheetNameByRaid(raid);
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) return {};
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return {};
+
+  const headers = values[0].map(h => String(h).trim());
+  const itemCol = findHeaderAny(headers, ["Itemname_DE", "Item", "Itemname", "Name"]);
+
+  if (itemCol === -1) return {};
+
+  const target = itemKey(itemName);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowItem = String(values[i][itemCol] || "");
+
+    if (itemKey(rowItem) !== target) continue;
+
+    const obj = rowToObject(headers, values[i]);
+    return normalizeLootEntryFromObject(raid, obj, rowItem);
+  }
+
+  return {};
+}
+
+function normalizeLootEntryFromObject(raid, obj, fallbackItem) {
+  const item = getFirstValue(obj, ["Itemname_DE", "Item", "Itemname", "Name"]) || fallbackItem || "";
+  const tooltip = getFirstValue(obj, ["Tooltip_DE", "Tooltip", "Beschreibung"]);
+  const stats = getFirstValue(obj, ["Stats_DE", "Stats", "Werte", "Effekt"]) || collectAddonStats(obj);
+
+  return {
+    raid: normalizeRaidForP0(getFirstValue(obj, ["Raid"]) || raid),
+    boss: getFirstValue(obj, ["Boss", "BossName"]),
+    slot: getFirstValue(obj, ["Slot_DE", "Slot", "ItemSlot"]),
+    typ: getFirstValue(obj, ["Typ_DE", "Typ", "Type", "Kategorie"]),
+    item: item,
+    itemId: getFirstValue(obj, ["ItemID", "ItemId", "ID"]),
+    icon: normalizeIconName(getFirstValue(obj, ["Icon", "IconName"])),
+    quality: getFirstValue(obj, ["Qualität", "Qualitaet", "Quality"]),
+    dropchance: getFirstValue(obj, ["Dropchance", "Drop", "DropChance"]),
+    stats: stats,
+    tooltip: tooltip,
+    itemLink: getFirstValue(obj, ["ItemLink", "Link"]),
+    player: "__Datenbank__",
+    points: 0
+  };
+}
+
+function rowToObject(headers, row) {
+  const obj = {};
+
+  headers.forEach((header, index) => {
+    obj[header] = row[index];
+  });
+
+  return obj;
+}
+
+function collectAddonStats(obj) {
+  const stats = [];
+  const seen = {};
+
+  function add(value) {
+    const clean = String(value || "").trim();
+    if (!clean) return;
+
+    const key = itemKey(clean);
+    if (seen[key]) return;
+
+    seen[key] = true;
+    stats.push(clean);
+  }
+
+  [
+    "Stats_DE",
+    "Stats",
+    "Stat1",
+    "Stat2",
+    "Stat3",
+    "Stat4",
+    "Stat5",
+    "Stat6",
+    "Benötigt",
+    "Eigenschaften",
+    "Werte",
+    "Effekt",
+    "Beschreibung"
+  ].forEach(col => {
+    if (!obj[col]) return;
+
+    String(obj[col])
+      .split(/;|\n|\|/)
+      .forEach(part => add(part));
+  });
+
+  return stats.join(" | ");
+}
+
+function findSlotForItem(raid, itemName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = getLootSheetNameByRaid(raid);
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) return "";
+
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return "";
+
+  const headers = values[0].map(h => String(h).trim());
+
+  const itemCol = findHeaderAny(headers, ["Itemname_DE", "Item", "Itemname", "Name"]);
+  const slotCol = findHeaderAny(headers, ["Slot_DE", "Slot", "ItemSlot"]);
+
+  if (itemCol === -1 || slotCol === -1) return "";
+
+  const targetKey = itemKey(itemName);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowItem = String(values[i][itemCol] || "");
+
+    if (itemKey(rowItem) === targetKey) {
+      return String(values[i][slotCol] || "").trim();
+    }
+  }
+
+  return "";
+}
+
+function findHeaderAny(headers, names) {
+  for (let i = 0; i < names.length; i++) {
+    const index = findHeader(headers, names[i]);
+    if (index !== -1) return index;
+  }
+  return -1;
+}
+
+function getLootSheetNameByRaid(raid) {
+  const value = normalizeRaidForP0(raid);
+  return LOOT_SHEETS[value] || "";
+}
+
+/* =========================================================
+   WOWHEAD ITEM-ID / ICON SYNC
+   ========================================================= */
+
+function syncMCOnly() {
+  syncItemIdsAndIconsForOneSheet("LOOT_MC");
+}
+
+function syncBWLOnly() {
+  syncItemIdsAndIconsForOneSheet("LOOT_BWL");
+}
+
+function syncZGOnly() {
+  syncItemIdsAndIconsForOneSheet("LOOT_ZG");
+}
+
+function syncAQ20Only() {
+  syncItemIdsAndIconsForOneSheet("LOOT_AQ20");
+}
+
+function syncAQ40Only() {
+  syncItemIdsAndIconsForOneSheet("LOOT_AQ40");
+}
+
+function syncNaxxOnly() {
+  syncItemIdsAndIconsForOneSheet("LOOT_NAXX");
+}
+
+function syncOnyOnly() {
+  syncItemIdsAndIconsForOneSheet("LOOT_ONY");
+}
+
+function syncAllLootSheets() {
+  Object.keys(LOOT_SHEETS).forEach(raid => {
+    syncItemIdsAndIconsForOneSheet(LOOT_SHEETS[raid]);
+  });
+}
+
+function syncItemIdsAndIconsForOneSheet(sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    Logger.log("Tab nicht gefunden: " + sheetName);
+    return;
+  }
+
+  const values = sheet.getDataRange().getValues();
+
+  if (values.length < 2) {
+    Logger.log(sheetName + ": Keine Daten vorhanden.");
+    return;
+  }
+
+  const headers = values[0].map(h => String(h).trim());
+
+  const itemCol = findHeader(headers, "Item");
+  const itemIdCol = findHeader(headers, "ItemID");
+  const iconCol = findHeader(headers, "Icon");
+
+  if (itemCol === -1 || itemIdCol === -1 || iconCol === -1) {
+    Logger.log(sheetName + ": Item, ItemID oder Icon fehlt.");
+    return;
+  }
+
+  for (let i = 1; i < values.length; i++) {
+    const itemName = String(values[i][itemCol] || "").trim();
+
+    if (!itemName) continue;
+
+    const data = findWowheadClassicItemByName(itemName);
+
+    if (data && data.itemId) {
+      sheet.getRange(i + 1, itemIdCol + 1).setValue(data.itemId);
+    }
+
+    if (data && data.icon) {
+      sheet.getRange(i + 1, iconCol + 1).setValue(data.icon);
+    }
+
+    Utilities.sleep(350);
+  }
+
+  Logger.log(sheetName + ": ItemID/Icon-Abgleich abgeschlossen.");
+}
+
+function findWowheadClassicItemByName(itemName) {
+  try {
+    const searchUrl =
+      "https://www.wowhead.com/classic/search?q=" +
+      encodeURIComponent(itemName);
+
+    const html = UrlFetchApp.fetch(searchUrl, {
+      muteHttpExceptions: true,
+      followRedirects: true,
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    }).getContentText();
+
+    const escapedName = escapeRegex(itemName);
+
+    const idMatch =
+      html.match(new RegExp('/classic/item=(\\d+)[^"]*">\\s*' + escapedName, "i")) ||
+      html.match(/\/classic\/item=(\d+)/i) ||
+      html.match(/"id":\s*(\d+)/i);
+
+    if (!idMatch || !idMatch[1]) {
+      Logger.log("Keine ItemID gefunden für: " + itemName);
+      return null;
+    }
+
+    const itemId = idMatch[1];
+    const icon = getWowheadIconByItemId(itemId);
+
+    return {
+      itemId: itemId,
+      icon: icon
+    };
+
+  } catch (err) {
+    Logger.log("Fehler bei Itemname " + itemName + ": " + err.message);
+    return null;
+  }
+}
+
+function getWowheadIconByItemId(itemId) {
+  try {
+    const urls = [
+      "https://www.wowhead.com/classic/tooltip/item/" + encodeURIComponent(itemId),
+      "https://classic.wowhead.com/tooltip/item/" + encodeURIComponent(itemId),
+      "https://www.wowhead.com/classic/item=" + encodeURIComponent(itemId)
+    ];
+
+    for (const url of urls) {
+      const response = UrlFetchApp.fetch(url, {
+        muteHttpExceptions: true,
+        followRedirects: true,
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
+      });
+
+      const text = response.getContentText();
+
+      const match =
+        text.match(/"icon"\s*:\s*"([^"]+)"/) ||
+        text.match(/<icon>([^<]+)<\/icon>/) ||
+        text.match(/\/wow\/icons\/large\/([^".]+)\.jpg/);
+
+      if (match && match[1]) {
+        return normalizeIconName(match[1]);
+      }
+    }
+
+    return "";
+  } catch (err) {
+    Logger.log("Icon-Fehler bei ItemID " + itemId + ": " + err.message);
+    return "";
+  }
+}
+
+/* =========================================================
+   HILFSFUNKTIONEN
+   ========================================================= */
+
+function getRequiredSheet(name) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  if (!sheet) throw new Error("Tabellenblatt '" + name + "' wurde nicht gefunden.");
+  return sheet;
+}
+
+function getFirstValue(obj, names) {
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i];
+    if (obj[name] !== undefined && obj[name] !== null && String(obj[name]).trim() !== "") {
+      return String(obj[name]).trim();
+    }
+  }
+  return "";
+}
+
+function normalizeRaidForP0(value) {
+  const raid = String(value || "").trim().toUpperCase();
+
+  if (raid === "MC" || raid.includes("MOLTEN")) return "MC";
+  if (raid === "BWL" || raid.includes("BLACKWING")) return "BWL";
+  if (raid === "ZG" || raid.includes("ZUL")) return "ZG";
+  if (raid === "AQ20" || raid.includes("RUINS")) return "AQ20";
+  if (raid === "AQ40" || raid === "AQ" || raid.includes("TEMPLE")) return "AQ40";
+  if (raid === "NAXX" || raid.includes("NAXX")) return "NAXX";
+  if (raid === "ONY" || raid === "ONYXIA" || raid.includes("ONYXIA")) return "ONY";
+
+  return raid;
+}
+
+function addOrUpdateP0PlusPoint(sheet, raid, item, slot, player) {
+  const values = sheet.getDataRange().getValues();
+
+  const raidKey = normalizeRaidForP0(raid);
+  const itemKeyValue = itemKey(item);
+  const playerKeyValue = itemKey(player);
+
+  for (let i = 1; i < values.length; i++) {
+    const rowRaid = normalizeRaidForP0(values[i][0] || "");
+    const rowItem = String(values[i][1] || "");
+    const rowPlayer = String(values[i][3] || "");
+
+    if (
+      rowRaid === raidKey &&
+      itemKey(rowItem) === itemKeyValue &&
+      itemKey(rowPlayer) === playerKeyValue
+    ) {
+      const current = Number(values[i][4] || 0);
+      sheet.getRange(i + 1, 5).setValue(current + 1);
+      return true;
+    }
+  }
+
+  sheet.appendRow([
+    raidKey,
+    item,
+    slot || "",
+    player,
+    1
+  ]);
+
+  return true;
+}
+
+function findHeader(headers, name) {
+  return headers.findIndex(h =>
+    String(h).trim().toLowerCase() === String(name).trim().toLowerCase()
+  );
+}
+
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function itemKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/['’`´]/g, "")
+    .replace(/[-–—]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function normalizeIconName(icon) {
+  icon = String(icon || "").trim();
+  if (!icon) return "";
+
+  icon = icon.replace(/\.jpg$/i, "");
+  icon = icon.replace(/\.blp$/i, "");
+  icon = icon.replace(/^https:\/\/wow\.zamimg\.com\/images\/wow\/icons\/large\//i, "");
+  icon = icon.replace(/^Interface\\Icons\\/i, "");
+  icon = icon.replace(/^interface\\icons\\/i, "");
+
+  return icon.toLowerCase();
+}
+
+function encodeAddonField(value) {
+  return String(value || "")
+    .replace(/%/g, "%PCT%")
+    .replace(/\r/g, "")
+    .replace(/\n/g, "%BR%")
+    .replace(/;/g, "%SEP%")
+    .replace(/\|/g, "%PIPE%");
+}
+
+function jsonOutput(obj) {
+  if (__LICHTLOOT_CALLBACK) {
+    return ContentService
+      .createTextOutput(__LICHTLOOT_CALLBACK + "(" + JSON.stringify(obj) + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonOrJsonp(obj, callback) {
+  if (callback) {
+    return ContentService
+      .createTextOutput(callback + "(" + JSON.stringify(obj) + ");")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return jsonOutput(obj);
+}
+
+/* =========================================================
+   ICONNAMEN-AUTOMATIK / EINZELNER RAID-ABGLEICH
+   ========================================================= */
+
+function fillMCIconNames() {
+  fillIconNamesForRaid("MC");
+}
+
+function fillBWLIconNames() {
+  fillIconNamesForRaid("BWL");
+}
+
+function fillZGIconNames() {
+  fillIconNamesForRaid("ZG");
+}
+
+function fillAQ20IconNames() {
+  fillIconNamesForRaid("AQ20");
+}
+
+function fillAQ40IconNames() {
+  fillIconNamesForRaid("AQ40");
+}
+
+function fillNaxxIconNames() {
+  fillIconNamesForRaid("NAXX");
+}
+
+function fillOnyIconNames() {
+  fillIconNamesForRaid("ONY");
+}
+
+function fillAllRaidIconNames() {
+  fillMCIconNames();
+  fillBWLIconNames();
+  fillZGIconNames();
+  fillAQ20IconNames();
+  fillAQ40IconNames();
+  fillNaxxIconNames();
+  fillOnyIconNames();
+}
+
+function fillIconNamesForRaid(raid) {
+  const raidKey = normalizeRaidForP0(raid);
+  const sheetName = LOOT_SHEETS[raidKey];
+
+  if (!sheetName) {
+    Logger.log("❌ Kein Loot-Sheet für Raid gefunden: " + raid);
+    return;
+  }
+
+  fillIconNamesForSheet_(raidKey, sheetName);
+}
+
+function fillIconNamesForSheet_(raid, sheetName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    Logger.log("❌ Tab nicht gefunden: " + sheetName);
+    return;
+  }
+
+  const values = sheet.getDataRange().getValues();
+
+  if (values.length < 2) {
+    Logger.log("⚠️ " + raid + " / " + sheetName + ": Keine Daten vorhanden.");
+    return;
+  }
+
+  const headers = values[0].map(function(h) {
+    return String(h || "").trim();
+  });
+
+  const itemIdCol = findHeaderAny(headers, ["ItemID", "ItemId", "ID"]);
+  const iconNameCol = findHeaderAny(headers, ["IconName", "Icon_Name", "Iconname", "Icon"]);
+
+  if (itemIdCol === -1) {
+    Logger.log("❌ " + raid + " / " + sheetName + ": Spalte ItemID fehlt.");
+    return;
+  }
+
+  if (iconNameCol === -1) {
+    Logger.log("❌ " + raid + " / " + sheetName + ": Spalte IconName oder Icon fehlt.");
+    return;
+  }
+
+  Logger.log("");
+  Logger.log("========================================");
+  Logger.log("🔎 ICONNAMEN-ABGLEICH: " + raid);
+  Logger.log("Sheet: " + sheetName);
+  Logger.log("Zielspalte: " + headers[iconNameCol]);
+  Logger.log("========================================");
+
+  let checked = 0;
+  let filled = 0;
+  let skipped = 0;
+  let missing = 0;
+
+  for (let r = 1; r < values.length; r++) {
+    const rowNumber = r + 1;
+    const itemId = String(values[r][itemIdCol] || "").trim();
+    const currentIcon = String(values[r][iconNameCol] || "").trim();
+
+    if (!itemId) {
+      skipped++;
+      continue;
+    }
+
+    if (currentIcon) {
+      skipped++;
+      continue;
+    }
+
+    checked++;
+
+    const iconName = getClassicWowheadIconName_(itemId);
+
+    if (iconName) {
+      sheet.getRange(rowNumber, iconNameCol + 1).setValue(iconName);
+      filled++;
+      Logger.log("✅ " + raid + " | Zeile " + rowNumber + " | ItemID " + itemId + " -> " + iconName);
+      Utilities.sleep(250);
+    } else {
+      missing++;
+      Logger.log("⚠️ " + raid + " | Zeile " + rowNumber + " | Kein IconName gefunden für ItemID " + itemId);
+      Utilities.sleep(250);
+    }
+  }
+
+  Logger.log("----------------------------------------");
+  Logger.log("Raid: " + raid);
+  Logger.log("Geprüft: " + checked);
+  Logger.log("Neu gefüllt: " + filled);
+  Logger.log("Übersprungen: " + skipped);
+  Logger.log("Nicht gefunden: " + missing);
+  Logger.log("========================================");
+  Logger.log("");
+}
+
+function getClassicWowheadIconName_(itemId) {
+  const url = 'https://www.wowhead.com/classic/de/item=' + encodeURIComponent(itemId);
+  const html = UrlFetchApp.fetch(url, {
+    muteHttpExceptions: true,
+    followRedirects: true,
+    headers: {
+      'User-Agent': 'Mozilla/5.0'
+    }
+  }).getContentText();
+
+  let match = html.match(/icon:\s*['"]([^'"]+)['"]/i);
+  if (match && match[1]) return String(match[1]).toLowerCase();
+
+  match = html.match(/\"icon\"\s*:\s*\"([^\"]+)\"/i);
+  if (match && match[1]) return String(match[1]).toLowerCase();
+
+  match = html.match(/images\/wow\/icons\/large\/([^\."']+)\.jpg/i);
+  if (match && match[1]) return String(match[1]).toLowerCase();
+
+  return '';
+}
