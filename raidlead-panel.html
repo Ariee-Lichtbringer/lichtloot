@@ -754,14 +754,10 @@ function renderDcCheckBox(){
     ✅ Vollständig: <span class="ok">${complete}</span><br>
     ⚠️ Ohne Prio: <span class="${missingPrio.length ? "warn" : "ok"}">${missingPrio.length}</span><br>
     ⚠️ PO ohne Prio: <span class="${poWithoutPrio.length ? "warn" : "ok"}">${poWithoutPrio.length}</span><br>
-    ⚠️ PO ohne Anmeldung: <span class="${poWithoutSignup.length ? "warn" : "ok"}">${poWithoutSignup.length}</span><br>
-    ⚠️ Prio ohne Anmeldung: <span class="${prioWithoutSignup.length ? "warn" : "ok"}">${prioWithoutSignup.length}</span>
 
     <div class="dc-check-list">
       ${renderNameDetails("Ohne Prio", missingPrio)}
       ${renderNameDetails("PO ohne Prio", poWithoutPrio)}
-      ${renderNameDetails("PO ohne Anmeldung", poWithoutSignup)}
-      ${renderNameDetails("Prio ohne Anmeldung", prioWithoutSignup)}
     </div>
 
     <div class="dc-check-meta">
