@@ -52,7 +52,7 @@
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22."
     ],
     "tooltip": "Arlokks Hoodoostecken | Wird beim Aufheben gebunden | Einzigartig | In Schildhand geführt | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
-    "iconName": ""
+    "iconName": "inv_misc_bone_dwarfskull_01"
   },
   {
     "raid": "ZG",
@@ -71,7 +71,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23."
     ],
     "tooltip": "Band der Knechtschaft | Wird beim Aufheben gebunden | Einzigartig | Finger | +8 Ausdauer | +9 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23.",
-    "iconName": ""
+    "iconName": "inv_jewelry_ring_16"
   },
   {
     "raid": "ZG",
@@ -91,7 +91,7 @@
       "(2) Set: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33."
     ],
     "tooltip": "Band des Primalisten | Wird beim Aufheben gebunden | Einzigartig | Finger | +8 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. |   | Gebet der Uralten (0/2) |   Siegel des Primalisten |   Band des Primalisten |   | (2) Set: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33.",
-    "iconName": ""
+    "iconName": "inv_jewelry_ring_47"
   },
   {
     "raid": "ZG",
@@ -315,7 +315,7 @@
       "Anlegen: Verteidigung +10."
     ],
     "tooltip": "Blutgetränkte Beinplatten | Wird beim Aufheben gebunden | Beine Platte | 674 Rüstung | +36 Stärke | +21 Ausdauer | Benötigt Stufe 60 | Anlegen: Verteidigung +10.",
-    "iconName": ""
+    "iconName": "inv_pants_plate_21"
   },
   {
     "raid": "ZG",
@@ -334,7 +334,7 @@
       "Anlegen: Verteidigung +5."
     ],
     "tooltip": "Blutgetränkte Schienbeinschützer | Wird beim Aufheben gebunden | Füße Platte | 486 Rüstung | +8 Beweglichkeit | +25 Ausdauer | Benötigt Stufe 60 | Anlegen: Verteidigung +5.",
-    "iconName": ""
+    "iconName": "inv_boots_plate_06"
   },
   {
     "raid": "ZG",
@@ -389,7 +389,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Blutrebe",
-    "iconName": ""
+    "iconName": "inv_misc_herb_09"
   },
   {
     "raid": "ZG",
@@ -408,7 +408,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33."
     ],
     "tooltip": "Blutrufer | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Schwert | 52 - 114 Schaden Tempo 2,00 | (41.5 Schaden pro Sekunde) | +12 Ausdauer | +15 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33.",
-    "iconName": ""
+    "iconName": "inv_sword_18"
   },
   {
     "raid": "ZG",
@@ -423,7 +423,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Blutsense | Wird beim Aufheben gebunden | Einzigartig | 'Ermöglicht es einem Kräuterkundigen in der Flora von Zul'Gurub Blutreben zu sammeln, wenn mitgeführt.'",
-    "iconName": "inv_misc_herb_09"
+    "iconName": "inv_weapon_shortblade_29"
   },
   {
     "raid": "ZG",
@@ -496,7 +496,7 @@
       "Anlegen: +40 Angriffskraft."
     ],
     "tooltip": "Das Auge von Hakkar | Wird beim Aufheben gebunden | Hals | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +40 Angriffskraft.",
-    "iconName": ""
+    "iconName": "inv_jewelry_necklace_22"
   },
   {
     "raid": "ZG",
@@ -514,7 +514,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Priester | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Priester.'",
-    "iconName": ""
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -532,7 +532,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Magier | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Magier.'",
-    "iconName": "inv_zulgurubtrinket"
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -550,7 +550,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Hexenmeister | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Hexenmeister.'",
-    "iconName": "inv_zulgurubtrinket"
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -568,7 +568,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Schurke | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Schurken.'",
-    "iconName": "inv_zulgurubtrinket"
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -586,7 +586,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Druide | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Druiden.'",
-    "iconName": "inv_zulgurubtrinket"
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -604,7 +604,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Jäger | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Jäger.'",
-    "iconName": "inv_zulgurubtrinket"
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -622,7 +622,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Schamane | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Schamanen.'",
-    "iconName": ""
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -640,7 +640,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Paladin | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Paladin.'",
-    "iconName": ""
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -658,7 +658,7 @@
       "Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer."
     ],
     "tooltip": "Durchstochene Voodoopuppe | Einzigartig | Klassen: Krieger | Benutzen: Wird in Verbindung mit Gri'leks Blut, Renatakis Zahn, Wushoolays Mähne und Hazza'rahs Traumfaden zu einem mächtigen Glücksbringer. | 'Die Puppe ähnelt einem Krieger.'",
-    "iconName": ""
+    "iconName": "inv_misc_idol_02"
   },
   {
     "raid": "ZG",
@@ -677,7 +677,7 @@
       "Anlegen: +44 Angriffskraft."
     ],
     "tooltip": "Echsenschuppenaugenklappe | Wird beim Aufheben gebunden | Einzigartig | Kopf Leder | 160 Rüstung | +19 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: +44 Angriffskraft.",
-    "iconName": ""
+    "iconName": "inv_helmet_46"
   },
   {
     "raid": "ZG",
@@ -695,7 +695,7 @@
       "Anlegen: +28 Angriffskraft."
     ],
     "tooltip": "Fangzahn des Gesichtslosen | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 66 - 123 Schaden Tempo 1,90 | (49.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +28 Angriffskraft.",
-    "iconName": ""
+    "iconName": "inv_weapon_shortblade_30"
   },
   {
     "raid": "ZG",
@@ -715,7 +715,7 @@
       "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Fangzahn von Venoxis | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Dolch | 35 - 73 Schaden Tempo 1,30 | (41.5 Schaden pro Sekunde) | +8 Intelligenz | +6 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 24. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
-    "iconName": ""
+    "iconName": "inv_weapon_shortblade_31"
   },
   {
     "raid": "ZG",
@@ -754,7 +754,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 22."
     ],
     "tooltip": "Fließende Ritualroben | Wird beim Aufheben gebunden | Einzigartig | Brust Stoff | 100 Rüstung | +15 Ausdauer | +23 Intelligenz | +24 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 22.",
-    "iconName": ""
+    "iconName": "inv_chest_cloth_25"
   },
   {
     "raid": "ZG",
@@ -772,7 +772,7 @@
       "Benutzen: Lehrt Verwandlung: Schildkröte."
     ],
     "tooltip": "Foliant der Verwandlung: Schildkröte | Klassen: Magier | Benötigt Stufe 60 | Benutzen: Lehrt Verwandlung: Schildkröte.",
-    "iconName": ""
+    "iconName": "inv_misc_book_07"
   },
   {
     "raid": "ZG",
@@ -789,7 +789,7 @@
       "Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte)."
     ],
     "tooltip": "Formel: Brust - Große Werte | Wird beim Aufheben gebunden | Benötigt Verzauberkunst | Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte).",
-    "iconName": "inv_scroll_06"
+    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "ZG",
@@ -806,7 +806,7 @@
       "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird."
     ],
     "tooltip": "Formel: Handschuhe - Bedrohung | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
-    "iconName": "inv_scroll_06"
+    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "ZG",
@@ -925,7 +925,7 @@
       "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert."
     ],
     "tooltip": "Formel: Umhang - Feingefühl | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
-    "iconName": "inv_scroll_06"
+    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "ZG",
@@ -982,7 +982,7 @@
       "Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Gamaschen des Friedensbewahrers | Wird beim Aufheben gebunden | Beine Platte | 618 Rüstung | +14 Ausdauer | +18 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her.",
-    "iconName": ""
+    "iconName": "inv_pants_plate_04"
   },
   {
     "raid": "ZG",
@@ -1049,7 +1049,7 @@
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33."
     ],
     "tooltip": "Göttlicher Hakkariumhang | Wird beim Aufheben gebunden | Rücken | 50 Rüstung | +6 Ausdauer | +6 Intelligenz | +8 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 33.",
-    "iconName": ""
+    "iconName": "inv_misc_cape_18"
   },
   {
     "raid": "ZG",
@@ -1098,7 +1098,7 @@
       "Anlegen: +48 Angriffskraft, wenn gegen Drachkin gekämpft wird."
     ],
     "tooltip": "Grileks Schleifer | Wird beim Aufheben gebunden | Einhändig Streitkolben | 75 - 140 Schaden Tempo 2,40 | (44.8 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +48 Angriffskraft, wenn gegen Drachkin gekämpft wird.",
-    "iconName": ""
+    "iconName": "inv_mace_04"
   },
   {
     "raid": "ZG",
@@ -1115,7 +1115,7 @@
       "Anlegen: +117 Angriffskraft, wenn gegen Drachkin gekämpft wird."
     ],
     "tooltip": "Grileks Schnitzer | Wird beim Aufheben gebunden | Zweihändig Axt | 182 - 274 Schaden Tempo 3,90 | (58.5 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +117 Angriffskraft, wenn gegen Drachkin gekämpft wird.",
-    "iconName": ""
+    "iconName": "inv_axe_24"
   },
   {
     "raid": "ZG",
@@ -1242,7 +1242,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Hazza'rahs Traumfaden | Wird beim Aufheben gebunden | Einzigartig",
-    "iconName": ""
+    "iconName": "inv_misc_bandage_16"
   },
   {
     "raid": "ZG",
@@ -1293,7 +1293,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Herz von Hakkar | Wird beim Aufheben gebunden | Einzigartig | Dieser Gegenstand startet eine Quest. | Benötigt Stufe 58",
-    "iconName": ""
+    "iconName": "inv_misc_gem_bloodstone_02"
   },
   {
     "raid": "ZG",
@@ -1310,7 +1310,7 @@
       "Anlegen: +117 Angriffskraft, wenn gegen Dämonen gekämpft wird."
     ],
     "tooltip": "Heugabel des Wahnsinns | Wird beim Aufheben gebunden | Zweihändig Stangenwaffe | 163 - 246 Schaden Tempo 3,50 | (58.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +117 Angriffskraft, wenn gegen Dämonen gekämpft wird.",
-    "iconName": ""
+    "iconName": "inv_spear_03"
   },
   {
     "raid": "ZG",
@@ -1380,7 +1380,7 @@
       "Trefferchance: Verwundet das Ziel und fügt ihm 200 bis 220 Schaden zu."
     ],
     "tooltip": "Jekliks Zermalmer | Wird beim Aufheben gebunden | Zweihändig Streitkolben | 159 - 248 Schaden Tempo 3,60 | (56.5 Schaden pro Sekunde) | Benötigt Stufe 60 | Trefferchance: Verwundet das Ziel und fügt ihm 200 bis 220 Schaden zu.",
-    "iconName": ""
+    "iconName": "inv_mace_19"
   },
   {
     "raid": "ZG",
@@ -1441,7 +1441,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27."
     ],
     "tooltip": "Jin'dos Richturteil | Wird beim Aufheben gebunden | Zweihändig Stab | 143 - 227 Schaden Tempo 3,30 | (56.1 Schaden pro Sekunde) | +10 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 2%. | Anlegen: Stellt alle 5 Sek. 14 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27.",
-    "iconName": ""
+    "iconName": "inv_staff_33"
   },
   {
     "raid": "ZG",
@@ -1499,7 +1499,7 @@
       "(2) Set: Schwerter +6."
     ],
     "tooltip": "Kriegsklinge der Hakkari | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.9 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. |   | Die Zwillingsklingen von Hakkari (0/2) |   Kriegsklinge der Hakkari |   Kriegsklinge der Hakkari |   | (2) Set: Schwerter +6. | '...den brodelnden Flammen des Hasses.'",
-    "iconName": ""
+    "iconName": "inv_sword_55"
   },
   {
     "raid": "ZG",
@@ -1640,7 +1640,7 @@
       "Benutzen: Stellt alle 5 Sek. 60 Punkt(e) Mana wieder her. Hält 30 Sek. lang an. (3 Min. Abklingzeit)"
     ],
     "tooltip": "Mar'lis Auge | Wird beim Aufheben gebunden | Schmuck | Benötigt Stufe 60 | Benutzen: Stellt alle 5 Sek. 60 Punkt(e) Mana wieder her. Hält 30 Sek. lang an. (3 Min. Abklingzeit)",
-    "iconName": ""
+    "iconName": "inv_zulgurubtrinket"
   },
   {
     "raid": "ZG",
@@ -1700,7 +1700,7 @@
       "Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Meeresfurienstiefel | Wird beim Aufheben gebunden | Füße Schwere Rüstung | 274 Rüstung | +10 Ausdauer | +15 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
-    "iconName": ""
+    "iconName": "inv_boots_chain_11"
   },
   {
     "raid": "ZG",
@@ -1838,7 +1838,7 @@
       "+19 Ausdauer"
     ],
     "tooltip": "Nat Pagles Fischterminator | Wird beim Aufheben gebunden | Einzigartig | Zweihändig Stab | 172 - 258 Schaden Tempo 3,50 | (61.4 Schaden pro Sekunde) | +41 Stärke | +19 Ausdauer | Benötigt Stufe 60 | 'Die Inschrift lautet: Fischen is' für Waschlappen -Nat Pagle'",
-    "iconName": ""
+    "iconName": "inv_fishingpole_02"
   },
   {
     "raid": "ZG",
@@ -1875,7 +1875,7 @@
       "(2) Set: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%."
     ],
     "tooltip": "Onyxband des Oberherren | Wird beim Aufheben gebunden | Einzigartig | Finger | +11 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 2%. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. |   | Erlass des Oberherren (0/2) |   Purpurrotes Band des Oberherren |   Onyxband des Oberherren |   | (2) Set: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
-    "iconName": ""
+    "iconName": "inv_jewelry_ring_39"
   },
   {
     "raid": "ZG",
@@ -1894,7 +1894,7 @@
       "Anlegen: Verbessert Eure Trefferchance um 1%."
     ],
     "tooltip": "Opferungsstulpen | Wird beim Aufheben gebunden | Hände Platte | 441 Rüstung | +19 Stärke | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
-    "iconName": ""
+    "iconName": "inv_gauntlets_31"
   },
   {
     "raid": "ZG",
@@ -1924,7 +1924,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Pantherbalgsack | Wird beim Aufheben gebunden | Einzigartig | 18 Platz Behälter",
-    "iconName": ""
+    "iconName": "inv_misc_bag_14"
   },
   {
     "raid": "ZG",
@@ -2155,7 +2155,7 @@
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37."
     ],
     "tooltip": "Schiftung des Animisten | Wird beim Aufheben gebunden | Schulter Leder | 201 Rüstung | +11 Ausdauer | +18 Intelligenz | +12 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37.",
-    "iconName": ""
+    "iconName": "inv_shoulder_09"
   },
   {
     "raid": "ZG",
@@ -2334,7 +2334,7 @@
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29."
     ],
     "tooltip": "Stiefel des Animisten | Wird beim Aufheben gebunden | Füße Leder | 184 Rüstung | +9 Ausdauer | +14 Intelligenz | +14 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29.",
-    "iconName": ""
+    "iconName": "inv_boots_chain_13"
   },
   {
     "raid": "ZG",
@@ -2374,7 +2374,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30."
     ],
     "tooltip": "Stiefel des Verräters | Wird beim Aufheben gebunden | Füße Stoff | 69 Rüstung | +8 Ausdauer | +12 Intelligenz | +12 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30.",
-    "iconName": ""
+    "iconName": "inv_boots_cloth_09"
   },
   {
     "raid": "ZG",
@@ -2439,7 +2439,7 @@
       "Trefferchance: Überzieht den Feind mit Gift für 63 bis 93 Punkt(en) Naturschaden."
     ],
     "tooltip": "Szepter der Pein | Wird beim Aufheben gebunden | Einzigartig | Einhändig Streitkolben | 77 - 145 Schaden Tempo 2,60 | (42.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Streitkolben +2. | Trefferchance: Überzieht den Feind mit Gift für 63 bis 93 Punkt(en) Naturschaden.",
-    "iconName": ""
+    "iconName": "inv_mace_08"
   },
   {
     "raid": "ZG",
@@ -2533,7 +2533,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23."
     ],
     "tooltip": "Umhang der Hakkarianbeter | Wird beim Aufheben gebunden | Rücken | 48 Rüstung | +6 Ausdauer | +6 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23.",
-    "iconName": ""
+    "iconName": "inv_misc_cape_16"
   },
   {
     "raid": "ZG",
@@ -2552,7 +2552,7 @@
       "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
     ],
     "tooltip": "Umhang der Verzehrung | Wird beim Aufheben gebunden | Rücken | 52 Rüstung | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
-    "iconName": ""
+    "iconName": "inv_misc_cape_22"
   },
   {
     "raid": "ZG",
@@ -2586,7 +2586,7 @@
       "Klassen: Jäger, Schurke, Priester"
     ],
     "tooltip": "Urzeitliche Aegis der Hakkari | Wird beim Aufheben gebunden | Klassen: Jäger, Schurke, Priester | 'Ein legendäres Symbol der Macht des alten Gurubashiimperiums.'",
-    "iconName": ""
+    "iconName": "inv_chest_chain_12"
   },
   {
     "raid": "ZG",
@@ -2620,7 +2620,7 @@
       "Klassen: Paladin, Jäger, Magier"
     ],
     "tooltip": "Urzeitliche Hakkaribindungen | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Magier | 'Ein legendäres Symbol der Macht des alten Gurubashiimperiums.'",
-    "iconName": ""
+    "iconName": "inv_bracer_05"
   },
   {
     "raid": "ZG",
@@ -2637,7 +2637,7 @@
       "Klassen: Priester, Hexenmeister, Druide"
     ],
     "tooltip": "Urzeitliche Hakkarischärpe | Wird beim Aufheben gebunden | Klassen: Priester, Hexenmeister, Druide | 'Ein legendäres Symbol der Macht des alten Gurubashiimperiums.'",
-    "iconName": ""
+    "iconName": "inv_belt_07"
   },
   {
     "raid": "ZG",
@@ -2669,7 +2669,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Urzeitlicher Hakkarigötze | Wird beim Aufheben gebunden | Benötigt Stufe 58 | 'Etwas uraltes Böses lauert in diesem Götzen...'",
-    "iconName": ""
+    "iconName": "inv_zulgurubtrinket"
   },
   {
     "raid": "ZG",
@@ -2874,7 +2874,7 @@
       "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Wushoolays Schüreisen | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Dolch | 43 - 88 Schaden Tempo 1,60 | (40.9 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 31. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
-    "iconName": ""
+    "iconName": "inv_sword_37"
   },
   {
     "raid": "ZG",
@@ -2968,7 +2968,7 @@
       "(2) Set: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
     ],
     "tooltip": "Zanzils Siegel | Wird beim Aufheben gebunden | Einzigartig | Finger | +10 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 11. |   | Zanzils Konzentration (0/2) |   Zanzils Band |   Zanzils Siegel |   | (2) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 6. | (2) Set: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
-    "iconName": ""
+    "iconName": "inv_jewelry_ring_46"
   },
   {
     "raid": "ZG",
@@ -3020,7 +3020,7 @@
       "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
     ],
     "tooltip": "Zulianische Steinaxt | Wird beim Aufheben gebunden | Zweihändig Axt | 131 - 197 Schaden Tempo 2,80 | (58.6 Schaden pro Sekunde) | +22 Intelligenz | Benötigt Stufe 60 | Anlegen: +44 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | 'Trägt das Symbol von Jin.'",
-    "iconName": ""
+    "iconName": "inv_axe_34"
   },
   {
     "raid": "ZG",
@@ -3074,7 +3074,7 @@
       "Anlegen: Kürschnerei +10."
     ],
     "tooltip": "Zulianischer Schnitzler | Wird beim Aufheben gebunden | Einhändig Schwert | 78 - 146 Schaden Tempo 2,50 | (44.8 Schaden pro Sekunde) | Benötigt Stufe 60 | Trefferchance: Zerhäckselt den Feind für 72 bis 96 Naturschaden. | Anlegen: +12 Angriffskraft. | Anlegen: Kürschnerei +10.",
-    "iconName": ""
+    "iconName": "inv_sword_35"
   },
   {
     "raid": "ZG",
@@ -3112,7 +3112,7 @@
       "+8 Willenskraft"
     ],
     "tooltip": "Zulianischer Verteidiger | Wird beim Aufheben gebunden | Schildhand Schild | 2312 Rüstung | 43 Blocken | +15 Ausdauer | +9 Intelligenz | +8 Willenskraft | Benötigt Stufe 60",
-    "iconName": ""
+    "iconName": "inv_shield_22"
   },
   {
     "raid": "ZG",
@@ -3148,7 +3148,7 @@
       "Anlegen: Äxte +2."
     ],
     "tooltip": "Zulianischer Zerhacker | Wird beim Anlegen gebunden | Einhändig Axt | 71 - 134 Schaden Tempo 2,40 | (42.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Äxte +2.",
-    "iconName": ""
+    "iconName": "inv_axe_08"
   },
   {
     "raid": "ZG",
