@@ -1,1 +1,18 @@
-
+[
+  {
+    "itemId": 21232,
+    "name": "Imperial Qiraji Regalia",
+    "slot": "Head",
+    "boss": "The Prophet Skeram",
+    "quality": "Epic",
+    "icon": "inv_crown_01"
+  },
+  {
+    "itemId": 21237,
+    "name": "Imperial Qiraji Armaments",
+    "slot": "Weapon",
+    "boss": "The Prophet Skeram",
+    "quality": "Epic",
+    "icon": "inv_sword_59"
+  }
+]
