@@ -3277,5 +3277,39 @@
     ],
     "tooltip": "Zauberstab des flüsternden Todes | Wird beim Aufheben gebunden | Distanz Zauberstab | 119 - 222 Schattenschaden Tempo 1,50 | (113.7 Schaden pro Sekunde) | +10 Intelligenz | +9 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
     "iconName": "inv_wand_1h_stratholme_d_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 5760,
+    "name": "Eterniumschließkassette",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Gewöhnlich",
+    "icon": "134344",
+    "dropChance": "",
+    "statsText": "Preiset Cutiepie",
+    "stats": [
+      "Preiset Cutiepie"
+    ],
+    "tooltip": "Verschlossen; Benötigt Schlossknacken (225)",
+    "iconName": "Inv_misc_ornatebox"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 5759,
+    "name": "Thoriumschließkassette",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Gewöhnlich",
+    "icon": "134344",
+    "dropChance": "",
+    "statsText": "Preiset Cutiepie",
+    "stats": [
+      "Preiset Cutiepie"
+    ],
+    "tooltip": "Verschlossen; Benötigt Schlossknacken (225)",
+    "iconName": "Inv_misc_ornatebox"
   }
 ]
