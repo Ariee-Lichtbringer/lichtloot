@@ -1,1 +1,3281 @@
-
+[
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 23001,
+    "name": "Auge des Schwunds",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135440",
+    "dropChance": "14. Sep",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Benutzen: Verringert die von Euch verursachte Bedrohung 20 Sek. lang um 35%. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+      "Benutzen: Verringert die von Euch verursachte Bedrohung 20 Sek. lang um 35%. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Auge des Schwunds | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Benutzen: Verringert die von Euch verursachte Bedrohung 20 Sek. lang um 35%. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23047,
+    "name": "Auge des Todes",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135439",
+    "dropChance": "39.3",
+    "statsText": "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 70. | Benutzen: Erhöht die durch die nächsten 5 Zauber verursachte Heilung um bis zu 450. Hält 30 Sek. lang an. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 70.",
+      "Benutzen: Erhöht die durch die nächsten 5 Zauber verursachte Heilung um bis zu 450. Hält 30 Sek. lang an. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Auge des Todes | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 70. | Benutzen: Erhöht die durch die nächsten 5 Zauber verursachte Heilung um bis zu 450. Hält 30 Sek. lang an. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22939,
+    "name": "Band der unerhörten Gebete",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133392",
+    "dropChance": "Tue Feb 24 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+11 Ausdauer | +11 Intelligenz | +12 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 51.",
+    "stats": [
+      "+11 Ausdauer",
+      "+11 Intelligenz",
+      "+12 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 51."
+    ],
+    "tooltip": "Band der unerhörten Gebete | Wird beim Aufheben gebunden | Einzigartig | Finger | +11 Ausdauer | +11 Intelligenz | +12 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 51.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 23038,
+    "name": "Band der unnatürlichen Kräfte",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133390",
+    "dropChance": "11. Sep",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +52 Angriffskraft.",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Anlegen: +52 Angriffskraft."
+    ],
+    "tooltip": "Band der unnatürlichen Kräfte | Wird beim Aufheben gebunden | Einzigartig | Finger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +52 Angriffskraft.",
+    "iconName": "inv_jewelry_ring_48naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22961,
+    "name": "Band des neuen Lebens",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133391",
+    "dropChance": "Sat Apr 18 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+34 Beweglichkeit",
+    "stats": [
+      "+34 Beweglichkeit"
+    ],
+    "tooltip": "Band des neuen Lebens | Wird beim Aufheben gebunden | Einzigartig | Finger | +34 Beweglichkeit | Benötigt Stufe 60",
+    "iconName": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23031,
+    "name": "Band des Unvermeidlichen",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133395",
+    "dropChance": "16",
+    "statsText": "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "stats": [
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
+    ],
+    "tooltip": "Band des Unvermeidlichen | Wird beim Aufheben gebunden | Einzigartig | Finger | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 36. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "iconName": "inv_jewelry_ring_53naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Heigan the Unclean",
+    "itemId": 23068,
+    "name": "Beinplatten des Blutbads",
+    "slot": "Beine",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "134696",
+    "dropChance": "Tue Aug 25 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+42 Stärke | +18 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+42 Stärke",
+      "+18 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Beinplatten des Blutbads | Wird beim Aufheben gebunden | Beine Platte | 815 Rüstung | +42 Stärke | +18 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_pants_plate_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22935,
+    "name": "Berührung des Frosts",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133279",
+    "dropChance": "19",
+    "statsText": "+20 Ausdauer | +24 Frostwiderstand",
+    "stats": [
+      "+20 Ausdauer",
+      "+24 Frostwiderstand"
+    ],
+    "tooltip": "Berührung des Frosts | Wird beim Aufheben gebunden | Einzigartig | Hals | +20 Ausdauer | +24 Frostwiderstand | Benötigt Stufe 60",
+    "iconName": "inv_jewelry_amulet_04"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gothik the Harvester",
+    "itemId": 23021,
+    "name": "Bindungen des Seelenjägers",
+    "slot": "Handgelenke",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "132606",
+    "dropChance": "Mon May 25 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+14 Ausdauer | +11 Intelligenz | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21.",
+    "stats": [
+      "+14 Ausdauer",
+      "+11 Intelligenz",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21."
+    ],
+    "tooltip": "Bindungen des Seelenjägers | Wird beim Aufheben gebunden | Handgelenke Stoff | 55 Rüstung | +14 Ausdauer | +11 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21.",
+    "iconName": "inv_bracer_07"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22726,
+    "name": "Bruchstück von Atiesh",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Legendär",
+    "icon": "134888",
+    "dropChance": "Sun Apr 19 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister, Druide | Benutzen: Kombiniert 40 Bruchstücke von Atiesh, um den Grundstab von Atiesh zu bilden.",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister, Druide",
+      "Benutzen: Kombiniert 40 Bruchstücke von Atiesh, um den Grundstab von Atiesh zu bilden."
+    ],
+    "tooltip": "Bruchstück von Atiesh | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister, Druide | Benötigt Stufe 60 | Benutzen: Kombiniert 40 Bruchstücke von Atiesh, um den Grundstab von Atiesh zu bilden. | 'Eines der Bruchstücke von Atiesh, dem Hohestab des Wächters.'",
+    "iconName": "inv_qiraj_jewelblessed"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23006,
+    "name": "Buchband des Lichts",
+    "slot": "Relikt",
+    "type": "Buchband",
+    "quality": "Episch",
+    "icon": "134915",
+    "dropChance": "09. Mär",
+    "statsText": "Anlegen: Erhöht durch 'Lichtblitz' verursachte Heilung um bis zu 83.",
+    "stats": [
+      "Anlegen: Erhöht durch 'Lichtblitz' verursachte Heilung um bis zu 83."
+    ],
+    "tooltip": "Buchband des Lichts | Wird beim Aufheben gebunden | Einzigartig | Relikt Buchband | Benötigt Stufe 60 | Anlegen: Erhöht durch 'Lichtblitz' verursachte Heilung um bis zu 83.",
+    "iconName": "inv_relics_libramofgrace"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22813,
+    "name": "Claymore der unheiligen Kraft",
+    "slot": "Zweihändig",
+    "type": "Zweihandschwerter",
+    "quality": "Episch",
+    "icon": "135356",
+    "dropChance": "Sat Aug 22 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+20 Ausdauer | Anlegen: +98 Angriffskraft.",
+    "stats": [
+      "+20 Ausdauer",
+      "Anlegen: +98 Angriffskraft."
+    ],
+    "tooltip": "Claymore der unheiligen Kraft | Wird beim Aufheben gebunden | Zweihändig Schwert | 235 - 354 Schaden Tempo 3,60 | (81.8 Schaden pro Sekunde) | +20 Ausdauer | Benötigt Stufe 60 | Anlegen: +98 Angriffskraft.",
+    "iconName": "inv_sword_46"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 23039,
+    "name": "Das Auge Nerubs",
+    "slot": "Zweihändig",
+    "type": "Stangenwaffen",
+    "quality": "Episch",
+    "icon": "135574",
+    "dropChance": "11. Sep",
+    "statsText": "+45 Beweglichkeit | +22 Ausdauer | Anlegen: Bogen +4. | Anlegen: Armbrüste +4. | Anlegen: Schusswaffen +4.",
+    "stats": [
+      "+45 Beweglichkeit",
+      "+22 Ausdauer",
+      "Anlegen: Bogen +4.",
+      "Anlegen: Armbrüste +4.",
+      "Anlegen: Schusswaffen +4."
+    ],
+    "tooltip": "Das Auge Nerubs | Wird beim Aufheben gebunden | Zweihändig Stangenwaffe | 251 - 378 Schaden Tempo 3,70 | (85.0 Schaden pro Sekunde) | +45 Beweglichkeit | +22 Ausdauer | Benötigt Stufe 60 | Anlegen: Bogen +4. | Anlegen: Armbrüste +4. | Anlegen: Schusswaffen +4.",
+    "iconName": "inv_weapon_halberd_04"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grobbulus",
+    "itemId": 22988,
+    "name": "Das Ende aller Träume",
+    "slot": "Einhändig",
+    "type": "Einhandstreitkolben",
+    "quality": "Episch",
+    "icon": "133496",
+    "dropChance": "Sun Apr 19 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+13 Ausdauer | +13 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95. | Anlegen: +305 Angriffskraft in Katzengestalt, Bärengestalt oder Terrorbärengestalt. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+13 Ausdauer",
+      "+13 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95.",
+      "Anlegen: +305 Angriffskraft in Katzengestalt, Bärengestalt oder Terrorbärengestalt.",
+      "Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Das Ende aller Träume | Wird beim Aufheben gebunden | Einzigartig | Einhändig Streitkolben | 44 - 121 Schaden Tempo 1,90 | (43.4 Schaden pro Sekunde) | +13 Ausdauer | +13 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95. | Anlegen: +305 Angriffskraft in Katzengestalt, Bärengestalt oder Terrorbärengestalt. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "iconName": "inv_mace_1h_stratholme_d_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23043,
+    "name": "Das Gesicht des Todes",
+    "slot": "Schildhand",
+    "type": "Schilde",
+    "quality": "Episch",
+    "icon": "134971",
+    "dropChance": "17. Sep",
+    "statsText": "+21 Ausdauer | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schilds um 21.",
+    "stats": [
+      "+21 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%.",
+      "Anlegen: Erhöht den Blockwert Eures Schilds um 21."
+    ],
+    "tooltip": "Das Gesicht des Todes | Wird beim Aufheben gebunden | Schildhand Schild | 3494 Rüstung | 66 Blocken | +21 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schilds um 21.",
+    "iconName": "inv_shield_28"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 527,
+    "name": "Deprecated Gnoll War Beads",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Gewöhnlich",
+    "icon": "133280",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Deprecated Gnoll War Beads | Questgegenstand",
+    "iconName": "inv_jewelry_amulet_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 22808,
+    "name": "Der Bestrafer",
+    "slot": "Einhändig",
+    "type": "Einhandstreitkolben",
+    "quality": "Episch",
+    "icon": "133495",
+    "dropChance": "Fri Apr 10 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+9 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +16 Angriffskraft.",
+    "stats": [
+      "+9 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Anlegen: +16 Angriffskraft."
+    ],
+    "tooltip": "Der Bestrafer | Wird beim Aufheben gebunden | Einzigartig | Einhändig Streitkolben | 119 - 221 Schaden Tempo 2,60 | (65.4 Schaden pro Sekunde) | +9 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +16 Angriffskraft.",
+    "iconName": "inv_mace_1h_stratholme_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22818,
+    "name": "Der Seuchenbringer",
+    "slot": "Schildhand",
+    "type": "Schilde",
+    "quality": "Episch",
+    "icon": "134972",
+    "dropChance": "12. Mär",
+    "statsText": "+21 Ausdauer | +15 Frostwiderstand | Anlegen: Verteidigung +9.",
+    "stats": [
+      "+21 Ausdauer",
+      "+15 Frostwiderstand",
+      "Anlegen: Verteidigung +9."
+    ],
+    "tooltip": "Der Seuchenbringer | Wird beim Aufheben gebunden | Schildhand Schild | 3106 Rüstung | 59 Blocken | +21 Ausdauer | +15 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Verteidigung +9.",
+    "iconName": "inv_shield_27"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23046,
+    "name": "Die gebundene Essenz Saphirons",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135444",
+    "dropChance": "10. Jul",
+    "statsText": "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40. | Benutzen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung 20 Sek. lang um bis zu 130. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40.",
+      "Benutzen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung 20 Sek. lang um bis zu 130. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Die gebundene Essenz Saphirons | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40. | Benutzen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung 20 Sek. lang um bis zu 130. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23577,
+    "name": "Die zehrende Kälte",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135372",
+    "dropChance": "",
+    "statsText": "+14 Ausdauer | Anlegen: Schwerter +6.",
+    "stats": [
+      "+14 Ausdauer",
+      "Anlegen: Schwerter +6."
+    ],
+    "tooltip": "Die zehrende Kälte | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 76 - 143 Schaden Tempo 1,50 | (73.0 Schaden pro Sekunde) | 140 Rüstung | +14 Ausdauer | Benötigt Stufe 60 | Anlegen: Schwerter +6.",
+    "iconName": "inv_sword_62"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 521,
+    "name": "Druid",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23057,
+    "name": "Edelstein der gefangenen Unschuld",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133319",
+    "dropChance": "34.8",
+    "statsText": "+9 Ausdauer | +7 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 15. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "stats": [
+      "+9 Ausdauer",
+      "+7 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 15.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%."
+    ],
+    "tooltip": "Edelstein der gefangenen Unschuld | Wird beim Aufheben gebunden | Hals | +9 Ausdauer | +7 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 15. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "iconName": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22937,
+    "name": "Edelstein von Nerubis",
+    "slot": "In Schildhand geführt",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "134548",
+    "dropChance": "17. Sep",
+    "statsText": "+14 Ausdauer | +10 Intelligenz | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 25.",
+    "stats": [
+      "+14 Ausdauer",
+      "+10 Intelligenz",
+      "Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 25."
+    ],
+    "tooltip": "Edelstein von Nerubis | Wird beim Aufheben gebunden | In Schildhand geführt | +14 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 25.",
+    "iconName": "inv_offhand_naxxramas_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Heigan the Unclean",
+    "itemId": 23019,
+    "name": "Eisfluchhelm",
+    "slot": "Kopf",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "133074",
+    "dropChance": "Wed Feb 11 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+12 Stärke | +24 Ausdauer | +44 Frostwiderstand | Anlegen: Verteidigung +8.",
+    "stats": [
+      "+12 Stärke",
+      "+24 Ausdauer",
+      "+44 Frostwiderstand",
+      "Anlegen: Verteidigung +8."
+    ],
+    "tooltip": "Eisfluchhelm | Wird beim Aufheben gebunden | Kopf Platte | 757 Rüstung | +12 Stärke | +24 Ausdauer | +44 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Verteidigung +8.",
+    "iconName": "inv_helmet_24"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grand Widow Faerlina",
+    "itemId": 22940,
+    "name": "Eisfluchschulterstücke",
+    "slot": "Schulter",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "135047",
+    "dropChance": "Sat Jan 17 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+9 Stärke | +18 Ausdauer | +33 Frostwiderstand | Anlegen: Verteidigung +7.",
+    "stats": [
+      "+9 Stärke",
+      "+18 Ausdauer",
+      "+33 Frostwiderstand",
+      "Anlegen: Verteidigung +7."
+    ],
+    "tooltip": "Eisfluchschulterstücke | Wird beim Aufheben gebunden | Schulter Platte | 698 Rüstung | +9 Stärke | +18 Ausdauer | +33 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Verteidigung +7.",
+    "iconName": "inv_shoulder_12"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Heigan the Unclean",
+    "itemId": 23033,
+    "name": "Eisschuppenhelmkappe",
+    "slot": "Kopf",
+    "type": "Schwere Rüstung",
+    "quality": "Episch",
+    "icon": "133122",
+    "dropChance": "Fri Feb 20 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+18 Beweglichkeit | +24 Ausdauer | +44 Frostwiderstand",
+    "stats": [
+      "+18 Beweglichkeit",
+      "+24 Ausdauer",
+      "+44 Frostwiderstand"
+    ],
+    "tooltip": "Eisschuppenhelmkappe | Wird beim Aufheben gebunden | Kopf Schwere Rüstung | 425 Rüstung | +18 Beweglichkeit | +24 Ausdauer | +44 Frostwiderstand | Benötigt Stufe 60",
+    "iconName": "inv_helmet_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grobbulus",
+    "itemId": 22967,
+    "name": "Eisschuppenschiftung",
+    "slot": "Schulter",
+    "type": "Schwere Rüstung",
+    "quality": "Episch",
+    "icon": "135045",
+    "dropChance": "22. Mär",
+    "statsText": "+25 Ausdauer | +33 Frostwiderstand",
+    "stats": [
+      "+25 Ausdauer",
+      "+33 Frostwiderstand"
+    ],
+    "tooltip": "Eisschuppenschiftung | Wird beim Aufheben gebunden | Schulter Schwere Rüstung | 393 Rüstung | +25 Ausdauer | +33 Frostwiderstand",
+    "iconName": "inv_shoulder_14"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22355,
+    "name": "Entweihte Armschienen",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133830",
+    "dropChance": "33.7",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Armschienen | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_bracer_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 22352,
+    "name": "Entweihte Beinplatten",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133834",
+    "dropChance": "33.1",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Beinplatten | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_pants_mail_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 22359,
+    "name": "Entweihte Beinschützer",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133826",
+    "dropChance": "32.5",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihte Beinschützer | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_pants_mail_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22369,
+    "name": "Entweihte Bindungen",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133806",
+    "dropChance": "Mon Apr 27 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Bindungen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_bracer_13"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 22349,
+    "name": "Entweihte Brustplatte",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133831",
+    "dropChance": "",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Brustplatte | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_chest_plate02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 22366,
+    "name": "Entweihte Gamaschen",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133810",
+    "dropChance": "32.5",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Gamaschen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_pants_mail_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22371,
+    "name": "Entweihte Handschuhe",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133808",
+    "dropChance": "52.6",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Handschuhe | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_gauntlets_25"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22364,
+    "name": "Entweihte Handschützer",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133824",
+    "dropChance": "52.6",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihte Handschützer | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_gauntlets_25"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22351,
+    "name": "Entweihte Robe",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133807",
+    "dropChance": "",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Robe | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_chest_cloth_43"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22358,
+    "name": "Entweihte Sabatons",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133829",
+    "dropChance": "27. Jun",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Sabatons | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_helmet_58"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22372,
+    "name": "Entweihte Sandalen",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133805",
+    "dropChance": "07. Mär",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Sandalen | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_boots_fabric_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "",
+    "itemId": 22361,
+    "name": "Entweihte Schiftung",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133827",
+    "dropChance": "Wed Jan 28 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihte Schiftung | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_leathershoulder"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22368,
+    "name": "Entweihte Schulterpolster",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133811",
+    "dropChance": "05. Jul",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihte Schulterpolster | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_shoulder_25"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22354,
+    "name": "Entweihte Schulterstücke",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133835",
+    "dropChance": "Sat Aug 29 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Schulterstücke | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_shoulder_14"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22365,
+    "name": "Entweihte Stiefel",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133821",
+    "dropChance": "04. Sep",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihte Stiefel | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_boots_plate_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Maexxna",
+    "itemId": 22357,
+    "name": "Entweihte Stulpen",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133832",
+    "dropChance": "37.5",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihte Stulpen | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_plategloves"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 22350,
+    "name": "Entweihte Tunika",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133823",
+    "dropChance": "",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihte Tunika | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_chest_chain_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22363,
+    "name": "Entweihter Gurt",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133820",
+    "dropChance": "10. Jun",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihter Gurt | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_mailbelt"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 22370,
+    "name": "Entweihter Gürtel",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133804",
+    "dropChance": "24",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihter Gürtel | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_leatherbelt"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22362,
+    "name": "Entweihter Handgelenksschutz",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133822",
+    "dropChance": "03. Mär",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihter Handgelenksschutz | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_platebracer"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 22353,
+    "name": "Entweihter Helm",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133833",
+    "dropChance": "62.7",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihter Helm | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_platehelm"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 22367,
+    "name": "Entweihter Reif",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133809",
+    "dropChance": "46.3",
+    "statsText": "Klassen: Priester, Magier, Hexenmeister",
+    "stats": [
+      "Klassen: Priester, Magier, Hexenmeister"
+    ],
+    "tooltip": "Entweihter Reif | Wird beim Aufheben gebunden | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_clothhelm"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 22356,
+    "name": "Entweihter Taillenschutz",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133828",
+    "dropChance": "21. Mär",
+    "statsText": "Klassen: Krieger, Schurke",
+    "stats": [
+      "Klassen: Krieger, Schurke"
+    ],
+    "tooltip": "Entweihter Taillenschutz | Wird beim Aufheben gebunden | Klassen: Krieger, Schurke | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_platebelt"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 22360,
+    "name": "Entweihtes Kopfstück",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "133825",
+    "dropChance": "47.8",
+    "statsText": "Klassen: Paladin, Jäger, Schamane, Druide",
+    "stats": [
+      "Klassen: Paladin, Jäger, Schamane, Druide"
+    ],
+    "tooltip": "Entweihtes Kopfstück | Wird beim Aufheben gebunden | Klassen: Paladin, Jäger, Schamane, Druide | Benötigt Stufe 60",
+    "iconName": "inv_misc_desecrated_mailhelm"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22994,
+    "name": "Faulige Hand der Macht",
+    "slot": "In Schildhand geführt",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "134555",
+    "dropChance": "16. Mär",
+    "statsText": "+10 Ausdauer | +14 Intelligenz | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+10 Ausdauer",
+      "+14 Intelligenz",
+      "Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Faulige Hand der Macht | Wird beim Aufheben gebunden | In Schildhand geführt | +10 Ausdauer | +14 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+    "iconName": "inv_offhand_naxxramas_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "AQ40 / Quest",
+    "itemId": 16253,
+    "name": "Formel: Brust - Große Werte",
+    "slot": "Rezept",
+    "type": "Verzauberkunst",
+    "quality": "Ungewöhnlich",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte).",
+    "stats": [
+      "Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte)."
+    ],
+    "tooltip": "Formel: Brust - Große Werte | Wird beim Aufheben gebunden | Benötigt Verzauberkunst | Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte).",
+    "iconName": "inv_scroll_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Twin Emperors",
+    "itemId": 20726,
+    "name": "Formel: Handschuhe - Bedrohung",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Bedrohung | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
+    "iconName": "inv_scroll_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20729,
+    "name": "Formel: Handschuhe - Feuermacht",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Feuermacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20728,
+    "name": "Formel: Handschuhe - Frostmacht",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Frostmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20730,
+    "name": "Formel: Handschuhe - Heilkraft",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Heilkraft | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20727,
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Schattenmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20731,
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird."
+    ],
+    "tooltip": "Formel: Handschuhe - Überragende Beweglichkeit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20736,
+    "name": "Formel: Umhang - Ausweichen",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht."
+    ],
+    "tooltip": "Formel: Umhang - Ausweichen | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Twin Emperors",
+    "itemId": 20735,
+    "name": "Formel: Umhang - Feingefühl",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert."
+    ],
+    "tooltip": "Formel: Umhang - Feingefühl | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
+    "iconName": "inv_scroll_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Ahn'Qiraj enchants",
+    "itemId": 20734,
+    "name": "Formel: Umhang - Verstohlenheit",
+    "slot": "",
+    "type": "Verzauberkunst",
+    "quality": "Selten",
+    "icon": "134327",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht."
+    ],
+    "tooltip": "Formel: Umhang - Verstohlenheit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
+    "iconName": "inv_misc_note_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23062,
+    "name": "Frostfeuerring",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "Fri Apr 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+10 Ausdauer | +10 Intelligenz | Klassen: Magier | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht.",
+    "stats": [
+      "+10 Ausdauer",
+      "+10 Intelligenz",
+      "Klassen: Magier",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "(2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min.",
+      "(4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen.",
+      "(6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen.",
+      "(8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht."
+    ],
+    "tooltip": "Frostfeuerring | Wird beim Aufheben gebunden | Einzigartig | Finger | +10 Ausdauer | +10 Intelligenz | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 30. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. |   | Frostfeuerornat (0/9) |   Frostfeuergürtel |   Frostfeuerbindungen |   Frostfeuerreif |   Frostfeuerhandschuhe |   Frostfeuergamaschen |   Frostfeuerrobe |   Frostfeuersandalen |   Frostfeuerschulterpolster |   Frostfeuerring |   | (2) Set: Verringert die Abklingzeit Eures Zaubers 'Hervorrufung' um 1 Min. | (4) Set: Eure 'Magische Rüstung' erhält eine Chance, bei jedem Treffer durch einen Schadenszauber Euren Widerstand gegen diese Art der Magie 30 Sek. lang um 35 zu erhöhen. | (6) Set: Eure Schadenszauber haben eine Chance, Euer Ziel bis zu 200 erhöhten Schaden durch nachfolgende Zauber erleiden zu lassen. | (8) Set: Eure Schadenszauber haben eine Chance, Euch in einen Zustand der Verrückung zu versetzen, bei dem Euer nächster gewirkter Zauber keine Bedrohung verursacht.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 23071,
+    "name": "Gamaschen der Apokalypse",
+    "slot": "Beine",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "134634",
+    "dropChance": "",
+    "statsText": "+15 Stärke | +31 Beweglichkeit | +23 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+15 Stärke",
+      "+31 Beweglichkeit",
+      "+23 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Gamaschen der Apokalypse | Wird beim Aufheben gebunden | Beine Leder | 211 Rüstung | +15 Stärke | +31 Beweglichkeit | +23 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_pants_leather_09"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23665,
+    "name": "Gamaschen des Elementarfurors",
+    "slot": "Beine",
+    "type": "Schwere Rüstung",
+    "quality": "Episch",
+    "icon": "134666",
+    "dropChance": "",
+    "statsText": "+26 Ausdauer | +27 Intelligenz | Klassen: Schamane | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "stats": [
+      "+26 Ausdauer",
+      "+27 Intelligenz",
+      "Klassen: Schamane",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%."
+    ],
+    "tooltip": "Gamaschen des Elementarfurors | Wird beim Aufheben gebunden | Beine Schwere Rüstung | 468 Rüstung | +26 Ausdauer | +27 Intelligenz | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 32. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "iconName": "inv_pants_mail_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23668,
+    "name": "Gamaschen des obersten Kreuzzüglers",
+    "slot": "Beine",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "134584",
+    "dropChance": "",
+    "statsText": "+21 Stärke | +21 Ausdauer | +21 Intelligenz | Klassen: Paladin | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+21 Stärke",
+      "+21 Ausdauer",
+      "+21 Intelligenz",
+      "Klassen: Paladin",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Gamaschen des obersten Kreuzzüglers | Wird beim Aufheben gebunden | Beine Platte | 833 Rüstung | +21 Stärke | +21 Ausdauer | +21 Intelligenz | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_pants_plate_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 23070,
+    "name": "Gamaschen des Widerspruchs",
+    "slot": "Beine",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "134588",
+    "dropChance": "26. Sep",
+    "statsText": "+20 Ausdauer | +14 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 44. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "stats": [
+      "+20 Ausdauer",
+      "+14 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 44.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%."
+    ],
+    "tooltip": "Gamaschen des Widerspruchs | Wird beim Aufheben gebunden | Beine Stoff | 112 Rüstung | +20 Ausdauer | +14 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 44. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+    "iconName": "inv_pants_cloth_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 22682,
+    "name": "Gefrorene Rune",
+    "slot": "",
+    "type": "Handwerkswaren",
+    "quality": "Selten",
+    "icon": "134422",
+    "dropChance": "",
+    "statsText": "Benutzen: Absorbiert 1500 bis 2500 Feuerschaden. Hält 1 Stunde lang an.",
+    "stats": [
+      "Benutzen: Absorbiert 1500 bis 2500 Feuerschaden. Hält 1 Stunde lang an."
+    ],
+    "tooltip": "Gefrorene Rune | Benötigt Stufe 60 | Benutzen: Absorbiert 1500 bis 2500 Feuerschaden. Hält 1 Stunde lang an.",
+    "iconName": "inv_misc_rune_09"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 23000,
+    "name": "Gepanzerter Monstrositätenbrustkorb",
+    "slot": "Brust",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "132637",
+    "dropChance": "Fri Apr 10 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+45 Stärke | +25 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+45 Stärke",
+      "+25 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Gepanzerter Monstrositätenbrustkorb | Wird beim Aufheben gebunden | Brust Platte | 953 Rüstung | +45 Stärke | +25 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_chest_plate09"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Maexxna",
+    "itemId": 22807,
+    "name": "Gespensterklinge",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135291",
+    "dropChance": "Tue Feb 17 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+10 Ausdauer | +8 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "+10 Ausdauer",
+      "+8 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Gespensterklinge | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 38 - 110 Schaden Tempo 1,80 | (41.1 Schaden pro Sekunde) | +10 Ausdauer | +8 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "iconName": "inv_offhand_naxxramas_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23069,
+    "name": "Gewand des Nekroritters",
+    "slot": "Brust",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "132687",
+    "dropChance": "",
+    "statsText": "+32 Ausdauer | Klassen: Priester, Magier, Hexenmeister | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 37.",
+    "stats": [
+      "+32 Ausdauer",
+      "Klassen: Priester, Magier, Hexenmeister",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 37."
+    ],
+    "tooltip": "Gewand des Nekroritters | Wird beim Aufheben gebunden | Brust Stoff | 448 Rüstung | +32 Ausdauer | Klassen: Priester, Magier, Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 37.",
+    "iconName": "inv_chest_cloth_43"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23226,
+    "name": "Ghulhauttunika",
+    "slot": "Brust",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "132717",
+    "dropChance": "",
+    "statsText": "+40 Stärke | +22 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+40 Stärke",
+      "+22 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Ghulhauttunika | Wird beim Aufheben gebunden | Brust Leder | 411 Rüstung | +40 Stärke | +22 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_chest_leather_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gothik the Harvester",
+    "itemId": 23032,
+    "name": "Gletscherkopfputz",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133155",
+    "dropChance": "Mon May 25 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+20 Ausdauer | +21 Intelligenz | +40 Frostwiderstand | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18.",
+    "stats": [
+      "+20 Ausdauer",
+      "+21 Intelligenz",
+      "+40 Frostwiderstand",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18."
+    ],
+    "tooltip": "Gletscherkopfputz | Wird beim Aufheben gebunden | Kopf Stoff | 102 Rüstung | +20 Ausdauer | +21 Intelligenz | +40 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18.",
+    "iconName": "inv_helmet_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grobbulus",
+    "itemId": 22968,
+    "name": "Gletschermantel",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "135045",
+    "dropChance": "13. Jun",
+    "statsText": "+18 Ausdauer | +33 Frostwiderstand | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16.",
+    "stats": [
+      "+18 Ausdauer",
+      "+33 Frostwiderstand",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16."
+    ],
+    "tooltip": "Gletschermantel | Wird beim Aufheben gebunden | Schulter Stoff | 94 Rüstung | +18 Ausdauer | +33 Frostwiderstand | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16.",
+    "iconName": "inv_shoulder_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22981,
+    "name": "Gluths verschollenes Halsband",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133315",
+    "dropChance": "Sat Aug 22 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+24 Ausdauer | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schildes um 15.",
+    "stats": [
+      "+24 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%.",
+      "Anlegen: Erhöht den Blockwert Eures Schildes um 15."
+    ],
+    "tooltip": "Gluths verschollenes Halsband | Wird beim Aufheben gebunden | Einzigartig | Hals | +24 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schildes um 15.",
+    "iconName": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23040,
+    "name": "Glyphe der Abwehr",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135443",
+    "dropChance": "10. Jul",
+    "statsText": "Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schildes um 23. | Benutzen: Erhöht 20 Sek. lang den Blockwert Eures Schildes um 235. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%.",
+      "Anlegen: Erhöht den Blockwert Eures Schildes um 23.",
+      "Benutzen: Erhöht 20 Sek. lang den Blockwert Eures Schildes um 235. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Glyphe der Abwehr | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 3%. | Anlegen: Erhöht den Blockwert Eures Schildes um 23. | Benutzen: Erhöht 20 Sek. lang den Blockwert Eures Schildes um 235. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23004,
+    "name": "Götze der Langlebigkeit",
+    "slot": "Relikt",
+    "type": "Götze",
+    "quality": "Episch",
+    "icon": "134913",
+    "dropChance": "Thu Jan 15 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "Anlegen: Jedes Mal, wenn Ihr 'Heilende Berührung' wirkt, erhaltet ihr bis zu 25 Mana zurückerstattet.",
+    "stats": [
+      "Anlegen: Jedes Mal, wenn Ihr 'Heilende Berührung' wirkt, erhaltet ihr bis zu 25 Mana zurückerstattet."
+    ],
+    "tooltip": "Götze der Langlebigkeit | Wird beim Aufheben gebunden | Einzigartig | Relikt Götze | Benötigt Stufe 60 | Anlegen: Jedes Mal, wenn Ihr 'Heilende Berührung' wirkt, erhaltet ihr bis zu 25 Mana zurückerstattet.",
+    "iconName": "inv_relics_idolofhealth"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23054,
+    "name": "Gressil, Vorbote des Untergangs",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135371",
+    "dropChance": "08. Jul",
+    "statsText": "+15 Ausdauer | Anlegen: +40 Angriffskraft.",
+    "stats": [
+      "+15 Ausdauer",
+      "Anlegen: +40 Angriffskraft."
+    ],
+    "tooltip": "Gressil, Vorbote des Untergangs | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 138 - 257 Schaden Tempo 2,70 | (73.1 Schaden pro Sekunde) | +15 Ausdauer | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft.",
+    "iconName": "inv_sword_61"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22727,
+    "name": "Grundstab von Atiesh",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Legendär",
+    "icon": "135157",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Grundstab von Atiesh | Wird beim Aufheben gebunden | Einzigartig | Dieser Gegenstand startet eine Quest. | Benötigt Stufe 60 | 'Der Kopf und der Fuß des Stabs fehlen.'",
+    "iconName": "inv_staff_medivh"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23663,
+    "name": "Gurt des Elementarfurors",
+    "slot": "Taille",
+    "type": "Schwere Rüstung",
+    "quality": "Episch",
+    "icon": "132521",
+    "dropChance": "",
+    "statsText": "+20 Ausdauer | +21 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+20 Ausdauer",
+      "+21 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29.",
+      "Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Gurt des Elementarfurors | Wird beim Aufheben gebunden | Taille Schwere Rüstung | 301 Rüstung | +20 Ausdauer | +21 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "iconName": "inv_belt_16"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23219,
+    "name": "Gurt des Mentors",
+    "slot": "Taille",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "132502",
+    "dropChance": "Sun Apr 12 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+21 Stärke | +20 Beweglichkeit | +21 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+21 Stärke",
+      "+20 Beweglichkeit",
+      "+21 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Gurt des Mentors | Wird beim Aufheben gebunden | Taille Platte | 536 Rüstung | +21 Stärke | +20 Beweglichkeit | +21 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_belt_13"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23666,
+    "name": "Gürtel des obersten Kreuzzüglers",
+    "slot": "Taille",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "132516",
+    "dropChance": "",
+    "statsText": "+18 Stärke | +18 Ausdauer | +18 Intelligenz | Klassen: Paladin | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21. | Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+18 Stärke",
+      "+18 Ausdauer",
+      "+18 Intelligenz",
+      "Klassen: Paladin",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21.",
+      "Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Gürtel des obersten Kreuzzüglers | Wird beim Aufheben gebunden | Taille Platte | 536 Rüstung | +18 Stärke | +18 Ausdauer | +18 Intelligenz | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21. | Anlegen: Stellt alle 5 Sek. 7 Punkt(e) Mana wieder her.",
+    "iconName": "inv_belt_27"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 23027,
+    "name": "Güte der Vergebung",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135439",
+    "dropChance": "",
+    "statsText": "Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her. | Benutzen: Stellt 500 Mana wieder her. (3 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+      "Benutzen: Stellt 500 Mana wieder her. (3 Min. Abklingzeit)"
+    ],
+    "tooltip": "Güte der Vergebung | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her. | Benutzen: Stellt 500 Mana wieder her. (3 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23028,
+    "name": "Hagelschauerband",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133377",
+    "dropChance": "11. Mär",
+    "statsText": "+18 Ausdauer | +20 Frostwiderstand | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
+    "stats": [
+      "+18 Ausdauer",
+      "+20 Frostwiderstand",
+      "Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%."
+    ],
+    "tooltip": "Hagelschauerband | Wird beim Aufheben gebunden | Einzigartig | Finger | +18 Ausdauer | +20 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Heigan the Unclean",
+    "itemId": 23036,
+    "name": "Halskette der Leichenschau",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133321",
+    "dropChance": "9",
+    "statsText": "+10 Ausdauer | +11 Intelligenz | +10 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53.",
+    "stats": [
+      "+10 Ausdauer",
+      "+11 Intelligenz",
+      "+10 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53."
+    ],
+    "tooltip": "Halskette der Leichenschau | Wird beim Aufheben gebunden | Hals | +10 Ausdauer | +11 Intelligenz | +10 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53.",
+    "iconName": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23056,
+    "name": "Hammer des wirbelnden Nethers",
+    "slot": "Einhändig",
+    "type": "Einhandstreitkolben",
+    "quality": "Episch",
+    "icon": "133504",
+    "dropChance": "Fri Apr 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+8 Ausdauer | +11 Intelligenz | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 238. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+8 Ausdauer",
+      "+11 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 238.",
+      "Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Hammer des wirbelnden Nethers | Wird beim Aufheben gebunden | Einzigartig | Einhändig Streitkolben | 36 - 121 Schaden Tempo 1,90 | (41.3 Schaden pro Sekunde) | +8 Ausdauer | +11 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 238. | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her.",
+    "iconName": "inv_mace_29"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22936,
+    "name": "Handgelenksschutz der Rache",
+    "slot": "Handgelenke",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "132616",
+    "dropChance": "14. Jul",
+    "statsText": "+24 Stärke | +10 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "stats": [
+      "+24 Stärke",
+      "+10 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
+    ],
+    "tooltip": "Handgelenksschutz der Rache | Wird beim Aufheben gebunden | Handgelenke Platte | 407 Rüstung | +24 Stärke | +10 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "iconName": "inv_bracer_17"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grand Widow Faerlina",
+    "itemId": 22943,
+    "name": "Heimtückischer Steinanhänger",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133319",
+    "dropChance": "Sat May 16 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+9 Ausdauer | +8 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 13.",
+    "stats": [
+      "+9 Ausdauer",
+      "+8 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28.",
+      "Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 13."
+    ],
+    "tooltip": "Heimtückischer Steinanhänger | Wird beim Aufheben gebunden | Hals | +9 Ausdauer | +8 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 13.",
+    "iconName": "inv_jewelry_necklace_28naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 530,
+    "name": "Hunter",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Heigan the Unclean",
+    "itemId": 23035,
+    "name": "Hut des Mentors",
+    "slot": "Kopf",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133152",
+    "dropChance": "15. Jul",
+    "statsText": "+18 Ausdauer | +24 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 51.",
+    "stats": [
+      "+18 Ausdauer",
+      "+24 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 51."
+    ],
+    "tooltip": "Hut des Mentors | Wird beim Aufheben gebunden | Kopf Stoff | 102 Rüstung | +18 Ausdauer | +24 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 51.",
+    "iconName": "inv_helmet_50"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23014,
+    "name": "Iblis, Klinge des gefallenen Engels",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135277",
+    "dropChance": "Tue Feb 10 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +26 Angriffskraft.",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Anlegen: +26 Angriffskraft."
+    ],
+    "tooltip": "Iblis, Klinge des gefallenen Engels | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 70 - 131 Schaden Tempo 1,60 | (62.8 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +26 Angriffskraft.",
+    "iconName": "inv_sword_07"
+  },
+  {
+    "raid": "Raid",
+    "boss": "Boss",
+    "itemId": "",
+    "name": "Itemname_DE",
+    "slot": "Slot_DE",
+    "type": "Typ_DE",
+    "quality": "Qualität",
+    "icon": "Icon",
+    "dropChance": "Dropchance",
+    "statsText": "Stats_DE",
+    "stats": [
+      "Stats_DE"
+    ],
+    "tooltip": "Tooltip_DE",
+    "iconName": "IconName"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 22374,
+    "name": "Kampfzerschlissenes Kettenstück",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Selten",
+    "icon": "134515",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Kampfzerschlissenes Kettenstück",
+    "iconName": "inv_misc_wartornscrap_chain"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 22373,
+    "name": "Kampfzerschlissenes Lederstück",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Selten",
+    "icon": "134517",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Kampfzerschlissenes Lederstück",
+    "iconName": "inv_misc_wartornscrap_leather"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 22375,
+    "name": "Kampfzerschlissenes Plattenstück",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Selten",
+    "icon": "134518",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Kampfzerschlissenes Plattenstück",
+    "iconName": "inv_misc_wartornscrap_plate"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 22376,
+    "name": "Kampfzerschlissenes Stoffstück",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Selten",
+    "icon": "134516",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Kampfzerschlissenes Stoffstück",
+    "iconName": "inv_misc_wartornscrap_cloth"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22520,
+    "name": "Kel'Thuzads Phylakterium",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Episch",
+    "icon": "134514",
+    "dropChance": "87",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Kel'Thuzads Phylakterium | Wird beim Aufheben gebunden | Einzigartig | Dieser Gegenstand startet eine Quest. | Benötigt Stufe 60",
+    "iconName": "inv_misc_urn_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 22809,
+    "name": "Keule des erlösten Kreuzzüglers",
+    "slot": "Zweihändig",
+    "type": "Zweihandstreitkolben",
+    "quality": "Episch",
+    "icon": "133503",
+    "dropChance": "",
+    "statsText": "+29 Ausdauer | +24 Intelligenz | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 35.",
+    "stats": [
+      "+29 Ausdauer",
+      "+24 Intelligenz",
+      "Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 35."
+    ],
+    "tooltip": "Keule des erlösten Kreuzzüglers | Wird beim Aufheben gebunden | Zweihändig Streitkolben | 244 - 367 Schaden Tempo 3,60 | (84.9 Schaden pro Sekunde) | +29 Ausdauer | +24 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 8 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 35.",
+    "iconName": "inv_mace_29"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23242,
+    "name": "Klaue des Frostwyrms",
+    "slot": "Schildhand",
+    "type": "Faustwaffen",
+    "quality": "Episch",
+    "icon": "135594",
+    "dropChance": "Tue Apr 21 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+8 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +22 Angriffskraft.",
+    "stats": [
+      "+8 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Anlegen: +22 Angriffskraft."
+    ],
+    "tooltip": "Klaue des Frostwyrms | Wird beim Aufheben gebunden | Einzigartig | Schildhand Faustwaffe | 75 - 140 Schaden Tempo 1,50 | (71.7 Schaden pro Sekunde) | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +22 Angriffskraft.",
+    "iconName": "inv_misc_monsterclaw_04"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 22816,
+    "name": "Knochenspalterbeil",
+    "slot": "Einhändig",
+    "type": "Einhandäxte",
+    "quality": "Episch",
+    "icon": "132399",
+    "dropChance": "11. Mär",
+    "statsText": "Anlegen: +36 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "stats": [
+      "Anlegen: +36 Angriffskraft.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
+    ],
+    "tooltip": "Knochenspalterbeil | Wird beim Aufheben gebunden | Einzigartig | Einhändig Axt | 119 - 221 Schaden Tempo 2,60 | (65.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +36 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "iconName": "inv_axe_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22802,
+    "name": "Königsmörder",
+    "slot": "Einhändig",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "135672",
+    "dropChance": "21. Jul",
+    "statsText": "+16 Beweglichkeit | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+16 Beweglichkeit",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Königsmörder | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 105 - 158 Schaden Tempo 1,80 | (73.1 Schaden pro Sekunde) | +16 Beweglichkeit | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_weapon_shortblade_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Maexxna",
+    "itemId": 23220,
+    "name": "Kristallgewebte Robe",
+    "slot": "Brust",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "132687",
+    "dropChance": "Tue May 12 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+25 Ausdauer | +19 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 53.",
+    "stats": [
+      "+25 Ausdauer",
+      "+19 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 53."
+    ],
+    "tooltip": "Kristallgewebte Robe | Wird beim Aufheben gebunden | Brust Stoff | 128 Rüstung | +25 Ausdauer | +19 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 53.",
+    "iconName": "inv_chest_cloth_43"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Maexxna",
+    "itemId": 22954,
+    "name": "Kuss der Spinne",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135442",
+    "dropChance": "Wed Apr 22 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Benutzen: Erhöht Euer Angriffstempo 15 Sek. lang um 20%. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Benutzen: Erhöht Euer Angriffstempo 15 Sek. lang um 20%. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Kuss der Spinne | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Benutzen: Erhöht Euer Angriffstempo 15 Sek. lang um 20%. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas04"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Broodlord Lashlayer",
+    "itemId": 19341,
+    "name": "Lebensspendender Edelstein",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Klassen: Krieger | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
+    "stats": [
+      "Klassen: Krieger",
+      "Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)"
+    ],
+    "tooltip": "Lebensspendender Edelstein | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Krieger | Benötigt Stufe 60 | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
+    "iconName": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 23042,
+    "name": "Loathebs Abglanz",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135443",
+    "dropChance": "08. Jun",
+    "statsText": "+13 Arkanwiderstand | +13 Feuerwiderstand | +13 Naturwiderstand | +13 Frostwiderstand | +13 Schattenwiderstand | Benutzen: Erhöht 20 Sek. lang den Widerstand gegen alle Arten von Magie um 40. (2 Min. Abklingzeit)",
+    "stats": [
+      "+13 Arkanwiderstand",
+      "+13 Feuerwiderstand",
+      "+13 Naturwiderstand",
+      "+13 Frostwiderstand",
+      "+13 Schattenwiderstand",
+      "Benutzen: Erhöht 20 Sek. lang den Widerstand gegen alle Arten von Magie um 40. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Loathebs Abglanz | Wird beim Aufheben gebunden | Einzigartig | Schmuck | +13 Arkanwiderstand | +13 Feuerwiderstand | +13 Naturwiderstand | +13 Frostwiderstand | +13 Schattenwiderstand | Benötigt Stufe 60 | Benutzen: Erhöht 20 Sek. lang den Widerstand gegen alle Arten von Magie um 40. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23548,
+    "name": "Macht der Geißel",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "136146",
+    "dropChance": "46.4",
+    "statsText": "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 26 erhöhte Angriffskraft zu und erhöht die Chance auf einen kritischen Treffer um 1%.",
+    "stats": [
+      "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 26 erhöhte Angriffskraft zu und erhöht die Chance auf einen kritischen Treffer um 1%."
+    ],
+    "tooltip": "Macht der Geißel | Wird beim Aufheben gebunden | Benötigt Stufe 60 | Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 26 erhöhte Angriffskraft zu und erhöht die Chance auf einen kritischen Treffer um 1%.",
+    "iconName": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22798,
+    "name": "Macht von Menethil",
+    "slot": "Zweihändig",
+    "type": "Zweihandstreitkolben",
+    "quality": "Episch",
+    "icon": "133502",
+    "dropChance": "34.8",
+    "statsText": "+20 Stärke | +46 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+20 Stärke",
+      "+46 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Macht von Menethil | Wird beim Aufheben gebunden | Zweihändig Streitkolben | 289 - 435 Schaden Tempo 3,80 | (95.3 Schaden pro Sekunde) | +20 Stärke | +46 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_mace_1h_stratholme_d_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Maexxna",
+    "itemId": 22804,
+    "name": "Maexxnas Fangzahn",
+    "slot": "Einhändig",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "133454",
+    "dropChance": "Wed Jan 14 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+8 Ausdauer | Anlegen: +36 Angriffskraft. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+8 Ausdauer",
+      "Anlegen: +36 Angriffskraft.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Maexxnas Fangzahn | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 94 - 141 Schaden Tempo 1,80 | (65.3 Schaden pro Sekunde) | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: +36 Angriffskraft. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_knife_1h_stratholme_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 526,
+    "name": "Mage",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Broodlord Lashlayer",
+    "itemId": 19351,
+    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
+      "Anlegen: Schwerter +4."
+    ],
+    "tooltip": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 86 - 162 Schaden Tempo 2,20 | (56.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
+    "iconName": "inv_sword_49"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grobbulus",
+    "itemId": 22803,
+    "name": "Mitternachtsnebel",
+    "slot": "Einhändig",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "133455",
+    "dropChance": "Sat Apr 18 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+20 Ausdauer | +12 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 85.",
+    "stats": [
+      "+20 Ausdauer",
+      "+12 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 85."
+    ],
+    "tooltip": "Mitternachtsnebel | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 51 - 98 Schaden Tempo 1,80 | (41.4 Schaden pro Sekunde) | +20 Ausdauer | +12 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 85.",
+    "iconName": "inv_weapon_shortblade_18"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22812,
+    "name": "Nerubischer Sklavenjäger",
+    "slot": "Distanz",
+    "type": "Armbrüste",
+    "quality": "Episch",
+    "icon": "135541",
+    "dropChance": "",
+    "statsText": "Anlegen: +24 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "stats": [
+      "Anlegen: +24 Angriffskraft.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
+    ],
+    "tooltip": "Nerubischer Sklavenjäger | Wird beim Aufheben gebunden | Distanz Armbrust | 128 - 238 Schaden Tempo 3,20 | (57.2 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +24 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "iconName": "inv_weapon_crossbow_12"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23029,
+    "name": "Noths kaltes Herz",
+    "slot": "In Schildhand geführt",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "134547",
+    "dropChance": "16. Jul",
+    "statsText": "+12 Intelligenz | +13 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53.",
+    "stats": [
+      "+12 Intelligenz",
+      "+13 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53."
+    ],
+    "tooltip": "Noths kaltes Herz | Wird beim Aufheben gebunden | In Schildhand geführt | +12 Intelligenz | +13 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 53.",
+    "iconName": "inv_offhand_naxxramas_04"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 528,
+    "name": "Paladin",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Worlddrop",
+    "itemId": 22388,
+    "name": "Pläne: Gamaschen der Titanen",
+    "slot": "Rezept",
+    "type": "Schmiedekunstplan",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, Gamaschen der Titanen herzustellen.",
+    "stats": [
+      "Benutzen: Lehrt Euch, Gamaschen der Titanen herzustellen."
+    ],
+    "tooltip": "Pläne: Gamaschen der Titanen | Benötigt Schmiedekunst (300); Rüstungsschmied | Benutzen: Lehrt Euch, Gamaschen der Titanen herzustellen.",
+    "iconName": "inv_scroll_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Zone Drop / Alle Bosse",
+    "itemId": 12717,
+    "name": "Pläne: Löwenherzhelm",
+    "slot": "Rezept",
+    "type": "Schmiedekunstplan",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, einen Löwenherzhelm herzustellen.",
+    "stats": [
+      "Benutzen: Lehrt Euch, einen Löwenherzhelm herzustellen."
+    ],
+    "tooltip": "Pläne: Löwenherzhelm | Benötigt Schmiedekunst (300) | Benutzen: Lehrt Euch, einen Löwenherzhelm herzustellen.",
+    "iconName": "inv_scroll_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gothik the Harvester",
+    "itemId": 23020,
+    "name": "Polarhelm",
+    "slot": "Kopf",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "133072",
+    "dropChance": "Fri May 08 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+18 Beweglichkeit | +24 Ausdauer | +44 Frostwiderstand",
+    "stats": [
+      "+18 Beweglichkeit",
+      "+24 Ausdauer",
+      "+44 Frostwiderstand"
+    ],
+    "tooltip": "Polarhelm | Wird beim Aufheben gebunden | Kopf Leder | 196 Rüstung | +18 Beweglichkeit | +24 Ausdauer | +44 Frostwiderstand | Benötigt Stufe 60",
+    "iconName": "inv_helmet_15"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grand Widow Faerlina",
+    "itemId": 22941,
+    "name": "Polarschulterpolster",
+    "slot": "Schulter",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "135038",
+    "dropChance": "19",
+    "statsText": "+25 Ausdauer | +33 Frostwiderstand",
+    "stats": [
+      "+25 Ausdauer",
+      "+33 Frostwiderstand"
+    ],
+    "tooltip": "Polarschulterpolster | Wird beim Aufheben gebunden | Schulter Leder | 181 Rüstung | +25 Ausdauer | +33 Frostwiderstand | Benötigt Stufe 60",
+    "iconName": "inv_shoulder_07"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 525,
+    "name": "Priest",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 22983,
+    "name": "Reifbedeckter Mantel",
+    "slot": "Schulter",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "135036",
+    "dropChance": "13",
+    "statsText": "+12 Ausdauer | +12 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 39. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "+12 Ausdauer",
+      "+12 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 39.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Reifbedeckter Mantel | Wird beim Aufheben gebunden | Schulter Stoff | 94 Rüstung | +12 Ausdauer | +12 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 39. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "iconName": "inv_shoulder_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grand Widow Faerlina",
+    "itemId": 22806,
+    "name": "Reue der Witwe",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135370",
+    "dropChance": "Sat Apr 18 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+17 Ausdauer | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+17 Ausdauer",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Reue der Witwe | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 70 - 131 Schaden Tempo 1,60 | (62.8 Schaden pro Sekunde) | 100 Rüstung | +17 Ausdauer | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_sword_60"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 13493,
+    "name": "Rezept: Großes Arkanelixier",
+    "slot": "Rezept",
+    "type": "Alchemierezept",
+    "quality": "Ungewöhnlich",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Großes Arkanelixier.",
+    "stats": [
+      "Benutzen: Lehrt Großes Arkanelixier."
+    ],
+    "tooltip": "Rezept: Großes Arkanelixier | Benötigt Alchemie (285) | Benutzen: Lehrt Großes Arkanelixier.",
+    "iconName": "inv_scroll_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Zone Drop",
+    "itemId": 13486,
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "slot": "Rezept",
+    "type": "Alchemierezept",
+    "quality": "Selten",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers.",
+    "stats": [
+      "Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers."
+    ],
+    "tooltip": "Rezept: Untod zu Wasser transmutieren | Benötigt Alchemie (275) | Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers.",
+    "iconName": "inv_scroll_06"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23066,
+    "name": "Ring der Erlösung",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "Thu Apr 30 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+16 Ausdauer | +16 Intelligenz | Klassen: Paladin | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200.",
+    "stats": [
+      "+16 Ausdauer",
+      "+16 Intelligenz",
+      "Klassen: Paladin",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37.",
+      "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
+      "(2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20.",
+      "(4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min.",
+      "(6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen.",
+      "(8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200."
+    ],
+    "tooltip": "Ring der Erlösung | Wird beim Aufheben gebunden | Einzigartig | Finger | +16 Ausdauer | +16 Intelligenz | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. |   | Rüstung der Erlösung (0/9) |   Stiefel der Erlösung |   Gurt der Erlösung |   Handschützer der Erlösung |   Kopfstück der Erlösung |   Beinschützer der Erlösung |   Schiftung der Erlösung |   Tunika der Erlösung |   Handgelenksschutz der Erlösung |   Ring der Erlösung |   | (2) Set: Erhöht den durch Euren Zauber 'Richturteil des Lichts' geheilten Wert um 20. | (4) Set: Verringert die Abklingzeit Eures Zaubers 'Handauflegung' um 12 Min. | (6) Set: Eure Zauber 'Lichtblitz' und 'Heiliges Licht' haben eine Chance, Euer Ziel mit heiliger Macht magiezuerfüllen. | (8) Set: Euer Zauber 'Reinigung des Glaubens' heilt das Ziel zusätzlich um 200.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23237,
+    "name": "Ring der ewigen Flamme",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133390",
+    "dropChance": "",
+    "statsText": "+10 Intelligenz | Anlegen: Erhöht durch Feuerzauber und Feuereffekte zugefügten Schaden um bis zu 34. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "+10 Intelligenz",
+      "Anlegen: Erhöht durch Feuerzauber und Feuereffekte zugefügten Schaden um bis zu 34.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Ring der ewigen Flamme | Wird beim Aufheben gebunden | Einzigartig | Finger | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Feuerzauber und Feuereffekte zugefügten Schaden um bis zu 34. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23060,
+    "name": "Ring der Knochensense",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "34.8",
+    "statsText": "+20 Stärke | +20 Beweglichkeit | +10 Ausdauer | Klassen: Schurke | Anlegen: Verbessert Eure Trefferchance um 1%. | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält.",
+    "stats": [
+      "+20 Stärke",
+      "+20 Beweglichkeit",
+      "+10 Ausdauer",
+      "Klassen: Schurke",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "(2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110.",
+      "(4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her.",
+      "(6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung.",
+      "(8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält."
+    ],
+    "tooltip": "Ring der Knochensense | Wird beim Aufheben gebunden | Einzigartig | Finger | +20 Stärke | +20 Beweglichkeit | +10 Ausdauer | Klassen: Schurke | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. |   | Rüstung der Knochensense (0/9) |   Armschienen der Knochensense |   Brustplatte der Knochensense |   Stulpen der Knochensense |   Helm der Knochensense |   Beinplatten der Knochensense |   Schulterstücke der Knochensense |   Sabatons der Knochensense |   Taillenschutz der Knochensense |   Ring der Knochensense |   | (2) Set: Eure normalen Nahkampfangriffe haben eine Chance, Euch zu stärken, und heilen Euch um 90 bis 110. | (4) Set: Kritische Treffer mit Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß' und 'Blutsturz' stellen 5 Energie wieder her. | (6) Set: Verringert die von Euren Fähigkeiten 'Meucheln', 'Finsterer Stoß', 'Blutsturz' und 'Ausweiden' verursachte Bedrohung. | (8) Set: Eure Fähigkeit 'Ausweiden' hat pro Combopunkt eine Chance, eine Schwachstelle in der Rüstung Eures Gegners aufzudecken, wodurch die nächste Anwendung Eurer Fähigkeiten 'Meucheln', 'Finsterer Stoß' oder 'Blutsturz' eine kritische Trefferchance von 100% erhält.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23065,
+    "name": "Ring des Erdspalters",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "21. Jul",
+    "statsText": "+16 Ausdauer | +16 Intelligenz | Klassen: Schamane | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist.",
+    "stats": [
+      "+16 Ausdauer",
+      "+16 Intelligenz",
+      "Klassen: Schamane",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37.",
+      "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
+      "(2) Set: Verringert die Manakosten Eurer Totemzauber um 12%.",
+      "(4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%.",
+      "(6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen.",
+      "(8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist."
+    ],
+    "tooltip": "Ring des Erdspalters | Wird beim Aufheben gebunden | Einzigartig | Finger | +16 Ausdauer | +16 Intelligenz | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. |   | Der Erdspalter (0/9) |   Stiefel des Erdspalters |   Gurt des Erdspalters |   Handschützer des Erdspalters |   Kopfstück des Erdspalters |   Beinschützer des Erdspalters |   Schiftung des Erdspalters |   Tunika des Erdspalters |   Handgelenksschutz des Erdspalters |   Ring des Erdspalters |   | (2) Set: Verringert die Manakosten Eurer Totemzauber um 12%. | (4) Set: Erhöht die durch Euer Totem der Manaquelle regenerierte Manamenge um 25%. | (6) Set: Eure Zauber 'Welle der Heilung' und 'Geringe Welle der Heilung' haben eine Chance, Euer Ziel mit der 'Macht der Totems' magiezuerfüllen. | (8) Set: Euer Zauber 'Blitzschlagschild' gewährt Euch zusätzlich alle 5 Sekunden 15 Mana, solange er aktiv ist.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23061,
+    "name": "Ring des Glaubens",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "13",
+    "statsText": "+16 Intelligenz | +16 Willenskraft | Klassen: Priester | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 55. | Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht.",
+    "stats": [
+      "+16 Intelligenz",
+      "+16 Willenskraft",
+      "Klassen: Priester",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 55.",
+      "Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%.",
+      "Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert.",
+      "Set: Verringert die durch Eure Heilzauber verursachte Bedrohung.",
+      "Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht."
+    ],
+    "tooltip": "Ring des Glaubens | Wird beim Aufheben gebunden | Einzigartig | Finger | +16 Intelligenz | +16 Willenskraft | Klassen: Priester | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 55. |   | Gewänder des Glaubens (8/9) |   Gürtel des Glaubens |   Bindungen des Glaubens |   Reif des Glaubens |   Handschuhe des Glaubens |   Gamaschen des Glaubens |   Robe des Glaubens |   Sandalen des Glaubens |   Schulterpolster des Glaubens |   Ring des Glaubens |   | Set: Verringert die Manakosten Eures Zaubers 'Erneuerung' um 12%. | Set: Bei kritischen Treffern Eures Zaubers 'Große Heilung' erhält Euer Ziel eine 'Rüstung des Glaubens', welche bis zu 500 Schaden absorbiert. | Set: Verringert die durch Eure Heilzauber verursachte Bedrohung. | Set: Jeder gewirkte Zauber kann eine göttliche Offenbarung auslösen, die Eure Manaregeneration 30 Sek. lang um 24 erhöht.",
+    "iconName": "inv_jewelry_ring_42"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23067,
+    "name": "Ring des Gruftpirschers",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "Fri Apr 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+30 Beweglichkeit | Klassen: Jäger | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20.",
+    "stats": [
+      "+30 Beweglichkeit",
+      "Klassen: Jäger",
+      "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
+      "(2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek.",
+      "(4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50.",
+      "(6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt.",
+      "(8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20."
+    ],
+    "tooltip": "Ring des Gruftpirschers | Wird beim Aufheben gebunden | Einzigartig | Finger | +30 Beweglichkeit | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. |   | Rüstung des Gruftpirschers (0/9) |   Stiefel des Gruftpirschers |   Gurt des Gruftpirschers |   Handschützer des Gruftpirschers |   Kopfstück des Gruftpirschers |   Beinschützer des Gruftpirschers |   Schiftung des Gruftpirschers |   Tunika des Gruftpirschers |   Handgelenksschutz des Gruftpirschers |   Ring des Gruftpirschers |   | (2) Set: Erhöht die Dauer Eurer Fähigkeit 'Schnellfeuer' um 4 Sek. | (4) Set: Erhöht die Angriffskraft von Euch und Eurem Begleiter um 50. | (6) Set: Eure kritischen Distanztreffer verursachen einen Adrenalinrausch, der Euch 50 Mana gewährt. | (8) Set: Reduziert die Manakosten Eurer Fähigkeiten 'Mehrfachschuss' und 'Gezielter Schuss' um 20.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23059,
+    "name": "Ring des Schreckenspanzers",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "Mon Jan 26 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+27 Ausdauer | Klassen: Krieger | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verteidigung +10. | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird.",
+    "stats": [
+      "+27 Ausdauer",
+      "Klassen: Krieger",
+      "Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
+      "Anlegen: Verteidigung +10.",
+      "(2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75.",
+      "(4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%.",
+      "(6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%.",
+      "(8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird."
+    ],
+    "tooltip": "Ring des Schreckenspanzers | Wird beim Aufheben gebunden | Einzigartig | Finger | +27 Ausdauer | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verteidigung +10. |   | Schlachtrüstung des Schreckenspanzers (0/9) |   Armschienen des Schreckenspanzers |   Brustplatte des Schreckenspanzers |   Stulpen des Schreckenspanzers |   Taillenschutz des Schreckenspanzers |   Helm des Schreckenspanzers |   Beinplatten des Schreckenspanzers |   Schulterstücke des Schreckenspanzers |   Sabatons des Schreckenspanzers |   Ring des Schreckenspanzers |   | (2) Set: Erhöht den Schaden, der von Eurer Fähigkeit 'Rache' verursacht wird, um 75. | (4) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Spott' und 'Herausforderungsruf' um 5%. | (6) Set: Erhöht Eure Trefferchance mit den Fähigkeiten 'Rüstung zerreißen', 'Heldenhafter Stoß', 'Rache' und 'Schildschlag' um 5%. | (8) Set: Wenn Eure Gesundheit unter 20% sinkt, helfen Euch Heilzauber, die in den nächsten 5 Sekunden gewirkt werden, dem Tod von der Schippe zu springen, indem die Heilung um bis zu 160 erhöht wird.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 23037,
+    "name": "Ring des Seeleneifers",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133394",
+    "dropChance": "10. Jun",
+    "statsText": "+11 Ausdauer | +14 Intelligenz | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+11 Ausdauer",
+      "+14 Intelligenz",
+      "Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Ring des Seeleneifers | Wird beim Aufheben gebunden | Einzigartig | Finger | +11 Ausdauer | +14 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+    "iconName": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23064,
+    "name": "Ring des Traumwandlers",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "04. Mär",
+    "statsText": "+16 Ausdauer | +16 Intelligenz | +16 Willenskraft | Klassen: Druide | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück.",
+    "stats": [
+      "+16 Ausdauer",
+      "+16 Intelligenz",
+      "+16 Willenskraft",
+      "Klassen: Druide",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37.",
+      "(2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden.",
+      "(4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%.",
+      "(6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar.",
+      "(8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück."
+    ],
+    "tooltip": "Ring des Traumwandlers | Wird beim Aufheben gebunden | Einzigartig | Finger | +16 Ausdauer | +16 Intelligenz | +16 Willenskraft | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 37. |   | Gewandung des Traumwandlers (0/9) |   Stiefel des Traumwandlers |   Gurt des Traumwandlers |   Handschützer des Traumwandlers |   Kopfstück des Traumwandlers |   Beinschützer des Traumwandlers |   Schiftung des Traumwandlers |   Tunika des Traumwandlers |   Handgelenksschutz des Traumwandlers |   Ring des Traumwandlers |   | (2) Set: Bei jedem Wirkungsintervall Eures Zaubers 'Verjüngung' besteht eine Chance, dass beim Ziel 60 Mana, 8 Energie oder 2 Wut wiederhergestellt werden. | (4) Set: Verringert die Manakosten Eurer Zauber 'Heilende Berührung', 'Nachwachsen', 'Verjüngung' und 'Gelassenheit' um 3%. | (6) Set: Das erstmalige Wirken sowie jedes Wirkungsintervall von 'Nachwachsen' erhöhen die maximale Gesundheit Eures Ziels um bis zu 50. Bis zu 7 mal stapelbar. | (8) Set: Bei kritischen Treffern Eures Zaubers 'Heilende Berührung' erhaltet Ihr 30% der Manakosten dieses Zaubers zurück.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23063,
+    "name": "Ring des verseuchten Herzens",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133393",
+    "dropChance": "08. Jul",
+    "statsText": "+24 Ausdauer | Klassen: Hexenmeister | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29. | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%.",
+    "stats": [
+      "+24 Ausdauer",
+      "Klassen: Hexenmeister",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29.",
+      "(2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen.",
+      "(4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12%",
+      "(6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung.",
+      "(8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%."
+    ],
+    "tooltip": "Ring des verseuchten Herzens | Wird beim Aufheben gebunden | Einzigartig | Finger | +24 Ausdauer | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 29. |   | Roben des verseuchten Herzens (0/9) |   Gürtel des verseuchten Herzens |   Bindungen des verseuchten Herzens |   Reif des verseuchten Herzens |   Handschuhe des verseuchten Herzens |   Gamaschen des verseuchten Herzens |   Robe des verseuchten Herzens |   Sandalen des verseuchten Herzens |   Schulterpolster des verseuchten Herzens |   Ring des verseuchten Herzens |   | (2) Set: Eure Zauber 'Schattenblitz' erhalten eine Chance, Euch für 270 bis 330 zu heilen. | (4) Set: Erhöht den Schaden Eures Zaubers 'Verderbnis' um 12% | (6) Set: Eure kritischen Treffer mit Zaubern erzeugen 25% weniger Bedrohung. Zusätzlich verursachen Verderbnis, Feuerbrand, Fluch der Pein und Lebensentzug 25% weniger Bedrohung. | (8) Set: Verringert die Gesundheitskosten Eures Zaubers 'Aderlass' um 12%.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 524,
+    "name": "Rogue",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gothik the Harvester",
+    "itemId": 23023,
+    "name": "Sadistenhalsband",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133319",
+    "dropChance": "10. Jun",
+    "statsText": "+24 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +20 Angriffskraft.",
+    "stats": [
+      "+24 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: +20 Angriffskraft."
+    ],
+    "tooltip": "Sadistenhalsband | Wird beim Aufheben gebunden | Hals | +24 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +20 Angriffskraft.",
+    "iconName": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23049,
+    "name": "Saphirons linkes Auge",
+    "slot": "In Schildhand geführt",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "134546",
+    "dropChance": "Wed Jan 07 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+12 Ausdauer | +8 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "stats": [
+      "+12 Ausdauer",
+      "+8 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
+    ],
+    "tooltip": "Saphirons linkes Auge | Wird beim Aufheben gebunden | In Schildhand geführt | +12 Ausdauer | +8 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "iconName": "inv_offhand_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23048,
+    "name": "Saphirons rechtes Auge",
+    "slot": "In Schildhand geführt",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "134545",
+    "dropChance": "14. Mär",
+    "statsText": "+9 Ausdauer | +10 Intelligenz | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 62. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+9 Ausdauer",
+      "+10 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 62.",
+      "Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Saphirons rechtes Auge | Wird beim Aufheben gebunden | In Schildhand geführt | +9 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 62. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "iconName": "inv_offhand_naxxramas_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22821,
+    "name": "Schicksalszeig",
+    "slot": "Distanz",
+    "type": "Zauberstäbe",
+    "quality": "Episch",
+    "icon": "135482",
+    "dropChance": "13",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16.",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16."
+    ],
+    "tooltip": "Schicksalszeig | Wird beim Aufheben gebunden | Distanz Zauberstab | 146 - 271 Schattenschaden Tempo 1,50 | (139.0 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 16.",
+    "iconName": "inv_wand_1h_stratholme_d_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23667,
+    "name": "Schiftung des obersten Kreuzzüglers",
+    "slot": "Schulter",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "135053",
+    "dropChance": "",
+    "statsText": "+18 Stärke | +18 Ausdauer | +17 Intelligenz | Klassen: Paladin | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20.",
+    "stats": [
+      "+18 Stärke",
+      "+18 Ausdauer",
+      "+17 Intelligenz",
+      "Klassen: Paladin",
+      "Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20."
+    ],
+    "tooltip": "Schiftung des obersten Kreuzzüglers | Wird beim Aufheben gebunden | Schulter Platte | 714 Rüstung | +18 Stärke | +18 Ausdauer | +17 Intelligenz | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20.",
+    "iconName": "inv_shoulder_14"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22819,
+    "name": "Schild der Geißelung",
+    "slot": "Schildhand",
+    "type": "Schilde",
+    "quality": "Episch",
+    "icon": "134973",
+    "dropChance": "04. Mär",
+    "statsText": "+10 Ausdauer | +10 Intelligenz | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59.",
+    "stats": [
+      "+10 Ausdauer",
+      "+10 Intelligenz",
+      "Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her.",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59."
+    ],
+    "tooltip": "Schild der Geißelung | Wird beim Aufheben gebunden | Schildhand Schild | 3425 Rüstung | 68 Blocken | +10 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59.",
+    "iconName": "inv_shield_28"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23017,
+    "name": "Schleier der Finsternis",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133775",
+    "dropChance": "10. Jul",
+    "statsText": "+10 Ausdauer | +10 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10.",
+    "stats": [
+      "+10 Ausdauer",
+      "+10 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28.",
+      "Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10."
+    ],
+    "tooltip": "Schleier der Finsternis | Wird beim Aufheben gebunden | Rücken | 63 Rüstung | +10 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 28. | Anlegen: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10.",
+    "iconName": "inv_misc_cape_naxxramas_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23045,
+    "name": "Schleier der Herrschaft",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133777",
+    "dropChance": "28. Jun",
+    "statsText": "+11 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +50 Angriffskraft.",
+    "stats": [
+      "+11 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: +50 Angriffskraft."
+    ],
+    "tooltip": "Schleier der Herrschaft | Wird beim Aufheben gebunden | Rücken | 68 Rüstung | +11 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +50 Angriffskraft.",
+    "iconName": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23664,
+    "name": "Schulterstücke des Elementarfurors",
+    "slot": "Schulter",
+    "type": "Schwere Rüstung",
+    "quality": "Episch",
+    "icon": "135032",
+    "dropChance": "",
+    "statsText": "+19 Ausdauer | +21 Intelligenz | Klassen: Schamane | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "stats": [
+      "+19 Ausdauer",
+      "+21 Intelligenz",
+      "Klassen: Schamane",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
+    ],
+    "tooltip": "Schulterstücke des Elementarfurors | Wird beim Aufheben gebunden | Schulter Schwere Rüstung | 401 Rüstung | +19 Ausdauer | +21 Intelligenz | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "iconName": "inv_shoulder_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Loatheb",
+    "itemId": 22800,
+    "name": "Schwefelstab",
+    "slot": "Zweihändig",
+    "type": "Stäbe",
+    "quality": "Episch",
+    "icon": "135150",
+    "dropChance": "09. Sep",
+    "statsText": "+31 Ausdauer | +30 Intelligenz | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 2%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 113. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "+31 Ausdauer",
+      "+30 Intelligenz",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 2%.",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 113.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Schwefelstab | Wird beim Aufheben gebunden | Zweihändig Stab | 140 - 251 Schaden Tempo 3,20 | (61.1 Schaden pro Sekunde) | +31 Ausdauer | +30 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 2%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 113. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "iconName": "inv_staff_13"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 22811,
+    "name": "Seelenstrang",
+    "slot": "Distanz",
+    "type": "Bogen",
+    "quality": "Episch",
+    "icon": "135501",
+    "dropChance": "",
+    "statsText": "+6 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +16 Angriffskraft.",
+    "stats": [
+      "+6 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: +16 Angriffskraft."
+    ],
+    "tooltip": "Seelenstrang | Wird beim Aufheben gebunden | Distanz Bogen | 103 - 192 Schaden Tempo 2,90 | (50.9 Schaden pro Sekunde) | +6 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +16 Angriffskraft.",
+    "iconName": "inv_weapon_bow_13"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22799,
+    "name": "Seelensucher",
+    "slot": "Zweihändig",
+    "type": "Stäbe",
+    "quality": "Episch",
+    "icon": "135152",
+    "dropChance": "Fri Apr 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+30 Ausdauer | +31 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 126. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Anlegen: Verringert die Magiewiderstände der Ziele Eurer Zauber um 25.",
+    "stats": [
+      "+30 Ausdauer",
+      "+31 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 126.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%.",
+      "Anlegen: Verringert die Magiewiderstände der Ziele Eurer Zauber um 25."
+    ],
+    "tooltip": "Seelensucher | Wird beim Aufheben gebunden | Zweihändig Stab | 142 - 266 Schaden Tempo 3,20 | (63.8 Schaden pro Sekunde) | +30 Ausdauer | +31 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 126. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 2%. | Anlegen: Verringert die Magiewiderstände der Ziele Eurer Zauber um 25.",
+    "iconName": "inv_staff_31"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Anub'Rekhan",
+    "itemId": 22938,
+    "name": "Seidenumhang der Gruftsatanskreatur",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133776",
+    "dropChance": "16. Mär",
+    "statsText": "+14 Ausdauer | Anlegen: Verteidigung +7. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+14 Ausdauer",
+      "Anlegen: Verteidigung +7.",
+      "Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Seidenumhang der Gruftsatanskreatur | Wird beim Aufheben gebunden | Rücken | 203 Rüstung | +14 Ausdauer | Benötigt Stufe 60 | Anlegen: Verteidigung +7. | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 23025,
+    "name": "Siegel der Verdammten",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133390",
+    "dropChance": "",
+    "statsText": "+17 Ausdauer | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "+17 Ausdauer",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Siegel der Verdammten | Wird beim Aufheben gebunden | Einzigartig | Finger | +17 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 21. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "iconName": "inv_jewelry_ring_53naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23018,
+    "name": "Siegel des gefallenen Verteidigers",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133392",
+    "dropChance": "17. Mär",
+    "statsText": "+24 Ausdauer | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+24 Ausdauer",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Siegel des gefallenen Verteidigers | Wird beim Aufheben gebunden | Einzigartig | Finger | 140 Rüstung | +24 Ausdauer | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Thaddius",
+    "itemId": 22801,
+    "name": "Spitze des Zwiespalts",
+    "slot": "Zweihändig",
+    "type": "Stäbe",
+    "quality": "Episch",
+    "icon": "135168",
+    "dropChance": "Thu Apr 16 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+30 Ausdauer | +38 Intelligenz | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 178.",
+    "stats": [
+      "+30 Ausdauer",
+      "+38 Intelligenz",
+      "Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her.",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 178."
+    ],
+    "tooltip": "Spitze des Zwiespalts | Wird beim Aufheben gebunden | Zweihändig Stab | 140 - 251 Schaden Tempo 3,20 | (61.1 Schaden pro Sekunde) | +30 Ausdauer | +38 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 10 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 178.",
+    "iconName": "inv_staff_31"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 22733,
+    "name": "Stabkopf von Atiesh",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Legendär",
+    "icon": "133573",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Stabkopf von Atiesh | Questgegenstand | Einzigartig",
+    "iconName": "inv_staff_medivh"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23549,
+    "name": "Standhaftigkeit der Geißel",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "136121",
+    "dropChance": "",
+    "statsText": "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 16 erhöhte Ausdauer zu und gewährt 100 Rüstung.",
+    "stats": [
+      "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 16 erhöhte Ausdauer zu und gewährt 100 Rüstung."
+    ],
+    "tooltip": "Standhaftigkeit der Geißel | Wird beim Aufheben gebunden | Benötigt Stufe 60 | Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um 16 erhöhte Ausdauer zu und gewährt 100 Rüstung.",
+    "iconName": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23545,
+    "name": "Stärke der Geißel",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "136141",
+    "dropChance": "46.4",
+    "statsText": "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 15 erhöhte Schadens- und Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Chance auf einen kritischen Zaubertreffer um 1%.",
+    "stats": [
+      "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 15 erhöhte Schadens- und Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Chance auf einen kritischen Zaubertreffer um 1%."
+    ],
+    "tooltip": "Stärke der Geißel | Wird beim Aufheben gebunden | Benötigt Stufe 60 | Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 15 erhöhte Schadens- und Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Chance auf einen kritischen Zaubertreffer um 1%.",
+    "iconName": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gothik the Harvester",
+    "itemId": 23073,
+    "name": "Stiefel der Verrückung",
+    "slot": "Füße",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "132542",
+    "dropChance": "Fri May 08 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+33 Beweglichkeit | +21 Ausdauer | Anlegen: Erhöht Eure effektive Verstohlenheitsstufe.",
+    "stats": [
+      "+33 Beweglichkeit",
+      "+21 Ausdauer",
+      "Anlegen: Erhöht Eure effektive Verstohlenheitsstufe."
+    ],
+    "tooltip": "Stiefel der Verrückung | Wird beim Aufheben gebunden | Füße Leder | 166 Rüstung | +33 Beweglichkeit | +21 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure effektive Verstohlenheitsstufe.",
+    "iconName": "inv_boots_08"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Kel'Thuzad",
+    "itemId": 23053,
+    "name": "Stormrages Talisman des Zorns",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133317",
+    "dropChance": "21. Jul",
+    "statsText": "+12 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: +26 Angriffskraft.",
+    "stats": [
+      "+12 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+      "Anlegen: +26 Angriffskraft."
+    ],
+    "tooltip": "Stormrages Talisman des Zorns | Wird beim Aufheben gebunden | Hals | +12 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: +26 Angriffskraft.",
+    "iconName": "inv_jewelry_necklace_28naxxramas"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Firemaw / Ebonroc / Flamegor",
+    "itemId": 16899,
+    "name": "Sturmgrimms Handschützer",
+    "slot": "Hände",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "+13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
+    "stats": [
+      "+13 Ausdauer",
+      "+19 Intelligenz",
+      "+15 Willenskraft",
+      "+10 Schattenwiderstand",
+      "Klassen: Druide",
+      "Benötigt Stufe 60",
+      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42."
+    ],
+    "tooltip": "Sturmgrimms Handschützer | Wird beim Aufheben gebunden | Hände Leder | 140 Rüstung | +13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
+    "iconName": "inv_gauntlets_25"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Chromaggus",
+    "itemId": 16902,
+    "name": "Sturmgrimms Schulterstücke",
+    "slot": "Schulter",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "+14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
+    "stats": [
+      "+14 Ausdauer",
+      "+21 Intelligenz",
+      "+10 Willenskraft",
+      "+10 Feuerwiderstand",
+      "Klassen: Druide",
+      "Benötigt Stufe 60",
+      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29.",
+      "Stellt alle 5 Sek. 4 Mana wieder her."
+    ],
+    "tooltip": "Sturmgrimms Schulterstücke | Wird beim Aufheben gebunden | Schulter Leder | 169 Rüstung | +14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
+    "iconName": "inv_shoulder_07"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23238,
+    "name": "Stygischer Rundschild",
+    "slot": "Schildhand",
+    "type": "Schilde",
+    "quality": "Episch",
+    "icon": "132390",
+    "dropChance": "",
+    "statsText": "Anlegen: Bei einem Treffer besteht eine Chance von 15%, dass das Bewegungstempo des Angreifers 5 Sekunden lang um 50% verringert wird.",
+    "stats": [
+      "Anlegen: Bei einem Treffer besteht eine Chance von 15%, dass das Bewegungstempo des Angreifers 5 Sekunden lang um 50% verringert wird."
+    ],
+    "tooltip": "Stygischer Rundschild | Wird beim Aufheben gebunden | Schildhand Schild | 3106 Rüstung | 59 Blocken | Benötigt Stufe 60 | Anlegen: Bei einem Treffer besteht eine Chance von 15%, dass das Bewegungstempo des Angreifers 5 Sekunden lang um 50% verringert wird.",
+    "iconName": "inv_armor_shield_naxxramas_d_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Gluth",
+    "itemId": 23075,
+    "name": "Todeshandel",
+    "slot": "Schildhand",
+    "type": "Schilde",
+    "quality": "Episch",
+    "icon": "132389",
+    "dropChance": "Wed Apr 15 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+12 Ausdauer | +12 Intelligenz | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+12 Ausdauer",
+      "+12 Intelligenz",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29.",
+      "Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Todeshandel | Wird beim Aufheben gebunden | Schildhand Schild | 3106 Rüstung | 59 Blocken | +12 Ausdauer | +12 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "iconName": "inv_armor_shield_naxxramas_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23005,
+    "name": "Totem des Wasserlaufs",
+    "slot": "Relikt",
+    "type": "Totem",
+    "quality": "Episch",
+    "icon": "134918",
+    "dropChance": "04. Jul",
+    "statsText": "Anlegen: Jedes Mal, wenn Ihr 'Geringe Welle der Heilung' wirkt, erhaltet ihr bis zu 10 Mana zurück.",
+    "stats": [
+      "Anlegen: Jedes Mal, wenn Ihr 'Geringe Welle der Heilung' wirkt, erhaltet ihr bis zu 10 Mana zurück."
+    ],
+    "tooltip": "Totem des Wasserlaufs | Wird beim Aufheben gebunden | Einzigartig | Relikt Totem | Benötigt Stufe 60 | Anlegen: Jedes Mal, wenn Ihr 'Geringe Welle der Heilung' wirkt, erhaltet ihr bis zu 10 Mana zurück.",
+    "iconName": "inv_relics_totemoflife"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grobbulus",
+    "itemId": 22810,
+    "name": "Toxindüse",
+    "slot": "Distanz",
+    "type": "Schusswaffen",
+    "quality": "Episch",
+    "icon": "135620",
+    "dropChance": "Mon Apr 20 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+10 Ausdauer | Anlegen: +28 Angriffskraft.",
+    "stats": [
+      "+10 Ausdauer",
+      "Anlegen: +28 Angriffskraft."
+    ],
+    "tooltip": "Toxindüse | Wird beim Aufheben gebunden | Distanz Schusswaffe | 68 - 128 Schaden Tempo 2,00 | (49.0 Schaden pro Sekunde) | +10 Ausdauer | Benötigt Stufe 60 | Anlegen: +28 Angriffskraft.",
+    "iconName": "inv_weapon_rifle_11"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Grand Widow Faerlina",
+    "itemId": 22942,
+    "name": "Umarmung der Witwe",
+    "slot": "Einhändig",
+    "type": "Einhandstreitkolben",
+    "quality": "Episch",
+    "icon": "133506",
+    "dropChance": "20. Mär",
+    "statsText": "+12 Ausdauer | +12 Intelligenz | +14 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 161.",
+    "stats": [
+      "+12 Ausdauer",
+      "+12 Intelligenz",
+      "+14 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 161."
+    ],
+    "tooltip": "Umarmung der Witwe | Wird beim Aufheben gebunden | Einzigartig | Einhändig Streitkolben | 42 - 116 Schaden Tempo 1,90 | (41.6 Schaden pro Sekunde) | +12 Ausdauer | +12 Intelligenz | +14 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 161.",
+    "iconName": "inv_mace_29"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Noth the Plaguebringer",
+    "itemId": 23030,
+    "name": "Umhang der Geißel",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133775",
+    "dropChance": "19. Mär",
+    "statsText": "+23 Ausdauer | Anlegen: +30 Angriffskraft. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+23 Ausdauer",
+      "Anlegen: +30 Angriffskraft.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Umhang der Geißel | Wird beim Aufheben gebunden | Rücken | 63 Rüstung | +23 Ausdauer | Benötigt Stufe 60 | Anlegen: +30 Angriffskraft. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23050,
+    "name": "Umhang der Nekropole",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133777",
+    "dropChance": "Wed Jan 07 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+12 Ausdauer | +11 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "stats": [
+      "+12 Ausdauer",
+      "+11 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
+    ],
+    "tooltip": "Umhang der Nekropole | Wird beim Aufheben gebunden | Rücken | 68 Rüstung | +12 Ausdauer | +11 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 26. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "iconName": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22960,
+    "name": "Umhang der Wundnaht",
+    "slot": "Rücken",
+    "type": "Stoff",
+    "quality": "Episch",
+    "icon": "133776",
+    "dropChance": "Wed Jan 21 2026 00:00:00 GMT+0100 (Central European Standard Time)",
+    "statsText": "+12 Intelligenz | +12 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 48. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+12 Intelligenz",
+      "+12 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 48.",
+      "Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Umhang der Wundnaht | Wird beim Aufheben gebunden | Rücken | 63 Rüstung | +12 Intelligenz | +12 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 48. | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her.",
+    "iconName": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23547,
+    "name": "Unverwüstlichkeit der Geißel",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "136143",
+    "dropChance": "",
+    "statsText": "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 31 erhöhte Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Manaregeneration um 5 alle 5 Sek.",
+    "stats": [
+      "Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 31 erhöhte Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Manaregeneration um 5 alle 5 Sek."
+    ],
+    "tooltip": "Unverwüstlichkeit der Geißel | Wird beim Aufheben gebunden | Benötigt Stufe 60 | Benutzen: Fügt einem Gegenstand, der sich an einem Schulterplatz befindet, dauerhaft eine um bis zu 31 erhöhte Heilwirkung durch Zauber und magische Effekte hinzu und erhöht die Manaregeneration um 5 alle 5 Sek.",
+    "iconName": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23044,
+    "name": "Verdammnisbote",
+    "slot": "Einhändig",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "133456",
+    "dropChance": "",
+    "statsText": "+8 Beweglichkeit | +8 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "stats": [
+      "+8 Beweglichkeit",
+      "+8 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%."
+    ],
+    "tooltip": "Verdammnisbote | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 83 - 126 Schaden Tempo 1,60 | (65.3 Schaden pro Sekunde) | +8 Beweglichkeit | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Verbessert Eure Trefferchance um 1%.",
+    "iconName": "inv_knife_1h_stratholme_d_03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "The Four Horsemen",
+    "itemId": 22691,
+    "name": "Verderbter Aschenbringer",
+    "slot": "Zweihändig",
+    "type": "Zweihandschwerter",
+    "quality": "Episch",
+    "icon": "135331",
+    "dropChance": "",
+    "statsText": "Anlegen: Der Träger wird vom Willen des Aschenbringers erfüllt. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Trefferchance: Stiehlt dem feindlichen Ziel 185 bis 215 Punkt(e) Leben.",
+    "stats": [
+      "Anlegen: Der Träger wird vom Willen des Aschenbringers erfüllt.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Trefferchance: Stiehlt dem feindlichen Ziel 185 bis 215 Punkt(e) Leben."
+    ],
+    "tooltip": "Verderbter Aschenbringer | Wird beim Aufheben gebunden | Einzigartig | Zweihändig Schwert | 259 - 389 Schaden Tempo 3,60 | (90.0 Schaden pro Sekunde) | -25 Ausdauer | Benötigt Stufe 60 | Anlegen: Der Träger wird vom Willen des Aschenbringers erfüllt. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: Verbessert Eure Trefferchance um 1%. | Trefferchance: Stiehlt dem feindlichen Ziel 185 bis 215 Punkt(e) Leben. | 'Klinge des Scharlachroten Hochlords'",
+    "iconName": "inv_axe_24"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23221,
+    "name": "Verlegter Servoarm",
+    "slot": "Einhändig",
+    "type": "Einhandstreitkolben",
+    "quality": "Episch",
+    "icon": "133505",
+    "dropChance": "",
+    "statsText": "Anlegen: Es besteht eine Chance, dass eine elektrische Entladung ausgelöst wird, die Eurem Ziel 100 bis 150 Naturschaden hinzufügt.",
+    "stats": [
+      "Anlegen: Es besteht eine Chance, dass eine elektrische Entladung ausgelöst wird, die Eurem Ziel 100 bis 150 Naturschaden hinzufügt."
+    ],
+    "tooltip": "Verlegter Servoarm | Wird beim Aufheben gebunden | Einhändig Streitkolben | 128 - 238 Schaden Tempo 2,80 | (65.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Es besteht eine Chance, dass eine elektrische Entladung ausgelöst wird, die Eurem Ziel 100 bis 150 Naturschaden hinzufügt.",
+    "iconName": "inv_mace_28"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Sapphiron",
+    "itemId": 23041,
+    "name": "Wappen des Schlächters",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "135441",
+    "dropChance": "14. Mär",
+    "statsText": "Anlegen: +64 Angriffskraft. | Benutzen: Erhöht 20 Sek. lang die Angriffskraft um 260. (2 Min. Abklingzeit)",
+    "stats": [
+      "Anlegen: +64 Angriffskraft.",
+      "Benutzen: Erhöht 20 Sek. lang die Angriffskraft um 260. (2 Min. Abklingzeit)"
+    ],
+    "tooltip": "Wappen des Schlächters | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: +64 Angriffskraft. | Benutzen: Erhöht 20 Sek. lang die Angriffskraft um 260. (2 Min. Abklingzeit)",
+    "iconName": "inv_trinket_naxxramas03"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 529,
+    "name": "Warlock",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "T3_SET",
+    "itemId": 523,
+    "name": "Warrior",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Trash",
+    "itemId": 23055,
+    "name": "Wort des Tauens",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Gewöhnlich",
+    "icon": "134938",
+    "dropChance": "",
+    "statsText": "Benutzen: Bei einer gefrorenen Rune verwenden, um sie freizuschmelzen.",
+    "stats": [
+      "Benutzen: Bei einer gefrorenen Rune verwenden, um sie freizuschmelzen."
+    ],
+    "tooltip": "Wort des Tauens | Benutzen: Bei einer gefrorenen Rune verwenden, um sie freizuschmelzen.",
+    "iconName": "inv_scroll_02"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22815,
+    "name": "Wundspalter",
+    "slot": "Zweihändig",
+    "type": "Zweihandäxte",
+    "quality": "Episch",
+    "icon": "132416",
+    "dropChance": "Sun May 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+43 Stärke | +18 Ausdauer | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "stats": [
+      "+43 Stärke",
+      "+18 Ausdauer",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%."
+    ],
+    "tooltip": "Wundspalter | Wird beim Aufheben gebunden | Zweihändig Axt | 235 - 354 Schaden Tempo 3,60 | (81.8 Schaden pro Sekunde) | +43 Stärke | +18 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%.",
+    "iconName": "inv_axe_22"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Patchwerk",
+    "itemId": 22820,
+    "name": "Zauberstab der Heimsuchung",
+    "slot": "Distanz",
+    "type": "Zauberstäbe",
+    "quality": "Episch",
+    "icon": "135481",
+    "dropChance": "Sun May 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+7 Ausdauer | +7 Intelligenz | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "stats": [
+      "+7 Ausdauer",
+      "+7 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12.",
+      "Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%."
+    ],
+    "tooltip": "Zauberstab der Heimsuchung | Wird beim Aufheben gebunden | Distanz Zauberstab | 119 - 222 Schattenschaden Tempo 1,50 | (113.7 Schaden pro Sekunde) | +7 Ausdauer | +7 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%.",
+    "iconName": "inv_wand_1h_stratholme_d_01"
+  },
+  {
+    "raid": "NAXX",
+    "boss": "Instructor Razuvious",
+    "itemId": 23009,
+    "name": "Zauberstab des flüsternden Todes",
+    "slot": "Distanz",
+    "type": "Zauberstäbe",
+    "quality": "Episch",
+    "icon": "135481",
+    "dropChance": "Mon Aug 17 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "statsText": "+10 Intelligenz | +9 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
+    "stats": [
+      "+10 Intelligenz",
+      "+9 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22."
+    ],
+    "tooltip": "Zauberstab des flüsternden Todes | Wird beim Aufheben gebunden | Distanz Zauberstab | 119 - 222 Schattenschaden Tempo 1,50 | (113.7 Schaden pro Sekunde) | +10 Intelligenz | +9 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
+    "iconName": "inv_wand_1h_stratholme_d_02"
+  }
+]
