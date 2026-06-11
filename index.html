@@ -871,7 +871,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
       <div class="steps-list">
         <div class="step-card">Erstelle zuerst einen Spielerlogin. Damit kannst du auf unser Prio- und Punktesystem zugreifen.</div>
         <div class="step-card">Dieser Spielerlogin ist für alle Raids gültig und unabhängig von der jeweiligen Prio-ID.</div>
-        <div class="step-card">Gib deinen SpielerPin im Login-Bereich ein und lade deine Charaktere.</div>
+        <div class="step-card">Gib deinen Spielerlogin im Login-Bereich ein und lade deine Charaktere.</div>
         <div class="step-card">Auf der jeweiligen Prio-Seite gibst du zusätzlich den PrioPin des Raids ein.</div>
         <div class="step-card">Wähle deinen Charakter aus und erstelle anschließend deine Prio.</div>
       </div>
@@ -880,8 +880,8 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
     <section class="main-login-layout">
       <div class="player-login-card">
         <h2>Spielerlogin</h2>
-        <p>Gib hier deinen SpielerPin aus „Mein LichtLoot“ ein. Danach kannst du deine gespeicherten Charaktere laden.</p>
-        <input id="homePlayerPin" class="login-input" type="password" placeholder="SpielerPin eingeben" onkeydown="homePlayerLoginEnter(event)">
+        <p>Gib hier deinen Spielerlogin aus „Mein LichtLoot“ ein. Danach kannst du deine gespeicherten Charaktere laden.</p>
+        <input id="homePlayerPin" class="login-input" type="password" placeholder="Spielerlogin eingeben" onkeydown="homePlayerLoginEnter(event)">
         <div class="login-actions">
           <button class="big-btn" onclick="homePlayerLogin()">Einloggen</button>
           <button class="big-btn" onclick="showCreateLogin()">Spielerlogin erstellen</button>
@@ -900,7 +900,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 
   <div class="lichtloot-tabs">
     <button id="tabPrios" class="lichtloot-tab active" onclick="showLichtLootTab('prios')">Meine Prios & PO+</button>
-    <button id="tabPin" class="lichtloot-tab" onclick="showLichtLootTab('pin')">SpielerPin erstellen</button>
+    <button id="tabPin" class="lichtloot-tab" onclick="showLichtLootTab('pin')">Spielerlogin erstellen</button>
     <button id="tabTwinks" class="lichtloot-tab" onclick="showLichtLootTab('twinks')">Charakter hinzufügen</button>
     <button id="tabReset" class="lichtloot-tab" onclick="showLichtLootTab('reset')">Spielerlogin zurücksetzen</button>
   </div>
@@ -908,8 +908,8 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
   <div id="lichtlootPriosSection" class="lichtloot-section">
     <div class="myprios-form">
       <div style="grid-column:1 / span 2">
-        <label>SpielerPin</label>
-        <input id="myPriosPin" type="password" placeholder="SpielerPin eingeben" onkeydown="myPriosEnter(event)">
+        <label>Spielerlogin</label>
+        <input id="myPriosPin" type="password" placeholder="Spielerlogin eingeben" onkeydown="myPriosEnter(event)">
       </div>
       <button class="tool-btn" onclick="loadLichtLootCharacters()">Chars laden</button>
     </div>
@@ -918,22 +918,22 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 
     <div class="myprios-form" style="margin-top:10px">
       <div style="grid-column:1 / span 2">
-        <label>Alle Charaktere mit diesem SpielerPin</label>
+        <label>Alle Charaktere mit diesem Spielerlogin</label>
         <select id="myLichtlootCharSelect" onchange="selectLichtLootCharacter()">
-          <option value="">Erst SpielerPin eingeben und Chars laden</option>
+          <option value="">Erst Spielerlogin eingeben und Chars laden</option>
         </select>
       </div>
       <button class="tool-btn" onclick="loadMyPrios()">Prios anzeigen</button>
     </div>
 
-    <div id="myPriosStatus" class="status">Gib deinen SpielerPin ein. Danach werden alle Charaktere mit diesem Pin geladen.</div>
+    <div id="myPriosStatus" class="status">Gib deinen Spielerlogin ein. Danach werden alle Charaktere mit diesem Pin geladen.</div>
     <div id="myPriosResults" class="myprios-results"></div>
   </div>
 
 <div id="lichtlootPinSection" class="lichtloot-section hidden">
   <div class="form-card">
     <h3>Spielerlogin erstellen</h3>
-    <p class="hint">Lege hier deinen SpielerPin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen Spielerlogin später zurücksetzen.</p>
+    <p class="hint">Lege hier deinen Spielerlogin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen Spielerlogin später zurücksetzen.</p>
 
     <div class="clean-form">
       <div>
@@ -967,7 +967,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
       </div>
 
       <div>
-        <label>Wunsch-SpielerPin</label>
+        <label>Wunsch-Spielerlogin</label>
         <input id="customPlayerPin" type="text" placeholder="4–8 Zeichen, z. B. ARIEE25" maxlength="8" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
       </div>
 
@@ -989,7 +989,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
       </div>
     </div>
 
-    <label style="display:block;margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;">SpielerPin-Status</label>
+    <label style="display:block;margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;">Spielerlogin-Status</label>
     <div class="form-actions">
       <div id="fixedPlayerPin" class="pin-output">----</div>
       <button id="copyPlayerPinBtn" class="copy-btn hidden" onclick="copyText('fixedPlayerPin')">Kopieren</button>
@@ -1010,8 +1010,8 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
   <div id="lichtlootTwinkSection" class="lichtloot-section hidden">
     <div class="twink-form">
       <div class="full">
-        <label>Bestehender SpielerPin</label>
-        <input id="twinkPlayerPin" type="password" placeholder="SpielerPin">
+        <label>Bestehender Spielerlogin</label>
+        <input id="twinkPlayerPin" type="password" placeholder="Spielerlogin">
       </div>
 
       <div>
@@ -1050,14 +1050,14 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
     </div>
 
     <div id="twinkStatus" class="status">
-      Gib deinen bestehenden SpielerPin und den neuen Charakter ein. Der Charakter nutzt danach denselben SpielerPin.
+      Gib deinen bestehenden Spielerlogin und den neuen Charakter ein. Der Charakter nutzt danach denselben Spielerlogin.
     </div>
   </div>
 
   <div id="lichtlootResetSection" class="lichtloot-section hidden">
     <div class="form-card">
       <h3>Spielerlogin zurücksetzen</h3>
-      <p class="hint">Wenn du deinen SpielerPin vergessen hast, kannst du hier mit Charaktername, Server und Sicherheitsfrage einen neuen Pin setzen.</p>
+      <p class="hint">Wenn du deinen Spielerlogin vergessen hast, kannst du hier mit Charaktername, Server und Sicherheitsfrage einen neuen Pin setzen.</p>
 
       <div class="clean-form">
         <div>
@@ -1091,7 +1091,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
         </div>
 
         <div class="full">
-          <label>Neuer Wunsch-SpielerPin</label>
+          <label>Neuer Wunsch-Spielerlogin</label>
           <input id="resetNewPlayerPin" type="text" placeholder="4–8 Zeichen, z. B. ARIEE25" maxlength="8" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')">
         </div>
       </div>
@@ -1373,7 +1373,7 @@ async function loadFixedPlayerPinForChar(){
     return;
   }
 
-  status.innerHTML='<span class="warn">SpielerPin wird geprüft …</span>';
+  status.innerHTML='<span class="warn">Spielerlogin wird geprüft …</span>';
 
   const url =
     RAID_API_URL +
@@ -1388,7 +1388,7 @@ async function loadFixedPlayerPinForChar(){
 
     if(!result.success){
       hidePlayerPinValue("----");
-      status.innerHTML='<span class="bad">' + safeHtml(result.error || "SpielerPin konnte nicht geladen werden.") + '</span>';
+      status.innerHTML='<span class="bad">' + safeHtml(result.error || "Spielerlogin konnte nicht geladen werden.") + '</span>';
       createBtn.classList.remove("hidden");
       resetArea.classList.add("hidden");
       return;
@@ -1401,12 +1401,12 @@ async function loadFixedPlayerPinForChar(){
         document.getElementById("pinClass").value=result.className;
       }
 
-      status.innerHTML='<span class="ok">✓ Für diesen Charakter ist bereits ein SpielerPin vorhanden.</span><br>Der Pin wird aus Sicherheitsgründen nicht angezeigt. Wenn du ihn vergessen hast, nutze den Tab „Spielerlogin zurücksetzen“ mit deiner Sicherheitsfrage.';
+      status.innerHTML='<span class="ok">✓ Für diesen Charakter ist bereits ein Spielerlogin vorhanden.</span><br>Der Pin wird aus Sicherheitsgründen nicht angezeigt. Wenn du ihn vergessen hast, nutze den Tab „Spielerlogin zurücksetzen“ mit deiner Sicherheitsfrage.';
       createBtn.classList.add("hidden");
       resetArea.classList.remove("hidden");
     }else{
       hidePlayerPinValue("----");
-      status.innerHTML="Für diesen Charakter ist noch kein SpielerPin gespeichert.";
+      status.innerHTML="Für diesen Charakter ist noch kein Spielerlogin gespeichert.";
       createBtn.classList.remove("hidden");
       resetArea.classList.add("hidden");
       if(oldPinInput) oldPinInput.value="";
@@ -1415,7 +1415,7 @@ async function loadFixedPlayerPinForChar(){
   }catch(error){
     console.error(error);
     hidePlayerPinValue("----");
-    status.innerHTML='<span class="bad">SpielerPin-API konnte nicht erreicht werden.</span>';
+    status.innerHTML='<span class="bad">Spielerlogin-API konnte nicht erreicht werden.</span>';
   }
 }
 
@@ -1434,7 +1434,7 @@ async function createPlayerPinFromSheet(){
   }
 
   if(!input.customPin){
-    alert("Bitte Wunsch-SpielerPin eingeben.");
+    alert("Bitte Wunsch-Spielerlogin eingeben.");
     return;
   }
 
@@ -1462,7 +1462,7 @@ async function createPlayerPinFromSheet(){
 
     if(!result.success){
       hidePlayerPinValue("Vorhanden");
-      status.innerHTML='<span class="bad">' + safeHtml(result.error || "SpielerPin konnte nicht erstellt werden.") + '</span><br>Falls dies dein Charakter ist, nutze den Tab „Spielerlogin zurücksetzen“ mit deiner Sicherheitsfrage.';
+      status.innerHTML='<span class="bad">' + safeHtml(result.error || "Spielerlogin konnte nicht erstellt werden.") + '</span><br>Falls dies dein Charakter ist, nutze den Tab „Spielerlogin zurücksetzen“ mit deiner Sicherheitsfrage.';
       createBtn=document.getElementById("createPlayerPinBtn");
       if(createBtn) createBtn.classList.add("hidden");
       document.getElementById("resetPinArea").classList.remove("hidden");
@@ -1476,7 +1476,7 @@ async function createPlayerPinFromSheet(){
 
   }catch(error){
     console.error(error);
-    status.innerHTML='<span class="bad">Fehler beim Erstellen des SpielerPins.</span>';
+    status.innerHTML='<span class="bad">Fehler beim Erstellen des Spielerlogins.</span>';
   }
 }
 
@@ -1491,16 +1491,16 @@ async function resetPlayerPinFromSheet(){
   }
 
   if(!oldPin){
-    status.innerHTML='<span class="bad">Bitte alten SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte alten Spielerlogin eingeben.</span>';
     return;
   }
 
   if(!input.customPin){
-    status.innerHTML='<span class="bad">Bitte neuen Wunsch-SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte neuen Wunsch-Spielerlogin eingeben.</span>';
     return;
   }
 
-  status.innerHTML='<span class="warn">SpielerPin wird geändert …</span>';
+  status.innerHTML='<span class="warn">Spielerlogin wird geändert …</span>';
 
   const url =
     RAID_API_URL +
@@ -1518,17 +1518,17 @@ async function resetPlayerPinFromSheet(){
 
     if(!result.success){
       hidePlayerPinValue("Vorhanden");
-      status.innerHTML='<span class="bad">' + safeHtml(result.error || "SpielerPin konnte nicht zurückgesetzt werden.") + '</span>';
+      status.innerHTML='<span class="bad">' + safeHtml(result.error || "Spielerlogin konnte nicht zurückgesetzt werden.") + '</span>';
       return;
     }
 
     document.getElementById("oldPlayerPin").value="";
     showPlayerPinValue(result.pin);
-    status.innerHTML='<span class="ok">✓ SpielerPin wurde geändert und im Sheet gespeichert.</span><br><strong>Bitte den neuen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    status.innerHTML='<span class="ok">✓ Spielerlogin wurde geändert und im Sheet gespeichert.</span><br><strong>Bitte den neuen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
 
   }catch(error){
     console.error(error);
-    status.innerHTML='<span class="bad">Fehler beim Zurücksetzen des SpielerPins.</span>';
+    status.innerHTML='<span class="bad">Fehler beim Zurücksetzen des Spielerlogins.</span>';
   }
 }
 
@@ -1547,7 +1547,7 @@ async function resetPlayerLoginWithSecurity(){
   }
 
   if(newPin.length < 4){
-    status.innerHTML='<span class="bad">Der neue SpielerPin muss mindestens 4 Zeichen haben.</span>';
+    status.innerHTML='<span class="bad">Der neue Spielerlogin muss mindestens 4 Zeichen haben.</span>';
     return;
   }
 
@@ -1575,7 +1575,7 @@ async function resetPlayerLoginWithSecurity(){
     localStorage.setItem("lichtlootPlayerPin", result.pin || newPin);
     sessionStorage.setItem("lichtlootPlayerPin", result.pin || newPin);
 
-    status.innerHTML='<span class="ok">✓ Spielerlogin wurde zurückgesetzt.</span><br><strong>Neuer SpielerPin:</strong> ' + safeHtml(result.pin || newPin) + '<br>Der neue Pin wurde im Browser gespeichert.';
+    status.innerHTML='<span class="ok">✓ Spielerlogin wurde zurückgesetzt.</span><br><strong>Neuer Spielerlogin:</strong> ' + safeHtml(result.pin || newPin) + '<br>Der neue Pin wurde im Browser gespeichert.';
 
     document.getElementById("resetSecurityAnswer").value="";
     document.getElementById("resetNewPlayerPin").value="";
@@ -1605,7 +1605,7 @@ async function addTwinkToPlayerPin(){
   const status=document.getElementById("twinkStatus");
 
   if(!pin || !charName || !server || !className){
-    status.innerHTML='<span class="bad">Bitte SpielerPin, Charaktername, Server und Klasse vollständig ausfüllen.</span>';
+    status.innerHTML='<span class="bad">Bitte Spielerlogin, Charaktername, Server und Klasse vollständig ausfüllen.</span>';
     return;
   }
 
@@ -1633,7 +1633,7 @@ async function addTwinkToPlayerPin(){
 
     status.innerHTML=
       '<span class="ok">✓ Charakter wurde gespeichert.</span><br>' +
-      '<strong>' + safeHtml(charName) + '</strong> nutzt jetzt denselben SpielerPin.';
+      '<strong>' + safeHtml(charName) + '</strong> nutzt jetzt denselben Spielerlogin.';
 
     document.getElementById("twinkCharName").value="";
     document.getElementById("twinkClass").value="";
@@ -2369,11 +2369,11 @@ async function loadLichtLootCharacters(){
   const results=document.getElementById("myPriosResults");
 
   if(!pin){
-    status.innerHTML='<span class="bad">Bitte zuerst deinen SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte zuerst deinen Spielerlogin eingeben.</span>';
     return;
   }
 
-  status.innerHTML='<span class="warn">Lade alle Charaktere zu diesem SpielerPin …</span>';
+  status.innerHTML='<span class="warn">Lade alle Charaktere zu diesem Spielerlogin …</span>';
   results.innerHTML='';
   charField.value='';
 
@@ -2420,7 +2420,7 @@ async function loadLichtLootCharacters(){
     });
 
     if(!chars.length){
-      status.innerHTML='<span class="warn">Zu diesem SpielerPin wurden noch keine Charaktere gefunden.</span>';
+      status.innerHTML='<span class="warn">Zu diesem Spielerlogin wurden noch keine Charaktere gefunden.</span>';
       if(select){
         select.innerHTML='<option value="">Keine Charaktere gefunden</option>';
       }
@@ -2486,7 +2486,7 @@ async function loadMyPrios(){
   const results=document.getElementById("myPriosResults");
 
   if(!pin){
-    status.innerHTML='<span class="bad">Bitte zuerst deinen SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte zuerst deinen Spielerlogin eingeben.</span>';
     return;
   }
 
@@ -2707,7 +2707,7 @@ async function deleteOwnPrio(payload){
   const status=document.getElementById("myPriosStatus");
 
   if(!pin){
-    status.innerHTML='<span class="bad">Bitte SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte Spielerlogin eingeben.</span>';
     return;
   }
 
@@ -3243,11 +3243,11 @@ async function homePlayerLogin(){
   const pin=(pinField && pinField.value ? pinField.value.trim() : '');
 
   if(!pin){
-    status.innerHTML='<span class="bad">Bitte deinen SpielerPin eingeben.</span>';
+    status.innerHTML='<span class="bad">Bitte deinen Spielerlogin eingeben.</span>';
     return;
   }
 
-  status.innerHTML='<span class="warn">SpielerPin wird geprüft …</span>';
+  status.innerHTML='<span class="warn">Spielerlogin wird geprüft …</span>';
 
   try{
     const url=RAID_API_URL+
@@ -3270,10 +3270,10 @@ async function homePlayerLogin(){
       return;
     }
 
-    status.innerHTML='<span class="bad">Dieser SpielerPin wurde nicht gefunden.</span>';
+    status.innerHTML='<span class="bad">Dieser Spielerlogin wurde nicht gefunden.</span>';
   }catch(error){
     console.error(error);
-    status.innerHTML='<span class="bad">SpielerPin konnte nicht geprüft werden.</span>';
+    status.innerHTML='<span class="bad">Spielerlogin konnte nicht geprüft werden.</span>';
   }
 }
 function homePlayerLoginEnter(event){ if(event.key==='Enter') homePlayerLogin(); }
