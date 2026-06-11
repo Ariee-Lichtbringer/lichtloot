@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot - Naxxramas</title>
+<title>Lichtloot - Zul Gurub</title>
 
 <style>
 :root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/naxx.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/zg.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -1002,7 +1002,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </style>
 </head>
 
-<body class="raid-naxx">
+<body class="raid-zg">
 
 <div id="participantPinModal" class="participant-pin-modal hidden">
   <div class="participant-pin-card">
@@ -1091,7 +1091,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </div>
 
 <div class="header">
-<h1>Naxxramas – Prio-Auswahl</h1>
+<h1>Zul Gurub – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 
 <div id="playerCard" class="player-input-card">
@@ -1357,9 +1357,9 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 
 <script>
-const RAID_NAME = "naxx";
+const RAID_NAME = "zg";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_JSON_URL = "/data/naxx.json";
+const LOOT_JSON_URL = "/data/zg.json";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
@@ -1983,7 +1983,7 @@ async function loadLootFromSheet(){
         itemId: obj.itemId || obj.ItemID || "",
         icon: iconName || fallbackIcon,
         quality: normalizeQuality(obj.quality || obj["Qualität"] || ""),
-        ilvl: (obj.itemId || obj.ItemID) ? "ItemID: " + (obj.itemId || obj.ItemID) : "Naxxramas",
+        ilvl: (obj.itemId || obj.ItemID) ? "ItemID: " + (obj.itemId || obj.ItemID) : "Zul Gurub",
         bind: "",
         slot: obj.slot || obj.Slot_DE || "",
         type: obj.type || obj.Typ_DE || "",
@@ -3770,7 +3770,7 @@ const CREATE_RAIDS = {
   mc:{name:"Molten Core",short:"MC"},
   bwl:{name:"Blackwing Lair",short:"BWL"},
   aq40:{name:"Ahn'Qiraj 40",short:"AQ40"},
-  naxx:{name:"Naxxramas",short:"NAXX"},
+  naxx:{name:"Zul Gurub",short:"NAXX"},
   zg:{name:"ZG 20",short:"ZG"},
   aq20:{name:"AQ 20",short:"AQ20"},
   ony:{name:"Onyxia",short:"ONY"}
