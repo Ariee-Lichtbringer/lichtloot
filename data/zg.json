@@ -793,159 +793,6 @@
   },
   {
     "raid": "ZG",
-    "boss": "Twin Emperors",
-    "itemId": 20726,
-    "name": "Formel: Handschuhe - Bedrohung",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Bedrohung | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20729,
-    "name": "Formel: Handschuhe - Feuermacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Feuermacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20728,
-    "name": "Formel: Handschuhe - Frostmacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Frostmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20730,
-    "name": "Formel: Handschuhe - Heilkraft",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Heilkraft | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20727,
-    "name": "Formel: Handschuhe - Schattenmacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Schattenmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20731,
-    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Überragende Beweglichkeit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20736,
-    "name": "Formel: Umhang - Ausweichen",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht."
-    ],
-    "tooltip": "Formel: Umhang - Ausweichen | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Twin Emperors",
-    "itemId": 20735,
-    "name": "Formel: Umhang - Feingefühl",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert."
-    ],
-    "tooltip": "Formel: Umhang - Feingefühl | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20734,
-    "name": "Formel: Umhang - Verstohlenheit",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht."
-    ],
-    "tooltip": "Formel: Umhang - Verstohlenheit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "ZG",
     "boss": "Bloodlord Mandokir",
     "itemId": 19877,
     "name": "Gamaschen des Animisten",
@@ -1591,24 +1438,6 @@
   },
   {
     "raid": "ZG",
-    "boss": "Broodlord Lashlayer",
-    "itemId": 19351,
-    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
-    "slot": "Einhändig",
-    "type": "Einhandschwerter",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "stats": [
-      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
-      "Anlegen: Schwerter +4."
-    ],
-    "tooltip": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 86 - 162 Schaden Tempo 2,20 | (56.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "iconName": "inv_sword_49"
-  },
-  {
-    "raid": "ZG",
     "boss": "Bloodlord Mandokir",
     "itemId": 20038,
     "name": "Mandokirs Stachel",
@@ -2065,23 +1894,6 @@
       "Benutzen: Lehrt Großes Arkanelixier."
     ],
     "tooltip": "Rezept: Großes Arkanelixier | Benötigt Alchemie (285) | Benutzen: Lehrt Großes Arkanelixier.",
-    "iconName": "inv_scroll_06"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Zone Drop",
-    "itemId": 13486,
-    "name": "Rezept: Untod zu Wasser transmutieren",
-    "slot": "Rezept",
-    "type": "Alchemierezept",
-    "quality": "Selten",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers.",
-    "stats": [
-      "Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers."
-    ],
-    "tooltip": "Rezept: Untod zu Wasser transmutieren | Benötigt Alchemie (275) | Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers.",
     "iconName": "inv_scroll_06"
   },
   {
@@ -2738,21 +2550,6 @@
     ],
     "tooltip": "Urzeitlicher Hakkariwappenrock | Wird beim Aufheben gebunden | Klassen: Paladin, Schamane, Druide | 'Ein legendäres Symbol der Macht des alten Gurubashiimperiums.'",
     "iconName": "inv_banner_01"
-  },
-  {
-    "raid": "ZG",
-    "boss": "Trash",
-    "itemId": 19767,
-    "name": "Urzeitliches Fledermausleder",
-    "slot": "",
-    "type": "Handwerkswaren",
-    "quality": "Gewöhnlich",
-    "icon": "134345",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Urzeitliches Fledermausleder",
-    "iconName": "inv_misc_pelt_01"
   },
   {
     "raid": "ZG",
