@@ -32,14 +32,14 @@
       "Trefferchance: Schleudert einen Schattenblitz auf den Feind und verursacht 55 bis 85 Punkt(e) Schattenschaden.",
       "(2) Set: Gewährt dem Benutzer beim Zufügen von Distanz- oder Nahkampfschaden eine kleine Chance, mit dem Segen der wilden Götter erfüllt zu werden. Distanz- und Nahkampfangriffskraft 12 Sekunden lang um 300 erhöht."
     ],
-    "tooltip": "Arlokks Griff | Wird beim Aufheben gebunden | Einzigartig | Schildhand Faustwaffe | 41 - 85 Schaden Tempo 1,50 | (42.0 Schaden pro Sekunde) | Benötigt Stufe 60 | Trefferchance: Schleudert einen Schattenblitz auf den Feind und verursacht 55 bis 85 Punkt(e) Schattenschaden. |   | Ursegen (0/2) |   Thekals Griff |   Arlokks Griff |   | (2) Set: Gewährt dem Benutzer beim Zufügen von Distanz- oder Nahkampfschaden eine kleine Chance, mit dem Segen der wilden Götter erfüllt zu werden. Distanz- und Nahkampfangriffskraft 12 Sekunden lang um 300 erhöht.",
+    "tooltip": " Griff | Wird beim Aufheben gebunden | Einzigartig | Schildhand Faustwaffe | 41 - 85 Schaden Tempo 1,50 | (42.0 Schaden pro Sekunde) | Benötigt Stufe 60 | Trefferchance: Schleudert einen Schattenblitz auf den Feind und verursacht 55 bis 85 Punkt(e) Schattenschaden. |   | Ursegen (0/2) |   Thekals Griff |    Griff |   | (2) Set: Gewährt dem Benutzer beim Zufügen von Distanz- oder Nahkampfschaden eine kleine Chance, mit dem Segen der wilden Götter erfüllt zu werden. Distanz- und Nahkampfangriffskraft 12 Sekunden lang um 300 erhöht.",
     "iconName": "inv_weapon_hand_01"
   },
   {
     "raid": "ZG",
     "boss": "High Priestess Arlokk",
     "itemId": 19922,
-    "name": "Arlokks Hoodoostecken",
+    "name": " Hoodoostecken",
     "slot": "In Schildhand geführt",
     "type": "Verschiedenes",
     "quality": "Selten",
@@ -51,7 +51,7 @@
       "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22."
     ],
-    "tooltip": "Arlokks Hoodoostecken | Wird beim Aufheben gebunden | Einzigartig | In Schildhand geführt | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
+    "tooltip": " Hoodoostecken | Wird beim Aufheben gebunden | Einzigartig | In Schildhand geführt | +8 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22.",
     "iconName": "inv_misc_bone_dwarfskull_01"
   },
   {
@@ -2841,7 +2841,7 @@
       "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 46."
     ],
     "tooltip": "Wille Arlokks | Wird beim Aufheben gebunden | Einzigartig | Zweihändig Stab | 129 - 204 Schaden Tempo 3,00 | (55.5 Schaden pro Sekunde) | +15 Ausdauer | +19 Intelligenz | +35 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 46.",
-    "iconName": "inv_staff_07"
+    "iconName": "inv_staff_35"
   },
   {
     "raid": "ZG",
