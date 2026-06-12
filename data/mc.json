@@ -751,51 +751,6 @@
   },
   {
     "raid": "MC",
-    "boss": "T1_SET",
-    "itemId": 203,
-    "name": "Dicke Stoffhandschuhe",
-    "slot": "Hände",
-    "type": "Stoff",
-    "quality": "Gewöhnlich",
-    "icon": "132955",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Dicke Stoffhandschuhe | Hände Stoff | 21 Rüstung | Benötigt Stufe 17",
-    "iconName": "inv_gauntlets_21"
-  },
-  {
-    "raid": "MC",
-    "boss": "T1_SET",
-    "itemId": 201,
-    "name": "Dicke Stoffhose",
-    "slot": "Beine",
-    "type": "Stoff",
-    "quality": "Gewöhnlich",
-    "icon": "134592",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Dicke Stoffhose | Beine Stoff | 30 Rüstung | Benötigt Stufe 17",
-    "iconName": "inv_pants_12"
-  },
-  {
-    "raid": "MC",
-    "boss": "T1_SET",
-    "itemId": 202,
-    "name": "Dicke Stoffschuhe",
-    "slot": "Füße",
-    "type": "Stoff",
-    "quality": "Gewöhnlich",
-    "icon": "132539",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Dicke Stoffschuhe | Füße Stoff | 24 Rüstung | Benötigt Stufe 17",
-    "iconName": "inv_boots_05"
-  },
-  {
-    "raid": "MC",
     "boss": "Ragnaros",
     "itemId": 17107,
     "name": "Drachenblut-Cape",
@@ -1080,159 +1035,6 @@
     ],
     "tooltip": "Formel: Brust - Große Werte | Wird beim Aufheben gebunden | Benötigt Verzauberkunst | Benutzen: Lehrt dauerhaftes Verzaubern von Brust - Große Werte (+4 alle Werte).",
     "iconName": "inv_scroll_06"
-  },
-  {
-    "raid": "MC",
-    "boss": "Twin Emperors",
-    "itemId": 20726,
-    "name": "Formel: Handschuhe - Bedrohung",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Bedrohung | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Bedrohung, die der Träger gegen Monster generiert, erhöht wird.",
-    "iconName": "inv_scroll_06"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20729,
-    "name": "Formel: Handschuhe - Feuermacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Feuermacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Feuerschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20728,
-    "name": "Formel: Handschuhe - Frostmacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Frostmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Frostschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20730,
-    "name": "Formel: Handschuhe - Heilkraft",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Heilkraft | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Heilung von Zaubern und Fähigkeiten um 30 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20727,
-    "name": "Formel: Handschuhe - Schattenmacht",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Schattenmacht | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass der Schattenschaden von Zaubern und Fähigkeiten um 20 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20731,
-    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird."
-    ],
-    "tooltip": "Formel: Handschuhe - Überragende Beweglichkeit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man Handschuhe dauerhaft so verzaubert, dass die Beweglichkeit um 15 erhöht wird.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20736,
-    "name": "Formel: Umhang - Ausweichen",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht."
-    ],
-    "tooltip": "Formel: Umhang - Ausweichen | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Ausweichchance um 1% erhöht.",
-    "iconName": "inv_misc_note_01"
-  },
-  {
-    "raid": "MC",
-    "boss": "Twin Emperors",
-    "itemId": 20735,
-    "name": "Formel: Umhang - Feingefühl",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert."
-    ],
-    "tooltip": "Formel: Umhang - Feingefühl | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Bedrohung gegenüber Monstern um 2% verringert.",
-    "iconName": "inv_scroll_06"
-  },
-  {
-    "raid": "MC",
-    "boss": "Ahn'Qiraj enchants",
-    "itemId": 20734,
-    "name": "Formel: Umhang - Verstohlenheit",
-    "slot": "",
-    "type": "Verzauberkunst",
-    "quality": "Selten",
-    "icon": "134327",
-    "dropChance": "",
-    "statsText": "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
-    "stats": [
-      "Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht."
-    ],
-    "tooltip": "Formel: Umhang - Verstohlenheit | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man einen Umhang dauerhaft so verzaubert, dass er die Verstohlenheit erhöht.",
-    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "MC",
@@ -2344,24 +2146,6 @@
   },
   {
     "raid": "MC",
-    "boss": "Broodlord Lashlayer",
-    "itemId": 19341,
-    "name": "Lebensspendender Edelstein",
-    "slot": "Schmuck",
-    "type": "Verschiedenes",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Klassen: Krieger | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
-    "stats": [
-      "Klassen: Krieger",
-      "Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)"
-    ],
-    "tooltip": "Lebensspendender Edelstein | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Krieger | Benötigt Stufe 60 | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
-    "iconName": "inv_misc_gem_pearl_05"
-  },
-  {
-    "raid": "MC",
     "boss": "Golemagg the Incinerator",
     "itemId": 17103,
     "name": "Magierklinge des Azurlieds",
@@ -2400,24 +2184,6 @@
     ],
     "tooltip": "Magmagehärtete Stiefel | Wird beim Aufheben gebunden | Füße Platte | 544 Rüstung | +19 Ausdauer | +18 Intelligenz | +12 Willenskraft | +8 Feuerwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 18.",
     "iconName": "inv_boots_plate_08"
-  },
-  {
-    "raid": "MC",
-    "boss": "Broodlord Lashlayer",
-    "itemId": 19351,
-    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
-    "slot": "Einhändig",
-    "type": "Einhandschwerter",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "stats": [
-      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
-      "Anlegen: Schwerter +4."
-    ],
-    "tooltip": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 86 - 162 Schaden Tempo 2,20 | (56.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "iconName": "inv_sword_49"
   },
   {
     "raid": "MC",
@@ -3563,53 +3329,6 @@
     ],
     "tooltip": "Stulpen der Macht | Wird beim Aufheben gebunden | Hände Platte | 468 Rüstung | +22 Stärke | +17 Ausdauer | +7 Feuerwiderstand | Klassen: Krieger | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Verteidigung +5. |   | Schlachtrüstung der Macht (0/8) |   Gürtel der Macht |   Armschienen der Macht |   Brustplatte der Macht |   Stulpen der Macht |   Helm der Macht |   Beinplatten der Macht |   Schulterstücke der Macht |   Sabatons der Macht |   | (3) Set: Erhöht den Blockwert Eures Schildes um 30. | (5) Set: Gewährt Euch eine Chance von 20%, einen zusätzlichen Wutpunkt zu generieren, wenn Euch Nahkampfschaden zugefügt wird. | (8) Set: Erhöht die von Euren Zaubern 'Rüstung zerreißen' verursachte Bedrohung um 15%.",
     "iconName": "inv_gauntlets_10"
-  },
-  {
-    "raid": "MC",
-    "boss": "Firemaw / Ebonroc / Flamegor",
-    "itemId": 16899,
-    "name": "Sturmgrimms Handschützer",
-    "slot": "Hände",
-    "type": "Leder",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "+13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
-    "stats": [
-      "+13 Ausdauer",
-      "+19 Intelligenz",
-      "+15 Willenskraft",
-      "+10 Schattenwiderstand",
-      "Klassen: Druide",
-      "Benötigt Stufe 60",
-      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42."
-    ],
-    "tooltip": "Sturmgrimms Handschützer | Wird beim Aufheben gebunden | Hände Leder | 140 Rüstung | +13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
-    "iconName": "inv_gauntlets_25"
-  },
-  {
-    "raid": "MC",
-    "boss": "Chromaggus",
-    "itemId": 16902,
-    "name": "Sturmgrimms Schulterstücke",
-    "slot": "Schulter",
-    "type": "Leder",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "+14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
-    "stats": [
-      "+14 Ausdauer",
-      "+21 Intelligenz",
-      "+10 Willenskraft",
-      "+10 Feuerwiderstand",
-      "Klassen: Druide",
-      "Benötigt Stufe 60",
-      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29.",
-      "Stellt alle 5 Sek. 4 Mana wieder her."
-    ],
-    "tooltip": "Sturmgrimms Schulterstücke | Wird beim Aufheben gebunden | Schulter Leder | 169 Rüstung | +14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
-    "iconName": "inv_shoulder_07"
   },
   {
     "raid": "MC",
