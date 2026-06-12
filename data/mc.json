@@ -2162,7 +2162,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40."
     ],
     "tooltip": "Magierklinge des Azurlieds | Wird beim Aufheben gebunden | Waffenhand Schwert | 64 - 140 Schaden Tempo 2,40 | (42.5 Schaden pro Sekunde) | +7 Ausdauer | +12 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40.",
-    "iconName": "inv_gizmo_02"
+    "iconName": "inv_sword_39"
   },
   {
     "raid": "MC",
@@ -2545,7 +2545,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33."
     ],
     "tooltip": "Ring der Zauberkraft | Wird beim Aufheben gebunden | Finger | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 33.",
-    "iconName": "inv_jewelry_ring_19"
+    "iconName": "inv_jewelry_ring_38"
   },
   {
     "raid": "MC",
@@ -2636,7 +2636,7 @@
       "(8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%."
     ],
     "tooltip": "Roben des Arkanisten | Wird beim Aufheben gebunden | Brust Stoff | 102 Rüstung | +19 Ausdauer | +25 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. |   | Ornat des Arkanisten (0/8) |   Gürtel des Arkanisten |   Bindungen des Arkanisten |   Krone des Arkanisten |   Stiefel des Arkanisten |   Handschuhe des Arkanisten |   Gamaschen des Arkanisten |   Mantel des Arkanisten |   Roben des Arkanisten |   | (3) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18. | (5) Set: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | (8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%.",
-    "iconName": "inv_staff_12"
+    "iconName": "inv_chest_cloth_03"
   },
   {
     "raid": "MC",
@@ -2751,7 +2751,7 @@
       "Anlegen: Zweihandschwerter +8."
     ],
     "tooltip": "Scharfkantige Obsidianklinge | Wird beim Aufheben gebunden | Zweihändig Schwert | 176 - 264 Schaden Tempo 3,40 | (64.7 Schaden pro Sekunde) | +42 Stärke | Benötigt Stufe 60 | Anlegen: Zweihandschwerter +8.",
-    "iconName": "inv_sword_56"
+    "iconName": "inv_sword_28"
   },
   {
     "raid": "MC",
@@ -2788,7 +2788,7 @@
       "Benutzen: Transformiert Schattenschlag zu Donnerschlag."
     ],
     "tooltip": "Schattenschlag | Wird beim Aufheben gebunden | Zweihändig Stangenwaffe | 147 - 221 Schaden Tempo 3,10 | (59.4 Schaden pro Sekunde) | Benötigt Stufe 58 | Trefferchance: Stiehlt dem feindlichen Ziel 100 bis 180 Punkt(e) Leben. | Benutzen: Transformiert Schattenschlag zu Donnerschlag.",
-    "iconName": "spell_fire_fire"
+    "iconName": "inv_spear_08"
   },
   {
     "raid": "MC",
@@ -2994,7 +2994,7 @@
       "Anlegen: Verteidigung +5."
     ],
     "tooltip": "Schwerer Dunkeleisenring | Wird beim Aufheben gebunden | Einzigartig | Finger | 110 Rüstung | +20 Ausdauer | Benötigt Stufe 60 | Anlegen: Verteidigung +5.",
-    "iconName": "inv_jewelry_ring_01"
+    "iconName": "inv_jewelry_ring_14"
   },
   {
     "raid": "MC",
@@ -3034,7 +3034,7 @@
       "Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Siegel des Erzmagiers | Wird beim Aufheben gebunden | Einzigartig | Finger | +11 Ausdauer | +11 Intelligenz | +11 Willenskraft | +6 Arkanwiderstand | +6 Feuerwiderstand | +6 Naturwiderstand | +6 Frostwiderstand | +6 Schattenwiderstand | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her.",
-    "iconName": "inv_jewelry_ring_27"
+    "iconName": "inv_jewelry_ring_21"
   },
   {
     "raid": "MC",
@@ -3073,7 +3073,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40."
     ],
     "tooltip": "Stab der Dominanz | Wird beim Aufheben gebunden | Zweihändig Stab | 126 - 205 Schaden Tempo 2,90 | (57.1 Schaden pro Sekunde) | +16 Ausdauer | +37 Intelligenz | +14 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 40.",
-    "iconName": "inv_misc_book_09"
+    "iconName": "inv_staff_13"
   },
   {
     "raid": "MC",
@@ -3343,7 +3343,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Sulfuronblock",
-    "iconName": "inv_hammer_unique_sulfuras"
+    "iconName": "spell_fire_sealoffire"
   },
   {
     "raid": "MC",
@@ -3360,7 +3360,7 @@
       "Benutzen: Erhöht durch magische Zauber und magische Effekte zugefügten Schaden und Heilung 15 Sek. lang um bis zu 175 Punkt(e). (1 Min. 30 Sek. Abklingzeit)"
     ],
     "tooltip": "Talisman der ephemeren Macht | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Benutzen: Erhöht durch magische Zauber und magische Effekte zugefügten Schaden und Heilung 15 Sek. lang um bis zu 175 Punkt(e). (1 Min. 30 Sek. Abklingzeit)",
-    "iconName": "inv_jewelry_necklace_11"
+    "iconName": "inv_misc_stonetablet_11"
   },
   {
     "raid": "MC",
@@ -3599,7 +3599,7 @@
       "Anlegen: Stellt alle 5 Sek. 9 Punkt(e) Mana wieder her."
     ],
     "tooltip": "Überwärmter Isolierlavagreifer | Wird beim Aufheben gebunden | Zweihändig Streitkolben | 155 - 234 Schaden Tempo 2,90 | (67.1 Schaden pro Sekunde) | +25 Ausdauer | +24 Intelligenz | +15 Feuerwiderstand | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 9 Punkt(e) Mana wieder her. | 'Eigentum von Pip Quickwit, Großmeister Abenteurer'",
-    "iconName": "inv_shield_13"
+    "iconName": "inv_gizmo_02"
   },
   {
     "raid": "MC",
@@ -3619,7 +3619,7 @@
       "+6 Naturwiderstand"
     ],
     "tooltip": "Umhang der verhüllten Nebel | Wird beim Aufheben gebunden | Rücken | 57 Rüstung | +22 Beweglichkeit | +12 Ausdauer | +6 Feuerwiderstand | +6 Naturwiderstand | Benötigt Stufe 60",
-    "iconName": "inv_misc_cape_18"
+    "iconName": "inv_misc_cape_17"
   },
   {
     "raid": "MC",
@@ -3680,7 +3680,7 @@
       "Klassen: Jäger"
     ],
     "tooltip": "Uraltes versteinertes Blatt | Wird beim Aufheben gebunden | Einzigartig | Dieser Gegenstand startet eine Quest. | Klassen: Jäger | Benötigt Stufe 60 | 'Ein sehr großes versteinertes Blatt.'",
-    "iconName": "inv_misc_quiver_03"
+    "iconName": "spell_nature_resistnature"
   },
   {
     "raid": "MC",
