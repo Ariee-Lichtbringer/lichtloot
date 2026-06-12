@@ -41,7 +41,7 @@
       "(8) Set: Heilt den Schurken für 500 wenn 'Verschwinden' angewandt wird."
     ],
     "tooltip": "Armreifen des Nachtmeuchlers | Wird beim Anlegen gebunden | Handgelenke Leder | 88 Rüstung | +20 Beweglichkeit | +15 Ausdauer | Klassen: Schurke | Benötigt Stufe 60 |   | Der Nachtmeuchler (0/8) |   Gürtel des Nachtmeuchlers |   Stiefel des Nachtmeuchlers |   Armreifen des Nachtmeuchlers |   Brustharnisch des Nachtmeuchlers |   Kopfschutz des Nachtmeuchlers |   Handschuhe des Nachtmeuchlers |   Hose des Nachtmeuchlers |   Schulterklappen des Nachtmeuchlers |   | (3) Set: Verringert die Abklingzeit Eurer Fähigkeit 'Verschwinden' um 30 Sek. | (5) Set: Erhöht Eure maximale Energie um 10. | (8) Set: Heilt den Schurken für 500 wenn 'Verschwinden' angewandt wird.",
-    "iconName": ""
+    "iconName": "inv_bracer_02"
   },
   {
     "raid": "MC",
@@ -91,7 +91,7 @@
       "(8) Set: Gibt dem Paladin eine Chance, Eure Gruppe bei jedem Nahkampftreffer um 189 bis 211 zu heilen."
     ],
     "tooltip": "Armschienen der Gerechtigkeit | Wird beim Anlegen gebunden | Handgelenke Platte | 328 Rüstung | +10 Stärke | +11 Ausdauer | +8 Intelligenz | +11 Willenskraft | Klassen: Paladin | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her. |   | Rüstung der Gerechtigkeit (0/8) |   Gürtel der Gerechtigkeit |   Stiefel der Gerechtigkeit |   Armschienen der Gerechtigkeit |   Brustschutz der Gerechtigkeit |   Stulpen der Gerechtigkeit |   Helm der Gerechtigkeit |   Beinplatten der Gerechtigkeit |   Schiftung der Gerechtigkeit |   | (3) Set: Erhöht die Chance eine 'Richturteil des Lichts'Heilung auszulösen um 10%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | (8) Set: Gibt dem Paladin eine Chance, Eure Gruppe bei jedem Nahkampftreffer um 189 bis 211 zu heilen.",
-    "iconName": ""
+    "iconName": "inv_bracer_18"
   },
   {
     "raid": "MC",
@@ -321,7 +321,7 @@
     "slot": "Beine",
     "type": "Platte",
     "quality": "Episch",
-    "icon": "134584",
+    "icon": "inv_pants_04",
     "dropChance": "Sep 95",
     "statsText": "+7 Stärke | +24 Ausdauer | +18 Intelligenz | +18 Willenskraft | +10 Schattenwiderstand | Klassen: Paladin | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 22. | (3) Set: Erhöht die Chance eine 'Richturteil des Lichts'Heilung auszulösen um 10%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | (8) Set: Gibt dem Paladin eine Chance, Eure Gruppe bei jedem Nahkampftreffer um 189 bis 211 zu heilen.",
     "stats": [
@@ -839,7 +839,7 @@
     "raid": "MC",
     "boss": "T1_SET",
     "itemId": 205,
-    "name": "Druid",
+    "name": "Kaese",
     "slot": "",
     "type": "",
     "quality": "",
@@ -986,7 +986,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Feuerkern",
-    "iconName": "inv_sword_39"
+    "iconName": "spell_fire_flamebolt"
   },
   {
     "raid": "MC",
@@ -2216,7 +2216,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Kernleder",
-    "iconName": "inv_fabric_felrag"
+    "iconName": "inv_ammo_firetar"
   },
   {
     "raid": "MC",
