@@ -19,7 +19,7 @@
       "Anlegen: Dolche +5."
     ],
     "tooltip": "Alte Kernlederhandschuhe | Wird beim Aufheben gebunden | Hände Leder | 130 Rüstung | +15 Stärke | +15 Ausdauer | +8 Feuerwiderstand | +5 Schattenwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: Dolche +5.",
-    "iconName": "inv_gauntlets_19"
+    "iconName": "inv_gauntlets_23"
   },
   {
     "raid": "MC",
@@ -198,7 +198,7 @@
       "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 25."
     ],
     "tooltip": "Aurastein-Hammer | Wird beim Aufheben gebunden | Einhändig Streitkolben | 78 - 162 Schaden Tempo 2,70 | (44.4 Schaden pro Sekunde) | +10 Ausdauer | +10 Intelligenz | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 5 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 25.",
-    "iconName": "inv_misc_book_07"
+    "iconName": "inv_hammer_05"
   },
   {
     "raid": "MC",
@@ -236,7 +236,7 @@
       "Anlegen: Verbessert Eure Trefferchance um 2%."
     ],
     "tooltip": "Band von Accuria | Wird beim Aufheben gebunden | Einzigartig | Finger | +16 Beweglichkeit | +10 Ausdauer | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 2%.",
-    "iconName": "inv_helmet_36"
+    "iconName": "inv_jewelry_ring_15"
   },
   {
     "raid": "MC",
@@ -255,7 +255,7 @@
       "+10 Willenskraft"
     ],
     "tooltip": "Band von Sulfuras | Wird beim Aufheben gebunden | Einzigartig | Finger | +13 Ausdauer | +23 Intelligenz | +10 Willenskraft | Benötigt Stufe 60",
-    "iconName": "inv_staff_13"
+    "iconName": "inv_jewelry_ring_36"
   },
   {
     "raid": "MC",
@@ -569,7 +569,7 @@
       "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
     ],
     "tooltip": "Blasterwerfer | Wird beim Aufheben gebunden | Distanz Schusswaffe | 73 - 136 Schaden Tempo 2,60 | (40.2 Schaden pro Sekunde) | +6 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
-    "iconName": "inv_weapon_crossbow_07"
+    "iconName": "inv_weapon_rifle_09"
   },
   {
     "raid": "MC",
@@ -788,7 +788,7 @@
       "Anlegen: Erhöht den Blockwert Eures Schildes um 23."
     ],
     "tooltip": "Drillbohrer-Scheibe | Wird beim Aufheben gebunden | Schildhand Schild | 2539 Rüstung | 46 Blocken | +10 Ausdauer | Benötigt Stufe 60 | Anlegen: Bei einem Treffer im Kampf erleidet der Angreifer 3 Punkt(e) Arkanschaden. | Anlegen: Erhöht Eure Chance, Angriffe mit einem Schild zu blocken, um 2%. | Anlegen: Erhöht den Blockwert Eures Schildes um 23.",
-    "iconName": "inv_jewelry_ring_05"
+    "iconName": "inv_shield_10"
   },
   {
     "raid": "MC",
@@ -821,7 +821,7 @@
       "Anlegen: +22 Angriffskraft."
     ],
     "tooltip": "Erderschütterer | Wird beim Aufheben gebunden | Zweihändig Streitkolben | 175 - 263 Schaden Tempo 3,50 | (62.6 Schaden pro Sekunde) | Benötigt Stufe 60 | Trefferchance: Wirft 3 Sek. lang alle in der Nähe befindlichen Feinde zu Boden. | Anlegen: +22 Angriffskraft.",
-    "iconName": "inv_mace_13"
+    "iconName": "inv_hammer_04"
   },
   {
     "raid": "MC",
@@ -906,7 +906,7 @@
       "Klassen: Krieger, Paladin, Jäger, Schurke"
     ],
     "tooltip": "Fesseln des Windsuchers | Wird beim Aufheben gebunden | Einzigartig | Klassen: Krieger, Paladin, Jäger, Schurke | 'Die linke Hälfte von Donneraans ewigem Gefängnis'",
-    "iconName": "inv_sword_39"
+    "iconName": "spell_ice_lament"
   },
   {
     "raid": "MC",
@@ -981,7 +981,7 @@
       "Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%."
     ],
     "tooltip": "Feuerschuppenbeinplatten | Wird beim Aufheben gebunden | Beine Platte | 748 Rüstung | +18 Stärke | +22 Ausdauer | +11 Feuerwiderstand | +11 Schattenwiderstand | Benötigt Stufe 56 | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%.",
-    "iconName": "inv_pants_plate_05"
+    "iconName": "inv_pants_04"
   },
   {
     "raid": "MC",
@@ -1051,7 +1051,7 @@
       "Benutzen: Lehrt Euch, wie man eine Waffe dauerhaft so verzaubert, dass sie die Heilwirkung von Heilzaubern um bis zu 55 Punkte erhöht."
     ],
     "tooltip": "Formel: Waffe - Heilkraft | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man eine Waffe dauerhaft so verzaubert, dass sie die Heilwirkung von Heilzaubern um bis zu 55 Punkte erhöht.",
-    "iconName": "inv_hammer_07"
+    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "MC",
@@ -1068,7 +1068,7 @@
       "Benutzen: Lehrt Euch, wie man eine Waffe dauerhaft so verzaubert, dass sie den Schaden von Zaubersprüchen um bis zu 30 Punkte erhöht."
     ],
     "tooltip": "Formel: Waffe - Zauberkraft | Wird beim Aufheben gebunden | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man eine Waffe dauerhaft so verzaubert, dass sie den Schaden von Zaubersprüchen um bis zu 30 Punkte erhöht.",
-    "iconName": "inv_potion_105"
+    "iconName": "inv_misc_note_01"
   },
   {
     "raid": "MC",
@@ -1121,7 +1121,7 @@
       "(8) Set: Verringert die von Euren Zerstörungszaubern verursachte Bedrohung um 20%."
     ],
     "tooltip": "Gamaschen der Nemesis | Wird beim Aufheben gebunden | Beine Stoff | 101 Rüstung | +23 Ausdauer | +16 Intelligenz | +4 Willenskraft | +10 Arkanwiderstand | +10 Feuerwiderstand | Klassen: Hexenmeister | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 39. |   | Roben der Nemesis (0/8) |   Gürtel der Nemesis |   Stiefel der Nemesis |   Armschienen der Nemesis |   Handschuhe der Nemesis |   Gamaschen der Nemesis |   Roben der Nemesis |   Schädelkappe der Nemesis |   Schiftung der Nemesis |   | (3) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. | (5) Set: Euer Begleiter erhält 20 Ausdauer und 130 Zauberwiderstand gegen alle Arten von Magie. | (8) Set: Verringert die von Euren Zerstörungszaubern verursachte Bedrohung um 20%.",
-    "iconName": "inv_jewelry_talisman_12"
+    "iconName": "inv_pants_07"
   },
   {
     "raid": "MC",
@@ -1554,7 +1554,7 @@
       "+8 Ausdauer"
     ],
     "tooltip": "Handgelenksschutz der Stabilität | Wird beim Aufheben gebunden | Handgelenke Leder | 86 Rüstung | +24 Stärke | +8 Ausdauer | Benötigt Stufe 60",
-    "iconName": "inv_bracer_04"
+    "iconName": "inv_jewelry_amulet_05"
   },
   {
     "raid": "MC",
@@ -1574,7 +1574,7 @@
       "Anlegen: Verbessert Eure Trefferchance um 1%."
     ],
     "tooltip": "Handgelenksschutz des wahren Flugs | Wird beim Aufheben gebunden | Handgelenke Schwere Rüstung | 198 Rüstung | +19 Beweglichkeit | +11 Ausdauer | +6 Intelligenz | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%.",
-    "iconName": "inv_bracer_07"
+    "iconName": "inv_bracer_02"
   },
   {
     "raid": "MC",
@@ -2054,7 +2054,7 @@
       "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
     ],
     "tooltip": "Knochenhäschers Schneide | Wird beim Aufheben gebunden | Zweihändig Schwert | 206 - 310 Schaden Tempo 3,40 | (75.9 Schaden pro Sekunde) | +16 Ausdauer | Benötigt Stufe 60 | Trefferchance: Eure Angriffe ignorieren 10 Sek. lang 700 Rüstung Eures Gegners. Bis zu 3 mal stapelbar. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
-    "iconName": "ability_warrior_sunder"
+    "iconName": "inv_sword_12"
   },
   {
     "raid": "MC",
@@ -2127,7 +2127,7 @@
       "(8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%."
     ],
     "tooltip": "Krone des Arkanisten | Wird beim Aufheben gebunden | Kopf Stoff | 83 Rüstung | +16 Ausdauer | +27 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. |   | Ornat des Arkanisten (0/8) |   Gürtel des Arkanisten |   Bindungen des Arkanisten |   Krone des Arkanisten |   Stiefel des Arkanisten |   Handschuhe des Arkanisten |   Gamaschen des Arkanisten |   Mantel des Arkanisten |   Roben des Arkanisten |   | (3) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18. | (5) Set: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | (8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%.",
-    "iconName": "inv_helmet_59"
+    "iconName": "inv_helmet_53"
   },
   {
     "raid": "MC",
