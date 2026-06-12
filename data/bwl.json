@@ -17,6 +17,21 @@
     "tooltip": "Aegis der Bewahrung | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Priester | Benötigt Stufe 60 | Benutzen: Erhöht 20 Sek. lang die Rüstung um 500 und heilt jedesmal bei erlittenem Distanz- oder Nahkampfschaden 35 Schaden. (5 Min. Abklingzeit)",
     "iconName": "spell_holy_blessingofprotection"
   },
+    {
+    "raid": "BWL",
+    "boss": "T1_SET",
+    "itemId": 205,
+    "name": "Kaese",
+    "slot": "",
+    "type": "",
+    "quality": "",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "",
+    "iconName": "inv_misc_food_37"
+  },
   {
     "raid": "BWL",
     "boss": "Chromaggus",
