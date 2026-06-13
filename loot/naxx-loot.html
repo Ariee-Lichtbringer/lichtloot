@@ -3220,7 +3220,7 @@ function loadP0PlusFromSheet(){
     script.src =
       P0PLUS_API_URL +
       "?action=getP0Plus" +
-      "&raid=aq40" +
+      "&raid=" + encodeURIComponent(RAID_NAME) +
       "&callback=" + callbackName +
       "&t=" + Date.now();
 
@@ -3923,15 +3923,14 @@ var RAID_API_URL = APPS_SCRIPT_URL;
 var lootDataByRaid = {};
 window.lootDataByRaid = lootDataByRaid;
 window.p0plusEntries = window.p0plusEntries || [];
-    if(typeof renderLootList === 'function') renderLootList(); // refresh after P0+ load
-var LOOT_CSV_URLS = {
-  mc:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_MC",
-  bwl:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL",
-  aq40:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40",
-  naxx:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX",
-  zg:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG",
-  aq20:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20",
-  ony:"https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ONY"
+var LOOT_JSON_URLS = {
+  mc:"../data/mc.json",
+  bwl:"../data/bwl.json",
+  aq40:"../data/aq40.json",
+  naxx:"../data/naxx.json",
+  zg:"../data/zg.json",
+  aq20:"../data/aq20.json",
+  ony:"../data/ony.json"
 };
 
 function togglePlayerPin(){
