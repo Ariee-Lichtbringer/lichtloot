@@ -38,6 +38,25 @@
   "iconName": "inv_gauntlets_10"
 },
   {
+  "raid": "",
+  "boss": "",
+  "itemId": 12363,
+  "name": "Arkankristall",
+  "slot": "",
+  "type": "Handwerksware",
+  "quality": "Ungewöhnlich",
+  "icon": "134096",
+  "dropChance": "",
+  "statsText": "Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
+  "stats": [
+    "Gegenstandsstufe 60",
+    "Maximaler Stapel: 20",
+    "Verkaufspreis: 20 Silber"
+  ],
+  "tooltip": "Arkankristall | Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
+  "iconName": "inv_misc_gem_topaz_01"
+}
+  {
     "raid": "ZG",
     "boss": "High Priestess Arlokk",
     "itemId": 19910,
