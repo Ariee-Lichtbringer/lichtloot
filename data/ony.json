@@ -40,7 +40,7 @@
   ],
   "tooltip": "Bedeckung des Stormrage | Wird beim Aufheben gebunden | Kopf Leder | 183 Rüstung | +20 Ausdauer | +31 Intelligenz | +12 Willenskraft | +10 Frostwiderstand | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. |   | Gewänder des Stormrage (0/8) |   Gürtel des Stormrage |   Stiefel des Stormrage |   Armschienen des Stormrage |   Brustschutz des Stormrage |   Bedeckung des Stormrage |   Handschützer des Stormrage |   Beinschützer des Stormrage |   Schulterstücke des Stormrage |   | (3) Set: Ermöglicht, dass 15% Eurer Manaregeneration während des Zauberwirkens weiterläuft. | (5) Set: Verringert die Zauberzeit Eures Zaubers 'Nachwachsen' um 0.2 Sekunden. | (8) Set: Erhöht die Dauer Eures Zaubers 'Verjüngung' um 3 Sek.",
   "iconName": "inv_helmet_09"
-}
+},
   {
     "raid": "ONY",
     "boss": "Onyxia",
