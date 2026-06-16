@@ -74,6 +74,23 @@
     "tooltip": "Amulett von Vek'nilash | Wird beim Aufheben gebunden | Hals | +9 Ausdauer | +5 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 27. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
     "iconName": "inv_jewelry_necklace_ahnqiraj_01"
   },
+    {
+    "raid": "AQ40",
+    "boss": "Trash",
+    "itemId": 5760,
+    "name": "Eterniumschließkassette",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Gewöhnlich",
+    "icon": "134344",
+    "dropChance": "",
+    "statsText": "Preiset Cutiepie",
+    "stats": [
+      "Preiset Cutiepie"
+    ],
+    "tooltip": "Verschlossen; Benötigt Schlossknacken (225)",
+    "iconName": "Inv_misc_ornatebox"
+  },
   {
     "raid": "AQ40",
     "boss": "Bug Trio",
