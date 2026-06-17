@@ -1,0 +1,73 @@
+[
+  {
+    "raid": "ONY",
+    "boss": "Quest / Kopf von Onyxia",
+    "itemId": 18403,
+    "name": "Drachentötersignet",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "sf_startpt",
+    "dropChance": "Questbelohnung",
+    "statsText": "Finger | +12 Ausdauer | +12 Intelligenz | +6 Willenskraft | +10 Feuerwiderstand | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
+    "stats": [
+      "Finger",
+      "+12 Ausdauer",
+      "+12 Intelligenz",
+      "+6 Willenskraft",
+      "+10 Feuerwiderstand",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
+    ],
+    "tooltip": "Drachentötersignet | Gegenstandsstufe 74 | Wird beim Aufheben gebunden | Finger | +12 Ausdauer | +12 Intelligenz | +6 Willenskraft | +10 Feuerwiderstand | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Verkaufspreis: 4 90 60",
+    "iconName": "sf_startpt",
+    "tokenGroup": "ONY:Onyxia Head",
+    "tokenName": "Kopf von Onyxia"
+  },
+  {
+    "raid": "ONY",
+    "boss": "Quest / Kopf von Onyxia",
+    "itemId": 18404,
+    "name": "Zahn Onyxias",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "sf_startpt",
+    "dropChance": "Questbelohnung",
+    "statsText": "Hals | +12 Beweglichkeit | +9 Ausdauer | +10 Feuerwiderstand | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    "stats": [
+      "Hals",
+      "+12 Beweglichkeit",
+      "+9 Ausdauer",
+      "+10 Feuerwiderstand",
+      "Anlegen: Verbessert Eure Trefferchance um 1%.",
+      "Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%."
+    ],
+    "tooltip": "Zahn Onyxias | Gegenstandsstufe 74 | Wird beim Aufheben gebunden | Hals | +12 Beweglichkeit | +9 Ausdauer | +10 Feuerwiderstand | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Verkaufspreis: 67 14",
+    "iconName": "sf_startpt",
+    "tokenGroup": "ONY:Onyxia Head",
+    "tokenName": "Kopf von Onyxia"
+  },
+  {
+    "raid": "ONY",
+    "boss": "Quest / Kopf von Onyxia",
+    "itemId": 18406,
+    "name": "Talisman mit Onyxiablut",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "sf_startpt",
+    "dropChance": "Questbelohnung",
+    "statsText": "Schmuck | +15 Feuerwiderstand | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Verteidigung +8. | Anlegen: Stellt alle 5 Sek. 7 Gesundheit wieder her.",
+    "stats": [
+      "Schmuck",
+      "+15 Feuerwiderstand",
+      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
+      "Anlegen: Verteidigung +8.",
+      "Anlegen: Stellt alle 5 Sek. 7 Gesundheit wieder her."
+    ],
+    "tooltip": "Talisman mit Onyxiablut | Gegenstandsstufe 74 | Wird beim Aufheben gebunden | Schmuck | +15 Feuerwiderstand | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Verteidigung +8. | Anlegen: Stellt alle 5 Sek. 7 Gesundheit wieder her. | Verkaufspreis: 4 60 30",
+    "iconName": "sf_startpt",
+    "tokenGroup": "ONY:Onyxia Head",
+    "tokenName": "Kopf von Onyxia"
+  }
+]
