@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LichtLoot - Gildenleitung</title>
+<style>
+:root{
+  --gold:#facc15;
+  --bg:#050914;
+  --panel:rgba(10,15,28,.88);
+  --panel2:rgba(13,20,36,.92);
+  --line:rgba(250,204,21,.22);
+  --soft:rgba(148,163,184,.18);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+  --blue:#60a5fa;
+  --green:#22c55e;
+  --red:#ef4444;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:
+    linear-gradient(rgba(5,9,20,.88), rgba(5,9,20,.94)),
+    radial-gradient(circle at 50% 0%, rgba(250,204,21,.14), transparent 36%),
+    var(--bg);
+}
+
+button,input,select{font:inherit}
+
+.shell{
+  width:min(1500px, calc(100vw - 40px));
+  margin:0 auto;
+  padding:28px 0 42px;
+}
+
+.topbar{
+  border:1px solid var(--line);
+  border-radius:22px;
+  background:rgba(8,13,25,.78);
+  padding:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.brand{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.brand h1{
+  margin:0;
+  color:var(--gold);
+  font-size:clamp(30px, 4vw, 54px);
+  line-height:1;
+  letter-spacing:0;
+}
+
+.brand p{
+  margin:0;
+  color:var(--muted);
+  font-weight:700;
+}
+
+.nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn,
+.icon-btn{
+  border:1px solid rgba(250,204,21,.38);
+  background:linear-gradient(135deg, rgba(250,204,21,.28), rgba(96,165,250,.16));
+  color:white;
+  font-weight:900;
+  border-radius:12px;
+  min-height:42px;
+  padding:10px 16px;
+  cursor:pointer;
+}
+
+.btn:hover,
+.icon-btn:hover{border-color:rgba(250,204,21,.75)}
+
+.btn.danger{
+  border-color:rgba(239,68,68,.75);
+  background:rgba(127,29,29,.45);
+}
+
+.btn.ghost{
+  background:rgba(15,23,42,.72);
+  border-color:rgba(148,163,184,.3);
+}
+
+.panel{
+  margin-top:18px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:var(--panel);
+  padding:18px;
+}
+
+.unlock{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:12px;
+  align-items:end;
+}
+
+.field label{
+  display:block;
+  color:var(--gold);
+  text-transform:uppercase;
+  font-size:12px;
+  font-weight:900;
+  margin-bottom:7px;
+}
+
+input,
+select{
+  width:100%;
+  min-height:44px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(15,23,42,.82);
+  color:white;
+  padding:10px 12px;
+  outline:none;
+  font-weight:800;
+}
+
+input:focus,
+select:focus{border-color:rgba(250,204,21,.7)}
+
+.status{
+  min-height:44px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(2,6,23,.55);
+  border-radius:12px;
+  padding:12px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.status.good{color:#bbf7d0;border-color:rgba(34,197,94,.45)}
+.status.bad{color:#fecaca;border-color:rgba(239,68,68,.45)}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(160px, 1fr));
+  gap:12px;
+  margin-top:18px;
+}
+
+.metric{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:14px;
+  background:rgba(2,6,23,.48);
+  padding:14px;
+}
+
+.metric span{
+  display:block;
+  color:var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+.metric strong{
+  display:block;
+  margin-top:5px;
+  font-size:30px;
+  color:var(--gold);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:18px;
+  align-items:start;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.section-head h2{
+  margin:0;
+  color:var(--gold);
+  font-size:24px;
+}
+
+.tools{
+  display:grid;
+  grid-template-columns:1fr 180px;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:14px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:860px;
+}
+
+th,
+td{
+  padding:11px 12px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+  text-align:left;
+  vertical-align:middle;
+}
+
+th{
+  position:sticky;
+  top:0;
+  background:#081020;
+  color:var(--gold);
+  text-transform:uppercase;
+  font-size:12px;
+  z-index:1;
+}
+
+tr:hover td{background:rgba(250,204,21,.04)}
+
+.pin{
+  color:#bfdbfe;
+  font-weight:900;
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+.muted{color:var(--muted)}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:3px 9px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(15,23,42,.72);
+  color:#e2e8f0;
+  font-size:12px;
+  font-weight:900;
+}
+
+.badge.open{border-color:rgba(34,197,94,.55);color:#bbf7d0}
+.badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
+.badge.warn{border-color:rgba(250,204,21,.5);color:#fde68a}
+
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.small-btn{
+  min-height:34px;
+  padding:7px 10px;
+  border-radius:10px;
+  border:1px solid rgba(250,204,21,.32);
+  background:rgba(250,204,21,.16);
+  color:white;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.small-btn.danger{
+  border-color:rgba(239,68,68,.55);
+  background:rgba(127,29,29,.38);
+}
+
+.reset-card{
+  border:1px solid rgba(96,165,250,.28);
+  background:rgba(15,23,42,.62);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.reset-card h3{
+  margin:0 0 8px;
+  color:var(--gold);
+}
+
+.new-pin{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(96,165,250,.45);
+  color:#bfdbfe;
+  font-size:24px;
+  font-weight:900;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(7px);
+}
+
+.modal.hidden{display:none}
+
+.modal-box{
+  width:min(1180px, calc(100vw - 32px));
+  max-height:min(860px, calc(100vh - 34px));
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(5,9,20,.96);
+}
+
+.modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:18px;
+  border-bottom:1px solid rgba(148,163,184,.18);
+}
+
+.modal-title h2{
+  margin:0;
+  color:var(--gold);
+  font-size:26px;
+}
+
+.modal-title p{
+  margin:5px 0 0;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.modal-content{
+  padding:18px;
+  overflow:auto;
+}
+
+.prio-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+@media (max-width:1000px){
+  .unlock,
+  .grid,
+  .tools,
+  .summary,
+  .prio-actions{grid-template-columns:1fr}
+  .topbar{align-items:flex-start}
+  .nav{width:100%}
+  .btn{flex:1}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Gildenleitung</h1>
+      <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
+    </div>
+    <nav class="nav" aria-label="Navigation">
+      <button class="btn ghost" type="button" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn ghost" type="button" onclick="location.href='raidlead-panel.html'">Raidlead</button>
+      <button class="btn" type="button" onclick="loadOverview()">Aktualisieren</button>
+    </nav>
+  </header>
+
+  <section class="panel">
+    <div class="unlock">
+      <div class="field">
+        <label for="masterCode">Master-Code</label>
+        <input id="masterCode" type="password" placeholder="Master-Code eingeben" autocomplete="current-password" onkeydown="enterLoads(event)">
+      </div>
+      <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
+      <button class="btn ghost" type="button" onclick="clearMasterCode()">Sperren</button>
+    </div>
+    <div id="status" class="status" style="margin-top:12px">Bereit.</div>
+    <div class="summary">
+      <div class="metric"><span>Raids</span><strong id="raidCount">0</strong></div>
+      <div class="metric"><span>Offene Raids</span><strong id="openRaidCount">0</strong></div>
+      <div class="metric"><span>Spielerlogins</span><strong id="playerCount">0</strong></div>
+      <div class="metric"><span>Konten mit Twinks</span><strong id="linkedCount">0</strong></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="section-head">
+        <h2>Raidlead-PINs</h2>
+      </div>
+      <div class="tools">
+        <input id="raidSearch" type="search" placeholder="Raid, Datum, PIN oder Status suchen..." oninput="renderRaids()">
+        <input id="raidDateSearch" type="date" onchange="renderRaids()" aria-label="Datum suchen">
+      </div>
+      <div class="tools">
+        <select id="raidFilter" onchange="renderRaids()">
+          <option value="">Letzte 10</option>
+          <option value="offen">Offen</option>
+          <option value="geöffnet">Geöffnet</option>
+          <option value="geschlossen">Geschlossen</option>
+          <option value="archiviert">Archiviert</option>
+          <option value="alle">Alle anzeigen</option>
+        </select>
+        <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Datum</th>
+              <th>Prio-PIN</th>
+              <th>LeadPIN</th>
+              <th>Status</th>
+              <th>P0+</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="raidRows">
+            <tr><td colspan="7" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>Spielerlogins</h2>
+      </div>
+      <div id="lastReset" class="reset-card" style="display:none"></div>
+      <div class="tools">
+        <input id="playerSearch" type="search" placeholder="Spieler, Server oder Klasse suchen..." oninput="renderPlayers()">
+        <select id="classFilter" onchange="renderPlayers()">
+          <option value="">Alle Klassen</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Spieler</th>
+              <th>Server</th>
+              <th>Klasse</th>
+              <th>Login</th>
+              <th>Twinks</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="playerRows">
+            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="prioModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="prioModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="prioModalTitle">Prioliste</h2>
+        <p id="prioModalSubline"></p>
+      </div>
+      <button class="btn danger" type="button" onclick="closePrioModal()">Schließen</button>
+    </div>
+    <div id="prioModalContent" class="modal-content">
+      <div class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode";
+
+let guildData = { raids: [], players: [] };
+
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
+  if (saved) document.getElementById("masterCode").value = saved;
+});
+
+function enterLoads(event){
+  if(event.key === "Enter") loadOverview();
+}
+
+function setStatus(message, type){
+  const el = document.getElementById("status");
+  el.textContent = message;
+  el.className = "status" + (type ? " " + type : "");
+}
+
+function clearMasterCode(){
+  sessionStorage.removeItem(MASTER_STORAGE_KEY);
+  document.getElementById("masterCode").value = "";
+  guildData = { raids: [], players: [] };
+  renderAll();
+  setStatus("Gildenleitung gesperrt.", "");
+}
+
+function apiJsonp(params){
+  return new Promise((resolve, reject) => {
+    const callbackName = "guildApi_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const query = new URLSearchParams(Object.assign({}, params, { callback: callbackName, t: Date.now() }));
+    const script = document.createElement("script");
+    let settled = false;
+
+    window[callbackName] = function(result){
+      settled = true;
+      cleanup();
+      resolve(result || {});
+    };
+
+    function cleanup(){
+      try{ delete window[callbackName]; }catch(error){ window[callbackName] = undefined; }
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    script.onerror = () => {
+      if(settled) return;
+      cleanup();
+      reject(new Error("Apps Script liefert die neue Gildenleitungs-Aktion noch nicht aus. Bitte den aktualisierten Code veröffentlichen."));
+    };
+
+    script.src = API_URL + "?" + query.toString();
+    document.body.appendChild(script);
+  });
+}
+
+async function loadOverview(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  setStatus("Gildenleitung wird geladen ...", "");
+
+  try{
+    const result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
+      return;
+    }
+
+    sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    guildData = {
+      raids: Array.isArray(result.raids) ? result.raids : [],
+      players: Array.isArray(result.players) ? result.players : []
+    };
+    fillClassFilter();
+    renderAll();
+    setStatus("Gildenleitung geladen.", "good");
+  }catch(error){
+    setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
+  }
+}
+
+function renderAll(){
+  renderSummary();
+  renderRaids();
+  renderPlayers();
+}
+
+function renderSummary(){
+  const raids = guildData.raids || [];
+  const players = guildData.players || [];
+  const openRaids = raids.filter(raid => isOpenStatus(raid.status)).length;
+  const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
+
+  document.getElementById("raidCount").textContent = raids.length;
+  document.getElementById("openRaidCount").textContent = openRaids;
+  document.getElementById("playerCount").textContent = players.length;
+  document.getElementById("linkedCount").textContent = linked;
+}
+
+function fillClassFilter(){
+  const select = document.getElementById("classFilter");
+  const current = select.value;
+  const classes = Array.from(new Set((guildData.players || []).map(player => player.className).filter(Boolean))).sort();
+  select.innerHTML = '<option value="">Alle Klassen</option>' + classes.map(name => `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`).join("");
+  if(classes.includes(current)) select.value = current;
+}
+
+function renderRaids(){
+  const tbody = document.getElementById("raidRows");
+  const search = normalize(document.getElementById("raidSearch").value);
+  const filter = normalize(document.getElementById("raidFilter").value);
+  const raids = (guildData.raids || []).filter(raid => {
+    const status = normalize(raid.status || "geschlossen");
+    const haystack = normalize([
+      raid.raid,
+      raid.raidName,
+      raid.raidDate,
+      raid.raidTime,
+      raid.playerPin,
+      raid.leadPin,
+      raid.status,
+      raid.guild
+    ].join(" "));
+    return (!filter || status === filter) && (!search || haystack.includes(search));
+  });
+
+  if(!raids.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = raids.map(raid => {
+    const status = raid.status || "geschlossen";
+    const p0 = raid.p0PlusFreigabe || "";
+    return `
+      <tr>
+        <td><strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong><br><span class="muted">${escapeHtml(raid.raidId || "")} ${escapeHtml(raid.guild || "")}</span></td>
+        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
+        <td>${statusBadge(status)}</td>
+        <td>${p0Badge(p0)}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn" type="button" onclick="setRaidStatusFromPage('${escapeAttr(raid.raidId)}','geöffnet')">Öffnen</button>
+            <button class="small-btn" type="button" onclick="setRaidStatusFromPage('${escapeAttr(raid.raidId)}','geschlossen')">Schließen</button>
+            <button class="small-btn danger" type="button" onclick="setRaidStatusFromPage('${escapeAttr(raid.raidId)}','archiviert')">Archiv</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderPlayers(){
+  const tbody = document.getElementById("playerRows");
+  const search = normalize(document.getElementById("playerSearch").value);
+  const classFilter = normalize(document.getElementById("classFilter").value);
+  const players = (guildData.players || []).filter(player => {
+    const haystack = normalize([
+      player.char,
+      player.server,
+      player.className,
+      player.mainChar
+    ].join(" "));
+    return (!classFilter || normalize(player.className) === classFilter) && (!search || haystack.includes(search));
+  });
+
+  if(!players.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine passenden Spielerlogins gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = players.map(player => `
+    <tr>
+      <td><strong>${escapeHtml(player.char || "-")}</strong><br><span class="muted">${escapeHtml(player.mainChar || "")}</span></td>
+      <td>${escapeHtml(player.server || "-")}</td>
+      <td>${escapeHtml(player.className || "-")}</td>
+      <td><span class="badge closed">verborgen</span></td>
+      <td>${Number(player.linkedCharacters || 0)}</td>
+      <td><button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(player.rowNumber || 0)})">Zurücksetzen</button></td>
+    </tr>
+  `).join("");
+}
+
+async function resetPlayerLogin(rowNumber){
+  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+  if(!player) return;
+
+  const ok = confirm(`Spielerlogin für ${player.char} zurücksetzen? Twinks mit gleichem Konto bekommen denselben neuen Login.`);
+  if(!ok) return;
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  setStatus("Spielerlogin wird zurückgesetzt ...", "");
+
+  try{
+    const result = await apiJsonp({
+      action:"guildResetPlayerLogin",
+      masterCode,
+      rowNumber:player.rowNumber,
+      char:player.char,
+      server:player.server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Spielerlogin konnte nicht zurückgesetzt werden.", "bad");
+      return;
+    }
+
+    showResetResult(result);
+    setStatus("Spielerlogin wurde zurückgesetzt.", "good");
+    await loadOverview();
+  }catch(error){
+    setStatus(error.message || "Reset fehlgeschlagen.", "bad");
+  }
+}
+
+function showResetResult(result){
+  const box = document.getElementById("lastReset");
+  box.style.display = "block";
+  box.innerHTML = `
+    <h3>Neuer Spielerlogin</h3>
+    <div><strong>${escapeHtml(result.char || "")}</strong> ${escapeHtml(result.server || "")}</div>
+    <div class="new-pin">nicht sichtbar</div>
+    <div class="muted">${Number(result.updated || 0)} Charaktere aktualisiert.</div>
+  `;
+}
+
+async function setRaidStatusFromPage(raidId, status){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await apiJsonp({ action:"guildSetRaidStatus", masterCode, raidId, status });
+    if(!result.success){
+      setStatus(result.error || "Raidstatus konnte nicht geändert werden.", "bad");
+      return;
+    }
+
+    const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+    if(raid) raid.status = status;
+    renderSummary();
+    renderRaids();
+    setStatus("Raidstatus wurde geändert.", "good");
+  }catch(error){
+    setStatus(error.message || "Raidstatus konnte nicht geändert werden.", "bad");
+  }
+}
+
+function isOpenStatus(status){
+  const value = normalize(status);
+  return value === "offen" || value === "geöffnet" || value === "published" || value === "true";
+}
+
+function statusBadge(status){
+  const value = normalize(status || "geschlossen");
+  const cls = isOpenStatus(value) ? "open" : (value === "archiviert" ? "warn" : "closed");
+  return `<span class="badge ${cls}">${escapeHtml(status || "geschlossen")}</span>`;
+}
+
+function p0Badge(value){
+  const normalized = normalize(value);
+  if(normalized === "ja" || normalized === "aktiv" || normalized === "true"){
+    return '<span class="badge open">frei</span>';
+  }
+  if(normalized === "nein"){
+    return '<span class="badge closed">gesperrt</span>';
+  }
+  return '<span class="badge closed">-</span>';
+}
+
+function formatRaidDate(value){
+  if(!value) return "-";
+  const parts = String(value).split("-");
+  if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  return String(value);
+}
+
+function normalize(value){
+  return String(value || "").trim().toLowerCase();
+}
+
+function escapeHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(value){
+  return escapeHtml(value).replace(/`/g,"&#096;");
+}
+</script>
+</body>
+</html>
