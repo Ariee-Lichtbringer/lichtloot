@@ -1614,7 +1614,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 </style>
 </head>
 
-<body class="raid-aq40">
+<body class="raid-naxx">
 
 <div id="participantPinModal" class="participant-pin-modal hidden">
   <div class="participant-pin-card">
@@ -2003,8 +2003,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <script>
 const RAID_NAME = "naxx";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LOOT_JSON_URL = "/data/aq40.json";
-const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40";
+const LOOT_JSON_URL = "/data/naxx.json";
+const NAXX_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_NAXX";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
@@ -2013,7 +2013,7 @@ const PRIO_COUNT = 3;
 
 
 let p0PlusData = {};
-let aq40Loot = [];
+let NAXXLoot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
@@ -2317,7 +2317,7 @@ async function fetchWowheadIconByItemId(itemId){
 }
 
 async function hydrateLootIcons(){
-  const missing = aq40Loot.filter(item => item.itemId && (!item.icon || /^\d+$/.test(String(item.icon))));
+  const missing = naxxLoot.filter(item => item.itemId && (!item.icon || /^\d+$/.test(String(item.icon))));
 
   await Promise.all(missing.map(async item => {
     const icon = await fetchWowheadIconByItemId(item.itemId);
@@ -2539,7 +2539,7 @@ function findLootItem(itemName){
   const wanted = normalizeItemName(itemName);
   if(!wanted) return null;
 
-  return aq40Loot.find(item =>
+  return naxxLoot.find(item =>
     normalizeItemName(item.name) === wanted
   ) || null;
 }
@@ -2605,8 +2605,8 @@ async function loadLootFromSheet(){
   const list=document.getElementById("lootList");
 
   try{
-    const result=await loadAq40LootWithFallback();
-    aq40Loot=result.items;
+    const result=await loadnaxxLootWithFallback();
+    naxxLoot=result.items;
     if(!aq40Loot.length){
       throw new Error("Keine AQ40-Lootdaten gefunden.");
     }
