@@ -551,7 +551,7 @@
       "(8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%."
     ],
     "tooltip": "Bindungen des Arkanisten | Wird beim Anlegen gebunden | Handgelenke Stoff | 44 Rüstung | +8 Ausdauer | +15 Intelligenz | +6 Willenskraft | Klassen: Magier | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 12. | Anlegen: Stellt alle 5 Sek. 3 Punkt(e) Mana wieder her. |   | Ornat des Arkanisten (0/8) |   Gürtel des Arkanisten |   Bindungen des Arkanisten |   Krone des Arkanisten |   Stiefel des Arkanisten |   Handschuhe des Arkanisten |   Gamaschen des Arkanisten |   Mantel des Arkanisten |   Roben des Arkanisten |   | (3) Set: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 18. | (5) Set: Reduziert die Magiewiderstände der Ziele Eurer Zauber um 10. | (8) Set: Verringert die von Euren Zaubern verursachte Bedrohung um 15%.",
-    "iconName": "ability_mount_undeadhorse"
+    "iconName": "inv_belt_29"
   },
   {
     "raid": "MC",
@@ -3052,7 +3052,7 @@
       "(2) Set: +10 zu allen Widerstandsarten."
     ],
     "tooltip": "Splitter der Flamme | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 16 Gesundheit wieder her. |   | Scherbe der Götter (0/2) |   Splitter der Flamme |   Splitter der Schuppe |   | (2) Set: +10 zu allen Widerstandsarten.",
-    "iconName": "inv_ore_truesilver_01"
+    "iconName": "inv_misc_orb_05"
   },
   {
     "raid": "MC",
