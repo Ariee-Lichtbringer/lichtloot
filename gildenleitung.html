@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LichtLoot - Gildenleitung</title>
+<style>
+:root{
+  --gold:#facc15;
+  --bg:#08111f;
+  --panel:rgba(12,18,32,.78);
+  --panel2:rgba(2,6,23,.58);
+  --line:rgba(255,255,255,.10);
+  --soft:rgba(148,163,184,.18);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+  --blue:#60a5fa;
+  --green:#22c55e;
+  --red:#ef4444;
+  --violet:#a78bfa;
+  --cyan:#22d3ee;
+  --orange:#fb923c;
+  --ink:#111827;
+}
+
+*{box-sizing:border-box}
+.hidden{display:none!important}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.90)),url('./images/back.jpeg');
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+
+button,input,select{font:inherit}
+
+.shell{
+  width:min(1480px, calc(100vw - 24px));
+  margin:0 auto;
+  padding:12px 0 24px;
+}
+
+.topbar{
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:14px;
+  background:rgba(12,18,32,.74);
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  backdrop-filter:blur(8px);
+}
+
+.brand{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.brand h1{
+  margin:0;
+  color:#fde68a;
+  font-size:24px;
+  line-height:1;
+  letter-spacing:0;
+}
+
+.brand p{
+  margin:0;
+  color:#b6c2d3;
+  font-weight:600;
+  font-size:13px;
+}
+
+.nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn,
+.icon-btn{
+  border:1px solid rgba(250,204,21,.22);
+  background:rgba(2,6,23,.48);
+  color:white;
+  font-weight:700;
+  border-radius:8px;
+  min-height:34px;
+  padding:7px 11px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.btn:hover,
+.icon-btn:hover{border-color:rgba(250,204,21,.75)}
+
+.nav .btn:nth-child(1){border-color:rgba(250,204,21,.38)}
+.nav .btn:nth-child(2){border-color:rgba(250,204,21,.22);color:#dbeafe}
+.nav .btn:nth-child(3){border-color:rgba(250,204,21,.22);color:#d1fae5}
+.nav .btn:nth-child(4){border-color:rgba(250,204,21,.22);color:#fed7aa}
+.nav .btn:nth-child(5){border-color:rgba(250,204,21,.38);background:rgba(250,204,21,.12)}
+
+.btn.danger{
+  border-color:rgba(239,68,68,.75);
+  background:rgba(127,29,29,.45);
+}
+
+.btn.ghost{
+  background:rgba(15,23,42,.72);
+  border-color:rgba(148,163,184,.3);
+}
+
+.panel{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--panel);
+  padding:10px;
+  box-shadow:none;
+  backdrop-filter:blur(8px);
+}
+
+.auth-panel,
+.create-panel,
+.raid-panel,
+.player-panel,
+.p0-panel,
+.issue-panel{background:rgba(12,18,32,.76)}
+
+.auth-panel{border-color:rgba(250,204,21,.18)}
+.create-panel{border-color:rgba(250,204,21,.22)}
+.raid-panel{border-color:rgba(250,204,21,.22)}
+.player-panel{border-color:rgba(250,204,21,.16)}
+.p0-panel{border-color:rgba(250,204,21,.20)}
+.issue-panel{border-color:rgba(250,204,21,.20)}
+
+.unlock{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:8px;
+  align-items:end;
+}
+
+.field label{
+  display:block;
+  color:var(--gold);
+  text-transform:uppercase;
+  font-size:11px;
+  font-weight:900;
+  margin-bottom:4px;
+}
+
+.auth-panel .field label,
+.create-panel .field label{color:#facc15}
+.create-panel summary,
+.p0-panel summary,
+.issue-panel summary,
+.raid-panel summary,
+.player-panel summary{color:#fde68a}
+
+input,
+select{
+  width:100%;
+  min-height:34px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(2,6,23,.72);
+  color:white;
+  padding:7px 9px;
+  outline:none;
+  font-weight:600;
+  font-size:13px;
+}
+
+input:focus,
+select:focus{border-color:rgba(96,165,250,.75)}
+
+.status{
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(2,6,23,.42);
+  border-radius:8px;
+  padding:8px 10px;
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+}
+
+.status.good{color:#bbf7d0;border-color:rgba(34,197,94,.45)}
+.status.bad{color:#fecaca;border-color:rgba(239,68,68,.45)}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(160px, 1fr));
+  gap:8px;
+  margin-top:8px;
+}
+
+.metric{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  padding:8px 10px;
+}
+
+.metric:nth-child(1),
+.metric:nth-child(2),
+.metric:nth-child(3),
+.metric:nth-child(4){border-color:rgba(255,255,255,.10);background:rgba(2,6,23,.32)}
+
+.metric span{
+  display:block;
+  color:var(--muted);
+  font-weight:800;
+  font-size:11px;
+}
+
+.metric strong{
+  display:block;
+  margin-top:2px;
+  font-size:20px;
+  color:var(--gold);
+}
+
+.metric:nth-child(1) strong,
+.metric:nth-child(2) strong,
+.metric:nth-child(3) strong,
+.metric:nth-child(4) strong{color:#fde68a}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-items:start;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+
+.section-head h2{
+  margin:0;
+  color:var(--gold);
+  font-size:18px;
+}
+
+.create-panel summary,
+.p0-panel summary,
+.issue-panel summary,
+.raid-panel summary,
+.player-panel summary{
+  cursor:pointer;
+  font-size:18px;
+  font-weight:700;
+  list-style:none;
+}
+
+.create-panel summary::-webkit-details-marker,
+.p0-panel summary::-webkit-details-marker,
+.issue-panel summary::-webkit-details-marker,
+.raid-panel summary::-webkit-details-marker,
+.player-panel summary::-webkit-details-marker{display:none}
+
+.create-panel summary::after,
+.p0-panel summary::after,
+.issue-panel summary::after,
+.raid-panel summary::after,
+.player-panel summary::after{
+  content:" öffnen";
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+
+.create-panel[open] summary::after,
+.p0-panel[open] summary::after,
+.issue-panel[open] summary::after,
+.raid-panel[open] summary::after,
+.player-panel[open] summary::after{content:" schließen"}
+
+.create-panel-body,
+.p0-panel-body,
+.issue-panel-body,
+.raid-panel-body,
+.player-panel-body{
+  display:grid;
+  gap:8px;
+  margin-top:8px;
+}
+
+.create-grid{
+  display:grid;
+  grid-template-columns:1.2fr 150px 130px 1fr auto;
+  gap:8px;
+  align-items:end;
+}
+
+.create-result{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+  padding:8px 10px;
+  color:var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+.created-raid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:8px;
+}
+
+.created-pin{
+  border:1px solid rgba(96,165,250,.32);
+  border-radius:8px;
+  padding:8px;
+  background:rgba(15,23,42,.65);
+}
+
+.created-pin span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+}
+
+.created-pin strong{
+  display:block;
+  margin:3px 0 6px;
+  color:#bfdbfe;
+  font-size:18px;
+}
+
+.tools{
+  display:grid;
+  grid-template-columns:1fr 180px;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.24);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1120px;
+}
+
+th,
+td{
+  padding:7px 8px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+  text-align:left;
+  vertical-align:top;
+}
+
+th{
+  position:sticky;
+  top:0;
+  background:rgba(2,6,23,.62);
+  color:#fde68a;
+  text-transform:uppercase;
+  font-size:11px;
+  z-index:1;
+}
+
+.raid-panel th,
+.player-panel th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+tr:hover td{background:rgba(250,204,21,.035)}
+
+.raid-title{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:150px;
+}
+
+.raid-title strong{
+  color:#f8fafc;
+  font-size:13px;
+}
+
+.raid-meta{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+}
+
+.raid-meta span{
+  padding:2px 5px;
+  border-radius:999px;
+  background:rgba(2,6,23,.34);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.pin{
+  color:#dbeafe;
+  font-weight:700;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:13px;
+}
+
+.muted{color:var(--muted)}
+.ok{color:#bbf7d0}
+.warn{color:#fde68a}
+.bad{color:#fecaca}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(2,6,23,.42);
+  color:#e2e8f0;
+  font-size:11px;
+  font-weight:700;
+}
+
+.badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
+.badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
+.badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
+.actions{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  min-width:260px;
+}
+
+.action-row{
+  display:flex;
+  gap:5px;
+}
+
+.small-btn{
+  min-height:28px;
+  padding:5px 8px;
+  border-radius:7px;
+  border:1px solid rgba(250,204,21,.22);
+  background:rgba(2,6,23,.42);
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  font-size:12px;
+}
+
+.small-btn.primary{
+  border-color:rgba(96,165,250,.34);
+  background:rgba(37,99,235,.22);
+  color:#dbeafe;
+}
+
+.small-btn.danger{
+  border-color:rgba(239,68,68,.38);
+  background:rgba(127,29,29,.20);
+  color:#fecaca;
+}
+
+.small-btn.ghost{
+  border-color:rgba(148,163,184,.3);
+  background:rgba(15,23,42,.72);
+}
+
+.small-btn.good{
+  border-color:rgba(34,197,94,.34);
+  background:rgba(20,83,45,.24);
+  color:#bbf7d0;
+}
+
+.small-btn:hover{
+  border-color:rgba(250,204,21,.72);
+}
+
+.reset-card{
+  border:1px solid rgba(96,165,250,.28);
+  background:rgba(15,23,42,.62);
+  border-radius:8px;
+  padding:8px;
+  margin-bottom:8px;
+}
+
+.reset-card h3{
+  margin:0 0 6px;
+  color:var(--gold);
+}
+
+.new-pin{
+  display:inline-block;
+  margin-top:6px;
+  padding:6px 9px;
+  border-radius:8px;
+  border:1px solid rgba(96,165,250,.45);
+  color:#bfdbfe;
+  font-size:18px;
+  font-weight:900;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(7px);
+}
+
+.modal.hidden{display:none}
+
+.modal-box{
+  width:min(1080px, calc(100vw - 24px));
+  min-width:min(640px, calc(100vw - 24px));
+  min-height:360px;
+  max-height:min(780px, calc(100vh - 24px));
+  overflow:hidden;
+  resize:both;
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(5,9,20,.96);
+  box-shadow:0 24px 80px rgba(0,0,0,.42);
+}
+
+.modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 12px;
+  border-bottom:1px solid rgba(148,163,184,.18);
+}
+
+.modal-title h2{
+  margin:0;
+  color:var(--gold);
+  font-size:20px;
+}
+
+.modal-title p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+}
+
+.modal-content{
+  padding:10px;
+  overflow:auto;
+}
+
+.prio-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+  padding:7px 9px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(15,23,42,.48);
+}
+
+.prio-table{
+  min-width:780px;
+}
+
+.epic{color:#c084fc}
+.rare{color:#60a5fa}
+.uncommon{color:#4ade80}
+.legendary{color:#fb923c}
+.class-warrior{color:#c69b6d}
+.class-paladin{color:#f48cba}
+.class-hunter{color:#aad372}
+.class-rogue{color:#fff468}
+.class-priest{color:#f0ebe0}
+.class-shaman{color:#0070dd}
+.class-mage{color:#3fc7eb}
+.class-warlock{color:#8788ee}
+.class-druid{color:#ff7c0a}
+
+.item-with-tooltip{
+  cursor:help;
+  font-weight:700;
+}
+
+.tooltip{
+  position:fixed;
+  z-index:100;
+  width:330px;
+  max-width:calc(100vw - 24px);
+  padding:10px;
+  border-radius:8px;
+  background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));
+  border:1px solid rgba(148,163,184,.75);
+  box-shadow:0 0 28px rgba(0,0,0,.85);
+  pointer-events:none;
+  font-size:11px;
+  line-height:1.35;
+}
+
+.tooltip-title{font-size:15px;font-weight:900;margin-bottom:4px}
+.tooltip-title.epic{color:#a335ee}
+.tooltip-title.rare{color:#0070dd}
+.tooltip-title.uncommon{color:#1eff00}
+.tooltip-title.legendary{color:#ff8000}
+.tooltip-row{display:flex;justify-content:space-between;gap:14px;color:white;margin-top:3px}
+.tooltip-stat{color:white;margin-top:3px}
+.tooltip-extra{margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
+
+.character-stack{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:5px;
+}
+
+.character-chip{
+  display:inline-flex;
+  gap:4px;
+  align-items:center;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(2,6,23,.38);
+  border-radius:999px;
+  padding:2px 7px;
+  font-size:11px;
+}
+
+.p0-toolbar{
+  display:grid;
+  grid-template-columns:150px 1fr auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.p0-points-input{
+  width:76px;
+  min-height:28px;
+  padding:4px 7px;
+}
+
+.p0-table{
+  min-width:920px;
+}
+
+.p0-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+.issue-toolbar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.issue-table{
+  min-width:1040px;
+}
+
+.issue-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+.issue-note{
+  max-width:320px;
+  white-space:normal;
+  color:#f8fafc;
+}
+
+.prio-p0{
+  display:inline-flex;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(34,197,94,.48);
+  color:#bbf7d0;
+  font-size:11px;
+  font-weight:900;
+}
+
+#prioModal .modal-box{border-color:rgba(96,165,250,.38)}
+#prioModal .modal-title h2{color:#fde68a}
+
+.prio-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+@media (max-width:1000px){
+  .unlock,
+  .grid,
+  .create-grid,
+  .tools,
+  .summary,
+  .prio-actions{grid-template-columns:1fr}
+  .topbar{align-items:flex-start}
+  .nav{width:100%}
+  .btn{flex:1}
+  .p0-toolbar{grid-template-columns:1fr}
+  .actions,
+  .action-row{grid-template-columns:1fr}
+  table{min-width:760px}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <h1>Gildenleitung</h1>
+      <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
+    </div>
+    <nav class="nav" aria-label="Navigation">
+      <button class="btn ghost" type="button" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn ghost" type="button" onclick="location.href='raidlead-panel.html'">Raidlead</button>
+      <button class="btn ghost" type="button" onclick="toggleP0PlusPanel()">P0+ Liste</button>
+      <button class="btn ghost" type="button" onclick="toggleIssueInboxPanel()">Postfach</button>
+      <button class="btn" type="button" onclick="loadOverview()">Aktualisieren</button>
+    </nav>
+  </header>
+
+  <section class="panel auth-panel">
+    <div class="unlock">
+      <div class="field">
+        <label for="masterCode">Master-Code</label>
+        <input id="masterCode" type="password" placeholder="Master-Code eingeben" autocomplete="current-password" onkeydown="enterLoads(event)">
+      </div>
+      <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
+      <button class="btn ghost" type="button" onclick="clearMasterCode()">Sperren</button>
+    </div>
+    <div id="status" class="status" style="margin-top:12px">Bereit.</div>
+    <div class="summary">
+      <div class="metric"><span>Raids</span><strong id="raidCount">0</strong></div>
+      <div class="metric"><span>Offene Raids</span><strong id="openRaidCount">0</strong></div>
+      <div class="metric"><span>Spielerlogins</span><strong id="playerCount">0</strong></div>
+      <div class="metric"><span>Konten mit Twinks</span><strong id="linkedCount">0</strong></div>
+    </div>
+  </section>
+
+  <details class="panel create-panel">
+    <summary>Raid erstellen</summary>
+    <div class="create-panel-body">
+    <div class="create-grid">
+      <div class="field">
+        <label for="createRaidSelect">Raid</label>
+        <select id="createRaidSelect">
+          <option value="mc">Molten Core</option>
+          <option value="bwl">Blackwing Lair</option>
+          <option value="aq40">Ahn'Qiraj 40</option>
+          <option value="naxx">Naxxramas</option>
+          <option value="zg">Zul Gurub</option>
+          <option value="aq20">Ahn'Qiraj 20</option>
+          <option value="ony">Onyxia</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="createRaidDate">Datum</label>
+        <input id="createRaidDate" type="date">
+      </div>
+      <div class="field">
+        <label for="createRaidTime">Uhrzeit</label>
+        <input id="createRaidTime" type="time" value="20:00">
+      </div>
+      <div class="field">
+        <label for="createRaidGuild">Gilde</label>
+        <input id="createRaidGuild" type="text" placeholder="Gilde">
+      </div>
+      <button class="btn" type="button" onclick="createRaidFromGuildPage()">Erstellen</button>
+    </div>
+    <div id="createRaidResult" class="create-result">Prio-PIN und LeadPIN werden nach dem Erstellen angezeigt.</div>
+    </div>
+  </details>
+
+  <details id="p0PlusPanel" class="panel p0-panel" ontoggle="if(this.open) loadP0PlusPanel()">
+    <summary>P0+ Liste</summary>
+    <div class="p0-panel-body">
+      <div id="p0PlusPanelContent" class="create-result">P0+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+    </div>
+  </details>
+
+  <details id="issueInboxPanel" class="panel issue-panel" ontoggle="if(this.open) loadIssueInboxPanel()">
+    <summary>Postfach</summary>
+    <div class="issue-panel-body">
+      <div id="issueInboxPanelContent" class="create-result">Meldungen aus dem Briefumschlag laden.</div>
+    </div>
+  </details>
+
+  <div class="grid">
+    <details class="panel raid-panel">
+      <summary>Raidlead-PINs</summary>
+      <div class="raid-panel-body">
+      <div class="tools">
+        <input id="raidSearch" type="search" placeholder="Raid, Datum, PIN oder Status suchen..." oninput="renderRaids()">
+        <input id="raidDateSearch" type="date" onchange="renderRaids()" aria-label="Datum suchen">
+      </div>
+      <div class="tools">
+        <select id="raidFilter" onchange="renderRaids()">
+          <option value="">Letzte 10</option>
+          <option value="offen">Offen</option>
+          <option value="geöffnet">Geöffnet</option>
+          <option value="geschlossen">Geschlossen</option>
+          <option value="archiviert">Archiviert</option>
+          <option value="alle">Alle anzeigen</option>
+        </select>
+        <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Datum</th>
+              <th>Prio-PIN</th>
+              <th>LeadPIN</th>
+              <th>Status</th>
+              <th>P0+</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="raidRows">
+            <tr><td colspan="7" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </details>
+
+    <details class="panel player-panel">
+      <summary>Spielerlogins</summary>
+      <div class="player-panel-body">
+      <div id="lastReset" class="reset-card" style="display:none"></div>
+      <div class="tools">
+        <input id="playerSearch" type="search" placeholder="Spieler, Server oder Klasse suchen..." oninput="renderPlayers()">
+        <select id="classFilter" onchange="renderPlayers()">
+          <option value="">Alle Klassen</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Main & Twinks</th>
+              <th>Klassen</th>
+              <th>Login</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="playerRows">
+            <tr><td colspan="4" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </details>
+  </div>
+</main>
+
+<div id="prioModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="prioModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="prioModalTitle">Prioliste</h2>
+        <p id="prioModalSubline"></p>
+      </div>
+      <button class="btn danger" type="button" onclick="closePrioModal()">Schließen</button>
+    </div>
+    <div id="prioModalContent" class="modal-content">
+      <div class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip" class="tooltip hidden"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode";
+const RAID_OPTIONS = {
+  mc:{ name:"Molten Core", short:"MC" },
+  bwl:{ name:"Blackwing Lair", short:"BWL" },
+  aq40:{ name:"Ahn'Qiraj 40", short:"AQ40" },
+  naxx:{ name:"Naxxramas", short:"NAXX" },
+  zg:{ name:"Zul Gurub", short:"ZG" },
+  aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
+  ony:{ name:"Onyxia", short:"ONY" }
+};
+
+let guildData = { raids: [], players: [] };
+let p0PlusEntries = [];
+let issueReports = [];
+let lootItemIndex = {};
+let lootDataLoaded = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
+  if (saved) document.getElementById("masterCode").value = saved;
+  setDefaultCreateRaidDate();
+});
+
+function enterLoads(event){
+  if(event.key === "Enter") loadOverview();
+}
+
+function setStatus(message, type){
+  const el = document.getElementById("status");
+  el.textContent = message;
+  el.className = "status" + (type ? " " + type : "");
+}
+
+function clearMasterCode(){
+  sessionStorage.removeItem(MASTER_STORAGE_KEY);
+  document.getElementById("masterCode").value = "";
+  guildData = { raids: [], players: [] };
+  renderAll();
+  setStatus("Gildenleitung gesperrt.", "");
+}
+
+function apiJsonp(params){
+  return new Promise((resolve, reject) => {
+    const callbackName = "guildApi_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const query = new URLSearchParams(Object.assign({}, params, { callback: callbackName, t: Date.now() }));
+    const script = document.createElement("script");
+    let settled = false;
+
+    window[callbackName] = function(result){
+      settled = true;
+      cleanup();
+      resolve(result || {});
+    };
+
+    function cleanup(){
+      try{ delete window[callbackName]; }catch(error){ window[callbackName] = undefined; }
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    script.onerror = () => {
+      if(settled) return;
+      cleanup();
+      reject(new Error("Apps Script liefert die neue Gildenleitungs-Aktion noch nicht aus. Bitte den aktualisierten Code veröffentlichen."));
+    };
+
+    script.src = API_URL + "?" + query.toString();
+    document.body.appendChild(script);
+  });
+}
+
+async function loadOverview(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  setStatus("Gildenleitung wird geladen ...", "");
+
+  try{
+    const result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
+      return;
+    }
+
+    sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    guildData = {
+      raids: Array.isArray(result.raids) ? result.raids : [],
+      players: Array.isArray(result.players) ? result.players : []
+    };
+    fillClassFilter();
+    renderAll();
+    setStatus("Gildenleitung geladen.", "good");
+  }catch(error){
+    setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
+  }
+}
+
+function renderAll(){
+  renderSummary();
+  renderRaids();
+  renderPlayers();
+}
+
+function renderSummary(){
+  const raids = guildData.raids || [];
+  const players = guildData.players || [];
+  const openRaids = raids.filter(raid => isOpenStatus(raid.status)).length;
+  const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
+
+  document.getElementById("raidCount").textContent = raids.length;
+  document.getElementById("openRaidCount").textContent = openRaids;
+  document.getElementById("playerCount").textContent = players.length;
+  document.getElementById("linkedCount").textContent = linked;
+}
+
+function fillClassFilter(){
+  const select = document.getElementById("classFilter");
+  const current = select.value;
+  const classes = Array.from(new Set((guildData.players || []).map(player => player.className).filter(Boolean))).sort();
+  select.innerHTML = '<option value="">Alle Klassen</option>' + classes.map(name => `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`).join("");
+  if(classes.includes(current)) select.value = current;
+}
+
+function renderRaids(){
+  const tbody = document.getElementById("raidRows");
+  const search = normalize(document.getElementById("raidSearch").value);
+  const filter = normalize(document.getElementById("raidFilter").value);
+  const dateSearch = document.getElementById("raidDateSearch").value;
+  const raids = (guildData.raids || []).filter(raid => {
+    const status = normalize(raid.status || "geschlossen");
+    const haystack = normalize([
+      raid.raid,
+      raid.raidName,
+      raid.raidDate,
+      raid.raidTime,
+      raid.playerPin,
+      raid.leadPin,
+      raid.status,
+      raid.guild
+    ].join(" "));
+    const isArchived = status === "archiviert" || status === "archive";
+    const filterMatches =
+      filter === "alle" ? true :
+      filter ? status === filter :
+      !isArchived;
+    const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
+    return filterMatches && dateMatches && (!search || haystack.includes(search));
+  }).slice(0, filter || search || dateSearch ? undefined : 10);
+
+  if(!raids.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = raids.map(raid => {
+    const status = raid.status || "geschlossen";
+    const p0 = raid.p0PlusFreigabe || "";
+    return `
+      <tr>
+        <td>
+          <div class="raid-title">
+            <strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong>
+            <div class="raid-meta">
+              <span>${escapeHtml(raid.raidId || "-")}</span>
+              ${raid.guild ? `<span>${escapeHtml(raid.guild)}</span>` : ""}
+            </div>
+          </div>
+        </td>
+        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
+        <td>${statusBadge(status)}</td>
+        <td>${p0Badge(p0)}</td>
+        <td>
+          <div class="actions">
+            <div class="action-row">
+              <button class="small-btn good" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',true)">P0 an</button>
+              <button class="small-btn ghost" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',false)">P0 aus</button>
+            </div>
+            <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
+            <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderPlayers(){
+  const tbody = document.getElementById("playerRows");
+  const search = normalize(document.getElementById("playerSearch").value);
+  const classFilter = normalize(document.getElementById("classFilter").value);
+  const groups = groupPlayersByMain(guildData.players || []).filter(group => {
+    const haystack = normalize([
+      group.main.char,
+      group.main.server,
+      group.main.className,
+      group.twinks.map(twink => [twink.char, twink.server, twink.className].join(" ")).join(" ")
+    ].join(" "));
+    const classMatches = !classFilter || group.characters.some(player => normalize(player.className) === classFilter);
+    return classMatches && (!search || haystack.includes(search));
+  });
+
+  if(!groups.length){
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Keine passenden Spielerlogins gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = groups.map(group => `
+    <tr>
+      <td>
+        <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
+        ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
+      </td>
+      <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
+      <td><span class="badge closed">verborgen</span></td>
+      <td><button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button></td>
+    </tr>
+  `).join("");
+}
+
+function groupPlayersByMain(players){
+  const groups = new Map();
+  (players || []).forEach(player => {
+    const mainName = String(player.mainChar || player.char || "").trim();
+    const key = normalize(mainName || player.char || "") || String(player.rowNumber || Math.random());
+    if(!groups.has(key)){
+      groups.set(key, { main:null, characters:[] });
+    }
+    const group = groups.get(key);
+    group.characters.push(player);
+    if(!group.main || normalize(player.char) === normalize(mainName)){
+      group.main = player;
+    }
+  });
+
+  return Array.from(groups.values()).map(group => {
+    group.main = group.main || group.characters[0] || {};
+    group.twinks = group.characters.filter(player => player !== group.main);
+    group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
+    return group;
+  }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
+}
+
+function setDefaultCreateRaidDate(){
+  const field = document.getElementById("createRaidDate");
+  if(!field || field.value) return;
+  const now = new Date();
+  field.value = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function createRaidIdForGuildPage(raidKey){
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-") + "-" +
+  String(now.getHours()).padStart(2, "0") +
+  String(now.getMinutes()).padStart(2, "0") +
+  String(now.getSeconds()).padStart(2, "0");
+  return raid.short + "-" + stamp;
+}
+
+function randomCode(length){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for(let i = 0; i < length; i++){
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function createRaidFromGuildPage(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const raidKey = document.getElementById("createRaidSelect").value;
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
+  const raidDate = document.getElementById("createRaidDate").value;
+  const raidTime = document.getElementById("createRaidTime").value;
+  const guild = document.getElementById("createRaidGuild").value.trim();
+  const resultBox = document.getElementById("createRaidResult");
+
+  if(!masterCode){
+    resultBox.innerHTML = '<span class="bad">Bitte zuerst den Master-Code eingeben.</span>';
+    return;
+  }
+
+  if(!raidDate){
+    resultBox.innerHTML = '<span class="bad">Bitte ein Raid-Datum auswählen.</span>';
+    return;
+  }
+
+  if(!raidTime){
+    resultBox.innerHTML = '<span class="bad">Bitte eine Raid-Uhrzeit auswählen.</span>';
+    return;
+  }
+
+  const raidId = createRaidIdForGuildPage(raidKey);
+  const playerPin = randomCode(3);
+  const leadPin = randomCode(4);
+  const raidData = {
+    action:"createRaid",
+    raidId,
+    raid:raidKey,
+    raidName:raid.name,
+    datum:raidDate,
+    uhrzeit:raidTime,
+    raidDate,
+    raidTime,
+    guild,
+    gilde:guild,
+    playerPin,
+    leadPin,
+    playerLink:"",
+    createdAt:new Date().toISOString(),
+    status:"geschlossen",
+    p0PlusFreigabe:"nein"
+  };
+
+  resultBox.innerHTML = '<span class="warn">Raid wird erstellt ...</span>';
+
+  try{
+    await fetch(API_URL, {
+      method:"POST",
+      mode:"no-cors",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(raidData)
+    });
+
+    guildData.raids = [raidData].concat(guildData.raids || []);
+    renderSummary();
+    renderRaids();
+
+    resultBox.innerHTML = `
+      <span class="ok">Raid wurde erstellt.</span>
+      <div class="created-raid">
+        <div class="created-pin">
+          <span>Prio-PIN</span>
+          <strong id="createdPlayerPin">${escapeHtml(playerPin)}</strong>
+          <button class="small-btn ghost" type="button" onclick="copyText('createdPlayerPin')">Kopieren</button>
+        </div>
+        <div class="created-pin">
+          <span>LeadPIN</span>
+          <strong id="createdLeadPin">${escapeHtml(leadPin)}</strong>
+          <button class="small-btn ghost" type="button" onclick="copyText('createdLeadPin')">Kopieren</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:10px">${escapeHtml(raid.name)} · ${escapeHtml(formatRaidDate(raidDate))} · ${escapeHtml(raidTime)}${guild ? " · " + escapeHtml(guild) : ""}</div>
+    `;
+    setStatus("Raid wurde erstellt und in die Liste eingetragen.", "good");
+  }catch(error){
+    resultBox.innerHTML = `<span class="bad">${escapeHtml(error.message || "Raid konnte nicht erstellt werden.")}</span>`;
+  }
+}
+
+async function resetPlayerLogin(rowNumber){
+  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+  if(!player) return;
+
+  const ok = confirm(`Spielerlogin für ${player.char} zurücksetzen? Twinks mit gleichem Konto bekommen denselben neuen Login.`);
+  if(!ok) return;
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  setStatus("Spielerlogin wird zurückgesetzt ...", "");
+
+  try{
+    const result = await apiJsonp({
+      action:"guildResetPlayerLogin",
+      masterCode,
+      rowNumber:player.rowNumber,
+      char:player.char,
+      server:player.server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Spielerlogin konnte nicht zurückgesetzt werden.", "bad");
+      return;
+    }
+
+    showResetResult(result);
+    setStatus("Spielerlogin wurde zurückgesetzt.", "good");
+    await loadOverview();
+  }catch(error){
+    setStatus(error.message || "Reset fehlgeschlagen.", "bad");
+  }
+}
+
+function showResetResult(result){
+  const box = document.getElementById("lastReset");
+  box.style.display = "block";
+  box.innerHTML = `
+    <h3>Neuer Spielerlogin</h3>
+    <div><strong>${escapeHtml(result.char || "")}</strong> ${escapeHtml(result.server || "")}</div>
+    <div class="new-pin">nicht sichtbar</div>
+    <div class="muted">${Number(result.updated || 0)} Charaktere aktualisiert.</div>
+  `;
+}
+
+async function copyText(elementId){
+  const element = document.getElementById(elementId);
+  const text = element ? (element.value || element.textContent || "").trim() : "";
+  if(!text) return;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    setStatus("Kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
+async function setRaidStatusFromPage(raidId, status){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await apiJsonp({ action:"guildSetRaidStatus", masterCode, raidId, status });
+    if(!result.success){
+      setStatus(result.error || "Raidstatus konnte nicht geändert werden.", "bad");
+      return;
+    }
+
+    const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+    if(raid) raid.status = status;
+    renderSummary();
+    renderRaids();
+    setStatus("Raidstatus wurde geändert.", "good");
+  }catch(error){
+    setStatus(error.message || "Raidstatus konnte nicht geändert werden.", "bad");
+  }
+}
+
+async function setRaidP0PlusFromPage(raidId, enabled){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const currentStatus = raid && raid.status ? raid.status : "geschlossen";
+  const freigabe = enabled ? "ja" : "nein";
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await apiJsonp({
+      action:"guildSetRaidStatus",
+      masterCode,
+      raidId,
+      status:currentStatus,
+      p0PlusFreigabe:freigabe
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ konnte nicht geändert werden.", "bad");
+      return;
+    }
+
+    if(raid) raid.p0PlusFreigabe = freigabe;
+    renderRaids();
+    setStatus(enabled ? "P0+ wurde geöffnet." : "P0+ wurde geschlossen.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+ konnte nicht geändert werden.", "bad");
+  }
+}
+
+async function archiveRaidFromPage(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const label = raid ? (raid.raidName || raid.raid || raid.raidId) : raidId;
+  const ok = confirm(`Raid ${label} archivieren? Er verschwindet aus der Standardliste, bleibt aber gespeichert.`);
+  if(!ok) return;
+  await setRaidStatusFromPage(raidId, "archiviert");
+}
+
+async function openPrioModal(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  document.getElementById("prioModalTitle").textContent = raid.raidName || raid.raid || "Prioliste";
+  document.getElementById("prioModalSubline").textContent = [
+    formatRaidDate(raid.raidDate),
+    raid.raidTime,
+    raid.guild,
+    "Prio-PIN " + (raid.playerPin || "-")
+  ].filter(Boolean).join(" · ");
+  document.getElementById("prioModalContent").innerHTML = '<div class="status">Prioliste wird geladen ...</div>';
+  document.getElementById("prioModal").classList.remove("hidden");
+
+  try{
+    await ensureLootDataLoaded();
+    const result = await apiJsonp({
+      action:"getPublishedPrios",
+      raid:raid.raid || raid.raidName || "",
+      playerPin:raid.playerPin || raid.raidId || raid.leadPin || ""
+    });
+
+    if(!result.success && result.error){
+      document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(result.error)}</div>`;
+      return;
+    }
+
+    renderPrioModalContent(result, raid);
+  }catch(error){
+    document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Prioliste konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function closePrioModal(){
+  document.getElementById("prioModal").classList.add("hidden");
+}
+
+function renderPrioModalContent(result, raid){
+  const prios = Array.isArray(result.prios) ? result.prios : [];
+  const raidStatus = result.published ? "geöffnet" : "geschlossen";
+
+  if(!prios.length){
+    document.getElementById("prioModalContent").innerHTML = `
+      <div class="prio-toolbar">
+        ${statusBadge(raidStatus)}
+        ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}
+      </div>
+      <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
+    `;
+    return;
+  }
+
+  document.getElementById("prioModalContent").innerHTML = `
+    <div class="prio-toolbar">
+      <div>${statusBadge(raidStatus)} ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}</div>
+      <div class="muted">${prios.length} Einträge</div>
+    </div>
+    <div class="table-wrap">
+      <table class="prio-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Spieler</th>
+            <th>Klasse</th>
+            <th>P1</th>
+            <th>P2</th>
+            <th>P3</th>
+            <th>P0+</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${prios.map((prio, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td><strong>${escapeHtml(prio.Spieler || "-")}</strong></td>
+              <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
+              <td>${renderLootItem(prio.P1)}</td>
+              <td>${renderLootItem(prio.P2)}</td>
+              <td>${renderLootItem(prio.P3)}</td>
+              <td>${renderP0PlusChoice(prio)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderP0PlusChoice(prio){
+  const active = normalize(prio.P0Plus) === "ja";
+  if(!active) return '<span class="badge closed">-</span>';
+  return `<span class="prio-p0">${renderLootItem(prio.P1 || "P0+")}</span>`;
+}
+
+async function ensureLootDataLoaded(){
+  if(lootDataLoaded) return;
+  const files = ["mc","bwl","aq40","naxx","zg","aq20","ony","preraidbis"];
+  const results = await Promise.all(files.map(file =>
+    fetch(`data/${file}.json`).then(response => response.ok ? response.json() : []).catch(() => [])
+  ));
+  results.flat().forEach(item => {
+    const name = item && (item.name || item.Item || item.Itemname_DE || item.item);
+    if(!name) return;
+    lootItemIndex[itemKey(name)] = normalizeLootItem(item);
+  });
+  lootDataLoaded = true;
+}
+
+function normalizeLootItem(item){
+  return {
+    name:item.name || item.Item || item.Itemname_DE || item.item || "",
+    quality:normalizeQuality(item.quality || item["Qualität"] || item.Quality || item.Seltenheit || ""),
+    slot:item.slot || item.Slot || "",
+    type:item.type || item.Typ || item.Type || "",
+    boss:item.boss || item.Boss || "",
+    itemId:item.itemId || item.itemID || item.ItemID || "",
+    tooltip:item.tooltip || item.Tooltip_DE || item.Tooltip || item.statsText || "",
+    stats:Array.isArray(item.stats) ? item.stats : [],
+    dropChance:item.dropChance || item.dropchance || item.Dropchance || ""
+  };
+}
+
+function renderLootItem(itemName){
+  const name = String(itemName || "").trim();
+  if(!name) return '<span class="muted">-</span>';
+  const item = lootItemIndex[itemKey(name)];
+  const quality = item ? item.quality : "";
+  const displayName = item ? item.name : name;
+  return `<span class="item-with-tooltip ${escapeAttr(quality)}" onmouseenter="showItemTooltip(event,'${escapeAttr(displayName)}')" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">${escapeHtml(displayName)}</span>`;
+}
+
+function showItemTooltip(event, itemName){
+  const tooltip = document.getElementById("tooltip");
+  const item = lootItemIndex[itemKey(itemName)];
+  if(!tooltip) return;
+
+  if(!item){
+    tooltip.innerHTML = `<div class="tooltip-title epic">${escapeHtml(itemName)}</div><div class="tooltip-row">Keine Itemdetails gefunden.</div>`;
+  }else{
+    const tooltipLines = item.tooltip
+      ? String(item.tooltip).split("|").map(line => line.trim()).filter(Boolean).map(line => `<div class="tooltip-stat">${escapeHtml(line)}</div>`).join("")
+      : item.stats.map(line => `<div class="tooltip-stat">${escapeHtml(line)}</div>`).join("");
+    tooltip.innerHTML = `
+      <div class="tooltip-title ${escapeAttr(item.quality || "epic")}">${escapeHtml(item.name)}</div>
+      ${(item.slot || item.type) ? `<div class="tooltip-row"><span>${escapeHtml(item.slot || "")}</span><span>${escapeHtml(item.type || "")}</span></div>` : ""}
+      ${tooltipLines}
+      ${(item.boss || item.dropChance) ? `<div class="tooltip-extra">${item.boss ? `<div><strong>Boss:</strong> ${escapeHtml(item.boss)}</div>` : ""}${item.dropChance ? `<div><strong>Dropchance:</strong> ${escapeHtml(item.dropChance)}</div>` : ""}${item.itemId ? `<div><strong>ItemID:</strong> ${escapeHtml(item.itemId)}</div>` : ""}</div>` : ""}
+    `;
+  }
+
+  tooltip.classList.remove("hidden");
+  moveTooltip(event);
+}
+
+function moveTooltip(event){
+  const tooltip = document.getElementById("tooltip");
+  if(!tooltip || tooltip.classList.contains("hidden")) return;
+  const padding = 14;
+  const width = tooltip.offsetWidth || 330;
+  const height = tooltip.offsetHeight || 220;
+  let left = event.clientX + 16;
+  let top = event.clientY + 16;
+  if(left + width + padding > window.innerWidth) left = event.clientX - width - 16;
+  if(top + height + padding > window.innerHeight) top = event.clientY - height - 16;
+  tooltip.style.left = Math.max(padding, left) + "px";
+  tooltip.style.top = Math.max(padding, top) + "px";
+}
+
+function hideTooltip(){
+  const tooltip = document.getElementById("tooltip");
+  if(tooltip) tooltip.classList.add("hidden");
+}
+
+function normalizeQuality(value){
+  const q = normalize(value);
+  if(q.includes("legend")) return "legendary";
+  if(q.includes("episch") || q.includes("epic")) return "epic";
+  if(q.includes("selten") || q.includes("rare")) return "rare";
+  if(q.includes("ungew") || q.includes("uncommon")) return "uncommon";
+  return "";
+}
+
+function itemKey(value){
+  return normalize(value)
+    .replace(/[’']/g,"")
+    .replace(/[^a-z0-9äöüß]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function classColor(className){
+  const value = normalize(className);
+  if(value.includes("krieger") || value.includes("warrior")) return "class-warrior";
+  if(value.includes("paladin")) return "class-paladin";
+  if(value.includes("jäger") || value.includes("jaeger") || value.includes("hunter")) return "class-hunter";
+  if(value.includes("schurke") || value.includes("rogue")) return "class-rogue";
+  if(value.includes("priester") || value.includes("priest")) return "class-priest";
+  if(value.includes("schamane") || value.includes("shaman")) return "class-shaman";
+  if(value.includes("magier") || value.includes("mage")) return "class-mage";
+  if(value.includes("hexenmeister") || value.includes("warlock")) return "class-warlock";
+  if(value.includes("druide") || value.includes("druid")) return "class-druid";
+  return "";
+}
+
+function toggleP0PlusPanel(){
+  const panel = document.getElementById("p0PlusPanel");
+  panel.open = !panel.open;
+}
+
+async function loadP0PlusPanel(){
+  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
+
+  try{
+    const result = await apiJsonp({ action:"getP0Plus" });
+    if(!result.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
+    renderP0PlusModalContent();
+  }catch(error){
+    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderP0PlusModalContent(){
+  const raids = Array.from(new Set(p0PlusEntries.map(entry => entry.raid).filter(Boolean))).sort();
+  document.getElementById("p0PlusPanelContent").innerHTML = `
+    <div class="p0-toolbar">
+      <select id="p0RaidFilter" onchange="renderP0PlusRows()">
+        <option value="">Alle Raids</option>
+        ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
+      </select>
+      <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+      <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+    </div>
+    <div class="table-wrap">
+      <table class="p0-table">
+        <thead>
+          <tr>
+            <th>Raid</th>
+            <th>Spieler</th>
+            <th>Item</th>
+            <th>Slot</th>
+            <th>Punkte</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="p0PlusRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderP0PlusRows();
+}
+
+function renderP0PlusRows(){
+  const tbody = document.getElementById("p0PlusRows");
+  if(!tbody) return;
+
+  const raidFilter = normalize(document.getElementById("p0RaidFilter").value);
+  const search = normalize(document.getElementById("p0Search").value);
+  const rows = p0PlusEntries.filter(entry => {
+    const haystack = normalize([entry.raid, entry.player, entry.item, entry.slot].join(" "));
+    return (!raidFilter || normalize(entry.raid) === raidFilter) && (!search || haystack.includes(search));
+  }).sort((a, b) => {
+    const raidCompare = String(a.raid || "").localeCompare(String(b.raid || ""));
+    if(raidCompare) return raidCompare;
+    const playerCompare = String(a.player || "").localeCompare(String(b.player || ""));
+    if(playerCompare) return playerCompare;
+    return String(a.item || "").localeCompare(String(b.item || ""));
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine P0+ Einträge gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((entry, index) => {
+    const sourceIndex = p0PlusEntries.indexOf(entry);
+    const inputId = `p0Points_${sourceIndex}`;
+    return `
+      <tr>
+        <td>${escapeHtml(entry.raid || "-")}</td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+        <td>${escapeHtml(entry.item || "-")}</td>
+        <td>${escapeHtml(entry.slot || "-")}</td>
+        <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
+        <td>
+          <div class="actions">
+            <button class="small-btn ghost" type="button" onclick="setP0PlusInput(${sourceIndex},0.5)">0.5 Bench</button>
+            <button class="small-btn primary" type="button" onclick="saveP0PlusPoints(${sourceIndex})">Speichern</button>
+            <button class="small-btn danger" type="button" onclick="setP0PlusInput(${sourceIndex},0); saveP0PlusPoints(${sourceIndex})">Entfernen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function setP0PlusInput(index, value){
+  const field = document.getElementById(`p0Points_${index}`);
+  if(field) field.value = String(value);
+}
+
+async function saveP0PlusPoints(index){
+  const entry = p0PlusEntries[index];
+  if(!entry) return;
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const field = document.getElementById(`p0Points_${index}`);
+  const points = Number(String(field ? field.value : entry.count).replace(",", "."));
+  if(!isFinite(points) || points < 0){
+    setStatus("P0+ Punkte müssen 0 oder größer sein.", "bad");
+    return;
+  }
+
+  try{
+    const result = await apiJsonp({
+      action:"guildSetP0PlusPoints",
+      masterCode,
+      raid:entry.raid || "",
+      item:entry.item || "",
+      slot:entry.slot || "",
+      player:entry.player || "",
+      points
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Punkte konnten nicht gespeichert werden.", "bad");
+      return;
+    }
+
+    if(result.deleted || points === 0){
+      p0PlusEntries.splice(index, 1);
+    }else{
+      entry.count = points;
+      entry.slot = result.slot || entry.slot || "";
+    }
+    renderP0PlusRows();
+    setStatus(points === 0 ? "P0+ Eintrag entfernt." : "P0+ Punkte gespeichert.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+ Punkte konnten nicht gespeichert werden.", "bad");
+  }
+}
+
+function formatPoints(value){
+  const number = Number(value || 0);
+  if(!isFinite(number)) return "0";
+  return String(number).replace(".", ".");
+}
+
+function toggleIssueInboxPanel(){
+  const panel = document.getElementById("issueInboxPanel");
+  panel.open = !panel.open;
+}
+
+async function loadIssueInboxPanel(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    return;
+  }
+
+  document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
+
+  try{
+    const result = await apiJsonp({ action:"guildGetIssueReports", masterCode });
+    if(!result.success){
+      document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    issueReports = Array.isArray(result.reports) ? result.reports : [];
+    await ensureLootDataLoaded();
+    renderIssueInboxPanel();
+  }catch(error){
+    document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Postfach konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderIssueInboxPanel(){
+  document.getElementById("issueInboxPanelContent").innerHTML = `
+    <div class="issue-toolbar">
+      <input id="issueSearch" type="search" placeholder="Spieler, Item, Raid oder Hinweis suchen..." oninput="renderIssueRows()">
+      <button class="small-btn ghost" type="button" onclick="loadIssueInboxPanel()">Neu laden</button>
+    </div>
+    <div class="table-wrap">
+      <table class="issue-table">
+        <thead>
+          <tr>
+            <th>Zeit</th>
+            <th>Art</th>
+            <th>Raid</th>
+            <th>Item</th>
+            <th>Spieler</th>
+            <th>Hinweis</th>
+            <th>Quelle</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="issueRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderIssueRows();
+}
+
+function renderIssueRows(){
+  const tbody = document.getElementById("issueRows");
+  if(!tbody) return;
+
+  const search = normalize(document.getElementById("issueSearch").value);
+  const rows = issueReports.filter(report => {
+    const haystack = normalize([
+      report.time,
+      report.type,
+      report.source,
+      report.category,
+      report.raid,
+      report.item,
+      report.slot,
+      report.points,
+      report.player,
+      report.server,
+      report.note,
+      report.page
+    ].join(" "));
+    return !search || haystack.includes(search);
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Meldungen gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(report => `
+    <tr>
+      <td>${escapeHtml(report.time || "-")}</td>
+      <td>${escapeHtml(report.type || report.category || "-")}</td>
+      <td>${escapeHtml(report.raid || "-")}</td>
+      <td>${renderLootItem(report.item || "-")}<br><span class="muted">${escapeHtml(report.slot || "")}${report.points ? " · " + escapeHtml(report.points) + " Punkte" : ""}</span></td>
+      <td>${escapeHtml(report.player || "-")}<br><span class="muted">${escapeHtml(report.server || "")}</span></td>
+      <td class="issue-note">${escapeHtml(report.note || "-")}</td>
+      <td>${escapeHtml(report.source || "-")}<br><span class="muted">${escapeHtml(report.page || "")}</span></td>
+      <td><button class="small-btn good" type="button" onclick="resolveIssueReport(${Number(report.rowNumber || 0)})">Erledigt</button></td>
+    </tr>
+  `).join("");
+}
+
+async function resolveIssueReport(rowNumber){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!rowNumber) return;
+
+  try{
+    const result = await apiJsonp({ action:"guildResolveIssueReport", masterCode, rowNumber });
+    if(!result.success){
+      setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
+      return;
+    }
+    issueReports = issueReports.filter(report => Number(report.rowNumber || 0) !== Number(rowNumber));
+    renderIssueRows();
+    setStatus("Meldung erledigt und gelöscht.", "good");
+  }catch(error){
+    setStatus(error.message || "Meldung konnte nicht erledigt werden.", "bad");
+  }
+}
+
+function isOpenStatus(status){
+  const value = normalize(status);
+  return value === "offen" || value === "geöffnet" || value === "published" || value === "true";
+}
+
+function statusBadge(status){
+  const value = normalize(status || "geschlossen");
+  const cls = isOpenStatus(value) ? "open" : (value === "archiviert" ? "warn" : "closed");
+  return `<span class="badge ${cls}">${escapeHtml(status || "geschlossen")}</span>`;
+}
+
+function p0Badge(value){
+  const normalized = normalize(value);
+  if(normalized === "ja" || normalized === "aktiv" || normalized === "true"){
+    return '<span class="badge open">frei</span>';
+  }
+  if(normalized === "nein"){
+    return '<span class="badge closed">gesperrt</span>';
+  }
+  return '<span class="badge closed">-</span>';
+}
+
+function formatRaidDate(value){
+  if(!value) return "-";
+  const parts = String(value).split("-");
+  if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  return String(value);
+}
+
+function normalize(value){
+  return String(value || "").trim().toLowerCase();
+}
+
+function escapeHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(value){
+  return escapeHtml(value).replace(/`/g,"&#096;");
+}
+</script>
+</body>
+</html>
