@@ -1192,6 +1192,11 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .raid-calendar-day-number{color:#f8fafc;font-weight:950;font-size:12px}
 .raid-calendar-event{border:1px solid rgba(250,204,21,.18);border-radius:5px;background:rgba(250,204,21,.10);padding:3px 4px;color:#f8fafc;font-size:11px;font-weight:850;line-height:1.25;overflow:hidden}
 .raid-calendar-event.external{border-color:rgba(96,165,250,.24);background:rgba(37,99,235,.16)}
+.raid-calendar-event.reset{border-color:rgba(148,163,184,.22);background:rgba(15,23,42,.72);font-size:10px;color:#cbd5e1}
+.raid-calendar-event.reset.server{border-color:rgba(96,165,250,.28);background:rgba(59,130,246,.14)}
+.raid-calendar-event.reset.short{border-color:rgba(45,212,191,.25);background:rgba(20,184,166,.12)}
+.raid-calendar-event.reset.ony{border-color:rgba(248,113,113,.25);background:rgba(239,68,68,.12)}
+.raid-calendar-event.reset.dmf{border-color:rgba(192,132,252,.30);background:rgba(126,34,206,.16);color:#e9d5ff}
 .raid-calendar-event small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .raid-calendar-menu{position:fixed;z-index:70000;width:min(310px,calc(100vw - 28px));display:grid;gap:7px;padding:12px;border:1px solid rgba(250,204,21,.34);border-radius:8px;background:rgba(5,10,23,.98);box-shadow:0 18px 40px rgba(0,0,0,.45)}
 .raid-calendar-menu.hidden{display:none}
@@ -1210,6 +1215,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .raid-calendar-modal .raid-calendar-day{min-height:126px;padding:8px;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(2,6,23,.62)}
 .raid-calendar-modal .raid-calendar-day-number{font-size:16px}
 .raid-calendar-modal .raid-calendar-event{font-size:13px;padding:6px 7px}
+.raid-calendar-modal .raid-calendar-event.reset{font-size:11px;padding:4px 6px}
 .raid-calendar-modal .raid-calendar-event small{font-size:11px}
 .raid-calendar-mini{display:grid;gap:8px}
 .raid-calendar-open-btn{width:100%;justify-content:center}
@@ -4255,6 +4261,77 @@ function raidCalendarTimestamp(event){
   return parsed.getTime();
 }
 
+const RAID_CALENDAR_RESET_RULES=[
+  { id:"zg-aq20", title:"ZG/AQ20 Reset", anchor:"2026-06-20", intervalDays:3, time:"09:00", resetClass:"short" },
+  { id:"ony", title:"Onyxia Reset", anchor:"2026-06-21", intervalDays:5, time:"09:00", resetClass:"ony" }
+];
+
+function firstMondayOfMonth(year,month){
+  const date=new Date(year,month,1);
+  const offset=(8-date.getDay())%7;
+  date.setDate(1+offset);
+  return date;
+}
+
+function buildRaidCalendarResetEvents(){
+  const days=raidCalendarVisibleDays();
+  if(!days.length) return [];
+  const start=new Date(days[0]);
+  const end=new Date(days[days.length-1]);
+  start.setHours(0,0,0,0);
+  end.setHours(23,59,59,999);
+
+  const events=[];
+  RAID_CALENDAR_RESET_RULES.forEach(rule=>{
+    const anchor=parseActiveRaidDate(rule.anchor);
+    if(!anchor || !rule.intervalDays) return;
+    anchor.setHours(0,0,0,0);
+    const intervalMs=rule.intervalDays*24*60*60*1000;
+    let date=new Date(anchor);
+    if(date < start){
+      const steps=Math.ceil((start.getTime()-date.getTime())/intervalMs);
+      date=new Date(date.getTime()+steps*intervalMs);
+    }
+    while(date <= end){
+      events.push({
+        id:"reset_"+rule.id+"_"+raidCalendarDateToIso(date),
+        title:rule.title,
+        date:raidCalendarDateToIso(date),
+        time:rule.time || "09:00",
+        guild:"Server Reset",
+        note:"Reset-Termin",
+        source:"reset",
+        resetClass:rule.resetClass || "server"
+      });
+      date=new Date(date.getTime()+intervalMs);
+    }
+  });
+
+  const monthCursor=new Date(start.getFullYear(),start.getMonth()-1,1);
+  const lastMonth=new Date(end.getFullYear(),end.getMonth()+1,1);
+  while(monthCursor <= lastMonth){
+    const dmfStart=firstMondayOfMonth(monthCursor.getFullYear(),monthCursor.getMonth());
+    for(let day=0;day<7;day++){
+      const date=new Date(dmfStart);
+      date.setDate(dmfStart.getDate()+day);
+      if(date < start || date > end) continue;
+      events.push({
+        id:"reset_dmf_"+raidCalendarDateToIso(date),
+        title:day === 0 ? "Dunkelmond Start" : "Dunkelmond offen",
+        date:raidCalendarDateToIso(date),
+        time:"",
+        guild:"Dunkelmond-Jahrmarkt",
+        note:"Jahrmarkt-Woche",
+        source:"reset",
+        resetClass:"dmf",
+        allDay:true
+      });
+    }
+    monthCursor.setMonth(monthCursor.getMonth()+1);
+  }
+  return events;
+}
+
 function buildRaidCalendarEvents(){
   const prioEvents=(myRaidCalendarPrioEntries || []).map(entry=>{
     const raidName=entry.raidName || entry.raid || "Raid";
@@ -4269,7 +4346,7 @@ function buildRaidCalendarEvents(){
       source:"prio"
     };
   });
-  return prioEvents.concat(loadExternalRaidCalendarEntries())
+  return prioEvents.concat(loadExternalRaidCalendarEntries(),buildRaidCalendarResetEvents())
     .filter(event=>event && event.title && event.date)
     .sort((a,b)=>raidCalendarTimestamp(a)-raidCalendarTimestamp(b));
 }
@@ -4314,13 +4391,14 @@ function updateRaidCalendarMini(events){
   const mini=document.getElementById("dashboardRaidCalendarMini");
   if(!mini) return;
   const list=events || buildRaidCalendarEvents();
-  const prioCount=list.filter(event=>event.source === "prio").length;
-  const externalCount=list.filter(event=>event.source === "external").length;
-  if(!list.length){
+  const ownEvents=list.filter(event=>event.source !== "reset");
+  const prioCount=ownEvents.filter(event=>event.source === "prio").length;
+  const externalCount=ownEvents.filter(event=>event.source === "external").length;
+  if(!ownEvents.length){
     mini.textContent="Noch keine Termine. Lade deine Prios oder trage externe Gilden-Raids im Kalender ein.";
     return;
   }
-  mini.textContent=list.length+" Termin(e): "+prioCount+" aus deinen Prios, "+externalCount+" extern.";
+  mini.textContent=ownEvents.length+" Termin(e): "+prioCount+" aus deinen Prios, "+externalCount+" extern.";
 }
 
 function openRaidCalendarModal(){
@@ -4343,12 +4421,15 @@ function closeRaidCalendarModalOnBackdrop(event){
 }
 
 function renderRaidCalendarEvent(event){
-  const sourceClass=event.source === "external" ? " external" : "";
+  const sourceClass=event.source === "external"
+    ? " external"
+    : (event.source === "reset" ? " reset "+safeAttr(event.resetClass || "server") : "");
   const remove=event.source === "external"
     ? ' <button class="text-link-btn" onclick="removeExternalRaidFromCalendar(\''+safeJs(event.id)+'\')">×</button>'
     : "";
+  const timeLabel=event.allDay ? "" : safeHtml(formatRaidTimeForDisplay(event.time))+" ";
   return '<div class="raid-calendar-event'+sourceClass+'">'+
-    safeHtml(formatRaidTimeForDisplay(event.time))+' '+safeHtml(event.title)+remove+
+    timeLabel+safeHtml(event.title)+remove+
     '<small>'+safeHtml(event.guild || "-")+'</small>'+
   '</div>';
 }
@@ -4469,7 +4550,7 @@ function escapeIcsText(value){
 }
 
 function downloadRaidCalendarIcs(){
-  const events=buildRaidCalendarEvents();
+  const events=buildRaidCalendarEvents().filter(event=>event.source !== "reset");
   const status=document.getElementById("externalRaidStatus");
   if(!events.length){
     if(status) status.innerHTML='<span class="bad">Keine Raidtermine zum Exportieren gefunden.</span>';
