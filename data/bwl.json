@@ -18,6 +18,28 @@
     "iconName": "spell_holy_blessingofprotection"
   },
   {
+  "raid": "ONY",
+  "boss": "Onyxia",
+  "itemId": 17073,
+  "name": "Drakonischer Schlägel",
+  "slot": "Zweihandwaffe",
+  "type": "Streitkolben",
+  "quality": "Episch",
+  "icon": "133481",
+  "dropChance": "14.85",
+  "statsText": "20 - 26 Schaden | Geschwindigkeit 3.60 | +9 Stärke | +6 Ausdauer | Erhöht Eure kritische Trefferwertung um 13",
+  "stats": [
+    "20 - 26 Schaden",
+    "Geschwindigkeit 3.60",
+    "(6.4 Schaden pro Sekunde)",
+    "+9 Stärke",
+    "+6 Ausdauer",
+    "Erhöht Eure kritische Trefferwertung um 13"
+  ],
+  "tooltip": "Drakonischer Schlägel | Wird beim Aufheben gebunden | Zweihändig | Streitkolben | 20 - 26 Schaden | Geschwindigkeit 3.60 | (6.4 Schaden pro Sekunde) | +9 Stärke | +6 Ausdauer | Erhöht Eure kritische Trefferwertung um 13 | Haltbarkeit 120 / 120 | Benötigt Stufe 30",
+  "iconName": "inv_hammer_04"
+},
+  {
     "raid": "BWL",
     "boss": "T1_SET",
     "itemId": 205,
