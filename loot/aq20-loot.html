@@ -2003,6 +2003,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <script>
 const RAID_NAME = "aq20";
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const LOOT_JSON_URL = "../data/aq20.json";
 const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
@@ -3146,7 +3147,7 @@ function copyParticipantPinFromPopup(){
 }
 
 async function fetchCharactersForParticipantPin(pin){
-  const url=RAID_API_URL+
+  const url=LICHTLOOT_API_URL+
     '?action=getCharactersByPin'+
     '&pin='+encodeURIComponent(pin)+
     '&t='+Date.now();
@@ -3223,7 +3224,7 @@ async function createParticipantPinForCurrentCharacter(){
 
   for(let attempt=0; attempt<5; attempt++){
     const newPin=generateParticipantPin();
-    const url = RAID_API_URL+
+    const url = LICHTLOOT_API_URL+
       "?action=createPlayerPin"+
       "&char="+encodeURIComponent(player)+
       "&server="+encodeURIComponent(server)+
@@ -3316,9 +3317,12 @@ function buildSavePrioUrl(savePin, oldPin){
     p1 === p2 &&
     p2 === p3;
 
-  let url=APPS_SCRIPT_URL+
+  let url=LICHTLOOT_API_URL+
     "?action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
+    "&raidId="+encodeURIComponent(currentRaidId || "")+
+    "&raidDate="+encodeURIComponent(currentRaidDate || "")+
+    "&raidTime="+encodeURIComponent(currentRaidTime || "")+
     "&raidPin="+encodeURIComponent(pin)+
     "&characterPin="+encodeURIComponent(savePin)+
     "&playerPin="+encodeURIComponent(savePin)+
@@ -4259,7 +4263,7 @@ async function loadLoggedInLichtLootCharacters(){
   }
 
   try{
-    const response=await fetch(APPS_SCRIPT_URL + '?action=getCharactersByPin&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+    const response=await fetch(LICHTLOOT_API_URL + '?action=getCharactersByPin&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
     const result=await response.json();
 
     if(!result.success){
@@ -5719,7 +5723,7 @@ async function loadMyPrios(){
   results.innerHTML='';
 
   try{
-    const url=APPS_SCRIPT_URL+
+    const url=LICHTLOOT_API_URL+
       '?action=getPlayerPrioHistory'+
       '&char='+encodeURIComponent(charName)+
       '&pin='+encodeURIComponent(pin)+
@@ -6626,7 +6630,7 @@ async function loadLichtLootCharacters(){
   }
 
   try{
-    const url=RAID_API_URL+
+    const url=LICHTLOOT_API_URL+
       '?action=getCharactersByPin'+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
@@ -6759,7 +6763,7 @@ async function loadMyPrios(){
   results.innerHTML='';
 
   try{
-    const url=RAID_API_URL+
+    const url=LICHTLOOT_API_URL+
       '?action=getPlayerPrioHistory'+
       '&char='+encodeURIComponent(charName)+
       '&pin='+encodeURIComponent(pin)+
@@ -7017,7 +7021,7 @@ async function deleteOwnPrio(payload){
     '&t='+Date.now();
 
   async function tryDeletePrio(){
-    const response=await fetch(RAID_API_URL+'?action=deletePrio'+baseParams);
+    const response=await fetch(LICHTLOOT_API_URL+'?action=deletePrio'+baseParams);
     const data=await response.json();
     return data || {};
   }
