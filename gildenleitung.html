@@ -3331,10 +3331,37 @@ function renderGuildSentLeadPinRows(tbody){
         <td>${escapeHtml(message.recipientNames || "-")}</td>
         <td class="issue-note">${escapeHtml(message.title || "LeadPIN")}</td>
         <td><a href="${escapeAttr(directLink)}" target="_blank" rel="noopener">Raid öffnen</a></td>
-        <td><button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(message.leadPin || "")}')">PIN kopieren</button></td>
+        <td>
+          <div class="actions">
+            <button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(message.leadPin || "")}')">PIN kopieren</button>
+            <button class="small-btn danger" type="button" onclick="deleteGuildSentMessage('${escapeAttr(message.id)}')">Löschen</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
+}
+
+async function deleteGuildSentMessage(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode || !id){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Verschickte LeadPIN-Nachricht wirklich löschen?")) return;
+
+  try{
+    const result = await railwayApi({ action:"guildDeletePlayerMessage", masterCode, id });
+    if(!result.success || !result.deleted){
+      setStatus(result.error || "Nachricht konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+    guildSentMessages = guildSentMessages.filter(message => String(message.id || "") !== String(id));
+    renderIssueRows();
+    setStatus("Nachricht gelöscht.", "good");
+  }catch(error){
+    setStatus(error.message || "Nachricht konnte nicht gelöscht werden.", "bad");
+  }
 }
 
 function renderIssueItem(report){
