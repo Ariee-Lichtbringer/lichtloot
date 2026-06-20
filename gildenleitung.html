@@ -1845,36 +1845,11 @@ async function loadDashboardRaidStats(){
   const raids = getDashboardActiveRaids();
   if(!raids.length) return;
 
-  await Promise.all(raids.map(async raid => {
+  raids.forEach(raid => {
     const raidId = String(raid.raidId || "");
     if(!raidId) return;
-    const key = getRaidKey(raid);
-    const stats = { prios:null, signups:null };
-
-    try{
-      const prioResult = await apiJsonp({
-        action:"getPublishedPrios",
-        raid:RAID_OPTIONS[key]?.short || raid.raid || "",
-        playerPin:raid.playerPin || ""
-      });
-      if(prioResult && !prioResult.error){
-        stats.prios = Array.isArray(prioResult.prios) ? prioResult.prios.length : 0;
-      }
-    }catch(error){}
-
-    try{
-      const checkResult = await apiJsonp({
-        action:"getPrioCheck",
-        raidId:raidId,
-        raid:RAID_OPTIONS[key]?.short || raid.raid || ""
-      });
-      if(checkResult && checkResult.success && checkResult.check && checkResult.check.counts){
-        stats.signups = Number(checkResult.check.counts.signups || 0);
-      }
-    }catch(error){}
-
-    dashboardRaidStats[raidId] = stats;
-  }));
+    dashboardRaidStats[raidId] = { prios:null, signups:null };
+  });
 
   renderDashboardCards();
 }

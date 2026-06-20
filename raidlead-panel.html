@@ -1620,31 +1620,7 @@ function localPrioPlayerCount(){
 }
 
 async function loadRaidPrioCheck(){
-  if(!currentRaidData || !currentRaidData.raidId){
-    currentPrioCheck = null;
-    return null;
-  }
-
-  const url =
-    RAID_API_URL +
-    "?action=getPrioCheck" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
-    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || "") +
-    "&t=" + Date.now();
-
-  try{
-    const response = await fetch(url,{cache:"no-store"});
-    const result = await response.json();
-
-    currentPrioCheck =
-      result && result.success
-        ? (result.check || null)
-        : null;
-  }catch(error){
-    console.warn("DC Abgleich konnte nicht geladen werden:", error);
-    currentPrioCheck = null;
-  }
-
+  currentPrioCheck = null;
   return currentPrioCheck;
 }
 
