@@ -2039,7 +2039,6 @@ function updatePrio3ButtonVisibility(){
 let currentRaidDate = "";
 let currentRaidTime = "";
 let currentRaidId = "";
-let currentP0PlusOverride = false;
 let currentPrioCheck = null;
 let prioCheckTimer = null;
 let p0DeadlineTimer = null;
@@ -2103,23 +2102,11 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  if(currentP0PlusOverride) return false;
-  const deadline=getP0Deadline();
-  if(!deadline) return false;
-  return new Date() > deadline;
+  return false;
 }
 
 function getP0DeadlineClosedMessage(){
-  if(currentP0PlusOverride){
-    return "P0+ wurde vom Raidlead wieder freigeschaltet.";
-  }
-  const deadline=getP0Deadline();
-  if(!deadline){
-    return "P0+ kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
-  }
-
-  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-  return "P0+ ist bereits geschlossen. P0+ konnte nur bis " + deadlineText + " gesetzt werden.";
+  return "";
 }
 
 function formatRaidDate(value){
@@ -2155,11 +2142,6 @@ function updateRaidTimeDisplay(){
   timeEl.textContent=formatTime(currentRaidTime);
 
   const deadline=getP0Deadline();
-  if(currentP0PlusOverride){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ durch Raidlead freigeschaltet</span><br>Die 30-Minuten-Sperre ist für diesen Raid aufgehoben.';
-    updateActiveButtons();
-    return;
-  }
   if(!deadline){
     deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> P0+ bleibt vorerst auswählbar.';
     return;
@@ -3594,7 +3576,6 @@ async function loadPublishedPrios(){
     currentRaidDate="";
     currentRaidTime="";
     currentRaidId="";
-    currentP0PlusOverride=false;
     currentPrioCheck=null;
     updateRaidTimeDisplay();
     renderDcCheckBox();
@@ -3621,7 +3602,6 @@ async function loadPublishedPrios(){
     currentRaidId = result.raidId || result.RaidID || result.raidID || currentRaidId || "";
     currentRaidDate = result.raidDate || result.datum || result.Datum || "";
     currentRaidTime = result.raidTime || result.uhrzeit || result.Uhrzeit || "";
-    currentP0PlusOverride = Boolean(result.p0PlusOverride) || ["ja","true","aktiv","freigeschaltet"].includes(String(result.p0PlusFreigabe || "").trim().toLowerCase());
 
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
