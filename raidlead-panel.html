@@ -1284,7 +1284,6 @@ let currentRaidKey = null;
 let currentRaidData = null;
 let currentPrios = [];
 let currentReleased = false;
-let currentP0PlusOpen = false;
 let itemIdMap = {};
 let itemVisualMap = {};
 let currentP0PlusEntries = [];
@@ -1567,24 +1566,6 @@ async function loadPriosFromSheet(playerPin){
       localStorage.getItem(stickyKey) === "true";
     currentReleased = apiReleased || stickyOpen;
 
-    const p0PlusValue =
-      result.p0PlusFreigabe ??
-      result.P0PlusFreigabe ??
-      result["P0+ Freigabe"] ??
-      result.p0PlusOverride ??
-      result.P0PlusOverride ??
-      result.p0Status ??
-      result.P0Status ??
-      "";
-
-    const p0StickyKey = "p0PlusOverride_" + (currentRaidData.raidId || result.raidId || "");
-    const p0HasSticky = localStorage.getItem(p0StickyKey) !== null || sessionStorage.getItem(p0StickyKey) !== null;
-    const p0StickyOpen = localStorage.getItem(p0StickyKey) === "true" || sessionStorage.getItem(p0StickyKey) === "true";
-    currentP0PlusOpen = String(p0PlusValue || "").trim()
-      ? isActiveFlag(p0PlusValue)
-      : p0HasSticky
-        ? p0StickyOpen
-        : false;
 
     currentPrios = (result.prios || []).map(p => ({
       rowNumber: Number(p.rowNumber || p.RowNumber || p.zeile || p.Zeile || 0),
@@ -1718,10 +1699,6 @@ function getRaidTimeLabel(){
   return time ? String(time).trim() : "-";
 }
 
-function isP0PlusOpen(){
-  return currentP0PlusOpen === true;
-}
-
 function getTransferableP0Count(){
   if(!isAllowedP0Raid()) return 0;
 
@@ -1735,14 +1712,6 @@ function renderRaidStatCards(){
   const signupCount = getDcSignupCount();
   const prioCount = localPrioPlayerCount();
   const signupText = signupCount === null ? `${prioCount}` : `${prioCount} / ${signupCount}`;
-  const p0Open = isP0PlusOpen();
-  const p0Card = hasP0Control() ? `
-      <div class="raid-stat-card violet">
-        <div class="raid-stat-head"><span class="raid-stat-icon">✦</span><span>${p0Label()} Status</span></div>
-        <strong>${p0Open ? "Aktiv" : "Gesperrt"}</strong>
-        <small>${p0Open ? p0Label() + " freigeschaltet" : p0Label() + " gesperrt"}</small>
-      </div>
-  ` : "";
   const transferCard = isAllowedP0Raid() ? `
       <div class="raid-stat-card">
         <div class="raid-stat-head"><span class="raid-stat-icon">★</span><span>P0+ Transfer</span></div>
@@ -1768,7 +1737,6 @@ function renderRaidStatCards(){
         <strong>${currentReleased ? "Offen" : "Geschlossen"}</strong>
         <small>${currentReleased ? "Items sichtbar" : "Nur Haken sichtbar"}</small>
       </div>
-      ${p0Card}
       ${transferCard}
     </div>
   `;
@@ -1793,19 +1761,11 @@ function renderRaidView(){
         ? `<button class="btn action-transfer" onclick="transferP0PlusPoints()"><span class="star">★</span>P0+ übertragen</button>`
         : `<button class="btn action-transfer" disabled style="opacity:.45;cursor:not-allowed"><span class="star">★</span>P0+ übertragen</button>`
       : "";
-  const p0Button = hasP0Control()
-    ? `<button class="btn ${isP0PlusOpen() ? "action-close" : "action-p0open"}" onclick="${isP0PlusOpen() ? "disableP0PlusOverride()" : "enableP0PlusOverride()"}">
-        ${isP0PlusOpen() ? p0Label() + " sperren" : p0Label() + " öffnen"}
-      </button>`
-    : "";
-  const p0Chip = hasP0Control()
-    ? `<span class="raid-chip ${isP0PlusOpen() ? "ok" : "warn"}">${p0Label()}: ${isP0PlusOpen() ? "aktiv" : "gesperrt"}</span>`
-    : "";
   const openStatusText = currentReleased
     ? isAllowedP0Raid()
       ? "Die Prioliste ist geöffnet. Mit „P0+ übertragen“ erhalten alle gesetzten P0+ Einträge +1 Punkt."
       : hasP0Control()
-        ? "Die Prioliste ist geöffnet. P0 kann geprüft und bei Bedarf geöffnet oder gesperrt werden."
+        ? "Die Prioliste ist geöffnet. P0 kann geprüft werden."
         : "Die Prioliste ist geöffnet. Ony nutzt nur P1."
     : `Die Prioliste ist geschlossen. Es wird nur angezeigt, ob ${prioLabelText()} gesetzt wurde.`;
 
@@ -1813,11 +1773,10 @@ function renderRaidView(){
     <div class="raid-hero">
       <div>
         <h2>${safe(r.name)} Raidlead Panel</h2>
-        <div class="subtitle">Verwalte Raid und Prios für diesen Raid${hasP0Control() ? " inklusive " + p0Label() : ""}.</div>
+        <div class="subtitle">Verwalte Raid und Prios für diesen Raid.</div>
         <div class="raid-chips">
           <span class="raid-chip">${safe(getRaidDateLabel())} · ${safe(getRaidTimeLabel())} Uhr</span>
           <span class="raid-chip ${currentReleased ? "ok" : "warn"}">Prio: ${currentReleased ? "offen" : "geschlossen"}</span>
-          ${p0Chip}
           <span class="raid-chip">${safe(currentRaidData.raidId || "Raidlead PIN geladen")}</span>
         </div>
       </div>
@@ -1829,7 +1788,6 @@ function renderRaidView(){
       <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}">
         ${currentReleased ? "Prio schließen" : "Prio öffnen"}
       </button>
-      ${p0Button}
       <button class="btn action-soft" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
       ${transferButton}
     </div>
@@ -2424,58 +2382,6 @@ async function setPrioBench(rowNumber, bench, player, server){
   }
 }
 
-
-async function setP0PlusOverride(enabled){
-  if(!currentRaidData || !currentRaidData.raidId){
-    alert("Bitte zuerst einen gültigen Raid laden.");
-    return;
-  }
-
-  if(!hasP0Control()){
-    alert("Für diesen Raid gibt es keine P0/P0+ Freischaltung.");
-    return;
-  }
-
-  try{
-    const result = await railwayApi({
-      action:"setP0PlusOverride",
-      raidId:currentRaidData.raidId,
-      leadPin:currentRaidData.leadPin || "",
-      enabled:enabled ? "true" : "false",
-      value:enabled ? "geöffnet" : "geschlossen",
-      p0PlusFreigabe:enabled ? "geöffnet" : "geschlossen",
-      p0PlusOverride:enabled ? "geöffnet" : "geschlossen"
-    });
-    if(result && result.success === false){
-      throw new Error(result.error || p0Label() + " Freischaltung konnte nicht gespeichert werden.");
-    }
-
-    const key = "p0PlusOverride_" + currentRaidData.raidId;
-    currentP0PlusOpen = enabled;
-    if(enabled){
-      localStorage.setItem(key,"true");
-      sessionStorage.setItem(key,"true");
-      alert(p0Label() + " wurde geöffnet. Spieler können jetzt " + p0Label() + " setzen.");
-    }else{
-      localStorage.setItem(key,"false");
-      sessionStorage.setItem(key,"false");
-      alert(p0Label() + " wurde geschlossen. Spieler können keine neuen " + p0Label() + " Einträge setzen.");
-    }
-
-    await reloadCurrentRaid();
-  }catch(error){
-    console.error(error);
-    alert(p0Label() + " Freischaltung konnte nicht gesendet werden.");
-  }
-}
-
-function enableP0PlusOverride(){
-  setP0PlusOverride(true);
-}
-
-function disableP0PlusOverride(){
-  setP0PlusOverride(false);
-}
 
 async function transferP0PlusPoints(){
   if(!currentRaidData || !currentRaidData.raidId){
