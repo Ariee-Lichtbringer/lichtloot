@@ -1174,13 +1174,13 @@ th{
 <body>
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo">
+    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Raidlead Navigation">
-      <a class="side-link" href="start.html"><span class="side-icon">⌂</span><span>Startseite</span></a>
-      <a class="side-link" id="navPrioPage" href="start.html#mein-lichtloot"><span class="side-icon">✦</span><span>Prioseite</span></a>
-      <a class="side-link" href="start.html#mein-lichtloot"><span class="side-icon">☷</span><span>Mein LichtLoot</span></a>
+      <a class="side-link" data-guild-link="start.html" href="start.html"><span class="side-icon">⌂</span><span>Startseite</span></a>
+      <a class="side-link" id="navPrioPage" data-guild-link="start.html#mein-lichtloot" href="start.html#mein-lichtloot"><span class="side-icon">✦</span><span>Prioseite</span></a>
+      <a class="side-link" data-guild-link="start.html#mein-lichtloot" href="start.html#mein-lichtloot"><span class="side-icon">☷</span><span>Mein <span data-guild-brand="lootName">LichtLoot</span></span></a>
       <button class="side-link" id="navP0PlusOverview" type="button" onclick="openP0PlusOverviewModal()"><span class="side-icon">★</span><span>P0+ Übersicht</span></button>
-      <a class="side-link" href="start.html#raid-erstellen"><span class="side-icon">＋</span><span>Raid erstellen</span></a>
+      <a class="side-link" data-guild-link="start.html#raid-erstellen" href="start.html#raid-erstellen"><span class="side-icon">＋</span><span>Raid erstellen</span></a>
       <button class="side-link" type="button" onclick="document.getElementById('entriesPanel')?.scrollIntoView({behavior:'smooth',block:'start'})"><span class="side-icon">≡</span><span>Einträge</span></button>
       <button class="side-link active" type="button"><span class="side-icon">⚑</span><span>Raidlead</span></button>
     </nav>
@@ -1192,18 +1192,18 @@ th{
   <main class="overlay">
     <header class="topbar">
       <div class="brand">
-        <img src="images/content.png" alt="LichtLoot" class="brand-logo">
+        <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
         <div class="brand-copy">
           <h1>Raidlead</h1>
           <p>Raid laden und Prios verwalten.</p>
         </div>
       </div>
       <div class="nav" aria-label="Navigation">
-        <button class="btn ghost" type="button" onclick="location.href='start.html'">Startseite</button>
+        <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
-          <img src="images/content.png" alt="">
-          <div><strong>Lichtbringer</strong><span>Raidlead</span></div>
+          <img src="images/content.png" alt="" data-guild-brand-alt>
+          <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Raidlead</span></div>
         </div>
       </div>
     </header>
@@ -1242,10 +1242,69 @@ const RAID_API_URL =
 const LICHTLOOT_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 
+function getCurrentGuildSlug(){
+  const params = new URLSearchParams(window.location.search);
+  const explicit = params.get("guild") || params.get("gilde");
+  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  return "lichtloot";
+}
+
+const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
+const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+let currentGuildInfo = null;
+
+function withGuildUrl(url){
+  const sep = String(url || "").includes("?") ? "&" : "?";
+  return String(url || "") + sep + CURRENT_GUILD_QUERY;
+}
+
+function titleFromSlug(slug){
+  return String(slug || "gilde")
+    .split("-")
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function lootTitleFromGuild(guild){
+  const slug = String(guild?.slug || CURRENT_GUILD_SLUG || "").trim();
+  if(slug === "lichtloot") return "LichtLoot";
+  return titleFromSlug(slug || guild?.name || "Lootsystem");
+}
+
+async function fetchCurrentGuildInfo(){
+  try{
+    const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
+    const data = await response.json();
+    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    return currentGuildInfo;
+  }catch(error){
+    console.warn("Gildenbranding konnte nicht geladen werden.", error);
+    return null;
+  }
+}
+
+function applyGuildBrand(){
+  const guild = currentGuildInfo;
+  const guildName = guild?.name || (CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : titleFromSlug(CURRENT_GUILD_SLUG));
+  const lootName = guild ? lootTitleFromGuild(guild) : (CURRENT_GUILD_SLUG === "lichtloot" ? "LichtLoot" : titleFromSlug(CURRENT_GUILD_SLUG));
+  document.title = lootName + " - Raidlead";
+  document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = guildName);
+  document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = lootName);
+  document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", lootName + " - " + guildName));
+  if(guild?.logoUrl){
+    document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => { el.src = guild.logoUrl; });
+  }
+  document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
+  document.querySelectorAll("[data-guild-onclick]").forEach(el => {
+    el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
+  });
+}
+
 const MASTER_CODE = "Lichtbringer-Master";
 
 async function railwayApi(params){
-  const query = new URLSearchParams(Object.assign({}, params, { t: Date.now() }));
+  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
   const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
   return await response.json();
 }
@@ -1323,7 +1382,7 @@ function checkLogin(){
 
   if(isLoggedIn !== "true" || !role){
     alert("Bitte zuerst über die Startseite einloggen.");
-    window.location.href = "index.html";
+    window.location.href = withGuildUrl("index.html");
     return;
   }
 
@@ -1652,10 +1711,12 @@ function updateRaidNavigation(){
 
   const pin = currentRaidData?.playerPin || "";
   if(prioLink){
-    prioLink.href =
+    const target =
       currentRaidData?.playerLink ||
       (fallback && pin ? `${fallback}?pin=${encodeURIComponent(pin)}` : fallback) ||
       "start.html#mein-lichtloot";
+    prioLink.href =
+      target.includes("guild=") ? target : withGuildUrl(target);
   }
 
   if(p0OverviewLink){
@@ -2976,7 +3037,7 @@ function logout(){
   sessionStorage.removeItem("raidleadRaidId");
   sessionStorage.removeItem("raidleadPrioPin");
   sessionStorage.removeItem("raidleadPlayerPin");
-  window.location.href = "index.html";
+  window.location.href = withGuildUrl("index.html");
 }
 
 function safe(value){
@@ -2993,7 +3054,13 @@ function escapeQuotes(value){
     .replace(/'/g,"\\'");
 }
 
-checkLogin();
+async function initRaidleadPage(){
+  await fetchCurrentGuildInfo();
+  applyGuildBrand();
+  checkLogin();
+}
+
+initRaidleadPage();
 </script>
 </body>
 </html>

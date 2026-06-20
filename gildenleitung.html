@@ -1366,7 +1366,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
-      <button class="side-link" type="button" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
+      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
     <div class="sidebar-foot">
       <button class="side-link" type="button" onclick="clearMasterCode()"><span class="side-icon">⚙</span>Sperren</button>
@@ -1383,7 +1383,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
     </div>
     <div class="nav" aria-label="Navigation">
-      <button class="btn ghost" type="button" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
       <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
@@ -1665,11 +1665,6 @@ const GUILD_BRANDS = {
     guildName: "Lichtbringer",
     lootName: "LichtLoot",
     footerName: "Lichtbringer Lootsystem"
-  },
-  nachtloot: {
-    guildName: "Nachtwächter",
-    lootName: "NachtLoot",
-    footerName: "Nachtwächter Lootsystem"
   }
 };
 
@@ -1691,13 +1686,47 @@ function getCurrentGuildBrand(){
 }
 
 const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
+let currentGuildInfo = null;
+
+async function fetchCurrentGuildInfo(){
+  try{
+    const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
+    const data = await response.json();
+    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    return currentGuildInfo;
+  }catch(error){
+    console.warn("Gildenbranding konnte nicht geladen werden.", error);
+    return null;
+  }
+}
+
+function lootTitleFromGuild(guild){
+  const slug = String(guild?.slug || CURRENT_GUILD_SLUG || "").trim();
+  if(slug === "lichtloot") return "LichtLoot";
+  return titleFromSlug(slug || guild?.name || "Lootsystem");
+}
 
 function applyGuildBrand(){
-  const brand = CURRENT_GUILD_BRAND;
+  const guild = currentGuildInfo;
+  const brand = guild ? {
+    guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
+    lootName: lootTitleFromGuild(guild),
+    footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
+  } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Gildenleitung";
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
+  document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => {
+    if(guild?.logoUrl) el.src = guild.logoUrl;
+  });
+  if(guild?.backgroundUrl){
+    document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
+  }
+  document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
+  document.querySelectorAll("[data-guild-onclick]").forEach(el => {
+    el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
+  });
 }
 const RAID_IMAGES = {
   mc:"images/mc.jpg",
@@ -1722,7 +1751,8 @@ let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
 let pendingMessageContext = null;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchCurrentGuildInfo();
   applyGuildBrand();
   const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
   if (saved) document.getElementById("masterCode").value = saved;
@@ -2354,7 +2384,7 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
   lines.push(
     "",
     "Prio-PIN: " + playerPin,
-    "Prios eintragen: " + withGuildUrl("https://lichtloot.de"),
+    "Prios eintragen: " + new URL(withGuildUrl("index.html"), window.location.href).href,
     "",
     "Bitte tragt eure Prios rechtzeitig ein."
   );
@@ -2364,7 +2394,7 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
 
 function buildRaidDirectLink(raid){
   const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
-  return raidId ? `https://lichtloot.de/?${CURRENT_GUILD_QUERY}&raidId=${raidId}` : withGuildUrl("https://lichtloot.de");
+  return raidId ? withGuildUrl("index.html") + `&raidId=${raidId}` : withGuildUrl("index.html");
 }
 
 async function createRaidFromGuildPage(){
@@ -3339,7 +3369,7 @@ function renderGuildSentLeadPinRows(tbody){
   }
 
   tbody.innerHTML = rows.map(message => {
-    const directLink = message.raidId ? `https://lichtloot.de/?${CURRENT_GUILD_QUERY}&raidId=${encodeURIComponent(message.raidId)}` : withGuildUrl("https://lichtloot.de");
+    const directLink = message.raidId ? withGuildUrl("index.html") + `&raidId=${encodeURIComponent(message.raidId)}` : withGuildUrl("index.html");
     return `
       <tr>
         <td>${escapeHtml(formatDateTime(message.createdAt) || "-")}</td>
