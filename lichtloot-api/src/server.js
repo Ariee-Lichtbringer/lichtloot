@@ -832,6 +832,50 @@ async function markPlayerMessageRead({ guildId, query: params }) {
   return { success: true, message: result.rows[0] ? normalizePlayerMessageRow(result.rows[0]) : null };
 }
 
+async function deletePlayerMessage({ guildId, query: params }) {
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const id = clean(params.id || params.messageId);
+  const folder = clean(params.folder || params.box);
+  if (!playerPin || !id) {
+    const error = new Error("Bitte SpielerLogin und Nachricht angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `delete from player_messages
+     where guild_id = $1
+       and id = $2
+       and (
+         player_pin = $3
+         or ($4 = 'sent' and sender = $5)
+       )
+     returning id`,
+    [guildId, id, playerPin, folder, `Spieler ${playerPin}`]
+  );
+  return { success: true, deleted: result.rowCount };
+}
+
+async function deleteGuildPlayerMessage({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const id = clean(params.id || params.messageId);
+  if (!id) {
+    const error = new Error("Bitte Nachricht angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `delete from player_messages
+     where guild_id = $1
+       and id = $2
+       and sender = 'Gildenleitung'
+     returning id`,
+    [guildId, id]
+  );
+  return { success: true, deleted: result.rowCount };
+}
+
 async function deleteRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const raidId = clean(params.raidId || params.id);
@@ -1605,6 +1649,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "markPlayerMessageRead") {
       const message = await markPlayerMessageRead({ guildId: guild.id, query: req.query });
       return res.json({ ...message, guild: guild.slug });
+    }
+
+    if (action === "deletePlayerMessage") {
+      const deleted = await deletePlayerMessage({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildDeletePlayerMessage") {
+      const deleted = await deleteGuildPlayerMessage({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "createRaid") {
