@@ -358,7 +358,7 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:14px;
 }
 
@@ -1886,6 +1886,7 @@ function renderDashboardCards(){
             </div>
             <div class="active-raid-actions">
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
+              <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
             </div>
           </div>
@@ -2385,6 +2386,49 @@ async function copyPlainText(text){
     setStatus("LeadPIN kopiert.", "good");
   }catch(error){
     setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
+async function sendLeadPinToPlayer(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(!raid || !raid.leadPin){
+    setStatus("Für diesen Raid ist kein LeadPIN vorhanden.", "bad");
+    return;
+  }
+
+  const playerPin = prompt("An welchen SpielerLogin soll der LeadPIN geschickt werden?");
+  if(!playerPin) return;
+
+  const title = `LeadPIN für ${raid.raidName || raid.raid || "Raid"}`;
+  const body = `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`;
+
+  try{
+    const result = await railwayApi({
+      action:"sendPlayerMessage",
+      masterCode,
+      playerPin,
+      title,
+      body,
+      raidId:raid.raidId || "",
+      raidName:raid.raidName || raid.raid || "",
+      raidDate:raid.raidDate || "",
+      raidTime:raid.raidTime || "",
+      leadPin:raid.leadPin || "",
+      sender:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "Nachricht konnte nicht gesendet werden.", "bad");
+      return;
+    }
+    setStatus("LeadPIN wurde ins Spieler-Postfach gelegt.", "good");
+  }catch(error){
+    setStatus(error.message || "Nachricht konnte nicht gesendet werden.", "bad");
   }
 }
 
@@ -2937,7 +2981,7 @@ async function loadIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetIssueReports", masterCode });
+    const result = await railwayApi({ action:"guildGetIssueReports", masterCode });
     if(!result.success){
       document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
       return;
@@ -3045,7 +3089,7 @@ async function resolveIssueReport(rowNumber){
   if(!rowNumber) return;
 
   try{
-    const result = await apiWrite({ action:"guildResolveIssueReport", masterCode, rowNumber });
+    const result = await railwayApi({ action:"guildResolveIssueReport", masterCode, rowNumber });
     if(!result.success){
       setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
       return;
