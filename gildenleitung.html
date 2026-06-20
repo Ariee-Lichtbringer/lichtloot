@@ -3217,17 +3217,19 @@ async function loadIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
 
   try{
-    const [result,sentResult] = await Promise.all([
-      railwayApi({ action:"guildGetIssueReports", masterCode }),
-      railwayApi({ action:"guildGetSentPlayerMessages", masterCode })
-    ]);
+    const result = await railwayApi({ action:"guildGetIssueReports", masterCode });
     if(!result.success){
       document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
       return;
     }
 
     issueReports = Array.isArray(result.reports) ? result.reports : [];
-    guildSentMessages = Array.isArray(sentResult.messages) ? sentResult.messages : [];
+    try{
+      const sentResult = await railwayApi({ action:"guildGetSentPlayerMessages", masterCode });
+      guildSentMessages = sentResult && sentResult.success && Array.isArray(sentResult.messages) ? sentResult.messages : [];
+    }catch(sentError){
+      guildSentMessages = [];
+    }
     await ensureLootDataLoaded();
     renderSummary();
     renderIssueInboxPanel();
@@ -3314,7 +3316,7 @@ function renderIssueRows(){
       <td>${escapeHtml(report.player || "-")}<br><span class="muted">${escapeHtml(report.server || "")}</span></td>
       <td class="issue-note">${escapeHtml(report.note || "-")}</td>
       <td>${escapeHtml(report.source || "-")}<br><span class="muted">${escapeHtml(report.page || "")}</span></td>
-      <td><button class="small-btn good" type="button" onclick="resolveIssueReport(${Number(report.rowNumber || 0)})">Erledigt</button></td>
+      <td><button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}')">Erledigt</button></td>
     </tr>
   `).join("");
 }
@@ -3412,7 +3414,7 @@ async function resolveIssueReport(rowNumber){
       setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
       return;
     }
-    issueReports = issueReports.filter(report => Number(report.rowNumber || 0) !== Number(rowNumber));
+    issueReports = issueReports.filter(report => String(report.id || report.rowNumber || "") !== String(rowNumber));
     renderSummary();
     renderIssueRows();
     setStatus("Meldung erledigt und gelöscht.", "good");
