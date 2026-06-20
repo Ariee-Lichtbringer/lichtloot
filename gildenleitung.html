@@ -1496,6 +1496,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode";
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
@@ -1639,6 +1640,13 @@ function apiWrite(params){
       resolve({ success:true, submitted:true, timeout:true });
     }, 5000);
   });
+}
+
+async function railwayApi(params){
+  const query = new URLSearchParams(Object.assign({}, params, { t: Date.now() }));
+  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+  const result = await response.json();
+  return result || {};
 }
 
 async function loadOverview(){
@@ -2708,7 +2716,7 @@ async function loadP0PlusPanel(){
   document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"getP0Plus" });
+    const result = await railwayApi({ action:"getP0Plus" });
     if(!result.success){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
       return;
@@ -2819,7 +2827,7 @@ async function saveP0PlusPoints(index){
   }
 
   try{
-    const result = await apiWrite({
+    const result = await railwayApi({
       action:"guildSetP0PlusPoints",
       masterCode,
       raid:entry.raid || "",

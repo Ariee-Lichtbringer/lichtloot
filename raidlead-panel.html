@@ -1239,6 +1239,8 @@ th{
 <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const LICHTLOOT_API_URL =
+  "https://lichtloot-production.up.railway.app/api/apps-script";
 
 const MASTER_CODE = "Lichtbringer-Master";
 
@@ -2019,7 +2021,7 @@ async function loadP0PlusPoints(){
     return [];
   }
 
-  const url = RAID_API_URL +
+  const url = LICHTLOOT_API_URL +
     "?action=getP0Plus" +
     "&all=1" +
     "&nocache=1" +
@@ -2545,7 +2547,7 @@ async function transferP0PlusPoints(){
   }
 
   const url =
-    RAID_API_URL +
+    LICHTLOOT_API_URL +
     "?action=transferP0PlusPoints" +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&raid=" + encodeURIComponent(currentRaidKey) +
@@ -2605,7 +2607,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
   }
 
   const url =
-    RAID_API_URL +
+    LICHTLOOT_API_URL +
     "?action=clearP0PlusForPlayer" +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&player=" + encodeURIComponent(player) +
