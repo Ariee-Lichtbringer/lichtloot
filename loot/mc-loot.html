@@ -2030,6 +2030,7 @@ let aq40Loot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
+let currentPrioEntryOpen = false;
 function updatePrio3ButtonVisibility(){
   document.querySelectorAll("[data-prio-export-buttons]").forEach(box => {
     box.classList.toggle("hidden", !currentPublishedMode);
@@ -3384,6 +3385,12 @@ async function savePrio(){
     return;
   }
 
+  if(currentPublishedMode){
+    status.innerHTML=`<span class="bad">Prioliste ist geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
+    updateSaveButtonState();
+    return;
+  }
+
   if(saveButton) saveButton.disabled=true;
 
   try{
@@ -3573,6 +3580,7 @@ async function loadPublishedPrios(){
     table.innerHTML=`<tr><td colspan="8">Noch keine Prioliste geladen.</td></tr>`;
     currentPublishedPrios=[];
     currentPublishedMode=false;
+    currentPrioEntryOpen=false;
     currentRaidDate="";
     currentRaidTime="";
     currentRaidId="";
@@ -3595,6 +3603,7 @@ async function loadPublishedPrios(){
       table.innerHTML=`<tr><td colspan="8">Keine Daten verfügbar.</td></tr>`;
       currentPublishedPrios=[];
       currentPublishedMode=false;
+      currentPrioEntryOpen=false;
       setPublishedMode(false);
       return;
     }
@@ -3606,6 +3615,7 @@ async function loadPublishedPrios(){
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
     currentPublishedMode = Boolean(result.published);
+    currentPrioEntryOpen = !Boolean(result.published);
 
     updateRaidTimeDisplay();
     await loadPrioCheck();
@@ -3640,6 +3650,13 @@ async function loadPublishedPrios(){
   }
 }
 
+function updateSaveButtonState(){
+  const saveButton=document.querySelector('button[onclick="savePrio()"]');
+  if(!saveButton) return;
+  saveButton.disabled = Boolean(currentPublishedMode);
+  saveButton.title = currentPublishedMode ? "Prioliste ist geöffnet. Neue Einträge sind nicht mehr möglich." : "";
+}
+
 function setPublishedMode(isPublished){
   const grid=document.getElementById("mainGrid");
   const playerCard=document.getElementById("playerCard");
@@ -3655,6 +3672,7 @@ function setPublishedMode(isPublished){
     grid.classList.remove("published-mode");
   }
   updatePrio3ButtonVisibility();
+  updateSaveButtonState();
 }
 
 
@@ -5684,6 +5702,7 @@ function setPublishedMode(isPublished){
     lootCard.classList.remove("hidden");
   }
   updatePrio3ButtonVisibility();
+  updateSaveButtonState();
 }
 
 function ensureVisibleRaidPlayerPin(){
@@ -8880,29 +8899,8 @@ function normalizeDcPlayerName(value){
 }
 
 async function loadPrioCheck(){
-  if(!currentRaidId){
-    currentPrioCheck = null;
-    return null;
-  }
-
-  try{
-    const result = await apiJsonp({
-      action:"getPrioCheck",
-      raidId:currentRaidId,
-      raid:RAID_NAME
-    });
-
-    if(result && result.success){
-      currentPrioCheck = result.check || null;
-    }else{
-      currentPrioCheck = null;
-    }
-  }catch(error){
-    console.warn("DC Abgleich konnte nicht geladen werden:", error);
-    currentPrioCheck = null;
-  }
-
-  return currentPrioCheck;
+  currentPrioCheck = null;
+  return null;
 }
 
 
