@@ -1631,7 +1631,9 @@ tr:hover td{background:rgba(250,204,21,.035)}
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
-const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode";
+const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
+const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -1641,6 +1643,23 @@ const RAID_OPTIONS = {
   aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
   ony:{ name:"Onyxia", short:"ONY" }
 };
+
+function getCurrentGuildSlug(){
+  const params = new URLSearchParams(window.location.search);
+  const explicit = params.get("guild") || params.get("gilde");
+  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const first = parts[0] || "";
+  if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
+    return first.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  }
+  return "lichtloot";
+}
+
+function withGuildUrl(url){
+  const sep = String(url || "").includes("?") ? "&" : "?";
+  return String(url || "") + sep + CURRENT_GUILD_QUERY;
+}
 const RAID_IMAGES = {
   mc:"images/mc.jpg",
   bwl:"images/bwl.jpg",
@@ -1780,7 +1799,7 @@ function apiWrite(params){
 }
 
 async function railwayApi(params){
-  const query = new URLSearchParams(Object.assign({}, params, { t: Date.now() }));
+  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
   const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
   const result = await response.json();
   return result || {};
@@ -2301,7 +2320,7 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
   lines.push(
     "",
     "Prio-PIN: " + playerPin,
-    "Prios eintragen: https://lichtloot.de",
+    "Prios eintragen: " + withGuildUrl("https://lichtloot.de"),
     "",
     "Bitte tragt eure Prios rechtzeitig ein."
   );
@@ -2311,7 +2330,7 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
 
 function buildRaidDirectLink(raid){
   const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
-  return raidId ? `https://lichtloot.de/?raidId=${raidId}` : "https://lichtloot.de";
+  return raidId ? `https://lichtloot.de/?${CURRENT_GUILD_QUERY}&raidId=${raidId}` : withGuildUrl("https://lichtloot.de");
 }
 
 async function createRaidFromGuildPage(){
@@ -3321,7 +3340,7 @@ function renderGuildSentLeadPinRows(tbody){
   }
 
   tbody.innerHTML = rows.map(message => {
-    const directLink = message.raidId ? `https://lichtloot.de/?raidId=${encodeURIComponent(message.raidId)}` : "https://lichtloot.de";
+    const directLink = message.raidId ? `https://lichtloot.de/?${CURRENT_GUILD_QUERY}&raidId=${encodeURIComponent(message.raidId)}` : withGuildUrl("https://lichtloot.de");
     return `
       <tr>
         <td>${escapeHtml(formatDateTime(message.createdAt) || "-")}</td>
