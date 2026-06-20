@@ -358,7 +358,7 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:14px;
 }
 
@@ -463,13 +463,15 @@ button,input,select{font:inherit}
   grid-column:1 / -1;
   display:flex;
   gap:8px;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:stretch;
   margin-top:0;
 }
 
 .active-raid-actions .small-btn{
-  flex:1;
+  flex:1 1 calc(50% - 8px);
+  min-width:105px;
 }
 
 .active-raid-lead-card{
@@ -1274,6 +1276,47 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 #prioModal .modal-box{border-color:rgba(96,165,250,.38)}
 #prioModal .modal-title h2{color:#fde68a}
+#messageModal .modal-box{
+  width:min(560px, calc(100vw - 24px));
+  min-width:min(420px, calc(100vw - 24px));
+  min-height:0;
+  resize:none;
+  border-color:rgba(250,204,21,.38);
+}
+#messageModal .modal-content{
+  display:grid;
+  gap:10px;
+}
+#messageModal textarea{
+  width:100%;
+  min-height:110px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(2,6,23,.72);
+  color:white;
+  padding:9px;
+  resize:vertical;
+  font-weight:600;
+}
+#messageModal .message-raid-preview{
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:8px;
+  padding:10px;
+  background:rgba(250,204,21,.08);
+  color:#e5edf8;
+  font-weight:800;
+}
+#messageModal .message-pin-preview{
+  display:inline-flex;
+  margin-top:8px;
+  padding:6px 10px;
+  border-radius:7px;
+  border:1px solid rgba(250,204,21,.38);
+  color:#fbbf24;
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:1px;
+}
 
 .prio-actions{
   display:grid;
@@ -1365,6 +1408,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <button class="quick-action" type="button" onclick="openCreatePanel()"><span class="qa-icon">＋</span><span><strong>Raid erstellen</strong><span>Neuen Raid anlegen</span></span></button>
     <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
     <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
+    <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
     <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
   </section>
@@ -1553,6 +1597,35 @@ tr:hover td{background:rgba(250,204,21,.035)}
   </div>
 </div>
 
+<div id="messageModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="messageModalTitle">Nachricht senden</h2>
+        <p id="messageModalSubtitle">Empfänger als Charaktername eintragen.</p>
+      </div>
+      <button class="btn danger" type="button" onclick="closeMessageModal()">Schließen</button>
+    </div>
+    <div class="modal-content">
+      <div id="messageRaidPreview" class="message-raid-preview hidden"></div>
+      <div class="field">
+        <label for="messageRecipient">Charaktername</label>
+        <input id="messageRecipient" type="text" placeholder="z. B. Ariee">
+      </div>
+      <div class="field">
+        <label for="messageTitle">Betreff</label>
+        <input id="messageTitle" type="text" placeholder="Betreff">
+      </div>
+      <div class="field">
+        <label for="messageBody">Nachricht</label>
+        <textarea id="messageBody" placeholder="Nachricht schreiben"></textarea>
+      </div>
+      <button class="btn" type="button" onclick="submitMessageModal()">Nachricht senden</button>
+      <div id="messageModalStatus" class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
 <div id="tooltip" class="tooltip hidden"></div>
 
 <script>
@@ -1587,6 +1660,7 @@ let lootItemIndex = {};
 let lootDataLoaded = false;
 let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
+let pendingMessageContext = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
@@ -1888,6 +1962,7 @@ function renderDashboardCards(){
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId)}')">Raid löschen</button>
             </div>
           </div>
         </div>
@@ -2402,33 +2477,157 @@ async function sendLeadPinToPlayer(raidId){
     return;
   }
 
-  const playerPin = prompt("An welchen SpielerLogin soll der LeadPIN geschickt werden?");
-  if(!playerPin) return;
-
   const title = `LeadPIN für ${raid.raidName || raid.raid || "Raid"}`;
   const body = `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`;
 
+  openMessageModal({
+    mode:"leadpin",
+    raid,
+    title,
+    body,
+    leadPin:raid.leadPin || "",
+    raidId:raid.raidId || "",
+    raidName:raid.raidName || raid.raid || "",
+    raidDate:raid.raidDate || "",
+    raidTime:raid.raidTime || ""
+  });
+}
+
+function sendGeneralMessageFromGuildPage(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  openMessageModal({
+    mode:"message",
+    title:"Nachricht der Gildenleitung",
+    body:""
+  });
+}
+
+function openMessageModal(context){
+  pendingMessageContext = context || {};
+  const modal = document.getElementById("messageModal");
+  const title = document.getElementById("messageModalTitle");
+  const subtitle = document.getElementById("messageModalSubtitle");
+  const preview = document.getElementById("messageRaidPreview");
+  const recipient = document.getElementById("messageRecipient");
+  const titleField = document.getElementById("messageTitle");
+  const bodyField = document.getElementById("messageBody");
+  const status = document.getElementById("messageModalStatus");
+
+  if(title) title.textContent = context.mode === "leadpin" ? "LeadPIN senden" : "Nachricht senden";
+  if(subtitle) subtitle.textContent = "Empfänger als Charaktername eintragen. Der SpielerPin bleibt privat.";
+  if(recipient) recipient.value = "";
+  if(titleField) titleField.value = context.title || "";
+  if(bodyField) bodyField.value = context.body || "";
+  if(status){
+    status.textContent = "Bereit.";
+    status.className = "status";
+  }
+
+  if(preview){
+    if(context.mode === "leadpin" && context.raid){
+      preview.classList.remove("hidden");
+      preview.innerHTML =
+        `${escapeHtml(context.raidName || "Raid")} · ${escapeHtml(formatRaidDate(context.raidDate))} · ${escapeHtml(context.raidTime || "")} Uhr<br>` +
+        `<span class="message-pin-preview">${escapeHtml(context.leadPin || "-")}</span>`;
+    }else{
+      preview.classList.add("hidden");
+      preview.innerHTML = "";
+    }
+  }
+
+  if(modal) modal.classList.remove("hidden");
+  setTimeout(() => recipient && recipient.focus(), 30);
+}
+
+function closeMessageModal(){
+  const modal = document.getElementById("messageModal");
+  if(modal) modal.classList.add("hidden");
+  pendingMessageContext = null;
+}
+
+async function submitMessageModal(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const recipient = document.getElementById("messageRecipient").value.trim();
+  const title = document.getElementById("messageTitle").value.trim() || "Nachricht der Gildenleitung";
+  const body = document.getElementById("messageBody").value.trim();
+  const status = document.getElementById("messageModalStatus");
+
+  if(!masterCode || !recipient || !body){
+    if(status){
+      status.textContent = "Bitte Master-Code, Charaktername und Nachricht ausfüllen.";
+      status.className = "status bad";
+    }
+    return;
+  }
+
+  if(status){
+    status.textContent = "Nachricht wird gesendet ...";
+    status.className = "status";
+  }
+
   try{
+    const context = pendingMessageContext || {};
     const result = await railwayApi({
       action:"sendPlayerMessage",
       masterCode,
-      playerPin,
+      character:recipient,
       title,
       body,
-      raidId:raid.raidId || "",
-      raidName:raid.raidName || raid.raid || "",
-      raidDate:raid.raidDate || "",
-      raidTime:raid.raidTime || "",
-      leadPin:raid.leadPin || "",
+      raidId:context.raidId || "",
+      raidName:context.raidName || "",
+      raidDate:context.raidDate || "",
+      raidTime:context.raidTime || "",
+      leadPin:context.leadPin || "",
       sender:"Gildenleitung"
     });
     if(!result.success){
-      setStatus(result.error || "Nachricht konnte nicht gesendet werden.", "bad");
+      if(status){
+        status.textContent = result.error || "Nachricht konnte nicht gesendet werden.";
+        status.className = "status bad";
+      }
       return;
     }
-    setStatus("LeadPIN wurde ins Spieler-Postfach gelegt.", "good");
+    closeMessageModal();
+    setStatus("Nachricht wurde ins Spieler-Postfach gelegt.", "good");
   }catch(error){
-    setStatus(error.message || "Nachricht konnte nicht gesendet werden.", "bad");
+    if(status){
+      status.textContent = error.message || "Nachricht konnte nicht gesendet werden.";
+      status.className = "status bad";
+    }
+  }
+}
+
+async function deleteRaidFromDashboard(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
+  if(!confirm(`${label} wirklich komplett löschen? Der Raid wird aus Railway entfernt.`)) return;
+
+  try{
+    const result = await railwayApi({ action:"guildDeleteRaid", masterCode, raidId });
+    if(!result.success || !result.deleted){
+      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    guildData.raids = (guildData.raids || []).filter(entry => String(entry.raidId || "") !== String(raidId));
+    renderSummary();
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    setStatus("Raid wurde aus Railway gelöscht.", "good");
+  }catch(error){
+    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
   }
 }
 
