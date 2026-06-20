@@ -147,6 +147,73 @@ async function createGuild({ query: params }) {
   }
 }
 
+async function updateGuildConfig({ query: params, body = {} }) {
+  const values = { ...params, ...body };
+  const slug = clean(values.guild || values.slug);
+  if (!slug) {
+    const error = new Error("Gilde fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const guild = await requireGuild(slug);
+  const name = clean(values.guildName || values.name);
+  const server = clean(values.server);
+  const logoUrl = clean(values.logoUrl || values.logo_url);
+  const backgroundUrl = clean(values.backgroundUrl || values.background_url);
+  const pointsLabel = clean(values.pointsLabel || values.points_label);
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const guildResult = await client.query(
+      `update guilds
+       set name = coalesce(nullif($2, ''), name),
+           server = coalesce(nullif($3, ''), server),
+           logo_url = coalesce(nullif($4, ''), logo_url),
+           background_url = coalesce(nullif($5, ''), background_url),
+           updated_at = now()
+       where id = $1
+       returning slug, name, server, logo_url, background_url, created_at`,
+      [guild.id, name, server, logoUrl, backgroundUrl]
+    );
+
+    await client.query(
+      `insert into guild_settings (guild_id, points_label)
+       values ($1, coalesce(nullif($2, ''), 'P0/P0+'))
+       on conflict (guild_id) do update
+         set points_label = coalesce(nullif(excluded.points_label, ''), guild_settings.points_label),
+             updated_at = now()`,
+      [guild.id, pointsLabel]
+    );
+
+    const settingsResult = await client.query(
+      `select points_label from guild_settings where guild_id = $1`,
+      [guild.id]
+    );
+
+    await client.query("commit");
+    const row = guildResult.rows[0];
+    return {
+      success: true,
+      guild: {
+        slug: row.slug,
+        name: row.name,
+        server: row.server || "",
+        logoUrl: row.logo_url || "",
+        backgroundUrl: row.background_url || "",
+        pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
+        createdAt: row.created_at
+      }
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 function normalizePin(value) {
   return clean(value).toUpperCase();
 }
@@ -1704,6 +1771,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(created);
     }
 
+    if (action === "updateGuildConfig") {
+      const saved = await updateGuildConfig({ query: req.query });
+      return res.json(saved);
+    }
+
     const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
 
     if (action === "getCharactersByPin") {
@@ -1901,6 +1973,23 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     return res.status(404).json({ success: false, error: `Unsupported action: ${action}` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/apps-script", async (req, res, next) => {
+  try {
+    const action = clean(req.body?.action || req.query?.action);
+
+    if (action === "updateGuildConfig") {
+      const saved = await updateGuildConfig({ query: req.query, body: req.body });
+      return res.json(saved);
+    }
+
+    const error = new Error("Unbekannte POST-Aktion.");
+    error.statusCode = 404;
+    throw error;
   } catch (error) {
     next(error);
   }
