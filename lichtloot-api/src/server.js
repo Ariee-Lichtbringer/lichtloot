@@ -24,6 +24,29 @@ app.get("/db-health", async (req, res, next) => {
   }
 });
 
+app.get("/api/dashboard", async (req, res, next) => {
+  try {
+    const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
+    const today = new Date().toISOString().slice(0, 10);
+    const result = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and raid_date >= $2
+         and coalesce(status, '') not in ('archiviert', 'archive')
+       order by raid_date asc, coalesce(raid_time, '') asc, created_at asc`,
+      [guild.id, today]
+    );
+    const raids = result.rows.map(row => {
+      const raid = normalizeRaidRow(row);
+      return { ...raid, leadPin: "", LeadPin: "" };
+    });
+    res.json({ success: true, guild: guild.slug, raids, allRaids: raids, activeRaids: raids });
+  } catch (error) {
+    next(error);
+  }
+});
+
 function clean(value) {
   return String(value || "").trim();
 }
@@ -233,32 +256,58 @@ async function savePrio({ guildId, query: params }) {
   try {
     await client.query("begin");
 
-    const raidResult = await client.query(
-      `insert into raids (
-         guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
-         raid_time, guild_name, p0plus_freigabe
-       )
-       values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geschlossen'))
-       on conflict (guild_id, raid_type, raid_date) do update
-         set name = excluded.name,
-             external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
-             raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
-             raid_time = coalesce(excluded.raid_time, raids.raid_time),
-             guild_name = coalesce(excluded.guild_name, raids.guild_name),
+    let raidResult;
+    if (externalRaidId) {
+      raidResult = await client.query(
+        `update raids
+         set name = coalesce(nullif($3, ''), name),
+             raid_pin = coalesce(nullif($4, ''), raid_pin),
+             raid_time = coalesce(nullif($5, ''), raid_time),
+             guild_name = coalesce(nullif($6, ''), guild_name),
+             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
              updated_at = now()
-       returning id, external_raid_id, name, raid_type, raid_date`,
-      [
-        guildId,
-        raidName,
-        raidType,
-        raidDate,
-        externalRaidId || null,
-        prioPin || null,
-        clean(params.raidTime || params.uhrzeit) || null,
-        clean(params.guild || params.gilde) || null,
-        clean(params.p0PlusFreigabe || params.p0PlusOverride)
-      ]
-    );
+         where guild_id = $1 and external_raid_id = $2
+         returning id, external_raid_id, name, raid_type, raid_date`,
+        [
+          guildId,
+          externalRaidId,
+          raidName,
+          prioPin || "",
+          clean(params.raidTime || params.uhrzeit),
+          clean(params.guild || params.gilde),
+          clean(params.p0PlusFreigabe || params.p0PlusOverride)
+        ]
+      );
+    }
+
+    if (!raidResult || !raidResult.rows.length) {
+      raidResult = await client.query(
+        `insert into raids (
+           guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
+           raid_time, guild_name, p0plus_freigabe
+         )
+         values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geschlossen'))
+         on conflict (guild_id, raid_type, raid_date) do update
+           set name = excluded.name,
+               external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
+               raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
+               raid_time = coalesce(excluded.raid_time, raids.raid_time),
+               guild_name = coalesce(excluded.guild_name, raids.guild_name),
+               updated_at = now()
+         returning id, external_raid_id, name, raid_type, raid_date`,
+        [
+          guildId,
+          raidName,
+          raidType,
+          raidDate,
+          externalRaidId || null,
+          prioPin || null,
+          clean(params.raidTime || params.uhrzeit) || null,
+          clean(params.guild || params.gilde) || null,
+          clean(params.p0PlusFreigabe || params.p0PlusOverride)
+        ]
+      );
+    }
 
     const p1 = await upsertItem(client, raidType, params.p1);
     const p2 = await upsertItem(client, raidType, params.p2);
