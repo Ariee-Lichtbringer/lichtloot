@@ -646,6 +646,8 @@ function normalizePlayerMessageRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
   return {
     id: row.id,
+    playerPin: row.player_pin || "",
+    recipientNames: row.recipient_names || "",
     title: row.title || "",
     body: row.body || "",
     raidId: row.raid_id || "",
@@ -755,12 +757,64 @@ async function getPlayerMessages({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select *
-     from player_messages
-     where guild_id = $1 and player_pin = $2
+    `select pm.*,
+            coalesce((
+              select string_agg(c.name, ', ' order by c.name)
+              from players p
+              join characters c on c.player_id = p.id
+              where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
+            ), '') as recipient_names
+     from player_messages pm
+     where pm.guild_id = $1 and pm.player_pin = $2
      order by created_at desc
      limit 50`,
     [guildId, playerPin]
+  );
+  return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
+}
+
+async function getPlayerSentMessages({ guildId, query: params }) {
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  if (!playerPin) {
+    const error = new Error("Bitte SpielerLogin eingeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `select pm.*,
+            coalesce((
+              select string_agg(c.name, ', ' order by c.name)
+              from players p
+              join characters c on c.player_id = p.id
+              where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
+            ), '') as recipient_names
+     from player_messages pm
+     where pm.guild_id = $1 and pm.sender = $2
+     order by pm.created_at desc
+     limit 50`,
+    [guildId, `Spieler ${playerPin}`]
+  );
+  return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
+}
+
+async function getGuildSentMessages({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const result = await query(
+    `select pm.*,
+            coalesce((
+              select string_agg(c.name, ', ' order by c.name)
+              from players p
+              join characters c on c.player_id = p.id
+              where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
+            ), '') as recipient_names
+     from player_messages pm
+     where pm.guild_id = $1
+       and pm.sender = 'Gildenleitung'
+       and coalesce(pm.lead_pin, '') <> ''
+     order by pm.created_at desc
+     limit 100`,
+    [guildId]
   );
   return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
 }
@@ -1535,6 +1589,16 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "getPlayerMessages") {
       const messages = await getPlayerMessages({ guildId: guild.id, query: req.query });
+      return res.json({ ...messages, guild: guild.slug });
+    }
+
+    if (action === "getPlayerSentMessages") {
+      const messages = await getPlayerSentMessages({ guildId: guild.id, query: req.query });
+      return res.json({ ...messages, guild: guild.slug });
+    }
+
+    if (action === "guildGetSentPlayerMessages") {
+      const messages = await getGuildSentMessages({ guildId: guild.id, query: req.query });
       return res.json({ ...messages, guild: guild.slug });
     }
 
