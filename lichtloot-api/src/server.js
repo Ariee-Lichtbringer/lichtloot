@@ -74,7 +74,9 @@ function buildLootSlug(guildName, lootName) {
 async function listGuilds() {
   const result = await query(
     `select g.slug, g.name, g.server, g.logo_url, g.background_url, g.created_at,
-            coalesce(gs.points_label, 'P0/P0+') as points_label
+            coalesce(gs.points_label, 'P0/P0+') as points_label,
+            coalesce(gs.primary_color, '#facc15') as primary_color,
+            coalesce(gs.accent_color, '#1d4ed8') as accent_color
      from guilds g
      left join guild_settings gs on gs.guild_id = g.id
      order by g.created_at asc, g.name asc`
@@ -88,6 +90,8 @@ async function listGuilds() {
       logoUrl: row.logo_url || "",
       backgroundUrl: row.background_url || "",
       pointsLabel: row.points_label || "P0/P0+",
+      primaryColor: row.primary_color || "#facc15",
+      accentColor: row.accent_color || "#1d4ed8",
       createdAt: row.created_at
     }))
   };
@@ -162,6 +166,8 @@ async function updateGuildConfig({ query: params, body = {} }) {
   const logoUrl = clean(values.logoUrl || values.logo_url);
   const backgroundUrl = clean(values.backgroundUrl || values.background_url);
   const pointsLabel = clean(values.pointsLabel || values.points_label);
+  const primaryColor = clean(values.primaryColor || values.primary_color);
+  const accentColor = clean(values.accentColor || values.accent_color);
 
   const client = await pool.connect();
   try {
@@ -179,16 +185,18 @@ async function updateGuildConfig({ query: params, body = {} }) {
     );
 
     await client.query(
-      `insert into guild_settings (guild_id, points_label)
-       values ($1, coalesce(nullif($2, ''), 'P0/P0+'))
+      `insert into guild_settings (guild_id, points_label, primary_color, accent_color)
+       values ($1, coalesce(nullif($2, ''), 'P0/P0+'), coalesce(nullif($3, ''), '#facc15'), coalesce(nullif($4, ''), '#1d4ed8'))
        on conflict (guild_id) do update
          set points_label = coalesce(nullif(excluded.points_label, ''), guild_settings.points_label),
+             primary_color = coalesce(nullif(excluded.primary_color, ''), guild_settings.primary_color),
+             accent_color = coalesce(nullif(excluded.accent_color, ''), guild_settings.accent_color),
              updated_at = now()`,
-      [guild.id, pointsLabel]
+      [guild.id, pointsLabel, primaryColor, accentColor]
     );
 
     const settingsResult = await client.query(
-      `select points_label from guild_settings where guild_id = $1`,
+      `select points_label, primary_color, accent_color from guild_settings where guild_id = $1`,
       [guild.id]
     );
 
@@ -203,6 +211,8 @@ async function updateGuildConfig({ query: params, body = {} }) {
         logoUrl: row.logo_url || "",
         backgroundUrl: row.background_url || "",
         pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
+        primaryColor: settingsResult.rows[0]?.primary_color || "#facc15",
+        accentColor: settingsResult.rows[0]?.accent_color || "#1d4ed8",
         createdAt: row.created_at
       }
     };
