@@ -1357,7 +1357,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 <body>
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="LichtLoot" class="side-logo">
+    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
       <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
@@ -1376,7 +1376,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 <main class="shell dashboard-main" id="dashboardTop">
   <header class="topbar">
     <div class="brand">
-      <img src="images/content.png" alt="LichtLoot" class="brand-logo">
+      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
       <div class="brand-copy">
         <h1>Gildenleitung</h1>
         <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
@@ -1387,7 +1387,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
-        <div><strong>Lichtbringer</strong><span>Gildenleitung</span></div>
+        <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
       </div>
     </div>
   </header>
@@ -1522,12 +1522,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <th>Prio-PIN</th>
               <th>LeadPIN</th>
               <th>Status</th>
-              <th>P0+</th>
               <th>Aktion</th>
             </tr>
           </thead>
           <tbody id="raidRows">
-            <tr><td colspan="7" class="muted">Noch keine Daten geladen.</td></tr>
+            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1660,6 +1659,46 @@ function withGuildUrl(url){
   const sep = String(url || "").includes("?") ? "&" : "?";
   return String(url || "") + sep + CURRENT_GUILD_QUERY;
 }
+
+const GUILD_BRANDS = {
+  lichtloot: {
+    guildName: "Lichtbringer",
+    lootName: "LichtLoot",
+    footerName: "Lichtbringer Lootsystem"
+  },
+  nachtloot: {
+    guildName: "Nachtwächter",
+    lootName: "NachtLoot",
+    footerName: "Nachtwächter Lootsystem"
+  }
+};
+
+function titleFromSlug(slug){
+  return String(slug || "gilde")
+    .split("-")
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getCurrentGuildBrand(){
+  const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
+  return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
+    guildName: fallback,
+    lootName: fallback + "Loot",
+    footerName: fallback + " Lootsystem"
+  };
+}
+
+const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
+
+function applyGuildBrand(){
+  const brand = CURRENT_GUILD_BRAND;
+  document.title = brand.lootName + " - Gildenleitung";
+  document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
+  document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
+  document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
+}
 const RAID_IMAGES = {
   mc:"images/mc.jpg",
   bwl:"images/bwl.jpg",
@@ -1684,6 +1723,7 @@ let dashboardRaidStats = {};
 let pendingMessageContext = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  applyGuildBrand();
   const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
   if (saved) document.getElementById("masterCode").value = saved;
   const raidDateSearch = document.getElementById("raidDateSearch");
@@ -1969,7 +2009,7 @@ function renderDashboardCards(){
             <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
             <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
             <div class="active-raid-stats">
-              <span class="active-raid-stat">${escapeHtml(raid.guild || "Lichtbringer")}</span>
+              <span class="active-raid-stat">${escapeHtml(raid.guild || CURRENT_GUILD_BRAND.guildName)}</span>
               <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
             </div>
           </div>
@@ -2177,13 +2217,12 @@ function renderRaids(){
   }).slice(0, filter || search || dateSearch ? undefined : 10);
 
   if(!raids.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine passenden Raids gefunden.</td></tr>';
     return;
   }
 
   tbody.innerHTML = raids.map(raid => {
     const status = raid.status || "geschlossen";
-    const p0 = raid.p0PlusFreigabe || "";
     return `
       <tr>
         <td>
@@ -2199,13 +2238,8 @@ function renderRaids(){
         <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
         <td>${statusBadge(status)}</td>
-        <td>${p0Badge(p0)}</td>
         <td>
           <div class="actions">
-            <div class="action-row">
-              <button class="small-btn good" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',true)">P0 an</button>
-              <button class="small-btn ghost" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',false)">P0 aus</button>
-            </div>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
@@ -2377,7 +2411,6 @@ async function createRaidFromGuildPage(){
     playerLink:"",
     createdAt:new Date().toISOString(),
     status:"geschlossen",
-    p0PlusFreigabe:"geschlossen"
   };
 
   resultBox.innerHTML = '<span class="warn">Raid wird erstellt ...</span>';
@@ -2694,41 +2727,6 @@ async function toggleRaidPrioStatus(raidId){
   await setRaidStatusFromPage(raidId,nextStatus);
 }
 
-async function setRaidP0PlusFromPage(raidId, enabled){
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
-  const currentStatus = raid && raid.status ? raid.status : "geschlossen";
-  const freigabe = enabled ? "ja" : "nein";
-
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  try{
-    const result = await railwayApi({
-      action:"guildSetRaidStatus",
-      masterCode,
-      raidId,
-      status:currentStatus,
-      p0PlusFreigabe:freigabe
-    });
-
-    if(!result.success){
-      setStatus(result.error || "P0+ konnte nicht geändert werden.", "bad");
-      return;
-    }
-
-    if(raid) raid.p0PlusFreigabe = freigabe;
-    renderDashboardCards();
-    loadDashboardRaidStats();
-    renderRaids();
-    setStatus(enabled ? "P0+ wurde geöffnet." : "P0+ wurde geschlossen.", "good");
-  }catch(error){
-    setStatus(error.message || "P0+ konnte nicht geändert werden.", "bad");
-  }
-}
-
 async function archiveRaidFromPage(raidId){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
   const label = raid ? (raid.raidName || raid.raid || raid.raidId) : raidId;
@@ -2788,7 +2786,6 @@ function renderPrioModalContent(result, raid){
     document.getElementById("prioModalContent").innerHTML = `
       <div class="prio-toolbar">
         ${statusBadge(raidStatus)}
-        ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}
       </div>
       <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
     `;
@@ -2797,7 +2794,7 @@ function renderPrioModalContent(result, raid){
 
   document.getElementById("prioModalContent").innerHTML = `
     <div class="prio-toolbar">
-      <div>${statusBadge(raidStatus)} ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}</div>
+      <div>${statusBadge(raidStatus)}</div>
       <div class="muted">${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}</div>
     </div>
     <div class="table-wrap">
@@ -3998,17 +3995,6 @@ function statusBadge(status){
   const value = normalize(status || "geschlossen");
   const cls = isOpenStatus(value) ? "open" : (value === "archiviert" ? "warn" : "closed");
   return `<span class="badge ${cls}">${escapeHtml(status || "geschlossen")}</span>`;
-}
-
-function p0Badge(value){
-  const normalized = normalize(value);
-  if(normalized === "ja" || normalized === "aktiv" || normalized === "true"){
-    return '<span class="badge open">frei</span>';
-  }
-  if(normalized === "nein"){
-    return '<span class="badge closed">gesperrt</span>';
-  }
-  return '<span class="badge closed">-</span>';
 }
 
 function formatRaidDate(value){
