@@ -1875,6 +1875,16 @@ async function railwayApi(params){
   return result || {};
 }
 
+async function railwayWrite(params){
+  const response = await fetch(LICHTLOOT_API_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }))
+  });
+  const result = await response.json();
+  return result || {};
+}
+
 async function loadOverview(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -3815,7 +3825,7 @@ async function loadHordenbuffPanel(){
   content.innerHTML = '<div class="status">Hordenbuffs werden geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetHordenbuffs", masterCode, days });
+    const result = await railwayApi({ action:"guildGetHordenbuffs", masterCode, days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Hordenbuffs konnten nicht geladen werden.")}</div>`;
       return;
@@ -3950,7 +3960,7 @@ async function saveHordenbuffEntry(index){
   const note = document.getElementById(`hordenbuffNote_${index}`).value.trim();
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildSetHordenbuffEntry",
       masterCode,
       rowNumber:entry.rowNumber,
@@ -3969,6 +3979,8 @@ async function saveHordenbuffEntry(index){
     entry.uebernehmer = uebernehmer;
     entry.status = normalizeBuffStatus(status);
     entry.note = note;
+
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
     setStatus("Hordenbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Hordenbuff konnte nicht gespeichert werden.", "bad");
@@ -3990,7 +4002,7 @@ async function createHordenbuffTerm(){
   const note = document.getElementById("newHordenbuffNote").value.trim() || "kommender Rend-Termin laut Lichtbuff";
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildCreateBuffTerm",
       masterCode,
       target:"hordenbuff",
@@ -4010,6 +4022,7 @@ async function createHordenbuffTerm(){
     }
 
     await loadHordenbuffPanel();
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
     setStatus("Hordenbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Hordenbuff-Termin konnte nicht erstellt werden.", "bad");
