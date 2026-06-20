@@ -3403,7 +3403,7 @@ async function savePrio(){
     }
 
     const playerPin = pinInfo.pin;
-    status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
+    status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
     let result=await submitPrioWithPin(playerPin, "");
 
@@ -9589,23 +9589,13 @@ function sendReport(){
   const note = document.getElementById("reportNote")?.value || "";
   const status = document.getElementById("reportStatus");
   const payload = currentReportPayload || {};
-  const callbackName = "reportIssueCallback_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+  const guild = new URLSearchParams(location.search).get("guild") || new URLSearchParams(location.search).get("gilde") || "lichtloot";
 
   if(status) status.textContent = "Meldung wird gesendet...";
 
-  window[callbackName] = function(response){
-    if(status){
-      status.innerHTML = response && response.success
-        ? '<span class="ok">✓ Danke, die Meldung wurde gespeichert.</span>'
-        : '<span class="bad">Meldung konnte nicht gespeichert werden.</span>';
-    }
-    setTimeout(closeReportModal, response && response.success ? 900 : 0);
-    try{ delete window[callbackName]; }catch(error){}
-  };
-
   const params = new URLSearchParams({
     action:"reportIssue",
-    callback:callbackName,
+    guild:guild,
     type:type,
     note:note,
     source:payload.source || "AQ40 Lootseite",
@@ -9617,18 +9607,23 @@ function sendReport(){
     player:payload.player || "",
     server:payload.server || "",
     createdAt:payload.createdAt || "",
-    page:location.href
+    page:location.href,
+    t:Date.now()
   });
 
-  const script = document.createElement("script");
-  script.src = APPS_SCRIPT_URL + "?" + params.toString();
-  script.onerror = function(){
-    if(status) status.innerHTML = '<span class="bad">Meldung konnte nicht gespeichert werden.</span>';
-    try{ delete window[callbackName]; }catch(error){}
-    script.remove();
-  };
-  document.body.appendChild(script);
-  setTimeout(() => script.remove(), 10000);
+  fetch(LICHTLOOT_API_URL + "?" + params.toString(), { cache:"no-store" })
+    .then(response => response.json())
+    .then(response => {
+      if(status){
+        status.innerHTML = response && response.success
+          ? '<span class="ok">✓ Danke, die Meldung wurde gespeichert.</span>'
+          : '<span class="bad">Meldung konnte nicht gespeichert werden.</span>';
+      }
+      setTimeout(closeReportModal, response && response.success ? 900 : 0);
+    })
+    .catch(() => {
+      if(status) status.innerHTML = '<span class="bad">Meldung konnte nicht gespeichert werden.</span>';
+    });
 }
 
 function normalizeOwnPrioText(value){
