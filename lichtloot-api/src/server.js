@@ -77,6 +77,295 @@ async function getCharactersByPin(guildId, pin) {
   return result.rows.map(normalizeCharacter);
 }
 
+function parseDateValue(value) {
+  const raw = clean(value);
+  if (!raw) return new Date().toISOString().slice(0, 10);
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+
+  const german = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (german) {
+    return `${german[3]}-${german[2].padStart(2, "0")}-${german[1].padStart(2, "0")}`;
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+
+  return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeRaidType(value) {
+  const raw = clean(value) || "raid";
+  return raw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "raid";
+}
+
+function displayRaidName(value) {
+  const key = normalizeRaidType(value);
+  const names = {
+    mc: "Molten Core",
+    bwl: "Blackwing Lair",
+    aq40: "Ahn'Qiraj 40",
+    naxx: "Naxxramas",
+    zg: "Zul'Gurub",
+    aq20: "AQ 20",
+    ony: "Onyxia"
+  };
+  return names[key] || clean(value) || "Raid";
+}
+
+async function findCharacterForPin(guildId, pin, charName, server) {
+  const params = [guildId, normalizePin(pin), clean(charName)];
+  let serverClause = "";
+
+  if (clean(server)) {
+    params.push(clean(server));
+    serverClause = `and lower(c.server) = lower($${params.length})`;
+  }
+
+  const result = await query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from players p
+     join characters c on c.player_id = p.id
+     where p.guild_id = $1
+       and p.player_pin = $2
+       and lower(c.name) = lower($3)
+       ${serverClause}
+     order by c.created_at asc
+     limit 1`,
+    params
+  );
+  return result.rows[0] || null;
+}
+
+async function upsertItem(client, raidType, itemName) {
+  const name = clean(itemName);
+  if (!name || name === "-") return null;
+
+  const result = await client.query(
+    `insert into items (raid_type, name)
+     values ($1, $2)
+     on conflict (raid_type, name) do update
+       set name = excluded.name
+     returning id, name`,
+    [raidType, name]
+  );
+  return result.rows[0];
+}
+
+async function savePrio({ guildId, query: params }) {
+  const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
+  const player = params.player || params.char || params.spieler;
+  const server = params.server;
+  const character = await findCharacterForPin(guildId, pin, player, server);
+
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerPin.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const raidType = normalizeRaidType(params.raid || params.raidName);
+  const raidName = displayRaidName(params.raidName || params.raid);
+  const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
+  const p0Plus = clean(params.p0Plus).toLowerCase();
+  const client = await pool.connect();
+
+  try {
+    await client.query("begin");
+
+    const raidResult = await client.query(
+      `insert into raids (guild_id, name, raid_type, raid_date, raid_pin)
+       values ($1, $2, $3, $4, $5)
+       on conflict (guild_id, raid_type, raid_date) do update
+         set name = excluded.name,
+             raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
+             updated_at = now()
+       returning id, name, raid_type, raid_date`,
+      [guildId, raidName, raidType, raidDate, clean(params.raidId || params.RaidID || params.raidPin) || null]
+    );
+
+    const p1 = await upsertItem(client, raidType, params.p1);
+    const p2 = await upsertItem(client, raidType, params.p2);
+    const p3 = await upsertItem(client, raidType, params.p3);
+    const comment = JSON.stringify({
+      p0Plus: p0Plus === "ja" || p0Plus === "true" ? "ja" : "nein",
+      raidTime: clean(params.raidTime || params.uhrzeit),
+      source: "railway"
+    });
+
+    const prioResult = await client.query(
+      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+       values ($1, $2, $3, $4, $5, $6)
+       on conflict (raid_id, character_id) do update
+         set p1_item_id = excluded.p1_item_id,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
+             comment = excluded.comment,
+             updated_at = now()
+       returning id, created_at, updated_at`,
+      [raidResult.rows[0].id, character.id, p1?.id || null, p2?.id || null, p3?.id || null, comment]
+    );
+
+    await client.query("commit");
+    return {
+      success: true,
+      characterPin: normalizePin(pin),
+      playerPin: normalizePin(pin),
+      tempPin: normalizePin(pin),
+      prioId: prioResult.rows[0].id,
+      raidId: raidResult.rows[0].id
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+function commentMeta(comment) {
+  try {
+    return JSON.parse(comment || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+async function getPlayerPrioHistory(guildId, params) {
+  const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
+  const charName = params.char || params.player || params.spieler;
+  const character = await findCharacterForPin(guildId, pin, charName, params.server);
+
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerPin.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const result = await query(
+    `select
+       pr.id,
+       pr.comment,
+       pr.created_at,
+       pr.updated_at,
+       r.id as raid_id,
+       r.name as raid_name,
+       r.raid_type,
+       r.raid_date,
+       i1.name as p1,
+       i2.name as p2,
+       i3.name as p3
+     from prios pr
+     join raids r on r.id = pr.raid_id
+     left join items i1 on i1.id = pr.p1_item_id
+     left join items i2 on i2.id = pr.p2_item_id
+     left join items i3 on i3.id = pr.p3_item_id
+     where pr.character_id = $1
+     order by r.raid_date desc, pr.updated_at desc
+     limit 25`,
+    [character.id]
+  );
+
+  const pointsResult = await query(
+    `select
+       coalesce(i.raid_type, 'Raid') as raid,
+       coalesce(i.name, pp.note, 'P0/P0+') as item,
+       coalesce(i.quality, '') as quality,
+       pp.points,
+       pp.source,
+       pp.note,
+       pp.created_at
+     from p0plus_points pp
+     left join items i on i.id = pp.item_id
+     where pp.guild_id = $1 and pp.character_id = $2
+     order by raid asc, item asc`,
+    [guildId, character.id]
+  );
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const entries = result.rows.map(row => {
+    const meta = commentMeta(row.comment);
+    const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
+    const raidDay = raidDate ? new Date(`${raidDate}T00:00:00`) : null;
+
+    return {
+      id: row.id,
+      raidId: row.raid_id,
+      raid: row.raid_type,
+      raidName: row.raid_name || displayRaidName(row.raid_type),
+      raidDate,
+      raidTime: meta.raidTime || "",
+      createdAt: row.updated_at || row.created_at,
+      player: character.name,
+      server: character.server,
+      className: character.class_name,
+      p1: row.p1 || "",
+      p2: row.p2 || "",
+      p3: row.p3 || "",
+      p0Plus: meta.p0Plus || "nein",
+      current: raidDay ? raidDay >= today : true,
+      pinType: "Railway"
+    };
+  });
+
+  return {
+    success: true,
+    guild: defaultGuildSlug,
+    player: character.name,
+    server: character.server,
+    className: character.class_name,
+    entries,
+    ownP0PlusPoints: pointsResult.rows.map(row => ({
+      raid: row.raid,
+      item: row.item,
+      quality: row.quality || "",
+      slot: "",
+      count: row.points,
+      source: row.source || "",
+      note: row.note || "",
+      createdAt: row.created_at
+    }))
+  };
+}
+
+async function deletePrio({ guildId, query: params }) {
+  const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
+  const player = params.player || params.char || params.spieler;
+  const character = await findCharacterForPin(guildId, pin, player, params.server);
+
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerPin.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const values = [character.id];
+  let raidClause = "";
+  const raidId = clean(params.raidId);
+
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raidId)) {
+    values.push(raidId);
+    raidClause = `and pr.raid_id = $${values.length}`;
+  } else if (clean(params.raid)) {
+    values.push(normalizeRaidType(params.raid));
+    raidClause = `and r.raid_type = $${values.length}`;
+  }
+
+  const result = await query(
+    `delete from prios pr
+     using raids r
+     where pr.raid_id = r.id
+       and pr.character_id = $1
+       ${raidClause}
+     returning pr.id`,
+    values
+  );
+
+  return { success: true, deleted: result.rowCount };
+}
+
 async function createPlayerWithCharacter({
   guildId,
   playerPin,
@@ -252,6 +541,21 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getCharactersByPin") {
       const characters = await getCharactersByPin(guild.id, req.query.pin);
       return res.json({ success: true, guild: guild.slug, characters, entries: characters, chars: characters });
+    }
+
+    if (action === "getPlayerPrioHistory") {
+      const history = await getPlayerPrioHistory(guild.id, req.query);
+      return res.json({ ...history, guild: guild.slug });
+    }
+
+    if (action === "savePrio") {
+      const saved = await savePrio({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "deletePrio" || action === "deletePlayerPrio") {
+      const deleted = await deletePrio({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "getPlayerPin") {
