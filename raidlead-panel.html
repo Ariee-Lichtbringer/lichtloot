@@ -1244,6 +1244,12 @@ const LICHTLOOT_API_URL =
 
 const MASTER_CODE = "Lichtbringer-Master";
 
+async function railwayApi(params){
+  const query = new URLSearchParams(Object.assign({}, params, { t: Date.now() }));
+  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+  return await response.json();
+}
+
 const raids = {
   mc:{name:"Molten Core",short:"MC",role:"mc-bwl",lootPage:"loot/mc-loot.html",overviewPage:"molten-core.html"},
   bwl:{name:"Blackwing Lair",short:"BWL",role:"mc-bwl",lootPage:"loot/bwl-loot.html",overviewPage:"bwl.html"},
@@ -1494,10 +1500,11 @@ async function tryLoadRaidByPin(pin, raidKey){
 
 async function loadPriosFromSheet(playerPin){
   const url =
-    RAID_API_URL +
+    LICHTLOOT_API_URL +
     "?action=getPublishedPrios" +
     "&raid=" + encodeURIComponent(raids[currentRaidKey].short) +
     "&playerPin=" + encodeURIComponent(playerPin) +
+    "&leadPin=" + encodeURIComponent(playerPin) +
     "&t=" + Date.now();
 
   try{
@@ -2290,26 +2297,16 @@ async function sendRaidStatus(status){
     return false;
   }
 
-  const url =
-    RAID_API_URL +
-    "?action=setRaidStatus" +
-    "&raidId=" + encodeURIComponent(raidId) +
-    "&leadPin=" + encodeURIComponent(leadPin) +
-    "&status=" + encodeURIComponent(status) +
-    "&t=" + Date.now();
-
   try{
-    /*
-      Wichtig: Apps Script liefert bei setRaidStatus JSON, aber ohne CORS-Header.
-      Deshalb lesen wir die Antwort hier nicht aus. Der GET-Aufruf wird trotzdem ausgeführt
-      und schreibt den Status in den Raids-Tab. So vermeiden wir den Browserfehler
-      „Origin is not allowed by Access-Control-Allow-Origin“.
-    */
-    await fetch(url, {
-      method:"GET",
-      mode:"no-cors",
-      cache:"no-store"
+    const result = await railwayApi({
+      action:"setRaidStatus",
+      raidId,
+      leadPin,
+      status
     });
+    if(result && result.success === false){
+      throw new Error(result.error || "Priolisten-Status konnte nicht gespeichert werden.");
+    }
 
     if(status === "geöffnet"){
       sessionStorage.setItem("raidOpen_" + raidId, "true");
@@ -2366,16 +2363,13 @@ async function deleteSinglePrio(player,server){
     return;
   }
 
-  const url =
-    RAID_API_URL +
-    "?action=deletePrio" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
-    "&player=" + encodeURIComponent(player) +
-    "&server=" + encodeURIComponent(server || "") +
-    "&t=" + Date.now();
-
-  const response = await fetch(url);
-  const result = await response.json();
+  const result = await railwayApi({
+    action:"guildDeletePrio",
+    raidId:currentRaidData.raidId,
+    leadPin:currentRaidData.leadPin || "",
+    player,
+    server:server || ""
+  });
 
   if(result.error){
     alert(result.error);
@@ -2398,20 +2392,20 @@ async function setPrioBench(rowNumber, bench, player, server){
   );
   if(!confirmed) return;
 
-  const url =
-    RAID_API_URL +
-    "?action=guildSetPrioBench" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
-    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
-    "&rowNumber=" + encodeURIComponent(rowNumber || "") +
-    "&player=" + encodeURIComponent(player || "") +
-    "&server=" + encodeURIComponent(server || "") +
-    "&bench=" + encodeURIComponent(bench ? "ja" : "nein") +
-    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || currentRaidKey || "") +
-    "&t=" + Date.now();
-
   try{
-    await fetch(url,{method:"GET",mode:"no-cors",cache:"no-store"});
+    const result = await railwayApi({
+      action:"guildSetPrioBench",
+      raidId:currentRaidData.raidId,
+      leadPin:currentRaidData.leadPin || "",
+      rowNumber:rowNumber || "",
+      player:player || "",
+      server:server || "",
+      bench:bench ? "ja" : "nein",
+      raid:raids[currentRaidKey]?.short || currentRaidKey || ""
+    });
+    if(result && result.success === false){
+      throw new Error(result.error || "Bench konnte nicht gespeichert werden.");
+    }
 
     const entry = currentPrios.find(prio =>
       (rowNumber && Number(prio.rowNumber || 0) === Number(rowNumber || 0)) ||
@@ -2442,19 +2436,19 @@ async function setP0PlusOverride(enabled){
     return;
   }
 
-  const url =
-    RAID_API_URL +
-    "?action=setP0PlusOverride" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
-    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
-    "&enabled=" + encodeURIComponent(enabled ? "true" : "false") +
-    "&value=" + encodeURIComponent(enabled ? "geöffnet" : "geschlossen") +
-    "&p0PlusFreigabe=" + encodeURIComponent(enabled ? "geöffnet" : "geschlossen") +
-    "&p0PlusOverride=" + encodeURIComponent(enabled ? "geöffnet" : "geschlossen") +
-    "&t=" + Date.now();
-
   try{
-    await fetch(url,{method:"GET",mode:"no-cors",cache:"no-store"});
+    const result = await railwayApi({
+      action:"setP0PlusOverride",
+      raidId:currentRaidData.raidId,
+      leadPin:currentRaidData.leadPin || "",
+      enabled:enabled ? "true" : "false",
+      value:enabled ? "geöffnet" : "geschlossen",
+      p0PlusFreigabe:enabled ? "geöffnet" : "geschlossen",
+      p0PlusOverride:enabled ? "geöffnet" : "geschlossen"
+    });
+    if(result && result.success === false){
+      throw new Error(result.error || p0Label() + " Freischaltung konnte nicht gespeichert werden.");
+    }
 
     const key = "p0PlusOverride_" + currentRaidData.raidId;
     currentP0PlusOpen = enabled;

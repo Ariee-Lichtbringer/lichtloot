@@ -1659,7 +1659,7 @@ async function loadOverview(){
   setStatus("Gildenleitung wird geladen ...", "");
 
   try{
-    const result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
+    const result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode });
     if(!result.success){
       setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
       return;
@@ -2216,7 +2216,7 @@ async function createRaidFromGuildPage(){
   resultBox.innerHTML = '<span class="warn">Raid wird erstellt ...</span>';
 
   try{
-    const saveResult = await apiJsonp(raidData);
+    const saveResult = await railwayApi(Object.assign({ masterCode }, raidData));
     if(saveResult && saveResult.success === false){
       throw new Error(saveResult.error || saveResult.message || "Raid konnte nicht gespeichert werden.");
     }
@@ -2318,7 +2318,7 @@ async function setRaidStatusFromPage(raidId, status){
   }
 
   try{
-    const result = await apiWrite({ action:"guildSetRaidStatus", masterCode, raidId, status });
+    const result = await railwayApi({ action:"guildSetRaidStatus", masterCode, raidId, status });
     if(!result.success){
       setStatus(result.error || "Raidstatus konnte nicht geändert werden.", "bad");
       return;
@@ -2348,7 +2348,7 @@ async function setRaidP0PlusFromPage(raidId, enabled){
   }
 
   try{
-    const result = await apiWrite({
+    const result = await railwayApi({
       action:"guildSetRaidStatus",
       masterCode,
       raidId,
@@ -2398,8 +2398,9 @@ async function openPrioModal(raidId){
 
   try{
     await ensureLootDataLoaded();
-    const result = await apiJsonp({
+    const result = await railwayApi({
       action:"getPublishedPrios",
+      raidId:raid.raidId || "",
       raid:raid.raid || raid.raidName || "",
       playerPin:raid.playerPin || raid.raidId || raid.leadPin || ""
     });
@@ -2521,7 +2522,7 @@ async function setPrioBenchFromModal(raidId, rowNumber, bench, player, server){
   }
 
   try{
-    const result = await apiWrite({
+    const result = await railwayApi({
       action:"guildSetPrioBench",
       masterCode,
       raidId,
