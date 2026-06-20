@@ -1654,6 +1654,8 @@ const RAID_IMAGES = {
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let issueReports = [];
+let guildSentMessages = [];
+let guildInboxTab = "reports";
 let worldbuffEntries = [];
 let hordenbuffEntries = [];
 let lootItemIndex = {};
@@ -1962,6 +1964,7 @@ function renderDashboardCards(){
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
+              <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(raid.status) ? "Prio schließen" : "Prio öffnen"}</button>
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId)}')">Raid löschen</button>
             </div>
           </div>
@@ -2184,6 +2187,7 @@ function renderRaids(){
               <button class="small-btn good" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',true)">P0 an</button>
               <button class="small-btn ghost" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',false)">P0 aus</button>
             </div>
+            <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
           </div>
@@ -2303,6 +2307,11 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
   );
 
   return lines.join("\n");
+}
+
+function buildRaidDirectLink(raid){
+  const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
+  return raidId ? `https://lichtloot.de/?raidId=${raidId}` : "https://lichtloot.de";
 }
 
 async function createRaidFromGuildPage(){
@@ -2478,7 +2487,10 @@ async function sendLeadPinToPlayer(raidId){
   }
 
   const title = `LeadPIN für ${raid.raidName || raid.raid || "Raid"}`;
-  const body = `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`;
+  const body = [
+    `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`,
+    `Direkt zum Raid: ${buildRaidDirectLink(raid)}`
+  ].join("\n\n");
 
   openMessageModal({
     mode:"leadpin",
@@ -2655,6 +2667,12 @@ async function setRaidStatusFromPage(raidId, status){
   }catch(error){
     setStatus(error.message || "Raidstatus konnte nicht geändert werden.", "bad");
   }
+}
+
+async function toggleRaidPrioStatus(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const nextStatus = raid && isOpenStatus(raid.status) ? "geschlossen" : "geöffnet";
+  await setRaidStatusFromPage(raidId,nextStatus);
 }
 
 async function setRaidP0PlusFromPage(raidId, enabled){
@@ -3180,13 +3198,17 @@ async function loadIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetIssueReports", masterCode });
+    const [result,sentResult] = await Promise.all([
+      railwayApi({ action:"guildGetIssueReports", masterCode }),
+      railwayApi({ action:"guildGetSentPlayerMessages", masterCode })
+    ]);
     if(!result.success){
       document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
       return;
     }
 
     issueReports = Array.isArray(result.reports) ? result.reports : [];
+    guildSentMessages = Array.isArray(sentResult.messages) ? sentResult.messages : [];
     await ensureLootDataLoaded();
     renderSummary();
     renderIssueInboxPanel();
@@ -3197,6 +3219,10 @@ async function loadIssueInboxPanel(){
 
 function renderIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = `
+    <div class="issue-toolbar">
+      <button id="guildInboxReportsTab" class="small-btn ${guildInboxTab === "reports" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('reports')">Meldungen</button>
+      <button id="guildInboxSentTab" class="small-btn ${guildInboxTab === "sent" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('sent')">Verschickte LeadPINs</button>
+    </div>
     <div class="issue-toolbar">
       <input id="issueSearch" type="search" placeholder="Spieler, Item, Raid oder Hinweis suchen..." oninput="renderIssueRows()">
       <button class="small-btn ghost" type="button" onclick="loadIssueInboxPanel()">Neu laden</button>
@@ -3222,9 +3248,19 @@ function renderIssueInboxPanel(){
   renderIssueRows();
 }
 
+function setGuildInboxTab(tab){
+  guildInboxTab = tab === "sent" ? "sent" : "reports";
+  renderIssueInboxPanel();
+}
+
 function renderIssueRows(){
   const tbody = document.getElementById("issueRows");
   if(!tbody) return;
+
+  if(guildInboxTab === "sent"){
+    renderGuildSentLeadPinRows(tbody);
+    return;
+  }
 
   const search = normalize(document.getElementById("issueSearch").value);
   const rows = issueReports.filter(report => {
@@ -3262,6 +3298,43 @@ function renderIssueRows(){
       <td><button class="small-btn good" type="button" onclick="resolveIssueReport(${Number(report.rowNumber || 0)})">Erledigt</button></td>
     </tr>
   `).join("");
+}
+
+function renderGuildSentLeadPinRows(tbody){
+  const search = normalize(document.getElementById("issueSearch").value);
+  const rows = guildSentMessages.filter(message => {
+    const haystack = normalize([
+      message.createdAt,
+      message.recipientNames,
+      message.raidName,
+      message.raidDate,
+      message.raidTime,
+      message.leadPin,
+      message.title
+    ].join(" "));
+    return !search || haystack.includes(search);
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Noch keine LeadPIN-Nachrichten verschickt.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(message => {
+    const directLink = message.raidId ? `https://lichtloot.de/?raidId=${encodeURIComponent(message.raidId)}` : "https://lichtloot.de";
+    return `
+      <tr>
+        <td>${escapeHtml(formatDateTime(message.createdAt) || "-")}</td>
+        <td>LeadPIN</td>
+        <td>${escapeHtml(message.raidName || "-")}<br><span class="muted">${escapeHtml(formatRaidDate(message.raidDate))} ${escapeHtml(message.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(message.leadPin || "-")}</span></td>
+        <td>${escapeHtml(message.recipientNames || "-")}</td>
+        <td class="issue-note">${escapeHtml(message.title || "LeadPIN")}</td>
+        <td><a href="${escapeAttr(directLink)}" target="_blank" rel="noopener">Raid öffnen</a></td>
+        <td><button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(message.leadPin || "")}')">PIN kopieren</button></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function renderIssueItem(report){
@@ -3895,6 +3968,19 @@ function formatRaidDate(value){
   const parts = String(value).split("-");
   if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
   return String(value);
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("de-DE",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
 }
 
 function normalize(value){
