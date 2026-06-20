@@ -77,6 +77,34 @@ async function findPlayerByPin(guildId, pin) {
   return result.rows[0] || null;
 }
 
+async function findPlayerByRecipient(guildId, recipient, server) {
+  const raw = clean(recipient);
+  if (!raw) return null;
+
+  const byPin = await findPlayerByPin(guildId, raw);
+  if (byPin) return byPin;
+
+  const params = [guildId, raw];
+  let serverClause = "";
+  if (clean(server)) {
+    params.push(clean(server));
+    serverClause = `and lower(c.server) = lower($${params.length})`;
+  }
+
+  const result = await query(
+    `select p.id, p.player_pin, c.name as character_name, c.server
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+       ${serverClause}
+     order by c.created_at asc
+     limit 1`,
+    params
+  );
+  return result.rows[0] || null;
+}
+
 async function findCharacter(guildId, charName, server) {
   const result = await query(
     `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
@@ -634,16 +662,16 @@ function normalizePlayerMessageRow(row) {
 
 async function sendPlayerMessage({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const playerPin = normalizePin(params.playerPin || params.pin);
-  if (!playerPin) {
-    const error = new Error("Bitte SpielerLogin/SpielerPin angeben.");
+  const recipient = clean(params.recipient || params.character || params.char || params.player || params.playerPin || params.pin);
+  if (!recipient) {
+    const error = new Error("Bitte Empfänger angeben.");
     error.statusCode = 400;
     throw error;
   }
 
-  const player = await findPlayerByPin(guildId, playerPin);
+  const player = await findPlayerByRecipient(guildId, recipient, params.server);
   if (!player) {
-    const error = new Error("Dieser SpielerLogin wurde nicht gefunden.");
+    const error = new Error("Dieser Spieler/Charakter wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
   }
@@ -657,7 +685,7 @@ async function sendPlayerMessage({ guildId, query: params }) {
      returning *`,
     [
       guildId,
-      playerPin,
+      player.player_pin,
       clean(params.title) || "Raidlead-PIN",
       clean(params.body) || "Du wurdest als Raidlead eingetragen.",
       clean(params.raidId),
@@ -666,6 +694,53 @@ async function sendPlayerMessage({ guildId, query: params }) {
       clean(params.raidTime || params.time),
       clean(params.leadPin),
       clean(params.sender) || "Gildenleitung"
+    ]
+  );
+  return { success: true, message: normalizePlayerMessageRow(result.rows[0]) };
+}
+
+async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
+  const senderPin = normalizePin(params.fromPlayerPin || params.senderPin || params.fromPin);
+  const recipient = clean(params.recipient || params.character || params.char || params.player || params.toPlayerPin || params.playerPin || params.pin);
+  const body = clean(params.body || params.message);
+  if (!senderPin || !recipient || !body) {
+    const error = new Error("Bitte Absender, Empfänger und Nachricht angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const sender = await findPlayerByPin(guildId, senderPin);
+  if (!sender) {
+    const error = new Error("Dein SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const recipientPlayer = await findPlayerByRecipient(guildId, recipient, params.server);
+  if (!recipientPlayer) {
+    const error = new Error("Empfänger wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const result = await query(
+    `insert into player_messages (
+       guild_id, player_pin, title, body, raid_id, raid_name,
+       raid_date, raid_time, lead_pin, sender
+     )
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     returning *`,
+    [
+      guildId,
+      recipientPlayer.player_pin,
+      clean(params.title) || "Nachricht",
+      body,
+      clean(params.raidId),
+      clean(params.raidName),
+      parseDateValue(params.raidDate || params.date || null),
+      clean(params.raidTime || params.time),
+      clean(params.leadPin),
+      clean(params.sender) || `Spieler ${senderPin}`
     ]
   );
   return { success: true, message: normalizePlayerMessageRow(result.rows[0]) };
@@ -701,6 +776,25 @@ async function markPlayerMessageRead({ guildId, query: params }) {
     [guildId, playerPin, id]
   );
   return { success: true, message: result.rows[0] ? normalizePlayerMessageRow(result.rows[0]) : null };
+}
+
+async function deleteRaid({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const raidId = clean(params.raidId || params.id);
+  if (!raidId) {
+    const error = new Error("Bitte Raid angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `delete from raids
+     where guild_id = $1
+       and (id::text = $2 or external_raid_id = $2)
+     returning id, external_raid_id, name`,
+    [guildId, raidId]
+  );
+  return { success: true, deleted: result.rowCount, raid: result.rows[0] || null };
 }
 
 async function createRaid({ guildId, query: params }) {
@@ -1434,6 +1528,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...message, guild: guild.slug });
     }
 
+    if (action === "sendPlayerMessageFromPlayer" || action === "sendPlayerMessageAsPlayer") {
+      const message = await sendPlayerMessageFromPlayer({ guildId: guild.id, query: req.query });
+      return res.json({ ...message, guild: guild.slug });
+    }
+
     if (action === "getPlayerMessages") {
       const messages = await getPlayerMessages({ guildId: guild.id, query: req.query });
       return res.json({ ...messages, guild: guild.slug });
@@ -1447,6 +1546,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "createRaid") {
       const created = await createRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteRaid" || action === "deleteRaid") {
+      const deleted = await deleteRaid({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "getPublishedPrios") {
