@@ -358,23 +358,29 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
-  gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:14px;
 }
 
 .active-raid-card{
-  display:grid;
-  grid-template-columns:180px minmax(0,1fr) auto;
-  gap:18px;
-  align-items:center;
-  padding:10px 0;
-  border-bottom:1px solid rgba(148,163,184,.14);
+  min-height:330px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  padding:0;
+  border:1px solid rgba(250,204,21,.18);
+  border-radius:10px;
+  background:
+    linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
+    rgba(2,6,23,.34);
+  box-shadow:0 14px 28px rgba(0,0,0,.18);
 }
 
-.active-raid-card:last-child{border-bottom:0}
+.active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
 
 .active-raid-image{
-  height:82px;
-  border-radius:7px;
+  height:136px;
+  border-radius:0;
   background-image:
     linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
     var(--raid-image);
@@ -382,6 +388,14 @@ button,input,select{font:inherit}
   background-position:center;
   border:1px solid rgba(148,163,184,.16);
   box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
+}
+
+.active-raid-body{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
 }
 
 .active-raid-title{
@@ -401,7 +415,7 @@ button,input,select{font:inherit}
   display:flex;
   flex-direction:column;
   gap:8px;
-  align-items:flex-end;
+  align-items:stretch;
 }
 
 .active-raid-count{
@@ -446,6 +460,48 @@ button,input,select{font:inherit}
   display:flex;
   gap:8px;
   align-items:center;
+  justify-content:stretch;
+  margin-top:auto;
+}
+
+.active-raid-actions .small-btn{
+  flex:1;
+}
+
+.active-raid-lead-card{
+  border:1px solid rgba(250,204,21,.28);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
+  padding:10px;
+  min-width:0;
+}
+
+.active-raid-lead-label{
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.active-raid-lead-pin{
+  display:block;
+  margin-top:4px;
+  color:#fbbf24;
+  font-size:26px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:1px;
+  word-break:break-word;
+}
+
+.active-raid-id{
+  display:block;
+  margin-top:6px;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:700;
+  white-space:normal;
 }
 
 .side-card{
@@ -1804,26 +1860,29 @@ function renderDashboardCards(){
 
   box.innerHTML = raids.map(raid => {
     const key = getRaidKey(raid);
-    const stats = dashboardRaidStats[String(raid.raidId || "")] || {};
-    const signups = stats.signups == null ? "-" : stats.signups;
-    const prios = stats.prios == null ? "-" : stats.prios;
     return `
       <article class="active-raid-card">
         <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
-        <div>
-          <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-          <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
-          <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
-          <div class="active-raid-stats">
-            <span class="active-raid-stat">Anmeldungen <strong>${escapeHtml(signups)}</strong></span>
-            <span class="active-raid-stat">Prios <strong>${escapeHtml(prios)}</strong></span>
+        <div class="active-raid-body">
+          <div>
+            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
+            <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
+            <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
+            <div class="active-raid-stats">
+              <span class="active-raid-stat">${escapeHtml(raid.guild || "Lichtbringer")}</span>
+              <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
+            </div>
           </div>
-        </div>
-        <div class="active-raid-side">
-          <div class="active-raid-count">${escapeHtml(raid.guild || "Lichtbringer")}<span>LeadPIN ${escapeHtml(raid.leadPin || "-")}</span><span>${escapeHtml(raid.raidId || "")}</span></div>
-          <div class="active-raid-actions">
-            <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Verwalten</button>
-            <button class="small-btn ghost" type="button" onclick="openRaidPanel()">Details</button>
+          <div class="active-raid-side">
+            <div class="active-raid-lead-card">
+              <span class="active-raid-lead-label">LeadPIN</span>
+              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
+              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
+            </div>
+            <div class="active-raid-actions">
+              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
+              <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
+            </div>
           </div>
         </div>
       </article>
@@ -1837,8 +1896,7 @@ function getDashboardActiveRaids(){
       const status = normalize(raid.status || "");
       return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
     })
-    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")))
-    .slice(0,3);
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
 async function loadDashboardRaidStats(){
@@ -2310,6 +2368,21 @@ async function copyText(elementId){
   }
 }
 
+async function copyPlainText(text){
+  const value = String(text || "").trim();
+  if(!value || value === "-"){
+    setStatus("Kein LeadPIN zum Kopieren vorhanden.", "bad");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(value);
+    setStatus("LeadPIN kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
 async function setRaidStatusFromPage(raidId, status){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -2770,7 +2843,7 @@ function renderP0PlusRows(){
         <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
         <td>
           <div class="actions">
-            <button class="small-btn ghost" type="button" onclick="setP0PlusInput(${sourceIndex},0.5)">0.5 Bench</button>
+            <button class="small-btn ghost" type="button" onclick="addP0PlusInput(${sourceIndex},0.5)">+0.5 Bench</button>
             <button class="small-btn primary" type="button" onclick="saveP0PlusPoints(${sourceIndex})">Speichern</button>
             <button class="small-btn danger" type="button" onclick="setP0PlusInput(${sourceIndex},0); saveP0PlusPoints(${sourceIndex})">Entfernen</button>
           </div>
@@ -2783,6 +2856,14 @@ function renderP0PlusRows(){
 function setP0PlusInput(index, value){
   const field = document.getElementById(`p0Points_${index}`);
   if(field) field.value = String(value);
+}
+
+function addP0PlusInput(index, amount){
+  const field = document.getElementById(`p0Points_${index}`);
+  if(!field) return;
+
+  const current = Number(String(field.value || "0").replace(",", ".")) || 0;
+  field.value = formatPoints(current + Number(amount || 0));
 }
 
 async function saveP0PlusPoints(index){
