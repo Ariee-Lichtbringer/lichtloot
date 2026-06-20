@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lootsystem konfigurieren</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+:root{
+  --gold:#facc15;
+  --accent:#1d4ed8;
+  --panel:rgba(12,18,32,.92);
+  --line:rgba(255,255,255,.14);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    linear-gradient(rgba(8,17,31,.82),rgba(8,17,31,.94)),
+    url("./images/back.jpeg");
+  background-size:cover;
+  background-position:center top;
+  background-attachment:fixed;
+}
+.page{
+  width:min(1180px,calc(100vw - 32px));
+  margin:0 auto;
+  padding:28px 0 44px;
+}
+.brand{
+  display:flex;
+  justify-content:center;
+  padding:8px 0 20px;
+}
+.brand img{
+  width:min(380px,70vw);
+  max-height:120px;
+  object-fit:contain;
+  filter:drop-shadow(0 14px 26px rgba(0,0,0,.6));
+}
+.shell{
+  border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);
+  border-radius:24px;
+  background:linear-gradient(135deg,rgba(12,18,32,.94),rgba(2,6,23,.82));
+  box-shadow:0 24px 70px rgba(0,0,0,.45);
+  padding:28px;
+}
+.head{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:flex-start;
+  margin-bottom:22px;
+}
+h1{
+  margin:0 0 8px;
+  color:var(--gold);
+  font-size:clamp(30px,4vw,48px);
+  line-height:1;
+}
+p{margin:0;color:var(--muted);line-height:1.5}
+.grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 360px;
+  gap:22px;
+  align-items:start;
+}
+.card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(2,6,23,.54);
+  padding:20px;
+}
+.link-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-bottom:18px;
+}
+.link-card{
+  text-decoration:none;
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(15,23,42,.55);
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:center;
+}
+.link-card strong{display:block;color:var(--gold);font-size:17px;margin-bottom:5px}
+.link-card span{color:var(--muted);font-size:13px}
+.link-card b{font-size:24px;color:var(--gold)}
+.form{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.full{grid-column:1 / -1}
+label{
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin:0 0 7px;
+}
+input{
+  width:100%;
+  min-height:48px;
+  padding:0 14px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(2,6,23,.72);
+  color:white;
+  font-weight:800;
+  outline:none;
+}
+input:focus{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 18%,transparent)}
+input[type=color]{padding:5px;cursor:pointer}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
+button,.button{
+  border:1px solid color-mix(in srgb,var(--gold) 42%,transparent);
+  border-radius:12px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 35%,transparent),rgba(37,99,235,.28));
+  color:white;
+  font-weight:900;
+  padding:12px 16px;
+  cursor:pointer;
+  text-decoration:none;
+}
+button.secondary,.button.secondary{background:rgba(15,23,42,.55)}
+.preview{
+  min-height:220px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:
+    linear-gradient(rgba(8,17,31,.55),rgba(8,17,31,.82)),
+    var(--preview-bg,url("./images/back.jpeg"));
+  background-size:cover;
+  background-position:center;
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+.preview img{
+  max-width:220px;
+  max-height:90px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.55));
+}
+.preview h2{margin:16px 0 4px;color:var(--gold)}
+.status{
+  margin-top:12px;
+  border:1px solid rgba(96,165,250,.28);
+  background:rgba(37,99,235,.12);
+  border-radius:12px;
+  padding:13px;
+  color:#dbeafe;
+  line-height:1.45;
+}
+.ok{color:#22c55e;font-weight:900}
+.bad{color:#ef4444;font-weight:900}
+.warn{color:var(--gold);font-weight:900}
+@media(max-width:920px){.grid,.form,.link-grid{grid-template-columns:1fr}.head{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="brand"><img id="topLogo" src="images/content.png" alt="Lootsystem"></div>
+  <main class="shell">
+    <div class="head">
+      <div>
+        <h1 id="pageTitle">Lootsystem konfigurieren</h1>
+        <p>Diese Seite füllt die Vorlage mit deinen Gildendaten: Name, Logo, Farben, Server und Links.</p>
+      </div>
+      <button class="secondary" type="button" onclick="loadGuild()">Aktualisieren</button>
+    </div>
+
+    <div class="link-grid">
+      <a id="loginLink" class="link-card" href="#"><span><strong>SpielerLogin</strong><span>Link für deine Spieler</span></span><b>›</b></a>
+      <a id="startLink" class="link-card" href="#"><span><strong>Raid-Übersicht</strong><span>Raids, Prios und Mein Loot</span></span><b>›</b></a>
+      <a id="leadLink" class="link-card" href="#"><span><strong>Gildenleitung</strong><span>Verwalten und Postfach</span></span><b>›</b></a>
+      <a id="raidleadLink" class="link-card" href="#"><span><strong>Raidlead</strong><span>LeadPIN und Priolisten</span></span><b>›</b></a>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="form">
+          <div>
+            <label>Gildenname</label>
+            <input id="guildName" placeholder="z. B. Panem">
+          </div>
+          <div>
+            <label>Server</label>
+            <input id="guildServer" placeholder="z. B. Everlook">
+          </div>
+          <div>
+            <label>Punkte-Name</label>
+            <input id="pointsLabel" placeholder="P0/P0+">
+          </div>
+          <div>
+            <label>Lootsystem-Slug</label>
+            <input id="guildSlug" disabled>
+          </div>
+          <div>
+            <label>Primärfarbe</label>
+            <input id="primaryColor" type="color" value="#facc15" oninput="updatePreview()">
+          </div>
+          <div>
+            <label>Akzentfarbe</label>
+            <input id="accentColor" type="color" value="#1d4ed8" oninput="updatePreview()">
+          </div>
+          <div class="full">
+            <label>Logo hochladen</label>
+            <input id="logoFile" type="file" accept="image/*" onchange="loadImageFile('logo')">
+          </div>
+          <div class="full">
+            <label>Logo-URL oder hochgeladenes Bild</label>
+            <input id="logoUrl" placeholder="https://... oder hochgeladenes Bild" oninput="updatePreview()">
+          </div>
+          <div class="full">
+            <label>Hintergrund hochladen</label>
+            <input id="backgroundFile" type="file" accept="image/*" onchange="loadImageFile('background')">
+          </div>
+          <div class="full">
+            <label>Hintergrund-URL oder hochgeladenes Bild</label>
+            <input id="backgroundUrl" placeholder="https://... oder hochgeladenes Bild" oninput="updatePreview()">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" onclick="saveConfig()">Konfiguration speichern</button>
+          <button class="secondary" type="button" onclick="copyLinks()">Links kopieren</button>
+          <a id="openLoginButton" class="button secondary" href="#">Zum SpielerLogin</a>
+        </div>
+        <div id="status" class="status">Gildendaten werden geladen...</div>
+      </section>
+
+      <aside class="preview" id="preview">
+        <div><img id="logoPreview" src="images/content.png" alt="Logo Vorschau"></div>
+        <div>
+          <h2 id="previewTitle">Lootsystem</h2>
+          <p id="previewText">Gilde und Server werden hier als Vorschau angezeigt.</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+const LICHTLOOT_API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
+
+function cleanSlug(value){
+  return String(value || "").trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"");
+}
+
+const params=new URLSearchParams(location.search);
+const GUILD_SLUG=cleanSlug(params.get("guild") || params.get("gilde") || "");
+
+function titleFromSlug(slug){
+  return String(slug || "Lootsystem").split("-").filter(Boolean).map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join(" ");
+}
+
+function lootTitle(guild){
+  if(String(guild?.slug || GUILD_SLUG) === "lichtloot") return "LichtLoot";
+  return titleFromSlug(guild?.slug || GUILD_SLUG);
+}
+
+function linkTo(page){
+  return page + "?guild=" + encodeURIComponent(GUILD_SLUG);
+}
+
+function setStatus(html){
+  const status=document.getElementById("status");
+  if(status) status.innerHTML=html;
+}
+
+function setLinks(){
+  const links={
+    loginLink:"index.html",
+    startLink:"start.html",
+    leadLink:"gildenleitung.html",
+    raidleadLink:"raidlead-panel.html",
+    openLoginButton:"index.html"
+  };
+  Object.entries(links).forEach(([id,page])=>{
+    const el=document.getElementById(id);
+    if(el) el.href=linkTo(page);
+  });
+}
+
+function updatePreview(){
+  const primary=document.getElementById("primaryColor").value || "#facc15";
+  const accent=document.getElementById("accentColor").value || "#1d4ed8";
+  const logo=document.getElementById("logoUrl").value.trim() || "images/content.png";
+  const bg=document.getElementById("backgroundUrl").value.trim();
+  const guildName=document.getElementById("guildName").value.trim() || titleFromSlug(GUILD_SLUG);
+  const server=document.getElementById("guildServer").value.trim();
+  document.documentElement.style.setProperty("--gold", primary);
+  document.documentElement.style.setProperty("--accent", accent);
+  document.getElementById("topLogo").src=logo;
+  document.getElementById("logoPreview").src=logo;
+  document.getElementById("previewTitle").textContent=lootTitle({slug:GUILD_SLUG});
+  document.getElementById("previewText").textContent=guildName + (server ? " - " + server : "");
+  document.getElementById("pageTitle").textContent=lootTitle({slug:GUILD_SLUG}) + " konfigurieren";
+  if(bg){
+    document.getElementById("preview").style.setProperty("--preview-bg","url('"+bg.replace(/'/g,"%27")+"')");
+    document.body.style.backgroundImage="linear-gradient(rgba(8,17,31,.82),rgba(8,17,31,.94)),url('"+bg.replace(/'/g,"%27")+"')";
+  }
+}
+
+function loadImageFile(kind){
+  const input=document.getElementById(kind === "logo" ? "logoFile" : "backgroundFile");
+  const target=document.getElementById(kind === "logo" ? "logoUrl" : "backgroundUrl");
+  const file=input?.files?.[0];
+  if(!file || !target) return;
+  if(file.size > 650000){
+    alert("Das Bild ist zu groß. Bitte nutze ein kleineres Bild oder eine Bild-URL.");
+    input.value="";
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>{ target.value=String(reader.result || ""); updatePreview(); };
+  reader.readAsDataURL(file);
+}
+
+async function loadGuild(){
+  if(!GUILD_SLUG){
+    setStatus('<span class="bad">Keine Gilde in der Adresse gefunden.</span>');
+    return;
+  }
+  setLinks();
+  setStatus('<span class="warn">Gildendaten werden geladen...</span>');
+  try{
+    const response=await fetch(LICHTLOOT_API_URL+"?action=listGuilds&t="+Date.now(),{cache:"no-store"});
+    const data=await response.json();
+    const guild=(data.guilds || []).find(entry=>String(entry.slug || "").toLowerCase() === GUILD_SLUG);
+    if(!guild){
+      document.getElementById("guildSlug").value=GUILD_SLUG;
+      document.getElementById("guildName").value=titleFromSlug(GUILD_SLUG);
+      updatePreview();
+      setStatus('<span class="bad">Gilde wurde nicht gefunden. Vielleicht ist Railway noch nicht neu geladen?</span>');
+      return;
+    }
+    document.getElementById("guildSlug").value=guild.slug || GUILD_SLUG;
+    document.getElementById("guildName").value=guild.name || "";
+    document.getElementById("guildServer").value=guild.server || "";
+    document.getElementById("pointsLabel").value=guild.pointsLabel || "P0/P0+";
+    document.getElementById("logoUrl").value=guild.logoUrl || "";
+    document.getElementById("backgroundUrl").value=guild.backgroundUrl || "";
+    document.getElementById("primaryColor").value=guild.primaryColor || "#facc15";
+    document.getElementById("accentColor").value=guild.accentColor || "#1d4ed8";
+    updatePreview();
+    setStatus('<span class="ok">Gilde geladen.</span>');
+  }catch(error){
+    console.error(error);
+    setStatus('<span class="bad">Gildendaten konnten nicht geladen werden.</span>');
+  }
+}
+
+async function saveConfig(){
+  setStatus('<span class="warn">Konfiguration wird gespeichert...</span>');
+  const payload={
+    action:"updateGuildConfig",
+    guild:GUILD_SLUG,
+    guildName:document.getElementById("guildName").value.trim(),
+    server:document.getElementById("guildServer").value.trim(),
+    pointsLabel:document.getElementById("pointsLabel").value.trim(),
+    logoUrl:document.getElementById("logoUrl").value.trim(),
+    backgroundUrl:document.getElementById("backgroundUrl").value.trim(),
+    primaryColor:document.getElementById("primaryColor").value.trim(),
+    accentColor:document.getElementById("accentColor").value.trim()
+  };
+  try{
+    const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await response.json();
+    if(!data.success){
+      setStatus('<span class="bad">'+(data.error || "Speichern fehlgeschlagen.")+'</span>');
+      return;
+    }
+    setStatus('<span class="ok">Konfiguration gespeichert.</span>');
+    loadGuild();
+  }catch(error){
+    console.error(error);
+    setStatus('<span class="bad">Konfiguration konnte nicht gespeichert werden.</span>');
+  }
+}
+
+function copyLinks(){
+  const text=[
+    "SpielerLogin: "+new URL(linkTo("index.html"), location.href).href,
+    "Raid-Übersicht: "+new URL(linkTo("start.html"), location.href).href,
+    "Gildenleitung: "+new URL(linkTo("gildenleitung.html"), location.href).href,
+    "Raidlead: "+new URL(linkTo("raidlead-panel.html"), location.href).href
+  ].join("\\n");
+  navigator.clipboard?.writeText(text).then(()=>alert("Links kopiert.")).catch(()=>alert(text));
+}
+
+loadGuild();
+</script>
+</body>
+</html>
