@@ -156,8 +156,6 @@ body{
   top:78px;
   right:25px;
   width:390px;
-  max-height:calc(100vh - 104px);
-  overflow:auto;
   padding:18px;
   border-radius:18px;
   background:rgba(12,18,32,.94);
@@ -171,8 +169,6 @@ body{
   top:78px;
   right:25px;
   width:360px;
-  max-height:calc(100vh - 104px);
-  overflow:auto;
   padding:18px;
   border-radius:18px;
   background:linear-gradient(180deg,rgba(12,18,32,.96),rgba(2,6,23,.92));
@@ -347,10 +343,6 @@ body{
 }
 
 .p0plus-box{
-  max-height:calc(100vh - 104px);
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
   background:rgba(12,18,32,.96);
   border:1px solid rgba(250,204,21,.35);
   border-radius:18px;
@@ -413,8 +405,6 @@ body{
 }
 
 .p0plus-content{
-  min-height:0;
-  flex:1 1 auto;
   max-height:520px;
   overflow:auto;
   font-size:14px;
@@ -584,18 +574,6 @@ body{
 
 .raid-active-box strong{
   color:#facc15;
-}
-
-.raid-active-select{
-  width:100%;
-  margin-bottom:9px;
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid rgba(250,204,21,.32);
-  background:rgba(2,6,23,.88);
-  color:#f8fafc;
-  font-size:12px;
-  font-weight:900;
 }
 
 .raid-active-empty{
@@ -839,22 +817,15 @@ body{
 .lichtloot-tab{padding:9px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.28);background:rgba(2,6,23,.55);color:#f8fafc;font-weight:900;cursor:pointer}
 .lichtloot-tab.active{background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22));border-color:rgba(250,204,21,.65)}
 .lichtloot-section{
-  flex:1 1 auto;
   margin-top:12px;
   min-height:0;
   overflow:auto;
   padding-right:4px;
 }
 .lichtloot-section::-webkit-scrollbar,
-.myprios-results::-webkit-scrollbar,
-.raid-create-box::-webkit-scrollbar,
-.raidlead-login-box::-webkit-scrollbar,
-.p0plus-content::-webkit-scrollbar{width:8px;height:8px}
+.myprios-results::-webkit-scrollbar{width:8px;height:8px}
 .lichtloot-section::-webkit-scrollbar-thumb,
-.myprios-results::-webkit-scrollbar-thumb,
-.raid-create-box::-webkit-scrollbar-thumb,
-.raidlead-login-box::-webkit-scrollbar-thumb,
-.p0plus-content::-webkit-scrollbar-thumb{background:rgba(250,204,21,.34);border-radius:999px}
+.myprios-results::-webkit-scrollbar-thumb{background:rgba(250,204,21,.34);border-radius:999px}
 .twink-form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:end}
 .twink-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .twink-form input,.twink-form select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:700}
@@ -1196,514 +1167,334 @@ body{
 .p0plus-item.uncommon,.p0plus-summary-left .uncommon{color:#4ade80!important}
 .p0plus-item.legendary,.p0plus-summary-left .legendary{color:#fb923c!important}
 
+
+
 /* === Startseite Dashboard 2026 === */
-body.start-dashboard-body{
-  background:linear-gradient(90deg,rgba(3,10,20,.96),rgba(5,15,29,.86)),url("./images/back.jpeg");
-  background-size:cover;
-  background-position:center top;
-}
-
-.start-dashboard-body .overlay{
-  padding:0;
-  backdrop-filter:none;
-}
-
-.start-shell{
-  min-height:100vh;
-  display:grid;
-  grid-template-columns:246px 1fr;
-  background:radial-gradient(circle at 55% 20%,rgba(250,204,21,.08),transparent 28%);
-}
-
-.start-sidebar{
-  position:sticky;
-  top:0;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  padding:30px 16px 18px;
-  border-right:1px solid rgba(250,204,21,.28);
-  background:linear-gradient(180deg,rgba(2,6,23,.93),rgba(3,12,24,.98));
-}
-
-.start-sidebar-logo{
-  width:170px;
-  margin:0 auto 28px;
-  object-fit:contain;
-  filter:drop-shadow(0 14px 22px rgba(0,0,0,.55));
-}
-
-.start-side-nav{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.start-side-link{
-  width:100%;
-  min-height:46px;
-  display:grid;
-  grid-template-columns:28px 1fr auto;
-  align-items:center;
-  gap:8px;
-  padding:10px 14px;
-  border-radius:8px;
-  border:1px solid transparent;
-  background:transparent;
-  color:#f8fafc;
-  font-size:15px;
-  font-weight:850;
-  text-align:left;
-  cursor:pointer;
-}
-
-.start-side-link.active,
-.start-side-link:hover{
-  border-color:rgba(250,204,21,.44);
-  background:linear-gradient(90deg,rgba(250,204,21,.23),rgba(250,204,21,.05));
-}
-
-.start-side-icon{color:#facc15;font-size:17px;text-align:center}
-.start-side-badge{
-  min-width:24px;
-  padding:2px 7px;
-  border-radius:999px;
-  background:#facc15;
-  color:#111827;
-  text-align:center;
-  font-weight:950;
-}
-
-.start-side-spacer{flex:1}
-
-.start-main{
-  min-width:0;
-  padding:28px 34px 0;
-}
-
-.start-header{
-  display:flex;
-  justify-content:space-between;
-  gap:22px;
-  align-items:flex-start;
-  margin-bottom:22px;
-}
-
-.start-kicker{
-  color:#facc15;
-  font-size:30px;
-  line-height:1;
-  font-weight:950;
-}
-
-.start-subtitle{
-  margin-top:8px;
-  color:#f8fafc;
-  font-size:14px;
-  font-weight:800;
-}
-
-.start-header-actions{
-  display:flex;
-  gap:14px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-
-.start-top-btn,
-.start-profile-btn{
-  min-height:52px;
-  padding:12px 18px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,.22);
-  background:rgba(8,13,26,.72);
-  color:#f8fafc;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.start-top-btn:hover,
-.start-profile-btn:hover{
-  border-color:rgba(250,204,21,.55);
-}
-
-.start-profile-btn{
-  display:grid;
-  grid-template-columns:42px 1fr;
-  gap:10px;
-  align-items:center;
-  min-width:220px;
-  text-align:left;
-}
-
-.start-profile-btn img{
-  width:42px;
-  height:42px;
-  object-fit:contain;
-}
-
-.start-profile-btn small{
-  display:block;
-  color:#cbd5e1;
-  font-size:12px;
-  margin-top:2px;
-}
-
-.dashboard-layout{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 370px;
-  gap:20px;
-  align-items:start;
-}
-
-.dashboard-left,
-.dashboard-right{
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-}
-
-.dash-panel{
-  border:1px solid rgba(250,204,21,.27);
-  background:linear-gradient(135deg,rgba(9,16,30,.86),rgba(4,14,27,.70));
-  border-radius:8px;
-  box-shadow:0 18px 38px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05);
-}
-
-.next-raid-panel{
-  display:grid;
-  grid-template-columns:410px minmax(230px,1fr) 220px;
-  gap:28px;
-  padding:18px;
-  align-items:center;
-}
-
-.section-title{
-  color:#facc15;
-  font-size:16px;
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.03em;
-}
-
-.next-raid-image{
-  height:150px;
-  border-radius:6px;
-  background-size:cover;
-  background-position:center;
-  box-shadow:inset 0 -70px 80px rgba(0,0,0,.42);
-}
-
-.next-raid-name{
-  margin:12px 0 14px;
-  color:#f8fafc;
-  font-size:26px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.next-raid-meta{
-  display:grid;
-  gap:12px;
-  color:#f8fafc;
-  font-weight:850;
-}
-
-.next-raid-status{
-  overflow:hidden;
-  border-radius:6px;
-  border:1px solid rgba(255,255,255,.10);
-  background:rgba(15,23,42,.62);
-}
-
-.next-raid-status-row{
-  padding:12px;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  color:#dbeafe;
-  font-weight:800;
-}
-
-.next-raid-status-row strong{
-  display:block;
-  color:#22c55e;
-  text-transform:uppercase;
-  font-size:15px;
-  margin-bottom:4px;
-}
-
-.start-gold-action{
-  width:100%;
-  min-height:38px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:10px 14px;
-  border:0;
-  border-radius:0 0 6px 6px;
-  background:linear-gradient(90deg,#eab308,#f59e0b);
-  color:#111827;
-  font-weight:950;
-  cursor:pointer;
-}
-
-.metric-grid{
-  display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
-  gap:14px;
-}
-
-.metric-card{
-  min-height:118px;
-  padding:18px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.metric-card h3{
-  color:#f8fafc;
-  font-size:14px;
-  font-weight:900;
-}
-
-.metric-number{
-  color:#f8fafc;
-  font-size:27px;
-  font-weight:950;
-}
-
-.metric-card button,
-.text-link-btn{
-  width:max-content;
-  border:0;
-  background:transparent;
-  color:#facc15;
-  font-weight:950;
-  cursor:pointer;
-}
-
-.raid-instance-section,
-.upcoming-section{
-  padding:14px;
-}
-
-.section-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:12px;
-}
-
-.instance-grid{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:14px;
-}
-
-.instance-card{
-  min-height:200px;
-  padding:12px;
-  display:grid;
-  grid-template-columns:78px 1fr;
-  gap:10px;
-  align-items:start;
-}
-
-.instance-card img{
-  width:78px;
-  height:122px;
-  object-fit:cover;
-  border-radius:5px;
-}
-
-.instance-card h3{
-  color:#f8fafc;
-  font-size:15px;
-  font-weight:950;
-  margin-bottom:8px;
-}
-
-.instance-card p{
-  color:#dbeafe;
-  font-size:13px;
-  line-height:1.4;
-  margin-bottom:6px;
-}
-
-.instance-status{color:#22c55e!important;font-weight:950}
-
-.instance-card .raid-active-box{
-  display:none;
-}
-
-.instance-card .pin-input{
-  position:absolute;
-  width:1px;
-  height:1px;
-  opacity:0;
-  pointer-events:none;
-}
-
-.instance-card .raid-btn{
-  grid-column:1 / -1;
-  min-height:36px;
-  padding:8px 10px;
-  border-radius:6px;
-  background:rgba(30,41,59,.85);
-}
-
-.upcoming-list{
-  display:grid;
-  gap:0;
-}
-
-.upcoming-row{
-  min-height:54px;
-  display:grid;
-  grid-template-columns:78px 1.2fr 1fr 1fr 150px 40px;
-  gap:12px;
-  align-items:center;
-  padding:8px 10px;
-  border-top:1px solid rgba(255,255,255,.08);
-}
-
-.upcoming-row img{
-  width:64px;
-  height:34px;
-  object-fit:cover;
-  border-radius:4px;
-}
-
-.upcoming-row strong{color:#f8fafc}
-.upcoming-row span{color:#cbd5e1;font-size:13px;font-weight:800}
-
-.right-card{
-  padding:18px;
-}
-
-.right-card h2{
-  color:#facc15;
-  font-size:18px;
-  text-transform:uppercase;
-  margin-bottom:12px;
-}
-
-.right-card p{
-  color:#f8fafc;
-  line-height:1.55;
-  font-size:14px;
-  margin-bottom:12px;
-}
-
-.quick-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
-
-.quick-actions button,
-.right-inline-btn{
-  min-height:34px;
-  padding:8px 12px;
-  border-radius:6px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(15,23,42,.72);
-  color:#f8fafc;
-  font-weight:900;
-  cursor:pointer;
-}
-
-.quick-actions button:first-child{
-  background:linear-gradient(90deg,#eab308,#b7791f);
-  color:#111827;
-}
-
-.right-pin-row{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:8px;
-}
-
-.right-pin-row input{
-  min-height:36px;
-  padding:8px 10px;
-  border-radius:6px;
-  border:1px solid rgba(255,255,255,.13);
-  background:rgba(2,6,23,.75);
-  color:white;
-  font-weight:800;
-}
-
-.side-list{
-  display:grid;
-  gap:9px;
-}
-
-.side-row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:5px 0;
-  border-bottom:1px solid rgba(255,255,255,.05);
-  color:#f8fafc;
-  font-weight:800;
-}
-
-.side-row span:last-child{color:#86efac}
-
-.start-footer{
-  margin-top:26px;
-  padding:20px 34px;
-  display:grid;
-  grid-template-columns:1fr repeat(4,auto) 1fr;
-  gap:44px;
-  border-top:1px solid rgba(250,204,21,.28);
-  color:#cbd5e1;
-  font-size:13px;
-}
-
-.start-footer a{
-  color:#facc15;
-  text-decoration:none;
-}
-
-.start-footer-love{
-  text-align:right;
-}
-
-@media(max-width:1450px){
-  .metric-grid{grid-template-columns:repeat(3,1fr)}
-  .instance-grid{grid-template-columns:repeat(3,1fr)}
-  .next-raid-panel{grid-template-columns:330px 1fr}
-  .next-raid-status{grid-column:1 / -1}
-}
-
-@media(max-width:1050px){
-  .start-shell{grid-template-columns:1fr}
-  .start-sidebar{position:relative;height:auto;flex-direction:row;overflow:auto}
-  .start-side-nav{flex-direction:row}
-  .start-side-spacer{display:none}
-  .dashboard-layout{grid-template-columns:1fr}
-  .next-raid-panel{grid-template-columns:1fr}
-  .metric-grid,.instance-grid{grid-template-columns:1fr 1fr}
-}
-
-@media(max-width:720px){
-  .start-main{padding:18px 14px 0}
-  .start-header{display:grid}
-  .metric-grid,.instance-grid{grid-template-columns:1fr}
-  .upcoming-row{grid-template-columns:58px 1fr}
-  .start-footer{grid-template-columns:1fr;gap:10px}
-  .start-footer-love{text-align:left}
+body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgba(5,15,29,.86)),url('./images/back.jpeg');background-size:cover;background-position:center top;background-attachment:fixed}.start-dashboard-body .overlay{padding:0;backdrop-filter:none}.start-shell{min-height:100vh;display:grid;grid-template-columns:246px 1fr;background:radial-gradient(circle at 55% 20%,rgba(250,204,21,.08),transparent 28%)}.start-sidebar{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:30px 16px 18px;border-right:1px solid rgba(250,204,21,.28);background:linear-gradient(180deg,rgba(2,6,23,.93),rgba(3,12,24,.98))}.start-sidebar-logo{width:170px;margin:0 auto 28px;object-fit:contain;filter:drop-shadow(0 14px 22px rgba(0,0,0,.55))}.start-side-nav{display:flex;flex-direction:column;gap:8px}.start-side-link{width:100%;min-height:46px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;border:1px solid transparent;background:transparent;color:#f8fafc;font-size:15px;font-weight:850;text-align:left;cursor:pointer}.start-side-link.active,.start-side-link:hover{border-color:rgba(250,204,21,.44);background:linear-gradient(90deg,rgba(250,204,21,.23),rgba(250,204,21,.05))}.start-side-icon{color:#facc15;font-size:17px;text-align:center}.start-side-badge{min-width:24px;padding:2px 7px;border-radius:999px;background:#facc15;color:#111827;text-align:center;font-weight:950}.start-side-spacer{flex:1}.start-main{min-width:0;padding:28px 34px 0}.start-header{display:flex;justify-content:space-between;gap:22px;align-items:flex-start;margin-bottom:22px}.start-kicker{color:#facc15;font-size:30px;line-height:1;font-weight:950}.start-subtitle{margin-top:8px;color:#f8fafc;font-size:14px;font-weight:800}.start-header-actions{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.start-top-btn,.start-profile-btn{min-height:52px;padding:12px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(8,13,26,.72);color:#f8fafc;font-weight:900;cursor:pointer}.start-profile-btn{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:center;min-width:220px;text-align:left}.start-profile-btn img{width:42px;height:42px;object-fit:contain}.start-profile-btn small{display:block;color:#cbd5e1;font-size:12px;margin-top:2px}.dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:20px;align-items:start}.dashboard-left,.dashboard-right{min-width:0;display:flex;flex-direction:column;gap:16px}.dash-panel{border:1px solid rgba(250,204,21,.27);background:linear-gradient(135deg,rgba(9,16,30,.86),rgba(4,14,27,.70));border-radius:8px;box-shadow:0 18px 38px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.05)}.next-raid-panel{display:grid;grid-template-columns:410px minmax(230px,1fr) 220px;gap:28px;padding:18px;align-items:center}.section-title{color:#facc15;font-size:16px;font-weight:950;text-transform:uppercase;letter-spacing:.03em}.next-raid-image{height:150px;border-radius:6px;background-size:cover;background-position:center;box-shadow:inset 0 -70px 80px rgba(0,0,0,.42)}.next-raid-name{margin:12px 0 14px;color:#f8fafc;font-size:26px;font-weight:950;text-transform:uppercase}.next-raid-meta{display:grid;gap:12px;color:#f8fafc;font-weight:850}.next-raid-status{overflow:hidden;border-radius:6px;border:1px solid rgba(255,255,255,.10);background:rgba(15,23,42,.62)}.next-raid-status-row{padding:12px;border-bottom:1px solid rgba(255,255,255,.07);color:#dbeafe;font-weight:800}.next-raid-status-row strong{display:block;color:#22c55e;text-transform:uppercase;font-size:15px;margin-bottom:4px}.start-gold-action{width:100%;min-height:38px;display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:0;border-radius:0 0 6px 6px;background:linear-gradient(90deg,#eab308,#f59e0b);color:#111827;font-weight:950;cursor:pointer}.text-link-btn{width:max-content;border:0;background:transparent;color:#facc15;font-weight:950;cursor:pointer}.raid-instance-section,.upcoming-section{padding:14px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.instance-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.instance-card{min-height:200px;padding:12px;display:grid;grid-template-columns:78px 1fr;gap:10px;align-items:start;position:relative}.instance-card img{width:78px;height:122px;object-fit:cover;border-radius:5px}.instance-card h3{color:#f8fafc;font-size:15px;font-weight:950;margin-bottom:8px}.instance-card p{color:#dbeafe;font-size:13px;line-height:1.4;margin-bottom:6px}.instance-status{color:#22c55e!important;font-weight:950}.instance-card .raid-active-box{display:none}.instance-card .pin-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.instance-card .raid-btn{grid-column:1 / -1;min-height:36px;padding:8px 10px;border-radius:6px;background:rgba(30,41,59,.85)}.upcoming-list{display:grid;gap:0}.upcoming-row{min-height:54px;display:grid;grid-template-columns:78px 1.2fr 1fr 1fr 150px 40px;gap:12px;align-items:center;padding:8px 10px;border-top:1px solid rgba(255,255,255,.08)}.upcoming-row img{width:64px;height:34px;object-fit:cover;border-radius:4px}.upcoming-row strong{color:#f8fafc}.upcoming-row span{color:#cbd5e1;font-size:13px;font-weight:800}.right-card{padding:18px}.right-card h2{color:#facc15;font-size:18px;text-transform:uppercase;margin-bottom:12px}.right-card p{color:#f8fafc;line-height:1.55;font-size:14px;margin-bottom:12px}.quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.quick-actions button,.right-inline-btn{min-height:34px;padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}.quick-actions button:first-child{background:linear-gradient(90deg,#eab308,#b7791f);color:#111827}.right-pin-row{display:grid;grid-template-columns:1fr auto;gap:8px}.right-pin-row input{min-height:36px;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.13);background:rgba(2,6,23,.75);color:white;font-weight:800}.side-list{display:grid;gap:9px}.side-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);color:#f8fafc;font-weight:800}.side-row span:last-child{color:#86efac}.start-footer{margin-top:26px;padding:20px 34px;display:grid;grid-template-columns:1fr repeat(4,auto) 1fr;gap:44px;border-top:1px solid rgba(250,204,21,.28);color:#cbd5e1;font-size:13px}.start-footer a{color:#facc15;text-decoration:none}.start-footer-love{text-align:right}
+
+.dashboard-fold{margin-top:12px;border:1px solid rgba(255,255,255,.12);border-radius:8px;background:rgba(2,6,23,.42);overflow:hidden}
+.dashboard-fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;color:#facc15;font-weight:950;text-transform:uppercase;font-size:13px;letter-spacing:.03em}
+.dashboard-fold summary::-webkit-details-marker{display:none}
+.dashboard-fold summary:after{content:'öffnen';color:#cbd5e1;text-transform:none;font-size:12px;font-weight:850;letter-spacing:0}
+.dashboard-fold[open] summary:after{content:'schließen'}
+.dashboard-fold-body{padding:0 12px 12px;display:grid;gap:10px}
+.dashboard-select-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.dashboard-select-row select{min-height:36px;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.13);background:rgba(2,6,23,.75);color:#f8fafc;font-weight:850;min-width:0}
+.dashboard-inline-status{margin:0!important;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(2,6,23,.52);color:#dbeafe!important;font-size:13px!important;line-height:1.45!important}
+.dashboard-inline-results{display:grid;gap:10px;max-height:360px;overflow:auto;padding-right:4px}
+.dashboard-inline-results:empty:before{content:'Noch nichts geladen.';display:block;color:#cbd5e1;padding:10px 0;font-weight:800}
+.raid-calendar-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.raid-calendar-actions select{min-height:34px;padding:7px 9px;border-radius:6px;border:1px solid rgba(255,255,255,.13);background:rgba(2,6,23,.75);color:#f8fafc;font-weight:850}
+.raid-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.raid-calendar-weekday{color:#facc15;font-size:11px;font-weight:950;text-align:center;text-transform:uppercase}
+.raid-calendar-day{min-height:82px;border:1px solid rgba(255,255,255,.10);border-radius:7px;background:rgba(2,6,23,.48);padding:5px;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.raid-calendar-day.muted{opacity:.45}.raid-calendar-day.today{border-color:rgba(250,204,21,.62);box-shadow:inset 0 0 0 1px rgba(250,204,21,.22)}
+.raid-calendar-day-number{color:#f8fafc;font-weight:950;font-size:12px}
+.raid-calendar-event{border:1px solid rgba(250,204,21,.18);border-radius:5px;background:rgba(250,204,21,.10);padding:3px 4px;color:#f8fafc;font-size:11px;font-weight:850;line-height:1.25;overflow:hidden}
+.raid-calendar-event.lichtbringer{border-color:rgba(250,204,21,.42);background:linear-gradient(135deg,rgba(250,204,21,.26),rgba(180,83,9,.18));color:#fef3c7}
+.raid-calendar-event.external{border-color:rgba(96,165,250,.24);background:rgba(37,99,235,.16)}
+.raid-calendar-event.reset{border-color:rgba(148,163,184,.22);background:rgba(15,23,42,.72);font-size:10px;color:#cbd5e1}
+.raid-calendar-event.reset.server{border-color:rgba(96,165,250,.28);background:rgba(59,130,246,.14)}
+.raid-calendar-event.reset.short{border-color:rgba(45,212,191,.25);background:rgba(20,184,166,.12)}
+.raid-calendar-event.reset.ony{border-color:rgba(248,113,113,.25);background:rgba(239,68,68,.12)}
+.raid-calendar-event.reset.dmf{border-color:rgba(192,132,252,.30);background:rgba(126,34,206,.16);color:#e9d5ff}
+.raid-calendar-event small{display:block;color:#cbd5e1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.raid-calendar-menu{position:fixed;z-index:70000;width:min(310px,calc(100vw - 28px));display:grid;gap:7px;padding:12px;border:1px solid rgba(250,204,21,.34);border-radius:8px;background:rgba(5,10,23,.98);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.raid-calendar-menu.hidden{display:none}
+.raid-calendar-menu strong{color:#facc15}.raid-calendar-menu input{width:100%;min-height:34px;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.13);background:rgba(2,6,23,.75);color:#f8fafc;font-weight:800}
+.raid-calendar-modal{position:fixed;inset:0;z-index:64000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(2,6,23,.72);backdrop-filter:blur(8px)}
+.raid-calendar-modal.hidden{display:none}
+.raid-calendar-modal-box{width:min(1120px,calc(100vw - 44px));height:min(820px,calc(100vh - 44px));display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;gap:14px;padding:18px;border:1px solid rgba(250,204,21,.36);border-radius:12px;background:linear-gradient(135deg,rgba(10,18,32,.98),rgba(3,11,24,.96));box-shadow:0 28px 80px rgba(0,0,0,.62)}
+.raid-calendar-modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.raid-calendar-modal-head h2{margin:0;color:#facc15;font-size:24px;text-transform:uppercase}
+.raid-calendar-modal .raid-calendar-actions{gap:10px}
+.raid-calendar-modal .raid-calendar-actions .right-inline-btn,.raid-calendar-modal .raid-calendar-actions select{min-height:42px;padding:9px 14px;font-size:15px}
+.raid-calendar-modal-content{min-height:0;overflow:auto;padding:2px 4px 8px}
+.raid-calendar-modal .raid-calendar-title{color:#f8fafc;font-size:22px;font-weight:950;margin:2px 0 12px}
+.raid-calendar-modal .raid-calendar-grid{gap:8px}
+.raid-calendar-modal .raid-calendar-weekday{font-size:13px;text-align:left;padding-left:6px}
+.raid-calendar-modal .raid-calendar-day{min-height:126px;padding:8px;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(2,6,23,.62)}
+.raid-calendar-modal .raid-calendar-day-number{font-size:16px}
+.raid-calendar-modal .raid-calendar-event{font-size:13px;padding:6px 7px}
+.raid-calendar-modal .raid-calendar-event.reset{font-size:11px;padding:4px 6px}
+.raid-calendar-modal .raid-calendar-event small{font-size:11px}
+.raid-calendar-mini{display:grid;gap:8px}
+.raid-calendar-open-btn{width:100%;justify-content:center}
+.dashboard-inline-results .my-worldbuff-box{display:block!important;margin:0!important;border:0!important;background:transparent!important;padding:0!important}
+.dashboard-inline-results .my-worldbuff-head{display:none!important}
+.dashboard-inline-results .status{margin:0!important}
+.dashboard-inline-results .lichtloot-fold,.dashboard-inline-results .my-worldbuff-item{background:rgba(2,6,23,.55)!important}
+.dashboard-mini-link{width:100%;min-height:38px;margin-top:8px;border-radius:6px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:#facc15;font-weight:950;cursor:pointer;text-align:left;padding:8px 10px}
+
+.dashboard-worldbuff-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);color:#f8fafc;font-weight:850}
+.dashboard-worldbuff-dot{width:10px;height:10px;border-radius:999px;background:#facc15;box-shadow:0 0 12px rgba(250,204,21,.45)}
+.dashboard-worldbuff-dot.hakkar{background:#22c55e}.dashboard-worldbuff-dot.ony,.dashboard-worldbuff-dot.nef{background:#ef4444}.dashboard-worldbuff-dot.rend{background:#f59e0b}
+.dashboard-worldbuff-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dashboard-worldbuff-time{color:#86efac;font-weight:950;white-space:nowrap}
+.dashboard-worldbuff-meta{grid-column:2 / 4;color:#cbd5e1;font-size:12px;margin-top:-4px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+
+/* === FINAL: Mein-LichtLoot Priolisten-Modal feiner und resizebar === */
+#myPrioDetailModal.report-modal{z-index:52000!important;padding:14px!important;align-items:center!important;justify-content:center!important}
+#myPrioDetailModal .myprio-detail-box{
+  width:min(940px,calc(100vw - 32px))!important;
+  height:min(760px,calc(100vh - 32px))!important;
+  min-width:520px!important;
+  min-height:420px!important;
+  max-width:calc(100vw - 20px)!important;
+  max-height:calc(100vh - 20px)!important;
+  resize:both!important;
+  overflow:hidden!important;
+  border-radius:14px!important;
+  padding:16px!important;
+  font-size:13px!important;
+}
+#myPrioDetailModal .report-head{margin-bottom:8px!important}
+#myPrioDetailModal .report-head h2{font-size:18px!important;letter-spacing:.01em!important}
+#myPrioDetailModal .report-close{width:36px!important;height:36px!important;min-height:36px!important;padding:0!important;border-radius:10px!important;font-size:16px!important}
+#myPrioDetailModal #myPrioDetailContent{font-size:13px!important;line-height:1.35!important;overflow:auto!important;padding-right:8px!important}
+#myPrioDetailModal .myprio-detail-title{font-size:22px!important;line-height:1.05!important;margin:0 0 3px!important}
+#myPrioDetailModal .myprio-detail-subtitle{font-size:12px!important;margin-bottom:8px!important;color:#cbd5e1!important}
+#myPrioDetailModal .myprio-own-summary{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;margin:10px 0!important}
+#myPrioDetailModal .myprio-own-summary-card{border-radius:10px!important;padding:8px!important;min-height:auto!important}
+#myPrioDetailModal .myprio-own-summary-card strong{font-size:11px!important;margin-bottom:4px!important;letter-spacing:.05em!important}
+#myPrioDetailModal .myprio-own-summary-card span{font-size:13px!important;line-height:1.3!important}
+#myPrioDetailModal .my-own-p0-block{border-radius:10px!important;margin-top:8px!important;max-height:150px!important;overflow:auto!important}
+#myPrioDetailModal .myprio-detail-row{grid-template-columns:46px minmax(0,1fr)!important;gap:8px!important;padding:6px 0!important;font-size:13px!important}
+#myPrioDetailModal .raid-prio-list-block{border-radius:12px!important;margin-top:10px!important;padding:10px!important;max-height:none!important;overflow:auto!important}
+#myPrioDetailModal .raid-prio-list-block h3{font-size:18px!important;margin:2px 0 6px!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-detail-subtitle{font-size:12px!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table{min-width:980px!important;font-size:12px!important;table-layout:fixed!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table th,
+#myPrioDetailModal .raid-prio-list-block .myprio-table td{padding:7px 8px!important;line-height:1.25!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table th{font-size:11px!important;letter-spacing:.04em!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table th:nth-child(1),
+#myPrioDetailModal .raid-prio-list-block .myprio-table td:nth-child(1){width:42px!important;text-align:center!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table th:nth-child(2),
+#myPrioDetailModal .raid-prio-list-block .myprio-table td:nth-child(2){width:150px!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table th:nth-child(3),
+#myPrioDetailModal .raid-prio-list-block .myprio-table td:nth-child(3){width:110px!important}
+#myPrioDetailModal .p0plus-item{font-size:12px!important;line-height:1.25!important}
+#myPrioDetailModal .item-icon{width:20px!important;height:20px!important}
+.tooltip{z-index:90000!important;font-size:12px!important;max-width:330px!important}
+.tooltip-title{font-size:14px!important}.tooltip-row,.tooltip-stat,.tooltip-bind,.tooltip-equip{font-size:12px!important;line-height:1.3!important}
+@media(max-width:700px){#myPrioDetailModal .myprio-detail-box{min-width:0!important;width:calc(100vw - 18px)!important;height:calc(100vh - 18px)!important;resize:none!important}#myPrioDetailModal .myprio-own-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+
+
+
+/* === FINAL: Startseiten-Buffuebersicht im mittleren Feld === */
+.buff-overview-panel{padding:16px!important;min-height:460px}
+.buff-overview-head{align-items:flex-start!important;margin-bottom:12px!important}.buff-overview-head p{margin:5px 0 0;color:#cbd5e1;font-size:13px;font-weight:800}.buff-overview-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.buff-overview-tabs{display:flex;gap:8px;margin-bottom:12px}.buff-tab{min-height:34px;padding:7px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}.buff-tab.active{border-color:rgba(250,204,21,.55);background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(250,204,21,.06));color:#facc15}.buff-overview-content{border:1px solid rgba(255,255,255,.10);border-radius:8px;overflow:auto;background:rgba(2,6,23,.42);max-height:calc(100vh - 280px)}.buff-overview-table{width:100%;border-collapse:collapse;min-width:860px}.buff-overview-table th,.buff-overview-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;font-weight:850;color:#dbeafe}.buff-overview-table th{color:#facc15;text-transform:uppercase;font-size:11px;letter-spacing:.04em;background:rgba(2,6,23,.50);position:sticky;top:0;z-index:2}.buff-overview-table td strong{color:#f8fafc}.buff-pill{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border-radius:999px;background:rgba(15,23,42,.68);border:1px solid rgba(255,255,255,.12);color:#f8fafc;font-weight:950}.buff-source{font-size:11px;color:#94a3b8;font-weight:850}.buff-empty{padding:18px;color:#cbd5e1;font-weight:850}.start-side-link.is-soft-active{border-color:rgba(250,204,21,.44);background:linear-gradient(90deg,rgba(250,204,21,.20),rgba(250,204,21,.04))}
+
+/* === FINAL: Priolisten-Fenster sichtbarer Resize-Griff === */
+#myPrioDetailModal .myprio-detail-box{position:relative!important;overflow:auto!important}
+#myPrioDetailModal #myPrioDetailContent{max-height:calc(100% - 48px)!important}
+#myPrioDetailModal .modal-resize-handle{position:absolute;right:5px;bottom:5px;width:24px;height:24px;cursor:nwse-resize;border-radius:5px;background:linear-gradient(135deg,transparent 0 48%,rgba(250,204,21,.22) 48% 60%,rgba(250,204,21,.65) 60% 72%,rgba(250,204,21,.22) 72%);z-index:5}
+
+/* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
+#meinLichtLootCard.right-card{padding:14px!important}
+#meinLichtLootCard h2{font-size:16px!important;margin-bottom:8px!important;letter-spacing:.02em!important}
+#meinLichtLootCard p{font-size:12px!important;line-height:1.4!important;margin-bottom:9px!important}
+#meinLichtLootCard .right-pin-row{gap:6px!important}
+#meinLichtLootCard .right-pin-row input,
+#meinLichtLootCard .dashboard-select-row select{min-height:32px!important;padding:6px 9px!important;border-radius:7px!important;font-size:12px!important}
+#meinLichtLootCard .right-inline-btn{min-height:32px!important;padding:6px 10px!important;border-radius:7px!important;font-size:12px!important}
+#meinLichtLootCard .dashboard-inline-status{padding:8px 10px!important;font-size:12px!important;border-radius:7px!important;margin-top:8px!important}
+#meinLichtLootCard .dashboard-fold{margin-top:9px!important;border-radius:8px!important}
+#meinLichtLootCard .dashboard-fold summary{padding:9px 10px!important;font-size:12px!important;letter-spacing:.02em!important}
+#meinLichtLootCard .dashboard-fold summary:after{font-size:11px!important}
+#meinLichtLootCard .dashboard-fold-body{padding:0 10px 10px!important;gap:8px!important}
+#meinLichtLootCard .dashboard-select-row{gap:6px!important;grid-template-columns:minmax(0,1fr) auto!important}
+#meinLichtLootCard .dashboard-inline-results{gap:8px!important;max-height:300px!important}
+#meinLichtLootCard .lichtloot-fold{border-radius:9px!important}
+#meinLichtLootCard .lichtloot-fold summary{font-size:12px!important;padding:8px 10px!important}
+#meinLichtLootCard .lichtloot-fold-body{padding:8px!important}
+#meinLichtLootCard .myprio-list{gap:7px!important}
+#meinLichtLootCard .myprio-card{min-height:52px!important;border-radius:10px!important;padding:8px 9px!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important}
+#meinLichtLootCard .myprio-open{min-height:0!important;padding:0!important;gap:3px!important}
+#meinLichtLootCard .myprio-open strong{font-size:13px!important;line-height:1.15!important}
+#meinLichtLootCard .myprio-open span{font-size:11px!important}
+#meinLichtLootCard .myprio-card-actions{gap:5px!important}
+#meinLichtLootCard .icon-action-btn,
+#meinLichtLootCard .myprio-card-actions .report-btn,
+#meinLichtLootCard .myprio-card-actions .delete-prio-btn{width:32px!important;min-width:32px!important;height:32px!important;border-radius:8px!important;font-size:13px!important}
+#meinLichtLootCard .icon-action-btn img{width:18px!important;height:18px!important}
+#meinLichtLootCard .my-po-summary{padding:9px!important;margin-bottom:9px!important;border-radius:10px!important}
+#meinLichtLootCard .my-po-summary-title{font-size:14px!important;margin-bottom:7px!important}
+#meinLichtLootCard .my-po-grid{gap:6px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+#meinLichtLootCard .my-po-raid{padding:7px!important;border-radius:8px!important}
+#meinLichtLootCard .my-po-raid strong{font-size:10px!important;margin-bottom:3px!important}
+#meinLichtLootCard .my-po-raid span{font-size:15px!important}
+#meinLichtLootCard .my-worldbuff-item{padding:8px!important;border-radius:9px!important}
+#meinLichtLootCard .my-worldbuff-title{font-size:13px!important}
+#meinLichtLootCard .my-worldbuff-meta{font-size:11px!important}
+
+
+/* === FINAL: Worldbuffs in Mein-LichtLoot kompakter === */
+#meinLichtLootCard .my-worldbuff-claim{grid-template-columns:1fr!important;gap:6px!important;padding:7px!important;border-radius:9px!important;margin-bottom:8px!important}
+#meinLichtLootCard .my-worldbuff-claim select,
+#meinLichtLootCard .my-worldbuff-claim button{min-height:30px!important;padding:6px 8px!important;border-radius:7px!important;font-size:12px!important;width:100%!important;min-width:0!important}
+#meinLichtLootCard .my-worldbuff-main{grid-template-columns:minmax(0,1fr)!important;gap:5px!important}
+#meinLichtLootCard .my-worldbuff-item{overflow:hidden!important}
+#meinLichtLootCard .my-worldbuff-title{font-size:13px!important;line-height:1.15!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+#meinLichtLootCard .my-worldbuff-meta{font-size:11px!important;line-height:1.25!important;white-space:normal!important}
+#meinLichtLootCard .my-worldbuff-main .pill{width:max-content!important;min-height:22px!important;font-size:10px!important;padding:2px 7px!important}
+#meinLichtLootCard .my-worldbuff-actions{margin-top:6px!important}
+#meinLichtLootCard .my-worldbuff-actions button{min-height:28px!important;padding:5px 8px!important;border-radius:7px!important;font-size:11px!important}
+#meinLichtLootCard .my-worldbuff-move{grid-template-columns:1fr!important;gap:5px!important}
+#meinLichtLootCard .my-worldbuff-move select,
+#meinLichtLootCard .my-worldbuff-move button{min-height:28px!important;padding:5px 8px!important;border-radius:7px!important;font-size:11px!important;width:100%!important;min-width:0!important}
+#meinLichtLootCard #dashboardMyWorldbuffContent{overflow-x:hidden!important}
+
+
+/* === FINAL: Mein-LichtLoot eigener Bereich goldener Fokus === */
+#meinLichtLootCard{
+  border-color:rgba(250,204,21,.48)!important;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(250,204,21,.18),transparent 36%),
+    linear-gradient(135deg,rgba(38,28,7,.72),rgba(7,13,26,.84) 46%,rgba(4,14,27,.74))!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.36),inset 0 1px 0 rgba(250,204,21,.18),0 0 0 1px rgba(250,204,21,.08)!important;
+}
+#meinLichtLootCard h2:before{content:'★ ';color:#facc15}
+#meinLichtLootCard .dashboard-fold[open]{border-color:rgba(250,204,21,.34)!important;background:rgba(250,204,21,.055)!important}
+#meinLichtLootCard .dashboard-inline-status .ok,
+#meinLichtLootCard .myprio-open strong{color:#facc15!important}
+
+
+/* === FINAL: Twink hinzufügen im Mein-LichtLoot Bereich === */
+#meinLichtLootCard .dashboard-twink-form{grid-template-columns:1fr!important}
+#meinLichtLootCard .dashboard-twink-form input,
+#meinLichtLootCard .dashboard-twink-form select{min-height:32px!important;padding:6px 9px!important;border-radius:7px!important;border:1px solid rgba(255,255,255,.13)!important;background:rgba(2,6,23,.75)!important;color:#f8fafc!important;font-size:12px!important;font-weight:850!important;width:100%!important;min-width:0!important}
+#meinLichtLootCard .dashboard-twink-form button{width:100%!important}
+#meinLichtLootCard #dashboardTwinkStatus{margin-top:0!important}
+
+
+/* === FINAL: Sidebar-Aufklapper fuer Raidlead und Raid erstellen === */
+.sidebar-drawer-slot:empty{display:none}
+.start-sidebar .raidlead-login-box,
+.start-sidebar .raid-create-box{
+  position:static!important;
+  width:100%!important;
+  max-height:0!important;
+  overflow:hidden!important;
+  padding:0 10px!important;
+  margin:0!important;
+  border-width:0!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+  background:rgba(2,6,23,.48)!important;
+  transition:max-height .22s ease,padding .22s ease,border-width .22s ease,margin .22s ease!important;
+}
+.start-sidebar .raidlead-login-box:not(.hidden),
+.start-sidebar .raid-create-box:not(.hidden){
+  max-height:520px!important;
+  overflow:auto!important;
+  padding:10px!important;
+  margin:4px 0 8px!important;
+  border:1px solid rgba(250,204,21,.28)!important;
+}
+.start-sidebar .raidlead-login-head,
+.start-sidebar .raid-create-head{margin-bottom:8px!important;gap:6px!important}
+.start-sidebar .raidlead-login-head h2,
+.start-sidebar .raid-create-head h2{font-size:13px!important;line-height:1.15!important}
+.start-sidebar .raidlead-close{width:28px!important;height:28px!important;min-height:28px!important;padding:0!important;border-radius:8px!important;font-size:12px!important}
+.start-sidebar .raidlead-login-box p{font-size:11px!important;margin-bottom:8px!important;line-height:1.35!important}
+.start-sidebar .raidlead-login-box label,
+.start-sidebar .raid-create-box label{font-size:10px!important;margin:8px 0 4px!important;letter-spacing:.05em!important}
+.start-sidebar .raidlead-login-box input,
+.start-sidebar .raid-create-box input,
+.start-sidebar .raid-create-box select{min-height:31px!important;padding:6px 8px!important;border-radius:7px!important;font-size:12px!important}
+.start-sidebar .raidlead-login-box .tool-btn,
+.start-sidebar .raid-create-box .tool-btn,
+.start-sidebar .raid-create-box .copy-btn{min-height:32px!important;padding:7px 9px!important;border-radius:7px!important;font-size:12px!important}
+.start-sidebar .raidlead-login-box .status,
+.start-sidebar .raid-create-box .status{font-size:11px!important;line-height:1.35!important;padding:8px!important;border-radius:7px!important;margin-top:8px!important}
+.start-sidebar .raid-create-box .result-row{grid-template-columns:1fr!important;gap:5px!important}
+.start-sidebar .raid-create-box .discord-copy-text{min-height:100px!important;font-size:11px!important}
+
+
+/* === FINAL: PrioPIN in Raid-Instanzkarten === */
+.instance-card p[id^="dash-"][id$="-summary"]{white-space:pre-line!important}
+.instance-card .dash-prio-pin{display:block;color:#facc15;font-size:12px;font-weight:950;margin-top:4px}
+
+
+
+/* === FINAL: Mein-LichtLoot rechte Spalte feiner, ohne abgeschnittene Raid-Liste === */
+#meinLichtLootCard{
+  max-height:none!important;
+  overflow:visible!important;
+}
+#meinLichtLootCard .dashboard-inline-results{
+  max-height:none!important;
+  overflow:visible!important;
+}
+#meinLichtLootCard .dashboard-fold[open] .dashboard-fold-body{
+  overflow:visible!important;
+}
+#meinLichtLootCard .lichtloot-fold{
+  overflow:visible!important;
+}
+#meinLichtLootCard .lichtloot-fold-body{
+  overflow:visible!important;
+}
+#meinLichtLootCard .myprio-list{
+  max-height:none!important;
+  overflow:visible!important;
+}
+#meinLichtLootCard .myprio-card{
+  min-height:44px!important;
+  padding:6px 7px!important;
+  border-radius:8px!important;
+  gap:6px!important;
+}
+#meinLichtLootCard .myprio-open strong{
+  font-size:12px!important;
+  line-height:1.12!important;
+  letter-spacing:0!important;
+}
+#meinLichtLootCard .myprio-open span{
+  font-size:10.5px!important;
+  line-height:1.15!important;
+}
+#meinLichtLootCard .myprio-card-actions{
+  gap:4px!important;
+}
+#meinLichtLootCard .icon-action-btn,
+#meinLichtLootCard .myprio-card-actions .report-btn,
+#meinLichtLootCard .myprio-card-actions .delete-prio-btn{
+  width:28px!important;
+  min-width:28px!important;
+  height:28px!important;
+  min-height:28px!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+}
+#meinLichtLootCard .icon-action-btn img{
+  width:15px!important;
+  height:15px!important;
+}
+#meinLichtLootCard .dashboard-fold summary{
+  font-size:11.5px!important;
+  padding:8px 9px!important;
+}
+#meinLichtLootCard .dashboard-fold-body{
+  padding:0 9px 9px!important;
+}
+#meinLichtLootCard .right-inline-btn{
+  min-height:30px!important;
+  padding:5px 9px!important;
+  font-size:11.5px!important;
+}
+#meinLichtLootCard .dashboard-select-row select,
+#meinLichtLootCard .right-pin-row input{
+  min-height:30px!important;
+  font-size:11.5px!important;
 }
 
 </style>
 </head>
 
-<body>
+<body class="start-dashboard-body">
 
 <div id="p0plusOverlay" class="p0plus-overlay hidden">
   <div class="p0plus-box">
@@ -1730,9 +1521,10 @@ body.start-dashboard-body{
 
 <div class="overlay">
 
-<div id="myPriosBox" class="myprios-box">
+<div id="myPriosBox" class="myprios-box hidden">
   <div class="myprios-head">
     <h2>Mein LichtLoot</h2>
+    <button class="myprios-close" onclick="closeMyPrios()">✕</button>
   </div>
   <div class="myprios-subline">
     Deine Charaktere, Prios und P0/P0+ Punkte bleiben hier griffbereit.
@@ -1872,155 +1664,80 @@ body.start-dashboard-body{
   </div>
 </div>
 
-<div class="header">
-  <img src="images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner">
 
-  <nav class="main-nav" aria-label="LichtLoot Navigation">
-    <button class="nav-btn" onclick="goHomeView()">Startseite</button>
-    <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
-    <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
-    <button class="nav-btn" onclick="window.location.href='gildenleitung.html'">Gildenleitung</button>
-    <button class="nav-btn" onclick="toggleRaidleadLogin()">Raidlead Login</button>
-  </nav>
-</div>
+<div class="start-shell">
+  <aside class="start-sidebar">
+    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="start-sidebar-logo">
+    <nav class="start-side-nav" aria-label="Startseite Navigation">
+      <button class="start-side-link active" data-start-nav="dashboard" onclick="goHomeView()"><span class="start-side-icon">⌂</span><span>Dashboard</span></button>
+      <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><span class="start-side-icon">✦</span><span>P0+ Liste</span></button>
+      <button class="start-side-link" data-start-nav="worldbuff" onclick="showBuffOverview('worldbuff')"><span class="start-side-icon">◎</span><span>Worldbuffs</span></button>
+      <button class="start-side-link" data-start-nav="raidlead" onclick="toggleRaidleadLogin()"><span class="start-side-icon">♚</span><span>Raidlead-Panel</span></button>
+      <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
+      <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><span class="start-side-icon">✚</span><span>Raid erstellen</span></button>
+      <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
+    </nav><div class="start-side-spacer"></div><button class="start-side-link" onclick="goHomeView()"><span class="start-side-icon">▣</span><span>Sperren</span></button>
+  </aside>
+  <main class="start-main">
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span>Lichtbringer<small>Gildenleitung</small></span></button></div></header>
+    <div class="dashboard-layout"><div class="dashboard-left">
+      <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
+      <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
+        <div class="section-head buff-overview-head">
+          <div>
+            <div class="section-title" id="buffOverviewTitle">Worldbuffs</div>
+            <p id="buffOverviewSubtitle">Buff-Termine aus Lichtbuff und Ticker.</p>
+          </div>
+          <div class="buff-overview-actions">
+            <button class="right-inline-btn" onclick="loadBuffOverview(currentBuffOverviewType)">Neu laden</button>
+            <button class="text-link-btn" onclick="goHomeView()">Dashboard anzeigen →</button>
+          </div>
+        </div>
+        <div class="buff-overview-tabs" role="tablist">
+          <button id="buffTabWorld" class="buff-tab active" onclick="showBuffOverview('worldbuff')">Worldbuffs</button>
+          <button id="buffTabHorde" class="buff-tab" onclick="showBuffOverview('hordenbuff')">Hordenbuffs</button>
+        </div>
+        <div id="buffOverviewContent" class="buff-overview-content"><div class="status">Noch keine Daten geladen.</div></div>
+      </section>
 
-<div class="raid-grid">
-
-  <div class="raid-card" style="background-image:url('./images/mc.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Molten Core</div>
-      <div class="raid-active-box" id="active-mc">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-mc" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'mc')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('mc')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="raid-card" style="background-image:url('./images/bwl.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Blackwing Lair</div>
-      <div class="raid-active-box" id="active-bwl">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-bwl" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'bwl')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('bwl')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="raid-card" style="background-image:url('./images/aq40.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Ahn'Qiraj 40</div>
-      <div class="raid-active-box" id="active-aq40">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-aq40" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'aq40')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('aq40')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="raid-card" style="background-image:url('./images/naxx.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Naxxramas</div>
-      <div class="raid-active-box" id="active-naxx">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-naxx" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'naxx')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('naxx')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div class="small-raid-grid">
-
-  <div class="raid-card small" style="background-image:url('./images/zg.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Zul Gurub</div>
-      <div class="raid-active-box" id="active-zg">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-zg" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'zg')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('zg')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="raid-card small" style="background-image:url('./images/aq20.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Ahn'Qiraj 20</div>
-      <div class="raid-active-box" id="active-aq20">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-aq20" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'aq20')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('aq20')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="raid-card small" style="background-image:url('./images/ony.jpg')">
-    <div class="raid-content">
-      <div class="raid-title">Onyxia</div>
-      <div class="raid-active-box" id="active-ony">
-        <span class="raid-active-empty">Kein aktiver Raid</span>
-      </div>
-      <div class="raid-buttons">
-        <input class="pin-input" id="pin-ony" type="text" placeholder="Prio PIN eingeben" onkeydown="handlePinEnter(event,'ony')">
-        <button class="raid-btn loot-btn" onclick="openLootWithPin('ony')">Prio öffnen</button>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-<div style="
-  width:min(1500px,100%);
-  margin:40px auto 20px auto;
-  padding:18px 22px;
-  border-radius:18px;
-  background:rgba(12,18,32,.92);
-  border:1px solid rgba(250,204,21,.25);
-  text-align:center;
-  color:#dbeafe;
-">
-
-  <h3 style="
-    color:#facc15;
-    margin-bottom:10px;
-    font-size:20px;
-  ">
-    Fragen, Anregungen & Itemfehler
-  </h3>
-
-  <p style="line-height:1.7;font-size:14px;">
-    Du hast Fragen zum Prio-System, einen Vorschlag zur Verbesserung
-    oder ein Item mit fehlerhaften Daten, Icon oder Item-ID gefunden?
-    <br><br>
-    Bitte sende eine Discord-Nachricht an
-    <strong style="color:#facc15;">Ariee-Everlook</strong>.
-    <br>
-    Fehler und Hinweise werden zeitnah geprüft und korrigiert.
-  </p>
-
-</div>
-
-<div class="footer">
-  Lichtbringer • Classic WoW • Prio 0 Plus
-</div>
-
+      <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein LichtLoot</h2><p>Deine Charaktere, Prios, P0/P0+ Punkte und Worldbuff-Termine bleiben hier griffbereit.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerPin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Daten laden</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerPin wird automatisch übernommen, wenn du eingeloggt bist.</p><details class="dashboard-fold" open><summary>Prios & P0+ Punkte</summary><div class="dashboard-fold-body"><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter()"><option value="">Erst Daten laden</option></select><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button></div><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div></div></div></details><details class="dashboard-fold"><summary>Twink hinzufügen</summary><div class="dashboard-fold-body dashboard-twink-form"><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neuer Charakter nutzt danach denselben SpielerPin.</div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+    <footer class="start-footer"><span>© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
+  </main>
 </div>
 
 <div id="tooltip" class="tooltip hidden"></div>
+
+<div id="raidCalendarModal" class="raid-calendar-modal hidden" onclick="closeRaidCalendarModalOnBackdrop(event)">
+  <div class="raid-calendar-modal-box" role="dialog" aria-modal="true" aria-labelledby="raidCalendarModalTitle">
+    <div class="raid-calendar-modal-head">
+      <h2 id="raidCalendarModalTitle">Raidkalender</h2>
+      <button class="right-inline-btn" onclick="closeRaidCalendarModal()">schließen</button>
+    </div>
+    <div class="raid-calendar-actions">
+      <button class="right-inline-btn" onclick="shiftRaidCalendar(-1)">‹</button>
+      <select id="raidCalendarMode" onchange="setRaidCalendarMode(this.value)">
+        <option value="month">Monat</option>
+        <option value="week">Woche</option>
+      </select>
+      <button class="right-inline-btn" onclick="shiftRaidCalendar(1)">›</button>
+      <button class="right-inline-btn" onclick="downloadRaidCalendarIcs()">Apple/Google .ics</button>
+    </div>
+    <div id="dashboardRaidCalendar" class="raid-calendar-modal-content">
+      <div class="status">Kalender wird nach dem Laden deiner Prios angezeigt.</div>
+    </div>
+    <div id="externalRaidStatus" class="dashboard-inline-status">Rechtsklick auf einen Kalendertag, um externe Gilden-Raids einzutragen.</div>
+  </div>
+</div>
+
+<div id="raidCalendarMenu" class="raid-calendar-menu hidden">
+  <strong id="raidCalendarMenuDate">Raid eintragen</strong>
+  <input id="externalRaidName" type="text" placeholder="Raid / Name">
+  <input id="externalRaidGuild" type="text" placeholder="Gilde">
+  <input id="externalRaidTime" type="time" value="20:00">
+  <input id="externalRaidNote" type="text" placeholder="Notiz / Link">
+  <button class="right-inline-btn" onclick="addExternalRaidToCalendar()">Eintragen</button>
+</div>
 
 <div id="reportModal" class="report-modal hidden">
   <div class="report-box">
@@ -2056,18 +1773,21 @@ body.start-dashboard-body{
       <button class="report-close" onclick="closeMyPrioDetailModal()">✕</button>
     </div>
     <div id="myPrioDetailContent"></div>
+    <div class="modal-resize-handle" title="Fenstergröße ändern" onpointerdown="startMyPrioResize(event)"></div>
   </div>
 </div>
 
 <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-
-const LICHTLOOT_API_URL =
-  "https://lichtloot-production.up.railway.app/api/apps-script";
+const RAILWAY_API_URL =
+  window.LICHTLOOT_RAILWAY_API_URL || "https://lichtbuff-bot-production.up.railway.app";
 
 const P0PLUS_API_URL =
 "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const WORLDBUFF_PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
+const HORDENBUFF_PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1246908857";
+const WORLDBUFF_TICKER_CSV_URL = "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
 
 const raidleadAccounts = {
   "Lichtbringer-master":"master",
@@ -2100,7 +1820,6 @@ const LOOT_JSON_URLS = {
 let lootDataByRaid = {};
 window.p0plusEntries = [];
 window.activeRaidCards = {};
-window.activeRaidOptions = {};
 
 function randomCode(length){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -2124,7 +1843,36 @@ function createRaidId(raid){
   return raids[raid].short+"-"+date;
 }
 
+function placeSidebarDrawers(){
+  const raidleadSlot=document.getElementById("sidebarRaidleadSlot");
+  const raidCreateSlot=document.getElementById("sidebarRaidCreateSlot");
+  const raidleadBox=document.getElementById("raidleadLoginBox");
+  const raidCreateBox=document.getElementById("raidCreateBox");
+  if(raidleadSlot && raidleadBox && raidleadBox.parentNode !== raidleadSlot) raidleadSlot.appendChild(raidleadBox);
+  if(raidCreateSlot && raidCreateBox && raidCreateBox.parentNode !== raidCreateSlot) raidCreateSlot.appendChild(raidCreateBox);
+}
+
+function setStartNavActive(key){
+  document.querySelectorAll(".start-side-link[data-start-nav]").forEach(btn=>{
+    btn.classList.toggle("active", btn.dataset.startNav === key);
+    btn.classList.toggle("is-soft-active", btn.dataset.startNav === key && key !== "dashboard");
+  });
+}
+
+function setDashboardCenterMode(mode){
+  const showDashboard=mode !== "buff";
+  ["nextRaidPanel","raidInstances"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle("hidden", !showDashboard);
+  });
+  const buffPanel=document.getElementById("buffOverviewPanel");
+  if(buffPanel) buffPanel.classList.toggle("hidden", showDashboard);
+}
+
 function goHomeView(){
+  placeSidebarDrawers();
+  setDashboardCenterMode("dashboard");
+  setStartNavActive("dashboard");
   const raidCreateBox=document.getElementById("raidCreateBox");
   const raidleadLoginBox=document.getElementById("raidleadLoginBox");
   const p0plusOverlay=document.getElementById("p0plusOverlay");
@@ -2139,11 +1887,15 @@ function goHomeView(){
 }
 
 function toggleRaidCreate(){
+  placeSidebarDrawers();
+  setDashboardCenterMode("dashboard");
+  setStartNavActive("create");
   const oldPinBox=document.getElementById("playerPinBox");
   const raidleadLoginBox=document.getElementById("raidleadLoginBox");
+  const raidCreateBox=document.getElementById("raidCreateBox");
   if(oldPinBox) oldPinBox.classList.add("hidden");
   if(raidleadLoginBox) raidleadLoginBox.classList.add("hidden");
-  document.getElementById("raidCreateBox").classList.toggle("hidden");
+  if(raidCreateBox) raidCreateBox.classList.toggle("hidden");
   setDefaultRaidDate();
 }
 
@@ -2208,17 +1960,18 @@ async function createRaidFromStart(){
     leadPin:leadPin,
     playerLink:"",
     createdAt:new Date().toISOString(),
-    status:"geschlossen",
-    p0PlusFreigabe:"geschlossen"
+    status:"geschlossen"
   };
 
   resultBox.innerHTML=`<span class="warn">Raid wird erstellt …</span>`;
 
   try{
-    const saveResult=await fetchRaidApiJsonp(raidData);
-    if(saveResult && saveResult.success===false){
-      throw new Error(saveResult.error || saveResult.message || "Raid konnte nicht gespeichert werden.");
-    }
+    await fetch(RAID_API_URL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(raidData)
+    });
 
     resultBox.innerHTML=`
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
@@ -2256,11 +2009,10 @@ async function createRaidFromStart(){
 
     document.getElementById("raidleadPin").value=leadPin;
     renderActiveRaidCard(raid,raidData);
-    loadActiveRaidCards();
 
   }catch(error){
     console.error(error);
-    resultBox.innerHTML=`<span class="bad">${safeHtml(error.message || "Fehler beim Erstellen des Raids.")}</span>`;
+    resultBox.innerHTML=`<span class="bad">Fehler beim Erstellen des Raids.</span>`;
   }
 }
 
@@ -2284,8 +2036,6 @@ function formatP0DeadlineForDisplay(dateValue,timeValue){
 }
 
 function resetActiveRaidCards(){
-  window.activeRaidCards = {};
-  window.activeRaidOptions = {};
   Object.keys(raids).forEach(raid=>{
     const box=document.getElementById("active-"+raid);
     if(box){
@@ -2296,15 +2046,14 @@ function resetActiveRaidCards(){
 
 function normalizeRaidKey(value){
   const text=String(value || "").toLowerCase();
+  const compact=text.replace(/[^a-z0-9]+/g,"");
 
-  if(text.includes("molten") || text === "mc" || text.includes("mc-")) return "mc";
-  if(text.includes("blackwing") || text === "bwl" || text.includes("bwl-")) return "bwl";
-  if(text.includes("ahn") && text.includes("40")) return "aq40";
-  if(text === "aq40" || text.includes("aq40-")) return "aq40";
+  if(text.includes("molten") || compact === "mc" || compact.includes("mc")) return "mc";
+  if(text.includes("blackwing") || compact === "bwl" || compact.includes("bwl")) return "bwl";
+  if((text.includes("ahn") && text.includes("40")) || compact.includes("aq40")) return "aq40";
   if(text.includes("naxx")) return "naxx";
-  if(text.includes("zul") || text === "zg" || text.includes("zg-")) return "zg";
-  if(text.includes("ahn") && text.includes("20")) return "aq20";
-  if(text === "aq20" || text.includes("aq20-")) return "aq20";
+  if(text.includes("zul") || compact === "zg" || compact.includes("zg20") || compact.includes("zg")) return "zg";
+  if((text.includes("ahn") && text.includes("20")) || compact.includes("aq20")) return "aq20";
   if(text.includes("ony")) return "ony";
 
   return "";
@@ -2383,11 +2132,8 @@ function formatRaidTimeForDisplay(value){
 function activeRaidIsTodayOrFuture(raid){
   const timestamp=activeRaidTimestamp(raid);
   if(!timestamp) return true;
-  const raidDate=new Date(timestamp);
-  const today=new Date();
-  raidDate.setHours(0,0,0,0);
-  today.setHours(0,0,0,0);
-  return raidDate.getTime() >= today.getTime();
+  const visibleUntil=timestamp + (60 * 60 * 1000);
+  return visibleUntil >= Date.now();
 }
 
 function renderActiveRaidCard(raidKey,raid){
@@ -2405,23 +2151,7 @@ function renderActiveRaidCard(raidKey,raid){
     pinField.value=pin;
   }
 
-  const options=window.activeRaidOptions && window.activeRaidOptions[raidKey] ? window.activeRaidOptions[raidKey] : [];
-  const selectedIndex=Math.max(0,options.indexOf(raid));
-  const selectorHtml=options.length > 1 ? `
-    <select class="raid-active-select" onchange="selectActiveRaid('${raidKey}', this.value)">
-      ${options.map((option,index)=>{
-        const optionDate=formatRaidDateForDisplay(activeRaidDate(option));
-        const optionTime=formatRaidTimeForDisplay(activeRaidTime(option));
-        const optionGuild=activeRaidGuild(option);
-        const optionPin=activeRaidPin(option);
-        const label=[optionDate, optionTime, optionGuild, optionPin ? "PIN " + optionPin : ""].filter(Boolean).join(" · ");
-        return `<option value="${index}" ${index===selectedIndex ? "selected" : ""}>${safeHtml(label)}</option>`;
-      }).join("")}
-    </select>
-  ` : "";
-
   box.innerHTML=`
-    ${selectorHtml}
     <div class="raid-active-line"><span>Raid</span><strong>${safeHtml(raidName)}</strong></div>
     <div class="raid-active-line"><span>Datum</span><strong>${safeHtml(formatRaidDateForDisplay(date))}</strong></div>
     <div class="raid-active-line"><span>Uhrzeit</span><strong>${safeHtml(formatRaidTimeForDisplay(time))}</strong></div>
@@ -2434,42 +2164,691 @@ function renderActiveRaidCard(raidKey,raid){
 
 function renderActiveRaidCards(entries){
   resetActiveRaidCards();
-  const optionsByRaid={};
-  const selectedByRaid={};
+  const latestByRaid={};
 
   (entries || []).forEach(entry=>{
     const raidKey=normalizeRaidKey(entry.raid || entry.raidName || entry.raidId || entry.id || "");
     if(!raidKey) return;
     if(!activeRaidIsTodayOrFuture(entry)) return;
 
-    if(!optionsByRaid[raidKey]) optionsByRaid[raidKey]=[];
-    optionsByRaid[raidKey].push(entry);
+    if(!latestByRaid[raidKey] || activeRaidTimestamp(entry) >= activeRaidTimestamp(latestByRaid[raidKey])){
+      latestByRaid[raidKey]=entry;
+    }
   });
 
-  Object.keys(optionsByRaid).forEach(raidKey=>{
-    optionsByRaid[raidKey].sort((a,b)=>{
-      const timestampA=activeRaidTimestamp(a) || Number.MAX_SAFE_INTEGER;
-      const timestampB=activeRaidTimestamp(b) || Number.MAX_SAFE_INTEGER;
-      return timestampA-timestampB;
-    });
-    selectedByRaid[raidKey]=optionsByRaid[raidKey][0];
-  });
+  window.activeRaidCards=latestByRaid;
 
-  window.activeRaidOptions=optionsByRaid;
-  window.activeRaidCards=selectedByRaid;
-
-  Object.keys(selectedByRaid).forEach(raidKey=>{
-    renderActiveRaidCard(raidKey,selectedByRaid[raidKey]);
+  Object.keys(latestByRaid).forEach(raidKey=>{
+    renderActiveRaidCard(raidKey,latestByRaid[raidKey]);
   });
+  renderStartDashboard(entries || []);
 }
 
-function selectActiveRaid(raidKey,index){
-  const options=window.activeRaidOptions && window.activeRaidOptions[raidKey] ? window.activeRaidOptions[raidKey] : [];
-  const selected=options[Number(index)] || options[0];
-  if(!selected) return;
-  window.activeRaidCards[raidKey]=selected;
-  renderActiveRaidCard(raidKey,selected);
-  useActiveRaidPin(raidKey,activeRaidPin(selected));
+
+function raidImagePath(raidKey){
+  return "images/" + raidKey + ".jpg";
+}
+
+function prioIsOpen(raid){
+  const status=String(raid.status || raid.Status || "").toLowerCase();
+  return status.includes("offen") || status.includes("geöffnet") || status.includes("geoeffnet");
+}
+
+function raidIsInProgress(raid){
+  const timestamp=activeRaidTimestamp(raid);
+  if(!timestamp) return false;
+  const now=Date.now();
+  return now >= timestamp && now <= timestamp + (60 * 60 * 1000);
+}
+
+function dashboardPrioLabel(raid){
+  if(raidIsInProgress(raid)) return "Raid im Gange";
+  return prioIsOpen(raid) ? "Prio offen" : "Prio Eintrag offen";
+}
+
+function dashboardPrioHint(raid){
+  if(raidIsInProgress(raid)) return "Der Raid läuft bereits. Neue Einträge sind geschlossen.";
+  return prioIsOpen(raid) ? "Eintragen ist möglich." : "Eintragen ist möglich, Liste wird noch nicht veröffentlicht.";
+}
+
+function setDashboardText(id,value){
+  const el=document.getElementById(id);
+  if(el) el.textContent=value;
+}
+
+function renderStartDashboard(entries){
+  const list=(entries || []).filter(activeRaidIsTodayOrFuture).map(entry=>{
+    const raidKey=normalizeRaidKey(entry.raid || entry.raidName || entry.raidId || entry.id || "");
+    const clone=Object.assign({},entry);
+    clone._raidKey=raidKey;
+    clone._time=activeRaidTimestamp(entry) || Number.MAX_SAFE_INTEGER;
+    return clone;
+  }).filter(entry=>entry._raidKey).sort((a,b)=>a._time-b._time);
+
+  setDashboardText("metricRaids",String(list.length));
+  setDashboardText("metricOpenRaids",String(list.filter(prioIsOpen).length));
+  setDashboardText("metricP0",String((window.p0plusEntries || []).length || "-"));
+
+  const next=list[0];
+  if(next){
+    window.dashboardNextRaid=next;
+    const name=next.raidName || next.name || raids[next._raidKey].name;
+    setDashboardText("nextRaidName",name);
+    setDashboardText("nextRaidDate",formatRaidDateForDisplay(activeRaidDate(next)));
+    setDashboardText("nextRaidTime",formatRaidTimeForDisplay(activeRaidTime(next)) + " Uhr");
+    setDashboardText("nextRaidGuild",activeRaidGuild(next) || "Lichtbringer");
+    setDashboardText("nextRaidStatus",dashboardPrioLabel(next));
+    setDashboardText("nextRaidDeadline",dashboardPrioHint(next));
+    setDashboardText("nextRaidPinInfo","PIN: " + (activeRaidPin(next) || "-"));
+    const image=document.getElementById("nextRaidImage");
+    if(image) image.style.backgroundImage="url('" + raidImagePath(next._raidKey) + "')";
+  }else{
+    window.dashboardNextRaid=null;
+    setDashboardText("nextRaidName","Kein kommender Raid");
+    setDashboardText("nextRaidDate","-");
+    setDashboardText("nextRaidTime","-");
+    setDashboardText("nextRaidGuild","-");
+    setDashboardText("nextRaidStatus","Keine Daten");
+    setDashboardText("nextRaidDeadline","Erstelle oder lade einen Raid.");
+    setDashboardText("nextRaidPinInfo","PIN: -");
+  }
+
+  Object.keys(raids).forEach(key=>{
+    const raid=(window.activeRaidCards || {})[key];
+    const summaryEl=document.getElementById("dash-"+key+"-summary");
+    if(summaryEl){
+      if(raid){
+        const dateTime=[formatRaidDateForDisplay(activeRaidDate(raid)), formatRaidTimeForDisplay(activeRaidTime(raid))].filter(Boolean).join(" · ");
+        summaryEl.innerHTML=safeHtml(dateTime)+'<span class="dash-prio-pin">PrioPIN: '+safeHtml(activeRaidPin(raid) || "-")+'</span>';
+      }else{
+        summaryEl.textContent="Kein aktiver Raid";
+      }
+    }
+    setDashboardText("dash-"+key+"-status",raid ? dashboardPrioLabel(raid) : "-");
+  });
+
+  renderUpcomingRaidCards(list);
+
+  const upcoming=document.getElementById("upcomingRaidList");
+  if(upcoming){
+    upcoming.innerHTML=list.slice(0,6).map(entry=>{
+      const name=entry.raidName || entry.name || raids[entry._raidKey].name;
+      const pin=activeRaidPin(entry);
+      return '<div class="upcoming-row">' +
+        '<img src="' + raidImagePath(entry._raidKey) + '" alt="">' +
+        '<strong>' + safeHtml(name) + '</strong>' +
+        '<span>' + safeHtml(formatRaidDateForDisplay(activeRaidDate(entry))) + ' · ' + safeHtml(formatRaidTimeForDisplay(activeRaidTime(entry))) + ' Uhr</span>' +
+        '<span>' + dashboardPrioLabel(entry) + '</span>' +
+        '<span>' + safeHtml(activeRaidGuild(entry) || 'Lichtbringer') + '<br>LeadPIN: ' + safeHtml(entry.leadPin || entry.LeadPin || '-') + '</span>' +
+        '<button class="text-link-btn" onclick="useActiveRaidPin(\'' + entry._raidKey + '\',\'' + safeAttr(pin) + '\');openLootWithPin(\'' + entry._raidKey + '\')">•••</button>' +
+      '</div>';
+    }).join("") || '<div class="upcoming-row"><span>Keine kommenden Raids gefunden.</span></div>';
+  }
+}
+
+function renderUpcomingRaidCards(list){
+  const container=document.getElementById("upcomingRaidCards");
+  if(!container) return;
+
+  const entries=(list || []).filter(entry=>entry && entry._raidKey);
+  window.dashboardUpcomingRaidCards=entries;
+  if(!entries.length){
+    container.innerHTML='<article class="dash-panel instance-card"><div><h3>Keine kommenden Raids</h3><p>Aktuell sind keine kommenden Raids geladen.</p></div><button class="raid-btn loot-btn" onclick="toggleRaidCreate()">Raid erstellen</button></article>';
+    return;
+  }
+
+  container.innerHTML=entries.map((entry,index)=>{
+    const raidKey=entry._raidKey;
+    const name=entry.raidName || entry.name || raids[raidKey].name;
+    const pin=activeRaidPin(entry);
+    const date=formatRaidDateForDisplay(activeRaidDate(entry));
+    const time=formatRaidTimeForDisplay(activeRaidTime(entry));
+    const guild=activeRaidGuild(entry) || "Lichtbringer";
+    const buttonLabel="Zur Prio";
+
+    return '<article class="dash-panel instance-card">'+
+      '<img src="'+safeAttr(raidImagePath(raidKey))+'" alt="">'+
+      '<div>'+
+        '<h3>'+safeHtml(name)+'</h3>'+
+        '<p>'+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
+        '<p>Gilde: '+safeHtml(guild)+'</p>'+
+        '<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p>'+
+        '<p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>'+
+      '</div>'+
+      '<button class="raid-btn loot-btn" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button>'+
+    '</article>';
+  }).join("");
+}
+
+function openUpcomingRaidCard(index){
+  const entry=(window.dashboardUpcomingRaidCards || [])[Number(index)];
+  if(!entry){
+    alert("Raid wurde nicht gefunden.");
+    return;
+  }
+  openLootPageWithPin(entry._raidKey,activeRaidPin(entry));
+}
+
+function normalizeDashboardWorldbuff(row){
+  if(!row) return null;
+  const buff=row.buff || row.Buff || row.name || row.Name || row.type || row.Type || "";
+  const datum=row.datum || row.Datum || row.date || row.Date || "";
+  const uhrzeit=row.uhrzeit || row.Uhrzeit || row.time || row.Time || "";
+  const gilde=row.gilde || row.Gilde || row.guild || row.Guild || row.fraktion || row.Fraktion || row["Gilde / Fraktion"] || "";
+  const charakter=row.charakter || row.Charakter || row.caster || row.Caster || row.werfer || row.Werfer || row.character || "";
+  const status=row.status || row.Status || "";
+  const notiz=row.notiz || row.Notiz || row.note || row.Note || row.hinweis || row.Hinweis || "";
+  const uebernehmer=row.uebernehmer || row.Übernehmer || row.Uebernehmer || row.helfer || row.Helfer || "";
+  const tag=row.tag || row.Tag || "";
+  if(!buff && !datum && !uhrzeit) return null;
+  return {buff:String(buff||""),datum:String(datum||""),uhrzeit:String(uhrzeit||""),gilde:String(gilde||""),charakter:String(charakter||""),status:String(status||""),notiz:String(notiz||""),uebernehmer:String(uebernehmer||""),tag:String(tag||"")};
+}
+
+function dashboardWorldbuffDateMatchesToday(value){
+  const parsed=parseActiveRaidDate(value);
+  if(!parsed) return false;
+  const today=new Date();
+  return parsed.getFullYear()===today.getFullYear() && parsed.getMonth()===today.getMonth() && parsed.getDate()===today.getDate();
+}
+
+function dashboardWorldbuffTimeValue(value){
+  const parts=parseActiveRaidTime(value);
+  return (parts.hours*60)+parts.minutes;
+}
+
+function dashboardBuffClass(buff){
+  const b=String(buff||"").toLowerCase();
+  if(b.includes("hakkar") || b === "zg") return "hakkar";
+  if(b.includes("ony")) return "ony";
+  if(b.includes("nef")) return "nef";
+  if(b.includes("rend")) return "rend";
+  return "";
+}
+
+function dashboardWorldbuffTimestamp(entry){
+  const parsed=parseActiveRaidDate(entry.datum);
+  if(!parsed) return 0;
+  const parts=parseActiveRaidTime(entry.uhrzeit);
+  parsed.setHours(parts.hours,parts.minutes,0,0);
+  return parsed.getTime();
+}
+
+function dashboardWorldbuffWithinDays(entry,days){
+  const ts=dashboardWorldbuffTimestamp(entry);
+  if(!ts) return false;
+  const now=new Date();
+  const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const end=start + Number(days || 4) * 24 * 60 * 60 * 1000;
+  return ts >= start && ts < end;
+}
+
+function parseDashboardCsv(text){
+  const rows=[];
+  let row=[], cell='', quote=false;
+  for(let i=0;i<String(text||'').length;i++){
+    const ch=text[i];
+    if(ch==='"'){
+      if(quote && text[i+1]==='"'){ cell+='"'; i++; }
+      else quote=!quote;
+    }else if(ch===',' && !quote){ row.push(cell); cell=''; }
+    else if((ch==='\n' || ch==='\r') && !quote){
+      if(ch==='\r' && text[i+1]==='\n') i++;
+      row.push(cell); cell='';
+      if(row.some(v=>String(v).trim())) rows.push(row);
+      row=[];
+    }else cell+=ch;
+  }
+  row.push(cell);
+  if(row.some(v=>String(v).trim())) rows.push(row);
+  return rows;
+}
+
+function normalizeDashboardCsvHeader(value){
+  return String(value||'').toLowerCase().replace(/[ä]/g,'ae').replace(/[ö]/g,'oe').replace(/[ü]/g,'ue').replace(/[ß]/g,'ss').replace(/[^a-z0-9]+/g,' ').trim();
+}
+
+function dashboardCsvRowsToBuffs(text,kind){
+  const rows=parseDashboardCsv(text);
+  const headerIndex=rows.findIndex(row=>{
+    const keys=row.map(normalizeDashboardCsvHeader);
+    return keys.includes('tag') && keys.includes('datum') && keys.includes('uhrzeit') && keys.includes('buff');
+  });
+  if(headerIndex < 0) return [];
+  const headers=rows[headerIndex].map(normalizeDashboardCsvHeader);
+  const find=(...names)=>headers.findIndex(h=>names.map(normalizeDashboardCsvHeader).includes(h));
+  const idx={
+    tag:find('tag'), datum:find('datum'), uhrzeit:find('uhrzeit','zeit'), buff:find('buff'),
+    gilde:find('gilde fraktion','gilde','fraktion'), charakter:find('charakter','char','spieler','werfer'),
+    uebernehmer:find('uebernehmer','helfer','helper'), status:find('status'), notiz:find('notiz','note','hinweis')
+  };
+  let lastTag='', lastDatum='';
+  const entries=[];
+  rows.slice(headerIndex+1).forEach((row,rowOffset)=>{
+    const value=name=>idx[name] >= 0 ? String(row[idx[name]] || '').trim() : '';
+    let tag=value('tag');
+    let datum=value('datum');
+    if(tag) lastTag=tag; else tag=lastTag;
+    if(datum) lastDatum=datum; else datum=lastDatum;
+    const entry=normalizeDashboardWorldbuff({
+      tag, datum, Uhrzeit:value('uhrzeit'), Buff:value('buff'), "Gilde / Fraktion":value('gilde'),
+      Charakter:value('charakter'), Übernehmer:value('uebernehmer'), Status:value('status'), Notiz:value('notiz')
+    });
+    if(entry && entry.buff && entry.datum && entry.uhrzeit){
+      entry.source=kind === 'hordenbuff' ? 'Hordenbuff-Sheet' : 'Worldbuff-Sheet';
+      entry.rowNumber=headerIndex + rowOffset + 2;
+      entries.push(entry);
+    }
+  });
+  return entries;
+}
+
+function normalizeDashboardTickerBuff(value){
+  const text=String(value||'').trim().replace(/^[-–•]+\s*/, '').replace(/[🟢🔴🟠⚪🟡]/g,'').replace(/\*/g,'').trim();
+  const lower=text.toLowerCase();
+  if(lower === 'zg' || lower.includes('hakkar')) return 'Hakkar';
+  if(lower.includes('ony')) return 'Ony';
+  if(lower.includes('nef')) return 'Nef';
+  if(lower.includes('rend')) return 'Rend';
+  return '';
+}
+
+function dashboardTickerRowsToBuffs(text){
+  return parseDashboardCsv(text).map(row=>{
+    const cells=row.map(cell=>String(cell||'').trim()).filter(Boolean);
+    if(cells.length < 3) return null;
+    const dateCell=cells.find(cell=>parseActiveRaidDate(cell));
+    const timeCell=cells.find(cell=>/^\d{1,2}:\d{2}(?::\d{2})?$/.test(cell));
+    const buffCell=cells.find(cell=>normalizeDashboardTickerBuff(cell));
+    if(!dateCell || !timeCell || !buffCell) return null;
+    const buff=normalizeDashboardTickerBuff(buffCell);
+    const gilde=cells.filter(cell=>cell!==dateCell && cell!==timeCell && cell!==buffCell && !/^[A-Za-zÄÖÜäöü]{2}$/.test(cell)).join(' · ');
+    const entry=normalizeDashboardWorldbuff({Datum:dateCell, Buff:buff, Uhrzeit:timeCell, "Gilde / Fraktion":gilde});
+    if(!entry || !entry.buff || !entry.datum || !entry.uhrzeit) return null;
+    entry.source='Worldbuffticker';
+    return entry;
+  }).filter(Boolean);
+}
+
+async function loadBuffCsvEntries(kind){
+  const urls=kind === 'hordenbuff' ? [HORDENBUFF_PUBLIC_CSV_URL] : [WORLDBUFF_PUBLIC_CSV_URL,WORLDBUFF_TICKER_CSV_URL];
+  const all=[];
+  for(const url of urls){
+    try{
+      const response=await fetch(url,{cache:'no-store'});
+      if(!response.ok) continue;
+      const text=await response.text();
+      const entries=url === WORLDBUFF_TICKER_CSV_URL ? dashboardTickerRowsToBuffs(text) : dashboardCsvRowsToBuffs(text,kind);
+      all.push(...entries);
+    }catch(error){
+      console.warn('Buff-CSV nicht ladbar:', url, error);
+    }
+  }
+  return all;
+}
+
+function dedupeDashboardBuffs(entries){
+  const list=Array.isArray(entries) ? entries.slice() : [];
+  const realSlots={};
+  const seen={};
+  const result=[];
+
+  list.forEach(entry=>{
+    const slotKey=dashboardWorldbuffSlotKey(entry);
+    if(!slotKey || dashboardWorldbuffPlaceholderGuild(entry && entry.gilde)) return;
+    realSlots[slotKey]=true;
+  });
+
+  list.forEach(entry=>{
+    const slotKey=dashboardWorldbuffSlotKey(entry);
+    if(!slotKey) return;
+    if(dashboardWorldbuffPlaceholderGuild(entry && entry.gilde) && realSlots[slotKey]) return;
+
+    const key=dashboardWorldbuffMergeKey(entry);
+    if(!key) return;
+
+    if(seen[key]){
+      mergeDashboardWorldbuffEntry(seen[key],entry);
+      return;
+    }
+
+    seen[key]=Object.assign({},entry);
+    result.push(seen[key]);
+  });
+
+  return result;
+}
+
+function dashboardWorldbuffSlotKey(entry){
+  if(!entry || !entry.datum || !entry.uhrzeit || !entry.buff) return "";
+  return [entry.datum,entry.uhrzeit,dashboardWorldbuffBuffKey(entry.buff)].join("|");
+}
+
+function dashboardWorldbuffMergeKey(entry){
+  const slotKey=dashboardWorldbuffSlotKey(entry);
+  if(!slotKey) return "";
+  if(dashboardWorldbuffBuffKey(entry.buff)==="rend") return slotKey;
+  return [slotKey,dashboardWorldbuffGuildKey(entry.gilde) || "worldbuffticker"].join("|");
+}
+
+function mergeDashboardWorldbuffEntry(target,source){
+  if(dashboardWorldbuffPlaceholderGuild(target.gilde)) target.gilde=source.gilde || target.gilde || "";
+  if(!target.charakter || target.charakter === "-") target.charakter=source.charakter || target.charakter || "";
+  if(!target.status || target.status === "-") target.status=source.status || target.status || "";
+  if(!target.notiz || target.notiz === "-") target.notiz=source.notiz || target.notiz || "";
+  if(!target.source || target.source === "Worldbuffticker") target.source=source.source || target.source || "";
+}
+
+function dashboardWorldbuffBuffKey(value){
+  const text=dashboardWorldbuffTextKey(value);
+  if(text === "zg") return "hakkar";
+  if(text === "onyxia") return "ony";
+  if(text === "nefarian") return "nef";
+  return text;
+}
+
+function dashboardWorldbuffGuildKey(value){
+  const text=dashboardWorldbuffTextKey(value);
+  if(dashboardWorldbuffPlaceholderGuild(value)) return "";
+  if(text.includes("lichtbringer")) return "lichtbringer";
+  if(text.includes("horde")) return "horde";
+  return text;
+}
+
+function dashboardWorldbuffPlaceholderGuild(value){
+  const text=dashboardWorldbuffTextKey(value);
+  return !text || text === "worldbuffticker" || text === "worldbuff" || text === "worldbuffs" || text === "ticker";
+}
+
+function dashboardWorldbuffTextKey(value){
+  return String(value||"").trim().toLowerCase()
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"");
+}
+
+async function getDashboardBuffEntries(kind,days){
+  const action=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
+  let entries=[];
+  try{
+    const data=await fetchRaidApiJsonp({action,days:days || 14});
+    if(data && data.success !== false){
+      const raw=data.buffs || data.entries || data.rows || data.data || [];
+      if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
+    }
+  }catch(error){
+    console.warn('Buff-API nicht ladbar:', action, error);
+  }
+  if(!entries.length){
+    entries=await loadBuffCsvEntries(kind);
+  }
+  return dedupeDashboardBuffs(entries)
+    .filter(entry=>dashboardWorldbuffWithinDays(entry,days || 14))
+    .sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b));
+}
+
+function renderBuffRows(entries,kind){
+  if(!entries.length) return '<div class="buff-empty">Keine Termine in diesem Zeitraum gefunden.</div>';
+  const casterLabel=kind === 'hordenbuff' ? 'Char / Übernehmer' : 'Werfer';
+  return '<table class="buff-overview-table"><thead><tr><th>Tag</th><th>Datum</th><th>Uhrzeit</th><th>Buff</th><th>Gilde</th><th>'+casterLabel+'</th><th>Status</th><th>Notiz</th></tr></thead><tbody>'+
+    entries.map(entry=>{
+      const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
+      return '<tr>'+
+        '<td>'+safeHtml(entry.tag || '')+'</td>'+
+        '<td><strong>'+safeHtml(formatRaidDateForDisplay(entry.datum))+'</strong></td>'+
+        '<td>'+safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))+'</td>'+
+        '<td><span class="buff-pill"><span class="dashboard-worldbuff-dot '+dashboardBuffClass(entry.buff)+'"></span>'+safeHtml(entry.buff || '-')+'</span><div class="buff-source">'+safeHtml(entry.source || '')+'</div></td>'+
+        '<td>'+safeHtml(entry.gilde || '-')+'</td>'+
+        '<td>'+safeHtml(caster || '-')+'</td>'+
+        '<td>'+safeHtml(entry.status || '-')+'</td>'+
+        '<td>'+safeHtml(entry.notiz || '')+'</td>'+
+      '</tr>';
+    }).join('')+'</tbody></table>';
+}
+
+let currentBuffOverviewType='worldbuff';
+async function showBuffOverview(kind){
+  currentBuffOverviewType=kind === 'hordenbuff' ? 'hordenbuff' : 'worldbuff';
+  placeSidebarDrawers();
+  const raidCreateBox=document.getElementById('raidCreateBox');
+  const raidleadLoginBox=document.getElementById('raidleadLoginBox');
+  const p0plusOverlay=document.getElementById('p0plusOverlay');
+  if(raidCreateBox) raidCreateBox.classList.add('hidden');
+  if(raidleadLoginBox) raidleadLoginBox.classList.add('hidden');
+  if(p0plusOverlay) p0plusOverlay.classList.add('hidden');
+  setDashboardCenterMode('buff');
+  setStartNavActive(currentBuffOverviewType);
+  document.getElementById('buffTabWorld')?.classList.toggle('active', currentBuffOverviewType === 'worldbuff');
+  document.getElementById('buffTabHorde')?.classList.toggle('active', currentBuffOverviewType === 'hordenbuff');
+  const title=document.getElementById('buffOverviewTitle');
+  const subtitle=document.getElementById('buffOverviewSubtitle');
+  if(title) title.textContent=currentBuffOverviewType === 'hordenbuff' ? 'Hordenbuffs' : 'Worldbuffs';
+  if(subtitle) subtitle.textContent=currentBuffOverviewType === 'hordenbuff' ? 'Rend-Helfer und Übernehmer aus der Hordenbuff-Liste.' : 'Buff-Termine aus Lichtbuff und dem Worldbuffticker.';
+  await loadBuffOverview(currentBuffOverviewType);
+  document.getElementById('buffOverviewPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function loadBuffOverview(kind){
+  const content=document.getElementById('buffOverviewContent');
+  if(!content) return;
+  content.innerHTML='<div class="buff-empty">Termine werden geladen …</div>';
+  const targetKind=kind || currentBuffOverviewType;
+  const entries=await getDashboardBuffEntries(targetKind,targetKind === 'hordenbuff' ? 30 : 14);
+  content.innerHTML=renderBuffRows(entries,targetKind);
+}
+
+async function loadDashboardWorldbuffs(){
+  const box=document.getElementById("dashboardWorldbuffs");
+  if(!box) return;
+  box.innerHTML='<div class="side-row"><span>Heute</span><span>lade …</span></div>';
+  const merged=await getDashboardBuffEntries('worldbuff',4);
+  const today=merged.filter(entry=>dashboardWorldbuffDateMatchesToday(entry.datum));
+  const list=(today.length ? today : merged).slice(0,6);
+  if(!list.length){
+    box.innerHTML='<div class="side-row"><span>Heute</span><span>-</span></div><div class="status" style="margin-top:8px">Keine Buffs für die nächsten Tage geladen.</div>';
+    return;
+  }
+  box.innerHTML=list.map(entry=>{
+    const meta=[entry.gilde,entry.charakter ? "Werfer: "+entry.charakter : "",entry.source].filter(Boolean).join(" · ");
+    return '<div class="dashboard-worldbuff-row">' +
+      '<span class="dashboard-worldbuff-dot '+dashboardBuffClass(entry.buff)+'"></span>' +
+      '<span class="dashboard-worldbuff-name">'+safeHtml(entry.buff || "Buff")+'</span>' +
+      '<span class="dashboard-worldbuff-time">'+safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))+'</span>' +
+      '<div class="dashboard-worldbuff-meta">'+safeHtml([formatRaidDateForDisplay(entry.datum),meta].filter(Boolean).join(' · '))+'</div>' +
+    '</div>';
+  }).join("");
+}
+
+function openNextRaidLoot(){
+  if(!window.dashboardNextRaid){ alert("Kein kommender Raid geladen."); return; }
+  openLootPageWithPin(window.dashboardNextRaid._raidKey,activeRaidPin(window.dashboardNextRaid));
+}
+
+function refreshStartDashboard(){
+  loadActiveRaidCards();
+  loadDashboardWorldbuffs();
+  if(typeof loadP0PlusOverview === "function"){
+    const overlay=document.getElementById("p0plusOverlay");
+    const wasHidden=overlay ? overlay.classList.contains("hidden") : true;
+    loadP0PlusOverview();
+    if(wasHidden && overlay) overlay.classList.add("hidden");
+  }
+}
+
+function syncHiddenPinFromDashboard(){
+  hydrateDashboardPlayerPin();
+  const source=document.getElementById("dashboardPlayerPin");
+  const pin=source ? source.value.trim() : "";
+  const targets=["myPriosPin","twinkPlayerPin"];
+  targets.forEach(id=>{
+    const target=document.getElementById(id);
+    if(target && pin) target.value=pin;
+  });
+  return pin;
+}
+
+function copyHiddenLichtLootToDashboard(clearHidden){
+  const statusSource=document.getElementById("myPriosStatus");
+  const statusTarget=document.getElementById("dashboardMyStatus");
+  if(statusSource && statusTarget) statusTarget.innerHTML=statusSource.innerHTML || "Bereit.";
+
+  const hiddenSelect=document.getElementById("myLichtlootCharSelect");
+  const dashSelect=document.getElementById("dashboardCharSelect");
+  if(hiddenSelect && dashSelect){
+    const selected=hiddenSelect.value;
+    dashSelect.innerHTML=hiddenSelect.innerHTML || '<option value="">Keine Charaktere geladen</option>';
+    dashSelect.value=selected;
+  }
+
+  const resultSource=document.getElementById("myPriosResults");
+  const resultTarget=document.getElementById("dashboardMyPriosResults");
+  if(resultSource && resultTarget){
+    resultTarget.innerHTML=resultSource.innerHTML;
+    if(clearHidden) resultSource.innerHTML="";
+  }
+
+  const worldSource=document.getElementById("myWorldbuffContent");
+  const worldTarget=document.getElementById("dashboardMyWorldbuffContent");
+  if(worldSource && worldTarget && worldSource.innerHTML.trim()){
+    worldTarget.innerHTML=worldSource.innerHTML;
+    if(clearHidden) worldSource.innerHTML="";
+  }
+}
+
+async function dashboardLoadLichtLoot(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardMyStatus");
+  const box=document.getElementById("myPriosBox");
+  if(box) box.classList.add("hidden");
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte SpielerPin eingeben.</span>';
+    return;
+  }
+  if(status) status.innerHTML='<span class="warn">Lade deine Charaktere und Worldbuff-Termine …</span>';
+  await loadLichtLootCharacters();
+  const selected=document.getElementById("myLichtlootCharSelect");
+  if(selected && selected.value){
+    await loadMyPrios();
+  }
+  renderRaidCalendar();
+  copyHiddenLichtLootToDashboard(true);
+}
+
+function dashboardSelectCharacter(){
+  const dashSelect=document.getElementById("dashboardCharSelect");
+  const hiddenSelect=document.getElementById("myLichtlootCharSelect");
+  if(dashSelect && hiddenSelect){
+    hiddenSelect.value=dashSelect.value;
+    selectLichtLootCharacter();
+    copyHiddenLichtLootToDashboard(false);
+  }
+}
+
+async function dashboardLoadMyPrios(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardMyStatus");
+  const box=document.getElementById("myPriosBox");
+  if(box) box.classList.add("hidden");
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte SpielerPin eingeben.</span>';
+    return;
+  }
+  dashboardSelectCharacter();
+  await loadMyPrios();
+  renderRaidCalendar();
+  copyHiddenLichtLootToDashboard(true);
+}
+
+function dashboardPriosEnter(event){
+  if(event.key === "Enter"){
+    const select=document.getElementById("dashboardCharSelect");
+    if(select && select.value){ dashboardLoadMyPrios(); }
+    else{ dashboardLoadLichtLoot(); }
+  }
+}
+
+function openMyPriosFromDashboard(){
+  dashboardLoadLichtLoot();
+}
+
+function openMyPriosTwinksFromDashboard(){
+  focusMeinLichtLoot();
+}
+
+async function dashboardAddTwink(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardTwinkStatus");
+  const hiddenStatus=document.getElementById("twinkStatus");
+  const name=document.getElementById("dashboardTwinkName");
+  const server=document.getElementById("dashboardTwinkServer");
+  const className=document.getElementById("dashboardTwinkClass");
+
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst SpielerPin eingeben oder Daten laden.</span>';
+    return;
+  }
+
+  const targets={
+    twinkPlayerPin:pin,
+    twinkCharName:name ? name.value.trim() : "",
+    twinkServer:server ? server.value.trim() : "",
+    twinkClass:className ? className.value.trim() : ""
+  };
+  Object.keys(targets).forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value=targets[id];
+  });
+
+  if(status) status.innerHTML='<span class="warn">Charakter wird gespeichert …</span>';
+  await addTwinkToPlayerPin();
+  if(status && hiddenStatus) status.innerHTML=hiddenStatus.innerHTML;
+
+  if(hiddenStatus && hiddenStatus.innerHTML.includes('ok')){
+    if(name) name.value="";
+    if(className) className.value="";
+    await dashboardLoadLichtLoot();
+  }
+}
+
+function focusMeinLichtLoot(){
+  hydrateDashboardPlayerPin();
+  const card=document.getElementById("meinLichtLootCard");
+  if(card) card.scrollIntoView({behavior:"smooth",block:"center"});
+  const input=document.getElementById("dashboardPlayerPin");
+  if(input) input.focus();
+}
+
+function getStoredLichtLootPlayerPin(){
+  const keys=["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+  for(const key of keys){
+    try{
+      const value=localStorage.getItem(key) || sessionStorage.getItem(key);
+      if(value && String(value).trim()) return String(value).trim();
+    }catch(error){}
+  }
+  return "";
+}
+
+function hydrateDashboardPlayerPin(){
+  const saved=getStoredLichtLootPlayerPin();
+  const dashboard=document.getElementById("dashboardPlayerPin");
+  const my=document.getElementById("myPriosPin");
+  const twink=document.getElementById("twinkPlayerPin");
+  if(saved){
+    if(dashboard && !dashboard.value.trim()) dashboard.value=saved;
+    if(my && !my.value.trim()) my.value=saved;
+    if(twink && !twink.value.trim()) twink.value=saved;
+  }
+  return saved;
+}
+
+function initMeinLichtLootAutoLogin(){
+  const saved=hydrateDashboardPlayerPin();
+  const status=document.getElementById("myPriosStatus");
+  const dashboardStatus=document.getElementById("dashboardMyStatus");
+  if(saved){
+    if(status) status.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Du kannst deine Charaktere direkt laden.</span>';
+    if(dashboardStatus) dashboardStatus.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Deine Daten werden geladen …</span>';
+    window.setTimeout(()=>dashboardLoadLichtLoot(), 50);
+  }
 }
 
 function useActiveRaidPin(raid,pin){
@@ -2482,12 +2861,35 @@ function useActiveRaidPin(raid,pin){
 function loadActiveRaidCards(){
   resetActiveRaidCards();
 
+  loadActiveRaidCardsFromRailway().then(loaded=>{
+    if(loaded) return;
+    loadActiveRaidCardsFromAppsScript();
+  });
+}
+
+async function loadActiveRaidCardsFromRailway(){
+  if(!RAILWAY_API_URL) return false;
+
+  try{
+    const data=await fetchRailwayApi("/api/dashboard");
+    if(data && data.success){
+      renderActiveRaidCards(data.allRaids || data.raids || data.entries || data.activeRaids || []);
+      return true;
+    }
+  }catch(error){
+    console.warn("Railway-Dashboard nicht ladbar, nutze Apps Script:", error);
+  }
+
+  return false;
+}
+
+function loadActiveRaidCardsFromAppsScript(){
   const callbackName="receiveActiveRaids_"+Date.now();
 
   window[callbackName]=function(result){
     try{
       if(result && result.success){
-        renderActiveRaidCards(result.raids || result.entries || result.activeRaids || []);
+        renderActiveRaidCards(result.allRaids || result.raids || result.entries || result.activeRaids || []);
       }
     }finally{
       cleanup();
@@ -2509,7 +2911,39 @@ function loadActiveRaidCards(){
   document.body.appendChild(script);
 }
 
+async function fetchRailwayApi(path){
+  if(!RAILWAY_API_URL) throw new Error("Railway API nicht konfiguriert.");
+  const base=RAILWAY_API_URL.replace(/\/+$/,"");
+  const response=await fetch(base+path,{cache:"no-store"});
+  if(!response.ok) throw new Error("Railway API HTTP "+response.status);
+  return await response.json();
+}
+
+async function fetchRailwayReadAction(params){
+  if(!RAILWAY_API_URL || !params || !params.action) return null;
+
+  if(params.action === "getActiveRaids"){
+    return await fetchRailwayApi("/api/dashboard");
+  }
+
+  if(params.action === "getPublicWorldbuffs"){
+    return await fetchRailwayApi("/api/worldbuffs");
+  }
+
+  if(params.action === "getPublicHordenbuffs"){
+    return await fetchRailwayApi("/api/hordenbuffs");
+  }
+
+  return null;
+}
+
 async function fetchRaidApiJsonp(params){
+  const railwayData=await fetchRailwayReadAction(params).catch(error=>{
+    console.warn("Railway-API nicht ladbar, nutze Apps Script:", error);
+    return null;
+  });
+  if(railwayData) return railwayData;
+
   const jsonQuery=new URLSearchParams(Object.assign({},params,{t:Date.now()}));
   const jsonUrl=RAID_API_URL+"?"+jsonQuery.toString();
 
@@ -2592,7 +3026,7 @@ async function addTwinkToPlayerPin(){
   status.innerHTML='<span class="warn">Charakter wird gespeichert …</span>';
 
   const url =
-    LICHTLOOT_API_URL +
+    RAID_API_URL +
     "?action=addTwink" +
     "&pin=" + encodeURIComponent(pin) +
     "&char=" + encodeURIComponent(charName) +
@@ -2674,6 +3108,9 @@ async function raidleadLogin(){
 }
 
 function toggleRaidleadLogin(){
+  placeSidebarDrawers();
+  setDashboardCenterMode("dashboard");
+  setStartNavActive("raidlead");
   const raidCreateBox=document.getElementById("raidCreateBox");
   const oldPinBox=document.getElementById("playerPinBox");
   const box=document.getElementById("raidleadLoginBox");
@@ -2700,7 +3137,7 @@ function raidleadEnter(event){
 
 function openLootWithPin(raid){
   const input=document.getElementById("pin-"+raid);
-  const pin=input.value.trim();
+  const pin=input ? input.value.trim() : "";
 
   if(!pin){
     alert("Bitte Prio PIN eingeben.");
@@ -2708,6 +3145,23 @@ function openLootWithPin(raid){
   }
 
   window.location.href=raids[raid].lootPage+"?pin="+encodeURIComponent(pin);
+}
+
+function openLootPageWithPin(raid,pin){
+  const raidConfig=raids[raid];
+  const value=String(pin || "").trim();
+
+  if(!raidConfig){
+    alert("Raid-Seite wurde nicht gefunden.");
+    return;
+  }
+
+  if(!value){
+    alert("Für diesen Raid fehlt die Prio PIN.");
+    return;
+  }
+
+  window.location.href=raidConfig.lootPage+"?pin="+encodeURIComponent(value);
 }
 
 function handlePinEnter(event,raid){
@@ -3296,6 +3750,12 @@ function safeAttr(value){
     .replace(/"/g,"&quot;");
 }
 
+function safeJs(value){
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'");
+}
+
 function toggleMyPrios(){
   document.getElementById("raidCreateBox").classList.add("hidden");
   const oldPinBox=document.getElementById("playerPinBox");
@@ -3391,7 +3851,7 @@ async function loadLichtLootCharacters(){
   }
 
   try{
-    const url=LICHTLOOT_API_URL+
+    const url=RAID_API_URL+
       '?action=getCharactersByPin'+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
@@ -3400,7 +3860,7 @@ async function loadLichtLootCharacters(){
     const data=await response.json();
 
     if(!data.success){
-      status.innerHTML='<span class="bad">'+safeHtml(data.error || 'Charaktere konnten nicht geladen werden.')+'</span>';
+      status.innerHTML='<span class="bad">'+safeHtml(data.error || 'Charaktere konnten nicht geladen werden. Bitte prüfe, ob das neue Apps Script mit getCharactersByPin bereitgestellt wurde.')+'</span>';
       if(select){
         select.innerHTML='<option value="">Keine Charaktere geladen</option>';
       }
@@ -3494,6 +3954,10 @@ function selectLichtLootCharacter(){
 let myWorldbuffEntries=[];
 let myWorldbuffOpenSlots=[];
 let myLichtlootCharacters=[];
+let myRaidCalendarPrioEntries=[];
+let raidCalendarMode="month";
+let raidCalendarCursor=new Date();
+let raidCalendarSelectedDate="";
 
 async function loadMyWorldbuffs(){
   const pinField=document.getElementById("myPriosPin");
@@ -3521,15 +3985,24 @@ async function loadMyWorldbuffs(){
 
     if(!data.success){
       content.innerHTML='<div class="status bad">'+safeHtml(data.error || "Worldbuff-Termine konnten nicht geladen werden.")+'</div>';
+      if(document.getElementById("dashboardMyWorldbuffContent")){
+        copyHiddenLichtLootToDashboard(true);
+      }
       return;
     }
 
     myWorldbuffEntries=Array.isArray(data.buffs) ? data.buffs : [];
     myWorldbuffOpenSlots=Array.isArray(data.openSlots) ? data.openSlots : [];
     renderMyWorldbuffs();
+    if(document.getElementById("dashboardMyWorldbuffContent")){
+      copyHiddenLichtLootToDashboard(true);
+    }
   }catch(error){
     console.error(error);
     content.innerHTML='<div class="status bad">Worldbuff-Termine konnten nicht geladen werden.</div>';
+    if(document.getElementById("dashboardMyWorldbuffContent")){
+      copyHiddenLichtLootToDashboard(true);
+    }
   }
 }
 
@@ -3759,6 +4232,9 @@ function renderMyPrios(data){
   const entries=data.entries || [];
   const ownP0=data.ownP0PlusPoints || [];
 
+  myRaidCalendarPrioEntries=entries.slice();
+  renderRaidCalendar();
+
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
   if(!entries.length && !ownP0.length){
@@ -3820,6 +4296,374 @@ function renderMyPrios(data){
   }
 
   results.innerHTML=html;
+}
+
+function raidCalendarStorageKey(){
+  const pinField=document.getElementById("dashboardPlayerPin") || document.getElementById("myPriosPin");
+  const pin=pinField ? String(pinField.value || "").trim() : "";
+  return "lichtloot_external_raids_"+(pin || "guest");
+}
+
+function loadExternalRaidCalendarEntries(){
+  try{
+    const raw=localStorage.getItem(raidCalendarStorageKey());
+    const entries=JSON.parse(raw || "[]");
+    return Array.isArray(entries) ? entries : [];
+  }catch(error){
+    return [];
+  }
+}
+
+function saveExternalRaidCalendarEntries(entries){
+  localStorage.setItem(raidCalendarStorageKey(),JSON.stringify(entries || []));
+}
+
+function raidCalendarDateValue(entry){
+  return entry.raidDate || entry.RaidDate || entry.raidDatum || entry.RaidDatum ||
+    entry.date || entry.Date || entry.datum || entry.Datum || "";
+}
+
+function raidCalendarTimeValue(entry){
+  return entry.raidTime || entry.RaidTime || entry.raidUhrzeit || entry.RaidUhrzeit ||
+    entry.time || entry.Time || entry.uhrzeit || entry.Uhrzeit || "20:00";
+}
+
+function raidCalendarTimestamp(event){
+  const parsed=parseActiveRaidDate(event.date);
+  if(!parsed) return Number.MAX_SAFE_INTEGER;
+  const parts=parseActiveRaidTime(event.time || "20:00");
+  parsed.setHours(parts.hours,parts.minutes,0,0);
+  return parsed.getTime();
+}
+
+const RAID_CALENDAR_RESET_RULES=[
+  { id:"zg-aq20", title:"ZG/AQ20 Reset", anchor:"2026-06-20", intervalDays:3, time:"09:00", resetClass:"short" },
+  { id:"ony", title:"Onyxia Reset", anchor:"2026-06-21", intervalDays:5, time:"09:00", resetClass:"ony" }
+];
+
+function firstMondayOfMonth(year,month){
+  const date=new Date(year,month,1);
+  const offset=(8-date.getDay())%7;
+  date.setDate(1+offset);
+  return date;
+}
+
+function buildRaidCalendarResetEvents(){
+  const days=raidCalendarVisibleDays();
+  if(!days.length) return [];
+  const start=new Date(days[0]);
+  const end=new Date(days[days.length-1]);
+  start.setHours(0,0,0,0);
+  end.setHours(23,59,59,999);
+
+  const events=[];
+  RAID_CALENDAR_RESET_RULES.forEach(rule=>{
+    const anchor=parseActiveRaidDate(rule.anchor);
+    if(!anchor || !rule.intervalDays) return;
+    anchor.setHours(0,0,0,0);
+    const intervalMs=rule.intervalDays*24*60*60*1000;
+    let date=new Date(anchor);
+    if(date < start){
+      const steps=Math.ceil((start.getTime()-date.getTime())/intervalMs);
+      date=new Date(date.getTime()+steps*intervalMs);
+    }
+    while(date <= end){
+      events.push({
+        id:"reset_"+rule.id+"_"+raidCalendarDateToIso(date),
+        title:rule.title,
+        date:raidCalendarDateToIso(date),
+        time:rule.time || "09:00",
+        guild:"Server Reset",
+        note:"Reset-Termin",
+        source:"reset",
+        resetClass:rule.resetClass || "server"
+      });
+      date=new Date(date.getTime()+intervalMs);
+    }
+  });
+
+  const monthCursor=new Date(start.getFullYear(),start.getMonth()-1,1);
+  const lastMonth=new Date(end.getFullYear(),end.getMonth()+1,1);
+  while(monthCursor <= lastMonth){
+    const dmfStart=firstMondayOfMonth(monthCursor.getFullYear(),monthCursor.getMonth());
+    for(let day=0;day<7;day++){
+      const date=new Date(dmfStart);
+      date.setDate(dmfStart.getDate()+day);
+      if(date < start || date > end) continue;
+      events.push({
+        id:"reset_dmf_"+raidCalendarDateToIso(date),
+        title:day === 0 ? "Dunkelmond Start" : "Dunkelmond offen",
+        date:raidCalendarDateToIso(date),
+        time:"",
+        guild:"Dunkelmond-Jahrmarkt",
+        note:"Jahrmarkt-Woche",
+        source:"reset",
+        resetClass:"dmf",
+        allDay:true
+      });
+    }
+    monthCursor.setMonth(monthCursor.getMonth()+1);
+  }
+  return events;
+}
+
+function buildRaidCalendarEvents(){
+  const prioEvents=(myRaidCalendarPrioEntries || []).map(entry=>{
+    const raidName=entry.raidName || entry.raid || "Raid";
+    const raidDate=raidCalendarDateValue(entry);
+    return {
+      id:"prio_"+String(entry.raidId || entry.id || raidName)+"_"+String(entry.createdAt || ""),
+      title:raidName,
+      date:raidDate,
+      time:raidCalendarTimeValue(entry),
+      guild:entry.guild || entry.gilde || "Lichtbringer",
+      note:"Prio gesetzt"+(entry.player ? " fuer "+entry.player : ""),
+      source:"prio"
+    };
+  });
+  return prioEvents.concat(loadExternalRaidCalendarEntries(),buildRaidCalendarResetEvents())
+    .filter(event=>event && event.title && event.date)
+    .sort((a,b)=>raidCalendarTimestamp(a)-raidCalendarTimestamp(b));
+}
+
+function renderRaidCalendar(){
+  const box=document.getElementById("dashboardRaidCalendar");
+  const events=buildRaidCalendarEvents();
+  updateRaidCalendarMini(events);
+  if(!box) return;
+
+  const days=raidCalendarVisibleDays();
+  const monthLabel=raidCalendarCursor.toLocaleDateString("de-DE",{month:"long",year:"numeric"});
+  const weekDays=["Mo","Di","Mi","Do","Fr","Sa","So"];
+  const eventMap={};
+  events.forEach(event=>{
+    const key=raidCalendarIsoDate(event.date);
+    if(!key) return;
+    if(!eventMap[key]) eventMap[key]=[];
+    eventMap[key].push(event);
+  });
+
+  box.innerHTML=
+    '<div class="raid-calendar-title">'+safeHtml(raidCalendarMode === "week" ? "Woche" : monthLabel)+'</div>'+
+    '<div class="raid-calendar-grid">'+
+      weekDays.map(day=>'<div class="raid-calendar-weekday">'+safeHtml(day)+'</div>').join("")+
+      days.map(day=>{
+        const key=raidCalendarDateToIso(day);
+        const dayEvents=eventMap[key] || [];
+        const muted=raidCalendarMode === "month" && day.getMonth() !== raidCalendarCursor.getMonth();
+        const today=raidCalendarDateToIso(new Date()) === key;
+        return '<div class="raid-calendar-day '+(muted ? 'muted ' : '')+(today ? 'today' : '')+'" oncontextmenu="openRaidCalendarMenu(event,\''+safeJs(key)+'\')">'+
+          '<div class="raid-calendar-day-number">'+day.getDate()+'</div>'+
+          dayEvents.slice(0,3).map(event=>renderRaidCalendarEvent(event)).join("")+
+          (dayEvents.length>3 ? '<div class="raid-calendar-event"><small>+'+(dayEvents.length-3)+' weitere</small></div>' : '')+
+        '</div>';
+      }).join("")+
+    '</div>'+
+    (!events.length ? '<div class="status">Noch keine Kalendereinträge. Lade deine Prios oder trage per Rechtsklick einen externen Raid ein.</div>' : '');
+}
+
+function updateRaidCalendarMini(events){
+  const mini=document.getElementById("dashboardRaidCalendarMini");
+  if(!mini) return;
+  const list=events || buildRaidCalendarEvents();
+  const ownEvents=list.filter(event=>event.source !== "reset");
+  const prioCount=ownEvents.filter(event=>event.source === "prio").length;
+  const externalCount=ownEvents.filter(event=>event.source === "external").length;
+  if(!ownEvents.length){
+    mini.textContent="Noch keine Termine. Lade deine Prios oder trage externe Gilden-Raids im Kalender ein.";
+    return;
+  }
+  mini.textContent=ownEvents.length+" Termin(e): "+prioCount+" aus deinen Prios, "+externalCount+" extern.";
+}
+
+function openRaidCalendarModal(){
+  const modal=document.getElementById("raidCalendarModal");
+  const modeSelect=document.getElementById("raidCalendarMode");
+  if(modeSelect) modeSelect.value=raidCalendarMode;
+  renderRaidCalendar();
+  modal?.classList.remove("hidden");
+}
+
+function closeRaidCalendarModal(){
+  closeRaidCalendarMenu();
+  document.getElementById("raidCalendarModal")?.classList.add("hidden");
+}
+
+function closeRaidCalendarModalOnBackdrop(event){
+  if(event.target && event.target.id === "raidCalendarModal"){
+    closeRaidCalendarModal();
+  }
+}
+
+function renderRaidCalendarEvent(event){
+  const sourceClass=event.source === "external"
+    ? " external"
+    : (event.source === "reset" ? " reset "+safeAttr(event.resetClass || "server") : "");
+  const guildClass=event.source !== "reset" && String(event.guild || "").toLowerCase().includes("lichtbringer")
+    ? " lichtbringer"
+    : "";
+  const remove=event.source === "external"
+    ? ' <button class="text-link-btn" onclick="removeExternalRaidFromCalendar(\''+safeJs(event.id)+'\')">×</button>'
+    : "";
+  const timeLabel=event.allDay ? "" : safeHtml(formatRaidTimeForDisplay(event.time))+" ";
+  return '<div class="raid-calendar-event'+sourceClass+guildClass+'">'+
+    timeLabel+safeHtml(event.title)+remove+
+    '<small>'+safeHtml(event.guild || "-")+'</small>'+
+  '</div>';
+}
+
+function raidCalendarVisibleDays(){
+  const cursor=new Date(raidCalendarCursor.getFullYear(),raidCalendarCursor.getMonth(),raidCalendarCursor.getDate());
+  let start;
+  let count;
+  if(raidCalendarMode === "week"){
+    const day=(cursor.getDay()+6)%7;
+    start=new Date(cursor);
+    start.setDate(cursor.getDate()-day);
+    count=7;
+  }else{
+    start=new Date(cursor.getFullYear(),cursor.getMonth(),1);
+    const day=(start.getDay()+6)%7;
+    start.setDate(start.getDate()-day);
+    count=42;
+  }
+  return Array.from({length:count},(_,index)=>{
+    const date=new Date(start);
+    date.setDate(start.getDate()+index);
+    return date;
+  });
+}
+
+function raidCalendarDateToIso(date){
+  return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");
+}
+
+function raidCalendarIsoDate(value){
+  const parsed=parseActiveRaidDate(value);
+  return parsed ? raidCalendarDateToIso(parsed) : "";
+}
+
+function setRaidCalendarMode(mode){
+  raidCalendarMode=mode === "week" ? "week" : "month";
+  const modeSelect=document.getElementById("raidCalendarMode");
+  if(modeSelect) modeSelect.value=raidCalendarMode;
+  renderRaidCalendar();
+}
+
+function shiftRaidCalendar(amount){
+  if(raidCalendarMode === "week"){
+    raidCalendarCursor.setDate(raidCalendarCursor.getDate()+(amount*7));
+  }else{
+    raidCalendarCursor.setMonth(raidCalendarCursor.getMonth()+amount);
+  }
+  renderRaidCalendar();
+}
+
+function openRaidCalendarMenu(event,date){
+  event.preventDefault();
+  raidCalendarSelectedDate=date;
+  const menu=document.getElementById("raidCalendarMenu");
+  if(!menu) return;
+  document.getElementById("raidCalendarMenuDate").textContent=formatRaidDateForDisplay(date)+" eintragen";
+  menu.style.left=Math.min(event.clientX,window.innerWidth-330)+"px";
+  menu.style.top=Math.min(event.clientY,window.innerHeight-250)+"px";
+  menu.classList.remove("hidden");
+  document.getElementById("externalRaidName")?.focus();
+}
+
+function closeRaidCalendarMenu(){
+  document.getElementById("raidCalendarMenu")?.classList.add("hidden");
+}
+
+function addExternalRaidToCalendar(){
+  const name=document.getElementById("externalRaidName")?.value.trim() || "";
+  const guild=document.getElementById("externalRaidGuild")?.value.trim() || "";
+  const date=raidCalendarSelectedDate || "";
+  const time=document.getElementById("externalRaidTime")?.value || "20:00";
+  const note=document.getElementById("externalRaidNote")?.value.trim() || "";
+  const status=document.getElementById("externalRaidStatus");
+
+  if(!name || !date || !time){
+    if(status) status.innerHTML='<span class="bad">Bitte Raid, Datum und Uhrzeit eintragen.</span>';
+    return;
+  }
+
+  const entries=loadExternalRaidCalendarEntries();
+  entries.push({
+    id:"external_"+Date.now(),
+    source:"external",
+    title:name,
+    guild:guild || "Andere Gilde",
+    date,
+    time,
+    note
+  });
+  saveExternalRaidCalendarEntries(entries);
+  ["externalRaidName","externalRaidGuild","externalRaidNote"].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=""; });
+  if(status) status.innerHTML='<span class="ok">Raid wurde in deinen Kalender eingetragen.</span>';
+  closeRaidCalendarMenu();
+  renderRaidCalendar();
+}
+
+function removeExternalRaidFromCalendar(id){
+  const entries=loadExternalRaidCalendarEntries().filter(entry=>entry.id !== id);
+  saveExternalRaidCalendarEntries(entries);
+  renderRaidCalendar();
+}
+
+function calendarIcsDate(date,time,offsetMinutes){
+  const parsed=parseActiveRaidDate(date);
+  if(!parsed) return "";
+  const parts=parseActiveRaidTime(time || "20:00");
+  parsed.setHours(parts.hours,parts.minutes + (offsetMinutes || 0),0,0);
+  return parsed.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z");
+}
+
+function escapeIcsText(value){
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/\n/g,"\\n")
+    .replace(/,/g,"\\,")
+    .replace(/;/g,"\\;");
+}
+
+function downloadRaidCalendarIcs(){
+  const events=buildRaidCalendarEvents().filter(event=>event.source !== "reset");
+  const status=document.getElementById("externalRaidStatus");
+  if(!events.length){
+    if(status) status.innerHTML='<span class="bad">Keine Raidtermine zum Exportieren gefunden.</span>';
+    return;
+  }
+
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//LichtLoot//Raidkalender//DE","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
+  events.forEach(event=>{
+    const start=calendarIcsDate(event.date,event.time,0);
+    const end=calendarIcsDate(event.date,event.time,180);
+    if(!start || !end) return;
+    lines.push(
+      "BEGIN:VEVENT",
+      "UID:"+escapeIcsText(event.id || (event.title+"-"+event.date+"-"+event.time))+"@lichtloot",
+      "DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d{3}Z$/,"Z"),
+      "DTSTART:"+start,
+      "DTEND:"+end,
+      "SUMMARY:"+escapeIcsText("LichtLoot: "+event.title),
+      "LOCATION:"+escapeIcsText(event.guild || ""),
+      "DESCRIPTION:"+escapeIcsText([event.guild,event.note].filter(Boolean).join(" | ")),
+      "END:VEVENT"
+    );
+  });
+  lines.push("END:VCALENDAR");
+
+  const blob=new Blob([lines.join("\r\n")],{type:"text/calendar;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;
+  link.download="lichtloot-raidkalender.ics";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  if(status) status.innerHTML='<span class="ok">Kalenderdatei erstellt. In Apple Kalender öffnen oder in Google Kalender importieren.</span>';
 }
 
 async function openMyPrioDetail(index){
@@ -3925,6 +4769,26 @@ function renderFullRaidPrioTable(prios, entry){
 
   html+='</tbody></table></div>';
   return html;
+}
+
+function startMyPrioResize(event){
+  const box=document.querySelector("#myPrioDetailModal .myprio-detail-box");
+  if(!box) return;
+  event.preventDefault();
+  const startX=event.clientX;
+  const startY=event.clientY;
+  const startW=box.offsetWidth;
+  const startH=box.offsetHeight;
+  function move(e){
+    box.style.width=Math.min(window.innerWidth-20,Math.max(520,startW + e.clientX - startX))+"px";
+    box.style.height=Math.min(window.innerHeight-20,Math.max(420,startH + e.clientY - startY))+"px";
+  }
+  function done(){
+    window.removeEventListener("pointermove",move);
+    window.removeEventListener("pointerup",done);
+  }
+  window.addEventListener("pointermove",move);
+  window.addEventListener("pointerup",done);
 }
 
 function closeMyPrioDetailModal(){
@@ -4658,7 +5522,16 @@ function renderP0PlusOverview(entries){
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
+  placeSidebarDrawers();
+  initMeinLichtLootAutoLogin();
   loadActiveRaidCards();
+  loadDashboardWorldbuffs();
+  document.addEventListener("click",event=>{
+    const menu=document.getElementById("raidCalendarMenu");
+    if(menu && !menu.classList.contains("hidden") && !menu.contains(event.target)){
+      closeRaidCalendarMenu();
+    }
+  });
 });
 
 </script>
