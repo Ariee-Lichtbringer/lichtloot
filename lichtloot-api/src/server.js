@@ -433,8 +433,8 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if (normalizeStatus(raidResult.rows[0].status) !== "geöffnet") {
-      const error = new Error("Die Prioeingabe ist für diesen Raid geschlossen.");
+    if (normalizeStatus(raidResult.rows[0].status) === "geöffnet") {
+      const error = new Error("Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.");
       error.statusCode = 403;
       throw error;
     }
@@ -1126,12 +1126,12 @@ async function getPublishedPrios({ guildId, query: params }) {
 
   const normalizedRaid = normalizeRaidRow(raid);
   const raidStatus = normalizeStatus(raid.status);
-  const published = ["veröffentlicht", "published"].includes(raidStatus.toLowerCase());
+  const published = ["geöffnet", "veröffentlicht", "published"].includes(raidStatus.toLowerCase());
   return {
     success: true,
     ...normalizedRaid,
     published,
-    open: raidStatus === "geöffnet",
+    open: raidStatus !== "geöffnet" && !published,
     prios: result.rows.map((row, index) => {
       const meta = commentMeta(row.comment);
       return {
