@@ -51,6 +51,102 @@ function clean(value) {
   return String(value || "").trim();
 }
 
+function slugify(value) {
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildLootSlug(guildName, lootName) {
+  const explicit = slugify(lootName);
+  if (explicit) return explicit;
+  const base = slugify(guildName);
+  return base ? `${base}-loot` : "";
+}
+
+async function listGuilds() {
+  const result = await query(
+    `select g.slug, g.name, g.server, g.logo_url, g.background_url, g.created_at,
+            coalesce(gs.points_label, 'P0/P0+') as points_label
+     from guilds g
+     left join guild_settings gs on gs.guild_id = g.id
+     order by g.created_at asc, g.name asc`
+  );
+  return {
+    success: true,
+    guilds: result.rows.map(row => ({
+      slug: row.slug,
+      name: row.name,
+      server: row.server || "",
+      logoUrl: row.logo_url || "",
+      backgroundUrl: row.background_url || "",
+      pointsLabel: row.points_label || "P0/P0+",
+      createdAt: row.created_at
+    }))
+  };
+}
+
+async function createGuild({ query: params }) {
+  const guildName = clean(params.guildName || params.name);
+  const lootName = clean(params.lootName || params.slugName);
+  const server = clean(params.server);
+  const slug = buildLootSlug(guildName, lootName);
+
+  if (!guildName || !slug) {
+    const error = new Error("Bitte Gildenname und Lootsystem-Name angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const guildResult = await client.query(
+      `insert into guilds (name, slug, server)
+       values ($1, $2, $3)
+       on conflict (slug) do update
+         set name = excluded.name,
+             server = coalesce(nullif(excluded.server, ''), guilds.server),
+             updated_at = now()
+       returning id, name, slug, server, created_at`,
+      [guildName, slug, server || null]
+    );
+
+    await client.query(
+      `insert into guild_settings (guild_id)
+       values ($1)
+       on conflict (guild_id) do nothing`,
+      [guildResult.rows[0].id]
+    );
+
+    await client.query("commit");
+    const guild = guildResult.rows[0];
+    return {
+      success: true,
+      guild: {
+        slug: guild.slug,
+        name: guild.name,
+        server: guild.server || "",
+        createdAt: guild.created_at
+      },
+      startUrl: `start.html?guild=${encodeURIComponent(guild.slug)}`,
+      leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(guild.slug)}`
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 function normalizePin(value) {
   return clean(value).toUpperCase();
 }
@@ -295,7 +391,7 @@ async function savePrio({ guildId, query: params }) {
              p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
              updated_at = now()
          where guild_id = $1 and external_raid_id = $2
-         returning id, external_raid_id, name, raid_type, raid_date`,
+         returning id, external_raid_id, name, raid_type, raid_date, status`,
         [
           guildId,
           externalRaidId,
@@ -322,7 +418,7 @@ async function savePrio({ guildId, query: params }) {
                raid_time = coalesce(excluded.raid_time, raids.raid_time),
                guild_name = coalesce(excluded.guild_name, raids.guild_name),
                updated_at = now()
-         returning id, external_raid_id, name, raid_type, raid_date`,
+         returning id, external_raid_id, name, raid_type, raid_date, status`,
         [
           guildId,
           raidName,
@@ -335,6 +431,12 @@ async function savePrio({ guildId, query: params }) {
           clean(params.p0PlusFreigabe || params.p0PlusOverride)
         ]
       );
+    }
+
+    if (normalizeStatus(raidResult.rows[0].status) !== "geöffnet") {
+      const error = new Error("Die Prioeingabe ist für diesen Raid geschlossen.");
+      error.statusCode = 403;
+      throw error;
     }
 
     const p1 = await upsertItem(client, raidType, params.p1);
@@ -1023,11 +1125,13 @@ async function getPublishedPrios({ guildId, query: params }) {
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
+  const raidStatus = normalizeStatus(raid.status);
+  const published = ["veröffentlicht", "published"].includes(raidStatus.toLowerCase());
   return {
     success: true,
     ...normalizedRaid,
-    published: normalizeStatus(raid.status) === "geöffnet",
-    open: normalizeStatus(raid.status) === "geöffnet",
+    published,
+    open: raidStatus === "geöffnet",
     prios: result.rows.map((row, index) => {
       const meta = commentMeta(row.comment);
       return {
@@ -1588,8 +1692,19 @@ async function resetPlayerPinBySecurity({
 
 app.get("/api/apps-script", async (req, res, next) => {
   try {
-    const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
     const action = clean(req.query.action);
+
+    if (action === "listGuilds") {
+      const guilds = await listGuilds();
+      return res.json(guilds);
+    }
+
+    if (action === "createGuild") {
+      const created = await createGuild({ query: req.query });
+      return res.json(created);
+    }
+
+    const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
 
     if (action === "getCharactersByPin") {
       const characters = await getCharactersByPin(guild.id, req.query.pin);
