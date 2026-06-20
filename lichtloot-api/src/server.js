@@ -541,6 +541,168 @@ async function getGuildLeadershipOverview(guildId, params) {
   };
 }
 
+function normalizeIssueReportRow(row, index = 0) {
+  return {
+    id: row.id,
+    rowNumber: row.id,
+    number: index + 1,
+    time: row.created_at ? row.created_at.toISOString() : "",
+    type: row.type || "",
+    source: row.source || "",
+    category: row.category || "",
+    raid: row.raid || "",
+    item: row.item || "",
+    slot: row.slot || "",
+    points: row.points || "",
+    player: row.player || "",
+    server: row.server || "",
+    note: row.note || "",
+    page: row.page || "",
+    originalDate: row.original_date || ""
+  };
+}
+
+async function reportIssue({ guildId, query: params }) {
+  const result = await query(
+    `insert into issue_reports (
+       guild_id, type, source, category, raid, item, slot, points,
+       player, server, note, page, original_date
+     )
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     returning *`,
+    [
+      guildId,
+      clean(params.type),
+      clean(params.source),
+      clean(params.category),
+      clean(params.raid),
+      clean(params.item),
+      clean(params.slot),
+      clean(params.points),
+      clean(params.player),
+      clean(params.server),
+      clean(params.note),
+      clean(params.page),
+      clean(params.createdAt || params.originalDate)
+    ]
+  );
+  return { success: true, report: normalizeIssueReportRow(result.rows[0]) };
+}
+
+async function getIssueReports({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const result = await query(
+    `select *
+     from issue_reports
+     where guild_id = $1 and resolved_at is null
+     order by created_at desc`,
+    [guildId]
+  );
+  return { success: true, reports: result.rows.map(normalizeIssueReportRow) };
+}
+
+async function resolveIssueReport({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const id = clean(params.id || params.rowNumber);
+  const result = await query(
+    `update issue_reports
+     set resolved_at = now()
+     where guild_id = $1 and id = $2
+     returning id`,
+    [guildId, id]
+  );
+  return { success: true, resolved: result.rowCount };
+}
+
+function normalizePlayerMessageRow(row) {
+  const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
+  return {
+    id: row.id,
+    title: row.title || "",
+    body: row.body || "",
+    raidId: row.raid_id || "",
+    raidName: row.raid_name || "",
+    raidDate,
+    raidTime: row.raid_time || "",
+    leadPin: row.lead_pin || "",
+    sender: row.sender || "",
+    createdAt: row.created_at,
+    readAt: row.read_at,
+    read: Boolean(row.read_at)
+  };
+}
+
+async function sendPlayerMessage({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  if (!playerPin) {
+    const error = new Error("Bitte SpielerLogin/SpielerPin angeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const player = await findPlayerByPin(guildId, playerPin);
+  if (!player) {
+    const error = new Error("Dieser SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const result = await query(
+    `insert into player_messages (
+       guild_id, player_pin, title, body, raid_id, raid_name,
+       raid_date, raid_time, lead_pin, sender
+     )
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     returning *`,
+    [
+      guildId,
+      playerPin,
+      clean(params.title) || "Raidlead-PIN",
+      clean(params.body) || "Du wurdest als Raidlead eingetragen.",
+      clean(params.raidId),
+      clean(params.raidName),
+      parseDateValue(params.raidDate || params.date || null),
+      clean(params.raidTime || params.time),
+      clean(params.leadPin),
+      clean(params.sender) || "Gildenleitung"
+    ]
+  );
+  return { success: true, message: normalizePlayerMessageRow(result.rows[0]) };
+}
+
+async function getPlayerMessages({ guildId, query: params }) {
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  if (!playerPin) {
+    const error = new Error("Bitte SpielerLogin eingeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `select *
+     from player_messages
+     where guild_id = $1 and player_pin = $2
+     order by created_at desc
+     limit 50`,
+    [guildId, playerPin]
+  );
+  return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
+}
+
+async function markPlayerMessageRead({ guildId, query: params }) {
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const id = clean(params.id || params.messageId);
+  const result = await query(
+    `update player_messages
+     set read_at = coalesce(read_at, now())
+     where guild_id = $1 and player_pin = $2 and id = $3
+     returning *`,
+    [guildId, playerPin, id]
+  );
+  return { success: true, message: result.rows[0] ? normalizePlayerMessageRow(result.rows[0]) : null };
+}
+
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -1250,6 +1412,36 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getGuildLeadershipOverview") {
       const overview = await getGuildLeadershipOverview(guild.id, req.query);
       return res.json({ ...overview, guild: guild.slug });
+    }
+
+    if (action === "reportIssue") {
+      const report = await reportIssue({ guildId: guild.id, query: req.query });
+      return res.json({ ...report, guild: guild.slug });
+    }
+
+    if (action === "guildGetIssueReports") {
+      const reports = await getIssueReports({ guildId: guild.id, query: req.query });
+      return res.json({ ...reports, guild: guild.slug });
+    }
+
+    if (action === "guildResolveIssueReport") {
+      const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
+      return res.json({ ...resolved, guild: guild.slug });
+    }
+
+    if (action === "sendPlayerMessage") {
+      const message = await sendPlayerMessage({ guildId: guild.id, query: req.query });
+      return res.json({ ...message, guild: guild.slug });
+    }
+
+    if (action === "getPlayerMessages") {
+      const messages = await getPlayerMessages({ guildId: guild.id, query: req.query });
+      return res.json({ ...messages, guild: guild.slug });
+    }
+
+    if (action === "markPlayerMessageRead") {
+      const message = await markPlayerMessageRead({ guildId: guild.id, query: req.query });
+      return res.json({ ...message, guild: guild.slug });
     }
 
     if (action === "createRaid") {
