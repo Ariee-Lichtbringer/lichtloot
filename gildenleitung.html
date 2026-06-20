@@ -358,18 +358,21 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
   gap:14px;
 }
 
 .active-raid-card{
-  min-height:330px;
-  display:flex;
-  flex-direction:column;
+  min-height:210px;
+  display:grid;
+  grid-template-columns:78px 1fr;
+  gap:10px;
+  align-items:start;
+  position:relative;
   overflow:hidden;
-  padding:0;
+  padding:12px;
   border:1px solid rgba(250,204,21,.18);
-  border-radius:10px;
+  border-radius:8px;
   background:
     linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
     rgba(2,6,23,.34);
@@ -379,8 +382,9 @@ button,input,select{font:inherit}
 .active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
 
 .active-raid-image{
-  height:136px;
-  border-radius:0;
+  width:78px;
+  height:122px;
+  border-radius:5px;
   background-image:
     linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
     var(--raid-image);
@@ -391,24 +395,24 @@ button,input,select{font:inherit}
 }
 
 .active-raid-body{
-  flex:1;
   display:flex;
   flex-direction:column;
-  gap:10px;
-  padding:12px;
+  gap:8px;
+  min-width:0;
 }
 
 .active-raid-title{
-  color:#fbbf24;
-  font-size:20px;
+  color:#f8fafc;
+  font-size:15px;
   font-weight:900;
+  line-height:1.2;
 }
 
 .active-raid-meta{
   margin-top:4px;
   color:#cbd5e1;
   font-weight:700;
-  font-size:13px;
+  font-size:12px;
 }
 
 .active-raid-side{
@@ -434,21 +438,20 @@ button,input,select{font:inherit}
 
 .active-raid-stats{
   display:flex;
-  flex-wrap:wrap;
+  flex-direction:column;
   gap:6px;
   margin-top:8px;
 }
 
 .active-raid-stat{
-  display:inline-flex;
+  display:flex;
   gap:5px;
   align-items:center;
-  padding:3px 7px;
-  border-radius:999px;
-  border:1px solid rgba(148,163,184,.18);
-  background:rgba(2,6,23,.42);
+  padding:0;
+  border:0;
+  background:transparent;
   color:#cbd5e1;
-  font-size:11px;
+  font-size:12px;
   font-weight:900;
 }
 
@@ -457,11 +460,12 @@ button,input,select{font:inherit}
 }
 
 .active-raid-actions{
+  grid-column:1 / -1;
   display:flex;
   gap:8px;
   align-items:center;
   justify-content:stretch;
-  margin-top:auto;
+  margin-top:0;
 }
 
 .active-raid-actions .small-btn{
@@ -469,10 +473,11 @@ button,input,select{font:inherit}
 }
 
 .active-raid-lead-card{
+  grid-column:1 / -1;
   border:1px solid rgba(250,204,21,.28);
-  border-radius:10px;
+  border-radius:6px;
   background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
-  padding:10px;
+  padding:8px 10px;
   min-width:0;
 }
 
@@ -488,7 +493,7 @@ button,input,select{font:inherit}
   display:block;
   margin-top:4px;
   color:#fbbf24;
-  font-size:26px;
+  font-size:20px;
   font-weight:900;
   line-height:1;
   letter-spacing:1px;
