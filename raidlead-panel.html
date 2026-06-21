@@ -1174,13 +1174,13 @@ th{
 <body>
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo" data-guild-brand-alt>
+    <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo">
     <nav class="side-nav" aria-label="Raidlead Navigation">
-      <a class="side-link" data-guild-link="start.html" href="start.html"><span class="side-icon">⌂</span><span>Startseite</span></a>
-      <a class="side-link" id="navPrioPage" data-guild-link="start.html#mein-lichtloot" href="start.html#mein-lichtloot"><span class="side-icon">✦</span><span>Prioseite</span></a>
-      <a class="side-link" data-guild-link="start.html#mein-lichtloot" href="start.html#mein-lichtloot"><span class="side-icon">☷</span><span>Mein <span data-guild-brand="lootName">LichtLoot</span></span></a>
+      <a class="side-link" href="start.html" onclick="event.preventDefault(); window.location.href=guildUrl('start.html')"><span class="side-icon">⌂</span><span>Startseite</span></a>
+      <a class="side-link" id="navPrioPage" href="start.html#mein-lichtloot" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#mein-lichtloot')"><span class="side-icon">✦</span><span>Prioseite</span></a>
+      <a class="side-link" href="start.html#mein-lichtloot" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#mein-lichtloot')"><span class="side-icon">☷</span><span>Mein LichtLoot</span></a>
       <button class="side-link" id="navP0PlusOverview" type="button" onclick="openP0PlusOverviewModal()"><span class="side-icon">★</span><span>P0+ Übersicht</span></button>
-      <a class="side-link" data-guild-link="start.html#raid-erstellen" href="start.html#raid-erstellen"><span class="side-icon">＋</span><span>Raid erstellen</span></a>
+      <a class="side-link" href="start.html#raid-erstellen" onclick="event.preventDefault(); window.location.href=guildUrl('start.html#raid-erstellen')"><span class="side-icon">＋</span><span>Raid erstellen</span></a>
       <button class="side-link" type="button" onclick="document.getElementById('entriesPanel')?.scrollIntoView({behavior:'smooth',block:'start'})"><span class="side-icon">≡</span><span>Einträge</span></button>
       <button class="side-link active" type="button"><span class="side-icon">⚑</span><span>Raidlead</span></button>
     </nav>
@@ -1192,18 +1192,18 @@ th{
   <main class="overlay">
     <header class="topbar">
       <div class="brand">
-        <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
+        <img src="images/content.png" alt="LichtLoot" class="brand-logo">
         <div class="brand-copy">
           <h1>Raidlead</h1>
           <p>Raid laden und Prios verwalten.</p>
         </div>
       </div>
       <div class="nav" aria-label="Navigation">
-        <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
+        <button class="btn ghost" type="button" onclick="window.location.href=guildUrl('start.html')">Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
-          <img src="images/content.png" alt="" data-guild-brand-alt>
-          <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Raidlead</span></div>
+          <img src="images/content.png" alt="">
+          <div><strong>Lichtbringer</strong><span>Raidlead</span></div>
         </div>
       </div>
     </header>
@@ -1238,76 +1238,36 @@ th{
 
 <script>
 const RAID_API_URL =
-  "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LICHTLOOT_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 
-function getCurrentGuildSlug(){
-  const params = new URLSearchParams(window.location.search);
-  const explicit = params.get("guild") || params.get("gilde");
-  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
-  return "lichtloot";
+function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function currentGuildName(){ return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot"; }
+function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
+function guildUrl(path){
+  const slug=currentGuildSlug();
+  if(slug === "lichtloot") return path;
+  const hashIndex=path.indexOf("#");
+  const hash=hashIndex >= 0 ? path.slice(hashIndex) : "";
+  const base=hashIndex >= 0 ? path.slice(0,hashIndex) : path;
+  return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
-
-const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
-const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
-let currentGuildInfo = null;
-
-function withGuildUrl(url){
-  const sep = String(url || "").includes("?") ? "&" : "?";
-  return String(url || "") + sep + CURRENT_GUILD_QUERY;
-}
-
-function titleFromSlug(slug){
-  return String(slug || "gilde")
-    .split("-")
-    .filter(Boolean)
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function lootTitleFromGuild(guild){
-  const slug = String(guild?.slug || CURRENT_GUILD_SLUG || "").trim();
-  if(slug === "lichtloot") return "LichtLoot";
-  return titleFromSlug(slug || guild?.name || "Lootsystem");
-}
-
-async function fetchCurrentGuildInfo(){
-  try{
-    const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
-    const data = await response.json();
-    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
-    return currentGuildInfo;
-  }catch(error){
-    console.warn("Gildenbranding konnte nicht geladen werden.", error);
-    return null;
-  }
-}
-
-function applyGuildBrand(){
-  const guild = currentGuildInfo;
-  const guildName = guild?.name || (CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : titleFromSlug(CURRENT_GUILD_SLUG));
-  const lootName = guild ? lootTitleFromGuild(guild) : (CURRENT_GUILD_SLUG === "lichtloot" ? "LichtLoot" : titleFromSlug(CURRENT_GUILD_SLUG));
-  document.title = lootName + " - Raidlead";
-  document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = guildName);
-  document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = lootName);
-  document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", lootName + " - " + guildName));
-  if(guild?.logoUrl){
-    document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => { el.src = guild.logoUrl; });
-  }
-  document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
-  document.querySelectorAll("[data-guild-onclick]").forEach(el => {
-    el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
+function applyGuildBranding(){
+  if(currentGuildSlug() !== "panemloot") return;
+  document.title = document.title.replace(/Lichtloot|LichtLoot/g,"PanemLoot");
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    node.nodeValue = node.nodeValue
+      .replace(/Mein LichtLoot/g,"Mein PanemLoot")
+      .replace(/LichtLoot/g,"PanemLoot")
+      .replace(/Lichtloot/g,"PanemLoot")
+      .replace(/Lichtbringer/g,"Panem");
   });
 }
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 
 const MASTER_CODE = "Lichtbringer-Master";
-
-async function railwayApi(params){
-  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
-  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
-  return await response.json();
-}
 
 const raids = {
   mc:{name:"Molten Core",short:"MC",role:"mc-bwl",lootPage:"loot/mc-loot.html",overviewPage:"molten-core.html"},
@@ -1382,7 +1342,7 @@ function checkLogin(){
 
   if(isLoggedIn !== "true" || !role){
     alert("Bitte zuerst über die Startseite einloggen.");
-    window.location.href = withGuildUrl("index.html");
+    window.location.href = guildUrl("index.html");
     return;
   }
 
@@ -1558,11 +1518,10 @@ async function tryLoadRaidByPin(pin, raidKey){
 
 async function loadPriosFromSheet(playerPin){
   const url =
-    LICHTLOOT_API_URL +
-    "?action=getPublishedPrios" +
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPublishedPrios" +
     "&raid=" + encodeURIComponent(raids[currentRaidKey].short) +
     "&playerPin=" + encodeURIComponent(playerPin) +
-    "&leadPin=" + encodeURIComponent(playerPin) +
     "&t=" + Date.now();
 
   try{
@@ -1667,7 +1626,31 @@ function localPrioPlayerCount(){
 }
 
 async function loadRaidPrioCheck(){
-  currentPrioCheck = null;
+  if(!currentRaidData || !currentRaidData.raidId){
+    currentPrioCheck = null;
+    return null;
+  }
+
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPrioCheck" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || "") +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url,{cache:"no-store"});
+    const result = await response.json();
+
+    currentPrioCheck =
+      result && result.success
+        ? (result.check || null)
+        : null;
+  }catch(error){
+    console.warn("DC Abgleich konnte nicht geladen werden:", error);
+    currentPrioCheck = null;
+  }
+
   return currentPrioCheck;
 }
 
@@ -1711,12 +1694,10 @@ function updateRaidNavigation(){
 
   const pin = currentRaidData?.playerPin || "";
   if(prioLink){
-    const target =
+    prioLink.href =
       currentRaidData?.playerLink ||
       (fallback && pin ? `${fallback}?pin=${encodeURIComponent(pin)}` : fallback) ||
       "start.html#mein-lichtloot";
-    prioLink.href =
-      target.includes("guild=") ? target : withGuildUrl(target);
   }
 
   if(p0OverviewLink){
@@ -2023,8 +2004,8 @@ async function loadP0PlusPoints(){
     return [];
   }
 
-  const url = LICHTLOOT_API_URL +
-    "?action=getP0Plus" +
+  const url = RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getP0Plus" +
     "&all=1" +
     "&nocache=1" +
     "&refresh=1" +
@@ -2289,9 +2270,9 @@ function openPrio(){
   }
 
   window.location.href =
-    raids[currentRaidKey].lootPage +
+    guildUrl(raids[currentRaidKey].lootPage +
     "?pin=" +
-    encodeURIComponent(currentRaidData.playerPin);
+    encodeURIComponent(currentRaidData.playerPin));
 }
 
 function openOverview(){
@@ -2301,9 +2282,10 @@ function openOverview(){
   }
 
   const pin = currentRaidData?.playerPin || "";
-  window.location.href =
+  window.location.href = guildUrl(
     raids[currentRaidKey].lootPage +
-    (pin ? "?pin=" + encodeURIComponent(pin) : "");
+    (pin ? "?pin=" + encodeURIComponent(pin) : "")
+  );
 }
 
 
@@ -2316,16 +2298,26 @@ async function sendRaidStatus(status){
     return false;
   }
 
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=setRaidStatus" +
+    "&raidId=" + encodeURIComponent(raidId) +
+    "&leadPin=" + encodeURIComponent(leadPin) +
+    "&status=" + encodeURIComponent(status) +
+    "&t=" + Date.now();
+
   try{
-    const result = await railwayApi({
-      action:"setRaidStatus",
-      raidId,
-      leadPin,
-      status
+    /*
+      Wichtig: Apps Script liefert bei setRaidStatus JSON, aber ohne CORS-Header.
+      Deshalb lesen wir die Antwort hier nicht aus. Der GET-Aufruf wird trotzdem ausgeführt
+      und schreibt den Status in den Raids-Tab. So vermeiden wir den Browserfehler
+      „Origin is not allowed by Access-Control-Allow-Origin“.
+    */
+    await fetch(url, {
+      method:"GET",
+      mode:"no-cors",
+      cache:"no-store"
     });
-    if(result && result.success === false){
-      throw new Error(result.error || "Priolisten-Status konnte nicht gespeichert werden.");
-    }
 
     if(status === "geöffnet"){
       sessionStorage.setItem("raidOpen_" + raidId, "true");
@@ -2382,13 +2374,16 @@ async function deleteSinglePrio(player,server){
     return;
   }
 
-  const result = await railwayApi({
-    action:"guildDeletePrio",
-    raidId:currentRaidData.raidId,
-    leadPin:currentRaidData.leadPin || "",
-    player,
-    server:server || ""
-  });
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=deletePrio" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&player=" + encodeURIComponent(player) +
+    "&server=" + encodeURIComponent(server || "") +
+    "&t=" + Date.now();
+
+  const response = await fetch(url);
+  const result = await response.json();
 
   if(result.error){
     alert(result.error);
@@ -2411,20 +2406,20 @@ async function setPrioBench(rowNumber, bench, player, server){
   );
   if(!confirmed) return;
 
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSetPrioBench" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&rowNumber=" + encodeURIComponent(rowNumber || "") +
+    "&player=" + encodeURIComponent(player || "") +
+    "&server=" + encodeURIComponent(server || "") +
+    "&bench=" + encodeURIComponent(bench ? "ja" : "nein") +
+    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || currentRaidKey || "") +
+    "&t=" + Date.now();
+
   try{
-    const result = await railwayApi({
-      action:"guildSetPrioBench",
-      raidId:currentRaidData.raidId,
-      leadPin:currentRaidData.leadPin || "",
-      rowNumber:rowNumber || "",
-      player:player || "",
-      server:server || "",
-      bench:bench ? "ja" : "nein",
-      raid:raids[currentRaidKey]?.short || currentRaidKey || ""
-    });
-    if(result && result.success === false){
-      throw new Error(result.error || "Bench konnte nicht gespeichert werden.");
-    }
+    await fetch(url,{method:"GET",mode:"no-cors",cache:"no-store"});
 
     const entry = currentPrios.find(prio =>
       (rowNumber && Number(prio.rowNumber || 0) === Number(rowNumber || 0)) ||
@@ -2484,8 +2479,8 @@ async function transferP0PlusPoints(){
   }
 
   const url =
-    LICHTLOOT_API_URL +
-    "?action=transferP0PlusPoints" +
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=transferP0PlusPoints" +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&masterCode=" + encodeURIComponent(masterCode) +
@@ -2544,8 +2539,8 @@ async function clearP0PlusForPlayer(player,server,itemName){
   }
 
   const url =
-    LICHTLOOT_API_URL +
-    "?action=clearP0PlusForPlayer" +
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=clearP0PlusForPlayer" +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
@@ -3025,9 +3020,9 @@ function backToRaidPrio(){
   }
 
   window.location.href =
-    raids[currentRaidKey].lootPage +
+    guildUrl(raids[currentRaidKey].lootPage +
     "?pin=" +
-    encodeURIComponent(currentRaidData.playerPin || "");
+    encodeURIComponent(currentRaidData.playerPin || ""));
 }
 
 function logout(){
@@ -3037,7 +3032,7 @@ function logout(){
   sessionStorage.removeItem("raidleadRaidId");
   sessionStorage.removeItem("raidleadPrioPin");
   sessionStorage.removeItem("raidleadPlayerPin");
-  window.location.href = withGuildUrl("index.html");
+  window.location.href = guildUrl("index.html");
 }
 
 function safe(value){
@@ -3054,13 +3049,7 @@ function escapeQuotes(value){
     .replace(/'/g,"\\'");
 }
 
-async function initRaidleadPage(){
-  await fetchCurrentGuildInfo();
-  applyGuildBrand();
-  checkLogin();
-}
-
-initRaidleadPage();
+checkLogin();
 </script>
 </body>
 </html>
