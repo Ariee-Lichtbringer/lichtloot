@@ -3466,7 +3466,10 @@ async function fetchRaidApiJsonp(params){
     console.warn("Railway-API nicht ladbar, nutze Apps Script:", error);
     return null;
   });
-  if(railwayData) return railwayData;
+  if(railwayData && railwayData.success !== false) return railwayData;
+  if(railwayData && railwayData.success === false){
+    console.warn("Railway-API meldet Fehler, nutze Apps Script:", railwayData.error || railwayData);
+  }
 
   const jsonQuery=new URLSearchParams(Object.assign({},params,{t:Date.now()}));
   const jsonUrl=RAID_API_URL+"?"+jsonQuery.toString();
