@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LichtLoot SpielerLogin Suche</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      --bg:#070b14;
+      --panel:#101827;
+      --line:#273247;
+      --text:#f8fafc;
+      --muted:#9ca3af;
+      --gold:#facc15;
+      --good:#86efac;
+      --bad:#fca5a5;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,#070b14,#111827);
+      color:var(--text);
+      font-family:Arial,Helvetica,sans-serif;
+    }
+    main{
+      width:min(560px,calc(100vw - 28px));
+      border:1px solid rgba(250,204,21,.35);
+      border-radius:8px;
+      background:rgba(16,24,39,.94);
+      box-shadow:0 18px 48px rgba(0,0,0,.42);
+      padding:18px;
+    }
+    h1{font-size:20px;margin:0 0 12px;color:var(--gold)}
+    label{display:block;margin:12px 0 6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
+    input{
+      width:100%;
+      padding:11px 12px;
+      border-radius:6px;
+      border:1px solid var(--line);
+      background:#070b14;
+      color:var(--text);
+      font-weight:800;
+    }
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:11px 14px;
+      border-radius:6px;
+      border:1px solid rgba(250,204,21,.45);
+      background:rgba(250,204,21,.14);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+    }
+    #result{
+      margin-top:14px;
+      padding:12px;
+      border-radius:6px;
+      border:1px solid var(--line);
+      background:#080d18;
+      min-height:46px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .pin{
+      display:inline-block;
+      margin-top:6px;
+      padding:8px 10px;
+      border-radius:6px;
+      background:#111827;
+      color:var(--gold);
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:.08em;
+    }
+    .ok{color:var(--good);font-weight:900}
+    .bad{color:var(--bad);font-weight:900}
+    .muted{color:var(--muted)}
+    @media(max-width:560px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SpielerLogin suchen</h1>
+    <div class="row">
+      <div>
+        <label for="character">Charakter</label>
+        <input id="character" value="Loujsa" autocomplete="off">
+      </div>
+      <div>
+        <label for="server">Server</label>
+        <input id="server" value="Everlook" autocomplete="off">
+      </div>
+    </div>
+    <label for="masterCode">Master-Code</label>
+    <input id="masterCode" type="password" autocomplete="current-password">
+    <button type="button" onclick="lookupPlayerLogin()">SpielerLogin anzeigen</button>
+    <div id="result">Master-Code eingeben und suchen.</div>
+  </main>
+
+  <script>
+    const API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
+
+    function normalize(value){
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function setResult(html){
+      document.getElementById("result").innerHTML=html;
+    }
+
+    function jsonp(params){
+      return new Promise((resolve,reject)=>{
+        const callback="lichtlootPinLookup_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+        const query=new URLSearchParams(params);
+        query.set("callback",callback);
+        query.set("t",Date.now());
+        const script=document.createElement("script");
+        const timer=setTimeout(()=>{
+          cleanup();
+          reject(new Error("API konnte nicht geladen werden."));
+        },15000);
+        function cleanup(){
+          clearTimeout(timer);
+          delete window[callback];
+          script.remove();
+        }
+        window[callback]=data=>{
+          cleanup();
+          resolve(data);
+        };
+        script.onerror=()=>{
+          cleanup();
+          reject(new Error("API konnte nicht geladen werden."));
+        };
+        script.src=API_URL+"?"+query.toString();
+        document.body.appendChild(script);
+      });
+    }
+
+    async function lookupPlayerLogin(){
+      const character=document.getElementById("character").value.trim();
+      const server=document.getElementById("server").value.trim();
+      const masterCode=document.getElementById("masterCode").value.trim();
+
+      if(!character || !server || !masterCode){
+        setResult('<span class="bad">Bitte Charakter, Server und Master-Code ausfüllen.</span>');
+        return;
+      }
+
+      setResult("Backup wird geladen ...");
+
+      try{
+        const data=await jsonp({
+          action:"guildExportBackup",
+          guild:"lichtloot",
+          masterCode
+        });
+
+        if(!data || !data.success){
+          setResult('<span class="bad">'+String((data && data.error) || "Backup konnte nicht geladen werden.")+'</span>');
+          return;
+        }
+
+        const rows=data.playersAndCharacters || [];
+        const match=rows.find(row =>
+          normalize(row.character_name) === normalize(character) &&
+          normalize(row.server) === normalize(server)
+        );
+
+        if(!match){
+          setResult('<span class="bad">Kein Eintrag für diesen Charakter gefunden.</span>');
+          return;
+        }
+
+        setResult(
+          '<span class="ok">Gefunden:</span><br>'+
+          '<strong>'+String(match.character_name || character)+'</strong> <span class="muted">'+String(match.server || server)+'</span><br>'+
+          '<span class="pin">'+String(match.player_pin || "-")+'</span>'
+        );
+      }catch(error){
+        setResult('<span class="bad">'+String(error.message || "Abfrage fehlgeschlagen.")+'</span>');
+      }
+    }
+  </script>
+</body>
+</html>
