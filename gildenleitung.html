@@ -1917,7 +1917,13 @@ function apiWrite(params){
 async function railwayApi(params){
   const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
   const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
-  const result = await response.json();
+  if(!response.ok){
+    const text = await response.text().catch(() => "");
+    throw new Error(text || ("Railway API HTTP " + response.status));
+  }
+  const result = await response.json().catch(() => {
+    throw new Error("Railway API hat keine gültige Antwort geliefert.");
+  });
   return result || {};
 }
 
@@ -1964,7 +1970,8 @@ async function downloadGuildBackup(){
   }
 }
 
-async function loadOverview(){
+async function loadOverview(options){
+  options = options || {};
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -1990,7 +1997,7 @@ async function loadOverview(){
     renderAll();
     loadDashboardRaidStats();
     loadWorldbuffMiniOverview();
-    setStatus("Gildenleitung geladen.", "good");
+    if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
     setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
   }
@@ -3066,6 +3073,7 @@ async function transferP0PlusFromGuild(raidId){
   if(!ok) return;
 
   try{
+    setStatus("P0+ Punkte werden nach Railway übertragen ...", "");
     const result = await railwayApi({
       action:"transferP0PlusPoints",
       masterCode,
@@ -3082,8 +3090,8 @@ async function transferP0PlusFromGuild(raidId){
     raid.p0PlusTransferCount = Number(result.p0PlusTransferCount || result.awarded || 0);
     renderDashboardCards();
     renderRaids();
+    await loadOverview({ preserveStatus:true });
     setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
-    await loadOverview();
 
     const modal = document.getElementById("prioModal");
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
@@ -3464,6 +3472,7 @@ async function saveP0PlusPoints(index){
   }
 
   try{
+    setStatus("P0+ Punkte werden gespeichert ...", "");
     const result = await railwayApi({
       action:"guildSetP0PlusPoints",
       masterCode,
