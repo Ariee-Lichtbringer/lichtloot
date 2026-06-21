@@ -1288,6 +1288,21 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 .mylichtloot-card{display:none}
 body.show-mylichtloot .mylichtloot-card{display:block}
 .lichtloot-tabs{display:none!important}
+.guild-soon-note{
+  width:min(760px,92vw);
+  margin:-8px auto 18px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(250,204,21,.26);
+  background:rgba(2,6,23,.52);
+  color:#dbeafe;
+  font-size:13px;
+  font-weight:800;
+  text-align:center;
+}
+.guild-soon-note strong{
+  color:#facc15;
+}
 .dashboard-box{margin-top:14px;padding:14px;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.48)}
 .dashboard-title{color:#facc15;font-weight:900;text-transform:uppercase;letter-spacing:.08em;font-size:12px;margin-bottom:10px}
 .dashboard-characters{display:flex;flex-wrap:wrap;gap:8px;color:#dbeafe}
@@ -1360,6 +1375,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div class="header">
     <img src="images/content.png" alt="LichtLoot" class="logo-banner">
   </div>
+  <div class="guild-soon-note"><strong>Hinweis:</strong> Die Registrierung für weitere Gilden kommt bald.</div>
 
   <section id="guildGate" class="guild-gate hidden">
     <div class="guild-gate-head">
@@ -1373,6 +1389,10 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       <div class="guild-register">
         <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Weitere Gilden bald verfügbar</span></div>
         <p>Die Registrierung für andere Gilden wird gerade vorbereitet. Sobald alles fertig ist, erscheint hier wieder ein eigenes Anmeldefenster.</p>
+        <div class="guild-config-actions">
+          <a class="guild-config-link" href="index.html?guild=lichtloot">LichtLoot Login öffnen <span>›</span></a>
+          <a class="guild-config-link" href="index.html?guild=lichtloot&open=createLogin">SpielerLogin erstellen <span>›</span></a>
+        </div>
         <div id="guildGateStatus" class="guild-status">Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.</div>
       </div>
     </div>
@@ -1757,7 +1777,7 @@ const P0PLUS_API_URL =
 
 function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
-  return (params.get("guild") || params.get("gilde") || "").trim().toLowerCase();
+  return (params.get("guild") || params.get("gilde") || "lichtloot").trim().toLowerCase();
 }
 
 function isGuildConfigMode(){
@@ -4287,6 +4307,8 @@ document.addEventListener('DOMContentLoaded',async function(){
     if(field) field.value=saved;
     loadDashboardForPin(saved).catch(console.error);
   }
+  const openMode=new URLSearchParams(window.location.search).get('open');
+  if(openMode === 'createLogin' && typeof showCreateLogin === 'function') showCreateLogin();
 });
 </script>
 </body>
