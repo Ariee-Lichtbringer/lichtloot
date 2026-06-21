@@ -2096,6 +2096,11 @@ let aq40Loot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
+function isPublishedFlag(value){
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return value === true || ["true","ja","1","geöffnet","veröffentlicht","published"].includes(normalized);
+}
+
 function updatePrio3ButtonVisibility(){
   document.querySelectorAll("[data-prio-export-buttons]").forEach(box => {
     box.classList.toggle("hidden", !currentPublishedMode);
@@ -3679,7 +3684,7 @@ async function loadPublishedPrios(){
 
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
-    currentPublishedMode = Boolean(result.published);
+    currentPublishedMode = isPublishedFlag(result.published);
 
     updateRaidTimeDisplay();
     await loadPrioCheck();
@@ -3689,15 +3694,15 @@ async function loadPublishedPrios(){
     p0DeadlineTimer=setInterval(updateRaidTimeDisplay,30000);
 
     if(prios.length===0){
-      status.innerHTML=result.published
+      status.innerHTML=currentPublishedMode
         ? `<span class="ok">✓ Prios veröffentlicht, aber noch keine Einträge vorhanden.</span>`
         : `<span class="warn">Prios noch nicht veröffentlicht.</span>`;
       table.innerHTML=`<tr><td colspan="8">Noch keine Einträge vorhanden.</td></tr>`;
-      setPublishedMode(Boolean(result.published));
+      setPublishedMode(currentPublishedMode);
       return;
     }
 
-    if(result.published){
+    if(currentPublishedMode){
       status.innerHTML=`<span class="ok">✓ Prios veröffentlicht. Items werden angezeigt.</span>`;
       setPublishedMode(true);
     }else{
