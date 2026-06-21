@@ -1818,6 +1818,12 @@ function setStatus(message, type){
   el.className = "status" + (type ? " " + type : "");
 }
 
+function setStatusHtml(html, type){
+  const el = document.getElementById("status");
+  el.innerHTML = html;
+  el.className = "status" + (type ? " " + type : "");
+}
+
 function clearMasterCode(){
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
   document.getElementById("masterCode").value = "";
@@ -1941,6 +1947,7 @@ async function downloadGuildBackup(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
+    alert("Bitte Master-Code eingeben.");
     return;
   }
 
@@ -1957,16 +1964,21 @@ async function downloadGuildBackup(){
     const stamp = new Date().toISOString().replace(/[:.]/g,"-");
     const blob = new Blob([JSON.stringify(result, null, 2)], { type:"application/json" });
     const url = URL.createObjectURL(blob);
+    const fileName = `${guildSlug}-railway-sicherung-${stamp}.json`;
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${guildSlug}-railway-sicherung-${stamp}.json`;
+    link.download = fileName;
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
-    setStatus("Sicherung wurde heruntergeladen.", "good");
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    setStatusHtml(
+      `Sicherung wurde erstellt. Falls kein Download startet: <a href="${url}" download="${escapeAttr(fileName)}">Sicherung herunterladen</a>`,
+      "good"
+    );
   }catch(error){
     setStatus(error.message || "Sicherung konnte nicht erstellt werden.", "bad");
+    alert(error.message || "Sicherung konnte nicht erstellt werden.");
   }
 }
 
