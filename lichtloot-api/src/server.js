@@ -1692,10 +1692,21 @@ async function getPublishedPrios({ guildId, query: params }) {
 }
 
 async function validateLeadPin({ guildId, query: params }) {
-  const raid = await findRaid(guildId, {
-    ...params,
-    leadPin: params.leadPin || params.raidleadPin
-  });
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (!leadPin) {
+    return { success: false, error: "Falsche Raidlead-PIN." };
+  }
+
+  const result = await query(
+    `select *
+     from raids
+     where guild_id = $1
+       and lower(lead_pin) = lower($2)
+     order by raid_date desc, created_at desc
+     limit 1`,
+    [guildId, leadPin]
+  );
+  const raid = result.rows[0] || null;
 
   if (!raid || !clean(raid.lead_pin)) {
     return { success: false, error: "Falsche Raidlead-PIN." };
