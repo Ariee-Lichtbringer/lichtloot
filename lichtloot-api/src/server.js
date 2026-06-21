@@ -370,15 +370,15 @@ function normalizeRaidType(value) {
 function raidTypeSearchValues(value) {
   const normalized = normalizeRaidType(value);
   const variants = {
-    mc: ["mc", "molten-core", "Molten Core"],
-    bwl: ["bwl", "blackwing-lair", "Blackwing Lair"],
-    aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj", "AQ 40", "Ahn'Qiraj 40"],
-    naxx: ["naxx", "naxxramas", "Naxxramas"],
-    zg: ["zg", "zg-20", "zul-gurub", "zul-gurub-20", "ZG 20", "Zul'Gurub"],
-    aq20: ["aq20", "aq-20", "ahn-qiraj-20", "ruins-of-ahn-qiraj", "AQ 20"],
-    ony: ["ony", "onyxia", "onyxia-s-lair", "Onyxia"]
+    mc: ["mc", "molten-core"],
+    bwl: ["bwl", "blackwing-lair"],
+    aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj"],
+    naxx: ["naxx", "naxxramas"],
+    zg: ["zg", "zg-20", "zul-gurub", "zul-gurub-20"],
+    aq20: ["aq20", "aq-20", "ahn-qiraj-20", "ruins-of-ahn-qiraj"],
+    ony: ["ony", "onyxia", "onyxia-s-lair"]
   };
-  return Array.from(new Set([normalized, ...(variants[normalized] || [])]));
+  return Array.from(new Set([normalized, ...(variants[normalized] || [])].map(value => value.toLowerCase())));
 }
 
 function displayRaidName(value) {
@@ -787,6 +787,56 @@ async function savePrio({ guildId, query: params }) {
         [
           guildId,
           externalRaidId,
+          raidName,
+          prioPin || "",
+          clean(params.raidTime || params.uhrzeit),
+          clean(params.guild || params.gilde),
+          clean(params.p0PlusFreigabe || params.p0PlusOverride)
+        ]
+      );
+    }
+
+    if ((!raidResult || !raidResult.rows.length) && prioPin) {
+      raidResult = await client.query(
+        `update raids
+         set name = coalesce(nullif($3, ''), name),
+             raid_pin = coalesce(nullif($4, ''), raid_pin),
+             raid_time = coalesce(nullif($5, ''), raid_time),
+             guild_name = coalesce(nullif($6, ''), guild_name),
+             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
+             updated_at = now()
+         where guild_id = $1
+           and raid_pin = $2
+           and lower(raid_type) = any($8)
+         returning id, external_raid_id, name, raid_type, raid_date, status`,
+        [
+          guildId,
+          prioPin,
+          raidName,
+          prioPin || "",
+          clean(params.raidTime || params.uhrzeit),
+          clean(params.guild || params.gilde),
+          clean(params.p0PlusFreigabe || params.p0PlusOverride),
+          raidTypeSearchValues(raidType)
+        ]
+      );
+    }
+
+    if ((!raidResult || !raidResult.rows.length) && prioPin) {
+      raidResult = await client.query(
+        `update raids
+         set name = coalesce(nullif($3, ''), name),
+             raid_pin = coalesce(nullif($4, ''), raid_pin),
+             raid_time = coalesce(nullif($5, ''), raid_time),
+             guild_name = coalesce(nullif($6, ''), guild_name),
+             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
+             updated_at = now()
+         where guild_id = $1
+           and raid_pin = $2
+         returning id, external_raid_id, name, raid_type, raid_date, status`,
+        [
+          guildId,
+          prioPin,
           raidName,
           prioPin || "",
           clean(params.raidTime || params.uhrzeit),
@@ -1535,17 +1585,17 @@ async function findRaid(guildId, params) {
 
   if (!identityClauses.length && raidType) {
     values.push(raidTypeSearchValues(raidType));
-    identityClauses.push(`raid_type = any($${values.length})`);
+    identityClauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
   const clauses = ["guild_id = $1"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType && (leadPin || prioPin) && !raidId) {
     values.push(raidTypeSearchValues(raidType));
-    clauses.push(`raid_type = any($${values.length})`);
+    clauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
-  const result = await query(
+  let result = await query(
     `select *
      from raids
      where ${clauses.join(" and ")}
@@ -1553,6 +1603,18 @@ async function findRaid(guildId, params) {
      limit 1`,
     values
   );
+
+  if (!result.rows.length && prioPin) {
+    result = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and raid_pin = $2
+       order by raid_date desc, created_at desc
+       limit 1`,
+      [guildId, prioPin]
+    );
+  }
 
   return result.rows[0] || null;
 }
