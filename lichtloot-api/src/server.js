@@ -751,7 +751,8 @@ async function savePrio({ guildId, query: params }) {
              guild_name = coalesce(nullif($6, ''), guild_name),
              p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
              updated_at = now()
-         where guild_id = $1 and external_raid_id = $2
+         where guild_id = $1
+           and (external_raid_id = $2 or id::text = $2)
          returning id, external_raid_id, name, raid_type, raid_date, status`,
         [
           guildId,
@@ -794,8 +795,8 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if (normalizeStatus(raidResult.rows[0].status) === "geöffnet") {
-      const error = new Error("Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.");
+    if (normalizeStatus(raidResult.rows[0].status) !== "geöffnet") {
+      const error = new Error("Die Prioliste ist aktuell nicht für Einträge geöffnet.");
       error.statusCode = 403;
       throw error;
     }
