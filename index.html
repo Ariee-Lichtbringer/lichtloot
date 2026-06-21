@@ -2225,7 +2225,10 @@ async function createRaidFromStart(){
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
   const lootUrl=new URL(r.lootPage+"?guild="+encodeURIComponent(CURRENT_GUILD_SLUG)+"&pin="+encodeURIComponent(playerPin), window.location.href).href;
-  const leadUrl=new URL("raidlead-panel.html?guild="+encodeURIComponent(CURRENT_GUILD_SLUG), window.location.href).href;
+  const leadUrl=new URL(
+    "raidlead-panel.html?guild="+encodeURIComponent(CURRENT_GUILD_SLUG)+"&leadPin="+encodeURIComponent(leadPin),
+    window.location.href
+  ).href;
 
   const raidData={
     action:"createRandomRaid",

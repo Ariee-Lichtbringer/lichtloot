@@ -1337,6 +1337,14 @@ function raidPinEnter(event){
 }
 
 function checkLogin(){
+  const params = new URLSearchParams(window.location.search);
+  const urlLeadPin = (params.get("leadPin") || params.get("raidleadPin") || "").trim();
+  if(urlLeadPin){
+    sessionStorage.setItem("raidlead","true");
+    sessionStorage.setItem("raidleadRole","master");
+    sessionStorage.setItem("raidleadPrioPin",urlLeadPin);
+  }
+
   const isLoggedIn = sessionStorage.getItem("raidlead");
   const role = sessionStorage.getItem("raidleadRole");
 
