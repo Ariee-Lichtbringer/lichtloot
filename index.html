@@ -1320,8 +1320,13 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-raid-result{margin-top:12px}
 .random-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .random-link-grid .copy-btn{width:100%}
+.random-open-box{margin-top:18px;padding-top:16px;border-top:1px solid rgba(250,204,21,.18)}
+.random-open-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.random-open-grid label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+.random-open-grid input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
+.random-open-grid .big-btn{margin-top:10px}
 @media(max-width:900px){.random-raid-form{grid-template-columns:1fr 1fr}.random-link-grid{grid-template-columns:1fr}}
-@media(max-width:620px){.random-raid-form{grid-template-columns:1fr}}
+@media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
 .myprios-form div[style]{grid-column:auto!important}
@@ -1538,6 +1543,23 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       </div>
       <button class="big-btn" style="margin-top:12px" onclick="createRaidFromStart()">Random-Raid erstellen</button>
       <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
+      <div class="random-open-box">
+        <h2>Random-Raid öffnen</h2>
+        <p>PrioPIN für Mitspieler oder LeadPIN für die Raidleitung eingeben.</p>
+        <div class="random-open-grid">
+          <div>
+            <label>Random PrioPIN</label>
+            <input id="randomPrioPin" type="text" placeholder="PrioPIN" onkeydown="randomPrioEnter(event)">
+            <button class="big-btn" type="button" onclick="openRandomPrioFromStart()">Zur Prioseite</button>
+          </div>
+          <div>
+            <label>Random LeadPIN</label>
+            <input id="randomLeadPin" type="text" placeholder="LeadPIN" onkeydown="randomLeadEnter(event)">
+            <button class="big-btn" type="button" onclick="openRandomRaidleadFromStart()">Zum Raidlead-Panel</button>
+          </div>
+        </div>
+        <div id="randomOpenStatus" class="status random-raid-result">Hier kannst du Random-Raids direkt per PIN öffnen.</div>
+      </div>
     </section>
 
     <section class="main-login-layout">
@@ -2329,6 +2351,101 @@ function setDefaultRaidDate(){
     today.getFullYear()+"-"+
     String(today.getMonth()+1).padStart(2,"0")+"-"+
     String(today.getDate()).padStart(2,"0");
+}
+
+function setRandomOpenStatus(message,type){
+  const status=document.getElementById("randomOpenStatus");
+  if(!status) return;
+  const cls=type || "warn";
+  status.innerHTML=`<span class="${cls}">${safeHtml(message)}</span>`;
+}
+
+async function openRandomPrioFromStart(){
+  const field=document.getElementById("randomPrioPin");
+  const pin=field ? field.value.trim() : "";
+  if(!pin){
+    setRandomOpenStatus("Bitte Random PrioPIN eingeben.","bad");
+    return;
+  }
+
+  setRandomOpenStatus("Raid wird gesucht ...","warn");
+
+  try{
+    const url =
+      RAID_API_URL +
+      "?action=findRaidByPrioPin" +
+      "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+      "&playerPin=" + encodeURIComponent(pin) +
+      "&t=" + Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    const result=await response.json();
+    if(!result.success){
+      setRandomOpenStatus(result.error || "Kein Raid zu dieser Random PrioPIN gefunden.","bad");
+      return;
+    }
+
+    const raidKey=String(result.raid || "").toLowerCase();
+    const raid=raids[raidKey];
+    if(!raid || !raid.lootPage){
+      setRandomOpenStatus("Raid gefunden, aber die Lootseite konnte nicht zugeordnet werden.","bad");
+      return;
+    }
+
+    const target=new URL(raid.lootPage, window.location.href);
+    target.searchParams.set("guild", CURRENT_GUILD_SLUG);
+    target.searchParams.set("pin", result.playerPin || result.prioPin || pin);
+    target.searchParams.set("random", "1");
+    window.location.href=target.href;
+  }catch(error){
+    console.error(error);
+    setRandomOpenStatus("Random PrioPIN konnte nicht geprüft werden.","bad");
+  }
+}
+
+async function openRandomRaidleadFromStart(){
+  const field=document.getElementById("randomLeadPin");
+  const pin=field ? field.value.trim() : "";
+  if(!pin){
+    setRandomOpenStatus("Bitte Random LeadPIN eingeben.","bad");
+    return;
+  }
+
+  setRandomOpenStatus("Raidlead-PIN wird geprüft ...","warn");
+
+  try{
+    const url =
+      RAID_API_URL +
+      "?action=validateLeadPin" +
+      "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+      "&leadPin=" + encodeURIComponent(pin) +
+      "&t=" + Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    const result=await response.json();
+    if(!result.success){
+      setRandomOpenStatus(result.error || "Falsche Random LeadPIN.","bad");
+      return;
+    }
+
+    const target=new URL("raidlead-panel.html", window.location.href);
+    target.searchParams.set("guild", CURRENT_GUILD_SLUG);
+    target.searchParams.set("leadPin", result.leadPin || pin);
+    window.location.href=target.href;
+  }catch(error){
+    console.error(error);
+    setRandomOpenStatus("Random LeadPIN konnte nicht geprüft werden.","bad");
+  }
+}
+
+function randomPrioEnter(event){
+  if(event.key==="Enter"){
+    openRandomPrioFromStart();
+  }
+}
+
+function randomLeadEnter(event){
+  if(event.key==="Enter"){
+    openRandomRaidleadFromStart();
+  }
 }
 
 function copyText(id){

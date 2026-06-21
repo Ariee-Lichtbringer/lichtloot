@@ -1825,6 +1825,20 @@ async function validateLeadPin({ guildId, query: params }) {
   return { success: true, ...normalizeRaidRow(raid) };
 }
 
+async function findRaidByPrioPin({ guildId, query: params }) {
+  const prioPin = clean(params.playerPin || params.prioPin || params.raidPin || params.pin);
+  if (!prioPin) {
+    return { success: false, error: "Bitte Random PrioPIN eingeben." };
+  }
+
+  const raid = await findRaid(guildId, { playerPin: prioPin });
+  if (!raid || !clean(raid.raid_pin)) {
+    return { success: false, error: "Kein Raid zu dieser Random PrioPIN gefunden." };
+  }
+
+  return { success: true, ...normalizeRaidRow(raid) };
+}
+
 async function setRaidStatus({ guildId, query: params }) {
   const master = clean(params.masterCode);
   if (master) requireMasterCode(master);
@@ -2640,6 +2654,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublishedPrios") {
       const prios = await getPublishedPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...prios, guild: guild.slug });
+    }
+
+    if (action === "findRaidByPrioPin") {
+      const raid = await findRaidByPrioPin({ guildId: guild.id, query: req.query });
+      return res.json({ ...raid, guild: guild.slug });
     }
 
     if (action === "validateLeadPin") {
