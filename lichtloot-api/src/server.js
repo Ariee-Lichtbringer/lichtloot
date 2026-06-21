@@ -1065,6 +1065,20 @@ function normalizeIssueReportRow(row, index = 0) {
 }
 
 async function reportIssue({ guildId, query: params }) {
+  let reportPlayer = clean(params.player || params.char || params.spieler);
+  let reportServer = clean(params.server);
+  if (!reportPlayer) {
+    const pin = params.playerPin || params.characterPin || params.pin;
+    if (pin) {
+      const characters = await getCharactersByPin(guildId, pin);
+      const character = characters[0] || null;
+      if (character) {
+        reportPlayer = clean(character.name);
+        reportServer = clean(character.server);
+      }
+    }
+  }
+
   const result = await query(
     `insert into issue_reports (
        guild_id, type, source, category, raid, item, slot, points,
@@ -1081,8 +1095,8 @@ async function reportIssue({ guildId, query: params }) {
       clean(params.item),
       clean(params.slot),
       clean(params.points),
-      clean(params.player),
-      clean(params.server),
+      reportPlayer,
+      reportServer,
       clean(params.note),
       clean(params.page),
       clean(params.createdAt || params.originalDate)

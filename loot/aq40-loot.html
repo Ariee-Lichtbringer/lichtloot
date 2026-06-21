@@ -9596,6 +9596,19 @@ function sendReport(){
 
   if(status) status.textContent = "Meldung wird gesendet...";
 
+  const reportPlayer = String(
+    payload.player ||
+    (lichtlootSelectedCharacter && lichtlootSelectedCharacter.name) ||
+    document.getElementById("playerName")?.value ||
+    ""
+  ).trim();
+  const reportServer = String(
+    payload.server ||
+    (lichtlootSelectedCharacter && lichtlootSelectedCharacter.server) ||
+    document.getElementById("playerServer")?.value ||
+    ""
+  ).trim();
+
   const params = new URLSearchParams({
     action:"reportIssue",
     guild:guild,
@@ -9607,8 +9620,9 @@ function sendReport(){
     item:payload.item || "",
     slot:payload.slot || "",
     points:payload.points || "",
-    player:payload.player || "",
-    server:payload.server || "",
+    player:reportPlayer,
+    server:reportServer,
+    playerPin:(typeof getStoredLichtLootPlayerPin === "function" ? getStoredLichtLootPlayerPin() : ""),
     createdAt:payload.createdAt || "",
     page:location.href,
     t:Date.now()
