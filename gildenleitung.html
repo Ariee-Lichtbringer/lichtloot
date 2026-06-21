@@ -1406,6 +1406,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
+      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="side-icon">⚿</span>Admin</button>
       <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
       <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
@@ -1452,6 +1453,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
     <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
+    <button class="quick-action" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="qa-icon">⚿</span><span><strong>Admin</strong><span>SpielerLogin suchen</span></span></button>
     <button class="quick-action" type="button" onclick="downloadGuildBackup()"><span class="qa-icon">⇩</span><span><strong>Sicherung</strong><span>Railway-Daten speichern</span></span></button>
   </section>
 
@@ -1690,6 +1692,7 @@ function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
   const explicit = params.get("guild") || params.get("gilde");
   if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  if(window.location.protocol === "file:") return "lichtloot";
   const parts = window.location.pathname.split("/").filter(Boolean);
   const first = parts[0] || "";
   if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
@@ -2102,7 +2105,7 @@ function hasP0PlusTransfer(raidOrResult){
 function renderP0TransferState(raidOrResult, compact){
   if(!isAllowedP0RaidForRaid(raidOrResult || {})) return "";
   const done = hasP0PlusTransfer(raidOrResult);
-  const label = done ? "P0+ übertragen" : "P0+ offen";
+  const label = done ? "P0+ übertragen" : "P0+ nicht übertragen";
   return `<span class="transfer-light ${done ? "done" : "open"}" title="${escapeAttr(label)}"><span class="transfer-dot"></span>${compact ? "" : escapeHtml(label)}</span>`;
 }
 
@@ -3075,11 +3078,12 @@ async function transferP0PlusFromGuild(raidId){
       return;
     }
 
-    raid.p0PlusTransferred = Number(result.candidates || result.awarded || 0) > 0;
-    raid.p0PlusTransferCount = Number(result.candidates || result.awarded || 0);
+    raid.p0PlusTransferred = Boolean(result.p0PlusTransferred || Number(result.p0PlusTransferCount || 0) > 0);
+    raid.p0PlusTransferCount = Number(result.p0PlusTransferCount || result.awarded || 0);
     renderDashboardCards();
     renderRaids();
     setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
+    await loadOverview();
 
     const modal = document.getElementById("prioModal");
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
