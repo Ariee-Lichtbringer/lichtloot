@@ -31,9 +31,20 @@ app.get("/api/dashboard", async (req, res, next) => {
     const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
     const today = new Date().toISOString().slice(0, 10);
     const result = await query(
-      `select *
-       from raids
-       where guild_id = $1
+      `select r.*,
+              (
+                select count(*)
+                from p0plus_points pp
+                where pp.guild_id = r.guild_id
+                  and pp.source = 'Raidlead Transfer'
+                  and pp.note in (
+                    concat('RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+                    concat('RaidID: ', r.id::text),
+                    concat('RaidID: ', r.raid_pin)
+                  )
+              ) as p0plus_transfer_count
+       from raids r
+       where r.guild_id = $1
          and raid_date >= $2
          and coalesce(status, '') not in ('archiviert', 'archive')
        order by raid_date asc, coalesce(raid_time, '') asc, created_at asc`,
@@ -394,6 +405,7 @@ function raidPublicId(row) {
 
 function normalizeRaidRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
+  const p0PlusTransferCount = Number(row.p0plus_transfer_count || 0);
   return {
     id: row.id,
     raidId: raidPublicId(row),
@@ -413,6 +425,8 @@ function normalizeRaidRow(row) {
     leadPin: row.lead_pin || "",
     status: row.status || "geschlossen",
     p0PlusFreigabe: row.p0plus_freigabe || "geschlossen",
+    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferCount,
     playerLink: row.player_link || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -972,9 +986,20 @@ async function getGuildLeadershipOverview(guildId, params) {
   requireMasterCode(params.masterCode);
 
   const raidsResult = await query(
-    `select *
-     from raids
-     where guild_id = $1
+    `select r.*,
+            (
+              select count(*)
+              from p0plus_points pp
+              where pp.guild_id = r.guild_id
+                and pp.source = 'Raidlead Transfer'
+                and pp.note in (
+                  concat('RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+                  concat('RaidID: ', r.id::text),
+                  concat('RaidID: ', r.raid_pin)
+                )
+            ) as p0plus_transfer_count
+     from raids r
+     where r.guild_id = $1
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
@@ -1514,11 +1539,22 @@ async function getPublishedPrios({ guildId, query: params }) {
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
+  const transferResult = await query(
+    `select count(*)::int as count
+     from p0plus_points
+     where guild_id = $1
+       and source = 'Raidlead Transfer'
+       and note in ($2, $3, $4)`,
+    [guildId, `RaidID: ${raidPublicId(raid)}`, `RaidID: ${raid.id}`, `RaidID: ${raid.raid_pin}`]
+  );
+  const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
   const raidStatus = normalizeStatus(raid.status);
   const published = ["geöffnet", "veröffentlicht", "published"].includes(raidStatus.toLowerCase());
   return {
     success: true,
     ...normalizedRaid,
+    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferCount,
     published,
     open: raidStatus !== "geöffnet" && !published,
     prios: result.rows.map((row, index) => {
@@ -1858,6 +1894,122 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount };
 }
 
+async function exportGuildBackup({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const [
+    guildResult,
+    settingsResult,
+    playersResult,
+    raidsResult,
+    priosResult,
+    p0plusResult,
+    issueReportsResult,
+    playerMessagesResult,
+    hordenbuffEventsResult,
+    hordenbuffEntriesResult
+  ] = await Promise.all([
+    query("select id, name, slug, created_at from guilds where id = $1", [guildId]),
+    query("select * from guild_settings where guild_id = $1", [guildId]),
+    query(
+      `select
+         p.id as player_id,
+         p.player_pin,
+         p.security_question,
+         p.security_answer_hash,
+         p.created_at as player_created_at,
+         p.updated_at as player_updated_at,
+         c.id as character_id,
+         c.name as character_name,
+         c.server,
+         c.class_name,
+         c.created_at as character_created_at,
+         c.updated_at as character_updated_at
+       from players p
+       left join characters c on c.player_id = p.id
+       where p.guild_id = $1
+       order by p.created_at asc, c.created_at asc`,
+      [guildId]
+    ),
+    query(
+      `select *
+       from raids
+       where guild_id = $1
+       order by raid_date asc, raid_time asc, created_at asc`,
+      [guildId]
+    ),
+    query(
+      `select
+         pr.*,
+         r.external_raid_id,
+         r.raid_type,
+         r.name as raid_name,
+         r.raid_date,
+         r.raid_time,
+         r.raid_pin,
+         r.lead_pin,
+         c.name as player,
+         c.server,
+         c.class_name,
+         i1.name as p1,
+         i2.name as p2,
+         i3.name as p3
+       from prios pr
+       join raids r on r.id = pr.raid_id
+       join characters c on c.id = pr.character_id
+       left join items i1 on i1.id = pr.p1_item_id
+       left join items i2 on i2.id = pr.p2_item_id
+       left join items i3 on i3.id = pr.p3_item_id
+       where r.guild_id = $1
+       order by r.raid_date asc, r.raid_time asc, c.name asc`,
+      [guildId]
+    ),
+    query(
+      `select
+         pp.*,
+         c.name as player,
+         c.server,
+         c.class_name,
+         i.raid_type,
+         i.name as item_name,
+         i.quality
+       from p0plus_points pp
+       join characters c on c.id = pp.character_id
+       left join items i on i.id = pp.item_id
+       where pp.guild_id = $1
+       order by pp.created_at asc`,
+      [guildId]
+    ),
+    query("select * from issue_reports where guild_id = $1 order by created_at asc", [guildId]),
+    query("select * from player_messages where guild_id = $1 order by created_at asc", [guildId]),
+    query("select * from hordenbuff_events where guild_id = $1 order by event_date asc, event_time asc", [guildId]),
+    query(
+      `select he.*
+       from hordenbuff_entries he
+       join hordenbuff_events e on e.id = he.event_id
+       where e.guild_id = $1
+       order by e.event_date asc, e.event_time asc, he.created_at asc`,
+      [guildId]
+    )
+  ]);
+
+  return {
+    success: true,
+    exportedAt: new Date().toISOString(),
+    version: 1,
+    guild: guildResult.rows[0] || null,
+    settings: settingsResult.rows[0] || null,
+    playersAndCharacters: playersResult.rows,
+    raids: raidsResult.rows,
+    prios: priosResult.rows,
+    p0plusPoints: p0plusResult.rows,
+    issueReports: issueReportsResult.rows,
+    playerMessages: playerMessagesResult.rows,
+    hordenbuffEvents: hordenbuffEventsResult.rows,
+    hordenbuffEntries: hordenbuffEntriesResult.rows
+  };
+}
+
 async function transferP0PlusPoints({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -1871,8 +2023,26 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     raidClause += ` and r.id = $${values.length}`;
   } else if (raidId) {
     values.push(raidId);
-    raidClause += ` and r.raid_pin = $${values.length}`;
+    raidClause += ` and (r.external_raid_id = $${values.length} or r.raid_pin = $${values.length})`;
   }
+
+  const raidResult = await query(
+    `select r.*
+     from raids r
+     where ${raidClause}
+     order by r.raid_date desc, coalesce(r.raid_time, '') desc, r.created_at desc
+     limit 1`,
+    values
+  );
+
+  const raid = raidResult.rows[0];
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const transferNote = `RaidID: ${raidPublicId(raid)}`;
 
   const priosResult = await query(
     `select
@@ -1896,9 +2066,18 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     await client.query("begin");
     for (const row of candidates) {
       await client.query(
+        `delete from p0plus_points
+         where guild_id = $1
+           and character_id = $2
+           and item_id = $3
+           and source = 'Raidlead Transfer'
+           and note = $4`,
+        [guildId, row.character_id, row.item_id, transferNote]
+      );
+      await client.query(
         `insert into p0plus_points (guild_id, character_id, item_id, points, source, note)
          values ($1, $2, $3, 1, $4, $5)`,
-        [guildId, row.character_id, row.item_id, "Raidlead Transfer", raidId ? `RaidID: ${raidId}` : ""]
+        [guildId, row.character_id, row.item_id, "Raidlead Transfer", transferNote]
       );
     }
     await client.query("commit");
@@ -1909,7 +2088,23 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     client.release();
   }
 
-  return { success: true, awarded: candidates.length, candidates: candidates.length };
+  const transferResult = await query(
+    `select count(*)::int as count
+     from p0plus_points
+     where guild_id = $1
+       and source = 'Raidlead Transfer'
+       and note = $2`,
+    [guildId, transferNote]
+  );
+  const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
+
+  return {
+    success: true,
+    awarded: candidates.length,
+    candidates: candidates.length,
+    p0PlusTransferred: p0PlusTransferCount > 0,
+    p0PlusTransferCount
+  };
 }
 
 async function createPlayerWithCharacter({
@@ -2113,6 +2308,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getGuildLeadershipOverview") {
       const overview = await getGuildLeadershipOverview(guild.id, req.query);
       return res.json({ ...overview, guild: guild.slug });
+    }
+
+    if (action === "guildExportBackup" || action === "exportGuildBackup") {
+      const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
+      return res.json({ ...backup, guild: guild.slug });
     }
 
     if (action === "reportIssue") {
