@@ -358,33 +358,23 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:14px;
+  gap:10px;
 }
 
 .active-raid-card{
-  min-height:210px;
   display:grid;
-  grid-template-columns:78px 1fr;
-  gap:10px;
-  align-items:start;
-  position:relative;
-  overflow:hidden;
-  padding:12px;
-  border:1px solid rgba(250,204,21,.18);
-  border-radius:8px;
-  background:
-    linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
-    rgba(2,6,23,.34);
-  box-shadow:0 14px 28px rgba(0,0,0,.18);
+  grid-template-columns:180px minmax(0,1fr) auto;
+  gap:18px;
+  align-items:center;
+  padding:10px 0;
+  border-bottom:1px solid rgba(148,163,184,.14);
 }
 
-.active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
+.active-raid-card:last-child{border-bottom:0}
 
 .active-raid-image{
-  width:78px;
-  height:122px;
-  border-radius:5px;
+  height:82px;
+  border-radius:7px;
   background-image:
     linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
     var(--raid-image);
@@ -394,32 +384,24 @@ button,input,select{font:inherit}
   box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
 }
 
-.active-raid-body{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  min-width:0;
-}
-
 .active-raid-title{
-  color:#f8fafc;
-  font-size:15px;
+  color:#fbbf24;
+  font-size:20px;
   font-weight:900;
-  line-height:1.2;
 }
 
 .active-raid-meta{
   margin-top:4px;
   color:#cbd5e1;
   font-weight:700;
-  font-size:12px;
+  font-size:13px;
 }
 
 .active-raid-side{
   display:flex;
   flex-direction:column;
   gap:8px;
-  align-items:stretch;
+  align-items:flex-end;
 }
 
 .active-raid-count{
@@ -438,20 +420,21 @@ button,input,select{font:inherit}
 
 .active-raid-stats{
   display:flex;
-  flex-direction:column;
+  flex-wrap:wrap;
   gap:6px;
   margin-top:8px;
 }
 
 .active-raid-stat{
-  display:flex;
+  display:inline-flex;
   gap:5px;
   align-items:center;
-  padding:0;
-  border:0;
-  background:transparent;
+  padding:3px 7px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.18);
+  background:rgba(2,6,23,.42);
   color:#cbd5e1;
-  font-size:12px;
+  font-size:11px;
   font-weight:900;
 }
 
@@ -460,55 +443,9 @@ button,input,select{font:inherit}
 }
 
 .active-raid-actions{
-  grid-column:1 / -1;
   display:flex;
   gap:8px;
-  flex-wrap:wrap;
   align-items:center;
-  justify-content:stretch;
-  margin-top:0;
-}
-
-.active-raid-actions .small-btn{
-  flex:1 1 calc(50% - 8px);
-  min-width:105px;
-}
-
-.active-raid-lead-card{
-  grid-column:1 / -1;
-  border:1px solid rgba(250,204,21,.28);
-  border-radius:6px;
-  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
-  padding:8px 10px;
-  min-width:0;
-}
-
-.active-raid-lead-label{
-  color:#cbd5e1;
-  font-size:11px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-}
-
-.active-raid-lead-pin{
-  display:block;
-  margin-top:4px;
-  color:#fbbf24;
-  font-size:20px;
-  font-weight:900;
-  line-height:1;
-  letter-spacing:1px;
-  word-break:break-word;
-}
-
-.active-raid-id{
-  display:block;
-  margin-top:6px;
-  color:#94a3b8;
-  font-size:11px;
-  font-weight:700;
-  white-space:normal;
 }
 
 .side-card{
@@ -1047,46 +984,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   background:rgba(15,23,42,.48);
 }
 
-.prio-toolbar-actions,
-.prio-row-actions{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:6px;
-}
-
-.transfer-light{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  padding:4px 8px;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:999px;
-  color:#cbd5e1;
-  font-size:11px;
-  font-weight:900;
-  text-transform:uppercase;
-}
-
-.transfer-dot{
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  box-shadow:0 0 12px currentColor;
-}
-
-.transfer-light.done{
-  color:#22c55e;
-  border-color:rgba(34,197,94,.38);
-  background:rgba(34,197,94,.10);
-}
-
-.transfer-light.open{
-  color:#ef4444;
-  border-color:rgba(239,68,68,.38);
-  background:rgba(239,68,68,.10);
-}
-
 .prio-table{
   min-width:780px;
 }
@@ -1316,47 +1213,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 #prioModal .modal-box{border-color:rgba(96,165,250,.38)}
 #prioModal .modal-title h2{color:#fde68a}
-#messageModal .modal-box{
-  width:min(560px, calc(100vw - 24px));
-  min-width:min(420px, calc(100vw - 24px));
-  min-height:0;
-  resize:none;
-  border-color:rgba(250,204,21,.38);
-}
-#messageModal .modal-content{
-  display:grid;
-  gap:10px;
-}
-#messageModal textarea{
-  width:100%;
-  min-height:110px;
-  border-radius:8px;
-  border:1px solid rgba(148,163,184,.28);
-  background:rgba(2,6,23,.72);
-  color:white;
-  padding:9px;
-  resize:vertical;
-  font-weight:600;
-}
-#messageModal .message-raid-preview{
-  border:1px solid rgba(250,204,21,.22);
-  border-radius:8px;
-  padding:10px;
-  background:rgba(250,204,21,.08);
-  color:#e5edf8;
-  font-weight:800;
-}
-#messageModal .message-pin-preview{
-  display:inline-flex;
-  margin-top:8px;
-  padding:6px 10px;
-  border-radius:7px;
-  border:1px solid rgba(250,204,21,.38);
-  color:#fbbf24;
-  font-size:22px;
-  font-weight:950;
-  letter-spacing:1px;
-}
 
 .prio-actions{
   display:grid;
@@ -1397,7 +1253,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 <body>
 <div class="app-frame">
   <aside class="sidebar">
-    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
+    <img src="images/content.png" alt="LichtLoot" class="side-logo">
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
       <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
@@ -1406,8 +1262,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
-      <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
-      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
+      <button class="side-link" type="button" onclick="goGuildUrl('admin-spielerlogin-suche.html')"><span class="side-icon">⚿</span>Admin</button>
+      <button class="side-link" type="button" onclick="goGuildUrl('raidlead-panel.html')"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
     <div class="sidebar-foot">
       <button class="side-link" type="button" onclick="clearMasterCode()"><span class="side-icon">⚙</span>Sperren</button>
@@ -1417,18 +1273,18 @@ tr:hover td{background:rgba(250,204,21,.035)}
 <main class="shell dashboard-main" id="dashboardTop">
   <header class="topbar">
     <div class="brand">
-      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
+      <img src="images/content.png" alt="LichtLoot" class="brand-logo">
       <div class="brand-copy">
         <h1>Gildenleitung</h1>
         <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
       </div>
     </div>
     <div class="nav" aria-label="Navigation">
-      <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn ghost" type="button" onclick="goGuildUrl('start.html')">Startseite</button>
       <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
-        <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
+        <div><strong>Lichtbringer</strong><span>Gildenleitung</span></div>
       </div>
     </div>
   </header>
@@ -1449,10 +1305,9 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <button class="quick-action" type="button" onclick="openCreatePanel()"><span class="qa-icon">＋</span><span><strong>Raid erstellen</strong><span>Neuen Raid anlegen</span></span></button>
     <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
     <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
-    <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
     <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
-    <button class="quick-action" type="button" onclick="downloadGuildBackup()"><span class="qa-icon">⇩</span><span><strong>Sicherung</strong><span>Railway-Daten speichern</span></span></button>
+    <button class="quick-action" type="button" onclick="goGuildUrl('admin-spielerlogin-suche.html')"><span class="qa-icon">⚿</span><span><strong>Admin</strong><span>SpielerLogin suchen</span></span></button>
   </section>
 
   <section class="stat-grid">
@@ -1563,13 +1418,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <th>Datum</th>
               <th>Prio-PIN</th>
               <th>LeadPIN</th>
-              <th>P0+</th>
               <th>Status</th>
+              <th>P0+</th>
               <th>Aktion</th>
             </tr>
           </thead>
           <tbody id="raidRows">
-            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
+            <tr><td colspan="7" class="muted">Noch keine Daten geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1639,43 +1494,47 @@ tr:hover td{background:rgba(250,204,21,.035)}
   </div>
 </div>
 
-<div id="messageModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-title">
-        <h2 id="messageModalTitle">Nachricht senden</h2>
-        <p id="messageModalSubtitle">Empfänger als Charaktername eintragen.</p>
-      </div>
-      <button class="btn danger" type="button" onclick="closeMessageModal()">Schließen</button>
-    </div>
-    <div class="modal-content">
-      <div id="messageRaidPreview" class="message-raid-preview hidden"></div>
-      <div class="field">
-        <label for="messageRecipient">Charaktername</label>
-        <input id="messageRecipient" type="text" placeholder="z. B. Ariee">
-      </div>
-      <div class="field">
-        <label for="messageTitle">Betreff</label>
-        <input id="messageTitle" type="text" placeholder="Betreff">
-      </div>
-      <div class="field">
-        <label for="messageBody">Nachricht</label>
-        <textarea id="messageBody" placeholder="Nachricht schreiben"></textarea>
-      </div>
-      <button class="btn" type="button" onclick="submitMessageModal()">Nachricht senden</button>
-      <div id="messageModalStatus" class="status">Bereit.</div>
-    </div>
-  </div>
-</div>
-
 <div id="tooltip" class="tooltip hidden"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
-const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
-const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
-const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
+const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+function currentGuildSlug(){
+  return new URLSearchParams(window.location.search).get("guild") || "lichtloot";
+}
+
+function currentGuildName(){
+  return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot";
+}
+
+const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + currentGuildSlug();
+
+function withCurrentGuild(params){
+  return Object.assign({ guild: currentGuildSlug() }, params || {});
+}
+
+function guildUrl(path){
+  const slug=currentGuildSlug();
+  if(slug === "lichtloot") return path;
+  const hashIndex=path.indexOf("#");
+  const hash=hashIndex >= 0 ? path.slice(hashIndex) : "";
+  const base=hashIndex >= 0 ? path.slice(0,hashIndex) : path;
+  return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
+}
+
+function goGuildUrl(path){
+  window.location.href=guildUrl(path);
+}
+
+function applyGuildBranding(){
+  const name=currentGuildName();
+  document.title=name + " - Gildenleitung";
+  document.querySelectorAll(".side-logo,.brand-logo").forEach(img => {
+    img.alt=name;
+  });
+  const profile=document.querySelector(".top-profile strong");
+  if(profile) profile.textContent=currentGuildSlug() === "panemloot" ? "Panem" : "Lichtbringer";
+}
+
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -1685,92 +1544,6 @@ const RAID_OPTIONS = {
   aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
   ony:{ name:"Onyxia", short:"ONY" }
 };
-
-function getCurrentGuildSlug(){
-  const params = new URLSearchParams(window.location.search);
-  const explicit = params.get("guild") || params.get("gilde");
-  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
-  const parts = window.location.pathname.split("/").filter(Boolean);
-  const first = parts[0] || "";
-  if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
-    return first.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
-  }
-  return "lichtloot";
-}
-
-function withGuildUrl(url){
-  const sep = String(url || "").includes("?") ? "&" : "?";
-  return String(url || "") + sep + CURRENT_GUILD_QUERY;
-}
-
-const GUILD_BRANDS = {
-  lichtloot: {
-    guildName: "Lichtbringer",
-    lootName: "LichtLoot",
-    footerName: "Lichtbringer Lootsystem"
-  }
-};
-
-function titleFromSlug(slug){
-  return String(slug || "gilde")
-    .split("-")
-    .filter(Boolean)
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function getCurrentGuildBrand(){
-  const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
-  return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
-    guildName: fallback,
-    lootName: fallback + "Loot",
-    footerName: fallback + " Lootsystem"
-  };
-}
-
-const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
-let currentGuildInfo = null;
-
-async function fetchCurrentGuildInfo(){
-  try{
-    const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
-    const data = await response.json();
-    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
-    return currentGuildInfo;
-  }catch(error){
-    console.warn("Gildenbranding konnte nicht geladen werden.", error);
-    return null;
-  }
-}
-
-function lootTitleFromGuild(guild){
-  const slug = String(guild?.slug || CURRENT_GUILD_SLUG || "").trim();
-  if(slug === "lichtloot") return "LichtLoot";
-  return titleFromSlug(slug || guild?.name || "Lootsystem");
-}
-
-function applyGuildBrand(){
-  const guild = currentGuildInfo;
-  const brand = guild ? {
-    guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
-    lootName: lootTitleFromGuild(guild),
-    footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
-  } : CURRENT_GUILD_BRAND;
-  document.title = brand.lootName + " - Gildenleitung";
-  document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
-  document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
-  document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
-  document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => {
-    if(guild?.logoUrl) el.src = guild.logoUrl;
-  });
-  if(guild?.backgroundUrl){
-    document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
-  }
-  document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
-  document.querySelectorAll("[data-guild-onclick]").forEach(el => {
-    el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
-  });
-}
 const RAID_IMAGES = {
   mc:"images/mc.jpg",
   bwl:"images/bwl.jpg",
@@ -1784,19 +1557,15 @@ const RAID_IMAGES = {
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let issueReports = [];
-let guildSentMessages = [];
-let guildInboxTab = "reports";
 let worldbuffEntries = [];
 let hordenbuffEntries = [];
 let lootItemIndex = {};
 let lootDataLoaded = false;
 let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
-let pendingMessageContext = null;
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await fetchCurrentGuildInfo();
-  applyGuildBrand();
+document.addEventListener("DOMContentLoaded", () => {
+  applyGuildBranding();
   const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
   if (saved) document.getElementById("masterCode").value = saved;
   const raidDateSearch = document.getElementById("raidDateSearch");
@@ -1824,141 +1593,25 @@ function clearMasterCode(){
 }
 
 function apiJsonp(params){
-  return new Promise((resolve, reject) => {
-    const callbackName = "guildApi_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-    const query = new URLSearchParams(Object.assign({}, params, { callback: callbackName, t: Date.now() }));
-    const script = document.createElement("script");
-    let settled = false;
-
-    window[callbackName] = function(result){
-      settled = true;
-      cleanup();
-      resolve(result || {});
-    };
-
-    function cleanup(){
-      try{ delete window[callbackName]; }catch(error){ window[callbackName] = undefined; }
-      if(script.parentNode) script.parentNode.removeChild(script);
-    }
-
-    script.onerror = () => {
-      if(settled) return;
-      cleanup();
-      reject(new Error("Apps Script liefert die neue Gildenleitungs-Aktion noch nicht aus. Bitte den aktualisierten Code veröffentlichen."));
-    };
-
-    script.src = API_URL + "?" + query.toString();
-    document.body.appendChild(script);
-  });
+  const query = new URLSearchParams(Object.assign({}, withCurrentGuild(params), { t: Date.now() }));
+  return fetch(API_URL + "?" + query.toString(), { cache:"no-store" })
+    .then(response => response.json());
 }
 
 function apiWrite(params){
-  return new Promise((resolve, reject) => {
-    const iframeName = "guildWriteFrame_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-    const iframe = document.createElement("iframe");
-    const form = document.createElement("form");
-    let settled = false;
-    let submitted = false;
-
-    iframe.name = iframeName;
-    iframe.style.display = "none";
-    form.style.display = "none";
-    form.method = "POST";
-    form.action = API_URL;
-    form.target = iframeName;
-
-    Object.entries(Object.assign({}, params, { t: Date.now() })).forEach(([key, value]) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = key;
-      input.value = value == null ? "" : String(value);
-      form.appendChild(input);
-    });
-
-    function cleanup(){
-      window.setTimeout(() => {
-        if(form.parentNode) form.parentNode.removeChild(form);
-        if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
-      }, 1000);
-    }
-
-    iframe.onload = () => {
-      if(!submitted) return;
-      if(settled) return;
-      settled = true;
-      cleanup();
-      resolve({ success:true, submitted:true });
-    };
-
-    iframe.onerror = () => {
-      if(settled) return;
-      settled = true;
-      cleanup();
-      reject(new Error("Aktion konnte nicht an Apps Script gesendet werden."));
-    };
-
-    document.body.appendChild(iframe);
-    document.body.appendChild(form);
-    submitted = true;
-    form.submit();
-
-    window.setTimeout(() => {
-      if(settled) return;
-      settled = true;
-      cleanup();
-      resolve({ success:true, submitted:true, timeout:true });
-    }, 5000);
-  });
-}
-
-async function railwayApi(params){
-  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
-  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
-  const result = await response.json();
-  return result || {};
-}
-
-async function railwayWrite(params){
-  const response = await fetch(LICHTLOOT_API_URL, {
+  const payload = new URLSearchParams(Object.assign({}, withCurrentGuild(params), { t: Date.now() }));
+  return fetch(API_URL, {
     method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }))
-  });
-  const result = await response.json();
-  return result || {};
-}
-
-async function downloadGuildBackup(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  setStatus("Sicherung wird erstellt ...", "");
-
-  try{
-    const result = await railwayApi({ action:"guildExportBackup", masterCode });
-    if(!result.success){
-      setStatus(result.error || "Sicherung konnte nicht erstellt werden.", "bad");
-      return;
-    }
-
-    const guildSlug = result.guild || CURRENT_GUILD_SLUG || "gilde";
-    const stamp = new Date().toISOString().replace(/[:.]/g,"-");
-    const blob = new Blob([JSON.stringify(result, null, 2)], { type:"application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${guildSlug}-railway-sicherung-${stamp}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    setStatus("Sicherung wurde heruntergeladen.", "good");
-  }catch(error){
-    setStatus(error.message || "Sicherung konnte nicht erstellt werden.", "bad");
-  }
+    headers:{ "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
+    body:payload.toString()
+  })
+    .then(response => response.json())
+    .then(result => {
+      if(result && result.success !== false) return result;
+      const message = String((result && result.error) || "").toLowerCase();
+      if(!message.includes("post") && !message.includes("aktion")) return result;
+      return apiJsonp(params);
+    });
 }
 
 async function loadOverview(){
@@ -1971,7 +1624,7 @@ async function loadOverview(){
   setStatus("Gildenleitung wird geladen ...", "");
 
   try{
-    const result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode });
+    const result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
     if(!result.success){
       setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
       return;
@@ -2088,28 +1741,6 @@ function getRaidKey(raid){
   return "aq40";
 }
 
-function isAllowedP0RaidForRaid(raid){
-  return ["mc","bwl","aq40","naxx"].includes(getRaidKey(raid));
-}
-
-function hasP0PlusTransfer(raidOrResult){
-  return Boolean(
-    raidOrResult &&
-    (raidOrResult.p0PlusTransferred || Number(raidOrResult.p0PlusTransferCount || 0) > 0)
-  );
-}
-
-function renderP0TransferState(raidOrResult, compact){
-  if(!isAllowedP0RaidForRaid(raidOrResult || {})) return "";
-  const done = hasP0PlusTransfer(raidOrResult);
-  const label = done ? "P0+ übertragen" : "P0+ offen";
-  return `<span class="transfer-light ${done ? "done" : "open"}" title="${escapeAttr(label)}"><span class="transfer-dot"></span>${compact ? "" : escapeHtml(label)}</span>`;
-}
-
-function isP0PlusPrio(prio){
-  return normalize(prio && (prio.P0Plus || prio.p0Plus)) === "ja";
-}
-
 function todayIsoDate(){
   const now = new Date();
   return [
@@ -2138,33 +1769,26 @@ function renderDashboardCards(){
 
   box.innerHTML = raids.map(raid => {
     const key = getRaidKey(raid);
+    const stats = dashboardRaidStats[String(raid.raidId || "")] || {};
+    const signups = stats.signups == null ? "-" : stats.signups;
+    const prios = stats.prios == null ? "-" : stats.prios;
     return `
       <article class="active-raid-card">
         <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
-        <div class="active-raid-body">
-          <div>
-            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-            <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
-            <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
-            <div class="active-raid-stats">
-              <span class="active-raid-stat">${escapeHtml(raid.guild || CURRENT_GUILD_BRAND.guildName)}</span>
-              <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
-            </div>
+        <div>
+          <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
+          <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
+          <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
+          <div class="active-raid-stats">
+            <span class="active-raid-stat">Anmeldungen <strong>${escapeHtml(signups)}</strong></span>
+            <span class="active-raid-stat">Prios <strong>${escapeHtml(prios)}</strong></span>
           </div>
-          <div class="active-raid-side">
-            <div class="active-raid-lead-card">
-              <span class="active-raid-lead-label">LeadPIN</span>
-              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
-              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
-              ${renderP0TransferState(raid)}
-            </div>
-            <div class="active-raid-actions">
-              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
-              <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
-              <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
-              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId)}')">Raid löschen</button>
-            </div>
+        </div>
+        <div class="active-raid-side">
+          <div class="active-raid-count">${escapeHtml(raid.guild || "Lichtbringer")}<span>LeadPIN ${escapeHtml(raid.leadPin || "-")}</span><span>${escapeHtml(raid.raidId || "")}</span></div>
+          <div class="active-raid-actions">
+            <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Verwalten</button>
+            <button class="small-btn ghost" type="button" onclick="openRaidPanel()">Details</button>
           </div>
         </div>
       </article>
@@ -2178,18 +1802,44 @@ function getDashboardActiveRaids(){
       const status = normalize(raid.status || "");
       return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
     })
-    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")))
+    .slice(0,3);
 }
 
 async function loadDashboardRaidStats(){
   const raids = getDashboardActiveRaids();
   if(!raids.length) return;
 
-  raids.forEach(raid => {
+  await Promise.all(raids.map(async raid => {
     const raidId = String(raid.raidId || "");
     if(!raidId) return;
-    dashboardRaidStats[raidId] = { prios:null, signups:null };
-  });
+    const key = getRaidKey(raid);
+    const stats = { prios:null, signups:null };
+
+    try{
+      const prioResult = await apiJsonp({
+        action:"getPublishedPrios",
+        raid:RAID_OPTIONS[key]?.short || raid.raid || "",
+        playerPin:raid.playerPin || ""
+      });
+      if(prioResult && !prioResult.error){
+        stats.prios = Array.isArray(prioResult.prios) ? prioResult.prios.length : 0;
+      }
+    }catch(error){}
+
+    try{
+      const checkResult = await apiJsonp({
+        action:"getPrioCheck",
+        raidId:raidId,
+        raid:RAID_OPTIONS[key]?.short || raid.raid || ""
+      });
+      if(checkResult && checkResult.success && checkResult.check && checkResult.check.counts){
+        stats.signups = Number(checkResult.check.counts.signups || 0);
+      }
+    }catch(error){}
+
+    dashboardRaidStats[raidId] = stats;
+  }));
 
   renderDashboardCards();
 }
@@ -2238,7 +1888,7 @@ function formatPlayerLoginTime(player){
 function renderWorldbuffMiniList(){
   const box = document.getElementById("worldbuffMiniList");
   if(!box) return;
-  const entries = (worldbuffEntries || [])
+  const entries = normalizeWorldbuffDisplayEntries(worldbuffEntries)
     .filter(isWorldbuffInMiniWindow)
     .sort((a,b) => {
       const dateA = parseWorldbuffDate(a.datum);
@@ -2274,7 +1924,7 @@ async function loadWorldbuffMiniOverview(){
   try{
     const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4 });
     if(result && result.success){
-      worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+      worldbuffEntries = normalizeWorldbuffDisplayEntries(result.buffs);
       renderWorldbuffMiniList();
       return;
     }
@@ -2299,6 +1949,84 @@ function renderWorldbuffCasterMini(entry){
   const caster = String(entry && (entry.charakter || entry.caster || entry.werfer) || "").trim();
   if(!caster || !guild.includes("lichtbringer")) return "";
   return `<small>${escapeHtml(caster)}</small>`;
+}
+
+function normalizeWorldbuffDisplayEntries(entries){
+  const list = Array.isArray(entries) ? entries.slice() : [];
+  const realSlots = {};
+  const result = [];
+  const byKey = {};
+
+  list.forEach(entry => {
+    const slotKey = getWorldbuffDisplaySlotKey(entry);
+    if(!slotKey || isWorldbuffDisplayPlaceholderGuild(entry && entry.gilde)) return;
+    realSlots[slotKey] = true;
+  });
+
+  list.forEach(entry => {
+    const slotKey = getWorldbuffDisplaySlotKey(entry);
+    if(!slotKey) return;
+    if(isWorldbuffDisplayPlaceholderGuild(entry && entry.gilde) && realSlots[slotKey]) return;
+
+    const key = getWorldbuffDisplayMergeKey(entry);
+    if(!key) return;
+
+    if(byKey[key]){
+      mergeWorldbuffDisplayEntry(byKey[key], entry);
+      return;
+    }
+
+    byKey[key] = Object.assign({}, entry);
+    result.push(byKey[key]);
+  });
+
+  return result;
+}
+
+function getWorldbuffDisplaySlotKey(entry){
+  if(!entry || !entry.datum || !entry.uhrzeit || !entry.buff) return "";
+  return [entry.datum, entry.uhrzeit, normalizeWorldbuffDisplayBuff(entry.buff)].join("|");
+}
+
+function getWorldbuffDisplayMergeKey(entry){
+  const slotKey = getWorldbuffDisplaySlotKey(entry);
+  if(!slotKey) return "";
+  if(normalizeWorldbuffDisplayBuff(entry.buff) === "rend") return slotKey;
+  return [slotKey, normalizeWorldbuffDisplayGuild(entry.gilde) || "worldbuffticker"].join("|");
+}
+
+function mergeWorldbuffDisplayEntry(target, source){
+  if(isWorldbuffDisplayPlaceholderGuild(target.gilde)) target.gilde = source.gilde || target.gilde || "";
+  if(!target.charakter || target.charakter === "-") target.charakter = source.charakter || target.charakter || "";
+  if(!target.status || target.status === "-") target.status = source.status || target.status || "";
+  if(!target.note || target.note === "-") target.note = source.note || target.note || "";
+}
+
+function normalizeWorldbuffDisplayBuff(value){
+  const text = normalizeWorldbuffDisplayText(value);
+  if(text === "zg") return "hakkar";
+  if(text === "onyxia") return "ony";
+  if(text === "nefarian") return "nef";
+  return text;
+}
+
+function normalizeWorldbuffDisplayGuild(value){
+  const text = normalizeWorldbuffDisplayText(value);
+  if(isWorldbuffDisplayPlaceholderGuild(value)) return "";
+  if(text.includes("lichtbringer")) return "lichtbringer";
+  if(text.includes("horde")) return "horde";
+  return text;
+}
+
+function isWorldbuffDisplayPlaceholderGuild(value){
+  const text = normalizeWorldbuffDisplayText(value);
+  return !text || text === "worldbuffticker" || text === "worldbuff" || text === "worldbuffs" || text === "ticker";
+}
+
+function normalizeWorldbuffDisplayText(value){
+  return normalize(value)
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"");
 }
 
 function parseWorldbuffDate(value){
@@ -2362,6 +2090,7 @@ function renderRaids(){
 
   tbody.innerHTML = raids.map(raid => {
     const status = raid.status || "geschlossen";
+    const p0 = raid.p0PlusFreigabe || "";
     return `
       <tr>
         <td>
@@ -2376,13 +2105,15 @@ function renderRaids(){
         <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
         <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
-        <td>${renderP0TransferState(raid)}</td>
         <td>${statusBadge(status)}</td>
+        <td>${p0Badge(p0)}</td>
         <td>
           <div class="actions">
-            <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
+            <div class="action-row">
+              <button class="small-btn good" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',true)">P0 an</button>
+              <button class="small-btn ghost" type="button" onclick="setRaidP0PlusFromPage('${escapeAttr(raid.raidId)}',false)">P0 aus</button>
+            </div>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
-            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
           </div>
         </td>
@@ -2495,17 +2226,12 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
   lines.push(
     "",
     "Prio-PIN: " + playerPin,
-    "Prios eintragen: " + new URL(withGuildUrl("index.html"), window.location.href).href,
+    "Prios eintragen: https://lichtloot.de/" + (currentGuildSlug() === "lichtloot" ? "" : "?guild=" + currentGuildSlug()),
     "",
     "Bitte tragt eure Prios rechtzeitig ein."
   );
 
   return lines.join("\n");
-}
-
-function buildRaidDirectLink(raid){
-  const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
-  return raidId ? withGuildUrl("index.html") + `&raidId=${raidId}` : withGuildUrl("index.html");
 }
 
 async function createRaidFromGuildPage(){
@@ -2552,12 +2278,13 @@ async function createRaidFromGuildPage(){
     playerLink:"",
     createdAt:new Date().toISOString(),
     status:"geschlossen",
+    p0PlusFreigabe:"geschlossen"
   };
 
   resultBox.innerHTML = '<span class="warn">Raid wird erstellt ...</span>';
 
   try{
-    const saveResult = await railwayApi(Object.assign({ masterCode }, raidData));
+    const saveResult = await apiJsonp(raidData);
     if(saveResult && saveResult.success === false){
       throw new Error(saveResult.error || saveResult.message || "Raid konnte nicht gespeichert werden.");
     }
@@ -2651,191 +2378,6 @@ async function copyText(elementId){
   }
 }
 
-async function copyPlainText(text){
-  const value = String(text || "").trim();
-  if(!value || value === "-"){
-    setStatus("Kein LeadPIN zum Kopieren vorhanden.", "bad");
-    return;
-  }
-
-  try{
-    await navigator.clipboard.writeText(value);
-    setStatus("LeadPIN kopiert.", "good");
-  }catch(error){
-    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
-  }
-}
-
-async function sendLeadPinToPlayer(raidId){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  if(!raid || !raid.leadPin){
-    setStatus("Für diesen Raid ist kein LeadPIN vorhanden.", "bad");
-    return;
-  }
-
-  const title = `LeadPIN für ${raid.raidName || raid.raid || "Raid"}`;
-  const body = [
-    `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`,
-    `Direkt zum Raid: ${buildRaidDirectLink(raid)}`
-  ].join("\n\n");
-
-  openMessageModal({
-    mode:"leadpin",
-    raid,
-    title,
-    body,
-    leadPin:raid.leadPin || "",
-    raidId:raid.raidId || "",
-    raidName:raid.raidName || raid.raid || "",
-    raidDate:raid.raidDate || "",
-    raidTime:raid.raidTime || ""
-  });
-}
-
-function sendGeneralMessageFromGuildPage(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  openMessageModal({
-    mode:"message",
-    title:"Nachricht der Gildenleitung",
-    body:""
-  });
-}
-
-function openMessageModal(context){
-  pendingMessageContext = context || {};
-  const modal = document.getElementById("messageModal");
-  const title = document.getElementById("messageModalTitle");
-  const subtitle = document.getElementById("messageModalSubtitle");
-  const preview = document.getElementById("messageRaidPreview");
-  const recipient = document.getElementById("messageRecipient");
-  const titleField = document.getElementById("messageTitle");
-  const bodyField = document.getElementById("messageBody");
-  const status = document.getElementById("messageModalStatus");
-
-  if(title) title.textContent = context.mode === "leadpin" ? "LeadPIN senden" : "Nachricht senden";
-  if(subtitle) subtitle.textContent = "Empfänger als Charaktername eintragen. Der SpielerPin bleibt privat.";
-  if(recipient) recipient.value = "";
-  if(titleField) titleField.value = context.title || "";
-  if(bodyField) bodyField.value = context.body || "";
-  if(status){
-    status.textContent = "Bereit.";
-    status.className = "status";
-  }
-
-  if(preview){
-    if(context.mode === "leadpin" && context.raid){
-      preview.classList.remove("hidden");
-      preview.innerHTML =
-        `${escapeHtml(context.raidName || "Raid")} · ${escapeHtml(formatRaidDate(context.raidDate))} · ${escapeHtml(context.raidTime || "")} Uhr<br>` +
-        `<span class="message-pin-preview">${escapeHtml(context.leadPin || "-")}</span>`;
-    }else{
-      preview.classList.add("hidden");
-      preview.innerHTML = "";
-    }
-  }
-
-  if(modal) modal.classList.remove("hidden");
-  setTimeout(() => recipient && recipient.focus(), 30);
-}
-
-function closeMessageModal(){
-  const modal = document.getElementById("messageModal");
-  if(modal) modal.classList.add("hidden");
-  pendingMessageContext = null;
-}
-
-async function submitMessageModal(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  const recipient = document.getElementById("messageRecipient").value.trim();
-  const title = document.getElementById("messageTitle").value.trim() || "Nachricht der Gildenleitung";
-  const body = document.getElementById("messageBody").value.trim();
-  const status = document.getElementById("messageModalStatus");
-
-  if(!masterCode || !recipient || !body){
-    if(status){
-      status.textContent = "Bitte Master-Code, Charaktername und Nachricht ausfüllen.";
-      status.className = "status bad";
-    }
-    return;
-  }
-
-  if(status){
-    status.textContent = "Nachricht wird gesendet ...";
-    status.className = "status";
-  }
-
-  try{
-    const context = pendingMessageContext || {};
-    const result = await railwayApi({
-      action:"sendPlayerMessage",
-      masterCode,
-      character:recipient,
-      title,
-      body,
-      raidId:context.raidId || "",
-      raidName:context.raidName || "",
-      raidDate:context.raidDate || "",
-      raidTime:context.raidTime || "",
-      leadPin:context.leadPin || "",
-      sender:"Gildenleitung"
-    });
-    if(!result.success){
-      if(status){
-        status.textContent = result.error || "Nachricht konnte nicht gesendet werden.";
-        status.className = "status bad";
-      }
-      return;
-    }
-    closeMessageModal();
-    setStatus("Nachricht wurde ins Spieler-Postfach gelegt.", "good");
-  }catch(error){
-    if(status){
-      status.textContent = error.message || "Nachricht konnte nicht gesendet werden.";
-      status.className = "status bad";
-    }
-  }
-}
-
-async function deleteRaidFromDashboard(raidId){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} wirklich komplett löschen? Der Raid wird aus Railway entfernt.`)) return;
-
-  try{
-    const result = await railwayApi({ action:"guildDeleteRaid", masterCode, raidId });
-    if(!result.success || !result.deleted){
-      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
-      return;
-    }
-
-    guildData.raids = (guildData.raids || []).filter(entry => String(entry.raidId || "") !== String(raidId));
-    renderSummary();
-    renderDashboardCards();
-    loadDashboardRaidStats();
-    renderRaids();
-    setStatus("Raid wurde aus Railway gelöscht.", "good");
-  }catch(error){
-    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
-  }
-}
-
 async function setRaidStatusFromPage(raidId, status){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -2844,7 +2386,7 @@ async function setRaidStatusFromPage(raidId, status){
   }
 
   try{
-    const result = await railwayApi({ action:"guildSetRaidStatus", masterCode, raidId, status });
+    const result = await apiWrite({ action:"guildSetRaidStatus", masterCode, raidId, status });
     if(!result.success){
       setStatus(result.error || "Raidstatus konnte nicht geändert werden.", "bad");
       return;
@@ -2862,10 +2404,39 @@ async function setRaidStatusFromPage(raidId, status){
   }
 }
 
-async function toggleRaidPrioStatus(raidId){
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  const nextStatus = raid && isOpenStatus(raid.status) ? "geschlossen" : "geöffnet";
-  await setRaidStatusFromPage(raidId,nextStatus);
+async function setRaidP0PlusFromPage(raidId, enabled){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const currentStatus = raid && raid.status ? raid.status : "geschlossen";
+  const freigabe = enabled ? "ja" : "nein";
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await apiWrite({
+      action:"guildSetRaidStatus",
+      masterCode,
+      raidId,
+      status:currentStatus,
+      p0PlusFreigabe:freigabe
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ konnte nicht geändert werden.", "bad");
+      return;
+    }
+
+    if(raid) raid.p0PlusFreigabe = freigabe;
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    setStatus(enabled ? "P0+ wurde geöffnet." : "P0+ wurde geschlossen.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+ konnte nicht geändert werden.", "bad");
+  }
 }
 
 async function archiveRaidFromPage(raidId){
@@ -2895,9 +2466,8 @@ async function openPrioModal(raidId){
 
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({
+    const result = await apiJsonp({
       action:"getPublishedPrios",
-      raidId:raid.raidId || "",
       raid:raid.raid || raid.raidName || "",
       playerPin:raid.playerPin || raid.raidId || raid.leadPin || ""
     });
@@ -2922,32 +2492,23 @@ function renderPrioModalContent(result, raid){
   const listOpen = isPrioListVisibleForGuild(result, raid);
   const raidStatus = listOpen ? "geöffnet" : "geschlossen";
   const benchCount = prios.filter(isBenchPrio).length;
-  const transferState = { ...raid, ...result, raid: raid.raid, raidName: raid.raidName, raidId: raid.raidId };
-  const raidId = raid.raidId || raid.raidID || raid.id || "";
-  const toolbar = `
-    <div class="prio-toolbar">
-      <div class="prio-toolbar-actions">
-        ${statusBadge(raidStatus)}
-        ${renderP0TransferState(transferState)}
-      </div>
-      <div class="prio-toolbar-actions">
-        <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatusFromModal('${escapeAttr(raidId)}')">${listOpen ? "Prio schließen" : "Prio öffnen"}</button>
-        ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(transferState) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raidId)}')">P0+ Punkte übertragen</button>` : ""}
-        <div class="muted">${prios.length ? `${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}` : "Keine Einträge"}</div>
-      </div>
-    </div>
-  `;
 
   if(!prios.length){
     document.getElementById("prioModalContent").innerHTML = `
-      ${toolbar}
+      <div class="prio-toolbar">
+        ${statusBadge(raidStatus)}
+        ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}
+      </div>
       <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
     `;
     return;
   }
 
   document.getElementById("prioModalContent").innerHTML = `
-    ${toolbar}
+    <div class="prio-toolbar">
+      <div>${statusBadge(raidStatus)} ${p0Badge(result.p0PlusFreigabe || raid.p0PlusFreigabe)}</div>
+      <div class="muted">${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}</div>
+    </div>
     <div class="table-wrap">
       <table class="prio-table">
         <thead>
@@ -2959,7 +2520,7 @@ function renderPrioModalContent(result, raid){
             <th>P2</th>
             <th>P3</th>
             <th>P0+</th>
-            <th>Aktion</th>
+            <th>Bench</th>
           </tr>
         </thead>
         <tbody>
@@ -2972,7 +2533,7 @@ function renderPrioModalContent(result, raid){
               <td>${renderPrioValue(prio.P2, listOpen)}</td>
               <td>${renderPrioValue(prio.P3, listOpen)}</td>
               <td>${renderP0PlusChoice(prio, listOpen)}</td>
-              <td>${renderPrioRowActions(prio, raid, listOpen)}</td>
+              <td>${renderBenchAction(prio, raid)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -3019,149 +2580,6 @@ function renderBenchAction(prio, raid){
   return `<button class="small-btn ${cls}" type="button" onclick="setPrioBenchFromModal('${escapeAttr(raid.raidId || raid.raidID || raid.id || "")}',${rowNumber},${active ? "false" : "true"},'${escapeQuotes(prio.Spieler || prio.player || "")}','${escapeQuotes(prio.Server || prio.server || "")}')">${label}</button>`;
 }
 
-function renderPrioRowActions(prio, raid, listOpen){
-  if(!prio) return '<span class="badge closed">-</span>';
-  const raidId = raid.raidId || raid.raidID || raid.id || "";
-  const player = prio.Spieler || prio.player || "";
-  const server = prio.Server || prio.server || "";
-  const p0Item = prio.P1 || prio.p1 || "";
-  const buttons = [renderBenchAction(prio, raid)];
-
-  if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
-    buttons.push(`<button class="small-btn good" type="button" onclick="clearP0PlusForPlayerFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}','${escapeQuotes(p0Item)}')">Item erhalten</button>`);
-  }
-
-  buttons.push(`<button class="small-btn danger" type="button" onclick="deletePrioFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}')">Löschen</button>`);
-
-  return `<div class="prio-row-actions">${buttons.join("")}</div>`;
-}
-
-async function toggleRaidPrioStatusFromModal(raidId){
-  await toggleRaidPrioStatus(raidId);
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  if(raid) openPrioModal(raidId);
-}
-
-async function transferP0PlusFromGuild(raidId){
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  if(!raid){
-    setStatus("Raid wurde nicht gefunden.", "bad");
-    return;
-  }
-  if(!isAllowedP0RaidForRaid(raid)){
-    setStatus("P0+ Übertragung gibt es nur für MC, BWL, AQ40 und Naxxramas.", "bad");
-    return;
-  }
-
-  const label = `${raid.raidName || raid.raid || "Raid"} ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim();
-  const ok = confirm(`P0+ Punkte für ${label} nach Railway übertragen?`);
-  if(!ok) return;
-
-  try{
-    const result = await railwayApi({
-      action:"transferP0PlusPoints",
-      masterCode,
-      raidId: raid.raidId || "",
-      raid: getRaidKey(raid)
-    });
-
-    if(!result.success){
-      setStatus(result.error || "P0+ Punkte konnten nicht übertragen werden.", "bad");
-      return;
-    }
-
-    raid.p0PlusTransferred = Number(result.candidates || result.awarded || 0) > 0;
-    raid.p0PlusTransferCount = Number(result.candidates || result.awarded || 0);
-    renderDashboardCards();
-    renderRaids();
-    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
-
-    const modal = document.getElementById("prioModal");
-    if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
-  }catch(error){
-    setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
-  }
-}
-
-async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  if(!raid){
-    setStatus("Raid wurde nicht gefunden.", "bad");
-    return;
-  }
-
-  const ok = confirm(`${player} hat "${itemName}" erhalten? Der P0+ Punkt wird entfernt.`);
-  if(!ok) return;
-
-  try{
-    const result = await railwayApi({
-      action:"clearP0PlusForPlayer",
-      masterCode,
-      raid:getRaidKey(raid),
-      player,
-      server,
-      item:itemName
-    });
-
-    if(!result.success){
-      setStatus(result.error || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
-      return;
-    }
-
-    setStatus("Item erhalten gespeichert.", "good");
-    openPrioModal(raidId);
-  }catch(error){
-    setStatus(error.message || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
-  }
-}
-
-async function deletePrioFromModal(raidId, player, server){
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  if(!raid){
-    setStatus("Raid wurde nicht gefunden.", "bad");
-    return;
-  }
-
-  const ok = confirm(`Prio von ${player} für diesen Raid löschen?`);
-  if(!ok) return;
-
-  try{
-    const result = await railwayApi({
-      action:"guildDeletePrio",
-      masterCode,
-      raidId,
-      raid:getRaidKey(raid),
-      player,
-      server
-    });
-
-    if(!result.success){
-      setStatus(result.error || "Prio konnte nicht gelöscht werden.", "bad");
-      return;
-    }
-
-    setStatus("Prio gelöscht.", "good");
-    openPrioModal(raidId);
-  }catch(error){
-    setStatus(error.message || "Prio konnte nicht gelöscht werden.", "bad");
-  }
-}
-
 async function setPrioBenchFromModal(raidId, rowNumber, bench, player, server){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
   const masterCode = document.getElementById("masterCode").value.trim();
@@ -3171,7 +2589,7 @@ async function setPrioBenchFromModal(raidId, rowNumber, bench, player, server){
   }
 
   try{
-    const result = await railwayApi({
+    const result = await apiWrite({
       action:"guildSetPrioBench",
       masterCode,
       raidId,
@@ -3341,7 +2759,7 @@ async function loadP0PlusPanel(){
   document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"getP0Plus" });
+    const result = await apiJsonp({ action:"getP0Plus" });
     if(!result.success){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
       return;
@@ -3419,7 +2837,7 @@ function renderP0PlusRows(){
         <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
         <td>
           <div class="actions">
-            <button class="small-btn ghost" type="button" onclick="addP0PlusInput(${sourceIndex},0.5)">+0.5 Bench</button>
+            <button class="small-btn ghost" type="button" onclick="setP0PlusInput(${sourceIndex},0.5)">0.5 Bench</button>
             <button class="small-btn primary" type="button" onclick="saveP0PlusPoints(${sourceIndex})">Speichern</button>
             <button class="small-btn danger" type="button" onclick="setP0PlusInput(${sourceIndex},0); saveP0PlusPoints(${sourceIndex})">Entfernen</button>
           </div>
@@ -3432,14 +2850,6 @@ function renderP0PlusRows(){
 function setP0PlusInput(index, value){
   const field = document.getElementById(`p0Points_${index}`);
   if(field) field.value = String(value);
-}
-
-function addP0PlusInput(index, amount){
-  const field = document.getElementById(`p0Points_${index}`);
-  if(!field) return;
-
-  const current = Number(String(field.value || "0").replace(",", ".")) || 0;
-  field.value = formatPoints(current + Number(amount || 0));
 }
 
 async function saveP0PlusPoints(index){
@@ -3460,7 +2870,7 @@ async function saveP0PlusPoints(index){
   }
 
   try{
-    const result = await railwayApi({
+    const result = await apiWrite({
       action:"guildSetP0PlusPoints",
       masterCode,
       raid:entry.raid || "",
@@ -3508,19 +2918,13 @@ async function loadIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetIssueReports", masterCode });
+    const result = await apiJsonp({ action:"guildGetIssueReports", masterCode });
     if(!result.success){
       document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
       return;
     }
 
     issueReports = Array.isArray(result.reports) ? result.reports : [];
-    try{
-      const sentResult = await railwayApi({ action:"guildGetSentPlayerMessages", masterCode });
-      guildSentMessages = sentResult && sentResult.success && Array.isArray(sentResult.messages) ? sentResult.messages : [];
-    }catch(sentError){
-      guildSentMessages = [];
-    }
     await ensureLootDataLoaded();
     renderSummary();
     renderIssueInboxPanel();
@@ -3531,10 +2935,6 @@ async function loadIssueInboxPanel(){
 
 function renderIssueInboxPanel(){
   document.getElementById("issueInboxPanelContent").innerHTML = `
-    <div class="issue-toolbar">
-      <button id="guildInboxReportsTab" class="small-btn ${guildInboxTab === "reports" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('reports')">Meldungen</button>
-      <button id="guildInboxSentTab" class="small-btn ${guildInboxTab === "sent" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('sent')">Verschickte LeadPINs</button>
-    </div>
     <div class="issue-toolbar">
       <input id="issueSearch" type="search" placeholder="Spieler, Item, Raid oder Hinweis suchen..." oninput="renderIssueRows()">
       <button class="small-btn ghost" type="button" onclick="loadIssueInboxPanel()">Neu laden</button>
@@ -3560,19 +2960,9 @@ function renderIssueInboxPanel(){
   renderIssueRows();
 }
 
-function setGuildInboxTab(tab){
-  guildInboxTab = tab === "sent" ? "sent" : "reports";
-  renderIssueInboxPanel();
-}
-
 function renderIssueRows(){
   const tbody = document.getElementById("issueRows");
   if(!tbody) return;
-
-  if(guildInboxTab === "sent"){
-    renderGuildSentLeadPinRows(tbody);
-    return;
-  }
 
   const search = normalize(document.getElementById("issueSearch").value);
   const rows = issueReports.filter(report => {
@@ -3604,76 +2994,12 @@ function renderIssueRows(){
       <td>${escapeHtml(report.type || report.category || "-")}</td>
       <td>${escapeHtml(report.raid || "-")}</td>
       <td>${renderIssueItem(report)}<br><span class="muted">${escapeHtml(report.slot || "")}${report.points ? " · " + escapeHtml(report.points) + " Punkte" : ""}</span></td>
-      <td>${escapeHtml(report.player || "-")}<br><span class="muted">${escapeHtml(report.server || "")}</span></td>
+      <td><span class="muted">Gemeldet von</span><br><strong>${escapeHtml(report.player || "Unbekannt")}</strong><br><span class="muted">${escapeHtml(report.server || "Kein Server")}</span></td>
       <td class="issue-note">${escapeHtml(report.note || "-")}</td>
       <td>${escapeHtml(report.source || "-")}<br><span class="muted">${escapeHtml(report.page || "")}</span></td>
-      <td><button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}')">Erledigt</button></td>
+      <td><button class="small-btn good" type="button" onclick="resolveIssueReport(${Number(report.rowNumber || 0)})">Erledigt</button></td>
     </tr>
   `).join("");
-}
-
-function renderGuildSentLeadPinRows(tbody){
-  const search = normalize(document.getElementById("issueSearch").value);
-  const rows = guildSentMessages.filter(message => {
-    const haystack = normalize([
-      message.createdAt,
-      message.recipientNames,
-      message.raidName,
-      message.raidDate,
-      message.raidTime,
-      message.leadPin,
-      message.title
-    ].join(" "));
-    return !search || haystack.includes(search);
-  });
-
-  if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="8" class="muted">Noch keine LeadPIN-Nachrichten verschickt.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = rows.map(message => {
-    const directLink = message.raidId ? withGuildUrl("index.html") + `&raidId=${encodeURIComponent(message.raidId)}` : withGuildUrl("index.html");
-    return `
-      <tr>
-        <td>${escapeHtml(formatDateTime(message.createdAt) || "-")}</td>
-        <td>LeadPIN</td>
-        <td>${escapeHtml(message.raidName || "-")}<br><span class="muted">${escapeHtml(formatRaidDate(message.raidDate))} ${escapeHtml(message.raidTime || "")}</span></td>
-        <td><span class="pin">${escapeHtml(message.leadPin || "-")}</span></td>
-        <td>${escapeHtml(message.recipientNames || "-")}</td>
-        <td class="issue-note">${escapeHtml(message.title || "LeadPIN")}</td>
-        <td><a href="${escapeAttr(directLink)}" target="_blank" rel="noopener">Raid öffnen</a></td>
-        <td>
-          <div class="actions">
-            <button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(message.leadPin || "")}')">PIN kopieren</button>
-            <button class="small-btn danger" type="button" onclick="deleteGuildSentMessage('${escapeAttr(message.id)}')">Löschen</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
-}
-
-async function deleteGuildSentMessage(id){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode || !id){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  if(!confirm("Verschickte LeadPIN-Nachricht wirklich löschen?")) return;
-
-  try{
-    const result = await railwayApi({ action:"guildDeletePlayerMessage", masterCode, id });
-    if(!result.success || !result.deleted){
-      setStatus(result.error || "Nachricht konnte nicht gelöscht werden.", "bad");
-      return;
-    }
-    guildSentMessages = guildSentMessages.filter(message => String(message.id || "") !== String(id));
-    renderIssueRows();
-    setStatus("Nachricht gelöscht.", "good");
-  }catch(error){
-    setStatus(error.message || "Nachricht konnte nicht gelöscht werden.", "bad");
-  }
 }
 
 function renderIssueItem(report){
@@ -3700,15 +3026,15 @@ async function resolveIssueReport(rowNumber){
   if(!rowNumber) return;
 
   try{
-    const result = await railwayApi({ action:"guildResolveIssueReport", masterCode, rowNumber });
+    const result = await apiJsonp({ action:"guildResolveIssueReport", masterCode, rowNumber });
     if(!result.success){
       setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
       return;
     }
-    issueReports = issueReports.filter(report => String(report.id || report.rowNumber || "") !== String(rowNumber));
+    issueReports = issueReports.filter(report => Number(report.rowNumber || 0) !== Number(rowNumber));
     renderSummary();
     renderIssueRows();
-    setStatus("Meldung erledigt und gelöscht.", "good");
+    setStatus(result.notified ? "Meldung erledigt. Der Spieler wurde benachrichtigt." : "Meldung erledigt. Es konnte keine Spieler-Nachricht erstellt werden.", result.notified ? "good" : "warn");
   }catch(error){
     setStatus(error.message || "Meldung konnte nicht erledigt werden.", "bad");
   }
@@ -3737,7 +3063,7 @@ async function loadWorldbuffPanel(){
       return;
     }
 
-    worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+    worldbuffEntries = normalizeWorldbuffDisplayEntries(result.buffs);
     renderWorldbuffMiniList();
     renderWorldbuffPanel(days);
   }catch(error){
@@ -3847,7 +3173,7 @@ function renderWorldbuffRows(){
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
           </select>
         </td>
-        <td><div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button></div></td>
+        <td><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button></td>
       </tr>
     `;
   }).join("");
@@ -3941,44 +3267,6 @@ async function saveWorldbuffCaster(index){
     setStatus("Worldbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Worldbuff konnte nicht gespeichert werden.", "bad");
-  }
-}
-
-async function requestWorldbuffReplacement(index){
-  const entry = worldbuffEntries[index];
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!entry || !masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  const targetChoice = (prompt("Wohin posten? worldbuff, intern oder beide", "beide") || "beide").toLowerCase().trim();
-  const target = targetChoice.includes("intern") ? "guild" : targetChoice.includes("world") ? "worldbuff" : "both";
-  const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
-
-  try{
-    const result = await apiWrite({
-      action:"guildRequestWorldbuffReplacement",
-      masterCode,
-      target,
-      rowNumber:entry.rowNumber || "",
-      buff:entry.buff || "",
-      datum:entry.datum || "",
-      uhrzeit:entry.uhrzeit || "",
-      gilde:entry.gilde || "",
-      charakter:entry.charakter || "",
-      status:entry.status || "",
-      note
-    });
-
-    if(!result.success){
-      setStatus(result.error || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
-      return;
-    }
-
-    setStatus("Ersatzsuche wurde an den Bot übergeben.", "good");
-  }catch(error){
-    setStatus(error.message || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
   }
 }
 
@@ -4079,7 +3367,7 @@ async function loadHordenbuffPanel(){
   content.innerHTML = '<div class="status">Hordenbuffs werden geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetHordenbuffs", masterCode, days });
+    const result = await apiJsonp({ action:"guildGetHordenbuffs", masterCode, days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Hordenbuffs konnten nicht geladen werden.")}</div>`;
       return;
@@ -4214,7 +3502,7 @@ async function saveHordenbuffEntry(index){
   const note = document.getElementById(`hordenbuffNote_${index}`).value.trim();
 
   try{
-    const result = await railwayWrite({
+    const result = await apiWrite({
       action:"guildSetHordenbuffEntry",
       masterCode,
       rowNumber:entry.rowNumber,
@@ -4233,8 +3521,6 @@ async function saveHordenbuffEntry(index){
     entry.uebernehmer = uebernehmer;
     entry.status = normalizeBuffStatus(status);
     entry.note = note;
-
-    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
     setStatus("Hordenbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Hordenbuff konnte nicht gespeichert werden.", "bad");
@@ -4256,7 +3542,7 @@ async function createHordenbuffTerm(){
   const note = document.getElementById("newHordenbuffNote").value.trim() || "kommender Rend-Termin laut Lichtbuff";
 
   try{
-    const result = await railwayWrite({
+    const result = await apiWrite({
       action:"guildCreateBuffTerm",
       masterCode,
       target:"hordenbuff",
@@ -4276,7 +3562,6 @@ async function createHordenbuffTerm(){
     }
 
     await loadHordenbuffPanel();
-    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
     setStatus("Hordenbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Hordenbuff-Termin konnte nicht erstellt werden.", "bad");
@@ -4294,24 +3579,22 @@ function statusBadge(status){
   return `<span class="badge ${cls}">${escapeHtml(status || "geschlossen")}</span>`;
 }
 
+function p0Badge(value){
+  const normalized = normalize(value);
+  if(normalized === "ja" || normalized === "aktiv" || normalized === "true"){
+    return '<span class="badge open">frei</span>';
+  }
+  if(normalized === "nein"){
+    return '<span class="badge closed">gesperrt</span>';
+  }
+  return '<span class="badge closed">-</span>';
+}
+
 function formatRaidDate(value){
   if(!value) return "-";
   const parts = String(value).split("-");
   if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
   return String(value);
-}
-
-function formatDateTime(value){
-  if(!value) return "-";
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString("de-DE",{
-    day:"2-digit",
-    month:"2-digit",
-    year:"numeric",
-    hour:"2-digit",
-    minute:"2-digit"
-  });
 }
 
 function normalize(value){
