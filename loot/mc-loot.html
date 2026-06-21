@@ -3351,7 +3351,10 @@ function buildSavePrioUrl(savePin, oldPin){
   let url=APPS_SCRIPT_URL+
     "?action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
+    "&raidId="+encodeURIComponent(currentRaidId || "")+
     "&raidPin="+encodeURIComponent(pin)+
+    "&raidDate="+encodeURIComponent(currentRaidDate || "")+
+    "&raidTime="+encodeURIComponent(currentRaidTime || "")+
     "&characterPin="+encodeURIComponent(savePin)+
     "&playerPin="+encodeURIComponent(savePin)+
     "&player="+encodeURIComponent(player)+
