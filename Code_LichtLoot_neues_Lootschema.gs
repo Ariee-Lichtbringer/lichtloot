@@ -3365,7 +3365,7 @@ function buildWorldbuffListResponse_(e, defaultDays) {
   const maxDate = new Date(todayOnly.getTime() + days * 24 * 60 * 60 * 1000);
 
   const filtered = rows.filter(function(row) {
-    if (buffFilter && normalizeWorldbuffName_(row.buff) !== buffFilter) return false;
+    if (buffFilter && !worldbuffRowMatchesFilter_(row, buffFilter)) return false;
 
     const dateValue = parseWorldbuffDate_(row.datum);
     if (!dateValue) return includePast;
@@ -3388,6 +3388,21 @@ function buildWorldbuffListResponse_(e, defaultDays) {
     count: filtered.length,
     buffs: filtered
   };
+}
+
+function worldbuffRowMatchesFilter_(row, buffFilter) {
+  const wanted = normalizeWorldbuffName_(buffFilter);
+  const rowBuff = normalizeWorldbuffName_(row && row.buff);
+  if (!wanted || rowBuff === wanted) return true;
+  return isWorldbuffOpen_(row && row.status) &&
+    !(row && row.charakter) &&
+    isOnyNefWorldbuff_(wanted) &&
+    isOnyNefWorldbuff_(rowBuff);
+}
+
+function isOnyNefWorldbuff_(buff) {
+  const value = normalizeWorldbuffName_(buff);
+  return value === "Ony" || value === "Nef";
 }
 
 function getPlayerWorldbuffsData(e) {
@@ -3725,17 +3740,19 @@ function guildSetWorldbuffCasterData(e) {
   const rowNumber = Number(e.parameter.rowNumber || 0);
   const charakter = String(e.parameter.charakter || e.parameter.caster || "").trim();
   const status = normalizeBuffStatusForSheet_(e.parameter.status || "");
+  const buff = normalizeWorldbuffName_(e.parameter.buff || "");
 
   if (rowNumber < 2) {
     return { success: false, error: "Worldbuff-Zeile fehlt." };
   }
 
-  const saved = setWorldbuffSheetEntry_(WORLDBUFF_SHEET_GID, rowNumber, charakter, status, null);
+  const saved = setWorldbuffSheetEntry_(WORLDBUFF_SHEET_GID, rowNumber, charakter, status, null, null, buff || null);
   if (!saved.success) return saved;
 
   queueWorldbuffBotUpdate_("worldbuff_update", {
     source: "gildenleitung",
     rowNumber: rowNumber,
+    buff: buff,
     charakter: charakter,
     status: status
   });
@@ -3743,6 +3760,7 @@ function guildSetWorldbuffCasterData(e) {
   return {
     success: true,
     rowNumber: rowNumber,
+    buff: buff,
     charakter: charakter,
     status: status,
     queued: true

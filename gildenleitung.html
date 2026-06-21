@@ -3847,7 +3847,7 @@ function renderWorldbuffRows(){
       entry.status,
       entry.note
     ].join(" "));
-    return (!buffFilter || entry.buff === buffFilter) && (!search || haystack.includes(search));
+    return (!buffFilter || worldbuffMatchesFilter(entry, buffFilter)) && (!search || haystack.includes(search));
   });
 
   if(!rows.length){
@@ -3870,7 +3870,7 @@ function renderWorldbuffRows(){
         ${renderBuffGroupCell(entry.tag || "-", hideDateCells)}
         ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
         ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
-        <td>${renderWorldbuffBadge(entry.buff)}</td>
+        <td>${renderWorldbuffBuffControl(entry, index)}</td>
         <td>${escapeHtml(entry.gilde || "-")}</td>
         <td><input id="worldbuffCaster_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
         <td>
@@ -3882,6 +3882,41 @@ function renderWorldbuffRows(){
       </tr>
     `;
   }).join("");
+}
+
+function worldbuffMatchesFilter(entry, buffFilter){
+  const wanted = String(buffFilter || "").trim();
+  const buff = String((entry && entry.buff) || "").trim();
+  if(!wanted || buff === wanted) return true;
+  return isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff) && isOnyNefBuff(wanted);
+}
+
+function isOnyNefBuff(buff){
+  const value = String(buff || "").trim().toLowerCase();
+  return value === "ony" || value === "nef";
+}
+
+function isWorldbuffOpenSlot(entry){
+  if(!entry || String(entry.charakter || "").trim()) return false;
+  const cleanStatus = String(entry.status || "").replace(/[🟡🟢✅🔴🟠⚪]/g,"").trim().toLowerCase();
+  return !cleanStatus || cleanStatus.includes("offen") || cleanStatus.includes("frei");
+}
+
+function getWorldbuffChoices(entry){
+  const buff = String((entry && entry.buff) || "").trim();
+  if(isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff)) return ["Ony", "Nef"];
+  return ["Hakkar", "Ony", "Nef"].includes(buff) ? [buff] : ["Hakkar", "Ony", "Nef"];
+}
+
+function renderWorldbuffBuffControl(entry, index){
+  const choices = getWorldbuffChoices(entry);
+  if(choices.length <= 1) return renderWorldbuffBadge(entry.buff);
+  const current = String((entry && entry.buff) || "").trim();
+  return `
+    <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff">
+      ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
+    </select>
+  `;
 }
 
 function renderWorldbuffBadge(buff){
@@ -3959,12 +3994,15 @@ async function saveWorldbuffCaster(index){
 
   const charakter = document.getElementById(`worldbuffCaster_${index}`).value.trim();
   const status = document.getElementById(`worldbuffStatus_${index}`).value.trim();
+  const buffField = document.getElementById(`worldbuffBuff_${index}`);
+  const buff = buffField ? buffField.value.trim() : (entry.buff || "");
 
   try{
     const result = await apiWrite({
       action:"guildSetWorldbuffCaster",
       masterCode,
       rowNumber:entry.rowNumber,
+      buff,
       charakter,
       status
     });
@@ -3974,6 +4012,7 @@ async function saveWorldbuffCaster(index){
       return;
     }
 
+    entry.buff = buff;
     entry.charakter = charakter;
     entry.status = normalizeBuffStatus(status);
     setStatus("Worldbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
