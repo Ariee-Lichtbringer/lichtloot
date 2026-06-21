@@ -3144,6 +3144,20 @@ function mailboxDirectLink(message){
   return message && message.raidId ? withGuildUrl("index.html")+"&raidId="+encodeURIComponent(message.raidId) : "";
 }
 
+function getPlayerMailboxSenderCharacter(){
+  const select=document.getElementById("dashboardCharSelect") || document.getElementById("myLichtlootCharSelect");
+  if(!select || !select.value) return null;
+  try{
+    const character=JSON.parse(select.value);
+    return {
+      name:String(character.name || character.char || character.player || "").trim(),
+      server:String(character.server || "").trim()
+    };
+  }catch(error){
+    return {name:String(select.value || "").trim(), server:""};
+  }
+}
+
 function renderPlayerMailbox(){
   const content=document.getElementById("playerMailboxContent");
   if(!content) return;
@@ -3221,6 +3235,7 @@ async function sendPlayerMailboxMessage(){
   if(status) status.innerHTML='<span class="warn">Nachricht wird gesendet ...</span>';
 
   try{
+    const senderCharacter=getPlayerMailboxSenderCharacter();
     const query=new URLSearchParams({
       action:"sendPlayerMessageFromPlayer",
       guild:CURRENT_GUILD_SLUG,
@@ -3230,6 +3245,10 @@ async function sendPlayerMailboxMessage(){
       body,
       t:Date.now()
     });
+    if(senderCharacter && senderCharacter.name){
+      query.set("senderCharacter",senderCharacter.name);
+      if(senderCharacter.server) query.set("senderServer",senderCharacter.server);
+    }
     const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
     const result=await response.json();
     if(!result.success){
@@ -3991,18 +4010,39 @@ function parseCSV(text){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+  const numericIconMap = {
+    "133639":"inv_misc_bag_10",
+    "133640":"inv_misc_bag_10_black",
+    "133641":"inv_misc_bag_10_blue",
+    "133642":"inv_misc_bag_10_green",
+    "133643":"inv_misc_bag_10_red"
+  };
 
   if(!raw) return fallback;
   if(/^https?:\/\//i.test(raw)) return raw;
 
   /* Zahlen aus alten Icon-Spalten sind keine stabilen Wowhead-Icons. */
-  if(/^\d+$/.test(raw)) return fallback;
+  if(/^\d+$/.test(raw)){
+    return numericIconMap[raw]
+      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
+      : fallback;
+  }
 
   const clean = raw.toLowerCase().replace(/\.(jpg|jpeg|png|webp)$/i,"");
   return "https://wow.zamimg.com/images/wow/icons/large/" + clean + ".jpg";
 }
 
 function getSheetIconName(obj){
+  const numericIconMap = {
+    "133639":"inv_misc_bag_10",
+    "133640":"inv_misc_bag_10_black",
+    "133641":"inv_misc_bag_10_blue",
+    "133642":"inv_misc_bag_10_green",
+    "133643":"inv_misc_bag_10_red"
+  };
+  const numericIcon = String((obj && (obj.Icon || obj.icon)) || "").trim();
+  if(numericIconMap[numericIcon]) return numericIconMap[numericIcon];
+
   const candidates = [
     obj.IconName,
     obj.WowheadIcon,
@@ -4014,6 +4054,7 @@ function getSheetIconName(obj){
 
   for(const value of candidates){
     const raw = String(value || "").trim();
+    if(numericIconMap[raw]) return numericIconMap[raw];
     if(raw && !/^\d+$/.test(raw)){
       return raw.toLowerCase().replace(/\.(jpg|jpeg|png|webp)$/i,"");
     }

@@ -265,11 +265,15 @@ async function findPlayerByPin(guildId, pin) {
 
 async function getPlayerDisplayNameByPin(guildId, pin) {
   const result = await query(
-    `select coalesce(nullif(p.main_name, ''), min(c.name), p.player_pin) as display_name
+    `select coalesce((
+       select c.name
+       from characters c
+       where c.player_id = p.id
+       order by c.is_main desc, c.created_at asc
+       limit 1
+     ), p.player_pin) as display_name
      from players p
-     left join characters c on c.player_id = p.id
-     where p.guild_id = $1 and p.player_pin = $2
-     group by p.id, p.main_name, p.player_pin`,
+     where p.guild_id = $1 and p.player_pin = $2`,
     [guildId, normalizePin(pin)]
   );
   return clean(result.rows[0]?.display_name);
@@ -1419,12 +1423,17 @@ async function getPlayerMessages({ guildId, query: params }) {
               where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
             ), '') as recipient_names,
             coalesce((
-              select coalesce(nullif(p.main_name, ''), min(c.name), p.player_pin)
+              select coalesce((
+                select c.name
+                from characters c
+                where c.player_id = p.id
+                order by c.is_main desc, c.created_at asc
+                limit 1
+              ), p.player_pin)
               from players p
-              left join characters c on c.player_id = p.id
               where p.guild_id = pm.guild_id
                 and p.player_pin = substring(pm.sender from '^Spieler (.+)$')
-              group by p.id, p.main_name, p.player_pin
+              limit 1
             ), pm.sender) as sender_display
      from player_messages pm
      where pm.guild_id = $1 and pm.player_pin = $2
@@ -1461,12 +1470,6 @@ async function getPlayerSentMessages({ guildId, query: params }) {
            join characters c on c.player_id = p.id
            where p.guild_id = pm.guild_id and p.player_pin = $3
          )
-         or pm.sender = coalesce((
-           select nullif(p.main_name, '')
-           from players p
-           where p.guild_id = pm.guild_id and p.player_pin = $3
-           limit 1
-         ), '')
        )
      order by pm.created_at desc
      limit 50`,
@@ -1535,12 +1538,6 @@ async function deletePlayerMessage({ guildId, query: params }) {
                join characters c on c.player_id = p.id
                where p.guild_id = player_messages.guild_id and p.player_pin = $3
              )
-             or sender = coalesce((
-               select nullif(p.main_name, '')
-               from players p
-               where p.guild_id = player_messages.guild_id and p.player_pin = $3
-               limit 1
-             ), '')
            )
          )
        )
