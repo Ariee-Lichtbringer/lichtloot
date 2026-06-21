@@ -1725,7 +1725,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html">Startseite</a>
+  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -2002,20 +2002,34 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 <script>
 const RAID_NAME = "bwl";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
-
-function getCurrentGuildSlug(){
-  const params = new URLSearchParams(window.location.search);
-  const explicit = params.get("guild") || params.get("gilde");
-  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
-  return "lichtloot";
+const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function currentGuildName(){ return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot"; }
+function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
+function guildUrl(path){
+  const slug=currentGuildSlug();
+  if(slug === "lichtloot") return path;
+  const hashIndex=path.indexOf("#");
+  const hash=hashIndex >= 0 ? path.slice(hashIndex) : "";
+  const base=hashIndex >= 0 ? path.slice(0,hashIndex) : path;
+  return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
-const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
-function withGuildParam(url){
-  const sep = String(url || "").includes("?") ? "&" : "?";
-  return String(url || "") + sep + "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+function applyGuildBranding(){
+  if(currentGuildSlug() !== "panemloot") return;
+  document.title = document.title.replace(/Lichtloot|LichtLoot/g,"PanemLoot");
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    node.nodeValue = node.nodeValue
+      .replace(/Mein LichtLoot/g,"Mein PanemLoot")
+      .replace(/Mein-LichtLoot/g,"Mein-PanemLoot")
+      .replace(/LichtLoot/g,"PanemLoot")
+      .replace(/Lichtloot/g,"PanemLoot")
+      .replace(/Lichtbringer/g,"Panem");
+  });
 }
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 const LOOT_JSON_URL = "../data/bwl.json";
 const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
@@ -2030,7 +2044,6 @@ let aq40Loot = [];
 let autoRefreshTimer = null;
 let currentPublishedPrios = [];
 let currentPublishedMode = false;
-let currentPrioEntryOpen = false;
 function updatePrio3ButtonVisibility(){
   document.querySelectorAll("[data-prio-export-buttons]").forEach(box => {
     box.classList.toggle("hidden", !currentPublishedMode);
@@ -2040,6 +2053,7 @@ function updatePrio3ButtonVisibility(){
 let currentRaidDate = "";
 let currentRaidTime = "";
 let currentRaidId = "";
+let currentP0PlusOverride = false;
 let currentPrioCheck = null;
 let prioCheckTimer = null;
 let p0DeadlineTimer = null;
@@ -2103,11 +2117,23 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  return false;
+  if(currentP0PlusOverride) return false;
+  const deadline=getP0Deadline();
+  if(!deadline) return false;
+  return new Date() > deadline;
 }
 
 function getP0DeadlineClosedMessage(){
-  return "";
+  if(currentP0PlusOverride){
+    return "P0+ wurde vom Raidlead wieder freigeschaltet.";
+  }
+  const deadline=getP0Deadline();
+  if(!deadline){
+    return "P0+ kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
+  }
+
+  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
+  return "P0+ ist bereits geschlossen. P0+ konnte nur bis " + deadlineText + " gesetzt werden.";
 }
 
 function formatRaidDate(value){
@@ -2143,6 +2169,11 @@ function updateRaidTimeDisplay(){
   timeEl.textContent=formatTime(currentRaidTime);
 
   const deadline=getP0Deadline();
+  if(currentP0PlusOverride){
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ durch Raidlead freigeschaltet</span><br>Die 30-Minuten-Sperre ist für diesen Raid aufgehoben.';
+    updateActiveButtons();
+    return;
+  }
   if(!deadline){
     deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> P0+ bleibt vorerst auswählbar.';
     return;
@@ -2211,6 +2242,13 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+  const numericIconMap = {
+    "133639":"inv_misc_bag_10",
+    "133640":"inv_misc_bag_10_black",
+    "133641":"inv_misc_bag_10_blue",
+    "133642":"inv_misc_bag_10_green",
+    "133643":"inv_misc_bag_10_red"
+  };
 
   if(!raw){
     return fallback;
@@ -2228,7 +2266,9 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return fallback;
+    return numericIconMap[raw]
+      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
+      : fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -2236,6 +2276,16 @@ function getIconUrl(icon){
 }
 
 function getSheetIconName(obj){
+  const numericIconMap = {
+    "133639":"inv_misc_bag_10",
+    "133640":"inv_misc_bag_10_black",
+    "133641":"inv_misc_bag_10_blue",
+    "133642":"inv_misc_bag_10_green",
+    "133643":"inv_misc_bag_10_red"
+  };
+  const numericIcon = String((obj && (obj.Icon || obj.icon)) || "").trim();
+  if(numericIconMap[numericIcon]) return numericIconMap[numericIcon];
+
   const candidates = [
     obj.IconName,
     obj.WowheadIcon,
@@ -2246,6 +2296,7 @@ function getSheetIconName(obj){
 
   for(const value of candidates){
     const raw = String(value || "").trim();
+    if(numericIconMap[raw]) return numericIconMap[raw];
     if(raw && !/^\d+$/.test(raw)){
       return raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
     }
@@ -2604,7 +2655,7 @@ async function loadLootFromSheet(){
     const result=await loadAq40LootWithFallback();
     aq40Loot=result.items;
     if(!aq40Loot.length){
-      throw new Error("Keine Naxx-Lootdaten gefunden.");
+      throw new Error("Keine BWL-Lootdaten gefunden.");
     }
 
     await loadP0PlusFromSheet();
@@ -2625,8 +2676,9 @@ async function loadLootFromSheet(){
 async function loadAq40LootWithFallback(){
   const jsonCandidates=[
     LOOT_JSON_URL,
-    "data/naxx.json",
-    "../data/naxx.json"
+    "/data/bwl.json",
+    "data/bwl.json",
+    "../data/bwl.json"
   ];
 
   for(const url of jsonCandidates){
@@ -2639,15 +2691,15 @@ async function loadAq40LootWithFallback(){
         return {items:mapped,source:"JSON"};
       }
     }catch(error){
-      console.warn("Naxx JSON-Fallback fehlgeschlagen:", url, error);
+      console.warn("BWL JSON-Fallback fehlgeschlagen:", url, error);
     }
   }
 
   try{
     const response=await fetch(AQ40_LOOT_CSV_URL + "&t=" + Date.now(), {cache:"no-store"});
-    if(!response.ok) throw new Error("Naxx CSV HTTP " + response.status);
+    if(!response.ok) throw new Error("BWL CSV HTTP " + response.status);
     const csvText=await response.text();
-    if(/^\s*</.test(csvText)) throw new Error("Naxx CSV lieferte HTML statt Daten");
+    if(/^\s*</.test(csvText)) throw new Error("BWL CSV lieferte HTML statt Daten");
 
     const rows=parseCSV(csvText);
     if(rows.length){
@@ -2661,12 +2713,12 @@ async function loadAq40LootWithFallback(){
       if(mapped.length) return {items:mapped,source:"Google Sheet"};
     }
   }catch(error){
-    console.warn("Naxx CSV-Fallback fehlgeschlagen:", error);
+    console.warn("BWL CSV-Fallback fehlgeschlagen:", error);
   }
 
   const exportResult=await apiJsonp({
     action:"getFullExport",
-    raid:"NAXX"
+    raid:"BWL"
   });
   const exported=(exportResult.entries || []).map(entry=>mapAq40SheetLootRow({
     Itemname_DE: entry.item || entry.Item || "",
@@ -2920,7 +2972,7 @@ function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
 
-  return player ? "aq40_prio_"+server+"_"+player : null;
+  return player ? RAID_NAME+"_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -2970,7 +3022,8 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  let data=JSON.parse(localStorage.getItem("aq40_prios")||"[]");
+  const storageKey=RAID_NAME+"_prios";
+  let data=JSON.parse(localStorage.getItem(storageKey)||"[]");
 
   data=data.filter(entry=>
     !(
@@ -2990,7 +3043,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("aq40_prios",JSON.stringify(data));
+  localStorage.setItem(storageKey,JSON.stringify(data));
 }
 
 
@@ -3142,7 +3195,8 @@ function copyParticipantPinFromPopup(){
 }
 
 async function fetchCharactersForParticipantPin(pin){
-  const url=withGuildParam(LICHTLOOT_API_URL+'?action=getCharactersByPin')+
+  const url=RAID_API_URL+
+    '?action=getCharactersByPin'+
     '&pin='+encodeURIComponent(pin)+
     '&t='+Date.now();
 
@@ -3218,7 +3272,8 @@ async function createParticipantPinForCurrentCharacter(){
 
   for(let attempt=0; attempt<5; attempt++){
     const newPin=generateParticipantPin();
-    const url = withGuildParam(LICHTLOOT_API_URL+'?action=createPlayerPin')+
+    const url = RAID_API_URL+
+      "?action=createPlayerPin"+
       "&char="+encodeURIComponent(player)+
       "&server="+encodeURIComponent(server)+
       "&className="+encodeURIComponent(playerClass)+
@@ -3310,11 +3365,9 @@ function buildSavePrioUrl(savePin, oldPin){
     p1 === p2 &&
     p2 === p3;
 
-  let url=withGuildParam(LICHTLOOT_API_URL+'?action=savePrio')+
+  let url=APPS_SCRIPT_URL+
+    "?action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
-    "&raidId="+encodeURIComponent(currentRaidId || "")+
-    "&raidDate="+encodeURIComponent(currentRaidDate || "")+
-    "&raidTime="+encodeURIComponent(currentRaidTime || "")+
     "&raidPin="+encodeURIComponent(pin)+
     "&characterPin="+encodeURIComponent(savePin)+
     "&playerPin="+encodeURIComponent(savePin)+
@@ -3385,12 +3438,6 @@ async function savePrio(){
     return;
   }
 
-  if(currentPublishedMode){
-    status.innerHTML=`<span class="bad">Prioliste ist geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
-    updateSaveButtonState();
-    return;
-  }
-
   if(saveButton) saveButton.disabled=true;
 
   try{
@@ -3401,7 +3448,7 @@ async function savePrio(){
     }
 
     const playerPin = pinInfo.pin;
-    status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
+    status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
 
     let result=await submitPrioWithPin(playerPin, "");
 
@@ -3462,7 +3509,7 @@ async function raidleadLogin(){
   if(raidleadAccounts[pin]){
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
-    window.location.href = "../raidlead-panel.html";
+    window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
 
@@ -3480,7 +3527,7 @@ async function raidleadLogin(){
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadRaidId",result.raidId);
     sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
-    window.location.href = "../raidlead-panel.html";
+    window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
 
@@ -3502,26 +3549,8 @@ async function refreshPrios(){
 }
 
 async function apiJsonp(params){
-  const railwayParams = Object.assign({}, params || {}, { guild: CURRENT_GUILD_SLUG, t: Date.now() });
-  const railwayQuery = Object.entries(railwayParams)
-    .map(([key,value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value == null ? "" : value))
-    .join("&");
-
-  try{
-    const response = await fetch(LICHTLOOT_API_URL + "?" + railwayQuery, {cache:"no-store"});
-    if(response.ok){
-      const result = await response.json();
-      if(result && result.success !== false) return result;
-      if(result && result.error){
-        const errorText = String(result.error || "");
-        if(!/unsupported action/i.test(errorText)) return result;
-      }
-    }
-  }catch(error){
-    console.warn("Railway-API nicht direkt ladbar, nutze Apps-Script-Fallback:", error);
-  }
-
-  const query = Object.entries(params || {})
+  params = Object.assign({ guild: currentGuildSlug() }, params || {});
+  const query = Object.entries(params)
     .map(([key,value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value == null ? "" : value))
     .join("&");
 
@@ -3580,10 +3609,10 @@ async function loadPublishedPrios(){
     table.innerHTML=`<tr><td colspan="8">Noch keine Prioliste geladen.</td></tr>`;
     currentPublishedPrios=[];
     currentPublishedMode=false;
-    currentPrioEntryOpen=false;
     currentRaidDate="";
     currentRaidTime="";
     currentRaidId="";
+    currentP0PlusOverride=false;
     currentPrioCheck=null;
     updateRaidTimeDisplay();
     renderDcCheckBox();
@@ -3603,7 +3632,6 @@ async function loadPublishedPrios(){
       table.innerHTML=`<tr><td colspan="8">Keine Daten verfügbar.</td></tr>`;
       currentPublishedPrios=[];
       currentPublishedMode=false;
-      currentPrioEntryOpen=false;
       setPublishedMode(false);
       return;
     }
@@ -3611,11 +3639,11 @@ async function loadPublishedPrios(){
     currentRaidId = result.raidId || result.RaidID || result.raidID || currentRaidId || "";
     currentRaidDate = result.raidDate || result.datum || result.Datum || "";
     currentRaidTime = result.raidTime || result.uhrzeit || result.Uhrzeit || "";
+    currentP0PlusOverride = Boolean(result.p0PlusOverride) || ["ja","true","aktiv","freigeschaltet"].includes(String(result.p0PlusFreigabe || "").trim().toLowerCase());
 
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
     currentPublishedMode = Boolean(result.published);
-    currentPrioEntryOpen = !Boolean(result.published);
 
     updateRaidTimeDisplay();
     await loadPrioCheck();
@@ -3650,13 +3678,6 @@ async function loadPublishedPrios(){
   }
 }
 
-function updateSaveButtonState(){
-  const saveButton=document.querySelector('button[onclick="savePrio()"]');
-  if(!saveButton) return;
-  saveButton.disabled = Boolean(currentPublishedMode);
-  saveButton.title = currentPublishedMode ? "Prioliste ist geöffnet. Neue Einträge sind nicht mehr möglich." : "";
-}
-
 function setPublishedMode(isPublished){
   const grid=document.getElementById("mainGrid");
   const playerCard=document.getElementById("playerCard");
@@ -3672,7 +3693,6 @@ function setPublishedMode(isPublished){
     grid.classList.remove("published-mode");
   }
   updatePrio3ButtonVisibility();
-  updateSaveButtonState();
 }
 
 
@@ -4289,7 +4309,7 @@ async function loadLoggedInLichtLootCharacters(){
   }
 
   try{
-    const response=await fetch(withGuildParam(LICHTLOOT_API_URL + '?action=getCharactersByPin') + '&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
+    const response=await fetch(APPS_SCRIPT_URL + '?guild=' + encodeURIComponent(currentGuildSlug()) + '&action=getCharactersByPin&pin=' + encodeURIComponent(pin) + '&t=' + Date.now());
     const result=await response.json();
 
     if(!result.success){
@@ -5702,7 +5722,6 @@ function setPublishedMode(isPublished){
     lootCard.classList.remove("hidden");
   }
   updatePrio3ButtonVisibility();
-  updateSaveButtonState();
 }
 
 function ensureVisibleRaidPlayerPin(){
@@ -5750,7 +5769,8 @@ async function loadMyPrios(){
   results.innerHTML='';
 
   try{
-    const url=withGuildParam(LICHTLOOT_API_URL+'?action=getPlayerPrioHistory')+
+    const url=APPS_SCRIPT_URL+
+      '?action=getPlayerPrioHistory'+
       '&char='+encodeURIComponent(charName)+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
@@ -6239,6 +6259,13 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+  const numericIconMap = {
+    "133639":"inv_misc_bag_10",
+    "133640":"inv_misc_bag_10_black",
+    "133641":"inv_misc_bag_10_blue",
+    "133642":"inv_misc_bag_10_green",
+    "133643":"inv_misc_bag_10_red"
+  };
 
   if(!raw){
     return fallback;
@@ -6256,7 +6283,9 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return fallback;
+    return numericIconMap[raw]
+      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
+      : fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -6656,7 +6685,8 @@ async function loadLichtLootCharacters(){
   }
 
   try{
-    const url=withGuildParam(LICHTLOOT_API_URL+'?action=getCharactersByPin')+
+    const url=RAID_API_URL+
+      '?action=getCharactersByPin'+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
 
@@ -6788,7 +6818,8 @@ async function loadMyPrios(){
   results.innerHTML='';
 
   try{
-    const url=withGuildParam(LICHTLOOT_API_URL+'?action=getPlayerPrioHistory')+
+    const url=RAID_API_URL+
+      '?action=getPlayerPrioHistory'+
       '&char='+encodeURIComponent(charName)+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
@@ -7045,7 +7076,7 @@ async function deleteOwnPrio(payload){
     '&t='+Date.now();
 
   async function tryDeletePrio(){
-    const response=await fetch(withGuildParam(LICHTLOOT_API_URL+'?action=deletePrio')+baseParams);
+    const response=await fetch(RAID_API_URL+'?action=deletePrio'+baseParams);
     const data=await response.json();
     return data || {};
   }
@@ -8899,8 +8930,29 @@ function normalizeDcPlayerName(value){
 }
 
 async function loadPrioCheck(){
-  currentPrioCheck = null;
-  return null;
+  if(!currentRaidId){
+    currentPrioCheck = null;
+    return null;
+  }
+
+  try{
+    const result = await apiJsonp({
+      action:"getPrioCheck",
+      raidId:currentRaidId,
+      raid:RAID_NAME
+    });
+
+    if(result && result.success){
+      currentPrioCheck = result.check || null;
+    }else{
+      currentPrioCheck = null;
+    }
+  }catch(error){
+    console.warn("DC Abgleich konnte nicht geladen werden:", error);
+    currentPrioCheck = null;
+  }
+
+  return currentPrioCheck;
 }
 
 
@@ -9620,7 +9672,6 @@ function sendReport(){
   const note = document.getElementById("reportNote")?.value || "";
   const status = document.getElementById("reportStatus");
   const payload = currentReportPayload || {};
-  const guild = new URLSearchParams(location.search).get("guild") || new URLSearchParams(location.search).get("gilde") || "lichtloot";
 
   if(status) status.textContent = "Meldung wird gesendet...";
 
@@ -9638,11 +9689,11 @@ function sendReport(){
   ).trim();
 
   const params = new URLSearchParams({
+    guild:currentGuildSlug(),
     action:"reportIssue",
-    guild:guild,
     type:type,
     note:note,
-    source:payload.source || "Lootseite",
+    source:payload.source || String(RAID_NAME || "").toUpperCase()+" Lootseite",
     category:payload.category || "",
     raid:payload.raid || RAID_NAME || "",
     item:payload.item || "",
@@ -9652,11 +9703,10 @@ function sendReport(){
     server:reportServer,
     playerPin:(typeof getStoredLichtLootPlayerPin === "function" ? getStoredLichtLootPlayerPin() : ""),
     createdAt:payload.createdAt || "",
-    page:location.href,
-    t:Date.now()
+    page:location.href
   });
 
-  fetch(LICHTLOOT_API_URL + "?" + params.toString(), { cache:"no-store" })
+  fetch(APPS_SCRIPT_URL + "?" + params.toString(), { cache:"no-store" })
     .then(response => response.json())
     .then(response => {
       if(status){
