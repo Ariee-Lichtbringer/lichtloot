@@ -856,6 +856,15 @@ th{
   display:none;
 }
 
+body.random-raidlead .app-frame{
+  display:block;
+}
+
+body.random-raidlead .sidebar,
+body.random-raidlead .internal-nav-link{
+  display:none!important;
+}
+
 .topbar{
   border:0;
   border-radius:0;
@@ -1172,6 +1181,11 @@ th{
 </head>
 
 <body>
+<script>
+if(new URLSearchParams(window.location.search).get("leadPin") || new URLSearchParams(window.location.search).get("raidleadPin")){
+  document.body.classList.add("random-raidlead");
+}
+</script>
 <div class="app-frame">
   <aside class="sidebar">
     <img src="images/content.png" alt="Lichtbringer Lootsystem" class="side-logo">
@@ -1199,7 +1213,7 @@ th{
         </div>
       </div>
       <div class="nav" aria-label="Navigation">
-        <button class="btn ghost" type="button" onclick="window.location.href=guildUrl('start.html')">Startseite</button>
+        <button class="btn ghost internal-nav-link" type="button" onclick="window.location.href=guildUrl('start.html')">Startseite</button>
         <button class="btn" type="button" onclick="reloadCurrentRaid()">↻ Aktualisieren</button>
         <div class="top-profile">
           <img src="images/content.png" alt="">
@@ -1340,6 +1354,7 @@ function checkLogin(){
   const params = new URLSearchParams(window.location.search);
   const urlLeadPin = (params.get("leadPin") || params.get("raidleadPin") || "").trim();
   if(urlLeadPin){
+    document.body.classList.add("random-raidlead");
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadPrioPin",urlLeadPin);

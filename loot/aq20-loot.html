@@ -224,6 +224,24 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   box-shadow:0 0 0 2px rgba(250,204,21,.16);
 }
 
+body.random-prio .main-nav > .nav-btn{
+  display:none!important;
+}
+
+body.random-prio .main-nav{
+  width:min(520px,calc(100vw - 48px));
+}
+
+body.random-prio .nav-login input{
+  width:240px;
+}
+
+body.random-prio .p0plus-overlay,
+body.random-prio .item-p0plus-line,
+body.random-prio .tooltip-p0{
+  display:none!important;
+}
+
 .raid-create-box{
   position:fixed;
   top:132px;
@@ -3502,6 +3520,18 @@ const raidleadAccounts = {
 async function raidleadLogin(){
   const pin = document.getElementById("raidleadPin").value.trim();
 
+  if(typeof isRandomPrioLink !== "undefined" && isRandomPrioLink){
+    if(!pin){
+      alert("Bitte Random Raidlead-PIN eingeben.");
+      return;
+    }
+    const target=new URL("../raidlead-panel.html", window.location.href);
+    target.searchParams.set("guild", currentGuildSlug());
+    target.searchParams.set("leadPin", pin);
+    window.location.href=target.href;
+    return;
+  }
+
   if(raidleadAccounts[pin]){
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
@@ -3873,6 +3903,13 @@ function cssEscape(text){
 
 const params=new URLSearchParams(window.location.search);
 const pinFromUrl=params.get("pin");
+const isRandomPrioLink=params.get("random")==="1";
+
+if(isRandomPrioLink){
+  document.body.classList.add("random-prio");
+  const randomLeadInput=document.getElementById("raidleadPin");
+  if(randomLeadInput) randomLeadInput.placeholder="Random Raidlead PIN";
+}
 
 if(pinFromUrl){
   document.getElementById("raidPin").value=pinFromUrl;
