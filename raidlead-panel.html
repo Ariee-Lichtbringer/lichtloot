@@ -1516,12 +1516,12 @@ async function tryLoadRaidByPin(pin, raidKey){
   return false;
 }
 
-async function loadPriosFromSheet(playerPin){
+async function loadPriosFromSheet(leadPin){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getPublishedPrios" +
     "&raid=" + encodeURIComponent(raids[currentRaidKey].short) +
-    "&playerPin=" + encodeURIComponent(playerPin) +
+    "&leadPin=" + encodeURIComponent(leadPin) +
     "&t=" + Date.now();
 
   try{
