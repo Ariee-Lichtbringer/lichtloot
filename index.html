@@ -1311,6 +1311,17 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .dashboard-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
 .dashboard-link{text-decoration:none;text-align:center;display:block}
 .big-btn.subtle{background:rgba(2,6,23,.55)!important;border-color:rgba(255,255,255,.16)!important}
+.random-raid-panel{border-radius:22px;border:1px solid rgba(250,204,21,.28);background:rgba(12,18,32,.86);box-shadow:0 16px 34px rgba(0,0,0,.36);padding:20px 22px}
+.random-raid-panel h2{color:#facc15;font-size:22px;margin:0 0 8px}
+.random-raid-panel p{color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 0 14px}
+.random-raid-form{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:12px;align-items:end}
+.random-raid-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+.random-raid-form input,.random-raid-form select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
+.random-raid-result{margin-top:12px}
+.random-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.random-link-grid .copy-btn{width:100%}
+@media(max-width:900px){.random-raid-form{grid-template-columns:1fr 1fr}.random-link-grid{grid-template-columns:1fr}}
+@media(max-width:620px){.random-raid-form{grid-template-columns:1fr}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
 .myprios-form div[style]{grid-column:auto!important}
@@ -1494,6 +1505,39 @@ body.show-mylichtloot .mylichtloot-card{display:block}
         <div class="step-card">Raid öffnen und dort den PrioPin eingeben.</div>
         <div class="step-card">Charakter auswählen und Prios speichern.</div>
       </div>
+    </section>
+
+    <section class="random-raid-panel" id="randomRaidPanel">
+      <h2>Random-Raid erstellen</h2>
+      <p>Für Pugs und spontane Gruppen: Raid anlegen, PrioPIN teilen und LeadPIN für die Raidleitung behalten.</p>
+      <div class="random-raid-form">
+        <div>
+          <label>Gruppe / Gilde</label>
+          <input id="createRaidGuild" type="text" placeholder="z. B. Random, Softres, GDKP">
+        </div>
+        <div>
+          <label>Raid</label>
+          <select id="createRaidSelect">
+            <option value="mc">Molten Core</option>
+            <option value="bwl">Blackwing Lair</option>
+            <option value="aq40">Ahn'Qiraj 40</option>
+            <option value="naxx">Naxxramas</option>
+            <option value="zg">ZG 20</option>
+            <option value="aq20">AQ 20</option>
+            <option value="ony">Onyxia</option>
+          </select>
+        </div>
+        <div>
+          <label>Datum</label>
+          <input id="createRaidDate" type="date">
+        </div>
+        <div>
+          <label>Uhrzeit</label>
+          <input id="createRaidTime" type="time" value="20:00">
+        </div>
+      </div>
+      <button class="big-btn" style="margin-top:12px" onclick="createRaidFromStart()">Random-Raid erstellen</button>
+      <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
     </section>
 
     <section class="main-login-layout">
@@ -2163,6 +2207,7 @@ async function createRaidFromStart(){
   const r=raids[raid];
   const raidDate=document.getElementById("createRaidDate").value;
   const raidTime=document.getElementById("createRaidTime").value;
+  const raidGuild=document.getElementById("createRaidGuild")?.value.trim() || "Random";
 
   const resultBox=document.getElementById("createRaidResult");
 
@@ -2179,6 +2224,8 @@ async function createRaidFromStart(){
   const raidId=createRaidId(raid);
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
+  const lootUrl=new URL(r.lootPage+"?guild="+encodeURIComponent(CURRENT_GUILD_SLUG)+"&pin="+encodeURIComponent(playerPin), window.location.href).href;
+  const leadUrl=new URL("raidlead-panel.html?guild="+encodeURIComponent(CURRENT_GUILD_SLUG), window.location.href).href;
 
   const raidData={
     action:"createRaid",
@@ -2190,9 +2237,11 @@ async function createRaidFromStart(){
     uhrzeit:raidTime,
     raidDate:raidDate,
     raidTime:raidTime,
+    gilde:raidGuild,
+    guildName:raidGuild,
     playerPin:playerPin,
     leadPin:leadPin,
-    playerLink:"",
+    playerLink:lootUrl,
     createdAt:new Date().toISOString(),
     status:"geschlossen"
   };
@@ -2201,7 +2250,7 @@ async function createRaidFromStart(){
 
   try{
     const query=new URLSearchParams(raidData);
-    const response=await fetch(RAID_API_URL+"?"+query.toString());
+    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
     const result=await response.json();
     if(!result.success){
       resultBox.innerHTML=`<span class="bad">${safeHtml(result.error || "Raid konnte nicht erstellt werden.")}</span>`;
@@ -2213,6 +2262,9 @@ async function createRaidFromStart(){
 
       <strong>Raid:</strong><br>
       ${r.name}<br><br>
+
+      <strong>Gruppe:</strong><br>
+      ${safeHtml(raidGuild)}<br><br>
 
       <strong>Raidstart:</strong><br>
       ${formatRaidDateForDisplay(raidDate)} um ${raidTime} Uhr<br>
@@ -2231,10 +2283,18 @@ async function createRaidFromStart(){
       </div>
 
       <br>
-      <span class="warn">Mit dem LeadPIN kann sich der Raidlead oben direkt einloggen.</span>
+      <div class="random-link-grid">
+        <button class="copy-btn" onclick="copyText('randomLootLink')">Loot-Link kopieren</button>
+        <button class="copy-btn" onclick="copyText('randomLeadLink')">Raidlead-Link kopieren</button>
+      </div>
+      <div id="randomLootLink" class="hidden">${safeHtml(lootUrl)}</div>
+      <div id="randomLeadLink" class="hidden">${safeHtml(leadUrl)}</div>
+      <br>
+      <span class="warn">Den PrioPIN gibst du den Mitspielern. Den LeadPIN behält der Raidlead fürs Panel.</span>
     `;
 
-    document.getElementById("raidleadPin").value=leadPin;
+    const leadField=document.getElementById("raidleadPin");
+    if(leadField) leadField.value=leadPin;
 
   }catch(error){
     console.error(error);
