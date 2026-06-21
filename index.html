@@ -1318,14 +1318,18 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-raid-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-raid-form input,.random-raid-form select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
 .random-raid-result{margin-top:12px}
-.random-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.random-link-grid .copy-btn{width:100%}
+.random-result-compact{display:grid;gap:10px}
+.random-result-meta{display:flex;gap:10px;flex-wrap:wrap;color:#dbeafe;font-weight:800}
+.random-result-meta strong{color:#facc15}
+.random-pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.random-pin-card{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.random-pin-card label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-open-box{margin-top:18px;padding-top:16px;border-top:1px solid rgba(250,204,21,.18)}
 .random-open-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
 .random-open-grid label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-open-grid input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
 .random-open-grid .big-btn{margin-top:10px}
-@media(max-width:900px){.random-raid-form{grid-template-columns:1fr 1fr}.random-link-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.random-raid-form{grid-template-columns:1fr 1fr}.random-pin-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
@@ -2283,39 +2287,32 @@ async function createRaidFromStart(){
     }
 
     resultBox.innerHTML=`
-      <span class="ok">✓ Raid wurde erstellt.</span><br><br>
-
-      <strong>Raid:</strong><br>
-      ${r.name}<br><br>
-
-      <strong>Gruppe:</strong><br>
-      ${safeHtml(raidGuild)}<br><br>
-
-      <strong>Raidstart:</strong><br>
-      ${formatRaidDateForDisplay(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/P0+ möglich bis ${formatP0DeadlineForDisplay(raidDate,raidTime)} Uhr.</span><br><br>
-
-      <strong>Prio PIN:</strong>
-      <div class="result-row">
-        <div class="pin-output" id="newPlayerPin">${playerPin}</div>
-        <button class="copy-btn" onclick="copyText('newPlayerPin')">Kopieren</button>
+      <div class="random-result-compact">
+        <span class="ok">✓ Raid wurde erstellt.</span>
+        <div class="random-result-meta">
+          <span><strong>${safeHtml(r.name)}</strong></span>
+          <span>${safeHtml(raidGuild)}</span>
+          <span>${formatRaidDateForDisplay(raidDate)} · ${safeHtml(raidTime)} Uhr</span>
+          <span class="warn">P0/P0+ bis ${formatP0DeadlineForDisplay(raidDate,raidTime)} Uhr</span>
+        </div>
+        <div class="random-pin-grid">
+          <div class="random-pin-card">
+            <div>
+              <label>PrioPIN</label>
+              <div class="pin-output" id="newPlayerPin">${playerPin}</div>
+            </div>
+            <button class="copy-btn" onclick="copyText('newPlayerPin')">Kopieren</button>
+          </div>
+          <div class="random-pin-card">
+            <div>
+              <label>LeadPIN</label>
+              <div class="pin-output" id="newLeadPin">${leadPin}</div>
+            </div>
+            <button class="copy-btn" onclick="copyText('newLeadPin')">Kopieren</button>
+          </div>
+        </div>
+        <span class="warn">PrioPIN an Mitspieler geben. LeadPIN bleibt bei der Raidleitung.</span>
       </div>
-
-      <strong style="display:block;margin-top:12px">LeadPIN:</strong>
-      <div class="result-row">
-        <div class="pin-output" id="newLeadPin">${leadPin}</div>
-        <button class="copy-btn" onclick="copyText('newLeadPin')">Kopieren</button>
-      </div>
-
-      <br>
-      <div class="random-link-grid">
-        <button class="copy-btn" onclick="copyText('randomLootLink')">Loot-Link kopieren</button>
-        <button class="copy-btn" onclick="copyText('randomLeadLink')">Raidlead-Link kopieren</button>
-      </div>
-      <div id="randomLootLink" class="hidden">${safeHtml(lootUrl)}</div>
-      <div id="randomLeadLink" class="hidden">${safeHtml(leadUrl)}</div>
-      <br>
-      <span class="warn">Den PrioPIN gibst du den Mitspielern. Den LeadPIN behält der Raidlead fürs Panel.</span>
     `;
 
     const leadField=document.getElementById("raidleadPin");
