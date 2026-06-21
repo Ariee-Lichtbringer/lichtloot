@@ -1311,10 +1311,10 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .dashboard-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
 .dashboard-link{text-decoration:none;text-align:center;display:block}
 .big-btn.subtle{background:rgba(2,6,23,.55)!important;border-color:rgba(255,255,255,.16)!important}
-.random-raid-panel{border-radius:22px;border:1px solid rgba(250,204,21,.28);background:rgba(12,18,32,.86);box-shadow:0 16px 34px rgba(0,0,0,.36);padding:20px 22px}
-.random-raid-panel h2{color:#facc15;font-size:22px;margin:0 0 8px}
-.random-raid-panel p{color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 0 14px}
-.random-raid-form{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:12px;align-items:end}
+.raid-open-panel,.random-raid-panel{border-radius:16px;border:1px solid rgba(250,204,21,.30);background:linear-gradient(135deg,rgba(12,18,32,.90),rgba(2,6,23,.72));box-shadow:0 16px 34px rgba(0,0,0,.36);padding:20px 22px}
+.raid-open-panel h2,.random-raid-panel h2{color:#facc15;font-size:22px;margin:0 0 8px}
+.raid-open-panel p,.random-raid-panel p{color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 0 14px}
+.random-raid-form{display:grid;grid-template-columns:1.15fr 1fr .9fr .75fr 1.35fr;gap:12px;align-items:end}
 .random-raid-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-raid-form input,.random-raid-form select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
 .random-raid-result{margin-top:12px}
@@ -1324,12 +1324,15 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-pin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .random-pin-card{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
 .random-pin-card label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
-.random-open-box{margin-top:18px;padding-top:16px;border-top:1px solid rgba(250,204,21,.18)}
+.random-open-box{margin:0;padding:0;border:0}
 .random-open-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.random-open-card{border:1px solid rgba(255,255,255,.12);border-radius:14px;background:rgba(2,6,23,.50);padding:16px}
+.random-open-card h3{color:#f8fafc;font-size:21px;margin:0 0 8px}
 .random-open-grid label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-open-grid input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
 .random-open-grid .big-btn{margin-top:10px}
-@media(max-width:900px){.random-raid-form{grid-template-columns:1fr 1fr}.random-pin-grid{grid-template-columns:1fr}}
+@media(max-width:1150px){.random-raid-form{grid-template-columns:1fr 1fr}.random-raid-form .random-create-action{grid-column:1 / -1}}
+@media(max-width:900px){.random-open-grid{grid-template-columns:1fr}.random-pin-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
@@ -1507,62 +1510,25 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       <p id="brandWelcomeText">LichtLoot ist unser zentrales Prio- und Punktesystem. Über deinen SpielerLogin greifst du auf deine Charaktere, deine Prios und deine P0/P0+ Punkte zu.</p>
     </section>
 
-    <section class="random-raid-panel" id="randomRaidPanel">
-      <h2>Random-Raid erstellen</h2>
-      <p>Für Pugs und spontane Gruppen: Raid anlegen, PrioPIN teilen und LeadPIN für die Raidleitung behalten.</p>
-      <div class="random-raid-form">
-        <div>
-          <label>Gruppe / Gilde</label>
-          <input id="createRaidGuild" type="text" placeholder="z. B. Random, Softres, GDKP">
-        </div>
-        <div>
-          <label>Raid</label>
-          <select id="createRaidSelect">
-            <option value="mc">Molten Core</option>
-            <option value="bwl">Blackwing Lair</option>
-            <option value="aq40">Ahn'Qiraj 40</option>
-            <option value="naxx">Naxxramas</option>
-            <option value="zg">ZG 20</option>
-            <option value="aq20">AQ 20</option>
-            <option value="ony">Onyxia</option>
-          </select>
-        </div>
-        <div>
-          <label>Datum</label>
-          <input id="createRaidDate" type="date">
-        </div>
-        <div>
-          <label>Uhrzeit</label>
-          <input id="createRaidTime" type="time" value="20:00">
-        </div>
-      </div>
-      <button class="big-btn" style="margin-top:12px" onclick="createRaidFromStart()">Random-Raid erstellen</button>
-      <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
+    <section class="raid-open-panel">
+      <h2>Raid öffnen</h2>
+      <p>Random-Raid direkt per PrioPIN oder LeadPIN öffnen.</p>
       <div class="random-open-box">
-        <h2>Random-Raid öffnen</h2>
-        <p>PrioPIN für Mitspieler oder LeadPIN für die Raidleitung eingeben.</p>
         <div class="random-open-grid">
-          <div>
+          <div class="random-open-card">
+            <h3>Spieler</h3>
             <label>Random PrioPIN</label>
-            <input id="randomPrioPin" type="text" placeholder="PrioPIN" onkeydown="randomPrioEnter(event)">
+            <input id="randomPrioPin" type="text" placeholder="PrioPIN eingeben" onkeydown="randomPrioEnter(event)">
             <button class="big-btn" type="button" onclick="openRandomPrioFromStart()">Zur Prioseite</button>
           </div>
-          <div>
+          <div class="random-open-card">
+            <h3>Raidlead</h3>
             <label>Random LeadPIN</label>
-            <input id="randomLeadPin" type="text" placeholder="LeadPIN" onkeydown="randomLeadEnter(event)">
+            <input id="randomLeadPin" type="text" placeholder="LeadPIN eingeben" onkeydown="randomLeadEnter(event)">
             <button class="big-btn" type="button" onclick="openRandomRaidleadFromStart()">Zum Raidlead-Panel</button>
           </div>
         </div>
         <div id="randomOpenStatus" class="status random-raid-result">Hier kannst du Random-Raids direkt per PIN öffnen.</div>
-      </div>
-    </section>
-
-    <section class="steps-panel compact-help">
-      <h2 id="brandHowTitle">So funktioniert LichtLoot</h2>
-      <div class="steps-list steps-list-3">
-        <div class="step-card">SpielerLogin erstellen oder einloggen.</div>
-        <div class="step-card">Raid öffnen und dort den PrioPin eingeben.</div>
-        <div class="step-card">Charakter auswählen und Prios speichern.</div>
       </div>
     </section>
 
@@ -1822,6 +1788,50 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 
 
       </div>
+    </section>
+
+    <section class="steps-panel compact-help">
+      <h2 id="brandHowTitle">So funktioniert LichtLoot</h2>
+      <div class="steps-list steps-list-3">
+        <div class="step-card">SpielerLogin erstellen oder einloggen.</div>
+        <div class="step-card">Raid öffnen und dort den PrioPin eingeben.</div>
+        <div class="step-card">Charakter auswählen und Prios speichern.</div>
+      </div>
+    </section>
+
+    <section class="random-raid-panel" id="randomRaidPanel">
+      <h2>Random-Raid erstellen</h2>
+      <p>Für Pugs und spontane Gruppen: Raid anlegen, PrioPIN teilen und LeadPIN für die Raidleitung behalten.</p>
+      <div class="random-raid-form">
+        <div>
+          <label>Gruppe / Gilde</label>
+          <input id="createRaidGuild" type="text" placeholder="z. B. Random, Softres, GDKP">
+        </div>
+        <div>
+          <label>Raid</label>
+          <select id="createRaidSelect">
+            <option value="mc">Molten Core</option>
+            <option value="bwl">Blackwing Lair</option>
+            <option value="aq40">Ahn'Qiraj 40</option>
+            <option value="naxx">Naxxramas</option>
+            <option value="zg">ZG 20</option>
+            <option value="aq20">AQ 20</option>
+            <option value="ony">Onyxia</option>
+          </select>
+        </div>
+        <div>
+          <label>Datum</label>
+          <input id="createRaidDate" type="date">
+        </div>
+        <div>
+          <label>Uhrzeit</label>
+          <input id="createRaidTime" type="time" value="20:00">
+        </div>
+        <div class="random-create-action">
+          <button class="big-btn" type="button" onclick="createRaidFromStart()">Random-Raid erstellen</button>
+        </div>
+      </div>
+      <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
     </section>
   </main>
 
