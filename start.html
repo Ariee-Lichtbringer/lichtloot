@@ -1843,6 +1843,7 @@ function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
   const explicit = params.get("guild") || params.get("gilde");
   if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  if(window.location.protocol === "file:") return "lichtloot";
   const parts = window.location.pathname.split("/").filter(Boolean);
   const first = parts[0] || "";
   if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
@@ -3131,6 +3132,16 @@ function getStoredLichtLootPlayerPin(){
   return "";
 }
 
+function rememberLichtLootPlayerPin(pin){
+  const cleanPin=String(pin || "").trim().toUpperCase();
+  if(!cleanPin) return;
+  const keys=["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+  keys.forEach(key=>{
+    try{ localStorage.setItem(key, cleanPin); }catch(error){}
+    try{ sessionStorage.setItem(key, cleanPin); }catch(error){}
+  });
+}
+
 function hydrateDashboardPlayerPin(){
   const saved=getStoredLichtLootPlayerPin();
   const dashboard=document.getElementById("dashboardPlayerPin");
@@ -3360,6 +3371,7 @@ async function addTwinkToPlayerPin(){
 
     const myPinField=document.getElementById("myPriosPin");
     if(myPinField && myPinField.value.trim() === pin){
+      rememberLichtLootPlayerPin(pin);
       loadLichtLootCharacters();
     }
   }catch(error){
@@ -4204,6 +4216,8 @@ async function loadLichtLootCharacters(){
       }
       return;
     }
+
+    rememberLichtLootPlayerPin(pin);
 
     if(select){
       select.innerHTML='<option value="">Charakter auswählen</option>';
