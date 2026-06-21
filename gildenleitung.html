@@ -1993,15 +1993,15 @@ async function loadOverview(options){
   setStatus("Gildenleitung wird geladen ...", "");
 
   try{
-    let result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode }).catch(error => {
-      console.warn("Apps-Script-Gildenleitung nicht ladbar, nutze Railway:", error);
+    let result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode }).catch(error => {
+      console.warn("Railway-Gildenleitung nicht ladbar, versuche Apps Script:", error);
       return null;
     });
     if(!result || result.success === false){
       if(result && result.error){
-        console.warn("Apps-Script-Gildenleitung meldet Fehler, nutze Railway:", result.error);
+        console.warn("Railway-Gildenleitung meldet Fehler, versuche Apps Script:", result.error);
       }
-      result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode });
+      result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
     }
     if(!result.success){
       setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
