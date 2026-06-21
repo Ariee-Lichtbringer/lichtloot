@@ -2016,14 +2016,14 @@
     "slot": "",
     "type": "Plunder",
     "quality": "Episch",
-    "icon": "132253",
+    "icon": "132242",
     "dropChance": "Fri May 01 2026 00:00:00 GMT+0200 (Central European Summer Time)",
     "statsText": "Benutzen: Beschwört einen reitbaren schnellen Razzashiraptor oder gibt ihn frei. Das ist ein sehr schnelles Reittier.",
     "stats": [
       "Benutzen: Beschwört einen reitbaren schnellen Razzashiraptor oder gibt ihn frei. Das ist ein sehr schnelles Reittier."
     ],
     "tooltip": "Schneller Razzashiraptor | Wird beim Aufheben gebunden | Einzigartig | Benötigt Stufe 60 | Benutzen: Beschwört einen reitbaren schnellen Razzashiraptor oder gibt ihn frei. Das ist ein sehr schnelles Reittier.",
-    "iconName": "ability_mount_jungletiger"
+    "iconName": "ability_mount_raptor"
   },
   {
     "raid": "ZG",
@@ -2033,14 +2033,14 @@
     "slot": "",
     "type": "Plunder",
     "quality": "Episch",
-    "icon": "132242",
+    "icon": "132253",
     "dropChance": "0.9",
     "statsText": "Benutzen: Beschwört einen reitbaren schnellen zulianischen Tiger oder gibt ihn frei. Das ist ein sehr schnelles Reittier.",
     "stats": [
       "Benutzen: Beschwört einen reitbaren schnellen zulianischen Tiger oder gibt ihn frei. Das ist ein sehr schnelles Reittier."
     ],
     "tooltip": "Schneller zulianischer Tiger | Wird beim Aufheben gebunden | Einzigartig | Benötigt Stufe 60 | Benutzen: Beschwört einen reitbaren schnellen zulianischen Tiger oder gibt ihn frei. Das ist ein sehr schnelles Reittier.",
-    "iconName": "ability_mount_raptor"
+    "iconName": "ability_mount_jungletiger"
   },
   {
     "raid": "ZG",
