@@ -1047,6 +1047,46 @@ tr:hover td{background:rgba(250,204,21,.035)}
   background:rgba(15,23,42,.48);
 }
 
+.prio-toolbar-actions,
+.prio-row-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.transfer-light{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:999px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.transfer-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  box-shadow:0 0 12px currentColor;
+}
+
+.transfer-light.done{
+  color:#22c55e;
+  border-color:rgba(34,197,94,.38);
+  background:rgba(34,197,94,.10);
+}
+
+.transfer-light.open{
+  color:#ef4444;
+  border-color:rgba(239,68,68,.38);
+  background:rgba(239,68,68,.10);
+}
+
 .prio-table{
   min-width:780px;
 }
@@ -1366,6 +1406,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
+      <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
       <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
     <div class="sidebar-foot">
@@ -1411,6 +1452,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
     <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
+    <button class="quick-action" type="button" onclick="downloadGuildBackup()"><span class="qa-icon">⇩</span><span><strong>Sicherung</strong><span>Railway-Daten speichern</span></span></button>
   </section>
 
   <section class="stat-grid">
@@ -1521,6 +1563,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <th>Datum</th>
               <th>Prio-PIN</th>
               <th>LeadPIN</th>
+              <th>P0+</th>
               <th>Status</th>
               <th>Aktion</th>
             </tr>
@@ -1885,6 +1928,39 @@ async function railwayWrite(params){
   return result || {};
 }
 
+async function downloadGuildBackup(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  setStatus("Sicherung wird erstellt ...", "");
+
+  try{
+    const result = await railwayApi({ action:"guildExportBackup", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Sicherung konnte nicht erstellt werden.", "bad");
+      return;
+    }
+
+    const guildSlug = result.guild || CURRENT_GUILD_SLUG || "gilde";
+    const stamp = new Date().toISOString().replace(/[:.]/g,"-");
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${guildSlug}-railway-sicherung-${stamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setStatus("Sicherung wurde heruntergeladen.", "good");
+  }catch(error){
+    setStatus(error.message || "Sicherung konnte nicht erstellt werden.", "bad");
+  }
+}
+
 async function loadOverview(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -2012,6 +2088,28 @@ function getRaidKey(raid){
   return "aq40";
 }
 
+function isAllowedP0RaidForRaid(raid){
+  return ["mc","bwl","aq40","naxx"].includes(getRaidKey(raid));
+}
+
+function hasP0PlusTransfer(raidOrResult){
+  return Boolean(
+    raidOrResult &&
+    (raidOrResult.p0PlusTransferred || Number(raidOrResult.p0PlusTransferCount || 0) > 0)
+  );
+}
+
+function renderP0TransferState(raidOrResult, compact){
+  if(!isAllowedP0RaidForRaid(raidOrResult || {})) return "";
+  const done = hasP0PlusTransfer(raidOrResult);
+  const label = done ? "P0+ übertragen" : "P0+ offen";
+  return `<span class="transfer-light ${done ? "done" : "open"}" title="${escapeAttr(label)}"><span class="transfer-dot"></span>${compact ? "" : escapeHtml(label)}</span>`;
+}
+
+function isP0PlusPrio(prio){
+  return normalize(prio && (prio.P0Plus || prio.p0Plus)) === "ja";
+}
+
 function todayIsoDate(){
   const now = new Date();
   return [
@@ -2058,12 +2156,13 @@ function renderDashboardCards(){
               <span class="active-raid-lead-label">LeadPIN</span>
               <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
               <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
+              ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
-              <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(raid.status) ? "Prio schließen" : "Prio öffnen"}</button>
+              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId)}')">Raid löschen</button>
             </div>
           </div>
@@ -2257,7 +2356,7 @@ function renderRaids(){
   }).slice(0, filter || search || dateSearch ? undefined : 10);
 
   if(!raids.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
     return;
   }
 
@@ -2277,11 +2376,13 @@ function renderRaids(){
         <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
         <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
+        <td>${renderP0TransferState(raid)}</td>
         <td>${statusBadge(status)}</td>
         <td>
           <div class="actions">
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
+            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
           </div>
         </td>
@@ -2821,22 +2922,32 @@ function renderPrioModalContent(result, raid){
   const listOpen = isPrioListVisibleForGuild(result, raid);
   const raidStatus = listOpen ? "geöffnet" : "geschlossen";
   const benchCount = prios.filter(isBenchPrio).length;
+  const transferState = { ...raid, ...result, raid: raid.raid, raidName: raid.raidName, raidId: raid.raidId };
+  const raidId = raid.raidId || raid.raidID || raid.id || "";
+  const toolbar = `
+    <div class="prio-toolbar">
+      <div class="prio-toolbar-actions">
+        ${statusBadge(raidStatus)}
+        ${renderP0TransferState(transferState)}
+      </div>
+      <div class="prio-toolbar-actions">
+        <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatusFromModal('${escapeAttr(raidId)}')">${listOpen ? "Prio schließen" : "Prio öffnen"}</button>
+        ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(transferState) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raidId)}')">P0+ Punkte übertragen</button>` : ""}
+        <div class="muted">${prios.length ? `${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}` : "Keine Einträge"}</div>
+      </div>
+    </div>
+  `;
 
   if(!prios.length){
     document.getElementById("prioModalContent").innerHTML = `
-      <div class="prio-toolbar">
-        ${statusBadge(raidStatus)}
-      </div>
+      ${toolbar}
       <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
     `;
     return;
   }
 
   document.getElementById("prioModalContent").innerHTML = `
-    <div class="prio-toolbar">
-      <div>${statusBadge(raidStatus)}</div>
-      <div class="muted">${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}</div>
-    </div>
+    ${toolbar}
     <div class="table-wrap">
       <table class="prio-table">
         <thead>
@@ -2848,7 +2959,7 @@ function renderPrioModalContent(result, raid){
             <th>P2</th>
             <th>P3</th>
             <th>P0+</th>
-            <th>Bench</th>
+            <th>Aktion</th>
           </tr>
         </thead>
         <tbody>
@@ -2861,7 +2972,7 @@ function renderPrioModalContent(result, raid){
               <td>${renderPrioValue(prio.P2, listOpen)}</td>
               <td>${renderPrioValue(prio.P3, listOpen)}</td>
               <td>${renderP0PlusChoice(prio, listOpen)}</td>
-              <td>${renderBenchAction(prio, raid)}</td>
+              <td>${renderPrioRowActions(prio, raid, listOpen)}</td>
             </tr>
           `).join("")}
         </tbody>
@@ -2906,6 +3017,149 @@ function renderBenchAction(prio, raid){
   const cls = active ? "ghost" : "primary";
   const rowNumber = Number(prio.rowNumber || prio.RowNumber || prio.zeile || prio.Zeile || 0);
   return `<button class="small-btn ${cls}" type="button" onclick="setPrioBenchFromModal('${escapeAttr(raid.raidId || raid.raidID || raid.id || "")}',${rowNumber},${active ? "false" : "true"},'${escapeQuotes(prio.Spieler || prio.player || "")}','${escapeQuotes(prio.Server || prio.server || "")}')">${label}</button>`;
+}
+
+function renderPrioRowActions(prio, raid, listOpen){
+  if(!prio) return '<span class="badge closed">-</span>';
+  const raidId = raid.raidId || raid.raidID || raid.id || "";
+  const player = prio.Spieler || prio.player || "";
+  const server = prio.Server || prio.server || "";
+  const p0Item = prio.P1 || prio.p1 || "";
+  const buttons = [renderBenchAction(prio, raid)];
+
+  if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
+    buttons.push(`<button class="small-btn good" type="button" onclick="clearP0PlusForPlayerFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}','${escapeQuotes(p0Item)}')">Item erhalten</button>`);
+  }
+
+  buttons.push(`<button class="small-btn danger" type="button" onclick="deletePrioFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}')">Löschen</button>`);
+
+  return `<div class="prio-row-actions">${buttons.join("")}</div>`;
+}
+
+async function toggleRaidPrioStatusFromModal(raidId){
+  await toggleRaidPrioStatus(raidId);
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(raid) openPrioModal(raidId);
+}
+
+async function transferP0PlusFromGuild(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+  if(!isAllowedP0RaidForRaid(raid)){
+    setStatus("P0+ Übertragung gibt es nur für MC, BWL, AQ40 und Naxxramas.", "bad");
+    return;
+  }
+
+  const label = `${raid.raidName || raid.raid || "Raid"} ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim();
+  const ok = confirm(`P0+ Punkte für ${label} nach Railway übertragen?`);
+  if(!ok) return;
+
+  try{
+    const result = await railwayApi({
+      action:"transferP0PlusPoints",
+      masterCode,
+      raidId: raid.raidId || "",
+      raid: getRaidKey(raid)
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+      return;
+    }
+
+    raid.p0PlusTransferred = Number(result.candidates || result.awarded || 0) > 0;
+    raid.p0PlusTransferCount = Number(result.candidates || result.awarded || 0);
+    renderDashboardCards();
+    renderRaids();
+    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
+
+    const modal = document.getElementById("prioModal");
+    if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+  }
+}
+
+async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  const ok = confirm(`${player} hat "${itemName}" erhalten? Der P0+ Punkt wird entfernt.`);
+  if(!ok) return;
+
+  try{
+    const result = await railwayApi({
+      action:"clearP0PlusForPlayer",
+      masterCode,
+      raid:getRaidKey(raid),
+      player,
+      server,
+      item:itemName
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
+      return;
+    }
+
+    setStatus("Item erhalten gespeichert.", "good");
+    openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
+  }
+}
+
+async function deletePrioFromModal(raidId, player, server){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  const ok = confirm(`Prio von ${player} für diesen Raid löschen?`);
+  if(!ok) return;
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeletePrio",
+      masterCode,
+      raidId,
+      raid:getRaidKey(raid),
+      player,
+      server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Prio konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    setStatus("Prio gelöscht.", "good");
+    openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "Prio konnte nicht gelöscht werden.", "bad");
+  }
 }
 
 async function setPrioBenchFromModal(raidId, rowNumber, bench, player, server){
