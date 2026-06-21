@@ -1569,8 +1569,37 @@ async function deleteGuildPlayerMessage({ guildId, query: params }) {
 
 async function deleteRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const raidId = clean(params.raidId || params.id);
-  if (!raidId) {
+  const raidId = clean(params.raidId || params.RaidID || params.raidID);
+  const id = clean(params.id || params.dbId || params.databaseId);
+  const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  const values = [guildId];
+  const clauses = [];
+
+  if (id) {
+    values.push(id);
+    clauses.push(`id::text = $${values.length}`);
+  }
+
+  if (raidId) {
+    values.push(raidId);
+    clauses.push(`external_raid_id = $${values.length}`);
+    if (isUuid(raidId)) {
+      clauses.push(`id::text = $${values.length}`);
+    }
+  }
+
+  if (prioPin) {
+    values.push(prioPin);
+    clauses.push(`raid_pin = $${values.length}`);
+  }
+
+  if (leadPin) {
+    values.push(leadPin);
+    clauses.push(`lead_pin = $${values.length}`);
+  }
+
+  if (!clauses.length) {
     const error = new Error("Bitte Raid angeben.");
     error.statusCode = 400;
     throw error;
@@ -1579,9 +1608,9 @@ async function deleteRaid({ guildId, query: params }) {
   const result = await query(
     `delete from raids
      where guild_id = $1
-       and (id::text = $2 or external_raid_id = $2)
+       and (${clauses.join(" or ")})
      returning id, external_raid_id, name`,
-    [guildId, raidId]
+    values
   );
   return { success: true, deleted: result.rowCount, raid: result.rows[0] || null };
 }

@@ -2194,7 +2194,7 @@ function renderDashboardCards(){
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId)}')">Raid löschen</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
             </div>
           </div>
         </div>
@@ -2845,23 +2845,39 @@ async function deleteRaidFromDashboard(raidId){
     return;
   }
 
-  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const raid = (guildData.raids || []).find(entry =>
+    String(entry.raidId || "") === String(raidId) ||
+    String(entry.id || "") === String(raidId)
+  );
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
   if(!confirm(`${label} wirklich komplett löschen? Der Raid wird aus Railway entfernt.`)) return;
 
   try{
-    const result = await railwayApi({ action:"guildDeleteRaid", masterCode, raidId });
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      id:raid?.id || "",
+      raidId:raid?.raidId || raidId,
+      playerPin:raid?.playerPin || raid?.prioPin || "",
+      leadPin:raid?.leadPin || ""
+    });
     if(!result.success || !result.deleted){
       setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
       return;
     }
 
-    guildData.raids = (guildData.raids || []).filter(entry => String(entry.raidId || "") !== String(raidId));
+    guildData.raids = (guildData.raids || []).filter(entry =>
+      String(entry.raidId || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raid?.id || "") &&
+      String(entry.raidId || "") !== String(raid?.raidId || "")
+    );
     renderSummary();
     renderDashboardCards();
     loadDashboardRaidStats();
     renderRaids();
     setStatus("Raid wurde aus Railway gelöscht.", "good");
+    await loadOverview({ preserveStatus:true });
   }catch(error){
     setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
   }
