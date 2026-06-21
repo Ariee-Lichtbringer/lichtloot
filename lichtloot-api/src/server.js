@@ -374,8 +374,8 @@ function raidTypeSearchValues(value) {
     bwl: ["bwl", "blackwing-lair"],
     aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj"],
     naxx: ["naxx", "naxxramas"],
-    zg: ["zg", "zg-20", "zul-gurub", "zul-gurub-20"],
-    aq20: ["aq20", "aq-20", "ahn-qiraj-20", "ruins-of-ahn-qiraj"],
+    zg: ["zg", "zg20", "zg 20", "zg-20", "zul-gurub", "zul gurub", "zul'gurub", "zul-gurub-20", "zul gurub 20"],
+    aq20: ["aq20", "aq 20", "aq-20", "ahn-qiraj-20", "ahn qiraj 20", "ahn'qiraj 20", "ruins-of-ahn-qiraj", "ruins of ahn qiraj"],
     ony: ["ony", "onyxia", "onyxia-s-lair"]
   };
   return Array.from(new Set([normalized, ...(variants[normalized] || [])].map(value => value.toLowerCase())));

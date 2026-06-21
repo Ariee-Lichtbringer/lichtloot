@@ -3425,6 +3425,10 @@ async function savePrio(){
   }
 
   await loadPublishedPrios();
+  if(!currentRaidId){
+    status.innerHTML=`<span class="bad">Raid wurde zu diesem Prio-PIN nicht gefunden. Bitte Seite neu laden oder Prio-PIN prüfen.</span>`;
+    return;
+  }
   if(currentPublishedMode){
     status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
     return;
@@ -3616,6 +3620,7 @@ async function loadPublishedPrios(){
     const result = await apiJsonp({
       action:"getPublishedPrios",
       raid:RAID_NAME,
+      raidPin:pin,
       playerPin:pin
     });
 
