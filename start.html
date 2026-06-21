@@ -2877,17 +2877,20 @@ function renderDashboardBuffDay(group,kind){
 
 function renderDashboardBuffCardRow(entry,kind){
   const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
-  const displayCaster=caster || (kind === "hordenbuff" ? "Helfer fehlt" : "Werfer fehlt");
   const statusLabel=dashboardBuffStatusLabel(entry);
   const confirmed=isDashboardBuffConfirmed(entry);
   const guild=entry.gilde && !dashboardWorldbuffPlaceholderGuild(entry.gilde) ? entry.gilde : "-";
+  const isLichtbringer=dashboardWorldbuffGuildKey(guild) === "lichtbringer";
+  const showMissingNotice=isLichtbringer || kind === "hordenbuff";
+  const displayCaster=caster || (showMissingNotice ? (kind === "hordenbuff" ? "Helfer fehlt" : "Werfer fehlt") : "");
+  const displayStatus=(!isLichtbringer && statusLabel === "offen" && !caster) ? "" : statusLabel;
   return `
     <div class="buff-day-row">
       <div class="buff-row-time">◷ ${safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))}</div>
       <div>${renderDashboardBuffLabel(entry.buff)}</div>
       <div class="buff-row-guild">♢ ${renderDashboardBuffGuild(guild)}</div>
-      <div class="buff-row-caster ${caster ? "" : "missing"}">♙ ${safeHtml(displayCaster)}</div>
-      <div class="buff-row-status"><span class="buff-status-pill ${confirmed ? "confirmed" : "open"}"><span class="buff-status-dot"></span>${safeHtml(statusLabel)}</span></div>
+      <div class="buff-row-caster ${caster ? "" : "missing"}">${displayCaster ? "♙ "+safeHtml(displayCaster) : ""}</div>
+      <div class="buff-row-status">${displayStatus ? '<span class="buff-status-pill '+(confirmed ? "confirmed" : "open")+'"><span class="buff-status-dot"></span>'+safeHtml(displayStatus)+'</span>' : ""}</div>
       <div class="buff-row-more">...</div>
     </div>
   `;
