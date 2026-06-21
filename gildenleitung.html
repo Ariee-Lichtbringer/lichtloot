@@ -3917,13 +3917,20 @@ function shouldHideBuffDateCells(rows, rowIndex){
 
 function shouldHideBuffTimeCell(rows, rowIndex){
   if(rowIndex <= 0 || !isSameBuffDate(rows[rowIndex - 1], rows[rowIndex])) return false;
-  return String((rows[rowIndex - 1] && rows[rowIndex - 1].uhrzeit) || "").trim() ===
-    String((rows[rowIndex] && rows[rowIndex].uhrzeit) || "").trim();
+  return getBuffTimeGroupKey(rows[rowIndex - 1]) === getBuffTimeGroupKey(rows[rowIndex]);
 }
 
 function isSameBuffDate(first, second){
   const firstKey = getBuffDateKey(first);
   return !!firstKey && firstKey === getBuffDateKey(second);
+}
+
+function getBuffTimeGroupKey(entry){
+  return [
+    getBuffDateKey(entry),
+    String((entry && entry.uhrzeit) || "").trim(),
+    String((entry && entry.buff) || "").trim()
+  ].join("|");
 }
 
 function normalizeBuffStatus(value){
