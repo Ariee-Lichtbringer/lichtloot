@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenschutz - LichtLoot</title>
+<style>
+:root{
+  --gold:#facc15;
+  --panel:rgba(12,18,32,.86);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+  --line:rgba(255,255,255,.12);
+  --shadow:0 22px 48px rgba(0,0,0,.48);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  min-height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.92)),url('./images/back.jpeg');
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+
+.overlay{
+  min-height:100vh;
+  padding:24px 24px 42px;
+  backdrop-filter:blur(3px);
+}
+
+.logo-banner{
+  display:block;
+  width:min(560px,82vw);
+  max-height:170px;
+  object-fit:contain;
+  margin:0 auto 12px;
+  filter:drop-shadow(0 16px 26px rgba(0,0,0,.55));
+}
+
+.brand-fallback{
+  display:block;
+  text-align:center;
+  color:var(--gold);
+  font-size:clamp(34px,5vw,58px);
+  font-weight:950;
+  line-height:1;
+  margin:18px auto 16px;
+  text-shadow:0 0 22px rgba(250,204,21,.20),0 10px 28px rgba(0,0,0,.55);
+}
+
+.main-nav{
+  width:min(920px,calc(100vw - 48px));
+  margin:12px auto 24px;
+  padding:10px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  border-radius:22px;
+  border:1px solid rgba(250,204,21,.34);
+  background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56));
+  box-shadow:0 18px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(10px);
+}
+
+.nav-btn{
+  min-height:42px;
+  padding:10px 16px;
+  border-radius:14px;
+  border:1px solid rgba(250,204,21,.28);
+  background:rgba(2,6,23,.58);
+  color:#f8fafc;
+  font-weight:900;
+  text-decoration:none;
+  cursor:pointer;
+  text-shadow:0 2px 8px rgba(0,0,0,.65);
+  transition:transform .18s ease,border .18s ease,background .18s ease,box-shadow .18s ease;
+}
+
+.nav-btn:hover{
+  transform:translateY(-2px);
+  border-color:rgba(250,204,21,.70);
+  background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(96,165,250,.20));
+  box-shadow:0 0 0 2px rgba(250,204,21,.12);
+}
+
+.nav-primary{
+  background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22));
+  border-color:rgba(250,204,21,.62);
+}
+
+.privacy-shell{
+  width:min(980px,calc(100vw - 36px));
+  margin:0 auto;
+  padding:28px;
+  border:1px solid rgba(250,204,21,.30);
+  border-radius:24px;
+  background:linear-gradient(180deg,rgba(12,18,32,.92),rgba(2,6,23,.88));
+  box-shadow:var(--shadow);
+}
+
+.privacy-head{
+  display:grid;
+  gap:12px;
+  padding-bottom:22px;
+  border-bottom:1px solid var(--line);
+}
+
+.privacy-kicker{
+  color:var(--gold);
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+h1{
+  color:var(--gold);
+  font-size:clamp(34px,5vw,56px);
+  line-height:1.02;
+  text-shadow:0 0 20px rgba(250,204,21,.16);
+}
+
+.privacy-head p,
+.privacy-section p,
+.privacy-section li{
+  color:var(--muted);
+  line-height:1.62;
+  font-size:16px;
+}
+
+.privacy-grid{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:28px;
+  align-items:start;
+  margin-top:26px;
+}
+
+.toc{
+  position:sticky;
+  top:18px;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(2,6,23,.46);
+}
+
+.toc strong{
+  display:block;
+  margin-bottom:10px;
+  color:var(--gold);
+}
+
+.toc a{
+  display:block;
+  padding:8px 0;
+  color:#e5e7eb;
+  text-decoration:none;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+
+.toc a:first-of-type{border-top:0}
+.toc a:hover{color:var(--gold)}
+
+.privacy-content{
+  display:grid;
+  gap:22px;
+}
+
+.privacy-section{
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:18px;
+  background:rgba(2,6,23,.34);
+}
+
+.privacy-section h2{
+  color:var(--gold);
+  font-size:24px;
+  margin-bottom:10px;
+}
+
+.privacy-section h3{
+  color:#f8fafc;
+  font-size:18px;
+  margin:18px 0 8px;
+}
+
+.privacy-section ul{
+  display:grid;
+  gap:8px;
+  padding-left:20px;
+  margin-top:10px;
+}
+
+.note{
+  margin-top:14px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(250,204,21,.24);
+  background:rgba(250,204,21,.08);
+  color:#fde68a;
+  line-height:1.55;
+}
+
+.site-footer{
+  text-align:center;
+  padding:22px 10px 0;
+  margin-top:26px;
+  color:#cbd5e1;
+  font-size:14px;
+}
+
+.site-footer a{
+  color:#d4af37;
+  text-decoration:none;
+  margin:0 8px;
+}
+
+.site-footer a:hover{text-decoration:underline}
+
+@media(max-width:820px){
+  .overlay{padding:18px 14px 32px}
+  .main-nav{width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
+  .nav-btn{white-space:nowrap}
+  .privacy-shell{width:100%;padding:20px}
+  .privacy-grid{grid-template-columns:1fr}
+  .toc{position:static}
+  .privacy-section{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="overlay">
+  <header>
+    <img src="images/content.png" alt="LichtLoot" class="logo-banner" onerror="this.style.display='none';document.getElementById('brandFallback').hidden=false">
+    <span id="brandFallback" class="brand-fallback" hidden>LichtLoot</span>
+    <nav class="main-nav" aria-label="Navigation">
+      <a class="nav-btn" href="start.html">Startseite</a>
+      <a class="nav-btn nav-primary" href="datenschutz.html">Datenschutz</a>
+      <a class="nav-btn" href="impressum.html">Impressum</a>
+    </nav>
+  </header>
+
+  <main class="privacy-shell">
+    <section class="privacy-head">
+      <div class="privacy-kicker">Stand: 21. Juni 2026</div>
+      <h1>Datenschutzerklärung</h1>
+      <p>
+        Diese Datenschutzerklärung erklärt, welche Daten bei der Nutzung von LichtLoot verarbeitet werden,
+        wofür sie benötigt werden und welche Rechte betroffene Personen haben.
+      </p>
+      <div class="note">
+        Hinweis: LichtLoot ist ein Gilden- und Raidtool. Die hier beschriebenen Daten dienen der Organisation
+        von Charakteren, Raids, Priolisten, Punkten und Lootentscheidungen.
+      </div>
+    </section>
+
+    <div class="privacy-grid">
+      <aside class="toc" aria-label="Inhalt">
+        <strong>Inhalt</strong>
+        <a href="#verantwortlich">Verantwortliche Stelle</a>
+        <a href="#daten">Verarbeitete Daten</a>
+        <a href="#zwecke">Zwecke</a>
+        <a href="#speicherung">Speicherung</a>
+        <a href="#hosting">Hosting und Technik</a>
+        <a href="#rechte">Deine Rechte</a>
+        <a href="#kontakt">Kontakt</a>
+      </aside>
+
+      <div class="privacy-content">
+        <section class="privacy-section" id="verantwortlich">
+          <h2>1. Verantwortliche Stelle</h2>
+          <p>
+            Verantwortlich für die Verarbeitung personenbezogener Daten im Rahmen von LichtLoot ist die
+            Administration der jeweiligen Gilde, die LichtLoot einsetzt.
+          </p>
+          <p>
+            Kontakt zur verantwortlichen Stelle erfolgt über die Gildenleitung oder die im Impressum genannten
+            Kontaktmöglichkeiten.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="daten">
+          <h2>2. Welche Daten verarbeitet werden</h2>
+          <p>Je nach Nutzung können folgende Daten verarbeitet werden:</p>
+          <ul>
+            <li>Charakternamen, Server, Klasse, Rolle und ggf. Twink-Zuordnungen</li>
+            <li>SpielerLogin beziehungsweise PIN zur Zuordnung deiner Charaktere</li>
+            <li>Prioritäten, Wunschitems, Raidteilnahmen, Lootverlauf sowie P0- und P0+-Punkte</li>
+            <li>Raidinformationen wie Raidname, Datum, Status, Teilnehmer und organisatorische Notizen</li>
+            <li>Fehlermeldungen oder Hinweise, die freiwillig über das Tool übermittelt werden</li>
+            <li>Technische Zugriffsdaten, die beim Aufruf der Webseite oder API entstehen können</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="zwecke">
+          <h2>3. Zwecke der Verarbeitung</h2>
+          <p>Die Daten werden verarbeitet, um LichtLoot bereitzustellen und die Raidorganisation zu ermöglichen.</p>
+          <ul>
+            <li>Anzeige und Verwaltung von Priolisten, Punkten und Lootdaten</li>
+            <li>Zuordnung von Charakteren zu einem SpielerLogin</li>
+            <li>Vorbereitung, Durchführung und Nachverfolgung von Raids</li>
+            <li>Transparente Dokumentation von Lootentscheidungen</li>
+            <li>Fehleranalyse, Wartung und Verbesserung des Tools</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="speicherung">
+          <h2>4. Speicherung im Browser</h2>
+          <p>
+            LichtLoot kann Daten lokal im Browser speichern, zum Beispiel den SpielerLogin oder zuletzt verwendete
+            Einstellungen. Diese Speicherung erleichtert die Nutzung, damit Eingaben nicht jedes Mal neu gemacht
+            werden müssen.
+          </p>
+          <p>
+            Lokale Browserdaten können jederzeit über die Einstellungen des Browsers gelöscht werden. Danach müssen
+            gespeicherte Eingaben erneut vorgenommen werden.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="hosting">
+          <h2>5. Hosting, API und Drittanbieter</h2>
+          <p>
+            LichtLoot nutzt technische Infrastruktur zur Bereitstellung der Webseite und zur Verarbeitung der
+            Spiel- und Raidinformationen. Dabei können Zugriffsdaten wie IP-Adresse, Zeitpunkt des Zugriffs,
+            aufgerufene URL und technische Browserinformationen in Serverprotokollen verarbeitet werden.
+          </p>
+          <p>
+            Soweit externe Dienste für Hosting, Datenbank, API-Betrieb oder Fehleranalyse eingesetzt werden,
+            geschieht dies zur Bereitstellung und Absicherung des Tools.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="rechte">
+          <h2>6. Deine Rechte</h2>
+          <p>Betroffene Personen können im Rahmen der gesetzlichen Vorgaben insbesondere folgende Rechte geltend machen:</p>
+          <ul>
+            <li>Auskunft über gespeicherte Daten</li>
+            <li>Berichtigung unrichtiger Daten</li>
+            <li>Löschung oder Einschränkung der Verarbeitung</li>
+            <li>Widerspruch gegen bestimmte Verarbeitungen</li>
+            <li>Übertragung bereitgestellter Daten, soweit anwendbar</li>
+          </ul>
+          <p>
+            Bei Fragen oder Anliegen wende dich an die Gildenleitung beziehungsweise die im Impressum genannte
+            Kontaktstelle.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="kontakt">
+          <h2>7. Kontakt</h2>
+          <p>
+            Für Datenschutzanfragen, Korrekturen oder Löschwünsche nutze bitte den bekannten Kontaktweg zur
+            Gildenleitung oder die Angaben im Impressum.
+          </p>
+          <h3>Änderungen dieser Datenschutzerklärung</h3>
+          <p>
+            Diese Datenschutzerklärung kann angepasst werden, wenn sich Funktionen, technische Abläufe oder
+            rechtliche Anforderungen ändern.
+          </p>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <a href="start.html">Startseite</a> |
+    <a href="impressum.html">Impressum</a> |
+    <a href="datenschutz.html">Datenschutz</a>
+    <div>&copy; 2026 LichtLoot. Alle Rechte vorbehalten.</div>
+  </footer>
+</div>
+</body>
+</html>
