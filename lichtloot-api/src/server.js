@@ -795,8 +795,8 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if (normalizeStatus(raidResult.rows[0].status) !== "geöffnet") {
-      const error = new Error("Die Prioliste ist aktuell nicht für Einträge geöffnet.");
+    if (normalizeStatus(raidResult.rows[0].status) === "geöffnet") {
+      const error = new Error("Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.");
       error.statusCode = 403;
       throw error;
     }
@@ -1597,6 +1597,19 @@ async function getPublishedPrios({ guildId, query: params }) {
       };
     })
   };
+}
+
+async function validateLeadPin({ guildId, query: params }) {
+  const raid = await findRaid(guildId, {
+    ...params,
+    leadPin: params.leadPin || params.raidleadPin
+  });
+
+  if (!raid || !clean(raid.lead_pin)) {
+    return { success: false, error: "Falsche Raidlead-PIN." };
+  }
+
+  return { success: true, ...normalizeRaidRow(raid) };
 }
 
 async function setRaidStatus({ guildId, query: params }) {
@@ -2409,6 +2422,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublishedPrios") {
       const prios = await getPublishedPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...prios, guild: guild.slug });
+    }
+
+    if (action === "validateLeadPin") {
+      const raid = await validateLeadPin({ guildId: guild.id, query: req.query });
+      return res.json({ ...raid, guild: guild.slug });
     }
 
     if (action === "savePrio") {
