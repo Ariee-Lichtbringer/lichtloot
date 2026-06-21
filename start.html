@@ -1318,7 +1318,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .buff-summary-card{display:flex;align-items:center;gap:12px;min-height:62px;border-right:1px solid rgba(148,163,184,.16)}
 .buff-summary-card:last-child{border-right:0}.buff-summary-icon{font-size:24px;color:#facc15}.buff-summary-number{font-size:30px;color:#f8fafc;font-weight:950;line-height:1}.buff-summary-label{color:#cbd5e1;font-size:13px;font-weight:850}.buff-summary-label strong{display:block;color:#f8fafc;font-size:14px}
 .buff-day-list{display:grid;gap:14px}.buff-day-card{border:1px solid rgba(148,163,184,.20);border-radius:8px;background:rgba(8,17,31,.58);overflow:hidden}.buff-day-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;color:#facc15;font-size:19px;font-weight:950;border-bottom:1px solid rgba(148,163,184,.16)}.buff-day-card summary::-webkit-details-marker{display:none}.buff-day-card summary::after{content:"⌃";color:#e5e7eb;font-size:18px}.buff-day-card:not([open]) summary::after{content:"⌄"}
-.buff-day-row{display:grid;grid-template-columns:100px 220px minmax(150px,1fr) minmax(180px,1.1fr) 150px 32px;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(148,163,184,.14);color:#dbeafe;font-weight:850}.buff-day-row:last-child{border-bottom:0}.buff-row-time{color:#cbd5e1;font-size:16px}.buff-label{display:inline-flex;align-items:center;gap:9px;min-width:150px;padding:8px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.15);font-weight:950}.buff-label.hakkar{background:rgba(22,101,52,.42);border-color:rgba(34,197,94,.35)}.buff-label.ony,.buff-label.nef{background:rgba(127,29,29,.44);border-color:rgba(239,68,68,.34)}.buff-label.rend{background:rgba(124,45,18,.52);border-color:rgba(249,115,22,.38)}.buff-row-muted{color:#cbd5e1}.buff-row-caster.missing{color:#facc15}.buff-status-pill{display:inline-flex;align-items:center;gap:8px}.buff-status-dot{width:11px;height:11px;border-radius:999px;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.42)}.buff-status-pill.confirmed .buff-status-dot{background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.45)}.buff-row-more{color:#cbd5e1;text-align:right;font-weight:950}
+.buff-day-row{display:grid;grid-template-columns:100px 220px minmax(150px,1fr) minmax(180px,1.1fr) 150px 32px;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(148,163,184,.14);color:#dbeafe;font-weight:850}.buff-day-row:last-child{border-bottom:0}.buff-row-time{color:#cbd5e1;font-size:16px}.buff-label{display:inline-flex;align-items:center;gap:9px;min-width:150px;padding:8px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.15);font-weight:950}.buff-label-icon{width:25px;height:25px;border-radius:5px;object-fit:cover;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 12px rgba(0,0,0,.28)}.buff-label.hakkar{background:rgba(22,101,52,.42);border-color:rgba(34,197,94,.35)}.buff-label.ony,.buff-label.nef{background:rgba(127,29,29,.44);border-color:rgba(239,68,68,.34)}.buff-label.rend{background:rgba(124,45,18,.52);border-color:rgba(249,115,22,.38)}.buff-row-muted{color:#cbd5e1}.buff-row-caster.missing{color:#facc15}.buff-status-pill{display:inline-flex;align-items:center;gap:8px}.buff-status-dot{width:11px;height:11px;border-radius:999px;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.42)}.buff-status-pill.confirmed .buff-status-dot{background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.45)}.buff-row-more{color:#cbd5e1;text-align:right;font-weight:950}
 @media(max-width:900px){.buff-summary-grid{grid-template-columns:1fr}.buff-summary-card{border-right:0;border-bottom:1px solid rgba(148,163,184,.16);padding-bottom:10px}.buff-summary-card:last-child{border-bottom:0;padding-bottom:0}.buff-day-row{grid-template-columns:72px 1fr;gap:8px}.buff-row-guild,.buff-row-caster,.buff-row-status,.buff-row-more{grid-column:2}.buff-label{min-width:0;width:100%}}
 
 /* === FINAL: Priolisten-Fenster sichtbarer Resize-Griff === */
@@ -2829,8 +2829,17 @@ function renderDashboardBuffCardRow(entry,kind){
 function renderDashboardBuffLabel(buff){
   const cls=dashboardBuffClass(buff);
   const label=dashboardBuffDisplayName(buff);
-  const icon=cls === "hakkar" ? "🌿" : cls === "rend" ? "🔥" : cls === "nef" ? "☠" : "●";
-  return `<span class="buff-label ${safeAttr(cls)}"><span>${safeHtml(icon)}</span>${safeHtml(label)}</span>`;
+  const icon=dashboardBuffIconName(buff);
+  return `<span class="buff-label ${safeAttr(cls)}"><img class="buff-label-icon" src="${safeAttr(getIconUrl(icon))}" alt="" loading="lazy" onerror="iconFallback(this)">${safeHtml(label)}</span>`;
+}
+
+function dashboardBuffIconName(buff){
+  const cls=dashboardBuffClass(buff);
+  if(cls === "hakkar") return "achievement_boss_hakkar";
+  if(cls === "ony") return "inv_misc_head_dragon_01";
+  if(cls === "nef") return "inv_misc_head_dragon_black";
+  if(cls === "rend") return "spell_fire_fire";
+  return "inv_misc_questionmark";
 }
 
 function dashboardBuffDisplayName(buff){
