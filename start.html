@@ -4494,7 +4494,7 @@ function refreshMyWorldbuffClaimSlots(){
   buffSelect.value=selectedBuff;
   const matchingSlots=(myWorldbuffOpenSlots || []).filter(slot => normalizeMyWorldbuffBuff(slot && slot.buff) === selectedBuff);
   slotSelect.innerHTML=matchingSlots.length
-    ? matchingSlots.map(slot => `<option value="${safeAttr(slot.rowNumber)}">${safeHtml([slot.datum, slot.uhrzeit, slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
+    ? matchingSlots.map(slot => `<option value="${safeAttr(getMyWorldbuffSlotValue(slot))}">${safeHtml([slot.datum, slot.uhrzeit, slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
     : '<option value="">Kein freier Termin für diesen Buff</option>';
   slotSelect.disabled=!matchingSlots.length;
 
@@ -4513,8 +4513,12 @@ function refreshMyWorldbuffClaimSlots(){
 
 function getSelectedMyWorldbuffClaimSlot(){
   const select=document.getElementById("myWorldbuffClaimSlot");
-  const rowNumber=select ? select.value : "";
-  return (myWorldbuffOpenSlots || []).find(slot => String(slot.rowNumber) === String(rowNumber)) || null;
+  const value=select ? select.value : "";
+  return (myWorldbuffOpenSlots || []).find(slot => getMyWorldbuffSlotValue(slot) === value) || null;
+}
+
+function getMyWorldbuffSlotValue(slot){
+  return [slot && slot.rowNumber, normalizeMyWorldbuffBuff(slot && slot.buff)].join("|");
 }
 
 function updateMyWorldbuffClaimMeta(){
@@ -4590,9 +4594,11 @@ async function claimMyWorldbuff(){
   const charSelect=document.getElementById("myWorldbuffClaimChar");
   const charakter=charSelect && charSelect.value ? charSelect.value.trim() : getSelectedMyLichtLootCharacterName();
   const select=document.getElementById("myWorldbuffClaimSlot");
-  const rowNumber=select ? select.value : "";
+  const slot=getSelectedMyWorldbuffClaimSlot();
+  const rowNumber=slot ? slot.rowNumber : "";
+  const buff=slot ? normalizeMyWorldbuffBuff(slot.buff) : "";
 
-  if(!pin || !charakter || !rowNumber){
+  if(!pin || !charakter || !rowNumber || !buff){
     alert("Bitte zuerst Charakter auswählen und einen freien Termin wählen.");
     return;
   }
@@ -4602,6 +4608,7 @@ async function claimMyWorldbuff(){
       action:"claimPlayerWorldbuff",
       pin,
       rowNumber,
+      buff,
       charakter
     });
 
