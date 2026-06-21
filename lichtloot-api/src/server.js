@@ -263,6 +263,44 @@ async function findPlayerByPin(guildId, pin) {
   return result.rows[0] || null;
 }
 
+async function getPlayerDisplayNameByPin(guildId, pin) {
+  const result = await query(
+    `select coalesce(nullif(p.main_name, ''), min(c.name), p.player_pin) as display_name
+     from players p
+     left join characters c on c.player_id = p.id
+     where p.guild_id = $1 and p.player_pin = $2
+     group by p.id, p.main_name, p.player_pin`,
+    [guildId, normalizePin(pin)]
+  );
+  return clean(result.rows[0]?.display_name);
+}
+
+async function getVerifiedSenderCharacterName(guildId, pin, charName, server) {
+  const name = clean(charName);
+  if (!name) return "";
+
+  const params = [guildId, normalizePin(pin), name];
+  let serverClause = "";
+  if (clean(server)) {
+    params.push(clean(server));
+    serverClause = `and lower(c.server) = lower($${params.length})`;
+  }
+
+  const result = await query(
+    `select c.name
+     from players p
+     join characters c on c.player_id = p.id
+     where p.guild_id = $1
+       and p.player_pin = $2
+       and lower(c.name) = lower($3)
+       ${serverClause}
+     order by c.created_at asc
+     limit 1`,
+    params
+  );
+  return clean(result.rows[0]?.name);
+}
+
 async function findPlayerByRecipient(guildId, recipient, server) {
   const raw = clean(recipient);
   if (!raw) return null;
@@ -1267,7 +1305,7 @@ function normalizePlayerMessageRow(row) {
     raidDate,
     raidTime: row.raid_time || "",
     leadPin: row.lead_pin || "",
-    sender: row.sender || "",
+    sender: row.sender_display || row.sender || "",
     createdAt: row.created_at,
     readAt: row.read_at,
     read: Boolean(row.read_at)
@@ -1329,6 +1367,10 @@ async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const senderName =
+    await getVerifiedSenderCharacterName(guildId, senderPin, params.senderCharacter || params.senderChar, params.senderServer) ||
+    await getPlayerDisplayNameByPin(guildId, senderPin) ||
+    "Spieler";
 
   const recipientPlayer = await findPlayerByRecipient(guildId, recipient, params.server);
   if (!recipientPlayer) {
@@ -1354,7 +1396,7 @@ async function sendPlayerMessageFromPlayer({ guildId, query: params }) {
       parseDateValue(params.raidDate || params.date || null),
       clean(params.raidTime || params.time),
       clean(params.leadPin),
-      clean(params.sender) || `Spieler ${senderPin}`
+      senderName
     ]
   );
   return { success: true, message: normalizePlayerMessageRow(result.rows[0]) };
@@ -1375,7 +1417,15 @@ async function getPlayerMessages({ guildId, query: params }) {
               from players p
               join characters c on c.player_id = p.id
               where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
-            ), '') as recipient_names
+            ), '') as recipient_names,
+            coalesce((
+              select coalesce(nullif(p.main_name, ''), min(c.name), p.player_pin)
+              from players p
+              left join characters c on c.player_id = p.id
+              where p.guild_id = pm.guild_id
+                and p.player_pin = substring(pm.sender from '^Spieler (.+)$')
+              group by p.id, p.main_name, p.player_pin
+            ), pm.sender) as sender_display
      from player_messages pm
      where pm.guild_id = $1 and pm.player_pin = $2
      order by created_at desc
@@ -1402,10 +1452,25 @@ async function getPlayerSentMessages({ guildId, query: params }) {
               where p.guild_id = pm.guild_id and p.player_pin = pm.player_pin
             ), '') as recipient_names
      from player_messages pm
-     where pm.guild_id = $1 and pm.sender = $2
+     where pm.guild_id = $1
+       and (
+         pm.sender = $2
+         or pm.sender = any(
+           select c.name
+           from players p
+           join characters c on c.player_id = p.id
+           where p.guild_id = pm.guild_id and p.player_pin = $3
+         )
+         or pm.sender = coalesce((
+           select nullif(p.main_name, '')
+           from players p
+           where p.guild_id = pm.guild_id and p.player_pin = $3
+           limit 1
+         ), '')
+       )
      order by pm.created_at desc
      limit 50`,
-    [guildId, `Spieler ${playerPin}`]
+    [guildId, `Spieler ${playerPin}`, playerPin]
   );
   return { success: true, messages: result.rows.map(normalizePlayerMessageRow) };
 }
@@ -1460,7 +1525,24 @@ async function deletePlayerMessage({ guildId, query: params }) {
        and id = $2
        and (
          player_pin = $3
-         or ($4 = 'sent' and sender = $5)
+         or (
+           $4 = 'sent'
+           and (
+             sender = $5
+             or sender = any(
+               select c.name
+               from players p
+               join characters c on c.player_id = p.id
+               where p.guild_id = player_messages.guild_id and p.player_pin = $3
+             )
+             or sender = coalesce((
+               select nullif(p.main_name, '')
+               from players p
+               where p.guild_id = player_messages.guild_id and p.player_pin = $3
+               limit 1
+             ), '')
+           )
+         )
        )
      returning id`,
     [guildId, id, playerPin, folder, `Spieler ${playerPin}`]
@@ -1509,7 +1591,38 @@ async function deleteRaid({ guildId, query: params }) {
 
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  return createRaidRecord({ guildId, query: params });
+}
 
+async function createRandomRaid({ guildId, query: params }) {
+  const raidType = normalizeRaidType(params.raid || params.raidName);
+  const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"]);
+  if (!allowedRaids.has(raidType)) {
+    const error = new Error("Dieser Raidtyp kann nicht erstellt werden.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (!prioPin || !leadPin) {
+    const error = new Error("PrioPIN oder LeadPIN fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return createRaidRecord({
+    guildId,
+    query: {
+      ...params,
+      raid: raidType,
+      status: "geschlossen",
+      p0PlusFreigabe: "geschlossen"
+    }
+  });
+}
+
+async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
@@ -2514,6 +2627,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "createRaid") {
       const created = await createRaid({ guildId: guild.id, query: req.query });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "createRandomRaid") {
+      const created = await createRandomRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...created, guild: guild.slug });
     }
 
