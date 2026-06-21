@@ -1591,32 +1591,33 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
       </div>
       <div id="myWorldbuffContent" class="my-worldbuff-list"></div>
     </div>
-    <div id="myWorldbuffClaimModal" class="report-modal hidden">
-      <div class="report-box">
-        <div class="report-head">
-          <h2>Worldbuff eintragen</h2>
-          <button class="report-close" type="button" onclick="closeMyWorldbuffClaimModal()">✕</button>
-        </div>
-        <div class="my-worldbuff-modal-grid">
-          <label>Buff
-            <select id="myWorldbuffClaimBuff" onchange="refreshMyWorldbuffClaimSlots()">
-              <option value="Nef">Nef</option>
-              <option value="Ony">Ony</option>
-              <option value="Hakkar">Hakkar</option>
-            </select>
-          </label>
-          <label>Freier Termin
-            <select id="myWorldbuffClaimSlot" onchange="updateMyWorldbuffClaimMeta()"></select>
-          </label>
-          <label>Charakter
-            <select id="myWorldbuffClaimChar"></select>
-          </label>
-          <div id="myWorldbuffClaimMeta" class="my-worldbuff-modal-meta">Freien Termin auswählen.</div>
-          <button class="tool-btn" type="button" onclick="claimMyWorldbuff()">Eintragen</button>
-        </div>
+    <div id="myPriosResults" class="myprios-results"></div>
+  </div>
+
+  <div id="myWorldbuffClaimModal" class="report-modal hidden">
+    <div class="report-box">
+      <div class="report-head">
+        <h2>Worldbuff eintragen</h2>
+        <button class="report-close" type="button" onclick="closeMyWorldbuffClaimModal()">✕</button>
+      </div>
+      <div class="my-worldbuff-modal-grid">
+        <label>Buff
+          <select id="myWorldbuffClaimBuff" onchange="refreshMyWorldbuffClaimSlots()">
+            <option value="Nef">Nef</option>
+            <option value="Ony">Ony</option>
+            <option value="Hakkar">Hakkar</option>
+          </select>
+        </label>
+        <label>Freier Termin
+          <select id="myWorldbuffClaimSlot" onchange="updateMyWorldbuffClaimMeta()"></select>
+        </label>
+        <label>Charakter
+          <select id="myWorldbuffClaimChar"></select>
+        </label>
+        <div id="myWorldbuffClaimMeta" class="my-worldbuff-modal-meta">Freien Termin auswählen.</div>
+        <button class="tool-btn" type="button" onclick="claimMyWorldbuff()">Eintragen</button>
       </div>
     </div>
-    <div id="myPriosResults" class="myprios-results"></div>
   </div>
 
   <div id="lichtlootTwinkSection" class="lichtloot-section hidden">
