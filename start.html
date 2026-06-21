@@ -1876,7 +1876,7 @@ const RAID_API_URL =
 const LICHTLOOT_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 const RAILWAY_API_URL =
-  window.LICHTLOOT_RAILWAY_API_URL || "https://lichtbuff-bot-production.up.railway.app";
+  window.LICHTLOOT_RAILWAY_API_URL || "https://lichtloot-production.up.railway.app";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 
@@ -3408,7 +3408,7 @@ function loadActiveRaidCards(){
 
   loadActiveRaidCardsFromRailway().then(loaded=>{
     if(loaded) return;
-    loadActiveRaidCardsFromAppsScript();
+    renderActiveRaidCards([]);
   });
 }
 
