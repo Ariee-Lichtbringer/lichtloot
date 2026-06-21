@@ -1122,13 +1122,14 @@ async function resolveIssueReport({ guildId, query: params }) {
     try {
       const player = await findPlayerByRecipient(guildId, report.player, report.server);
       if (player) {
+        const playerName = clean(player.main_name || player.character_name || report.player) || "Spieler";
         const bodyParts = [
-          "Deine Fehlermeldung wurde von der Gildenleitung erledigt.",
-          report.raid ? `Raid: ${report.raid}` : "",
-          report.item ? `Item: ${report.item}` : "",
-          (report.category || report.type) ? `Kategorie: ${report.category || report.type}` : "",
-          report.note ? `Dein Hinweis: ${report.note}` : ""
-        ].filter(Boolean);
+          `Lieber ${playerName},`,
+          "",
+          "vielen Dank für deine Mithilfe, das Item wurde geändert.",
+          "",
+          "LG"
+        ];
 
         await query(
           `insert into player_messages (
@@ -1138,7 +1139,7 @@ async function resolveIssueReport({ guildId, query: params }) {
           [
             guildId,
             player.player_pin,
-            "Fehlermeldung erledigt",
+            "Item wurde geändert",
             bodyParts.join("\n"),
             report.raid || "",
             "Gildenleitung"

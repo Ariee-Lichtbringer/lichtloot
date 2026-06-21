@@ -3733,7 +3733,13 @@ async function resolveIssueReport(rowNumber){
     issueReports = issueReports.filter(report => String(report.id || report.rowNumber || "") !== String(rowNumber));
     renderSummary();
     renderIssueRows();
-    setStatus("Meldung erledigt und gelöscht.", "good");
+    if(result.notified){
+      setStatus("Meldung erledigt und automatische Antwort ins Spieler-Postfach gelegt.", "good");
+    }else if(result.notificationError){
+      setStatus(`Meldung erledigt, aber keine automatische Antwort gesendet: ${result.notificationError}`, "bad");
+    }else{
+      setStatus("Meldung erledigt und gelöscht.", "good");
+    }
   }catch(error){
     setStatus(error.message || "Meldung konnte nicht erledigt werden.", "bad");
   }
