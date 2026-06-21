@@ -105,8 +105,9 @@ body.guild-gate-active .logo-banner{
 
 .guild-gate-grid{
   display:grid;
-  grid-template-columns:minmax(620px,1.1fr) minmax(420px,.8fr);
+  grid-template-columns:minmax(0,820px);
   gap:30px;
+  justify-content:center;
   align-items:start;
 }
 
@@ -1363,49 +1364,16 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <section id="guildGate" class="guild-gate hidden">
     <div class="guild-gate-head">
       <div>
-        <h1>Lootsystem wählen</h1>
-        <p>Wähle deine Gilde aus oder lege ein neues Lootsystem an. Danach bekommst du einen eigenen Loginbereich für deine Gilde.</p>
+        <h1>Gildenregistrierung kommt bald</h1>
+        <p>Bald können sich weitere Gilden ein eigenes Lootsystem anlegen. Bis dahin bleibt dieser Bereich geschlossen.</p>
       </div>
-      <button class="tool-btn" type="button" onclick="reloadGuildGate()">Aktualisieren</button>
     </div>
 
     <div class="guild-gate-grid">
-      <div class="guild-list-panel">
-        <div class="guild-panel-title"><span class="guild-panel-icon">♚</span><span>Bestehende Gilden</span></div>
-        <div class="guild-filter-row">
-          <input id="guildSearchInput" class="guild-search" type="search" placeholder="Gilde oder Lootsystem suchen..." oninput="renderGuildGateList()">
-          <select id="guildServerFilter" class="guild-server-filter" onchange="renderGuildGateList()">
-            <option value="">Alle Server</option>
-          </select>
-        </div>
-        <div class="guild-table">
-          <div class="guild-table-head">
-            <span>Gildenname</span>
-            <span>Lootsystem-Name</span>
-            <span>Server</span>
-            <span>Angelegt am</span>
-            <span></span>
-          </div>
-          <div id="guildGateList" class="guild-list">
-            <div class="guild-status">Gilden werden geladen …</div>
-          </div>
-        </div>
-      </div>
-
       <div class="guild-register">
-        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Gilde registrieren</span></div>
-        <label>Gildenname</label>
-        <input id="newGuildName" type="text" placeholder="z. B. Panem">
-
-        <label>Lootsystem-Name</label>
-        <input id="newLootName" type="text" placeholder="z. B. Lootsystem">
-
-        <label>Server</label>
-        <input id="newGuildServer" type="text" placeholder="z. B. Everlook">
-
-        <div class="guild-status">Nach der Registrierung kannst du Logo, Hintergrund und Links auf der Konfig-Seite festlegen.</div>
-        <button class="tool-btn" type="button" onclick="registerGuildFromGate()">Gilde registrieren</button>
-        <div id="guildGateStatus" class="guild-status">Der Name wird automatisch zu einem Link für diese Gilde.</div>
+        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Weitere Gilden bald verfügbar</span></div>
+        <p>Die Registrierung für andere Gilden wird gerade vorbereitet. Sobald alles fertig ist, erscheint hier wieder ein eigenes Anmeldefenster.</p>
+        <div id="guildGateStatus" class="guild-status">Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.</div>
       </div>
     </div>
   </section>
@@ -1443,7 +1411,7 @@ body.show-mylichtloot .mylichtloot-card{display:block}
     <div class="guild-config-form">
       <div>
         <label>Gildenname</label>
-        <input id="configGuildName" type="text" placeholder="z. B. Panem">
+        <input id="configGuildName" type="text" placeholder="Gildenname">
       </div>
 
       <div>
@@ -1974,75 +1942,14 @@ function renderGuildGateList(){
 }
 
 async function reloadGuildGate(){
-  const list=document.getElementById("guildGateList");
   const status=document.getElementById("guildGateStatus");
-  if(list) list.innerHTML='<div class="guild-status">Gilden werden geladen …</div>';
-
-  try{
-    const query=new URLSearchParams({action:"listGuilds",t:Date.now()});
-    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
-    const data=await response.json();
-    const guilds=data.guilds || [];
-    guildGateGuilds=guilds;
-
-    if(!guilds.length){
-      if(list) list.innerHTML='<div class="guild-status">Noch keine Gilden angelegt.</div>';
-      return;
-    }
-
-    const serverSelect=document.getElementById("guildServerFilter");
-    if(serverSelect){
-      const current=serverSelect.value;
-      const servers=[...new Set(guilds.map(guild => String(guild.server || "").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"));
-      serverSelect.innerHTML='<option value="">Alle Server</option>'+servers.map(server => `<option value="${safeHtml(server)}">${safeHtml(server)}</option>`).join("");
-      serverSelect.value=[...serverSelect.options].some(option => option.value === current) ? current : "";
-    }
-    renderGuildGateList();
-
-    if(status) status.innerHTML='Wähle eine Gilde oder registriere ein neues Lootsystem.';
-  }catch(error){
-    console.error(error);
-    if(list) list.innerHTML='<div class="guild-status"><span class="bad">Gilden konnten nicht geladen werden.</span></div>';
-  }
+  guildGateGuilds=[];
+  if(status) status.innerHTML='Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.';
 }
 
 async function registerGuildFromGate(){
-  const guildName=document.getElementById("newGuildName")?.value.trim() || "";
-  const lootName=document.getElementById("newLootName")?.value.trim() || "";
-  const server=document.getElementById("newGuildServer")?.value.trim() || "";
   const status=document.getElementById("guildGateStatus");
-
-  if(!guildName || !lootName){
-    if(status) status.innerHTML='<span class="bad">Bitte Gildenname und Lootsystem-Name ausfüllen.</span>';
-    return;
-  }
-
-  if(status) status.innerHTML='<span class="warn">Gilde wird angelegt …</span>';
-
-  try{
-    const query=new URLSearchParams({
-      action:"createGuild",
-      guildName,
-      lootName,
-      server,
-      t:Date.now()
-    });
-    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString());
-    const data=await response.json();
-
-    if(!data.success){
-      if(status) status.innerHTML='<span class="bad">'+safeHtml(data.error || "Gilde konnte nicht angelegt werden.")+'</span>';
-      return;
-    }
-
-    const slug=data.guild && data.guild.slug ? data.guild.slug : slugFromLootName(lootName || guildName);
-    activeGuildSlug=slug;
-    if(status) status.innerHTML='<span class="ok">✓ Gilde wurde angelegt.</span> Du wirst weitergeleitet …';
-    window.setTimeout(()=>{ window.location.href=guildConfigUrl(slug); }, 500);
-  }catch(error){
-    console.error(error);
-    if(status) status.innerHTML='<span class="bad">Gilde konnte nicht angelegt werden.</span>';
-  }
+  if(status) status.innerHTML='<span class="warn">Die Registrierung für weitere Gilden kommt bald.</span>';
 }
 
 let currentGuildInfo = null;
