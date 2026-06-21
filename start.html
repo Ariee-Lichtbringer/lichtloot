@@ -2701,12 +2701,49 @@ function dedupeDashboardBuffs(entries){
     result.push(seen[key]);
   });
 
-  return result;
+  return collapseSharedOnyNefDashboardSlots(result);
 }
 
 function dashboardWorldbuffSlotKey(entry){
   if(!entry || !entry.datum || !entry.uhrzeit || !entry.buff) return "";
   return [entry.datum,entry.uhrzeit,dashboardWorldbuffBuffKey(entry.buff)].join("|");
+}
+
+function dashboardWorldbuffSharedSlotKey(entry){
+  if(!entry || !entry.datum || !entry.uhrzeit || !entry.buff) return "";
+  const buffKey=dashboardWorldbuffBuffKey(entry.buff);
+  const sharedBuffKey=(buffKey === "ony" || buffKey === "nef") ? "ony-nef" : buffKey;
+  return [entry.datum,entry.uhrzeit,sharedBuffKey].join("|");
+}
+
+function dashboardWorldbuffIsOnyNef(entry){
+  const buffKey=dashboardWorldbuffBuffKey(entry && entry.buff);
+  return buffKey === "ony" || buffKey === "nef";
+}
+
+function dashboardWorldbuffHasThrower(entry){
+  return Boolean(String((entry && entry.charakter) || "").trim() || String((entry && entry.uebernehmer) || "").trim());
+}
+
+function collapseSharedOnyNefDashboardSlots(entries){
+  const list=Array.isArray(entries) ? entries : [];
+  const occupiedSlots={};
+
+  list.forEach(entry=>{
+    if(!dashboardWorldbuffIsOnyNef(entry)) return;
+    const sharedSlotKey=dashboardWorldbuffSharedSlotKey(entry);
+    if(!sharedSlotKey) return;
+    if(dashboardWorldbuffHasThrower(entry) || dashboardBuffStatusLabel(entry) !== "offen"){
+      occupiedSlots[sharedSlotKey]=true;
+    }
+  });
+
+  return list.filter(entry=>{
+    if(!dashboardWorldbuffIsOnyNef(entry)) return true;
+    const sharedSlotKey=dashboardWorldbuffSharedSlotKey(entry);
+    if(!sharedSlotKey || !occupiedSlots[sharedSlotKey]) return true;
+    return dashboardWorldbuffHasThrower(entry) || dashboardBuffStatusLabel(entry) !== "offen";
+  });
 }
 
 function dashboardWorldbuffMergeKey(entry){
