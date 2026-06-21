@@ -348,7 +348,37 @@ function weekdayShort(value) {
 
 function normalizeRaidType(value) {
   const raw = clean(value) || "raid";
-  return raw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "raid";
+  const key = raw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "raid";
+  const aliases = {
+    "molten-core": "mc",
+    "blackwing-lair": "bwl",
+    "ahn-qiraj-40": "aq40",
+    "aq-40": "aq40",
+    "ahn-qiraj": "aq40",
+    "zul-gurub": "zg",
+    "zg-20": "zg",
+    "zul-gurub-20": "zg",
+    "aq-20": "aq20",
+    "ahn-qiraj-20": "aq20",
+    "ruins-of-ahn-qiraj": "aq20",
+    "onyxia": "ony",
+    "onyxia-s-lair": "ony"
+  };
+  return aliases[key] || key;
+}
+
+function raidTypeSearchValues(value) {
+  const normalized = normalizeRaidType(value);
+  const variants = {
+    mc: ["mc", "molten-core", "Molten Core"],
+    bwl: ["bwl", "blackwing-lair", "Blackwing Lair"],
+    aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj", "AQ 40", "Ahn'Qiraj 40"],
+    naxx: ["naxx", "naxxramas", "Naxxramas"],
+    zg: ["zg", "zg-20", "zul-gurub", "zul-gurub-20", "ZG 20", "Zul'Gurub"],
+    aq20: ["aq20", "aq-20", "ahn-qiraj-20", "ruins-of-ahn-qiraj", "AQ 20"],
+    ony: ["ony", "onyxia", "onyxia-s-lair", "Onyxia"]
+  };
+  return Array.from(new Set([normalized, ...(variants[normalized] || [])]));
 }
 
 function displayRaidName(value) {
@@ -1504,15 +1534,15 @@ async function findRaid(guildId, params) {
   }
 
   if (!identityClauses.length && raidType) {
-    values.push(raidType);
-    identityClauses.push(`raid_type = $${values.length}`);
+    values.push(raidTypeSearchValues(raidType));
+    identityClauses.push(`raid_type = any($${values.length})`);
   }
 
   const clauses = ["guild_id = $1"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType && (leadPin || prioPin) && !raidId) {
-    values.push(raidType);
-    clauses.push(`raid_type = $${values.length}`);
+    values.push(raidTypeSearchValues(raidType));
+    clauses.push(`raid_type = any($${values.length})`);
   }
 
   const result = await query(
