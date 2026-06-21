@@ -1313,6 +1313,13 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 /* === FINAL: Startseiten-Buffuebersicht im mittleren Feld === */
 .buff-overview-panel{padding:16px!important;min-height:460px}
 .buff-overview-head{align-items:flex-start!important;margin-bottom:12px!important}.buff-overview-head p{margin:5px 0 0;color:#cbd5e1;font-size:13px;font-weight:800}.buff-overview-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.buff-overview-tabs{display:flex;gap:8px;margin-bottom:12px}.buff-tab{min-height:34px;padding:7px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}.buff-tab.active{border-color:rgba(250,204,21,.55);background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(250,204,21,.06));color:#facc15}.buff-overview-content{border:1px solid rgba(255,255,255,.10);border-radius:8px;overflow:auto;background:rgba(2,6,23,.42);max-height:calc(100vh - 280px)}.buff-overview-table{width:100%;border-collapse:collapse;min-width:860px}.buff-overview-table th,.buff-overview-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;font-weight:850;color:#dbeafe}.buff-overview-table th{color:#facc15;text-transform:uppercase;font-size:11px;letter-spacing:.04em;background:rgba(2,6,23,.50);position:sticky;top:0;z-index:2}.buff-overview-table td strong{color:#f8fafc}.buff-pill{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border-radius:999px;background:rgba(15,23,42,.68);border:1px solid rgba(255,255,255,.12);color:#f8fafc;font-weight:950}.buff-source{font-size:11px;color:#94a3b8;font-weight:850}.buff-empty{padding:18px;color:#cbd5e1;font-weight:850}.start-side-link.is-soft-active{border-color:rgba(250,204,21,.44);background:linear-gradient(90deg,rgba(250,204,21,.20),rgba(250,204,21,.04))}
+.buff-overview-content{max-height:none!important;overflow:visible!important;border-color:rgba(250,204,21,.16)!important;background:rgba(2,6,23,.28)!important;padding:12px!important}
+.buff-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px;border:1px solid rgba(148,163,184,.22);border-radius:8px;background:rgba(15,23,42,.46);padding:14px}
+.buff-summary-card{display:flex;align-items:center;gap:12px;min-height:62px;border-right:1px solid rgba(148,163,184,.16)}
+.buff-summary-card:last-child{border-right:0}.buff-summary-icon{font-size:24px;color:#facc15}.buff-summary-number{font-size:30px;color:#f8fafc;font-weight:950;line-height:1}.buff-summary-label{color:#cbd5e1;font-size:13px;font-weight:850}.buff-summary-label strong{display:block;color:#f8fafc;font-size:14px}
+.buff-day-list{display:grid;gap:14px}.buff-day-card{border:1px solid rgba(148,163,184,.20);border-radius:8px;background:rgba(8,17,31,.58);overflow:hidden}.buff-day-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;color:#facc15;font-size:19px;font-weight:950;border-bottom:1px solid rgba(148,163,184,.16)}.buff-day-card summary::-webkit-details-marker{display:none}.buff-day-card summary::after{content:"⌃";color:#e5e7eb;font-size:18px}.buff-day-card:not([open]) summary::after{content:"⌄"}
+.buff-day-row{display:grid;grid-template-columns:100px 220px minmax(150px,1fr) minmax(180px,1.1fr) 150px 32px;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(148,163,184,.14);color:#dbeafe;font-weight:850}.buff-day-row:last-child{border-bottom:0}.buff-row-time{color:#cbd5e1;font-size:16px}.buff-label{display:inline-flex;align-items:center;gap:9px;min-width:150px;padding:8px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.15);font-weight:950}.buff-label.hakkar{background:rgba(22,101,52,.42);border-color:rgba(34,197,94,.35)}.buff-label.ony,.buff-label.nef{background:rgba(127,29,29,.44);border-color:rgba(239,68,68,.34)}.buff-label.rend{background:rgba(124,45,18,.52);border-color:rgba(249,115,22,.38)}.buff-row-muted{color:#cbd5e1}.buff-row-caster.missing{color:#facc15}.buff-status-pill{display:inline-flex;align-items:center;gap:8px}.buff-status-dot{width:11px;height:11px;border-radius:999px;background:#facc15;box-shadow:0 0 10px rgba(250,204,21,.42)}.buff-status-pill.confirmed .buff-status-dot{background:#22c55e;box-shadow:0 0 10px rgba(34,197,94,.45)}.buff-row-more{color:#cbd5e1;text-align:right;font-weight:950}
+@media(max-width:900px){.buff-summary-grid{grid-template-columns:1fr}.buff-summary-card{border-right:0;border-bottom:1px solid rgba(148,163,184,.16);padding-bottom:10px}.buff-summary-card:last-child{border-bottom:0;padding-bottom:0}.buff-day-row{grid-template-columns:72px 1fr;gap:8px}.buff-row-guild,.buff-row-caster,.buff-row-status,.buff-row-more{grid-column:2}.buff-label{min-width:0;width:100%}}
 
 /* === FINAL: Priolisten-Fenster sichtbarer Resize-Griff === */
 #myPrioDetailModal .myprio-detail-box{position:relative!important;overflow:auto!important}
@@ -2550,6 +2557,7 @@ function dashboardWorldbuffWithinDays(entry,days){
   if(!ts) return false;
   const now=new Date();
   const start=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  if(days === "all") return ts >= start;
   const end=start + Number(days || 4) * 24 * 60 * 60 * 1000;
   return ts >= start && ts < end;
 }
@@ -2739,9 +2747,11 @@ function dashboardWorldbuffTextKey(value){
 
 async function getDashboardBuffEntries(kind,days){
   const action=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
+  const allUpcoming=days === "all";
+  const requestDays=allUpcoming ? 3650 : (days || 14);
   let entries=[];
   try{
-    const data=await fetchRaidApiJsonp({action,days:days || 14});
+    const data=await fetchRaidApiJsonp({action,days:requestDays});
     if(data && data.success !== false){
       const raw=data.buffs || data.entries || data.rows || data.data || [];
       if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
@@ -2753,27 +2763,99 @@ async function getDashboardBuffEntries(kind,days){
     entries=await loadBuffCsvEntries(kind);
   }
   return dedupeDashboardBuffs(entries)
-    .filter(entry=>dashboardWorldbuffWithinDays(entry,days || 14))
+    .filter(entry=>dashboardWorldbuffWithinDays(entry,allUpcoming ? "all" : requestDays))
     .sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b));
 }
 
 function renderBuffRows(entries,kind){
-  if(!entries.length) return '<div class="buff-empty">Keine Termine in diesem Zeitraum gefunden.</div>';
-  const casterLabel=kind === 'hordenbuff' ? 'Char / Übernehmer' : 'Werfer';
-  return '<table class="buff-overview-table"><thead><tr><th>Tag</th><th>Datum</th><th>Uhrzeit</th><th>Buff</th><th>Gilde</th><th>'+casterLabel+'</th><th>Status</th><th>Notiz</th></tr></thead><tbody>'+
-    entries.map(entry=>{
-      const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
-      return '<tr>'+
-        '<td>'+safeHtml(entry.tag || '')+'</td>'+
-        '<td><strong>'+safeHtml(formatRaidDateForDisplay(entry.datum))+'</strong></td>'+
-        '<td>'+safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))+'</td>'+
-        '<td><span class="buff-pill"><span class="dashboard-worldbuff-dot '+dashboardBuffClass(entry.buff)+'"></span>'+safeHtml(entry.buff || '-')+'</span><div class="buff-source">'+safeHtml(entry.source || '')+'</div></td>'+
-        '<td>'+safeHtml(entry.gilde || '-')+'</td>'+
-        '<td>'+safeHtml(caster || '-')+'</td>'+
-        '<td>'+safeHtml(entry.status || '-')+'</td>'+
-        '<td>'+safeHtml(entry.notiz || '')+'</td>'+
-      '</tr>';
-    }).join('')+'</tbody></table>';
+  if(!entries.length) return '<div class="buff-empty">Keine kommenden Termine gefunden.</div>';
+  const confirmed=entries.filter(isDashboardBuffConfirmed).length;
+  const open=entries.length-confirmed;
+  const confirmedPercent=entries.length ? Math.round((confirmed/entries.length)*100) : 0;
+  const openPercent=entries.length ? Math.round((open/entries.length)*100) : 0;
+  const grouped=groupDashboardBuffsByDate(entries);
+  return `
+    <div class="buff-summary-grid">
+      <div class="buff-summary-card"><span class="buff-summary-icon">▣</span><span class="buff-summary-number">${safeHtml(String(entries.length))}</span><span class="buff-summary-label"><strong>Buffs</strong>alle kommenden Termine</span></div>
+      <div class="buff-summary-card"><span class="buff-summary-icon">✓</span><span class="buff-summary-number">${safeHtml(String(confirmed))}</span><span class="buff-summary-label"><strong>bestätigt</strong>${safeHtml(String(confirmedPercent))}%</span></div>
+      <div class="buff-summary-card"><span class="buff-summary-icon">!</span><span class="buff-summary-number">${safeHtml(String(open))}</span><span class="buff-summary-label"><strong>offen</strong>${safeHtml(String(openPercent))}%</span></div>
+    </div>
+    <div class="buff-day-list">
+      ${grouped.map(group=>renderDashboardBuffDay(group,kind)).join("")}
+    </div>
+    <div class="buff-empty" style="text-align:center">Alle Zeiten in Serverzeit. Lichtbuffbot- und Worldbuffticker-Termine werden gemeinsam angezeigt.</div>
+  `;
+}
+
+function groupDashboardBuffsByDate(entries){
+  const map=new Map();
+  (entries || []).forEach(entry=>{
+    const key=formatRaidDateForDisplay(entry.datum) || String(entry.datum || "");
+    if(!map.has(key)) map.set(key,{date:key,entries:[]});
+    map.get(key).entries.push(entry);
+  });
+  return Array.from(map.values());
+}
+
+function renderDashboardBuffDay(group,kind){
+  const parsed=parseActiveRaidDate(group.date);
+  const heading=(parsed ? dashboardBuffWeekdayLong(parsed)+", " : "") + (group.date || "-");
+  return `
+    <details class="buff-day-card" open>
+      <summary><span>▣ ${safeHtml(heading)}</span></summary>
+      <div>${(group.entries || []).map(entry=>renderDashboardBuffCardRow(entry,kind)).join("")}</div>
+    </details>
+  `;
+}
+
+function renderDashboardBuffCardRow(entry,kind){
+  const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
+  const displayCaster=caster || (kind === "hordenbuff" ? "Helfer fehlt" : "Werfer fehlt");
+  const statusLabel=dashboardBuffStatusLabel(entry);
+  const confirmed=isDashboardBuffConfirmed(entry);
+  const guild=entry.gilde && !dashboardWorldbuffPlaceholderGuild(entry.gilde) ? entry.gilde : "-";
+  return `
+    <div class="buff-day-row">
+      <div class="buff-row-time">◷ ${safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))}</div>
+      <div>${renderDashboardBuffLabel(entry.buff)}</div>
+      <div class="buff-row-guild">♢ ${safeHtml(guild)}</div>
+      <div class="buff-row-caster ${caster ? "" : "missing"}">♙ ${safeHtml(displayCaster)}</div>
+      <div class="buff-row-status"><span class="buff-status-pill ${confirmed ? "confirmed" : "open"}"><span class="buff-status-dot"></span>${safeHtml(statusLabel)}</span></div>
+      <div class="buff-row-more">...</div>
+    </div>
+  `;
+}
+
+function renderDashboardBuffLabel(buff){
+  const cls=dashboardBuffClass(buff);
+  const label=dashboardBuffDisplayName(buff);
+  const icon=cls === "hakkar" ? "🌿" : cls === "rend" ? "🔥" : cls === "nef" ? "☠" : "●";
+  return `<span class="buff-label ${safeAttr(cls)}"><span>${safeHtml(icon)}</span>${safeHtml(label)}</span>`;
+}
+
+function dashboardBuffDisplayName(buff){
+  const cls=dashboardBuffClass(buff);
+  if(cls === "hakkar") return "ZG";
+  if(cls === "ony") return "Onyxia";
+  if(cls === "nef") return "Nef";
+  if(cls === "rend") return "Rend";
+  return String(buff || "-");
+}
+
+function dashboardBuffStatusLabel(entry){
+  const text=String((entry && entry.status) || "").replace(/[🟡🟢✅🔴🟠⚪]/g,"").trim().toLowerCase();
+  if(!text || text.includes("offen") || text.includes("frei")) return "offen";
+  if(text.includes("best") || text.includes("reserviert") || text.includes("eingetragen")) return "bestätigt";
+  return String((entry && entry.status) || "-").replace(/[🟡🟢✅🔴🟠⚪]/g,"").trim() || "-";
+}
+
+function isDashboardBuffConfirmed(entry){
+  return dashboardBuffStatusLabel(entry) === "bestätigt" && Boolean(String((entry && entry.charakter) || "").trim() || String((entry && entry.uebernehmer) || "").trim());
+}
+
+function dashboardBuffWeekdayLong(date){
+  const names=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  return names[date.getDay()] || "";
 }
 
 let currentBuffOverviewType='worldbuff';
@@ -2803,7 +2885,7 @@ async function loadBuffOverview(kind){
   if(!content) return;
   content.innerHTML='<div class="buff-empty">Termine werden geladen …</div>';
   const targetKind=kind || currentBuffOverviewType;
-  const entries=await getDashboardBuffEntries(targetKind,targetKind === 'hordenbuff' ? 30 : 14);
+  const entries=await getDashboardBuffEntries(targetKind,"all");
   content.innerHTML=renderBuffRows(entries,targetKind);
 }
 
