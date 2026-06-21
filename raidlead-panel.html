@@ -2307,17 +2307,33 @@ async function sendRaidStatus(status){
     "&t=" + Date.now();
 
   try{
-    /*
-      Wichtig: Apps Script liefert bei setRaidStatus JSON, aber ohne CORS-Header.
-      Deshalb lesen wir die Antwort hier nicht aus. Der GET-Aufruf wird trotzdem ausgeführt
-      und schreibt den Status in den Raids-Tab. So vermeiden wir den Browserfehler
-      „Origin is not allowed by Access-Control-Allow-Origin“.
-    */
-    await fetch(url, {
-      method:"GET",
-      mode:"no-cors",
-      cache:"no-store"
-    });
+    let result = null;
+    try{
+      const response = await fetch(url, {method:"GET",cache:"no-store"});
+      result = await response.json();
+    }catch(error){
+      result = await new Promise((resolve,reject)=>{
+        const callbackName = "raidStatusCb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        window[callbackName] = function(data){
+          delete window[callbackName];
+          if(script.parentNode) script.parentNode.removeChild(script);
+          resolve(data || {});
+        };
+        script.onerror = function(){
+          delete window[callbackName];
+          if(script.parentNode) script.parentNode.removeChild(script);
+          reject(error);
+        };
+        script.src = url + "&callback=" + encodeURIComponent(callbackName);
+        document.body.appendChild(script);
+      });
+    }
+
+    if(!result || result.success === false || result.error){
+      alert((result && result.error) || "Priolisten-Status konnte nicht gespeichert werden.");
+      return false;
+    }
 
     if(status === "geöffnet"){
       sessionStorage.setItem("raidOpen_" + raidId, "true");
