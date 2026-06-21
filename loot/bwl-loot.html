@@ -3442,6 +3442,10 @@ async function savePrio(){
   }
 
   await loadPublishedPrios();
+  if(currentPublishedMode){
+    status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
+    return;
+  }
 
   if(saveButton) saveButton.disabled=true;
 
