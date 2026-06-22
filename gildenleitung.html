@@ -1234,10 +1234,41 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .worldbuff-toolbar{
   display:grid;
-  grid-template-columns:140px 140px 1fr auto auto auto;
+  grid-template-columns:140px 140px 1fr auto auto auto auto;
   gap:8px;
   align-items:center;
   margin-bottom:8px;
+}
+
+.addon-export-box{
+  display:none;
+  gap:8px;
+  margin:8px 0;
+}
+
+.addon-export-box.open{
+  display:grid;
+}
+
+.addon-export-text{
+  width:100%;
+  min-height:118px;
+  resize:vertical;
+  border:1px solid rgba(148,163,184,.26);
+  border-radius:8px;
+  padding:9px 10px;
+  color:#e5edf8;
+  background:rgba(2,6,23,.76);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+  font-size:12px;
+  line-height:1.45;
+}
+
+.addon-export-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
 }
 
 .worldbuff-table{
@@ -3818,7 +3849,15 @@ function renderWorldbuffPanel(days){
       <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
       <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
       <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn ghost" type="button" onclick="showLichtBuffAddonExport('worldbuff')">Addon-Export</button>
       <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
+    </div>
+    <div id="worldbuffAddonExportBox" class="addon-export-box">
+      <textarea id="worldbuffAddonExportText" class="addon-export-text" readonly aria-label="LichtBuff Addon Export"></textarea>
+      <div class="addon-export-actions">
+        <button class="small-btn ghost" type="button" onclick="selectLichtBuffAddonExport('worldbuff')">Text markieren</button>
+        <button class="small-btn primary" type="button" onclick="copyLichtBuffAddonExport('worldbuff')">Kopieren</button>
+      </div>
     </div>
     <div class="buff-create-grid">
       <input id="newWorldbuffDate" type="date" aria-label="Datum">
@@ -3853,6 +3892,103 @@ function renderWorldbuffPanel(days){
     </div>
   `;
   renderWorldbuffRows();
+}
+
+function cleanLichtBuffAddonField(value){
+  return String(value || "")
+    .replace(/[|\r\n\t]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeLichtBuffAddonStatus(value){
+  return cleanLichtBuffAddonField(value).replace(/[🟡🟢✅❌]/g, "").trim();
+}
+
+function toLichtBuffAddonLine(type, entry){
+  const kind = type === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
+  const buff = cleanLichtBuffAddonField(entry.buff || (type === "hordenbuff" ? "Rend" : ""));
+  const datum = cleanLichtBuffAddonField(entry.datum || entry.date || "");
+  const tag = cleanLichtBuffAddonField(entry.tag || "");
+  const uhrzeit = cleanLichtBuffAddonField(entry.uhrzeit || entry.time || "");
+  const gilde = cleanLichtBuffAddonField(entry.gilde || entry.faction || (type === "hordenbuff" ? "Horde" : ""));
+  const charakter = cleanLichtBuffAddonField(entry.charakter || entry.character || "");
+  const uebernehmer = type === "hordenbuff" ? cleanLichtBuffAddonField(entry.uebernehmer || entry.helper || "") : "";
+  const status = normalizeLichtBuffAddonStatus(entry.status || "");
+  const note = cleanLichtBuffAddonField(entry.note || entry.notiz || "");
+
+  return ["LLB", kind, buff, datum, tag, uhrzeit, gilde, charakter, uebernehmer, status, note].join("|");
+}
+
+function buildLichtBuffAddonExport(type){
+  const entries = type === "hordenbuff" ? hordenbuffEntries : worldbuffEntries;
+  const today = parseWorldbuffDate(todayIsoDate());
+
+  return (entries || [])
+    .filter(entry => {
+      const date = parseWorldbuffDate(entry && (entry.datum || entry.date));
+      if(!date || !today) return true;
+      return date >= today;
+    })
+    .sort((a,b) => {
+      const dateA = parseWorldbuffDate(a && (a.datum || a.date));
+      const dateB = parseWorldbuffDate(b && (b.datum || b.date));
+      return ((dateA && dateA.getTime()) || 0) - ((dateB && dateB.getTime()) || 0) ||
+        String(a.uhrzeit || a.time || "").localeCompare(String(b.uhrzeit || b.time || ""));
+    })
+    .map(entry => toLichtBuffAddonLine(type, entry))
+    .join("\n");
+}
+
+function getLichtBuffAddonExportElements(type){
+  const prefix = type === "hordenbuff" ? "hordenbuff" : "worldbuff";
+  return {
+    box: document.getElementById(`${prefix}AddonExportBox`),
+    text: document.getElementById(`${prefix}AddonExportText`)
+  };
+}
+
+function showLichtBuffAddonExport(type){
+  const elements = getLichtBuffAddonExportElements(type);
+  if(!elements.box || !elements.text) return;
+
+  const exportText = buildLichtBuffAddonExport(type);
+  elements.text.value = exportText || "";
+  elements.box.classList.add("open");
+  elements.text.focus();
+  elements.text.select();
+
+  const label = type === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
+  setStatus(exportText ? `${label}-Export für das LichtBuff Addon ist bereit.` : `Keine kommenden ${label}-Termine zum Exportieren gefunden.`, exportText ? "good" : "bad");
+}
+
+function selectLichtBuffAddonExport(type){
+  const elements = getLichtBuffAddonExportElements(type);
+  if(!elements.text) return;
+  elements.text.focus();
+  elements.text.select();
+}
+
+async function copyLichtBuffAddonExport(type){
+  const elements = getLichtBuffAddonExportElements(type);
+  if(!elements.text) return;
+  const value = elements.text.value || buildLichtBuffAddonExport(type);
+  elements.text.value = value;
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(value);
+    }else{
+      elements.text.focus();
+      elements.text.select();
+      document.execCommand("copy");
+    }
+    setStatus("Addon-Export wurde kopiert.", "good");
+  }catch(error){
+    elements.text.focus();
+    elements.text.select();
+    setStatus("Kopieren nicht erlaubt. Der Text ist markiert und kann manuell kopiert werden.", "bad");
+  }
 }
 
 function renderWorldbuffRows(){
@@ -4211,7 +4347,15 @@ function renderHordenbuffPanel(days){
       <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
       <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
       <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn ghost" type="button" onclick="showLichtBuffAddonExport('hordenbuff')">Addon-Export</button>
       <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+    </div>
+    <div id="hordenbuffAddonExportBox" class="addon-export-box">
+      <textarea id="hordenbuffAddonExportText" class="addon-export-text" readonly aria-label="LichtBuff Addon Export"></textarea>
+      <div class="addon-export-actions">
+        <button class="small-btn ghost" type="button" onclick="selectLichtBuffAddonExport('hordenbuff')">Text markieren</button>
+        <button class="small-btn primary" type="button" onclick="copyLichtBuffAddonExport('hordenbuff')">Kopieren</button>
+      </div>
     </div>
     <div class="buff-create-grid">
       <input id="newHordenbuffDate" type="date" aria-label="Datum">
