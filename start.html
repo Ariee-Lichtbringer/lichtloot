@@ -2811,7 +2811,10 @@ async function getDashboardBuffEntries(kind,days){
   }catch(error){
     console.warn('Buff-API nicht ladbar:', action, error);
   }
-  if(!entries.length){
+  if(kind === "worldbuff"){
+    const tickerEntries=await loadBuffCsvEntries(kind);
+    entries=entries.concat(tickerEntries);
+  }else if(!entries.length){
     entries=await loadBuffCsvEntries(kind);
   }
   return dedupeDashboardBuffs(entries)
