@@ -3018,9 +3018,18 @@ function startLichtBuffAddonLine(entry,kind){
   return ["LLB",type,buff,datum,tag,uhrzeit,gilde,charakter,uebernehmer,status,note].join("#");
 }
 
-function buildStartLichtBuffAddonExport(){
-  const kind=currentBuffOverviewType === "hordenbuff" ? "hordenbuff" : "worldbuff";
-  return (currentBuffOverviewEntries || [])
+async function getStartLichtBuffAddonExportEntries(kind){
+  try{
+    const fresh=await getDashboardBuffEntries(kind,"all");
+    if(Array.isArray(fresh) && fresh.length) return fresh;
+  }catch(error){
+    console.warn("Addon-Export konnte Gesamtliste nicht frisch laden:", error);
+  }
+  return currentBuffOverviewType === kind ? (currentBuffOverviewEntries || []) : [];
+}
+
+function buildStartLichtBuffAddonExport(entries,kind){
+  return (entries || [])
     .filter(entry=>dashboardWorldbuffWithinDays(entry,"all"))
     .sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b))
     .map(entry=>startLichtBuffAddonLine(entry,kind))
@@ -3032,16 +3041,19 @@ function showStartLichtBuffAddonMessage(message){
   if(subtitle) subtitle.textContent=message;
 }
 
-function showStartLichtBuffAddonExport(){
+async function showStartLichtBuffAddonExport(){
   const box=document.getElementById("startLichtBuffAddonExportBox");
   const text=document.getElementById("startLichtBuffAddonExportText");
   if(!box || !text) return;
-  const exportText=buildStartLichtBuffAddonExport();
+  const kind=currentBuffOverviewType === "hordenbuff" ? "hordenbuff" : "worldbuff";
+  showStartLichtBuffAddonMessage("Addon-Export laedt alle oeffentlichen Termine ...");
+  const entries=await getStartLichtBuffAddonExportEntries(kind);
+  const exportText=buildStartLichtBuffAddonExport(entries,kind);
   text.value=exportText;
   box.classList.add("open");
   text.focus();
   text.select();
-  const label=currentBuffOverviewType === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
+  const label=kind === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
   showStartLichtBuffAddonMessage(exportText ? `${label}-Export fuer LichtBuff ist bereit.` : `Keine kommenden ${label}-Termine zum Exportieren gefunden.`);
 }
 
@@ -3055,7 +3067,11 @@ function selectStartLichtBuffAddonExport(){
 async function copyStartLichtBuffAddonExport(){
   const text=document.getElementById("startLichtBuffAddonExportText");
   if(!text) return;
-  if(!text.value) text.value=buildStartLichtBuffAddonExport();
+  if(!text.value){
+    const kind=currentBuffOverviewType === "hordenbuff" ? "hordenbuff" : "worldbuff";
+    const entries=await getStartLichtBuffAddonExportEntries(kind);
+    text.value=buildStartLichtBuffAddonExport(entries,kind);
+  }
   try{
     if(navigator.clipboard && window.isSecureContext){
       await navigator.clipboard.writeText(text.value);
