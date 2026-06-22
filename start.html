@@ -1314,6 +1314,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .buff-overview-panel{padding:16px!important;min-height:460px}
 .buff-overview-head{align-items:flex-start!important;margin-bottom:12px!important}.buff-overview-head p{margin:5px 0 0;color:#cbd5e1;font-size:13px;font-weight:800}.buff-overview-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.buff-overview-tabs{display:flex;gap:8px;margin-bottom:12px}.buff-tab{min-height:34px;padding:7px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}.buff-tab.active{border-color:rgba(250,204,21,.55);background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(250,204,21,.06));color:#facc15}.buff-overview-content{border:1px solid rgba(255,255,255,.10);border-radius:8px;overflow:auto;background:rgba(2,6,23,.42);max-height:calc(100vh - 280px)}.buff-overview-table{width:100%;border-collapse:collapse;min-width:860px}.buff-overview-table th,.buff-overview-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;font-weight:850;color:#dbeafe}.buff-overview-table th{color:#facc15;text-transform:uppercase;font-size:11px;letter-spacing:.04em;background:rgba(2,6,23,.50);position:sticky;top:0;z-index:2}.buff-overview-table td strong{color:#f8fafc}.buff-pill{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border-radius:999px;background:rgba(15,23,42,.68);border:1px solid rgba(255,255,255,.12);color:#f8fafc;font-weight:950}.buff-source{font-size:11px;color:#94a3b8;font-weight:850}.buff-empty{padding:18px;color:#cbd5e1;font-weight:850}.start-side-link.is-soft-active{border-color:rgba(250,204,21,.44);background:linear-gradient(90deg,rgba(250,204,21,.20),rgba(250,204,21,.04))}
 .buff-overview-content{max-height:none!important;overflow:visible!important;border-color:rgba(250,204,21,.16)!important;background:rgba(2,6,23,.28)!important;padding:12px!important}
+.buff-addon-export-box{display:none;gap:8px;margin:0 0 12px}.buff-addon-export-box.open{display:grid}.buff-addon-export-text{width:100%;min-height:126px;resize:vertical;border:1px solid rgba(250,204,21,.26);border-radius:8px;padding:10px 12px;color:#e5edf8;background:rgba(2,6,23,.74);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:12px;line-height:1.45}.buff-addon-export-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .buff-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:14px;border:1px solid rgba(148,163,184,.22);border-radius:8px;background:rgba(15,23,42,.46);padding:14px}
 .buff-summary-card{display:flex;align-items:center;gap:12px;min-height:62px;border-right:1px solid rgba(148,163,184,.16)}
 .buff-summary-card:last-child{border-right:0}.buff-summary-icon{font-size:24px;color:#facc15}.buff-summary-number{font-size:30px;color:#f8fafc;font-weight:950;line-height:1}.buff-summary-label{color:#cbd5e1;font-size:13px;font-weight:850}.buff-summary-label strong{display:block;color:#f8fafc;font-size:14px}
@@ -1754,6 +1755,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
           </div>
           <div class="buff-overview-actions">
             <button class="right-inline-btn" onclick="loadBuffOverview(currentBuffOverviewType)">Neu laden</button>
+            <button class="right-inline-btn" onclick="showStartLichtBuffAddonExport()">Addon-Export</button>
             <button class="text-link-btn" onclick="goHomeView()">Dashboard anzeigen →</button>
           </div>
         </div>
@@ -1763,6 +1765,13 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
         </div>
         <div class="buff-overview-search-row">
           <input id="buffOverviewSearch" type="search" placeholder="Datum, Name, Buff oder Gilde suchen..." oninput="renderCurrentBuffOverview()">
+        </div>
+        <div id="startLichtBuffAddonExportBox" class="buff-addon-export-box">
+          <textarea id="startLichtBuffAddonExportText" class="buff-addon-export-text" readonly aria-label="LichtBuff Addon Export"></textarea>
+          <div class="buff-addon-export-actions">
+            <button class="right-inline-btn" onclick="selectStartLichtBuffAddonExport()">Text markieren</button>
+            <button class="right-inline-btn" onclick="copyStartLichtBuffAddonExport()">Kopieren</button>
+          </div>
         </div>
         <div id="buffOverviewContent" class="buff-overview-content"><div class="status">Noch keine Daten geladen.</div></div>
       </section>
@@ -2982,6 +2991,101 @@ function renderCurrentBuffOverview(){
   const content=document.getElementById('buffOverviewContent');
   if(!content) return;
   content.innerHTML=renderBuffRows(currentBuffOverviewEntries,currentBuffOverviewType);
+}
+
+function cleanStartLichtBuffAddonField(value){
+  return String(value || "")
+    .replace(/[|#\r\n\t]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function startLichtBuffAddonStatus(value){
+  return cleanStartLichtBuffAddonField(value).replace(/[🟡🟢✅❌🔴🟠⚪]/g,"").trim();
+}
+
+function startLichtBuffAddonLine(entry,kind){
+  const type=kind === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
+  const buff=cleanStartLichtBuffAddonField(entry && entry.buff);
+  const datum=cleanStartLichtBuffAddonField(entry && entry.datum);
+  const tag=cleanStartLichtBuffAddonField(entry && entry.tag);
+  const uhrzeit=cleanStartLichtBuffAddonField(entry && entry.uhrzeit);
+  const gilde=cleanStartLichtBuffAddonField((entry && entry.gilde) || (kind === "hordenbuff" ? "Horde" : ""));
+  const charakter=cleanStartLichtBuffAddonField(entry && entry.charakter);
+  const uebernehmer=kind === "hordenbuff" ? cleanStartLichtBuffAddonField(entry && entry.uebernehmer) : "";
+  const status=startLichtBuffAddonStatus(entry && entry.status);
+  const note=cleanStartLichtBuffAddonField(entry && entry.notiz);
+  return ["LLB",type,buff,datum,tag,uhrzeit,gilde,charakter,uebernehmer,status,note].join("#");
+}
+
+async function getStartLichtBuffAddonExportEntries(kind){
+  try{
+    const fresh=await getDashboardBuffEntries(kind,"all");
+    if(Array.isArray(fresh) && fresh.length) return fresh;
+  }catch(error){
+    console.warn("Addon-Export konnte Gesamtliste nicht frisch laden:", error);
+  }
+  return currentBuffOverviewType === kind ? (currentBuffOverviewEntries || []) : [];
+}
+
+function buildStartLichtBuffAddonExport(entries,kind){
+  return (entries || [])
+    .filter(entry=>dashboardWorldbuffWithinDays(entry,"all"))
+    .sort((a,b)=>dashboardWorldbuffTimestamp(a)-dashboardWorldbuffTimestamp(b))
+    .map(entry=>startLichtBuffAddonLine(entry,kind))
+    .join("\n");
+}
+
+function showStartLichtBuffAddonMessage(message){
+  const subtitle=document.getElementById("buffOverviewSubtitle");
+  if(subtitle) subtitle.textContent=message;
+}
+
+async function showStartLichtBuffAddonExport(){
+  const box=document.getElementById("startLichtBuffAddonExportBox");
+  const text=document.getElementById("startLichtBuffAddonExportText");
+  if(!box || !text) return;
+  const kind=currentBuffOverviewType === "hordenbuff" ? "hordenbuff" : "worldbuff";
+  showStartLichtBuffAddonMessage("Addon-Export laedt alle oeffentlichen Termine ...");
+  const entries=await getStartLichtBuffAddonExportEntries(kind);
+  const exportText=buildStartLichtBuffAddonExport(entries,kind);
+  text.value=exportText;
+  box.classList.add("open");
+  text.focus();
+  text.select();
+  const label=kind === "hordenbuff" ? "Hordenbuff" : "Worldbuff";
+  showStartLichtBuffAddonMessage(exportText ? `${label}-Export fuer LichtBuff ist bereit.` : `Keine kommenden ${label}-Termine zum Exportieren gefunden.`);
+}
+
+function selectStartLichtBuffAddonExport(){
+  const text=document.getElementById("startLichtBuffAddonExportText");
+  if(!text) return;
+  text.focus();
+  text.select();
+}
+
+async function copyStartLichtBuffAddonExport(){
+  const text=document.getElementById("startLichtBuffAddonExportText");
+  if(!text) return;
+  if(!text.value){
+    const kind=currentBuffOverviewType === "hordenbuff" ? "hordenbuff" : "worldbuff";
+    const entries=await getStartLichtBuffAddonExportEntries(kind);
+    text.value=buildStartLichtBuffAddonExport(entries,kind);
+  }
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text.value);
+    }else{
+      text.focus();
+      text.select();
+      document.execCommand("copy");
+    }
+    showStartLichtBuffAddonMessage("Addon-Export wurde kopiert.");
+  }catch(error){
+    text.focus();
+    text.select();
+    showStartLichtBuffAddonMessage("Kopieren nicht erlaubt. Der Text ist markiert.");
+  }
 }
 
 async function loadDashboardWorldbuffs(){
