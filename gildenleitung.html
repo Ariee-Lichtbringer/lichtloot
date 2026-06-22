@@ -3896,7 +3896,7 @@ function renderWorldbuffPanel(days){
 
 function cleanLichtBuffAddonField(value){
   return String(value || "")
-    .replace(/[|\r\n\t]+/g, " ")
+    .replace(/[|#\r\n\t]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -3917,7 +3917,7 @@ function toLichtBuffAddonLine(type, entry){
   const status = normalizeLichtBuffAddonStatus(entry.status || "");
   const note = cleanLichtBuffAddonField(entry.note || entry.notiz || "");
 
-  return ["LLB", kind, buff, datum, tag, uhrzeit, gilde, charakter, uebernehmer, status, note].join("|");
+  return ["LLB", kind, buff, datum, tag, uhrzeit, gilde, charakter, uebernehmer, status, note].join("#");
 }
 
 function buildLichtBuffAddonExport(type){
