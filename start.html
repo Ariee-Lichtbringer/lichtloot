@@ -2696,7 +2696,6 @@ function dedupeDashboardBuffs(entries){
   list.forEach(entry=>{
     const slotKey=dashboardWorldbuffSlotKey(entry);
     if(!slotKey) return;
-    if(dashboardWorldbuffPlaceholderGuild(entry && entry.gilde) && realSlots[slotKey]) return;
 
     const key=dashboardWorldbuffMergeKey(entry);
     if(!key) return;
@@ -2722,7 +2721,7 @@ function dashboardWorldbuffSharedSlotKey(entry){
   if(!entry || !entry.datum || !entry.uhrzeit || !entry.buff) return "";
   const buffKey=dashboardWorldbuffBuffKey(entry.buff);
   const sharedBuffKey=(buffKey === "ony" || buffKey === "nef") ? "ony-nef" : buffKey;
-  return [entry.datum,entry.uhrzeit,sharedBuffKey].join("|");
+  return [entry.datum,entry.uhrzeit,sharedBuffKey,dashboardWorldbuffGuildKey(entry.gilde) || entry.source || "worldbuffticker"].join("|");
 }
 
 function dashboardWorldbuffIsOnyNef(entry){
@@ -2891,7 +2890,7 @@ function renderDashboardBuffCardRow(entry,kind){
   const caster=[entry.charakter,entry.uebernehmer && entry.uebernehmer !== '-' ? '→ '+entry.uebernehmer : ''].filter(Boolean).join(' ');
   const statusLabel=dashboardBuffStatusLabel(entry);
   const confirmed=isDashboardBuffConfirmed(entry);
-  const guild=entry.gilde && !dashboardWorldbuffPlaceholderGuild(entry.gilde) ? entry.gilde : "-";
+  const guild=dashboardBuffDisplayGuild(entry,kind);
   const isLichtbringer=dashboardWorldbuffGuildKey(guild) === "lichtbringer";
   const showMissingNotice=isLichtbringer || kind === "hordenbuff";
   const displayCaster=caster || (showMissingNotice ? (kind === "hordenbuff" ? "Helfer fehlt" : "Werfer fehlt") : "");
@@ -2906,6 +2905,13 @@ function renderDashboardBuffCardRow(entry,kind){
       <div class="buff-row-more">...</div>
     </div>
   `;
+}
+
+function dashboardBuffDisplayGuild(entry,kind){
+  const guild=entry && entry.gilde && !dashboardWorldbuffPlaceholderGuild(entry.gilde) ? entry.gilde : "";
+  if(guild) return guild;
+  if(kind === "worldbuff" && String((entry && entry.source) || "").toLowerCase().includes("worldbuffticker")) return "Lichtbot";
+  return "-";
 }
 
 function renderDashboardBuffGuild(guild){
@@ -3013,7 +3019,7 @@ function startLichtBuffAddonLine(entry,kind){
   const datum=cleanStartLichtBuffAddonField(entry && entry.datum);
   const tag=cleanStartLichtBuffAddonField(entry && entry.tag);
   const uhrzeit=cleanStartLichtBuffAddonField(entry && entry.uhrzeit);
-  const gilde=cleanStartLichtBuffAddonField((entry && entry.gilde) || (kind === "hordenbuff" ? "Horde" : ""));
+  const gilde=cleanStartLichtBuffAddonField(kind === "worldbuff" ? dashboardBuffDisplayGuild(entry,kind) : ((entry && entry.gilde) || "Horde"));
   const charakter=cleanStartLichtBuffAddonField(entry && entry.charakter);
   const uebernehmer=kind === "hordenbuff" ? cleanStartLichtBuffAddonField(entry && entry.uebernehmer) : "";
   const status=startLichtBuffAddonStatus(entry && entry.status);
