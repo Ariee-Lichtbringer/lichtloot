@@ -3576,10 +3576,6 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/dashboard");
   }
 
-  if(params.action === "getPublicWorldbuffs"){
-    return await fetchRailwayApi("/api/worldbuffs");
-  }
-
   if(params.action === "getPublicHordenbuffs"){
     return await fetchRailwayApi("/api/hordenbuffs");
   }
