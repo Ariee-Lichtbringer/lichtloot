@@ -1311,9 +1311,23 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .dashboard-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:14px}
 .dashboard-link{text-decoration:none;text-align:center;display:block}
 .big-btn.subtle{background:rgba(2,6,23,.55)!important;border-color:rgba(255,255,255,.16)!important}
-.raid-open-panel,.random-raid-panel{border-radius:16px;border:1px solid rgba(250,204,21,.30);background:linear-gradient(135deg,rgba(12,18,32,.90),rgba(2,6,23,.72));box-shadow:0 16px 34px rgba(0,0,0,.36);padding:20px 22px}
-.raid-open-panel h2,.random-raid-panel h2{color:#facc15;font-size:22px;margin:0 0 8px}
-.raid-open-panel p,.random-raid-panel p{color:#cbd5e1;font-size:14px;line-height:1.5;margin:0 0 14px}
+.random-raid-panel{border-radius:16px;border:1px solid rgba(250,204,21,.22);background:linear-gradient(135deg,rgba(12,18,32,.76),rgba(2,6,23,.60));box-shadow:0 12px 26px rgba(0,0,0,.28);padding:18px 20px}
+.random-raid-panel h2{color:#facc15;font-size:20px;margin:0 0 6px}
+.random-raid-panel p{color:#cbd5e1;font-size:13px;line-height:1.5;margin:0}
+.random-panel-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.random-panel-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.random-panel-actions .big-btn{width:auto;min-width:170px}
+.random-panel-actions .big-btn.subtle{color:#f8fafc}
+.random-raid-modal{position:fixed;inset:0;z-index:70000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(2,6,23,.74);backdrop-filter:blur(8px)}
+.random-raid-modal.hidden{display:none!important}
+.random-raid-modal-box{width:min(980px,calc(100vw - 36px));max-height:calc(100vh - 36px);overflow:auto;border-radius:20px;border:1px solid rgba(250,204,21,.40);background:linear-gradient(135deg,rgba(12,18,32,.98),rgba(2,6,23,.96));box-shadow:0 30px 90px rgba(0,0,0,.68);padding:20px}
+.random-raid-modal-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}
+.random-raid-modal-head h2{color:#facc15;font-size:24px;margin:0 0 5px}
+.random-raid-modal-head p{color:#cbd5e1;font-size:14px;line-height:1.45;margin:0}
+.random-raid-close{width:38px;height:38px;border-radius:12px;border:1px solid rgba(239,68,68,.45);background:rgba(239,68,68,.20);color:white;font-weight:900;cursor:pointer}
+.random-raid-modal-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.random-raid-modal-tabs button{width:auto;min-width:170px}
+.random-raid-modal-tabs button.active{border-color:rgba(250,204,21,.78);background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22))}
 .random-raid-form{display:grid;grid-template-columns:1.15fr 1fr .9fr .75fr 1.35fr;gap:12px;align-items:end}
 .random-raid-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
 .random-raid-form input,.random-raid-form select{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:800;outline:none}
@@ -1333,7 +1347,8 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-open-grid .big-btn{margin-top:10px}
 @media(max-width:1150px){.random-raid-form{grid-template-columns:1fr 1fr}.random-raid-form .random-create-action{grid-column:1 / -1}}
 @media(max-width:900px){.random-open-grid{grid-template-columns:1fr}.random-pin-grid{grid-template-columns:1fr}}
-@media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.random-panel-head{grid-template-columns:1fr}.random-panel-actions{justify-content:stretch}.random-panel-actions .big-btn{width:100%}}
+@media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}.random-raid-modal{padding:12px}.random-raid-modal-box{width:calc(100vw - 24px);max-height:calc(100vh - 24px);padding:16px}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
 .myprios-form div[style]{grid-column:auto!important}
@@ -1508,28 +1523,6 @@ body.show-mylichtloot .mylichtloot-card{display:block}
     <section class="welcome-panel">
       <h1 id="brandWelcomeTitle">Willkommen auf LichtLoot</h1>
       <p id="brandWelcomeText">LichtLoot ist unser zentrales Prio- und Punktesystem. Über deinen SpielerLogin greifst du auf deine Charaktere, deine Prios und deine P0/P0+ Punkte zu.</p>
-    </section>
-
-    <section class="raid-open-panel">
-      <h2>Raid öffnen</h2>
-      <p>Random-Raid direkt per PrioPIN oder LeadPIN öffnen.</p>
-      <div class="random-open-box">
-        <div class="random-open-grid">
-          <div class="random-open-card">
-            <h3>Spieler</h3>
-            <label>Random PrioPIN</label>
-            <input id="randomPrioPin" type="text" placeholder="PrioPIN eingeben" onkeydown="randomPrioEnter(event)">
-            <button class="big-btn" type="button" onclick="openRandomPrioFromStart()">Zur Prioseite</button>
-          </div>
-          <div class="random-open-card">
-            <h3>Raidlead</h3>
-            <label>Random LeadPIN</label>
-            <input id="randomLeadPin" type="text" placeholder="LeadPIN eingeben" onkeydown="randomLeadEnter(event)">
-            <button class="big-btn" type="button" onclick="openRandomRaidleadFromStart()">Zum Raidlead-Panel</button>
-          </div>
-        </div>
-        <div id="randomOpenStatus" class="status random-raid-result">Hier kannst du Random-Raids direkt per PIN öffnen.</div>
-      </div>
     </section>
 
     <section class="main-login-layout">
@@ -1800,42 +1793,84 @@ body.show-mylichtloot .mylichtloot-card{display:block}
     </section>
 
     <section class="random-raid-panel" id="randomRaidPanel">
-      <h2>Random-Raid erstellen</h2>
-      <p>Für Pugs und spontane Gruppen: Raid anlegen, PrioPIN teilen und LeadPIN für die Raidleitung behalten.</p>
-      <div class="random-raid-form">
+      <div class="random-panel-head">
         <div>
-          <label>Gruppe / Gilde</label>
-          <input id="createRaidGuild" type="text" placeholder="z. B. Random, Softres, GDKP">
+          <h2>Random Raid</h2>
+          <p>Für Pugs und spontane Gruppen. Normale Spieler starten oben über LichtLoot.</p>
         </div>
-        <div>
-          <label>Raid</label>
-          <select id="createRaidSelect">
-            <option value="mc">Molten Core</option>
-            <option value="bwl">Blackwing Lair</option>
-            <option value="aq40">Ahn'Qiraj 40</option>
-            <option value="naxx">Naxxramas</option>
-            <option value="zg">ZG 20</option>
-            <option value="aq20">AQ 20</option>
-            <option value="ony">Onyxia</option>
-          </select>
-        </div>
-        <div>
-          <label>Datum</label>
-          <input id="createRaidDate" type="date">
-        </div>
-        <div>
-          <label>Uhrzeit</label>
-          <input id="createRaidTime" type="time" value="20:00">
-        </div>
-        <div class="random-create-action">
-          <button class="big-btn" type="button" onclick="createRaidFromStart()">Random-Raid erstellen</button>
+        <div class="random-panel-actions">
+          <button class="big-btn subtle" type="button" onclick="openRandomRaidModal('open')">Random-Raid öffnen</button>
+          <button class="big-btn" type="button" onclick="openRandomRaidModal('create')">Random-Raid erstellen</button>
         </div>
       </div>
-      <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
     </section>
   </main>
 
   <div id="raidCreateBox" class="hidden"></div>
+  <div id="randomRaidModal" class="random-raid-modal hidden" onclick="closeRandomRaidModalOnBackdrop(event)">
+    <div class="random-raid-modal-box" role="dialog" aria-modal="true" aria-labelledby="randomRaidModalTitle">
+      <div class="random-raid-modal-head">
+        <div>
+          <h2 id="randomRaidModalTitle">Random Raid</h2>
+          <p>Nur für spontane Raids: PrioPIN öffnen, LeadPIN prüfen oder neuen Random-Raid anlegen.</p>
+        </div>
+        <button class="random-raid-close" type="button" onclick="closeRandomRaidModal()">X</button>
+      </div>
+      <div class="random-raid-modal-tabs">
+        <button id="randomRaidOpenTab" class="big-btn subtle" type="button" onclick="showRandomRaidModalTab('open')">Raid öffnen</button>
+        <button id="randomRaidCreateTab" class="big-btn subtle" type="button" onclick="showRandomRaidModalTab('create')">Raid erstellen</button>
+      </div>
+      <div id="randomRaidOpenPane" class="random-open-box">
+        <div class="random-open-grid">
+          <div class="random-open-card">
+            <h3>Spieler</h3>
+            <label>Random PrioPIN</label>
+            <input id="randomPrioPin" type="text" placeholder="PrioPIN eingeben" onkeydown="randomPrioEnter(event)">
+            <button class="big-btn" type="button" onclick="openRandomPrioFromStart()">Zur Prioseite</button>
+          </div>
+          <div class="random-open-card">
+            <h3>Raidlead</h3>
+            <label>Random LeadPIN</label>
+            <input id="randomLeadPin" type="text" placeholder="LeadPIN eingeben" onkeydown="randomLeadEnter(event)">
+            <button class="big-btn" type="button" onclick="openRandomRaidleadFromStart()">Zum Raidlead-Panel</button>
+          </div>
+        </div>
+        <div id="randomOpenStatus" class="status random-raid-result">Hier kannst du Random-Raids direkt per PIN öffnen.</div>
+      </div>
+      <div id="randomRaidCreatePane" class="hidden">
+        <div class="random-raid-form">
+          <div>
+            <label>Gruppe / Gilde</label>
+            <input id="createRaidGuild" type="text" placeholder="z. B. Random, Softres, GDKP">
+          </div>
+          <div>
+            <label>Raid</label>
+            <select id="createRaidSelect">
+              <option value="mc">Molten Core</option>
+              <option value="bwl">Blackwing Lair</option>
+              <option value="aq40">Ahn'Qiraj 40</option>
+              <option value="naxx">Naxxramas</option>
+              <option value="zg">ZG 20</option>
+              <option value="aq20">AQ 20</option>
+              <option value="ony">Onyxia</option>
+            </select>
+          </div>
+          <div>
+            <label>Datum</label>
+            <input id="createRaidDate" type="date">
+          </div>
+          <div>
+            <label>Uhrzeit</label>
+            <input id="createRaidTime" type="time" value="20:00">
+          </div>
+          <div class="random-create-action">
+            <button class="big-btn" type="button" onclick="createRaidFromStart()">Random-Raid erstellen</button>
+          </div>
+        </div>
+        <div id="createRaidResult" class="status random-raid-result">Nach dem Erstellen bekommst du PrioPIN, LeadPIN und kopierbare Links.</div>
+      </div>
+    </div>
+  </div>
   <div id="tooltip" class="tooltip hidden"></div>
 
   <footer class="site-footer">
@@ -2231,11 +2266,42 @@ function goHomeView(){
 }
 
 function toggleRaidCreate(){
-  const oldPinBox=document.getElementById("playerPinBox");
-  if(oldPinBox) oldPinBox.classList.add("hidden");
-  document.getElementById("myPriosBox").classList.add("hidden");
-  document.getElementById("raidCreateBox").classList.toggle("hidden");
-  setDefaultRaidDate();
+  openRandomRaidModal("create");
+}
+
+function openRandomRaidModal(tab){
+  const modal=document.getElementById("randomRaidModal");
+  if(!modal) return;
+  modal.classList.remove("hidden");
+  showRandomRaidModalTab(tab || "open");
+}
+
+function closeRandomRaidModal(){
+  const modal=document.getElementById("randomRaidModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+function closeRandomRaidModalOnBackdrop(event){
+  if(event && event.target && event.target.id === "randomRaidModal"){
+    closeRandomRaidModal();
+  }
+}
+
+function showRandomRaidModalTab(tab){
+  const mode=tab === "create" ? "create" : "open";
+  const openPane=document.getElementById("randomRaidOpenPane");
+  const createPane=document.getElementById("randomRaidCreatePane");
+  const openTab=document.getElementById("randomRaidOpenTab");
+  const createTab=document.getElementById("randomRaidCreateTab");
+
+  if(openPane) openPane.classList.toggle("hidden", mode !== "open");
+  if(createPane) createPane.classList.toggle("hidden", mode !== "create");
+  if(openTab) openTab.classList.toggle("active", mode === "open");
+  if(createTab) createTab.classList.toggle("active", mode === "create");
+
+  if(mode === "create") setDefaultRaidDate();
+  const focusTarget=document.getElementById(mode === "create" ? "createRaidGuild" : "randomPrioPin");
+  if(focusTarget) window.setTimeout(()=>focusTarget.focus(), 40);
 }
 
 async function createRaidFromStart(){
