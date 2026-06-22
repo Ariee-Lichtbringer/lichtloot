@@ -4213,23 +4213,128 @@ function lichtbotSyncWorldbuffTickerData(e) {
 
   const sheet = getWorldbuffTickerCacheSheet_();
   const rows = [["Datum", "Buff", "Uhrzeit", "Gilde"]];
+  const sheetInfo = getWorldbuffSheetInfo_(WORLDBUFF_SHEET_GID);
+  const seenTerms = {};
+  let synced = 0;
+  let skipped = 0;
+  const errors = [];
 
   buffs.forEach(function(buff) {
     const datum = formatWorldbuffDateValue_(buff && buff.datum);
     const name = normalizeWorldbuffName_(buff && buff.buff);
     const uhrzeit = formatWorldbuffTimeValue_(buff && buff.uhrzeit);
     const gilde = cleanWorldbuffCell_(buff && buff.gilde);
-    if (!datum || !name || !uhrzeit || !gilde) return;
+    if (!datum || !name || !uhrzeit || !gilde) {
+      skipped++;
+      return;
+    }
+
+    const termKey = [datum, uhrzeit, name, normalizeWorldbuffGuildForOverview_(gilde)].join("|");
+    if (seenTerms[termKey]) {
+      skipped++;
+      return;
+    }
+    seenTerms[termKey] = true;
+
     rows.push([datum, name, uhrzeit, gilde]);
+
+    const result = upsertLichtbotWorldbuffTerm_(sheetInfo, {
+      tag: makeWorldbuffTagFromDate_(datum),
+      datum: datum,
+      uhrzeit: uhrzeit,
+      buff: name,
+      gilde: gilde,
+      charakter: cleanWorldbuffCell_(buff && (buff.charakter || buff.werfer)),
+      status: cleanWorldbuffCell_(buff && buff.status),
+      note: cleanWorldbuffCell_(buff && (buff.note || buff.notiz)),
+      uebernehmer: cleanWorldbuffCell_(buff && buff.uebernehmer)
+    });
+
+    if (result && result.success) synced++;
+    else errors.push(result && result.error ? result.error : "Lichtbot-Termin konnte nicht gespeichert werden.");
   });
 
   sheet.clearContents();
   sheet.getRange(1, 1, rows.length, 4).setValues(rows);
 
   return {
-    success: true,
-    count: rows.length - 1
+    success: errors.length === 0,
+    count: rows.length - 1,
+    synced: synced,
+    skipped: skipped,
+    errors: errors.slice(0, 5),
+    error: errors.length ? errors[0] : ""
   };
+}
+
+function upsertLichtbotWorldbuffTerm_(sheetInfo, term) {
+  try {
+    const rowNumber = findWorldbuffTermRow_(sheetInfo, term);
+
+    if (rowNumber) {
+      updateWorldbuffTermRow_(sheetInfo, rowNumber, term, false);
+      return { success: true, rowNumber: rowNumber, updated: true };
+    }
+
+    const insertedRowNumber = insertBuffTermRow_(sheetInfo, term);
+    return { success: true, rowNumber: insertedRowNumber, inserted: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+function findWorldbuffTermRow_(sheetInfo, term) {
+  const values = sheetInfo.values;
+  const columns = sheetInfo.columns;
+  const datum = formatWorldbuffDateValue_(term && term.datum);
+  const uhrzeit = formatWorldbuffTimeValue_(term && term.uhrzeit);
+  const buff = normalizeWorldbuffName_(term && term.buff);
+  const gilde = normalizeWorldbuffGuildForOverview_(term && term.gilde);
+
+  for (let i = sheetInfo.headerRowIndex + 1; i < values.length; i++) {
+    const row = values[i];
+    if (formatWorldbuffDateValue_(getWorldbuffCell_(row, columns.datum)) !== datum) continue;
+    if (formatWorldbuffTimeValue_(getWorldbuffCell_(row, columns.uhrzeit)) !== uhrzeit) continue;
+    if (normalizeWorldbuffName_(getWorldbuffCell_(row, columns.buff)) !== buff) continue;
+
+    const rowGuild = normalizeWorldbuffGuildForOverview_(getWorldbuffCell_(row, columns.gilde));
+    if (rowGuild === gilde) return i + 1;
+  }
+
+  return 0;
+}
+
+function updateWorldbuffTermRow_(sheetInfo, rowNumber, term, overwriteFilledFields) {
+  const sheet = sheetInfo.sheet;
+  const columns = sheetInfo.columns;
+
+  function setIfAllowed(columnKey, value) {
+    const column = columns[columnKey];
+    if (column === -1 || column === undefined || value === null || value === undefined) return;
+    const clean = cleanWorldbuffCell_(value);
+    if (!clean) return;
+    const cell = sheet.getRange(rowNumber, column + 1);
+    if (overwriteFilledFields || !cleanWorldbuffCell_(cell.getDisplayValue())) {
+      cell.setValue(clean);
+    }
+  }
+
+  setIfAllowed("tag", term.tag);
+  setIfAllowed("datum", term.datum);
+  setIfAllowed("uhrzeit", term.uhrzeit);
+  setIfAllowed("buff", term.buff);
+  setIfAllowed("gilde", term.gilde);
+  setIfAllowed("charakter", term.charakter);
+  setIfAllowed("status", term.status);
+  setIfAllowed("note", term.note);
+
+  if (term.uebernehmer) {
+    const helperColumn = ensureWorldbuffColumn_(sheetInfo, "uebernehmer", "Übernehmer");
+    const cell = sheet.getRange(rowNumber, helperColumn + 1);
+    if (overwriteFilledFields || !cleanWorldbuffCell_(cell.getDisplayValue())) {
+      cell.setValue(cleanWorldbuffCell_(term.uebernehmer));
+    }
+  }
 }
 
 function setWorldbuffSheetEntry_(sheetGid, rowNumber, charakter, status, note, uebernehmer, buffOverride) {
