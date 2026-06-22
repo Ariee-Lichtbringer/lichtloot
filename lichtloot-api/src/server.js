@@ -613,6 +613,43 @@ async function setHordenbuffEntry({ guildId, query: params }) {
     const hordeChar = clean(params.uebernehmer || params.hordeChar || params.horde_char);
     const status = normalizeHordenbuffStatus(params.status);
     const note = clean(params.note || params.notiz);
+    const shouldAutoAssign = hordeChar && !allyChar && status !== "erledigt";
+
+    if (shouldAutoAssign) {
+      const target = await client.query(
+        `select he.id, he.note
+         from hordenbuff_entries he
+         where he.event_id = $1
+           and nullif(he.ally_char, '') is not null
+           and nullif(he.horde_char, '') is null
+           and lower(coalesce(he.status, '')) not in ('erledigt', 'done', 'fertig')
+           and ($2::uuid is null or he.id <> $2::uuid)
+         order by he.created_at asc
+         limit 1`,
+        [event.id, rowNumber && isUuid(rowNumber) ? rowNumber : null]
+      );
+
+      if (target.rows[0]) {
+        const assignedNote = note || target.rows[0].note || "Benötigt Buff für aktiven Termin; Helfer zugeteilt";
+        const assigned = await client.query(
+          `update hordenbuff_entries
+           set horde_char = $2,
+               status = 'zugeteilt',
+               note = $3,
+               updated_at = now()
+           where id = $1
+           returning *`,
+          [target.rows[0].id, hordeChar, assignedNote]
+        );
+
+        if (existingEntry) {
+          await client.query("delete from hordenbuff_entries where id = $1", [rowNumber]);
+        }
+
+        await client.query("commit");
+        return { success: true, rowNumber: assigned.rows[0].id, autoAssigned: true };
+      }
+    }
 
     let saved;
     if (existingEntry) {
@@ -687,6 +724,16 @@ async function deleteHordenbuffEntry({ guildId, query: params }) {
        using hordenbuff_events e
        where he.event_id = e.id and e.guild_id = $1 and he.id = $2`,
       [guildId, rowNumber]
+    );
+    return { success: true };
+  }
+
+  const eventId = clean(params.eventId || params.event_id);
+  if (eventId && isUuid(eventId)) {
+    await query(
+      `delete from hordenbuff_events
+       where guild_id = $1 and id = $2`,
+      [guildId, eventId]
     );
     return { success: true };
   }

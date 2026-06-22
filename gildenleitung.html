@@ -4296,7 +4296,12 @@ function renderHordenbuffRows(){
           </select>
         </td>
         <td><input id="hordenbuffNote_${index}" class="worldbuff-note-input" type="text" value="${escapeAttr(entry.note || "")}" placeholder="Notiz"></td>
-        <td><button class="small-btn good" type="button" onclick="saveHordenbuffEntry(${index})">Speichern</button></td>
+        <td>
+          <div class="action-row">
+            <button class="small-btn good" type="button" onclick="saveHordenbuffEntry(${index})">Speichern</button>
+            <button class="small-btn danger" type="button" onclick="deleteHordenbuffEntry(${index})">Löschen</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
@@ -4331,15 +4336,46 @@ async function saveHordenbuffEntry(index){
       return;
     }
 
-    entry.charakter = charakter;
-    entry.uebernehmer = uebernehmer;
-    entry.status = normalizeBuffStatus(status);
-    entry.note = note;
-
+    await loadHordenbuffPanel();
     await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
-    setStatus("Hordenbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
+    setStatus(result.autoAssigned ? "Hordenbuff automatisch zugeteilt. Bot-Update wurde vorgemerkt." : "Hordenbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Hordenbuff konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deleteHordenbuffEntry(index){
+  const entry = hordenbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const label = [entry.charakter, entry.uebernehmer].filter(Boolean).join(" / ") || `${entry.datum || ""} ${entry.uhrzeit || ""}`.trim() || "diese Zeile";
+  if(!confirm(`Hordenbuff-Eintrag "${label}" wirklich löschen?`)) return;
+
+  try{
+    const result = await railwayWrite({
+      action:"guildDeleteHordenbuffEntry",
+      masterCode,
+      rowNumber:entry.rowNumber,
+      eventId:entry.eventId,
+      datum:entry.datum,
+      uhrzeit:entry.uhrzeit,
+      name:entry.charakter || entry.uebernehmer || ""
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Hordenbuff konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    await loadHordenbuffPanel();
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
+    setStatus("Hordenbuff gelöscht. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Hordenbuff konnte nicht gelöscht werden.", "bad");
   }
 }
 
