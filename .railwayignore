@@ -1,0 +1,17 @@
+.cache/
+.pnpm-home/
+.pnpm-store/
+.railway-home/
+.DS_Store
+*.zip
+_alte_versionen_nicht_hochladen/
+tmp/
+output/
+outputs/
+design-vorschlaege/
+LichtBuff/
+LichtBuff 2/
+LichtBuff 3/
+LichtBuff 4/
+LichtBuff 5/
+lichtbuff-bot-work/

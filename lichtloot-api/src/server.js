@@ -965,12 +965,6 @@ async function savePrio({ guildId, query: params }) {
       );
     }
 
-    if (normalizeStatus(raidResult.rows[0].status) === "geöffnet") {
-      const error = new Error("Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.");
-      error.statusCode = 403;
-      throw error;
-    }
-
     const p1 = await upsertItem(client, raidType, params.p1);
     const p2 = await upsertItem(client, raidType, params.p2);
     const p3 = await upsertItem(client, raidType, params.p3);
@@ -1690,8 +1684,8 @@ async function createRandomRaid({ guildId, query: params }) {
     query: {
       ...params,
       raid: raidType,
-      status: "geschlossen",
-      p0PlusFreigabe: "geschlossen"
+      status: "geöffnet",
+      p0PlusFreigabe: "geöffnet"
     }
   });
 }
@@ -1703,8 +1697,8 @@ async function createRaidRecord({ guildId, query: params }) {
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
-  const status = normalizeStatus(params.status || "geschlossen");
-  const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geschlossen");
+  const status = normalizeStatus(params.status || "geöffnet");
+  const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geöffnet");
 
   const result = await query(
     `insert into raids (
@@ -2643,6 +2637,35 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...overview, guild: guild.slug });
     }
 
+    if (action === "getActiveRaids") {
+      const today = new Date().toISOString().slice(0, 10);
+      const result = await query(
+        `select r.*,
+                (
+                  select count(*)
+                  from p0plus_points pp
+                  where pp.guild_id = r.guild_id
+                    and pp.source = 'Raidlead Transfer'
+                    and pp.note in (
+                      concat('RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+                      concat('RaidID: ', r.id::text),
+                      concat('RaidID: ', r.raid_pin)
+                    )
+                ) as p0plus_transfer_count
+         from raids r
+         where r.guild_id = $1
+           and raid_date >= $2
+           and coalesce(status, '') not in ('archiviert', 'archive')
+         order by raid_date asc, coalesce(raid_time, '') asc, created_at asc`,
+        [guild.id, today]
+      );
+      const raids = result.rows.map(row => {
+        const raid = normalizeRaidRow(row);
+        return { ...raid, leadPin: "", LeadPin: "" };
+      });
+      return res.json({ success: true, guild: guild.slug, raids, allRaids: raids, activeRaids: raids });
+    }
+
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
@@ -2877,6 +2900,16 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildCreateBuffTerm") {
       const created = await createHordenbuffTerm({ guildId: guild.id, query: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "createRaid") {
+      const created = await createRaid({ guildId: guild.id, query: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "createRandomRaid") {
+      const created = await createRandomRaid({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
     }
 

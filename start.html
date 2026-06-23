@@ -2149,7 +2149,7 @@ async function createRaidFromStart(){
   const discordPostText=buildRaidDiscordPostText(r.name,raidDate,raidTime,guild,playerPin);
 
   const raidData={
-    action:"createRaid",
+    action:"createRandomRaid",
     raidId:raidId,
     raid:raid,
     raidName:r.name,
@@ -2163,18 +2163,21 @@ async function createRaidFromStart(){
     leadPin:leadPin,
     playerLink:"",
     createdAt:new Date().toISOString(),
-    status:"geschlossen"
+    status:"geöffnet"
   };
 
   resultBox.innerHTML=`<span class="warn">Raid wird erstellt …</span>`;
 
   try{
-    await fetch(RAID_API_URL,{
-      method:"POST",
-      mode:"no-cors",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(raidData)
-    });
+    const query = new URLSearchParams(Object.assign({}, raidData, {
+      guild:CURRENT_GUILD_SLUG,
+      t:Date.now()
+    }));
+    const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok || result.success === false){
+      throw new Error(result.error || result.message || "Raid konnte nicht erstellt werden.");
+    }
 
     resultBox.innerHTML=`
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
@@ -2186,7 +2189,7 @@ async function createRaidFromStart(){
 
       <strong>Raidstart:</strong><br>
       ${formatRaidDateForDisplay(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/P0+ möglich bis ${formatP0DeadlineForDisplay(raidDate,raidTime)} Uhr.</span><br><br>
+      <span class="warn">P0/P0+ kann jederzeit eingetragen werden.</span><br><br>
 
       <strong>Prio PIN:</strong>
       <div class="result-row">
@@ -2212,10 +2215,11 @@ async function createRaidFromStart(){
 
     document.getElementById("raidleadPin").value=leadPin;
     renderActiveRaidCard(raid,raidData);
+    loadActiveRaidCards();
 
   }catch(error){
     console.error(error);
-    resultBox.innerHTML=`<span class="bad">Fehler beim Erstellen des Raids.</span>`;
+    resultBox.innerHTML=`<span class="bad">Fehler beim Erstellen des Raids.</span><br>${safeHtml(error.message || error)}`;
   }
 }
 
