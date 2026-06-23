@@ -2153,7 +2153,7 @@ async function getRaidP0PlusAudit({ guildId, query: params }) {
     `select
        r.external_raid_id,
        r.raid_type,
-       r.raid_name,
+       r.name as raid_name,
        r.raid_date,
        r.raid_time,
        r.raid_pin,
