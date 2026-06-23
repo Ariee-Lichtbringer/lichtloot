@@ -3495,10 +3495,6 @@ async function savePrio(){
   }
 
   await loadPublishedPrios();
-  if(currentPublishedMode){
-    status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
-    return;
-  }
 
   if(saveButton) saveButton.disabled=true;
 
@@ -10116,8 +10112,6 @@ function prioActionCellHtml(prio,index,ownRow){
 }
 
 function getLiveDraftPrio(){
-  if(currentPublishedMode) return null;
-
   const player=document.getElementById("playerName")?.value.trim() || "";
   const server=document.getElementById("playerServer")?.value.trim() || "";
   const playerClass=document.getElementById("playerClass")?.value.trim() || "";
