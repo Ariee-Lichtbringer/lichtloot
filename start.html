@@ -3611,7 +3611,7 @@ async function fetchRailwayReadAction(params){
   }
 
   if(params.action === "getPublicWorldbuffs"){
-    return null;
+    return await fetchRailwayApi("/api/apps-script?action=getPublicWorldbuffs");
   }
 
   if(params.action === "getPublicHordenbuffs"){

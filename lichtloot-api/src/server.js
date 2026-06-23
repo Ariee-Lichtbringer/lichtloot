@@ -8,6 +8,12 @@ const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
+const worldbuffPublicCsvUrl =
+  process.env.WORLDBUFF_PUBLIC_CSV_URL ||
+  "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
+const worldbuffTickerCsvUrl =
+  process.env.WORLDBUFF_TICKER_CSV_URL ||
+  "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
@@ -551,6 +557,190 @@ function normalizeHordenbuffRow(row) {
     source: row.source || "railway",
     key: `${formatGermanDate(row.event_date)}|${row.event_time || ""}|Rend|${row.faction || "Horde"}`
   };
+}
+
+function parseCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let quote = false;
+  const input = String(text || "");
+
+  for (let index = 0; index < input.length; index += 1) {
+    const char = input[index];
+    if (char === "\"") {
+      if (quote && input[index + 1] === "\"") {
+        cell += "\"";
+        index += 1;
+      } else {
+        quote = !quote;
+      }
+    } else if ((char === "," || char === ";") && !quote) {
+      row.push(cell);
+      cell = "";
+    } else if ((char === "\n" || char === "\r") && !quote) {
+      if (char === "\r" && input[index + 1] === "\n") index += 1;
+      row.push(cell);
+      cell = "";
+      if (row.some(value => clean(value))) rows.push(row);
+      row = [];
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell);
+  if (row.some(value => clean(value))) rows.push(row);
+  return rows;
+}
+
+function normalizeCsvHeader(value) {
+  return slugify(value).replace(/-/g, " ");
+}
+
+function normalizeWorldbuffName(value) {
+  const text = clean(value)
+    .replace(/^[-–•]+\s*/, "")
+    .replace(/[🟢🔴🟠⚪🟡]/g, "")
+    .replace(/\*/g, "")
+    .trim();
+  const lower = text.toLowerCase();
+  if (lower === "zg" || lower.includes("hakkar")) return "Hakkar";
+  if (lower.includes("ony")) return "Ony";
+  if (lower.includes("nef")) return "Nef";
+  if (lower.includes("rend")) return "Rend";
+  return text;
+}
+
+function normalizeWorldbuffRow(row) {
+  const datum = clean(row.datum || row.Datum || row.date || row.Date);
+  const uhrzeit = clean(row.uhrzeit || row.Uhrzeit || row.time || row.Time);
+  const buff = normalizeWorldbuffName(row.buff || row.Buff || row.name || row.Name || row.type || row.Type);
+  const gilde = clean(row.gilde || row.Gilde || row.guild || row.Guild || row.fraktion || row.Fraktion || row["Gilde / Fraktion"]);
+
+  if (!datum || !uhrzeit || !buff) return null;
+  return {
+    buff,
+    datum,
+    date: parseDateValue(datum),
+    uhrzeit,
+    time: uhrzeit,
+    gilde,
+    charakter: clean(row.charakter || row.Charakter || row.caster || row.Caster || row.werfer || row.Werfer || row.character),
+    uebernehmer: clean(row.uebernehmer || row.Übernehmer || row.Uebernehmer || row.helfer || row.Helfer),
+    status: clean(row.status || row.Status || "offen") || "offen",
+    notiz: clean(row.notiz || row.Notiz || row.note || row.Note || row.hinweis || row.Hinweis),
+    tag: clean(row.tag || row.Tag) || weekdayShort(datum),
+    source: clean(row.source || row.Source || "railway-worldbuff")
+  };
+}
+
+function worldbuffCsvRowsToBuffs(text) {
+  const rows = parseCsvRows(text);
+  const headerIndex = rows.findIndex(row => {
+    const headers = row.map(normalizeCsvHeader);
+    return headers.includes("tag") && headers.includes("datum") && headers.includes("uhrzeit") && headers.includes("buff");
+  });
+  if (headerIndex < 0) return [];
+
+  const headers = rows[headerIndex].map(normalizeCsvHeader);
+  const find = (...names) => headers.findIndex(header => names.map(normalizeCsvHeader).includes(header));
+  const idx = {
+    tag: find("tag"),
+    datum: find("datum"),
+    uhrzeit: find("uhrzeit", "zeit"),
+    buff: find("buff"),
+    gilde: find("gilde fraktion", "gilde", "fraktion"),
+    charakter: find("charakter", "char", "spieler", "werfer"),
+    uebernehmer: find("uebernehmer", "helfer", "helper"),
+    status: find("status"),
+    notiz: find("notiz", "note", "hinweis")
+  };
+  let lastTag = "";
+  let lastDatum = "";
+
+  return rows.slice(headerIndex + 1).map(row => {
+    const value = name => (idx[name] >= 0 ? clean(row[idx[name]]) : "");
+    const tag = value("tag") || lastTag;
+    const datum = value("datum") || lastDatum;
+    if (value("tag")) lastTag = value("tag");
+    if (value("datum")) lastDatum = value("datum");
+    return normalizeWorldbuffRow({
+      Tag: tag,
+      Datum: datum,
+      Uhrzeit: value("uhrzeit"),
+      Buff: value("buff"),
+      "Gilde / Fraktion": value("gilde"),
+      Charakter: value("charakter"),
+      Übernehmer: value("uebernehmer"),
+      Status: value("status"),
+      Notiz: value("notiz"),
+      source: "Worldbuff-Sheet"
+    });
+  }).filter(Boolean);
+}
+
+function worldbuffTickerRowsToBuffs(text) {
+  return parseCsvRows(text).map(row => {
+    const cells = row.map(clean).filter(Boolean);
+    if (cells.length < 3) return null;
+    const dateCell = cells.find(cell => /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(cell) || /^\d{4}-\d{2}-\d{2}$/.test(cell));
+    const timeCell = cells.find(cell => /^\d{1,2}:\d{2}(?::\d{2})?$/.test(cell));
+    const buffCell = cells.find(cell => ["Hakkar", "Ony", "Nef", "Rend"].includes(normalizeWorldbuffName(cell)));
+    if (!dateCell || !timeCell || !buffCell) return null;
+    return normalizeWorldbuffRow({
+      Datum: dateCell,
+      Uhrzeit: timeCell,
+      Buff: normalizeWorldbuffName(buffCell),
+      "Gilde / Fraktion": cells.filter(cell => cell !== dateCell && cell !== timeCell && cell !== buffCell).join(" · "),
+      source: "Worldbuffticker"
+    });
+  }).filter(Boolean);
+}
+
+function worldbuffTimestamp(entry) {
+  const iso = parseDateValue(entry.date || entry.datum);
+  const match = clean(entry.uhrzeit || entry.time).match(/^(\d{1,2}):(\d{2})/);
+  const hours = match ? Math.max(0, Math.min(23, Number(match[1]) || 0)) : 0;
+  const minutes = match ? Math.max(0, Math.min(59, Number(match[2]) || 0)) : 0;
+  return new Date(`${iso}T${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`).getTime();
+}
+
+async function fetchText(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.text();
+}
+
+async function getWorldbuffs({ query: params }) {
+  const days = clean(params.days || "14");
+  const dayCount = days === "all" ? 3650 : Math.max(Number(days) || 14, 1);
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = start.getTime() + dayCount * 24 * 60 * 60 * 1000;
+  const entries = [];
+
+  const sources = [
+    { url: worldbuffPublicCsvUrl, parse: worldbuffCsvRowsToBuffs },
+    { url: worldbuffTickerCsvUrl, parse: worldbuffTickerRowsToBuffs }
+  ];
+
+  for (const source of sources) {
+    try {
+      entries.push(...source.parse(await fetchText(source.url)));
+    } catch (error) {
+      console.warn("Worldbuff-Quelle nicht ladbar:", source.url, error.message || error);
+    }
+  }
+
+  const filtered = entries
+    .filter(entry => {
+      const timestamp = worldbuffTimestamp(entry);
+      return timestamp >= start.getTime() && timestamp < end;
+    })
+    .sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
+
+  return { success: true, buffs: filtered, entries: filtered };
 }
 
 async function upsertHordenbuffEvent(client, guildId, params) {
@@ -2840,6 +3030,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetSentPlayerMessages") {
       const messages = await getGuildSentMessages({ guildId: guild.id, query: req.query });
       return res.json({ ...messages, guild: guild.slug });
+    }
+
+    if (action === "getPublicWorldbuffs") {
+      const buffs = await getWorldbuffs({ query: req.query });
+      return res.json({ ...buffs, guild: guild.slug });
     }
 
     if (action === "guildGetHordenbuffs" || action === "getPublicHordenbuffs") {
