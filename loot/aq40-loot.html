@@ -2192,23 +2192,11 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  if(currentP0PlusOverride) return false;
-  const deadline=getP0Deadline();
-  if(!deadline) return false;
-  return new Date() > deadline;
+  return false;
 }
 
 function getP0DeadlineClosedMessage(){
-  if(currentP0PlusOverride){
-    return "P0+ wurde vom Raidlead wieder freigeschaltet.";
-  }
-  const deadline=getP0Deadline();
-  if(!deadline){
-    return "P0+ kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
-  }
-
-  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-  return "P0+ ist bereits geschlossen. P0+ konnte nur bis " + deadlineText + " gesetzt werden.";
+  return "P0+ ist offen.";
 }
 
 function formatRaidDate(value){
@@ -2243,25 +2231,7 @@ function updateRaidTimeDisplay(){
   dateEl.textContent=formatRaidDate(currentRaidDate);
   timeEl.textContent=formatTime(currentRaidTime);
 
-  const deadline=getP0Deadline();
-  if(currentP0PlusOverride){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ durch Raidlead freigeschaltet</span><br>Die 30-Minuten-Sperre ist für diesen Raid aufgehoben.';
-    updateActiveButtons();
-    return;
-  }
-  if(!deadline){
-    deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> P0+ bleibt vorerst auswählbar.';
-    return;
-  }
-
-  const now=new Date();
-  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-
-  if(now <= deadline){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ möglich bis '+deadlineText+'</span><br>Noch offen: '+formatDuration(deadline-now);
-  }else{
-    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0+ geschlossen</span><br>P0+ konnte nur bis '+deadlineText+' gesetzt werden.';
-  }
+  deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann jederzeit eingetragen werden.';
 
   updateActiveButtons();
 }
@@ -2979,17 +2949,15 @@ function updateActiveButtons(){
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
 
-  const p0Closed=isP0DeadlineClosed();
-
   document.querySelectorAll(".mini-btn").forEach(btn=>{
     btn.classList.remove("active");
     btn.classList.remove("p0active");
 
     if(btn.dataset && btn.dataset.prio === "p0plus"){
-      btn.disabled = p0Closed;
-      btn.style.opacity = p0Closed ? ".35" : "";
-      btn.style.cursor = p0Closed ? "not-allowed" : "pointer";
-      btn.title = p0Closed ? getP0DeadlineClosedMessage() : "";
+      btn.disabled = false;
+      btn.style.opacity = "";
+      btn.style.cursor = "pointer";
+      btn.title = "";
     }
   });
 
