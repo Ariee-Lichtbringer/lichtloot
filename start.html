@@ -2358,8 +2358,11 @@ function formatRaidTimeForDisplay(value){
 function activeRaidIsTodayOrFuture(raid){
   const timestamp=activeRaidTimestamp(raid);
   if(!timestamp) return true;
-  const visibleUntil=timestamp + (60 * 60 * 1000);
-  return visibleUntil >= Date.now();
+  const raidDay=new Date(timestamp);
+  raidDay.setHours(0,0,0,0);
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  return raidDay.getTime() >= today.getTime();
 }
 
 function renderActiveRaidCard(raidKey,raid){
