@@ -3930,7 +3930,8 @@ function isWorldbuffOpenSlot(entry){
 function getWorldbuffChoices(entry){
   const buff = String((entry && entry.buff) || "").trim();
   if(isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff)) return ["Ony", "Nef"];
-  return ["Hakkar", "Ony", "Nef"].includes(buff) ? [buff] : ["Hakkar", "Ony", "Nef"];
+  const buffs = ["Hakkar", "Ony", "Nef", "Rend"];
+  return buffs.includes(buff) ? [buff] : buffs;
 }
 
 function renderWorldbuffBuffControl(entry, index){
