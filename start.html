@@ -3611,11 +3611,11 @@ async function fetchRailwayReadAction(params){
   }
 
   if(params.action === "getPublicWorldbuffs"){
-    return await fetchRailwayApi("/api/worldbuffs");
+    return null;
   }
 
   if(params.action === "getPublicHordenbuffs"){
-    return await fetchRailwayApi("/api/hordenbuffs");
+    return await fetchRailwayApi("/api/apps-script?action=getPublicHordenbuffs");
   }
 
   return null;
