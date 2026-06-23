@@ -2136,6 +2136,119 @@ async function getP0Plus(guildId) {
   return { success: true, entries: Array.from(grouped.values()).filter(entry => Number(entry.count) > 0) };
 }
 
+async function getRaidP0PlusAudit({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const raidType = normalizeRaidType(params.raid || "aq40");
+  const date = clean(params.date);
+  const values = [guildId, raidTypeSearchValues(raidType)];
+  let dateClause = "";
+
+  if (date) {
+    values.push(date);
+    dateClause = `and (r.raid_date = $${values.length}::date or pr.created_at::date = $${values.length}::date)`;
+  }
+
+  const priosResult = await query(
+    `select
+       r.external_raid_id,
+       r.raid_type,
+       r.raid_name,
+       r.raid_date,
+       r.raid_time,
+       r.raid_pin,
+       r.status,
+       r.created_at as raid_created_at,
+       pr.comment,
+       pr.created_at as prio_created_at,
+       c.name as player,
+       c.server,
+       c.class_name,
+       i1.name as p1,
+       i2.name as p2,
+       i3.name as p3
+     from prios pr
+     join raids r on r.id = pr.raid_id
+     join characters c on c.id = pr.character_id
+     left join items i1 on i1.id = pr.p1_item_id
+     left join items i2 on i2.id = pr.p2_item_id
+     left join items i3 on i3.id = pr.p3_item_id
+     where r.guild_id = $1
+       and lower(r.raid_type) = any($2)
+       ${dateClause}
+     order by r.raid_date desc nulls last, r.created_at desc, c.name asc`,
+    values
+  );
+
+  const transferValues = [guildId, raidTypeSearchValues(raidType)];
+  let transferDateClause = "";
+  if (date) {
+    transferValues.push(date);
+    transferDateClause = `and pp.created_at::date = $${transferValues.length}::date`;
+  }
+  const transferResult = await query(
+    `select
+       pp.points,
+       pp.source,
+       pp.note,
+       pp.created_at,
+       c.name as player,
+       c.server,
+       i.name as item,
+       i.raid_type
+     from p0plus_points pp
+     join characters c on c.id = pp.character_id
+     left join items i on i.id = pp.item_id
+     where pp.guild_id = $1
+       and pp.source = 'Raidlead Transfer'
+       and lower(coalesce(i.raid_type, '')) = any($2)
+       ${transferDateClause}
+     order by pp.created_at desc, c.name asc`,
+    transferValues
+  );
+
+  const prios = priosResult.rows.map(row => {
+    const meta = commentMeta(row.comment);
+    return {
+      raidId: row.external_raid_id || "",
+      raid: row.raid_type || "",
+      raidName: row.raid_name || "",
+      raidDate: row.raid_date || "",
+      raidTime: row.raid_time || "",
+      raidPin: row.raid_pin || "",
+      status: row.status || "",
+      player: row.player || "",
+      server: row.server || "",
+      className: row.class_name || "",
+      p1: row.p1 || "",
+      p2: row.p2 || "",
+      p3: row.p3 || "",
+      p0Plus: meta.p0Plus || "nein",
+      p0Item: meta.p0Item || "",
+      prioCreatedAt: row.prio_created_at,
+      raidCreatedAt: row.raid_created_at
+    };
+  });
+
+  const transfers = transferResult.rows.map(row => ({
+    player: row.player || "",
+    server: row.server || "",
+    item: row.item || "",
+    points: Number(row.points || 0),
+    note: row.note || "",
+    createdAt: row.created_at
+  }));
+
+  return {
+    success: true,
+    raid: raidType,
+    date,
+    prios,
+    p0PlusPrios: prios.filter(row => normalizeStatus(row.p0Plus) === "ja"),
+    transfers
+  };
+}
+
 async function findCharacterByName(guildId, charName, server) {
   const params = [guildId, clean(charName)];
   let serverClause = "";
@@ -2817,6 +2930,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getP0Plus") {
       const points = await getP0Plus(guild.id);
       return res.json({ ...points, guild: guild.slug });
+    }
+
+    if (action === "getRaidP0PlusAudit") {
+      const audit = await getRaidP0PlusAudit({ guildId: guild.id, query: req.query });
+      return res.json({ ...audit, guild: guild.slug });
     }
 
     if (action === "guildSetP0PlusPoints") {
