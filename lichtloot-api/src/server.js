@@ -29,7 +29,7 @@ app.get("/db-health", async (req, res, next) => {
 
 app.get("/api/dashboard", async (req, res, next) => {
   try {
-    const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.query.guild));
     const today = new Date().toISOString().slice(0, 10);
     const result = await query(
       `select r.*,
@@ -63,6 +63,24 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 function clean(value) {
   return String(value || "").trim();
+}
+
+function resolveGuildSlug(value) {
+  const slug = slugify(value || defaultGuildSlug);
+  if (!slug) return defaultGuildSlug;
+  if (
+    [
+      "lichtloot",
+      "lichtbringer",
+      "lichtzbringer",
+      "lichbringer",
+      "lichtbringer-loot",
+      "lichtloot-gilde"
+    ].includes(slug)
+  ) {
+    return "lichtloot";
+  }
+  return slug;
 }
 
 function slugify(value) {
@@ -174,7 +192,7 @@ async function updateGuildConfig({ query: params, body = {} }) {
     throw error;
   }
 
-  const guild = await requireGuild(slug);
+  const guild = await requireGuild(resolveGuildSlug(slug));
   const name = clean(values.guildName || values.name);
   const server = clean(values.server);
   const logoUrl = clean(values.logoUrl || values.logo_url);
@@ -2620,7 +2638,7 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(saved);
     }
 
-    const guild = await requireGuild(clean(req.query.guild) || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.query.guild));
 
     if (action === "getCharactersByPin") {
       const characters = await getCharactersByPin(guild.id, req.query.pin);
@@ -2891,7 +2909,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
-    const guild = await requireGuild(clean(postParams.guild) || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(postParams.guild));
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
       const saved = await setHordenbuffEntry({ guildId: guild.id, query: postParams });
@@ -2938,7 +2956,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
 app.get("/api/guilds/:guildSlug", async (req, res, next) => {
   try {
-    const guild = await requireGuild(req.params.guildSlug || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
     res.json({ success: true, guild });
   } catch (error) {
     next(error);
@@ -2947,7 +2965,7 @@ app.get("/api/guilds/:guildSlug", async (req, res, next) => {
 
 app.get("/api/guilds/:guildSlug/characters", async (req, res, next) => {
   try {
-    const guild = await requireGuild(req.params.guildSlug || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
     const result = await query(
       `select c.id, c.name, c.server, c.class_name, c.created_at
        from characters c
@@ -2964,7 +2982,7 @@ app.get("/api/guilds/:guildSlug/characters", async (req, res, next) => {
 
 app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res, next) => {
   try {
-    const guild = await requireGuild(req.params.guildSlug || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
     const result = await query(
       `select c.id, c.name, c.server, c.class_name, c.created_at
        from players p
@@ -2982,7 +3000,7 @@ app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res
 app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
   const client = await pool.connect();
   try {
-    const guild = await requireGuild(req.params.guildSlug || defaultGuildSlug);
+    const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
     const { playerPin, securityQuestion, securityAnswer, character } = req.body || {};
 
     if (!playerPin || !character?.name || !character?.server || !character?.className) {

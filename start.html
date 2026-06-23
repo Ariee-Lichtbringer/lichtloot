@@ -1907,14 +1907,33 @@ const WORLDBUFF_TICKER_CSV_URL = "https://docs.google.com/spreadsheets/d/1o7fzOA
 function getCurrentGuildSlug(){
   const params = new URLSearchParams(window.location.search);
   const explicit = params.get("guild") || params.get("gilde");
-  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  if(explicit) return normalizeCurrentGuildSlug(explicit);
   if(window.location.protocol === "file:") return "lichtloot";
   const parts = window.location.pathname.split("/").filter(Boolean);
   const first = parts[0] || "";
   if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
-    return first.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+    return normalizeCurrentGuildSlug(first);
   }
   return "lichtloot";
+}
+
+function normalizeCurrentGuildSlug(value){
+  const slug=String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/ä/g,"ae")
+    .replace(/ö/g,"oe")
+    .replace(/ü/g,"ue")
+    .replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"");
+  if(!slug) return "lichtloot";
+  if(["lichtloot","lichtbringer","lichtzbringer","lichbringer","lichtbringer-loot","lichtloot-gilde"].includes(slug)){
+    return "lichtloot";
+  }
+  return slug;
 }
 
 function withGuildUrl(url){
@@ -3533,7 +3552,7 @@ async function loadActiveRaidCardsFromRailway(){
   if(!RAILWAY_API_URL) return false;
 
   try{
-    const data=await fetchRailwayApi("/api/dashboard");
+    const data=await fetchRailwayApi("/api/apps-script?action=getActiveRaids");
     if(data && data.success){
       renderActiveRaidCards(data.allRaids || data.raids || data.entries || data.activeRaids || []);
       return true;
@@ -3586,7 +3605,7 @@ async function fetchRailwayReadAction(params){
   if(!RAILWAY_API_URL || !params || !params.action) return null;
 
   if(params.action === "getActiveRaids"){
-    return await fetchRailwayApi("/api/dashboard");
+    return await fetchRailwayApi("/api/apps-script?action=getActiveRaids");
   }
 
   if(params.action === "getPublicWorldbuffs"){
