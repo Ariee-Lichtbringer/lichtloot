@@ -6683,6 +6683,21 @@ async function loadLootDataForRaid(raid){
   if(lootDataByRaid[raid]) return lootDataByRaid[raid];
 
   try{
+    const apiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL) +
+      "?action=getLootItems&guild=lichtloot&raid=" + encodeURIComponent(raid) + "&t=" + Date.now();
+    const response=await fetch(apiUrl, {cache:"no-store"});
+    const payload=await response.json().catch(()=>null);
+    const rows=payload && Array.isArray(payload.items) ? payload.items : [];
+    const exported=rows.map(mapLootDatabaseEntry).filter(item=>item.name);
+    if(response.ok && payload && payload.success && exported.length){
+      lootDataByRaid[raid] = exported;
+      return exported;
+    }
+  }catch(error){
+    console.warn("Railway-Lootdaten konnten nicht geladen werden, nutze GitHub-Fallback:", raid, error);
+  }
+
+  try{
     const jsonUrl=(LOOT_JSON_URLS || {})[raid];
     if(jsonUrl){
       const response=await fetch(jsonUrl + "?t=" + Date.now(), {cache:"no-store"});

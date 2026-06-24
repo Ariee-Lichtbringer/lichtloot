@@ -3071,6 +3071,44 @@ async function adminSearchItems({ guildId, query: params }) {
   return { success: true, items: result.rows };
 }
 
+async function getLootItems({ query: params }) {
+  const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  if (!raidType || raidType === "raid") {
+    const error = new Error("Raid fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `select id, raid_type, item_id, name, quality, icon_url
+     from items
+     where lower(raid_type) = any($1)
+        or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
+     order by name asc`,
+    [raidTypeSearchValues(raidType)]
+  );
+
+  return {
+    success: true,
+    raid: raidType,
+    source: "Railway",
+    items: result.rows.map(row => ({
+      id: row.id,
+      raid: row.raid_type,
+      raidKey: normalizeRaidType(row.raid_type),
+      itemId: row.item_id || "",
+      ItemID: row.item_id || "",
+      name: row.name || "",
+      item: row.name || "",
+      Item: row.name || "",
+      quality: row.quality || "",
+      icon: row.icon_url || "",
+      iconName: row.icon_url || "",
+      IconName: row.icon_url || ""
+    }))
+  };
+}
+
 async function adminUpdateItem({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const id = clean(params.id || params.itemId);
@@ -3258,6 +3296,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildAdminSearchItems") {
       const items = await adminSearchItems({ guildId: guild.id, query: req.query });
+      return res.json({ ...items, guild: guild.slug });
+    }
+
+    if (action === "getLootItems" || action === "guildGetLootItems") {
+      const items = await getLootItems({ query: req.query });
       return res.json({ ...items, guild: guild.slug });
     }
 
