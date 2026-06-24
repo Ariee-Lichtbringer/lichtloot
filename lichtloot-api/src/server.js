@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { readFile } from "node:fs/promises";
 import { pool, query, requireGuild } from "./db.js";
 
 const app = express();
@@ -24,6 +25,10 @@ app.use(express.static("public"));
 
 await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
+});
+
+await seedDefaultLootItemsOnce().catch(error => {
+  console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
 
 app.get("/health", (req, res) => {
@@ -2966,6 +2971,59 @@ async function setGuildMasterCode({ guildId, query: params }) {
   );
   masterCodeOverrides.set(String(guildId), newCode);
   return { success: true };
+}
+
+async function seedDefaultLootItemsOnce() {
+  const markerKey = "default-loot-items-v1";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const raw = await readFile(new URL("./default-loot-items.json", import.meta.url), "utf8");
+    const items = JSON.parse(raw);
+    let imported = 0;
+    for (const item of Array.isArray(items) ? items : []) {
+      const raidType = normalizeRaidType(item.raid_type || item.raid || "");
+      const name = clean(item.name);
+      if (!raidType || !name) continue;
+      await client.query(
+        `insert into items (raid_type, item_id, name, quality, icon_url)
+         values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
+         on conflict (raid_type, name) do update
+           set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
+               quality = coalesce(nullif(excluded.quality, ''), items.quality),
+               icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url)`,
+        [raidType, clean(item.item_id), name, clean(item.quality), clean(item.icon_url)]
+      );
+      imported += 1;
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, String(imported)]
+    );
+    await client.query("commit");
+    console.log(`Standard-Lootdaten importiert: ${imported} Items`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function adminSearchItems({ guildId, query: params }) {

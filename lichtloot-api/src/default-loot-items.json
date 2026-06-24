@@ -1,0 +1,7961 @@
+[
+  {
+    "raid_type": "mc",
+    "item_id": "18823",
+    "name": "Alte Kernlederhandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_23"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16825",
+    "name": "Armreifen des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16840",
+    "name": "Armschienen der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_bracer_16"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16857",
+    "name": "Armschienen der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16861",
+    "name": "Armschienen der Macht",
+    "quality": "epic",
+    "icon_url": "inv_bracer_19"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16830",
+    "name": "Armschienen des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_bracer_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16850",
+    "name": "Armschienen des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_17"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17204",
+    "name": "Auge von Sulfuras",
+    "quality": "legendary",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17105",
+    "name": "Aurastein-Hammer",
+    "quality": "epic",
+    "icon_url": "inv_hammer_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19140",
+    "name": "Band der Ausbrennung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_39"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17063",
+    "name": "Band von Accuria",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_15"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19138",
+    "name": "Band von Sulfuras",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_36"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18290",
+    "name": "Bauplan: Biznicks 247x128 treffsicheres Zielfernrohr",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18292",
+    "name": "Bauplan: Kernscharfschützengewehr",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18291",
+    "name": "Bauplan: Machtreaktive Scheibe",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16855",
+    "name": "Beinplatten der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_pants_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16867",
+    "name": "Beinplatten der Macht",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16946",
+    "name": "Beinplatten der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "inv_pants_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16954",
+    "name": "Beinplatten des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16962",
+    "name": "Beinplatten des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16843",
+    "name": "Beinschützer der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_pants_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16938",
+    "name": "Beinschützer des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16901",
+    "name": "Beinschützer des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16799",
+    "name": "Bindungen des Arkanisten",
+    "quality": "epic",
+    "icon_url": "ability_mount_undeadhorse"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17072",
+    "name": "Blasterwerfer",
+    "quality": "epic",
+    "icon_url": "inv_weapon_rifle_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "11382",
+    "name": "Blut des Berges",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_gem_bloodstone_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16909",
+    "name": "Blutfanghose",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19139",
+    "name": "Brandwachenschultern",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_23"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16820",
+    "name": "Brustharnisch des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16865",
+    "name": "Brustplatte der Macht",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate16"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16845",
+    "name": "Brustplatte des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16853",
+    "name": "Brustschutz der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18646",
+    "name": "Das Auge der Offenbarung",
+    "quality": "epic",
+    "icon_url": "spell_holy_mindsooth"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17107",
+    "name": "Drachenblut-Cape",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17066",
+    "name": "Drillbohrer-Scheibe",
+    "quality": "epic",
+    "icon_url": "inv_shield_10"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "205",
+    "name": "Kaese",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17073",
+    "name": "Erderschütterer",
+    "quality": "epic",
+    "icon_url": "inv_hammer_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18203",
+    "name": "Eskhandars rechte Klaue",
+    "quality": "epic",
+    "icon_url": "inv_misc_monsterclaw_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18815",
+    "name": "Essenz der reinen Flamme",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19017",
+    "name": "Essenz des Feuerfürsten",
+    "quality": "legendary",
+    "icon_url": "inv_sword_39"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18564",
+    "name": "Fesseln des Windsuchers",
+    "quality": "legendary",
+    "icon_url": "inv_sword_39"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18811",
+    "name": "Feuerfester Umhang",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17010",
+    "name": "Feuerkern",
+    "quality": "rare",
+    "icon_url": "spell_fire_flamebolt"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19142",
+    "name": "Feuerrunenverzierter Zauberfoliant",
+    "quality": "epic",
+    "icon_url": "inv_misc_book_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18861",
+    "name": "Feuerschuppenbeinplatten",
+    "quality": "epic",
+    "icon_url": "inv_pants_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19143",
+    "name": "Flammenwächterstulpen",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_26"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16665",
+    "name": "Foliant des einlullenden Schusses",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_book_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18260",
+    "name": "Formel: Waffe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18259",
+    "name": "Formel: Waffe - Zauberkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16922",
+    "name": "Gamaschen der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16930",
+    "name": "Gamaschen der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_pants_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16796",
+    "name": "Gamaschen des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16835",
+    "name": "Gamaschen des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18872",
+    "name": "Gamaschen des Manasturms",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16847",
+    "name": "Gamaschen des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16841",
+    "name": "Gewand der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16833",
+    "name": "Gewand des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_16"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16817",
+    "name": "Gurt der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19137",
+    "name": "Gurt des Ansturms",
+    "quality": "epic",
+    "icon_url": "inv_belt_29"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16838",
+    "name": "Gürtel der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_belt_14"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16858",
+    "name": "Gürtel der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_belt_27"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16864",
+    "name": "Gürtel der Macht",
+    "quality": "epic",
+    "icon_url": "inv_belt_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16802",
+    "name": "Gürtel des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_belt_30"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16828",
+    "name": "Gürtel des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_belt_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16827",
+    "name": "Gürtel des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_belt_23"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16851",
+    "name": "Gürtel des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_belt_28"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17109",
+    "name": "Halsschmuck der Erleuchtung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_10"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18814",
+    "name": "Halsschmuck des Feuerlords",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_01"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19146",
+    "name": "Handgelenksschutz der Stabilität",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_amulet_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18812",
+    "name": "Handgelenksschutz des wahren Flugs",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18808",
+    "name": "Handschuhe der hypnotischen Flamme",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16812",
+    "name": "Handschuhe der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16801",
+    "name": "Handschuhe des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16831",
+    "name": "Handschuhe des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16826",
+    "name": "Handschuhe des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_21"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16852",
+    "name": "Handschuhe des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16842",
+    "name": "Helm der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16854",
+    "name": "Helm der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_helmet_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16866",
+    "name": "Helm der Macht",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16834",
+    "name": "Helm des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18870",
+    "name": "Helm des Lebensspenders",
+    "quality": "epic",
+    "icon_url": "inv_helmet_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16846",
+    "name": "Helm des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16814",
+    "name": "Hose der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16822",
+    "name": "Hose des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16915",
+    "name": "Hose des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "206",
+    "name": "Hunter",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18806",
+    "name": "Im Kern geschmiedete Schienbeinschützer",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18805",
+    "name": "Kernhundzahn",
+    "quality": "epic",
+    "icon_url": "inv_axe_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17012",
+    "name": "Kernleder",
+    "quality": "common",
+    "icon_url": "inv_ammo_firetar"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18816",
+    "name": "Klinge des Verderbens",
+    "quality": "epic",
+    "icon_url": "inv_sword_48"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17076",
+    "name": "Knochenhäschers Schneide",
+    "quality": "epic",
+    "icon_url": "inv_sword_12"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16821",
+    "name": "Kopfschutz des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_41"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18817",
+    "name": "Krone der Zerstörung",
+    "quality": "epic",
+    "icon_url": "inv_crown_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16795",
+    "name": "Krone des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_helmet_53"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17011",
+    "name": "Lavakern",
+    "quality": "rare",
+    "icon_url": "spell_nature_earthquake"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17103",
+    "name": "Magierklinge des Azurlieds",
+    "quality": "epic",
+    "icon_url": "inv_sword_39"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18824",
+    "name": "Magmagehärtete Stiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17106",
+    "name": "Malistar-Verteidiger",
+    "quality": "epic",
+    "icon_url": "inv_shield_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19136",
+    "name": "Mana entfachende Kordel",
+    "quality": "epic",
+    "icon_url": "inv_belt_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16816",
+    "name": "Mantel der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16797",
+    "name": "Mantel des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17065",
+    "name": "Medaillon der beständigen Macht",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_amulet_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18265",
+    "name": "Muster: Flimmerkernwickeltücher",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18252",
+    "name": "Muster: Kernrüstungsset",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "21371",
+    "name": "Muster: Kernteufelsstofftasche",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "208",
+    "name": "Paladin",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18264",
+    "name": "Pläne: Elementarwetzstein",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17077",
+    "name": "Purpurroter Schocker",
+    "quality": "epic",
+    "icon_url": "inv_staff_13"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17071",
+    "name": "Räuderipper",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16813",
+    "name": "Reif der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_helmet_34"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18257",
+    "name": "Rezept: Erheblicher Verjüngungstrank",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19147",
+    "name": "Ring der Zauberkraft",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_38"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18821",
+    "name": "Ring des rasanten Schlags",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19145",
+    "name": "Robe der flüchtigen Macht",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16815",
+    "name": "Roben der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16798",
+    "name": "Roben des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "204",
+    "name": "Rogue",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17104",
+    "name": "Rückgratschnitter",
+    "quality": "epic",
+    "icon_url": "inv_axe_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16862",
+    "name": "Sabatons der Macht",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "19144",
+    "name": "Sabatons des Flammenwandlers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18875",
+    "name": "Salamanderschuppengamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_12"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18822",
+    "name": "Scharfkantige Obsidianklinge",
+    "quality": "epic",
+    "icon_url": "inv_sword_28"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18809",
+    "name": "Schärpe der geflüsterten Geheimnisse",
+    "quality": "epic",
+    "icon_url": "inv_belt_12"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17074",
+    "name": "Schattenschlag",
+    "quality": "epic",
+    "icon_url": "inv_spear_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16856",
+    "name": "Schiftung der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_20"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16836",
+    "name": "Schiftung des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17069",
+    "name": "Schläger-Mal",
+    "quality": "epic",
+    "icon_url": "inv_weapon_bow_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "209",
+    "name": "Schmutzige Lederhose",
+    "quality": "common",
+    "icon_url": "inv_pants_wolf"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16844",
+    "name": "Schulterklappen der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_29"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16823",
+    "name": "Schulterklappen des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16848",
+    "name": "Schulterklappen des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_10"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16868",
+    "name": "Schulterstücke der Macht",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_15"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18879",
+    "name": "Schwerer Dunkeleisenring",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_14"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "207",
+    "name": "Shaman",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17110",
+    "name": "Siegel des Erzmagiers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_21"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17082",
+    "name": "Splitter der Flamme",
+    "quality": "epic",
+    "icon_url": "inv_ore_truesilver_01"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18842",
+    "name": "Stab der Dominanz",
+    "quality": "epic",
+    "icon_url": "inv_staff_13"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16837",
+    "name": "Stiefel der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16859",
+    "name": "Stiefel der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16811",
+    "name": "Stiefel der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_boots_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16800",
+    "name": "Stiefel des Arkanisten",
+    "quality": "epic",
+    "icon_url": "inv_boots_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16829",
+    "name": "Stiefel des Cenarius",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16824",
+    "name": "Stiefel des Nachtmeuchlers",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16849",
+    "name": "Stiefel des Riesenjägers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_13"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16839",
+    "name": "Stulpen der Erdenwut",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16860",
+    "name": "Stulpen der Gerechtigkeit",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_29"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16863",
+    "name": "Stulpen der Macht",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17203",
+    "name": "Sulfuronblock",
+    "quality": "epic",
+    "icon_url": "spell_fire_sealoffire"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18820",
+    "name": "Talisman der ephemeren Macht",
+    "quality": "epic",
+    "icon_url": "inv_misc_stonetablet_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16804",
+    "name": "Teufelsherzarmschienen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16806",
+    "name": "Teufelsherzgürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_11"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16805",
+    "name": "Teufelsherzhandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16808",
+    "name": "Teufelsherzhörner",
+    "quality": "epic",
+    "icon_url": "inv_helmet_08"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16810",
+    "name": "Teufelsherzhose",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_14"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16809",
+    "name": "Teufelsherzroben",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_03"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16803",
+    "name": "Teufelsherzschuhe",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_05"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16807",
+    "name": "Teufelsherzschulterpolster",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_23"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18829",
+    "name": "Tiefenerde - Schiftung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_04"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18803",
+    "name": "Überwärmter Isolierlavagreifer",
+    "quality": "epic",
+    "icon_url": "inv_gizmo_02"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "17102",
+    "name": "Umhang der verhüllten Nebel",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_17"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18832",
+    "name": "Unbarmherzige Klinge",
+    "quality": "epic",
+    "icon_url": "inv_sword_15"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "16819",
+    "name": "Unterarmschienen der Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_bracer_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18703",
+    "name": "Uraltes versteinertes Blatt",
+    "quality": "epic",
+    "icon_url": "spell_nature_resistnature"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18810",
+    "name": "Wilde Wachstums-Schiftung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_18"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18878",
+    "name": "Zauberdolch",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19345",
+    "name": "Aegis der Bewahrung",
+    "quality": "epic",
+    "icon_url": "spell_holy_blessingofprotection"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "205",
+    "name": "Kaese",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19388",
+    "name": "Angelistas Gespür",
+    "quality": "epic",
+    "icon_url": "inv_belt_13"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19371",
+    "name": "Anhänger des gefallenen Drachen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_12"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19376",
+    "name": "Archimtiros' Ring der Abrechnung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_40"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16959",
+    "name": "Armreifen des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_bracer_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19374",
+    "name": "Armschienen der arkanen Präzision",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16934",
+    "name": "Armschienen der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16943",
+    "name": "Armschienen der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "132615"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16935",
+    "name": "Armschienen des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_17"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16904",
+    "name": "Armschienen des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_bracer_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19361",
+    "name": "Ashjre'thul, Armbrust der Pein",
+    "quality": "epic",
+    "icon_url": "inv_weapon_crossbow_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19364",
+    "name": "Ashkandi, Großschwert der Bruderschaft",
+    "quality": "epic",
+    "icon_url": "inv_sword_50"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19382",
+    "name": "Band aus reinem Elementium",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_42"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19434",
+    "name": "Band der dunklen Herrschaft",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_24"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19403",
+    "name": "Band der erzwungenen Konzentration",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_34"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19402",
+    "name": "Beinschützer des gefallenen Kreuzfahrers",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19367",
+    "name": "Berührung des Drachen",
+    "quality": "epic",
+    "icon_url": "inv_wand_11"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16926",
+    "name": "Bindungen der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_bracer_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16918",
+    "name": "Bindungen des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_bracer_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16951",
+    "name": "Bindungen des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "17962",
+    "name": "Blauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_blue"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16911",
+    "name": "Blutfangarmschienen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16905",
+    "name": "Blutfangbrustharnisch",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16910",
+    "name": "Blutfanggürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_23"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16907",
+    "name": "Blutfanghandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_21"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16832",
+    "name": "Blutfangschiftung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_23"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16906",
+    "name": "Blutfangstiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16950",
+    "name": "Brustplatte der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "132633"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16942",
+    "name": "Brustplatte des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16958",
+    "name": "Brustplatte des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16966",
+    "name": "Brustplatte des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16897",
+    "name": "Brustschutz des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19352",
+    "name": "Chromatisch gehärtetes Schwert",
+    "quality": "epic",
+    "icon_url": "inv_sword_51"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19387",
+    "name": "Chromatische Stiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_04"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19363",
+    "name": "Crul'shorukh, Schneide des Chaos",
+    "quality": "epic",
+    "icon_url": "inv_axe_12"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19337",
+    "name": "Das schwarze Buch",
+    "quality": "epic",
+    "icon_url": "inv_misc_book_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19334",
+    "name": "Die ungezähmte Klinge",
+    "quality": "epic",
+    "icon_url": "inv_sword_50"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19406",
+    "name": "Drachenfangzahn-Talisman",
+    "quality": "epic",
+    "icon_url": "inv_misc_bone_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19353",
+    "name": "Drachenkrallenbeil",
+    "quality": "epic",
+    "icon_url": "inv_axe_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19394",
+    "name": "Drachenkrallenschulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_23"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19368",
+    "name": "Drachenodemhandkanone",
+    "quality": "epic",
+    "icon_url": "inv_weapon_rifle_02"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19346",
+    "name": "Drachenzahnklinge",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19354",
+    "name": "Drachischer Rächer",
+    "quality": "epic",
+    "icon_url": "inv_axe_21"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19358",
+    "name": "Drachischer Schlägel",
+    "quality": "epic",
+    "icon_url": "inv_mace_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19407",
+    "name": "Ebenholzfarbene Flammenhandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_27"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19336",
+    "name": "Edelstein der arkanen Kraft",
+    "quality": "epic",
+    "icon_url": "spell_nature_wispsplode"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19395",
+    "name": "Edelstein der Verjüngung",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_topaz_02"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19339",
+    "name": "Edelstein des Gedankensprungs",
+    "quality": "epic",
+    "icon_url": "spell_nature_wispheal"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19386",
+    "name": "Elementiumdurchwirkter Umhang",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "18562",
+    "name": "Elementiumerz",
+    "quality": "epic",
+    "icon_url": "inv_stone_sharpeningstone_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19349",
+    "name": "Elementiumverstärktes Bollwerk",
+    "quality": "epic",
+    "icon_url": "inv_shield_17"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19385",
+    "name": "Energieerfüllte Gamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19435",
+    "name": "Essenzsammler",
+    "quality": "epic",
+    "icon_url": "inv_wand_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19400",
+    "name": "Feuerschwingens Griff",
+    "quality": "epic",
+    "icon_url": "inv_belt_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19398",
+    "name": "Feuerschwingens Umhang",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_18"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19355",
+    "name": "Fokussierstab der Schattenschwingen",
+    "quality": "epic",
+    "icon_url": "inv_staff_13"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20726",
+    "name": "Formel: Handschuhe - Bedrohung",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20729",
+    "name": "Formel: Handschuhe - Feuermacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20728",
+    "name": "Formel: Handschuhe - Frostmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20730",
+    "name": "Formel: Handschuhe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20727",
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20731",
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20736",
+    "name": "Formel: Umhang - Ausweichen",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20735",
+    "name": "Formel: Umhang - Feingefühl",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20734",
+    "name": "Formel: Umhang - Verstohlenheit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19439",
+    "name": "Geflochtener Schattenwams",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19390",
+    "name": "Gehärtete Drachenlederhandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19389",
+    "name": "Gehärtete Drachenlederschulterpolster",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19396",
+    "name": "Gehärteter Drachenledergürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19401",
+    "name": "Gekettelter Beinschützer des Primalisten",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19393",
+    "name": "Gekettelter Taillenschutz des Primalisten",
+    "quality": "epic",
+    "icon_url": "inv_belt_21"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "17965",
+    "name": "Gelber Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19342",
+    "name": "Gifttotem",
+    "quality": "epic",
+    "icon_url": "inv_misc_idol_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "17964",
+    "name": "Grauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_black"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "17963",
+    "name": "Grüner Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_green"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19392",
+    "name": "Gurt des gefallenen Kreuzfahrers",
+    "quality": "epic",
+    "icon_url": "inv_belt_11"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16925",
+    "name": "Gürtel der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16933",
+    "name": "Gürtel der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_belt_13"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16944",
+    "name": "Gürtel der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "132503"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16936",
+    "name": "Gürtel des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_belt_28"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16818",
+    "name": "Gürtel des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16952",
+    "name": "Gürtel des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_belt_27"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16903",
+    "name": "Gürtel des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_belt_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16960",
+    "name": "Gürtelbund des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_belt_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16928",
+    "name": "Handschuhe der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19369",
+    "name": "Handschuhe der rapiden Evolution",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16913",
+    "name": "Handschuhe des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16920",
+    "name": "Handschützer der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16899",
+    "name": "Handschützer des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19372",
+    "name": "Helm der unendlichen Rage",
+    "quality": "epic",
+    "icon_url": "inv_helmet_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19357",
+    "name": "Herold des Leidens",
+    "quality": "epic",
+    "icon_url": "inv_mace_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19350",
+    "name": "Herzensbrecher",
+    "quality": "epic",
+    "icon_url": "inv_weapon_bow_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19365",
+    "name": "Klaue des Schwarzen Drachen",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_27"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19347",
+    "name": "Klaue von Chromaggus",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_28"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "20383",
+    "name": "Kopf des Brutwächters Dreschbringer",
+    "quality": "epic",
+    "icon_url": "inv_misc_head_dragon_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19003",
+    "name": "Kopf von Nefarian",
+    "quality": "epic",
+    "icon_url": "inv_misc_head_dragon_black"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19432",
+    "name": "Kreis der angewandten Macht",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_37"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19344",
+    "name": "Kristall der Naturverbundenheit",
+    "quality": "epic",
+    "icon_url": "134073"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19341",
+    "name": "Lebensspendender Edelstein",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19360",
+    "name": "Lok'amir il Romathis",
+    "quality": "epic",
+    "icon_url": "inv_mace_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19351",
+    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+    "quality": "epic",
+    "icon_url": "inv_sword_49"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19405",
+    "name": "Malfurions gesegnetes Bollwerk",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19370",
+    "name": "Mantel der Pechschwingenkabale",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16917",
+    "name": "Mantel des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_32"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19375",
+    "name": "Mish'undare, Reif des Gedankenschinders",
+    "quality": "epic",
+    "icon_url": "inv_helmet_52"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19379",
+    "name": "Neltharions Träne",
+    "quality": "epic",
+    "icon_url": "inv_stone_15"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19377",
+    "name": "Prestors Talisman der Verschwörung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_17"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19397",
+    "name": "Ring des Blackrock",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_43"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19438",
+    "name": "Ringos Blizzardstiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16923",
+    "name": "Roben der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16931",
+    "name": "Roben der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16916",
+    "name": "Roben des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19343",
+    "name": "Rollen des Blendenden Lichts",
+    "quality": "epic",
+    "icon_url": "inv_scroll_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19348",
+    "name": "Roter Drachenschuppenbeschützer",
+    "quality": "epic",
+    "icon_url": "inv_shield_20"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "17969",
+    "name": "Roter Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_red"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19340",
+    "name": "Rune der Metamorphose",
+    "quality": "epic",
+    "icon_url": "inv_misc_rune_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16957",
+    "name": "Sabatons des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16965",
+    "name": "Sabatons des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_04"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "11938",
+    "name": "Sack Edelsteine",
+    "quality": "common",
+    "icon_url": "inv_misc_bag_10_black"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19433",
+    "name": "Sandzwirngamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_17"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16949",
+    "name": "Schienbeinschützer der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "132587"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16941",
+    "name": "Schienbeinschützer des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16932",
+    "name": "Schiftung der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_19"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16937",
+    "name": "Schiftung des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16953",
+    "name": "Schiftung des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_37"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19391",
+    "name": "Schimmerndes Geta",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_01"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19430",
+    "name": "Schleier des reinen Gedankens",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_16"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19362",
+    "name": "Schneide der Verdammnis",
+    "quality": "epic",
+    "icon_url": "inv_axe_15"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16945",
+    "name": "Schulterklappen der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "135064"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19373",
+    "name": "Schultern der Schwarzen Brut",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16924",
+    "name": "Schulterstücke der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_02"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16902",
+    "name": "Schulterstücke des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16961",
+    "name": "Schulterstücke des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_34"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19399",
+    "name": "Schwarzaschenrobe",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_50"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19356",
+    "name": "Stab der Schattenflamme",
+    "quality": "epic",
+    "icon_url": "inv_staff_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16919",
+    "name": "Stiefel der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_boots_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16927",
+    "name": "Stiefel der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_boots_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19381",
+    "name": "Stiefel der Schattenflamme",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16912",
+    "name": "Stiefel des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_boots_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19437",
+    "name": "Stiefel des reinen Gedankens",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16898",
+    "name": "Stiefel des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16948",
+    "name": "Stulpen der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "132945"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16940",
+    "name": "Stulpen des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16956",
+    "name": "Stulpen des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_29"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16964",
+    "name": "Stulpen des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19431",
+    "name": "Styleens verhinderter Skarabäus",
+    "quality": "epic",
+    "icon_url": "inv_misc_armorkit_10"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19380",
+    "name": "Therazanes Zusammenhalt",
+    "quality": "epic",
+    "icon_url": "inv_belt_18"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19436",
+    "name": "Umhang der drachischen Macht",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_11"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19378",
+    "name": "Umhang des Brutlords",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_20"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "19335",
+    "name": "Wirbelsäulenbrecher",
+    "quality": "epic",
+    "icon_url": "inv_mace_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16900",
+    "name": "Bedeckung des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16901",
+    "name": "Beinschützer des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16939",
+    "name": "Helm des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_05"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16938",
+    "name": "Beinschützer des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_pants_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16914",
+    "name": "Krone des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_helmet_70"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16915",
+    "name": "Hose des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16955",
+    "name": "Krone des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_helmet_74"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16954",
+    "name": "Beinplatten des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_pants_04"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16921",
+    "name": "Heiligenschein der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_helmet_24"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16922",
+    "name": "Gamaschen der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_pants_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16908",
+    "name": "Blutfangkapuze",
+    "quality": "epic",
+    "icon_url": "inv_helmet_41"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16909",
+    "name": "Blutfanghose",
+    "quality": "epic",
+    "icon_url": "inv_pants_06"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16947",
+    "name": "Helm der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "inv_helmet_69"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16946",
+    "name": "Beinplatten der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "inv_pants_03"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16929",
+    "name": "Schädelkappe der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_helmet_08"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16930",
+    "name": "Gamaschen der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_pants_07"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16963",
+    "name": "Helm des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_helmet_71"
+  },
+  {
+    "raid_type": "bwl",
+    "item_id": "16962",
+    "name": "Beinplatten des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_pants_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21529",
+    "name": "Amulett der Schattenabwehr",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_17"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21459",
+    "name": "Armbrust der bevorstehenden Verdammnis",
+    "quality": "epic",
+    "icon_url": "inv_weapon_crossbow_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21457",
+    "name": "Armschienen der Unbarmherzigkeit",
+    "quality": "epic",
+    "icon_url": "inv_bracer_19"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21496",
+    "name": "Armschienen des Qirajikommandos",
+    "quality": "rare",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21473",
+    "name": "Auge von Moam",
+    "quality": "rare",
+    "icon_url": "inv_misc_eye_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20866",
+    "name": "Azurgötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_azure"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21526",
+    "name": "Band der eisigen Tiefen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_35"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21495",
+    "name": "Beinplatten des Qirajikommandos",
+    "quality": "rare",
+    "icon_url": "inv_pants_plate_15"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21475",
+    "name": "Beinplatten des Zerstörers",
+    "quality": "rare",
+    "icon_url": "inv_pants_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20869",
+    "name": "Bernsteingötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_amber"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21137",
+    "name": "Blauer Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_sapphire_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21478",
+    "name": "Bogen der straffen Sehne",
+    "quality": "epic",
+    "icon_url": "inv_weapon_bow_13"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20861",
+    "name": "Bronzeskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_bronze"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21294",
+    "name": "Buch der heilenden Berührung XI",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21296",
+    "name": "Buch der Verjüngung XI",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21295",
+    "name": "Buch des Sternenfeuers VII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21290",
+    "name": "Buchband: Heiliges Licht IX",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_08"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21289",
+    "name": "Buchband: Segen der Macht VII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_08"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21288",
+    "name": "Buchband: Segen der Weisheit VI",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_08"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21485",
+    "name": "Burus Schädelfragment",
+    "quality": "epic",
+    "icon_url": "inv_shield_15"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21474",
+    "name": "Chitinschulterschutz",
+    "quality": "rare",
+    "icon_url": "inv_shoulder_29"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21488",
+    "name": "Chitinstachelfetisch",
+    "quality": "rare",
+    "icon_url": "inv_misc_ahnqirajtrinket_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21175",
+    "name": "Das Szepter der Sandstürme",
+    "quality": "common",
+    "icon_url": "inv_staff_29"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21802",
+    "name": "Der verlorene Kris von Zedd",
+    "quality": "rare",
+    "icon_url": "inv_weapon_shortblade_35"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21467",
+    "name": "Dicker Silithidenbrustschutz",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21531",
+    "name": "Drachenzahnhalskette",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_22"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21527",
+    "name": "Dunkelwasserroben",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_31"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20865",
+    "name": "Elfenbeinskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_ivory"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21523",
+    "name": "Fangzahn von Korialstrasz",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21464",
+    "name": "Fesseln des Narbenlosen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21280",
+    "name": "Foliant der arkanen Geschosse VIII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_07"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21279",
+    "name": "Foliant des Feuerballs XII",
+    "quality": "rare",
+    "icon_url": "spell_fire_flamebolt"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21214",
+    "name": "Foliant des Frostblitzes XI",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_07"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20726",
+    "name": "Formel: Handschuhe - Bedrohung",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20729",
+    "name": "Formel: Handschuhe - Feuermacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20728",
+    "name": "Formel: Handschuhe - Frostmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20730",
+    "name": "Formel: Handschuhe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20727",
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20731",
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20736",
+    "name": "Formel: Umhang - Ausweichen",
+    "quality": "rare",
+    "icon_url": "spell_holy_greaterheal"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20735",
+    "name": "Formel: Umhang - Feingefühl",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20734",
+    "name": "Formel: Umhang - Verstohlenheit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21801",
+    "name": "Fühler der Kräftigung",
+    "quality": "rare",
+    "icon_url": "inv_wand_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21461",
+    "name": "Gamaschen des schwarzen Sturms",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_19"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21530",
+    "name": "Gamaschen mit Onyxeinbettung",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20884",
+    "name": "Gebieterring der Qiraji",
+    "quality": "rare",
+    "icon_url": "inv_qiraj_ringmagisterial"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21499",
+    "name": "Gewänder der Sandstürme",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_26"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20859",
+    "name": "Goldskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_gold"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20875",
+    "name": "Götze der Nacht",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_night"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20874",
+    "name": "Götze der Sonne",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_sun"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20877",
+    "name": "Götze der Weisen",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_sage"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20878",
+    "name": "Götze der Wiedergeburt",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_rebirth"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20881",
+    "name": "Götze des Kampfes",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_strife"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20882",
+    "name": "Götze des Krieges",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_war"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20879",
+    "name": "Götze des Lebens",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_life"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20876",
+    "name": "Götze des Todes",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_death"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "22203",
+    "name": "Großer Obsidiansplitter",
+    "quality": "common",
+    "icon_url": "inv_misc_stonetablet_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21139",
+    "name": "Grüner Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_emerald_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21500",
+    "name": "Gürtel der Inquisition",
+    "quality": "rare",
+    "icon_url": "inv_belt_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21503",
+    "name": "Gürtel des Sandhäschers",
+    "quality": "rare",
+    "icon_url": "inv_belt_13"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21806",
+    "name": "Hammer der Qirajigewalt",
+    "quality": "rare",
+    "icon_url": "inv_hammer_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21299",
+    "name": "Handbuch der Rache VI",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21297",
+    "name": "Handbuch des heldenhaften Stoßes IX",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21298",
+    "name": "Handbuch des Schlachtrufs VII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21502",
+    "name": "Handgelenksschutz des Sandhäschers",
+    "quality": "rare",
+    "icon_url": "inv_bracer_19"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21501",
+    "name": "Handschuhe aus gekräftigter Silithidenhaut",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_23"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21462",
+    "name": "Handschuhe der düsteren Weisheit",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21460",
+    "name": "Helm der Herrschaft",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21484",
+    "name": "Helm des Nachwachsens",
+    "quality": "rare",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21455",
+    "name": "Helm des Südwinds",
+    "quality": "rare",
+    "icon_url": "inv_helmet_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20889",
+    "name": "Hoheitstuch der Qiraji",
+    "quality": "rare",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21229",
+    "name": "Insignien des Qirajilords",
+    "quality": "common",
+    "icon_url": "inv_zulgurubtrinket"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20870",
+    "name": "Jaspisgötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_jasper"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20885",
+    "name": "Kampftuch der Qiraji",
+    "quality": "rare",
+    "icon_url": "inv_qiraj_drapemartial"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "22202",
+    "name": "Kleiner Obsidiansplitter",
+    "quality": "common",
+    "icon_url": "inv_misc_stonetablet_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20864",
+    "name": "Knochenskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_bone"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21285",
+    "name": "Kodex der Erneuerung X",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_09"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21284",
+    "name": "Kodex der großen Heilung V",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_09"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21287",
+    "name": "Kodex des Gebets der Heilung V",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_09"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21220",
+    "name": "Kopf von Ossirian dem Narbenlosen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21471",
+    "name": "Kralle der gewaltigen Konzentration",
+    "quality": "epic",
+    "icon_url": "inv_misc_bone_dwarfskull_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20862",
+    "name": "Kristallskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_crystal"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "19341",
+    "name": "Lebensspendender Edelstein",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21307",
+    "name": "Lehrbuch: Aspekt des Falken VII",
+    "quality": "rare",
+    "icon_url": "spell_nature_ravenform"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21304",
+    "name": "Lehrbuch: Mehrfachschuss V",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21306",
+    "name": "Lehrbuch: Schlangenbiss IX",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21303",
+    "name": "Leitfaden der Finte V",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_10"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21300",
+    "name": "Leitfaden des Meuchelns IX",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_10"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21302",
+    "name": "Leitfaden des tödlichen Gifts V",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_10"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "19351",
+    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+    "quality": "epic",
+    "icon_url": "inv_sword_49"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21468",
+    "name": "Mantel von Maz'Nadir",
+    "quality": "rare",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21492",
+    "name": "Menschentöter der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_sword_56"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20871",
+    "name": "Obsidiangötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_obsidian"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21476",
+    "name": "Obsidianschuppengamaschen",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20867",
+    "name": "Onyxgötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_onyx"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21498",
+    "name": "Opferdolch der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_12"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21463",
+    "name": "Ossirians Bindung",
+    "quality": "epic",
+    "icon_url": "inv_belt_18"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "22220",
+    "name": "Pläne: Dunkler Griff des Zerstörers",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21805",
+    "name": "Polierte Obsidianschulterstücke",
+    "quality": "rare",
+    "icon_url": "inv_shoulder_26"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21520",
+    "name": "Ravencrests Vermächtnis",
+    "quality": "epic",
+    "icon_url": "quest-start"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21025",
+    "name": "Rezept: Dirges abgefahrene Chimaerokkoteletts",
+    "quality": "epic",
+    "icon_url": "inv_misc_book_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21483",
+    "name": "Ring der Wüstenwinde",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21477",
+    "name": "Ring des Zorns",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21138",
+    "name": "Roter Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_ruby_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21521",
+    "name": "Runenschwert des Roten",
+    "quality": "epic",
+    "icon_url": "inv_sword_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21715",
+    "name": "Sandpolierter Hammer",
+    "quality": "epic",
+    "icon_url": "inv_hammer_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21456",
+    "name": "Sandsturmumhang",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_01"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21490",
+    "name": "Schleimkicker",
+    "quality": "rare",
+    "icon_url": "inv_boots_plate_04"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21762",
+    "name": "Schlüssel für einen großen Skarabäuskasten",
+    "quality": "common",
+    "icon_url": "inv_misc_key_08"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21761",
+    "name": "Schlüssel für einen Skarabäuskasten",
+    "quality": "common",
+    "icon_url": "inv_misc_key_08"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21291",
+    "name": "Schrifttafel der Welle der Heilung X",
+    "quality": "rare",
+    "icon_url": "inv_misc_stonetablet_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21292",
+    "name": "Schrifttafel des Totems der Erdstärke V",
+    "quality": "rare",
+    "icon_url": "inv_misc_stonetablet_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21293",
+    "name": "Schrifttafel des Totems der luftgleichen Anmut III",
+    "quality": "rare",
+    "icon_url": "inv_misc_stonetablet_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21491",
+    "name": "Schuppenarmschienen des Verschlingers",
+    "quality": "rare",
+    "icon_url": "inv_bracer_03"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21176",
+    "name": "Schwarzer Qirajiresonanzkristall",
+    "quality": "legendary",
+    "icon_url": "inv_misc_qirajicrystal_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21522",
+    "name": "Shadowsongs Kummer",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_25"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20860",
+    "name": "Silberskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_silver"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21800",
+    "name": "Silithidhülsenzünder",
+    "quality": "rare",
+    "icon_url": "inv_weapon_rifle_10"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21156",
+    "name": "Skarabäustasche",
+    "quality": "common",
+    "icon_url": "inv_misc_bag_13"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21452",
+    "name": "Stab der Ruinen",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_27"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21466",
+    "name": "Stachel von Ayamiss",
+    "quality": "epic",
+    "icon_url": "inv_mace23"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20886",
+    "name": "Stachelgriff der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_hiltspiked"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20858",
+    "name": "Steinskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_stone"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21482",
+    "name": "Stiefel der feurigen Sande",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_02"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21497",
+    "name": "Stiefel des Qirajigenerals",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_11"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21493",
+    "name": "Stiefel des Vorposten",
+    "quality": "epic",
+    "icon_url": "inv_mace_24"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21481",
+    "name": "Stiefel des Wüstenbeschützers",
+    "quality": "rare",
+    "icon_url": "inv_boots_plate_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21480",
+    "name": "Stulpen aus Silithidenschuppen",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21458",
+    "name": "Stulpen des neuen Lebens",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_24"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21469",
+    "name": "Stulpen des Südwinds",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21479",
+    "name": "Stulpen des Unbeweglichen",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "16899",
+    "name": "Sturmgrimms Handschützer",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "16902",
+    "name": "Sturmgrimms Schulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21494",
+    "name": "Südwinds Griff",
+    "quality": "rare",
+    "icon_url": "inv_belt_25"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20863",
+    "name": "Tonskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_clay"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21489",
+    "name": "Treibsandwandler",
+    "quality": "rare",
+    "icon_url": "inv_boots_cloth_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21810",
+    "name": "Treter des wandernden Nomaden",
+    "quality": "rare",
+    "icon_url": "inv_boots_cloth_05"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21517",
+    "name": "Turban der gnomischen Superpsychokräfte",
+    "quality": "epic",
+    "icon_url": "inv_helmet_63"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21472",
+    "name": "Turban der staubigen Winde",
+    "quality": "epic",
+    "icon_url": "inv_helmet_62"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21470",
+    "name": "Umhang des Retters",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_16"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21230",
+    "name": "Uraltes Qirajiartefakt",
+    "quality": "common",
+    "icon_url": "inv_misc_rune_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20890",
+    "name": "Verschnörkelter Griff der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_hiltornate"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21283",
+    "name": "Zauberfoliant der Verderbnis VII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21282",
+    "name": "Zauberfoliant des Feuerbrandes VIII",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21281",
+    "name": "Zauberfoliant des Schattenblitzes X",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_06"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20888",
+    "name": "Zeremonienring der Qiraji",
+    "quality": "rare",
+    "icon_url": "inv_qiraj_ringceremonial"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20872",
+    "name": "Zinnobergötze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_vermillion"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "21809",
+    "name": "Zorn des vergessenen Schwarms",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_necklace_14"
+  },
+  {
+    "raid_type": "aq20",
+    "item_id": "20868",
+    "name": "Züngelnder Götze",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_lambent"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21670",
+    "name": "Abzeichen der Schwarmwache",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21529",
+    "name": "Amulett der Schattenabwehr",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21702",
+    "name": "Amulett des faulen Zauberschutzes",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21608",
+    "name": "Amulett von Vek'nilash",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "5760",
+    "name": "Eterniumschließkassette",
+    "quality": "common",
+    "icon_url": "Inv_misc_ornatebox"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21695",
+    "name": "Angelistas Berührung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21690",
+    "name": "Angelistas Glücksbringer",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21700",
+    "name": "Anhänger des Qirajiwächters",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21604",
+    "name": "Armreifen der königlichen Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21611",
+    "name": "Armschienen des Wühlers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21221",
+    "name": "Auge von C'Thun",
+    "quality": "epic",
+    "icon_url": "spell_shadow_detectinvisibility"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22730",
+    "name": "Augenstrangkordel",
+    "quality": "epic",
+    "icon_url": "inv_belt_12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21526",
+    "name": "Band der eisigen Tiefen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_35"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20928",
+    "name": "Befehlsbindungen der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_bindingscommand"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21667",
+    "name": "Beinplatten des flammenden Lichts",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21579",
+    "name": "Bezwungene Tentakel von C'Thun",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21218",
+    "name": "Blauer Qirajiresonanzkristall",
+    "quality": "rare",
+    "icon_url": "inv_misc_qirajicrystal_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21137",
+    "name": "Blauer Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_sapphire_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20861",
+    "name": "Bronzeskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_bronze"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21691",
+    "name": "Brühschlammige Stulpen",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21814",
+    "name": "Brustplatte der Vernichtung",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21652",
+    "name": "Brustschutz aus Silithidenknochenpanzer",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate09"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22402",
+    "name": "Buchband der Anmut",
+    "quality": "epic",
+    "icon_url": "inv_relics_libramofgrace"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21697",
+    "name": "Cape der Dreifaltigkeit",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21175",
+    "name": "Das Szepter der Sandstürme",
+    "quality": "common",
+    "icon_url": "inv_hammer_25"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21675",
+    "name": "Dicker Qirajihautgürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_15"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20932",
+    "name": "Dominanzbindungen der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_bindingsdominance"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21615",
+    "name": "Don Rigobertos verlorener Hut",
+    "quality": "epic",
+    "icon_url": "inv_helmet_51"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21531",
+    "name": "Drachenzahnhalskette",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_22"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21694",
+    "name": "Dreistoffmantel",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21527",
+    "name": "Dunkelwasserroben",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_31"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21134",
+    "name": "Dunkle Schneide des Irrsinns",
+    "quality": "epic",
+    "icon_url": "inv_axe_22"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20865",
+    "name": "Elfenbeinskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_ivory"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21693",
+    "name": "Erscheinung des Verschlingers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21523",
+    "name": "Fangzahn von Korialstrasz",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21647",
+    "name": "Fetisch des Sandhäschers",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20726",
+    "name": "Formel: Handschuhe - Bedrohung",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20729",
+    "name": "Formel: Handschuhe - Feuermacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20728",
+    "name": "Formel: Handschuhe - Frostmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20730",
+    "name": "Formel: Handschuhe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20727",
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20731",
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20736",
+    "name": "Formel: Umhang - Ausweichen",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20735",
+    "name": "Formel: Umhang - Feingefühl",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20734",
+    "name": "Formel: Umhang - Verstohlenheit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21682",
+    "name": "Gallenbespritzte Stulpen",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_21"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21698",
+    "name": "Gamaschen der bodenlosen Tiefe",
+    "quality": "epic",
+    "icon_url": "inv_pants_12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21676",
+    "name": "Gamaschen des faulenden Schwarms",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21530",
+    "name": "Gamaschen mit Onyxeinbettung",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21324",
+    "name": "Gelber Qirajiresonanzkristall",
+    "quality": "rare",
+    "icon_url": "inv_misc_qirajicrystal_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21622",
+    "name": "Geschärfter Silithidenknochen",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21838",
+    "name": "Gewand des königlichen Aufstiegs",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_48"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20859",
+    "name": "Goldskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_gold"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22399",
+    "name": "Götze der Gesundheit",
+    "quality": "epic",
+    "icon_url": "spell_nature_healingtouch"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20875",
+    "name": "Götze der Nacht",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_night"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20874",
+    "name": "Götze der Sonne",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_sun"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20877",
+    "name": "Götze der Weisen",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_sage"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20878",
+    "name": "Götze der Wiedergeburt",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_rebirth"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20881",
+    "name": "Götze des Kampfes",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_strife"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20882",
+    "name": "Götze des Krieges",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_war"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20879",
+    "name": "Götze des Lebens",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_life"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20876",
+    "name": "Götze des Todes",
+    "quality": "rare",
+    "icon_url": "inv_qirajidol_death"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21582",
+    "name": "Griff des alten Gottes",
+    "quality": "epic",
+    "icon_url": "inv_belt_31"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21607",
+    "name": "Griff des gefallenen Imperators",
+    "quality": "epic",
+    "icon_url": "inv_belt_34"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22203",
+    "name": "Großer Obsidiansplitter",
+    "quality": "common",
+    "icon_url": "inv_stone_15"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21323",
+    "name": "Grüner Qirajiresonanzkristall",
+    "quality": "rare",
+    "icon_url": "inv_misc_qirajicrystal_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21139",
+    "name": "Grüner Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_emerald_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21586",
+    "name": "Gürtel der endlosen Pein",
+    "quality": "epic",
+    "icon_url": "inv_belt_26"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21606",
+    "name": "Gürtel des gefallenen Imperators",
+    "quality": "epic",
+    "icon_url": "inv_belt_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21678",
+    "name": "Halskette der Reinheit",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21703",
+    "name": "Hammer von Ji'zhi",
+    "quality": "epic",
+    "icon_url": "inv_mace_21"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21708",
+    "name": "Handgelenksschutz aus Käferschuppen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21618",
+    "name": "Handgelenksschutz des Schwarmbauentweihers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21672",
+    "name": "Handschuhe der Vollstreckung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21889",
+    "name": "Handschuhe der widerrufenen Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21619",
+    "name": "Handschuhe des Messias",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21888",
+    "name": "Handschuhe des Unsterblichen",
+    "quality": "epic",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21605",
+    "name": "Handschuhe des verborgenen Tempels",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_19"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21689",
+    "name": "Handschuhe von Ebru",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_23"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20931",
+    "name": "Haut des großen Sandwurms",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_skinsandworm"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21616",
+    "name": "Huhurans Stachel",
+    "quality": "epic",
+    "icon_url": "inv_weapon_bow_14"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20933",
+    "name": "Hülle des alten Gottes",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_huskoldgod"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21237",
+    "name": "Imperiale Qirajiinsignie",
+    "quality": "epic",
+    "icon_url": "inv_staff_20"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21232",
+    "name": "Imperiale Qirajiwaffe",
+    "quality": "epic",
+    "icon_url": "inv_staff_24"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21229",
+    "name": "Insignien des Qirajilords",
+    "quality": "common",
+    "icon_url": "inv_zulgurubtrinket"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "23570",
+    "name": "Jom Gabbar",
+    "quality": "epic",
+    "icon_url": "inv_misc_enggizmos_19"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21679",
+    "name": "Kalimdors Rache",
+    "quality": "epic",
+    "icon_url": "spell_holy_sealofmight"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22202",
+    "name": "Kleiner Obsidiansplitter",
+    "quality": "common",
+    "icon_url": "inv_misc_stonetablet_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20929",
+    "name": "Knochenpanzer des alten Gottes",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_carapaceoldgod"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20864",
+    "name": "Knochenskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_bone"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21598",
+    "name": "Königlicher Qirajigürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_31"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21597",
+    "name": "Königliches Szepter von Vek'lor",
+    "quality": "epic",
+    "icon_url": "inv_sword_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21669",
+    "name": "Kriecherrankenhelm",
+    "quality": "epic",
+    "icon_url": "inv_helmet_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21837",
+    "name": "Kriegshammer des Anubisath",
+    "quality": "epic",
+    "icon_url": "inv_hammer_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20862",
+    "name": "Kristallskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_crystal"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "23557",
+    "name": "Larve des großen Wurms",
+    "quality": "epic",
+    "icon_url": "inv_weapon_rifle_10"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "19341",
+    "name": "Lebensspendender Edelstein",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22732",
+    "name": "Mal von C'Thun",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21665",
+    "name": "Mantel der boshaften Rache",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_30"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21686",
+    "name": "Mantel der inneren Kraft",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21683",
+    "name": "Mantel des Wüstenfeldzugs",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21684",
+    "name": "Mantel des Wüstenzorns",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_28"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21856",
+    "name": "Neretzek der Bluttrinker",
+    "quality": "epic",
+    "icon_url": "inv_axe_09"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20927",
+    "name": "Ouros intakte Haut",
+    "quality": "epic",
+    "icon_url": "inv_qiraj_ourohide"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "23558",
+    "name": "Panzer des Wühlers",
+    "quality": "epic",
+    "icon_url": "inv_shield_23"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22222",
+    "name": "Pläne: Dicke Obsidianbrustplatte",
+    "quality": "rare",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21520",
+    "name": "Ravencrests Vermächtnis",
+    "quality": "epic",
+    "icon_url": "quest-start"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21025",
+    "name": "Rezept: Dirges abgefahrene Chimaerokkoteletts",
+    "quality": "epic",
+    "icon_url": "inv_misc_book_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21596",
+    "name": "Ring des Göttertöters",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21601",
+    "name": "Ring des Imperators Vek'lor",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21620",
+    "name": "Ring des Märtyrers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21677",
+    "name": "Ring des Qirajizorns",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21681",
+    "name": "Ring des Verschlungenen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21707",
+    "name": "Ring des wirren Gedankens",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21836",
+    "name": "Ritssyns Ring des Chaos",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_16"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21671",
+    "name": "Roben der Schlachtwache",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_26"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21696",
+    "name": "Roben des Dreigestirns",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_22"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21663",
+    "name": "Roben des Schutzheiligen",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21321",
+    "name": "Roter Qirajiresonanzkristall",
+    "quality": "rare",
+    "icon_url": "inv_misc_qirajicrystal_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21138",
+    "name": "Roter Szeptersplitter",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_ruby_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21521",
+    "name": "Runenschwert des Roten",
+    "quality": "epic",
+    "icon_url": "inv_sword_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21666",
+    "name": "Sarturas Macht",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21626",
+    "name": "Schleimbeschichtete Gamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21762",
+    "name": "Schlüssel für einen großen Skarabäuskasten",
+    "quality": "common",
+    "icon_url": "inv_misc_key_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21639",
+    "name": "Schulterstücke des Unerbittlichen",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_29"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21668",
+    "name": "Schuppengamaschen des Qirajizorns",
+    "quality": "epic",
+    "icon_url": "inv_chest_fur"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21651",
+    "name": "Schuppengamaschen des Sandhäschers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_10"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21176",
+    "name": "Schwarzer Qirajiresonanzkristall",
+    "quality": "legendary",
+    "icon_url": "inv_misc_qirajicrystal_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21522",
+    "name": "Shadowsongs Kummer",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_25"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20860",
+    "name": "Silberskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_silver"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21673",
+    "name": "Silithidenklaue",
+    "quality": "epic",
+    "icon_url": "inv_misc_monsterclaw_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21625",
+    "name": "Skarabäusbrosche",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21156",
+    "name": "Skarabäustasche",
+    "quality": "common",
+    "icon_url": "inv_misc_bag_13"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21699",
+    "name": "Sperrfeuerschultern",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_36"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21891",
+    "name": "Splitter des gefallenen Sterns",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21128",
+    "name": "Stab der Qirajipropheten",
+    "quality": "epic",
+    "icon_url": "inv_staff_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22734",
+    "name": "Stabfuß von Atiesh",
+    "quality": "legendary",
+    "icon_url": "inv_qirajidol_sun"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21664",
+    "name": "Stachelhalsschmuck",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_ahnqiraj_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20858",
+    "name": "Steinskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_stone"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21126",
+    "name": "Stich des Todes",
+    "quality": "epic",
+    "icon_url": "spell_shadow_abominationexplosion"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21600",
+    "name": "Stiefel der göttlichen Erscheinung",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_05"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21704",
+    "name": "Stiefel der widerrufenen Prophezeiung",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21688",
+    "name": "Stiefel des gefallenen Helden",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21705",
+    "name": "Stiefel des gefallenen Propheten",
+    "quality": "epic",
+    "icon_url": "inv_mace_21"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21645",
+    "name": "Stiefel des Schwarmbaugräbers",
+    "quality": "epic",
+    "icon_url": "inv_boots_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21706",
+    "name": "Stiefel des standhaften Willens",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21585",
+    "name": "Stulpen der dunklen Stürme",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21674",
+    "name": "Stulpen der festen Entschlossenheit",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_31"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21581",
+    "name": "Stulpen der Vernichtung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_31"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21623",
+    "name": "Stulpen des rechtschaffenen Champions",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_26"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21624",
+    "name": "Stulpen von Kalimdor",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_26"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "16899",
+    "name": "Sturmgrimms Handschützer",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "16902",
+    "name": "Sturmgrimms Schulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21839",
+    "name": "Szepter des falschen Propheten",
+    "quality": "epic",
+    "icon_url": "inv_mace22"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20863",
+    "name": "Tonskarabäus",
+    "quality": "uncommon",
+    "icon_url": "inv_scarab_clay"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22396",
+    "name": "Totem des Lebens",
+    "quality": "epic",
+    "icon_url": "inv_relics_totemoflife"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21692",
+    "name": "Triadengurt",
+    "quality": "epic",
+    "icon_url": "inv_belt_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21517",
+    "name": "Turban der gnomischen Superpsychokräfte",
+    "quality": "epic",
+    "icon_url": "inv_helmet_63"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21687",
+    "name": "Ukkos Ring der Dunkelheit",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21583",
+    "name": "Umhang der Klarsicht",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21627",
+    "name": "Umhang der ungelüfteten Geheimnisse",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_20"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21701",
+    "name": "Umhang des geballten Hasses",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21621",
+    "name": "Umhang des goldenen Schwarms",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "22731",
+    "name": "Umhang des Verschlungenen",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21650",
+    "name": "Uralter Qirajizerfetzer",
+    "quality": "epic",
+    "icon_url": "classic_inv_sword_59"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21230",
+    "name": "Uraltes Qirajiartefakt",
+    "quality": "common",
+    "icon_url": "inv_misc_idol_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20930",
+    "name": "Vek'lors Diadem",
+    "quality": "epic",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21599",
+    "name": "Vek'lors Handschuhe der Verwüstung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_28"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21609",
+    "name": "Vek'nilashs Gürtel der Regeneration",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "20926",
+    "name": "Vek'nilashs Reif",
+    "quality": "epic",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21685",
+    "name": "Versteinerter Skarabäus",
+    "quality": "epic",
+    "icon_url": "inv_misc_ahnqirajtrinket_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21602",
+    "name": "Vollstreckungsarmschienen der Qiraji",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21617",
+    "name": "Wespenhautstulpen",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21680",
+    "name": "Weste der zügigen Vollstreckung",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_45"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21635",
+    "name": "Widerhaken des Sandhäschers",
+    "quality": "epic",
+    "icon_url": "inv_weapon_hand_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21610",
+    "name": "Wurmschuppenblocker",
+    "quality": "epic",
+    "icon_url": "inv_shield_24"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21603",
+    "name": "Zauberstab des Qirajiadels",
+    "quality": "epic",
+    "icon_url": "inv_wand_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21648",
+    "name": "Zusammengesetzte Stiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21532",
+    "name": "Zwangsarbeiterstiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21353",
+    "name": "Helm der Genesis",
+    "quality": "epic",
+    "icon_url": "inv_helmet_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21354",
+    "name": "Schulterpolster der Genesis",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21357",
+    "name": "Weste der Genesis",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21356",
+    "name": "Beinkleider der Genesis",
+    "quality": "epic",
+    "icon_url": "inv_pants_leather_01"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21355",
+    "name": "Stiefel der Genesis",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21366",
+    "name": "Diadem des Hetzers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_73"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21367",
+    "name": "Schulterstücke des Hetzers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_36"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21370",
+    "name": "Halsberge des Hetzers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21368",
+    "name": "Gamaschen des Hetzers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21365",
+    "name": "Fußschützer des Hetzers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21347",
+    "name": "Reif des Mysteriums",
+    "quality": "epic",
+    "icon_url": "inv_helmet_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21345",
+    "name": "Schulterpolster des Mysteriums",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21343",
+    "name": "Roben des Mysteriums",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_11"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21346",
+    "name": "Gamaschen des Mysteriums",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21344",
+    "name": "Stiefel des Mysteriums",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21387",
+    "name": "Krone des Rächers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_72"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21391",
+    "name": "Schulterstücke des Rächers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_35"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21389",
+    "name": "Brustplatte des Rächers",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21390",
+    "name": "Beinschützer des Rächers",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21388",
+    "name": "Schienbeinschützer des Rächers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21348",
+    "name": "Tiara des Orakels",
+    "quality": "epic",
+    "icon_url": "inv_helmet_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21350",
+    "name": "Mantel des Orakels",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21351",
+    "name": "Tunika des Orakels",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_10"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21352",
+    "name": "Beinkleider des Orakels",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21349",
+    "name": "Fußlappen des Orakels",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21360",
+    "name": "Helm des Todesboten",
+    "quality": "epic",
+    "icon_url": "inv_helmet_04"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21361",
+    "name": "Schiftung des Todesboten",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21364",
+    "name": "Weste des Todesboten",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21362",
+    "name": "Gamaschen des Todesboten",
+    "quality": "epic",
+    "icon_url": "inv_pants_leather_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21359",
+    "name": "Stiefel des Todesboten",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21372",
+    "name": "Diadem des Sturmrufers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_73"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21376",
+    "name": "Schulterstücke des Sturmrufers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21374",
+    "name": "Halsberge des Sturmrufers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_13"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21375",
+    "name": "Gamaschen des Sturmrufers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_10"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21373",
+    "name": "Fußschützer des Sturmrufers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_07"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21337",
+    "name": "Reif des Verdammnisrufers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_06"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21335",
+    "name": "Mantel des Verdammnisrufers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21334",
+    "name": "Roben des Verdammnisrufers",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21336",
+    "name": "Beinkleider des Verdammnisrufers",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21338",
+    "name": "Fußlappen des Verdammnisrufers",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_02"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21329",
+    "name": "Krone des Eroberers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_72"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21330",
+    "name": "Schiftung des Eroberers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_35"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21331",
+    "name": "Brustplatte des Eroberers",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate12"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21332",
+    "name": "Beinschützer des Eroberers",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_03"
+  },
+  {
+    "raid_type": "aq40",
+    "item_id": "21333",
+    "name": "Schienbeinschützer des Eroberers",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19787",
+    "name": "Allgegenwärtige Sicht",
+    "quality": "rare",
+    "icon_url": "spell_shadow_detectlesserinvisibility"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20264",
+    "name": "Stulpen des Friedensbewahrers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "12363",
+    "name": "Arkankristall",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_gem_topaz_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19910",
+    "name": "Arlokks Griff",
+    "quality": "epic",
+    "icon_url": "inv_weapon_hand_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19922",
+    "name": "Hoodoostecken",
+    "quality": "rare",
+    "icon_url": "inv_misc_bone_dwarfskull_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22721",
+    "name": "Band der Knechtschaft",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19920",
+    "name": "Band des Primalisten",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_47"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19886",
+    "name": "Bedeckung des Verhexers",
+    "quality": "rare",
+    "icon_url": "inv_mask_02"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19861",
+    "name": "Berührung des Chaos",
+    "quality": "epic",
+    "icon_url": "inv_wand_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19708",
+    "name": "Blaues Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_blue"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19887",
+    "name": "Blutbefleckte Beinplatten",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19875",
+    "name": "Blutbefleckte Helmkappe",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19904",
+    "name": "Blutbefleckte runenverzierte Halsberge",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate08"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19919",
+    "name": "Blutbefleckte Schienbeinschützer",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_04"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19906",
+    "name": "Blutdurchnässte Fußpolster",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_04"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19889",
+    "name": "Blutdurchnässte Gamaschen",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22718",
+    "name": "Blutdurchnässte Maske",
+    "quality": "rare",
+    "icon_url": "inv_helmet_41"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19869",
+    "name": "Blutdurchnässter Handschutz",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_26"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19855",
+    "name": "Blutgetränkte Beinplatten",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_21"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19913",
+    "name": "Blutgetränkte Schienbeinschützer",
+    "quality": "rare",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19878",
+    "name": "Blutgetränkte Schulterstücke",
+    "quality": "rare",
+    "icon_url": "inv_shoulder_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19894",
+    "name": "Blutgetränkte Stulpen",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19726",
+    "name": "Blutrebe",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_herb_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19864",
+    "name": "Blutrufer",
+    "quality": "epic",
+    "icon_url": "inv_sword_18"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19727",
+    "name": "Blutsense",
+    "quality": "rare",
+    "icon_url": "inv_weapon_shortblade_29"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19929",
+    "name": "Blutverschmierte Handschuhe",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19895",
+    "name": "Blutverschmierter Kilt",
+    "quality": "rare",
+    "icon_url": "inv_pants_cloth_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19713",
+    "name": "Bronzefarbenes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_bronze"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19856",
+    "name": "Das Auge von Hakkar",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_22"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19820",
+    "name": "Durchstochene Voodoopuppe",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_idol_02"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19945",
+    "name": "Echsenschuppenaugenklappe",
+    "quality": "epic",
+    "icon_url": "inv_helmet_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19859",
+    "name": "Fangzahn des Gesichtslosen",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_30"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19903",
+    "name": "Fangzahn von Venoxis",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_31"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19968",
+    "name": "Feuriger Heimzahler",
+    "quality": "rare",
+    "icon_url": "inv_sword_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20032",
+    "name": "Fließende Ritualroben",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_25"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22739",
+    "name": "Foliant der Verwandlung: Schildkröte",
+    "quality": "rare",
+    "icon_url": "inv_misc_book_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19877",
+    "name": "Gamaschen des Animisten",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20266",
+    "name": "Gamaschen des Friedensbewahrers",
+    "quality": "rare",
+    "icon_url": "inv_pants_plate_04"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19967",
+    "name": "Gedankenvernichter",
+    "quality": "rare",
+    "icon_url": "inv_wand_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19709",
+    "name": "Gelbes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_misc_armorkit_11"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19715",
+    "name": "Goldenes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_gold"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19870",
+    "name": "Göttlicher Hakkariumhang",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_18"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22635",
+    "name": "Greuelwächter",
+    "quality": "rare",
+    "icon_url": "spell_nature_nullward"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19939",
+    "name": "Gri'leks Blut",
+    "quality": "uncommon",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19961",
+    "name": "Grileks Schleifer",
+    "quality": "rare",
+    "icon_url": "inv_mace_04"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19962",
+    "name": "Grileks Schnitzer",
+    "quality": "rare",
+    "icon_url": "inv_axe_24"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19711",
+    "name": "Grünes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_green"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20261",
+    "name": "Gürtel aus Schattenpantherbalg",
+    "quality": "rare",
+    "icon_url": "inv_belt_26"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22716",
+    "name": "Gürtel der unversehrten Kraft",
+    "quality": "rare",
+    "icon_url": "inv_belt_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19876",
+    "name": "Halskette des Seelenverderbers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_03"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20259",
+    "name": "Handschuhe aus Schattenpantherbalg",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_26"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22715",
+    "name": "Handschuhe der Gequälten",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_10"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19942",
+    "name": "Hazza'rahs Traumfaden",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bandage_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19874",
+    "name": "Hellebarde der Pein",
+    "quality": "epic",
+    "icon_url": "inv_sword_28"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20263",
+    "name": "Helm der Gurubashi",
+    "quality": "rare",
+    "icon_url": "inv_helmet_25"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19802",
+    "name": "Herz von Hakkar",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_bloodstone_02"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19963",
+    "name": "Heugabel des Wahnsinns",
+    "quality": "rare",
+    "icon_url": "inv_spear_03"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19993",
+    "name": "Hoodoojagdbogen",
+    "quality": "rare",
+    "icon_url": "inv_waepon_bow_zulgrub_d_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19923",
+    "name": "Jekliks opaliner Talisman",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_necklace_03"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19918",
+    "name": "Jekliks Zermalmer",
+    "quality": "epic",
+    "icon_url": "inv_mace_19"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19885",
+    "name": "Jin'dos Auge des Bösen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_45"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19891",
+    "name": "Jin'dos Beutel der Verdammnis",
+    "quality": "epic",
+    "icon_url": "inv_misc_bag_10_black"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19884",
+    "name": "Jin'dos Richturteil",
+    "quality": "epic",
+    "icon_url": "inv_staff_33"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19890",
+    "name": "Jin'dos Verhexer",
+    "quality": "epic",
+    "icon_url": "spell_nature_reincarnation"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19925",
+    "name": "Jins Band",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_44"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19866",
+    "name": "Kriegsklinge der Hakkari",
+    "quality": "epic",
+    "icon_url": "inv_sword_55"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19341",
+    "name": "Lebensspendender Edelstein",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19790",
+    "name": "Liebkosung des Animisten",
+    "quality": "rare",
+    "icon_url": "spell_nature_reincarnation"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19712",
+    "name": "Lilanes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_purple"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22712",
+    "name": "Macht der Stämme",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20038",
+    "name": "Mandokirs Stachel",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate08"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19930",
+    "name": "Mar'lis Auge",
+    "quality": "rare",
+    "icon_url": "inv_zulgurubtrinket"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19927",
+    "name": "Mar'lis Berührung",
+    "quality": "epic",
+    "icon_url": "inv_wand_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20260",
+    "name": "Meeresfuriengamaschen",
+    "quality": "rare",
+    "icon_url": "inv_pants_mail_06"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20262",
+    "name": "Meeresfurienstiefel",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_11"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19706",
+    "name": "Münze der Bloodscalp",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_11"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19701",
+    "name": "Münze der Gurubashi",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_17"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19700",
+    "name": "Münze der Hakkari",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19699",
+    "name": "Münze der Razzashi",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_10"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19704",
+    "name": "Münze der Sandfury",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_15"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19705",
+    "name": "Münze der Skullsplitter",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_12"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19702",
+    "name": "Münze der Vilebranch",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_13"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19703",
+    "name": "Münze der Witherbark",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19944",
+    "name": "Nat Pagles Fischterminator",
+    "quality": "epic",
+    "icon_url": "inv_fishingpole_02"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19947",
+    "name": "Nat Pagles kaputte Spule",
+    "quality": "rare",
+    "icon_url": "inv_gizmo_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19912",
+    "name": "Onyxband des Oberherren",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_39"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22714",
+    "name": "Opferungsstulpen",
+    "quality": "rare",
+    "icon_url": "inv_gauntlets_31"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19710",
+    "name": "Orangefarbenes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_orange"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19914",
+    "name": "Pantherbalgsack",
+    "quality": "rare",
+    "icon_url": "inv_misc_bag_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19782",
+    "name": "Präsenz der Macht",
+    "quality": "rare",
+    "icon_url": "spell_holy_sealofwrath"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19789",
+    "name": "Prophetische Aura",
+    "quality": "rare",
+    "icon_url": "spell_holy_holyprotection"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19873",
+    "name": "Purpurrotes Band des Oberherren",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_39"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19964",
+    "name": "Renatakis Seelenkanal",
+    "quality": "rare",
+    "icon_url": "inv_sword_37"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19940",
+    "name": "Renatakis Zahn",
+    "quality": "uncommon",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19899",
+    "name": "Rituelle Beinschützer",
+    "quality": "rare",
+    "icon_url": "inv_pants_cloth_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19707",
+    "name": "Rotes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_red"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19785",
+    "name": "Ruf des Falken",
+    "quality": "rare",
+    "icon_url": "ability_hunter_snipershot"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19928",
+    "name": "Schiftung des Animisten",
+    "quality": "rare",
+    "icon_url": "inv_shoulder_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19872",
+    "name": "Schneller Razzashiraptor",
+    "quality": "epic",
+    "icon_url": "ability_mount_raptor"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19902",
+    "name": "Schneller zulianischer Tiger",
+    "quality": "epic",
+    "icon_url": "ability_mount_jungletiger"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22722",
+    "name": "Siegel des Gurubashiberserkers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_20"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19863",
+    "name": "Siegel des Primalisten",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_47"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19898",
+    "name": "Siegel von Jin",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_44"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19783",
+    "name": "Siegelzeichen des Synkretisten",
+    "quality": "rare",
+    "icon_url": "spell_holy_prayerofhealing"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19714",
+    "name": "Silbernes Schmuckstück der Hakkari",
+    "quality": "rare",
+    "icon_url": "inv_bijou_silver"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19946",
+    "name": "Skippis Harpune",
+    "quality": "rare",
+    "icon_url": "inv_spear_04"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19774",
+    "name": "Soldarit",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_gem_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19892",
+    "name": "Stiefel des Animisten",
+    "quality": "rare",
+    "icon_url": "inv_boots_chain_13"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20265",
+    "name": "Stiefel des Friedensbewahrers",
+    "quality": "rare",
+    "icon_url": "inv_boots_plate_03"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19897",
+    "name": "Stiefel des Verräters",
+    "quality": "epic",
+    "icon_url": "inv_boots_cloth_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "16899",
+    "name": "Sturmgrimms Handschützer",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "16902",
+    "name": "Sturmgrimms Schulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19908",
+    "name": "Szepter der Pein",
+    "quality": "rare",
+    "icon_url": "inv_mace_08"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19871",
+    "name": "Talisman des Schutzes",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_necklace_21"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19896",
+    "name": "Thekals Griff",
+    "quality": "epic",
+    "icon_url": "inv_weapon_hand_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19888",
+    "name": "Umarmung des Oberherren",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_21"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19784",
+    "name": "Umarmung des Todes",
+    "quality": "rare",
+    "icon_url": "spell_shadow_scourgebuild"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22711",
+    "name": "Umhang der Hakkarianbeter",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_16"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19857",
+    "name": "Umhang der Verzehrung",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_22"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19852",
+    "name": "Uralter Menschentöter der Hakkari",
+    "quality": "epic",
+    "icon_url": "inv_axe_35"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19724",
+    "name": "Urzeitliche Aegis der Hakkari",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_12"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19717",
+    "name": "Urzeitliche Hakkariarmsplinte",
+    "quality": "epic",
+    "icon_url": "inv_bracer_18"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19716",
+    "name": "Urzeitliche Hakkaribindungen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19720",
+    "name": "Urzeitliche Hakkarischärpe",
+    "quality": "epic",
+    "icon_url": "inv_belt_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19718",
+    "name": "Urzeitliche Hakkaristütze",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22637",
+    "name": "Urzeitlicher Hakkarigötze",
+    "quality": "rare",
+    "icon_url": "inv_zulgurubtrinket"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19719",
+    "name": "Urzeitlicher Hakkarigurt",
+    "quality": "epic",
+    "icon_url": "inv_belt_12"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19723",
+    "name": "Urzeitlicher Hakkarikosak",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19721",
+    "name": "Urzeitlicher Hakkarischal",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_19"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19722",
+    "name": "Urzeitlicher Hakkariwappenrock",
+    "quality": "epic",
+    "icon_url": "inv_banner_01"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19768",
+    "name": "Urzeitliches Tigerleder",
+    "quality": "common",
+    "icon_url": "inv_misc_pelt_02"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19788",
+    "name": "Verhexung des Hoodoo",
+    "quality": "rare",
+    "icon_url": "spell_shadow_impphaseshift"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19867",
+    "name": "Verteidiger des Blutfürsten",
+    "quality": "epic",
+    "icon_url": "inv_sword_54"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19786",
+    "name": "Vodouisants wachsame Umarmung",
+    "quality": "rare",
+    "icon_url": "spell_nature_purge"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19909",
+    "name": "Wille Arlokks",
+    "quality": "epic",
+    "icon_url": "inv_staff_35"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19941",
+    "name": "Wushoolays Mähne",
+    "quality": "uncommon",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19965",
+    "name": "Wushoolays Schüreisen",
+    "quality": "rare",
+    "icon_url": "inv_sword_37"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20078",
+    "name": "Zandalarianisches Siegel der inneren Ruhe",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20077",
+    "name": "Zandalarianisches Siegel der Macht",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20076",
+    "name": "Zandalarianisches Siegel des Mojo",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19905",
+    "name": "Zanzils Band",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19893",
+    "name": "Zanzils Siegel",
+    "quality": "rare",
+    "icon_url": "inv_jewelry_ring_46"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19854",
+    "name": "Zin'rokh der Weltenzerstörer",
+    "quality": "epic",
+    "icon_url": "inv_sword_50"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19698",
+    "name": "Zulianische Münze",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_coin_09"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19900",
+    "name": "Zulianische Steinaxt",
+    "quality": "rare",
+    "icon_url": "inv_axe_34"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22720",
+    "name": "Zulianischer Kopfputz",
+    "quality": "rare",
+    "icon_url": "inv_helmet_61"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19975",
+    "name": "Zulianischer Matschstinker",
+    "quality": "common",
+    "icon_url": "inv_misc_fish_12"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19901",
+    "name": "Zulianischer Schnitzler",
+    "quality": "rare",
+    "icon_url": "inv_sword_35"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19907",
+    "name": "Zulianischer Tigerbalgumhang",
+    "quality": "rare",
+    "icon_url": "inv_misc_cape_10"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19915",
+    "name": "Zulianischer Verteidiger",
+    "quality": "rare",
+    "icon_url": "inv_shield_22"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "20258",
+    "name": "Zulianischer Zeremonienstab",
+    "quality": "rare",
+    "icon_url": "inv_staff_14"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19921",
+    "name": "Zulianischer Zerhacker",
+    "quality": "rare",
+    "icon_url": "inv_axe_08"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "22713",
+    "name": "Zulianisches Szepter der Riten",
+    "quality": "rare",
+    "icon_url": "inv_hammer_05"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19853",
+    "name": "Zwergenzerstörer der Gurubashi",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_30"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18403",
+    "name": "Drachentötersignet",
+    "quality": "epic",
+    "icon_url": "sf_startpt"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18404",
+    "name": "Zahn Onyxias",
+    "quality": "epic",
+    "icon_url": "sf_startpt"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18406",
+    "name": "Talisman mit Onyxiablut",
+    "quality": "epic",
+    "icon_url": "sf_startpt"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23001",
+    "name": "Auge des Schwunds",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23047",
+    "name": "Auge des Todes",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22939",
+    "name": "Band der unerhörten Gebete",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23038",
+    "name": "Band der unnatürlichen Kräfte",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_48naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22961",
+    "name": "Band des neuen Lebens",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23031",
+    "name": "Band des Unvermeidlichen",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_53naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23068",
+    "name": "Beinplatten des Blutbads",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22935",
+    "name": "Berührung des Frosts",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_amulet_04"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23021",
+    "name": "Bindungen des Seelenjägers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_07"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22726",
+    "name": "Bruchstück von Atiesh",
+    "quality": "legendary",
+    "icon_url": "inv_qiraj_jewelblessed"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23006",
+    "name": "Buchband des Lichts",
+    "quality": "epic",
+    "icon_url": "inv_relics_libramofgrace"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22813",
+    "name": "Claymore der unheiligen Kraft",
+    "quality": "epic",
+    "icon_url": "inv_sword_46"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23039",
+    "name": "Das Auge Nerubs",
+    "quality": "epic",
+    "icon_url": "inv_weapon_halberd_04"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22988",
+    "name": "Das Ende aller Träume",
+    "quality": "epic",
+    "icon_url": "inv_mace_1h_stratholme_d_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23043",
+    "name": "Das Gesicht des Todes",
+    "quality": "epic",
+    "icon_url": "inv_shield_28"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "527",
+    "name": "Deprecated Gnoll War Beads",
+    "quality": "common",
+    "icon_url": "inv_jewelry_amulet_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22808",
+    "name": "Der Bestrafer",
+    "quality": "epic",
+    "icon_url": "inv_mace_1h_stratholme_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22818",
+    "name": "Der Seuchenbringer",
+    "quality": "epic",
+    "icon_url": "inv_shield_27"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23046",
+    "name": "Die gebundene Essenz Saphirons",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23577",
+    "name": "Die zehrende Kälte",
+    "quality": "epic",
+    "icon_url": "inv_sword_62"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "521",
+    "name": "Kaese",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23057",
+    "name": "Edelstein der gefangenen Unschuld",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22937",
+    "name": "Edelstein von Nerubis",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23019",
+    "name": "Eisfluchhelm",
+    "quality": "epic",
+    "icon_url": "inv_helmet_24"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22940",
+    "name": "Eisfluchschulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_12"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23033",
+    "name": "Eisschuppenhelmkappe",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22967",
+    "name": "Eisschuppenschiftung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22355",
+    "name": "Entweihte Armschienen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22352",
+    "name": "Entweihte Beinplatten",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22359",
+    "name": "Entweihte Beinschützer",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22369",
+    "name": "Entweihte Bindungen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22349",
+    "name": "Entweihte Brustplatte",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22366",
+    "name": "Entweihte Gamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22371",
+    "name": "Entweihte Handschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22364",
+    "name": "Entweihte Handschützer",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22351",
+    "name": "Entweihte Robe",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22358",
+    "name": "Entweihte Sabatons",
+    "quality": "epic",
+    "icon_url": "inv_helmet_58"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22372",
+    "name": "Entweihte Sandalen",
+    "quality": "epic",
+    "icon_url": "inv_boots_fabric_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22361",
+    "name": "Entweihte Schiftung",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_leathershoulder"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22368",
+    "name": "Entweihte Schulterpolster",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22354",
+    "name": "Entweihte Schulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22365",
+    "name": "Entweihte Stiefel",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22357",
+    "name": "Entweihte Stulpen",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_plategloves"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22350",
+    "name": "Entweihte Tunika",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22363",
+    "name": "Entweihter Gurt",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_mailbelt"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22370",
+    "name": "Entweihter Gürtel",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_leatherbelt"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22362",
+    "name": "Entweihter Handgelenksschutz",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_platebracer"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22353",
+    "name": "Entweihter Helm",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_platehelm"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22367",
+    "name": "Entweihter Reif",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_clothhelm"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22356",
+    "name": "Entweihter Taillenschutz",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_platebelt"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22360",
+    "name": "Entweihtes Kopfstück",
+    "quality": "epic",
+    "icon_url": "inv_misc_desecrated_mailhelm"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22994",
+    "name": "Faulige Hand der Macht",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20726",
+    "name": "Formel: Handschuhe - Bedrohung",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20729",
+    "name": "Formel: Handschuhe - Feuermacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20728",
+    "name": "Formel: Handschuhe - Frostmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20730",
+    "name": "Formel: Handschuhe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20727",
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20731",
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20736",
+    "name": "Formel: Umhang - Ausweichen",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20735",
+    "name": "Formel: Umhang - Feingefühl",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "20734",
+    "name": "Formel: Umhang - Verstohlenheit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23062",
+    "name": "Frostfeuerring",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23071",
+    "name": "Gamaschen der Apokalypse",
+    "quality": "epic",
+    "icon_url": "inv_pants_leather_09"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23665",
+    "name": "Gamaschen des Elementarfurors",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23668",
+    "name": "Gamaschen des obersten Kreuzzüglers",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23070",
+    "name": "Gamaschen des Widerspruchs",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22682",
+    "name": "Gefrorene Rune",
+    "quality": "rare",
+    "icon_url": "inv_misc_rune_09"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23000",
+    "name": "Gepanzerter Monstrositätenbrustkorb",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate09"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22807",
+    "name": "Gespensterklinge",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23069",
+    "name": "Gewand des Nekroritters",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23226",
+    "name": "Ghulhauttunika",
+    "quality": "epic",
+    "icon_url": "inv_chest_leather_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23032",
+    "name": "Gletscherkopfputz",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22968",
+    "name": "Gletschermantel",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22981",
+    "name": "Gluths verschollenes Halsband",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23040",
+    "name": "Glyphe der Abwehr",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23004",
+    "name": "Götze der Langlebigkeit",
+    "quality": "epic",
+    "icon_url": "inv_relics_idolofhealth"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23054",
+    "name": "Gressil, Vorbote des Untergangs",
+    "quality": "epic",
+    "icon_url": "inv_sword_61"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22727",
+    "name": "Grundstab von Atiesh",
+    "quality": "legendary",
+    "icon_url": "inv_staff_medivh"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23663",
+    "name": "Gurt des Elementarfurors",
+    "quality": "epic",
+    "icon_url": "inv_belt_16"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23219",
+    "name": "Gurt des Mentors",
+    "quality": "epic",
+    "icon_url": "inv_belt_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23666",
+    "name": "Gürtel des obersten Kreuzzüglers",
+    "quality": "epic",
+    "icon_url": "inv_belt_27"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23027",
+    "name": "Güte der Vergebung",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23028",
+    "name": "Hagelschauerband",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23036",
+    "name": "Halskette der Leichenschau",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23056",
+    "name": "Hammer des wirbelnden Nethers",
+    "quality": "epic",
+    "icon_url": "inv_mace_29"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22936",
+    "name": "Handgelenksschutz der Rache",
+    "quality": "epic",
+    "icon_url": "inv_bracer_17"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22943",
+    "name": "Heimtückischer Steinanhänger",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_28naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "530",
+    "name": "Hunter",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23035",
+    "name": "Hut des Mentors",
+    "quality": "epic",
+    "icon_url": "inv_helmet_50"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23014",
+    "name": "Iblis, Klinge des gefallenen Engels",
+    "quality": "epic",
+    "icon_url": "inv_sword_07"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22374",
+    "name": "Kampfzerschlissenes Kettenstück",
+    "quality": "rare",
+    "icon_url": "inv_misc_wartornscrap_chain"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22373",
+    "name": "Kampfzerschlissenes Lederstück",
+    "quality": "rare",
+    "icon_url": "inv_misc_wartornscrap_leather"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22375",
+    "name": "Kampfzerschlissenes Plattenstück",
+    "quality": "rare",
+    "icon_url": "inv_misc_wartornscrap_plate"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22376",
+    "name": "Kampfzerschlissenes Stoffstück",
+    "quality": "rare",
+    "icon_url": "inv_misc_wartornscrap_cloth"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22520",
+    "name": "Kel'Thuzads Phylakterium",
+    "quality": "epic",
+    "icon_url": "inv_misc_urn_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22809",
+    "name": "Keule des erlösten Kreuzzüglers",
+    "quality": "epic",
+    "icon_url": "inv_mace_29"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23242",
+    "name": "Klaue des Frostwyrms",
+    "quality": "epic",
+    "icon_url": "inv_misc_monsterclaw_04"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22816",
+    "name": "Knochenspalterbeil",
+    "quality": "epic",
+    "icon_url": "inv_axe_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22802",
+    "name": "Königsmörder",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23220",
+    "name": "Kristallgewebte Robe",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22954",
+    "name": "Kuss der Spinne",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas04"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "19341",
+    "name": "Lebensspendender Edelstein",
+    "quality": "epic",
+    "icon_url": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23042",
+    "name": "Loathebs Abglanz",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23548",
+    "name": "Macht der Geißel",
+    "quality": "epic",
+    "icon_url": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22798",
+    "name": "Macht von Menethil",
+    "quality": "epic",
+    "icon_url": "inv_mace_1h_stratholme_d_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22804",
+    "name": "Maexxnas Fangzahn",
+    "quality": "epic",
+    "icon_url": "inv_knife_1h_stratholme_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "526",
+    "name": "Mage",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "19351",
+    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+    "quality": "epic",
+    "icon_url": "inv_sword_49"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22803",
+    "name": "Mitternachtsnebel",
+    "quality": "epic",
+    "icon_url": "inv_weapon_shortblade_18"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22812",
+    "name": "Nerubischer Sklavenjäger",
+    "quality": "epic",
+    "icon_url": "inv_weapon_crossbow_12"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23029",
+    "name": "Noths kaltes Herz",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_04"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "528",
+    "name": "Paladin",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23020",
+    "name": "Polarhelm",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22941",
+    "name": "Polarschulterpolster",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "525",
+    "name": "Priest",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22983",
+    "name": "Reifbedeckter Mantel",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22806",
+    "name": "Reue der Witwe",
+    "quality": "epic",
+    "icon_url": "inv_sword_60"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23066",
+    "name": "Ring der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23237",
+    "name": "Ring der ewigen Flamme",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23060",
+    "name": "Ring der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23065",
+    "name": "Ring des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23061",
+    "name": "Ring des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23067",
+    "name": "Ring des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23059",
+    "name": "Ring des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23037",
+    "name": "Ring des Seeleneifers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_ahnqiraj_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23064",
+    "name": "Ring des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23063",
+    "name": "Ring des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "524",
+    "name": "Rogue",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23023",
+    "name": "Sadistenhalsband",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_29naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23049",
+    "name": "Saphirons linkes Auge",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23048",
+    "name": "Saphirons rechtes Auge",
+    "quality": "epic",
+    "icon_url": "inv_offhand_naxxramas_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22821",
+    "name": "Schicksalszeig",
+    "quality": "epic",
+    "icon_url": "inv_wand_1h_stratholme_d_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23667",
+    "name": "Schiftung des obersten Kreuzzüglers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22819",
+    "name": "Schild der Geißelung",
+    "quality": "epic",
+    "icon_url": "inv_shield_28"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23017",
+    "name": "Schleier der Finsternis",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23045",
+    "name": "Schleier der Herrschaft",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23664",
+    "name": "Schulterstücke des Elementarfurors",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22800",
+    "name": "Schwefelstab",
+    "quality": "epic",
+    "icon_url": "inv_staff_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22811",
+    "name": "Seelenstrang",
+    "quality": "epic",
+    "icon_url": "inv_weapon_bow_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22799",
+    "name": "Seelensucher",
+    "quality": "epic",
+    "icon_url": "inv_staff_31"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22938",
+    "name": "Seidenumhang der Gruftsatanskreatur",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23025",
+    "name": "Siegel der Verdammten",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_53naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23018",
+    "name": "Siegel des gefallenen Verteidigers",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_51naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22801",
+    "name": "Spitze des Zwiespalts",
+    "quality": "epic",
+    "icon_url": "inv_staff_31"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22733",
+    "name": "Stabkopf von Atiesh",
+    "quality": "legendary",
+    "icon_url": "inv_staff_medivh"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23549",
+    "name": "Standhaftigkeit der Geißel",
+    "quality": "epic",
+    "icon_url": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23545",
+    "name": "Stärke der Geißel",
+    "quality": "epic",
+    "icon_url": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23073",
+    "name": "Stiefel der Verrückung",
+    "quality": "epic",
+    "icon_url": "inv_boots_08"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23053",
+    "name": "Stormrages Talisman des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_28naxxramas"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "16899",
+    "name": "Sturmgrimms Handschützer",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "16902",
+    "name": "Sturmgrimms Schulterstücke",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_07"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23238",
+    "name": "Stygischer Rundschild",
+    "quality": "epic",
+    "icon_url": "inv_armor_shield_naxxramas_d_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23075",
+    "name": "Todeshandel",
+    "quality": "epic",
+    "icon_url": "inv_armor_shield_naxxramas_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23005",
+    "name": "Totem des Wasserlaufs",
+    "quality": "epic",
+    "icon_url": "inv_relics_totemoflife"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22810",
+    "name": "Toxindüse",
+    "quality": "epic",
+    "icon_url": "inv_weapon_rifle_11"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22942",
+    "name": "Umarmung der Witwe",
+    "quality": "epic",
+    "icon_url": "inv_mace_29"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23030",
+    "name": "Umhang der Geißel",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23050",
+    "name": "Umhang der Nekropole",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22960",
+    "name": "Umhang der Wundnaht",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_naxxramas_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23547",
+    "name": "Unverwüstlichkeit der Geißel",
+    "quality": "epic",
+    "icon_url": "spell_shadow_unholyfrenzy"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23044",
+    "name": "Verdammnisbote",
+    "quality": "epic",
+    "icon_url": "inv_knife_1h_stratholme_d_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22691",
+    "name": "Verderbter Aschenbringer",
+    "quality": "epic",
+    "icon_url": "inv_axe_24"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23221",
+    "name": "Verlegter Servoarm",
+    "quality": "epic",
+    "icon_url": "inv_mace_28"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23041",
+    "name": "Wappen des Schlächters",
+    "quality": "epic",
+    "icon_url": "inv_trinket_naxxramas03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "529",
+    "name": "Warlock",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "523",
+    "name": "Warrior",
+    "quality": "",
+    "icon_url": "inv_misc_food_37"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23055",
+    "name": "Wort des Tauens",
+    "quality": "common",
+    "icon_url": "inv_scroll_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22815",
+    "name": "Wundspalter",
+    "quality": "epic",
+    "icon_url": "inv_axe_22"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22820",
+    "name": "Zauberstab der Heimsuchung",
+    "quality": "epic",
+    "icon_url": "inv_wand_1h_stratholme_d_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "23009",
+    "name": "Zauberstab des flüsternden Todes",
+    "quality": "epic",
+    "icon_url": "inv_wand_1h_stratholme_d_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "5760",
+    "name": "Eterniumschließkassette",
+    "quality": "common",
+    "icon_url": "Inv_misc_ornatebox"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "5759",
+    "name": "Thoriumschließkassette",
+    "quality": "common",
+    "icon_url": "Inv_misc_ornatebox"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22490",
+    "name": "Kopfstück des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22491",
+    "name": "Schiftung des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22488",
+    "name": "Tunika des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22495",
+    "name": "Handgelenksschutz des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22493",
+    "name": "Handschützer des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22494",
+    "name": "Gurt des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22489",
+    "name": "Beinschützer des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22492",
+    "name": "Stiefel des Traumwandlers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22438",
+    "name": "Kopfstück des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22439",
+    "name": "Schiftung des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22436",
+    "name": "Tunika des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22443",
+    "name": "Handgelenksschutz des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22441",
+    "name": "Handschützer des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22442",
+    "name": "Gurt des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22437",
+    "name": "Beinschützer des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22440",
+    "name": "Stiefel des Gruftpirschers",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22498",
+    "name": "Frostfeuerreif",
+    "quality": "epic",
+    "icon_url": "inv_crown_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22499",
+    "name": "Frostfeuerschulterpolster",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22496",
+    "name": "Frostfeuerrobe",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22503",
+    "name": "Frostfeuerbindungen",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22501",
+    "name": "Frostfeuerhandschuhe",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22502",
+    "name": "Frostfeuergürtel",
+    "quality": "epic",
+    "icon_url": "inv_belt_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22497",
+    "name": "Frostfeuergamaschen",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22500",
+    "name": "Frostfeuersandalen",
+    "quality": "epic",
+    "icon_url": "inv_boots_fabric_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22428",
+    "name": "Kopfstück der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22429",
+    "name": "Schiftung der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22425",
+    "name": "Tunika der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22424",
+    "name": "Handgelenksschutz der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22426",
+    "name": "Handschützer der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22431",
+    "name": "Gurt der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22427",
+    "name": "Beinschützer der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22430",
+    "name": "Stiefel der Erlösung",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22514",
+    "name": "Reif des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_crown_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22515",
+    "name": "Schulterpolster des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22512",
+    "name": "Robe des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22519",
+    "name": "Bindungen des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22517",
+    "name": "Handschuhe des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22518",
+    "name": "Gürtel des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_belt_08"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22513",
+    "name": "Gamaschen des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22516",
+    "name": "Sandalen des Glaubens",
+    "quality": "epic",
+    "icon_url": "inv_boots_fabric_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22478",
+    "name": "Helm der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_helmet_58"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22479",
+    "name": "Schulterstücke der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_29"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22476",
+    "name": "Brustplatte der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22483",
+    "name": "Armschienen der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_bracer_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22481",
+    "name": "Stulpen der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_28"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22482",
+    "name": "Taillenschutz der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_belt_27"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22477",
+    "name": "Beinplatten der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22480",
+    "name": "Sabatons der Knochensense",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22466",
+    "name": "Kopfstück des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_helmet_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22467",
+    "name": "Schiftung des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_14"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22464",
+    "name": "Tunika des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_chest_chain_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22471",
+    "name": "Handgelenksschutz des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_bracer_02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22469",
+    "name": "Handschützer des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22470",
+    "name": "Gurt des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_belt_22"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22465",
+    "name": "Beinschützer des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_pants_mail_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22468",
+    "name": "Stiefel des Erdspalters",
+    "quality": "epic",
+    "icon_url": "inv_boots_chain_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22506",
+    "name": "Reif des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_crown_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22507",
+    "name": "Schulterpolster des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_25"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22504",
+    "name": "Robe des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_chest_cloth_43"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22511",
+    "name": "Bindungen des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_bracer_13"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22509",
+    "name": "Handschuhe des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_17"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22510",
+    "name": "Gürtel des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_belt_03"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22505",
+    "name": "Gamaschen des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_pants_cloth_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22508",
+    "name": "Sandalen des verseuchten Herzens",
+    "quality": "epic",
+    "icon_url": "inv_boots_fabric_01"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22418",
+    "name": "Helm des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_58"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22419",
+    "name": "Schulterstücke des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_shoulder_29"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22416",
+    "name": "Brustplatte des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_chest_plate02"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22423",
+    "name": "Armschienen des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_bracer_15"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22421",
+    "name": "Stulpen des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_gauntlets_28"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22422",
+    "name": "Taillenschutz des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_belt_27"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22417",
+    "name": "Beinplatten des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_pants_plate_05"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "22420",
+    "name": "Sabatons des Schreckenspanzers",
+    "quality": "epic",
+    "icon_url": "inv_boots_plate_06"
+  },
+  {
+    "raid_type": "naxx",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  }
+]
