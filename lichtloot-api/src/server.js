@@ -20,6 +20,7 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use("/downloads", express.static("public/downloads"));
+app.use(express.static("public"));
 
 await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
