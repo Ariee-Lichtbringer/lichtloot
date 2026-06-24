@@ -1401,6 +1401,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
       <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
+      <button class="side-link" type="button" onclick="openPrioCheckPanel()"><span class="side-icon">☑</span>Priocheck</button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
@@ -1449,6 +1450,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   <section class="quick-actions" aria-label="Schnellaktionen">
     <button class="quick-action" type="button" onclick="openCreatePanel()"><span class="qa-icon">＋</span><span><strong>Raid erstellen</strong><span>Neuen Raid anlegen</span></span></button>
     <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
+    <button class="quick-action" type="button" onclick="openPrioCheckPanel()"><span class="qa-icon">☑</span><span><strong>Priocheck</strong><span>Items auch geschlossen sehen</span></span></button>
     <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
     <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
@@ -1514,6 +1516,30 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <summary>P0+ Liste</summary>
     <div class="p0-panel-body">
       <div id="p0PlusPanelContent" class="create-result">P0+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+    </div>
+  </details>
+
+  <details id="prioCheckPanel" class="panel p0-panel" ontoggle="if(this.open) renderPrioCheckRaidSelect()">
+    <summary>Priocheck</summary>
+    <div class="p0-panel-body">
+      <div class="tools">
+        <select id="prioCheckRaidSelect" onchange="syncPrioCheckFromRaidSelect()">
+          <option value="">Erst Gildenleitung laden</option>
+        </select>
+        <select id="prioCheckRaidType" aria-label="Raidtyp">
+          <option value="">Raidtyp</option>
+          <option value="mc">MC</option>
+          <option value="bwl">BWL</option>
+          <option value="aq40">AQ40</option>
+          <option value="naxx">Naxx</option>
+          <option value="zg">ZG</option>
+          <option value="aq20">AQ20</option>
+          <option value="ony">Ony</option>
+        </select>
+        <input id="prioCheckPin" type="text" placeholder="Prio-PIN oder Raid-ID">
+        <button class="btn" type="button" onclick="loadPrioCheck()">Priocheck laden</button>
+      </div>
+      <div id="prioCheckResult" class="create-result">Raid auswählen oder Prio-PIN eintragen. Items werden auch angezeigt, wenn die Prio geschlossen ist.</div>
     </div>
   </details>
 
@@ -2030,6 +2056,7 @@ function renderAll(){
   renderPlayerMiniList();
   renderRaids();
   renderPlayers();
+  renderPrioCheckRaidSelect();
 }
 
 function scrollToDashboard(){
@@ -2052,6 +2079,11 @@ function openCreatePanel(){
 
 function openRaidPanel(){
   openDetailsPanel("raidLeadPanel");
+}
+
+function openPrioCheckPanel(){
+  openDetailsPanel("prioCheckPanel");
+  renderPrioCheckRaidSelect();
 }
 
 function openPlayerPanel(){
@@ -3000,6 +3032,162 @@ async function openPrioModal(raidId){
   }catch(error){
     document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Prioliste konnte nicht geladen werden.")}</div>`;
   }
+}
+
+function renderPrioCheckRaidSelect(){
+  const select = document.getElementById("prioCheckRaidSelect");
+  if(!select) return;
+
+  const raids = (guildData.raids || []).slice().sort((a,b) => {
+    const aDate = String(a.raidDate || "");
+    const bDate = String(b.raidDate || "");
+    return bDate.localeCompare(aDate) || String(b.raidTime || "").localeCompare(String(a.raidTime || ""));
+  });
+
+  if(!raids.length){
+    select.innerHTML = '<option value="">Erst Gildenleitung laden</option>';
+    return;
+  }
+
+  const currentValue = select.value;
+  select.innerHTML = '<option value="">Raid auswählen...</option>' + raids.map(raid => {
+    const raidId = raid.raidId || raid.RaidID || raid.id || "";
+    const label = [
+      raid.raidName || raid.raid || "Raid",
+      formatRaidDate(raid.raidDate),
+      raid.raidTime ? raid.raidTime + " Uhr" : "",
+      raid.guild || "",
+      raid.status || "geschlossen"
+    ].filter(Boolean).join(" · ");
+    return `<option value="${escapeAttr(raidId)}">${escapeHtml(label)}</option>`;
+  }).join("");
+
+  if(currentValue && raids.some(raid => String(raid.raidId || raid.RaidID || raid.id || "") === currentValue)){
+    select.value = currentValue;
+  }
+}
+
+function syncPrioCheckFromRaidSelect(){
+  const select = document.getElementById("prioCheckRaidSelect");
+  const pinField = document.getElementById("prioCheckPin");
+  const raidTypeField = document.getElementById("prioCheckRaidType");
+  const raidId = select ? select.value : "";
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || entry.RaidID || entry.id || "") === String(raidId));
+  if(!raid) return;
+  if(pinField) pinField.value = raid.playerPin || raid.prioPin || raid.raidPin || raidId || "";
+  if(raidTypeField) raidTypeField.value = getRaidKey(raid) || "";
+}
+
+async function loadPrioCheck(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const resultBox = document.getElementById("prioCheckResult");
+  const raidId = document.getElementById("prioCheckRaidSelect")?.value || "";
+  const pin = document.getElementById("prioCheckPin")?.value.trim() || "";
+  const raidType = document.getElementById("prioCheckRaidType")?.value || "";
+
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    if(resultBox) resultBox.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    return;
+  }
+
+  if(!raidId && !pin){
+    if(resultBox) resultBox.innerHTML = '<div class="status bad">Bitte Raid auswählen oder Prio-PIN eintragen.</div>';
+    return;
+  }
+
+  const selectedRaid = (guildData.raids || []).find(entry => String(entry.raidId || entry.RaidID || entry.id || "") === String(raidId));
+  const raid = selectedRaid || {
+    raidId:"",
+    raid:raidType,
+    raidName:RAID_OPTIONS[raidType]?.name || raidType || "Raid",
+    playerPin:pin,
+    status:"geschlossen"
+  };
+
+  if(resultBox) resultBox.innerHTML = '<div class="status">Priocheck wird geladen ...</div>';
+
+  try{
+    await ensureLootDataLoaded();
+    const result = await railwayApi({
+      action:"getPublishedPrios",
+      raidId:raidId || "",
+      raid:raidType || raid.raid || raid.raidName || "",
+      playerPin:pin || raid.playerPin || raidId || ""
+    });
+
+    if(!result.success && result.error){
+      if(resultBox) resultBox.innerHTML = `<div class="status bad">${escapeHtml(result.error)}</div>`;
+      return;
+    }
+
+    renderPrioCheckResult(result, raid);
+  }catch(error){
+    if(resultBox) resultBox.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Priocheck konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderPrioCheckResult(result, raid){
+  const resultBox = document.getElementById("prioCheckResult");
+  if(!resultBox) return;
+  const prios = Array.isArray(result.prios) ? result.prios : [];
+  const benchCount = prios.filter(isBenchPrio).length;
+  const raidInfo = [
+    result.raidName || raid.raidName || raid.raid || "Raid",
+    formatRaidDate(result.raidDate || raid.raidDate),
+    result.raidTime || raid.raidTime || "",
+    result.guild || raid.guild || "",
+    "Status: " + (result.status || raid.status || "geschlossen")
+  ].filter(Boolean).join(" · ");
+
+  if(!prios.length){
+    resultBox.innerHTML = `
+      <div class="prio-toolbar">
+        <div class="prio-toolbar-actions">${statusBadge(result.status || raid.status || "geschlossen")}</div>
+        <div class="muted">${escapeHtml(raidInfo)}</div>
+      </div>
+      <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
+    `;
+    return;
+  }
+
+  resultBox.innerHTML = `
+    <div class="prio-toolbar">
+      <div class="prio-toolbar-actions">
+        ${statusBadge(result.status || raid.status || "geschlossen")}
+        <span class="badge open">${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}</span>
+      </div>
+      <div class="muted">${escapeHtml(raidInfo)}</div>
+    </div>
+    <div class="table-wrap">
+      <table class="prio-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Spieler</th>
+            <th>Klasse</th>
+            <th>P1</th>
+            <th>P2</th>
+            <th>P3</th>
+            <th>P0+</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${prios.map((prio, index) => `
+            <tr class="${isBenchPrio(prio) ? "bench-prio-row" : ""}">
+              <td>${index + 1}</td>
+              <td><strong>${escapeHtml(prio.Spieler || "-")}</strong>${isBenchPrio(prio) ? '<span class="bench-label">Bench</span>' : ""}</td>
+              <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
+              <td>${renderLootItem(prio.P1)}</td>
+              <td>${renderLootItem(prio.P2)}</td>
+              <td>${renderLootItem(prio.P3)}</td>
+              <td>${renderP0PlusChoice(prio, true)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function closePrioModal(){
