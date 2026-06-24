@@ -6199,21 +6199,21 @@
     "item_id": "18403",
     "name": "Drachentötersignet",
     "quality": "epic",
-    "icon_url": "sf_startpt"
+    "icon_url": "inv_jewelry_ring_27"
   },
   {
     "raid_type": "ony",
     "item_id": "18404",
     "name": "Zahn Onyxias",
     "quality": "epic",
-    "icon_url": "sf_startpt"
+    "icon_url": "inv_jewelry_necklace_09"
   },
   {
     "raid_type": "ony",
     "item_id": "18406",
     "name": "Talisman mit Onyxiablut",
     "quality": "epic",
-    "icon_url": "sf_startpt"
+    "icon_url": "spell_shadow_lifedrain"
   },
   {
     "raid_type": "naxx",

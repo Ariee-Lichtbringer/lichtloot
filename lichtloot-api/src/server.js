@@ -31,6 +31,10 @@ await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
 
+await applyLootItemCorrectionsOnce().catch(error => {
+  console.warn("Lootdaten-Korrekturen konnten nicht angewendet werden:", error.message || error);
+});
+
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api" });
 });
@@ -3018,6 +3022,57 @@ async function seedDefaultLootItemsOnce() {
     );
     await client.query("commit");
     console.log(`Standard-Lootdaten importiert: ${imported} Items`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function applyLootItemCorrectionsOnce() {
+  const markerKey = "loot-item-corrections-v1";
+  const corrections = [
+    { raidType: "ony", itemId: "18403", name: "Drachentötersignet", iconUrl: "inv_jewelry_ring_27" },
+    { raidType: "ony", itemId: "18404", name: "Zahn Onyxias", iconUrl: "inv_jewelry_necklace_09" },
+    { raidType: "ony", itemId: "18406", name: "Talisman mit Onyxiablut", iconUrl: "spell_shadow_lifedrain" }
+  ];
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    let updated = 0;
+    for (const item of corrections) {
+      const result = await client.query(
+        `update items
+         set icon_url = $4
+         where lower(raid_type) = $1
+           and (item_id = $2 or lower(name) = lower($3))`,
+        [item.raidType, item.itemId, item.name, item.iconUrl]
+      );
+      updated += result.rowCount;
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, String(updated)]
+    );
+    await client.query("commit");
+    console.log(`Lootdaten-Korrekturen angewendet: ${updated} Items`);
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
