@@ -27,7 +27,7 @@
       font-family:Arial,Helvetica,sans-serif;
     }
     main{
-      width:min(560px,calc(100vw - 28px));
+      width:min(920px,calc(100vw - 28px));
       border:1px solid rgba(250,204,21,.35);
       border-radius:8px;
       background:rgba(16,24,39,.94);
@@ -35,6 +35,8 @@
       padding:18px;
     }
     h1{font-size:20px;margin:0 0 12px;color:var(--gold)}
+    h2{font-size:17px;margin:0 0 10px;color:var(--gold)}
+    section+section{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.10)}
     label{display:block;margin:12px 0 6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
     input{
       width:100%;
@@ -57,6 +59,13 @@
       font-weight:900;
       cursor:pointer;
     }
+    .button-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .danger{border-color:rgba(252,165,165,.5);background:rgba(239,68,68,.16)}
+    .item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;border:1px solid var(--line);border-radius:6px;padding:10px;margin-top:10px;background:#080d18}
+    .item-row strong{color:var(--gold)}
+    .item-row small{display:block;color:var(--muted);margin-top:4px}
+    .item-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:260px}
+    .item-actions input{grid-column:1 / -1}
     #result{
       margin-top:14px;
       padding:12px;
@@ -81,7 +90,7 @@
     .ok{color:var(--good);font-weight:900}
     .bad{color:var(--bad);font-weight:900}
     .muted{color:var(--muted)}
-    @media(max-width:560px){.row{grid-template-columns:1fr}}
+    @media(max-width:700px){.row,.button-row,.item-row{grid-template-columns:1fr}.item-actions{min-width:0}}
   </style>
 </head>
 <body>
@@ -101,6 +110,30 @@
     <input id="masterCode" type="password" autocomplete="current-password">
     <button type="button" onclick="lookupPlayerLogin()">SpielerLogin anzeigen</button>
     <div id="result">Master-Code eingeben und suchen.</div>
+
+    <section>
+      <h2>Gildenleitungs-Passwort ändern</h2>
+      <label for="newMasterCode">Neues Passwort</label>
+      <input id="newMasterCode" type="password" autocomplete="new-password" placeholder="Neuer Master-Code">
+      <button type="button" onclick="changeMasterCode()">Passwort ändern</button>
+      <div id="passwordResult" class="muted" style="margin-top:10px"></div>
+    </section>
+
+    <section>
+      <h2>Items verwalten</h2>
+      <div class="row">
+        <div>
+          <label for="itemSearch">Item suchen</label>
+          <input id="itemSearch" placeholder="Itemname">
+        </div>
+        <div>
+          <label for="itemRaid">Raid</label>
+          <input id="itemRaid" placeholder="aq40, bwl, naxx ...">
+        </div>
+      </div>
+      <button type="button" onclick="searchItems()">Items suchen</button>
+      <div id="itemResult" class="muted" style="margin-top:10px">Item suchen, dann Icon ändern oder aus der Datenbank löschen.</div>
+    </section>
   </main>
 
   <script>
@@ -114,33 +147,16 @@
       document.getElementById("result").innerHTML=html;
     }
 
-    function jsonp(params){
-      return new Promise((resolve,reject)=>{
-        const callback="lichtlootPinLookup_"+Date.now()+"_"+Math.random().toString(36).slice(2);
-        const query=new URLSearchParams(params);
-        query.set("callback",callback);
-        query.set("t",Date.now());
-        const script=document.createElement("script");
-        const timer=setTimeout(()=>{
-          cleanup();
-          reject(new Error("API konnte nicht geladen werden."));
-        },15000);
-        function cleanup(){
-          clearTimeout(timer);
-          delete window[callback];
-          script.remove();
-        }
-        window[callback]=data=>{
-          cleanup();
-          resolve(data);
-        };
-        script.onerror=()=>{
-          cleanup();
-          reject(new Error("API konnte nicht geladen werden."));
-        };
-        script.src=API_URL+"?"+query.toString();
-        document.body.appendChild(script);
-      });
+    async function apiFetch(params){
+      const query=new URLSearchParams(Object.assign({guild:"lichtloot"},params,{t:Date.now()}));
+      const response=await fetch(API_URL+"?"+query.toString(),{cache:"no-store"});
+      const data=await response.json().catch(()=>null);
+      if(!response.ok || !data) throw new Error("API konnte nicht geladen werden.");
+      return data;
+    }
+
+    function masterCode(){
+      return document.getElementById("masterCode").value.trim();
     }
 
     async function lookupPlayerLogin(){
@@ -156,9 +172,8 @@
       setResult("Backup wird geladen ...");
 
       try{
-        const data=await jsonp({
+        const data=await apiFetch({
           action:"guildExportBackup",
-          guild:"lichtloot",
           masterCode
         });
 
@@ -187,6 +202,111 @@
         setResult('<span class="bad">'+String(error.message || "Abfrage fehlgeschlagen.")+'</span>');
       }
     }
+
+    async function changeMasterCode(){
+      const current=masterCode();
+      const next=document.getElementById("newMasterCode").value.trim();
+      const box=document.getElementById("passwordResult");
+      if(!current || !next){
+        box.innerHTML='<span class="bad">Bitte aktuellen Master-Code oben und neues Passwort eingeben.</span>';
+        return;
+      }
+      if(next.length < 6){
+        box.innerHTML='<span class="bad">Das neue Passwort muss mindestens 6 Zeichen haben.</span>';
+        return;
+      }
+      try{
+        const data=await apiFetch({action:"guildSetMasterCode",masterCode:current,newMasterCode:next});
+        if(!data.success){
+          box.innerHTML='<span class="bad">'+String(data.error || "Passwort konnte nicht geändert werden.")+'</span>';
+          return;
+        }
+        document.getElementById("masterCode").value=next;
+        document.getElementById("newMasterCode").value="";
+        box.innerHTML='<span class="ok">Passwort wurde geändert.</span>';
+      }catch(error){
+        box.innerHTML='<span class="bad">'+String(error.message || "Passwort konnte nicht geändert werden.")+'</span>';
+      }
+    }
+
+    async function searchItems(){
+      const box=document.getElementById("itemResult");
+      const search=document.getElementById("itemSearch").value.trim();
+      const raid=document.getElementById("itemRaid").value.trim();
+      if(!masterCode()){
+        box.innerHTML='<span class="bad">Bitte Master-Code eingeben.</span>';
+        return;
+      }
+      box.textContent="Items werden geladen ...";
+      try{
+        const data=await apiFetch({action:"guildAdminSearchItems",masterCode:masterCode(),search,raid});
+        if(!data.success){
+          box.innerHTML='<span class="bad">'+String(data.error || "Items konnten nicht geladen werden.")+'</span>';
+          return;
+        }
+        renderItems(data.items || []);
+      }catch(error){
+        box.innerHTML='<span class="bad">'+String(error.message || "Items konnten nicht geladen werden.")+'</span>';
+      }
+    }
+
+    function renderItems(items){
+      const box=document.getElementById("itemResult");
+      if(!items.length){
+        box.innerHTML='<span class="bad">Keine Items gefunden.</span>';
+        return;
+      }
+      box.innerHTML=items.map(item=>{
+        const id=String(item.id || "");
+        const icon=String(item.icon_url || "");
+        return `
+          <div class="item-row">
+            <div>
+              <strong>${escapeHtml(item.name || "-")}</strong>
+              <small>${escapeHtml(item.raid_type || "")} · ItemID: ${escapeHtml(item.item_id || "-")} · Prios: ${Number(item.prio_count || 0)} · P0+: ${Number(item.p0plus_count || 0)}</small>
+              ${icon ? `<small>Icon: ${escapeHtml(icon)}</small>` : ""}
+            </div>
+            <div class="item-actions">
+              <input id="icon_${id}" placeholder="Icon-URL oder Iconname" value="${escapeAttr(icon)}">
+              <button type="button" onclick="updateItemIcon('${escapeAttr(id)}')">Icon ändern</button>
+              <button class="danger" type="button" onclick="deleteItem('${escapeAttr(id)}','${escapeAttr(item.name || "")}')">Löschen</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function updateItemIcon(id){
+      const icon=document.getElementById("icon_"+id).value.trim();
+      const box=document.getElementById("itemResult");
+      try{
+        const data=await apiFetch({action:"guildAdminUpdateItem",masterCode:masterCode(),id,iconUrl:icon});
+        if(!data.success) throw new Error(data.error || "Icon konnte nicht geändert werden.");
+        await searchItems();
+      }catch(error){
+        box.insertAdjacentHTML("afterbegin",'<div class="bad">'+escapeHtml(error.message || "Icon konnte nicht geändert werden.")+'</div>');
+      }
+    }
+
+    async function deleteItem(id,name){
+      const ok=confirm(`Item "${name}" wirklich aus der Datenbank löschen? Verknüpfte Prios/P0+ verlieren dieses Item.`);
+      if(!ok) return;
+      const typed=prompt("Zum Löschen bitte Itemname eingeben:");
+      if(normalize(typed) !== normalize(name)) return;
+      const box=document.getElementById("itemResult");
+      try{
+        const data=await apiFetch({action:"guildAdminDeleteItem",masterCode:masterCode(),id});
+        if(!data.success) throw new Error(data.error || "Item konnte nicht gelöscht werden.");
+        await searchItems();
+      }catch(error){
+        box.insertAdjacentHTML("afterbegin",'<div class="bad">'+escapeHtml(error.message || "Item konnte nicht gelöscht werden.")+'</div>');
+      }
+    }
+
+    function escapeHtml(value){
+      return String(value || "").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[char]));
+    }
+    function escapeAttr(value){ return escapeHtml(value); }
   </script>
 </body>
 </html>

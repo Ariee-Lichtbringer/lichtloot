@@ -8,6 +8,7 @@ const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
+const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -19,6 +20,10 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use("/downloads", express.static("public/downloads"));
+
+await loadMasterCodeOverrides().catch(error => {
+  console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
+});
 
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api" });
@@ -468,8 +473,21 @@ function readSlotFromNote(note) {
   return match ? clean(match[1]) : "";
 }
 
+async function loadMasterCodeOverrides() {
+  await query(
+    `create table if not exists guild_master_codes (
+       guild_id uuid primary key references guilds(id) on delete cascade,
+       master_code text not null,
+       updated_at timestamptz not null default now()
+     )`
+  );
+  const result = await query("select guild_id, master_code from guild_master_codes");
+  result.rows.forEach(row => masterCodeOverrides.set(String(row.guild_id), row.master_code));
+}
+
 function requireMasterCode(value) {
-  if (clean(value) !== masterCode) {
+  const code = clean(value);
+  if (code !== masterCode && !Array.from(masterCodeOverrides.values()).includes(code)) {
     const error = new Error("Falscher Master-Code.");
     error.statusCode = 403;
     throw error;
@@ -2928,6 +2946,111 @@ async function deletePlayerLogin({ guildId, query: params }) {
   }
 }
 
+async function setGuildMasterCode({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const newCode = clean(params.newMasterCode || params.newCode || params.password);
+  if (newCode.length < 6) {
+    const error = new Error("Der neue Master-Code muss mindestens 6 Zeichen haben.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await query(
+    `insert into guild_master_codes (guild_id, master_code, updated_at)
+     values ($1, $2, now())
+     on conflict (guild_id) do update
+       set master_code = excluded.master_code,
+           updated_at = now()`,
+    [guildId, newCode]
+  );
+  masterCodeOverrides.set(String(guildId), newCode);
+  return { success: true };
+}
+
+async function adminSearchItems({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const search = `%${clean(params.search || params.item || "")}%`;
+  const raidType = normalizeRaidType(params.raid);
+  const values = [search];
+  let raidClause = "";
+  if (raidType) {
+    values.push(raidTypeSearchValues(raidType));
+    raidClause = `and lower(i.raid_type) = any($${values.length})`;
+  }
+
+  const result = await query(
+    `select
+       i.id,
+       i.raid_type,
+       i.item_id,
+       i.name,
+       i.quality,
+       i.icon_url,
+       (select count(*)::int from prios pr where pr.p1_item_id = i.id or pr.p2_item_id = i.id or pr.p3_item_id = i.id) as prio_count,
+       (select count(*)::int from p0plus_points pp where pp.guild_id = $${values.length + 1} and pp.item_id = i.id) as p0plus_count
+     from items i
+     where i.name ilike $1
+       ${raidClause}
+     order by i.raid_type asc, i.name asc
+     limit 80`,
+    [...values, guildId]
+  );
+  return { success: true, items: result.rows };
+}
+
+async function adminUpdateItem({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const id = clean(params.id || params.itemId);
+  if (!isUuid(id)) {
+    const error = new Error("Item-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `update items
+     set icon_url = coalesce(nullif($2, ''), icon_url),
+         quality = coalesce(nullif($3, ''), quality),
+         item_id = coalesce(nullif($4, ''), item_id)
+     where id = $1
+     returning id, raid_type, item_id, name, quality, icon_url`,
+    [id, clean(params.iconUrl || params.icon || params.icon_url), clean(params.quality), clean(params.itemGameId || params.item_id)]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Item wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { success: true, item: result.rows[0] };
+}
+
+async function adminDeleteItem({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const id = clean(params.id || params.itemId);
+  if (!isUuid(id)) {
+    const error = new Error("Item-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("delete from p0plus_points where guild_id = $1 and item_id = $2", [guildId, id]);
+    await client.query("update prios set p1_item_id = null where p1_item_id = $1", [id]);
+    await client.query("update prios set p2_item_id = null where p2_item_id = $1", [id]);
+    await client.query("update prios set p3_item_id = null where p3_item_id = $1", [id]);
+    const deleted = await client.query("delete from items where id = $1 returning name, raid_type", [id]);
+    await client.query("commit");
+    return { success: true, deleted: deleted.rowCount, item: deleted.rows[0] || null };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function resetPlayerPinBySecurity({
   guildId,
   charName,
@@ -3052,6 +3175,26 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildDeletePlayerLogin") {
       const deleted = await deletePlayerLogin({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildSetMasterCode") {
+      const saved = await setGuildMasterCode({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildAdminSearchItems") {
+      const items = await adminSearchItems({ guildId: guild.id, query: req.query });
+      return res.json({ ...items, guild: guild.slug });
+    }
+
+    if (action === "guildAdminUpdateItem") {
+      const item = await adminUpdateItem({ guildId: guild.id, query: req.query });
+      return res.json({ ...item, guild: guild.slug });
+    }
+
+    if (action === "guildAdminDeleteItem") {
+      const deleted = await adminDeleteItem({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
     }
 
