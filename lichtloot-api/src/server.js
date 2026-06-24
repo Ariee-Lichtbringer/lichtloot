@@ -2970,13 +2970,26 @@ async function setGuildMasterCode({ guildId, query: params }) {
 
 async function adminSearchItems({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const search = `%${clean(params.search || params.item || "")}%`;
+  const searchTerms = clean(params.search || params.item || "")
+    .split(/\s+/)
+    .map(term => term.trim())
+    .filter(Boolean)
+    .slice(0, 6);
   const raidType = normalizeRaidType(params.raid);
-  const values = [search];
+  const values = [];
+  const searchClauses = [];
+  for (const term of searchTerms) {
+    values.push(`%${term}%`);
+    searchClauses.push(`i.name ilike $${values.length}`);
+  }
+  const searchClause = searchClauses.length ? `and ${searchClauses.join(" and ")}` : "";
   let raidClause = "";
   if (raidType) {
     values.push(raidTypeSearchValues(raidType));
-    raidClause = `and lower(i.raid_type) = any($${values.length})`;
+    raidClause = `and (
+      lower(i.raid_type) = any($${values.length})
+      or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($${values.length})
+    )`;
   }
 
   const result = await query(
@@ -2990,7 +3003,8 @@ async function adminSearchItems({ guildId, query: params }) {
        (select count(*)::int from prios pr where pr.p1_item_id = i.id or pr.p2_item_id = i.id or pr.p3_item_id = i.id) as prio_count,
        (select count(*)::int from p0plus_points pp where pp.guild_id = $${values.length + 1} and pp.item_id = i.id) as p0plus_count
      from items i
-     where i.name ilike $1
+     where 1 = 1
+       ${searchClause}
        ${raidClause}
      order by i.raid_type asc, i.name asc
      limit 80`,
