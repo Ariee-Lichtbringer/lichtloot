@@ -418,15 +418,15 @@
       const raidId=document.getElementById("prioCheckRaid").value;
       const pin=document.getElementById("prioCheckPin").value.trim();
       const raidType=document.getElementById("prioCheckRaidType").value;
-      if(!masterCode()){
-        box.innerHTML='<span class="bad">Bitte Master-Code eingeben.</span>';
-        return;
-      }
       if(!raidId && !pin){
         box.innerHTML='<span class="bad">Bitte Raid auswählen oder Prio-PIN/Raid-ID eintragen.</span>';
         return;
       }
-      if(!prioCheckRaids.length){
+      if(raidId && !prioCheckRaids.length){
+        if(!masterCode()){
+          box.innerHTML='<span class="bad">Für die Raidliste bitte Master-Code eingeben. Mit direkter Prio-PIN geht der Check auch ohne Raidliste.</span>';
+          return;
+        }
         const loaded=await loadPrioCheckRaids(true);
         if(!loaded) return;
       }
