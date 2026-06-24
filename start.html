@@ -5630,19 +5630,22 @@ async function loadRaidPrioListIntoDetail(entry){
 
   const raidId=entry.raidId || "";
   const raidKey=entry.raid || raidKeyFromEntryRaid(entry.raidName || "");
-  const pin=entry.prioPin || raidId;
+  const pin=entry.prioPin || entry.raidPin || entry.externalRaidId || "";
 
-  if(!pin && !raidKey){
+  if(!raidId && !pin && !raidKey){
     block.innerHTML='<div class="status">Keine RaidID für die vollständige Prioliste gefunden.</div>';
     return;
   }
 
   try{
-    const result=await fetchRaidApiJsonp({
+    const request={
       action:"getPublishedPrios",
-      playerPin:pin,
       raid:raidKey
-    });
+    };
+    if(raidId) request.raidId=raidId;
+    if(pin) request.playerPin=pin;
+
+    const result=await fetchRaidApiJsonp(request);
 
     if(!result.success && result.error){
       block.innerHTML='<div class="status"><span class="bad">'+safeHtml(result.error)+'</span></div>';
