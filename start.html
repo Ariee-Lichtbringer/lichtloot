@@ -5150,6 +5150,7 @@ function renderMyPrios(data){
   const status=document.getElementById("myPriosStatus");
   const results=document.getElementById("myPriosResults");
   const entries=data.entries || [];
+  const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
 
   myRaidCalendarPrioEntries=entries.slice();
@@ -5157,8 +5158,8 @@ function renderMyPrios(data){
 
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
-  if(!entries.length && !ownP0.length){
-    results.innerHTML='<div class="status">Für diesen Charakter wurden keine Prios aus aktuellen oder den letzten 5 Raids und keine P0/P0+ Punkte gefunden.</div>';
+  if(!pastEntries.length && !ownP0.length){
+    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios und keine P0/P0+ Punkte gefunden.</div>';
     return;
   }
 
@@ -5170,13 +5171,13 @@ function renderMyPrios(data){
     html+='</div></details>';
   }
 
-  if(entries.length){
-    html+='<details class="lichtloot-fold" open><summary>Aktuelle Raids</summary><div class="lichtloot-fold-body">';
-    window.myPrioDetailEntries=entries;
+  if(pastEntries.length){
+    html+='<details class="lichtloot-fold" open><summary>Vergangene Raids</summary><div class="lichtloot-fold-body">';
+    window.myPrioDetailEntries=pastEntries;
     window.myPrioDetailData=data;
     html+='<div class="myprio-list">';
 
-    entries.forEach((entry,index)=>{
+    pastEntries.forEach((entry,index)=>{
       const rowId='myprio-card-'+index;
       const deletePayload=safeAttr(JSON.stringify({
         rowId:rowId,
