@@ -360,7 +360,7 @@ async function findPlayerByRecipient(guildId, recipient, server) {
 
 async function findCharacter(guildId, charName, server) {
   const result = await query(
-    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.id as player_id, p.player_pin
      from characters c
      join players p on p.id = c.player_id
      where p.guild_id = $1 and lower(c.name) = lower($2) and lower(c.server) = lower($3)
@@ -2885,6 +2885,49 @@ async function resetPlayerPin({ guildId, charName, server, oldPin, newPin, class
   return pin;
 }
 
+async function deletePlayerLogin({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const charName = clean(params.char || params.player || params.spieler);
+  const server = clean(params.server);
+  const character = await findCharacter(guildId, charName, server);
+  if (!character) {
+    const error = new Error("Dieser Charakter wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const countResult = await client.query(
+      "select count(*)::int as count from characters where player_id = $1",
+      [character.player_id]
+    );
+    await client.query(
+      "delete from player_messages where guild_id = $1 and player_pin = $2",
+      [guildId, character.player_pin]
+    );
+    const deleteResult = await client.query(
+      "delete from players where guild_id = $1 and id = $2 returning id",
+      [guildId, character.player_id]
+    );
+    await client.query("commit");
+    return {
+      success: true,
+      deleted: deleteResult.rowCount,
+      deletedCharacters: Number(countResult.rows[0]?.count || 0),
+      player: character.name,
+      server: character.server
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function resetPlayerPinBySecurity({
   guildId,
   charName,
@@ -3005,6 +3048,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildResolveIssueReport") {
       const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
+    }
+
+    if (action === "guildDeletePlayerLogin") {
+      const deleted = await deletePlayerLogin({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "sendPlayerMessage") {

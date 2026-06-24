@@ -2450,7 +2450,10 @@ function renderPlayers(){
       </td>
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
       <td><span class="badge closed">verborgen</span></td>
-      <td><button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button></td>
+      <td>
+        <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
+      </td>
     </tr>
   `).join("");
 }
@@ -2656,6 +2659,44 @@ async function resetPlayerLogin(rowNumber){
     await loadOverview();
   }catch(error){
     setStatus(error.message || "Reset fehlgeschlagen.", "bad");
+  }
+}
+
+async function deletePlayerLogin(rowNumber){
+  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+  if(!player) return;
+
+  const group = groupPlayersByMain(guildData.players || []).find(item => Number(item.main.rowNumber || 0) === Number(rowNumber));
+  const count = group ? group.characters.length : 1;
+  const ok = confirm(`Spielerlogin für ${player.char} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
+  if(!ok) return;
+
+  const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
+  if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
+    setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
+    return;
+  }
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  setStatus("Spielerlogin wird gelöscht ...", "");
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeletePlayerLogin",
+      masterCode,
+      char:player.char,
+      server:player.server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Spielerlogin konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    setStatus(`Spielerlogin wurde gelöscht (${Number(result.deletedCharacters || count)} Charaktere).`, "good");
+    await loadOverview();
+  }catch(error){
+    setStatus(error.message || "Löschen fehlgeschlagen.", "bad");
   }
 }
 
