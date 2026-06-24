@@ -3691,7 +3691,7 @@ async function loadPublishedPrios(){
     currentRaidId = result.raidId || result.RaidID || result.raidID || currentRaidId || "";
     currentRaidDate = result.raidDate || result.datum || result.Datum || "";
     currentRaidTime = result.raidTime || result.uhrzeit || result.Uhrzeit || "";
-    currentP0PlusOverride = Boolean(result.p0PlusOverride) || ["ja","true","aktiv","freigeschaltet"].includes(String(result.p0PlusFreigabe || "").trim().toLowerCase());
+    currentP0PlusOverride = Boolean(result.p0PlusOverride) || ["ja","true","1","aktiv","freigeschaltet","geöffnet","geoeffnet","offen","open","published","veröffentlicht"].includes(String(result.p0PlusFreigabe || "").trim().toLowerCase());
 
     const prios=sortPrios(result.prios||[]);
     currentPublishedPrios = prios;
