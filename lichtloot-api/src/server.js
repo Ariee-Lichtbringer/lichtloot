@@ -3031,7 +3031,7 @@ async function seedDefaultLootItemsOnce() {
 }
 
 async function applyLootItemCorrectionsOnce() {
-  const markerKey = "loot-item-corrections-v3-ony-backup";
+  const markerKey = "loot-item-corrections-v4-ony-backup-exact";
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -3066,15 +3066,32 @@ async function applyLootItemCorrectionsOnce() {
       );
       upserted += result.rowCount;
     }
+    const correctionNames = corrections.map(item => clean(item.name).toLowerCase()).filter(Boolean);
+    const deleted = await client.query(
+      `delete from items i
+       where lower(i.raid_type) = 'ony'
+         and not (lower(i.name) = any($1))
+         and not exists (
+           select 1 from prios pr
+           where pr.p1_item_id = i.id
+              or pr.p2_item_id = i.id
+              or pr.p3_item_id = i.id
+         )
+         and not exists (
+           select 1 from p0plus_points pp
+           where pp.item_id = i.id
+         )`,
+      [correctionNames]
+    );
 
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, String(upserted)]
+      [markerKey, JSON.stringify({ upserted, deleted: deleted.rowCount })]
     );
     await client.query("commit");
-    console.log(`Lootdaten-Korrekturen angewendet: ${upserted} Ony-Items`);
+    console.log(`Lootdaten-Korrekturen angewendet: ${upserted} Ony-Items, ${deleted.rowCount} alte entfernt`);
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
