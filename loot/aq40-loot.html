@@ -2699,6 +2699,20 @@ async function loadLootFromSheet(){
 }
 
 async function loadAq40LootWithFallback(){
+  try{
+    const apiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL) +
+      "?action=getLootItems&guild=lichtloot&raid=" + encodeURIComponent(RAID_NAME) + "&t=" + Date.now();
+    const response=await fetch(apiUrl, {cache:"no-store"});
+    const payload=await response.json().catch(()=>null);
+    const rows=payload && Array.isArray(payload.items) ? payload.items : [];
+    const mapped=mapAq40JsonLoot(rows);
+    if(response.ok && payload && payload.success && mapped.length){
+      return {items:mapped,source:"Railway"};
+    }
+  }catch(error){
+    console.warn("Railway-Lootdaten fuer Hauptliste konnten nicht geladen werden, nutze JSON-Fallback:", RAID_NAME, error);
+  }
+
   const jsonCandidates=[
     LOOT_JSON_URL,
     "data/aq40.json",
