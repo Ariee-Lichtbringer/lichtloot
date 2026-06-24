@@ -6195,27 +6195,6 @@
     "icon_url": "inv_weapon_shortblade_30"
   },
   {
-    "raid_type": "ony",
-    "item_id": "18403",
-    "name": "Drachentötersignet",
-    "quality": "epic",
-    "icon_url": "inv_jewelry_ring_27"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "18404",
-    "name": "Zahn Onyxias",
-    "quality": "epic",
-    "icon_url": "inv_jewelry_necklace_09"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "18406",
-    "name": "Talisman mit Onyxiablut",
-    "quality": "epic",
-    "icon_url": "spell_shadow_lifedrain"
-  },
-  {
     "raid_type": "naxx",
     "item_id": "23001",
     "name": "Auge des Schwunds",
@@ -7957,5 +7936,278 @@
     "name": "Formel: Brust - Große Werte",
     "quality": "uncommon",
     "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17962",
+    "name": "Blauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_blue"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16908",
+    "name": "Blutfangkapuze",
+    "quality": "epic",
+    "icon_url": "inv_helmet_41"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18205",
+    "name": "Eskhandars Halsband",
+    "quality": "epic",
+    "icon_url": "inv_belt_12"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17965",
+    "name": "Gelber Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17964",
+    "name": "Grauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_black"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17963",
+    "name": "Grüner Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_green"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16921",
+    "name": "Heiligenschein der Erhabenheit",
+    "quality": "epic",
+    "icon_url": "inv_helmet_24"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16947",
+    "name": "Helm der zehn Stürme",
+    "quality": "epic",
+    "icon_url": "inv_helmet_69"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16939",
+    "name": "Helm des Drachenjägers",
+    "quality": "epic",
+    "icon_url": "inv_helmet_05"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16963",
+    "name": "Helm des Zorns",
+    "quality": "epic",
+    "icon_url": "inv_helmet_71"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16914",
+    "name": "Krone des Netherwinds",
+    "quality": "epic",
+    "icon_url": "inv_helmet_70"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16955",
+    "name": "Krone des Richturteils",
+    "quality": "epic",
+    "icon_url": "inv_helmet_74"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18423",
+    "name": "Onyxias Kopf",
+    "quality": "epic",
+    "icon_url": "inv_misc_head_dragon_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "22388",
+    "name": "Pläne: Gamaschen der Titanen",
+    "quality": "epic",
+    "icon_url": "inv_scroll_05"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "13486",
+    "name": "Rezept: Untod zu Wasser transmutieren",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18813",
+    "name": "Ring der Bindung",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_13"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17969",
+    "name": "Roter Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_red"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17966",
+    "name": "Rucksack aus Onyxias Haut",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_22"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "11938",
+    "name": "Sack Edelsteine",
+    "quality": "common",
+    "icon_url": "inv_misc_bag_10_red"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17078",
+    "name": "Saphirontuch",
+    "quality": "epic",
+    "icon_url": "inv_misc_cape_16"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16929",
+    "name": "Schädelkappe der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_helmet_08"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "15410",
+    "name": "Schuppe von Onyxia",
+    "quality": "rare",
+    "icon_url": "inv_misc_monsterscales_07"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18705",
+    "name": "Sehne eines ausgewachsenen schwarzen Drachen",
+    "quality": "epic",
+    "icon_url": "inv_misc_bandage_04"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17064",
+    "name": "Splitter der Schuppe",
+    "quality": "epic",
+    "icon_url": "inv_misc_monsterscales_15"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17068",
+    "name": "Todesbringer",
+    "quality": "epic",
+    "icon_url": "inv_axe_09"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17075",
+    "name": "Vis'kag der Blutvergießer",
+    "quality": "epic",
+    "icon_url": "inv_sword_18"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17067",
+    "name": "Zauberfoliant des uralten Grundsteins",
+    "quality": "epic",
+    "icon_url": "inv_misc_book_07"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "13493",
+    "name": "Rezept: Großes Arkanelixier",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "12717",
+    "name": "Pläne: Löwenherzhelm",
+    "quality": "epic",
+    "icon_url": "inv_scroll_03"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16253",
+    "name": "Formel: Brust - Große Werte",
+    "quality": "uncommon",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20726",
+    "name": "Formel: Handschuhe - Bedrohung",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20729",
+    "name": "Formel: Handschuhe - Feuermacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20728",
+    "name": "Formel: Handschuhe - Frostmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20730",
+    "name": "Formel: Handschuhe - Heilkraft",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20727",
+    "name": "Formel: Handschuhe - Schattenmacht",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20731",
+    "name": "Formel: Handschuhe - Überragende Beweglichkeit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20736",
+    "name": "Formel: Umhang - Ausweichen",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20735",
+    "name": "Formel: Umhang - Feingefühl",
+    "quality": "rare",
+    "icon_url": "inv_scroll_06"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "20734",
+    "name": "Formel: Umhang - Verstohlenheit",
+    "quality": "rare",
+    "icon_url": "inv_misc_note_01"
   }
 ]

@@ -3031,12 +3031,7 @@ async function seedDefaultLootItemsOnce() {
 }
 
 async function applyLootItemCorrectionsOnce() {
-  const markerKey = "loot-item-corrections-v1";
-  const corrections = [
-    { raidType: "ony", itemId: "18403", name: "Drachentötersignet", iconUrl: "inv_jewelry_ring_27" },
-    { raidType: "ony", itemId: "18404", name: "Zahn Onyxias", iconUrl: "inv_jewelry_necklace_09" },
-    { raidType: "ony", itemId: "18406", name: "Talisman mit Onyxiablut", iconUrl: "spell_shadow_lifedrain" }
-  ];
+  const markerKey = "loot-item-corrections-v3-ony-backup";
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -3053,26 +3048,33 @@ async function applyLootItemCorrectionsOnce() {
       return;
     }
 
-    let updated = 0;
+    const raw = await readFile(new URL("./default-loot-items.json", import.meta.url), "utf8");
+    const corrections = JSON.parse(raw).filter(item => normalizeRaidType(item.raid_type) === "ony");
+    let upserted = 0;
     for (const item of corrections) {
+      const raidType = normalizeRaidType(item.raid_type || item.raid || "");
+      const name = clean(item.name);
+      if (!raidType || !name) continue;
       const result = await client.query(
-        `update items
-         set icon_url = $4
-         where lower(raid_type) = $1
-           and (item_id = $2 or lower(name) = lower($3))`,
-        [item.raidType, item.itemId, item.name, item.iconUrl]
+        `insert into items (raid_type, item_id, name, quality, icon_url)
+         values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
+         on conflict (raid_type, name) do update
+           set item_id = excluded.item_id,
+               quality = excluded.quality,
+               icon_url = excluded.icon_url`,
+        [raidType, clean(item.item_id), name, clean(item.quality), clean(item.icon_url)]
       );
-      updated += result.rowCount;
+      upserted += result.rowCount;
     }
 
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, String(updated)]
+      [markerKey, String(upserted)]
     );
     await client.query("commit");
-    console.log(`Lootdaten-Korrekturen angewendet: ${updated} Items`);
+    console.log(`Lootdaten-Korrekturen angewendet: ${upserted} Ony-Items`);
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
