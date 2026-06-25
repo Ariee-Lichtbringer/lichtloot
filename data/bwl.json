@@ -177,7 +177,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Armschienen der zehn Stürme | Wird beim Aufheben gebunden | Handgelenke Schwere Rüstung | 211 Rüstung | +13 Ausdauer | +16 Intelligenz | +9 Willenskraft | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_bracer_16"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -448,7 +448,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Blauer Sack voller Edelsteine",
-    "iconName": "inv_misc_bag_10"
+    "iconName": "inv_misc_bag_10_blue"
   },
   {
     "raid": "BWL",
@@ -624,7 +624,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Brustplatte der zehn Stürme | Wird beim Aufheben gebunden | Brust Schwere Rüstung | 482 Rüstung | +17 Ausdauer | +31 Intelligenz | +16 Willenskraft | +10 Feuerwiderstand | +10 Naturwiderstand | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 23. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_chest_chain_11"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -1516,7 +1516,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Grauer Sack voller Edelsteine",
-    "iconName": "inv_misc_bag_10"
+    "iconName": "inv_misc_bag_10_black"
   },
   {
     "raid": "BWL",
@@ -1531,7 +1531,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Grüner Sack voller Edelsteine",
-    "iconName": ""
+    "iconName": "inv_misc_bag_10_green"
   },
   {
     "raid": "BWL",
@@ -1629,7 +1629,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Gürtel der zehn Stürme | Wird beim Aufheben gebunden | Taille Schwere Rüstung | 271 Rüstung | +13 Ausdauer | +18 Intelligenz | +11 Willenskraft | +10 Schattenwiderstand | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_belt_14"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -1987,7 +1987,7 @@
     "quality": "Episch",
     "icon": "136140",
     "dropChance": "74.77",
-    "statsText": "spell_shadow_curseoftounges",
+    "statsText": "",
     "stats": [],
     "tooltip": "Kopf des Brutwächters Dreschbringer | Questgegenstand | Einzigartig | 'Nur EINER wird sich erheben... (und folglich kann auch nur EINER diesen Kopf erbeuten)'",
     "iconName": "inv_misc_head_dragon_01"
@@ -2042,7 +2042,7 @@
       "Benutzen: Verbindet den Schamanen mit der Natur, erhöht den Zauberschaden um 20%, verbessert Heileffekte um 20% und erhöht die Manakosten von Zaubern um 20%. Hält 20 Sek. lang an. (5 Min. Abklingzeit)"
     ],
     "tooltip": "Kristall der Naturverbundenheit | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Schamane | Benötigt Stufe 60 | Benutzen: Verbindet den Schamanen mit der Natur, erhöht den Zauberschaden um 20%, verbessert Heileffekte um 20% und erhöht die Manakosten von Zaubern um 20%. Hält 20 Sek. lang an. (5 Min. Abklingzeit)",
-    "iconName": "inv_misc_gem_03"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -2457,7 +2457,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Roter Sack voller Edelsteine",
-    "iconName": ""
+    "iconName": "inv_misc_bag_10_red"
   },
   {
     "raid": "BWL",
@@ -2541,7 +2541,7 @@
     "statsText": "",
     "stats": [],
     "tooltip": "Sack Edelsteine",
-    "iconName": ""
+    "iconName": "inv_misc_bag_10_black"
   },
   {
     "raid": "BWL",
@@ -2586,7 +2586,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Schienbeinschützer der zehn Stürme | Wird beim Aufheben gebunden | Füße Schwere Rüstung | 332 Rüstung | +17 Ausdauer | +16 Intelligenz | +16 Willenskraft | +10 Feuerwiderstand | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 20. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_boots_plate_06"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -2773,7 +2773,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Schulterklappen der zehn Stürme | Wird beim Aufheben gebunden | Schulter Schwere Rüstung | 362 Rüstung | +23 Ausdauer | +17 Intelligenz | +8 Willenskraft | +10 Feuerwiderstand | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_shoulder_33"
+    "iconName": ""
   },
   {
     "raid": "BWL",
@@ -3077,7 +3077,7 @@
       "(8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden."
     ],
     "tooltip": "Stulpen der zehn Stürme | Wird beim Aufheben gebunden | Hände Schwere Rüstung | 301 Rüstung | +15 Ausdauer | +17 Intelligenz | +13 Willenskraft | +10 Schattenwiderstand | Klassen: Schamane | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 6 Punkt(e) Mana wieder her. | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 8. | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 15. |   | Die zehn Stürme (0/8) |   Gürtel der zehn Stürme |   Armschienen der zehn Stürme |   Brustplatte der zehn Stürme |   Schulterklappen der zehn Stürme |   Stulpen der zehn Stürme |   Schienbeinschützer der zehn Stürme |   Helm der zehn Stürme |   Beinplatten der zehn Stürme |   | (3) Set: Erhöht den durch 'Kettenheilung' geheilten Wert bei jedem Ziel nach dem ersten um 30%. | (5) Set: Erhöht Eure Chance, einen kritischen Treffer durch Naturzauber zu erzielen, um 3%. | (8) Set: Wenn Ihr die Zauber 'Welle der Heilung' oder 'Geringe Welle der Heilung' wirkt, besteht eine Chance von 25%, dass das Ziel zusätzlich einen Blitzschlagschild erhält. Dieser zusätzliche Blitzschlagschild verursacht beim Angreifer bei einem Treffer 50 Naturschaden.",
-    "iconName": "inv_gauntlets_11"
+    "iconName": ""
   },
   {
     "raid": "BWL",

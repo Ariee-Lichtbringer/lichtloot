@@ -1260,7 +1260,7 @@
       "Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%."
     ],
     "tooltip": "Gespensterklinge | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 38 - 110 Schaden Tempo 1,80 | (41.1 Schaden pro Sekunde) | +10 Ausdauer | +8 Intelligenz | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 95. | Anlegen: Erhöht Eure Chance mit Zaubern zu treffen um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer durch Zauber zu erzielen, um 1%.",
-    "iconName": "inv_sword_11"
+    "iconName": "inv_offhand_naxxramas_d_01"
   },
   {
     "raid": "NAXX",
@@ -6269,4 +6269,3 @@
     "iconName": "inv_scroll_06"
   }
 ]
-

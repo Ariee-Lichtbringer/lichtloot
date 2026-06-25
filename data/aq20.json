@@ -112,6 +112,25 @@
   },
   {
     "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21526,
+    "name": "Band der eisigen Tiefen",
+    "slot": "Finger",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133377",
+    "dropChance": "",
+    "statsText": "+19 Ausdauer | +20 Frostwiderstand | Anlegen: Ermöglicht Unterwasseratmung.",
+    "stats": [
+      "+19 Ausdauer",
+      "+20 Frostwiderstand",
+      "Anlegen: Ermöglicht Unterwasseratmung."
+    ],
+    "tooltip": "Band der eisigen Tiefen | Wird beim Aufheben gebunden | Einzigartig | Finger | +19 Ausdauer | +20 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Ermöglicht Unterwasseratmung.",
+    "iconName": "inv_jewelry_ring_35"
+  },
+  {
+    "raid": "AQ20",
     "boss": "General Rajaxx",
     "itemId": 21495,
     "name": "Beinplatten des Qirajikommandos",
@@ -439,6 +458,26 @@
   {
     "raid": "AQ20",
     "boss": "AQ opening",
+    "itemId": 21531,
+    "name": "Drachenzahnhalskette",
+    "slot": "Hals",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "133309",
+    "dropChance": "",
+    "statsText": "+7 Ausdauer | +12 Intelligenz | +20 Naturwiderstand | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26.",
+    "stats": [
+      "+7 Ausdauer",
+      "+12 Intelligenz",
+      "+20 Naturwiderstand",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26."
+    ],
+    "tooltip": "Drachenzahnhalskette | Wird beim Aufheben gebunden | Hals | +7 Ausdauer | +12 Intelligenz | +20 Naturwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26.",
+    "iconName": "inv_jewelry_necklace_22"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
     "itemId": 21527,
     "name": "Dunkelwasserroben",
     "slot": "Brust",
@@ -470,6 +509,26 @@
     "stats": [],
     "tooltip": "Elfenbeinskarabäus",
     "iconName": "inv_scarab_ivory"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21523,
+    "name": "Fangzahn von Korialstrasz",
+    "slot": "Waffenhand",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "135665",
+    "dropChance": "",
+    "statsText": "+9 Ausdauer | +14 Intelligenz | +13 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121.",
+    "stats": [
+      "+9 Ausdauer",
+      "+14 Intelligenz",
+      "+13 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121."
+    ],
+    "tooltip": "Fangzahn von Korialstrasz | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Dolch | 43 - 107 Schaden Tempo 1,80 | (41.7 Schaden pro Sekunde) | +9 Ausdauer | +14 Intelligenz | +13 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121.",
+    "iconName": "inv_weapon_shortblade_29"
   },
   {
     "raid": "AQ20",
@@ -981,6 +1040,21 @@
   },
   {
     "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21139,
+    "name": "Grüner Szeptersplitter",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "134106",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Grüner Szeptersplitter | Questgegenstand | Einzigartig",
+    "iconName": "inv_misc_gem_emerald_02"
+  },
+  {
+    "raid": "AQ20",
     "boss": "Kurinnaxx",
     "itemId": 21500,
     "name": "Gürtel der Inquisition",
@@ -1414,6 +1488,24 @@
   },
   {
     "raid": "AQ20",
+    "boss": "Broodlord Lashlayer",
+    "itemId": 19341,
+    "name": "Lebensspendender Edelstein",
+    "slot": "Schmuck",
+    "type": "Verschiedenes",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Klassen: Krieger | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
+    "stats": [
+      "Klassen: Krieger",
+      "Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)"
+    ],
+    "tooltip": "Lebensspendender Edelstein | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Krieger | Benötigt Stufe 60 | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
+    "iconName": "inv_misc_gem_pearl_05"
+  },
+  {
+    "raid": "AQ20",
     "boss": "Class books",
     "itemId": 21307,
     "name": "Lehrbuch: Aspekt des Falken VII",
@@ -1522,6 +1614,24 @@
     ],
     "tooltip": "Leitfaden des tödlichen Gifts V | Klassen: Schurke | Benötigt Stufe 60 | Benutzen: Lehrt 'Tödliches Gift' (Rang 5). |  | Tödliches Gift V | Klassen: Schurke | Benötigt Stufe 60 | Benutzen: Überzieht eine Waffe mit Gift, das 30 Minuten lang wirkt.  | Bei jedem Schlag besteht eine Chance von 30%, den Gegner 12 Sek. lang zu vergiften und ihm 136 Punkt(e) Naturschaden zuzufügen. Kann bis zu 5-mal auf ein einzelnes Ziel angewendet werden. 120 Aufladungen. |  | Benötigt Todeskraut (7), Kristallphiole",
     "iconName": "inv_misc_book_10"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "Broodlord Lashlayer",
+    "itemId": 19351,
+    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
+    "stats": [
+      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
+      "Anlegen: Schwerter +4."
+    ],
+    "tooltip": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 86 - 162 Schaden Tempo 2,20 | (56.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
+    "iconName": "inv_sword_49"
   },
   {
     "raid": "AQ20",
@@ -1731,6 +1841,43 @@
   },
   {
     "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21520,
+    "name": "Ravencrests Vermächtnis",
+    "slot": "Einhändig",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135359",
+    "dropChance": "",
+    "statsText": "+13 Stärke | +9 Beweglichkeit | +14 Ausdauer",
+    "stats": [
+      "+13 Stärke",
+      "+9 Beweglichkeit",
+      "+14 Ausdauer"
+    ],
+    "tooltip": "Ravencrests Vermächtnis | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 84 - 157 Schaden Tempo 2,10 | (57.4 Schaden pro Sekunde) | +13 Stärke | +9 Beweglichkeit | +14 Ausdauer | Benötigt Stufe 60",
+    "iconName": "quest-start"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21025,
+    "name": "Rezept: Dirges abgefahrene Chimaerokkoteletts",
+    "slot": "",
+    "type": "Kochkunst",
+    "quality": "Episch",
+    "icon": "133734",
+    "dropChance": "",
+    "statsText": "Benutzen: Lehrt Euch, wie man Dirges abgefahrene Chimaerokkoteletts zubereitet. | Benutzen: Stellt im Verlauf von 30 Sek. 2550 Punkt(e) Gesundheit wieder her. Ihr müsst beim Essen sitzen bleiben. Wenn Ihr mindestens 10 Sekunden lang mit Essen verbringt, werdet Ihr satt und erhaltet 15 Min. lang 25 Punkte Ausdauer.",
+    "stats": [
+      "Benutzen: Lehrt Euch, wie man Dirges abgefahrene Chimaerokkoteletts zubereitet.",
+      "Benutzen: Stellt im Verlauf von 30 Sek. 2550 Punkt(e) Gesundheit wieder her. Ihr müsst beim Essen sitzen bleiben. Wenn Ihr mindestens 10 Sekunden lang mit Essen verbringt, werdet Ihr satt und erhaltet 15 Min. lang 25 Punkte Ausdauer."
+    ],
+    "tooltip": "Rezept: Dirges abgefahrene Chimaerokkoteletts | Einzigartig | Benötigt Kochkunst (300) | Benutzen: Lehrt Euch, wie man Dirges abgefahrene Chimaerokkoteletts zubereitet. |  | Dirges abgefahrene Chimaerokkoteletts | Benötigt Stufe 55 | Benutzen: Stellt im Verlauf von 30 Sek. 2550 Punkt(e) Gesundheit wieder her. Ihr müsst beim Essen sitzen bleiben. Wenn Ihr mindestens 10 Sekunden lang mit Essen verbringt, werdet Ihr satt und erhaltet 15 Min. lang 25 Punkte Ausdauer. |  | Benötigt Scharfe Gewürze, Goblin-Raketentreibstoff, Tiefsteinsalz, Chimaeroklenden",
+    "iconName": "inv_misc_book_02"
+  },
+  {
+    "raid": "AQ20",
     "boss": "Trash",
     "itemId": 13493,
     "name": "Rezept: Großes Arkanelixier",
@@ -1801,6 +1948,41 @@
     ],
     "tooltip": "Ring des Zorns | Wird beim Aufheben gebunden | Einzigartig | Finger | +9 Ausdauer | Benötigt Stufe 60 | Anlegen: Verbessert Eure Trefferchance um 1%. | Anlegen: +30 Angriffskraft.",
     "iconName": "inv_jewelry_ring_ahnqiraj_04"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21138,
+    "name": "Roter Szeptersplitter",
+    "slot": "",
+    "type": "Quest",
+    "quality": "Episch",
+    "icon": "134130",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Roter Szeptersplitter | Questgegenstand | Einzigartig",
+    "iconName": "inv_misc_gem_ruby_02"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21521,
+    "name": "Runenschwert des Roten",
+    "slot": "Waffenhand",
+    "type": "Einhandschwerter",
+    "quality": "Episch",
+    "icon": "135361",
+    "dropChance": "",
+    "statsText": "+17 Ausdauer | +9 Intelligenz | +7 Willenskraft | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 64.",
+    "stats": [
+      "+17 Ausdauer",
+      "+9 Intelligenz",
+      "+7 Willenskraft",
+      "Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 64."
+    ],
+    "tooltip": "Runenschwert des Roten | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Schwert | 52 - 129 Schaden Tempo 2,20 | (41.1 Schaden pro Sekunde) | +17 Ausdauer | +9 Intelligenz | +7 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 64.",
+    "iconName": "inv_sword_11"
   },
   {
     "raid": "AQ20",
@@ -1967,6 +2149,42 @@
     ],
     "tooltip": "Schuppenarmschienen des Verschlingers | Wird beim Aufheben gebunden | Handgelenke Leder | 87 Rüstung | +10 Stärke | +15 Beweglichkeit | +8 Ausdauer | Benötigt Stufe 60",
     "iconName": "inv_bracer_03"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21176,
+    "name": "Schwarzer Qirajiresonanzkristall",
+    "slot": "",
+    "type": "Plunder",
+    "quality": "Legendär",
+    "icon": "134399",
+    "dropChance": "",
+    "statsText": "Benutzen: Beschwört eine reitbare Qirajipanzerdrohne oder gibt sie frei. Dies ist ein sehr schnelles Reittier.",
+    "stats": [
+      "Benutzen: Beschwört eine reitbare Qirajipanzerdrohne oder gibt sie frei. Dies ist ein sehr schnelles Reittier."
+    ],
+    "tooltip": "Schwarzer Qirajiresonanzkristall | Wird beim Aufheben gebunden | Einzigartig | Benötigt Stufe 60 | Benutzen: Beschwört eine reitbare Qirajipanzerdrohne oder gibt sie frei. Dies ist ein sehr schnelles Reittier.",
+    "iconName": "inv_misc_qirajicrystal_05"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "AQ opening",
+    "itemId": 21522,
+    "name": "Shadowsongs Kummer",
+    "slot": "Einhändig",
+    "type": "Dolche",
+    "quality": "Episch",
+    "icon": "135661",
+    "dropChance": "",
+    "statsText": "+9 Stärke | +13 Beweglichkeit | +14 Ausdauer",
+    "stats": [
+      "+9 Stärke",
+      "+13 Beweglichkeit",
+      "+14 Ausdauer"
+    ],
+    "tooltip": "Shadowsongs Kummer | Wird beim Aufheben gebunden | Einzigartig | Einhändig Dolch | 68 - 127 Schaden Tempo 1,70 | (57.4 Schaden pro Sekunde) | +9 Stärke | +13 Beweglichkeit | +14 Ausdauer | Benötigt Stufe 60",
+    "iconName": "inv_weapon_shortblade_25"
   },
   {
     "raid": "AQ20",
@@ -2247,6 +2465,53 @@
     ],
     "tooltip": "Stulpen des Unbeweglichen | Wird beim Aufheben gebunden | Hände Platte | 482 Rüstung | +15 Stärke | +18 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Verteidigung +5.",
     "iconName": "inv_gauntlets_14"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "Firemaw / Ebonroc / Flamegor",
+    "itemId": 16899,
+    "name": "Sturmgrimms Handschützer",
+    "slot": "Hände",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "+13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
+    "stats": [
+      "+13 Ausdauer",
+      "+19 Intelligenz",
+      "+15 Willenskraft",
+      "+10 Schattenwiderstand",
+      "Klassen: Druide",
+      "Benötigt Stufe 60",
+      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42."
+    ],
+    "tooltip": "Sturmgrimms Handschützer | Wird beim Aufheben gebunden | Hände Leder | 140 Rüstung | +13 Ausdauer | +19 Intelligenz | +15 Willenskraft | +10 Schattenwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 42.",
+    "iconName": "inv_gauntlets_25"
+  },
+  {
+    "raid": "AQ20",
+    "boss": "Chromaggus",
+    "itemId": 16902,
+    "name": "Sturmgrimms Schulterstücke",
+    "slot": "Schulter",
+    "type": "Leder",
+    "quality": "Episch",
+    "icon": "",
+    "dropChance": "",
+    "statsText": "+14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
+    "stats": [
+      "+14 Ausdauer",
+      "+21 Intelligenz",
+      "+10 Willenskraft",
+      "+10 Feuerwiderstand",
+      "Klassen: Druide",
+      "Benötigt Stufe 60",
+      "Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29.",
+      "Stellt alle 5 Sek. 4 Mana wieder her."
+    ],
+    "tooltip": "Sturmgrimms Schulterstücke | Wird beim Aufheben gebunden | Schulter Leder | 169 Rüstung | +14 Ausdauer | +21 Intelligenz | +10 Willenskraft | +10 Feuerwiderstand | Klassen: Druide | Benötigt Stufe 60 | Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 29. | Stellt alle 5 Sek. 4 Mana wieder her.",
+    "iconName": "inv_shoulder_07"
   },
   {
     "raid": "AQ20",

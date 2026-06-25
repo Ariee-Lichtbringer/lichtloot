@@ -18,44 +18,44 @@
     "iconName": "spell_shadow_detectlesserinvisibility"
   },
   {
-  "raid": "ZG",
-  "boss": "Hakkar",
-  "itemId": 20264,
-  "name": "Stulpen des Friedensbewahrers",
-  "slot": "Hände",
-  "type": "Platte",
-  "quality": "Episch",
-  "icon": "132960",
-  "dropChance": "",
-  "statsText": "+7 Ausdauer | +12 Intelligenz | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
-  "stats": [
-    "+7 Ausdauer",
-    "+12 Intelligenz",
-    "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59.",
-    "Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her."
-  ],
-  "tooltip": "Stulpen des Friedensbewahrers | Gegenstandsstufe 68 | Wird beim Aufheben gebunden | Hände | Platte | 482 Rüstung | +7 Ausdauer | +12 Intelligenz | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
-  "iconName": "inv_gauntlets_10"
-},
+    "raid": "ZG",
+    "boss": "Hakkar",
+    "itemId": 20264,
+    "name": "Stulpen des Friedensbewahrers",
+    "slot": "Hände",
+    "type": "Platte",
+    "quality": "Episch",
+    "icon": "132960",
+    "dropChance": "",
+    "statsText": "+7 Ausdauer | +12 Intelligenz | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "stats": [
+      "+7 Ausdauer",
+      "+12 Intelligenz",
+      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59.",
+      "Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her."
+    ],
+    "tooltip": "Stulpen des Friedensbewahrers | Gegenstandsstufe 68 | Wird beim Aufheben gebunden | Hände | Platte | 482 Rüstung | +7 Ausdauer | +12 Intelligenz | Haltbarkeit 55 / 55 | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 59. | Anlegen: Stellt alle 5 Sek. 4 Punkt(e) Mana wieder her.",
+    "iconName": "inv_gauntlets_10"
+  },
   {
-  "raid": "",
-  "boss": "",
-  "itemId": 12363,
-  "name": "Arkankristall",
-  "slot": "",
-  "type": "Handwerksware",
-  "quality": "Ungewöhnlich",
-  "icon": "134096",
-  "dropChance": "",
-  "statsText": "Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
-  "stats": [
-    "Gegenstandsstufe 60",
-    "Maximaler Stapel: 20",
-    "Verkaufspreis: 20 Silber"
-  ],
-  "tooltip": "Arkankristall | Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
-  "iconName": "inv_misc_gem_topaz_01"
-},
+    "raid": "",
+    "boss": "",
+    "itemId": 12363,
+    "name": "Arkankristall",
+    "slot": "",
+    "type": "Handwerksware",
+    "quality": "Ungewöhnlich",
+    "icon": "134096",
+    "dropChance": "",
+    "statsText": "Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
+    "stats": [
+      "Gegenstandsstufe 60",
+      "Maximaler Stapel: 20",
+      "Verkaufspreis: 20 Silber"
+    ],
+    "tooltip": "Arkankristall | Gegenstandsstufe 60 | Maximaler Stapel: 20 | Verkaufspreis: 20 Silber",
+    "iconName": "inv_misc_gem_topaz_01"
+  },
   {
     "raid": "ZG",
     "boss": "High Priestess Arlokk",
