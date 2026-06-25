@@ -1689,6 +1689,7 @@ body.raid-create-open:before{
           <option value="">Erst SpielerPin eingeben und Chars laden</option>
         </select>
       </div>
+      <button class="tool-btn" onclick="setSelectedMainCharacter()">Als Main setzen</button>
       <button class="tool-btn" onclick="loadMyPrios()">Prios anzeigen</button>
     </div>
 
@@ -1894,7 +1895,7 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Deine Charaktere, Prios, P0/P0+ Punkte und Worldbuff-Termine bleiben hier griffbereit.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerPin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Daten laden</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerPin wird automatisch übernommen, wenn du eingeloggt bist.</p><button class="right-inline-btn" style="width:100%;margin-bottom:12px" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><details class="dashboard-fold" open><summary>Prios & P0+ Punkte</summary><div class="dashboard-fold-body"><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst Daten laden</option></select><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button></div><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div></div></div></details><details class="dashboard-fold"><summary>Twink hinzufügen</summary><div class="dashboard-fold-body dashboard-twink-form"><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neuer Charakter nutzt danach denselben SpielerPin.</div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Deine Charaktere, Prios, P0/P0+ Punkte und Worldbuff-Termine bleiben hier griffbereit.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerPin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Daten laden</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerPin wird automatisch übernommen, wenn du eingeloggt bist.</p><button class="right-inline-btn" style="width:100%;margin-bottom:12px" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><details class="dashboard-fold" open><summary>Prios & P0+ Punkte</summary><div class="dashboard-fold-body"><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst Daten laden</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button></div><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div></div></div></details><details class="dashboard-fold"><summary>Twink hinzufügen</summary><div class="dashboard-fold-body dashboard-twink-form"><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neuer Charakter nutzt danach denselben SpielerPin.</div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -4691,6 +4692,7 @@ function normalizeLichtlootCharEntry(char){
   const server=char.server || char.Server || "";
   const className=char.className || char.class || char.Klasse || "";
   const mainChar=char.mainChar || char.MainChar || "";
+  const isMain=Boolean(char.isMain || char.is_main || char.Main);
 
   if(!String(name).trim()) return null;
 
@@ -4698,7 +4700,8 @@ function normalizeLichtlootCharEntry(char){
     name:String(name).trim(),
     server:String(server || "").trim(),
     className:String(className || "").trim(),
-    mainChar:String(mainChar || "").trim()
+    mainChar:String(mainChar || "").trim(),
+    isMain
   };
 }
 
@@ -4762,8 +4765,8 @@ async function loadLichtLootCharacters(){
     });
 
     chars.sort((a,b)=>{
-      const aMain=a.mainChar && a.name.toLowerCase()===a.mainChar.toLowerCase() ? 0 : 1;
-      const bMain=b.mainChar && b.name.toLowerCase()===b.mainChar.toLowerCase() ? 0 : 1;
+      const aMain=a.isMain || (a.mainChar && a.name.toLowerCase()===a.mainChar.toLowerCase()) ? 0 : 1;
+      const bMain=b.isMain || (b.mainChar && b.name.toLowerCase()===b.mainChar.toLowerCase()) ? 0 : 1;
       if(aMain!==bMain) return aMain-bMain;
       return a.name.localeCompare(b.name,"de");
     });
@@ -4788,6 +4791,7 @@ async function loadLichtLootCharacters(){
         option.value=JSON.stringify(char);
 
         option.textContent=
+          (char.isMain ? 'Main: ' : '')+
           char.name+
           (char.server ? ' – '+char.server : '')+
           (char.className ? ' ('+char.className+')' : '');
@@ -4826,10 +4830,70 @@ function selectLichtLootCharacter(){
     charField.value=data.name || '';
 
     if(status && data.name){
-      status.innerHTML='<span class="warn">Ausgewählt: <strong>'+safeHtml(data.name)+'</strong>'+(data.server ? ' – '+safeHtml(data.server) : '')+'. Klicke auf „Prios anzeigen“.</span>';
+      status.innerHTML='<span class="warn">Ausgewählt: <strong>'+safeHtml(data.name)+'</strong>'+(data.server ? ' – '+safeHtml(data.server) : '')+(data.isMain ? ' · Main' : '')+'. Klicke auf „Prios anzeigen“.</span>';
     }
   }catch(error){
     charField.value=select.value;
+  }
+}
+
+function getSelectedLichtLootCharacter(){
+  const popup=document.getElementById("myPriosBox");
+  const popupVisible=popup && !popup.classList.contains("hidden");
+  const select=popupVisible
+    ? document.getElementById("myLichtlootCharSelect")
+    : (document.getElementById("dashboardCharSelect") || document.getElementById("myLichtlootCharSelect"));
+  if(!select || !select.value) return null;
+  try{
+    return JSON.parse(select.value);
+  }catch(error){
+    return null;
+  }
+}
+
+async function setSelectedMainCharacter(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardMyStatus") || document.getElementById("myPriosStatus");
+  const hiddenStatus=document.getElementById("myPriosStatus");
+  const character=getSelectedLichtLootCharacter();
+
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst SpielerPin eingeben.</span>';
+    return;
+  }
+  if(!character || !character.name){
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst einen Charakter auswählen.</span>';
+    return;
+  }
+  if(character.isMain){
+    if(status) status.innerHTML='<span class="ok">'+safeHtml(character.name)+' ist bereits dein Main.</span>';
+    return;
+  }
+
+  if(status) status.innerHTML='<span class="warn">Main wird gespeichert …</span>';
+
+  try{
+    const query=new URLSearchParams({
+      action:"setMainCharacter",
+      guild:CURRENT_GUILD_SLUG,
+      pin,
+      char:character.name || "",
+      server:character.server || "",
+      t:Date.now()
+    });
+    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
+    const result=await response.json();
+    if(!result.success){
+      if(status) status.innerHTML='<span class="bad">'+safeHtml(result.error || "Main konnte nicht gespeichert werden.")+'</span>';
+      return;
+    }
+    if(hiddenStatus) hiddenStatus.innerHTML='<span class="ok">'+safeHtml(character.name)+' ist jetzt dein Main.</span>';
+    if(status) status.innerHTML='<span class="ok">'+safeHtml(character.name)+' ist jetzt dein Main.</span>';
+    await loadLichtLootCharacters();
+    copyHiddenLichtLootToDashboard(true);
+  }catch(error){
+    console.error(error);
+    if(status) status.innerHTML='<span class="bad">Main konnte nicht gespeichert werden.</span>';
   }
 }
 
