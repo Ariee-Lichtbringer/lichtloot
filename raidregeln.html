@@ -378,6 +378,68 @@ h1{
   border-bottom:1px solid rgba(255,255,255,.08);
 }
 
+.requirement-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  padding:12px;
+}
+
+.requirement-card{
+  display:grid;
+  gap:8px;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid color-mix(in srgb, var(--class-color) 48%, rgba(255,255,255,.10));
+  background:linear-gradient(135deg,color-mix(in srgb, var(--class-color) 13%, rgba(15,23,42,.78)),rgba(2,6,23,.58));
+}
+
+.requirement-class{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.requirement-class strong{
+  color:var(--class-color);
+  font-size:15px;
+  font-weight:950;
+}
+
+.requirement-type{
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+
+.requirement-values{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.requirement-chip{
+  min-height:25px;
+  padding:5px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(2,6,23,.58);
+  color:#f8fafc;
+  font-size:12px;
+  font-weight:950;
+}
+
+.requirement-note{
+  padding:0 12px 12px;
+  color:#cbd5e1;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:800;
+}
+
 .table-wrap{
   overflow:auto;
   border:1px solid rgba(255,255,255,.10);
@@ -472,7 +534,7 @@ th{
   .raid-layout{grid-template-columns:1fr}
   .raid-menu{position:static;display:flex;overflow-x:auto}
   .raid-menu button{min-width:160px}
-  .quick-rules,.raid-section-grid{grid-template-columns:1fr}
+  .quick-rules,.raid-section-grid,.requirement-grid{grid-template-columns:1fr}
   .main-nav{width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
   .nav-btn,.rules-tab,.filter-btn{white-space:nowrap}
 }
@@ -627,6 +689,9 @@ function groupRaidRules(raid){
 
 function getRaidSummary(raid){
   const groups=groupRaidRules(raid);
+  if(raid.id === "naxx"){
+    groups.requirements=groups.requirements.filter(rule => !isNaxxRequirementLine(rule));
+  }
   const pick = rules => rules.find(Boolean) || "Keine Angabe in den importierten Regeln.";
   return [
     {label:"P0", text:pick(groups.prio.filter(rule => /grundregel|freigabe|prio 0|p0/i.test(rule)))},
@@ -648,6 +713,53 @@ function renderRaidSection(title,rules,wide=false){
   `;
 }
 
+const naxxRequirementRules=[
+  {name:"Krieger", type:"Melee", values:["ab 1150 AP"]},
+  {name:"Schurken", type:"Melee", values:["ab 1100 AP"]},
+  {name:"Jäger", type:"Ranged", values:["ab 6x T3", "ab 1330 AP"]},
+  {name:"Hexer", type:"Caster", values:["ab 600 Spellpower", "10% Hit"]},
+  {name:"Magier", type:"Caster", values:["ab 600 Spellpower", "16% Hit"]},
+  {name:"Tanks", type:"Tank", values:["ab 6 T3 Teile"]},
+  {name:"FeralDruid", type:"Tank / Feral", values:["11,5k Rüstung", "1050 AP"]},
+  {name:"HealPala", type:"Heal", values:["ab 1050 +Heal"]},
+  {name:"HealPriest", type:"Heal", values:["ab 1100 +Heal"]},
+  {name:"HealDruide", type:"Heal", values:["ab 1100 +Heal"]},
+  {name:"Eule", type:"Caster", values:["ab 600 Spellpower", "12% Hit"]}
+];
+
+function isNaxxRequirementLine(rule){
+  return /Werte je nach Klasse|Krieger ab 1150|Schurken ab 1100|Tanks ab 6 T3|Hexer ab 600|Jäger ab 6x T3/i.test(String(rule || ""));
+}
+
+function requirementMatchesSearch(item){
+  const searchText=[item.name,item.type,...item.values].join(" ");
+  return matchesSearch(searchText);
+}
+
+function renderNaxxRequirements(){
+  const items=naxxRequirementRules.filter(requirementMatchesSearch);
+  if(!items.length) return "";
+  return `
+    <article class="raid-section-card is-wide">
+      <h3>Naxx P0-Voraussetzungen nach Klasse</h3>
+      <div class="requirement-grid">
+        ${items.map(item => `
+          <div class="requirement-card ${getClassColorClass(item.name)}">
+            <div class="requirement-class">
+              <strong>${escapeHtml(item.name)}</strong>
+              <span class="requirement-type">${escapeHtml(item.type)}</span>
+            </div>
+            <div class="requirement-values">
+              ${item.values.map(value => `<span class="requirement-chip">${escapeHtml(value)}</span>`).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      <div class="requirement-note">Zusätzlich gelten die normalen Naxx-P0-Regeln: Freigabe, Teilnahmen und vollständige Verzauberungen.</div>
+    </article>
+  `;
+}
+
 function renderRaids(){
   const panel=document.getElementById("panelRaids");
   if(!rulesData.raids.some(raid => raid.id === activeRaid)){
@@ -665,10 +777,14 @@ function renderRaids(){
     </button>
   `).join("");
   const groups=groupRaidRules(raid);
+  if(raid.id === "naxx"){
+    groups.requirements=groups.requirements.filter(rule => !isNaxxRequirementLine(rule));
+  }
   const summary=getRaidSummary(raid);
   const sections=[
     renderRaidSection(raidCategoryLabels.prio, groups.prio),
     renderRaidSection(raidCategoryLabels.loot, groups.loot),
+    raid.id === "naxx" ? renderNaxxRequirements() : "",
     renderRaidSection(raidCategoryLabels.requirements, groups.requirements),
     renderRaidSection(raidCategoryLabels.flow, groups.flow),
     renderRaidSection(raidCategoryLabels.worldbuff, groups.worldbuff),
