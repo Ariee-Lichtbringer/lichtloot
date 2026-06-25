@@ -1,25 +1,6 @@
 [
   {
     "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21529,
-    "name": "Amulett der Schattenabwehr",
-    "slot": "Hals",
-    "type": "Verschiedenes",
-    "quality": "Episch",
-    "icon": "133304",
-    "dropChance": "",
-    "statsText": "+18 Ausdauer | +7 Willenskraft | +20 Schattenwiderstand",
-    "stats": [
-      "+18 Ausdauer",
-      "+7 Willenskraft",
-      "+20 Schattenwiderstand"
-    ],
-    "tooltip": "Amulett der Schattenabwehr | Wird beim Aufheben gebunden | Hals | +18 Ausdauer | +7 Willenskraft | +20 Schattenwiderstand | Benötigt Stufe 60",
-    "iconName": "inv_jewelry_necklace_17"
-  },
-  {
-    "raid": "AQ20",
     "boss": "Ossirian the Unscarred",
     "itemId": 21459,
     "name": "Armbrust der bevorstehenden Verdammnis",
@@ -112,25 +93,6 @@
   },
   {
     "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21526,
-    "name": "Band der eisigen Tiefen",
-    "slot": "Finger",
-    "type": "Verschiedenes",
-    "quality": "Episch",
-    "icon": "133377",
-    "dropChance": "",
-    "statsText": "+19 Ausdauer | +20 Frostwiderstand | Anlegen: Ermöglicht Unterwasseratmung.",
-    "stats": [
-      "+19 Ausdauer",
-      "+20 Frostwiderstand",
-      "Anlegen: Ermöglicht Unterwasseratmung."
-    ],
-    "tooltip": "Band der eisigen Tiefen | Wird beim Aufheben gebunden | Einzigartig | Finger | +19 Ausdauer | +20 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Ermöglicht Unterwasseratmung.",
-    "iconName": "inv_jewelry_ring_35"
-  },
-  {
-    "raid": "AQ20",
     "boss": "General Rajaxx",
     "itemId": 21495,
     "name": "Beinplatten des Qirajikommandos",
@@ -185,21 +147,6 @@
     ],
     "tooltip": "Bernsteingötze | Klassen: Paladin, Jäger, Schamane, Hexenmeister",
     "iconName": "inv_qirajidol_amber"
-  },
-  {
-    "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21137,
-    "name": "Blauer Szeptersplitter",
-    "slot": "",
-    "type": "Quest",
-    "quality": "Episch",
-    "icon": "134133",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Blauer Szeptersplitter | Questgegenstand | Einzigartig",
-    "iconName": "inv_misc_gem_sapphire_02"
   },
   {
     "raid": "AQ20",
@@ -399,21 +346,6 @@
   },
   {
     "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21175,
-    "name": "Das Szepter der Sandstürme",
-    "slot": "",
-    "type": "Plunder",
-    "quality": "Gewöhnlich",
-    "icon": "133062",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Das Szepter der Sandstürme | Wird beim Aufheben gebunden | Einzigartig",
-    "iconName": "inv_staff_29"
-  },
-  {
-    "raid": "AQ20",
     "boss": "Trash",
     "itemId": 21802,
     "name": "Der verlorene Kris von Zedd",
@@ -457,46 +389,6 @@
   },
   {
     "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21531,
-    "name": "Drachenzahnhalskette",
-    "slot": "Hals",
-    "type": "Verschiedenes",
-    "quality": "Episch",
-    "icon": "133309",
-    "dropChance": "",
-    "statsText": "+7 Ausdauer | +12 Intelligenz | +20 Naturwiderstand | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26.",
-    "stats": [
-      "+7 Ausdauer",
-      "+12 Intelligenz",
-      "+20 Naturwiderstand",
-      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26."
-    ],
-    "tooltip": "Drachenzahnhalskette | Wird beim Aufheben gebunden | Hals | +7 Ausdauer | +12 Intelligenz | +20 Naturwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 26.",
-    "iconName": "inv_jewelry_necklace_22"
-  },
-  {
-    "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21527,
-    "name": "Dunkelwasserroben",
-    "slot": "Brust",
-    "type": "Stoff",
-    "quality": "Episch",
-    "icon": "132672",
-    "dropChance": "",
-    "statsText": "+17 Ausdauer | +17 Intelligenz | +30 Feuerwiderstand | Anlegen: Erhöht durch Frostzauber und Frosteffekte zugefügten Schaden um bis zu 39.",
-    "stats": [
-      "+17 Ausdauer",
-      "+17 Intelligenz",
-      "+30 Feuerwiderstand",
-      "Anlegen: Erhöht durch Frostzauber und Frosteffekte zugefügten Schaden um bis zu 39."
-    ],
-    "tooltip": "Dunkelwasserroben | Wird beim Aufheben gebunden | Brust Stoff | 117 Rüstung | +17 Ausdauer | +17 Intelligenz | +30 Feuerwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Frostzauber und Frosteffekte zugefügten Schaden um bis zu 39.",
-    "iconName": "inv_chest_cloth_31"
-  },
-  {
-    "raid": "AQ20",
     "boss": "Trash",
     "itemId": 20865,
     "name": "Elfenbeinskarabäus",
@@ -509,26 +401,6 @@
     "stats": [],
     "tooltip": "Elfenbeinskarabäus",
     "iconName": "inv_scarab_ivory"
-  },
-  {
-    "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21523,
-    "name": "Fangzahn von Korialstrasz",
-    "slot": "Waffenhand",
-    "type": "Dolche",
-    "quality": "Episch",
-    "icon": "135665",
-    "dropChance": "",
-    "statsText": "+9 Ausdauer | +14 Intelligenz | +13 Willenskraft | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121.",
-    "stats": [
-      "+9 Ausdauer",
-      "+14 Intelligenz",
-      "+13 Willenskraft",
-      "Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121."
-    ],
-    "tooltip": "Fangzahn von Korialstrasz | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Dolch | 43 - 107 Schaden Tempo 1,80 | (41.7 Schaden pro Sekunde) | +9 Ausdauer | +14 Intelligenz | +13 Willenskraft | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und Effekte verursachte Heilung um bis zu 121.",
-    "iconName": "inv_weapon_shortblade_29"
   },
   {
     "raid": "AQ20",
@@ -816,26 +688,6 @@
   },
   {
     "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21530,
-    "name": "Gamaschen mit Onyxeinbettung",
-    "slot": "Beine",
-    "type": "Schwere Rüstung",
-    "quality": "Episch",
-    "icon": "134656",
-    "dropChance": "",
-    "statsText": "+23 Beweglichkeit | +23 Ausdauer | +17 Intelligenz | +30 Schattenwiderstand",
-    "stats": [
-      "+23 Beweglichkeit",
-      "+23 Ausdauer",
-      "+17 Intelligenz",
-      "+30 Schattenwiderstand"
-    ],
-    "tooltip": "Gamaschen mit Onyxeinbettung | Wird beim Aufheben gebunden | Beine Schwere Rüstung | 427 Rüstung | +23 Beweglichkeit | +23 Ausdauer | +17 Intelligenz | +30 Schattenwiderstand | Benötigt Stufe 60",
-    "iconName": "inv_pants_mail_04"
-  },
-  {
-    "raid": "AQ20",
     "boss": "Kurinnaxx",
     "itemId": 20884,
     "name": "Gebieterring der Qiraji",
@@ -1037,21 +889,6 @@
     "stats": [],
     "tooltip": "Großer Obsidiansplitter",
     "iconName": "inv_misc_stonetablet_01"
-  },
-  {
-    "raid": "AQ20",
-    "boss": "AQ opening",
-    "itemId": 21139,
-    "name": "Grüner Szeptersplitter",
-    "slot": "",
-    "type": "Quest",
-    "quality": "Episch",
-    "icon": "134106",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Grüner Szeptersplitter | Questgegenstand | Einzigartig",
-    "iconName": "inv_misc_gem_emerald_02"
   },
   {
     "raid": "AQ20",
@@ -1488,24 +1325,6 @@
   },
   {
     "raid": "AQ20",
-    "boss": "Broodlord Lashlayer",
-    "itemId": 19341,
-    "name": "Lebensspendender Edelstein",
-    "slot": "Schmuck",
-    "type": "Verschiedenes",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Klassen: Krieger | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
-    "stats": [
-      "Klassen: Krieger",
-      "Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)"
-    ],
-    "tooltip": "Lebensspendender Edelstein | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Klassen: Krieger | Benötigt Stufe 60 | Benutzen: Heilt Euch selbst für 15% Eurer maximalen Gesundheit und erhöht Eure maximale Gesundheit 20 Sek. um 15%. (5 Min. Abklingzeit)",
-    "iconName": "inv_misc_gem_pearl_05"
-  },
-  {
-    "raid": "AQ20",
     "boss": "Class books",
     "itemId": 21307,
     "name": "Lehrbuch: Aspekt des Falken VII",
@@ -1614,24 +1433,6 @@
     ],
     "tooltip": "Leitfaden des tödlichen Gifts V | Klassen: Schurke | Benötigt Stufe 60 | Benutzen: Lehrt 'Tödliches Gift' (Rang 5). |  | Tödliches Gift V | Klassen: Schurke | Benötigt Stufe 60 | Benutzen: Überzieht eine Waffe mit Gift, das 30 Minuten lang wirkt.  | Bei jedem Schlag besteht eine Chance von 30%, den Gegner 12 Sek. lang zu vergiften und ihm 136 Punkt(e) Naturschaden zuzufügen. Kann bis zu 5-mal auf ein einzelnes Ziel angewendet werden. 120 Aufladungen. |  | Benötigt Todeskraut (7), Kristallphiole",
     "iconName": "inv_misc_book_10"
-  },
-  {
-    "raid": "AQ20",
-    "boss": "Broodlord Lashlayer",
-    "itemId": 19351,
-    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
-    "slot": "Einhändig",
-    "type": "Einhandschwerter",
-    "quality": "Episch",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "stats": [
-      "Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%.",
-      "Anlegen: Schwerter +4."
-    ],
-    "tooltip": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 86 - 162 Schaden Tempo 2,20 | (56.4 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen Angriff zu parieren, um 1%. | Anlegen: Schwerter +4.",
-    "iconName": "inv_sword_49"
   },
   {
     "raid": "AQ20",

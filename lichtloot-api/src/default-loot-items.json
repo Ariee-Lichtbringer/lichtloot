@@ -2409,13 +2409,6 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "21529",
-    "name": "Amulett der Schattenabwehr",
-    "quality": "epic",
-    "icon_url": "inv_jewelry_necklace_17"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "21459",
     "name": "Armbrust der bevorstehenden Verdammnis",
     "quality": "epic",
@@ -2451,13 +2444,6 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "21526",
-    "name": "Band der eisigen Tiefen",
-    "quality": "epic",
-    "icon_url": "inv_jewelry_ring_35"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "21495",
     "name": "Beinplatten des Qirajikommandos",
     "quality": "rare",
@@ -2476,13 +2462,6 @@
     "name": "Bernsteingötze",
     "quality": "rare",
     "icon_url": "inv_qirajidol_amber"
-  },
-  {
-    "raid_type": "aq20",
-    "item_id": "21137",
-    "name": "Blauer Szeptersplitter",
-    "quality": "epic",
-    "icon_url": "inv_misc_gem_sapphire_02"
   },
   {
     "raid_type": "aq20",
@@ -2563,13 +2542,6 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "21175",
-    "name": "Das Szepter der Sandstürme",
-    "quality": "common",
-    "icon_url": "inv_staff_29"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "21802",
     "name": "Der verlorene Kris von Zedd",
     "quality": "rare",
@@ -2584,31 +2556,10 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "21531",
-    "name": "Drachenzahnhalskette",
-    "quality": "epic",
-    "icon_url": "inv_jewelry_necklace_22"
-  },
-  {
-    "raid_type": "aq20",
-    "item_id": "21527",
-    "name": "Dunkelwasserroben",
-    "quality": "epic",
-    "icon_url": "inv_chest_cloth_31"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "20865",
     "name": "Elfenbeinskarabäus",
     "quality": "uncommon",
     "icon_url": "inv_scarab_ivory"
-  },
-  {
-    "raid_type": "aq20",
-    "item_id": "21523",
-    "name": "Fangzahn von Korialstrasz",
-    "quality": "epic",
-    "icon_url": "inv_weapon_shortblade_29"
   },
   {
     "raid_type": "aq20",
@@ -2724,13 +2675,6 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "21530",
-    "name": "Gamaschen mit Onyxeinbettung",
-    "quality": "epic",
-    "icon_url": "inv_pants_mail_04"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "20884",
     "name": "Gebieterring der Qiraji",
     "quality": "rare",
@@ -2812,13 +2756,6 @@
     "name": "Großer Obsidiansplitter",
     "quality": "common",
     "icon_url": "inv_misc_stonetablet_01"
-  },
-  {
-    "raid_type": "aq20",
-    "item_id": "21139",
-    "name": "Grüner Szeptersplitter",
-    "quality": "epic",
-    "icon_url": "inv_misc_gem_emerald_02"
   },
   {
     "raid_type": "aq20",
@@ -2990,13 +2927,6 @@
   },
   {
     "raid_type": "aq20",
-    "item_id": "19341",
-    "name": "Lebensspendender Edelstein",
-    "quality": "epic",
-    "icon_url": "inv_misc_gem_pearl_05"
-  },
-  {
-    "raid_type": "aq20",
     "item_id": "21307",
     "name": "Lehrbuch: Aspekt des Falken VII",
     "quality": "rare",
@@ -3036,13 +2966,6 @@
     "name": "Leitfaden des tödlichen Gifts V",
     "quality": "rare",
     "icon_url": "inv_misc_book_10"
-  },
-  {
-    "raid_type": "aq20",
-    "item_id": "19351",
-    "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
-    "quality": "epic",
-    "icon_url": "inv_sword_49"
   },
   {
     "raid_type": "aq20",
@@ -6301,13 +6224,6 @@
   },
   {
     "raid_type": "naxx",
-    "item_id": "527",
-    "name": "Deprecated Gnoll War Beads",
-    "quality": "common",
-    "icon_url": "inv_jewelry_amulet_05"
-  },
-  {
-    "raid_type": "naxx",
     "item_id": "22808",
     "name": "Der Bestrafer",
     "quality": "epic",
@@ -6333,13 +6249,6 @@
     "name": "Die zehrende Kälte",
     "quality": "epic",
     "icon_url": "inv_sword_62"
-  },
-  {
-    "raid_type": "naxx",
-    "item_id": "521",
-    "name": "Kaese",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
   },
   {
     "raid_type": "naxx",
@@ -6805,13 +6714,6 @@
   },
   {
     "raid_type": "naxx",
-    "item_id": "530",
-    "name": "Hunter",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
-  },
-  {
-    "raid_type": "naxx",
     "item_id": "23035",
     "name": "Hut des Mentors",
     "quality": "epic",
@@ -6938,13 +6840,6 @@
   },
   {
     "raid_type": "naxx",
-    "item_id": "526",
-    "name": "Mage",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
-  },
-  {
-    "raid_type": "naxx",
     "item_id": "19351",
     "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
     "quality": "epic",
@@ -6973,13 +6868,6 @@
   },
   {
     "raid_type": "naxx",
-    "item_id": "528",
-    "name": "Paladin",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
-  },
-  {
-    "raid_type": "naxx",
     "item_id": "22388",
     "name": "Pläne: Gamaschen der Titanen",
     "quality": "epic",
@@ -7005,13 +6893,6 @@
     "name": "Polarschulterpolster",
     "quality": "epic",
     "icon_url": "inv_shoulder_07"
-  },
-  {
-    "raid_type": "naxx",
-    "item_id": "525",
-    "name": "Priest",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
   },
   {
     "raid_type": "naxx",
@@ -7110,13 +6991,6 @@
     "name": "Ring des verseuchten Herzens",
     "quality": "epic",
     "icon_url": "inv_jewelry_ring_51naxxramas"
-  },
-  {
-    "raid_type": "naxx",
-    "item_id": "524",
-    "name": "Rogue",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
   },
   {
     "raid_type": "naxx",
@@ -7369,20 +7243,6 @@
     "name": "Wappen des Schlächters",
     "quality": "epic",
     "icon_url": "inv_trinket_naxxramas03"
-  },
-  {
-    "raid_type": "naxx",
-    "item_id": "529",
-    "name": "Warlock",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
-  },
-  {
-    "raid_type": "naxx",
-    "item_id": "523",
-    "name": "Warrior",
-    "quality": "",
-    "icon_url": "inv_misc_food_37"
   },
   {
     "raid_type": "naxx",

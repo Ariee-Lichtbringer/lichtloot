@@ -18,6 +18,7 @@ const worldbuffTickerCsvUrl =
   "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
 const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
+const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
@@ -3660,13 +3661,14 @@ async function getLootItems({ query: params }) {
 async function loadStaticLootItems(raidType) {
   const raidKey = normalizeRaidType(raidType);
   if (!raidKey) return [];
-  if (staticLootCache.has(raidKey)) return staticLootCache.get(raidKey);
+  const cached = staticLootCache.get(raidKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.items;
 
   try {
     const raw = await readFile(new URL(`../public/data/${raidKey}.json`, import.meta.url), "utf8");
     const parsed = JSON.parse(raw);
     const items = Array.isArray(parsed) ? parsed : [];
-    staticLootCache.set(raidKey, items);
+    staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
     return items;
   } catch (error) {
     try {
@@ -3677,10 +3679,10 @@ async function loadStaticLootItems(raidType) {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const parsed = await response.json();
       const items = Array.isArray(parsed) ? parsed : [];
-      staticLootCache.set(raidKey, items);
+      staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
       return items;
     } catch (fallbackError) {
-      staticLootCache.set(raidKey, []);
+      staticLootCache.set(raidKey, { items: [], expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
       return [];
     }
   }

@@ -282,21 +282,6 @@
   },
   {
     "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 527,
-    "name": "Deprecated Gnoll War Beads",
-    "slot": "",
-    "type": "Quest",
-    "quality": "Gewöhnlich",
-    "icon": "133280",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "Deprecated Gnoll War Beads | Questgegenstand",
-    "iconName": "inv_jewelry_amulet_05"
-  },
-  {
-    "raid": "NAXX",
     "boss": "Thaddius",
     "itemId": 22808,
     "name": "Der Bestrafer",
@@ -369,21 +354,6 @@
     ],
     "tooltip": "Die zehrende Kälte | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 76 - 143 Schaden Tempo 1,50 | (73.0 Schaden pro Sekunde) | 140 Rüstung | +14 Ausdauer | Benötigt Stufe 60 | Anlegen: Schwerter +6.",
     "iconName": "inv_sword_62"
-  },
-  {
-    "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 521,
-    "name": "Kaese",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
   },
   {
     "raid": "NAXX",
@@ -1608,21 +1578,6 @@
   },
   {
     "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 530,
-    "name": "Hunter",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
-  },
-  {
-    "raid": "NAXX",
     "boss": "Heigan the Unclean",
     "itemId": 23035,
     "name": "Hut des Mentors",
@@ -1946,21 +1901,6 @@
   },
   {
     "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 526,
-    "name": "Mage",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
-  },
-  {
-    "raid": "NAXX",
     "boss": "Broodlord Lashlayer",
     "itemId": 19351,
     "name": "Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms",
@@ -2035,21 +1975,6 @@
   },
   {
     "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 528,
-    "name": "Paladin",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
-  },
-  {
-    "raid": "NAXX",
     "boss": "Worlddrop",
     "itemId": 22388,
     "name": "Pläne: Gamaschen der Titanen",
@@ -2118,21 +2043,6 @@
     ],
     "tooltip": "Polarschulterpolster | Wird beim Aufheben gebunden | Schulter Leder | 181 Rüstung | +25 Ausdauer | +33 Frostwiderstand | Benötigt Stufe 60",
     "iconName": "inv_shoulder_07"
-  },
-  {
-    "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 525,
-    "name": "Priest",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
   },
   {
     "raid": "NAXX",
@@ -2549,21 +2459,6 @@
     "iconName": "inv_jewelry_ring_51naxxramas",
     "tokenGroup": "NAXX:T3:RING:CLOTH",
     "tokenName": "Naxxramas T3 Ring: Mage/Priest/Warlock"
-  },
-  {
-    "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 524,
-    "name": "Rogue",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
   },
   {
     "raid": "NAXX",
@@ -3264,36 +3159,6 @@
     ],
     "tooltip": "Wappen des Schlächters | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: +64 Angriffskraft. | Benutzen: Erhöht 20 Sek. lang die Angriffskraft um 260. (2 Min. Abklingzeit)",
     "iconName": "inv_trinket_naxxramas03"
-  },
-  {
-    "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 529,
-    "name": "Warlock",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
-  },
-  {
-    "raid": "NAXX",
-    "boss": "T3_SET",
-    "itemId": 523,
-    "name": "Warrior",
-    "slot": "",
-    "type": "",
-    "quality": "",
-    "icon": "",
-    "dropChance": "",
-    "statsText": "",
-    "stats": [],
-    "tooltip": "",
-    "iconName": "inv_misc_food_37"
   },
   {
     "raid": "NAXX",
