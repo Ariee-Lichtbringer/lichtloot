@@ -2140,23 +2140,14 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  if(currentP0PlusOverride) return false;
-  const deadline=getP0Deadline();
-  if(!deadline) return false;
-  return new Date() > deadline;
+  return Boolean(currentPublishedMode);
 }
 
 function getP0DeadlineClosedMessage(){
-  if(currentP0PlusOverride){
-    return "P0 wurde vom Raidlead wieder freigeschaltet.";
+  if(currentPublishedMode){
+    return "P0+ ist geschlossen, weil die Prioliste bereits geöffnet ist.";
   }
-  const deadline=getP0Deadline();
-  if(!deadline){
-    return "P0+ kann nicht geprüft werden, weil keine Raidzeit geladen wurde.";
-  }
-
-  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-  return "P0 ist bereits geschlossen. P0 konnte nur bis " + deadlineText + " gesetzt werden.";
+  return "P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.";
 }
 
 function formatRaidDate(value){
@@ -2191,24 +2182,10 @@ function updateRaidTimeDisplay(){
   dateEl.textContent=formatRaidDate(currentRaidDate);
   timeEl.textContent=formatTime(currentRaidTime);
 
-  const deadline=getP0Deadline();
-  if(currentP0PlusOverride){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 durch Raidlead freigeschaltet</span><br>Die 30-Minuten-Sperre ist für diesen Raid aufgehoben.';
-    updateActiveButtons();
-    return;
-  }
-  if(!deadline){
-    deadlineEl.innerHTML='<span class="warn">Keine Raidzeit vorhanden.</span> P0+ bleibt vorerst auswählbar.';
-    return;
-  }
-
-  const now=new Date();
-  const deadlineText=deadline.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
-
-  if(now <= deadline){
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 möglich bis '+deadlineText+'</span><br>Noch offen: '+formatDuration(deadline-now);
+  if(currentPublishedMode){
+    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0+ geschlossen</span><br>P0+ kann nicht mehr gesetzt werden, weil die Prioliste geöffnet ist.';
   }else{
-    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0 geschlossen</span><br>P0 konnte nur bis '+deadlineText+' gesetzt werden.';
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.';
   }
 
   updateActiveButtons();

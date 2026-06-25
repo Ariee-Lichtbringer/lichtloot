@@ -2192,11 +2192,14 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  return false;
+  return Boolean(currentPublishedMode);
 }
 
 function getP0DeadlineClosedMessage(){
-  return "P0+ ist offen.";
+  if(currentPublishedMode){
+    return "P0+ ist geschlossen, weil die Prioliste bereits geöffnet ist.";
+  }
+  return "P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.";
 }
 
 function formatRaidDate(value){
@@ -2231,7 +2234,11 @@ function updateRaidTimeDisplay(){
   dateEl.textContent=formatRaidDate(currentRaidDate);
   timeEl.textContent=formatTime(currentRaidTime);
 
-  deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann jederzeit eingetragen werden.';
+  if(currentPublishedMode){
+    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0+ geschlossen</span><br>P0+ kann nicht mehr gesetzt werden, weil die Prioliste geöffnet ist.';
+  }else{
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.';
+  }
 
   updateActiveButtons();
 }
@@ -6239,7 +6246,7 @@ async function createRaidFromLootPage(){
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
       <strong>Raid:</strong><br>${r.name}<br><br>
       <strong>Raidstart:</strong><br>${formatRaidDateForCreate(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/P0+ möglich bis ${formatP0DeadlineForCreate(raidDate,raidTime)} Uhr.</span><br><br>
+      <span class="warn">P0/P0+ möglich, bis die Prioliste geöffnet wird.</span><br><br>
       <strong>Prio PIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
