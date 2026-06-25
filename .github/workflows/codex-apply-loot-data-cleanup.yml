@@ -1,0 +1,136 @@
+name: Apply loot data cleanup
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clean reported loot data
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const aq20Names = new Set([
+            'Amulett der Schattenabwehr',
+            'Band der eisigen Tiefen',
+            'Blauer Szeptersplitter',
+            'Das Szepter der Sandstürme',
+            'Das Scepter der Sandstürme',
+            'Drachenzahnhalskette',
+            'Dunkelwasserroben',
+            'Fangzahn von Korialstrasz',
+            'Gamaschen mit Onyxeinbettung',
+            'Grüner Szeptersplitter',
+            'Lebensspendender Edelstein',
+            'Maladath, Runenverzierte Klinge des schwarzen Drachenschwarms'
+          ]);
+
+          const naxxNames = new Set([
+            'Deprecated Gnoll War Beads',
+            'Kaese',
+            'Käse',
+            'Warrior',
+            'Warlock',
+            'Rogue',
+            'Priest',
+            'Paladin',
+            'Mage',
+            'Hunter',
+            'Druid',
+            'Shaman',
+            'Krieger',
+            'Hexenmeister',
+            'Schurke',
+            'Priester',
+            'Magier',
+            'Jäger',
+            'Jaeger',
+            'Druide',
+            'Schamane'
+          ]);
+
+          function raidOf(item) {
+            return String(item.raid_type || item.raid || item.raidType || '').trim().toLowerCase();
+          }
+
+          function itemName(item) {
+            return String(item.name || item.item_name || '').trim();
+          }
+
+          function rewriteArrayFile(file, shouldRemove) {
+            if (!fs.existsSync(file)) return;
+            const items = JSON.parse(fs.readFileSync(file, 'utf8'));
+            if (!Array.isArray(items)) return;
+            const filtered = items.filter(item => !shouldRemove(item));
+            fs.writeFileSync(file, JSON.stringify(filtered, null, 2) + '\n');
+            console.log(`${file}: ${items.length} -> ${filtered.length}`);
+          }
+
+          rewriteArrayFile('data/aq20.json', item => aq20Names.has(itemName(item)));
+          rewriteArrayFile('lichtloot-api/public/data/aq20.json', item => aq20Names.has(itemName(item)));
+          rewriteArrayFile('data/naxx.json', item => naxxNames.has(itemName(item)));
+          rewriteArrayFile('lichtloot-api/public/data/naxx.json', item => naxxNames.has(itemName(item)));
+          rewriteArrayFile('lichtloot-api/src/default-loot-items.json', item => {
+            const raid = raidOf(item);
+            const name = itemName(item);
+            return (raid === 'aq20' && aq20Names.has(name)) || (raid === 'naxx' && naxxNames.has(name));
+          });
+
+          const serverPath = 'lichtloot-api/src/server.js';
+          if (fs.existsSync(serverPath)) {
+            let server = fs.readFileSync(serverPath, 'utf8');
+            if (server.includes('const staticLootCache = new Map();') && !server.includes('STATIC_LOOT_CACHE_TTL_MS')) {
+              server = server.replace(
+                'const staticLootCache = new Map();',
+                'const staticLootCache = new Map();\nconst STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;'
+              );
+              server = server.replace(
+                'if (staticLootCache.has(raidKey)) return staticLootCache.get(raidKey);',
+                'const cached = staticLootCache.get(raidKey);\n  if (cached && cached.expiresAt > Date.now()) return cached.items;'
+              );
+              server = server.replaceAll(
+                'staticLootCache.set(raidKey, items);',
+                'staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });'
+              );
+              server = server.replace(
+                'staticLootCache.set(raidKey, []);',
+                'staticLootCache.set(raidKey, { items: [], expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });'
+              );
+              fs.writeFileSync(serverPath, server);
+              console.log(`${serverPath}: cache TTL patched`);
+            }
+          }
+          NODE
+
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for path in \
+            data/aq20.json \
+            data/naxx.json \
+            lichtloot-api/public/data/aq20.json \
+            lichtloot-api/public/data/naxx.json \
+            lichtloot-api/src/default-loot-items.json \
+            lichtloot-api/src/server.js; do
+            if [ -e "$path" ]; then git add "$path"; fi
+          done
+          if git diff --cached --quiet; then
+            echo "No cleanup changes needed."
+            exit 0
+          fi
+          git commit -m "Clean reported loot data"
+          git push
