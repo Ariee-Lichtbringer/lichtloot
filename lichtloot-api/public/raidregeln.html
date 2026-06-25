@@ -248,6 +248,136 @@ h1{
   margin-bottom:14px;
 }
 
+.raid-layout{
+  display:grid;
+  grid-template-columns:240px minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+}
+
+.raid-menu{
+  position:sticky;
+  top:16px;
+  display:grid;
+  gap:8px;
+  padding:10px;
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+}
+
+.raid-menu button{
+  width:100%;
+  min-height:42px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:7px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(15,23,42,.64);
+  color:#f8fafc;
+  font-weight:950;
+  text-align:left;
+  cursor:pointer;
+}
+
+.raid-menu button.active,
+.raid-menu button:hover{
+  border-color:rgba(250,204,21,.58);
+  background:linear-gradient(90deg,rgba(250,204,21,.26),rgba(250,204,21,.05));
+  color:var(--gold);
+}
+
+.raid-menu small{
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:900;
+}
+
+.raid-detail{
+  display:grid;
+  gap:14px;
+}
+
+.raid-hero{
+  padding:18px;
+  border:1px solid rgba(250,204,21,.24);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(96,165,250,.08)),rgba(2,6,23,.62);
+}
+
+.raid-hero h2{
+  color:var(--gold);
+  font-size:clamp(28px,4vw,44px);
+  line-height:1.05;
+  margin-bottom:8px;
+}
+
+.raid-hero p{
+  color:#dbeafe;
+  line-height:1.5;
+  font-size:15px;
+  font-weight:800;
+}
+
+.quick-rules{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px;
+}
+
+.quick-rule{
+  min-height:72px;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(15,23,42,.58);
+}
+
+.quick-rule strong{
+  display:block;
+  color:#86efac;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:5px;
+}
+
+.quick-rule span{
+  color:#f8fafc;
+  font-size:14px;
+  line-height:1.35;
+  font-weight:850;
+}
+
+.raid-section-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.raid-section-card{
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+  background:var(--panel-soft);
+  overflow:hidden;
+}
+
+.raid-section-card.is-wide{
+  grid-column:1 / -1;
+}
+
+.raid-section-card h3{
+  padding:13px 15px;
+  color:var(--gold);
+  font-size:16px;
+  line-height:1.2;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
 .table-wrap{
   overflow:auto;
   border:1px solid rgba(255,255,255,.10);
@@ -299,6 +429,22 @@ th{
 
 .pill.required{border-color:rgba(34,197,94,.45);color:#86efac}
 .pill.optional{border-color:rgba(96,165,250,.45);color:#bfdbfe}
+.class-pill{
+  border-color:color-mix(in srgb, var(--class-color) 62%, transparent);
+  color:var(--class-color);
+  background:color-mix(in srgb, var(--class-color) 18%, rgba(15,23,42,.72));
+}
+.class-warrior{--class-color:#c79c6e}
+.class-rogue{--class-color:#fff569}
+.class-hunter{--class-color:#abd473}
+.class-mage{--class-color:#69ccf0}
+.class-warlock{--class-color:#9482c9}
+.class-priest{--class-color:#ffffff}
+.class-paladin{--class-color:#f58cba}
+.class-druid{--class-color:#ff7d0a}
+.class-tank{--class-color:#f97316}
+.class-healer{--class-color:#86efac}
+.class-hybrid{--class-color:#cbd5e1}
 
 .empty-state{
   padding:18px;
@@ -323,6 +469,10 @@ th{
   .rules-shell{width:100%;padding:16px;border-radius:16px}
   .rules-head{grid-template-columns:1fr}
   .rules-grid{grid-template-columns:1fr}
+  .raid-layout{grid-template-columns:1fr}
+  .raid-menu{position:static;display:flex;overflow-x:auto}
+  .raid-menu button{min-width:160px}
+  .quick-rules,.raid-section-grid{grid-template-columns:1fr}
   .main-nav{width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
   .nav-btn,.rules-tab,.filter-btn{white-space:nowrap}
 }
@@ -355,14 +505,14 @@ th{
     </section>
 
     <div class="rules-tabs" role="tablist">
-      <button class="rules-tab active" type="button" data-tab="general" onclick="switchRulesTab('general')">Allgemein</button>
-      <button class="rules-tab" type="button" data-tab="raids" onclick="switchRulesTab('raids')">Raids</button>
+      <button class="rules-tab active" type="button" data-tab="raids" onclick="switchRulesTab('raids')">Raids</button>
+      <button class="rules-tab" type="button" data-tab="general" onclick="switchRulesTab('general')">Alle Regeln</button>
       <button class="rules-tab" type="button" data-tab="consumables" onclick="switchRulesTab('consumables')">Consumables</button>
       <button class="rules-tab" type="button" data-tab="enchants" onclick="switchRulesTab('enchants')">Verzauberungen</button>
     </div>
 
-    <section id="panelGeneral" class="rules-panel active"></section>
-    <section id="panelRaids" class="rules-panel"></section>
+    <section id="panelGeneral" class="rules-panel"></section>
+    <section id="panelRaids" class="rules-panel active"></section>
     <section id="panelConsumables" class="rules-panel"></section>
     <section id="panelEnchants" class="rules-panel"></section>
 
@@ -372,8 +522,8 @@ th{
 
 <script>
 let rulesData=null;
-let activeTab="general";
-let activeRaid="all";
+let activeTab="raids";
+let activeRaid="bwl";
 let activeClass="all";
 
 const generalLabels={
@@ -447,19 +597,103 @@ function setRaidFilter(raidId){
   renderRaids();
 }
 
+const raidCategoryLabels={
+  prio:"Prio & P0",
+  loot:"Loot-Sonderregeln",
+  requirements:"Anforderungen",
+  flow:"Raidablauf",
+  worldbuff:"Worldbuffs",
+  other:"Weitere Regeln"
+};
+
+function getRaidCategory(rule){
+  const text=String(rule || "").toLowerCase();
+  if(/prio|p0|p1|p2|p3|freigabe|teilnahmen|mainspec/.test(text)) return "prio";
+  if(/gelockt|gildenbank|gbank|elementium|fesseln|auge|götzen|skarabaen|bücher|boe|kopf|herz|beschworenen boss|schmuckstücke|blutreben|puppen|splitter|kristalle|armbrust/.test(text)) return "loot";
+  if(/anforderung|ausrüstungsstand|verzauber|resist|resi|t3|spellpower|heal|rüstung|ap|hit|consumable|verbrauch|tränke/.test(text)) return "requirements";
+  if(/raidleitung|invite|später|rainanmeldechannel|raidstart|mittwoch|id|pull/.test(text)) return "flow";
+  if(/worldbuff|abgabe der quest/.test(text)) return "worldbuff";
+  return "other";
+}
+
+function groupRaidRules(raid){
+  const groups={prio:[],loot:[],requirements:[],flow:[],worldbuff:[],other:[]};
+  raid.rules.forEach(rule => {
+    if(!matchesSearch(rule)) return;
+    groups[getRaidCategory(rule)].push(rule);
+  });
+  return groups;
+}
+
+function getRaidSummary(raid){
+  const groups=groupRaidRules(raid);
+  const pick = rules => rules.find(Boolean) || "Keine Angabe in den importierten Regeln.";
+  return [
+    {label:"P0", text:pick(groups.prio.filter(rule => /grundregel|freigabe|prio 0|p0/i.test(rule)))},
+    {label:"Loot", text:pick(groups.loot)},
+    {label:"Anforderungen", text:pick(groups.requirements)},
+    {label:"Ablauf", text:pick(groups.flow)}
+  ];
+}
+
+function renderRaidSection(title,rules,wide=false){
+  if(!rules.length) return "";
+  return `
+    <article class="raid-section-card ${wide ? "is-wide" : ""}">
+      <h3>${escapeHtml(title)}</h3>
+      <ul class="rule-list">
+        ${rules.map(rule => `<li>${escapeHtml(rule)}</li>`).join("")}
+      </ul>
+    </article>
+  `;
+}
+
 function renderRaids(){
   const panel=document.getElementById("panelRaids");
-  const filters=[
-    `<button class="filter-btn ${activeRaid === "all" ? "active" : ""}" type="button" onclick="setRaidFilter('all')">Alle</button>`,
-    ...rulesData.raids.map(raid => `<button class="filter-btn ${activeRaid === raid.id ? "active" : ""}" type="button" onclick="setRaidFilter('${escapeHtml(raid.id)}')">${escapeHtml(raid.name)}</button>`)
-  ].join("");
-  const cards=rulesData.raids
-    .filter(raid => activeRaid === "all" || raid.id === activeRaid)
-    .map(raid => renderRuleCard(raid.name, raid.rules))
-    .filter(Boolean);
+  if(!rulesData.raids.some(raid => raid.id === activeRaid)){
+    activeRaid=rulesData.raids[0]?.id || "";
+  }
+  const raid=rulesData.raids.find(entry => entry.id === activeRaid);
+  if(!raid){
+    panel.innerHTML='<div class="empty-state">Keine Raidregeln gefunden.</div>';
+    return;
+  }
+  const menu=rulesData.raids.map(entry => `
+    <button class="${activeRaid === entry.id ? "active" : ""}" type="button" onclick="setRaidFilter('${escapeHtml(entry.id)}')">
+      <span>${escapeHtml(entry.name)}</span>
+      <small>${escapeHtml(entry.id.toUpperCase())}</small>
+    </button>
+  `).join("");
+  const groups=groupRaidRules(raid);
+  const summary=getRaidSummary(raid);
+  const sections=[
+    renderRaidSection(raidCategoryLabels.prio, groups.prio),
+    renderRaidSection(raidCategoryLabels.loot, groups.loot),
+    renderRaidSection(raidCategoryLabels.requirements, groups.requirements),
+    renderRaidSection(raidCategoryLabels.flow, groups.flow),
+    renderRaidSection(raidCategoryLabels.worldbuff, groups.worldbuff),
+    renderRaidSection(raidCategoryLabels.other, groups.other, true)
+  ].filter(Boolean).join("");
+  const count=Object.values(groups).reduce((total,rules) => total + rules.length, 0);
   panel.innerHTML=`
-    <div class="raid-filter">${filters}</div>
-    ${cards.length ? `<div class="rules-grid">${cards.join("")}</div>` : `<div class="empty-state">Keine Raidregeln gefunden.</div>`}
+    <div class="raid-layout">
+      <aside class="raid-menu" aria-label="Raid auswählen">${menu}</aside>
+      <div class="raid-detail">
+        <section class="raid-hero">
+          <h2>${escapeHtml(raid.name)}</h2>
+          <p>${count ? `${count} passende Regeln in klaren Bereichen.` : "Für diese Suche wurden keine Regeln gefunden."}</p>
+          <div class="quick-rules">
+            ${summary.map(item => `
+              <div class="quick-rule">
+                <strong>${escapeHtml(item.label)}</strong>
+                <span>${escapeHtml(item.text)}</span>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+        ${sections ? `<div class="raid-section-grid">${sections}</div>` : `<div class="empty-state">Keine Raidregeln gefunden.</div>`}
+      </div>
+    </div>
   `;
 }
 
@@ -481,6 +715,26 @@ function renderClassFilters(classes){
   ].join("");
 }
 
+function getClassColorClass(className){
+  const value=String(className || "").toLowerCase();
+  if(value.includes("krieger")) return "class-warrior";
+  if(value.includes("schur")) return "class-rogue";
+  if(value.includes("jäger") || value.includes("jaeger")) return "class-hunter";
+  if(value.includes("mage") || value.includes("magier")) return "class-mage";
+  if(value.includes("hexer")) return "class-warlock";
+  if(value.includes("priester") || value.includes("priest")) return "class-priest";
+  if(value.includes("pala")) return "class-paladin";
+  if(value.includes("druid") || value.includes("druide")) return "class-druid";
+  if(value.includes("tank")) return "class-tank";
+  if(value.includes("heal") || value.includes("heiler")) return "class-healer";
+  if(value.includes("hybrid")) return "class-hybrid";
+  return "class-hybrid";
+}
+
+function renderClassPill(className){
+  return `<span class="pill class-pill ${getClassColorClass(className)}">${escapeHtml(className)}</span>`;
+}
+
 function renderConsumables(){
   const panel=document.getElementById("panelConsumables");
   const classes=allConsumableClasses();
@@ -499,7 +753,7 @@ function renderConsumables(){
             <tr>
               <td>${escapeHtml(item.name)}</td>
               <td><span class="pill ${item.required ? "required" : "optional"}">${item.required ? "wichtig" : "optional"}</span></td>
-              <td><div class="pill-row">${item.classes.map(cls => `<span class="pill">${escapeHtml(cls)}</span>`).join("")}</div></td>
+              <td><div class="pill-row">${item.classes.map(cls => renderClassPill(cls)).join("")}</div></td>
             </tr>
           `).join("") || `<tr><td colspan="3">Keine Consumables gefunden.</td></tr>`}
         </tbody>
@@ -535,7 +789,7 @@ function renderEnchants(){
         <tbody>
           ${rows.map(row => `
             <tr>
-              <td><span class="pill">${escapeHtml(row.className)}</span></td>
+              <td>${renderClassPill(row.className)}</td>
               <td>${escapeHtml(row.slot)}</td>
               <td>${escapeHtml(row.value)}</td>
             </tr>
@@ -559,7 +813,7 @@ async function loadRules(){
     const response=await fetch("data/raidregeln.json?v=20260625");
     if(!response.ok) throw new Error("Regeln konnten nicht geladen werden.");
     rulesData=await response.json();
-    renderGeneral();
+    renderRaids();
     const updated=rulesData.updatedAt ? new Date(rulesData.updatedAt).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}) : "unbekannt";
     document.getElementById("rulesFooter").textContent=`Quelle: ${rulesData.source || "CSV Export"} · Stand: ${updated}`;
   }catch(error){

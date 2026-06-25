@@ -1,11 +1,9 @@
 {
-  "updatedAt": "2026-06-25T06:02:49.541Z",
+  "updatedAt": "2026-06-25T06:14:31.325Z",
   "source": "Raidregeln Lichtbringer CSV Export",
   "general": {
     "prio": [
       "Alle Spieler bestimmen eine festgelegte Anzahl PRIOs - in der Regel PRIO 1 - 3",
-      "www.sahne-team.de",
-      "Die Prio-ID posten wir vor Raid in dem Kanal, in welchem der Raidplaner ist.",
       "Für eine PRIO 0 muss man das gleiche Item auf alle 3 PRIOs nehmen",
       "In den Raids gibt es verschiedene Bedingungen für PRIO 0",
       "Offspec-items nur PRIO2 und PRIO3 - KEINE PRIO1.",
@@ -17,12 +15,7 @@
       "Ein Roll bis 100 schlägt immer einen Roll bis 99 - selbst wenn der 99 Roll höher war",
       "Flaskgear ist immer nur ein 50er Roll + kann nicht auf P1 genommen werden. (Auch beim Prio Roll nur 50er Wurf)",
       "Beim Kriegerloot wird nicht mehr unterschieden zwischen Tank und Fury DD Items. (Kriegerloot = Kriegerloot)",
-      "Wer später zum Raid kommt hat nur P2 und P3. Definition von „später“: Wenn die sahne-Liste geöffnet wurde.",
-      "Wenn es nicht zu spät ist, dann könnt ihr nach OK vom Raidlead vorher über Handy die sahne-id schon machen.",
       "Spieler, welche die Raidregeln in Bezug auf VZ und Consumables grob mißachten, verlieren ggf. ihre Prio1/Prio0.",
-      "Falls jemand nach der Sahnei-Id fragt: Sagt diesem Spieler, er soll bitte im Raidkanal nachschauen.",
-      "B) Damit stellen wir sicher, daß jeder sieht, ob etwas auf P0 ist.",
-      "Bimmii Kreyna Linari? Giminiufns Lagertha Kaeseroller Vallkyria Bimmii Milkshake",
       "- Prio Bedingungen gelten natürlich pro Character"
     ],
     "invite": [
