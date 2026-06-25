@@ -3669,8 +3669,20 @@ async function loadStaticLootItems(raidType) {
     staticLootCache.set(raidKey, items);
     return items;
   } catch (error) {
-    staticLootCache.set(raidKey, []);
-    return [];
+    try {
+      const response = await fetch(
+        `https://raw.githubusercontent.com/Ariee-Lichtbringer/lichtloot/main/data/${encodeURIComponent(raidKey)}.json`,
+        { cache: "no-store" }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const parsed = await response.json();
+      const items = Array.isArray(parsed) ? parsed : [];
+      staticLootCache.set(raidKey, items);
+      return items;
+    } catch (fallbackError) {
+      staticLootCache.set(raidKey, []);
+      return [];
+    }
   }
 }
 
