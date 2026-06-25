@@ -1358,6 +1358,39 @@ async function getPlayerPrioHistory(guildId, params) {
 async function deletePrio({ guildId, query: params }) {
   const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
   const player = params.player || params.char || params.spieler;
+  const raidId = clean(params.raidId);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+
+  if (leadPin && raidId && player) {
+    const raid = await findRaid(guildId, { raidId, leadPin });
+    if (!raid) {
+      const error = new Error("RaidID oder LeadPIN nicht gefunden.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    const values = [guildId, raid.id, clean(player)];
+    let serverClause = "";
+    if (clean(params.server)) {
+      values.push(clean(params.server));
+      serverClause = `and lower(c.server) = lower($${values.length})`;
+    }
+
+    const result = await query(
+      `delete from prios pr
+       using characters c
+       where pr.character_id = c.id
+         and pr.raid_id = $2
+         and c.player_id in (select id from players where guild_id = $1)
+         and lower(c.name) = lower($3)
+         ${serverClause}
+       returning pr.id`,
+      values
+    );
+
+    return { success: true, deleted: result.rowCount };
+  }
+
   const character = await findCharacterForPin(guildId, pin, player, params.server);
 
   if (!character) {
@@ -1368,7 +1401,6 @@ async function deletePrio({ guildId, query: params }) {
 
   const values = [character.id];
   let raidClause = "";
-  const raidId = clean(params.raidId);
 
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raidId)) {
     values.push(raidId);

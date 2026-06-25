@@ -2417,6 +2417,7 @@ async function deleteSinglePrio(player,server){
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=deletePrio" +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
     "&t=" + Date.now();
