@@ -440,6 +440,35 @@ h1{
   font-weight:800;
 }
 
+.naxx-requirement-list{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  padding:12px;
+}
+
+.naxx-requirement-box{
+  display:grid;
+  gap:8px;
+  padding:13px;
+  border-radius:8px;
+  border:1px solid rgba(250,204,21,.24);
+  background:rgba(15,23,42,.58);
+}
+
+.naxx-requirement-box strong{
+  color:var(--gold);
+  font-size:14px;
+  font-weight:950;
+}
+
+.naxx-requirement-box span{
+  color:#dbeafe;
+  font-size:13px;
+  line-height:1.45;
+  font-weight:850;
+}
+
 .table-wrap{
   overflow:auto;
   border:1px solid rgba(255,255,255,.10);
@@ -534,7 +563,7 @@ th{
   .raid-layout{grid-template-columns:1fr}
   .raid-menu{position:static;display:flex;overflow-x:auto}
   .raid-menu button{min-width:160px}
-  .quick-rules,.raid-section-grid,.requirement-grid{grid-template-columns:1fr}
+  .quick-rules,.raid-section-grid,.requirement-grid,.naxx-requirement-list{grid-template-columns:1fr}
   .main-nav{width:100%;justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}
   .nav-btn,.rules-tab,.filter-btn{white-space:nowrap}
 }
@@ -728,7 +757,7 @@ const naxxRequirementRules=[
 ];
 
 function isNaxxRequirementLine(rule){
-  return /Werte je nach Klasse|Krieger ab 1150|Schurken ab 1100|Tanks ab 6 T3|Hexer ab 600|Jäger ab 6x T3/i.test(String(rule || ""));
+  return /Werte je nach Klasse|Krieger ab 1150|Schurken ab 1100|Tanks ab 6 T3|Hexer ab 600|Jäger ab 6x T3|alle Verzauberungen|VERBRAUCHSMATERIAL|RÜSTUNGSTEILEN|Frostresi|VERZAUBERUNGEN DER GEGENSTÄNDE|Item-Slot maximal|Consumables im Naxx|maximal.*Consumables|Reiter.*Consumables|log Analyse/i.test(String(rule || ""));
 }
 
 function requirementMatchesSearch(item){
@@ -738,24 +767,50 @@ function requirementMatchesSearch(item){
 
 function renderNaxxRequirements(){
   const items=naxxRequirementRules.filter(requirementMatchesSearch);
-  if(!items.length) return "";
+  const generalRequirements=[
+    {
+      title:"Verzauberungen",
+      text:"Alle Item-Slots maximal verzaubert, inklusive ZG- oder Naxx-Schulterverzauberung."
+    },
+    {
+      title:"Frostresi & Gear",
+      text:"Frostresi und Ausrüstungsanforderungen gelten laut DC-Channel Naxx Vorbereitung."
+    },
+    {
+      title:"Consumables",
+      text:"Maximal mögliche Consumables. Benötigte Tränke richten sich nach den geplanten Bossen im Raidanmeldechannel."
+    }
+  ].filter(item => matchesSearch([item.title,item.text].join(" ")));
+  if(!items.length && !generalRequirements.length) return "";
   return `
     <article class="raid-section-card is-wide">
       <h3>Naxx P0-Voraussetzungen nach Klasse</h3>
-      <div class="requirement-grid">
-        ${items.map(item => `
-          <div class="requirement-card ${getClassColorClass(item.name)}">
-            <div class="requirement-class">
-              <strong>${escapeHtml(item.name)}</strong>
-              <span class="requirement-type">${escapeHtml(item.type)}</span>
+      ${items.length ? `
+        <div class="requirement-grid">
+          ${items.map(item => `
+            <div class="requirement-card ${getClassColorClass(item.name)}">
+              <div class="requirement-class">
+                <strong>${escapeHtml(item.name)}</strong>
+                <span class="requirement-type">${escapeHtml(item.type)}</span>
+              </div>
+              <div class="requirement-values">
+                ${item.values.map(value => `<span class="requirement-chip">${escapeHtml(value)}</span>`).join("")}
+              </div>
             </div>
-            <div class="requirement-values">
-              ${item.values.map(value => `<span class="requirement-chip">${escapeHtml(value)}</span>`).join("")}
+          `).join("")}
+        </div>
+      ` : ""}
+      ${generalRequirements.length ? `
+        <div class="naxx-requirement-list">
+          ${generalRequirements.map(item => `
+            <div class="naxx-requirement-box">
+              <strong>${escapeHtml(item.title)}</strong>
+              <span>${escapeHtml(item.text)}</span>
             </div>
-          </div>
-        `).join("")}
-      </div>
-      <div class="requirement-note">Zusätzlich gelten die normalen Naxx-P0-Regeln: Freigabe, Teilnahmen und vollständige Verzauberungen.</div>
+          `).join("")}
+        </div>
+      ` : ""}
+      <div class="requirement-note">Zusätzlich gelten die normalen Naxx-P0-Regeln: Freigabe durch Leitung/Klassenleitung und die geforderten Teilnahmen.</div>
     </article>
   `;
 }
