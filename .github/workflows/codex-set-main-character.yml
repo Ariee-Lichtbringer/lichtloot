@@ -18,13 +18,6 @@ jobs:
           python3 <<'PY'
           from pathlib import Path
 
-          def replace_once(path, old, new):
-              p = Path(path)
-              text = p.read_text()
-              if old not in text:
-                  raise SystemExit(f"Pattern not found in {path}: {old[:80]!r}")
-              p.write_text(text.replace(old, new, 1))
-
           server = Path('lichtloot-api/src/server.js')
           s = server.read_text()
           s = s.replace('''    Klasse: row.class_name,
@@ -259,3 +252,5 @@ let myWorldbuffEntries=[];''', 1)
           git commit -m "Remove temporary main character workflow" || true
       - name: Push changes
         run: git push
+
+# trigger 2
