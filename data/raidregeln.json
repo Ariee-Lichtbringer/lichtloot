@@ -1,0 +1,811 @@
+{
+  "updatedAt": "2026-06-25T06:02:49.541Z",
+  "source": "Raidregeln Lichtbringer CSV Export",
+  "general": {
+    "prio": [
+      "Alle Spieler bestimmen eine festgelegte Anzahl PRIOs - in der Regel PRIO 1 - 3",
+      "www.sahne-team.de",
+      "Die Prio-ID posten wir vor Raid in dem Kanal, in welchem der Raidplaner ist.",
+      "Für eine PRIO 0 muss man das gleiche Item auf alle 3 PRIOs nehmen",
+      "In den Raids gibt es verschiedene Bedingungen für PRIO 0",
+      "Offspec-items nur PRIO2 und PRIO3 - KEINE PRIO1.",
+      "Für Spieler die Prio 0 gesetzt haben gilt:",
+      "Bei 100er FFA-Rolls habt ihr ab sofort nur noch eine /99 + Bei 50er FFA-Rolls habt ihr ab sofort nur noch eine /49",
+      "Items welche keiner auf der Prio hat werden FFA verwürfelt aber nach Spec im Raid.",
+      "Rolls bis 100 für MAINSPEC - Rolls bis 50 für OFFSPEC",
+      "Hat ein Spieler bereits ein MAINSPEC im Roll bis 100 gewonnen, so würfelt er beim nächsten MAINSPEC FFA Item eine 99",
+      "Ein Roll bis 100 schlägt immer einen Roll bis 99 - selbst wenn der 99 Roll höher war",
+      "Flaskgear ist immer nur ein 50er Roll + kann nicht auf P1 genommen werden. (Auch beim Prio Roll nur 50er Wurf)",
+      "Beim Kriegerloot wird nicht mehr unterschieden zwischen Tank und Fury DD Items. (Kriegerloot = Kriegerloot)",
+      "Wer später zum Raid kommt hat nur P2 und P3. Definition von „später“: Wenn die sahne-Liste geöffnet wurde.",
+      "Wenn es nicht zu spät ist, dann könnt ihr nach OK vom Raidlead vorher über Handy die sahne-id schon machen.",
+      "Spieler, welche die Raidregeln in Bezug auf VZ und Consumables grob mißachten, verlieren ggf. ihre Prio1/Prio0.",
+      "Falls jemand nach der Sahnei-Id fragt: Sagt diesem Spieler, er soll bitte im Raidkanal nachschauen.",
+      "B) Damit stellen wir sicher, daß jeder sieht, ob etwas auf P0 ist.",
+      "Bimmii Kreyna Linari? Giminiufns Lagertha Kaeseroller Vallkyria Bimmii Milkshake",
+      "- Prio Bedingungen gelten natürlich pro Character"
+    ],
+    "invite": [
+      "Für Spieler die RL-bedingt nicht rechtzeitig zum Raid kommen können: whispert den Raidleiter an, wann ca. ihr kommen könnt.",
+      "Information zur INVITE-Phase",
+      "Die im Raidplaner genannten Zeiten sind Soll-Pullzeiten: Pull vom ersten Mob",
+      "Invite der 40er Raids startet mindestens 15 Minuten vor Pull-Zeit",
+      "Ab 10 Minuten vor Pull-Zeit laden wir Spieler von der Ersatzbank",
+      "Wenn Ihr fest angemeldet seit: Schaut bitte, daß Ihr bis 10 Minuten vor Raid im Raidkader seit.",
+      "Die Invitephase für die Organisatoren ist sehr stressig, falls mal ein Whisper überlesen wurde: Bitte bis 5 Minuten vor Pull im Discord ansagen:",
+      "Wir kündigen im Raidplanerkanal oder per Whisper an, wer auf der EB ist. Der Rest ist fest gesetzt.",
+      "Bitte die Inviter während dem Invite nur mit Invite-relevanten Fragen anwhispern.",
+      "auf die Ersatzbank anmelden. Und dann nur mitkommen, wenn der Spot sonst leer bleiben würde.",
+      "Wenn wir nur einen Druiden haben auf Anmeldeplatz 50, dann müssen wir dennoch den zehnten Schurken auf Anmeldeplatz 20",
+      "Anmeldereihenfolge:",
+      "Bitte meldet Euch frühzeitig an! Wir achten beim Inviten auch auf die Reihenfolge der Anmeldung.",
+      "Regelmässige Anmeldungen:"
+    ],
+    "ersatzbank": [
+      "Ersatzbank",
+      "Erst einmal: Bitte betrachtet es als vorteilhaft für Euch und alle anderen, wenn wir Spieler auf der Ersatzbank haben.",
+      "Falls wir über 40 Spieler haben, dann fragen wir immer zuerst, ob jemand freiwillig raus geht.",
+      "Bei MC oder 20er Raids gehen oft und gern gut equippte Spieler freiwillig auf die EB.",
+      "Wer aufgestellt wird entscheidet der Raidleiter",
+      "Wenn sich nicht genug Freiwillige für die Ersatzbank finden, dann werden mehrere Kriterien herangezogen:",
+      "Raidzusammenstellung:",
+      "Spieler die es nicht schaffen ihr Gear zu verzaubern,Tränke und andere 7-Sachen dabeizuhaben werden eher auf die Bank gesetzt"
+    ],
+    "consumables": [
+      "VERBRAUCHSMATERIAL - ALLE Raids",
+      "Habt die geforderte Mindestmenge an Verbrauchsgegenständen dabei, je 1 5er Stack.",
+      "Wetzsteine / Zauberöl / Manaöl",
+      "Schwere Runenstoff-Verbände und Erhebliche Heiltränke",
+      "Melees: wenigstens Elixier der Riesen und 25 Beweglichkeit",
+      "Melees: besser Stärke Juju und Elixir des Mungos",
+      "Caster: wenigstens kleines Arkanelixier und Frostmacht/Feuermacht/Schattenmacht",
+      "Caster: besser das große Arkanelixier und Frostmacht/Feuermacht/Schattenmacht",
+      "Abilities der Klassen abstimmen. Z.B. Paladine Pallypower-Buffs, Magier das Ignite"
+    ],
+    "verzauberungen": [
+      "Bei >BWL würde ich im Gegenzug erwarten, daß sich Spieler die gearmässig eigentlich noch nicht soweit sind, aber gern mit würden,",
+      "Vorhandensein von Verzauberungen und Tränken"
+    ],
+    "leistung": [
+      "Leistung im Raid:",
+      "Wir schauen nicht stupide auf irgendwelche Logs, aber wenn harte Kämpfe anstehen, ab BWL aufwärts, brauchen wir Leute die Einsatz zeigen.",
+      "Uns fällt es auf wenn ihr inaktiv seid. Wir erwarten von allen Spielern eine hohe \"ACTIVE TIME\", vorallem beim clearen der Trash-Gruppen.",
+      "Klassenleiter Lichtbringer",
+      "Die Klassenleiter sollen:"
+    ],
+    "charakterwechsel": [
+      "**Characterwechsel-Infos**:",
+      "- bei Raiddienlichem Wechsel - zb. Healer oder Hexer wird noch benötigt",
+      "- Characterwechsel bitte per Direktnachricht anfragen - damit geplant und besprochen werden kann ob es passt"
+    ],
+    "sonstiges": [
+      "RAIDREGELN für Lichtbringer RAIDS",
+      "Manatränke + Dämonische Runen + Nachtdrachen für Manaklassen",
+      "\"Mein Name ist XXX, ich bin fest angemeldet aber noch nicht im Raid\".",
+      "Grund hierfür:",
+      "A) Damit stellen wir sicher, daß jeder im Discord wenigstens lesen und hören kann",
+      "Grund: Der Raid wird gut laufen",
+      "Gewissenhafte Spieler können sich guten Gewissens abmelden vom Raid, wenn mal was im Leben dazwischen kommt.",
+      "eher auf die EB nehmen als den einen Druiden...",
+      "Wir haben Verständnis, wenn Leute spontan mitkommen und dann nicht alles dabei haben.",
+      "Stammspieler werden bevorzugt mitgenommen.",
+      "Tanks Krieger Priester Druide Paladin Jäger Hexer Schurken Magier",
+      "Setsunai Saitl Krumjorn Gimlion Lillianvoss",
+      "Der entsprechenden Klasse mit Rat zur Seite stehen",
+      "- oder Wechsel auf einen Char der bereits so gut ist, dass es kaum einen Unterschied in der Performance macht",
+      "- Wechsel für BWL - nur möglich ab >MC/ZG/AQ20 Equipstand",
+      "- Wechsel für MC- nur möglich ab >ZG/AQ20 Equipstand",
+      "Wenn also jemand vor hat seine Klasse in unseren 40er Raids zu wechseln,",
+      "ist dies nun unter den genannten Vorraussetzungen in Absprache möglich."
+    ]
+  },
+  "raids": [
+    {
+      "id": "mc",
+      "name": "Molten Core",
+      "rules": [
+        "Raidleitung: Bimmii Setsunai",
+        "PRIO 1-3: für alle !!!! auch neue Spieler oder Twinks",
+        "PRIO 0 Vorraussetzungen: Nur nach vorheriger Freigabe - durch PM und Klassenleiter",
+        "1. Grundregel >=8 Teilnahmen der letzten 16 MCRaids (inkl. des aktuellen Raids)",
+        "Prio 0: möglich für alle Mainspec-Items oder Rezepte",
+        "Prio0 muss im Discordchannel: p0-freigabe muss einmalig angefragt und freigeben werden. Bis spätestens 15Uhr am Raidtag",
+        "spätestens 30 Minuten vor Beginn des Raids muss das gewünschte Prio0 Item dann im Discord Raid-Anmeldechannel gepostet werden.",
+        "Beide Teile der Fesseln des Windsuchers sind gelockt.",
+        "Ragnaros Auge gelockt für Gilde",
+        "Feuer/Lavakerne und Kernleder können auf Prio 1-3 genommen werden",
+        "Sulfuronblock kann ebenfalls auf Prio genommen werden",
+        "BoE Items die nicht auf Prio sind oder für den anwesenden Char - gehen auf die Gildenbank"
+      ]
+    },
+    {
+      "id": "bwl",
+      "name": "Blackwing Lair",
+      "rules": [
+        "Raidleitung: Bimmii Setsunai",
+        "PRIO 1-3: für alle !!!! auch neue Spieler oder Twinks",
+        "PRIO 0 Vorraussetzungen: Nur nach vorheriger Freigabe - durch PM und Klassenleiter",
+        "1. Grundregel >=8 Teilnahmen der letzten 16 BWLRaids (inkl. des aktuellen Raids)",
+        "Prio 0: möglich für alle Mainspec-Items oder Rezepte",
+        "Prio0 muss im Discordchannel: p0-freigabe muss einmalig angefragt und freigeben werden. Bis spätestens 15Uhr am Raidtag",
+        "spätestens 30 Minuten vor Beginn des Raids muss das gewünschte Prio0 Item dann im Discord Raid-Anmeldechannel gepostet werden.",
+        "Elementium Erz nur je Raid 1x je P1 raus - Rest geht auf die Gbank",
+        "Falls Ihr Glück hattet und den KOPF VON NEFARIAN gewonnen habt, meldet dies im Worldbuff Channel an.",
+        "Die Abgabe der Quest löst einen Worldbuff aus welcher gezielt zu bestimmten Zeiten eingesetzt werden soll.",
+        "VERBRAUCHSMATERIAL - zusätzlich",
+        "Bei Vael und Firemaw erwarten wir, daß alle schadenserhöhenden Tränke in der großen Version genommen werden.",
+        "ANFORDERUNG AN RÜSTUNGSTEILEN",
+        "Der allgemeine Ausrüstungsstand muss mindestens aus MC / ZG / AQ20 oder besser sein.",
+        "VERZAUBERUNGEN DER GEGENSTÄNDE",
+        "Wir erwarten daß jeder Item-Slot sinnvoll verzaubert ist"
+      ]
+    },
+    {
+      "id": "aq40",
+      "name": "AQ40",
+      "rules": [
+        "Raidleitung: Bimmii",
+        "PRIO 1-3: für alle !!!! auch neue Spieler oder Twinks",
+        "PRIO 0 Vorraussetzungen: Nur nach vorheriger Freigabe - durch PM und Klassenleiter",
+        "1. Grundregel >=8 Teilnahmen der letzten 16 AQ40 Raids (inkl. des aktuellen Raids)",
+        "Prio 0: möglich für alle Mainspec-Items oder Rezepte",
+        "Prio0 muss im Discordchannel: p0-freigabe muss einmalig angefragt und freigeben werden. Bis spätestens 15Uhr am Raidtag",
+        "spätestens 30 Minuten vor Beginn des Raids muss das gewünschte Prio0 Item dann im Discord Raid-Anmeldechannel gepostet werden.",
+        "Götzen / Skarabaen gehen auf die Gildenbank und werden dann im DC angefragt und - sinnvoll ausgegeben",
+        "VERBRAUCHSMATERIAL - zusätzlich",
+        "steht immer im Rainanmeldechannel - je nach geplanten Bosse varieren die benötigten Tränke",
+        "ANFORDERUNG AN RÜSTUNGSTEILEN",
+        "Naturresi - siehe DC Channel - AQ Vorbereitung",
+        "Der allgemeine Ausrüstungsstand muss mindestens aus BWL / MC / ZG oder besser sein.",
+        "VERZAUBERUNGEN DER GEGENSTÄNDE",
+        "Wir erwarten daß jeder Item-Slot sinnvoll verzaubert ist"
+      ]
+    },
+    {
+      "id": "naxx",
+      "name": "Naxxramas",
+      "rules": [
+        "Raidleitung: Bimmii",
+        "PRIO 1-3: ab dem 4. NAXX Lichtbringer Raid bei dem man mit diesem Character dabei ist (vorher nur P3)",
+        "PRIO 0 Vorraussetzungen: Nur nach vorheriger Freigabe",
+        "1. Grundregel >=8 Teilnahmen der letzten 16 Naxxraids (inkl. des aktuellen Raids)",
+        "2. die angegeben Werte sind erreicht oder höher",
+        "+ alle Verzauberungen sind vorhanden (inkl.ZG oder Naxx Schulter VZ)",
+        "Prio 0: möglich für alle Mainspec-Items",
+        "Prio0 muss im Discordchannel: p0-freigabe muss einmalig angefragt und freigeben werden. Bis spätestens 15Uhr am Raidtag",
+        "spätestens 30 Minuten vor Beginn des Raids muss das gewünschte Prio0 Item dann im Discord Raid-Anmeldechannel gepostet werden.",
+        "Die festgelegte Prio am Mittwoch gilt für die ganze ID",
+        "Werte je nach Klasse für P0 Freigabe",
+        "Krieger ab 1150 AP HealPala ab 1050 +Heal",
+        "Schurken ab 1100 AP HealPriest ab 1100 +Heal",
+        "Tanks ab 6 T3 Teile HealDruide ab 1100 +Heal",
+        "Hexer ab 600 Spellpower + 10%Hit FeralDruid 11,5k Rüstung + 1050 AP",
+        "Jäger ab 6x T3 + 1330 AP",
+        "VERBRAUCHSMATERIAL - zusätzlich",
+        "steht immer im Rainanmeldechannel - je nach geplanten Bosse varieren die benötigten Tränke",
+        "ANFORDERUNG AN RÜSTUNGSTEILEN",
+        "Frostresi - siehe DC Channel - Naxx Vorbereitung",
+        "VERZAUBERUNGEN DER GEGENSTÄNDE",
+        "Wir erwarten daß jeder Item-Slot maximal verzaubert ist",
+        "Consumables im Naxx Raid",
+        "Wir erwarten hier \"maximal\" mögliche Consumables",
+        "Siehe \"Reiter\" hier unten im Sheet - Consumables - oder schaut im Channel log Analyse was die anderen Spieler nutzen",
+        "Werden überarbeitet"
+      ]
+    },
+    {
+      "id": "zg",
+      "name": "Zul Gurub",
+      "rules": [
+        "PRIO 0: spätestens 30 Min. vor Raidstart im Channel angemeldet, auf alle Items möglich. 1. Götze geht vorrangig an AQ/Naxx Kaderchars / 2. Götze geht an alle",
+        "Wer einen beschworenen Boss stellen kann, darf 1 Item von dem Boss locken (Das Item muss vor Pull angesagt werden!)",
+        "Schmuckstücke gehen erst an Spieler mit PRIO Max 5 Stück mit Prio 0",
+        "Falls Ihr Glück hattet und das Herz von Hakkar gewonnen habt, meldet dies im Worldbuff Channel an. #worldbuffs",
+        "Die Abgabe der Quest löst einen Worldbuff aus welcher gezielt zu bestimmten Zeiten eingesetzt werden soll.",
+        "PRIO 0: spätestens um 19:15 Uhr im Channel angemeldet, auf alle Items möglich. 1. Götze geht vorrangig an AQ/Naxx Kaderchars / 2. Götze geht an alle",
+        "Die jenigen die sonst nichts bekommen haben können sich 1 Schmuckstück am Ende abholen - der Rest geht auf die Gbank.",
+        "Blutreben die nicht auf Prio sind - gehen an die Gbank",
+        "Puppen die droppen - werden an die anwesenden passenden Chars bei Bedarf verrollt. (Restlichen gehen an die Gbank)",
+        "Splitter und Kristalle vom entzaubern - an die Gbank",
+        "Fangzahn des Gesichtslosen P0 nur an Jäger + Dolchschurken",
+        "Falls Ihr Glück hattet und das Herz von Hakkar gewonnen habt, meldet dies im Worldbuff Channel an."
+      ]
+    },
+    {
+      "id": "aq20",
+      "name": "AQ20",
+      "rules": [
+        "PRIO 0: spätestens 30 Min. vor Raidstart im Channel angemeldet, auf alle Items möglich.",
+        "Armbrust der bevorstehenden Verdammnis P0 nur an Krieger und Schurken",
+        "PRIO 0: spätestens um 19:15 Uhr im Channel angemeldet, auf alle Items möglich.",
+        "Klassenbücher die nicht auf Prio sind - werden an die anwesenden passenden Chars bei Bedarf verrollt. (Restlichen gehen an die Gbank)",
+        "Definition: \"passend\" dürfen nur auf Prio1 bzw. errollt werden wenn ihr dies nicht bereits gelernt habt!",
+        "Klassenbücher für Twinks können nur auf Prio 2 + 3 genommen werden",
+        "AQ20 Götzen nur auf P0 möglich - Restliche Götzen auf die Gbank - Götzen können von der Gbank angefragt werden",
+        "(gehen dann nach Anfragereihenfolge raus) (ohne Bezahlung)"
+      ]
+    },
+    {
+      "id": "ony",
+      "name": "Onyxia",
+      "rules": [
+        "PRIO 1: Jeder Spieler kann nur 1 Item als Prio bestimmen",
+        "Falls Ihr Glück hattet und den Kopf von Onyxia gewonnen habt, meldet dies im Worldbuff Channel an. #worldbuffs",
+        "Die Abgabe der Quest löst einen Worldbuff aus welcher gezielt zu bestimmten Zeiten eingesetzt werden soll."
+      ]
+    }
+  ],
+  "consumables": [
+    {
+      "name": "Kraft des Juju oder Elixier der Riesen",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Feuerwasser der Winterfelle oder Macht des Juju",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Gesegnete Sonnenfrucht oder Wüstenknödel",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Krieger",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Elementarwetzstein oder Verdichteter",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Elixier der überragenden Verteidigung",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger",
+        "Frostmage",
+        "Firemage",
+        "Hexer",
+        "Healer",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Elixier der Seelenstärke",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger",
+        "Frostmage",
+        "Firemage",
+        "Hexer",
+        "Healer",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Zanzas Geist",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger",
+        "Frostmage",
+        "Firemage",
+        "Hexer",
+        "Healer",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Elixier des Mungos",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Fläschchen der Titanen",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger",
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Gemahlene Skorpokinhaltsstoffprobe",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Krieger",
+        "Schurke",
+        "Jäger"
+      ]
+    },
+    {
+      "name": "Zerebralkortexverbund",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Frostmage",
+        "Firemage",
+        "Hexer",
+        "Healer"
+      ]
+    },
+    {
+      "name": "Nachtflossensuppe",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Healer"
+      ]
+    },
+    {
+      "name": "Fläschchen mit destillierter Weisheit",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Healer"
+      ]
+    },
+    {
+      "name": "Hervorragendes Manaöl",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Healer"
+      ]
+    },
+    {
+      "name": "Runn Tum Knolle Surprise",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Frostmage",
+        "Firemage",
+        "Hexer"
+      ]
+    },
+    {
+      "name": "Fläschchen mit oberster Macht",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Frostmage",
+        "Firemage",
+        "Hexer"
+      ]
+    },
+    {
+      "name": "Hervorragendes Zauberöl",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Frostmage",
+        "Firemage",
+        "Hexer"
+      ]
+    },
+    {
+      "name": "Großes Arkanelixier",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Frostmage",
+        "Firemage",
+        "Hexer"
+      ]
+    },
+    {
+      "name": "Elixier der Schattenmacht",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Hexer"
+      ]
+    },
+    {
+      "name": "Elixier der großen Feuermacht",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Firemage"
+      ]
+    },
+    {
+      "name": "Elixier der Frostmacht",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Frostmage"
+      ]
+    },
+    {
+      "name": "Dirges abgefahrene Chimaerokkoteletts",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Tanks"
+      ]
+    },
+    {
+      "name": "Magierbluttrank",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Jäger",
+        "Frostmage",
+        "Firemage",
+        "Hexer",
+        "Healer"
+      ]
+    },
+    {
+      "name": "Gegrillter Kalmar",
+      "required": false,
+      "optional": true,
+      "classes": [
+        "Schurke",
+        "Jäger"
+      ]
+    },
+    {
+      "name": "Macht des Juju - extra Zeile weil für Jäger",
+      "required": true,
+      "optional": false,
+      "classes": [
+        "Jäger"
+      ]
+    }
+  ],
+  "enchantments": {
+    "classes": [
+      "Magier",
+      "Hexer",
+      "Jäger",
+      "Krieger",
+      "Schurken",
+      "Tanks",
+      "Heiler",
+      "Hybride"
+    ],
+    "rows": [
+      [
+        {
+          "className": "Magier",
+          "text": "Waffe : Zaubermacht"
+        },
+        {
+          "className": "Hexer",
+          "text": "Waffe: Zaubermacht"
+        },
+        {
+          "className": "Jäger",
+          "text": "15 Agi 1Hand / 25 Agi 2Hand"
+        },
+        {
+          "className": "Krieger",
+          "text": "Waffe: Kreuzfahrer"
+        },
+        {
+          "className": "Schurken",
+          "text": "Waffe: Kreuzfahrer / 15 Agi"
+        },
+        {
+          "className": "Tanks",
+          "text": "Waffe Kreuzfahrer / Unheilige Waffe"
+        },
+        {
+          "className": "Heiler",
+          "text": "Waffe: Heilkraft"
+        },
+        {
+          "className": "Hybride",
+          "text": "Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Kopf: 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Hexer",
+          "text": "Kopf: 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Jäger",
+          "text": "Kopf: 8 Agi / ZG Verzauberung"
+        },
+        {
+          "className": "Krieger",
+          "text": "Kopf: 8 Stärke / 1% Angriffsgeschwindigkeit"
+        },
+        {
+          "className": "Schurken",
+          "text": "Kopf: 8 Agi / ZG Verzauberung"
+        },
+        {
+          "className": "Tanks",
+          "text": "Kopf: 100 Leben / ZG Verzauberung"
+        },
+        {
+          "className": "Heiler",
+          "text": "Kopf 150 Mana / 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Hybride",
+          "text": "Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Hexer",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Jäger",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Krieger",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Schurken",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Tanks",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Heiler",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        },
+        {
+          "className": "Hybride",
+          "text": "Schultern: ZG Enchant / 5 Resi bis genug Ruf"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Brust: 3 Werte oder besser 4 Werte / 100 Mana"
+        },
+        {
+          "className": "Hexer",
+          "text": "Brust: 3 Werte oder besser 4 Werte / 100 Mana"
+        },
+        {
+          "className": "Jäger",
+          "text": "Brust: 3 Werte oder besser 4 Werte"
+        },
+        {
+          "className": "Krieger",
+          "text": "Brust: 3 Werte oder besser 4 Werte"
+        },
+        {
+          "className": "Schurken",
+          "text": "Brust: 3 Werte oder besser 4 Werte"
+        },
+        {
+          "className": "Tanks",
+          "text": "Brust: 3 Werte oder besser 4 Werte / 100 Leben"
+        },
+        {
+          "className": "Heiler",
+          "text": "Brust: 3 Werte oder besser 4 Werte / 100 Mana"
+        },
+        {
+          "className": "Hybride",
+          "text": "Brust: Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Armschienen: 7 Int / 4 MP5"
+        },
+        {
+          "className": "Hexer",
+          "text": "Armschienen: 7 Int / 4 MP5"
+        },
+        {
+          "className": "Jäger",
+          "text": "Armschienen: 7 Int / 9 Stam/ 4 MP5/ 1 Agi"
+        },
+        {
+          "className": "Krieger",
+          "text": "Armschienen: 9 Stärke"
+        },
+        {
+          "className": "Schurken",
+          "text": "Armschienen: 9 Stärke"
+        },
+        {
+          "className": "Tanks",
+          "text": "Armschienen: 9 Stärke / 9 Stamina"
+        },
+        {
+          "className": "Heiler",
+          "text": "Armschienen: 24 Heilkraft / 9 Wille"
+        },
+        {
+          "className": "Hybride",
+          "text": "Armschienen: Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Handschuhe: Frostmacht / Feuermacht"
+        },
+        {
+          "className": "Hexer",
+          "text": "Handschuhe: Schattenmacht"
+        },
+        {
+          "className": "Jäger",
+          "text": "Handschuhe: 15 Agi"
+        },
+        {
+          "className": "Krieger",
+          "text": "Handschuhe: 7 Stärke / 15 Agi"
+        },
+        {
+          "className": "Schurken",
+          "text": "Handschuhe: 15 Agi"
+        },
+        {
+          "className": "Tanks",
+          "text": "Handschuhe: 15 Agi / 2% Bedrohung"
+        },
+        {
+          "className": "Heiler",
+          "text": "Handschuhe: Heilkraft"
+        },
+        {
+          "className": "Hybride",
+          "text": "Handschuhe: Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Hose: 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Hexer",
+          "text": "Hose: 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Jäger",
+          "text": "Hose: 8 Agi / ZG Verzauberung"
+        },
+        {
+          "className": "Krieger",
+          "text": "Hose: 8 Stärke / 1% Angriffsgeschwindigkeit"
+        },
+        {
+          "className": "Schurken",
+          "text": "Hose: 8 Agi / ZG Verzauberung"
+        },
+        {
+          "className": "Tanks",
+          "text": "Hose: 100 Leben / ZG Verzauberung"
+        },
+        {
+          "className": "Heiler",
+          "text": "Hose 150 Mana / 8 Zaubermacht / ZG Verzauberung"
+        },
+        {
+          "className": "Hybride",
+          "text": "Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Stiefel: Bewegungstempo"
+        },
+        {
+          "className": "Hexer",
+          "text": "Stiefel: Bewegungstempo"
+        },
+        {
+          "className": "Jäger",
+          "text": "Stiefel: 7 Agi"
+        },
+        {
+          "className": "Krieger",
+          "text": "Stiefel: Bewegungstempo"
+        },
+        {
+          "className": "Schurken",
+          "text": "Stiefel: Bewegungstempo / 7 Agi"
+        },
+        {
+          "className": "Tanks",
+          "text": "Stiefel: Bewegungstempo / 7 Stamina"
+        },
+        {
+          "className": "Heiler",
+          "text": "Stiefel: Bewegungstempo / 5 Spirit"
+        },
+        {
+          "className": "Hybride",
+          "text": "Analog Rolle"
+        }
+      ],
+      [
+        {
+          "className": "Magier",
+          "text": "Umhang: Feingefühl / Widerstände"
+        },
+        {
+          "className": "Hexer",
+          "text": "Umhang: Feingefühl / Widerstände"
+        },
+        {
+          "className": "Jäger",
+          "text": "Umhang: 3 Agi"
+        },
+        {
+          "className": "Krieger",
+          "text": "Umhang Feingefühl / 3 Agi"
+        },
+        {
+          "className": "Schurken",
+          "text": "Umhang: 3 Agi"
+        },
+        {
+          "className": "Tanks",
+          "text": "Umhang: 1% Ausweichen / 3 Agi"
+        },
+        {
+          "className": "Heiler",
+          "text": "Umhang: Beliebiger Enchant"
+        },
+        {
+          "className": "Hybride",
+          "text": "Analog Rolle"
+        }
+      ]
+    ]
+  }
+}
