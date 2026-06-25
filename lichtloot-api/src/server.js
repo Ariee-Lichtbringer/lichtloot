@@ -17,6 +17,7 @@ const worldbuffTickerCsvUrl =
   process.env.WORLDBUFF_TICKER_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
 const warcraftLogsTokenCache = new Map();
+const staticLootCache = new Map();
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
@@ -3610,6 +3611,16 @@ async function getLootItems({ query: params }) {
     throw error;
   }
 
+  const staticItems = await loadStaticLootItems(raidType);
+  const staticByName = new Map();
+  const staticByItemId = new Map();
+  staticItems.forEach(item => {
+    const nameKey = itemKey(item.name);
+    const itemId = clean(item.itemId || item.item_id || item.ItemID || "");
+    if (nameKey && !staticByName.has(nameKey)) staticByName.set(nameKey, item);
+    if (itemId && !staticByItemId.has(itemId)) staticByItemId.set(itemId, item);
+  });
+
   const result = await query(
     `select id, raid_type, item_id, name, quality, icon_url
      from items
@@ -3619,24 +3630,95 @@ async function getLootItems({ query: params }) {
     [raidTypeSearchValues(raidType)]
   );
 
+  const mergedItems = result.rows.map(row => {
+    const detail =
+      staticByItemId.get(clean(row.item_id)) ||
+      staticByName.get(itemKey(row.name)) ||
+      {};
+    return normalizeLootItemForApi(row, detail);
+  });
+
+  const seen = new Set(mergedItems.map(item => itemKey(item.name)));
+  staticItems.forEach(item => {
+    const key = itemKey(item.name);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    mergedItems.push(normalizeLootItemForApi(null, item));
+  });
+
+  mergedItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
+
   return {
     success: true,
     raid: raidType,
     source: "Railway",
-    items: result.rows.map(row => ({
-      id: row.id,
-      raid: row.raid_type,
-      raidKey: normalizeRaidType(row.raid_type),
-      itemId: row.item_id || "",
-      ItemID: row.item_id || "",
-      name: row.name || "",
-      item: row.name || "",
-      Item: row.name || "",
-      quality: row.quality || "",
-      icon: row.icon_url || "",
-      iconName: row.icon_url || "",
-      IconName: row.icon_url || ""
-    }))
+    enriched: Boolean(staticItems.length),
+    items: mergedItems
+  };
+}
+
+async function loadStaticLootItems(raidType) {
+  const raidKey = normalizeRaidType(raidType);
+  if (!raidKey) return [];
+  if (staticLootCache.has(raidKey)) return staticLootCache.get(raidKey);
+
+  try {
+    const raw = await readFile(new URL(`../public/data/${raidKey}.json`, import.meta.url), "utf8");
+    const parsed = JSON.parse(raw);
+    const items = Array.isArray(parsed) ? parsed : [];
+    staticLootCache.set(raidKey, items);
+    return items;
+  } catch (error) {
+    staticLootCache.set(raidKey, []);
+    return [];
+  }
+}
+
+function normalizeLootItemForApi(row, detail = {}) {
+  const raidType = normalizeRaidType(row?.raid_type || detail.raid_type || detail.raid || "");
+  const itemId = clean(row?.item_id || detail.item_id || detail.itemId || detail.ItemID || "");
+  const name = clean(row?.name || detail.name || detail.Item || "");
+  const icon = clean(row?.icon_url || detail.iconName || detail.icon_url || detail.icon || detail.IconName || "");
+  const quality = clean(row?.quality || detail.quality || detail["Qualität"] || "");
+  const stats = Array.isArray(detail.stats)
+    ? detail.stats
+    : clean(detail.statsText || detail.Stats_DE || "").split("|").map(line => line.trim()).filter(Boolean);
+  const tooltip = clean(detail.tooltip || detail.Tooltip || detail.Tooltip_DE || "");
+  const slot = clean(detail.slot || detail.Slot || detail.Slot_DE || "");
+  const type = clean(detail.type || detail.Typ || detail.Typ_DE || "");
+  const boss = clean(detail.boss || detail.Boss || "");
+  const dropChance = clean(detail.dropChance || detail.dropchance || detail.Dropchance || "");
+
+  return {
+    id: row?.id || itemId || name,
+    raid: row?.raid_type || detail.raid || raidType,
+    raidKey: raidType,
+    itemId,
+    ItemID: itemId,
+    name,
+    item: name,
+    Item: name,
+    quality,
+    icon,
+    iconName: icon,
+    IconName: icon,
+    slot,
+    Slot: slot,
+    Slot_DE: slot,
+    type,
+    Typ: type,
+    Typ_DE: type,
+    boss,
+    Boss: boss,
+    stats,
+    statsText: clean(detail.statsText || detail.Stats_DE || stats.join("|")),
+    Stats_DE: clean(detail.statsText || detail.Stats_DE || stats.join("|")),
+    tooltip,
+    Tooltip: tooltip,
+    Tooltip_DE: tooltip,
+    dropChance,
+    dropchance: dropChance,
+    Dropchance: dropChance
   };
 }
 
