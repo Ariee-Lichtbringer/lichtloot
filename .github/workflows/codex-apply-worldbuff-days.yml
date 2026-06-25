@@ -3,7 +3,7 @@ name: Apply worldbuff days patch
 on:
   push:
     paths:
-      - '.github/workflows/codex-apply-worldbuff-days.yml'
+      - .github/workflows/codex-apply-worldbuff-days.yml
 
 permissions:
   contents: write
@@ -13,55 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch start page worldbuff range
+      - name: Patch start page
+        run: node .github/workflows/codex-apply-worldbuff-days.js
+      - name: Validate start page
+        run: node .github/workflows/codex-validate-start.js
+      - name: Commit and push
         run: |
-          python3 <<'PY'
-          from pathlib import Path
-          p = Path('start.html')
-          text = p.read_text()
-          old = '''  if(params.action === "getPublicWorldbuffs"){
-    return await fetchRailwayApi("/api/apps-script?action=getPublicWorldbuffs");
-  }
-
-  if(params.action === "getPublicHordenbuffs"){
-    return await fetchRailwayApi("/api/apps-script?action=getPublicHordenbuffs");
-  }'''
-          new = '''  if(params.action === "getPublicWorldbuffs"){
-    const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicWorldbuffs"+days);
-  }
-
-  if(params.action === "getPublicHordenbuffs"){
-    const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicHordenbuffs"+days);
-  }'''
-          if old not in text:
-              if 'getPublicWorldbuffs"+days' in text and 'getPublicHordenbuffs"+days' in text:
-                  print('start.html already patched')
-              else:
-                  raise SystemExit('target pattern not found')
-          else:
-              p.write_text(text.replace(old, new, 1))
-          PY
-      - name: Validate start page JavaScript
-        run: |
-          node - <<'NODE'
-          const fs=require('fs');
-          const html=fs.readFileSync('start.html','utf8');
-          const scripts=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(m=>m[1]).join('\n');
-          new Function(scripts);
-          console.log('start.html JS OK');
-          NODE
-      - name: Commit patch
-        run: |
-          git config user.name "codex-bot"
-          git config user.email "codex-bot@users.noreply.github.com"
+          git config user.name codex-bot
+          git config user.email codex-bot@users.noreply.github.com
           git add start.html
           git commit -m "Pass worldbuff date range on start page" || true
-      - name: Remove temporary workflow
-        run: |
-          rm .github/workflows/codex-apply-worldbuff-days.yml
-          git add .github/workflows/codex-apply-worldbuff-days.yml
+          rm .github/workflows/codex-apply-worldbuff-days.yml .github/workflows/codex-apply-worldbuff-days.js .github/workflows/codex-validate-start.js
+          git add .github/workflows/codex-apply-worldbuff-days.yml .github/workflows/codex-apply-worldbuff-days.js .github/workflows/codex-validate-start.js
           git commit -m "Remove temporary worldbuff days workflow" || true
-      - name: Push changes
-        run: git push
+          git push
