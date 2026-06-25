@@ -174,7 +174,7 @@ function doGet(e) {
         playerPin: "TST",
         leadPin: "TEST",
         status: "geschlossen",
-        p0PlusFreigabe: "geschlossen",
+        p0PlusFreigabe: "geöffnet",
         guild: "Script Test"
       }), callback);
     }
@@ -280,7 +280,7 @@ function createRaidData_(data) {
   const playerLink = data.playerLink || data.PlayerLink || "";
   const createdAt = data.createdAt || data.CreatedAt || new Date().toISOString();
   const status = data.status || data.Status || "geschlossen";
-  const p0PlusFreigabe = data.p0PlusFreigabe || data.P0PlusFreigabe || data.p0PlusOverride || "geschlossen";
+  const p0PlusFreigabe = data.p0PlusFreigabe || data.P0PlusFreigabe || data.p0PlusOverride || "geöffnet";
   const guild = data.guild || data.gilde || data.Gilde || data.Guild || "";
 
   sheet.appendRow([

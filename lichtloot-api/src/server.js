@@ -1928,7 +1928,7 @@ async function createRandomRaid({ guildId, query: params }) {
     query: {
       ...params,
       raid: raidType,
-      status: "geöffnet",
+      status: "geschlossen",
       p0PlusFreigabe: "geöffnet"
     }
   });
@@ -1941,7 +1941,7 @@ async function createRaidRecord({ guildId, query: params }) {
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
-  const status = normalizeStatus(params.status || "geöffnet");
+  const status = normalizeStatus(params.status || "geschlossen");
   const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geöffnet");
 
   const result = await query(
