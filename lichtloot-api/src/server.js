@@ -291,6 +291,7 @@ function normalizeCharacter(row) {
     className: row.class_name,
     Klasse: row.class_name,
     mainChar: row.main_char || "",
+    isMain: Boolean(row.is_main),
     created_at: row.created_at
   };
 }
@@ -387,11 +388,21 @@ async function findCharacter(guildId, charName, server) {
 
 async function getCharactersByPin(guildId, pin) {
   const result = await query(
-    `select c.id, c.name, c.server, c.class_name, c.created_at
+    `select
+       c.id,
+       c.name,
+       c.server,
+       c.class_name,
+       c.is_main,
+       c.created_at,
+       first_value(c.name) over (
+         partition by p.id
+         order by c.is_main desc, c.created_at asc
+       ) as main_char
      from players p
      join characters c on c.player_id = p.id
      where p.guild_id = $1 and p.player_pin = $2
-     order by c.name asc`,
+     order by c.is_main desc, c.created_at asc, c.name asc`,
     [guildId, normalizePin(pin)]
   );
   return result.rows.map(normalizeCharacter);
@@ -1178,7 +1189,7 @@ async function savePrio({ guildId, query: params }) {
            guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
            raid_time, guild_name, p0plus_freigabe
          )
-         values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geschlossen'))
+         values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geöffnet'))
          on conflict (guild_id, raid_type, raid_date) do update
            set name = excluded.name,
                external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
@@ -2911,6 +2922,45 @@ async function addCharacterToPlayer({ guildId, pin, charName, server, className 
   return normalizeCharacter(result.rows[0]);
 }
 
+async function setMainCharacter({ guildId, pin, charName, server }) {
+  const player = await findPlayerByPin(guildId, pin);
+  if (!player) {
+    const error = new Error("Dieser SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      "update characters set is_main = false, updated_at = now() where player_id = $1",
+      [player.id]
+    );
+    const result = await client.query(
+      `update characters
+       set is_main = true, updated_at = now()
+       where player_id = $1
+         and lower(name) = lower($2)
+         and lower(server) = lower($3)
+       returning id, name, server, class_name, is_main, created_at, name as main_char`,
+      [player.id, clean(charName), clean(server)]
+    );
+    if (!result.rows.length) {
+      const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerPin.");
+      error.statusCode = 404;
+      throw error;
+    }
+    await client.query("commit");
+    return normalizeCharacter(result.rows[0]);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function resetPlayerPin({ guildId, charName, server, oldPin, newPin, className }) {
   const character = await findCharacter(guildId, charName, server);
   if (!character) {
@@ -3599,6 +3649,16 @@ app.get("/api/apps-script", async (req, res, next) => {
         charName: req.query.char,
         server: req.query.server,
         className: req.query.className
+      });
+      return res.json({ success: true, guild: guild.slug, character });
+    }
+
+    if (action === "setMainCharacter") {
+      const character = await setMainCharacter({
+        guildId: guild.id,
+        pin: req.query.pin,
+        charName: req.query.char,
+        server: req.query.server
       });
       return res.json({ success: true, guild: guild.slug, character });
     }
