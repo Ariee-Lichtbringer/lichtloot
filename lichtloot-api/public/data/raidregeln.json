@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-25T06:14:31.325Z",
+  "updatedAt": "2026-06-25T06:26:55.858Z",
   "source": "Raidregeln Lichtbringer CSV Export",
   "general": {
     "prio": [
@@ -162,7 +162,6 @@
         "PRIO 1-3: ab dem 4. NAXX Lichtbringer Raid bei dem man mit diesem Character dabei ist (vorher nur P3)",
         "PRIO 0 Vorraussetzungen: Nur nach vorheriger Freigabe",
         "1. Grundregel >=8 Teilnahmen der letzten 16 Naxxraids (inkl. des aktuellen Raids)",
-        "2. die angegeben Werte sind erreicht oder höher",
         "+ alle Verzauberungen sind vorhanden (inkl.ZG oder Naxx Schulter VZ)",
         "Prio 0: möglich für alle Mainspec-Items",
         "Prio0 muss im Discordchannel: p0-freigabe muss einmalig angefragt und freigeben werden. Bis spätestens 15Uhr am Raidtag",
@@ -182,8 +181,7 @@
         "Wir erwarten daß jeder Item-Slot maximal verzaubert ist",
         "Consumables im Naxx Raid",
         "Wir erwarten hier \"maximal\" mögliche Consumables",
-        "Siehe \"Reiter\" hier unten im Sheet - Consumables - oder schaut im Channel log Analyse was die anderen Spieler nutzen",
-        "Werden überarbeitet"
+        "Siehe \"Reiter\" hier unten im Sheet - Consumables - oder schaut im Channel log Analyse was die anderen Spieler nutzen"
       ]
     },
     {
