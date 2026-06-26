@@ -54,8 +54,8 @@ await applyLootRaidAssignmentCorrectionsOnce().catch(error => {
   console.warn("Loot-Raid-Zuordnungen konnten nicht korrigiert werden:", error.message || error);
 });
 
-await applyMcEterniumLockboxOnce().catch(error => {
-  console.warn("MC-Eterniumschließkassette konnte nicht ergänzt werden:", error.message || error);
+await applyEterniumLockboxRaidItemsOnce().catch(error => {
+  console.warn("Eterniumschließkassette konnte nicht für alle Raids ergänzt werden:", error.message || error);
 });
 
 app.get("/health", (req, res) => {
@@ -4375,8 +4375,9 @@ async function applyLootRaidAssignmentCorrectionsOnce() {
   }
 }
 
-async function applyMcEterniumLockboxOnce() {
-  const markerKey = "mc-eternium-lockbox-v1";
+async function applyEterniumLockboxRaidItemsOnce() {
+  const markerKey = "eternium-lockbox-raid-items-v2";
+  const raidTypes = ["mc", "bwl", "naxx"];
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -4393,33 +4394,37 @@ async function applyMcEterniumLockboxOnce() {
       return;
     }
 
-    const result = await client.query(
-      `insert into items (
-         raid_type, item_id, name, quality, icon_url, slot, type, boss, category
-       )
-       values (
-         'mc', '5760', 'Eterniumschließkassette', 'common', 'Inv_misc_ornatebox',
-         'Sonstiges', 'Sonstiges', 'Trash', 'Sonstiges'
-       )
-       on conflict (raid_type, name) do update
-         set item_id = excluded.item_id,
-             quality = excluded.quality,
-             icon_url = excluded.icon_url,
-             slot = excluded.slot,
-             type = excluded.type,
-             boss = excluded.boss,
-             category = excluded.category`,
-      []
-    );
+    let upserted = 0;
+    for (const raidType of raidTypes) {
+      const result = await client.query(
+        `insert into items (
+           raid_type, item_id, name, quality, icon_url, slot, type, boss, category
+         )
+         values (
+           $1, '5760', 'Eterniumschließkassette', 'common', 'Inv_misc_ornatebox',
+           'Sonstiges', 'Sonstiges', 'Trash', 'Sonstiges'
+         )
+         on conflict (raid_type, name) do update
+           set item_id = excluded.item_id,
+               quality = excluded.quality,
+               icon_url = excluded.icon_url,
+               slot = excluded.slot,
+               type = excluded.type,
+               boss = excluded.boss,
+               category = excluded.category`,
+        [raidType]
+      );
+      upserted += result.rowCount;
+    }
 
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ upserted: result.rowCount })]
+      [markerKey, JSON.stringify({ raidTypes, upserted })]
     );
     await client.query("commit");
-    console.log("MC-Eterniumschließkassette ergänzt");
+    console.log("Eterniumschließkassette für MC, BWL und Naxx ergänzt");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
