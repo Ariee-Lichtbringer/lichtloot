@@ -716,6 +716,7 @@ body.random-prio .tooltip-p0{
 
 .prio-export-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .prio-export-buttons .tool-btn{padding:6px 10px!important;font-size:12px!important;margin:0!important;white-space:nowrap}
+.prio-export-buttons .tool-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1)}
 @media(max-width:700px){.prio-export-buttons{justify-content:flex-start;width:100%;margin-top:6px}}
 
 
@@ -2069,7 +2070,11 @@ function isPublishedFlag(value){
 
 function updatePrio3ButtonVisibility(){
   document.querySelectorAll("[data-prio-export-buttons]").forEach(box => {
-    box.classList.toggle("hidden", !currentPublishedMode);
+    box.classList.remove("hidden");
+    box.querySelectorAll("[data-requires-published]").forEach(button => {
+      button.disabled = !currentPublishedMode;
+      button.title = currentPublishedMode ? "" : "Download verfügbar, sobald die Prio offen ist.";
+    });
   });
 }
 
@@ -9095,14 +9100,13 @@ function renderNameDetails(title,names){
 }
 
 function dcCheckHeaderHtml(){
-  const hiddenClass = currentPublishedMode ? "" : " hidden";
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap">
       <div class="dc-check-title" style="margin:0">DC Abgleich</div>
-      <div class="prio-export-buttons${hiddenClass}" data-prio-export-buttons>
-        <button class="tool-btn" onclick="exportPrio3CSV()">Prio3</button>
-        <button class="tool-btn" onclick="exportPrioListTXT()">TXT</button>
-        <button class="tool-btn" onclick="exportPrioListCSV()">CSV</button>
+      <div class="prio-export-buttons" data-prio-export-buttons>
+        <button class="tool-btn" data-requires-published ${currentPublishedMode ? "" : "disabled"} onclick="exportPrio3CSV()">Prio3</button>
+        <button class="tool-btn" data-requires-published ${currentPublishedMode ? "" : "disabled"} onclick="exportPrioListTXT()">TXT</button>
+        <button class="tool-btn" data-requires-published ${currentPublishedMode ? "" : "disabled"} onclick="exportPrioListCSV()">CSV</button>
       </div>
     </div>
   `;
@@ -9644,6 +9648,11 @@ function csvEscape(value){
 }
 
 function exportPrioListTXT(){
+  if(!currentPublishedMode){
+    alert("Die TXT-Datei kann erst heruntergeladen werden, wenn die Prio offen ist.");
+    return;
+  }
+
   const prios = currentPublishedPrios || [];
   if(!prios.length){
     alert("Keine Priodaten geladen.");
