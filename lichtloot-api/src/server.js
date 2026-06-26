@@ -54,6 +54,10 @@ await applyLootRaidAssignmentCorrectionsOnce().catch(error => {
   console.warn("Loot-Raid-Zuordnungen konnten nicht korrigiert werden:", error.message || error);
 });
 
+await applyMcEterniumLockboxOnce().catch(error => {
+  console.warn("MC-Eterniumschließkassette konnte nicht ergänzt werden:", error.message || error);
+});
+
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api" });
 });
@@ -4363,6 +4367,59 @@ async function applyLootRaidAssignmentCorrectionsOnce() {
     );
     await client.query("commit");
     console.log(`Loot-Raid-Zuordnungen korrigiert: ${removedWrongRows} BWL-Duplikate entfernt, ${movedReferences} Referenzen verschoben`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function applyMcEterniumLockboxOnce() {
+  const markerKey = "mc-eternium-lockbox-v1";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const result = await client.query(
+      `insert into items (
+         raid_type, item_id, name, quality, icon_url, slot, type, boss, category
+       )
+       values (
+         'mc', '5760', 'Eterniumschließkassette', 'common', 'Inv_misc_ornatebox',
+         'Sonstiges', 'Sonstiges', 'Trash', 'Sonstiges'
+       )
+       on conflict (raid_type, name) do update
+         set item_id = excluded.item_id,
+             quality = excluded.quality,
+             icon_url = excluded.icon_url,
+             slot = excluded.slot,
+             type = excluded.type,
+             boss = excluded.boss,
+             category = excluded.category`,
+      []
+    );
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ upserted: result.rowCount })]
+    );
+    await client.query("commit");
+    console.log("MC-Eterniumschließkassette ergänzt");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;

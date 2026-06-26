@@ -281,6 +281,13 @@
   },
   {
     "raid_type": "mc",
+    "item_id": "5760",
+    "name": "Eterniumschließkassette",
+    "quality": "common",
+    "icon_url": "Inv_misc_ornatebox"
+  },
+  {
+    "raid_type": "mc",
     "item_id": "18564",
     "name": "Fesseln des Windsuchers",
     "quality": "legendary",
