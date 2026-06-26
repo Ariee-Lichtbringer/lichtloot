@@ -52,7 +52,8 @@
     .badge{font-size:11px;font-weight:900;color:var(--gold);text-transform:uppercase}
     label{display:block;margin:12px 0 6px;font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase}
     input,
-    select{
+    select,
+    textarea{
       width:100%;
       padding:11px 12px;
       border-radius:6px;
@@ -61,6 +62,7 @@
       color:var(--text);
       font-weight:800;
     }
+    textarea{min-height:82px;resize:vertical;line-height:1.4}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .row.three{grid-template-columns:1fr 1fr 1fr}
     button{
@@ -220,6 +222,58 @@
                 <input id="newItemIcon" placeholder="Iconname oder URL">
               </div>
             </div>
+            <div class="row three">
+              <div>
+                <label for="newItemSlot">Slot</label>
+                <input id="newItemSlot" placeholder="z. B. Rücken, Schmuck">
+              </div>
+              <div>
+                <label for="newItemType">Typ</label>
+                <input id="newItemType" placeholder="z. B. Stoff, Rezept">
+              </div>
+              <div>
+                <label for="newItemBoss">Boss</label>
+                <input id="newItemBoss" placeholder="z. B. Ragnaros">
+              </div>
+            </div>
+            <div class="row three">
+              <div>
+                <label for="newItemBind">Bindung</label>
+                <input id="newItemBind" placeholder="Wird beim Aufheben gebunden">
+              </div>
+              <div>
+                <label for="newItemCategory">Kategorie</label>
+                <input id="newItemCategory" placeholder="Waffe, Rüstung, Rezept ...">
+              </div>
+              <div>
+                <label for="newItemDropchance">Dropchance</label>
+                <input id="newItemDropchance" placeholder="z. B. 12%">
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="newItemStats">Stats</label>
+                <textarea id="newItemStats" placeholder="+10 Ausdauer&#10;+12 Intelligenz"></textarea>
+              </div>
+              <div>
+                <label for="newItemTooltip">Tooltip</label>
+                <textarea id="newItemTooltip" placeholder="Zusatztext, Benutzen, Anlegen, Klassen ..."></textarea>
+              </div>
+            </div>
+            <div class="row three">
+              <div>
+                <label for="newItemNeeded">Benötigt</label>
+                <input id="newItemNeeded" placeholder="z. B. Stufe 60">
+              </div>
+              <div>
+                <label for="newItemEquip">Anlegen</label>
+                <input id="newItemEquip" placeholder="Anlegen-Effekt">
+              </div>
+              <div>
+                <label for="newItemWowhead">Wowhead</label>
+                <input id="newItemWowhead" placeholder="Link oder ItemID">
+              </div>
+            </div>
             <button type="button" onclick="createItem()">Item hinzufügen</button>
             <div id="itemResult" class="result-box">Suchen, dann Icon ändern oder Item löschen.</div>
           </section>
@@ -351,6 +405,17 @@
       const itemGameId=document.getElementById("newItemId").value.trim();
       const quality=document.getElementById("newItemQuality").value.trim();
       const iconUrl=document.getElementById("newItemIcon").value.trim();
+      const slot=document.getElementById("newItemSlot").value.trim();
+      const type=document.getElementById("newItemType").value.trim();
+      const boss=document.getElementById("newItemBoss").value.trim();
+      const bind=document.getElementById("newItemBind").value.trim();
+      const category=document.getElementById("newItemCategory").value.trim();
+      const dropchance=document.getElementById("newItemDropchance").value.trim();
+      const statsText=document.getElementById("newItemStats").value.trim();
+      const tooltip=document.getElementById("newItemTooltip").value.trim();
+      const needed=document.getElementById("newItemNeeded").value.trim();
+      const equip=document.getElementById("newItemEquip").value.trim();
+      const wowhead=document.getElementById("newItemWowhead").value.trim();
       if(!masterCode()){
         box.innerHTML='<span class="bad">Bitte Master-Code eingeben.</span>';
         return;
@@ -361,18 +426,30 @@
       }
       box.textContent="Item wird gespeichert ...";
       try{
-        const data=await apiFetch({action:"guildAdminCreateItem",masterCode:masterCode(),raid,name,itemGameId,quality,iconUrl});
-        if(!data.success) throw new Error(data.error || "Item konnte nicht gespeichert werden.");
+        const data=await apiFetch({action:"guildAdminCreateItem",masterCode:masterCode(),raid,name,itemGameId,quality,iconUrl,slot,type,boss,bind,category,dropchance,statsText,tooltip,needed,equip,wowhead});
+        if(!data.success) throw new Error(explainItemCreateError(data.error) || "Item konnte nicht gespeichert werden.");
         document.getElementById("itemSearch").value=name;
         document.getElementById("itemRaid").value=raid;
         document.getElementById("newItemName").value="";
         document.getElementById("newItemId").value="";
         document.getElementById("newItemIcon").value="";
+        ["newItemSlot","newItemType","newItemBoss","newItemBind","newItemCategory","newItemDropchance","newItemStats","newItemTooltip","newItemNeeded","newItemEquip","newItemWowhead"].forEach(id => {
+          const input=document.getElementById(id);
+          if(input) input.value="";
+        });
         await searchItems();
         box.insertAdjacentHTML("afterbegin",'<div class="ok">Item wurde gespeichert.</div>');
       }catch(error){
         box.innerHTML='<span class="bad">'+escapeHtml(error.message || "Item konnte nicht gespeichert werden.")+'</span>';
       }
+    }
+
+    function explainItemCreateError(message){
+      const text=String(message || "");
+      if(text.includes("Unsupported action")){
+        return "Railway-Server ist noch nicht aktualisiert. Bitte lichtloot-api/src/server.js mit deployen.";
+      }
+      return text;
     }
 
     function renderItems(items){
@@ -389,6 +466,9 @@
             <div>
               <strong>${escapeHtml(item.name || "-")}</strong>
               <small>${escapeHtml(item.raid_type || "")} · ItemID: ${escapeHtml(item.item_id || "-")} · Prios: ${Number(item.prio_count || 0)} · P0+: ${Number(item.p0plus_count || 0)}</small>
+              ${item.slot || item.type || item.boss || item.dropchance ? `<small>${escapeHtml([item.slot,item.type,item.boss,item.dropchance].filter(Boolean).join(" · "))}</small>` : ""}
+              ${item.stats_text ? `<small>Stats: ${escapeHtml(String(item.stats_text).replace(/\|/g," · "))}</small>` : ""}
+              ${item.tooltip ? `<small>Tooltip: ${escapeHtml(item.tooltip)}</small>` : ""}
               ${icon ? `<small>Icon: ${escapeHtml(icon)}</small>` : ""}
             </div>
             <div class="item-actions">

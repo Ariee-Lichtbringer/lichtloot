@@ -59,7 +59,7 @@ await applyEterniumLockboxRaidItemsOnce().catch(error => {
 });
 
 app.get("/health", (req, res) => {
-  res.json({ success: true, service: "lichtloot-api" });
+  res.json({ success: true, service: "lichtloot-api", build: "item-create-v2" });
 });
 
 app.get("/db-health", async (req, res, next) => {
@@ -4489,6 +4489,17 @@ async function adminSearchItems({ guildId, query: params }) {
        i.name,
        i.quality,
        i.icon_url,
+       i.slot,
+       i.type,
+       i.boss,
+       i.bind,
+       i.category,
+       i.wowhead,
+       i.stats_text,
+       i.tooltip,
+       i.needed,
+       i.equip,
+       i.dropchance,
        (select count(*)::int from prios pr where pr.p1_item_id = i.id or pr.p2_item_id = i.id or pr.p3_item_id = i.id) as prio_count,
        (select count(*)::int from p0plus_points pp where pp.guild_id = $${values.length + 1} and pp.item_id = i.id) as p0plus_count
      from items i
@@ -4670,6 +4681,18 @@ async function adminCreateItem({ guildId, query: params }) {
   const itemId = clean(params.itemGameId || params.item_id || params.itemId);
   const quality = clean(params.quality);
   const iconUrl = clean(params.iconUrl || params.icon || params.icon_url);
+  const slot = clean(params.slot);
+  const type = clean(params.type || params.itemType);
+  const boss = clean(params.boss);
+  const bind = clean(params.bind);
+  const category = clean(params.category);
+  const wowhead = clean(params.wowhead);
+  const statsText = clean(params.statsText || params.stats_text).replace(/\r?\n/g, "|");
+  const tooltip = clean(params.tooltip);
+  const needed = clean(params.needed);
+  const equip = clean(params.equip);
+  const price = clean(params.price);
+  const dropchance = clean(params.dropchance || params.dropChance);
 
   if (!raidType || raidType === "raid") {
     const error = new Error("Raid fehlt.");
@@ -4683,14 +4706,40 @@ async function adminCreateItem({ guildId, query: params }) {
   }
 
   const result = await query(
-    `insert into items (raid_type, item_id, name, quality, icon_url)
-     values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
+    `insert into items (
+       raid_type, item_id, name, quality, icon_url,
+       slot, type, boss, bind, category, wowhead,
+       stats_text, tooltip, needed, equip, price, dropchance
+     )
+     values (
+       $1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''),
+       nullif($6, ''), nullif($7, ''), nullif($8, ''), nullif($9, ''), nullif($10, ''), nullif($11, ''),
+       nullif($12, ''), nullif($13, ''), nullif($14, ''), nullif($15, ''), nullif($16, ''), nullif($17, '')
+     )
      on conflict (raid_type, name) do update
        set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
            quality = coalesce(nullif(excluded.quality, ''), items.quality),
-           icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url)
-     returning id, raid_type, item_id, name, quality, icon_url`,
-    [raidType, itemId, name, quality, iconUrl]
+           icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url),
+           slot = coalesce(nullif(excluded.slot, ''), items.slot),
+           type = coalesce(nullif(excluded.type, ''), items.type),
+           boss = coalesce(nullif(excluded.boss, ''), items.boss),
+           bind = coalesce(nullif(excluded.bind, ''), items.bind),
+           category = coalesce(nullif(excluded.category, ''), items.category),
+           wowhead = coalesce(nullif(excluded.wowhead, ''), items.wowhead),
+           stats_text = coalesce(nullif(excluded.stats_text, ''), items.stats_text),
+           tooltip = coalesce(nullif(excluded.tooltip, ''), items.tooltip),
+           needed = coalesce(nullif(excluded.needed, ''), items.needed),
+           equip = coalesce(nullif(excluded.equip, ''), items.equip),
+           price = coalesce(nullif(excluded.price, ''), items.price),
+           dropchance = coalesce(nullif(excluded.dropchance, ''), items.dropchance)
+     returning id, raid_type, item_id, name, quality, icon_url,
+               slot, type, boss, bind, category, wowhead,
+               stats_text, tooltip, needed, equip, price, dropchance`,
+    [
+      raidType, itemId, name, quality, iconUrl,
+      slot, type, boss, bind, category, wowhead,
+      statsText, tooltip, needed, equip, price, dropchance
+    ]
   );
 
   return { success: true, item: result.rows[0] };
