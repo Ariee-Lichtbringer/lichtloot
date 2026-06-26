@@ -1784,12 +1784,12 @@ async function loadPriosFromSheet(leadPin){
 
     currentPrios = (result.prios || []).map(p => ({
       rowNumber: Number(p.rowNumber || p.RowNumber || p.zeile || p.Zeile || 0),
-      player: p.Spieler || "",
-      server: p.Server || "",
-      class: p.Klasse || "",
-      p1: p.P1 || "",
-      p2: p.P2 || "",
-      p3: p.P3 || "",
+      player: p.Spieler || p.player || p.Player || p.spieler || "",
+      server: p.Server || p.server || "",
+      class: p.Klasse || p.class || p.className || p.Class || p.class_name || "",
+      p1: p.P1 || p.p1 || "",
+      p2: p.P2 || p.p2 || "",
+      p3: p.P3 || p.p3 || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
@@ -3398,8 +3398,8 @@ async function downloadPrio3ReforgedExport(){
   currentPrios
     .filter(entry => !isBenchPrio(entry))
     .forEach(entry => {
-    const player = entry.player || "";
-    const playerClass = entry.class || "";
+    const player = entry.player || entry.Spieler || "";
+    const playerClass = entry.class || entry.Klasse || entry.className || entry.class_name || "";
 
     const p1 = formatItemForPrio3(entry.p1);
     const p2 = formatItemForPrio3(entry.p2);
