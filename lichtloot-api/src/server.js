@@ -34,12 +34,20 @@ await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
 
+await ensureLootItemMetadataColumns().catch(error => {
+  console.warn("Item-Metadaten-Spalten konnten nicht vorbereitet werden:", error.message || error);
+});
+
 await applyLootItemCorrectionsOnce().catch(error => {
   console.warn("Lootdaten-Korrekturen konnten nicht angewendet werden:", error.message || error);
 });
 
 await applyLootSetPieceCleanupOnce().catch(error => {
   console.warn("Setteil-Bereinigung konnte nicht angewendet werden:", error.message || error);
+});
+
+await importLootItemMetadata().catch(error => {
+  console.warn("Item-Metadaten konnten nicht nach Railway übertragen werden:", error.message || error);
 });
 
 app.get("/health", (req, res) => {
@@ -3835,6 +3843,120 @@ async function applyLootSetPieceCleanupOnce() {
   }
 }
 
+async function ensureLootItemMetadataColumns() {
+  await query(
+    `alter table items
+       add column if not exists slot text,
+       add column if not exists type text,
+       add column if not exists boss text,
+       add column if not exists bind text,
+       add column if not exists category text,
+       add column if not exists wowhead text,
+       add column if not exists stats_text text,
+       add column if not exists tooltip text,
+       add column if not exists needed text,
+       add column if not exists equip text,
+       add column if not exists price text,
+       add column if not exists dropchance text,
+       add column if not exists token_group text,
+       add column if not exists token_name text,
+       add column if not exists token_item_id text`
+  );
+}
+
+async function importLootItemMetadata() {
+  const markerKey = "loot-item-metadata-import-latest";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+
+    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
+    let candidates = 0;
+    let updated = 0;
+    for (const raidKey of raidKeys) {
+      const items = await loadStaticLootItems(raidKey);
+      for (const rawItem of items) {
+        const item = normalizeLootItemForApi(null, rawItem);
+        const raidType = normalizeRaidType(item.raidKey || item.raid || raidKey);
+        const name = clean(item.name);
+        if (!raidType || !name) continue;
+        candidates += 1;
+
+        const result = await client.query(
+          `update items
+           set item_id = coalesce(nullif($3, ''), item_id),
+               quality = coalesce(nullif($4, ''), quality),
+               icon_url = coalesce(nullif($5, ''), icon_url),
+               slot = nullif($6, ''),
+               type = nullif($7, ''),
+               boss = nullif($8, ''),
+               bind = nullif($9, ''),
+               category = nullif($10, ''),
+               wowhead = nullif($11, ''),
+               stats_text = nullif($12, ''),
+               tooltip = nullif($13, ''),
+               needed = nullif($14, ''),
+               equip = nullif($15, ''),
+               price = nullif($16, ''),
+               dropchance = nullif($17, ''),
+               token_group = nullif($18, ''),
+               token_name = nullif($19, ''),
+               token_item_id = nullif($20, '')
+           where lower(raid_type) = $1
+             and (
+               lower(name) = lower($2)
+               or (nullif($3, '') is not null and item_id = $3)
+             )`,
+          [
+            raidType,
+            name,
+            item.itemId,
+            item.quality,
+            item.iconName || item.icon,
+            item.slot,
+            item.type,
+            item.boss,
+            item.bind,
+            item.category,
+            item.wowhead,
+            item.statsText,
+            item.tooltip,
+            item.needed,
+            item.equip,
+            item.price,
+            item.dropchance || item.dropChance,
+            item.tokenGroup,
+            item.tokenName,
+            item.tokenItemId
+          ]
+        );
+        updated += result.rowCount;
+      }
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ candidates, updated })]
+    );
+    await client.query("commit");
+    console.log(`Item-Metadaten nach Railway übertragen: ${updated}/${candidates} Updates`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function adminSearchItems({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const searchTerms = clean(params.search || params.item || "")
@@ -3888,18 +4010,11 @@ async function getLootItems({ query: params }) {
     throw error;
   }
 
-  const staticItems = await loadStaticLootItems(raidType);
-  const staticByName = new Map();
-  const staticByItemId = new Map();
-  staticItems.forEach(item => {
-    const nameKey = itemKey(item.name);
-    const itemId = clean(item.itemId || item.item_id || item.ItemID || "");
-    if (nameKey && !staticByName.has(nameKey)) staticByName.set(nameKey, item);
-    if (itemId && !staticByItemId.has(itemId)) staticByItemId.set(itemId, item);
-  });
-
   const result = await query(
-    `select id, raid_type, item_id, name, quality, icon_url
+    `select id, raid_type, item_id, name, quality, icon_url,
+            slot, type, boss, bind, category, wowhead,
+            stats_text, tooltip, needed, equip, price, dropchance,
+            token_group, token_name, token_item_id
      from items
      where lower(raid_type) = any($1)
         or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
@@ -3907,13 +4022,7 @@ async function getLootItems({ query: params }) {
     [raidTypeSearchValues(raidType)]
   );
 
-  const mergedItems = result.rows.map(row => {
-    const detail =
-      staticByItemId.get(clean(row.item_id)) ||
-      staticByName.get(itemKey(row.name)) ||
-      {};
-    return normalizeLootItemForApi(row, detail);
-  });
+  const mergedItems = result.rows.map(row => normalizeLootItemForApi(row));
 
   const displayItems = mergedItems.filter(item => !isLootPageSetPiece(item));
   displayItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
@@ -3922,7 +4031,7 @@ async function getLootItems({ query: params }) {
     success: true,
     raid: raidType,
     source: "Railway",
-    enriched: Boolean(staticItems.length),
+    enriched: true,
     items: displayItems
   };
 }
@@ -3953,12 +4062,13 @@ function normalizeLootItemForApi(row, detail = {}) {
   const quality = clean(row?.quality || detail.quality || detail["Qualität"] || "");
   const stats = Array.isArray(detail.stats)
     ? detail.stats
-    : clean(detail.statsText || detail.Stats_DE || "").split("|").map(line => line.trim()).filter(Boolean);
-  const tooltip = clean(detail.tooltip || detail.Tooltip || detail.Tooltip_DE || "");
-  const slot = clean(detail.slot || detail.Slot || detail.Slot_DE || "");
-  const type = clean(detail.type || detail.Typ || detail.Typ_DE || "");
-  const boss = clean(detail.boss || detail.Boss || "");
-  const dropChance = clean(detail.dropChance || detail.dropchance || detail.Dropchance || "");
+    : clean(row?.stats_text || detail.statsText || detail.Stats_DE || "").split("|").map(line => line.trim()).filter(Boolean);
+  const tooltip = clean(row?.tooltip || detail.tooltip || detail.Tooltip || detail.Tooltip_DE || "");
+  const slot = clean(row?.slot || detail.slot || detail.Slot || detail.Slot_DE || "");
+  const type = clean(row?.type || detail.type || detail.Typ || detail.Typ_DE || "");
+  const boss = clean(row?.boss || detail.boss || detail.Boss || "");
+  const dropChance = clean(row?.dropchance || detail.dropChance || detail.dropchance || detail.Dropchance || "");
+  const statsText = clean(row?.stats_text || detail.statsText || detail.Stats_DE || stats.join("|"));
 
   return {
     id: row?.id || itemId || name,
@@ -3982,17 +4092,23 @@ function normalizeLootItemForApi(row, detail = {}) {
     boss,
     Boss: boss,
     stats,
-    statsText: clean(detail.statsText || detail.Stats_DE || stats.join("|")),
-    Stats_DE: clean(detail.statsText || detail.Stats_DE || stats.join("|")),
+    statsText,
+    Stats_DE: statsText,
     tooltip,
     Tooltip: tooltip,
     Tooltip_DE: tooltip,
     dropChance,
     dropchance: dropChance,
     Dropchance: dropChance,
-    tokenGroup: clean(detail.tokenGroup || detail.TokenGroup || detail.tokenKey || detail.TokenKey || ""),
-    tokenName: clean(detail.tokenName || detail.TokenName || ""),
-    tokenItemId: clean(detail.tokenItemId || detail.TokenItemId || "")
+    bind: clean(row?.bind || detail.bind || detail.Bindung || detail.Bind || ""),
+    category: clean(row?.category || detail.category || detail.Kategorie || detail.Category || ""),
+    wowhead: clean(row?.wowhead || detail.wowhead || detail.Wowhead || detail.WowheadLink || ""),
+    needed: clean(row?.needed || detail.needed || detail["Benötigt"] || detail.Benötigt || ""),
+    equip: clean(row?.equip || detail.equip || detail.Anlegen || ""),
+    price: clean(row?.price || detail.price || detail.Preis || ""),
+    tokenGroup: clean(row?.token_group || detail.tokenGroup || detail.TokenGroup || detail.tokenKey || detail.TokenKey || ""),
+    tokenName: clean(row?.token_name || detail.tokenName || detail.TokenName || ""),
+    tokenItemId: clean(row?.token_item_id || detail.tokenItemId || detail.TokenItemId || "")
   };
 }
 
