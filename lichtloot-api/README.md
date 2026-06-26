@@ -89,3 +89,5 @@ Example player payload:
 5. Add guild admin screens and invite links.
 
 This order keeps the public pages usable while the database becomes the new source of truth.
+
+Deploy marker: item admin endpoint refresh 2026-06-27.
