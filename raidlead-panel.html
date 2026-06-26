@@ -127,7 +127,8 @@ label{
   letter-spacing:.08em;
 }
 
-input{
+input,
+select{
   width:100%;
   padding:12px 13px;
   border-radius:12px;
@@ -153,6 +154,38 @@ input{
   color:#dbeafe;
   line-height:1.6;
   font-size:14px;
+}
+
+.raidlead-prio-form{
+  margin:0 0 16px;
+  padding:16px;
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:16px;
+  background:rgba(2,6,23,.42);
+}
+
+.raidlead-prio-form h3{
+  margin-top:0;
+}
+
+.raidlead-prio-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px 12px;
+}
+
+.raidlead-prio-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.raidlead-prio-actions .status{
+  flex:1 1 260px;
+  margin:0;
+  padding:10px 12px;
 }
 
 .ok{color:var(--green);font-weight:900}
@@ -573,6 +606,7 @@ th{
 @media(max-width:1000px){
   .pin-grid{grid-template-columns:1fr}
   .button-grid{grid-template-columns:1fr}
+  .raidlead-prio-grid{grid-template-columns:1fr}
 }
 
 /* Dashboard-Anpassung im Stil der Gildenleitung */
@@ -1319,6 +1353,8 @@ let currentPrios = [];
 let currentReleased = false;
 let itemIdMap = {};
 let itemVisualMap = {};
+let raidleadItemOptions = [];
+let raidleadItemOptionsRaidKey = "";
 let currentP0PlusEntries = [];
 let currentPrioCheck = null;
 let prioCheckTimer = null;
@@ -1858,6 +1894,8 @@ function renderRaidView(){
     </div>
 
     <section class="entries-panel" id="entriesPanel">
+      ${renderRaidleadPrioForm()}
+
       <div class="entry-status-line">
         <div class="entry-status-content">
           <h3>Aktuelle Einträge</h3>
@@ -1884,6 +1922,96 @@ function renderRaidView(){
       </table>
     </section>
   `;
+
+  loadRaidleadItemOptions();
+}
+
+function renderRaidleadPrioForm(){
+  const p2p3Fields = isP1OnlyRaid() ? "" : `
+        <div>
+          <label for="raidleadPrioP2">P2</label>
+          <input id="raidleadPrioP2" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
+        </div>
+        <div>
+          <label for="raidleadPrioP3">P3</label>
+          <input id="raidleadPrioP3" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
+        </div>
+  `;
+
+  return `
+    <div class="raidlead-prio-form">
+      <h3>Prio für Spieler eintragen</h3>
+      <div class="raidlead-prio-grid">
+        <div>
+          <label for="raidleadPrioPlayer">Spieler</label>
+          <input id="raidleadPrioPlayer" type="text" placeholder="Charaktername">
+        </div>
+        <div>
+          <label for="raidleadPrioServer">Server</label>
+          <select id="raidleadPrioServer">
+            <option value="">Server wählen</option>
+            <option>Everlook</option>
+            <option>Lakeshire</option>
+          </select>
+        </div>
+        <div>
+          <label for="raidleadPrioClass">Klasse</label>
+          <select id="raidleadPrioClass">
+            <option value="">Klasse wählen</option>
+            <option>Krieger</option>
+            <option>Paladin</option>
+            <option>Jäger</option>
+            <option>Schurke</option>
+            <option>Priester</option>
+            <option>Schamane</option>
+            <option>Magier</option>
+            <option>Hexenmeister</option>
+            <option>Druide</option>
+          </select>
+        </div>
+        <div>
+          <label for="raidleadPrioP1">P1</label>
+          <input id="raidleadPrioP1" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
+        </div>
+        ${p2p3Fields}
+      </div>
+      <datalist id="raidleadItemOptions">${renderRaidleadItemOptions()}</datalist>
+      <div class="raidlead-prio-actions">
+        <button class="btn action-soft" type="button" onclick="saveRaidleadPrioForPlayer()">Prio speichern</button>
+        <div class="status" id="raidleadPrioStatus">Für Spieler, die ihre Prio nicht selbst eintragen können.</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRaidleadItemOptions(){
+  return (raidleadItemOptions || [])
+    .map(name => `<option value="${safe(name)}"></option>`)
+    .join("");
+}
+
+async function loadRaidleadItemOptions(){
+  const list = document.getElementById("raidleadItemOptions");
+  const url = LOOT_JSON_URLS[currentRaidKey];
+  if(!list || !url) return;
+
+  if(raidleadItemOptionsRaidKey === currentRaidKey && raidleadItemOptions.length){
+    list.innerHTML = renderRaidleadItemOptions();
+    return;
+  }
+
+  try{
+    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
+    const rows = await response.json();
+    raidleadItemOptions = [...new Set((Array.isArray(rows) ? rows : [])
+      .map(obj => normalizeJsonLootItem(obj).name)
+      .filter(Boolean))]
+      .sort((a,b) => a.localeCompare(b,"de"));
+    raidleadItemOptionsRaidKey = currentRaidKey;
+    list.innerHTML = renderRaidleadItemOptions();
+  }catch(error){
+    console.warn("Loot-Vorschläge konnten nicht geladen werden:", error);
+  }
 }
 
 function renderRaidRowsOnly(){
@@ -2402,6 +2530,76 @@ async function closeList(){
   sessionStorage.removeItem("raidOpen_" + currentRaidData.raidId);
   localStorage.removeItem("raidOpen_" + currentRaidData.raidId);
   renderRaidView();
+}
+
+function raidleadPrioValue(id){
+  return String(document.getElementById(id)?.value || "").trim();
+}
+
+async function saveRaidleadPrioForPlayer(){
+  const status = document.getElementById("raidleadPrioStatus");
+  const saveButton = document.querySelector('button[onclick="saveRaidleadPrioForPlayer()"]');
+
+  if(!currentRaidData || !currentRaidData.raidId){
+    if(status) status.innerHTML = '<span class="bad">Kein aktiver Raid geladen.</span>';
+    return;
+  }
+
+  const player = raidleadPrioValue("raidleadPrioPlayer");
+  const server = raidleadPrioValue("raidleadPrioServer");
+  const playerClass = raidleadPrioValue("raidleadPrioClass");
+  const p1 = raidleadPrioValue("raidleadPrioP1");
+  const p2 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP2");
+  const p3 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP3");
+
+  if(!player || !server || !playerClass || !p1 || (!isP1OnlyRaid() && (!p2 || !p3))){
+    if(status) status.innerHTML = '<span class="bad">Bitte Spieler, Server, Klasse und benötigte Prios ausfüllen.</span>';
+    return;
+  }
+
+  const confirmed = confirm(
+    "Prio für Spieler speichern?\n\n" +
+    "Spieler: " + player + "\n" +
+    "Raid: " + (raids[currentRaidKey]?.name || currentRaidKey || "-")
+  );
+  if(!confirmed) return;
+
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSavePrio" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || currentRaidKey || "") +
+    "&raidDate=" + encodeURIComponent(currentRaidData.date || "") +
+    "&raidTime=" + encodeURIComponent(currentRaidData.time || "") +
+    "&player=" + encodeURIComponent(player) +
+    "&server=" + encodeURIComponent(server) +
+    "&className=" + encodeURIComponent(playerClass) +
+    "&p1=" + encodeURIComponent(p1) +
+    "&p2=" + encodeURIComponent(p2) +
+    "&p3=" + encodeURIComponent(p3) +
+    "&t=" + Date.now();
+
+  try{
+    if(saveButton) saveButton.disabled = true;
+    if(status) status.innerHTML = '<span class="warn">Speichere Prio ...</span>';
+
+    const response = await fetch(url, {cache:"no-store"});
+    const result = await response.json();
+
+    if(!result || result.success === false || result.error){
+      if(status) status.innerHTML = '<span class="bad">' + safe(result?.error || "Prio konnte nicht gespeichert werden.") + '</span>';
+      return;
+    }
+
+    if(status) status.innerHTML = '<span class="ok">Prio gespeichert.</span>';
+    await reloadCurrentRaid();
+  }catch(error){
+    console.error(error);
+    if(status) status.innerHTML = '<span class="bad">Prio konnte nicht gespeichert werden.</span>';
+  }finally{
+    if(saveButton) saveButton.disabled = false;
+  }
 }
 async function deleteSinglePrio(player,server){
   if(!currentRaidData || !currentRaidData.raidId){
