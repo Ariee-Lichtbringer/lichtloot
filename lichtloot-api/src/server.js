@@ -42,12 +42,12 @@ await applyLootItemCorrectionsOnce().catch(error => {
   console.warn("Lootdaten-Korrekturen konnten nicht angewendet werden:", error.message || error);
 });
 
-await applyLootSetPieceCleanupOnce().catch(error => {
-  console.warn("Setteil-Bereinigung konnte nicht angewendet werden:", error.message || error);
-});
-
 await importLootItemMetadata().catch(error => {
   console.warn("Item-Metadaten konnten nicht nach Railway übertragen werden:", error.message || error);
+});
+
+await restoreLootItemsFromStaticDataOnce().catch(error => {
+  console.warn("Lootdaten-Wiederherstellung konnte nicht angewendet werden:", error.message || error);
 });
 
 app.get("/health", (req, res) => {
@@ -58,6 +58,15 @@ app.get("/db-health", async (req, res, next) => {
   try {
     const result = await query("select now() as now");
     res.json({ success: true, now: result.rows[0].now });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
+  try {
+    const html = await readFile(new URL("../public/sicherung.html", import.meta.url), "utf8");
+    res.type("html").send(html);
   } catch (error) {
     next(error);
   }
@@ -3257,6 +3266,190 @@ async function exportGuildBackup({ guildId, query: params }) {
   };
 }
 
+function formatBackupDate(value) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return clean(value);
+}
+
+async function getRaidBackupSnapshot({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const limit = Math.min(Math.max(Number(params.limit || 120) || 120, 1), 500);
+  const raidFilter = clean(params.raid || params.raidType);
+  const raidId = clean(params.raidId || params.id);
+  const values = [guildId, limit];
+  const where = ["r.guild_id = $1"];
+
+  if (raidFilter) {
+    values.push(raidTypeSearchValues(raidFilter));
+    where.push(`lower(r.raid_type) = any($${values.length})`);
+  }
+
+  if (raidId) {
+    values.push(raidId);
+    where.push(`(r.id::text = $${values.length} or r.external_raid_id = $${values.length} or r.raid_pin = $${values.length})`);
+  }
+
+  const raidsResult = await query(
+    `select r.*,
+            (
+              select count(*)::int
+              from prios pr
+              where pr.raid_id = r.id
+            ) as prio_count,
+            (
+              select count(*)::int
+              from p0plus_points pp
+              where pp.guild_id = r.guild_id
+                and pp.note in (
+                  concat('RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+                  concat('RaidID: ', r.id::text),
+                  concat('RaidID: ', r.raid_pin),
+                  concat('Bench RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+                  concat('Bench RaidID: ', r.id::text),
+                  concat('Bench RaidID: ', r.raid_pin)
+                )
+            ) as p0plus_transfer_count
+     from raids r
+     where ${where.join(" and ")}
+     order by r.raid_date desc nulls last, coalesce(r.raid_time, '') desc, r.created_at desc
+     limit $2`,
+    values
+  );
+
+  const raidRows = raidsResult.rows;
+  const raidIds = raidRows.map(row => row.id);
+  if (!raidIds.length) {
+    return { success: true, generatedAt: new Date().toISOString(), raids: [] };
+  }
+
+  const [priosResult, p0PlusResult] = await Promise.all([
+    query(
+      `select
+         pr.id,
+         pr.raid_id,
+         pr.comment,
+         pr.bench,
+         pr.created_at,
+         pr.updated_at,
+         c.name as player,
+         c.server,
+         c.class_name,
+         c.is_main,
+         i1.name as p1,
+         i2.name as p2,
+         i3.name as p3
+       from prios pr
+       join characters c on c.id = pr.character_id
+       left join items i1 on i1.id = pr.p1_item_id
+       left join items i2 on i2.id = pr.p2_item_id
+       left join items i3 on i3.id = pr.p3_item_id
+       where pr.raid_id = any($1::uuid[])
+       order by c.is_main desc, c.created_at asc, c.class_name asc, c.name asc`,
+      [raidIds]
+    ),
+    query(
+      `select
+         r.id as raid_id,
+         pp.id,
+         pp.points,
+         pp.source,
+         pp.note,
+         pp.created_at,
+         c.name as player,
+         c.server,
+         c.class_name,
+         i.name as item,
+         i.raid_type,
+         i.quality
+       from raids r
+       join p0plus_points pp
+         on pp.guild_id = r.guild_id
+        and pp.note in (
+          concat('RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+          concat('RaidID: ', r.id::text),
+          concat('RaidID: ', r.raid_pin),
+          concat('Bench RaidID: ', coalesce(r.external_raid_id, r.id::text)),
+          concat('Bench RaidID: ', r.id::text),
+          concat('Bench RaidID: ', r.raid_pin)
+        )
+       join characters c on c.id = pp.character_id
+       left join items i on i.id = pp.item_id
+       where r.id = any($1::uuid[])
+       order by pp.created_at desc, c.name asc, i.name asc`,
+      [raidIds]
+    )
+  ]);
+
+  const priosByRaid = new Map();
+  for (const row of priosResult.rows) {
+    const meta = commentMeta(row.comment);
+    const entry = {
+      id: row.id,
+      player: row.player || "",
+      server: row.server || "",
+      className: row.class_name || "",
+      isMain: Boolean(row.is_main),
+      p1: row.p1 || "",
+      p2: row.p2 || "",
+      p3: row.p3 || "",
+      p0Plus: meta.p0Plus || "nein",
+      p0Item: meta.p0Item || "",
+      bench: row.bench || "",
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    };
+    if (!priosByRaid.has(row.raid_id)) priosByRaid.set(row.raid_id, []);
+    priosByRaid.get(row.raid_id).push(entry);
+  }
+
+  const p0PlusByRaid = new Map();
+  for (const row of p0PlusResult.rows) {
+    const entry = {
+      id: row.id,
+      player: row.player || "",
+      server: row.server || "",
+      className: row.class_name || "",
+      item: row.item || "",
+      raid: row.raid_type || "",
+      quality: row.quality || "",
+      points: Number(row.points || 0),
+      source: row.source || "",
+      note: row.note || "",
+      createdAt: row.created_at
+    };
+    if (!p0PlusByRaid.has(row.raid_id)) p0PlusByRaid.set(row.raid_id, []);
+    p0PlusByRaid.get(row.raid_id).push(entry);
+  }
+
+  const raids = raidRows.map(row => {
+    const prios = priosByRaid.get(row.id) || [];
+    const p0Plus = p0PlusByRaid.get(row.id) || [];
+    const p0PlusPrios = prios.filter(entry => normalizeStatus(entry.p0Plus).toLowerCase() === "ja");
+    return {
+      ...normalizeRaidRow(row),
+      raidDate: formatBackupDate(row.raid_date),
+      date: formatBackupDate(row.raid_date),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      prioCount: prios.length,
+      p0PlusPrioCount: p0PlusPrios.length,
+      p0PlusTransferCount: p0Plus.length,
+      prios,
+      p0PlusPrios,
+      p0PlusTransfers: p0Plus
+    };
+  });
+
+  return {
+    success: true,
+    generatedAt: new Date().toISOString(),
+    count: raids.length,
+    raids
+  };
+}
+
 async function transferP0PlusPoints({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -3960,6 +4153,114 @@ async function importLootItemMetadata() {
   }
 }
 
+async function restoreLootItemsFromStaticDataOnce() {
+  const markerKey = "loot-items-restore-set-pieces-v2";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
+    let candidates = 0;
+    let upserted = 0;
+    const sources = {};
+    for (const raidKey of raidKeys) {
+      const { items, source } = await loadLootMetadataSourceItems(raidKey);
+      sources[raidKey] = { source, count: items.length };
+      for (const rawItem of items) {
+        const item = normalizeLootItemForApi(null, rawItem);
+        const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raid || item.raidKey || item.raid || raidKey);
+        const name = clean(item.name);
+        if (!raidType || !name) continue;
+        candidates += 1;
+
+        const result = await client.query(
+          `insert into items (
+             raid_type, item_id, name, quality, icon_url,
+             slot, type, boss, bind, category, wowhead,
+             stats_text, tooltip, needed, equip, price, dropchance,
+             token_group, token_name, token_item_id
+           )
+           values (
+             $1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''),
+             nullif($6, ''), nullif($7, ''), nullif($8, ''), nullif($9, ''),
+             nullif($10, ''), nullif($11, ''), nullif($12, ''), nullif($13, ''),
+             nullif($14, ''), nullif($15, ''), nullif($16, ''), nullif($17, ''),
+             nullif($18, ''), nullif($19, ''), nullif($20, '')
+           )
+           on conflict (raid_type, name) do update
+             set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
+                 quality = coalesce(nullif(excluded.quality, ''), items.quality),
+                 icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url),
+                 slot = coalesce(nullif(excluded.slot, ''), items.slot),
+                 type = coalesce(nullif(excluded.type, ''), items.type),
+                 boss = coalesce(nullif(excluded.boss, ''), items.boss),
+                 bind = coalesce(nullif(excluded.bind, ''), items.bind),
+                 category = coalesce(nullif(excluded.category, ''), items.category),
+                 wowhead = coalesce(nullif(excluded.wowhead, ''), items.wowhead),
+                 stats_text = coalesce(nullif(excluded.stats_text, ''), items.stats_text),
+                 tooltip = coalesce(nullif(excluded.tooltip, ''), items.tooltip),
+                 needed = coalesce(nullif(excluded.needed, ''), items.needed),
+                 equip = coalesce(nullif(excluded.equip, ''), items.equip),
+                 price = coalesce(nullif(excluded.price, ''), items.price),
+                 dropchance = coalesce(nullif(excluded.dropchance, ''), items.dropchance),
+                 token_group = coalesce(nullif(excluded.token_group, ''), items.token_group),
+                 token_name = coalesce(nullif(excluded.token_name, ''), items.token_name),
+                 token_item_id = coalesce(nullif(excluded.token_item_id, ''), items.token_item_id)`,
+          [
+            raidType,
+            item.itemId,
+            name,
+            item.quality,
+            item.iconName || item.icon,
+            item.slot,
+            item.type,
+            item.boss,
+            item.bind,
+            item.category,
+            item.wowhead,
+            item.statsText,
+            item.tooltip,
+            item.needed,
+            item.equip,
+            item.price,
+            item.dropchance || item.dropChance,
+            item.tokenGroup,
+            item.tokenName,
+            item.tokenItemId
+          ]
+        );
+        upserted += result.rowCount;
+      }
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ candidates, upserted, sources })]
+    );
+    await client.query("commit");
+    console.log(`Lootdaten wiederhergestellt: ${upserted}/${candidates} Items`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function loadLootMetadataSourceItems(raidType) {
   const raidKey = normalizeRaidType(raidType);
   if (!raidKey) return { items: [], source: "none" };
@@ -4051,15 +4352,14 @@ async function getLootItems({ query: params }) {
 
   const mergedItems = result.rows.map(row => normalizeLootItemForApi(row));
 
-  const displayItems = mergedItems.filter(item => !isLootPageSetPiece(item));
-  displayItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
+  mergedItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
 
   return {
     success: true,
     raid: raidType,
     source: "Railway",
     enriched: true,
-    items: displayItems
+    items: mergedItems
   };
 }
 
@@ -4322,6 +4622,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
+      return res.json({ ...backup, guild: guild.slug });
+    }
+
+    if (action === "guildRaidBackupSnapshot" || action === "raidBackupSnapshot") {
+      const backup = await getRaidBackupSnapshot({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
     }
 
