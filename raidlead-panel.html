@@ -1598,6 +1598,15 @@ function hasP0Control(){
   return isAllowedP0Raid() || isPlainP0Raid();
 }
 
+function isActiveP0Value(value){
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["ja","true","1","p0","p0+","preraid","pre-raid"].includes(normalized);
+}
+
+function isActiveP0Entry(entry){
+  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+}
+
 function p0Label(){
   return isAllowedP0Raid() ? "P0+" : "P0";
 }
@@ -1781,7 +1790,7 @@ async function loadPriosFromSheet(leadPin){
       p1: p.P1 || "",
       p2: p.P2 || "",
       p3: p.P3 || "",
-      p0Plus: p.P0Plus || "",
+      p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
 
@@ -1934,7 +1943,7 @@ function getTransferableP0Count(){
 
   return (currentPrios || []).filter(entry =>
     !isBenchPrio(entry) &&
-    String(entry.p0Plus || "").trim().toLowerCase() === "ja"
+    isActiveP0Entry(entry)
   ).length;
 }
 
@@ -2310,7 +2319,7 @@ function getFilteredAndSortedPrios(){
         entry.p1,
         entry.p2,
         entry.p3,
-        String(entry.p0Plus).toLowerCase() === "ja" ? entry.p1 : "",
+        isActiveP0Entry(entry) ? entry.p1 : "",
         renderP0PlusPointsText(entry.p1)
       ].join(" ").toLowerCase().includes(search);
     });
@@ -2517,7 +2526,7 @@ function renderP0PlusPoints(itemName,isActiveP0Plus){
   const entries = getP0PlusEntriesForItem(itemName);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong></strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>Preraid</strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
   }
 
   return `
@@ -2557,8 +2566,7 @@ function renderRows(){
   }
 
   return rows.map((entry,index)=>{
-    const isP0Plus =
-      String(entry.p0Plus || "").toLowerCase() === "ja";
+    const isP0Plus = isActiveP0Entry(entry);
 
     const clearButton =
       currentReleased && isP0Plus && isAllowedP0Raid()
@@ -2946,7 +2954,7 @@ async function transferP0PlusPoints(){
   }
 
   const p0Count = currentPrios.filter(entry =>
-    String(entry.p0Plus || "").toLowerCase() === "ja" &&
+    isActiveP0Entry(entry) &&
     !isBenchPrio(entry)
   ).length;
 
@@ -3471,7 +3479,7 @@ async function downloadAddonExport(){
     const player = entry.player || "";
 
     if(
-      String(entry.p0Plus || "").toLowerCase() === "ja"
+      isActiveP0Entry(entry)
       && entry.p1
     ){
       const info = addonItemInfoMap[itemKey(entry.p1)] || {};
