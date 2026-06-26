@@ -2937,32 +2937,28 @@ async function downloadPrio3ReforgedExport(){
 
   await loadItemIdsForExport();
 
-  let content = "";
-
-  currentPrios
+  const rows = currentPrios
     .filter(entry => !isBenchPrio(entry))
-    .forEach(entry => {
-    const player = entry.player || entry.Spieler || "";
-    const playerClass = entry.class || entry.Klasse || entry.className || entry.class_name || "";
+    .map(entry => {
+      const player = entry.player || entry.Spieler || "";
+      const playerClass = entry.class || entry.Klasse || entry.className || entry.class_name || "";
+      const p1 = formatItemForPrio3(entry.p1);
+      const p2 = formatItemForPrio3(entry.p2);
+      const p3 = formatItemForPrio3(entry.p3);
 
-    const p1 = formatItemForPrio3(entry.p1);
-    const p2 = formatItemForPrio3(entry.p2);
-    const p3 = formatItemForPrio3(entry.p3);
+      return [player, playerClass, p1, p2, p3]
+        .map(value => String(value || "").replace(/;/g, ","))
+        .join(";");
+    });
 
-    content +=
-      player + "\t\t" +
-      playerClass + "\t\t" +
-      p1 + "\t" +
-      p2 + "\t" +
-      p3 + "\n";
-  });
+  const content = rows.join("\n");
 
   const filename =
     (currentRaidData.raidId || currentRaidKey || "raid") +
-    "-prio3-reforged.txt";
+    "-prio3-reforged.csv";
 
   const blob = new Blob([content], {
-    type:"text/plain;charset=utf-8"
+    type:"text/csv;charset=utf-8"
   });
 
   const url = URL.createObjectURL(blob);
