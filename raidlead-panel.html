@@ -220,6 +220,33 @@ select{
   padding:10px 12px;
 }
 
+.raidlead-p0-toggle{
+  min-height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(250,204,21,.24);
+  background:rgba(15,23,42,.62);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  color:#dbeafe;
+  font-weight:900;
+  text-transform:none;
+  letter-spacing:0;
+  margin:0;
+}
+
+.raidlead-p0-toggle input{
+  width:18px;
+  height:18px;
+  accent-color:var(--gold);
+}
+
+.raidlead-p0-toggle span{
+  color:var(--gold);
+}
+
 .raidlead-item-picker{
   position:relative;
 }
@@ -2033,6 +2060,15 @@ function renderRaidleadPrioForm(){
         ${renderRaidleadItemPicker("P2","P2")}
         ${renderRaidleadItemPicker("P3","P3")}
   `;
+  const p0Field = hasP0Control() ? `
+        <div>
+          <label>${safe(p0Label())}</label>
+          <label class="raidlead-p0-toggle" for="raidleadPrioP0Plus">
+            <input id="raidleadPrioP0Plus" type="checkbox">
+            <span>${safe(p0Label())}</span> für P1 setzen
+          </label>
+        </div>
+  ` : "";
 
   return `
     <details class="raidlead-prio-form">
@@ -2068,6 +2104,7 @@ function renderRaidleadPrioForm(){
           </div>
           ${renderRaidleadItemPicker("P1","P1")}
           ${p2p3Fields}
+          ${p0Field}
         </div>
         <div class="raidlead-prio-actions">
           <button class="btn action-soft" type="button" onclick="saveRaidleadPrioForPlayer()">Prio speichern</button>
@@ -2754,10 +2791,16 @@ async function saveRaidleadPrioForPlayer(){
   const server = raidleadPrioValue("raidleadPrioServer");
   const playerClass = raidleadPrioValue("raidleadPrioClass");
   const p1 = raidleadPrioValue("raidleadPrioP1");
-  const p2 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP2");
-  const p3 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP3");
+  const isP0Plus = hasP0Control() && Boolean(document.getElementById("raidleadPrioP0Plus")?.checked);
+  let p2 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP2");
+  let p3 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP3");
 
-  if(!player || !server || !playerClass || !p1 || (!isP1OnlyRaid() && (!p2 || !p3))){
+  if(isP0Plus && !isP1OnlyRaid()){
+    p2 = p2 || p1;
+    p3 = p3 || p1;
+  }
+
+  if(!player || !server || !playerClass || !p1 || (!isP1OnlyRaid() && !isP0Plus && (!p2 || !p3))){
     if(status) status.innerHTML = '<span class="bad">Bitte Spieler, Server, Klasse und benötigte Prios ausfüllen.</span>';
     return;
   }
@@ -2765,7 +2808,8 @@ async function saveRaidleadPrioForPlayer(){
   const confirmed = confirm(
     "Prio für Spieler speichern?\n\n" +
     "Spieler: " + player + "\n" +
-    "Raid: " + (raids[currentRaidKey]?.name || currentRaidKey || "-")
+    "Raid: " + (raids[currentRaidKey]?.name || currentRaidKey || "-") +
+    (isP0Plus ? "\n" + p0Label() + ": ja" : "")
   );
   if(!confirmed) return;
 
@@ -2783,6 +2827,7 @@ async function saveRaidleadPrioForPlayer(){
     "&p1=" + encodeURIComponent(p1) +
     "&p2=" + encodeURIComponent(p2) +
     "&p3=" + encodeURIComponent(p3) +
+    "&p0Plus=" + encodeURIComponent(isP0Plus ? "ja" : "nein") +
     "&t=" + Date.now();
 
   try{
