@@ -3880,8 +3880,10 @@ async function importLootItemMetadata() {
     const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
     let candidates = 0;
     let updated = 0;
+    const sources = {};
     for (const raidKey of raidKeys) {
-      const items = await loadStaticLootItems(raidKey);
+      const { items, source } = await loadLootMetadataSourceItems(raidKey);
+      sources[raidKey] = { source, count: items.length };
       for (const rawItem of items) {
         const item = normalizeLootItemForApi(null, rawItem);
         const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raid || item.raidKey || item.raid || raidKey);
@@ -3945,16 +3947,40 @@ async function importLootItemMetadata() {
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ candidates, updated })]
+      [markerKey, JSON.stringify({ candidates, updated, sources })]
     );
     await client.query("commit");
     console.log(`Item-Metadaten nach Railway übertragen: ${updated}/${candidates} Updates`);
-    return { success: true, candidates, updated };
+    return { success: true, candidates, updated, sources };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
   } finally {
     client.release();
+  }
+}
+
+async function loadLootMetadataSourceItems(raidType) {
+  const raidKey = normalizeRaidType(raidType);
+  if (!raidKey) return { items: [], source: "none" };
+
+  try {
+    const raw = await readFile(new URL(`../public/data/${raidKey}.json`, import.meta.url), "utf8");
+    const parsed = JSON.parse(raw);
+    return { items: Array.isArray(parsed) ? parsed : [], source: "public/data" };
+  } catch (localError) {
+    try {
+      const response = await fetch(
+        `https://raw.githubusercontent.com/Ariee-Lichtbringer/lichtloot/main/data/${encodeURIComponent(raidKey)}.json`,
+        { cache: "no-store" }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const parsed = await response.json();
+      return { items: Array.isArray(parsed) ? parsed : [], source: "github" };
+    } catch (githubError) {
+      console.warn(`Metadatenquelle fuer ${raidKey} nicht ladbar:`, githubError.message || githubError);
+      return { items: [], source: "missing" };
+    }
   }
 }
 
