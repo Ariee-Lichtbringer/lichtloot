@@ -38,6 +38,10 @@ await applyLootItemCorrectionsOnce().catch(error => {
   console.warn("Lootdaten-Korrekturen konnten nicht angewendet werden:", error.message || error);
 });
 
+await applyLootSetPieceCleanupOnce().catch(error => {
+  console.warn("Setteil-Bereinigung konnte nicht angewendet werden:", error.message || error);
+});
+
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api" });
 });
@@ -3765,6 +3769,72 @@ async function applyLootItemCorrectionsOnce() {
   }
 }
 
+async function applyLootSetPieceCleanupOnce() {
+  const markerKey = "loot-set-piece-cleanup-v1";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
+    const staticItemsByRaid = await Promise.all(raidKeys.map(raidKey => loadStaticLootItems(raidKey)));
+    const cleanupItems = staticItemsByRaid.flat()
+      .map(item => normalizeLootItemForApi(null, item))
+      .filter(isLootPageSetPiece)
+      .map(item => ({
+        raidType: normalizeRaidType(item.raidKey || item.raid),
+        name: clean(item.name).toLowerCase()
+      }))
+      .filter(item => item.raidType && item.name);
+
+    let deletedTotal = 0;
+    for (const item of cleanupItems) {
+      const deleted = await client.query(
+        `delete from items i
+         where lower(i.raid_type) = $1
+           and lower(i.name) = $2
+           and not exists (
+             select 1 from prios pr
+             where pr.p1_item_id = i.id
+                or pr.p2_item_id = i.id
+                or pr.p3_item_id = i.id
+           )
+           and not exists (
+             select 1 from p0plus_points pp
+             where pp.item_id = i.id
+           )`,
+        [item.raidType, item.name]
+      );
+      deletedTotal += deleted.rowCount;
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ candidates: cleanupItems.length, deleted: deletedTotal })]
+    );
+    await client.query("commit");
+    console.log(`Setteil-Bereinigung angewendet: ${deletedTotal}/${cleanupItems.length} Items entfernt`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function adminSearchItems({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const searchTerms = clean(params.search || params.item || "")
@@ -3845,22 +3915,15 @@ async function getLootItems({ query: params }) {
     return normalizeLootItemForApi(row, detail);
   });
 
-  const seen = new Set(mergedItems.map(item => itemKey(item.name)));
-  staticItems.forEach(item => {
-    const key = itemKey(item.name);
-    if (!key || seen.has(key)) return;
-    seen.add(key);
-    mergedItems.push(normalizeLootItemForApi(null, item));
-  });
-
-  mergedItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
+  const displayItems = mergedItems.filter(item => !isLootPageSetPiece(item));
+  displayItems.sort((a, b) => clean(a.name).localeCompare(clean(b.name), "de"));
 
   return {
     success: true,
     raid: raidType,
     source: "Railway",
     enriched: Boolean(staticItems.length),
-    items: mergedItems
+    items: displayItems
   };
 }
 
@@ -3877,20 +3940,8 @@ async function loadStaticLootItems(raidType) {
     staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
     return items;
   } catch (error) {
-    try {
-      const response = await fetch(
-        `https://raw.githubusercontent.com/Ariee-Lichtbringer/lichtloot/main/data/${encodeURIComponent(raidKey)}.json`,
-        { cache: "no-store" }
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const parsed = await response.json();
-      const items = Array.isArray(parsed) ? parsed : [];
-      staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
-      return items;
-    } catch (fallbackError) {
-      staticLootCache.set(raidKey, { items: [], expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
-      return [];
-    }
+    staticLootCache.set(raidKey, { items: [], expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
+    return [];
   }
 }
 
@@ -3938,8 +3989,37 @@ function normalizeLootItemForApi(row, detail = {}) {
     Tooltip_DE: tooltip,
     dropChance,
     dropchance: dropChance,
-    Dropchance: dropChance
+    Dropchance: dropChance,
+    tokenGroup: clean(detail.tokenGroup || detail.TokenGroup || detail.tokenKey || detail.TokenKey || ""),
+    tokenName: clean(detail.tokenName || detail.TokenName || ""),
+    tokenItemId: clean(detail.tokenItemId || detail.TokenItemId || "")
   };
+}
+
+function isLootPageSetPiece(item) {
+  if (!item) return false;
+  const stats = Array.isArray(item.stats) ? item.stats.join(" | ") : "";
+  const text = [
+    item.name,
+    item.slot,
+    item.type,
+    item.category,
+    item.tooltipText,
+    item.tooltip,
+    item.statsText,
+    item.Stats_DE,
+    stats
+  ].join(" | ");
+
+  const hasSetBonus = /\(\d+\)\s*Set:/i.test(text) || /\(\d+\/\d+\)/.test(text);
+  if (!hasSetBonus) return false;
+
+  const hasClassRestriction = /Klassen:/i.test(text);
+  const hasTokenRewardLink = Boolean(item.tokenGroup || item.tokenItemId || item.tokenName);
+  const armorSlots = /^(Kopf|Schulter|Brust|Handgelenke|Hände|Taille|Beine|Füße|Finger)$/i;
+  const isArmorReward = armorSlots.test(clean(item.slot));
+
+  return hasClassRestriction || hasTokenRewardLink || isArmorReward;
 }
 
 async function adminUpdateItem({ guildId, query: params }) {
