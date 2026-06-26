@@ -2911,8 +2911,11 @@ function formatItemForPrio3(itemName){
     return "";
   }
 
-  if(/\-\d+$/.test(name)){
-    return name;
+  const existing = name.match(/^(.*)-(\d+)$/);
+  if(existing){
+    const itemText = existing[1].trim();
+    const itemId = existing[2];
+    return /\d/.test(itemText) ? itemId + "-" + itemText : name;
   }
 
   const id = itemIdMap[itemKey(name)];
@@ -2921,7 +2924,7 @@ function formatItemForPrio3(itemName){
     return name;
   }
 
-  return name + "-" + id;
+  return /\d/.test(name) ? id + "-" + name : name + "-" + id;
 }
 
 async function downloadPrio3ReforgedExport(){
