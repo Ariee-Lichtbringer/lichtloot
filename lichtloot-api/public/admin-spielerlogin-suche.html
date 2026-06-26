@@ -362,7 +362,7 @@
       box.textContent="Item wird gespeichert ...";
       try{
         const data=await apiFetch({action:"guildAdminCreateItem",masterCode:masterCode(),raid,name,itemGameId,quality,iconUrl});
-        if(!data.success) throw new Error(data.error || "Item konnte nicht gespeichert werden.");
+        if(!data.success) throw new Error(explainItemCreateError(data.error) || "Item konnte nicht gespeichert werden.");
         document.getElementById("itemSearch").value=name;
         document.getElementById("itemRaid").value=raid;
         document.getElementById("newItemName").value="";
@@ -373,6 +373,14 @@
       }catch(error){
         box.innerHTML='<span class="bad">'+escapeHtml(error.message || "Item konnte nicht gespeichert werden.")+'</span>';
       }
+    }
+
+    function explainItemCreateError(message){
+      const text=String(message || "");
+      if(text.includes("Unsupported action")){
+        return "Railway-Server ist noch nicht aktualisiert. Bitte lichtloot-api/src/server.js mit deployen.";
+      }
+      return text;
     }
 
     function renderItems(items){
