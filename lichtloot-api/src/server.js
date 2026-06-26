@@ -3430,6 +3430,73 @@ async function addCharacterToPlayer({ guildId, pin, charName, server, className 
   return normalizeCharacter(result.rows[0]);
 }
 
+async function deleteCharacterFromPlayer({ guildId, pin, charName, server }) {
+  const player = await findPlayerByPin(guildId, pin);
+  if (!player) {
+    const error = new Error("Dieser SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+
+    const countResult = await client.query(
+      "select count(*)::int as count from characters where player_id = $1",
+      [player.id]
+    );
+
+    if (Number(countResult.rows[0]?.count || 0) <= 1) {
+      const error = new Error("Der letzte Charakter dieses SpielerLogins kann nicht gelöscht werden.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const deleteResult = await client.query(
+      `delete from characters
+       where player_id = $1
+         and lower(name) = lower($2)
+         and lower(server) = lower($3)
+       returning id, name, server, class_name`,
+      [player.id, clean(charName), clean(server)]
+    );
+
+    if (!deleteResult.rows.length) {
+      const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerLogin.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const mainResult = await client.query(
+      "select count(*)::int as count from characters where player_id = $1 and is_main = true",
+      [player.id]
+    );
+
+    if (Number(mainResult.rows[0]?.count || 0) === 0) {
+      await client.query(
+        `update characters
+         set is_main = true, updated_at = now()
+         where id = (
+           select id from characters
+           where player_id = $1
+           order by created_at asc
+           limit 1
+         )`,
+        [player.id]
+      );
+    }
+
+    await client.query("commit");
+    return { success: true, deleted: 1, character: normalizeCharacter(deleteResult.rows[0]) };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function setMainCharacter({ guildId, pin, charName, server }) {
   const player = await findPlayerByPin(guildId, pin);
   if (!player) {
@@ -4263,6 +4330,16 @@ app.get("/api/apps-script", async (req, res, next) => {
         className: req.query.className
       });
       return res.json({ success: true, guild: guild.slug, character });
+    }
+
+    if (action === "deleteTwink" || action === "deleteCharacter") {
+      const deleted = await deleteCharacterFromPlayer({
+        guildId: guild.id,
+        pin: req.query.pin,
+        charName: req.query.char,
+        server: req.query.server
+      });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "setMainCharacter") {
