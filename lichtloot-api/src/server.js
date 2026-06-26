@@ -1616,6 +1616,145 @@ async function savePrio({ guildId, query: params }) {
   }
 }
 
+async function findOrCreateRaidleadCharacter(client, guildId, params) {
+  const player = clean(params.player || params.char || params.spieler);
+  const server = clean(params.server);
+  const className = clean(params.className || params.class || params.klasse);
+
+  if (!player || !server || !className) {
+    const error = new Error("Spieler, Server oder Klasse fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const existing = await client.query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+       and lower(c.server) = lower($3)
+     order by c.created_at asc
+     limit 1`,
+    [guildId, player, server]
+  );
+
+  if (existing.rows.length) {
+    const character = existing.rows[0];
+    if (className && clean(character.class_name).toLowerCase() !== className.toLowerCase()) {
+      const updated = await client.query(
+        `update characters
+         set class_name = $1, updated_at = now()
+         where id = $2
+         returning id, name, server, class_name, created_at`,
+        [className, character.id]
+      );
+      return updated.rows[0];
+    }
+    return character;
+  }
+
+  let createdPlayer = null;
+  for (let attempt = 0; attempt < 5 && !createdPlayer; attempt++) {
+    const generatedPin = normalizePin(
+      "RL" +
+      Date.now().toString(36) +
+      Math.random().toString(36).slice(2, 8)
+    );
+
+    const playerResult = await client.query(
+      `insert into players (guild_id, player_pin, security_question, security_answer)
+       values ($1, $2, $3, $4)
+       on conflict (guild_id, player_pin) do nothing
+       returning id, player_pin`,
+      [guildId, generatedPin, "Raidlead-Eintrag", "Raidlead-Eintrag"]
+    );
+    createdPlayer = playerResult.rows[0] || null;
+  }
+
+  if (!createdPlayer) {
+    const error = new Error("Interner SpielerLogin konnte nicht erzeugt werden.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const characterResult = await client.query(
+    `insert into characters (player_id, name, server, class_name, is_main)
+     values ($1, $2, $3, $4, true)
+     returning id, name, server, class_name, created_at`,
+    [createdPlayer.id, player, server, className]
+  );
+
+  return characterResult.rows[0];
+}
+
+async function savePrioAsRaidlead({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (!leadPin || !raid.lead_pin || leadPin !== raid.lead_pin) {
+    const error = new Error("LeadPIN passt nicht zu diesem Raid.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const raidType = normalizeRaidType(raid.raid_type || params.raid || params.raidName);
+  if (!clean(params.p1)) {
+    const error = new Error("P1 fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("begin");
+
+    const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    const p1 = await upsertItem(client, raidType, params.p1);
+    const p2 = await upsertItem(client, raidType, params.p2);
+    const p3 = await upsertItem(client, raidType, params.p3);
+    const comment = JSON.stringify({
+      p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
+      raidTime: clean(params.raidTime || params.uhrzeit) || raid.raid_time || "",
+      source: "raidlead"
+    });
+
+    const prioResult = await client.query(
+      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+       values ($1, $2, $3, $4, $5, $6)
+       on conflict (raid_id, character_id) do update
+         set p1_item_id = excluded.p1_item_id,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
+             comment = excluded.comment,
+             updated_at = now()
+       returning id, created_at, updated_at`,
+      [raid.id, character.id, p1?.id || null, p2?.id || null, p3?.id || null, comment]
+    );
+
+    await client.query("commit");
+    return {
+      success: true,
+      prioId: prioResult.rows[0].id,
+      raidId: raidPublicId(raid),
+      player: character.name,
+      server: character.server,
+      className: character.class_name
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 function commentMeta(comment) {
   try {
     return JSON.parse(comment || "{}") || {};
@@ -4033,6 +4172,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "savePrio") {
       const saved = await savePrio({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSavePrio" || action === "raidleadSavePrio") {
+      const saved = await savePrioAsRaidlead({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
