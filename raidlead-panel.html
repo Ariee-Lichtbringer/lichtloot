@@ -158,14 +158,46 @@ select{
 
 .raidlead-prio-form{
   margin:0 0 16px;
-  padding:16px;
   border:1px solid rgba(250,204,21,.22);
   border-radius:16px;
   background:rgba(2,6,23,.42);
+  overflow:visible;
 }
 
-.raidlead-prio-form h3{
-  margin-top:0;
+.raidlead-prio-form summary{
+  list-style:none;
+  cursor:pointer;
+  padding:16px;
+  color:#dbeafe;
+  font-size:14px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.raidlead-prio-form summary::-webkit-details-marker{display:none}
+
+.raidlead-prio-form summary::after{
+  content:"Aufklappen";
+  color:var(--gold);
+  font-size:11px;
+  letter-spacing:.08em;
+}
+
+.raidlead-prio-form[open] summary{
+  border-bottom:1px solid rgba(250,204,21,.16);
+}
+
+.raidlead-prio-form[open] summary::after{
+  content:"Einklappen";
+}
+
+.raidlead-prio-body{
+  padding:16px;
 }
 
 .raidlead-prio-grid{
@@ -186,6 +218,76 @@ select{
   flex:1 1 260px;
   margin:0;
   padding:10px 12px;
+}
+
+.raidlead-item-picker{
+  position:relative;
+}
+
+.raidlead-item-trigger{
+  width:100%;
+  min-height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(2,6,23,.82);
+  color:#cbd5e1;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+}
+
+.raidlead-item-trigger .placeholder{
+  color:#94a3b8;
+  font-weight:800;
+}
+
+.raidlead-item-menu{
+  position:absolute;
+  z-index:1000;
+  left:0;
+  right:0;
+  top:calc(100% + 6px);
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,.35);
+  background:rgba(2,6,23,.98);
+  box-shadow:0 18px 34px rgba(0,0,0,.55);
+}
+
+.raidlead-item-menu input{
+  margin-bottom:8px;
+  padding:9px 10px;
+}
+
+.raidlead-item-list{
+  max-height:260px;
+  overflow:auto;
+  display:grid;
+  gap:4px;
+}
+
+.raidlead-item-option{
+  width:100%;
+  padding:7px 8px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+}
+
+.raidlead-item-option:hover{
+  background:rgba(250,204,21,.10);
+}
+
+.raidlead-item-empty{
+  color:#94a3b8;
+  font-weight:800;
+  padding:8px;
 }
 
 .ok{color:var(--green);font-weight:900}
@@ -1928,57 +2030,69 @@ function renderRaidView(){
 
 function renderRaidleadPrioForm(){
   const p2p3Fields = isP1OnlyRaid() ? "" : `
-        <div>
-          <label for="raidleadPrioP2">P2</label>
-          <input id="raidleadPrioP2" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
-        </div>
-        <div>
-          <label for="raidleadPrioP3">P3</label>
-          <input id="raidleadPrioP3" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
-        </div>
+        ${renderRaidleadItemPicker("P2","P2")}
+        ${renderRaidleadItemPicker("P3","P3")}
   `;
 
   return `
-    <div class="raidlead-prio-form">
-      <h3>Prio für Spieler eintragen</h3>
-      <div class="raidlead-prio-grid">
-        <div>
-          <label for="raidleadPrioPlayer">Spieler</label>
-          <input id="raidleadPrioPlayer" type="text" placeholder="Charaktername">
+    <details class="raidlead-prio-form">
+      <summary>Prio für Spieler eintragen</summary>
+      <div class="raidlead-prio-body">
+        <div class="raidlead-prio-grid">
+          <div>
+            <label for="raidleadPrioPlayer">Spieler</label>
+            <input id="raidleadPrioPlayer" type="text" placeholder="Charaktername">
+          </div>
+          <div>
+            <label for="raidleadPrioServer">Server</label>
+            <select id="raidleadPrioServer">
+              <option value="">Server wählen</option>
+              <option>Everlook</option>
+              <option>Lakeshire</option>
+            </select>
+          </div>
+          <div>
+            <label for="raidleadPrioClass">Klasse</label>
+            <select id="raidleadPrioClass">
+              <option value="">Klasse wählen</option>
+              <option>Krieger</option>
+              <option>Paladin</option>
+              <option>Jäger</option>
+              <option>Schurke</option>
+              <option>Priester</option>
+              <option>Schamane</option>
+              <option>Magier</option>
+              <option>Hexenmeister</option>
+              <option>Druide</option>
+            </select>
+          </div>
+          ${renderRaidleadItemPicker("P1","P1")}
+          ${p2p3Fields}
         </div>
-        <div>
-          <label for="raidleadPrioServer">Server</label>
-          <select id="raidleadPrioServer">
-            <option value="">Server wählen</option>
-            <option>Everlook</option>
-            <option>Lakeshire</option>
-          </select>
+        <div class="raidlead-prio-actions">
+          <button class="btn action-soft" type="button" onclick="saveRaidleadPrioForPlayer()">Prio speichern</button>
+          <div class="status" id="raidleadPrioStatus">Für Spieler, die ihre Prio nicht selbst eintragen können.</div>
         </div>
-        <div>
-          <label for="raidleadPrioClass">Klasse</label>
-          <select id="raidleadPrioClass">
-            <option value="">Klasse wählen</option>
-            <option>Krieger</option>
-            <option>Paladin</option>
-            <option>Jäger</option>
-            <option>Schurke</option>
-            <option>Priester</option>
-            <option>Schamane</option>
-            <option>Magier</option>
-            <option>Hexenmeister</option>
-            <option>Druide</option>
-          </select>
-        </div>
-        <div>
-          <label for="raidleadPrioP1">P1</label>
-          <input id="raidleadPrioP1" list="raidleadItemOptions" type="text" placeholder="Item wählen oder tippen">
-        </div>
-        ${p2p3Fields}
       </div>
-      <datalist id="raidleadItemOptions">${renderRaidleadItemOptions()}</datalist>
-      <div class="raidlead-prio-actions">
-        <button class="btn action-soft" type="button" onclick="saveRaidleadPrioForPlayer()">Prio speichern</button>
-        <div class="status" id="raidleadPrioStatus">Für Spieler, die ihre Prio nicht selbst eintragen können.</div>
+    </details>
+  `;
+}
+
+function renderRaidleadItemPicker(slot,label){
+  const inputId = "raidleadPrio" + slot;
+  return `
+    <div class="raidlead-item-picker" data-slot="${safe(slot)}">
+      <label>${safe(label)}</label>
+      <input id="${safe(inputId)}" type="hidden">
+      <button class="raidlead-item-trigger" id="${safe(inputId)}Trigger" type="button" onclick="toggleRaidleadItemPicker('${safe(slot)}')">
+        <span class="placeholder">Item wählen</span>
+        <span>⌄</span>
+      </button>
+      <div class="raidlead-item-menu hidden" id="${safe(inputId)}Menu">
+        <input id="${safe(inputId)}Search" type="text" placeholder="Item suchen..." oninput="filterRaidleadItemPicker('${safe(slot)}')">
+        <div class="raidlead-item-list" id="${safe(inputId)}List">
+          ${renderRaidleadItemOptionsForSlot(slot)}
+        </div>
       </div>
     </div>
   `;
@@ -1990,28 +2104,119 @@ function renderRaidleadItemOptions(){
     .join("");
 }
 
+function renderRaidleadPickerItem(name){
+  const info = itemVisualMap[itemKey(name)] || {};
+  const quality = info.quality || "epic";
+  const iconName = info.iconName || "";
+  const tooltipAttrs = `
+    onmouseenter="showTooltip(event,'${escapeQuotes(name)}')"
+    onmousemove="moveTooltip(event)"
+    onmouseleave="hideTooltip()"
+  `;
+
+  return `
+    <span class="item-name item-${safe(quality)} item-with-icon" ${tooltipAttrs}>
+      <img class="item-icon" src="${getIconUrl(iconName)}" alt="" loading="lazy" onerror="iconFallback(this)">
+      <span>${safe(name)}</span>
+    </span>
+  `;
+}
+
+function renderRaidleadItemOptionsForSlot(slot,filter){
+  const needle = itemKey(filter || "");
+  const names = (raidleadItemOptions || [])
+    .filter(name => !needle || itemKey(name).includes(needle))
+    .slice(0,80);
+
+  if(!names.length){
+    return `<div class="raidlead-item-empty">Kein Item gefunden.</div>`;
+  }
+
+  return names.map(name => `
+    <button class="raidlead-item-option" type="button" data-item="${safe(name)}" onclick="selectRaidleadPrioItemFromButton('${safe(slot)}',this)">
+      ${renderRaidleadPickerItem(name)}
+    </button>
+  `).join("");
+}
+
 async function loadRaidleadItemOptions(){
-  const list = document.getElementById("raidleadItemOptions");
   const url = LOOT_JSON_URLS[currentRaidKey];
-  if(!list || !url) return;
+  if(!url) return;
 
   if(raidleadItemOptionsRaidKey === currentRaidKey && raidleadItemOptions.length){
-    list.innerHTML = renderRaidleadItemOptions();
+    refreshRaidleadItemPickerLists();
     return;
   }
 
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
-    raidleadItemOptions = [...new Set((Array.isArray(rows) ? rows : [])
-      .map(obj => normalizeJsonLootItem(obj).name)
-      .filter(Boolean))]
-      .sort((a,b) => a.localeCompare(b,"de"));
+    const visualNames = Object.values(itemVisualMap || {}).map(info => info.name).filter(Boolean);
+    if(visualNames.length){
+      raidleadItemOptions = [...new Set(visualNames)].sort((a,b) => a.localeCompare(b,"de"));
+    }else{
+      const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
+      const rows = await response.json();
+      raidleadItemOptions = [...new Set((Array.isArray(rows) ? rows : [])
+        .map(obj => normalizeJsonLootItem(obj).name)
+        .filter(Boolean))]
+        .sort((a,b) => a.localeCompare(b,"de"));
+    }
     raidleadItemOptionsRaidKey = currentRaidKey;
-    list.innerHTML = renderRaidleadItemOptions();
+    refreshRaidleadItemPickerLists();
   }catch(error){
     console.warn("Loot-Vorschläge konnten nicht geladen werden:", error);
   }
+}
+
+function refreshRaidleadItemPickerLists(){
+  ["P1","P2","P3"].forEach(slot => {
+    const search = document.getElementById("raidleadPrio" + slot + "Search");
+    const list = document.getElementById("raidleadPrio" + slot + "List");
+    if(list) list.innerHTML = renderRaidleadItemOptionsForSlot(slot, search?.value || "");
+  });
+}
+
+function toggleRaidleadItemPicker(slot){
+  const menu = document.getElementById("raidleadPrio" + slot + "Menu");
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+  if(!menu) return;
+
+  document.querySelectorAll(".raidlead-item-menu").forEach(el => {
+    if(el !== menu) el.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+  if(!menu.classList.contains("hidden")){
+    filterRaidleadItemPicker(slot);
+    setTimeout(() => search?.focus(), 0);
+  }
+}
+
+function filterRaidleadItemPicker(slot){
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+  const list = document.getElementById("raidleadPrio" + slot + "List");
+  if(list) list.innerHTML = renderRaidleadItemOptionsForSlot(slot, search?.value || "");
+}
+
+function selectRaidleadPrioItem(slot,name){
+  const input = document.getElementById("raidleadPrio" + slot);
+  const trigger = document.getElementById("raidleadPrio" + slot + "Trigger");
+  const menu = document.getElementById("raidleadPrio" + slot + "Menu");
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+
+  if(input) input.value = name;
+  if(trigger){
+    trigger.innerHTML = `
+      <span>${renderRaidleadPickerItem(name)}</span>
+      <span>⌄</span>
+    `;
+  }
+  if(search) search.value = "";
+  if(menu) menu.classList.add("hidden");
+  hideTooltip();
+}
+
+function selectRaidleadPrioItemFromButton(slot,button){
+  selectRaidleadPrioItem(slot, button?.dataset?.item || "");
 }
 
 function renderRaidRowsOnly(){
