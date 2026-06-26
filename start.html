@@ -1210,6 +1210,15 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .dashboard-inline-status{margin:0!important;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(2,6,23,.52);color:#dbeafe!important;font-size:13px!important;line-height:1.45!important}
 .dashboard-inline-results{display:grid;gap:10px;max-height:360px;overflow:auto;padding-right:4px}
 .dashboard-inline-results:empty:before{content:'Noch nichts geladen.';display:block;color:#cbd5e1;padding:10px 0;font-weight:800}
+.character-subsection{display:grid;gap:8px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(2,6,23,.34);box-shadow:inset 3px 0 0 rgba(148,163,184,.26)}
+.character-subsection.is-active{border-color:rgba(96,165,250,.25);background:rgba(37,99,235,.08);box-shadow:inset 3px 0 0 rgba(96,165,250,.70)}
+.character-subsection.is-add{border-color:rgba(34,197,94,.22);background:rgba(22,101,52,.09);box-shadow:inset 3px 0 0 rgba(34,197,94,.70)}
+.character-subsection.is-delete{border-color:rgba(248,113,113,.25);background:rgba(127,29,29,.10);box-shadow:inset 3px 0 0 rgba(248,113,113,.70)}
+.character-subtitle{color:#cbd5e1;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+.character-subsection.is-active .character-subtitle{color:#93c5fd}
+.character-subsection.is-add .character-subtitle{color:#86efac}
+.character-subsection.is-delete .character-subtitle{color:#fecaca}
+.character-danger{border-color:rgba(248,113,113,.34)!important;background:rgba(127,29,29,.18)!important;color:#fecaca!important}
 .mailbox-tabs{display:flex;gap:8px;margin:10px 0}
 .mailbox-tabs button{flex:1;min-height:34px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}
 .mailbox-tabs button.active{border-color:rgba(250,204,21,.52);background:rgba(250,204,21,.18);color:#facc15}
@@ -1895,7 +1904,7 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Deine Charaktere, Prios, P0/P0+ Punkte und Worldbuff-Termine bleiben hier griffbereit.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerPin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Daten laden</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerPin wird automatisch übernommen, wenn du eingeloggt bist.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Prios & P0+ Punkte</summary><div class="dashboard-fold-body"><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst Daten laden</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button></div><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div></div></div></details><details class="dashboard-fold"><summary>Twink hinzufügen</summary><div class="dashboard-fold-body dashboard-twink-form"><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neuer Charakter nutzt danach denselben SpielerPin.</div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Login, Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Einloggen</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">Mit deinem SpielerLogin anmelden.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3357,6 +3366,25 @@ function copyHiddenLichtLootToDashboard(clearHidden){
     worldTarget.innerHTML=worldSource.innerHTML;
     if(clearHidden) worldSource.innerHTML="";
   }
+
+  refreshDashboardDeleteTwinkSelect();
+}
+
+function refreshDashboardDeleteTwinkSelect(){
+  const select=document.getElementById("dashboardDeleteTwinkSelect");
+  if(!select) return;
+
+  select.innerHTML='<option value="">Charakter zum Löschen wählen</option>';
+  (myLichtlootCharacters || []).forEach(char=>{
+    const option=document.createElement("option");
+    option.value=JSON.stringify(char);
+    option.textContent=
+      (char.isMain ? "Main: " : "")+
+      (char.name || char.char || "-")+
+      (char.server ? " - "+char.server : "")+
+      (char.className ? " ("+char.className+")" : "");
+    select.appendChild(option);
+  });
 }
 
 async function dashboardLoadLichtLoot(){
@@ -3365,10 +3393,10 @@ async function dashboardLoadLichtLoot(){
   const box=document.getElementById("myPriosBox");
   if(box) box.classList.add("hidden");
   if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte SpielerPin eingeben.</span>';
+    if(status) status.innerHTML='<span class="bad">Bitte SpielerLogin eingeben.</span>';
     return;
   }
-  if(status) status.innerHTML='<span class="warn">Lade deine Charaktere und Worldbuff-Termine …</span>';
+  if(status) status.innerHTML='<span class="warn">Login wird geprüft und Charaktere werden geladen …</span>';
   await loadLichtLootCharacters();
   const selected=document.getElementById("myLichtlootCharSelect");
   if(selected && selected.value){
@@ -3388,7 +3416,7 @@ async function loadPlayerMailbox(showStatus){
   const content=document.getElementById("playerMailboxContent");
   const badge=document.getElementById("playerMailboxBadge");
   if(!pin){
-    if(showStatus && content) content.innerHTML='<div class="status bad">Bitte zuerst SpielerPin eingeben.</div>';
+    if(showStatus && content) content.innerHTML='<div class="status bad">Bitte zuerst mit SpielerLogin einloggen.</div>';
     if(badge) badge.textContent="";
     return;
   }
@@ -3617,7 +3645,7 @@ async function dashboardAddTwink(){
   const className=document.getElementById("dashboardTwinkClass");
 
   if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte zuerst SpielerPin eingeben oder Daten laden.</span>';
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst mit SpielerLogin einloggen.</span>';
     return;
   }
 
@@ -3640,6 +3668,66 @@ async function dashboardAddTwink(){
     if(name) name.value="";
     if(className) className.value="";
     await dashboardLoadLichtLoot();
+  }
+}
+
+async function dashboardDeleteTwink(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardTwinkStatus");
+  const select=document.getElementById("dashboardDeleteTwinkSelect");
+
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst mit SpielerLogin einloggen.</span>';
+    return;
+  }
+
+  if(!select || !select.value){
+    if(status) status.innerHTML='<span class="bad">Bitte einen Charakter zum Löschen auswählen.</span>';
+    return;
+  }
+
+  let character=null;
+  try{
+    character=JSON.parse(select.value);
+  }catch(error){}
+
+  const name=String(character?.name || character?.char || character?.player || "").trim();
+  const server=String(character?.server || "").trim();
+
+  if(!name || !server){
+    if(status) status.innerHTML='<span class="bad">Charakterdaten konnten nicht gelesen werden.</span>';
+    return;
+  }
+
+  if(!confirm("Charakter wirklich löschen?\n\n" + name + (server ? " - " + server : "") + "\n\nGespeicherte Prios dieses Charakters werden ebenfalls entfernt.")){
+    return;
+  }
+
+  if(status) status.innerHTML='<span class="warn">Charakter wird gelöscht …</span>';
+
+  const query=new URLSearchParams({
+    action:"deleteTwink",
+    guild:CURRENT_GUILD_SLUG,
+    pin,
+    char:name,
+    server,
+    t:Date.now()
+  });
+
+  try{
+    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
+    const result=await response.json();
+
+    if(!result.success){
+      if(status) status.innerHTML='<span class="bad">'+safeHtml(result.error || "Charakter konnte nicht gelöscht werden.")+'</span>';
+      return;
+    }
+
+    if(status) status.innerHTML='<span class="ok">Charakter wurde gelöscht.</span>';
+    await dashboardLoadLichtLoot();
+  }catch(error){
+    console.error(error);
+    if(status) status.innerHTML='<span class="bad">Charakter konnte nicht gelöscht werden.</span>';
   }
 }
 
@@ -3706,13 +3794,16 @@ function logoutLichtLootPlayer(){
   playerMailboxSentMessages=[];
 
   const dashboardStatus=document.getElementById("dashboardMyStatus");
-  if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Du kannst jetzt einen anderen SpielerPin eingeben.";
+  if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Du kannst jetzt einen anderen SpielerLogin eingeben.";
 
   const dashSelect=document.getElementById("dashboardCharSelect");
-  if(dashSelect) dashSelect.innerHTML='<option value="">Erst Daten laden</option>';
+  if(dashSelect) dashSelect.innerHTML='<option value="">Erst einloggen</option>';
 
   const hiddenSelect=document.getElementById("myLichtlootCharSelect");
   if(hiddenSelect) hiddenSelect.innerHTML='<option value="">Erst SpielerPin laden</option>';
+
+  const deleteSelect=document.getElementById("dashboardDeleteTwinkSelect");
+  if(deleteSelect) deleteSelect.innerHTML='<option value="">Charakter zum Löschen wählen</option>';
 
   const resultTarget=document.getElementById("dashboardMyPriosResults");
   if(resultTarget) resultTarget.innerHTML="";
@@ -3721,7 +3812,7 @@ function logoutLichtLootPlayer(){
   if(hiddenResults) hiddenResults.innerHTML="";
 
   const worldTarget=document.getElementById("dashboardMyWorldbuffContent");
-  if(worldTarget) worldTarget.innerHTML='<div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div>';
+  if(worldTarget) worldTarget.innerHTML='<div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div>';
 
   const hiddenWorld=document.getElementById("myWorldbuffContent");
   if(hiddenWorld) hiddenWorld.innerHTML="";
@@ -3742,7 +3833,7 @@ function initMeinLichtLootAutoLogin(){
   const dashboardStatus=document.getElementById("dashboardMyStatus");
   if(saved){
     if(status) status.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Du kannst deine Charaktere direkt laden.</span>';
-    if(dashboardStatus) dashboardStatus.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Deine Daten werden geladen …</span>';
+    if(dashboardStatus) dashboardStatus.innerHTML='<span class="ok">✓ SpielerLogin erkannt. Du wirst eingeloggt …</span>';
     window.setTimeout(()=>dashboardLoadLichtLoot(), 50);
   }
 }
