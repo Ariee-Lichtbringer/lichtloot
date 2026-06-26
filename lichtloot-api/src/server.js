@@ -862,8 +862,8 @@ function normalizeRaidType(value) {
 function raidTypeSearchValues(value) {
   const normalized = normalizeRaidType(value);
   const variants = {
-    mc: ["mc", "molten-core"],
-    bwl: ["bwl", "blackwing-lair"],
+    mc: ["mc", "molten-core", "molten core"],
+    bwl: ["bwl", "blackwing-lair", "blackwing lair"],
     aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj"],
     naxx: ["naxx", "naxxramas"],
     zg: ["zg", "zg20", "zg 20", "zg-20", "zul-gurub", "zul gurub", "zul'gurub", "zul-gurub-20", "zul gurub 20"],
@@ -2591,14 +2591,20 @@ async function findRaid(guildId, params) {
 
   if (!identityClauses.length && raidType) {
     values.push(raidTypeSearchValues(raidType));
-    identityClauses.push(`lower(raid_type) = any($${values.length})`);
+    identityClauses.push(`(
+      lower(raid_type) = any($${values.length})
+      or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($${values.length})
+    )`);
   }
 
   const clauses = ["guild_id = $1"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType && (leadPin || prioPin) && !raidId) {
     values.push(raidTypeSearchValues(raidType));
-    clauses.push(`lower(raid_type) = any($${values.length})`);
+    clauses.push(`(
+      lower(raid_type) = any($${values.length})
+      or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($${values.length})
+    )`);
   }
 
   let result = await query(
