@@ -1784,12 +1784,12 @@ async function loadPriosFromSheet(leadPin){
 
     currentPrios = (result.prios || []).map(p => ({
       rowNumber: Number(p.rowNumber || p.RowNumber || p.zeile || p.Zeile || 0),
-      player: p.Spieler || p.player || p.Player || p.spieler || "",
-      server: p.Server || p.server || "",
-      class: p.Klasse || p.class || p.className || p.Class || p.class_name || "",
-      p1: p.P1 || p.p1 || "",
-      p2: p.P2 || p.p2 || "",
-      p3: p.P3 || p.p3 || "",
+      player: p.Spieler || "",
+      server: p.Server || "",
+      class: p.Klasse || "",
+      p1: p.P1 || "",
+      p2: p.P2 || "",
+      p3: p.P3 || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
@@ -3393,28 +3393,32 @@ async function downloadPrio3ReforgedExport(){
 
   await loadItemIdsForExport();
 
-  const rows = currentPrios
+  let content = "";
+
+  currentPrios
     .filter(entry => !isBenchPrio(entry))
-    .map(entry => {
-      const player = entry.player || entry.Spieler || "";
-      const playerClass = entry.class || entry.Klasse || entry.className || entry.class_name || "";
-      const p1 = formatItemForPrio3(entry.p1);
-      const p2 = formatItemForPrio3(entry.p2);
-      const p3 = formatItemForPrio3(entry.p3);
+    .forEach(entry => {
+    const player = entry.player || "";
+    const playerClass = entry.class || "";
 
-      return [player, playerClass, p1, p2, p3]
-        .map(value => String(value || "").replace(/;/g, ","))
-        .join(";");
-    });
+    const p1 = formatItemForPrio3(entry.p1);
+    const p2 = formatItemForPrio3(entry.p2);
+    const p3 = formatItemForPrio3(entry.p3);
 
-  const content = rows.join("\n");
+    content +=
+      player + "\t\t" +
+      playerClass + "\t" +
+      p1 + "\t" +
+      p2 + "\t" +
+      p3 + "\r\n";
+  });
 
   const filename =
     (currentRaidData.raidId || currentRaidKey || "raid") +
-    "-prio3-reforged.csv";
+    "-prio3-reforged.txt";
 
   const blob = new Blob([content], {
-    type:"text/csv;charset=utf-8"
+    type:"text/plain;charset=utf-8"
   });
 
   const url = URL.createObjectURL(blob);
