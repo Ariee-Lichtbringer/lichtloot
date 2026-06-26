@@ -2282,132 +2282,6 @@
     "icon_url": "inv_mace_06"
   },
   {
-    "raid_type": "bwl",
-    "item_id": "16900",
-    "name": "Bedeckung des Stormrage",
-    "quality": "epic",
-    "icon_url": "inv_helmet_09"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16901",
-    "name": "Beinschützer des Stormrage",
-    "quality": "epic",
-    "icon_url": "inv_pants_06"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16939",
-    "name": "Helm des Drachenjägers",
-    "quality": "epic",
-    "icon_url": "inv_helmet_05"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16938",
-    "name": "Beinschützer des Drachenjägers",
-    "quality": "epic",
-    "icon_url": "inv_pants_03"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16914",
-    "name": "Krone des Netherwinds",
-    "quality": "epic",
-    "icon_url": "inv_helmet_70"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16915",
-    "name": "Hose des Netherwinds",
-    "quality": "epic",
-    "icon_url": "inv_pants_08"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16955",
-    "name": "Krone des Richturteils",
-    "quality": "epic",
-    "icon_url": "inv_helmet_74"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16954",
-    "name": "Beinplatten des Richturteils",
-    "quality": "epic",
-    "icon_url": "inv_pants_04"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16921",
-    "name": "Heiligenschein der Erhabenheit",
-    "quality": "epic",
-    "icon_url": "inv_helmet_24"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16922",
-    "name": "Gamaschen der Erhabenheit",
-    "quality": "epic",
-    "icon_url": "inv_pants_08"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16908",
-    "name": "Blutfangkapuze",
-    "quality": "epic",
-    "icon_url": "inv_helmet_41"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16909",
-    "name": "Blutfanghose",
-    "quality": "epic",
-    "icon_url": "inv_pants_06"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16947",
-    "name": "Helm der zehn Stürme",
-    "quality": "epic",
-    "icon_url": "inv_helmet_69"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16946",
-    "name": "Beinplatten der zehn Stürme",
-    "quality": "epic",
-    "icon_url": "inv_pants_03"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16929",
-    "name": "Schädelkappe der Nemesis",
-    "quality": "epic",
-    "icon_url": "inv_helmet_08"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16930",
-    "name": "Gamaschen der Nemesis",
-    "quality": "epic",
-    "icon_url": "inv_pants_07"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16963",
-    "name": "Helm des Zorns",
-    "quality": "epic",
-    "icon_url": "inv_helmet_71"
-  },
-  {
-    "raid_type": "bwl",
-    "item_id": "16962",
-    "name": "Beinplatten des Zorns",
-    "quality": "epic",
-    "icon_url": "inv_pants_04"
-  },
-  {
     "raid_type": "aq20",
     "item_id": "21459",
     "name": "Armbrust der bevorstehenden Verdammnis",
@@ -7799,45 +7673,10 @@
   },
   {
     "raid_type": "ony",
-    "item_id": "17962",
-    "name": "Blauer Sack voller Edelsteine",
-    "quality": "uncommon",
-    "icon_url": "inv_misc_bag_10_blue"
-  },
-  {
-    "raid_type": "ony",
     "item_id": "16908",
     "name": "Blutfangkapuze",
     "quality": "epic",
     "icon_url": "inv_helmet_41"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "18205",
-    "name": "Eskhandars Halsband",
-    "quality": "epic",
-    "icon_url": "inv_belt_12"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "17965",
-    "name": "Gelber Sack voller Edelsteine",
-    "quality": "uncommon",
-    "icon_url": "inv_misc_bag_10"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "17964",
-    "name": "Grauer Sack voller Edelsteine",
-    "quality": "uncommon",
-    "icon_url": "inv_misc_bag_10_black"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "17963",
-    "name": "Grüner Sack voller Edelsteine",
-    "quality": "uncommon",
-    "icon_url": "inv_misc_bag_10_green"
   },
   {
     "raid_type": "ony",
@@ -7880,6 +7719,83 @@
     "name": "Krone des Richturteils",
     "quality": "epic",
     "icon_url": "inv_helmet_74"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16929",
+    "name": "Schädelkappe der Nemesis",
+    "quality": "epic",
+    "icon_url": "inv_helmet_08"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18403",
+    "name": "Drachentötersignet",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_ring_27"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18404",
+    "name": "Zahn Onyxias",
+    "quality": "epic",
+    "icon_url": "inv_jewelry_necklace_09"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18406",
+    "name": "Talisman mit Onyxiablut",
+    "quality": "epic",
+    "icon_url": "spell_shadow_lifedrain"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "16900",
+    "name": "Bedeckung des Stormrage",
+    "quality": "epic",
+    "icon_url": "inv_helmet_09"
+  },
+  {
+    "raid_type": "mc",
+    "item_id": "18563",
+    "name": "Fesseln des Windsuchers",
+    "quality": "legendary",
+    "icon_url": "spell_ice_lament"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17962",
+    "name": "Blauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_blue"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "18205",
+    "name": "Eskhandars Halsband",
+    "quality": "epic",
+    "icon_url": "inv_belt_12"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17965",
+    "name": "Gelber Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17964",
+    "name": "Grauer Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_black"
+  },
+  {
+    "raid_type": "ony",
+    "item_id": "17963",
+    "name": "Grüner Sack voller Edelsteine",
+    "quality": "uncommon",
+    "icon_url": "inv_misc_bag_10_green"
   },
   {
     "raid_type": "ony",
@@ -7936,13 +7852,6 @@
     "name": "Saphirontuch",
     "quality": "epic",
     "icon_url": "inv_misc_cape_16"
-  },
-  {
-    "raid_type": "ony",
-    "item_id": "16929",
-    "name": "Schädelkappe der Nemesis",
-    "quality": "epic",
-    "icon_url": "inv_helmet_08"
   },
   {
     "raid_type": "ony",
