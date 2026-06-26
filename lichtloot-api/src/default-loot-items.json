@@ -1555,6 +1555,13 @@
   },
   {
     "raid_type": "bwl",
+    "item_id": "5760",
+    "name": "Eterniumschließkassette",
+    "quality": "common",
+    "icon_url": "Inv_misc_ornatebox"
+  },
+  {
+    "raid_type": "bwl",
     "item_id": "19349",
     "name": "Elementiumverstärktes Bollwerk",
     "quality": "epic",
