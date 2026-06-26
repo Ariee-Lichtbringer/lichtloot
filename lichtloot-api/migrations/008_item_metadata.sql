@@ -1,0 +1,16 @@
+alter table items
+  add column if not exists slot text,
+  add column if not exists type text,
+  add column if not exists boss text,
+  add column if not exists bind text,
+  add column if not exists category text,
+  add column if not exists wowhead text,
+  add column if not exists stats_text text,
+  add column if not exists tooltip text,
+  add column if not exists needed text,
+  add column if not exists equip text,
+  add column if not exists price text,
+  add column if not exists dropchance text,
+  add column if not exists token_group text,
+  add column if not exists token_name text,
+  add column if not exists token_item_id text;
