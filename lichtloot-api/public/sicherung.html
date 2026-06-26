@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Raid-Sicherung</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d0f18;
+      --panel: #171723;
+      --panel-2: #1f1f2d;
+      --line: #343447;
+      --text: #f5f1df;
+      --muted: #aaa5b8;
+      --gold: #f3d36b;
+      --green: #73d39a;
+      --red: #f07c7c;
+      --violet: #c287ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 0%, rgba(95, 68, 36, 0.24), transparent 34%), var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    main {
+      width: min(1500px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 56px;
+    }
+
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 38px);
+      line-height: 1.1;
+      color: var(--gold);
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar,
+    .raid {
+      border: 1px solid var(--line);
+      background: rgba(23, 23, 35, 0.94);
+      border-radius: 8px;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.25);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) 150px 150px auto auto;
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #10121d;
+      color: var(--text);
+      font: inherit;
+      letter-spacing: 0;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 9px 11px;
+    }
+
+    button {
+      padding: 0 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: linear-gradient(180deg, #ffe07b, #b9852a);
+      color: #17110a;
+      border-color: #d9ad45;
+      white-space: nowrap;
+    }
+
+    button.secondary {
+      background: #161927;
+      color: var(--text);
+      border-color: var(--line);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 8px 2px 16px;
+      color: var(--muted);
+    }
+
+    .status.error { color: var(--red); }
+    .status.good { color: var(--green); }
+
+    .raid {
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .raid-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .raid-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 9px;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 8px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: #10121d;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .badge.gold { color: var(--gold); }
+    .badge.green { color: var(--green); }
+    .badge.violet { color: var(--violet); }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .section {
+      padding: 14px 16px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .section:first-of-type { border-top: 0; }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      color: var(--gold);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(10, 11, 18, 0.55);
+    }
+
+    table {
+      width: 100%;
+      min-width: 880px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--gold);
+      font-size: 12px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .muted { color: var(--muted); }
+    .p0 { color: var(--green); font-weight: 900; }
+    .item { color: var(--violet); }
+    .empty { color: var(--muted); padding: 12px; }
+
+    @media (max-width: 900px) {
+      main { width: min(100% - 20px, 1500px); padding-top: 16px; }
+      header { display: block; }
+      .toolbar { grid-template-columns: 1fr; }
+      .raid-head { grid-template-columns: 1fr; }
+      .raid-title { font-size: 18px; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Raid-Sicherung</h1>
+        <div class="subtitle">Versteckte Ansicht für Priolisten und P0+ pro Raid.</div>
+      </div>
+      <div class="badge gold" id="generated">Nicht geladen</div>
+    </header>
+
+    <form class="toolbar" id="backupForm">
+      <label>
+        Master-Code
+        <input id="masterCode" type="password" autocomplete="current-password" required>
+      </label>
+      <label>
+        Raid
+        <select id="raidFilter">
+          <option value="">Alle</option>
+          <option value="mc">MC</option>
+          <option value="bwl">BWL</option>
+          <option value="aq40">AQ40</option>
+          <option value="naxx">Naxx</option>
+          <option value="zg">ZG</option>
+          <option value="aq20">AQ20</option>
+          <option value="ony">Ony</option>
+        </select>
+      </label>
+      <label>
+        Anzahl
+        <select id="limit">
+          <option value="80">80 Raids</option>
+          <option value="120" selected>120 Raids</option>
+          <option value="250">250 Raids</option>
+          <option value="500">500 Raids</option>
+        </select>
+      </label>
+      <button id="loadButton" type="submit">Laden</button>
+      <button class="secondary" id="downloadButton" type="button" disabled>JSON sichern</button>
+    </form>
+
+    <div class="status" id="status">Bitte Master-Code eingeben und laden.</div>
+    <section id="raids"></section>
+  </main>
+
+  <script>
+    const API_BASE = "https://lichtloot-production.up.railway.app/api/apps-script";
+    const form = document.getElementById("backupForm");
+    const masterCodeInput = document.getElementById("masterCode");
+    const raidFilterInput = document.getElementById("raidFilter");
+    const limitInput = document.getElementById("limit");
+    const statusEl = document.getElementById("status");
+    const raidsEl = document.getElementById("raids");
+    const generatedEl = document.getElementById("generated");
+    const loadButton = document.getElementById("loadButton");
+    const downloadButton = document.getElementById("downloadButton");
+    let lastBackup = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
+    }
+
+    function setStatus(text, type = "") {
+      statusEl.textContent = text;
+      statusEl.className = `status ${type}`;
+    }
+
+    function rowText(...parts) {
+      return parts.filter(Boolean).map(escapeHtml).join(" ");
+    }
+
+    function renderPrios(prios) {
+      if (!prios.length) return '<div class="empty">Keine Prios gespeichert.</div>';
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Spieler</th>
+                <th>Klasse</th>
+                <th>P1</th>
+                <th>P2</th>
+                <th>P3</th>
+                <th>P0+</th>
+                <th>Bench</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${prios.map(row => `
+                <tr>
+                  <td>${rowText(row.player, row.server ? `(${row.server})` : "")}</td>
+                  <td>${escapeHtml(row.className || "")}</td>
+                  <td class="item">${escapeHtml(row.p1 || "")}</td>
+                  <td class="item">${escapeHtml(row.p2 || "")}</td>
+                  <td class="item">${escapeHtml(row.p3 || "")}</td>
+                  <td>${String(row.p0Plus || "").toLowerCase() === "ja" ? `<span class="p0">Ja</span>${row.p0Item ? ` <span class="muted">${escapeHtml(row.p0Item)}</span>` : ""}` : '<span class="muted">Nein</span>'}</td>
+                  <td>${escapeHtml(row.bench || "")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderP0Plus(rows) {
+      if (!rows.length) return '<div class="empty">Keine übertragenen P0+-Punkte für diesen Raid gefunden.</div>';
+      return `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Spieler</th>
+                <th>Klasse</th>
+                <th>Item</th>
+                <th>Punkte</th>
+                <th>Quelle</th>
+                <th>Gesichert</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td>${rowText(row.player, row.server ? `(${row.server})` : "")}</td>
+                  <td>${escapeHtml(row.className || "")}</td>
+                  <td class="item">${escapeHtml(row.item || "")}</td>
+                  <td>${escapeHtml(row.points || "")}</td>
+                  <td>${escapeHtml(row.source || "")}</td>
+                  <td class="muted">${escapeHtml(formatDate(row.createdAt))}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderBackup(data) {
+      lastBackup = data;
+      downloadButton.disabled = !data;
+      generatedEl.textContent = data.generatedAt ? `Stand ${formatDate(data.generatedAt)}` : "Geladen";
+      const raids = Array.isArray(data.raids) ? data.raids : [];
+      if (!raids.length) {
+        raidsEl.innerHTML = '<div class="raid"><div class="empty">Keine Raids gefunden.</div></div>';
+        return;
+      }
+
+      raidsEl.innerHTML = raids.map(raid => `
+        <article class="raid">
+          <div class="raid-head">
+            <div>
+              <div class="raid-title">
+                <span>${escapeHtml(raid.raidName || raid.raid || "Raid")}</span>
+                <span class="badge gold">${escapeHtml((raid.raid || "").toUpperCase())}</span>
+                <span class="badge">${escapeHtml(raid.status || "")}</span>
+              </div>
+              <div class="meta">
+                <span>${escapeHtml(raid.raidDate || "")}</span>
+                <span>${escapeHtml(raid.raidTime || "")}</span>
+                <span>ID: ${escapeHtml(raid.raidId || raid.id || "")}</span>
+                <span>PrioPIN: ${escapeHtml(raid.playerPin || "")}</span>
+              </div>
+            </div>
+            <div class="meta">
+              <span class="badge violet">${escapeHtml(raid.prioCount || 0)} Prios</span>
+              <span class="badge green">${escapeHtml(raid.p0PlusPrioCount || 0)} P0+ in Prios</span>
+              <span class="badge green">${escapeHtml(raid.p0PlusTransferCount || 0)} P0+ Punkte</span>
+            </div>
+          </div>
+          <div class="section">
+            <h2>Prioliste</h2>
+            ${renderPrios(raid.prios || [])}
+          </div>
+          <div class="section">
+            <h2>P0+ dieses Raids</h2>
+            ${renderP0Plus(raid.p0PlusTransfers || [])}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    async function loadBackup(event) {
+      event.preventDefault();
+      const masterCode = masterCodeInput.value.trim();
+      if (!masterCode) {
+        setStatus("Bitte Master-Code eingeben.", "error");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        guild: "lichtloot",
+        action: "guildRaidBackupSnapshot",
+        masterCode,
+        limit: limitInput.value
+      });
+      if (raidFilterInput.value) params.set("raid", raidFilterInput.value);
+
+      loadButton.disabled = true;
+      setStatus("Sicherung wird geladen ...");
+      try {
+        const response = await fetch(`${API_BASE}?${params.toString()}`, { cache: "no-store" });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || data.success === false) {
+          throw new Error(data.error || `Fehler ${response.status}`);
+        }
+        renderBackup(data);
+        setStatus(`${data.count || 0} Raids geladen.`, "good");
+      } catch (error) {
+        lastBackup = null;
+        downloadButton.disabled = true;
+        raidsEl.innerHTML = "";
+        generatedEl.textContent = "Nicht geladen";
+        setStatus(error.message || "Sicherung konnte nicht geladen werden.", "error");
+      } finally {
+        loadButton.disabled = false;
+      }
+    }
+
+    function downloadBackup() {
+      if (!lastBackup) return;
+      const blob = new Blob([JSON.stringify(lastBackup, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `raid-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    form.addEventListener("submit", loadBackup);
+    downloadButton.addEventListener("click", downloadBackup);
+  </script>
+</body>
+</html>
