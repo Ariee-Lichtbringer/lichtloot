@@ -2006,6 +2006,7 @@ const RAILWAY_API_URL =
   window.LICHTLOOT_RAILWAY_API_URL || "https://lichtloot-production.up.railway.app";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+const GUILD_MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 
 const P0PLUS_API_URL = LICHTLOOT_API_URL;
 const WORLDBUFF_PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -2973,19 +2974,35 @@ function dashboardWorldbuffTextKey(value){
 }
 
 async function getDashboardBuffEntries(kind,days){
-  const action=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
+  const guildAction=kind === 'hordenbuff' ? 'guildGetHordenbuffs' : 'guildGetWorldbuffs';
+  const publicAction=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
   const allUpcoming=days === "all";
   const requestDays=allUpcoming ? 3650 : (days || 14);
+  const guildMasterCode=sessionStorage.getItem(GUILD_MASTER_STORAGE_KEY) || "";
   let entries=[];
+
   try{
-    const data=await fetchRaidApiJsonp({action,days:requestDays});
+    const data=await fetchRaidApiJsonp({action:guildAction,masterCode:guildMasterCode,days:requestDays});
     if(data && data.success !== false){
       const raw=data.buffs || data.entries || data.rows || data.data || [];
       if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
     }
   }catch(error){
-    console.warn('Buff-API nicht ladbar:', action, error);
+    console.warn('Gilden-Buffliste nicht ladbar:', guildAction, error);
   }
+
+  try{
+    if(!entries.length){
+      const data=await fetchRaidApiJsonp({action:publicAction,days:requestDays});
+      if(data && data.success !== false){
+        const raw=data.buffs || data.entries || data.rows || data.data || [];
+        if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
+      }
+    }
+  }catch(error){
+    console.warn('Public-Buffliste nicht ladbar:', publicAction, error);
+  }
+
   if(!entries.length){
     entries=await loadBuffCsvEntries(kind);
   }
@@ -3755,14 +3772,14 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/apps-script?action=getActiveRaids");
   }
 
-  if(params.action === "getPublicWorldbuffs"){
+  if(params.action === "getPublicWorldbuffs" || params.action === "guildGetWorldbuffs"){
     const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicWorldbuffs"+days);
+    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
   }
 
-  if(params.action === "getPublicHordenbuffs"){
+  if(params.action === "getPublicHordenbuffs" || params.action === "guildGetHordenbuffs"){
     const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicHordenbuffs"+days);
+    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
   }
 
   return null;
