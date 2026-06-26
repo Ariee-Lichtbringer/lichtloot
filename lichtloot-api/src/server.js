@@ -50,6 +50,10 @@ await restoreLootItemsFromStaticDataOnce().catch(error => {
   console.warn("Lootdaten-Wiederherstellung konnte nicht angewendet werden:", error.message || error);
 });
 
+await applyLootRaidAssignmentCorrectionsOnce().catch(error => {
+  console.warn("Loot-Raid-Zuordnungen konnten nicht korrigiert werden:", error.message || error);
+});
+
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api" });
 });
@@ -65,7 +69,12 @@ app.get("/db-health", async (req, res, next) => {
 
 app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
   try {
-    const html = await readFile(new URL("../public/sicherung.html", import.meta.url), "utf8");
+    let html = "";
+    try {
+      html = await readFile(new URL("./sicherung.html", import.meta.url), "utf8");
+    } catch {
+      html = await readFile(new URL("../public/sicherung.html", import.meta.url), "utf8");
+    }
     res.type("html").send(html);
   } catch (error) {
     next(error);
@@ -4154,7 +4163,7 @@ async function importLootItemMetadata() {
 }
 
 async function restoreLootItemsFromStaticDataOnce() {
-  const markerKey = "loot-items-restore-set-pieces-v2";
+  const markerKey = "loot-items-restore-set-pieces-v3";
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -4253,6 +4262,107 @@ async function restoreLootItemsFromStaticDataOnce() {
     );
     await client.query("commit");
     console.log(`Lootdaten wiederhergestellt: ${upserted}/${candidates} Items`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function applyLootRaidAssignmentCorrectionsOnce() {
+  const markerKey = "loot-raid-assignment-corrections-v1";
+  const corrections = [
+    ["16900", "ony"],
+    ["16939", "ony"],
+    ["16914", "ony"],
+    ["16955", "ony"],
+    ["16908", "ony"],
+    ["16929", "ony"],
+    ["16963", "ony"],
+    ["16921", "ony"],
+    ["16947", "ony"],
+    ["16901", "mc"],
+    ["16938", "mc"],
+    ["16915", "mc"],
+    ["16954", "mc"],
+    ["16909", "mc"],
+    ["16930", "mc"],
+    ["16962", "mc"],
+    ["16922", "mc"],
+    ["16946", "mc"]
+  ];
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    let movedReferences = 0;
+    let removedWrongRows = 0;
+    let reassignedRows = 0;
+    for (const [itemId, targetRaid] of corrections) {
+      const targetResult = await client.query(
+        `select id
+         from items
+         where item_id = $1
+           and lower(raid_type) = $2
+         order by created_at asc
+         limit 1`,
+        [itemId, targetRaid]
+      );
+      const wrongResult = await client.query(
+        `select id
+         from items
+         where item_id = $1
+           and lower(raid_type) = 'bwl'`,
+        [itemId]
+      );
+      if (!wrongResult.rows.length) continue;
+
+      let targetId = targetResult.rows[0]?.id || "";
+      if (!targetId) {
+        const reassigned = await client.query(
+          `update items
+           set raid_type = $2
+           where id = $1
+           returning id`,
+          [wrongResult.rows[0].id, targetRaid]
+        );
+        targetId = reassigned.rows[0]?.id || "";
+        reassignedRows += reassigned.rowCount;
+      }
+
+      for (const wrongRow of wrongResult.rows) {
+        if (!targetId || wrongRow.id === targetId) continue;
+        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [targetId, wrongRow.id]);
+        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [targetId, wrongRow.id]);
+        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [targetId, wrongRow.id]);
+        const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [targetId, wrongRow.id]);
+        movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
+        const deleted = await client.query("delete from items where id = $1", [wrongRow.id]);
+        removedWrongRows += deleted.rowCount;
+      }
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ corrections: corrections.length, movedReferences, removedWrongRows, reassignedRows })]
+    );
+    await client.query("commit");
+    console.log(`Loot-Raid-Zuordnungen korrigiert: ${removedWrongRows} BWL-Duplikate entfernt, ${movedReferences} Referenzen verschoben`);
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
