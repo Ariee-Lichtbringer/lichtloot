@@ -876,6 +876,21 @@
   },
   {
     "raid": "MC",
+    "boss": "Trash",
+    "itemId": 5760,
+    "name": "Eterniumschließkassette",
+    "slot": "",
+    "type": "Verschiedenes",
+    "quality": "Gewöhnlich",
+    "icon": "134344",
+    "dropChance": "",
+    "statsText": "",
+    "stats": [],
+    "tooltip": "Eterniumschließkassette",
+    "iconName": "Inv_misc_ornatebox"
+  },
+  {
+    "raid": "MC",
     "boss": "Garr",
     "itemId": 18564,
     "name": "Fesseln des Windsuchers",
