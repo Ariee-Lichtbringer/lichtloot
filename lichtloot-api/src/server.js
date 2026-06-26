@@ -862,8 +862,8 @@ function normalizeRaidType(value) {
 function raidTypeSearchValues(value) {
   const normalized = normalizeRaidType(value);
   const variants = {
-    mc: ["mc", "molten-core", "molten core"],
-    bwl: ["bwl", "blackwing-lair", "blackwing lair"],
+    mc: ["mc", "molten-core"],
+    bwl: ["bwl", "blackwing-lair"],
     aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj"],
     naxx: ["naxx", "naxxramas"],
     zg: ["zg", "zg20", "zg 20", "zg-20", "zul-gurub", "zul gurub", "zul'gurub", "zul-gurub-20", "zul gurub 20"],
@@ -2591,20 +2591,14 @@ async function findRaid(guildId, params) {
 
   if (!identityClauses.length && raidType) {
     values.push(raidTypeSearchValues(raidType));
-    identityClauses.push(`(
-      lower(raid_type) = any($${values.length})
-      or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($${values.length})
-    )`);
+    identityClauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
   const clauses = ["guild_id = $1"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType && (leadPin || prioPin) && !raidId) {
     values.push(raidTypeSearchValues(raidType));
-    clauses.push(`(
-      lower(raid_type) = any($${values.length})
-      or lower(regexp_replace(raid_type, '[^a-z0-9]+', '-', 'g')) = any($${values.length})
-    )`);
+    clauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
   let result = await query(
@@ -4669,6 +4663,39 @@ async function adminUpdateItem({ guildId, query: params }) {
   return { success: true, item: result.rows[0] };
 }
 
+async function adminCreateItem({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const raidType = normalizeRaidType(params.raid || params.raidType);
+  const name = clean(params.name || params.itemName || params.item);
+  const itemId = clean(params.itemGameId || params.item_id || params.itemId);
+  const quality = clean(params.quality);
+  const iconUrl = clean(params.iconUrl || params.icon || params.icon_url);
+
+  if (!raidType || raidType === "raid") {
+    const error = new Error("Raid fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!name) {
+    const error = new Error("Itemname fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `insert into items (raid_type, item_id, name, quality, icon_url)
+     values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
+     on conflict (raid_type, name) do update
+       set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
+           quality = coalesce(nullif(excluded.quality, ''), items.quality),
+           icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url)
+     returning id, raid_type, item_id, name, quality, icon_url`,
+    [raidType, itemId, name, quality, iconUrl]
+  );
+
+  return { success: true, item: result.rows[0] };
+}
+
 async function adminDeleteItem({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const id = clean(params.id || params.itemId);
@@ -4852,6 +4879,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildAdminUpdateItem") {
       const item = await adminUpdateItem({ guildId: guild.id, query: req.query });
+      return res.json({ ...item, guild: guild.slug });
+    }
+
+    if (action === "guildAdminCreateItem" || action === "guildAdminCreateltem") {
+      const item = await adminCreateItem({ guildId: guild.id, query: req.query });
       return res.json({ ...item, guild: guild.slug });
     }
 
@@ -5125,6 +5157,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "createRandomRaid") {
       const created = await createRandomRaid({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "guildAdminCreateItem" || action === "guildAdminCreateltem") {
+      const item = await adminCreateItem({ guildId: guild.id, query: postParams });
+      return res.json({ ...item, guild: guild.slug });
     }
 
     if (action === "guildDeleteHordenbuffEntry" || action === "lichtbotDeleteHordenbuffEntry") {
