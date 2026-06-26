@@ -2731,7 +2731,7 @@ async function loadAq40LootWithFallback(){
         const obj={};
         headers.forEach((header,index)=>obj[header]=row[index] || "");
         return mapAq40SheetLootRow(obj);
-      }).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+      }).filter(item=>item.name);
 
       if(mapped.length) return {items:mapped,source:"Google Sheet"};
     }
@@ -2754,7 +2754,7 @@ async function loadAq40LootWithFallback(){
     Stats_DE: entry.stats || entry.Stats_DE || "",
     Tooltip_DE: entry.tooltip || entry.Tooltip_DE || "",
     Dropchance: entry.dropchance || entry.Dropchance || ""
-  })).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+  })).filter(item=>item.name);
 
   return {items:exported,source:"Apps Script"};
 }
@@ -2774,7 +2774,7 @@ function mapAq40JsonLoot(items){
     tokenGroup: obj.tokenGroup || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
     tokenName: obj.tokenName || obj.TokenName || "",
     tokenItemId: obj.tokenItemId || obj.TokenItemId || ""
-  })).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+  })).filter(item=>item.name);
 }
 
 function mapAq40SheetLootRow(obj){
@@ -2837,7 +2837,7 @@ function isLootPageSetPiece(item){
 }
 
 function filterLootPageDisplayItems(items){
-  return (Array.isArray(items) ? items : []).filter(item => !isLootPageSetPiece(item));
+  return Array.isArray(items) ? items : [];
 }
 
 function fillItems(){
@@ -6537,7 +6537,7 @@ async function loadLootDataForRaid(raid){
     const response=await fetch(apiUrl, {cache:"no-store"});
     const payload=await response.json().catch(()=>null);
     const rows=payload && Array.isArray(payload.items) ? payload.items : [];
-    const exported=rows.map(mapLootDatabaseEntry).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+    const exported=rows.map(mapLootDatabaseEntry).filter(item=>item.name);
     if(response.ok && payload && payload.success && exported.length){
       lootDataByRaid[raid] = exported;
       return exported;
@@ -6554,7 +6554,7 @@ async function loadLootDataForRaid(raid){
       const response=await fetch(jsonUrl + "?t=" + Date.now(), {cache:"no-store"});
       if(!response.ok) throw new Error("GitHub JSON HTTP " + response.status);
       const rows=await response.json();
-      const exported=(Array.isArray(rows) ? rows : []).map(mapLootDatabaseEntry).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+      const exported=(Array.isArray(rows) ? rows : []).map(mapLootDatabaseEntry).filter(item=>item.name);
 
       if(exported.length){
         lootDataByRaid[raid] = exported;
@@ -6583,7 +6583,7 @@ async function loadLootDataForRaid(raid){
     const obj={};
     headers.forEach((header,index)=>obj[header]=row[index]||"");
     return mapLootDatabaseEntry(obj);
-  }).filter(item=>item.name).filter(item=>!isLootPageSetPiece(item));
+  }).filter(item=>item.name);
 
   lootDataByRaid[raid] = data;
   return data;
