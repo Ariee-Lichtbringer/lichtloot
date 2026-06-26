@@ -1357,6 +1357,53 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 #myPrioDetailModal #myPrioDetailContent{max-height:calc(100% - 48px)!important}
 #myPrioDetailModal .modal-resize-handle{position:absolute;right:5px;bottom:5px;width:24px;height:24px;cursor:nwse-resize;border-radius:5px;background:linear-gradient(135deg,transparent 0 48%,rgba(250,204,21,.22) 48% 60%,rgba(250,204,21,.65) 60% 72%,rgba(250,204,21,.22) 72%);z-index:5}
 
+/* === FINAL: Eigene P0/P0+ Punkte als Popup === */
+#ownP0PlusModal.report-modal{z-index:52500!important;padding:14px!important}
+#ownP0PlusModal .own-p0-modal-box{
+  width:min(760px,calc(100vw - 22px))!important;
+  height:min(760px,calc(100vh - 22px))!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  overflow:hidden!important;
+  padding:14px!important;
+  border-radius:14px!important;
+}
+#ownP0PlusModal .report-head{margin-bottom:8px!important}
+#ownP0PlusModal .report-head h2{font-size:18px!important;line-height:1.1!important}
+#ownP0PlusModalContent{min-height:0!important;overflow:auto!important;padding-right:6px!important}
+#ownP0PlusModal .my-own-p0-block{
+  max-height:none!important;
+  overflow:visible!important;
+  margin-top:0!important;
+  border-radius:10px!important;
+}
+#ownP0PlusModal .my-own-p0-block .p0plus-raid{
+  font-size:13px!important;
+  padding:8px 10px 3px!important;
+}
+#ownP0PlusModal .my-own-p0-block .p0plus-table th{font-size:10px!important}
+#ownP0PlusModal .my-own-p0-block .p0plus-table td{font-size:12px!important}
+.own-p0-popout-card{
+  display:grid;
+  gap:8px;
+  padding:10px!important;
+}
+.own-p0-popout-card strong{
+  color:#facc15;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.own-p0-popout-card span{
+  color:#cbd5e1;
+  font-size:11.5px;
+  line-height:1.35;
+}
+.own-p0-popout-card .right-inline-btn{
+  width:100%;
+  justify-content:center;
+}
+
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
 #meinLichtLootCard.right-card{padding:14px!important}
 #meinLichtLootCard h2{font-size:16px!important;margin-bottom:8px!important;letter-spacing:.02em!important}
@@ -1570,17 +1617,19 @@ body.raid-create-open:before{
   overflow:visible!important;
 }
 #meinLichtLootCard .dashboard-inline-results{
-  max-height:none!important;
-  overflow:visible!important;
+  max-height:min(430px,calc(100vh - 250px))!important;
+  overflow:auto!important;
+  padding-right:4px!important;
 }
 #meinLichtLootCard .dashboard-fold[open] .dashboard-fold-body{
-  overflow:visible!important;
+  overflow:auto!important;
 }
 #meinLichtLootCard .lichtloot-fold{
-  overflow:visible!important;
+  overflow:hidden!important;
 }
 #meinLichtLootCard .lichtloot-fold-body{
-  overflow:visible!important;
+  overflow:auto!important;
+  max-height:250px!important;
 }
 #meinLichtLootCard .myprio-list{
   max-height:none!important;
@@ -1624,6 +1673,48 @@ body.raid-create-open:before{
 }
 #meinLichtLootCard .dashboard-fold-body{
   padding:0 9px 9px!important;
+}
+#meinLichtLootCard .my-own-p0-block{
+  max-height:230px!important;
+  overflow:auto!important;
+  padding:0!important;
+  margin-top:6px!important;
+  border-radius:9px!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-raid{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:6px 8px 2px!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  background:#050916;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table{
+  margin:0 0 5px!important;
+  font-size:11px!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table th,
+#meinLichtLootCard .my-own-p0-block .p0plus-table td{
+  padding:4px 7px!important;
+  line-height:1.2!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table th{
+  font-size:10px!important;
+  letter-spacing:.03em!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-item{
+  font-size:11.5px!important;
+  line-height:1.2!important;
+}
+#meinLichtLootCard .my-own-p0-block .report-btn{
+  width:23px!important;
+  min-width:23px!important;
+  height:23px!important;
+  min-height:23px!important;
+  padding:0!important;
+  border-radius:7px!important;
+  font-size:12px!important;
 }
 #meinLichtLootCard .right-inline-btn{
   min-height:30px!important;
@@ -1886,7 +1977,7 @@ body.raid-create-open:before{
             <span>Addon herunterladen und aktuelle Termine fuer den Import vorbereiten.</span>
           </div>
           <div class="buff-addon-card-actions">
-            <a class="right-inline-btn buff-addon-download" href="https://lichtloot-production.up.railway.app/downloads/LichtBuff-clean-0.2.8.zip" download><img class="buff-addon-download-icon" src="images/lichtbuff-addon-icon.svg" alt="">Addon herunterladen</a>
+            <a class="right-inline-btn buff-addon-download" href="https://lichtloot-production.up.railway.app/downloads/LichtBuff-clean-0.2.9.zip" download><img class="buff-addon-download-icon" src="images/lichtbuff-addon-icon.svg" alt="">Addon herunterladen</a>
             <button class="right-inline-btn" onclick="copyStartLichtBuffAddonExport()">Termine aktualisieren</button>
           </div>
         </div>
@@ -2003,6 +2094,18 @@ body.raid-create-open:before{
     </div>
     <div id="myPrioDetailContent"></div>
     <div class="modal-resize-handle" title="Fenstergröße ändern" onpointerdown="startMyPrioResize(event)"></div>
+  </div>
+</div>
+
+<div id="ownP0PlusModal" class="report-modal hidden">
+  <div class="report-box own-p0-modal-box">
+    <div class="report-head">
+      <h2>Eigene P0/P0+ Punkte</h2>
+      <button class="report-close" onclick="closeOwnP0PlusModal()">✕</button>
+    </div>
+    <div id="ownP0PlusModalContent">
+      <div class="status">Noch nichts geladen.</div>
+    </div>
   </div>
 </div>
 
@@ -5462,6 +5565,8 @@ async function loadMyPrios(){
   document.getElementById("myPriosChar").value=charName;
   status.innerHTML='<span class="warn">Lade Prios und P0/P0+ für '+safeHtml(charName)+' …</span>';
   results.innerHTML='';
+  window.myOwnP0PlusPoints=[];
+  closeOwnP0PlusModal();
 
   try{
     const url=LICHTLOOT_API_URL+
@@ -5510,6 +5615,8 @@ function renderEmptyMyPriosForRailwayCharacter(char){
   const name=char && char.name ? String(char.name).trim() : "";
 
   myRaidCalendarPrioEntries=[];
+  window.myOwnP0PlusPoints=[];
+  closeOwnP0PlusModal();
   renderRaidCalendar();
 
   if(status){
@@ -5527,6 +5634,7 @@ function renderMyPrios(data){
   const entries=data.entries || [];
   const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
+  window.myOwnP0PlusPoints=ownP0.slice();
 
   myRaidCalendarPrioEntries=entries.slice();
   renderRaidCalendar();
@@ -5541,9 +5649,11 @@ function renderMyPrios(data){
   let html='';
 
   if(ownP0.length){
-    html+='<details class="lichtloot-fold"><summary>Eigene P0/P0+ Punkte</summary><div class="lichtloot-fold-body">';
-    html+=renderOwnP0PlusOverviewTable(ownP0);
-    html+='</div></details>';
+    html+=`<div class="lichtloot-fold own-p0-popout-card">
+      <strong>Eigene P0/P0+ Punkte</strong>
+      <span>${safeHtml(ownP0.length)} gespeicherte Punkte gefunden. Die komplette Liste öffnet sich als eigenes Fenster.</span>
+      <button class="right-inline-btn" type="button" onclick="openOwnP0PlusModal()">P0/P0+ Punkte öffnen</button>
+    </div>`;
   }
 
   if(pastEntries.length){
@@ -6093,6 +6203,23 @@ function startMyPrioResize(event){
 
 function closeMyPrioDetailModal(){
   const modal=document.getElementById("myPrioDetailModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+function openOwnP0PlusModal(){
+  const modal=document.getElementById("ownP0PlusModal");
+  const content=document.getElementById("ownP0PlusModalContent");
+  const points=window.myOwnP0PlusPoints || [];
+  if(!modal || !content) return;
+
+  content.innerHTML=points.length
+    ? renderOwnP0PlusOverviewTable(points)
+    : '<div class="status">Für diesen Charakter sind keine eigenen P0/P0+ Punkte hinterlegt.</div>';
+  modal.classList.remove("hidden");
+}
+
+function closeOwnP0PlusModal(){
+  const modal=document.getElementById("ownP0PlusModal");
   if(modal) modal.classList.add("hidden");
 }
 
