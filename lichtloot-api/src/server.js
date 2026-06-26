@@ -3884,7 +3884,7 @@ async function importLootItemMetadata() {
       const items = await loadStaticLootItems(raidKey);
       for (const rawItem of items) {
         const item = normalizeLootItemForApi(null, rawItem);
-        const raidType = normalizeRaidType(item.raidKey || item.raid || raidKey);
+        const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raid || item.raidKey || item.raid || raidKey);
         const name = clean(item.name);
         if (!raidType || !name) continue;
         candidates += 1;
@@ -3949,6 +3949,7 @@ async function importLootItemMetadata() {
     );
     await client.query("commit");
     console.log(`Item-Metadaten nach Railway übertragen: ${updated}/${candidates} Updates`);
+    return { success: true, candidates, updated };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -4326,6 +4327,13 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildAdminSearchItems") {
       const items = await adminSearchItems({ guildId: guild.id, query: req.query });
       return res.json({ ...items, guild: guild.slug });
+    }
+
+    if (action === "refreshLootMetadata" || action === "guildRefreshLootMetadata") {
+      requireMasterCode(req.query.masterCode);
+      await ensureLootItemMetadataColumns();
+      const metadata = await importLootItemMetadata();
+      return res.json({ ...metadata, guild: guild.slug });
     }
 
     if (action === "getLootItems" || action === "guildGetLootItems") {
