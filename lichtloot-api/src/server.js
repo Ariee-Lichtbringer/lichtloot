@@ -2250,7 +2250,34 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
 }
 
 function abilityName(event) {
-  return clean(event?.ability?.name || event?.abilityGameID || event?.ability || event?.sourceAbility || "");
+  return clean(event?.ability?.name || event?.ability || event?.sourceAbility?.name || "");
+}
+
+function abilityId(event) {
+  return Number(
+    event?.abilityGameID ||
+    event?.abilityGameId ||
+    event?.ability?.guid ||
+    event?.ability?.id ||
+    event?.sourceAbilityGameID ||
+    event?.sourceAbility?.guid ||
+    event?.sourceAbility?.id ||
+    0
+  );
+}
+
+function extraAbilityName(event) {
+  return clean(event?.extraAbility?.name || event?.extraAbility || "");
+}
+
+function extraAbilityId(event) {
+  return Number(
+    event?.extraAbilityGameID ||
+    event?.extraAbilityGameId ||
+    event?.extraAbility?.guid ||
+    event?.extraAbility?.id ||
+    0
+  );
 }
 
 function eventSourceId(event) {
@@ -2297,51 +2324,87 @@ const claExcludedGear = [
 ];
 
 const rpbConsumables = [
-  ["Greater Stoneshield Potion", ["Greater Stoneshield Potion"]],
-  ["Limited Invulnerability Potion", ["Limited Invulnerability Potion"]],
-  ["Living/Free Action Potion", ["Living Action Potion", "Free Action Potion"]],
-  ["Great Rage Potion", ["Great Rage Potion"]],
-  ["Mighty Rage Potion", ["Mighty Rage Potion"]],
-  ["Major Healing Potion", ["Major Healing Potion"]],
-  ["Major Mana Potion", ["Major Mana Potion"]],
-  ["all other Mana Potions", ["Superior Mana Potion", "Greater Mana Potion", "Mana Potion"]],
-  ["Demonic Rune/Dark Rune", ["Demonic Rune", "Dark Rune"]],
-  ["Major/Greater Healthstone", ["Major Healthstone", "Greater Healthstone", "Healthstone"]],
-  ["Mana Ruby", ["Mana Ruby"]],
-  ["all other Mana Gems", ["Mana Citrine", "Mana Jade", "Mana Agate"]],
-  ["Thistle Tea", ["Thistle Tea"]],
-  ["Elixir of Poison Resistance", ["Elixir of Poison Resistance"]],
-  ["Heavy Runecloth Bandage", ["Heavy Runecloth Bandage"]]
+  ["Greater Stoneshield Potion", ["Greater Stoneshield Potion"], [17540]],
+  ["Limited Invulnerability Potion", ["Limited Invulnerability Potion"], [3169]],
+  ["Living/Free Action Potion", ["Living Action Potion", "Free Action Potion"], [24364, 6615]],
+  ["Great Rage Potion", ["Great Rage Potion"], [6612]],
+  ["Mighty Rage Potion", ["Mighty Rage Potion"], [17528]],
+  ["Major Healing Potion", ["Major Healing Potion"], [17534]],
+  ["Major Mana Potion", ["Major Mana Potion"], [17531]],
+  ["all other Mana Potions", ["Superior Mana Potion", "Greater Mana Potion", "Mana Potion"], [17530, 2023, 2024]],
+  ["Demonic Rune/Dark Rune", ["Demonic Rune", "Dark Rune"], [16666, 27869]],
+  ["Major/Greater Healthstone", ["Major Healthstone", "Greater Healthstone", "Healthstone"], [23473, 5720, 6262, 6263]],
+  ["Mana Ruby", ["Mana Ruby"], [10058]],
+  ["all other Mana Gems", ["Mana Citrine", "Mana Jade", "Mana Agate"], [10057, 10054, 5514]],
+  ["Thistle Tea", ["Thistle Tea"], [9512]],
+  ["Elixir of Poison Resistance", ["Elixir of Poison Resistance"], [11349]],
+  ["Heavy Runecloth Bandage", ["Heavy Runecloth Bandage"], [18610]]
 ];
 
 const rpbAbsorbs = [
-  ["Greater Nature Protection Potion", ["Greater Nature Protection Potion"]],
-  ["Nature Protection Potion", ["Nature Protection Potion"]],
-  ["Greater Arcane Protection Potion", ["Greater Arcane Protection Potion"]],
-  ["Greater Fire Protection Potion", ["Greater Fire Protection Potion"]],
-  ["Fire Protection Potion", ["Fire Protection Potion"]],
-  ["Frozen Rune", ["Frozen Rune"]],
-  ["Greater Frost Protection Potion", ["Greater Frost Protection Potion"]],
-  ["Frost Protection Potion", ["Frost Protection Potion"]],
-  ["Frost Ward", ["Frost Ward"]],
-  ["Greater Shadow Protection Potion", ["Greater Shadow Protection Potion"]],
-  ["Shadow Protection Potion", ["Shadow Protection Potion"]],
-  ["Shadow Ward", ["Shadow Ward"]],
-  ["Power Word: Shield (excluded from total absorbed!)", ["Power Word: Shield"]]
+  ["Greater Nature Protection Potion", ["Greater Nature Protection Potion"], [17546]],
+  ["Nature Protection Potion", ["Nature Protection Potion"], [7254]],
+  ["Greater Arcane Protection Potion", ["Greater Arcane Protection Potion"], [17549]],
+  ["Greater Fire Protection Potion", ["Greater Fire Protection Potion"], [17543]],
+  ["Fire Protection Potion", ["Fire Protection Potion"], [7230]],
+  ["Frozen Rune", ["Frozen Rune"], [28764]],
+  ["Greater Frost Protection Potion", ["Greater Frost Protection Potion"], [17544]],
+  ["Frost Protection Potion", ["Frost Protection Potion"], [7239]],
+  ["Frost Ward", ["Frost Ward"], [28609, 8462, 8461, 6143]],
+  ["Greater Shadow Protection Potion", ["Greater Shadow Protection Potion"], [17548]],
+  ["Shadow Protection Potion", ["Shadow Protection Potion"], [7242]],
+  ["Shadow Ward", ["Shadow Ward"], [28610, 11739, 6229]],
+  ["Power Word: Shield (excluded from total absorbed!)", ["Power Word: Shield"], [10901, 10900, 10899, 10898, 6066, 6065, 3747]]
 ];
 
 const rpbEngineering = [
-  ["Dense Dynamite", ["Dense Dynamite"]],
-  ["Goblin Sapper Charge", ["Goblin Sapper Charge"]],
-  ["Stratholme Holy Water", ["Stratholme Holy Water"]],
-  ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"]]
+  ["Dense Dynamite", ["Dense Dynamite"], [19784, 23063]],
+  ["Goblin Sapper Charge", ["Goblin Sapper Charge"], [13241]],
+  ["Stratholme Holy Water", ["Stratholme Holy Water"], [17291]],
+  ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"], [8331]]
 ];
 
-function matchingLabel(name, groups) {
+const rpbSpellNamesById = {
+  6552: "Pummel",
+  6554: "Pummel",
+  1766: "Kick",
+  1767: "Kick",
+  1768: "Kick",
+  1769: "Kick",
+  2139: "Counterspell",
+  72: "Shield Bash",
+  1671: "Shield Bash",
+  1672: "Shield Bash",
+  8042: "Earth Shock",
+  8044: "Earth Shock",
+  8045: "Earth Shock",
+  8046: "Earth Shock",
+  10412: "Earth Shock",
+  10413: "Earth Shock",
+  10414: "Earth Shock"
+};
+
+function matchingLabel(name, groups, id = 0) {
+  const numericId = Number(id || 0);
+  if (numericId) {
+    const byId = groups.find(([, , ids]) => Array.isArray(ids) && ids.includes(numericId));
+    if (byId) return byId[0];
+  }
   const lower = clean(name).toLowerCase();
   if (!lower) return "";
   const found = groups.find(([, terms]) => terms.some(term => lower.includes(term.toLowerCase())));
   return found ? found[0] : "";
+}
+
+function labelForAbility(event, groups) {
+  return matchingLabel(abilityName(event), groups, abilityId(event));
+}
+
+function displayAbilityName(event, preferExtra = false) {
+  const name = preferExtra ? extraAbilityName(event) || abilityName(event) : abilityName(event) || extraAbilityName(event);
+  if (name) return name;
+  const id = preferExtra ? extraAbilityId(event) || abilityId(event) : abilityId(event) || extraAbilityId(event);
+  return rpbSpellNamesById[id] || (id ? String(id) : "");
 }
 
 async function buildClaAnalysisRows(analysis) {
@@ -2418,20 +2481,24 @@ async function buildRpbAnalysisRows(analysis) {
 
   castEvents.forEach(event => {
     const player = playersById.get(eventSourceId(event));
-    const label = matchingLabel(abilityName(event), rpbConsumables);
+    const label = labelForAbility(event, rpbConsumables);
     if (player && label) addPlayerAmount(consumes, player, label, 1);
   });
 
   damageTakenEvents.forEach(event => {
     const player = playersById.get(eventTargetId(event));
-    const label = matchingLabel(abilityName(event), rpbAbsorbs);
-    const amount = Number(event.absorbed || event.amount || 0);
+    const label = matchingLabel(
+      extraAbilityName(event) || abilityName(event),
+      rpbAbsorbs,
+      extraAbilityId(event) || abilityId(event)
+    );
+    const amount = Number(event.absorbed || event.absorb || event.amount || 0);
     if (player && label && amount) addPlayerAmount(absorbs, player, label, amount);
   });
 
   damageDoneEvents.forEach(event => {
     const player = playersById.get(eventSourceId(event));
-    const label = matchingLabel(abilityName(event), rpbEngineering);
+    const label = labelForAbility(event, rpbEngineering);
     const amount = Number(event.amount || 0);
     if (player && label) {
       addPlayerAmount(engineeringCounts, player, label, 1);
@@ -2443,7 +2510,7 @@ async function buildRpbAnalysisRows(analysis) {
     const player = playersById.get(eventSourceId(event));
     if (!player) return;
     addPlayerAmount(interrupts, player, "# of interrupted spells", 1);
-    const interrupted = abilityName(event) || clean(event.extraAbility?.name) || "Interrupt";
+    const interrupted = displayAbilityName(event, true) || "Interrupt";
     if (!interruptNames[player]) interruptNames[player] = new Set();
     interruptNames[player].add(interrupted);
   });
