@@ -2833,7 +2833,7 @@ async function runLogAnalysis({ guildId, query: params }) {
     [`${type}GeneratorStatus`]: generatorResult?.status || generatorStatus,
     [`${type}GeneratorError`]: generatorError
   };
-  const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : "failed";
+  const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : `${type}_failed`;
   const result = await query(
     `update log_analyses
      set status = $3,
@@ -2937,7 +2937,8 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
   const summaryPatch = {
     [`${type}GeneratorStatus`]: failed ? "failed" : "done",
     [`${type}GeneratorFinishedAt`]: new Date().toISOString(),
-    [`${type}GeneratorError`]: clean(params.error || "")
+    [`${type}GeneratorError`]: clean(params.error || ""),
+    [`${type}GeneratorWarnings`]: clean(params.warnings || params.warning || "")
   };
   if (sheetUrl) summaryPatch[downloadUrlKey] = sheetUrl;
 
@@ -2951,7 +2952,7 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
     [
       guildId,
       id,
-      failed ? "failed" : `${type}_done`,
+      failed ? `${type}_failed` : `${type}_done`,
       JSON.stringify(summaryPatch)
     ]
   );
