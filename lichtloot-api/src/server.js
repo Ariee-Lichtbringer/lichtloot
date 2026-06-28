@@ -3065,6 +3065,71 @@ async function cleanupIncompleteClaAnalyses({ guildId, query: params }) {
   };
 }
 
+async function clearLogAnalysisType({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  if (!isUuid(id) || !["cla", "rpb"].includes(type)) {
+    const error = new Error("Loganalyse-ID oder Typ fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const otherType = type === "cla" ? "rpb" : "cla";
+  const result = await query(
+    `update log_analyses
+     set status = case
+           when nullif(summary->>$4, '') is not null then $5
+           when lower(coalesce(summary->>$6, '')) = 'queued' then $7
+           when lower(coalesce(summary->>$6, '')) = 'failed' then $8
+           else 'pending'
+         end,
+         summary = ((((((((coalesce(summary, '{}'::jsonb)
+           - $9)
+           - $10)
+           - $11)
+           - $12)
+           - $13)
+           - $14)
+           - $15)
+           - $16),
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [
+      guildId,
+      id,
+      type,
+      `${otherType}DownloadUrl`,
+      `${otherType}_done`,
+      `${otherType}GeneratorStatus`,
+      `${otherType}_queued`,
+      `${otherType}_failed`,
+      `${type}DownloadUrl`,
+      `${type}DownloadToken`,
+      `${type}GeneratorJobId`,
+      `${type}GeneratorStatus`,
+      `${type}GeneratorError`,
+      `${type}GeneratorWarnings`,
+      `${type}GeneratorFinishedAt`,
+      `${type}GeneratorManualLink`
+    ]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    analysisType: type.toUpperCase(),
+    analysis: normalizeLogAnalysis(result.rows[0])
+  };
+}
+
 function normalizeIssueReportRow(row, index = 0) {
   return {
     id: row.id,
@@ -6320,6 +6385,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildCleanupIncompleteClaAnalyses") {
       const cleaned = await cleanupIncompleteClaAnalyses({ guildId: guild.id, query: postParams });
       return res.json({ ...cleaned, guild: guild.slug });
+    }
+
+    if (action === "guildClearLogAnalysisType") {
+      const cleared = await clearLogAnalysisType({ guildId: guild.id, query: postParams });
+      return res.json({ ...cleared, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
