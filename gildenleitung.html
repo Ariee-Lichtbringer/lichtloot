@@ -767,40 +767,68 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .log-analysis-hero{
   display:flex;
   justify-content:space-between;
-  align-items:flex-start;
+  align-items:center;
+  gap:18px;
+  padding:14px 18px;
+  border:1px solid rgba(96,165,250,.18);
+  border-radius:12px;
+  background:
+    radial-gradient(circle at 6% 0%,rgba(37,99,235,.18),transparent 30%),
+    linear-gradient(135deg,rgba(8,18,36,.94),rgba(2,6,23,.76));
+  box-shadow:0 18px 60px rgba(0,0,0,.22);
+}
+
+.log-analysis-title{
+  display:flex;
+  align-items:center;
   gap:12px;
-  padding:12px;
-  border:1px solid rgba(250,204,21,.18);
-  border-radius:8px;
-  background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(2,6,23,.62));
+}
+
+.log-analysis-mark{
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 14px rgba(250,204,21,.22));
 }
 
 .log-analysis-hero h3{
   margin:0;
-  color:var(--gold);
-  font-size:16px;
+  color:#f8fafc;
+  font-size:24px;
+  line-height:1;
+  text-transform:uppercase;
 }
+
+.log-analysis-hero h3 span{color:#fbbf24}
 
 .log-analysis-hero p{
   margin:4px 0 0;
-  color:var(--muted);
+  color:#cbd5e1;
   font-weight:800;
-  font-size:12px;
+  font-size:13px;
+}
+
+.log-analysis-head-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
 }
 
 .log-analysis-count{
-  min-width:92px;
-  padding:8px 10px;
-  border:1px solid rgba(96,165,250,.24);
-  border-radius:8px;
-  background:rgba(15,23,42,.66);
-  text-align:right;
+  min-width:86px;
+  padding:8px 12px;
+  border:1px solid rgba(96,165,250,.28);
+  border-radius:10px;
+  background:rgba(15,23,42,.74);
+  text-align:center;
 }
 
 .log-analysis-count span{
   display:block;
-  color:#93c5fd;
-  font-size:22px;
+  color:#7aa7ff;
+  font-size:26px;
+  line-height:1;
   font-weight:950;
 }
 
@@ -813,29 +841,145 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .log-analysis-toolbar{
   display:grid;
-  grid-template-columns:minmax(220px,1fr) auto auto;
-  gap:8px;
+  grid-template-columns:minmax(260px,1fr) auto;
+  gap:10px;
   align-items:center;
+  padding:12px;
+  border:1px solid rgba(96,165,250,.12);
+  border-radius:12px;
+  background:rgba(8,18,36,.70);
 }
 
 .log-analysis-table table{
-  min-width:760px;
+  min-width:900px;
+  border-collapse:separate;
+  border-spacing:0;
 }
 
 .log-analysis-table td:first-child strong{
   color:#e5e7eb;
-  font-size:14px;
+  font-size:16px;
+}
+
+.log-analysis-table th{
+  color:#e5e7eb;
+  background:rgba(8,18,36,.92);
+  letter-spacing:0;
+}
+
+.log-analysis-table td{
+  padding:10px 14px;
+  background:rgba(5,12,25,.42);
+}
+
+.log-raid-cell{
+  display:grid;
+  grid-template-columns:48px 1fr;
+  gap:12px;
+  align-items:center;
+  min-width:260px;
+}
+
+.log-raid-image{
+  width:48px;
+  height:48px;
+  border-radius:8px;
+  object-fit:cover;
+  border:1px solid rgba(250,204,21,.16);
+  box-shadow:0 10px 22px rgba(0,0,0,.24);
+}
+
+.log-raid-code{
+  display:block;
+  margin-top:3px;
+  color:#93a4bd;
+  font-size:13px;
+  font-weight:800;
+}
+
+.log-date-cell{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  min-width:130px;
+}
+
+.log-date-icon{
+  color:#cbd5e1;
+  font-size:15px;
+  line-height:1.4;
+}
+
+.log-date-main{
+  color:#e5e7eb;
+  font-weight:900;
+}
+
+.log-date-sub{
+  margin-top:2px;
+  color:#94a3b8;
+  font-weight:800;
+  font-size:12px;
+}
+
+.log-analysis-empty{
+  padding:28px 14px;
+  text-align:center;
+  color:var(--muted);
+  font-weight:900;
 }
 
 .log-action-stack{
   display:grid;
-  grid-template-columns:repeat(2,minmax(112px,1fr)) auto;
+  grid-template-columns:repeat(3,minmax(112px,1fr));
   gap:6px;
-  min-width:360px;
+  min-width:390px;
 }
 
 .log-action-stack .small-btn{
   justify-content:center;
+}
+
+.log-analysis-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  padding:12px 16px;
+  border:1px solid rgba(96,165,250,.14);
+  border-radius:12px;
+  background:rgba(8,18,36,.70);
+  color:#cbd5e1;
+  font-weight:800;
+}
+
+.log-pagination{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.log-page-btn{
+  min-width:36px;
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:7px;
+  background:rgba(15,23,42,.66);
+  color:#e5e7eb;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.log-page-btn.active{
+  border-color:rgba(96,165,250,.62);
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+}
+
+.log-page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
 }
 
 @media(max-width:760px){
@@ -1651,19 +1795,25 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <div class="log-analysis-body">
       <div class="log-analysis-layout">
         <div class="log-analysis-hero">
-          <div>
-            <h3>WarcraftLogs-Auswertungen</h3>
-            <p>Reports aus dem Logchannel und manuell eingetragene Links werden hier gesammelt.</p>
+          <div class="log-analysis-title">
+            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <div>
+              <h3>Warcraft Logs <span>Auswertungen</span></h3>
+              <p>Reports aus dem Logchannel und manuell eingetragene Links.</p>
+            </div>
           </div>
-          <div class="log-analysis-count">
-            <span id="logAnalysisCount">0</span>
-            <small>Reports</small>
+          <div class="log-analysis-head-actions">
+            <div class="log-analysis-count">
+              <span id="logAnalysisCount">0</span>
+              <small>Reports</small>
+            </div>
+            <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
+            <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
           </div>
         </div>
         <div class="log-analysis-toolbar">
           <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
-          <button class="btn" type="button" onclick="saveManualLogAnalysis()">Log aufnehmen</button>
-          <button class="btn ghost" type="button" onclick="loadLogAnalysisPanel(true)">Neu laden</button>
+          <button class="btn" type="button" onclick="saveManualLogAnalysis()">Link hinzufügen</button>
         </div>
       </div>
       <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
@@ -1682,6 +1832,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
           </tbody>
         </table>
       </div>
+      <div id="logAnalysisFooter" class="log-analysis-footer"></div>
     </div>
   </details>
 
@@ -1967,6 +2118,8 @@ let p0PlusEntries = [];
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
+let logAnalysisPage = 1;
+const LOG_ANALYSIS_PAGE_SIZE = 10;
 let guildSentMessages = [];
 let guildInboxTab = "reports";
 let worldbuffEntries = [];
@@ -4886,6 +5039,40 @@ function scheduleLogAnalysisRefresh(){
   logAnalysisRefreshTimer = setTimeout(() => loadLogAnalysisPanel(true, true), 15000);
 }
 
+function focusLogAnalysisInput(){
+  const input = document.getElementById("logAnalysisUrl");
+  if(input) input.focus();
+}
+
+function getLogAnalysisRaidKey(entry){
+  const text = String(entry?.raid || entry?.summary?.raid || entry?.title || "").toLowerCase();
+  if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
+  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
+  if(text.includes("naxx")) return "naxx";
+  if(text.includes("zg") || text.includes("zul")) return "zg";
+  if(text.includes("ony")) return "ony";
+  if(text.includes("mc") || text.includes("molten")) return "mc";
+  return "aq40";
+}
+
+function formatLogAnalysisTime(entry){
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const time = summary.raidTime || summary.startTime || "";
+  if(time) return String(time).replace(/\s*uhr$/i,"") + " Uhr";
+  const source = entry?.postedAt || entry?.createdAt || entry?.updatedAt || "";
+  if(!source) return "";
+  const date = new Date(source);
+  if(Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
+}
+
+function setLogAnalysisPage(page){
+  const pages = Math.max(1, Math.ceil((logAnalyses || []).length / LOG_ANALYSIS_PAGE_SIZE));
+  logAnalysisPage = Math.max(1, Math.min(Number(page) || 1, pages));
+  renderLogAnalyses();
+}
+
 function getLogAnalysisActiveType(entry){
   if(isLogAnalysisQueued(entry, "cla")) return "cla";
   if(isLogAnalysisQueued(entry, "rpb")) return "rpb";
@@ -4930,15 +5117,24 @@ function renderLogAnalyses(){
   if(count) count.textContent = String((logAnalyses || []).length);
   if(!tbody) return;
   if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Loganalysen vorhanden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    renderLogAnalysisFooter(0, 0, 0);
     scheduleLogAnalysisRefresh();
     return;
   }
 
-  tbody.innerHTML = logAnalyses.map(entry => {
+  const total = logAnalyses.length;
+  const pages = Math.max(1, Math.ceil(total / LOG_ANALYSIS_PAGE_SIZE));
+  if(logAnalysisPage > pages) logAnalysisPage = pages;
+  const start = (logAnalysisPage - 1) * LOG_ANALYSIS_PAGE_SIZE;
+  const visible = logAnalyses.slice(start, start + LOG_ANALYSIS_PAGE_SIZE);
+
+  tbody.innerHTML = visible.map(entry => {
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
     const raid = entry.raid || summary.raid || "Nicht erkannt";
     const date = entry.raidDate || summary.raidDate || "";
+    const raidKey = getLogAnalysisRaidKey(entry);
+    const raidImage = RAID_IMAGES[raidKey] || RAID_IMAGES.aq40;
     let claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
     let rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
     if(isLogAnalysisQueued(entry, "cla") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(claDownloadUrl)) claDownloadUrl = "";
@@ -4946,24 +5142,57 @@ function renderLogAnalyses(){
     return `
       <tr>
         <td>
-          <strong>${escapeHtml(raid)}</strong><br>
-          <span class="muted">${escapeHtml(entry.reportCode || "")}</span>
+          <div class="log-raid-cell">
+            <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
+            <div>
+              <strong>${escapeHtml(raid)}</strong>
+              <span class="log-raid-code">${escapeHtml(entry.reportCode || "")}</span>
+            </div>
+          </div>
         </td>
-        <td>${escapeHtml(formatLogAnalysisDate(date))}</td>
+        <td>
+          <div class="log-date-cell">
+            <span class="log-date-icon">▣</span>
+            <div>
+              <div class="log-date-main">${escapeHtml(formatLogAnalysisDate(date))}</div>
+              <div class="log-date-sub">${escapeHtml(formatLogAnalysisTime(entry))}</div>
+            </div>
+          </div>
+        </td>
         <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
         <td>
           <div class="log-action-stack">
             ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
-            <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','cla')">CLA Link</button>
             ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
-            <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','rpb')">RPB Link</button>
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
           </div>
         </td>
       </tr>
     `;
   }).join("");
+  renderLogAnalysisFooter(start + 1, Math.min(start + LOG_ANALYSIS_PAGE_SIZE, total), total);
   scheduleLogAnalysisRefresh();
+}
+
+function renderLogAnalysisFooter(from, to, total){
+  const footer = document.getElementById("logAnalysisFooter");
+  if(!footer) return;
+  if(!total){
+    footer.innerHTML = '<span>Keine Einträge</span>';
+    return;
+  }
+  const pages = Math.max(1, Math.ceil(total / LOG_ANALYSIS_PAGE_SIZE));
+  const buttons = [];
+  buttons.push(`<button class="log-page-btn" type="button" onclick="setLogAnalysisPage(${logAnalysisPage - 1})" ${logAnalysisPage <= 1 ? "disabled" : ""}>‹</button>`);
+  for(let page=1; page<=pages; page++){
+    buttons.push(`<button class="log-page-btn ${page === logAnalysisPage ? "active" : ""}" type="button" onclick="setLogAnalysisPage(${page})">${page}</button>`);
+  }
+  buttons.push(`<button class="log-page-btn" type="button" onclick="setLogAnalysisPage(${logAnalysisPage + 1})" ${logAnalysisPage >= pages ? "disabled" : ""}>›</button>`);
+  footer.innerHTML = `
+    <span>Zeige ${Math.max(0, from)}-${to} von ${total} Einträgen</span>
+    <div class="log-pagination">${buttons.join("")}</div>
+    <span>${LOG_ANALYSIS_PAGE_SIZE} Einträge pro Seite</span>
+  `;
 }
 
 function formatLogAnalysisDate(value){
