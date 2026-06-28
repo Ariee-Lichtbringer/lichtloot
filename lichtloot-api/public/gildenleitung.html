@@ -2964,7 +2964,7 @@ async function resetPlayerLogin(rowNumber){
   setStatus("Spielerlogin wird zurückgesetzt ...", "");
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildResetPlayerLogin",
       masterCode,
       rowNumber:player.rowNumber,
@@ -4502,7 +4502,7 @@ async function saveWorldbuffCaster(index){
   const buff = buffField ? buffField.value.trim() : (entry.buff || "");
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildSetWorldbuffCaster",
       masterCode,
       rowNumber:entry.rowNumber,
@@ -4538,7 +4538,7 @@ async function requestWorldbuffReplacement(index){
   const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildRequestWorldbuffReplacement",
       masterCode,
       target,
@@ -4577,7 +4577,7 @@ async function deleteWorldbuffTerm(index){
   }
 
   try{
-    const result = await apiJsonp({
+    const result = await railwayApi({
       action:"guildDeleteWorldbuffTerm",
       masterCode,
       rowNumber:entry.rowNumber || "",
@@ -4618,7 +4618,7 @@ async function createWorldbuffTerm(){
   const note = document.getElementById("newWorldbuffNote").value.trim();
 
   try{
-    const result = await apiWrite({
+    const result = await railwayWrite({
       action:"guildCreateBuffTerm",
       masterCode,
       target:"worldbuff",
@@ -4651,7 +4651,7 @@ async function queueWorldbuffBotUpdate(updateType){
   }
 
   try{
-    const result = await apiWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:updateType || "worldbuff_update" });
+    const result = await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:updateType || "worldbuff_update" });
     if(!result.success){
       setStatus(result.error || "Bot-Update konnte nicht vorgemerkt werden.", "bad");
       return;
@@ -4675,7 +4675,7 @@ async function restoreDeletedWorldbuffTerms(){
 
   setStatus("Gelöschte Worldbuff-Termine werden wiederhergestellt ...", "");
   try{
-    const result = await apiJsonp({ action:"guildRestoreDeletedWorldbuffTerms", masterCode });
+    const result = await railwayApi({ action:"guildRestoreDeletedWorldbuffTerms", masterCode });
     if(!result.success){
       setStatus(result.error || "Gelöschte Termine konnten nicht wiederhergestellt werden.", "bad");
       return;
@@ -4695,15 +4695,14 @@ async function syncPublicBuffTerms(){
     return;
   }
 
-  setStatus("Termine werden ins öffentliche Sheet übertragen ...", "");
+  setStatus("Termine werden nach Railway übernommen ...", "");
   try{
-    const result = await apiWrite({ action:"guildSyncPublicBuffTerms", masterCode });
+    const result = await railwayWrite({ action:"guildSyncPublicBuffTerms", masterCode });
     if(!result.success){
       setStatus(result.error || "Termine konnten nicht übertragen werden.", "bad");
       return;
     }
-    const cleanedText = result.cleaned ? " Falsch platzierte alte Exportzellen wurden bereinigt: "+result.cleaned+"." : "";
-    setStatus((result.synced || 0)+" Termine wurden ins öffentliche Sheet übertragen."+cleanedText, "good");
+    setStatus((result.synced || 0)+" Termine wurden nach Railway übernommen.", "good");
   }catch(error){
     setStatus(error.message || "Termine konnten nicht übertragen werden.", "bad");
   }
@@ -5080,6 +5079,10 @@ function getLogAnalysisTypeState(entry, type, url){
   return "pending";
 }
 
+function supportsLogAnalysisDiscordPost(entry){
+  return ["mc","bwl","aq40","naxx"].includes(getLogAnalysisRaidKey(entry));
+}
+
 function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
@@ -5087,8 +5090,11 @@ function renderLogAnalysisAction(entry, type, url){
   const clearButton = (url || state === "done" || state === "failed")
     ? `<button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} löschen</button>`
     : "";
+  const postButton = url && supportsLogAnalysisDiscordPost(entry)
+    ? `<button class="small-btn ghost" type="button" onclick="queueLogAnalysisDiscordPost('${escapeAttr(entry.id)}','${type}')">${label} in DC posten</button>`
+    : "";
   if(url){
-    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${clearButton}`;
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${postButton}${clearButton}`;
   }
   if(state === "queued"){
     return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button><button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} abbrechen</button>`;
@@ -5346,6 +5352,35 @@ async function triggerLogAnalysis(id, type){
     setStatus(isQueued ? `${label} wurde gestartet.` : `${label} ist bereit.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
+  }
+}
+
+async function queueLogAnalysisDiscordPost(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  const label = String(type || "").toUpperCase();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm(`${label}-Analyse jetzt im passenden Discord-Logchannel posten?`)) return;
+
+  if(status) status.textContent = `${label}-Discord-Post wird vorgemerkt ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildQueueLogAnalysisPost",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für den Discord-Post vorgemerkt.`;
+    setStatus(`${label}-Discord-Post wurde vorgemerkt.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
   }
 }
 
