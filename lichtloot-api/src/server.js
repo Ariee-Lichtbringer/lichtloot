@@ -2180,14 +2180,317 @@ function buildLogAnalysisDownloadUrl({ id, type, token }) {
   return `${apiUrl}?${params.toString()}`;
 }
 
-function buildLogAnalysisCsv(analysis, type) {
+function parseWarcraftLogsEventsData(raw) {
+  if (!raw) return [];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return Array.isArray(raw) ? raw : [];
+}
+
+function playerActorsFromReport(report) {
+  const actors = Array.isArray(report?.masterData?.actors) ? report.masterData.actors : [];
+  return actors
+    .filter(actor => clean(actor.type).toLowerCase() === "player")
+    .map(actor => ({
+      id: Number(actor.id),
+      name: clean(actor.name),
+      server: clean(actor.server),
+      className: clean(actor.subType || actor.type)
+    }))
+    .filter(actor => actor.id && actor.name)
+    .sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+
+function actorNameById(players) {
+  const map = new Map();
+  players.forEach(player => map.set(Number(player.id), player.name));
+  return map;
+}
+
+async function fetchReportBaseForAnalysis(reportCode) {
+  const token = await getWarcraftLogsAccessToken();
+  const gqlQuery =
+    "query($code:String!){"+
+    "reportData{report(code:$code){"+
+    "title startTime endTime zone{name}"+
+    "fights{ id name startTime endTime }"+
+    "masterData{actors{ id name server type subType }}"+
+    "}}}";
+  const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode });
+  const report = data.reportData?.report || {};
+  const fights = (Array.isArray(report.fights) ? report.fights : [])
+    .filter(fight => Number(fight.id) && Number(fight.endTime) > Number(fight.startTime));
+  return {
+    token,
+    report,
+    players: playerActorsFromReport(report),
+    fightIds: fights.map(fight => Number(fight.id))
+  };
+}
+
+async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightIds) {
+  if (!fightIds.length) return [];
+  const gqlQuery =
+    "query($code:String!,$fightIDs:[Int]){"+
+    "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,limit:10000){data}}}"+
+    "}";
+  try {
+    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
+    return parseWarcraftLogsEventsData(data.reportData?.report?.events?.data);
+  } catch (error) {
+    console.warn(`Warcraft-Logs-${dataType}-Events konnten nicht geladen werden:`, error.message || error);
+    return [];
+  }
+}
+
+function abilityName(event) {
+  return clean(event?.ability?.name || event?.abilityGameID || event?.ability || event?.sourceAbility || "");
+}
+
+function eventSourceId(event) {
+  return Number(event?.sourceID || event?.sourceId || event?.source?.id || 0);
+}
+
+function eventTargetId(event) {
+  return Number(event?.targetID || event?.targetId || event?.target?.id || 0);
+}
+
+function addPlayerAmount(table, player, key, amount = 1) {
+  if (!player || !key) return;
+  if (!table[key]) table[key] = {};
+  table[key][player] = (Number(table[key][player] || 0) || 0) + amount;
+}
+
+function formatCountValue(value) {
+  const number = Number(value || 0);
+  return number ? String(Math.round(number)) : "";
+}
+
+const claExcludedGear = [
+  [15138, "Onyxia Scale Cloak"],
+  [20538, "Runed Stygian Leggings"],
+  [20699, "Cenarion Reservist's Legplates"],
+  [20700, "Cenarion Reservist's Legplates"],
+  [20701, "Cenarion Reservist's Legguards"],
+  [20702, "Cenarion Reservist's Legguards"],
+  [20703, "Cenarion Reservist's Leggings"],
+  [20704, "Cenarion Reservist's Leggings"],
+  [20705, "Cenarion Reservist's Pants"],
+  [20706, "Cenarion Reservist's Pants"],
+  [20707, "Cenarion Reservist's Pants"],
+  [15072, "Chimeric Leggings"],
+  [15075, "Chimeric Vest"],
+  [13531, "Crypt Stalker Leggings"],
+  [17746, "Noxxion's Shackles"],
+  [21691, "Ooze-Ridden Gauntlets"],
+  [20476, "Sandstalker Bracers"],
+  [20478, "Sandstalker Breastplate"],
+  [21626, "Slime-Coated Leggings"],
+  [18344, "Stonebark Gauntlets"],
+  [9449, "Manual Crowd Pummeler"]
+];
+
+const rpbConsumables = [
+  ["Greater Stoneshield Potion", ["Greater Stoneshield Potion"]],
+  ["Limited Invulnerability Potion", ["Limited Invulnerability Potion"]],
+  ["Living/Free Action Potion", ["Living Action Potion", "Free Action Potion"]],
+  ["Great Rage Potion", ["Great Rage Potion"]],
+  ["Mighty Rage Potion", ["Mighty Rage Potion"]],
+  ["Major Healing Potion", ["Major Healing Potion"]],
+  ["Major Mana Potion", ["Major Mana Potion"]],
+  ["all other Mana Potions", ["Superior Mana Potion", "Greater Mana Potion", "Mana Potion"]],
+  ["Demonic Rune/Dark Rune", ["Demonic Rune", "Dark Rune"]],
+  ["Major/Greater Healthstone", ["Major Healthstone", "Greater Healthstone", "Healthstone"]],
+  ["Mana Ruby", ["Mana Ruby"]],
+  ["all other Mana Gems", ["Mana Citrine", "Mana Jade", "Mana Agate"]],
+  ["Thistle Tea", ["Thistle Tea"]],
+  ["Elixir of Poison Resistance", ["Elixir of Poison Resistance"]],
+  ["Heavy Runecloth Bandage", ["Heavy Runecloth Bandage"]]
+];
+
+const rpbAbsorbs = [
+  ["Greater Nature Protection Potion", ["Greater Nature Protection Potion"]],
+  ["Nature Protection Potion", ["Nature Protection Potion"]],
+  ["Greater Arcane Protection Potion", ["Greater Arcane Protection Potion"]],
+  ["Greater Fire Protection Potion", ["Greater Fire Protection Potion"]],
+  ["Fire Protection Potion", ["Fire Protection Potion"]],
+  ["Frozen Rune", ["Frozen Rune"]],
+  ["Greater Frost Protection Potion", ["Greater Frost Protection Potion"]],
+  ["Frost Protection Potion", ["Frost Protection Potion"]],
+  ["Frost Ward", ["Frost Ward"]],
+  ["Greater Shadow Protection Potion", ["Greater Shadow Protection Potion"]],
+  ["Shadow Protection Potion", ["Shadow Protection Potion"]],
+  ["Shadow Ward", ["Shadow Ward"]],
+  ["Power Word: Shield (excluded from total absorbed!)", ["Power Word: Shield"]]
+];
+
+const rpbEngineering = [
+  ["Dense Dynamite", ["Dense Dynamite"]],
+  ["Goblin Sapper Charge", ["Goblin Sapper Charge"]],
+  ["Stratholme Holy Water", ["Stratholme Holy Water"]],
+  ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"]]
+];
+
+function matchingLabel(name, groups) {
+  const lower = clean(name).toLowerCase();
+  if (!lower) return "";
+  const found = groups.find(([, terms]) => terms.some(term => lower.includes(term.toLowerCase())));
+  return found ? found[0] : "";
+}
+
+async function buildClaAnalysisRows(analysis) {
+  const { token, report, players, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
+  const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds);
+  const playersById = actorNameById(players);
+  const gearByPlayer = new Map();
+
+  combatantEvents.forEach(event => {
+    const player = playersById.get(eventSourceId(event));
+    if (!player || gearByPlayer.has(player)) return;
+    const gear = normalizeWarcraftLogsGear(event.gear || []);
+    if (gear.length) gearByPlayer.set(player, gear);
+  });
+
+  const headerPlayers = players.map(player => player.name);
+  const title = report.title || analysis.title || "";
+  const zone = report.zone?.name || analysis.raid || "";
+  const raidDate = report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : "";
+  const rows = [
+    ["", "yes", "", "", "", "title ", title, ...headerPlayers.map(() => "")],
+    ["bosses to consider", "all bosses", "", "", "", "zone ", zone, ...headerPlayers.map(() => "")],
+    ["", "equip to exclude", "", "", "", "date ", raidDate || "", ...headerPlayers.map(() => "")],
+    ["", "id", "name", "", ...headerPlayers.map(() => "Item [Enchant]")]
+  ];
+
+  claExcludedGear.forEach(([itemId, itemName], index) => {
+    const row = ["", itemId, itemName, ""];
+    headerPlayers.forEach(player => {
+      const gear = gearByPlayer.get(player) || [];
+      const found = gear.find(item => String(item.itemId || item.id) === String(itemId));
+      if (!found) {
+        row.push(index < headerPlayers.length ? "---------------------------------------------------------------" : "");
+        return;
+      }
+      const enchant = found.permanentEnchantName || found.permanentEnchant || "no enchant";
+      row.push(`${found.name || itemName} [${enchant}]`);
+    });
+    rows.push(row);
+  });
+
+  headerPlayers.forEach((player, index) => {
+    const gear = gearByPlayer.get(player) || [];
+    const missing = gear
+      .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"].includes(item.slotName))
+      .map(item => `${item.name} [no enchant]`);
+    if (!missing.length) return;
+    const row = ["", "", "", ""];
+    headerPlayers.forEach((name, playerIndex) => row.push(playerIndex === index ? missing.join(", ") : ""));
+    rows.push(row);
+  });
+
+  if (!combatantEvents.length) {
+    rows.push([], ["Hinweis", "Keine CombatantInfo-Daten von Warcraft Logs erhalten."]);
+  }
+
+  return rows;
+}
+
+async function buildRpbAnalysisRows(analysis) {
+  const { token, players, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
+  const playersById = actorNameById(players);
+  const headerPlayers = players.map(player => player.name);
+  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
+  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fightIds);
+  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fightIds);
+  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
+  const consumes = {};
+  const absorbs = {};
+  const engineeringCounts = {};
+  const engineeringDamage = {};
+  const interrupts = {};
+  const interruptNames = {};
+
+  castEvents.forEach(event => {
+    const player = playersById.get(eventSourceId(event));
+    const label = matchingLabel(abilityName(event), rpbConsumables);
+    if (player && label) addPlayerAmount(consumes, player, label, 1);
+  });
+
+  damageTakenEvents.forEach(event => {
+    const player = playersById.get(eventTargetId(event));
+    const label = matchingLabel(abilityName(event), rpbAbsorbs);
+    const amount = Number(event.absorbed || event.amount || 0);
+    if (player && label && amount) addPlayerAmount(absorbs, player, label, amount);
+  });
+
+  damageDoneEvents.forEach(event => {
+    const player = playersById.get(eventSourceId(event));
+    const label = matchingLabel(abilityName(event), rpbEngineering);
+    const amount = Number(event.amount || 0);
+    if (player && label) {
+      addPlayerAmount(engineeringCounts, player, label, 1);
+      addPlayerAmount(engineeringDamage, player, "damage done with Engineering etc. total", amount);
+    }
+  });
+
+  interruptEvents.forEach(event => {
+    const player = playersById.get(eventSourceId(event));
+    if (!player) return;
+    addPlayerAmount(interrupts, player, "# of interrupted spells", 1);
+    const interrupted = abilityName(event) || clean(event.extraAbility?.name) || "Interrupt";
+    if (!interruptNames[player]) interruptNames[player] = new Set();
+    interruptNames[player].add(interrupted);
+  });
+
+  const rows = [
+    ["", ...headerPlayers],
+    ["Consumables", ...headerPlayers.map(() => "")]
+  ];
+  rpbConsumables.forEach(([label]) => rows.push([label, ...headerPlayers.map(player => formatCountValue(consumes[label]?.[player]))]));
+  rows.push(["temporary enchant uptime (1+ consecr./blessed?)", ...headerPlayers.map(() => "")]);
+  rows.push([], ["Damage absorbed", ...headerPlayers.map(() => "")]);
+  rpbAbsorbs.forEach(([label]) => rows.push([label, ...headerPlayers.map(player => formatCountValue(absorbs[label]?.[player]))]));
+  rows.push(["total absorbed", ...headerPlayers.map(player => {
+    const total = Object.keys(absorbs).reduce((sum, label) => label.startsWith("Power Word") ? sum : sum + Number(absorbs[label]?.[player] || 0), 0);
+    return formatCountValue(total);
+  })]);
+  rows.push([], ["Engineering etc. (avg. hits per use)", ...headerPlayers.map(() => "")]);
+  rpbEngineering.forEach(([label]) => rows.push([label, ...headerPlayers.map(player => formatCountValue(engineeringCounts[label]?.[player]))]));
+  rows.push(["damage done with Engineering etc. total", ...headerPlayers.map(player => formatCountValue(engineeringDamage["damage done with Engineering etc. total"]?.[player]))]);
+  rows.push([], ["Interrupted spells", ...headerPlayers.map(() => "")]);
+  rows.push(["# of interrupted spells", ...headerPlayers.map(player => formatCountValue(interrupts["# of interrupted spells"]?.[player]))]);
+  rows.push(["names and sources of interrupted spells", ...headerPlayers.map(player => interruptNames[player] ? Array.from(interruptNames[player]).join(", ") : "")]);
+
+  if (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length) {
+    rows.push([], ["Hinweis", "Keine Detail-Events von Warcraft Logs erhalten."]);
+  }
+
+  return rows;
+}
+
+async function buildLogAnalysisRows(analysis, type) {
+  try {
+    return type === "cla" ? await buildClaAnalysisRows(analysis) : await buildRpbAnalysisRows(analysis);
+  } catch (error) {
+    console.warn("Loganalyse konnte nicht vollständig erzeugt werden:", error.message || error);
+    return buildLogAnalysisFallbackRows(analysis, type, error);
+  }
+}
+
+function buildLogAnalysisFallbackRows(analysis, type, error = null) {
   const summary = analysis.summary || {};
   const kind = type === "cla" ? "CLA" : "RPB";
   const generatedAt = new Date().toISOString();
   const raid = analysis.raid || summary.raid || "Nicht erkannt";
   const raidDate = analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : (summary.raidDate || "");
   const title = analysis.title || "";
-  const rows = [
+  return [
     [`${kind} Loganalyse`],
     [],
     ["Feld", "Wert"],
@@ -2203,18 +2506,13 @@ function buildLogAnalysisCsv(analysis, type) {
     [
       type === "cla" ? "CLA" : "RPB",
       "Die Datei wurde aus dem gespeicherten Warcraft-Logs-Report in LichtLoot erzeugt. Detailwerte koennen hier erweitert werden, sobald die gewuenschten Bewertungsregeln feststehen."
-    ]
+    ],
+    ...(error ? [["Hinweis", error.message || String(error)]] : [])
   ];
+}
 
-  if (summary.lastRequestedAnalysis || summary.analysisRequestedAt) {
-    rows.push(
-      [],
-      ["Letzte Aktion", summary.lastRequestedAnalysis || kind],
-      ["Angefordert am", summary.analysisRequestedAt || ""]
-    );
-  }
-
-  return buildCsv(rows);
+async function buildLogAnalysisCsv(analysis, type) {
+  return buildCsv(await buildLogAnalysisRows(analysis, type));
 }
 
 async function downloadLogAnalysis({ guildId, query: params, res }) {
@@ -2256,7 +2554,7 @@ async function downloadLogAnalysis({ guildId, query: params, res }) {
   const filename = `${type.toUpperCase()}-${slugPart(raid)}${raidDate ? `-${raidDate}` : ""}.csv`;
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-  return res.send(buildLogAnalysisCsv(analysis, type));
+  return res.send(await buildLogAnalysisCsv(analysis, type));
 }
 
 async function ensureLogAnalysesTable() {
