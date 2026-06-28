@@ -4643,9 +4643,11 @@ function renderLogAnalyses(){
             ${claDownloadUrl
               ? `<a class="small-btn primary" href="${escapeAttr(claDownloadUrl)}" target="_blank" rel="noopener">CLA öffnen</a>`
               : `<button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA erstellen</button>`}
+            <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','cla')">CLA Link</button>
             ${rpbDownloadUrl
               ? `<a class="small-btn good" href="${escapeAttr(rpbDownloadUrl)}" target="_blank" rel="noopener">RPB öffnen</a>`
               : `<button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB erstellen</button>`}
+            <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','rpb')">RPB Link</button>
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
           </div>
         </td>
@@ -4707,6 +4709,42 @@ async function triggerLogAnalysis(id, type){
     setStatus(isQueued ? `${label} wurde gestartet.` : `${label} ist bereit.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
+  }
+}
+
+async function setLogAnalysisSheetUrl(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  const label = String(type || "").toUpperCase();
+  const sheetUrl = prompt(`${label}-Google-Sheet-Link einfügen`);
+  if(!sheetUrl) return;
+  if(!/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(sheetUrl.trim())){
+    if(status) status.innerHTML = '<span class="bad">Bitte einen Google-Sheets-Link einfügen.</span>';
+    return;
+  }
+
+  try{
+    const result = await railwayWrite({
+      action:"guildSetLogAnalysisSheetUrl",
+      masterCode,
+      id,
+      type,
+      sheetUrl: sheetUrl.trim()
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " Link konnte nicht gespeichert werden.")}</span>`;
+      return;
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${label}-Link wurde gespeichert.</span>`;
+    setStatus(`${label}-Link wurde gespeichert.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " Link konnte nicht gespeichert werden.")}</span>`;
   }
 }
 
