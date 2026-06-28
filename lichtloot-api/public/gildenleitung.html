@@ -4575,10 +4575,22 @@ async function saveManualLogAnalysis(){
       return;
     }
     if(input) input.value = "";
-    await loadLogAnalysisPanel(true);
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
     setStatus("Loganalyse wurde aufgenommen.", "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Log konnte nicht gespeichert werden.")}</span>`;
+  }
+}
+
+function upsertLogAnalysis(entry){
+  if(!entry || !entry.id) return;
+  const index = logAnalyses.findIndex(item => String(item.id || "") === String(entry.id));
+  if(index === -1){
+    logAnalyses = [entry].concat(logAnalyses || []);
+  }else{
+    logAnalyses[index] = Object.assign({}, logAnalyses[index], entry);
   }
 }
 
@@ -4592,8 +4604,10 @@ function renderLogAnalyses(){
 
   tbody.innerHTML = logAnalyses.map(entry => {
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-    const raid = entry.raid || summary.raid || entry.title || entry.reportCode || "Noch nicht erkannt";
-    const date = entry.raidDate || summary.raidDate || entry.createdAt || "";
+    const raid = entry.raid || summary.raid || "Nicht erkannt";
+    const date = entry.raidDate || summary.raidDate || "";
+    const claDownloadUrl = entry.claDownloadUrl || summary.claDownloadUrl || "";
+    const rpbDownloadUrl = entry.rpbDownloadUrl || summary.rpbDownloadUrl || "";
     return `
       <tr>
         <td>
@@ -4604,8 +4618,12 @@ function renderLogAnalyses(){
         <td>${renderLogAnalysisStatus(entry.status)}</td>
         <td>
           <div class="actions">
-            <button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA</button>
-            <button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB</button>
+            ${claDownloadUrl
+              ? `<a class="small-btn primary" href="${escapeAttr(claDownloadUrl)}" target="_blank" rel="noopener">CLA Download</a>`
+              : `<button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA erstellen</button>`}
+            ${rpbDownloadUrl
+              ? `<a class="small-btn good" href="${escapeAttr(rpbDownloadUrl)}" target="_blank" rel="noopener">RPB Download</a>`
+              : `<button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB erstellen</button>`}
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
           </div>
         </td>
@@ -4626,8 +4644,8 @@ function renderLogAnalysisStatus(status){
   const label =
     value === "done" ? "fertig" :
     value === "failed" ? "Fehler" :
-    value === "cla_queued" ? "CLA gestartet" :
-    value === "rpb_queued" ? "RPB gestartet" :
+    value === "cla_queued" ? "CLA vorgemerkt" :
+    value === "rpb_queued" ? "RPB vorgemerkt" :
     "eingegangen";
   const cls = value === "done" || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
@@ -4655,8 +4673,10 @@ async function triggerLogAnalysis(id, type){
       if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht gestartet werden.")}</span>`;
       return;
     }
-    await loadLogAnalysisPanel(true);
-    setStatus(`${label}-Analyse wurde ausgelöst.`, "good");
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${label}-Erstellung wurde vorgemerkt.</span>`;
+    setStatus(`${label}-Erstellung wurde vorgemerkt.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
   }
