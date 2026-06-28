@@ -3501,7 +3501,7 @@ async function createRaidRecord({ guildId, query: params }) {
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const status = normalizeStatus(params.status || "geschlossen");
   const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geöffnet");
-  const createdBy = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller || "Gildenleitung");
+  const createdBy = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller);
 
   const result = await query(
     `insert into raids (
