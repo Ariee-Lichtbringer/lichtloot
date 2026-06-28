@@ -1149,6 +1149,33 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-top:7px;
 }
 
+.analysis-progress-list{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+  min-width:190px;
+}
+
+.analysis-progress-row{
+  display:grid;
+  grid-template-columns:34px minmax(120px,1fr) 46px;
+  gap:7px;
+  align-items:center;
+}
+
+.analysis-progress-name{
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:950;
+}
+
+.analysis-progress-value{
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:900;
+  text-align:right;
+}
+
 .analysis-progress-track{
   height:7px;
   overflow:hidden;
@@ -1166,6 +1193,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
   transition:width .4s ease;
 }
 
+.analysis-progress-fill.is-failed{
+  min-width:100%;
+  background:linear-gradient(90deg,#92400e,#facc15);
+  box-shadow:0 0 12px rgba(250,204,21,.26);
+}
+
 .analysis-progress.is-running .analysis-progress-fill{
   background:linear-gradient(90deg,#1d4ed8,#22c55e,#facc15);
   background-size:220% 100%;
@@ -1177,6 +1210,20 @@ tr:hover td{background:rgba(250,204,21,.035)}
   color:#94a3b8;
   font-size:10px;
   font-weight:900;
+}
+
+.analysis-warning{
+  margin-top:6px;
+  color:#fde68a;
+  font-size:10px;
+  font-weight:800;
+  max-width:260px;
+}
+
+.log-status-stack{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
 }
 
 @keyframes analysisProgressPulse{
@@ -5019,16 +5066,30 @@ function isLogAnalysisQueued(entry, type){
   return status === `${type}_queued` || generatorStatus === "queued" || generatorStatus === "running" || generatorStatus === "started";
 }
 
+function getLogAnalysisTypeState(entry, type, url){
+  const status = normalize(entry && entry.status || "");
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const generatorStatus = normalize(summary[`${type}GeneratorStatus`] || "");
+  const lastRequested = normalize(summary.lastRequestedAnalysis || "");
+  if(url || status === `${type}_done` || generatorStatus === "done") return "done";
+  if(isLogAnalysisQueued(entry, type)) return "queued";
+  if(status === `${type}_failed` || generatorStatus === "failed") return "failed";
+  if(status === "failed" && lastRequested === type) return "failed";
+  return "pending";
+}
+
 function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
+  const state = getLogAnalysisTypeState(entry, type, url);
   if(url){
     return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>`;
   }
-  if(isLogAnalysisQueued(entry, type)){
+  if(state === "queued"){
     return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button>`;
   }
-  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${label} erstellen</button>`;
+  const actionLabel = state === "failed" ? `${label} erneut` : `${label} erstellen`;
+  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>`;
 }
 
 function scheduleLogAnalysisRefresh(){
@@ -5082,32 +5143,50 @@ function getLogAnalysisActiveType(entry){
   return "";
 }
 
-function getLogAnalysisProgress(entry, type){
+function getLogAnalysisProgress(entry, type, url){
   if(!entry || !type) return null;
-  const status = normalize(entry.status || "");
-  if(status === `${type}_done` || status === "done") return {percent:100, label:"100%"};
-  if(!isLogAnalysisQueued(entry, type)) return null;
+  const state = getLogAnalysisTypeState(entry, type, url || "");
+  if(state === "done") return {percent:100, label:"100%", state};
+  if(state === "failed") return {percent:100, label:"Fehler", state};
+  if(state !== "queued") return {percent:0, label:"-", state};
   const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
   const startedRaw = summary.analysisRequestedAt || summary[`${type}GeneratorStartedAt`] || entry.updatedAt || entry.createdAt;
   const startedAt = new Date(startedRaw || Date.now()).getTime();
   const elapsed = Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now()));
   const estimatedMs = type === "cla" ? 4 * 60 * 1000 : 7 * 60 * 1000;
   const percent = Math.max(8, Math.min(96, Math.round((elapsed / estimatedMs) * 100)));
-  return {percent, label:`ca. ${percent}%`};
+  return {percent, label:`ca. ${percent}%`, state};
 }
 
 function renderLogAnalysisProgress(entry){
-  const type = getLogAnalysisActiveType(entry);
-  const progress = getLogAnalysisProgress(entry, type);
-  if(!progress) return "";
-  const running = progress.percent < 100;
-  return `
-    <div class="analysis-progress ${running ? "is-running" : ""}">
-      <div class="analysis-progress-track">
-        <div class="analysis-progress-fill" style="width:${progress.percent}%"></div>
+  if(!entry || typeof entry !== "object") return "";
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const urls = {
+    cla: logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || ""),
+    rpb: logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "")
+  };
+  const rows = ["cla","rpb"].map(type => {
+    const progress = getLogAnalysisProgress(entry, type, urls[type]);
+    const running = progress.state === "queued";
+    const failed = progress.state === "failed";
+    const fillWidth = progress.state === "pending" ? 0 : progress.percent;
+    const label = progress.state === "pending" ? "wartet" : progress.label;
+    return `
+      <div class="analysis-progress-row">
+        <span class="analysis-progress-name">${type.toUpperCase()}</span>
+        <div class="analysis-progress ${running ? "is-running" : ""}">
+          <div class="analysis-progress-track">
+            <div class="analysis-progress-fill ${failed ? "is-failed" : ""}" style="width:${fillWidth}%"></div>
+          </div>
+        </div>
+        <span class="analysis-progress-value">${escapeHtml(label)}</span>
       </div>
-      <div class="analysis-progress-label">${running ? escapeHtml(progress.label) + " · wird automatisch aktualisiert" : "fertig"}</div>
-    </div>
+    `;
+  }).join("");
+  const warnings = String(summary.claGeneratorWarnings || "").trim();
+  return `
+    <div class="analysis-progress-list">${rows}</div>
+    ${warnings ? `<div class="analysis-warning">CLA: ${escapeHtml(warnings)}</div>` : ""}
   `;
 }
 
@@ -5202,18 +5281,28 @@ function formatLogAnalysisDate(value){
   return formatDateTime(text);
 }
 
-function renderLogAnalysisStatus(entryOrStatus){
-  const value = normalize((entryOrStatus && typeof entryOrStatus === "object" ? entryOrStatus.status : entryOrStatus) || "pending");
-  const label =
-    value === "done" ? "fertig" :
-    value === "cla_done" ? "CLA fertig" :
-    value === "rpb_done" ? "RPB fertig" :
-    value === "failed" ? "Fehler" :
-    value === "cla_queued" ? "CLA läuft" :
-    value === "rpb_queued" ? "RPB läuft" :
-    "eingegangen";
-  const cls = value === "done" || value.endsWith("_done") || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
-  return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+function renderLogAnalysisStatus(entry){
+  if(!entry || typeof entry !== "object"){
+    return '<span class="badge closed">eingegangen</span>';
+  }
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const claUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
+  const rpbUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
+  const states = [
+    {type:"cla", label:"CLA", state:getLogAnalysisTypeState(entry, "cla", claUrl)},
+    {type:"rpb", label:"RPB", state:getLogAnalysisTypeState(entry, "rpb", rpbUrl)}
+  ];
+  const rendered = states
+    .filter(item => item.state !== "pending")
+    .map(item => {
+      const text = item.state === "done" ? `${item.label} fertig` :
+        item.state === "queued" ? `${item.label} läuft` :
+        `${item.label} Fehler`;
+      const cls = item.state === "failed" ? "warn" : "open";
+      return `<span class="badge ${cls}">${escapeHtml(text)}</span>`;
+    });
+  if(rendered.length) return `<div class="log-status-stack">${rendered.join("")}</div>`;
+  return '<span class="badge closed">eingegangen</span>';
 }
 
 async function triggerLogAnalysis(id, type){
