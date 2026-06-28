@@ -10,6 +10,7 @@ const port = Number(process.env.PORT || 3000);
 const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
+const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
@@ -2774,12 +2775,24 @@ async function runLogAnalysis({ guildId, query: params }) {
   const downloadTokenKey = type === "cla" ? "claDownloadToken" : "rpbDownloadToken";
   const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
   const downloadToken = current.summary?.[downloadTokenKey] || randomUUID();
+  let generatorResult = null;
+  try {
+    generatorResult = await startExternalLogAnalysisGenerator({ analysis: current, type, guildId });
+  } catch (error) {
+    console.warn(`${type.toUpperCase()} Generator konnte nicht gestartet werden:`, error.message || error);
+  }
+
+  const generatedSheetUrl = generatorResult?.sheetUrl || generatorResult?.spreadsheetUrl || generatorResult?.url || "";
+  const hasExternalGenerator = Boolean(generatorResult);
   const summaryPatch = {
     lastRequestedAnalysis: type.toUpperCase(),
     analysisRequestedAt: new Date().toISOString(),
     [downloadTokenKey]: downloadToken,
-    [downloadUrlKey]: buildLogAnalysisDownloadUrl({ id, type, token: downloadToken })
+    [downloadUrlKey]: generatedSheetUrl || buildLogAnalysisDownloadUrl({ id, type, token: downloadToken }),
+    [`${type}GeneratorJobId`]: generatorResult?.jobId || "",
+    [`${type}GeneratorStatus`]: generatorResult?.status || (generatedSheetUrl ? "done" : hasExternalGenerator ? "queued" : "local_csv")
   };
+  const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : `${type}_done`;
   const result = await query(
     `update log_analyses
      set status = $3,
@@ -2793,13 +2806,114 @@ async function runLogAnalysis({ guildId, query: params }) {
     [
       guildId,
       id,
-      `${type}_done`,
+      nextStatus,
       JSON.stringify(summaryPatch),
       reportMeta.title || "",
       normalizeLogRaidType(reportMeta.raid || ""),
       reportMeta.raidDate || ""
     ]
   );
+
+  return {
+    success: true,
+    analysisType: type.toUpperCase(),
+    analysis: normalizeLogAnalysis(result.rows[0])
+  };
+}
+
+function getLogAnalysisGeneratorConfig(type) {
+  const prefix = type === "cla" ? "CLA" : "RPB";
+  const url = process.env[`${prefix}_GENERATOR_URL`] || process.env.LOG_ANALYSIS_GENERATOR_URL || "";
+  const token = process.env[`${prefix}_GENERATOR_TOKEN`] || process.env.LOG_ANALYSIS_GENERATOR_TOKEN || "";
+  return { url: clean(url), token: clean(token) };
+}
+
+async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
+  const config = getLogAnalysisGeneratorConfig(type);
+  if (!config.url) return null;
+
+  const callbackBaseUrl = process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL || "";
+  const payload = {
+    action: `create${type.toUpperCase()}`,
+    type,
+    analysisId: analysis.id,
+    guildId,
+    reportCode: analysis.report_code || "",
+    reportUrl: analysis.report_url || "",
+    raid: analysis.raid || "",
+    raidDate: analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : "",
+    title: analysis.title || "",
+    token: config.token,
+    callbackToken: logAnalysisCallbackToken,
+    callbackUrl: callbackBaseUrl
+      ? `${callbackBaseUrl.replace(/\/$/, "")}/api/apps-script`
+      : ""
+  };
+
+  const response = await fetch(config.url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+  if (!response.ok || data.success === false) {
+    throw new Error(data.error || data.message || `Generator antwortete mit HTTP ${response.status}`);
+  }
+  return data;
+}
+
+async function completeExternalLogAnalysis({ guildId, query: params }) {
+  await ensureLogAnalysesTable();
+  const token = clean(params.callbackToken || params.token);
+  if (!logAnalysisCallbackToken || token !== logAnalysisCallbackToken) {
+    const error = new Error("Generator-Rückmeldung ist nicht autorisiert.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  if (!isUuid(id) || !["cla", "rpb"].includes(type)) {
+    const error = new Error("Generator-Rückmeldung ist unvollständig.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const sheetUrl = clean(params.sheetUrl || params.spreadsheetUrl || params.url || params.downloadUrl);
+  const failed = clean(params.status).toLowerCase() === "failed" || clean(params.error);
+  const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
+  const summaryPatch = {
+    [`${type}GeneratorStatus`]: failed ? "failed" : "done",
+    [`${type}GeneratorFinishedAt`]: new Date().toISOString(),
+    [`${type}GeneratorError`]: clean(params.error || "")
+  };
+  if (sheetUrl) summaryPatch[downloadUrlKey] = sheetUrl;
+
+  const result = await query(
+    `update log_analyses
+     set status = $3,
+         summary = coalesce(summary, '{}'::jsonb) || $4::jsonb,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [
+      guildId,
+      id,
+      failed ? "failed" : `${type}_done`,
+      JSON.stringify(summaryPatch)
+    ]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
 
   return {
     success: true,
@@ -6035,6 +6149,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildRunLogAnalysis") {
       const started = await runLogAnalysis({ guildId: guild.id, query: postParams });
       return res.json({ ...started, guild: guild.slug });
+    }
+
+    if (action === "guildCompleteLogAnalysis" || action === "logAnalysisGeneratorCallback") {
+      const completed = await completeExternalLogAnalysis({ guildId: guild.id, query: postParams });
+      return res.json({ ...completed, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
