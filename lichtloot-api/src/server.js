@@ -2176,7 +2176,8 @@ function buildLogAnalysisDownloadUrl({ id, type, token }) {
     type,
     token
   });
-  return `/api/apps-script?${params.toString()}`;
+  const apiUrl = clean(process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL) || "https://lichtloot-production.up.railway.app/api/apps-script";
+  return `${apiUrl}?${params.toString()}`;
 }
 
 function buildLogAnalysisCsv(analysis, type) {
