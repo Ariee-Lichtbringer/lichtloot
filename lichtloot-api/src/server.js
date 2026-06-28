@@ -360,6 +360,66 @@ async function fetchWarcraftLogsReportGear(token, reportCode, character, server)
   return null;
 }
 
+function inferRaidTypeFromLogText(value) {
+  const text = clean(value).toLowerCase();
+  if (!text) return "";
+
+  const checks = [
+    ["AQ40", ["aq40", "ahn'qiraj", "ahn qiraj", "temple of ahn", "tempel von ahn"]],
+    ["AQ20", ["aq20", "ruins of ahn", "ruinen von ahn"]],
+    ["BWL", ["bwl", "blackwing lair", "pechschwingenhort"]],
+    ["MC", ["mc", "molten core", "geschmolzener kern"]],
+    ["NAXX", ["naxx", "naxxramas"]],
+    ["ZG", ["zg", "zul'gurub", "zulgurub"]],
+    ["ONY", ["ony", "onyxia", "onixia"]]
+  ];
+
+  for (const [raid, terms] of checks) {
+    if (terms.some(term => text.includes(term))) return raid;
+  }
+  return "";
+}
+
+function formatDateInBerlin(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
+async function fetchWarcraftLogsReportMeta(reportCode) {
+  const token = await getWarcraftLogsAccessToken();
+  const gqlQuery =
+    "query($code:String!){"+
+    "reportData{report(code:$code){title startTime fights{ name startTime endTime }}}"+
+    "}";
+  const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode });
+  const report = data.reportData?.report || {};
+  const fights = Array.isArray(report.fights) ? report.fights : [];
+  const fightNames = fights.map(fight => fight.name || "").join(" ");
+  const startTime = Number(report.startTime || fights.find(fight => Number(fight.startTime))?.startTime || 0);
+  const raidDate = startTime ? formatDateInBerlin(new Date(startTime)) : "";
+  const raid = inferRaidTypeFromLogText([report.title || "", fightNames].join(" "));
+
+  return {
+    title: clean(report.title),
+    raid,
+    raidDate
+  };
+}
+
+async function fetchWarcraftLogsReportMetaSafe(reportCode) {
+  try {
+    return await fetchWarcraftLogsReportMeta(reportCode);
+  } catch (error) {
+    console.warn("Warcraft-Logs-Metadaten konnten nicht geladen werden:", error.message || error);
+    return {};
+  }
+}
+
 function normalizeWarcraftLogsGear(gear) {
   const slotNames = {
     0: "Kopf", 1: "Hals", 2: "Schultern", 3: "Hemd", 4: "Brust", 5: "Taille",
@@ -862,6 +922,14 @@ function normalizeRaidType(value) {
     "onyxia-s-lair": "ony"
   };
   return aliases[key] || key;
+}
+
+function normalizeLogRaidType(value) {
+  const raw = clean(value);
+  if (!raw) return "";
+  const normalized = normalizeRaidType(raw);
+  if (normalized === "raid") return "";
+  return normalized.toUpperCase();
 }
 
 function raidTypeSearchValues(value) {
@@ -2143,6 +2211,10 @@ async function saveLogAnalysis({ guildId, query: params }) {
     ? JSON.parse(params.summary || "{}")
     : (params.summary || {});
   const normalizedUrl = normalizeWarcraftLogsReportUrl(reportUrl, reportCode);
+  const reportMeta = await fetchWarcraftLogsReportMetaSafe(reportCode);
+  const logTitle = clean(params.title) || reportMeta.title || "";
+  const logRaid = normalizeLogRaidType(params.raid || summary.raid || reportMeta.raid || "");
+  const logDate = clean(params.raidDate || summary.raidDate || reportMeta.raidDate || "");
 
   const result = await query(
     `insert into log_analyses (
@@ -2170,9 +2242,9 @@ async function saveLogAnalysis({ guildId, query: params }) {
       guildId,
       reportCode,
       normalizedUrl,
-      clean(params.title),
-      clean(params.raid),
-      clean(params.raidDate),
+      logTitle,
+      logRaid,
+      logDate,
       clean(params.status || "pending"),
       JSON.stringify(summary || {}),
       clean(params.discordChannelId),
@@ -2205,6 +2277,23 @@ async function runLogAnalysis({ guildId, query: params }) {
     throw error;
   }
 
+  const existing = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1 and id = $2
+     limit 1`,
+    [guildId, id]
+  );
+  if (!existing.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const current = existing.rows[0];
+  const reportMeta = (!current.raid || !current.raid_date)
+    ? await fetchWarcraftLogsReportMetaSafe(current.report_code)
+    : {};
   const summaryPatch = {
     lastRequestedAnalysis: type.toUpperCase(),
     analysisRequestedAt: new Date().toISOString()
@@ -2213,17 +2302,22 @@ async function runLogAnalysis({ guildId, query: params }) {
     `update log_analyses
      set status = $3,
          summary = coalesce(summary, '{}'::jsonb) || $4::jsonb,
+         title = coalesce(nullif($5, ''), title),
+         raid = coalesce(nullif($6, ''), raid),
+         raid_date = coalesce(nullif($7, '')::date, raid_date),
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
-    [guildId, id, `${type}_queued`, JSON.stringify(summaryPatch)]
+    [
+      guildId,
+      id,
+      `${type}_queued`,
+      JSON.stringify(summaryPatch),
+      reportMeta.title || "",
+      normalizeLogRaidType(reportMeta.raid || ""),
+      reportMeta.raidDate || ""
+    ]
   );
-
-  if (!result.rows.length) {
-    const error = new Error("Loganalyse wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
-  }
 
   return {
     success: true,
