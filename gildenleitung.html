@@ -5080,6 +5080,10 @@ function getLogAnalysisTypeState(entry, type, url){
   return "pending";
 }
 
+function supportsLogAnalysisDiscordPost(entry){
+  return ["mc","bwl","aq40","naxx"].includes(getLogAnalysisRaidKey(entry));
+}
+
 function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
@@ -5087,8 +5091,11 @@ function renderLogAnalysisAction(entry, type, url){
   const clearButton = (url || state === "done" || state === "failed")
     ? `<button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} löschen</button>`
     : "";
+  const postButton = url && supportsLogAnalysisDiscordPost(entry)
+    ? `<button class="small-btn ghost" type="button" onclick="queueLogAnalysisDiscordPost('${escapeAttr(entry.id)}','${type}')">${label} in DC posten</button>`
+    : "";
   if(url){
-    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${clearButton}`;
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${postButton}${clearButton}`;
   }
   if(state === "queued"){
     return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button><button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} abbrechen</button>`;
@@ -5346,6 +5353,35 @@ async function triggerLogAnalysis(id, type){
     setStatus(isQueued ? `${label} wurde gestartet.` : `${label} ist bereit.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
+  }
+}
+
+async function queueLogAnalysisDiscordPost(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  const label = String(type || "").toUpperCase();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm(`${label}-Analyse jetzt im passenden Discord-Logchannel posten?`)) return;
+
+  if(status) status.textContent = `${label}-Discord-Post wird vorgemerkt ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildQueueLogAnalysisPost",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für den Discord-Post vorgemerkt.`;
+    setStatus(`${label}-Discord-Post wurde vorgemerkt.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
   }
 }
 
