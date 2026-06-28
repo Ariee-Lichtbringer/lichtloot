@@ -1538,7 +1538,7 @@ async function getBotQueue({ guildId, query: params }) {
 }
 
 async function queueRaidAnnouncement({ guildId, query: params }) {
-  requireMasterCode(params);
+  requireMasterCode(params.masterCode);
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   return queueBotUpdate({
