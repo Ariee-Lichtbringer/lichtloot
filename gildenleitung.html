@@ -1857,6 +1857,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
             <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
             <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
+            <button class="btn danger" type="button" onclick="cleanupIncompleteRpbAnalyses()">Hängende RPB abbrechen</button>
           </div>
         </div>
         <div class="log-analysis-toolbar">
@@ -5083,14 +5084,14 @@ function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
   const state = getLogAnalysisTypeState(entry, type, url);
-  const clearButton = type === "cla" && (url || state === "done" || state === "failed")
+  const clearButton = (url || state === "done" || state === "failed")
     ? `<button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} löschen</button>`
     : "";
   if(url){
     return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${clearButton}`;
   }
   if(state === "queued"){
-    return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button>`;
+    return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button><button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} abbrechen</button>`;
   }
   const actionLabel = state === "failed" ? `${label} erneut` : `${label} erstellen`;
   return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>${clearButton}`;
@@ -5410,6 +5411,32 @@ async function cleanupIncompleteClaAnalyses(){
   }
 }
 
+async function cleanupIncompleteRpbAnalyses(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm("Hängende oder fehlerhafte RPB-Zwischenstände abbrechen? Fertige CLA-Links bleiben erhalten.")) return;
+
+  if(status) status.textContent = "Hängende RPB-Einträge werden abgebrochen ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildCleanupIncompleteRpbAnalyses",
+      masterCode
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "RPB konnte nicht abgebrochen werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedRpb || 0)}</span> hängende/fehlerhafte RPB-Einträge abgebrochen.`;
+    await loadLogAnalysisPanel(true, true);
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "RPB konnte nicht abgebrochen werden.")}</span>`;
+  }
+}
+
 async function clearLogAnalysisType(id, type){
   const masterCode = document.getElementById("masterCode").value.trim();
   const status = document.getElementById("logAnalysisStatus");
@@ -5418,9 +5445,11 @@ async function clearLogAnalysisType(id, type){
     if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
     return;
   }
-  if(!confirm(`${label} für diesen Raid löschen? RPB und WCL bleiben erhalten.`)) return;
+  const otherLabel = String(type || "").toLowerCase() === "cla" ? "RPB" : "CLA";
+  const actionWord = (logAnalyses || []).some(entry => String(entry.id || "") === String(id) && isLogAnalysisQueued(entry, type)) ? "abbrechen" : "löschen";
+  if(!confirm(`${label} für diesen Raid ${actionWord}? ${otherLabel} und WCL bleiben erhalten.`)) return;
 
-  if(status) status.textContent = `${label} wird gelöscht ...`;
+  if(status) status.textContent = `${label} wird ${actionWord === "abbrechen" ? "abgebrochen" : "gelöscht"} ...`;
   try{
     const result = await railwayWrite({
       action:"guildClearLogAnalysisType",
@@ -5434,7 +5463,7 @@ async function clearLogAnalysisType(id, type){
     }
     if(result.analysis) upsertLogAnalysis(result.analysis);
     renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für diesen Raid gelöscht.`;
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für diesen Raid ${actionWord === "abbrechen" ? "abgebrochen" : "gelöscht"}.`;
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gelöscht werden.")}</span>`;
   }
