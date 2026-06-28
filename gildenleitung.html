@@ -4606,6 +4606,16 @@ function upsertLogAnalysis(entry){
   }
 }
 
+function logAnalysisDownloadHref(url){
+  const value = String(url || "").trim();
+  if(!value) return "";
+  if(/^https?:\/\//i.test(value)) return value;
+  if(value.startsWith("/api/apps-script?")){
+    return LICHTLOOT_API_URL + value.slice("/api/apps-script".length);
+  }
+  return value;
+}
+
 function renderLogAnalyses(){
   const tbody = document.getElementById("logAnalysisRows");
   if(!tbody) return;
@@ -4618,8 +4628,8 @@ function renderLogAnalyses(){
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
     const raid = entry.raid || summary.raid || "Nicht erkannt";
     const date = entry.raidDate || summary.raidDate || "";
-    const claDownloadUrl = entry.claDownloadUrl || summary.claDownloadUrl || "";
-    const rpbDownloadUrl = entry.rpbDownloadUrl || summary.rpbDownloadUrl || "";
+    const claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
+    const rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
     return `
       <tr>
         <td>
