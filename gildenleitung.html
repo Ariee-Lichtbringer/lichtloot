@@ -4011,7 +4011,7 @@ function renderWorldbuffRows(){
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
           </select>
         </td>
-        <td><div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button></div></td>
+        <td><div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div></td>
       </tr>
     `;
   }).join("");
@@ -4190,6 +4190,45 @@ async function requestWorldbuffReplacement(index){
     setStatus("Ersatzsuche wurde an den Bot übergeben.", "good");
   }catch(error){
     setStatus(error.message || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
+  }
+}
+
+async function deleteWorldbuffTerm(index){
+  const entry = worldbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const label = [entry.buff, entry.datum, entry.uhrzeit, entry.gilde].filter(Boolean).join(" · ");
+  if(!confirm("Diesen Worldbuff-Termin wirklich löschen?\n\n"+label)){
+    return;
+  }
+
+  try{
+    const result = await apiWrite({
+      action:"guildDeleteWorldbuffTerm",
+      masterCode,
+      rowNumber:entry.rowNumber || "",
+      datum:entry.datum || "",
+      uhrzeit:entry.uhrzeit || "",
+      buff:entry.buff || "",
+      gilde:entry.gilde || ""
+    });
+
+    if(!result.success && !result.submitted){
+      setStatus(result.error || "Worldbuff-Termin konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    worldbuffEntries.splice(index, 1);
+    renderWorldbuffMiniList();
+    renderWorldbuffRows();
+    setStatus("Worldbuff-Termin gelöscht. Bot-Update wurde vorgemerkt.", "good");
+    window.setTimeout(() => loadWorldbuffPanel(), 1200);
+  }catch(error){
+    setStatus(error.message || "Worldbuff-Termin konnte nicht gelöscht werden.", "bad");
   }
 }
 
