@@ -2236,6 +2236,7 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
+              <button class="small-btn ghost" type="button" onclick="postRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
@@ -2828,6 +2829,29 @@ function sendGeneralMessageFromGuildPage(){
     title:"Nachricht der Gildenleitung",
     body:""
   });
+}
+
+async function postRaidToDiscord(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raidId){
+    setStatus("Raid-ID fehlt.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayWrite({ action:"guildQueueRaidAnnouncement", masterCode, raidId });
+    if(!result.success){
+      setStatus(result.error || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
+      return;
+    }
+    setStatus("Discord-Post wurde vorgemerkt. Der Bot postet ihn gleich im Raid-Channel.", "good");
+  }catch(error){
+    setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
+  }
 }
 
 function openMessageModal(context){
