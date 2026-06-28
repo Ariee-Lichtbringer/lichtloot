@@ -5083,14 +5083,17 @@ function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
   const state = getLogAnalysisTypeState(entry, type, url);
+  const clearButton = type === "cla" && (url || state === "done" || state === "failed")
+    ? `<button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} löschen</button>`
+    : "";
   if(url){
-    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>`;
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${clearButton}`;
   }
   if(state === "queued"){
     return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button>`;
   }
   const actionLabel = state === "failed" ? `${label} erneut` : `${label} erstellen`;
-  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>`;
+  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>${clearButton}`;
 }
 
 function scheduleLogAnalysisRefresh(){
@@ -5404,6 +5407,36 @@ async function cleanupIncompleteClaAnalyses(){
     await loadLogAnalysisPanel(true, true);
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "CLA konnte nicht bereinigt werden.")}</span>`;
+  }
+}
+
+async function clearLogAnalysisType(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  const label = String(type || "").toUpperCase();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm(`${label} für diesen Raid löschen? RPB und WCL bleiben erhalten.`)) return;
+
+  if(status) status.textContent = `${label} wird gelöscht ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildClearLogAnalysisType",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht gelöscht werden.")}</span>`;
+      return;
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für diesen Raid gelöscht.`;
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gelöscht werden.")}</span>`;
   }
 }
 
