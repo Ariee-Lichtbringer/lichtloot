@@ -2881,6 +2881,13 @@ async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
   if (!config.url) return null;
 
   const callbackBaseUrl = process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL || "";
+  const legacyApiKey = clean(
+    process.env.WCL_V1_API_KEY ||
+    process.env.WCL_API_KEY ||
+    process.env.WARCRAFTLOGS_API_KEY ||
+    process.env.RPB_CLIENT_KEY ||
+    ""
+  );
   const payload = {
     action: `create${type.toUpperCase()}`,
     type,
@@ -2891,6 +2898,7 @@ async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
     raid: analysis.raid || "",
     raidDate: analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : "",
     title: analysis.title || "",
+    apiKey: legacyApiKey,
     token: config.token,
     callbackToken: logAnalysisCallbackToken,
     callbackUrl: buildLogAnalysisCallbackUrl(callbackBaseUrl)
