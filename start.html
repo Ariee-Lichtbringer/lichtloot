@@ -1210,6 +1210,15 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .dashboard-inline-status{margin:0!important;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.10);background:rgba(2,6,23,.52);color:#dbeafe!important;font-size:13px!important;line-height:1.45!important}
 .dashboard-inline-results{display:grid;gap:10px;max-height:360px;overflow:auto;padding-right:4px}
 .dashboard-inline-results:empty:before{content:'Noch nichts geladen.';display:block;color:#cbd5e1;padding:10px 0;font-weight:800}
+.character-subsection{display:grid;gap:8px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(2,6,23,.34);box-shadow:inset 3px 0 0 rgba(148,163,184,.26)}
+.character-subsection.is-active{border-color:rgba(96,165,250,.25);background:rgba(37,99,235,.08);box-shadow:inset 3px 0 0 rgba(96,165,250,.70)}
+.character-subsection.is-add{border-color:rgba(34,197,94,.22);background:rgba(22,101,52,.09);box-shadow:inset 3px 0 0 rgba(34,197,94,.70)}
+.character-subsection.is-delete{border-color:rgba(248,113,113,.25);background:rgba(127,29,29,.10);box-shadow:inset 3px 0 0 rgba(248,113,113,.70)}
+.character-subtitle{color:#cbd5e1;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.04em}
+.character-subsection.is-active .character-subtitle{color:#93c5fd}
+.character-subsection.is-add .character-subtitle{color:#86efac}
+.character-subsection.is-delete .character-subtitle{color:#fecaca}
+.character-danger{border-color:rgba(248,113,113,.34)!important;background:rgba(127,29,29,.18)!important;color:#fecaca!important}
 .mailbox-tabs{display:flex;gap:8px;margin:10px 0}
 .mailbox-tabs button{flex:1;min-height:34px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.72);color:#f8fafc;font-weight:900;cursor:pointer}
 .mailbox-tabs button.active{border-color:rgba(250,204,21,.52);background:rgba(250,204,21,.18);color:#facc15}
@@ -1347,6 +1356,53 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 #myPrioDetailModal .myprio-detail-box{position:relative!important;overflow:auto!important}
 #myPrioDetailModal #myPrioDetailContent{max-height:calc(100% - 48px)!important}
 #myPrioDetailModal .modal-resize-handle{position:absolute;right:5px;bottom:5px;width:24px;height:24px;cursor:nwse-resize;border-radius:5px;background:linear-gradient(135deg,transparent 0 48%,rgba(250,204,21,.22) 48% 60%,rgba(250,204,21,.65) 60% 72%,rgba(250,204,21,.22) 72%);z-index:5}
+
+/* === FINAL: Eigene P0/P0+ Punkte als Popup === */
+#ownP0PlusModal.report-modal{z-index:52500!important;padding:14px!important}
+#ownP0PlusModal .own-p0-modal-box{
+  width:min(760px,calc(100vw - 22px))!important;
+  height:min(760px,calc(100vh - 22px))!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  overflow:hidden!important;
+  padding:14px!important;
+  border-radius:14px!important;
+}
+#ownP0PlusModal .report-head{margin-bottom:8px!important}
+#ownP0PlusModal .report-head h2{font-size:18px!important;line-height:1.1!important}
+#ownP0PlusModalContent{min-height:0!important;overflow:auto!important;padding-right:6px!important}
+#ownP0PlusModal .my-own-p0-block{
+  max-height:none!important;
+  overflow:visible!important;
+  margin-top:0!important;
+  border-radius:10px!important;
+}
+#ownP0PlusModal .my-own-p0-block .p0plus-raid{
+  font-size:13px!important;
+  padding:8px 10px 3px!important;
+}
+#ownP0PlusModal .my-own-p0-block .p0plus-table th{font-size:10px!important}
+#ownP0PlusModal .my-own-p0-block .p0plus-table td{font-size:12px!important}
+.own-p0-popout-card{
+  display:grid;
+  gap:8px;
+  padding:10px!important;
+}
+.own-p0-popout-card strong{
+  color:#facc15;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.own-p0-popout-card span{
+  color:#cbd5e1;
+  font-size:11.5px;
+  line-height:1.35;
+}
+.own-p0-popout-card .right-inline-btn{
+  width:100%;
+  justify-content:center;
+}
 
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
 #meinLichtLootCard.right-card{padding:14px!important}
@@ -1561,17 +1617,19 @@ body.raid-create-open:before{
   overflow:visible!important;
 }
 #meinLichtLootCard .dashboard-inline-results{
-  max-height:none!important;
-  overflow:visible!important;
+  max-height:min(430px,calc(100vh - 250px))!important;
+  overflow:auto!important;
+  padding-right:4px!important;
 }
 #meinLichtLootCard .dashboard-fold[open] .dashboard-fold-body{
-  overflow:visible!important;
+  overflow:auto!important;
 }
 #meinLichtLootCard .lichtloot-fold{
-  overflow:visible!important;
+  overflow:hidden!important;
 }
 #meinLichtLootCard .lichtloot-fold-body{
-  overflow:visible!important;
+  overflow:auto!important;
+  max-height:250px!important;
 }
 #meinLichtLootCard .myprio-list{
   max-height:none!important;
@@ -1615,6 +1673,48 @@ body.raid-create-open:before{
 }
 #meinLichtLootCard .dashboard-fold-body{
   padding:0 9px 9px!important;
+}
+#meinLichtLootCard .my-own-p0-block{
+  max-height:230px!important;
+  overflow:auto!important;
+  padding:0!important;
+  margin-top:6px!important;
+  border-radius:9px!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-raid{
+  position:sticky;
+  top:0;
+  z-index:2;
+  padding:6px 8px 2px!important;
+  font-size:12px!important;
+  line-height:1.15!important;
+  background:#050916;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table{
+  margin:0 0 5px!important;
+  font-size:11px!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table th,
+#meinLichtLootCard .my-own-p0-block .p0plus-table td{
+  padding:4px 7px!important;
+  line-height:1.2!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-table th{
+  font-size:10px!important;
+  letter-spacing:.03em!important;
+}
+#meinLichtLootCard .my-own-p0-block .p0plus-item{
+  font-size:11.5px!important;
+  line-height:1.2!important;
+}
+#meinLichtLootCard .my-own-p0-block .report-btn{
+  width:23px!important;
+  min-width:23px!important;
+  height:23px!important;
+  min-height:23px!important;
+  padding:0!important;
+  border-radius:7px!important;
+  font-size:12px!important;
 }
 #meinLichtLootCard .right-inline-btn{
   min-height:30px!important;
@@ -1895,7 +1995,7 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Deine Charaktere, Prios, P0/P0+ Punkte und Worldbuff-Termine bleiben hier griffbereit.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerPin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Daten laden</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerPin wird automatisch übernommen, wenn du eingeloggt bist.</p><button class="right-inline-btn" style="width:100%;margin-bottom:12px" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><details class="dashboard-fold" open><summary>Prios & P0+ Punkte</summary><div class="dashboard-fold-body"><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst Daten laden</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button></div><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Laden angezeigt.</div></div></div></details><details class="dashboard-fold"><summary>Twink hinzufügen</summary><div class="dashboard-fold-body dashboard-twink-form"><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neuer Charakter nutzt danach denselben SpielerPin.</div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Login, Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Einloggen</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">Mit deinem SpielerLogin anmelden.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -1997,6 +2097,18 @@ body.raid-create-open:before{
   </div>
 </div>
 
+<div id="ownP0PlusModal" class="report-modal hidden">
+  <div class="report-box own-p0-modal-box">
+    <div class="report-head">
+      <h2>Eigene P0/P0+ Punkte</h2>
+      <button class="report-close" onclick="closeOwnP0PlusModal()">✕</button>
+    </div>
+    <div id="ownP0PlusModalContent">
+      <div class="status">Noch nichts geladen.</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
@@ -2006,6 +2118,7 @@ const RAILWAY_API_URL =
   window.LICHTLOOT_RAILWAY_API_URL || "https://lichtloot-production.up.railway.app";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+const GUILD_MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 
 const P0PLUS_API_URL = LICHTLOOT_API_URL;
 const WORLDBUFF_PUBLIC_CSV_URL = "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -2236,7 +2349,18 @@ function toggleRaidCreate(){
   setDefaultRaidDate();
 }
 
-function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin){
+function getRaidCreatedByForStart(){
+  const selectedName = typeof getSelectedMyLichtLootCharacterName === "function"
+    ? getSelectedMyLichtLootCharacterName()
+    : "";
+  const storedPin = typeof getStoredLichtLootPlayerPin === "function"
+    ? getStoredLichtLootPlayerPin()
+    : "";
+
+  return String(selectedName || (storedPin ? "SpielerLogin " + storedPin : "Spieler")).trim();
+}
+
+function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy){
   const lines=[
     "📣 Neuer Raid: " + raidName,
     "🗓️ Datum: " + formatRaidDateForDisplay(raidDate),
@@ -2245,6 +2369,10 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
 
   if(guild){
     lines.push("🏰 Gilde: " + guild);
+  }
+
+  if(createdBy){
+    lines.push("👤 Erstellt von: " + createdBy);
   }
 
   lines.push(
@@ -2280,7 +2408,8 @@ async function createRaidFromStart(){
   const raidId=createRaidId(raid);
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
-  const discordPostText=buildRaidDiscordPostText(r.name,raidDate,raidTime,guild,playerPin);
+  const createdBy=getRaidCreatedByForStart();
+  const discordPostText=buildRaidDiscordPostText(r.name,raidDate,raidTime,guild,playerPin,createdBy);
 
   const raidData={
     action:"createRandomRaid",
@@ -2296,6 +2425,8 @@ async function createRaidFromStart(){
     playerPin:playerPin,
     leadPin:leadPin,
     playerLink:"",
+    createdBy:createdBy,
+    erstelltVon:createdBy,
     createdAt:new Date().toISOString(),
     status:"geschlossen",
     p0PlusFreigabe:"geöffnet"
@@ -2320,6 +2451,7 @@ async function createRaidFromStart(){
       <strong>Raid:</strong><br>
       ${r.name}<br>
       ${guild ? `<strong>Gilde:</strong> ${safeHtml(guild)}<br>` : ""}
+      <strong>Erstellt von:</strong> ${safeHtml(createdBy)}<br>
       <br>
 
       <strong>Raidstart:</strong><br>
@@ -2976,19 +3108,35 @@ function dashboardWorldbuffTextKey(value){
 }
 
 async function getDashboardBuffEntries(kind,days){
-  const action=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
+  const guildAction=kind === 'hordenbuff' ? 'guildGetHordenbuffs' : 'guildGetWorldbuffs';
+  const publicAction=kind === 'hordenbuff' ? 'getPublicHordenbuffs' : 'getPublicWorldbuffs';
   const allUpcoming=days === "all";
   const requestDays=allUpcoming ? 3650 : (days || 14);
+  const guildMasterCode=sessionStorage.getItem(GUILD_MASTER_STORAGE_KEY) || "";
   let entries=[];
+
   try{
-    const data=await fetchRaidApiJsonp({action,days:requestDays});
+    const data=await fetchRaidApiJsonp({action:guildAction,masterCode:guildMasterCode,days:requestDays});
     if(data && data.success !== false){
       const raw=data.buffs || data.entries || data.rows || data.data || [];
       if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
     }
   }catch(error){
-    console.warn('Buff-API nicht ladbar:', action, error);
+    console.warn('Gilden-Buffliste nicht ladbar:', guildAction, error);
   }
+
+  try{
+    if(!entries.length){
+      const data=await fetchRaidApiJsonp({action:publicAction,days:requestDays});
+      if(data && data.success !== false){
+        const raw=data.buffs || data.entries || data.rows || data.data || [];
+        if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
+      }
+    }
+  }catch(error){
+    console.warn('Public-Buffliste nicht ladbar:', publicAction, error);
+  }
+
   if(!entries.length){
     entries=await loadBuffCsvEntries(kind);
   }
@@ -3343,6 +3491,25 @@ function copyHiddenLichtLootToDashboard(clearHidden){
     worldTarget.innerHTML=worldSource.innerHTML;
     if(clearHidden) worldSource.innerHTML="";
   }
+
+  refreshDashboardDeleteTwinkSelect();
+}
+
+function refreshDashboardDeleteTwinkSelect(){
+  const select=document.getElementById("dashboardDeleteTwinkSelect");
+  if(!select) return;
+
+  select.innerHTML='<option value="">Charakter zum Löschen wählen</option>';
+  (myLichtlootCharacters || []).forEach(char=>{
+    const option=document.createElement("option");
+    option.value=JSON.stringify(char);
+    option.textContent=
+      (char.isMain ? "Main: " : "")+
+      (char.name || char.char || "-")+
+      (char.server ? " - "+char.server : "")+
+      (char.className ? " ("+char.className+")" : "");
+    select.appendChild(option);
+  });
 }
 
 async function dashboardLoadLichtLoot(){
@@ -3351,10 +3518,10 @@ async function dashboardLoadLichtLoot(){
   const box=document.getElementById("myPriosBox");
   if(box) box.classList.add("hidden");
   if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte SpielerPin eingeben.</span>';
+    if(status) status.innerHTML='<span class="bad">Bitte SpielerLogin eingeben.</span>';
     return;
   }
-  if(status) status.innerHTML='<span class="warn">Lade deine Charaktere und Worldbuff-Termine …</span>';
+  if(status) status.innerHTML='<span class="warn">Login wird geprüft und Charaktere werden geladen …</span>';
   await loadLichtLootCharacters();
   const selected=document.getElementById("myLichtlootCharSelect");
   if(selected && selected.value){
@@ -3374,7 +3541,7 @@ async function loadPlayerMailbox(showStatus){
   const content=document.getElementById("playerMailboxContent");
   const badge=document.getElementById("playerMailboxBadge");
   if(!pin){
-    if(showStatus && content) content.innerHTML='<div class="status bad">Bitte zuerst SpielerPin eingeben.</div>';
+    if(showStatus && content) content.innerHTML='<div class="status bad">Bitte zuerst mit SpielerLogin einloggen.</div>';
     if(badge) badge.textContent="";
     return;
   }
@@ -3603,7 +3770,7 @@ async function dashboardAddTwink(){
   const className=document.getElementById("dashboardTwinkClass");
 
   if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte zuerst SpielerPin eingeben oder Daten laden.</span>';
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst mit SpielerLogin einloggen.</span>';
     return;
   }
 
@@ -3629,6 +3796,66 @@ async function dashboardAddTwink(){
   }
 }
 
+async function dashboardDeleteTwink(){
+  const pin=syncHiddenPinFromDashboard();
+  const status=document.getElementById("dashboardTwinkStatus");
+  const select=document.getElementById("dashboardDeleteTwinkSelect");
+
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst mit SpielerLogin einloggen.</span>';
+    return;
+  }
+
+  if(!select || !select.value){
+    if(status) status.innerHTML='<span class="bad">Bitte einen Charakter zum Löschen auswählen.</span>';
+    return;
+  }
+
+  let character=null;
+  try{
+    character=JSON.parse(select.value);
+  }catch(error){}
+
+  const name=String(character?.name || character?.char || character?.player || "").trim();
+  const server=String(character?.server || "").trim();
+
+  if(!name || !server){
+    if(status) status.innerHTML='<span class="bad">Charakterdaten konnten nicht gelesen werden.</span>';
+    return;
+  }
+
+  if(!confirm("Charakter wirklich löschen?\n\n" + name + (server ? " - " + server : "") + "\n\nGespeicherte Prios dieses Charakters werden ebenfalls entfernt.")){
+    return;
+  }
+
+  if(status) status.innerHTML='<span class="warn">Charakter wird gelöscht …</span>';
+
+  const query=new URLSearchParams({
+    action:"deleteTwink",
+    guild:CURRENT_GUILD_SLUG,
+    pin,
+    char:name,
+    server,
+    t:Date.now()
+  });
+
+  try{
+    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
+    const result=await response.json();
+
+    if(!result.success){
+      if(status) status.innerHTML='<span class="bad">'+safeHtml(result.error || "Charakter konnte nicht gelöscht werden.")+'</span>';
+      return;
+    }
+
+    if(status) status.innerHTML='<span class="ok">Charakter wurde gelöscht.</span>';
+    await dashboardLoadLichtLoot();
+  }catch(error){
+    console.error(error);
+    if(status) status.innerHTML='<span class="bad">Charakter konnte nicht gelöscht werden.</span>';
+  }
+}
+
 function focusMeinLichtLoot(){
   hydrateDashboardPlayerPin();
   const card=document.getElementById("meinLichtLootCard");
@@ -3638,8 +3865,7 @@ function focusMeinLichtLoot(){
 }
 
 function getStoredLichtLootPlayerPin(){
-  const keys=["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
-  for(const key of keys){
+  for(const key of lichtLootPlayerPinStorageKeys()){
     try{
       const value=localStorage.getItem(key) || sessionStorage.getItem(key);
       if(value && String(value).trim()) return String(value).trim();
@@ -3648,11 +3874,14 @@ function getStoredLichtLootPlayerPin(){
   return "";
 }
 
+function lichtLootPlayerPinStorageKeys(){
+  return ["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+}
+
 function rememberLichtLootPlayerPin(pin){
   const cleanPin=String(pin || "").trim().toUpperCase();
   if(!cleanPin) return;
-  const keys=["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
-  keys.forEach(key=>{
+  lichtLootPlayerPinStorageKeys().forEach(key=>{
     try{ localStorage.setItem(key, cleanPin); }catch(error){}
     try{ sessionStorage.setItem(key, cleanPin); }catch(error){}
   });
@@ -3671,13 +3900,65 @@ function hydrateDashboardPlayerPin(){
   return saved;
 }
 
+function logoutLichtLootPlayer(){
+  lichtLootPlayerPinStorageKeys().forEach(key=>{
+    try{ localStorage.removeItem(key); }catch(error){}
+    try{ sessionStorage.removeItem(key); }catch(error){}
+  });
+
+  ["dashboardPlayerPin","myPriosPin","twinkPlayerPin"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value="";
+  });
+
+  myWorldbuffEntries=[];
+  myWorldbuffOpenSlots=[];
+  myLichtlootCharacters=[];
+  myRaidCalendarPrioEntries=[];
+  playerMailboxMessages=[];
+  playerMailboxSentMessages=[];
+
+  const dashboardStatus=document.getElementById("dashboardMyStatus");
+  if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Du kannst jetzt einen anderen SpielerLogin eingeben.";
+
+  const dashSelect=document.getElementById("dashboardCharSelect");
+  if(dashSelect) dashSelect.innerHTML='<option value="">Erst einloggen</option>';
+
+  const hiddenSelect=document.getElementById("myLichtlootCharSelect");
+  if(hiddenSelect) hiddenSelect.innerHTML='<option value="">Erst SpielerPin laden</option>';
+
+  const deleteSelect=document.getElementById("dashboardDeleteTwinkSelect");
+  if(deleteSelect) deleteSelect.innerHTML='<option value="">Charakter zum Löschen wählen</option>';
+
+  const resultTarget=document.getElementById("dashboardMyPriosResults");
+  if(resultTarget) resultTarget.innerHTML="";
+
+  const hiddenResults=document.getElementById("myPriosResults");
+  if(hiddenResults) hiddenResults.innerHTML="";
+
+  const worldTarget=document.getElementById("dashboardMyWorldbuffContent");
+  if(worldTarget) worldTarget.innerHTML='<div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div>';
+
+  const hiddenWorld=document.getElementById("myWorldbuffContent");
+  if(hiddenWorld) hiddenWorld.innerHTML="";
+
+  const worldBox=document.getElementById("myWorldbuffBox");
+  if(worldBox) worldBox.classList.add("hidden");
+
+  const badge=document.getElementById("playerMailboxBadge");
+  if(badge) badge.textContent="";
+
+  renderRaidCalendar();
+  document.getElementById("dashboardPlayerPin")?.focus();
+}
+
 function initMeinLichtLootAutoLogin(){
   const saved=hydrateDashboardPlayerPin();
   const status=document.getElementById("myPriosStatus");
   const dashboardStatus=document.getElementById("dashboardMyStatus");
   if(saved){
     if(status) status.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Du kannst deine Charaktere direkt laden.</span>';
-    if(dashboardStatus) dashboardStatus.innerHTML='<span class="ok">✓ Spielerlogin erkannt. Deine Daten werden geladen …</span>';
+    if(dashboardStatus) dashboardStatus.innerHTML='<span class="ok">✓ SpielerLogin erkannt. Du wirst eingeloggt …</span>';
     window.setTimeout(()=>dashboardLoadLichtLoot(), 50);
   }
 }
@@ -3758,14 +4039,14 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/apps-script?action=getActiveRaids");
   }
 
-  if(params.action === "getPublicWorldbuffs"){
+  if(params.action === "getPublicWorldbuffs" || params.action === "guildGetWorldbuffs"){
     const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicWorldbuffs"+days);
+    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
   }
 
-  if(params.action === "getPublicHordenbuffs"){
+  if(params.action === "getPublicHordenbuffs" || params.action === "guildGetHordenbuffs"){
     const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action=getPublicHordenbuffs"+days);
+    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
   }
 
   return null;
@@ -5306,6 +5587,8 @@ async function loadMyPrios(){
   document.getElementById("myPriosChar").value=charName;
   status.innerHTML='<span class="warn">Lade Prios und P0/P0+ für '+safeHtml(charName)+' …</span>';
   results.innerHTML='';
+  window.myOwnP0PlusPoints=[];
+  closeOwnP0PlusModal();
 
   try{
     const url=LICHTLOOT_API_URL+
@@ -5354,6 +5637,8 @@ function renderEmptyMyPriosForRailwayCharacter(char){
   const name=char && char.name ? String(char.name).trim() : "";
 
   myRaidCalendarPrioEntries=[];
+  window.myOwnP0PlusPoints=[];
+  closeOwnP0PlusModal();
   renderRaidCalendar();
 
   if(status){
@@ -5371,6 +5656,7 @@ function renderMyPrios(data){
   const entries=data.entries || [];
   const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
+  window.myOwnP0PlusPoints=ownP0.slice();
 
   myRaidCalendarPrioEntries=entries.slice();
   renderRaidCalendar();
@@ -5385,9 +5671,11 @@ function renderMyPrios(data){
   let html='';
 
   if(ownP0.length){
-    html+='<details class="lichtloot-fold"><summary>Eigene P0/P0+ Punkte</summary><div class="lichtloot-fold-body">';
-    html+=renderOwnP0PlusOverviewTable(ownP0);
-    html+='</div></details>';
+    html+=`<div class="lichtloot-fold own-p0-popout-card">
+      <strong>Eigene P0/P0+ Punkte</strong>
+      <span>${safeHtml(ownP0.length)} gespeicherte Punkte gefunden. Die komplette Liste öffnet sich als eigenes Fenster.</span>
+      <button class="right-inline-btn" type="button" onclick="openOwnP0PlusModal()">P0/P0+ Punkte öffnen</button>
+    </div>`;
   }
 
   if(pastEntries.length){
@@ -5937,6 +6225,23 @@ function startMyPrioResize(event){
 
 function closeMyPrioDetailModal(){
   const modal=document.getElementById("myPrioDetailModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+function openOwnP0PlusModal(){
+  const modal=document.getElementById("ownP0PlusModal");
+  const content=document.getElementById("ownP0PlusModalContent");
+  const points=window.myOwnP0PlusPoints || [];
+  if(!modal || !content) return;
+
+  content.innerHTML=points.length
+    ? renderOwnP0PlusOverviewTable(points)
+    : '<div class="status">Für diesen Charakter sind keine eigenen P0/P0+ Punkte hinterlegt.</div>';
+  modal.classList.remove("hidden");
+}
+
+function closeOwnP0PlusModal(){
+  const modal=document.getElementById("ownP0PlusModal");
   if(modal) modal.classList.add("hidden");
 }
 
