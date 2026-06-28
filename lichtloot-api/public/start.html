@@ -2236,10 +2236,33 @@ function toggleRaidCreate(){
   setDefaultRaidDate();
 }
 
+function getSelectedDashboardCharacterName(){
+  const select=document.getElementById("dashboardCharSelect");
+  if(select && select.value){
+    try{
+      const data=JSON.parse(select.value);
+      if(data && (data.name || data.char || data.player)){
+        return String(data.name || data.char || data.player).trim();
+      }
+    }catch(error){
+      return String(select.value || "").trim();
+    }
+  }
+
+  if(Array.isArray(myLichtlootCharacters) && myLichtlootCharacters.length){
+    const main=myLichtlootCharacters.find(char=>char && (char.isMain || char.main || char.mainChar === char.name));
+    const chosen=main || myLichtlootCharacters[0];
+    return String(chosen.name || chosen.char || chosen.player || "").trim();
+  }
+
+  return "";
+}
+
 function getRaidCreatedByForStart(){
-  const selectedName = typeof getSelectedMyLichtLootCharacterName === "function"
+  const dashboardName=getSelectedDashboardCharacterName();
+  const selectedName = dashboardName || (typeof getSelectedMyLichtLootCharacterName === "function"
     ? getSelectedMyLichtLootCharacterName()
-    : "";
+    : "");
   const storedPin = typeof getStoredLichtLootPlayerPin === "function"
     ? getStoredLichtLootPlayerPin()
     : "";
