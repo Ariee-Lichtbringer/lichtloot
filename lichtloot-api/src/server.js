@@ -3024,6 +3024,47 @@ async function setLogAnalysisSheetUrl({ guildId, query: params }) {
   };
 }
 
+async function cleanupIncompleteClaAnalyses({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const result = await query(
+    `update log_analyses
+     set status = case
+           when nullif(summary->>'rpbDownloadUrl', '') is not null then 'rpb_done'
+           when lower(coalesce(summary->>'rpbGeneratorStatus', '')) = 'queued' then 'rpb_queued'
+           when lower(coalesce(summary->>'rpbGeneratorStatus', '')) = 'failed' then 'rpb_failed'
+           else 'pending'
+         end,
+         summary = (((((((coalesce(summary, '{}'::jsonb)
+           - 'claDownloadUrl')
+           - 'claGeneratorJobId')
+           - 'claGeneratorStatus')
+           - 'claGeneratorError')
+           - 'claGeneratorWarnings')
+           - 'claGeneratorFinishedAt')
+           - 'claGeneratorManualLink'),
+         updated_at = now()
+     where guild_id = $1
+       and (
+         status in ('cla_queued', 'cla_failed')
+         or lower(coalesce(summary->>'claGeneratorStatus', '')) in ('queued', 'failed', 'error', 'started', 'running')
+         or nullif(summary->>'claGeneratorError', '') is not null
+         or (
+           nullif(summary->>'claDownloadUrl', '') is not null
+           and summary->>'claDownloadUrl' !~* '^https://docs\\.google\\.com/spreadsheets/d/'
+         )
+       )
+     returning id`,
+    [guildId]
+  );
+
+  return {
+    success: true,
+    deletedCla: result.rowCount
+  };
+}
+
 function normalizeIssueReportRow(row, index = 0) {
   return {
     id: row.id,
@@ -6274,6 +6315,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetLogAnalysisSheetUrl") {
       const saved = await setLogAnalysisSheetUrl({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildCleanupIncompleteClaAnalyses") {
+      const cleaned = await cleanupIncompleteClaAnalyses({ guildId: guild.id, query: postParams });
+      return res.json({ ...cleaned, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
