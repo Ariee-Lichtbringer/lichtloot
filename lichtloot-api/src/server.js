@@ -1499,19 +1499,27 @@ async function deleteHordenbuffEntry({ guildId, query: params }) {
 async function queueBotUpdate({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const type = clean(params.type || "hordenbuff_update") || "hordenbuff_update";
+  const payload = params.payload && typeof params.payload === "object"
+    ? params.payload
+    : {
+        raidId: clean(params.raidId || params.id || ""),
+        source: clean(params.source || "")
+      };
+  await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   const result = await query(
-    `insert into bot_update_queue (guild_id, type)
-     values ($1, $2)
-     returning id, type`,
-    [guildId, type]
+    `insert into bot_update_queue (guild_id, type, payload)
+     values ($1, $2, $3::jsonb)
+     returning id, type, payload`,
+    [guildId, type, JSON.stringify(payload || {})]
   );
-  return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type };
+  return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type, payload: result.rows[0].payload || {} };
 }
 
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   const result = await query(
-    `select id, type, created_at
+    `select id, type, payload, created_at
      from bot_update_queue
      where guild_id = $1 and status = 'open'
      order by created_at asc
@@ -1523,9 +1531,27 @@ async function getBotQueue({ guildId, query: params }) {
     items: result.rows.map(row => ({
       rowNumber: row.id,
       type: row.type,
+      payload: row.payload || {},
       createdAt: row.created_at
     }))
   };
+}
+
+async function queueRaidAnnouncement({ guildId, query: params }) {
+  requireMasterCode(params);
+  const raidId = clean(params.raidId || params.id || "");
+  if (!raidId) return { success: false, error: "Raid-ID fehlt." };
+  return queueBotUpdate({
+    guildId,
+    query: {
+      ...params,
+      type: "raid_announcement",
+      payload: {
+        raidId,
+        source: "gildenleitung"
+      }
+    }
+  });
 }
 
 async function resolveBotQueue({ guildId, query: params }) {
@@ -6190,6 +6216,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueWorldbuffBotUpdate") {
       const queued = await queueBotUpdate({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueRaidAnnouncement") {
+      const queued = await queueRaidAnnouncement({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
