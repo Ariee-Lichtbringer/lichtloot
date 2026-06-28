@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, query, requireGuild } from "./db.js";
 
@@ -2128,6 +2129,7 @@ async function getGuildLeadershipOverview(guildId, params) {
 }
 
 function normalizeLogAnalysis(row) {
+  const summary = row.summary || {};
   return {
     id: row.id,
     reportCode: row.report_code || "",
@@ -2136,7 +2138,9 @@ function normalizeLogAnalysis(row) {
     raid: row.raid || "",
     raidDate: row.raid_date ? new Date(row.raid_date).toISOString().slice(0, 10) : "",
     status: row.status || "pending",
-    summary: row.summary || {},
+    summary,
+    claDownloadUrl: summary.claDownloadUrl || "",
+    rpbDownloadUrl: summary.rpbDownloadUrl || "",
     discordChannelId: row.discord_channel_id || "",
     discordMessageId: row.discord_message_id || "",
     discordAuthor: row.discord_author || "",
@@ -2145,6 +2149,113 @@ function normalizeLogAnalysis(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  if (/[;"\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+function buildCsv(rows) {
+  return `\uFEFF${rows.map(row => row.map(csvCell).join(";")).join("\n")}\n`;
+}
+
+function slugPart(value) {
+  return clean(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "log";
+}
+
+function buildLogAnalysisDownloadUrl({ id, type, token }) {
+  const params = new URLSearchParams({
+    action: "guildDownloadLogAnalysis",
+    id,
+    type,
+    token
+  });
+  return `/api/apps-script?${params.toString()}`;
+}
+
+function buildLogAnalysisCsv(analysis, type) {
+  const summary = analysis.summary || {};
+  const kind = type === "cla" ? "CLA" : "RPB";
+  const generatedAt = new Date().toISOString();
+  const raid = analysis.raid || summary.raid || "Nicht erkannt";
+  const raidDate = analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : (summary.raidDate || "");
+  const title = analysis.title || "";
+  const rows = [
+    [`${kind} Loganalyse`],
+    [],
+    ["Feld", "Wert"],
+    ["Typ", kind],
+    ["Raid", raid],
+    ["Datum", raidDate || "-"],
+    ["Warcraft-Logs-Code", analysis.report_code || ""],
+    ["Warcraft-Logs-Link", analysis.report_url || ""],
+    ["Titel", title],
+    ["Erstellt am", generatedAt],
+    [],
+    ["Auswertung", "Hinweis"],
+    [
+      type === "cla" ? "CLA" : "RPB",
+      "Die Datei wurde aus dem gespeicherten Warcraft-Logs-Report in LichtLoot erzeugt. Detailwerte koennen hier erweitert werden, sobald die gewuenschten Bewertungsregeln feststehen."
+    ]
+  ];
+
+  if (summary.lastRequestedAnalysis || summary.analysisRequestedAt) {
+    rows.push(
+      [],
+      ["Letzte Aktion", summary.lastRequestedAnalysis || kind],
+      ["Angefordert am", summary.analysisRequestedAt || ""]
+    );
+  }
+
+  return buildCsv(rows);
+}
+
+async function downloadLogAnalysis({ guildId, query: params, res }) {
+  await ensureLogAnalysesTable();
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  const token = clean(params.token);
+  if (!isUuid(id) || !["cla", "rpb"].includes(type) || !token) {
+    const error = new Error("Download-Link ist unvollständig.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1 and id = $2
+     limit 1`,
+    [guildId, id]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const analysis = result.rows[0];
+  const summary = analysis.summary || {};
+  const expectedToken = type === "cla" ? summary.claDownloadToken : summary.rpbDownloadToken;
+  if (!expectedToken || token !== expectedToken) {
+    const error = new Error("Download-Link ist nicht mehr gültig.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const raid = analysis.raid || summary.raid || "log";
+  const raidDate = analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : (summary.raidDate || "");
+  const filename = `${type.toUpperCase()}-${slugPart(raid)}${raidDate ? `-${raidDate}` : ""}.csv`;
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  return res.send(buildLogAnalysisCsv(analysis, type));
 }
 
 async function ensureLogAnalysesTable() {
@@ -2294,9 +2405,14 @@ async function runLogAnalysis({ guildId, query: params }) {
   const reportMeta = (!current.raid || !current.raid_date)
     ? await fetchWarcraftLogsReportMetaSafe(current.report_code)
     : {};
+  const downloadTokenKey = type === "cla" ? "claDownloadToken" : "rpbDownloadToken";
+  const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
+  const downloadToken = current.summary?.[downloadTokenKey] || randomUUID();
   const summaryPatch = {
     lastRequestedAnalysis: type.toUpperCase(),
-    analysisRequestedAt: new Date().toISOString()
+    analysisRequestedAt: new Date().toISOString(),
+    [downloadTokenKey]: downloadToken,
+    [downloadUrlKey]: buildLogAnalysisDownloadUrl({ id, type, token: downloadToken })
   };
   const result = await query(
     `update log_analyses
@@ -2311,7 +2427,7 @@ async function runLogAnalysis({ guildId, query: params }) {
     [
       guildId,
       id,
-      `${type}_queued`,
+      `${type}_done`,
       JSON.stringify(summaryPatch),
       reportMeta.title || "",
       normalizeLogRaidType(reportMeta.raid || ""),
@@ -5205,6 +5321,10 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildRunLogAnalysis") {
       const started = await runLogAnalysis({ guildId: guild.id, query: req.query });
       return res.json({ ...started, guild: guild.slug });
+    }
+
+    if (action === "guildDownloadLogAnalysis") {
+      return await downloadLogAnalysis({ guildId: guild.id, query: req.query, res });
     }
 
     if (action === "guildResolveIssueReport") {
