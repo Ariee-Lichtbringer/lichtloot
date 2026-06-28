@@ -4643,11 +4643,13 @@ function renderLogAnalysisStatus(status){
   const value = normalize(status || "pending");
   const label =
     value === "done" ? "fertig" :
+    value === "cla_done" ? "CLA fertig" :
+    value === "rpb_done" ? "RPB fertig" :
     value === "failed" ? "Fehler" :
     value === "cla_queued" ? "CLA vorgemerkt" :
     value === "rpb_queued" ? "RPB vorgemerkt" :
     "eingegangen";
-  const cls = value === "done" || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
+  const cls = value === "done" || value.endsWith("_done") || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
 }
 
@@ -4675,8 +4677,8 @@ async function triggerLogAnalysis(id, type){
     }
     if(result.analysis) upsertLogAnalysis(result.analysis);
     renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${label}-Erstellung wurde vorgemerkt.</span>`;
-    setStatus(`${label}-Erstellung wurde vorgemerkt.`, "good");
+    if(status) status.innerHTML = `<span class="ok">${label}-Download ist bereit.</span>`;
+    setStatus(`${label}-Download ist bereit.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
   }
