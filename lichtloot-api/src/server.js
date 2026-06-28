@@ -32,6 +32,10 @@ await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
 });
 
+await ensureRaidCreatedByColumn().catch(error => {
+  console.warn("Raid-Ersteller-Spalte konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
@@ -998,6 +1002,10 @@ function requireMasterOrQueueToken(params = {}) {
   throw error;
 }
 
+async function ensureRaidCreatedByColumn() {
+  await query(`alter table raids add column if not exists created_by text`);
+}
+
 function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean(value));
 }
@@ -1059,6 +1067,8 @@ function normalizeRaidRow(row) {
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
     playerLink: row.player_link || "",
+    createdBy: row.created_by || "",
+    erstelltVon: row.created_by || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -3491,13 +3501,14 @@ async function createRaidRecord({ guildId, query: params }) {
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const status = normalizeStatus(params.status || "geschlossen");
   const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geöffnet");
+  const createdBy = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller || "Gildenleitung");
 
   const result = await query(
     `insert into raids (
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
-       lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe
+       lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by
      )
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
      on conflict (guild_id, raid_type, raid_date) do update
        set name = excluded.name,
            external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
@@ -3508,6 +3519,7 @@ async function createRaidRecord({ guildId, query: params }) {
            player_link = coalesce(excluded.player_link, raids.player_link),
            status = excluded.status,
            p0plus_freigabe = excluded.p0plus_freigabe,
+           created_by = coalesce(nullif(excluded.created_by, ''), raids.created_by),
            updated_at = now()
      returning *`,
     [
@@ -3522,7 +3534,8 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.guild || params.gilde) || null,
       clean(params.playerLink) || null,
       status,
-      p0plusFreigabe
+      p0plusFreigabe,
+      createdBy || null
     ]
   );
 
