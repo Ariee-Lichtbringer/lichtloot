@@ -3061,7 +3061,7 @@ function closePrioModal(){
 }
 
 function renderPrioModalContent(result, raid){
-  const prios = sortPriosWithMainFirst(Array.isArray(result.prios) ? result.prios : []);
+  const prios = Array.isArray(result.prios) ? result.prios : [];
   const listOpen = isPrioListVisibleForGuild(result, raid);
   const raidStatus = listOpen ? "geöffnet" : "geschlossen";
   const benchCount = prios.filter(isBenchPrio).length;
@@ -3151,18 +3151,6 @@ function renderPrioValue(value, visible){
 function isBenchPrio(prio){
   const value = normalize(prio && (prio.Bench || prio.bench || prio.Gebencht || prio.status));
   return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
-}
-
-function sortPriosWithMainFirst(prios){
-  return prios
-    .map((prio,index)=>({prio,index}))
-    .sort((a,b)=>{
-      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
-      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
-      if(aMain !== bMain) return aMain ? -1 : 1;
-      return a.index-b.index;
-    })
-    .map(item=>item.prio);
 }
 
 function renderBenchAction(prio, raid){
@@ -4604,8 +4592,8 @@ function renderLogAnalyses(){
 
   tbody.innerHTML = logAnalyses.map(entry => {
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-    const raid = entry.raid || summary.raid || entry.title || entry.reportCode || "Noch nicht erkannt";
-    const date = entry.raidDate || summary.raidDate || entry.createdAt || "";
+    const raid = entry.raid || summary.raid || "Nicht erkannt";
+    const date = entry.raidDate || summary.raidDate || "";
     return `
       <tr>
         <td>
