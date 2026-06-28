@@ -3925,6 +3925,7 @@ function renderWorldbuffPanel(days){
       </select>
       <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
       <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
+      <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
       <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
       <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
     </div>
@@ -4289,6 +4290,32 @@ async function queueWorldbuffBotUpdate(updateType){
     setStatus("Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Bot-Update konnte nicht vorgemerkt werden.", "bad");
+  }
+}
+
+async function restoreDeletedWorldbuffTerms(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  if(!confirm("Gelöschte Worldbuff-Termine aus der Merkliste wiederherstellen?")){
+    return;
+  }
+
+  setStatus("Gelöschte Worldbuff-Termine werden wiederhergestellt ...", "");
+  try{
+    const result = await apiJsonp({ action:"guildRestoreDeletedWorldbuffTerms", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Gelöschte Termine konnten nicht wiederhergestellt werden.", "bad");
+      return;
+    }
+
+    await loadWorldbuffPanel();
+    setStatus((result.restored || 0)+" Worldbuff-Termin(e) wiederhergestellt. "+(result.skipped || 0)+" übersprungen.", "good");
+  }catch(error){
+    setStatus(error.message || "Gelöschte Termine konnten nicht wiederhergestellt werden.", "bad");
   }
 }
 
