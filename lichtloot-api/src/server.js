@@ -2661,7 +2661,7 @@ async function getLogAnalyses({ guildId, query: params }) {
     `select *
      from log_analyses
      where guild_id = $1
-     order by created_at desc
+     order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
      limit $2`,
     [guildId, limit]
   );
