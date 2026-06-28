@@ -1463,7 +1463,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   </section>
 
   <section class="quick-actions" aria-label="Schnellaktionen">
-    <button class="quick-action" type="button" onclick="openCreatePanel()"><span class="qa-icon">＋</span><span><strong>Raid erstellen</strong><span>Neuen Raid anlegen</span></span></button>
     <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
     <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
     <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
@@ -1492,40 +1491,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
           <div class="muted">Noch keine Daten geladen.</div>
         </div>
       </section>
-
-  <details id="createRaidPanel" class="panel create-panel">
-    <summary>Raid erstellen</summary>
-    <div class="create-panel-body">
-    <div class="create-grid">
-      <div class="field">
-        <label for="createRaidSelect">Raid</label>
-        <select id="createRaidSelect">
-          <option value="mc">Molten Core</option>
-          <option value="bwl">Blackwing Lair</option>
-          <option value="aq40">Ahn'Qiraj 40</option>
-          <option value="naxx">Naxxramas</option>
-          <option value="zg">Zul Gurub</option>
-          <option value="aq20">Ahn'Qiraj 20</option>
-          <option value="ony">Onyxia</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="createRaidDate">Datum</label>
-        <input id="createRaidDate" type="date">
-      </div>
-      <div class="field">
-        <label for="createRaidTime">Uhrzeit</label>
-        <input id="createRaidTime" type="time" value="20:00">
-      </div>
-      <div class="field">
-        <label for="createRaidGuild">Gilde</label>
-        <input id="createRaidGuild" type="text" placeholder="Gilde">
-      </div>
-      <button class="btn" type="button" onclick="createRaidFromGuildPage()">Erstellen</button>
-    </div>
-    <div id="createRaidResult" class="create-result">Prio-PIN und LeadPIN werden nach dem Erstellen angezeigt.</div>
-    </div>
-  </details>
 
   <details id="p0PlusPanel" class="panel p0-panel" ontoggle="if(this.open) loadP0PlusPanel()">
     <summary>P0+ Liste</summary>
@@ -2108,10 +2073,6 @@ function openDetailsPanel(id){
   panel.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
-function openCreatePanel(){
-  openDetailsPanel("createRaidPanel");
-}
-
 function openRaidPanel(){
   openDetailsPanel("raidLeadPanel");
 }
@@ -2635,96 +2596,6 @@ function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin
 function buildRaidDirectLink(raid){
   const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
   return raidId ? withGuildUrl("index.html") + `&raidId=${raidId}` : withGuildUrl("index.html");
-}
-
-async function createRaidFromGuildPage(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  const raidKey = document.getElementById("createRaidSelect").value;
-  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
-  const raidDate = document.getElementById("createRaidDate").value;
-  const raidTime = document.getElementById("createRaidTime").value;
-  const guild = document.getElementById("createRaidGuild").value.trim();
-  const resultBox = document.getElementById("createRaidResult");
-
-  if(!masterCode){
-    resultBox.innerHTML = '<span class="bad">Bitte zuerst den Master-Code eingeben.</span>';
-    return;
-  }
-
-  if(!raidDate){
-    resultBox.innerHTML = '<span class="bad">Bitte ein Raid-Datum auswählen.</span>';
-    return;
-  }
-
-  if(!raidTime){
-    resultBox.innerHTML = '<span class="bad">Bitte eine Raid-Uhrzeit auswählen.</span>';
-    return;
-  }
-
-  const raidId = createRaidIdForGuildPage(raidKey);
-  const playerPin = randomCode(3);
-  const leadPin = randomCode(4);
-  const createdBy = "Gildenleitung";
-  const discordPostText = buildRaidDiscordPostText(raid.name, raidDate, raidTime, guild, playerPin, createdBy);
-  const raidData = {
-    action:"createRaid",
-    raidId,
-    raid:raidKey,
-    raidName:raid.name,
-    datum:raidDate,
-    uhrzeit:raidTime,
-    raidDate,
-    raidTime,
-    guild,
-    gilde:guild,
-    playerPin,
-    leadPin,
-    playerLink:"",
-    createdBy,
-    createdAt:new Date().toISOString(),
-    status:"geschlossen",
-    p0PlusFreigabe:"geöffnet",
-  };
-
-  resultBox.innerHTML = '<span class="warn">Raid wird erstellt ...</span>';
-
-  try{
-    const saveResult = await railwayApi(Object.assign({ masterCode }, raidData));
-    if(saveResult && saveResult.success === false){
-      throw new Error(saveResult.error || saveResult.message || "Raid konnte nicht gespeichert werden.");
-    }
-
-    guildData.raids = [raidData].concat(guildData.raids || []);
-    renderSummary();
-    renderDashboardCards();
-    loadDashboardRaidStats();
-    renderRaids();
-
-    resultBox.innerHTML = `
-      <span class="ok">Raid wurde erstellt.</span>
-      <div class="created-raid">
-        <div class="created-pin">
-          <span>Prio-PIN</span>
-          <strong id="createdPlayerPin">${escapeHtml(playerPin)}</strong>
-          <button class="small-btn ghost" type="button" onclick="copyText('createdPlayerPin')">Kopieren</button>
-        </div>
-        <div class="created-pin">
-          <span>LeadPIN</span>
-          <strong id="createdLeadPin">${escapeHtml(leadPin)}</strong>
-          <button class="small-btn ghost" type="button" onclick="copyText('createdLeadPin')">Kopieren</button>
-        </div>
-      </div>
-      <div class="muted" style="margin-top:10px">${escapeHtml(raid.name)} · ${escapeHtml(formatRaidDate(raidDate))} · ${escapeHtml(raidTime)}${guild ? " · " + escapeHtml(guild) : ""}</div>
-      <div class="discord-copy-box">
-        <strong>Discord-Post</strong>
-        <textarea id="createdDiscordPost" class="discord-copy-text" readonly>${escapeHtml(discordPostText)}</textarea>
-        <button class="small-btn primary" type="button" onclick="copyText('createdDiscordPost')">Discord-Text kopieren</button>
-      </div>
-    `;
-    setStatus("Raid wurde erstellt und in die Liste eingetragen.", "good");
-  }catch(error){
-    resultBox.innerHTML = `<span class="bad">${escapeHtml(error.message || "Raid konnte nicht erstellt werden.")}</span>`;
-  }
 }
 
 async function resetPlayerLogin(rowNumber){
