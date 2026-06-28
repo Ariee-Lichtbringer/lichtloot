@@ -4282,6 +4282,11 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
   }
 
+  if(["getPlayerWorldbuffs","claimPlayerWorldbuff","movePlayerWorldbuff","guildDeleteWorldbuffTerm","guildRestoreDeletedWorldbuffTerms"].includes(params.action)){
+    const search=new URLSearchParams(params);
+    return await fetchRailwayApi("/api/apps-script?"+search.toString());
+  }
+
   return null;
 }
 
