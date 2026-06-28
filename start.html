@@ -1288,6 +1288,15 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .dashboard-worldbuff-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dashboard-worldbuff-time{color:#86efac;font-weight:950;white-space:nowrap}
 .dashboard-worldbuff-meta{grid-column:2 / 4;color:#cbd5e1;font-size:12px;margin-top:-4px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+.logs-dashboard-section{padding:18px;display:grid;gap:14px;background:linear-gradient(135deg,rgba(8,18,35,.92),rgba(3,10,23,.78))}
+.logs-dashboard-hero{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:14px;border:1px solid rgba(96,165,250,.18);border-radius:8px;background:linear-gradient(90deg,rgba(37,99,235,.16),rgba(2,6,23,.34))}
+.logs-dashboard-title{display:flex;align-items:center;gap:14px;min-width:0}.logs-dashboard-title img{width:76px;height:48px;object-fit:contain}.logs-dashboard-title h2{margin:0;color:#f8fafc;font-size:24px;text-transform:uppercase}.logs-dashboard-title h2 span{color:#facc15}.logs-dashboard-title p{margin-top:4px;color:#cbd5e1;font-weight:800;line-height:1.35}.logs-dashboard-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.logs-dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.logs-dashboard-stats div{min-height:78px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:rgba(2,6,23,.48)}.logs-dashboard-stats strong{color:#60a5fa;font-size:28px;line-height:1;font-weight:950}.logs-dashboard-stats span{color:#cbd5e1;font-size:12px;text-transform:uppercase;font-weight:950}
+.logs-dashboard-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.log-quick-card{min-height:84px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px;border-radius:8px;text-decoration:none;border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.62);color:#f8fafc}.log-quick-card.cla{border-color:rgba(96,165,250,.48);background:linear-gradient(135deg,rgba(37,99,235,.26),rgba(15,23,42,.68))}.log-quick-card.rpb{border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(22,101,52,.25),rgba(15,23,42,.68))}.log-quick-card.wcl{border-color:rgba(168,85,247,.36);background:linear-gradient(135deg,rgba(88,28,135,.28),rgba(15,23,42,.68))}.log-quick-icon{width:44px;height:44px;border-radius:8px;display:grid;place-items:center;background:rgba(255,255,255,.08);font-size:20px}.log-quick-card strong{display:block;color:#f8fafc;text-transform:uppercase;font-size:14px}.log-quick-card span{display:block;margin-top:4px;color:#cbd5e1;font-size:12px;font-weight:800}.log-quick-arrow{color:#93c5fd;font-size:22px;font-weight:950}
+.logs-table-wrap{border:1px solid rgba(255,255,255,.10);border-radius:8px;overflow:hidden;background:rgba(2,6,23,.40)}.logs-table-head,.log-dashboard-row{display:grid;grid-template-columns:1.5fr .9fr .9fr 1.1fr;gap:12px;align-items:center}.logs-table-head{padding:10px 12px;color:#cbd5e1;text-transform:uppercase;font-size:12px;font-weight:950;background:rgba(15,23,42,.58)}.log-dashboard-row{min-height:68px;padding:10px 12px;border-top:1px solid rgba(255,255,255,.07)}.log-dashboard-raid{display:grid;grid-template-columns:48px minmax(0,1fr);gap:10px;align-items:center}.log-dashboard-raid img{width:48px;height:48px;border-radius:6px;object-fit:cover}.log-dashboard-raid strong{display:block;color:#f8fafc;font-size:15px}.log-dashboard-raid span,.log-dashboard-date{color:#94a3b8;font-size:12px;font-weight:800}.log-dashboard-badges{display:flex;gap:6px;flex-wrap:wrap}.log-badge{display:inline-flex;align-items:center;min-height:24px;padding:4px 8px;border-radius:999px;border:1px solid rgba(148,163,184,.24);background:rgba(15,23,42,.72);color:#cbd5e1;font-size:11px;font-weight:950}.log-badge.done{border-color:rgba(34,197,94,.34);background:rgba(22,101,52,.20);color:#86efac}.log-badge.wait{border-color:rgba(250,204,21,.34);background:rgba(120,80,10,.18);color:#fde68a}.log-badge.fail{border-color:rgba(248,113,113,.34);background:rgba(127,29,29,.18);color:#fecaca}.log-dashboard-actions{display:flex;gap:6px;flex-wrap:wrap}.log-dashboard-actions a{min-height:30px;padding:7px 10px;border-radius:6px;border:1px solid rgba(96,165,250,.28);background:rgba(37,99,235,.14);color:#dbeafe;text-decoration:none;font-size:12px;font-weight:950}.log-dashboard-actions a.rpb{border-color:rgba(34,197,94,.28);background:rgba(22,101,52,.16);color:#bbf7d0}.log-dashboard-actions a.wcl{border-color:rgba(168,85,247,.24);background:rgba(88,28,135,.16);color:#e9d5ff}
+@media(max-width:1180px){.logs-dashboard-quick{grid-template-columns:1fr}.logs-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.logs-table-head{display:none}.log-dashboard-row{grid-template-columns:1fr;gap:8px}.log-dashboard-actions a{flex:1;text-align:center}}
+@media(max-width:700px){.logs-dashboard-hero{align-items:flex-start;flex-direction:column}.logs-dashboard-title{align-items:flex-start}.logs-dashboard-title img{width:58px;height:38px}.logs-dashboard-title h2{font-size:20px}.logs-dashboard-actions{width:100%}.logs-dashboard-actions .right-inline-btn{flex:1}.logs-dashboard-stats{grid-template-columns:1fr}.log-dashboard-raid{grid-template-columns:42px minmax(0,1fr)}.log-dashboard-raid img{width:42px;height:42px}}
+
 
 /* === FINAL: Mein-LichtLoot Priolisten-Modal feiner und resizebar === */
 #myPrioDetailModal.report-modal{z-index:52000!important;padding:14px!important;align-items:center!important;justify-content:center!important}
@@ -1934,6 +1943,7 @@ body.raid-create-open:before{
     <nav class="start-side-nav" aria-label="Startseite Navigation">
       <button class="start-side-link active" data-start-nav="dashboard" onclick="goHomeView()"><span class="start-side-icon">⌂</span><span>Dashboard</span></button>
       <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><span class="start-side-icon">✦</span><span>P0+ Liste</span></button>
+      <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><span class="start-side-icon">▣</span><span>Logs & Analysen</span></button>
       <button class="start-side-link" data-start-nav="worldbuff" onclick="showBuffOverview('worldbuff')"><span class="start-side-icon">◎</span><span>Worldbuffs</span></button>
       <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><span class="start-side-icon">☰</span><span>Raidregeln</span></button>
       <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><span class="start-side-icon">◆</span><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
@@ -1995,6 +2005,32 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
+      <section class="dash-panel logs-dashboard-section" id="logsDashboardSection">
+        <div class="logs-dashboard-hero">
+          <div class="logs-dashboard-title">
+            <img src="images/content.png" alt="">
+            <div>
+              <h2>Warcraft Logs <span>Auswertungen</span></h2>
+              <p>Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.</p>
+            </div>
+          </div>
+          <div class="logs-dashboard-actions">
+            <button class="right-inline-btn" onclick="loadDashboardLogAnalyses()">Neu laden</button>
+            <button class="right-inline-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'">Zur Verwaltung</button>
+          </div>
+        </div>
+        <div class="logs-dashboard-stats">
+          <div><strong id="logDashReports">0</strong><span>Reports</span></div>
+          <div><strong id="logDashCla">0</strong><span>CLA fertig</span></div>
+          <div><strong id="logDashRpb">0</strong><span>RPB fertig</span></div>
+          <div><strong id="logDashOpen">0</strong><span>offen</span></div>
+        </div>
+        <div class="logs-dashboard-quick" id="logsDashboardQuick"></div>
+        <div class="logs-table-wrap">
+          <div class="logs-table-head"><span>Raid</span><span>Datum</span><span>Status</span><span>Aktion</span></div>
+          <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
+        </div>
+      </section>
 </div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Login, Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Einloggen</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">Mit deinem SpielerLogin anmelden.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
@@ -3468,11 +3504,134 @@ function openNextRaidLoot(){
 function refreshStartDashboard(){
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
+  loadDashboardLogAnalyses();
   if(typeof loadP0PlusOverview === "function"){
     const overlay=document.getElementById("p0plusOverlay");
     const wasHidden=overlay ? overlay.classList.contains("hidden") : true;
     loadP0PlusOverview();
     if(wasHidden && overlay) overlay.classList.add("hidden");
+  }
+}
+
+function showLogsDashboard(){
+  goHomeView();
+  setStartNavActive("logs");
+  const section=document.getElementById("logsDashboardSection");
+  if(section) section.scrollIntoView({behavior:"smooth",block:"start"});
+  loadDashboardLogAnalyses();
+}
+
+function dashboardLogUrl(entry,type){
+  const summary=entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  return String((entry && entry[type+"DownloadUrl"]) || summary[type+"DownloadUrl"] || "");
+}
+
+function dashboardLogStatus(entry,type){
+  const url=dashboardLogUrl(entry,type);
+  const summary=entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const status=String((entry && entry.status) || "").toLowerCase();
+  const generator=String(summary[type+"GeneratorStatus"] || "").toLowerCase();
+  if(url || status === type+"_done" || generator === "done") return "done";
+  if(status === type+"_queued" || generator === "queued" || generator === "running" || generator === "started") return "wait";
+  if(status === type+"_failed" || generator === "failed") return "fail";
+  return "open";
+}
+
+function dashboardLogRaidKey(entry){
+  const text=String((entry && (entry.raid || entry.title)) || "").toLowerCase();
+  if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
+  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
+  if(text.includes("naxx")) return "naxx";
+  if(text.includes("zg") || text.includes("zul")) return "zg";
+  if(text.includes("ony")) return "ony";
+  return "mc";
+}
+
+function dashboardLogStatusBadge(entry,type){
+  const state=dashboardLogStatus(entry,type);
+  const label=type.toUpperCase();
+  if(state === "done") return '<span class="log-badge done">'+label+' fertig</span>';
+  if(state === "wait") return '<span class="log-badge wait">'+label+' läuft</span>';
+  if(state === "fail") return '<span class="log-badge fail">'+label+' Fehler</span>';
+  return '<span class="log-badge">'+label+' offen</span>';
+}
+
+function dashboardLogTime(entry){
+  const summary=entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const time=summary.raidTime || summary.startTime || "";
+  if(time) return formatRaidTimeForDisplay(time)+" Uhr";
+  const source=entry && (entry.postedAt || entry.createdAt || entry.updatedAt);
+  const date=source ? new Date(source) : null;
+  if(!date || Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+" Uhr";
+}
+
+function renderDashboardLogAnalyses(entries){
+  const list=Array.isArray(entries) ? entries : [];
+  const rows=document.getElementById("logsDashboardRows");
+  const quick=document.getElementById("logsDashboardQuick");
+  const total=list.length;
+  const claDone=list.filter(entry=>dashboardLogStatus(entry,"cla")==="done").length;
+  const rpbDone=list.filter(entry=>dashboardLogStatus(entry,"rpb")==="done").length;
+  const open=list.filter(entry=>dashboardLogStatus(entry,"cla")!=="done" || dashboardLogStatus(entry,"rpb")!=="done").length;
+  const setText=(id,value)=>{ const el=document.getElementById(id); if(el) el.textContent=String(value); };
+  setText("logDashReports",total);
+  setText("logDashCla",claDone);
+  setText("logDashRpb",rpbDone);
+  setText("logDashOpen",open);
+
+  const latestCla=list.find(entry=>dashboardLogUrl(entry,"cla"));
+  const latestRpb=list.find(entry=>dashboardLogUrl(entry,"rpb"));
+  const latestWcl=list.find(entry=>entry && entry.reportUrl);
+  if(quick){
+    const quickCards=[
+      {cls:"cla",icon:"▣",title:"CLA Sheet öffnen",text:latestCla ? (latestCla.raid || latestCla.title || "Letzte CLA") : "Noch kein CLA-Link",url:latestCla ? dashboardLogUrl(latestCla,"cla") : ""},
+      {cls:"rpb",icon:"▣",title:"RPB Sheet öffnen",text:latestRpb ? (latestRpb.raid || latestRpb.title || "Letzte RPB") : "Noch kein RPB-Link",url:latestRpb ? dashboardLogUrl(latestRpb,"rpb") : ""},
+      {cls:"wcl",icon:"◎",title:"Warcraft Logs öffnen",text:latestWcl ? (latestWcl.raid || latestWcl.title || "Letzter Report") : "Noch kein Report",url:latestWcl ? latestWcl.reportUrl : ""}
+    ];
+    quick.innerHTML=quickCards.map(card=>{
+      const disabled=!card.url;
+      const tag=disabled ? "div" : "a";
+      const href=disabled ? "" : ` href="${safeAttr(card.url)}" target="_blank" rel="noopener"`;
+      return `<${tag} class="log-quick-card ${card.cls}"${href}><span class="log-quick-icon">${card.icon}</span><span><strong>${safeHtml(card.title)}</strong><span>${safeHtml(card.text)}</span></span><span class="log-quick-arrow">›</span></${tag}>`;
+    }).join("");
+  }
+
+  if(!rows) return;
+  if(!list.length){
+    rows.innerHTML='<div class="status">Noch keine Loganalysen vorhanden.</div>';
+    return;
+  }
+  rows.innerHTML=list.slice(0,8).map(entry=>{
+    const raidKey=dashboardLogRaidKey(entry);
+    const raidName=entry.raid || raids[raidKey]?.short || "Raid";
+    const claUrl=dashboardLogUrl(entry,"cla");
+    const rpbUrl=dashboardLogUrl(entry,"rpb");
+    const actions=[
+      claUrl ? `<a href="${safeAttr(claUrl)}" target="_blank" rel="noopener">CLA</a>` : "",
+      rpbUrl ? `<a class="rpb" href="${safeAttr(rpbUrl)}" target="_blank" rel="noopener">RPB</a>` : "",
+      entry.reportUrl ? `<a class="wcl" href="${safeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
+    ].filter(Boolean).join("");
+    return `<div class="log-dashboard-row">
+      <div class="log-dashboard-raid"><img src="${safeAttr(raidImagePath(raidKey))}" alt=""><div><strong>${safeHtml(raidName)}</strong><span>${safeHtml(entry.reportCode || "")}</span></div></div>
+      <div class="log-dashboard-date">${safeHtml(formatRaidDateForDisplay(entry.raidDate || entry.summary?.raidDate || ""))}<br>${safeHtml(dashboardLogTime(entry))}</div>
+      <div class="log-dashboard-badges">${dashboardLogStatusBadge(entry,"cla")}${dashboardLogStatusBadge(entry,"rpb")}</div>
+      <div class="log-dashboard-actions">${actions || '<span class="log-badge wait">wartet</span>'}</div>
+    </div>`;
+  }).join("");
+}
+
+async function loadDashboardLogAnalyses(){
+  const rows=document.getElementById("logsDashboardRows");
+  if(rows) rows.innerHTML='<div class="status">Loganalysen werden geladen …</div>';
+  try{
+    const data=await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
+    renderDashboardLogAnalyses(data.analyses || []);
+  }catch(error){
+    console.warn("Loganalysen konnten nicht geladen werden:", error);
+    if(rows) rows.innerHTML='<div class="status bad">Loganalysen konnten nicht geladen werden.</div>';
+    renderDashboardLogAnalyses([]);
   }
 }
 
@@ -6980,6 +7139,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   initMeinLichtLootAutoLogin();
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
+  loadDashboardLogAnalyses();
   document.addEventListener("click",event=>{
     const menu=document.getElementById("raidCalendarMenu");
     if(menu && !menu.classList.contains("hidden") && !menu.contains(event.target)){
