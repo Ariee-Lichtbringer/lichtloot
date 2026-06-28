@@ -2828,6 +2828,13 @@ function getLogAnalysisGeneratorConfig(type) {
   return { url: clean(url), token: clean(token) };
 }
 
+function buildLogAnalysisCallbackUrl(baseUrl) {
+  const value = clean(baseUrl).replace(/\/$/, "");
+  if (!value) return "";
+  if (value.endsWith("/api/apps-script")) return value;
+  return `${value}/api/apps-script`;
+}
+
 async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
   const config = getLogAnalysisGeneratorConfig(type);
   if (!config.url) return null;
@@ -2845,9 +2852,7 @@ async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
     title: analysis.title || "",
     token: config.token,
     callbackToken: logAnalysisCallbackToken,
-    callbackUrl: callbackBaseUrl
-      ? `${callbackBaseUrl.replace(/\/$/, "")}/api/apps-script`
-      : ""
+    callbackUrl: buildLogAnalysisCallbackUrl(callbackBaseUrl)
   };
 
   const response = await fetch(config.url, {
