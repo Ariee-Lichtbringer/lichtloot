@@ -88,7 +88,6 @@ app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
 app.get("/api/dashboard", async (req, res, next) => {
   try {
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
-    const today = new Date().toISOString().slice(0, 10);
     const result = await query(
       `select r.*,
               (
@@ -104,10 +103,16 @@ app.get("/api/dashboard", async (req, res, next) => {
               ) as p0plus_transfer_count
        from raids r
        where r.guild_id = $1
-         and raid_date >= $2
+         and raid_date >= current_date - interval '1 day'
          and coalesce(status, '') not in ('archiviert', 'archive')
-       order by raid_date asc, coalesce(raid_time, '') asc, created_at asc`,
-      [guild.id, today]
+       order by
+         case when raid_date >= current_date then 0 else 1 end,
+         case when raid_date >= current_date then raid_date end asc,
+         case when raid_date < current_date then raid_date end desc,
+         coalesce(raid_time, '') asc,
+         created_at desc
+       limit 50`,
+      [guild.id]
     );
     const raids = result.rows.map(row => {
       const raid = normalizeRaidRow(row);
@@ -4996,7 +5001,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getActiveRaids") {
-      const today = new Date().toISOString().slice(0, 10);
       const result = await query(
         `select r.*,
                 (
@@ -5012,10 +5016,16 @@ app.get("/api/apps-script", async (req, res, next) => {
                 ) as p0plus_transfer_count
          from raids r
          where r.guild_id = $1
-           and raid_date >= $2
+           and raid_date >= current_date - interval '1 day'
            and coalesce(status, '') not in ('archiviert', 'archive')
-         order by raid_date asc, coalesce(raid_time, '') asc, created_at asc`,
-        [guild.id, today]
+         order by
+           case when raid_date >= current_date then 0 else 1 end,
+           case when raid_date >= current_date then raid_date end asc,
+           case when raid_date < current_date then raid_date end desc,
+           coalesce(raid_time, '') asc,
+           created_at desc
+         limit 50`,
+        [guild.id]
       );
       const raids = result.rows.map(row => {
         const raid = normalizeRaidRow(row);
