@@ -5936,7 +5936,7 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...messages, guild: guild.slug });
     }
 
-    if (action === "getPublicWorldbuffs") {
+    if (action === "guildGetWorldbuffs" || action === "getPublicWorldbuffs") {
       const buffs = await getWorldbuffs({ query: req.query });
       return res.json({ ...buffs, guild: guild.slug });
     }
