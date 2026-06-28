@@ -36,6 +36,10 @@ await ensureRaidCreatedByColumn().catch(error => {
   console.warn("Raid-Ersteller-Spalte konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureBuffTables().catch(error => {
+  console.warn("Buff-Tabellen konnten nicht vorbereitet werden:", error.message || error);
+});
+
 await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
@@ -1006,6 +1010,68 @@ async function ensureRaidCreatedByColumn() {
   await query(`alter table raids add column if not exists created_by text`);
 }
 
+async function ensureBuffTables() {
+  await query(
+    `create table if not exists hordenbuff_events (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       buff text not null default 'Rend',
+       event_date date not null,
+       event_time text not null,
+       faction text not null default 'Horde',
+       status text not null default 'offen',
+       note text,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (guild_id, buff, event_date, event_time)
+     )`
+  );
+  await query(
+    `create table if not exists hordenbuff_entries (
+       id uuid primary key default gen_random_uuid(),
+       event_id uuid not null references hordenbuff_events(id) on delete cascade,
+       ally_char text,
+       horde_char text,
+       status text not null default 'offen',
+       note text,
+       source text not null default 'railway',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(
+    `create table if not exists worldbuff_events (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       buff text not null,
+       event_date date not null,
+       event_time text not null,
+       guild_name text,
+       status text not null default 'offen',
+       note text,
+       source text not null default 'railway',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (guild_id, buff, event_date, event_time, guild_name)
+     )`
+  );
+  await query(
+    `create table if not exists worldbuff_entries (
+       id uuid primary key default gen_random_uuid(),
+       event_id uuid not null references worldbuff_events(id) on delete cascade,
+       caster text,
+       discord_name text,
+       status text not null default 'offen',
+       note text,
+       source text not null default 'railway',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(`create index if not exists hordenbuff_events_guild_date_idx on hordenbuff_events (guild_id, event_date, event_time)`);
+  await query(`create index if not exists worldbuff_events_guild_date_idx on worldbuff_events (guild_id, event_date, event_time)`);
+}
+
 function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean(value));
 }
@@ -1080,6 +1146,15 @@ function normalizeHordenbuffStatus(value) {
   if (raw.includes("erledigt") || raw === "done" || raw === "fertig") return "erledigt";
   if (raw.includes("zugeteilt")) return "zugeteilt";
   if (raw.includes("offen")) return "offen";
+  return clean(value);
+}
+
+function normalizeWorldbuffStatus(value) {
+  const raw = clean(value).replace(/[🟡🟢✅🔴🟠⚪]/g, "").trim().toLowerCase();
+  if (!raw) return "offen";
+  if (raw.includes("bestätigt") || raw.includes("bestaetigt") || raw.includes("reserviert")) return "bestätigt";
+  if (raw.includes("erledigt") || raw === "done" || raw === "fertig") return "erledigt";
+  if (raw.includes("offen") || raw.includes("frei")) return "offen";
   return clean(value);
 }
 
@@ -1179,6 +1254,29 @@ function normalizeWorldbuffRow(row) {
   };
 }
 
+function normalizeWorldbuffDbRow(row) {
+  return {
+    rowNumber: row.entry_id || row.event_id || "",
+    eventId: row.event_id,
+    buff: normalizeWorldbuffName(row.buff || "Worldbuff"),
+    tag: row.tag || weekdayShort(row.event_date),
+    datum: formatGermanDate(row.event_date),
+    date: row.event_date ? row.event_date.toISOString().slice(0, 10) : "",
+    uhrzeit: row.event_time || "",
+    time: row.event_time || "",
+    gilde: row.guild_name || "",
+    charakter: row.caster || "",
+    caster: row.caster || "",
+    discord: row.discord_name || "",
+    uebernehmer: "",
+    status: row.entry_status || row.event_status || "offen",
+    notiz: row.entry_note || row.event_note || "",
+    note: row.entry_note || row.event_note || "",
+    source: row.entry_source || row.event_source || "railway",
+    key: `${formatGermanDate(row.event_date)}|${row.event_time || ""}|${normalizeWorldbuffName(row.buff || "")}|${row.guild_name || ""}`
+  };
+}
+
 function worldbuffCsvRowsToBuffs(text) {
   const rows = parseCsvRows(text);
   const headerIndex = rows.findIndex(row => {
@@ -1256,7 +1354,7 @@ async function fetchText(url) {
   return response.text();
 }
 
-async function getWorldbuffs({ query: params }) {
+async function getWorldbuffsFromSheets(params = {}) {
   const days = clean(params.days || "14");
   const dayCount = days === "all" ? 3650 : Math.max(Number(days) || 14, 1);
   const start = new Date();
@@ -1285,6 +1383,367 @@ async function getWorldbuffs({ query: params }) {
     .sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
 
   return { success: true, buffs: filtered, entries: filtered };
+}
+
+async function getWorldbuffs({ guildId, query: params }) {
+  await ensureBuffTables();
+  const days = clean(params.days || "14");
+  const source = clean(params.source).toLowerCase();
+  const dayCount = days === "all" ? 3650 : Math.max(Number(days) || 14, 1);
+  const values = [guildId];
+  let windowClause = "";
+  if (days !== "all") {
+    values.push(dayCount);
+    windowClause = `and e.event_date <= current_date + ($2::int * interval '1 day')`;
+  }
+
+  const result = await query(
+    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name,
+            e.status as event_status, e.note as event_note, e.source as event_source,
+            we.id as entry_id, we.caster, we.discord_name,
+            we.status as entry_status, we.note as entry_note, we.source as entry_source
+     from worldbuff_events e
+     left join worldbuff_entries we on we.event_id = e.id
+     where e.guild_id = $1
+       and e.event_date >= current_date
+       ${windowClause}
+     order by e.event_date asc, e.event_time asc, e.buff asc, e.guild_name asc, we.created_at asc`,
+    values
+  );
+
+  const railwayRows = result.rows.map(normalizeWorldbuffDbRow);
+  if (railwayRows.length || source === "railway") {
+    return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+  }
+
+  const sheetRows = await getWorldbuffsFromSheets(params);
+  return { ...sheetRows, source: "sheet-fallback" };
+}
+
+async function upsertWorldbuffEvent(client, guildId, params) {
+  const eventDate = parseDateValue(params.datum || params.date || params.eventDate);
+  const eventTime = clean(params.uhrzeit || params.time || params.eventTime || "19:35");
+  const buff = normalizeWorldbuffName(params.buff || "Hakkar") || "Hakkar";
+  const guildName = clean(params.gilde || params.guild || params.fraktion || params.faction);
+  const status = normalizeWorldbuffStatus(params.eventStatus || params.status || "offen");
+  const note = clean(params.eventNote || params.note || params.notiz);
+  const source = clean(params.source || "railway");
+
+  const result = await client.query(
+    `insert into worldbuff_events (guild_id, buff, event_date, event_time, guild_name, status, note, source)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     on conflict (guild_id, buff, event_date, event_time, guild_name) do update
+       set status = coalesce(nullif(excluded.status, ''), worldbuff_events.status),
+           note = coalesce(nullif(excluded.note, ''), worldbuff_events.note),
+           source = coalesce(nullif(excluded.source, ''), worldbuff_events.source),
+           updated_at = now()
+     returning *`,
+    [guildId, buff, eventDate, eventTime, guildName, status, note, source]
+  );
+  return result.rows[0];
+}
+
+async function findWorldbuffEventOrEntry(client, guildId, rowNumber) {
+  if (!isUuid(rowNumber)) return { event: null, entry: null };
+  const entryResult = await client.query(
+    `select we.*, e.id as event_id
+     from worldbuff_entries we
+     join worldbuff_events e on e.id = we.event_id
+     where we.id = $1 and e.guild_id = $2`,
+    [rowNumber, guildId]
+  );
+  if (entryResult.rows[0]) return { event: { id: entryResult.rows[0].event_id }, entry: entryResult.rows[0] };
+
+  const eventResult = await client.query(
+    `select *
+     from worldbuff_events
+     where id = $1 and guild_id = $2`,
+    [rowNumber, guildId]
+  );
+  return { event: eventResult.rows[0] || null, entry: null };
+}
+
+async function setWorldbuffCaster({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureBuffTables();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const rowNumber = clean(params.rowNumber);
+    const found = await findWorldbuffEventOrEntry(client, guildId, rowNumber);
+    const caster = clean(params.charakter || params.caster || params.werfer);
+    const discordName = clean(params.discord || params.discordName);
+    const status = normalizeWorldbuffStatus(params.status || (caster ? "bestätigt" : "offen"));
+    const note = clean(params.note || params.notiz);
+    let event = found.event;
+    if (!event && !clean(params.datum || params.date) && !clean(params.uhrzeit || params.time)) {
+      const wantedBuff = normalizeWorldbuffName(params.buff);
+      const nextOpen = await client.query(
+        `select e.*
+         from worldbuff_events e
+         left join worldbuff_entries we on we.event_id = e.id and nullif(we.caster, '') is not null
+         where e.guild_id = $1
+           and e.event_date >= current_date
+           and lower(coalesce(e.guild_name, '')) = 'lichtbringer'
+           and ($2 = '' or e.buff = $2 or ($2 in ('Ony', 'Nef') and e.buff in ('Ony', 'Nef')))
+           and we.id is null
+           and lower(coalesce(e.status, 'offen')) not in ('erledigt', 'done', 'fertig')
+         order by e.event_date asc, e.event_time asc
+         limit 1`,
+        [guildId, wantedBuff]
+      );
+      event = nextOpen.rows[0] || null;
+    }
+    event = event || await upsertWorldbuffEvent(client, guildId, params);
+    let savedId = found.entry?.id || "";
+
+    if (found.entry) {
+      const saved = await client.query(
+        `update worldbuff_entries
+         set caster = $2,
+             discord_name = coalesce(nullif($3, ''), discord_name),
+             status = $4,
+             note = $5,
+             updated_at = now()
+         where id = $1
+         returning *`,
+        [found.entry.id, caster, discordName, status, note]
+      );
+      savedId = saved.rows[0].id;
+    } else if (caster || note || status !== "offen") {
+      const saved = await client.query(
+        `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
+         values ($1, $2, $3, $4, $5, $6)
+         returning *`,
+        [event.id, caster, discordName, status, note, clean(params.source || "railway")]
+      );
+      savedId = saved.rows[0].id;
+    } else {
+      await client.query(
+        `update worldbuff_events
+         set status = $2, updated_at = now()
+         where id = $1`,
+        [event.id, status]
+      );
+    }
+
+    await client.query("commit");
+    await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_saved" } }).catch(() => {});
+    return {
+      success: true,
+      rowNumber: savedId || event.id,
+      eventId: event.id,
+      buff: normalizeWorldbuffName(params.buff || event.buff),
+      datum: formatGermanDate(params.datum || event.event_date),
+      uhrzeit: clean(params.uhrzeit || event.event_time),
+      charakter: caster,
+      status
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function createWorldbuffTerm({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureBuffTables();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const event = await upsertWorldbuffEvent(client, guildId, params);
+    const caster = clean(params.charakter || params.caster || params.werfer);
+    if (caster || clean(params.note || params.notiz)) {
+      await client.query(
+        `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
+         values ($1, $2, $3, $4, $5, 'railway')`,
+        [
+          event.id,
+          caster,
+          clean(params.discord || params.discordName),
+          normalizeWorldbuffStatus(params.status || (caster ? "bestätigt" : "offen")),
+          clean(params.note || params.notiz)
+        ]
+      );
+    }
+    await client.query("commit");
+    await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_created" } }).catch(() => {});
+    return { success: true, eventId: event.id };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function deleteWorldbuffTerm({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureBuffTables();
+  const rowNumber = clean(params.rowNumber);
+  if (rowNumber && isUuid(rowNumber)) {
+    const entryDeleted = await query(
+      `delete from worldbuff_entries we
+       using worldbuff_events e
+       where we.event_id = e.id and e.guild_id = $1 and we.id = $2`,
+      [guildId, rowNumber]
+    );
+    if (!entryDeleted.rowCount) {
+      await query(`delete from worldbuff_events where guild_id = $1 and id = $2`, [guildId, rowNumber]);
+    }
+    await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_deleted" } }).catch(() => {});
+    return { success: true };
+  }
+
+  const eventDate = parseDateValue(params.datum || params.date);
+  const eventTime = clean(params.uhrzeit || params.time);
+  const buff = normalizeWorldbuffName(params.buff);
+  const guildName = clean(params.gilde || params.guild || params.fraktion || params.faction);
+  await query(
+    `delete from worldbuff_events
+     where guild_id = $1
+       and event_date = $2
+       and event_time = $3
+       and buff = $4
+       and coalesce(guild_name, '') = $5`,
+    [guildId, eventDate, eventTime, buff, guildName]
+  );
+  await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_deleted" } }).catch(() => {});
+  return { success: true };
+}
+
+async function importWorldbuffsFromSheets({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureBuffTables();
+  let sourceRows = [];
+  if (params.buffs) {
+    try {
+      const parsed = typeof params.buffs === "string" ? JSON.parse(params.buffs) : params.buffs;
+      if (Array.isArray(parsed)) sourceRows = parsed.map(normalizeWorldbuffRow).filter(Boolean);
+    } catch (error) {
+      const parseError = new Error("Worldbuff-Liste konnte nicht gelesen werden.");
+      parseError.statusCode = 400;
+      throw parseError;
+    }
+  }
+  if (!sourceRows.length) {
+    sourceRows = (await getWorldbuffsFromSheets({ ...params, days: params.days || "all" })).buffs || [];
+  }
+  const client = await pool.connect();
+  let synced = 0;
+  try {
+    await client.query("begin");
+    for (const entry of sourceRows) {
+      await upsertWorldbuffEvent(client, guildId, {
+        datum: entry.datum,
+        uhrzeit: entry.uhrzeit,
+        buff: entry.buff,
+        gilde: entry.gilde,
+        status: entry.status || "offen",
+        note: entry.notiz || entry.note || "",
+        source: entry.source || "sheet-import"
+      });
+      synced += 1;
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+  await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_import" } }).catch(() => {});
+  return { success: true, synced };
+}
+
+async function getPlayerWorldbuffs({ guildId, query: params }) {
+  const pin = normalizePin(params.pin);
+  if (!pin) return { success: false, error: "SpielerLogin fehlt." };
+  const chars = await getPlayerCharacters(guildId, pin);
+  const names = chars.map(char => clean(char.name).toLowerCase()).filter(Boolean);
+  if (!names.length) return { success: true, buffs: [], openSlots: [] };
+  const all = (await getWorldbuffs({ guildId, query: { days: params.days || 90, source: "railway" } })).buffs || [];
+  const openSlots = all.filter(entry =>
+    ["Hakkar", "Ony", "Nef"].includes(normalizeWorldbuffName(entry.buff)) &&
+    !clean(entry.charakter) &&
+    normalizeWorldbuffStatus(entry.status) === "offen" &&
+    clean(entry.gilde).toLowerCase() === "lichtbringer"
+  );
+  const buffs = all
+    .filter(entry => names.includes(clean(entry.charakter).toLowerCase()))
+    .map(entry => ({
+      ...entry,
+      alternatives: openSlots
+        .filter(slot => normalizeWorldbuffName(slot.buff) === normalizeWorldbuffName(entry.buff) && slot.rowNumber !== entry.rowNumber)
+        .slice(0, 20)
+    }));
+  return { success: true, buffs, openSlots };
+}
+
+async function claimPlayerWorldbuff({ guildId, query: params }) {
+  const pin = normalizePin(params.pin);
+  const charakter = clean(params.charakter || params.caster);
+  if (!pin || !charakter) return { success: false, error: "SpielerLogin oder Charakter fehlt." };
+  const chars = await getPlayerCharacters(guildId, pin);
+  if (!chars.some(char => clean(char.name).toLowerCase() === charakter.toLowerCase())) {
+    return { success: false, error: "Dieser Charakter gehört nicht zu deinem SpielerLogin." };
+  }
+  return setWorldbuffCaster({
+    guildId,
+    query: {
+      ...params,
+      queueToken: lichtbotQueueToken,
+      charakter,
+      status: "bestätigt"
+    }
+  });
+}
+
+async function movePlayerWorldbuff({ guildId, query: params }) {
+  const pin = normalizePin(params.pin);
+  const fromRowNumber = clean(params.fromRowNumber);
+  const toRowNumber = clean(params.toRowNumber);
+  if (!pin || !fromRowNumber || !toRowNumber) return { success: false, error: "Termin-Auswahl ist unvollständig." };
+  const chars = await getPlayerCharacters(guildId, pin);
+  const names = chars.map(char => clean(char.name).toLowerCase()).filter(Boolean);
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const from = await client.query(
+      `select we.*
+       from worldbuff_entries we
+       join worldbuff_events e on e.id = we.event_id
+       where we.id = $1 and e.guild_id = $2`,
+      [fromRowNumber, guildId]
+    );
+    const entry = from.rows[0];
+    if (!entry || !names.includes(clean(entry.caster).toLowerCase())) {
+      await client.query("rollback");
+      return { success: false, error: "Der alte Termin wurde nicht gefunden." };
+    }
+    const target = await findWorldbuffEventOrEntry(client, guildId, toRowNumber);
+    if (!target.event) {
+      await client.query("rollback");
+      return { success: false, error: "Der neue Termin wurde nicht gefunden." };
+    }
+    await client.query("delete from worldbuff_entries where id = $1", [entry.id]);
+    const saved = await client.query(
+      `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
+       values ($1, $2, $3, $4, $5, 'railway')
+       returning id`,
+      [target.event.id, entry.caster, entry.discord_name, entry.status, entry.note]
+    );
+    await client.query("commit");
+    await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_moved" } }).catch(() => {});
+    return { success: true, rowNumber: saved.rows[0].id };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function upsertHordenbuffEvent(client, guildId, params) {
@@ -4466,7 +4925,9 @@ async function exportGuildBackup({ guildId, query: params }) {
     issueReportsResult,
     playerMessagesResult,
     hordenbuffEventsResult,
-    hordenbuffEntriesResult
+    hordenbuffEntriesResult,
+    worldbuffEventsResult,
+    worldbuffEntriesResult
   ] = await Promise.all([
     query("select id, name, slug, created_at from guilds where id = $1", [guildId]),
     query("select * from guild_settings where guild_id = $1", [guildId]),
@@ -4549,6 +5010,15 @@ async function exportGuildBackup({ guildId, query: params }) {
        where e.guild_id = $1
        order by e.event_date asc, e.event_time asc, he.created_at asc`,
       [guildId]
+    ),
+    query("select * from worldbuff_events where guild_id = $1 order by event_date asc, event_time asc", [guildId]),
+    query(
+      `select we.*
+       from worldbuff_entries we
+       join worldbuff_events e on e.id = we.event_id
+       where e.guild_id = $1
+       order by e.event_date asc, e.event_time asc, we.created_at asc`,
+      [guildId]
     )
   ]);
 
@@ -4565,7 +5035,9 @@ async function exportGuildBackup({ guildId, query: params }) {
     issueReports: issueReportsResult.rows,
     playerMessages: playerMessagesResult.rows,
     hordenbuffEvents: hordenbuffEventsResult.rows,
-    hordenbuffEntries: hordenbuffEntriesResult.rows
+    hordenbuffEntries: hordenbuffEntriesResult.rows,
+    worldbuffEvents: worldbuffEventsResult.rows,
+    worldbuffEntries: worldbuffEntriesResult.rows
   };
 }
 
@@ -6291,13 +6763,38 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildGetWorldbuffs" || action === "getPublicWorldbuffs") {
-      const buffs = await getWorldbuffs({ query: req.query });
+      const buffs = await getWorldbuffs({ guildId: guild.id, query: req.query });
       return res.json({ ...buffs, guild: guild.slug });
     }
 
     if (action === "guildGetHordenbuffs" || action === "getPublicHordenbuffs") {
       const buffs = await getHordenbuffs({ guildId: guild.id, query: req.query });
       return res.json({ ...buffs, guild: guild.slug });
+    }
+
+    if (action === "getPlayerWorldbuffs") {
+      const buffs = await getPlayerWorldbuffs({ guildId: guild.id, query: req.query });
+      return res.json({ ...buffs, guild: guild.slug });
+    }
+
+    if (action === "claimPlayerWorldbuff") {
+      const saved = await claimPlayerWorldbuff({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "movePlayerWorldbuff") {
+      const moved = await movePlayerWorldbuff({ guildId: guild.id, query: req.query });
+      return res.json({ ...moved, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteWorldbuffTerm") {
+      const deleted = await deleteWorldbuffTerm({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildRestoreDeletedWorldbuffTerms") {
+      requireMasterOrQueueToken(req.query);
+      return res.json({ success: true, guild: guild.slug, restored: 0, skipped: 0 });
     }
 
     if (action === "lichtbotGetQueue") {
@@ -6518,8 +7015,26 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildCreateBuffTerm") {
-      const created = await createHordenbuffTerm({ guildId: guild.id, query: postParams });
+      const target = clean(postParams.target).toLowerCase();
+      const created = target === "worldbuff"
+        ? await createWorldbuffTerm({ guildId: guild.id, query: postParams })
+        : await createHordenbuffTerm({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "guildSetWorldbuffCaster" || action === "lichtbotSetWorldbuffCaster" || action === "lichtbotClaimWorldbuffSlot") {
+      const saved = await setWorldbuffCaster({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "claimPlayerWorldbuff") {
+      const saved = await claimPlayerWorldbuff({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "movePlayerWorldbuff") {
+      const moved = await movePlayerWorldbuff({ guildId: guild.id, query: postParams });
+      return res.json({ ...moved, guild: guild.slug });
     }
 
     if (action === "createRaid") {
@@ -6540,6 +7055,37 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildDeleteHordenbuffEntry" || action === "lichtbotDeleteHordenbuffEntry") {
       const deleted = await deleteHordenbuffEntry({ guildId: guild.id, query: postParams });
       return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteWorldbuffTerm" || action === "lichtbotDeleteWorldbuffTerm") {
+      const deleted = await deleteWorldbuffTerm({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildSyncPublicBuffTerms" || action === "guildImportWorldbuffsFromSheets" || action === "lichtbotSyncWorldbuffTicker") {
+      const imported = await importWorldbuffsFromSheets({ guildId: guild.id, query: postParams });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
+    if (action === "guildRestoreDeletedWorldbuffTerms") {
+      return res.json({ success: true, guild: guild.slug, restored: 0, skipped: 0 });
+    }
+
+    if (action === "guildRequestWorldbuffReplacement") {
+      const queued = await enqueueBotUpdate({
+        guildId: guild.id,
+        type: "worldbuff_replacement",
+        payload: {
+          target: clean(postParams.target || "both"),
+          buff: clean(postParams.buff),
+          datum: clean(postParams.datum),
+          uhrzeit: clean(postParams.uhrzeit),
+          gilde: clean(postParams.gilde),
+          charakter: clean(postParams.charakter),
+          note: clean(postParams.note)
+        }
+      });
+      return res.json({ ...queued, guild: guild.slug });
     }
 
     if (action === "guildQueueWorldbuffBotUpdate") {
