@@ -4207,7 +4207,7 @@ async function deleteWorldbuffTerm(index){
   }
 
   try{
-    const result = await apiWrite({
+    const result = await apiJsonp({
       action:"guildDeleteWorldbuffTerm",
       masterCode,
       rowNumber:entry.rowNumber || "",
@@ -4217,7 +4217,7 @@ async function deleteWorldbuffTerm(index){
       gilde:entry.gilde || ""
     });
 
-    if(!result.success && !result.submitted){
+    if(!result.success){
       setStatus(result.error || "Worldbuff-Termin konnte nicht gelöscht werden.", "bad");
       return;
     }
