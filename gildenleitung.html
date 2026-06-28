@@ -1357,6 +1357,21 @@ tr:hover td{background:rgba(250,204,21,.035)}
   font-weight:950;
   letter-spacing:1px;
 }
+#discordPostModal .modal-box{
+  width:min(620px, calc(100vw - 24px));
+}
+#discordPostText{
+  width:100%;
+  min-height:260px;
+  border-radius:8px;
+  border:1px solid rgba(250,204,21,.38);
+  background:rgba(2,6,23,.78);
+  color:#e5edf8;
+  padding:12px;
+  resize:vertical;
+  font-weight:800;
+  line-height:1.45;
+}
 
 .prio-actions{
   display:grid;
@@ -1695,6 +1710,23 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <button class="btn" type="button" onclick="submitMessageModal()">Nachricht senden</button>
       <div id="messageModalStatus" class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<div id="discordPostModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="discordPostModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="discordPostModalTitle">Discord-Post kopieren</h2>
+        <p>Fertigen Raid-Post kopieren und im passenden Discord-Channel einfügen.</p>
+      </div>
+      <button class="btn danger" type="button" onclick="closeDiscordPostModal()">Schließen</button>
+    </div>
+    <div class="modal-content">
+      <textarea id="discordPostText" readonly></textarea>
+      <button class="btn" type="button" onclick="copyDiscordPostText()">Text kopieren</button>
+      <div id="discordPostModalStatus" class="status">Bereit.</div>
     </div>
   </div>
 </div>
@@ -2190,6 +2222,17 @@ function isRaidTodayOrFuture(raid){
   return date >= yesterdayIsoDate();
 }
 
+function getRaidCreatorName(raid){
+  return String(
+    raid?.createdBy ||
+    raid?.creator ||
+    raid?.created_by ||
+    raid?.erstelltVon ||
+    raid?.ersteller ||
+    "Gildenleitung"
+  ).trim() || "Gildenleitung";
+}
+
 function yesterdayIsoDate(){
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -2213,6 +2256,7 @@ function renderDashboardCards(){
 
   box.innerHTML = raids.map(raid => {
     const key = getRaidKey(raid);
+    const createdBy = getRaidCreatorName(raid);
     return `
       <article class="active-raid-card">
         <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
@@ -2223,6 +2267,7 @@ function renderDashboardCards(){
             <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
             <div class="active-raid-stats">
               <span class="active-raid-stat">${escapeHtml(raid.guild || CURRENT_GUILD_BRAND.guildName)}</span>
+              <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
               <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
             </div>
           </div>
@@ -2236,7 +2281,7 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
-              <button class="small-btn ghost" type="button" onclick="postRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
+              <button class="small-btn ghost" type="button" onclick="openDiscordPostModal('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
@@ -2561,21 +2606,25 @@ function randomCode(length){
   return code;
 }
 
-function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin){
+function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy){
   const lines = [
-    "Neuer Raid: " + raidName,
-    "Datum: " + formatRaidDate(raidDate),
-    "Start: " + raidTime + " Uhr"
+    "📣 Neuer Raid: " + raidName,
+    "🗓️ Datum: " + formatRaidDate(raidDate),
+    "⏰ Start: " + raidTime + " Uhr"
   ];
 
   if(guild){
-    lines.push("Gilde: " + guild);
+    lines.push("🏰 Gilde: " + guild);
+  }
+
+  if(createdBy){
+    lines.push("👤 Erstellt von: " + createdBy);
   }
 
   lines.push(
     "",
-    "Prio-PIN: " + playerPin,
-    "Prios eintragen: " + new URL(withGuildUrl("index.html"), window.location.href).href,
+    "🔑 Prio-PIN: " + playerPin,
+    "➡️ Prios eintragen: " + new URL(withGuildUrl("index.html"), window.location.href).href,
     "",
     "Bitte tragt eure Prios rechtzeitig ein."
   );
@@ -2615,7 +2664,8 @@ async function createRaidFromGuildPage(){
   const raidId = createRaidIdForGuildPage(raidKey);
   const playerPin = randomCode(3);
   const leadPin = randomCode(4);
-  const discordPostText = buildRaidDiscordPostText(raid.name, raidDate, raidTime, guild, playerPin);
+  const createdBy = "Gildenleitung";
+  const discordPostText = buildRaidDiscordPostText(raid.name, raidDate, raidTime, guild, playerPin, createdBy);
   const raidData = {
     action:"createRaid",
     raidId,
@@ -2630,6 +2680,7 @@ async function createRaidFromGuildPage(){
     playerPin,
     leadPin,
     playerLink:"",
+    createdBy,
     createdAt:new Date().toISOString(),
     status:"geschlossen",
     p0PlusFreigabe:"geöffnet",
@@ -2831,27 +2882,85 @@ function sendGeneralMessageFromGuildPage(){
   });
 }
 
-async function postRaidToDiscord(raidId){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
+function findRaidByAnyId(raidId){
+  return (guildData.raids || []).find(entry => {
+    return String(entry.raidId || "") === String(raidId) ||
+      String(entry.id || "") === String(raidId) ||
+      String(entry.RaidID || "") === String(raidId);
+  });
+}
+
+function buildRaidDiscordPostTextFromRaid(raid){
+  const raidName = raid.raidName || RAID_OPTIONS[getRaidKey(raid)]?.name || raid.raid || "Raid";
+  const raidDate = raid.raidDate || raid.datum || raid.date || "";
+  const raidTime = raid.raidTime || raid.uhrzeit || raid.time || "";
+  const guild = raid.guild || raid.gilde || CURRENT_GUILD_BRAND.guildName;
+  const playerPin = raid.playerPin || raid.prioPin || "-";
+  const createdBy = getRaidCreatorName(raid);
+
+  return buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy);
+}
+
+function openDiscordPostModal(raidId){
   if(!raidId){
     setStatus("Raid-ID fehlt.", "bad");
     return;
   }
 
-  try{
-    const result = await railwayWrite({ action:"guildQueueRaidAnnouncement", masterCode, raidId });
-    if(!result.success){
-      setStatus(result.error || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
-      return;
-    }
-    setStatus("Discord-Post wurde vorgemerkt. Der Bot postet ihn gleich im Raid-Channel.", "good");
-  }catch(error){
-    setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde in der Liste nicht gefunden.", "bad");
+    return;
   }
+
+  const modal = document.getElementById("discordPostModal");
+  const textarea = document.getElementById("discordPostText");
+  const status = document.getElementById("discordPostModalStatus");
+
+  if(textarea) textarea.value = buildRaidDiscordPostTextFromRaid(raid);
+  if(status){
+    status.textContent = "Bereit zum Kopieren.";
+    status.className = "status";
+  }
+  if(modal) modal.classList.remove("hidden");
+}
+
+function closeDiscordPostModal(){
+  const modal = document.getElementById("discordPostModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+async function copyDiscordPostText(){
+  const textarea = document.getElementById("discordPostText");
+  const status = document.getElementById("discordPostModalStatus");
+  const text = textarea ? textarea.value : "";
+
+  if(!text.trim()){
+    if(status){
+      status.textContent = "Kein Discord-Text vorhanden.";
+      status.className = "status bad";
+    }
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(text);
+    if(status){
+      status.textContent = "Discord-Post kopiert.";
+      status.className = "status good";
+    }
+    setStatus("Discord-Post kopiert.", "good");
+  }catch(error){
+    if(textarea) textarea.select();
+    if(status){
+      status.textContent = "Kopieren ist im Browser gerade nicht erlaubt. Text ist markiert.";
+      status.className = "status bad";
+    }
+  }
+}
+
+function postRaidToDiscord(raidId){
+  openDiscordPostModal(raidId);
 }
 
 function openMessageModal(context){
