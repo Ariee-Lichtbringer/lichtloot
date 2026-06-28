@@ -706,14 +706,16 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .issue-panel summary::-webkit-details-marker,
 .worldbuff-panel summary::-webkit-details-marker,
 .raid-panel summary::-webkit-details-marker,
-.player-panel summary::-webkit-details-marker{display:none}
+.player-panel summary::-webkit-details-marker,
+.log-analysis-panel summary::-webkit-details-marker{display:none}
 
 .create-panel summary::after,
 .p0-panel summary::after,
 .issue-panel summary::after,
 .worldbuff-panel summary::after,
 .raid-panel summary::after,
-.player-panel summary::after{
+.player-panel summary::after,
+.log-analysis-panel summary::after{
   content:" öffnen";
   color:var(--muted);
   font-size:12px;
@@ -725,14 +727,16 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .issue-panel[open] summary::after,
 .worldbuff-panel[open] summary::after,
 .raid-panel[open] summary::after,
-.player-panel[open] summary::after{content:" schließen"}
+.player-panel[open] summary::after,
+.log-analysis-panel[open] summary::after{content:" schließen"}
 
 .create-panel-body,
 .p0-panel-body,
 .issue-panel-body,
 .worldbuff-panel-body,
 .raid-panel-body,
-.player-panel-body{
+.player-panel-body,
+.log-analysis-body{
   display:grid;
   gap:8px;
   margin-top:8px;
@@ -753,6 +757,102 @@ select:focus{border-color:rgba(96,165,250,.75)}
   color:var(--muted);
   font-weight:800;
   font-size:13px;
+}
+
+.log-analysis-layout{
+  display:grid;
+  gap:10px;
+}
+
+.log-analysis-hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px;
+  border:1px solid rgba(250,204,21,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(2,6,23,.62));
+}
+
+.log-analysis-hero h3{
+  margin:0;
+  color:var(--gold);
+  font-size:16px;
+}
+
+.log-analysis-hero p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+}
+
+.log-analysis-count{
+  min-width:92px;
+  padding:8px 10px;
+  border:1px solid rgba(96,165,250,.24);
+  border-radius:8px;
+  background:rgba(15,23,42,.66);
+  text-align:right;
+}
+
+.log-analysis-count span{
+  display:block;
+  color:#93c5fd;
+  font-size:22px;
+  font-weight:950;
+}
+
+.log-analysis-count small{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.log-analysis-toolbar{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+}
+
+.log-analysis-table table{
+  min-width:760px;
+}
+
+.log-analysis-table td:first-child strong{
+  color:#e5e7eb;
+  font-size:14px;
+}
+
+.log-action-stack{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(112px,1fr)) auto;
+  gap:6px;
+  min-width:360px;
+}
+
+.log-action-stack .small-btn{
+  justify-content:center;
+}
+
+@media(max-width:760px){
+  .log-analysis-hero,
+  .log-analysis-toolbar{
+    grid-template-columns:1fr;
+    display:grid;
+  }
+
+  .log-analysis-count{
+    text-align:left;
+  }
+
+  .log-action-stack{
+    grid-template-columns:1fr 1fr;
+    min-width:0;
+  }
 }
 
 .created-raid{
@@ -899,6 +999,46 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
 .badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
 .badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
+.analysis-progress{
+  width:min(180px,100%);
+  margin-top:7px;
+}
+
+.analysis-progress-track{
+  height:7px;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:999px;
+  background:rgba(15,23,42,.72);
+}
+
+.analysis-progress-fill{
+  height:100%;
+  min-width:8px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#2563eb,#22c55e);
+  box-shadow:0 0 14px rgba(34,197,94,.38);
+  transition:width .4s ease;
+}
+
+.analysis-progress.is-running .analysis-progress-fill{
+  background:linear-gradient(90deg,#1d4ed8,#22c55e,#facc15);
+  background-size:220% 100%;
+  animation:analysisProgressPulse 1.8s linear infinite;
+}
+
+.analysis-progress-label{
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:900;
+}
+
+@keyframes analysisProgressPulse{
+  from{background-position:0 0}
+  to{background-position:220% 0}
+}
 
 .actions{
   display:flex;
@@ -1508,14 +1648,26 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
   <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
     <summary>Loganalysen</summary>
-    <div class="create-panel-body">
-      <div class="tools">
-        <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
-        <button class="btn" type="button" onclick="saveManualLogAnalysis()">Log aufnehmen</button>
-        <button class="btn ghost" type="button" onclick="loadLogAnalysisPanel(true)">Neu laden</button>
+    <div class="log-analysis-body">
+      <div class="log-analysis-layout">
+        <div class="log-analysis-hero">
+          <div>
+            <h3>WarcraftLogs-Auswertungen</h3>
+            <p>Reports aus dem Logchannel und manuell eingetragene Links werden hier gesammelt.</p>
+          </div>
+          <div class="log-analysis-count">
+            <span id="logAnalysisCount">0</span>
+            <small>Reports</small>
+          </div>
+        </div>
+        <div class="log-analysis-toolbar">
+          <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
+          <button class="btn" type="button" onclick="saveManualLogAnalysis()">Log aufnehmen</button>
+          <button class="btn ghost" type="button" onclick="loadLogAnalysisPanel(true)">Neu laden</button>
+        </div>
       </div>
       <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
-      <div class="table-wrap">
+      <div class="table-wrap log-analysis-table">
         <table>
           <thead>
             <tr>
@@ -1814,6 +1966,7 @@ let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let issueReports = [];
 let logAnalyses = [];
+let logAnalysisRefreshTimer = null;
 let guildSentMessages = [];
 let guildInboxTab = "reports";
 let worldbuffEntries = [];
@@ -4599,7 +4752,7 @@ async function createHordenbuffTerm(){
   }
 }
 
-async function loadLogAnalysisPanel(force){
+async function loadLogAnalysisPanel(force, quiet){
   const masterCode = document.getElementById("masterCode").value.trim();
   const status = document.getElementById("logAnalysisStatus");
   if(!masterCode){
@@ -4611,7 +4764,7 @@ async function loadLogAnalysisPanel(force){
     return;
   }
 
-  if(status) status.textContent = "Loganalysen werden geladen ...";
+  if(status && !quiet) status.textContent = "Loganalysen werden geladen ...";
 
   try{
     const result = await railwayApi({ action:"guildGetLogAnalyses", masterCode, limit:100 });
@@ -4621,7 +4774,7 @@ async function loadLogAnalysisPanel(force){
     }
     logAnalyses = Array.isArray(result.analyses) ? result.analyses : [];
     renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
+    if(status && !quiet) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Loganalysen konnten nicht geladen werden.")}</span>`;
   }
@@ -4678,18 +4831,95 @@ function upsertLogAnalysis(entry){
 function logAnalysisDownloadHref(url){
   const value = String(url || "").trim();
   if(!value) return "";
-  if(/^https?:\/\//i.test(value)) return value;
+  if(/^https?:\/\//i.test(value)){
+    try{
+      const parsed = new URL(value);
+      if(parsed.searchParams.get("action") === "guildDownloadLogAnalysis" && !parsed.pathname.includes("/api/apps-script")){
+        const base = String(LICHTLOOT_API_URL || "").replace(/\/api\/apps-script\/?$/,"").replace(/\/$/,"");
+        return base + "/api/apps-script" + parsed.search;
+      }
+    }catch(error){}
+    return value;
+  }
   if(value.startsWith("/api/apps-script?")){
     return LICHTLOOT_API_URL + value.slice("/api/apps-script".length);
   }
   return value;
 }
 
+function isLogAnalysisQueued(entry, type){
+  const status = normalize(entry && entry.status || "");
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const generatorStatus = normalize(summary[`${type}GeneratorStatus`] || "");
+  return status === `${type}_queued` || generatorStatus === "queued" || generatorStatus === "running" || generatorStatus === "started";
+}
+
+function renderLogAnalysisAction(entry, type, url){
+  const label = type.toUpperCase();
+  const btnClass = type === "cla" ? "primary" : "good";
+  if(url){
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>`;
+  }
+  if(isLogAnalysisQueued(entry, type)){
+    return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button>`;
+  }
+  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${label} erstellen</button>`;
+}
+
+function scheduleLogAnalysisRefresh(){
+  if(logAnalysisRefreshTimer) clearTimeout(logAnalysisRefreshTimer);
+  const panel = document.getElementById("logAnalysisPanel");
+  const hasQueued = (logAnalyses || []).some(entry => isLogAnalysisQueued(entry, "cla") || isLogAnalysisQueued(entry, "rpb"));
+  if(!panel || !panel.open || !hasQueued) return;
+  logAnalysisRefreshTimer = setTimeout(() => loadLogAnalysisPanel(true, true), 15000);
+}
+
+function getLogAnalysisActiveType(entry){
+  if(isLogAnalysisQueued(entry, "cla")) return "cla";
+  if(isLogAnalysisQueued(entry, "rpb")) return "rpb";
+  const status = normalize(entry && entry.status || "");
+  if(status === "cla_done") return "cla";
+  if(status === "rpb_done") return "rpb";
+  return "";
+}
+
+function getLogAnalysisProgress(entry, type){
+  if(!entry || !type) return null;
+  const status = normalize(entry.status || "");
+  if(status === `${type}_done` || status === "done") return {percent:100, label:"100%"};
+  if(!isLogAnalysisQueued(entry, type)) return null;
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const startedRaw = summary.analysisRequestedAt || summary[`${type}GeneratorStartedAt`] || entry.updatedAt || entry.createdAt;
+  const startedAt = new Date(startedRaw || Date.now()).getTime();
+  const elapsed = Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now()));
+  const estimatedMs = type === "cla" ? 4 * 60 * 1000 : 7 * 60 * 1000;
+  const percent = Math.max(8, Math.min(96, Math.round((elapsed / estimatedMs) * 100)));
+  return {percent, label:`ca. ${percent}%`};
+}
+
+function renderLogAnalysisProgress(entry){
+  const type = getLogAnalysisActiveType(entry);
+  const progress = getLogAnalysisProgress(entry, type);
+  if(!progress) return "";
+  const running = progress.percent < 100;
+  return `
+    <div class="analysis-progress ${running ? "is-running" : ""}">
+      <div class="analysis-progress-track">
+        <div class="analysis-progress-fill" style="width:${progress.percent}%"></div>
+      </div>
+      <div class="analysis-progress-label">${running ? escapeHtml(progress.label) + " · wird automatisch aktualisiert" : "fertig"}</div>
+    </div>
+  `;
+}
+
 function renderLogAnalyses(){
   const tbody = document.getElementById("logAnalysisRows");
+  const count = document.getElementById("logAnalysisCount");
+  if(count) count.textContent = String((logAnalyses || []).length);
   if(!tbody) return;
   if(!logAnalyses.length){
     tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Loganalysen vorhanden.</td></tr>';
+    scheduleLogAnalysisRefresh();
     return;
   }
 
@@ -4697,8 +4927,10 @@ function renderLogAnalyses(){
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
     const raid = entry.raid || summary.raid || "Nicht erkannt";
     const date = entry.raidDate || summary.raidDate || "";
-    const claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
-    const rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
+    let claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
+    let rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
+    if(isLogAnalysisQueued(entry, "cla") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(claDownloadUrl)) claDownloadUrl = "";
+    if(isLogAnalysisQueued(entry, "rpb") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(rpbDownloadUrl)) rpbDownloadUrl = "";
     return `
       <tr>
         <td>
@@ -4706,16 +4938,12 @@ function renderLogAnalyses(){
           <span class="muted">${escapeHtml(entry.reportCode || "")}</span>
         </td>
         <td>${escapeHtml(formatLogAnalysisDate(date))}</td>
-        <td>${renderLogAnalysisStatus(entry.status)}</td>
+        <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
         <td>
-          <div class="actions">
-            ${claDownloadUrl
-              ? `<a class="small-btn primary" href="${escapeAttr(claDownloadUrl)}" target="_blank" rel="noopener">CLA öffnen</a>`
-              : `<button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA erstellen</button>`}
+          <div class="log-action-stack">
+            ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
             <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','cla')">CLA Link</button>
-            ${rpbDownloadUrl
-              ? `<a class="small-btn good" href="${escapeAttr(rpbDownloadUrl)}" target="_blank" rel="noopener">RPB öffnen</a>`
-              : `<button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB erstellen</button>`}
+            ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
             <button class="small-btn ghost" type="button" onclick="setLogAnalysisSheetUrl('${escapeAttr(entry.id)}','rpb')">RPB Link</button>
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
           </div>
@@ -4723,6 +4951,7 @@ function renderLogAnalyses(){
       </tr>
     `;
   }).join("");
+  scheduleLogAnalysisRefresh();
 }
 
 function formatLogAnalysisDate(value){
@@ -4732,8 +4961,8 @@ function formatLogAnalysisDate(value){
   return formatDateTime(text);
 }
 
-function renderLogAnalysisStatus(status){
-  const value = normalize(status || "pending");
+function renderLogAnalysisStatus(entryOrStatus){
+  const value = normalize((entryOrStatus && typeof entryOrStatus === "object" ? entryOrStatus.status : entryOrStatus) || "pending");
   const label =
     value === "done" ? "fertig" :
     value === "cla_done" ? "CLA fertig" :
