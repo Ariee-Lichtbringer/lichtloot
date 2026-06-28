@@ -1856,6 +1856,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
             <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
+            <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
           </div>
         </div>
         <div class="log-analysis-toolbar">
@@ -5183,7 +5184,11 @@ function renderLogAnalysisProgress(entry){
       </div>
     `;
   }).join("");
-  const warnings = String(summary.claGeneratorWarnings || "").trim();
+  const warnings = String(summary.claGeneratorWarnings || "")
+    .split("|")
+    .map(part => part.trim())
+    .filter(part => part && !/^populate(GearBreakdown|FrostResistance|Pulls):/i.test(part))
+    .join(" | ");
   return `
     <div class="analysis-progress-list">${rows}</div>
     ${warnings ? `<div class="analysis-warning">CLA: ${escapeHtml(warnings)}</div>` : ""}
@@ -5373,6 +5378,32 @@ async function setLogAnalysisSheetUrl(id, type){
     setStatus(`${label}-Link wurde gespeichert.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " Link konnte nicht gespeichert werden.")}</span>`;
+  }
+}
+
+async function cleanupIncompleteClaAnalyses(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm("Unfertige und fehlerhafte CLA-Zwischenstände löschen? Fertige RPB-Links bleiben erhalten.")) return;
+
+  if(status) status.textContent = "Fehlerhafte CLA-Einträge werden bereinigt ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildCleanupIncompleteClaAnalyses",
+      masterCode
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "CLA konnte nicht bereinigt werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedCla || 0)}</span> fehlerhafte/unfertige CLA-Einträge bereinigt.`;
+    await loadLogAnalysisPanel(true, true);
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "CLA konnte nicht bereinigt werden.")}</span>`;
   }
 }
 
