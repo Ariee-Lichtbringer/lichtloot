@@ -2813,24 +2813,27 @@ async function runLogAnalysis({ guildId, query: params }) {
   const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
   const downloadToken = current.summary?.[downloadTokenKey] || randomUUID();
   let generatorResult = null;
+  let generatorError = "";
   try {
     generatorResult = await startExternalLogAnalysisGenerator({ analysis: current, type, guildId });
   } catch (error) {
+    generatorError = error.message || String(error);
     console.warn(`${type.toUpperCase()} Generator konnte nicht gestartet werden:`, error.message || error);
   }
 
   const generatedSheetUrl = generatorResult?.sheetUrl || generatorResult?.spreadsheetUrl || generatorResult?.url || "";
   const hasExternalGenerator = Boolean(generatorResult);
-  const fallbackDownloadUrl = hasExternalGenerator ? "" : buildLogAnalysisDownloadUrl({ id, type, token: downloadToken });
+  const generatorStatus = generatedSheetUrl ? "done" : hasExternalGenerator ? "queued" : "failed";
   const summaryPatch = {
     lastRequestedAnalysis: type.toUpperCase(),
     analysisRequestedAt: new Date().toISOString(),
     [downloadTokenKey]: downloadToken,
-    [downloadUrlKey]: generatedSheetUrl || fallbackDownloadUrl,
+    [downloadUrlKey]: generatedSheetUrl || "",
     [`${type}GeneratorJobId`]: generatorResult?.jobId || "",
-    [`${type}GeneratorStatus`]: generatorResult?.status || (generatedSheetUrl ? "done" : hasExternalGenerator ? "queued" : "local_csv")
+    [`${type}GeneratorStatus`]: generatorResult?.status || generatorStatus,
+    [`${type}GeneratorError`]: generatorError
   };
-  const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : `${type}_done`;
+  const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : "failed";
   const result = await query(
     `update log_analyses
      set status = $3,
