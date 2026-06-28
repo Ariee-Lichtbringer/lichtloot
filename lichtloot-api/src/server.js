@@ -2188,6 +2188,50 @@ async function saveLogAnalysis({ guildId, query: params }) {
   };
 }
 
+async function runLogAnalysis({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  if (!isUuid(id)) {
+    const error = new Error("Loganalyse-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!["cla", "rpb"].includes(type)) {
+    const error = new Error("Unbekannter Analyse-Typ.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const summaryPatch = {
+    lastRequestedAnalysis: type.toUpperCase(),
+    analysisRequestedAt: new Date().toISOString()
+  };
+  const result = await query(
+    `update log_analyses
+     set status = $3,
+         summary = coalesce(summary, '{}'::jsonb) || $4::jsonb,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [guildId, id, `${type}_queued`, JSON.stringify(summaryPatch)]
+  );
+
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    analysisType: type.toUpperCase(),
+    analysis: normalizeLogAnalysis(result.rows[0])
+  };
+}
+
 function normalizeIssueReportRow(row, index = 0) {
   return {
     id: row.id,
@@ -5064,6 +5108,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildRunLogAnalysis") {
+      const started = await runLogAnalysis({ guildId: guild.id, query: req.query });
+      return res.json({ ...started, guild: guild.slug });
+    }
+
     if (action === "guildResolveIssueReport") {
       const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
@@ -5401,6 +5450,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSaveLogAnalysis" || action === "lichtbotSaveLogAnalysis") {
       const saved = await saveLogAnalysis({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildRunLogAnalysis") {
+      const started = await runLogAnalysis({ guildId: guild.id, query: postParams });
+      return res.json({ ...started, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
