@@ -4629,10 +4629,10 @@ function renderLogAnalyses(){
         <td>
           <div class="actions">
             ${claDownloadUrl
-              ? `<a class="small-btn primary" href="${escapeAttr(claDownloadUrl)}" target="_blank" rel="noopener">CLA Download</a>`
+              ? `<a class="small-btn primary" href="${escapeAttr(claDownloadUrl)}" target="_blank" rel="noopener">CLA öffnen</a>`
               : `<button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA erstellen</button>`}
             ${rpbDownloadUrl
-              ? `<a class="small-btn good" href="${escapeAttr(rpbDownloadUrl)}" target="_blank" rel="noopener">RPB Download</a>`
+              ? `<a class="small-btn good" href="${escapeAttr(rpbDownloadUrl)}" target="_blank" rel="noopener">RPB öffnen</a>`
               : `<button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB erstellen</button>`}
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
           </div>
@@ -4656,8 +4656,8 @@ function renderLogAnalysisStatus(status){
     value === "cla_done" ? "CLA fertig" :
     value === "rpb_done" ? "RPB fertig" :
     value === "failed" ? "Fehler" :
-    value === "cla_queued" ? "CLA vorgemerkt" :
-    value === "rpb_queued" ? "RPB vorgemerkt" :
+    value === "cla_queued" ? "CLA läuft" :
+    value === "rpb_queued" ? "RPB läuft" :
     "eingegangen";
   const cls = value === "done" || value.endsWith("_done") || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
@@ -4687,8 +4687,12 @@ async function triggerLogAnalysis(id, type){
     }
     if(result.analysis) upsertLogAnalysis(result.analysis);
     renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${label}-Download ist bereit.</span>`;
-    setStatus(`${label}-Download ist bereit.`, "good");
+    const analysisStatus = normalize((result.analysis && result.analysis.status) || "");
+    const isQueued = analysisStatus.endsWith("_queued");
+    if(status) status.innerHTML = isQueued
+      ? `<span class="ok">${label} wurde gestartet. Der Link erscheint hier, sobald Google fertig ist.</span>`
+      : `<span class="ok">${label} ist bereit.</span>`;
+    setStatus(isQueued ? `${label} wurde gestartet.` : `${label} ist bereit.`, "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
   }
