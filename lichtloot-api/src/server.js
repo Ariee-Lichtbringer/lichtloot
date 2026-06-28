@@ -2710,6 +2710,25 @@ async function getLogAnalyses({ guildId, query: params }) {
   };
 }
 
+async function getPublicLogAnalyses({ guildId, query: params }) {
+  await ensureLogAnalysesTable();
+
+  const limit = Math.min(Math.max(Number(params.limit || 12), 1), 40);
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1
+     order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
+     limit $2`,
+    [guildId, limit]
+  );
+
+  return {
+    success: true,
+    analyses: result.rows.map(normalizeLogAnalysis)
+  };
+}
+
 async function saveLogAnalysis({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensureLogAnalysesTable();
@@ -6000,6 +6019,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildGetLogAnalyses") {
       const analyses = await getLogAnalyses({ guildId: guild.id, query: req.query });
+      return res.json({ ...analyses, guild: guild.slug });
+    }
+
+    if (action === "getPublicLogAnalyses") {
+      const analyses = await getPublicLogAnalyses({ guildId: guild.id, query: req.query });
       return res.json({ ...analyses, guild: guild.slug });
     }
 
