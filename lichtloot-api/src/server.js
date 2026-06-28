@@ -3081,27 +3081,26 @@ async function clearLogAnalysisType({ guildId, query: params }) {
   const result = await query(
     `update log_analyses
      set status = case
-           when nullif(summary->>$4, '') is not null then $5
-           when lower(coalesce(summary->>$6, '')) = 'queued' then $7
-           when lower(coalesce(summary->>$6, '')) = 'failed' then $8
+           when nullif(summary->>$3, '') is not null then $4
+           when lower(coalesce(summary->>$5, '')) = 'queued' then $6
+           when lower(coalesce(summary->>$5, '')) = 'failed' then $7
            else 'pending'
          end,
          summary = ((((((((coalesce(summary, '{}'::jsonb)
+           - $8)
            - $9)
            - $10)
            - $11)
            - $12)
            - $13)
            - $14)
-           - $15)
-           - $16),
+           - $15),
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
     [
       guildId,
       id,
-      type,
       `${otherType}DownloadUrl`,
       `${otherType}_done`,
       `${otherType}GeneratorStatus`,
