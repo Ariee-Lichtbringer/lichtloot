@@ -2213,7 +2213,8 @@ function buildLogAnalysisDownloadUrl({ id, type, token }) {
     type,
     token
   });
-  const apiUrl = clean(process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL) || "https://lichtloot-production.up.railway.app/api/apps-script";
+  const apiBase = clean(process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL) || "https://lichtloot-production.up.railway.app";
+  const apiUrl = buildLogAnalysisCallbackUrl(apiBase);
   return `${apiUrl}?${params.toString()}`;
 }
 
@@ -2820,11 +2821,12 @@ async function runLogAnalysis({ guildId, query: params }) {
 
   const generatedSheetUrl = generatorResult?.sheetUrl || generatorResult?.spreadsheetUrl || generatorResult?.url || "";
   const hasExternalGenerator = Boolean(generatorResult);
+  const fallbackDownloadUrl = hasExternalGenerator ? "" : buildLogAnalysisDownloadUrl({ id, type, token: downloadToken });
   const summaryPatch = {
     lastRequestedAnalysis: type.toUpperCase(),
     analysisRequestedAt: new Date().toISOString(),
     [downloadTokenKey]: downloadToken,
-    [downloadUrlKey]: generatedSheetUrl || buildLogAnalysisDownloadUrl({ id, type, token: downloadToken }),
+    [downloadUrlKey]: generatedSheetUrl || fallbackDownloadUrl,
     [`${type}GeneratorJobId`]: generatorResult?.jobId || "",
     [`${type}GeneratorStatus`]: generatorResult?.status || (generatedSheetUrl ? "done" : hasExternalGenerator ? "queued" : "local_csv")
   };
