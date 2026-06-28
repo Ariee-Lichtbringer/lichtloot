@@ -915,7 +915,8 @@ function requireMasterCode(value) {
 }
 
 function requireMasterOrQueueToken(params = {}) {
-  if (clean(params.masterCode) === masterCode) return;
+  const code = clean(params.masterCode);
+  if (code === masterCode || Array.from(masterCodeOverrides.values()).includes(code)) return;
   if (lichtbotQueueToken && clean(params.queueToken) === lichtbotQueueToken) return;
   const error = new Error("Nicht erlaubt.");
   error.statusCode = 403;
@@ -924,6 +925,26 @@ function requireMasterOrQueueToken(params = {}) {
 
 function isUuid(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clean(value));
+}
+
+function extractWarcraftLogsReportCode(value) {
+  const text = clean(value);
+  if (!text) return "";
+
+  const reportMatch = text.match(/\/reports\/([A-Za-z0-9]+)/i);
+  if (reportMatch) return reportMatch[1];
+
+  const queryMatch = text.match(/[?&]report=([A-Za-z0-9]+)/i);
+  if (queryMatch) return queryMatch[1];
+
+  if (/^[A-Za-z0-9]{8,32}$/.test(text)) return text;
+  return "";
+}
+
+function normalizeWarcraftLogsReportUrl(url, reportCode) {
+  const raw = clean(url);
+  if (raw && /^https?:\/\//i.test(raw)) return raw;
+  return reportCode ? `${warcraftLogsBaseUrl()}/reports/${reportCode}` : raw;
 }
 
 function normalizeStatus(value) {
@@ -2030,6 +2051,135 @@ async function getGuildLeadershipOverview(guildId, params) {
       linkedCharacters: Number(row.linked_characters || 1),
       createdAt: row.created_at
     }))
+  };
+}
+
+function normalizeLogAnalysis(row) {
+  return {
+    id: row.id,
+    reportCode: row.report_code || "",
+    reportUrl: row.report_url || "",
+    title: row.title || "",
+    raid: row.raid || "",
+    raidDate: row.raid_date ? new Date(row.raid_date).toISOString().slice(0, 10) : "",
+    status: row.status || "pending",
+    summary: row.summary || {},
+    discordChannelId: row.discord_channel_id || "",
+    discordMessageId: row.discord_message_id || "",
+    discordAuthor: row.discord_author || "",
+    postedAt: row.posted_at,
+    analyzedAt: row.analyzed_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+async function ensureLogAnalysesTable() {
+  await query(
+    `create table if not exists log_analyses (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       report_code text not null,
+       report_url text not null,
+       title text,
+       raid text,
+       raid_date date,
+       status text not null default 'pending',
+       summary jsonb not null default '{}'::jsonb,
+       discord_channel_id text,
+       discord_message_id text,
+       discord_author text,
+       posted_at timestamptz,
+       analyzed_at timestamptz,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (guild_id, report_code)
+     )`
+  );
+  await query(
+    `create index if not exists log_analyses_guild_created_idx
+     on log_analyses (guild_id, created_at desc)`
+  );
+}
+
+async function getLogAnalyses({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const limit = Math.min(Math.max(Number(params.limit || 50), 1), 200);
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1
+     order by created_at desc
+     limit $2`,
+    [guildId, limit]
+  );
+
+  return {
+    success: true,
+    analyses: result.rows.map(normalizeLogAnalysis)
+  };
+}
+
+async function saveLogAnalysis({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureLogAnalysesTable();
+
+  const reportUrl = clean(params.reportUrl || params.url || params.logUrl);
+  const reportCode = clean(params.reportCode || extractWarcraftLogsReportCode(reportUrl));
+  if (!reportCode) {
+    const error = new Error("Warcraft-Logs-Report wurde nicht erkannt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const summary = typeof params.summary === "string"
+    ? JSON.parse(params.summary || "{}")
+    : (params.summary || {});
+  const normalizedUrl = normalizeWarcraftLogsReportUrl(reportUrl, reportCode);
+
+  const result = await query(
+    `insert into log_analyses (
+       guild_id, report_code, report_url, title, raid, raid_date, status, summary,
+       discord_channel_id, discord_message_id, discord_author, posted_at, updated_at
+     )
+     values ($1,$2,$3,$4,$5,nullif($6,'')::date,$7,$8::jsonb,$9,$10,$11,nullif($12,'')::timestamptz,now())
+     on conflict (guild_id, report_code) do update
+       set report_url = excluded.report_url,
+           title = coalesce(nullif(excluded.title, ''), log_analyses.title),
+           raid = coalesce(nullif(excluded.raid, ''), log_analyses.raid),
+           raid_date = coalesce(excluded.raid_date, log_analyses.raid_date),
+           status = excluded.status,
+           summary = case
+             when excluded.summary = '{}'::jsonb then log_analyses.summary
+             else excluded.summary
+           end,
+           discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), log_analyses.discord_channel_id),
+           discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), log_analyses.discord_message_id),
+           discord_author = coalesce(nullif(excluded.discord_author, ''), log_analyses.discord_author),
+           posted_at = coalesce(excluded.posted_at, log_analyses.posted_at),
+           updated_at = now()
+     returning *`,
+    [
+      guildId,
+      reportCode,
+      normalizedUrl,
+      clean(params.title),
+      clean(params.raid),
+      clean(params.raidDate),
+      clean(params.status || "pending"),
+      JSON.stringify(summary || {}),
+      clean(params.discordChannelId),
+      clean(params.discordMessageId),
+      clean(params.discordAuthor),
+      clean(params.postedAt)
+    ]
+  );
+
+  return {
+    success: true,
+    analysis: normalizeLogAnalysis(result.rows[0])
   };
 }
 
@@ -4894,6 +5044,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...reports, guild: guild.slug });
     }
 
+    if (action === "guildGetLogAnalyses") {
+      const analyses = await getLogAnalyses({ guildId: guild.id, query: req.query });
+      return res.json({ ...analyses, guild: guild.slug });
+    }
+
+    if (action === "guildSaveLogAnalysis") {
+      const saved = await saveLogAnalysis({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildResolveIssueReport") {
       const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
@@ -5226,6 +5386,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotResolveQueue") {
       const resolved = await resolveBotQueue({ guildId: guild.id, query: postParams });
       return res.json({ ...resolved, guild: guild.slug });
+    }
+
+    if (action === "guildSaveLogAnalysis" || action === "lichtbotSaveLogAnalysis") {
+      const saved = await saveLogAnalysis({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
