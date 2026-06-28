@@ -1515,6 +1515,10 @@ async function queueBotUpdate({ guildId, query: params }) {
         raidId: clean(params.raidId || params.id || ""),
         source: clean(params.source || "")
       };
+  return enqueueBotUpdate({ guildId, type, payload });
+}
+
+async function enqueueBotUpdate({ guildId, type, payload }) {
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   const result = await query(
     `insert into bot_update_queue (guild_id, type, payload)
@@ -1523,6 +1527,21 @@ async function queueBotUpdate({ guildId, query: params }) {
     [guildId, type, JSON.stringify(payload || {})]
   );
   return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type, payload: result.rows[0].payload || {} };
+}
+
+function logAnalysisPostChannelId(raid) {
+  switch (normalizeLogRaidType(raid)) {
+    case "MC":
+      return "1509236588410834965";
+    case "BWL":
+      return "1509236359141785600";
+    case "NAXX":
+      return "1509235847109804082";
+    case "AQ40":
+      return "1509236271816511651";
+    default:
+      return "";
+  }
 }
 
 async function getBotQueue({ guildId, query: params }) {
@@ -1562,6 +1581,71 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
       }
     }
   });
+}
+
+async function queueLogAnalysisDiscordPost({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  if (!isUuid(id) || !["cla", "rpb"].includes(type)) {
+    const error = new Error("Loganalyse-ID oder Typ fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1 and id = $2
+     limit 1`,
+    [guildId, id]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const analysis = normalizeLogAnalysis(result.rows[0]);
+  const raid = normalizeLogRaidType(analysis.raid || analysis.summary?.raid || analysis.title || "");
+  const channelId = logAnalysisPostChannelId(raid);
+  if (!channelId) {
+    const error = new Error("Für diesen Raid ist kein Log-Post-Channel hinterlegt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const sheetUrl = type === "cla"
+    ? clean(analysis.claDownloadUrl || analysis.summary?.claDownloadUrl)
+    : clean(analysis.rpbDownloadUrl || analysis.summary?.rpbDownloadUrl);
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(sheetUrl)) {
+    const error = new Error(`${type.toUpperCase()} ist noch nicht fertig.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const queued = await enqueueBotUpdate({
+    guildId,
+    type: "log_analysis_post",
+    payload: {
+      analysisId: analysis.id,
+      analysisType: type,
+      raid,
+      raidDate: analysis.raidDate || analysis.summary?.raidDate || "",
+      reportCode: analysis.reportCode || "",
+      reportUrl: analysis.reportUrl || "",
+      sheetUrl,
+      channelId
+    }
+  });
+
+  return {
+    ...queued,
+    success: true,
+    channelId
+  };
 }
 
 async function resolveBotQueue({ guildId, query: params }) {
@@ -6465,6 +6549,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueRaidAnnouncement") {
       const queued = await queueRaidAnnouncement({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueLogAnalysisPost") {
+      const queued = await queueLogAnalysisDiscordPost({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
