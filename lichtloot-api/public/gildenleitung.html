@@ -3989,7 +3989,7 @@ function renderWorldbuffRows(){
 
     return `
       <tr class="${dateClass}">
-        ${renderBuffGroupCell(entry.tag || "-", hideDateCells)}
+        ${renderBuffGroupCell(formatWorldbuffDay(entry.tag, entry.datum), hideDateCells)}
         ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
         ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
         <td>${renderWorldbuffBuffControl(entry, index)}</td>
@@ -4011,6 +4011,16 @@ function worldbuffMatchesFilter(entry, buffFilter){
   const buff = String((entry && entry.buff) || "").trim();
   if(!wanted || buff === wanted) return true;
   return isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff) && isOnyNefBuff(wanted);
+}
+
+function formatWorldbuffDay(tag, datum){
+  const value = String(tag || "").trim();
+  const map = { So:"Sonntag", Mo:"Montag", Di:"Dienstag", Mi:"Mittwoch", Do:"Donnerstag", Fr:"Freitag", Sa:"Samstag" };
+  if(map[value]) return map[value];
+  if(value) return value;
+  const date = parseWorldbuffDate(datum);
+  if(!date) return "-";
+  return ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"][date.getDay()];
 }
 
 function isOnyNefBuff(buff){
