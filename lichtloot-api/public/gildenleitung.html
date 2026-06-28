@@ -1539,15 +1539,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
         <table>
           <thead>
             <tr>
-              <th>Report</th>
+              <th>Raid</th>
+              <th>Datum</th>
               <th>Status</th>
-              <th>Quelle</th>
-              <th>Erkannt</th>
-              <th>Aktion</th>
+              <th>Aktionen</th>
             </tr>
           </thead>
           <tbody id="logAnalysisRows">
-            <tr><td colspan="5" class="muted">Noch keine Loganalysen geladen.</td></tr>
+            <tr><td colspan="4" class="muted">Noch keine Loganalysen geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -4587,38 +4586,80 @@ function renderLogAnalyses(){
   const tbody = document.getElementById("logAnalysisRows");
   if(!tbody) return;
   if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Loganalysen vorhanden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Loganalysen vorhanden.</td></tr>';
     return;
   }
 
   tbody.innerHTML = logAnalyses.map(entry => {
-    const source = entry.discordMessageId
-      ? `Discord ${entry.discordChannelId || ""}`
-      : "Manuell";
-    const title = entry.title || entry.reportCode || "Warcraft Log";
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-    const hint = summary.note || "";
+    const raid = entry.raid || summary.raid || entry.title || entry.reportCode || "Noch nicht erkannt";
+    const date = entry.raidDate || summary.raidDate || entry.createdAt || "";
     return `
       <tr>
         <td>
-          <strong>${escapeHtml(title)}</strong><br>
+          <strong>${escapeHtml(raid)}</strong><br>
           <span class="muted">${escapeHtml(entry.reportCode || "")}</span>
-          ${hint ? `<br><span class="muted">${escapeHtml(hint)}</span>` : ""}
         </td>
+        <td>${escapeHtml(formatLogAnalysisDate(date))}</td>
         <td>${renderLogAnalysisStatus(entry.status)}</td>
-        <td>${escapeHtml(source)}<br><span class="muted">${escapeHtml(entry.discordAuthor || "")}</span></td>
-        <td>${escapeHtml(formatDateTime(entry.createdAt))}</td>
-        <td><a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL öffnen</a></td>
+        <td>
+          <div class="actions">
+            <button class="small-btn primary" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','cla')">CLA</button>
+            <button class="small-btn good" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','rpb')">RPB</button>
+            <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
 }
 
+function formatLogAnalysisDate(value){
+  if(!value) return "-";
+  const text = String(value);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return formatRaidDate(text);
+  return formatDateTime(text);
+}
+
 function renderLogAnalysisStatus(status){
   const value = normalize(status || "pending");
-  const label = value === "done" ? "fertig" : value === "failed" ? "Fehler" : "eingegangen";
-  const cls = value === "done" ? "open" : value === "failed" ? "warn" : "closed";
+  const label =
+    value === "done" ? "fertig" :
+    value === "failed" ? "Fehler" :
+    value === "cla_queued" ? "CLA gestartet" :
+    value === "rpb_queued" ? "RPB gestartet" :
+    "eingegangen";
+  const cls = value === "done" || value.endsWith("_queued") ? "open" : value === "failed" ? "warn" : "closed";
   return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+}
+
+async function triggerLogAnalysis(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+
+  const label = String(type || "").toUpperCase();
+  if(status) status.textContent = `${label}-Analyse wird ausgelöst ...`;
+
+  try{
+    const result = await railwayWrite({
+      action:"guildRunLogAnalysis",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht gestartet werden.")}</span>`;
+      return;
+    }
+    await loadLogAnalysisPanel(true);
+    setStatus(`${label}-Analyse wurde ausgelöst.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
+  }
 }
 
 function isOpenStatus(status){
