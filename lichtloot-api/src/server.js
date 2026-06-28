@@ -2927,6 +2927,53 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
   };
 }
 
+async function setLogAnalysisSheetUrl({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType).toLowerCase();
+  const sheetUrl = clean(params.sheetUrl || params.spreadsheetUrl || params.url || params.downloadUrl);
+  if (!isUuid(id) || !["cla", "rpb"].includes(type)) {
+    const error = new Error("Loganalyse-ID oder Typ fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(sheetUrl)) {
+    const error = new Error("Bitte einen Google-Sheets-Link einfügen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
+  const summaryPatch = {
+    [downloadUrlKey]: sheetUrl,
+    [`${type}GeneratorStatus`]: "done",
+    [`${type}GeneratorFinishedAt`]: new Date().toISOString(),
+    [`${type}GeneratorManualLink`]: true
+  };
+  const result = await query(
+    `update log_analyses
+     set status = $3,
+         summary = coalesce(summary, '{}'::jsonb) || $4::jsonb,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [guildId, id, `${type}_done`, JSON.stringify(summaryPatch)]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    analysisType: type.toUpperCase(),
+    analysis: normalizeLogAnalysis(result.rows[0])
+  };
+}
+
 function normalizeIssueReportRow(row, index = 0) {
   return {
     id: row.id,
@@ -5808,6 +5855,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...started, guild: guild.slug });
     }
 
+    if (action === "guildSetLogAnalysisSheetUrl") {
+      const saved = await setLogAnalysisSheetUrl({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildDownloadLogAnalysis") {
       return await downloadLogAnalysis({ guildId: guild.id, query: req.query, res });
     }
@@ -6159,6 +6211,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildCompleteLogAnalysis" || action === "logAnalysisGeneratorCallback") {
       const completed = await completeExternalLogAnalysis({ guildId: guild.id, query: postParams });
       return res.json({ ...completed, guild: guild.slug });
+    }
+
+    if (action === "guildSetLogAnalysisSheetUrl") {
+      const saved = await setLogAnalysisSheetUrl({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     const error = new Error("Unbekannte POST-Aktion.");
