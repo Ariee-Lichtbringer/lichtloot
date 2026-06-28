@@ -1403,7 +1403,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
-      <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
@@ -1452,7 +1451,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
     <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
     <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
-    <button class="quick-action" type="button" onclick="openLogAnalysisPanel()"><span class="qa-icon">◉</span><span><strong>Loganalysen</strong><span>WCL-Reports prüfen</span></span></button>
     <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
     <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
     <button class="quick-action" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="qa-icon">⚿</span><span><strong>Admin</strong><span>SpielerLogin suchen</span></span></button>
@@ -1523,34 +1521,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <summary>Postfach</summary>
     <div class="issue-panel-body">
       <div id="issueInboxPanelContent" class="create-result">Meldungen aus dem Briefumschlag laden.</div>
-    </div>
-  </details>
-
-  <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
-    <summary>Loganalysen</summary>
-    <div class="create-panel-body">
-      <div class="tools">
-        <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
-        <button class="btn" type="button" onclick="saveManualLogAnalysis()">Log aufnehmen</button>
-        <button class="btn ghost" type="button" onclick="loadLogAnalysisPanel(true)">Neu laden</button>
-      </div>
-      <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Report</th>
-              <th>Status</th>
-              <th>Quelle</th>
-              <th>Erkannt</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="logAnalysisRows">
-            <tr><td colspan="5" class="muted">Noch keine Loganalysen geladen.</td></tr>
-          </tbody>
-        </table>
-      </div>
     </div>
   </details>
 
@@ -1817,7 +1787,6 @@ const RAID_IMAGES = {
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let issueReports = [];
-let logAnalyses = [];
 let guildSentMessages = [];
 let guildInboxTab = "reports";
 let worldbuffEntries = [];
@@ -2097,10 +2066,6 @@ function openIssueInboxPanel(){
   openDetailsPanel("issueInboxPanel");
 }
 
-function openLogAnalysisPanel(){
-  openDetailsPanel("logAnalysisPanel");
-}
-
 function openWorldbuffPanel(){
   openDetailsPanel("worldbuffPanel");
 }
@@ -2188,7 +2153,17 @@ function todayIsoDate(){
 function isRaidTodayOrFuture(raid){
   const date = String(raid && raid.raidDate || "").trim();
   if(!date) return false;
-  return date >= todayIsoDate();
+  return date >= yesterdayIsoDate();
+}
+
+function yesterdayIsoDate(){
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return [
+    yesterday.getFullYear(),
+    String(yesterday.getMonth() + 1).padStart(2, "0"),
+    String(yesterday.getDate()).padStart(2, "0")
+  ].join("-");
 }
 
 function renderDashboardCards(){
@@ -2446,6 +2421,7 @@ function renderRaids(){
         <td>${statusBadge(status)}</td>
         <td>
           <div class="actions">
+            <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
@@ -2992,6 +2968,15 @@ async function toggleRaidPrioStatus(raidId){
   await setRaidStatusFromPage(raidId,nextStatus);
 }
 
+async function activateRaidCardFromPage(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(raid && !isRaidTodayOrFuture(raid)){
+    setStatus("Nur Raids von gestern, heute oder der Zukunft können als Kachel aktiviert werden.", "bad");
+    return;
+  }
+  await setRaidStatusFromPage(raidId, "geöffnet");
+}
+
 async function archiveRaidFromPage(raidId){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
   const label = raid ? (raid.raidName || raid.raid || raid.raidId) : raidId;
@@ -3042,7 +3027,7 @@ function closePrioModal(){
 }
 
 function renderPrioModalContent(result, raid){
-  const prios = Array.isArray(result.prios) ? result.prios : [];
+  const prios = sortPriosWithMainFirst(Array.isArray(result.prios) ? result.prios : []);
   const listOpen = isPrioListVisibleForGuild(result, raid);
   const raidStatus = listOpen ? "geöffnet" : "geschlossen";
   const benchCount = prios.filter(isBenchPrio).length;
@@ -3132,6 +3117,18 @@ function renderPrioValue(value, visible){
 function isBenchPrio(prio){
   const value = normalize(prio && (prio.Bench || prio.bench || prio.Gebencht || prio.status));
   return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
+}
+
+function sortPriosWithMainFirst(prios){
+  return prios
+    .map((prio,index)=>({prio,index}))
+    .sort((a,b)=>{
+      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
+      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
+      if(aMain !== bMain) return aMain ? -1 : 1;
+      return a.index-b.index;
+    })
+    .map(item=>item.prio);
 }
 
 function renderBenchAction(prio, raid){
@@ -4497,108 +4494,6 @@ async function createHordenbuffTerm(){
   }catch(error){
     setStatus(error.message || "Hordenbuff-Termin konnte nicht erstellt werden.", "bad");
   }
-}
-
-async function loadLogAnalysisPanel(force){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  const status = document.getElementById("logAnalysisStatus");
-  if(!masterCode){
-    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
-    return;
-  }
-  if(!force && logAnalyses.length){
-    renderLogAnalyses();
-    return;
-  }
-
-  if(status) status.textContent = "Loganalysen werden geladen ...";
-
-  try{
-    const result = await railwayApi({ action:"guildGetLogAnalyses", masterCode, limit:100 });
-    if(!result.success){
-      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Loganalysen konnten nicht geladen werden.")}</span>`;
-      return;
-    }
-    logAnalyses = Array.isArray(result.analyses) ? result.analyses : [];
-    renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
-  }catch(error){
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Loganalysen konnten nicht geladen werden.")}</span>`;
-  }
-}
-
-async function saveManualLogAnalysis(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  const input = document.getElementById("logAnalysisUrl");
-  const status = document.getElementById("logAnalysisStatus");
-  const reportUrl = (input?.value || "").trim();
-  if(!masterCode){
-    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
-    return;
-  }
-  if(!reportUrl){
-    if(status) status.innerHTML = '<span class="bad">Bitte Warcraft-Logs-Link einfügen.</span>';
-    return;
-  }
-
-  if(status) status.textContent = "Log wird aufgenommen ...";
-
-  try{
-    const result = await railwayWrite({
-      action:"guildSaveLogAnalysis",
-      masterCode,
-      reportUrl,
-      status:"pending",
-      title:"Manuell hinzugefügt"
-    });
-    if(!result.success){
-      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Log konnte nicht gespeichert werden.")}</span>`;
-      return;
-    }
-    if(input) input.value = "";
-    await loadLogAnalysisPanel(true);
-    setStatus("Loganalyse wurde aufgenommen.", "good");
-  }catch(error){
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Log konnte nicht gespeichert werden.")}</span>`;
-  }
-}
-
-function renderLogAnalyses(){
-  const tbody = document.getElementById("logAnalysisRows");
-  if(!tbody) return;
-  if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Loganalysen vorhanden.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = logAnalyses.map(entry => {
-    const source = entry.discordMessageId
-      ? `Discord ${entry.discordChannelId || ""}`
-      : "Manuell";
-    const title = entry.title || entry.reportCode || "Warcraft Log";
-    const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-    const hint = summary.note || "";
-    return `
-      <tr>
-        <td>
-          <strong>${escapeHtml(title)}</strong><br>
-          <span class="muted">${escapeHtml(entry.reportCode || "")}</span>
-          ${hint ? `<br><span class="muted">${escapeHtml(hint)}</span>` : ""}
-        </td>
-        <td>${renderLogAnalysisStatus(entry.status)}</td>
-        <td>${escapeHtml(source)}<br><span class="muted">${escapeHtml(entry.discordAuthor || "")}</span></td>
-        <td>${escapeHtml(formatDateTime(entry.createdAt))}</td>
-        <td><a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL öffnen</a></td>
-      </tr>
-    `;
-  }).join("");
-}
-
-function renderLogAnalysisStatus(status){
-  const value = normalize(status || "pending");
-  const label = value === "done" ? "fertig" : value === "failed" ? "Fehler" : "eingegangen";
-  const cls = value === "done" ? "open" : value === "failed" ? "warn" : "closed";
-  return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
 }
 
 function isOpenStatus(status){
