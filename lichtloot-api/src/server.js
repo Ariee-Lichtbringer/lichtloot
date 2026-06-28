@@ -2831,10 +2831,11 @@ async function runLogAnalysis({ guildId, query: params }) {
   const downloadTokenKey = type === "cla" ? "claDownloadToken" : "rpbDownloadToken";
   const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
   const downloadToken = current.summary?.[downloadTokenKey] || randomUUID();
+  const generatorRunId = randomUUID();
   let generatorResult = null;
   let generatorError = "";
   try {
-    generatorResult = await startExternalLogAnalysisGenerator({ analysis: current, type, guildId });
+    generatorResult = await startExternalLogAnalysisGenerator({ analysis: current, type, guildId, generatorRunId });
   } catch (error) {
     generatorError = error.message || String(error);
     console.warn(`${type.toUpperCase()} Generator konnte nicht gestartet werden:`, error.message || error);
@@ -2849,6 +2850,8 @@ async function runLogAnalysis({ guildId, query: params }) {
     [downloadTokenKey]: downloadToken,
     [downloadUrlKey]: generatedSheetUrl || "",
     [`${type}GeneratorJobId`]: generatorResult?.jobId || "",
+    [`${type}GeneratorRunId`]: generatorRunId,
+    [`${type}GeneratorStartedAt`]: new Date().toISOString(),
     [`${type}GeneratorStatus`]: generatorResult?.status || generatorStatus,
     [`${type}GeneratorError`]: generatorError
   };
@@ -2895,7 +2898,7 @@ function buildLogAnalysisCallbackUrl(baseUrl) {
   return `${value}/api/apps-script`;
 }
 
-async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
+async function startExternalLogAnalysisGenerator({ analysis, type, guildId, generatorRunId }) {
   const config = getLogAnalysisGeneratorConfig(type);
   if (!config.url) return null;
 
@@ -2920,6 +2923,8 @@ async function startExternalLogAnalysisGenerator({ analysis, type, guildId }) {
     apiKey: legacyApiKey,
     token: config.token,
     callbackToken: logAnalysisCallbackToken,
+    jobToken: generatorRunId || "",
+    generatorRunId: generatorRunId || "",
     callbackUrl: buildLogAnalysisCallbackUrl(callbackBaseUrl)
   };
 
@@ -2960,7 +2965,39 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
 
   const sheetUrl = clean(params.sheetUrl || params.spreadsheetUrl || params.url || params.downloadUrl);
   const failed = clean(params.status).toLowerCase() === "failed" || clean(params.error);
+  const callbackRunId = clean(params.jobToken || params.generatorRunId || params.runId);
   const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
+  if (callbackRunId) {
+    const existing = await query(
+      `select summary
+       from log_analyses
+       where guild_id = $1 and id = $2
+       limit 1`,
+      [guildId, id]
+    );
+    if (!existing.rows.length) {
+      const error = new Error("Loganalyse wurde nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    const activeRunId = clean(existing.rows[0].summary?.[`${type}GeneratorRunId`]);
+    if (activeRunId && activeRunId !== callbackRunId) {
+      return {
+        success: true,
+        ignored: true,
+        reason: "stale_generator_callback",
+        analysisType: type.toUpperCase()
+      };
+    }
+    if (!activeRunId) {
+      return {
+        success: true,
+        ignored: true,
+        reason: "cancelled_generator_callback",
+        analysisType: type.toUpperCase()
+      };
+    }
+  }
   const summaryPatch = {
     [`${type}GeneratorStatus`]: failed ? "failed" : "done",
     [`${type}GeneratorFinishedAt`]: new Date().toISOString(),
@@ -3055,14 +3092,17 @@ async function cleanupIncompleteClaAnalyses({ guildId, query: params }) {
            when lower(coalesce(summary->>'rpbGeneratorStatus', '')) = 'failed' then 'rpb_failed'
            else 'pending'
          end,
-         summary = (((((((coalesce(summary, '{}'::jsonb)
-           - 'claDownloadUrl')
-           - 'claGeneratorJobId')
-           - 'claGeneratorStatus')
-           - 'claGeneratorError')
-           - 'claGeneratorWarnings')
-           - 'claGeneratorFinishedAt')
-           - 'claGeneratorManualLink'),
+         summary = coalesce(summary, '{}'::jsonb)
+           - 'claDownloadUrl'
+           - 'claDownloadToken'
+           - 'claGeneratorJobId'
+           - 'claGeneratorRunId'
+           - 'claGeneratorStartedAt'
+           - 'claGeneratorStatus'
+           - 'claGeneratorError'
+           - 'claGeneratorWarnings'
+           - 'claGeneratorFinishedAt'
+           - 'claGeneratorManualLink',
          updated_at = now()
      where guild_id = $1
        and (
@@ -3081,6 +3121,50 @@ async function cleanupIncompleteClaAnalyses({ guildId, query: params }) {
   return {
     success: true,
     deletedCla: result.rowCount
+  };
+}
+
+async function cleanupIncompleteRpbAnalyses({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+
+  const result = await query(
+    `update log_analyses
+     set status = case
+           when nullif(summary->>'claDownloadUrl', '') is not null then 'cla_done'
+           when lower(coalesce(summary->>'claGeneratorStatus', '')) = 'queued' then 'cla_queued'
+           when lower(coalesce(summary->>'claGeneratorStatus', '')) = 'failed' then 'cla_failed'
+           else 'pending'
+         end,
+         summary = coalesce(summary, '{}'::jsonb)
+           - 'rpbDownloadUrl'
+           - 'rpbDownloadToken'
+           - 'rpbGeneratorJobId'
+           - 'rpbGeneratorRunId'
+           - 'rpbGeneratorStartedAt'
+           - 'rpbGeneratorStatus'
+           - 'rpbGeneratorError'
+           - 'rpbGeneratorWarnings'
+           - 'rpbGeneratorFinishedAt'
+           - 'rpbGeneratorManualLink',
+         updated_at = now()
+     where guild_id = $1
+       and (
+         status in ('rpb_queued', 'rpb_failed')
+         or lower(coalesce(summary->>'rpbGeneratorStatus', '')) in ('queued', 'failed', 'error', 'started', 'running')
+         or nullif(summary->>'rpbGeneratorError', '') is not null
+         or (
+           nullif(summary->>'rpbDownloadUrl', '') is not null
+           and summary->>'rpbDownloadUrl' !~* '^https://docs\\.google\\.com/spreadsheets/d/'
+         )
+       )
+     returning id`,
+    [guildId]
+  );
+
+  return {
+    success: true,
+    deletedRpb: result.rowCount
   };
 }
 
@@ -3105,15 +3189,17 @@ async function clearLogAnalysisType({ guildId, query: params }) {
            when lower(coalesce(summary->>$5, '')) = 'failed' then $7
            else 'pending'
          end,
-         summary = ((((((((coalesce(summary, '{}'::jsonb)
-           - $8)
-           - $9)
-           - $10)
-           - $11)
-           - $12)
-           - $13)
-           - $14)
-           - $15),
+         summary = coalesce(summary, '{}'::jsonb)
+           - $8
+           - $9
+           - $10
+           - $11
+           - $12
+           - $13
+           - $14
+           - $15
+           - $16
+           - $17,
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
@@ -3132,7 +3218,9 @@ async function clearLogAnalysisType({ guildId, query: params }) {
       `${type}GeneratorError`,
       `${type}GeneratorWarnings`,
       `${type}GeneratorFinishedAt`,
-      `${type}GeneratorManualLink`
+      `${type}GeneratorManualLink`,
+      `${type}GeneratorRunId`,
+      `${type}GeneratorStartedAt`
     ]
   );
   if (!result.rows.length) {
@@ -6407,6 +6495,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildCleanupIncompleteClaAnalyses") {
       const cleaned = await cleanupIncompleteClaAnalyses({ guildId: guild.id, query: postParams });
+      return res.json({ ...cleaned, guild: guild.slug });
+    }
+
+    if (action === "guildCleanupIncompleteRpbAnalyses") {
+      const cleaned = await cleanupIncompleteRpbAnalyses({ guildId: guild.id, query: postParams });
       return res.json({ ...cleaned, guild: guild.slug });
     }
 
