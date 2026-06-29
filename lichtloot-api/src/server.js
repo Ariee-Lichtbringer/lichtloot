@@ -4,7 +4,6 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, query, requireGuild } from "./db.js";
-import { parseCombatLogText } from "./combat-log-parser.js";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -4743,6 +4742,13 @@ function raidImporterOverhealText(summary) {
   return summary.uses || total ? `${Math.round(summary.uses || 0)} (${pct}% OH)` : "0";
 }
 
+function raidImporterCastOverhealText(castCount, summary) {
+  const count = Number(castCount || 0);
+  const total = Number(summary.amount || 0) + Number(summary.overheal || 0);
+  const pct = total > 0 ? Math.round(Number(summary.overheal || 0) * 100 / total) : 0;
+  return count ? `${Math.round(count)} (${pct}% OH)` : "0";
+}
+
 function raidImporterAuraUptimePercent(table, ids, totalTime) {
   const wanted = new Set((ids || []).map(Number).filter(Boolean));
   const uptime = raidImporterTableAuras(table).reduce((sum, aura) => {
@@ -4908,7 +4914,10 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
         healing.bySpell[label] = raidImporterHealingSummary({ entries: [entry] });
       });
       [...classConfig.singleTarget, ...classConfig.aoe].filter(cast => cast.hasOverheal).forEach(cast => {
-        healing.byConfiguredCast[cast.name] = raidImporterOverhealText(raidImporterHealingSummary(healingTable, cast.ids));
+        healing.byConfiguredCast[cast.name] = raidImporterCastOverhealText(
+          raidImporterEntryTotal(castsTable, cast.ids),
+          raidImporterHealingSummary(healingTable, cast.ids)
+        );
       });
 
       const criticalOutgoing = raidImporterTableEntries(damageDoneTable).reduce((sum, entry) => sum + Number(entry.critHitCount || 0) + Number(entry.critTickCount || 0), 0);
@@ -5150,6 +5159,18 @@ function normalizeCombatLogRaidName(value) {
   return text || "CombatLog";
 }
 
+async function parseCombatLogTextSafe(text, options = {}) {
+  try {
+    const parser = await import("./combat-log-parser.js");
+    return parser.parseCombatLogText(text, options);
+  } catch (error) {
+    const wrapped = new Error("CombatLog-Parser konnte nicht geladen werden. Bitte Deployment-Dateien prüfen.");
+    wrapped.statusCode = 500;
+    wrapped.cause = error;
+    throw wrapped;
+  }
+}
+
 async function importCombatLogAnalysis({ guildId, query: params, text }) {
   requireMasterCode(params.masterCode);
   await ensureCombatLogImportsTable();
@@ -5160,7 +5181,7 @@ async function importCombatLogAnalysis({ guildId, query: params, text }) {
     throw error;
   }
   const fileName = clean(params.fileName || params.filename || "WoWCombatLog.txt");
-  const parsed = parseCombatLogText(logText, { fileName });
+  const parsed = await parseCombatLogTextSafe(logText, { fileName });
   const classByName = await getGuildClassMap(guildId);
   const roleByName = new Map();
   const summaryRoles = {};
