@@ -4017,6 +4017,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       if (cast.hasOverheal) {
+        const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
         const data = cast.ids.reduce((sum, id) => {
           const row = healingById[id]?.[player];
           if (!row) return sum;
@@ -4024,9 +4025,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           sum.overheal += Number(row.overheal || 0);
           return sum;
         }, { amount: 0, overheal: 0 });
-        if (!data.amount && !data.overheal) return [player, "0"];
+        if (!castCount && !data.amount && !data.overheal) return [player, "0"];
         const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
-        return [player, `${Math.round(data.amount)} (${pct}%)`];
+        return [player, `${formatCountValue(castCount)} (${pct}%)`];
       }
       return [player, formatCountValue(classCasts[className]?.[cast.name]?.[player])];
     })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast" });
@@ -4056,33 +4057,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         ...config.aoe.map(cast => configuredCastRow(className, cast, "aoe"))
       ];
 
-      const classHealingRows = healerClasses.has(className)
-        ? Object.keys(healingBySpell)
-          .map(spell => {
-            const total = classPlayers.reduce((sum, player) => {
-              const data = healingBySpell[spell]?.[player];
-              return sum + Number(data?.amount || 0) + Number(data?.overheal || 0);
-            }, 0);
-            return { spell, total };
-          })
-          .filter(row => row.total > 0)
-          .sort((a, b) => b.total - a.total || a.spell.localeCompare(b.spell, "de"))
-          .slice(0, 35)
-          .map(row => customRow(`${row.spell} (Overheal %)`, Object.fromEntries(playerNames.map(player => {
-            const data = healingBySpell[row.spell]?.[player];
-            if (!data || (!data.amount && !data.overheal)) return [player, ""];
-            const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
-            return [player, `${Math.round(data.amount)} (${pct}%)`];
-          })), { type: "text", tone: "healing" }))
-        : [];
-
       const cooldownRows = configuredCooldownRows(className);
-      const rows = castRows.concat(classHealingRows);
+      const rows = castRows;
       return {
         id: `class-${className.toLowerCase()}`,
         label: className,
         className,
-        description: `${className}: klassenspezifische Casts${classHealingRows.length ? ", Heilung und Overheal" : ""}.`,
+        description: `${className}: klassenspezifische Casts.`,
         rows: rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })],
         cooldownRows,
         playerFilter: classPlayers
@@ -4184,7 +4165,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       label: "Zauberer - Zauber",
       description: "Klassenblöcke für Caster-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
-      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
+      hideEmptyRows: true
     },
     {
       id: "healer",
@@ -4198,7 +4180,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       label: "Heiler - Zauber",
       description: "Heiler-Casts und Overheal pro Spell.",
       rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"]),
-      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])
+      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"]),
+      hideEmptyRows: true
     },
     {
       id: "physical",
@@ -4212,7 +4195,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       label: "Nahkampf - Zauber",
       description: "Klassenblöcke für Physical-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"]),
-      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Druid", "Hunter", "Rogue", "Warrior"])
+      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Druid", "Hunter", "Rogue", "Warrior"]),
+      hideEmptyRows: true
     },
     {
       id: "tank",
@@ -4226,7 +4210,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       label: "Tank - Zauber",
       description: "Tank-Casts nach Klassenblöcken.",
       rows: rowsForClasses(["Druid", "Paladin", "Warrior"]),
-      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])
+      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"]),
+      hideEmptyRows: true
     }
   ];
 
