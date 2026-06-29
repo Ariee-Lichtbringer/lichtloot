@@ -313,6 +313,9 @@
     table.cla-table td.cla-score-mid{background:#fff2cc!important;color:#111;font-weight:900}
     table.cla-table td.cla-score-bad{background:#e06666!important;color:#111;font-weight:900}
     table.cla-table td.cla-muted{background:#b7b7b7!important;color:#111}
+    table.sheet-table th,table.sheet-table td{width:116px;min-width:116px;max-width:116px;color:#111;background:#f8fafc}
+    table.sheet-table th:first-child,table.sheet-table td:first-child{width:250px;min-width:250px;max-width:250px;color:#111;background:#eef2f7}
+    table.sheet-table td{font-weight:700}
     .item-cell{font-weight:900;text-decoration:none}
     .item-poor{color:#9d9d9d}
     .item-common{color:#f3f4f6}
@@ -534,7 +537,7 @@
         if(allowed && !allowed.has(player.name)) return false;
         if(state.activeClass && player.className !== state.activeClass) return false;
         if(!state.search) return true;
-        return section.rows.some(row => playerMatchesSearch(player, row.label));
+        return (section.rows || []).some(row => playerMatchesSearch(player, row.label));
       });
     }
 
@@ -821,11 +824,58 @@
       document.getElementById("statusText").textContent = section.description || "CLA-Auswertung.";
     }
 
+    function isMatrixSection(section){
+      return Array.isArray(section?.matrix?.values);
+    }
+
+    function renderMatrixTable(section){
+      const table = document.getElementById("analysisTable");
+      renderClassSubtabs(section);
+      document.getElementById("classOverview").className = "class-overview";
+      document.getElementById("classOverview").innerHTML = "";
+      const values = section.matrix?.values || [];
+      const backgrounds = section.matrix?.backgrounds || [];
+      const fontColors = section.matrix?.fontColors || [];
+      const notes = section.matrix?.notes || [];
+      const q = state.search;
+      const rows = values
+        .map((row, index) => ({ row: Array.isArray(row) ? row : [], index }))
+        .filter(item => !q || item.row.some(cell => String(cell || "").toLowerCase().includes(q)));
+      const maxCols = Math.max(1, ...rows.map(item => item.row.length));
+      table.className = "compact sheet-table";
+      const head = `
+        <thead>
+          <tr>
+            ${Array.from({length:maxCols}, (_, col) => `<th>${col === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
+          </tr>
+        </thead>
+      `;
+      const body = rows.map(({row, index}) => `
+        <tr class="${state.highlightRow === `sheet-${index}` ? "mark-row" : ""}">
+          ${Array.from({length:maxCols}, (_, col) => {
+            const value = row[col] ?? "";
+            const bg = backgrounds[index]?.[col] || "";
+            const color = fontColors[index]?.[col] || "";
+            const note = notes[index]?.[col] || "";
+            const style = `${bg ? `background:${escapeHtml(bg)}!important;` : ""}${color ? `color:${escapeHtml(color)}!important;` : ""}`;
+            const marked = `${state.highlightRow === `sheet-${index}` ? " mark-row-cell" : ""}${state.highlightPlayer === `col-${col}` ? " mark-col" : ""}${state.highlightRow === `sheet-${index}` && state.highlightPlayer === `col-${col}` ? " mark-cell" : ""}`;
+            return `<td class="${value ? "text" : "empty"}${marked}" style="${style}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
+          }).join("")}
+        </tr>
+      `).join("");
+      table.innerHTML = head + `<tbody>${body || `<tr><td class="hint">Keine Treffer.</td></tr>`}</tbody>`;
+      document.getElementById("statusText").textContent = "Exakt aus dem Google Sheet nach Railway exportiert.";
+    }
+
     function renderTable(){
       const section = (state.data.sections || []).find(item => item.id === state.activeSection) || state.data.sections[0];
       const table = document.getElementById("analysisTable");
       if(!section){
         table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
+        return;
+      }
+      if(isMatrixSection(section)){
+        renderMatrixTable(section);
         return;
       }
       if(isClaSection(section)){
