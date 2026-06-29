@@ -4846,6 +4846,190 @@ function raidImporterNonZeroNames(counts) {
     .map(([label]) => label);
 }
 
+function raidProcessorEntryCount(entry, isAoE = false) {
+  let total = Number(entry?.total || entry?.uses || entry?.amount || entry?.count || 0);
+  if (isAoE && total === 0 && Array.isArray(entry?.subentries) && Number(entry.subentries[0]?.total || 0) > 0) {
+    total = Number(entry.subentries[0].total || 0);
+  }
+  return total;
+}
+
+function raidProcessorTableCount(table, ids, isAoE = false) {
+  const wanted = new Set((ids || []).map(Number).filter(Boolean));
+  return raidImporterTableEntries(table).reduce((sum, entry) => {
+    if (!wanted.has(abilityIdFromTableEntry(entry))) return sum;
+    return sum + raidProcessorEntryCount(entry, isAoE);
+  }, 0);
+}
+
+function raidProcessorOverhealPercent(cast, castsTable, healingTable) {
+  if (!cast?.hasOverheal) return 0;
+  const ids = new Set((cast.ids || []).map(Number).filter(Boolean));
+  const healingById = new Map();
+  raidImporterTableEntries(healingTable).forEach(entry => {
+    const id = abilityIdFromTableEntry(entry);
+    healingById.set(id, {
+      amount: Number(entry.total || entry.amount || 0),
+      overheal: Number(entry.overheal || entry.overhealing || entry.overhealAmount || 0)
+    });
+  });
+  let weighted = 0;
+  let totalCasts = 0;
+  let omittedCasts = 0;
+  raidImporterTableEntries(castsTable).forEach(entry => {
+    const castId = abilityIdFromTableEntry(entry);
+    if (!ids.has(castId)) return;
+    const count = raidProcessorEntryCount(entry, true);
+    if (!count) return;
+    const healId = holyNovaHealSpellMap[castId] || castId;
+    const healing = healingById.get(healId);
+    totalCasts += count;
+    if (healing && healing.overheal > 0 && healing.amount + healing.overheal > 0) {
+      weighted += (healing.overheal * 100 / (healing.amount + healing.overheal)) * count;
+    } else {
+      omittedCasts += count;
+    }
+  });
+  const denom = totalCasts - omittedCasts;
+  return denom > 0 ? Math.round(weighted / denom) : 0;
+}
+
+function raidProcessorAverageHits(cast, castsTable, hitTable, isAoE = false) {
+  if (!isAoE) return { averageHits: 0, rawHits: 0, rawCasts: 0 };
+  const ids = new Set((cast.ids || []).map(Number).filter(Boolean));
+  let rawHits = 0;
+  let rawCasts = 0;
+  raidImporterTableEntries(castsTable).forEach(castEntry => {
+    const castId = abilityIdFromTableEntry(castEntry);
+    if (!ids.has(castId)) return;
+    const castCount = raidProcessorEntryCount(castEntry, true);
+    if (!castCount) return;
+    raidImporterTableEntries(hitTable).forEach(hitEntry => {
+      const hitId = abilityIdFromTableEntry(hitEntry);
+      if (hitId !== castId && !(castId === 13877 && hitId === 22482)) return;
+      rawHits += Number(hitEntry.hitCount || 0) + Number(hitEntry.missCount || 0);
+      rawCasts += castCount;
+    });
+  });
+  return {
+    averageHits: rawCasts > 0 ? Math.round((rawHits / rawCasts) * 100) / 100 : 0,
+    rawHits,
+    rawCasts
+  };
+}
+
+function raidProcessorCastResult(cast, tables, isAoE = false) {
+  const hitTable = cast?.hasOverheal ? tables.healing : tables.damageDone;
+  const hitStats = raidProcessorAverageHits(cast, tables.casts, hitTable, isAoE);
+  const amount = raidProcessorTableCount(tables.casts, cast.ids, isAoE);
+  return {
+    name: cast.name,
+    ids: cast.ids,
+    hasUptime: Boolean(cast.hasUptime),
+    hasOverheal: Boolean(cast.hasOverheal),
+    uptimePercent: 0,
+    overhealPercent: raidProcessorOverhealPercent(cast, tables.casts, tables.healing),
+    amount,
+    adjustedAmount: amount,
+    uptime: 0,
+    castTime: cast.castTime || 0,
+    averageHits: hitStats.averageHits,
+    rawHits: hitStats.rawHits,
+    rawCasts: hitStats.rawCasts,
+    lowerRankPercent: 0
+  };
+}
+
+function raidProcessorConsumableResults(castsTable) {
+  return rpbConsumables.map(([name, , ids]) => ({
+    name,
+    amount: raidProcessorTableCount(castsTable, ids)
+  }));
+}
+
+function raidProcessorEngineeringResults(castsTable, damageDoneTable) {
+  return rpbEngineering.map(([name, , ids]) => {
+    const amount = raidProcessorTableCount(castsTable, ids);
+    const hitCount = raidImporterTableEntries(damageDoneTable).reduce((sum, entry) => {
+      return ids.includes(abilityIdFromTableEntry(entry))
+        ? sum + Number(entry.hitCount || 0) + Number(entry.missCount || 0)
+        : sum;
+    }, 0);
+    return { name, amount, hitCount };
+  });
+}
+
+function raidProcessorDamageTakenResult(damageTakenTable, trackedAbilities) {
+  const perAbility = (trackedAbilities || []).map(tracked => raidImporterEntryTotal(damageTakenTable, tracked.ids));
+  return {
+    perAbility,
+    total: perAbility.reduce((sum, value) => sum + Number(value || 0), 0)
+  };
+}
+
+function raidProcessorDebuffsAppliedResult(debuffsTable, trackedDebuffs) {
+  return (trackedDebuffs || []).map(tracked => {
+    const amount = raidImporterTableAuras(debuffsTable)
+      .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+      .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0);
+    return amount > 0 ? amount : "";
+  });
+}
+
+function raidProcessorAbsorbResults(buffsTable) {
+  const perAbsorb = rpbAbsorbs.map(([, , ids]) => {
+    const present = raidImporterAuraNames(buffsTable, raidImporterDefinitionObject([[rpbAbsorbs[0]?.[0] || "", [], ids]])).length > 0;
+    return present ? 1 : 0;
+  });
+  return {
+    perAbsorb,
+    total: perAbsorb.reduce((sum, value, index) => {
+      const label = rpbAbsorbs[index]?.[0] || "";
+      return label.startsWith("Power Word") ? sum : sum + Number(value || 0);
+    }, 0)
+  };
+}
+
+function buildRaidPlayerResult({ player, rpbConfig, tables, deaths = [] }) {
+  const classConfig = rpbConfig.byClass?.[player.className] || { singleTarget: [], aoe: [], cooldowns: [] };
+  const singleTargetCasts = classConfig.singleTarget.map(cast => raidProcessorCastResult(cast, tables, false));
+  const aoeCasts = classConfig.aoe.map(cast => raidProcessorCastResult(cast, tables, true));
+  const consumables = raidProcessorConsumableResults(tables.casts);
+  const engineering = raidProcessorEngineeringResults(tables.casts, tables.damageDone);
+  const engineeringDamageTotal = engineering.reduce((sum, item) => {
+    const ids = (rpbEngineering.find(([name]) => name === item.name)?.[2]) || [];
+    return sum + raidImporterTableEntries(tables.damageDone).reduce((entrySum, entry) => {
+      return ids.includes(abilityIdFromTableEntry(entry)) ? entrySum + Number(entry.total || 0) : entrySum;
+    }, 0);
+  }, 0);
+  return {
+    playerId: player.id,
+    playerName: player.name,
+    playerClass: player.className,
+    role: player.raidRole || "",
+    singleTargetCasts,
+    aoeCasts,
+    cooldowns: {},
+    damageTaken: {
+      ...raidProcessorDamageTakenResult(tables.damageTaken, rpbConfig.damageTaken || []),
+      deaths: String(deaths.length || "")
+    },
+    debuffsApplied: raidProcessorDebuffsAppliedResult(tables.debuffs, rpbConfig.debuffsTracked || []),
+    trinkets: (rpbConfig.trinketsAndRacials || []).map(item => ({
+      name: item.name,
+      amount: raidProcessorTableCount(tables.casts, item.ids),
+      uptime: 0
+    })),
+    engineering,
+    engineeringDamageTotal,
+    consumables,
+    absorbs: raidProcessorAbsorbResults(tables.buffs),
+    interruptsTotal: 0,
+    interruptsDetails: "",
+    source: "wcl-tables-player-result-v1"
+  };
+}
+
 function parseNumberList(value) {
   return String(value || "")
     .split(/[,\s]+/)
@@ -5004,7 +5188,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
   const rpbEndTime = rpbFights.length ? Math.max(...rpbFights.map(fight => Number(fight.endTime || 0))) : Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const rpbTimeScope = rpbEndTime > rpbStartTime ? { startTime: rpbStartTime, endTime: rpbEndTime } : rpbFightScope;
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
-  const activityScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : rpbTimeScope;
+  const activityScope = null;
   const reportInfo = {
     code: reportCode,
     url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
@@ -5014,7 +5198,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
     includedFights: rpbFights.length,
     bossFights: bossFights.length,
     gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
-    scopeRule: "activity tables use full report time; gear from last included boss"
+    scopeRule: "activity values use unfiltered WCL report tables; gear from last included boss"
   };
   if (String(params.listOnly || params.playersOnly || "") === "1") {
     return {
@@ -5152,6 +5336,19 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
       const worldBuffs = raidImporterAuraNames(buffsTable, worldBuffDefinitions);
       const playerDeaths = allDeaths.filter(event => eventSourceId(event) === Number(player.id) || eventTargetId(event) === Number(player.id));
       const worldBuffsLostDueToDying = playerDeaths.some(event => bossFightIds.has(Number(event.fight || event.fightID || event.fightId))) && worldBuffs.length > 0;
+      const playerResult = buildRaidPlayerResult({
+        player,
+        rpbConfig,
+        tables: {
+          casts: castsTable,
+          healing: healingTable,
+          damageDone: damageDoneTable,
+          damageTaken: damageTakenTable,
+          buffs: buffsTable,
+          debuffs: debuffsTable
+        },
+        deaths: playerDeaths
+      });
 
       importedPlayers.push({
         id: player.id,
@@ -5203,7 +5400,8 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
           engineering: engineeringCounts
         },
         gear,
-        enchantIssues: gear.filter(item => item.issue)
+        enchantIssues: gear.filter(item => item.issue),
+        playerResult
       });
     }
   }
@@ -5222,7 +5420,8 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
       buffs: "WarcraftLogs table(Buffs) per player",
       debuffs: "WarcraftLogs table(Debuffs) per player",
       gear: "WarcraftLogs table(Summary) gear snapshot",
-      deaths: "WarcraftLogs events(Deaths)"
+      deaths: "WarcraftLogs events(Deaths)",
+      playerResult: "processor-shaped object based on CastsProcessor/DamageProcessor/OutputBuilder"
     },
     report: reportInfo,
     players: importedPlayers
