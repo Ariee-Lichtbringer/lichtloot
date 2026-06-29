@@ -21,6 +21,7 @@ const worldbuffTickerCsvUrl =
 const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
+let rpbConfigAllCache = null;
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "1mb" }));
@@ -3149,6 +3150,104 @@ const rpbEngineering = [
 
 const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
 
+function parseRpbConfigCsvRows(text) {
+  const rows = [];
+  let row = [];
+  let cell = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (char === "\"" && next === "\"") {
+        cell += "\"";
+        i++;
+      } else if (char === "\"") {
+        inQuotes = false;
+      } else {
+        cell += char;
+      }
+      continue;
+    }
+    if (char === "\"") {
+      inQuotes = true;
+    } else if (char === ",") {
+      row.push(cell);
+      cell = "";
+    } else if (char === "\n") {
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = "";
+    } else if (char !== "\r") {
+      cell += char;
+    }
+  }
+  row.push(cell);
+  rows.push(row);
+  return rows;
+}
+
+function parseRpbConfigCast(configString) {
+  const text = clean(configString);
+  if (!text || text.indexOf("[") === -1) return null;
+  const name = text.split(" [")[0].split(" {")[0];
+  const idsText = (text.split("[")[1] || "").split("]")[0];
+  const ids = idsText
+    .split(",")
+    .map(id => Number(String(id).replace("*", "").trim()))
+    .filter(id => Number.isFinite(id) && id > 0);
+  const castTime = Number.parseFloat((text.split("{")[1] || "").split("}")[0]) || 0;
+  return {
+    raw: text,
+    name,
+    ids,
+    castTime,
+    hasOverheal: text.toLowerCase().includes("overheal"),
+    hasUptime: text.toLowerCase().includes("uptime") || text.includes("[99999]") || text.includes("[99998]")
+  };
+}
+
+function findRpbConfigMarker(rows, marker) {
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const colIndex = (rows[rowIndex] || []).findIndex(value => clean(value).startsWith(marker));
+    if (colIndex > -1) return { rowIndex, colIndex };
+  }
+  return null;
+}
+
+function readRpbConfigList(rows, marker) {
+  const found = findRpbConfigMarker(rows, marker);
+  if (!found) return [];
+  const values = [];
+  for (let rowIndex = found.rowIndex + 1; rowIndex < rows.length; rowIndex++) {
+    const value = clean(rows[rowIndex]?.[found.colIndex]);
+    if (!value) break;
+    values.push(value);
+  }
+  return values;
+}
+
+async function loadRpbConfigAll() {
+  if (rpbConfigAllCache) return rpbConfigAllCache;
+  const csv = await readFile(new URL("./rpb-configAll.csv", import.meta.url), "utf8");
+  const rows = parseRpbConfigCsvRows(csv);
+  const byClass = {};
+  rpbClassOrder.forEach(className => {
+    byClass[className] = {
+      singleTarget: readRpbConfigList(rows, `singleTargetCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean),
+      aoe: readRpbConfigList(rows, `aoeCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean)
+    };
+  });
+  rpbConfigAllCache = { rows, byClass };
+  return rpbConfigAllCache;
+}
+
+function findConfiguredCast(rpbConfig, className, spellId, kind) {
+  const casts = rpbConfig?.byClass?.[className]?.[kind] || [];
+  return casts.find(cast => cast.ids.includes(Number(spellId))) || null;
+}
+
 const rpbSpellNamesById = {
   17: "Power Word: Shield",
   72: "Shield Bash",
@@ -3568,6 +3667,7 @@ async function buildRpbAnalysisRows(analysis) {
 }
 
 async function buildRpbWebAnalysis(analysis, options = {}) {
+  const rpbConfig = await loadRpbConfigAll();
   const base = await fetchReportBaseForAnalysis(analysis.report_code);
   const { token, report, fights, fightIds } = base;
   const classByName = options.classByName instanceof Map ? options.classByName : new Map();
@@ -3636,18 +3736,30 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playersById.get(eventSourceId(event));
     if (!player) return;
     if (labelForAbility(event, rpbConsumables) || labelForAbility(event, rpbEngineering)) return;
-    const spell = displayAbilityName(event);
+    const id = abilityId(event);
+    const configuredStCast = findConfiguredCast(rpbConfig, player.className, id, "singleTarget");
+    const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
+    const configuredCast = configuredStCast || configuredAoeCast;
+    const spell = configuredCast?.name || displayAbilityName(event);
     if (!spell || /^\d+$/.test(spell)) return;
     if (!player.className) player.className = inferClassFromSpellName(spell);
     if (!player.className) return;
     if (!classCasts[player.className]) classCasts[player.className] = {};
     if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
     classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
-    const meta = rpbCastMeta(spell, player.className);
-    if (meta.castTime > 0 && meta.kind === "aoe") {
-      aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + meta.castTime;
-    } else if (meta.castTime > 0 && meta.kind === "st") {
-      stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + meta.castTime;
+    if (configuredCast) {
+      if (configuredAoeCast) {
+        aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + configuredCast.castTime;
+      } else {
+        stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + configuredCast.castTime;
+      }
+    } else {
+      const meta = rpbCastMeta(spell, player.className);
+      if (meta.castTime > 0 && meta.kind === "aoe") {
+        aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + meta.castTime;
+      } else if (meta.castTime > 0 && meta.kind === "st") {
+        stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + meta.castTime;
+      }
     }
   }
 
