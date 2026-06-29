@@ -54,7 +54,30 @@
       margin-top:12px;
       max-width:1100px;
     }
-    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+    .type-switch{
+      display:flex;
+      gap:6px;
+      align-items:center;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:4px;
+      background:#0d1217;
+    }
+    .type-switch button{
+      border:0;
+      border-radius:6px;
+      min-height:30px;
+      padding:0 12px;
+      background:transparent;
+      color:var(--muted);
+      font-weight:900;
+      cursor:pointer;
+    }
+    .type-switch button.active{
+      background:var(--accent);
+      color:#15100a;
+    }
     .btn{
       display:inline-flex;
       align-items:center;
@@ -313,13 +336,36 @@
     table.cla-table td.cla-score-mid{background:#fff2cc!important;color:#111;font-weight:900}
     table.cla-table td.cla-score-bad{background:#e06666!important;color:#111;font-weight:900}
     table.cla-table td.cla-muted{background:#b7b7b7!important;color:#111}
-    table.sheet-table{width:max-content;min-width:auto}
-    table.sheet-table th,table.sheet-table td{width:108px;min-width:108px;max-width:108px;color:#111;background:#f8fafc;white-space:normal;line-height:1.15}
-    table.sheet-table th:first-child,table.sheet-table td:first-child{width:210px;min-width:210px;max-width:210px;color:#111;background:#eef2f7}
+    table.sheet-table{width:max-content;min-width:auto;background:#0e141a}
+    table.sheet-table th,table.sheet-table td{width:108px;min-width:108px;max-width:108px;color:var(--text);background:#182126;white-space:normal;line-height:1.15;border-color:#2b3a48}
+    table.sheet-table th{background:#101820;color:#dbe5ef}
+    table.sheet-table th:first-child,table.sheet-table td:first-child{width:210px;min-width:210px;max-width:210px;color:#f2f5f7;background:#131b22}
     table.sheet-table td{font-weight:700}
     table.sheet-table td.sheet-wide,table.sheet-table th.sheet-wide{width:190px;min-width:190px;max-width:190px;text-align:left}
     table.sheet-table td.sheet-name,table.sheet-table th.sheet-name{width:150px;min-width:150px;max-width:150px;text-align:left}
-    table.sheet-table td.sheet-empty{color:transparent;background:#f8fafc}
+    table.sheet-table td.sheet-empty{color:transparent;background:#0e141a}
+    table.sheet-table td.sheet-section{background:#e5e7eb!important;color:#111827!important;font-weight:900}
+    table.sheet-table td.sheet-good{background:rgba(90,150,112,.28)!important;color:#75e0a0!important}
+    table.sheet-table td.sheet-mid{background:rgba(215,180,106,.26)!important;color:#f0cd7b!important}
+    table.sheet-table td.sheet-bad{background:rgba(224,102,102,.32)!important;color:#ff9a9a!important}
+    table.sheet-table td.sheet-muted{background:rgba(148,163,184,.18)!important;color:#c8d0da!important}
+    table.sheet-table td.sheet-class-druid,table.sheet-table th.sheet-class-druid{background:rgba(255,184,107,.34)!important;color:#ffd4a3!important}
+    table.sheet-table td.sheet-class-hunter,table.sheet-table th.sheet-class-hunter{background:rgba(170,214,160,.28)!important;color:#c4f0bc!important}
+    table.sheet-table td.sheet-class-mage,table.sheet-table th.sheet-class-mage{background:rgba(166,200,255,.28)!important;color:#c9dcff!important}
+    table.sheet-table td.sheet-class-paladin,table.sheet-table th.sheet-class-paladin{background:rgba(216,163,191,.30)!important;color:#f1bfd8!important}
+    table.sheet-table td.sheet-class-priest,table.sheet-table th.sheet-class-priest{background:rgba(255,255,255,.16)!important;color:#f8fafc!important}
+    table.sheet-table td.sheet-class-rogue,table.sheet-table th.sheet-class-rogue{background:rgba(255,241,191,.22)!important;color:#fff1bf!important}
+    table.sheet-table td.sheet-class-warlock,table.sheet-table th.sheet-class-warlock{background:rgba(185,167,223,.30)!important;color:#d8c9ff!important}
+    table.sheet-table td.sheet-class-warrior,table.sheet-table th.sheet-class-warrior{background:rgba(223,209,198,.24)!important;color:#eaded5!important}
+    table.sheet-table td.sheet-player-header,
+    table.sheet-table th.sheet-player-header{
+      color:#111827!important;
+      font-weight:900;
+      text-align:center;
+    }
+    table.sheet-table td.sheet-label{color:#f3f6f8!important;background:#192229!important;text-align:left}
+    table.sheet-table td.sheet-value{color:#65d58d!important}
+    table.sheet-table td.sheet-note{color:#cdd6df!important}
     .item-cell{font-weight:900;text-decoration:none}
     .item-poor{color:#9d9d9d}
     .item-common{color:#f3f4f6}
@@ -386,6 +432,10 @@
         <div id="classList" class="header-classes top-class-list"></div>
       </div>
       <div class="actions">
+        <div class="type-switch" aria-label="Auswertungstyp">
+          <button id="typeRpb" type="button" onclick="switchAnalysisType('rpb')">RPB</button>
+          <button id="typeCla" type="button" onclick="switchAnalysisType('cla')">CLA</button>
+        </div>
         <a id="wclLink" class="btn" href="#" target="_blank" rel="noopener">WCL öffnen</a>
         <a class="btn primary" href="gildenleitung.html">Zur Gildenleitung</a>
       </div>
@@ -459,6 +509,24 @@
       Unknown:"Unbekannt"
     };
     const CLASS_ORDER = ["Druid","Hunter","Mage","Paladin","Priest","Rogue","Shaman","Warlock","Warrior"];
+    const SHEET_CLASS_COLORS = {
+      Druid:["#f6b26b","#ffb86b","#f9cb9c"],
+      Hunter:["#b6d7a8","#93c47d","#a8d08d"],
+      Mage:["#a4c2f4","#9fc5e8","#a6c8ff"],
+      Paladin:["#d5a6bd","#d9a7c7","#ead1dc"],
+      Priest:["#ffffff","#f3f3f3","#efefef"],
+      Rogue:["#fff2cc","#ffe599","#fff1bf"],
+      Warlock:["#b4a7d6","#b9a7df","#c9b8e8"],
+      Warrior:["#e2d3c9","#d7ccc8","#dcc9bd"]
+    };
+    const SHEET_NAME_BLOCKLIST = new Set([
+      "druids","druiden","hunters","jaeger","jäger","mages","magier","paladins","paladine",
+      "priests","priester","rogues","schurken","warlocks","hexenmeister","warriors","krieger",
+      "general","allgemein","caster","zauberer","healer","heiler","physical","nahkampf",
+      "tank","title","zone","date","amount","average","start","end","optional","metric",
+      "stats and miscellaneous","consumables","damage absorbed","trinkets and racials",
+      "class specific cooldowns","unterbrochene zauber","keine treffer"
+    ]);
 
     function escapeHtml(value){
       return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -474,6 +542,103 @@
     function cellTitle(value){
       if(value && typeof value === "object") return value.title || value.tooltip || "";
       return "";
+    }
+
+    function normalizeNameKey(value){
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function normalizeSheetLabel(value){
+      return normalizeNameKey(value)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-z0-9]+/g," ")
+        .trim();
+    }
+
+    function parseColor(value){
+      const text = String(value || "").trim().toLowerCase();
+      if(!text) return null;
+      if(text.startsWith("#")){
+        const hex = text.length === 4
+          ? `#${text[1]}${text[1]}${text[2]}${text[2]}${text[3]}${text[3]}`
+          : text.slice(0,7);
+        const number = Number.parseInt(hex.slice(1), 16);
+        if(Number.isNaN(number)) return null;
+        return [(number >> 16) & 255, (number >> 8) & 255, number & 255];
+      }
+      const rgb = text.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+    }
+
+    function colorDistance(a, b){
+      return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
+    }
+
+    function classFromSheetColor(color){
+      const rgb = parseColor(color);
+      if(!rgb) return "";
+      let best = {className:"", distance:999};
+      Object.entries(SHEET_CLASS_COLORS).forEach(([className, colors]) => {
+        colors.forEach(candidate => {
+          const distance = colorDistance(rgb, parseColor(candidate));
+          if(distance < best.distance) best = {className, distance};
+        });
+      });
+      return best.distance < 75 ? best.className : "";
+    }
+
+    function looksLikeSheetPlayerName(value){
+      const text = String(value || "").trim();
+      if(!text || text.length < 2 || text.length > 24) return false;
+      if(/[0-9%()[\]:,./]/.test(text)) return false;
+      const normalized = normalizeSheetLabel(text);
+      if(SHEET_NAME_BLOCKLIST.has(normalized)) return false;
+      return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]+$/.test(text);
+    }
+
+    function hydrateSheetExportPlayers(){
+      if(!state.data || state.data.source !== "sheet-export") return;
+      const players = new Map();
+      const existingPlayers = Array.isArray(state.data.players) ? state.data.players : [];
+      const allowedNames = new Set(existingPlayers.map(player => normalizeNameKey(player.name)).filter(Boolean));
+      existingPlayers.forEach(player => {
+        if(player.name) players.set(normalizeNameKey(player.name), {
+          name:player.name,
+          className:player.className || "Unknown",
+          raidRole:player.raidRole || ""
+        });
+      });
+      (state.data.sections || []).forEach(section => {
+        const values = section.matrix?.values || [];
+        const backgrounds = section.matrix?.backgrounds || [];
+        values.forEach((row, rowIndex) => {
+          (Array.isArray(row) ? row : []).forEach((cell, colIndex) => {
+            const name = String(cell || "").trim();
+            if(!looksLikeSheetPlayerName(name)) return;
+            const key = normalizeNameKey(name);
+            if(allowedNames.size && !allowedNames.has(key)) return;
+            const bg = backgrounds[rowIndex]?.[colIndex] || "";
+            const className = classFromSheetColor(bg) || "Unknown";
+            const current = players.get(key);
+            if(!current || current.className === "Unknown"){
+              players.set(key, {name, className, raidRole:current?.raidRole || ""});
+            }
+          });
+        });
+      });
+      const inferred = Array.from(players.values()).sort((a,b) => {
+        const ai = CLASS_ORDER.includes(a.className) ? CLASS_ORDER.indexOf(a.className) : 999;
+        const bi = CLASS_ORDER.includes(b.className) ? CLASS_ORDER.indexOf(b.className) : 999;
+        return ai - bi || a.name.localeCompare(b.name, "de");
+      });
+      if(inferred.length) state.data.players = inferred;
+    }
+
+    function playerClassByName(){
+      const byName = new Map();
+      (state.data?.players || []).forEach(player => byName.set(normalizeNameKey(player.name), player.className || "Unknown"));
+      return byName;
     }
 
     function itemQualityClass(value){
@@ -627,6 +792,24 @@
       renderTable();
     }
 
+    function currentAnalysisType(){
+      return (params.get("type") || "rpb").toLowerCase() === "cla" ? "cla" : "rpb";
+    }
+
+    function switchAnalysisType(type){
+      const next = new URL(location.href);
+      next.searchParams.set("type", type);
+      location.href = next.toString();
+    }
+
+    function renderTypeSwitch(){
+      const type = currentAnalysisType();
+      const rpb = document.getElementById("typeRpb");
+      const cla = document.getElementById("typeCla");
+      if(rpb) rpb.classList.toggle("active", type === "rpb");
+      if(cla) cla.classList.toggle("active", type === "cla");
+    }
+
     function roleLabel(value){
       const found = (state.data?.roleOptions || []).find(option => option.value === value);
       return found ? found.label : "";
@@ -717,14 +900,6 @@
     }
 
     function renderClassControls(){
-      if(state.data?.source === "sheet-export"){
-        const list = document.getElementById("classList");
-        const select = document.getElementById("classSelect");
-        select.innerHTML = '<option value="">Alle Spieler</option>';
-        select.value = "";
-        list.innerHTML = "";
-        return;
-      }
       const groups = classGroups();
       const list = document.getElementById("classList");
       const select = document.getElementById("classSelect");
@@ -840,16 +1015,80 @@
       return Array.isArray(section?.matrix?.values);
     }
 
+    function sheetCellTone(value, bg, visualIndex){
+      const text = String(value || "").trim();
+      if(!text) return "sheet-empty";
+      const className = classFromSheetColor(bg);
+      if(className && looksLikeSheetPlayerName(text)) return `sheet-player-header sheet-class-${className.toLowerCase()}`;
+      if(visualIndex === 0) return "sheet-label";
+      const rgb = parseColor(bg);
+      if(rgb){
+        const [r,g,b] = rgb;
+        if(r > 220 && g < 150 && b < 150) return "sheet-bad";
+        if(g > 160 && r < 210) return "sheet-good";
+        if(r > 220 && g > 175 && b < 170) return "sheet-mid";
+        if(Math.abs(r-g) < 12 && Math.abs(g-b) < 12 && r > 150) return "sheet-muted";
+      }
+      if(/^\d+(\.\d+)?(\s*\([^)]*\))?$/.test(text) || /^\d+%$/.test(text)) return "sheet-value";
+      return "sheet-note";
+    }
+
+    function shouldKeepSheetRow(row, compactCols, playersByName){
+      if(!state.activeClass) return true;
+      const first = normalizeNameKey(row[compactCols[0]] || row[0] || "");
+      const firstClass = playersByName.get(first);
+      if(firstClass) return firstClass === state.activeClass;
+      return true;
+    }
+
+    function shouldKeepSheetColumn(rows, col, visualIndex, playersByName){
+      if(!state.activeClass || visualIndex === 0) return true;
+      const classes = new Set();
+      rows.forEach(({row}) => {
+        const className = playersByName.get(normalizeNameKey(row[col] || ""));
+        if(className) classes.add(className);
+      });
+      if(!classes.size) return true;
+      return classes.has(state.activeClass);
+    }
+
+    function renderSheetClassOverview(section, rows, cols){
+      const box = document.getElementById("classOverview");
+      if(!state.activeClass){
+        box.className = "class-overview";
+        box.innerHTML = "";
+        return;
+      }
+      const players = (state.data.players || []).filter(player => player.className === state.activeClass);
+      let filled = 0;
+      rows.forEach(({row}) => cols.forEach(col => {
+        const text = String(row[col] || "").trim();
+        if(text && text !== "0" && text !== "0%") filled++;
+      }));
+      box.className = "class-overview show";
+      box.innerHTML = `
+        <div class="class-title">
+          <h2 style="color:${classColor(state.activeClass)}">${escapeHtml(CLASS_LABELS[state.activeClass] || state.activeClass)}</h2>
+          <button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>${players.length}</strong><span>Spieler</span></div>
+          <div class="stat"><strong>${rows.length}</strong><span>Zeilen in diesem Reiter</span></div>
+          <div class="stat"><strong>${filled}</strong><span>gefüllte Felder</span></div>
+          <div class="stat"><strong>${section.label}</strong><span>aktueller Reiter</span></div>
+        </div>
+      `;
+    }
+
     function renderMatrixTable(section){
       const table = document.getElementById("analysisTable");
       renderClassSubtabs(section);
-      document.getElementById("classOverview").className = "class-overview";
-      document.getElementById("classOverview").innerHTML = "";
       const values = section.matrix?.values || [];
       const backgrounds = section.matrix?.backgrounds || [];
       const fontColors = section.matrix?.fontColors || [];
       const notes = section.matrix?.notes || [];
       const q = state.search;
+      const playersByName = playerClassByName();
       const rawRows = values.map((row, index) => ({ row: Array.isArray(row) ? row : [], index }));
       const usedCols = new Set();
       rawRows.forEach(item => {
@@ -861,26 +1100,28 @@
       const compactCols = colList.length ? colList : [0];
       const rows = rawRows
         .filter(item => compactCols.some(col => String(item.row[col] || "").trim()))
+        .filter(item => shouldKeepSheetRow(item.row, compactCols, playersByName))
         .filter(item => !q || compactCols.some(col => String(item.row[col] || "").toLowerCase().includes(q)));
+      const visibleCols = compactCols.filter((col, visualIndex) => shouldKeepSheetColumn(rows, col, visualIndex, playersByName));
+      renderSheetClassOverview(section, rows, visibleCols);
       table.className = "compact sheet-table";
       const head = `
         <thead>
           <tr>
-            ${compactCols.map((col, visualIndex) => `<th class="${sheetCellClass(rows, col, visualIndex)}">${visualIndex === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
+            ${visibleCols.map((col, visualIndex) => `<th class="${sheetCellClass(rows, col, visualIndex)}">${visualIndex === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
           </tr>
         </thead>
       `;
       const body = rows.map(({row, index}) => `
         <tr class="${state.highlightRow === `sheet-${index}` ? "mark-row" : ""}">
-          ${compactCols.map((col, visualIndex) => {
+          ${visibleCols.map((col, visualIndex) => {
             const value = row[col] ?? "";
             const bg = backgrounds[index]?.[col] || "";
             const color = fontColors[index]?.[col] || "";
             const note = notes[index]?.[col] || "";
-            const style = `${bg ? `background:${escapeHtml(bg)}!important;` : ""}${color ? `color:${escapeHtml(color)}!important;` : ""}`;
             const marked = `${state.highlightRow === `sheet-${index}` ? " mark-row-cell" : ""}${state.highlightPlayer === `col-${col}` ? " mark-col" : ""}${state.highlightRow === `sheet-${index}` && state.highlightPlayer === `col-${col}` ? " mark-cell" : ""}`;
-            const cls = `${value ? "text" : "sheet-empty"} ${sheetCellClass(rows, col, visualIndex)}${marked}`;
-            return `<td class="${cls}" style="${style}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
+            const cls = `${value ? "text" : "sheet-empty"} ${sheetCellClass(rows, col, visualIndex)} ${sheetCellTone(value, bg, visualIndex)}${marked}`;
+            return `<td class="${cls}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
           }).join("")}
         </tr>
       `).join("");
@@ -986,6 +1227,7 @@
       if(!state.data) return;
       state.search = (document.getElementById("searchInput").value || "").trim().toLowerCase();
       renderTabs();
+      renderTypeSwitch();
       renderClassControls();
       renderRoleEditor();
       renderTable();
@@ -1002,7 +1244,7 @@
         action:"getPublicLogAnalysisWeb",
         guild,
         id,
-        type:params.get("type") || "rpb",
+        type:currentAnalysisType(),
         t:Date.now()
       });
       const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
@@ -1015,14 +1257,13 @@
         throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
       }
       state.data = data.webAnalysis;
+      hydrateSheetExportPlayers();
       state.activeSection = state.data.sections?.[0]?.id || "";
       state.activeClass = "";
       document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
       document.getElementById("raidName").textContent = state.data.report.raid || state.data.analysis.raid || "Raid";
       document.getElementById("raidDate").textContent = state.data.report.raidDate || state.data.analysis.raidDate || "-";
-      document.getElementById("playerCount").textContent = state.data.source === "sheet-export"
-        ? `${state.data.sections.length} Sheet-Tabs`
-        : `${state.data.players.length} Spieler`;
+      document.getElementById("playerCount").textContent = `${(state.data.players || []).length} Spieler`;
       document.getElementById("wclLink").href = state.data.report.reportUrl || state.data.analysis.reportUrl || "#";
       if((state.data.warnings || []).length){
         document.getElementById("statusText").textContent = state.data.warnings.join(" ");
