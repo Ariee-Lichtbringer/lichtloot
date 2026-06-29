@@ -3048,11 +3048,16 @@ async function fetchReportBaseForAnalysis(reportCode) {
 
 async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightIds) {
   const hasFightScope = Array.isArray(fightIds);
+  const hasTimeScope = fightIds && typeof fightIds === "object" && !Array.isArray(fightIds);
   if (hasFightScope && !fightIds.length) return [];
   const gqlQuery = hasFightScope
     ? "query($code:String!,$fightIDs:[Int],$startTime:Float){"+
       "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
       "}"
+    : hasTimeScope
+      ? "query($code:String!,$startTime:Float,$endTime:Float){"+
+        "reportData{report(code:$code){events(dataType:"+dataType+",startTime:$startTime,endTime:$endTime,limit:10000){data nextPageTimestamp}}}"+
+        "}"
     : "query($code:String!,$startTime:Float){"+
       "reportData{report(code:$code){events(dataType:"+dataType+",startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
       "}";
@@ -3060,7 +3065,11 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
   let startTime = null;
   try {
     for (let page = 0; page < 50; page++) {
-      const variables = hasFightScope ? { code: reportCode, fightIDs: fightIds, startTime } : { code: reportCode, startTime };
+      const variables = hasFightScope
+        ? { code: reportCode, fightIDs: fightIds, startTime }
+        : hasTimeScope
+          ? { code: reportCode, startTime: startTime ?? Number(fightIds.startTime || 0), endTime: Number(fightIds.endTime || 999999999999) }
+          : { code: reportCode, startTime };
       const data = await warcraftLogsGraphql(token, gqlQuery, variables);
       const events = data.reportData?.report?.events || {};
       allEvents.push(...parseWarcraftLogsEventsData(events.data));
@@ -3076,18 +3085,24 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
 
 async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds, sourceId = null) {
   const hasFightScope = Array.isArray(fightIds);
+  const hasTimeScope = fightIds && typeof fightIds === "object" && !Array.isArray(fightIds);
   if (hasFightScope && !fightIds.length) return {};
   const hasSource = Number(sourceId) > 0;
   const sourceArg = hasSource ? ",sourceID:$sourceID" : "";
   const fightArg = hasFightScope ? ",fightIDs:$fightIDs" : "";
-  const queryVars = `$code:String!${hasFightScope ? ",$fightIDs:[Int]" : ""}${hasSource ? ",$sourceID:Int" : ""}`;
+  const timeArg = hasTimeScope ? ",startTime:$startTime,endTime:$endTime" : "";
+  const queryVars = `$code:String!${hasFightScope ? ",$fightIDs:[Int]" : ""}${hasTimeScope ? ",$startTime:Float,$endTime:Float" : ""}${hasSource ? ",$sourceID:Int" : ""}`;
   const gqlQuery =
     "query("+queryVars+"){"+
-    "reportData{report(code:$code){table(dataType:"+dataType+fightArg+sourceArg+")}}"+
+    "reportData{report(code:$code){table(dataType:"+dataType+fightArg+timeArg+sourceArg+")}}"+
     "}";
   try {
     const variables = { code: reportCode };
     if (hasFightScope) variables.fightIDs = fightIds;
+    if (hasTimeScope) {
+      variables.startTime = Number(fightIds.startTime || 0);
+      variables.endTime = Number(fightIds.endTime || 999999999999);
+    }
     if (hasSource) variables.sourceID = Number(sourceId);
     const data = await warcraftLogsGraphql(token, gqlQuery, variables);
     return parseWarcraftLogsTableData(data.reportData?.report?.table);
@@ -3760,7 +3775,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
   }));
   const playersById = actorById(players);
-  const fullReportScope = null;
+  const fullReportScope = { startTime: 0, endTime: 999999999999 };
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fullReportScope);
