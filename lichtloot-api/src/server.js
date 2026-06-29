@@ -3047,16 +3047,21 @@ async function fetchReportBaseForAnalysis(reportCode) {
 }
 
 async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightIds) {
-  if (!fightIds.length) return [];
-  const gqlQuery =
-    "query($code:String!,$fightIDs:[Int],$startTime:Float){"+
-    "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
-    "}";
+  const hasFightScope = Array.isArray(fightIds);
+  if (hasFightScope && !fightIds.length) return [];
+  const gqlQuery = hasFightScope
+    ? "query($code:String!,$fightIDs:[Int],$startTime:Float){"+
+      "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
+      "}"
+    : "query($code:String!,$startTime:Float){"+
+      "reportData{report(code:$code){events(dataType:"+dataType+",startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
+      "}";
   const allEvents = [];
   let startTime = null;
   try {
     for (let page = 0; page < 50; page++) {
-      const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds, startTime });
+      const variables = hasFightScope ? { code: reportCode, fightIDs: fightIds, startTime } : { code: reportCode, startTime };
+      const data = await warcraftLogsGraphql(token, gqlQuery, variables);
       const events = data.reportData?.report?.events || {};
       allEvents.push(...parseWarcraftLogsEventsData(events.data));
       if (!events.nextPageTimestamp || events.nextPageTimestamp === startTime) break;
@@ -3070,17 +3075,19 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
 }
 
 async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds, sourceId = null) {
-  if (!fightIds.length) return {};
+  const hasFightScope = Array.isArray(fightIds);
+  if (hasFightScope && !fightIds.length) return {};
   const hasSource = Number(sourceId) > 0;
-  const gqlQuery = hasSource
-    ? "query($code:String!,$fightIDs:[Int],$sourceID:Int){"+
-      "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs,sourceID:$sourceID)}}"+
-      "}"
-    : "query($code:String!,$fightIDs:[Int]){"+
-      "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs)}}"+
-      "}";
+  const sourceArg = hasSource ? ",sourceID:$sourceID" : "";
+  const fightArg = hasFightScope ? ",fightIDs:$fightIDs" : "";
+  const queryVars = `$code:String!${hasFightScope ? ",$fightIDs:[Int]" : ""}${hasSource ? ",$sourceID:Int" : ""}`;
+  const gqlQuery =
+    "query("+queryVars+"){"+
+    "reportData{report(code:$code){table(dataType:"+dataType+fightArg+sourceArg+")}}"+
+    "}";
   try {
-    const variables = { code: reportCode, fightIDs: fightIds };
+    const variables = { code: reportCode };
+    if (hasFightScope) variables.fightIDs = fightIds;
     if (hasSource) variables.sourceID = Number(sourceId);
     const data = await warcraftLogsGraphql(token, gqlQuery, variables);
     return parseWarcraftLogsTableData(data.reportData?.report?.table);
@@ -3753,12 +3760,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
   }));
   const playersById = actorById(players);
-  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
-  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fightIds);
-  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fightIds);
-  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fightIds);
-  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
-  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fightIds);
+  const fullReportScope = null;
+  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
+  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
+  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fullReportScope);
+  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fullReportScope);
+  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fullReportScope);
+  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fullReportScope);
   const consumes = {};
   const trinketsAndRacials = {};
   const absorbs = {};
@@ -3901,7 +3909,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     async function worker() {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
-        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fightIds, player.id);
+        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope, player.id);
         const entries = Array.isArray(table.entries) ? table.entries : [];
         entries.forEach(entry => {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
