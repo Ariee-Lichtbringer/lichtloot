@@ -2877,11 +2877,14 @@ function parseWarcraftLogsEventsData(raw) {
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed?.data)) return parsed.data;
+      return [];
     } catch {
       return [];
     }
   }
+  if (Array.isArray(raw?.data)) return raw.data;
   return Array.isArray(raw) ? raw : [];
 }
 
@@ -2994,15 +2997,23 @@ async function fetchReportBaseForAnalysis(reportCode) {
 async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightIds) {
   if (!fightIds.length) return [];
   const gqlQuery =
-    "query($code:String!,$fightIDs:[Int]){"+
-    "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,limit:10000){data}}}"+
+    "query($code:String!,$fightIDs:[Int],$startTime:Float){"+
+    "reportData{report(code:$code){events(dataType:"+dataType+",fightIDs:$fightIDs,startTime:$startTime,limit:10000){data nextPageTimestamp}}}"+
     "}";
+  const allEvents = [];
+  let startTime = null;
   try {
-    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
-    return parseWarcraftLogsEventsData(data.reportData?.report?.events?.data);
+    for (let page = 0; page < 50; page++) {
+      const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds, startTime });
+      const events = data.reportData?.report?.events || {};
+      allEvents.push(...parseWarcraftLogsEventsData(events.data));
+      if (!events.nextPageTimestamp || events.nextPageTimestamp === startTime) break;
+      startTime = Number(events.nextPageTimestamp);
+    }
+    return allEvents;
   } catch (error) {
     console.warn(`Warcraft-Logs-${dataType}-Events konnten nicht geladen werden:`, error.message || error);
-    return [];
+    return allEvents;
   }
 }
 
@@ -3780,8 +3791,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     .filter(player => healerClasses.has(player.className) || healingTotals[player.name])
     .map(player => player.name);
   const healingRows = [
-    customRow("Total healing", Object.fromEntries(playerNames.map(player => [player, formatCountValue(healingTotals[player])])), { tone: "healing" }),
-    customRow("Total overheal", Object.fromEntries(playerNames.map(player => [player, formatCountValue(overhealTotals[player])])), { tone: "healing" }),
+    customRow("Heilung gesamt", Object.fromEntries(playerNames.map(player => [player, formatCountValue(healingTotals[player])])), { tone: "healing" }),
+    customRow("Overheal gesamt", Object.fromEntries(playerNames.map(player => [player, formatCountValue(overhealTotals[player])])), { tone: "healing" }),
     customRow("Overheal %", Object.fromEntries(playerNames.map(player => {
       const healing = Number(healingTotals[player] || 0);
       const overheal = Number(overhealTotals[player] || 0);
@@ -3791,9 +3802,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   Object.keys(healingBySpell)
     .sort((a, b) => a.localeCompare(b, "de"))
     .forEach(spell => {
-      healingRows.push(customRow(`${spell} (overheal%)`, Object.fromEntries(playerNames.map(player => {
+      healingRows.push(customRow(`${spell} (Overheal %)`, Object.fromEntries(playerNames.map(player => {
         const data = healingBySpell[spell][player];
-        if (!data || !data.amount) return [player, ""];
+        if (!data || (!data.amount && !data.overheal)) return [player, ""];
         const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
         return [player, `${Math.round(data.amount)} (${pct}%)`];
       })), { type: "text", tone: "healing" }));
@@ -3819,15 +3830,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const classHealingRows = healerClasses.has(className)
         ? Object.keys(healingBySpell)
           .map(spell => {
-            const total = classPlayers.reduce((sum, player) => sum + Number(healingBySpell[spell]?.[player]?.amount || 0), 0);
+            const total = classPlayers.reduce((sum, player) => {
+              const data = healingBySpell[spell]?.[player];
+              return sum + Number(data?.amount || 0) + Number(data?.overheal || 0);
+            }, 0);
             return { spell, total };
           })
           .filter(row => row.total > 0)
           .sort((a, b) => b.total - a.total || a.spell.localeCompare(b.spell, "de"))
           .slice(0, 35)
-          .map(row => customRow(`${row.spell} (overheal%)`, Object.fromEntries(playerNames.map(player => {
+          .map(row => customRow(`${row.spell} (Overheal %)`, Object.fromEntries(playerNames.map(player => {
             const data = healingBySpell[row.spell]?.[player];
-            if (!data || !data.amount) return [player, ""];
+            if (!data || (!data.amount && !data.overheal)) return [player, ""];
             const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
             return [player, `${Math.round(data.amount)} (${pct}%)`];
           })), { type: "text", tone: "healing" }))
