@@ -3775,7 +3775,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
   }));
   const playersById = actorById(players);
-  const fullReportScope = fightIds;
+  const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
+  const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fullReportScope);
