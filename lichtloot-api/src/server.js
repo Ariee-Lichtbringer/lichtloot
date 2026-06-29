@@ -3367,11 +3367,17 @@ async function saveLogAnalysis({ guildId, query: params }) {
            title = coalesce(nullif(excluded.title, ''), log_analyses.title),
            raid = coalesce(nullif(excluded.raid, ''), log_analyses.raid),
            raid_date = coalesce(excluded.raid_date, log_analyses.raid_date),
-           status = excluded.status,
-           summary = case
-             when excluded.summary = '{}'::jsonb then log_analyses.summary
-             else excluded.summary
+           status = case
+             when excluded.status in ('pending', '')
+                  and (
+                    nullif(log_analyses.summary->>'claDownloadUrl', '') is not null
+                    or nullif(log_analyses.summary->>'rpbDownloadUrl', '') is not null
+                    or log_analyses.status in ('cla_done', 'rpb_done')
+                  )
+               then log_analyses.status
+             else coalesce(nullif(excluded.status, ''), log_analyses.status)
            end,
+           summary = coalesce(log_analyses.summary, '{}'::jsonb) || coalesce(excluded.summary, '{}'::jsonb),
            discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), log_analyses.discord_channel_id),
            discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), log_analyses.discord_message_id),
            discord_author = coalesce(nullif(excluded.discord_author, ''), log_analyses.discord_author),
@@ -3454,13 +3460,13 @@ async function runLogAnalysis({ guildId, query: params }) {
     lastRequestedAnalysis: type.toUpperCase(),
     analysisRequestedAt: new Date().toISOString(),
     [downloadTokenKey]: downloadToken,
-    [downloadUrlKey]: generatedSheetUrl || "",
     [`${type}GeneratorJobId`]: generatorResult?.jobId || "",
     [`${type}GeneratorRunId`]: generatorRunId,
     [`${type}GeneratorStartedAt`]: new Date().toISOString(),
     [`${type}GeneratorStatus`]: generatorResult?.status || generatorStatus,
     [`${type}GeneratorError`]: generatorError
   };
+  if (generatedSheetUrl) summaryPatch[downloadUrlKey] = generatedSheetUrl;
   const nextStatus = generatedSheetUrl ? `${type}_done` : hasExternalGenerator ? `${type}_queued` : `${type}_failed`;
   const result = await query(
     `update log_analyses
@@ -4987,6 +4993,7 @@ async function exportGuildBackup({ guildId, query: params }) {
     p0plusResult,
     issueReportsResult,
     playerMessagesResult,
+    logAnalysesResult,
     hordenbuffEventsResult,
     hordenbuffEntriesResult,
     worldbuffEventsResult,
@@ -5065,6 +5072,7 @@ async function exportGuildBackup({ guildId, query: params }) {
     ),
     query("select * from issue_reports where guild_id = $1 order by created_at asc", [guildId]),
     query("select * from player_messages where guild_id = $1 order by created_at asc", [guildId]),
+    query("select * from log_analyses where guild_id = $1 order by created_at asc", [guildId]),
     query("select * from hordenbuff_events where guild_id = $1 order by event_date asc, event_time asc", [guildId]),
     query(
       `select he.*
@@ -5097,6 +5105,7 @@ async function exportGuildBackup({ guildId, query: params }) {
     p0plusPoints: p0plusResult.rows,
     issueReports: issueReportsResult.rows,
     playerMessages: playerMessagesResult.rows,
+    logAnalyses: logAnalysesResult.rows,
     hordenbuffEvents: hordenbuffEventsResult.rows,
     hordenbuffEntries: hordenbuffEntriesResult.rows,
     worldbuffEvents: worldbuffEventsResult.rows,
