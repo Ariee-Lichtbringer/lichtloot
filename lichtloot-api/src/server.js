@@ -3236,7 +3236,8 @@ async function loadRpbConfigAll() {
   rpbClassOrder.forEach(className => {
     byClass[className] = {
       singleTarget: readRpbConfigList(rows, `singleTargetCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean),
-      aoe: readRpbConfigList(rows, `aoeCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean)
+      aoe: readRpbConfigList(rows, `aoeCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean),
+      cooldowns: readRpbConfigList(rows, `classCooldowns tracked ${className}`).map(parseRpbConfigCast).filter(Boolean)
     };
   });
   rpbConfigAllCache = { rows, byClass };
@@ -3695,7 +3696,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const healingTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
+  const healingById = {};
   const classCasts = {};
+  const classCooldowns = {};
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
@@ -3722,6 +3725,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!player) return;
     const amount = Number(event.amount || 0);
     const overheal = Number(event.overheal || event.overhealing || event.overhealAmount || 0);
+    const id = abilityId(event);
     const spell = displayAbilityName(event) || "Unbekannter Heal";
     healingTotals[player] = (healingTotals[player] || 0) + amount;
     overhealTotals[player] = (overhealTotals[player] || 0) + overheal;
@@ -3730,6 +3734,24 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     healingBySpell[spell][player].amount += amount;
     healingBySpell[spell][player].overheal += overheal;
     healingBySpell[spell][player].hits += 1;
+    if (id) {
+      if (!healingById[id]) healingById[id] = {};
+      if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0 };
+      healingById[id][player].amount += amount;
+      healingById[id][player].overheal += overheal;
+      healingById[id][player].hits += 1;
+    }
+  }
+
+  function addClassCooldown(event) {
+    const player = playersById.get(eventSourceId(event));
+    if (!player || !player.className) return;
+    const id = abilityId(event);
+    const cooldown = findConfiguredCast(rpbConfig, player.className, id, "cooldowns");
+    if (!cooldown) return;
+    if (!classCooldowns[player.className]) classCooldowns[player.className] = {};
+    if (!classCooldowns[player.className][cooldown.name]) classCooldowns[player.className][cooldown.name] = {};
+    classCooldowns[player.className][cooldown.name][player.name] = (classCooldowns[player.className][cooldown.name][player.name] || 0) + 1;
   }
 
   function addClassCast(event) {
@@ -3779,6 +3801,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   castEvents.forEach(event => {
     markActive(event);
     addClassCast(event);
+    addClassCooldown(event);
   });
   damageDoneEvents.forEach(markActive);
   healingEvents.forEach(event => {
@@ -3922,22 +3945,50 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       })), { type: "text", tone: "healing" }));
     });
 
+  function configuredCastRow(className, cast, kind) {
+    const isHealingRow = cast.hasOverheal || healerClasses.has(className);
+    return customRow(cast.name, Object.fromEntries(playerNames.map(player => {
+      const classPlayers = players.filter(item => item.className === className).map(item => item.name);
+      if (!classPlayers.includes(player)) return [player, ""];
+      if (cast.hasOverheal) {
+        const data = cast.ids.reduce((sum, id) => {
+          const row = healingById[id]?.[player];
+          if (!row) return sum;
+          sum.amount += Number(row.amount || 0);
+          sum.overheal += Number(row.overheal || 0);
+          return sum;
+        }, { amount: 0, overheal: 0 });
+        if (!data.amount && !data.overheal) return [player, "0"];
+        const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
+        return [player, `${Math.round(data.amount)} (${pct}%)`];
+      }
+      return [player, formatCountValue(classCasts[className]?.[cast.name]?.[player])];
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast" });
+  }
+
+  function configuredCooldownRows(className) {
+    const cooldowns = rpbConfig.byClass?.[className]?.cooldowns || [];
+    const rows = [];
+    cooldowns.forEach(cooldown => {
+      rows.push(customRow(`${cooldown.name} auf Trash`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
+      rows.push(customRow(`${cooldown.name} auf Bossen`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
+      rows.push(customRow(`${cooldown.name} gesamt`, Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(classCooldowns[className]?.[cooldown.name]?.[player])
+      ])), { tone: "total" }));
+    });
+    return rows;
+  }
+
   const classSections = rpbClassOrder
     .filter(className => players.some(player => player.className === className))
     .map(className => {
       const classPlayers = players.filter(player => player.className === className).map(player => player.name);
-      const castRows = Object.keys(classCasts[className] || {})
-        .map(spell => {
-          const total = classPlayers.reduce((sum, player) => sum + Number(classCasts[className][spell]?.[player] || 0), 0);
-          return { spell, total };
-        })
-        .filter(row => row.total > 0)
-        .sort((a, b) => b.total - a.total || a.spell.localeCompare(b.spell, "de"))
-        .slice(0, 45)
-        .map(row => customRow(row.spell, Object.fromEntries(playerNames.map(player => [
-          player,
-          formatCountValue(classCasts[className][row.spell]?.[player])
-        ])), { tone: "classCast" }));
+      const config = rpbConfig.byClass?.[className] || { singleTarget: [], aoe: [] };
+      const castRows = [
+        ...config.singleTarget.map(cast => configuredCastRow(className, cast, "singleTarget")),
+        ...config.aoe.map(cast => configuredCastRow(className, cast, "aoe"))
+      ];
 
       const classHealingRows = healerClasses.has(className)
         ? Object.keys(healingBySpell)
@@ -3959,7 +4010,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           })), { type: "text", tone: "healing" }))
         : [];
 
-      const rows = castRows.concat(classHealingRows);
+      const cooldownRows = configuredCooldownRows(className);
+      const rows = castRows
+        .concat(activityRows)
+        .concat(cooldownRows.length ? [headerRow("Klassenspezifische Cooldowns", { className })].concat(cooldownRows) : [])
+        .concat(classHealingRows);
       return {
         id: `class-${className.toLowerCase()}`,
         label: className,
