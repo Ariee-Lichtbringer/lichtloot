@@ -34,7 +34,7 @@
       font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     }
     a{color:inherit}
-    .shell{min-height:100vh;padding:24px}
+    .shell{min-height:100vh;padding:20px 24px 30px}
     .top{
       display:grid;
       grid-template-columns:minmax(0,1fr) auto;
@@ -140,10 +140,10 @@
     .subtab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
     .class-overview{
       display:none;
-      background:var(--panel);
+      background:linear-gradient(180deg,#171f27,#141a20);
       border:1px solid var(--line);
       border-radius:8px;
-      padding:14px;
+      padding:12px;
       margin:10px 0 12px;
     }
     .class-overview.show{display:block}
@@ -175,41 +175,46 @@
     .role-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .role-item select{min-height:32px;padding:0 8px;font-size:12px}
     .role-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .class-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-    .class-title h2{margin:0;font-size:20px}
+    .class-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .class-title h2{margin:0;font-size:18px}
     .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .stat{background:#0f1419;border:1px solid var(--line);border-radius:8px;padding:10px}
-    .stat strong{display:block;font-size:22px}
+    .stat{background:#10171d;border:1px solid #2d3b48;border-radius:8px;padding:9px 10px}
+    .stat strong{display:block;font-size:20px}
     .stat span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
     .matrix-wrap{
       overflow:auto;
       border:1px solid var(--line);
       border-radius:8px;
-      background:var(--panel);
+      background:#0e1318;
+      box-shadow:0 12px 28px rgba(0,0,0,.18);
     }
-    table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+    table{border-collapse:separate;border-spacing:0;width:max-content}
     th,td{
-      border-right:1px solid var(--line);
-      border-bottom:1px solid var(--line);
-      padding:5px 7px;
-      font-size:12px;
+      border-right:1px solid #2f3c48;
+      border-bottom:1px solid #2f3c48;
+      padding:6px 9px;
+      font-size:13px;
+      line-height:1.18;
       text-align:center;
-      min-width:68px;
-      max-width:180px;
+      width:112px;
+      min-width:112px;
+      max-width:112px;
       white-space:nowrap;
+      background:#182026;
     }
     th:first-child,td:first-child{
       position:sticky;
       left:0;
       z-index:2;
       text-align:left;
-      min-width:210px;
-      max-width:240px;
-      background:#151c23;
+      width:290px;
+      min-width:290px;
+      max-width:290px;
+      background:#1b232a;
       color:var(--text);
       white-space:normal;
       font-weight:800;
-      box-shadow:3px 0 0 rgba(0,0,0,.12);
+      box-shadow:4px 0 0 rgba(0,0,0,.22);
       overflow-wrap:anywhere;
     }
     thead th{
@@ -219,9 +224,11 @@
       background:#252f39;
       color:#111;
       font-weight:900;
+      height:30px;
     }
     thead th:first-child{z-index:4;color:var(--text)}
-    tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+    tbody tr:nth-child(even) td{background:#20282e}
+    tbody tr:nth-child(odd) td{background:#1a2228}
     tbody tr.tone-healing td{background:rgba(255,242,204,.12)}
     tbody tr.tone-consumable td,
     tbody tr.tone-consumableBlue td{background:#cfe2f3;color:#111}
@@ -237,7 +244,7 @@
     tbody tr.tone-engineeringTotal td{background:#f06d6d;color:#111;font-weight:900}
     tbody tr.tone-trinket td{background:#d9d2e9;color:#111}
     tbody tr.tone-interrupt td{background:#e6b8b7;color:#111}
-    tbody tr.tone-activity td{background:rgba(182,215,168,.13)}
+    tbody tr.tone-activity td{background:#20322f}
     tbody tr.tone-activityStrong td{background:#b7b7b7;color:#111;font-weight:900}
     tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
     tbody tr.tone-consumable td:first-child,
@@ -261,19 +268,20 @@
       background:#e5e7eb;
       color:#111827;
       font-weight:900;
-      border-top:3px solid #111827;
+      border-top:2px solid #0f1419;
       text-align:left;
+      height:30px;
     }
     tbody tr.tone-sectionHeader td.class-band{
       text-align:center;
       color:#111827;
-      border-top:3px solid #111827;
+      border-top:2px solid #0f1419;
     }
     tbody tr.tone-sectionHeader td.class-gap{
       background:#111820;
       color:transparent;
     }
-    tbody tr:hover td{background:rgba(215,180,106,.18)}
+    tbody tr:hover td{background:#2b3435}
     th.mark-col,
     td.mark-col{
       background:rgba(215,180,106,.34)!important;
@@ -287,15 +295,17 @@
       color:#111!important;
       box-shadow:inset 0 0 0 2px var(--accent);
     }
-    table.compact th,table.compact td{padding:5px 7px;font-size:12px;min-width:70px}
-    table.compact th:first-child,table.compact td:first-child{min-width:210px;max-width:240px}
-    td.empty{color:#4f5b66}
+    table.compact th,table.compact td{padding:6px 8px;font-size:13px;width:96px;min-width:96px;max-width:96px}
+    table.compact th:first-child,table.compact td:first-child{width:260px;min-width:260px;max-width:260px}
+    table.focused th,table.focused td{width:118px;min-width:118px;max-width:118px}
+    table.focused th:first-child,table.focused td:first-child{width:300px;min-width:300px;max-width:300px}
+    td.empty{color:#52616d}
     td.class-gap{
       background:#0d1217!important;
       color:transparent!important;
     }
     td.class-gap::selection{color:transparent}
-    td.hot{color:var(--good);font-weight:900}
+    td.hot{color:#73e09b;font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
     tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
     .side{display:none}
@@ -458,9 +468,40 @@
       });
     }
 
+    function isClassBlockSection(section){
+      return ["caster-casts", "healer-casts", "physical-casts", "tank-casts"].includes(section?.id);
+    }
+
+    function sectionClasses(section){
+      if(!section) return [];
+      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
+      const sectionPlayers = (state.data.players || []).filter(player => !allowed || allowed.has(player.name));
+      return CLASS_ORDER.filter(className => sectionPlayers.some(player => player.className === className));
+    }
+
+    function rowsForActiveClass(section){
+      if(!state.activeClass || !isClassBlockSection(section)) return section.rows || [];
+      const rows = [];
+      let keep = false;
+      for(const row of section.rows || []){
+        if(row.type === "header"){
+          keep = row.className === state.activeClass;
+          if(keep) rows.push(row);
+          continue;
+        }
+        if(row.tone === "activity" || row.tone === "activityStrong"){
+          rows.push(row);
+          continue;
+        }
+        if(keep) rows.push(row);
+      }
+      return rows;
+    }
+
     function visibleRows(section, players){
       const q = state.search;
-      const baseRows = section.rows.filter(row => {
+      const sourceRows = rowsForActiveClass(section);
+      const baseRows = sourceRows.filter(row => {
         if(!q) return true;
         if(String(row.label || "").toLowerCase().includes(q)) return true;
         return players.some(player => String(row.values?.[player.name] || "").toLowerCase().includes(q));
@@ -486,11 +527,13 @@
 
     function selectSection(id){
       state.activeSection = id;
-      state.activeClass = "";
+      const section = (state.data.sections || []).find(item => item.id === id);
+      const classes = sectionClasses(section);
+      state.activeClass = isClassBlockSection(section) && classes.length ? classes[0] : "";
       state.highlightRow = "";
       state.highlightPlayer = "";
       const select = document.getElementById("classSelect");
-      if(select) select.value = "";
+      if(select) select.value = state.activeClass;
       render();
     }
 
@@ -626,17 +669,16 @@
       if(!box || !section){
         return;
       }
-      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
-      const sectionPlayers = (state.data.players || []).filter(player => !allowed || allowed.has(player.name));
-      const classes = CLASS_ORDER.filter(className => sectionPlayers.some(player => player.className === className));
+      const classes = sectionClasses(section);
       if(!classes.length){
         box.className = "subtabs";
         box.innerHTML = "";
         return;
       }
       box.className = "subtabs show";
+      const showAllButton = !isClassBlockSection(section);
       box.innerHTML = `
-        <button class="subtab ${!state.activeClass ? "active" : ""}" type="button" onclick="selectClass('')">Alle</button>
+        ${showAllButton ? `<button class="subtab ${!state.activeClass ? "active" : ""}" type="button" onclick="selectClass('')">Alle</button>` : ""}
         ${classes.map(className => `
           <button class="subtab ${state.activeClass === className ? "active" : ""}" type="button" onclick="selectClass('${escapeHtml(className)}')" style="color:${classColor(className)}">
             ${escapeHtml(CLASS_LABELS[className] || className)}
@@ -653,7 +695,7 @@
         return;
       }
       const players = (state.data.players || []).filter(player => player.className === state.activeClass);
-      const rows = section.rows || [];
+      const rows = rowsForActiveClass(section);
       let filled = 0;
       let total = 0;
       players.forEach(player => rows.forEach(row => {
@@ -666,7 +708,7 @@
       box.innerHTML = `
         <div class="class-title">
           <h2 style="color:${classColor(state.activeClass)}">${escapeHtml(CLASS_LABELS[state.activeClass] || state.activeClass)}</h2>
-          <button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>
+          ${isClassBlockSection(section) ? "" : `<button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>`}
         </div>
         <div class="stats">
           <div class="stat"><strong>${players.length}</strong><span>Spieler</span></div>
@@ -688,7 +730,7 @@
       const rows = visibleRows(section, players);
       renderClassSubtabs(section);
       renderClassOverview(section);
-      table.className = section.compact ? "compact" : "";
+      table.className = `${section.compact ? "compact" : ""} ${state.activeClass ? "focused" : ""}`.trim();
       const head = `
         <thead>
           <tr>
@@ -703,6 +745,15 @@
         if(row.type === "header"){
           currentClass = row.className || "";
           if(row.className){
+            if(state.activeClass){
+              return `
+                <tr class="tone-sectionHeader">
+                  <td colspan="${players.length + 1}" style="background:${classColor(row.className)}">
+                    ${escapeHtml(CLASS_LABELS[row.className] || row.label)}
+                  </td>
+                </tr>
+              `;
+            }
             return `
               <tr class="tone-sectionHeader">
                 <td style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>
@@ -734,7 +785,7 @@
               }
               const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
               const marked = `${state.highlightRow === rowKey ? " mark-row-cell" : ""}${state.highlightPlayer === player.name ? " mark-col" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
-              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${escapeHtml(value || "")}</td>`;
+              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${escapeHtml(value || (state.activeClass ? "·" : ""))}</td>`;
             }).join("")}
           </tr>
         `;
