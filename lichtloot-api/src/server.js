@@ -3578,6 +3578,20 @@ async function buildRpbWebAnalysis(analysis) {
     tone: options.tone || "",
     values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
   });
+  const generalConsumableTone = label => {
+    if (/Demonic Rune|Dark Rune|Healthstone|Mana Ruby|Mana Gems|Thistle Tea/i.test(label)) return "consumableGreen";
+    if (/Poison Resistance|Runecloth Bandage/i.test(label)) return "muted";
+    return "consumableBlue";
+  };
+  const absorbTone = label => {
+    if (/Nature/i.test(label)) return "absorbNature";
+    if (/Arcane/i.test(label)) return "absorbArcane";
+    if (/Fire|Frozen Rune/i.test(label)) return "absorbFire";
+    if (/Frost/i.test(label)) return "absorbFrost";
+    if (/Shadow|Power Word/i.test(label)) return "absorbShadow";
+    return "absorb";
+  };
+  const engineeringTone = label => label.indexOf("damage done") > -1 ? "engineeringTotal" : "engineering";
 
   const activityRows = [
     customRow("WCL active seconds (event buckets)", Object.fromEntries(playerNames.map(player => [
@@ -3708,13 +3722,13 @@ async function buildRpbWebAnalysis(analysis) {
     headerRow("Stats and Miscellaneous"),
     ...activityRows,
     headerRow("Consumables"),
-    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: "consumable" })),
+    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
     headerRow("Damage absorbed"),
-    ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })),
+    ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) })),
     totalAbsorbed,
     headerRow("Engineering etc. (ø = avg. hits per use)"),
     ...rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" })),
-    amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "total" }),
+    amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "engineeringTotal" }),
     headerRow("Interrupted spells"),
     countRow("# of interrupted spells", interrupts, { tone: "interrupt" }),
     interruptDetails
@@ -3725,7 +3739,10 @@ async function buildRpbWebAnalysis(analysis) {
       id: "general",
       label: "General",
       description: "Sheet-nahe Gesamtübersicht mit Aktivität, Consumables, Absorbs, Engineering und Interrupts.",
-      rows: generalRows
+      rows: generalRows,
+      hideEmptyRows: true,
+      compact: true,
+      ignoreClassFilter: true
     },
     {
       id: "caster",
