@@ -313,9 +313,13 @@
     table.cla-table td.cla-score-mid{background:#fff2cc!important;color:#111;font-weight:900}
     table.cla-table td.cla-score-bad{background:#e06666!important;color:#111;font-weight:900}
     table.cla-table td.cla-muted{background:#b7b7b7!important;color:#111}
-    table.sheet-table th,table.sheet-table td{width:116px;min-width:116px;max-width:116px;color:#111;background:#f8fafc}
-    table.sheet-table th:first-child,table.sheet-table td:first-child{width:250px;min-width:250px;max-width:250px;color:#111;background:#eef2f7}
+    table.sheet-table{width:max-content;min-width:auto}
+    table.sheet-table th,table.sheet-table td{width:108px;min-width:108px;max-width:108px;color:#111;background:#f8fafc;white-space:normal;line-height:1.15}
+    table.sheet-table th:first-child,table.sheet-table td:first-child{width:210px;min-width:210px;max-width:210px;color:#111;background:#eef2f7}
     table.sheet-table td{font-weight:700}
+    table.sheet-table td.sheet-wide,table.sheet-table th.sheet-wide{width:190px;min-width:190px;max-width:190px;text-align:left}
+    table.sheet-table td.sheet-name,table.sheet-table th.sheet-name{width:150px;min-width:150px;max-width:150px;text-align:left}
+    table.sheet-table td.sheet-empty{color:transparent;background:#f8fafc}
     .item-cell{font-weight:900;text-decoration:none}
     .item-poor{color:#9d9d9d}
     .item-common{color:#f3f4f6}
@@ -713,6 +717,14 @@
     }
 
     function renderClassControls(){
+      if(state.data?.source === "sheet-export"){
+        const list = document.getElementById("classList");
+        const select = document.getElementById("classSelect");
+        select.innerHTML = '<option value="">Alle Spieler</option>';
+        select.value = "";
+        list.innerHTML = "";
+        return;
+      }
       const groups = classGroups();
       const list = document.getElementById("classList");
       const select = document.getElementById("classSelect");
@@ -838,33 +850,52 @@
       const fontColors = section.matrix?.fontColors || [];
       const notes = section.matrix?.notes || [];
       const q = state.search;
-      const rows = values
-        .map((row, index) => ({ row: Array.isArray(row) ? row : [], index }))
-        .filter(item => !q || item.row.some(cell => String(cell || "").toLowerCase().includes(q)));
-      const maxCols = Math.max(1, ...rows.map(item => item.row.length));
+      const rawRows = values.map((row, index) => ({ row: Array.isArray(row) ? row : [], index }));
+      const usedCols = new Set();
+      rawRows.forEach(item => {
+        item.row.forEach((cell, col) => {
+          if(String(cell || "").trim()) usedCols.add(col);
+        });
+      });
+      const colList = Array.from(usedCols).sort((a,b) => a - b);
+      const compactCols = colList.length ? colList : [0];
+      const rows = rawRows
+        .filter(item => compactCols.some(col => String(item.row[col] || "").trim()))
+        .filter(item => !q || compactCols.some(col => String(item.row[col] || "").toLowerCase().includes(q)));
       table.className = "compact sheet-table";
       const head = `
         <thead>
           <tr>
-            ${Array.from({length:maxCols}, (_, col) => `<th>${col === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
+            ${compactCols.map((col, visualIndex) => `<th class="${sheetCellClass(rows, col, visualIndex)}">${visualIndex === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
           </tr>
         </thead>
       `;
       const body = rows.map(({row, index}) => `
         <tr class="${state.highlightRow === `sheet-${index}` ? "mark-row" : ""}">
-          ${Array.from({length:maxCols}, (_, col) => {
+          ${compactCols.map((col, visualIndex) => {
             const value = row[col] ?? "";
             const bg = backgrounds[index]?.[col] || "";
             const color = fontColors[index]?.[col] || "";
             const note = notes[index]?.[col] || "";
             const style = `${bg ? `background:${escapeHtml(bg)}!important;` : ""}${color ? `color:${escapeHtml(color)}!important;` : ""}`;
             const marked = `${state.highlightRow === `sheet-${index}` ? " mark-row-cell" : ""}${state.highlightPlayer === `col-${col}` ? " mark-col" : ""}${state.highlightRow === `sheet-${index}` && state.highlightPlayer === `col-${col}` ? " mark-cell" : ""}`;
-            return `<td class="${value ? "text" : "empty"}${marked}" style="${style}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
+            const cls = `${value ? "text" : "sheet-empty"} ${sheetCellClass(rows, col, visualIndex)}${marked}`;
+            return `<td class="${cls}" style="${style}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
           }).join("")}
         </tr>
       `).join("");
       table.innerHTML = head + `<tbody>${body || `<tr><td class="hint">Keine Treffer.</td></tr>`}</tbody>`;
       document.getElementById("statusText").textContent = "Exakt aus dem Google Sheet nach Railway exportiert.";
+    }
+
+    function sheetCellClass(rows, col, visualIndex){
+      if(visualIndex === 0) return "sheet-wide";
+      const texts = rows.map(item => String(item.row[col] || "").trim()).filter(Boolean);
+      const longText = texts.some(text => text.length > 18 || text.includes(","));
+      const mostlyNames = texts.length && texts.every(text => /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,24}$/.test(text));
+      if(longText) return "sheet-wide";
+      if(mostlyNames) return "sheet-name";
+      return "";
     }
 
     function renderTable(){
@@ -985,10 +1016,13 @@
       }
       state.data = data.webAnalysis;
       state.activeSection = state.data.sections?.[0]?.id || "";
+      state.activeClass = "";
       document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
       document.getElementById("raidName").textContent = state.data.report.raid || state.data.analysis.raid || "Raid";
       document.getElementById("raidDate").textContent = state.data.report.raidDate || state.data.analysis.raidDate || "-";
-      document.getElementById("playerCount").textContent = `${state.data.players.length} Spieler`;
+      document.getElementById("playerCount").textContent = state.data.source === "sheet-export"
+        ? `${state.data.sections.length} Sheet-Tabs`
+        : `${state.data.players.length} Spieler`;
       document.getElementById("wclLink").href = state.data.report.reportUrl || state.data.analysis.reportUrl || "#";
       if((state.data.warnings || []).length){
         document.getElementById("statusText").textContent = state.data.warnings.join(" ");
