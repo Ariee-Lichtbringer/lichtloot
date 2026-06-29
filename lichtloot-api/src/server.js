@@ -1403,11 +1403,20 @@ async function getWorldbuffs({ guildId, query: params }) {
             we.id as entry_id, we.caster, we.discord_name,
             we.status as entry_status, we.note as entry_note, we.source as entry_source
      from worldbuff_events e
-     left join worldbuff_entries we on we.event_id = e.id
+     left join lateral (
+       select *
+       from worldbuff_entries entry
+       where entry.event_id = e.id
+       order by
+         case when nullif(entry.caster, '') is not null then 0 else 1 end,
+         entry.updated_at desc,
+         entry.created_at desc
+       limit 1
+     ) we on true
      where e.guild_id = $1
        and e.event_date >= current_date
        ${windowClause}
-     order by e.event_date asc, e.event_time asc, e.buff asc, e.guild_name asc, we.created_at asc`,
+     order by e.event_date asc, e.event_time asc, e.buff asc, e.guild_name asc`,
     values
   );
 
@@ -1560,7 +1569,23 @@ async function setWorldbuffCaster({ guildId, query: params }) {
     }
     let savedId = found.entry?.id || "";
 
-    if (found.entry) {
+    const clearsCaster = !caster && status === "offen";
+
+    if (found.entry && clearsCaster) {
+      await client.query(
+        `delete from worldbuff_entries
+         where id = $1`,
+        [found.entry.id]
+      );
+      await client.query(
+        `update worldbuff_events
+         set status = 'offen',
+             updated_at = now()
+         where id = $1 and guild_id = $2`,
+        [event.id, guildId]
+      );
+      savedId = event.id;
+    } else if (found.entry) {
       const saved = await client.query(
         `update worldbuff_entries
          set caster = $2,
@@ -1574,13 +1599,36 @@ async function setWorldbuffCaster({ guildId, query: params }) {
       );
       savedId = saved.rows[0].id;
     } else if (caster || note || status !== "offen") {
-      const saved = await client.query(
-        `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
-         values ($1, $2, $3, $4, $5, $6)
-         returning *`,
-        [event.id, caster, discordName, status, note, clean(params.source || "railway")]
+      const existingEntry = await client.query(
+        `select *
+         from worldbuff_entries
+         where event_id = $1
+         order by updated_at desc, created_at desc
+         limit 1`,
+        [event.id]
       );
-      savedId = saved.rows[0].id;
+      if (existingEntry.rows[0]) {
+        const saved = await client.query(
+          `update worldbuff_entries
+           set caster = $2,
+               discord_name = coalesce(nullif($3, ''), discord_name),
+               status = $4,
+               note = $5,
+               updated_at = now()
+           where id = $1
+           returning *`,
+          [existingEntry.rows[0].id, caster, discordName, status, note]
+        );
+        savedId = saved.rows[0].id;
+      } else {
+        const saved = await client.query(
+          `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
+           values ($1, $2, $3, $4, $5, $6)
+           returning *`,
+          [event.id, caster, discordName, status, note, clean(params.source || "railway")]
+        );
+        savedId = saved.rows[0].id;
+      }
     } else {
       await client.query(
         `update worldbuff_events
