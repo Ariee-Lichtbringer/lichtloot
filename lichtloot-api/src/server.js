@@ -3309,7 +3309,11 @@ async function loadRpbConfigAll() {
       cooldowns: readRpbConfigList(rows, `classCooldowns tracked ${className}`).map(parseRpbConfigCast).filter(Boolean)
     };
   });
-  rpbConfigAllCache = { rows, byClass };
+  rpbConfigAllCache = {
+    rows,
+    byClass,
+    trinketsAndRacials: readRpbConfigList(rows, "trinketsAndRacials tracked").map(parseRpbConfigCast).filter(Boolean)
+  };
   return rpbConfigAllCache;
 }
 
@@ -3668,6 +3672,7 @@ async function buildRpbAnalysisRows(analysis) {
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fightIds);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
   const consumes = {};
+  const trinketsAndRacials = {};
   const absorbs = {};
   const engineeringCounts = {};
   const engineeringDamage = {};
@@ -3901,6 +3906,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
           if (!count) return;
           const id = abilityIdFromTableEntry(entry);
+          const trinket = (rpbConfig.trinketsAndRacials || []).find(item => item.ids.includes(id));
+          if (trinket) addPlayerAmount(trinketsAndRacials, player.name, trinket.name, count);
           const configuredStCast = findConfiguredCast(rpbConfig, player.className, id, "singleTarget");
           const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
           const configuredCast = configuredStCast || configuredAoeCast;
@@ -4222,6 +4229,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     ...activityRows,
     headerRow("Consumables"),
     ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
+    headerRow("Trinkets und Racials"),
+    ...(rpbConfig.trinketsAndRacials || []).map(item => countRow(item.name, trinketsAndRacials, { tone: "trinket" })),
     headerRow("Absorbierter Schaden"),
     ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) })),
     totalAbsorbed,
