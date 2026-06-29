@@ -47,6 +47,13 @@
     h1{margin:6px 0 8px;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:0}
     .meta{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:14px}
     .meta span{padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+    .header-classes{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:12px;
+      max-width:1100px;
+    }
     .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .btn{
       display:inline-flex;
@@ -65,9 +72,7 @@
     }
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#15100a}
     .layout{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 290px;
-      gap:18px;
+      display:block;
       align-items:start;
       margin-top:18px;
     }
@@ -139,7 +144,7 @@
       border-right:1px solid var(--line);
       border-bottom:1px solid var(--line);
       padding:6px 8px;
-      font-size:12px;
+      font-size:13px;
       text-align:center;
       min-width:76px;
       max-width:220px;
@@ -152,9 +157,11 @@
       text-align:left;
       min-width:285px;
       max-width:330px;
-      background:var(--panel-2);
+      background:#f4f6f8;
+      color:#111827;
       white-space:normal;
       font-weight:800;
+      box-shadow:3px 0 0 rgba(0,0,0,.12);
     }
     thead th{
       position:sticky;
@@ -190,20 +197,13 @@
       text-align:left;
     }
     tbody tr:hover td{background:rgba(215,180,106,.18)}
-    table.compact th,table.compact td{padding:4px 6px;font-size:11px;min-width:68px}
+    table.compact th,table.compact td{padding:5px 7px;font-size:12px;min-width:70px}
     table.compact th:first-child,table.compact td:first-child{min-width:270px;max-width:310px}
     td.empty{color:#4f5b66}
     td.hot{color:var(--good);font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
     tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
-    .side{
-      position:sticky;
-      top:16px;
-      display:grid;
-      gap:12px;
-      max-height:calc(100vh - 32px);
-      overflow:auto;
-    }
+    .side{display:none}
     .panel{
       background:var(--panel);
       border:1px solid var(--line);
@@ -212,19 +212,25 @@
     }
     .panel h3{margin:0 0 10px;font-size:15px}
     .class-list{display:grid;gap:8px}
+    .top-class-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+    }
     .class-btn{
       border:1px solid var(--line);
       background:#10161b;
       color:var(--text);
       border-radius:8px;
-      min-height:40px;
-      padding:0 10px;
+      min-height:32px;
+      padding:0 9px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:10px;
       cursor:pointer;
       font-weight:800;
+      font-size:13px;
     }
     .class-btn.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
     .class-name{display:flex;align-items:center;gap:8px}
@@ -252,6 +258,7 @@
           <span id="raidDate">-</span>
           <span id="playerCount">0 Spieler</span>
         </div>
+        <div id="classList" class="header-classes top-class-list"></div>
       </div>
       <div class="actions">
         <a id="wclLink" class="btn" href="#" target="_blank" rel="noopener">WCL öffnen</a>
@@ -279,10 +286,6 @@
 
       <aside class="side">
         <div class="panel">
-          <h3>Klassen</h3>
-          <div id="classList" class="class-list"></div>
-        </div>
-        <div class="panel">
           <h3>Stand</h3>
           <div id="statusText" class="hint">Direkt aus Warcraft Logs berechnet.</div>
         </div>
@@ -308,7 +311,8 @@
       Rogue:"var(--rogue)",
       Shaman:"var(--shaman)",
       Warlock:"var(--warlock)",
-      Warrior:"var(--warrior)"
+      Warrior:"var(--warrior)",
+      Unknown:"#d1d5db"
     };
     const CLASS_LABELS = {
       Druid:"Druiden",
@@ -319,7 +323,8 @@
       Rogue:"Schurken",
       Shaman:"Schamanen",
       Warlock:"Hexenmeister",
-      Warrior:"Krieger"
+      Warrior:"Krieger",
+      Unknown:"Unbekannt"
     };
     const CLASS_ORDER = ["Druid","Hunter","Mage","Paladin","Priest","Rogue","Shaman","Warlock","Warrior"];
 
@@ -396,7 +401,11 @@
         if(!groups.has(cls)) groups.set(cls, []);
         groups.get(cls).push(player);
       });
-      return Array.from(groups.entries()).sort((a,b) => CLASS_ORDER.indexOf(a[0]) - CLASS_ORDER.indexOf(b[0]) || a[0].localeCompare(b[0],"de"));
+      return Array.from(groups.entries()).sort((a,b) => {
+        const ai = CLASS_ORDER.includes(a[0]) ? CLASS_ORDER.indexOf(a[0]) : 999;
+        const bi = CLASS_ORDER.includes(b[0]) ? CLASS_ORDER.indexOf(b[0]) : 999;
+        return ai - bi || a[0].localeCompare(b[0],"de");
+      });
     }
 
     function renderClassControls(){
