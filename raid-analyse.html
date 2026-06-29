@@ -16,15 +16,15 @@
       --good:#67d391;
       --bad:#f07474;
       --cell:#12171c;
-      --druid:#ff7c0a;
-      --hunter:#aad372;
-      --mage:#3fc7eb;
-      --paladin:#f48cba;
-      --priest:#ffffff;
-      --rogue:#fff468;
-      --shaman:#0070dd;
-      --warlock:#8788ee;
-      --warrior:#c69b6d;
+      --druid:#f6b26b;
+      --hunter:#b6d7a8;
+      --mage:#a4c2f4;
+      --paladin:#d5a6bd;
+      --priest:#efefef;
+      --rogue:#fff2cc;
+      --shaman:#6d9eeb;
+      --warlock:#b4a7d6;
+      --warrior:#e2d3c9;
     }
     *{box-sizing:border-box}
     body{
@@ -111,6 +111,8 @@
       cursor:pointer;
     }
     .tab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
+    .tab.class-tab{color:#111;border-color:rgba(0,0,0,.25)}
+    .tab.class-tab.active{box-shadow:0 0 0 2px var(--accent) inset}
     .class-overview{
       display:none;
       background:var(--panel);
@@ -164,7 +166,21 @@
     }
     thead th:first-child{z-index:4;color:var(--text)}
     tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
-    tbody tr:hover td{background:rgba(215,180,106,.12)}
+    tbody tr.tone-healing td{background:rgba(255,242,204,.12)}
+    tbody tr.tone-consumable td{background:rgba(255,229,153,.14)}
+    tbody tr.tone-absorb td{background:rgba(180,167,214,.18)}
+    tbody tr.tone-engineering td{background:rgba(246,178,107,.16)}
+    tbody tr.tone-interrupt td{background:rgba(164,194,244,.16)}
+    tbody tr.tone-activity td{background:rgba(182,215,168,.13)}
+    tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
+    tbody tr.tone-sectionHeader td{
+      background:#e5e7eb;
+      color:#111827;
+      font-weight:900;
+      border-top:3px solid #111827;
+      text-align:left;
+    }
+    tbody tr:hover td{background:rgba(215,180,106,.18)}
     td.empty{color:#4f5b66}
     td.hot{color:var(--good);font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
@@ -294,6 +310,7 @@
       Warlock:"Hexenmeister",
       Warrior:"Krieger"
     };
+    const CLASS_ORDER = ["Druid","Hunter","Mage","Paladin","Priest","Rogue","Shaman","Warlock","Warrior"];
 
     function escapeHtml(value){
       return String(value ?? "").replace(/[&<>"']/g, char => ({
@@ -351,7 +368,7 @@
         if(!groups.has(cls)) groups.set(cls, []);
         groups.get(cls).push(player);
       });
-      return Array.from(groups.entries()).sort((a,b) => a[0].localeCompare(b[0],"de"));
+      return Array.from(groups.entries()).sort((a,b) => CLASS_ORDER.indexOf(a[0]) - CLASS_ORDER.indexOf(b[0]) || a[0].localeCompare(b[0],"de"));
     }
 
     function renderClassControls(){
@@ -373,7 +390,7 @@
     function renderTabs(){
       const tabs = document.getElementById("tabs");
       tabs.innerHTML = (state.data.sections || []).map(section => `
-        <button class="tab ${state.activeSection === section.id ? "active" : ""}" type="button" onclick="selectSection('${escapeHtml(section.id)}')">
+        <button class="tab ${section.className ? "class-tab" : ""} ${state.activeSection === section.id ? "active" : ""}" type="button" onclick="selectSection('${escapeHtml(section.id)}')" style="${section.className ? `background:${classColor(section.className)}` : ""}">
           ${escapeHtml(section.label)}
         </button>
       `).join("");
@@ -429,16 +446,27 @@
           </tr>
         </thead>
       `;
-      const body = rows.map(row => `
-        <tr class="${row.tone === "total" ? "total" : ""}">
-          <td>${escapeHtml(row.label)}</td>
-          ${players.map(player => {
-            const value = row.values?.[player.name] || "";
-            const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
-            return `<td class="${cls}">${escapeHtml(value || "0")}</td>`;
-          }).join("")}
-        </tr>
-      `).join("");
+      const body = rows.map(row => {
+        if(row.type === "header"){
+          return `
+            <tr class="tone-sectionHeader">
+              <td colspan="${players.length + 1}" style="${row.className ? `background:${classColor(row.className)}` : ""}">
+                ${escapeHtml(CLASS_LABELS[row.className] || row.label)}
+              </td>
+            </tr>
+          `;
+        }
+        return `
+          <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""}">
+            <td>${escapeHtml(row.label)}</td>
+            ${players.map(player => {
+              const value = row.values?.[player.name] || "";
+              const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
+              return `<td class="${cls}">${escapeHtml(value || "0")}</td>`;
+            }).join("")}
+          </tr>
+        `;
+      }).join("");
       table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${players.length + 1}" class="hint">Keine Treffer.</td></tr>`}</tbody>`;
       document.getElementById("statusText").textContent = section.description || "Direkt aus Warcraft Logs berechnet.";
     }
@@ -467,7 +495,13 @@
       });
       const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
       const data = await response.json();
-      if(!response.ok || data.success === false) throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
+      if(!response.ok || data.success === false){
+        const message = String(data.error || "");
+        if(message.toLowerCase().includes("unsupported action")){
+          throw new Error("Die Webseite ist schon aktualisiert, aber die LichtLoot-API auf Railway noch nicht. Bitte die API ebenfalls deployen.");
+        }
+        throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
+      }
       state.data = data.webAnalysis;
       state.activeSection = state.data.sections?.[0]?.id || "";
       document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
