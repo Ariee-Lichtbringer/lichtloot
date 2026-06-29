@@ -926,6 +926,10 @@ async function getCharactersByPin(guildId, pin) {
   return result.rows.map(normalizeCharacter);
 }
 
+async function getPlayerCharacters(guildId, pin) {
+  return getCharactersByPin(guildId, pin);
+}
+
 function parseDateValue(value) {
   const raw = clean(value);
   if (!raw) return new Date().toISOString().slice(0, 10);
@@ -3885,7 +3889,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
   const rpbFights = rpbIncludedFightsForAnalysis(fights);
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
-  const activityScope = null;
+  const activityScope = fullReportScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
@@ -5188,7 +5192,8 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
   const rpbEndTime = rpbFights.length ? Math.max(...rpbFights.map(fight => Number(fight.endTime || 0))) : Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const rpbTimeScope = rpbEndTime > rpbStartTime ? { startTime: rpbStartTime, endTime: rpbEndTime } : rpbFightScope;
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
-  const activityScope = null;
+  const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : (fightIds.length ? fightIds : rpbTimeScope);
+  const activityScope = fullReportScope;
   const reportInfo = {
     code: reportCode,
     url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
@@ -5198,7 +5203,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
     includedFights: rpbFights.length,
     bossFights: bossFights.length,
     gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
-    scopeRule: "activity values use unfiltered WCL report tables; gear from last included boss"
+    scopeRule: "activity values use full report WCL table time range; gear from last included boss"
   };
   if (String(params.listOnly || params.playersOnly || "") === "1") {
     return {
