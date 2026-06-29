@@ -1510,17 +1510,53 @@ async function setWorldbuffCaster({ guildId, query: params }) {
     const requestedBuff = normalizeWorldbuffName(params.buff);
     const requestedGuild = clean(params.gilde || params.guild || params.fraktion || params.faction);
     if (event && (requestedBuff || requestedGuild || note)) {
-      const updatedEvent = await client.query(
-        `update worldbuff_events
-         set buff = coalesce(nullif($2, ''), buff),
-             guild_name = coalesce(nullif($3, ''), guild_name),
-             note = coalesce(nullif($4, ''), note),
-             updated_at = now()
-         where id = $1 and guild_id = $5
-         returning *`,
-        [event.id, requestedBuff, requestedGuild, note, guildId]
+      const targetBuff = requestedBuff || event.buff;
+      const targetGuild = requestedGuild || event.guild_name || "";
+      const targetDate = parseDateValue(params.datum || params.date || event.event_date);
+      const targetTime = clean(params.uhrzeit || params.time || event.event_time);
+      const conflictingEvent = await client.query(
+        `select *
+         from worldbuff_events
+         where guild_id = $1
+           and id <> $2
+           and buff = $3
+           and event_date = $4
+           and event_time = $5
+           and coalesce(guild_name, '') = $6
+         limit 1`,
+        [guildId, event.id, targetBuff, targetDate, targetTime, targetGuild]
       );
-      event = updatedEvent.rows[0] || event;
+
+      if (conflictingEvent.rows[0]) {
+        const targetEvent = conflictingEvent.rows[0];
+        await client.query(
+          `update worldbuff_entries
+           set event_id = $2,
+               updated_at = now()
+           where event_id = $1`,
+          [event.id, targetEvent.id]
+        );
+        await client.query(
+          `delete from worldbuff_events
+           where id = $1 and guild_id = $2`,
+          [event.id, guildId]
+        );
+        event = targetEvent;
+      } else {
+        const updatedEvent = await client.query(
+          `update worldbuff_events
+           set buff = $2,
+               event_date = $3,
+               event_time = $4,
+               guild_name = $5,
+               note = coalesce(nullif($6, ''), note),
+               updated_at = now()
+           where id = $1 and guild_id = $7
+           returning *`,
+          [event.id, targetBuff, targetDate, targetTime, targetGuild, note, guildId]
+        );
+        event = updatedEvent.rows[0] || event;
+      }
     }
     let savedId = found.entry?.id || "";
 
