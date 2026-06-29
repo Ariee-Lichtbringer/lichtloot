@@ -3760,6 +3760,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fightIds);
   const consumes = {};
+  const trinketsAndRacials = {};
   const absorbs = {};
   const engineeringCounts = {};
   const engineeringDamage = {};
