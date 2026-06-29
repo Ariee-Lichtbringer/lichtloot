@@ -94,6 +94,7 @@
       cursor:pointer;
     }
     .btn.primary{background:var(--accent);border-color:var(--accent);color:#15100a}
+    .btn.good{background:#123322;border-color:#2f8f55;color:#c8f7d8}
     .layout{
       display:block;
       align-items:start;
@@ -170,6 +171,77 @@
       margin:10px 0 12px;
     }
     .class-overview.show{display:block}
+    .player-import-preview{
+      display:none;
+      gap:10px;
+      background:linear-gradient(180deg,#141f1a,#101820);
+      border:1px solid rgba(103,211,145,.28);
+      border-radius:8px;
+      padding:12px;
+      margin:0 0 12px;
+    }
+    .player-import-preview.show{display:grid}
+    .player-import-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .player-import-head strong{display:block;color:var(--text);font-size:17px}
+    .player-import-head span{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:800}
+    .player-import-badges{display:flex;gap:6px;flex-wrap:wrap}
+    .player-import-pill{
+      display:inline-flex;
+      min-height:22px;
+      align-items:center;
+      padding:3px 7px;
+      border-radius:999px;
+      border:1px solid rgba(154,168,181,.28);
+      background:#10171d;
+      color:#cbd5e1;
+      font-size:11px;
+      font-weight:900;
+    }
+    .player-import-pill.good{border-color:rgba(103,211,145,.35);color:#baf7d0}
+    .player-import-pill.warn{border-color:rgba(215,180,106,.45);color:#f1d487}
+    .player-import-table{
+      overflow:auto;
+      border:1px solid rgba(154,168,181,.18);
+      border-radius:8px;
+      background:#0e1318;
+    }
+    .player-import-table table{width:100%;min-width:1040px;border-collapse:collapse}
+    .player-import-table th,
+    .player-import-table td{
+      position:static;
+      width:auto;
+      min-width:96px;
+      max-width:none;
+      padding:8px 9px;
+      white-space:normal;
+      text-align:left;
+      box-shadow:none;
+      border-right:1px solid #2f3c48;
+      border-bottom:1px solid #2f3c48;
+      background:#182026;
+      color:#dbe5ef;
+      font-size:12px;
+      vertical-align:top;
+    }
+    .player-import-table th:first-child,
+    .player-import-table td:first-child{
+      position:sticky;
+      left:0;
+      z-index:2;
+      width:170px;
+      min-width:170px;
+      max-width:170px;
+      background:#1b232a;
+      color:var(--text);
+      font-weight:900;
+    }
+    .player-import-table th{background:#252f39;color:#f3f6f8;font-weight:900}
     .role-editor{
       display:none;
       background:var(--panel);
@@ -436,6 +508,7 @@
           <button id="typeRpb" type="button" onclick="switchAnalysisType('rpb')">RPB</button>
           <button id="typeCla" type="button" onclick="switchAnalysisType('cla')">CLA</button>
         </div>
+        <button id="importPlayersBtn" class="btn good" type="button" onclick="importPlayerDataForAnalysis()">Spielerdaten importieren</button>
         <a id="wclLink" class="btn" href="#" target="_blank" rel="noopener">WCL öffnen</a>
         <a class="btn primary" href="gildenleitung.html">Zur Gildenleitung</a>
       </div>
@@ -454,6 +527,7 @@
         <div id="tabs" class="tabs"></div>
         <div id="classSubtabs" class="subtabs"></div>
         <section id="roleEditor" class="role-editor"></section>
+        <section id="playerImportPreview" class="player-import-preview"></section>
         <section id="classOverview" class="class-overview"></section>
         <div class="matrix-wrap">
           <table id="analysisTable">
@@ -813,6 +887,146 @@
     function roleLabel(value){
       const found = (state.data?.roleOptions || []).find(option => option.value === value);
       return found ? found.label : "";
+    }
+
+    function analysisReportUrl(){
+      return state.data?.report?.reportUrl || state.data?.analysis?.reportUrl || "";
+    }
+
+    function analysisReportCode(){
+      return state.data?.report?.reportCode || state.data?.analysis?.reportCode || "";
+    }
+
+    function importText(value){
+      if(value === null || value === undefined || value === "") return "-";
+      if(typeof value === "boolean") return value ? "ja" : "nein";
+      if(typeof value === "number") return Number.isFinite(value) ? String(Math.round(value * 100) / 100) : "-";
+      return String(value);
+    }
+
+    function importConfiguredHeal(player, pattern){
+      const data = player?.healing?.byConfiguredCast || {};
+      const key = Object.keys(data).find(name => pattern.test(name));
+      return key ? data[key] : "-";
+    }
+
+    function importCast(player, pattern){
+      const data = player?.casts || {};
+      const key = Object.keys(data).find(name => pattern.test(name));
+      return key ? importText(data[key]) : "-";
+    }
+
+    function importPills(values, empty="-"){
+      const list = Array.isArray(values) ? values.filter(Boolean) : [];
+      if(!list.length) return escapeHtml(empty);
+      return list.map(value => `<span class="player-import-pill good">${escapeHtml(value)}</span>`).join(" ");
+    }
+
+    function renderPlayerImportPreview(result){
+      const box = document.getElementById("playerImportPreview");
+      if(!box) return;
+      const report = result.report || {};
+      const players = Array.isArray(result.players) ? result.players.slice().sort((a,b) => String(a.name || "").localeCompare(String(b.name || ""),"de")) : [];
+      const body = players.map(player => {
+        const consumables = player.buffs?.consumables || [];
+        const worldBuffs = player.buffs?.worldBuffs || [];
+        const issues = Array.isArray(player.enchantIssues) ? player.enchantIssues : [];
+        const issueHtml = issues.length
+          ? issues.map(item => `<span class="player-import-pill warn">${escapeHtml(item.slot || "")}: ${escapeHtml(item.issue || "")}</span>`).join(" ")
+          : '<span class="player-import-pill good">ok</span>';
+        return `
+          <tr>
+            <td>${escapeHtml(player.name || "")}<br><span style="color:${classColor(player.className)}">${escapeHtml(player.className || "")}</span></td>
+            <td>${escapeHtml(importText(player.stats?.criticalHealsDone))}</td>
+            <td>${escapeHtml(importText(player.stats?.criticalOutgoing))}</td>
+            <td>${escapeHtml(importText(player.stats?.resistOutgoing))}</td>
+            <td>${escapeHtml(importCast(player,/shoot|schie/i))}</td>
+            <td>${escapeHtml(importConfiguredHeal(player,/flash heal|blitzheilung/i))}</td>
+            <td>${escapeHtml(importConfiguredHeal(player,/renew|erneuerung/i))}</td>
+            <td>${escapeHtml(importText(player.damageTaken?.total))}</td>
+            <td>${importPills(consumables)}</td>
+            <td>${importPills(worldBuffs)}</td>
+            <td>${issueHtml}</td>
+          </tr>
+        `;
+      }).join("");
+      box.className = "player-import-preview show";
+      box.innerHTML = `
+        <div class="player-import-head">
+          <div>
+            <strong>Importierte Spielerdaten</strong>
+            <span>${escapeHtml(report.title || "")} · ${escapeHtml(report.raid || "")} · ${escapeHtml(report.raidDate || "")}</span>
+            <span>${escapeHtml(report.scopeRule || "")}</span>
+          </div>
+          <div class="player-import-badges">
+            <span class="player-import-pill good">WCL-Tabellenwerte</span>
+            <span class="player-import-pill">${players.length} Spieler</span>
+            <span class="player-import-pill">${escapeHtml(importText(report.includedFights))} Fights</span>
+            <span class="player-import-pill">${escapeHtml(importText(report.bossFights))} Bosse</span>
+          </div>
+        </div>
+        <div class="player-import-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Spieler</th>
+                <th>Crit Heals</th>
+                <th>Crit Out</th>
+                <th>Resist Out</th>
+                <th>Shoot</th>
+                <th>Flash Heal</th>
+                <th>Renew</th>
+                <th>Damage Taken</th>
+                <th>Consumables</th>
+                <th>Worldbuffs</th>
+                <th>Enchant-Issues</th>
+              </tr>
+            </thead>
+            <tbody>${body || '<tr><td colspan="11">Keine Spielerdaten erhalten.</td></tr>'}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function importPlayerDataForAnalysis(){
+      const box = document.getElementById("playerImportPreview");
+      const button = document.getElementById("importPlayersBtn");
+      const reportUrl = analysisReportUrl();
+      const reportCode = analysisReportCode();
+      if(!reportUrl && !reportCode){
+        document.getElementById("statusText").textContent = "Kein Warcraft-Logs-Report für diese Auswertung gefunden.";
+        return;
+      }
+      if(button) button.disabled = true;
+      if(box){
+        box.className = "player-import-preview show";
+        box.innerHTML = '<div class="loading">Spielerdaten werden aus Warcraft Logs importiert ...</div>';
+      }
+      document.getElementById("statusText").textContent = "Spielerdaten-Import läuft mit WCL-Tabellenwerten.";
+      try{
+        const query = new URLSearchParams({
+          action:"importRaidLogAnalysis",
+          guild:params.get("guild") || "lichtloot",
+          reportUrl,
+          reportCode,
+          t:Date.now()
+        });
+        const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
+        const result = await response.json();
+        if(!response.ok || result.success === false){
+          throw new Error(result.error || "Spielerdaten konnten nicht importiert werden.");
+        }
+        renderPlayerImportPreview(result);
+        document.getElementById("statusText").textContent = `${Array.isArray(result.players) ? result.players.length : 0} Spieler importiert.`;
+      }catch(error){
+        if(box){
+          box.className = "player-import-preview show";
+          box.innerHTML = `<div class="error">${escapeHtml(error.message || "Spielerdaten konnten nicht importiert werden.")}</div>`;
+        }
+        document.getElementById("statusText").textContent = error.message || "Spielerdaten konnten nicht importiert werden.";
+      }finally{
+        if(button) button.disabled = false;
+      }
     }
 
     function toggleRoleEditor(){
