@@ -3333,6 +3333,16 @@ const rpbEngineering = [
   ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"], [23000]]
 ];
 
+const holyNovaHealSpellMap = {
+  15237: 23455,
+  15430: 23458,
+  15431: 23459,
+  27799: 27803,
+  27800: 27804,
+  27801: 27805,
+  25331: 25329
+};
+
 const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
 
 function parseRpbConfigCsvRows(text) {
@@ -3428,7 +3438,9 @@ async function loadRpbConfigAll() {
   rpbConfigAllCache = {
     rows,
     byClass,
-    trinketsAndRacials: readRpbConfigList(rows, "trinketsAndRacials tracked").map(parseRpbConfigCast).filter(Boolean)
+    trinketsAndRacials: readRpbConfigList(rows, "trinketsAndRacials tracked").map(parseRpbConfigCast).filter(Boolean),
+    damageTaken: readRpbConfigList(rows, "damageTaken tracked").map(parseRpbConfigCast).filter(Boolean),
+    debuffsTracked: readRpbConfigList(rows, "debuffs tracked").map(parseRpbConfigCast).filter(Boolean)
   };
   return rpbConfigAllCache;
 }
@@ -3873,13 +3885,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
   const rpbFights = rpbIncludedFightsForAnalysis(fights);
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
-  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
-  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
-  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", rpbFightScope);
-  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", rpbFightScope);
-  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", rpbFightScope);
-  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", rpbFightScope);
-  const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", fullReportScope);
+  const activityScope = null;
+  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
+  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
+  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", activityScope);
+  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", activityScope);
+  const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", activityScope);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds.length ? fightIds : fullReportScope);
   const consumes = {};
   const trinketsAndRacials = {};
@@ -3987,6 +4000,30 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     }
   }
 
+  function addHealingTableEntry(playerName, entry) {
+    if (!playerName || !entry) return;
+    const id = abilityIdFromTableEntry(entry);
+    const amount = Number(entry.total || entry.amount || 0);
+    const overheal = Number(entry.overheal || entry.overhealing || entry.overhealAmount || 0);
+    if (!amount && !overheal) return;
+    const spell = clean(entry.name) || rpbSpellNamesById[id] || "Unbekannter Heal";
+    healingTotals[playerName] = (healingTotals[playerName] || 0) + amount;
+    overhealTotals[playerName] = (overhealTotals[playerName] || 0) + overheal;
+    if (!healingBySpell[spell]) healingBySpell[spell] = {};
+    if (!healingBySpell[spell][playerName]) healingBySpell[spell][playerName] = { amount: 0, overheal: 0, hits: 0 };
+    healingBySpell[spell][playerName].amount += amount;
+    healingBySpell[spell][playerName].overheal += overheal;
+    healingBySpell[spell][playerName].hits += Number(entry.uses || entry.totalUses || entry.hitCount || entry.tickCount || 0);
+    if (id) {
+      if (!healingById[id]) healingById[id] = {};
+      healingById[id][playerName] = {
+        amount: (Number(healingById[id]?.[playerName]?.amount || 0) + amount),
+        overheal: (Number(healingById[id]?.[playerName]?.overheal || 0) + overheal),
+        hits: (Number(healingById[id]?.[playerName]?.hits || 0) + Number(entry.uses || entry.totalUses || entry.hitCount || entry.tickCount || 0))
+      };
+    }
+  }
+
   function addClassCooldown(event) {
     const player = playersById.get(eventSourceId(event));
     if (!player || !player.className) return;
@@ -4061,12 +4098,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   async function loadPlayerCastTables() {
     const limitedPlayers = players.filter(player => player.id && player.className);
-    const concurrency = 4;
+    const concurrency = 1;
     let index = 0;
     async function worker() {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
-        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", rpbFightScope, player.id);
+        const [table, healingTable] = await Promise.all([
+          fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope, player.id),
+          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", activityScope, player.id)
+        ]);
         const entries = Array.isArray(table.entries) ? table.entries : [];
         entries.forEach(entry => {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
@@ -4079,6 +4119,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           const configuredCast = configuredStCast || configuredAoeCast;
           if (!configuredCast) return;
           addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", count, "table");
+        });
+        (Array.isArray(healingTable.entries) ? healingTable.entries : []).forEach(entry => {
+          addHealingTableEntry(player.name, entry);
         });
       }
     }
@@ -4111,7 +4154,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   });
   healingEvents.forEach(event => {
     markActive(event);
-    addHealing(event);
   });
 
   players.forEach(player => {
@@ -4434,7 +4476,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
       if (cast.hasOverheal) {
         const data = cast.ids.reduce((sum, id) => {
-          const row = healingById[id]?.[player];
+          const healId = holyNovaHealSpellMap[id] || id;
+          const row = healingById[healId]?.[player];
           if (!row) return sum;
           sum.amount += Number(row.amount || 0);
           sum.overheal += Number(row.overheal || 0);
@@ -4803,6 +4846,80 @@ function raidImporterNonZeroNames(counts) {
     .map(([label]) => label);
 }
 
+function parseNumberList(value) {
+  return String(value || "")
+    .split(/[,\s]+/)
+    .map(item => Number(String(item).replace("*", "").trim()))
+    .filter(number => Number.isFinite(number) && number > 0);
+}
+
+async function debugRaidLogAnalysisScopes({ guildId, query: params }) {
+  const reportCode = extractWarcraftLogsReportCode(params.reportCode || params.report || params.reportUrl || params.url);
+  if (!reportCode) {
+    const error = new Error("Warcraft-Logs-Link oder Report-Code fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const base = await fetchReportBaseForAnalysis(reportCode);
+  const { token, report, players: rawPlayers, fights, fightIds } = base;
+  const playerName = clean(params.playerName || params.player || "");
+  const playerId = Number(params.playerId || 0);
+  const player = rawPlayers.find(item => playerId > 0 ? Number(item.id) === playerId : clean(item.name).toLowerCase() === playerName.toLowerCase());
+  if (!player) {
+    const error = new Error("Spieler wurde im Warcraft-Logs-Report nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const ids = parseNumberList(params.ids || params.spellIds);
+  const rpbFights = rpbIncludedFightsForAnalysis(fights);
+  const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : fightIds;
+  const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
+  const fullTimeScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : null;
+  async function tableSummary(label, dataType, scope, options) {
+    const table = await fetchReportTableForAnalysis(token, reportCode, dataType, scope, { ...options, strict: true });
+    return {
+      label,
+      dataType,
+      totalForIds: ids.length ? raidImporterEntryTotal(table, ids) : null,
+      totalEntries: raidImporterTableEntries(table).reduce((sum, entry) => sum + Number(entry.total || entry.uses || entry.amount || entry.count || 0), 0),
+      matchedEntries: ids.length ? raidImporterTableEntries(table)
+        .filter(entry => ids.includes(abilityIdFromTableEntry(entry)))
+        .map(entry => ({
+          id: abilityIdFromTableEntry(entry),
+          name: clean(entry.name),
+          total: Number(entry.total || 0),
+          uses: Number(entry.uses || 0),
+          amount: Number(entry.amount || 0),
+          hitCount: Number(entry.hitCount || 0),
+          overheal: Number(entry.overheal || entry.overhealing || entry.overhealAmount || 0)
+        })) : []
+    };
+  }
+  return {
+    success: true,
+    report: {
+      code: reportCode,
+      title: report.title || "",
+      durationMs: reportDurationMs,
+      fights: fights.length,
+      rpbFights: rpbFights.length
+    },
+    player: {
+      id: player.id,
+      name: player.name,
+      className: player.className || player.subType || player.type || ""
+    },
+    ids,
+    scopes: [
+      await tableSummary("fightIDs", "Casts", rpbFightScope, { sourceId: player.id }),
+      await tableSummary("full report time", "Casts", fullTimeScope, { sourceId: player.id }),
+      await tableSummary("unfiltered", "Casts", null, { sourceId: player.id }),
+      await tableSummary("healing full report time", "Healing", fullTimeScope, { sourceId: player.id }),
+      await tableSummary("healing unfiltered", "Healing", null, { sourceId: player.id })
+    ]
+  };
+}
+
 function raidImporterGearSlotName(slot) {
   const names = {
     0: "Head",
@@ -4886,6 +5003,8 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
   const rpbStartTime = rpbFights.length ? Math.min(...rpbFights.map(fight => Number(fight.startTime || 0))) : 0;
   const rpbEndTime = rpbFights.length ? Math.max(...rpbFights.map(fight => Number(fight.endTime || 0))) : Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const rpbTimeScope = rpbEndTime > rpbStartTime ? { startTime: rpbStartTime, endTime: rpbEndTime } : rpbFightScope;
+  const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
+  const activityScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : rpbTimeScope;
   const reportInfo = {
     code: reportCode,
     url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
@@ -4895,7 +5014,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
     includedFights: rpbFights.length,
     bossFights: bossFights.length,
     gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
-    scopeRule: "kill encounters plus trash from rpbIncludedFightsForAnalysis; gear from last included boss"
+    scopeRule: "activity tables use full report time; gear from last included boss"
   };
   if (String(params.listOnly || params.playersOnly || "") === "1") {
     return {
@@ -4924,7 +5043,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
       throw error;
     }
   }
-  const allDeaths = await fetchReportEventsForAnalysis(token, reportCode, "Deaths", rpbFightScope);
+  const allDeaths = await fetchReportEventsForAnalysis(token, reportCode, "Deaths", activityScope);
   const worldBuffDefinitions = {
     "Nef/Ony": [22888, 355363],
     Rend: [16609, 355366, 460940],
@@ -4951,12 +5070,12 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
     while (index < players.length) {
       const player = players[index++];
       const [castsTable, healingTable, damageDoneTable, damageTakenTable, buffsTable, debuffsTable, summaryTable] = await Promise.all([
-        fetchReportTableForAnalysis(token, reportCode, "Casts", rpbFightScope, { sourceId: player.id, strict: true }),
-        fetchReportTableForAnalysis(token, reportCode, "Healing", rpbFightScope, { sourceId: player.id, strict: true }),
-        fetchReportTableForAnalysis(token, reportCode, "DamageDone", rpbFightScope, { sourceId: player.id, strict: true }),
-        fetchReportTableForAnalysis(token, reportCode, "DamageTaken", rpbFightScope, { targetId: player.id, strict: true }),
-        fetchReportTableForAnalysis(token, reportCode, "Buffs", rpbTimeScope, { targetId: player.id, strict: true }),
-        fetchReportTableForAnalysis(token, reportCode, "Debuffs", rpbTimeScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Casts", activityScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Healing", activityScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageDone", activityScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageTaken", activityScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Buffs", activityScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Debuffs", activityScope, { targetId: player.id, strict: true }),
         fetchReportTableForAnalysis(token, reportCode, "Summary", gearScope, { sourceId: player.id, strict: true })
       ]);
 
@@ -5012,6 +5131,9 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
             return wanted.has(Number(ability.guid || 0)) ? abilitySum + Number(ability.total || 0) : abilitySum;
           }, 0);
         }, 0);
+      });
+      (rpbConfig.damageTaken || []).forEach(tracked => {
+        avoidableDamage[tracked.name] = raidImporterEntryTotal(damageTakenTable, tracked.ids);
       });
       const totalDamageTaken = raidImporterTableEntries(damageTakenTable).reduce((sum, entry) => sum + Number(entry.total || 0), 0);
       const combatantInfo = summaryTable?.combatantInfo || {};
@@ -5069,6 +5191,12 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
           totalUses: Number(aura.totalUses || 0),
           totalUptime: Number(aura.totalUptime || 0)
         })),
+        trackedDebuffs: Object.fromEntries((rpbConfig.debuffsTracked || []).map(tracked => [
+          tracked.name,
+          raidImporterTableAuras(debuffsTable)
+            .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+            .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0)
+        ])),
         general: {
           consumables: consumableCounts,
           absorbs: absorbCounts,
@@ -9332,6 +9460,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "importRaidLogAnalysis") {
       const imported = await importRaidLogAnalysis({ guildId: guild.id, query: req.query });
       return res.json({ ...imported, guild: guild.slug });
+    }
+
+    if (action === "debugRaidLogAnalysisScopes") {
+      const debugged = await debugRaidLogAnalysisScopes({ guildId: guild.id, query: req.query });
+      return res.json({ ...debugged, guild: guild.slug });
     }
 
     if (action === "setPublicLogAnalysisRaidRoles") {
