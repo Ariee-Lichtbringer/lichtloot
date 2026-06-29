@@ -2843,6 +2843,57 @@ function normalizeLogAnalysis(row) {
   };
 }
 
+const logAnalysisRaidRoleOptions = [
+  { value: "", label: "Automatisch" },
+  { value: "main_tank", label: "Main Tank" },
+  { value: "off_tank", label: "Off Tank" },
+  { value: "tank", label: "Tank" },
+  { value: "healer", label: "Heiler" },
+  { value: "cat", label: "Katze" },
+  { value: "owl", label: "Eule" },
+  { value: "melee", label: "Nahkampf" },
+  { value: "caster", label: "Caster" },
+  { value: "hunter", label: "Jäger" },
+  { value: "shadow", label: "Shadow" },
+  { value: "support", label: "Support" },
+  { value: "ignore", label: "Ignorieren" }
+];
+
+function normalizeLogAnalysisRaidRole(value) {
+  const role = clean(value).toLowerCase().replace(/\s+/g, "_").replace(/-/g, "_");
+  const aliases = {
+    maintank: "main_tank",
+    mt: "main_tank",
+    offtank: "off_tank",
+    ot: "off_tank",
+    feral_tank: "tank",
+    bear: "tank",
+    baer: "tank",
+    bär: "tank",
+    resto: "healer",
+    heal: "healer",
+    heiler: "healer",
+    katze: "cat",
+    feral: "cat",
+    dd: "melee",
+    melee_dd: "melee",
+    nahkampf: "melee",
+    eule: "owl",
+    boomkin: "owl",
+    moonkin: "owl",
+    jaeger: "hunter",
+    jäger: "hunter",
+    hunter_dd: "hunter",
+    schatten: "shadow",
+    shadow_priest: "shadow",
+    shadowpriest: "shadow",
+    caster_dd: "caster",
+    bench: "ignore"
+  };
+  const normalized = aliases[role] || role;
+  return logAnalysisRaidRoleOptions.some(option => option.value === normalized) ? normalized : "";
+}
+
 function csvCell(value) {
   const text = String(value ?? "");
   if (/[;"\n\r]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
@@ -3672,9 +3723,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const base = await fetchReportBaseForAnalysis(analysis.report_code);
   const { token, report, fights, fightIds } = base;
   const classByName = options.classByName instanceof Map ? options.classByName : new Map();
+  const roleByName = options.roleByName instanceof Map ? options.roleByName : new Map();
   const players = (base.players || []).map(player => ({
     ...player,
-    className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || ""
+    className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || "",
+    raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
   }));
   const playersById = actorById(players);
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
@@ -3812,6 +3865,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   players.forEach(player => {
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
     if (!player.className) player.className = "Unknown";
+    player.raidRole = normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()) || player.raidRole);
   });
   players.sort((a, b) => {
     const aIndex = rpbClassOrder.includes(a.className) ? rpbClassOrder.indexOf(a.className) : 999;
@@ -3890,10 +3944,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   };
   const engineeringTone = label => label.indexOf("damage done") > -1 ? "engineeringTotal" : "engineering";
 
-  const maxTotalActiveSeconds = Math.max(1, ...playerNames.map(player => {
-    return Math.round((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0));
-  }));
-  const activityRows = [
+  const buildActivityRows = scopeNames => {
+    const scoped = Array.isArray(scopeNames) && scopeNames.length ? scopeNames : playerNames;
+    const maxTotalActiveSeconds = Math.max(1, ...scoped.map(player => {
+      return Math.round((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0));
+    }));
+    return [
     customRow("Sekunden aktiv auf Einzelziel", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(stSecondsByPlayer[player])
@@ -3920,7 +3976,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       player,
       wclActivePercent[player] || ""
     ])), { tone: "activity" })
-  ];
+    ];
+  };
+  const activityRows = buildActivityRows(playerNames);
 
   const healerNames = players
     .filter(player => healerClasses.has(player.className) || healingTotals[player.name])
@@ -4019,16 +4077,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         : [];
 
       const cooldownRows = configuredCooldownRows(className);
-      const rows = castRows
-        .concat(activityRows)
-        .concat(cooldownRows.length ? [headerRow("Klassenspezifische Cooldowns", { className })].concat(cooldownRows) : [])
-        .concat(classHealingRows);
+      const rows = castRows.concat(classHealingRows);
       return {
         id: `class-${className.toLowerCase()}`,
         label: className,
         className,
         description: `${className}: klassenspezifische Casts${classHealingRows.length ? ", Heilung und Overheal" : ""}.`,
         rows: rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })],
+        cooldownRows,
         playerFilter: classPlayers
       };
     });
@@ -4036,13 +4092,35 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const namesForClasses = classNames => players
     .filter(player => classNames.includes(player.className))
     .map(player => player.name);
+  const namesForRolesOrClasses = (roleNames, classNames) => players
+    .filter(player => {
+      if (player.raidRole === "ignore") return false;
+      if (player.raidRole) return roleNames.includes(player.raidRole);
+      return classNames.includes(player.className);
+    })
+    .map(player => player.name);
+  const namesForRolesOnly = roleNames => players
+    .filter(player => player.raidRole !== "ignore" && player.raidRole && roleNames.includes(player.raidRole))
+    .map(player => player.name);
+  const roleAwareNames = (roleNames, fallbackClassNames) => {
+    const explicit = namesForRolesOnly(roleNames);
+    return explicit.length ? explicit : namesForRolesOrClasses(roleNames, fallbackClassNames);
+  };
   const rowsForClasses = classNames => {
     const rows = [];
+    const sections = classNames.map(className => classSectionByName.get(className)).filter(Boolean);
     classNames.forEach(className => {
       const section = classSectionByName.get(className);
       if (!section) return;
       rows.push(headerRow(className, { className }));
       rows.push(...section.rows);
+    });
+    const scopeNames = namesForClasses(classNames);
+    if (scopeNames.length) rows.push(...buildActivityRows(scopeNames));
+    sections.forEach(section => {
+      if (!section.cooldownRows || !section.cooldownRows.length) return;
+      rows.push(headerRow("Klassenspezifische Cooldowns", { className: section.className }));
+      rows.push(...section.cooldownRows);
     });
     return rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })];
   };
@@ -4098,57 +4176,57 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       id: "caster",
       label: "Zauberer",
       description: "Caster-Übersicht: Aktivität und allgemeine Kennzahlen.",
-      rows: activityRows,
-      playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+      rows: buildActivityRows(namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])),
+      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])
     },
     {
       id: "caster-casts",
       label: "Zauberer - Zauber",
       description: "Klassenblöcke für Caster-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
-      playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])
     },
     {
       id: "healer",
       label: "Heiler",
       description: "Heiler-Übersicht mit Healing, Overheal und Aktivität.",
-      rows: activityRows.concat(healingRows.slice(0, 3)),
-      playerFilter: healerNames
+      rows: buildActivityRows(roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])).concat(healingRows.slice(0, 3)),
+      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])
     },
     {
       id: "healer-casts",
       label: "Heiler - Zauber",
       description: "Heiler-Casts und Overheal pro Spell.",
       rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"]),
-      playerFilter: namesForClasses(["Druid", "Paladin", "Priest", "Shaman"])
+      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])
     },
     {
       id: "physical",
       label: "Nahkampf",
       description: "Physical-Übersicht mit Aktivität und allgemeinen Kennzahlen.",
-      rows: activityRows,
-      playerFilter: namesForClasses(["Hunter", "Rogue", "Warrior", "Druid"])
+      rows: buildActivityRows(namesForRolesOrClasses(["melee", "cat", "hunter"], ["Hunter", "Rogue", "Warrior", "Druid"])),
+      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Hunter", "Rogue", "Warrior", "Druid"])
     },
     {
       id: "physical-casts",
       label: "Nahkampf - Zauber",
       description: "Klassenblöcke für Physical-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"]),
-      playerFilter: namesForClasses(["Druid", "Hunter", "Rogue", "Warrior"])
+      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Druid", "Hunter", "Rogue", "Warrior"])
     },
     {
       id: "tank",
       label: "Tank",
       description: "Tank-nahe Übersicht mit Aktivität und vermeidbarem Schaden.",
-      rows: activityRows.concat(rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)),
-      playerFilter: namesForClasses(["Druid", "Paladin", "Warrior"])
+      rows: buildActivityRows(namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])).concat(rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)),
+      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])
     },
     {
       id: "tank-casts",
       label: "Tank - Zauber",
       description: "Tank-Casts nach Klassenblöcken.",
       rows: rowsForClasses(["Druid", "Paladin", "Warrior"]),
-      playerFilter: namesForClasses(["Druid", "Paladin", "Warrior"])
+      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])
     }
   ];
 
@@ -4167,8 +4245,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       id: player.id,
       name: player.name,
       server: player.server || "",
-      className: player.className || ""
+      className: player.className || "",
+      raidRole: player.raidRole || ""
     })),
+    roleOptions: logAnalysisRaidRoleOptions,
     sections,
     warnings: (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length && !healingEvents.length)
       ? ["Keine Detail-Events von Warcraft Logs erhalten."]
@@ -4244,9 +4324,48 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     throw error;
   }
   const classByName = await getGuildClassMap(guildId);
+  const roleByName = new Map(Object.entries(result.rows[0].summary?.raidRoles || {}).map(([name, role]) => [
+    clean(name).toLowerCase(),
+    normalizeLogAnalysisRaidRole(role)
+  ]));
   return {
     success: true,
-    webAnalysis: await buildRpbWebAnalysis(result.rows[0], { classByName })
+    webAnalysis: await buildRpbWebAnalysis(result.rows[0], { classByName, roleByName })
+  };
+}
+
+async function setPublicLogAnalysisRaidRoles({ guildId, query: params }) {
+  await ensureLogAnalysesTable();
+  const id = clean(params.id || params.analysisId);
+  if (!isUuid(id)) {
+    const error = new Error("Loganalyse-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const rawRoles = typeof params.roles === "string" ? JSON.parse(params.roles || "{}") : (params.roles || {});
+  const raidRoles = {};
+  Object.entries(rawRoles || {}).forEach(([name, role]) => {
+    const player = clean(name);
+    const normalized = normalizeLogAnalysisRaidRole(role);
+    if (player && normalized) raidRoles[player] = normalized;
+  });
+  const result = await query(
+    `update log_analyses
+     set summary = coalesce(summary, '{}'::jsonb) || jsonb_build_object('raidRoles', $3::jsonb),
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [guildId, id, JSON.stringify(raidRoles)]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    raidRoles,
+    analysis: normalizeLogAnalysis(result.rows[0])
   };
 }
 
@@ -7772,6 +7891,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...webAnalysis, guild: guild.slug });
     }
 
+    if (action === "setPublicLogAnalysisRaidRoles") {
+      const saved = await setPublicLogAnalysisRaidRoles({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildSaveLogAnalysis") {
       const saved = await saveLogAnalysis({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -8226,6 +8350,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetLogAnalysisSheetUrl") {
       const saved = await setLogAnalysisSheetUrl({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "setPublicLogAnalysisRaidRoles") {
+      const saved = await setPublicLogAnalysisRaidRoles({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
