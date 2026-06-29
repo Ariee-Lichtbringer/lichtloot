@@ -171,11 +171,11 @@
     th,td{
       border-right:1px solid var(--line);
       border-bottom:1px solid var(--line);
-      padding:6px 8px;
-      font-size:13px;
+      padding:5px 7px;
+      font-size:12px;
       text-align:center;
-      min-width:76px;
-      max-width:220px;
+      min-width:68px;
+      max-width:180px;
       white-space:nowrap;
     }
     th:first-child,td:first-child{
@@ -183,13 +183,14 @@
       left:0;
       z-index:2;
       text-align:left;
-      min-width:285px;
-      max-width:330px;
-      background:#f4f6f8;
-      color:#111827;
+      min-width:210px;
+      max-width:240px;
+      background:#151c23;
+      color:var(--text);
       white-space:normal;
       font-weight:800;
       box-shadow:3px 0 0 rgba(0,0,0,.12);
+      overflow-wrap:anywhere;
     }
     thead th{
       position:sticky;
@@ -218,6 +219,22 @@
     tbody tr.tone-activity td{background:rgba(182,215,168,.13)}
     tbody tr.tone-activityStrong td{background:#b7b7b7;color:#111;font-weight:900}
     tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
+    tbody tr.tone-consumable td:first-child,
+    tbody tr.tone-consumableBlue td:first-child,
+    tbody tr.tone-consumableGreen td:first-child,
+    tbody tr.tone-muted td:first-child,
+    tbody tr.tone-absorb td:first-child,
+    tbody tr.tone-absorbNature td:first-child,
+    tbody tr.tone-absorbArcane td:first-child,
+    tbody tr.tone-absorbFire td:first-child,
+    tbody tr.tone-absorbFrost td:first-child,
+    tbody tr.tone-absorbShadow td:first-child,
+    tbody tr.tone-engineering td:first-child,
+    tbody tr.tone-engineeringTotal td:first-child,
+    tbody tr.tone-interrupt td:first-child,
+    tbody tr.tone-activityStrong td:first-child{
+      color:#111827;
+    }
     tbody tr.tone-sectionHeader td{
       background:#e5e7eb;
       color:#111827;
@@ -225,10 +242,24 @@
       border-top:3px solid #111827;
       text-align:left;
     }
+    tbody tr.tone-sectionHeader td.class-band{
+      text-align:center;
+      color:#111827;
+      border-top:3px solid #111827;
+    }
+    tbody tr.tone-sectionHeader td.class-gap{
+      background:#111820;
+      color:transparent;
+    }
     tbody tr:hover td{background:rgba(215,180,106,.18)}
     table.compact th,table.compact td{padding:5px 7px;font-size:12px;min-width:70px}
-    table.compact th:first-child,table.compact td:first-child{min-width:270px;max-width:310px}
+    table.compact th:first-child,table.compact td:first-child{min-width:210px;max-width:240px}
     td.empty{color:#4f5b66}
+    td.class-gap{
+      background:#0d1217!important;
+      color:transparent!important;
+    }
+    td.class-gap::selection{color:transparent}
     td.hot{color:var(--good);font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
     tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
@@ -592,23 +623,42 @@
           </tr>
         </thead>
       `;
+      let currentClass = "";
       const body = rows.map(row => {
         if(row.type === "header"){
+          currentClass = row.className || "";
+          if(row.className){
+            return `
+              <tr class="tone-sectionHeader">
+                <td style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>
+                ${players.map(player => player.className === row.className
+                  ? `<td class="class-band" style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>`
+                  : `<td class="class-gap"></td>`
+                ).join("")}
+              </tr>
+            `;
+          }
           return `
             <tr class="tone-sectionHeader">
-              <td colspan="${players.length + 1}" style="${row.className ? `background:${classColor(row.className)}` : ""}">
-                ${escapeHtml(CLASS_LABELS[row.className] || row.label)}
+              <td colspan="${players.length + 1}">
+                ${escapeHtml(row.label)}
               </td>
             </tr>
           `;
+        }
+        if(row.tone === "activity" || row.tone === "activityStrong"){
+          currentClass = "";
         }
         return `
           <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""}">
             <td>${escapeHtml(row.label)}</td>
             ${players.map(player => {
               const value = row.values?.[player.name] || "";
+              if(currentClass && player.className !== currentClass){
+                return `<td class="class-gap"></td>`;
+              }
               const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
-              return `<td class="${cls}">${escapeHtml(value || "0")}</td>`;
+              return `<td class="${cls}">${escapeHtml(value || "")}</td>`;
             }).join("")}
           </tr>
         `;
