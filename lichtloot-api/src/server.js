@@ -4,6 +4,7 @@ import express from "express";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, query, requireGuild } from "./db.js";
+import { parseCombatLogText } from "./combat-log-parser.js";
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -23,9 +24,32 @@ const staticLootCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 let rpbConfigAllCache = null;
 
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+const defaultAllowedOrigins = [
+  "https://lichtloot.de",
+  "https://www.lichtloot.de",
+  "https://lichtloot-production.up.railway.app"
+];
+const configuredAllowedOrigins = clean(process.env.CORS_ORIGIN)
+  .split(",")
+  .map(origin => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredAllowedOrigins]);
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has("*") || allowedOrigins.has(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(null, false);
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
+}));
+app.options("*", cors());
+app.use("/api/combat-log/import", express.text({ type: "*/*", limit: "120mb" }));
+app.use(express.json({ limit: "80mb" }));
+app.use(express.urlencoded({ extended: true, limit: "80mb" }));
 app.use("/downloads", express.static("public/downloads"));
 app.use(express.static("public"));
 
@@ -3096,14 +3120,17 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
   const hasFightScope = Array.isArray(fightIds);
   const hasTimeScope = fightIds && typeof fightIds === "object" && !Array.isArray(fightIds);
   if (hasFightScope && !fightIds.length) return {};
-  const hasSource = Number(sourceId) > 0;
+  const options = sourceId && typeof sourceId === "object" ? sourceId : { sourceId };
+  const hasSource = Number(options.sourceId) > 0;
+  const hasTarget = Number(options.targetId) > 0;
   const sourceArg = hasSource ? ",sourceID:$sourceID" : "";
+  const targetArg = hasTarget ? ",targetID:$targetID" : "";
   const fightArg = hasFightScope ? ",fightIDs:$fightIDs" : "";
   const timeArg = hasTimeScope ? ",startTime:$startTime,endTime:$endTime" : "";
-  const queryVars = `$code:String!${hasFightScope ? ",$fightIDs:[Int]" : ""}${hasTimeScope ? ",$startTime:Float,$endTime:Float" : ""}${hasSource ? ",$sourceID:Int" : ""}`;
+  const queryVars = `$code:String!${hasFightScope ? ",$fightIDs:[Int]" : ""}${hasTimeScope ? ",$startTime:Float,$endTime:Float" : ""}${hasSource ? ",$sourceID:Int" : ""}${hasTarget ? ",$targetID:Int" : ""}`;
   const gqlQuery =
     "query("+queryVars+"){"+
-    "reportData{report(code:$code){table(dataType:"+dataType+fightArg+timeArg+sourceArg+")}}"+
+    "reportData{report(code:$code){table(dataType:"+dataType+fightArg+timeArg+sourceArg+targetArg+")}}"+
     "}";
   try {
     const variables = { code: reportCode };
@@ -3112,7 +3139,8 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
       variables.startTime = Number(fightIds.startTime || 0);
       variables.endTime = Number(fightIds.endTime || 999999999999);
     }
-    if (hasSource) variables.sourceID = Number(sourceId);
+    if (hasSource) variables.sourceID = Number(options.sourceId);
+    if (hasTarget) variables.targetID = Number(options.targetId);
     const data = await warcraftLogsGraphql(token, gqlQuery, variables);
     return parseWarcraftLogsTableData(data.reportData?.report?.table);
   } catch (error) {
@@ -4676,6 +4704,318 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   };
 }
 
+function raidImporterTableEntries(table) {
+  return Array.isArray(table?.entries) ? table.entries : [];
+}
+
+function raidImporterTableAuras(table) {
+  return Array.isArray(table?.auras) ? table.auras : [];
+}
+
+function raidImporterEntryTotal(table, ids, fields = ["total", "uses", "amount", "count"]) {
+  const wanted = new Set((ids || []).map(Number).filter(Boolean));
+  return raidImporterTableEntries(table).reduce((sum, entry) => {
+    if (wanted.size && !wanted.has(abilityIdFromTableEntry(entry))) return sum;
+    const value = fields.map(field => Number(entry?.[field] || 0)).find(number => number > 0) || 0;
+    return sum + value;
+  }, 0);
+}
+
+function raidImporterHealingSummary(table, ids = null) {
+  const wanted = ids ? new Set(ids.map(Number).filter(Boolean)) : null;
+  return raidImporterTableEntries(table).reduce((summary, entry) => {
+    if (wanted && !wanted.has(abilityIdFromTableEntry(entry))) return summary;
+    const amount = Number(entry.total || entry.amount || 0);
+    const overheal = Number(entry.overheal || entry.overhealing || entry.overhealAmount || 0);
+    const uses = Number(entry.uses || entry.totalUses || entry.hitCount || entry.tickCount || entry.total || 0);
+    const crits = Number(entry.critHitCount || 0) + Number(entry.critTickCount || 0);
+    summary.amount += amount;
+    summary.overheal += overheal;
+    summary.uses += uses;
+    summary.crits += crits;
+    return summary;
+  }, { amount: 0, overheal: 0, uses: 0, crits: 0 });
+}
+
+function raidImporterOverhealText(summary) {
+  const total = Number(summary.amount || 0) + Number(summary.overheal || 0);
+  const pct = total > 0 ? Math.round(Number(summary.overheal || 0) * 100 / total) : 0;
+  return summary.uses || total ? `${Math.round(summary.uses || 0)} (${pct}% OH)` : "0";
+}
+
+function raidImporterAuraUptimePercent(table, ids, totalTime) {
+  const wanted = new Set((ids || []).map(Number).filter(Boolean));
+  const uptime = raidImporterTableAuras(table).reduce((sum, aura) => {
+    if (!wanted.has(Number(aura.guid || aura.id || 0))) return sum;
+    return sum + Number(aura.totalUptime || 0);
+  }, 0);
+  return totalTime > 0 ? Math.round(uptime * 1000 / totalTime) / 10 : 0;
+}
+
+function raidImporterAuraNames(table, definitions) {
+  const ids = new Set(raidImporterTableAuras(table).map(aura => Number(aura.guid || aura.id || 0)));
+  return Object.entries(definitions)
+    .filter(([, spellIds]) => spellIds.some(id => ids.has(Number(id))))
+    .map(([label]) => label);
+}
+
+function raidImporterGearSlotName(slot) {
+  const names = {
+    0: "Head",
+    1: "Neck",
+    2: "Shoulders",
+    3: "Shirt",
+    4: "Chest",
+    5: "Waist",
+    6: "Legs",
+    7: "Feet",
+    8: "Bracers",
+    9: "Hands",
+    10: "Ring1",
+    11: "Ring2",
+    12: "Trinket1",
+    13: "Trinket2",
+    14: "Cloak",
+    15: "Weapon",
+    16: "Off-Hand",
+    17: "Wand/Idol/Relic etc."
+  };
+  return names[Number(slot)] || clean(slot);
+}
+
+function raidImporterEnchantIssue(item, playerClass = "") {
+  const slot = Number(item?.slot);
+  const itemName = clean(item?.name);
+  const enchantName = clean(item?.permanentEnchantName || item?.permanentEnchant);
+  const lower = `${itemName} ${enchantName}`.toLowerCase();
+  if (lower.includes("undead") || lower.includes("scourge")) {
+    return "vs. undead item/enchant used on non-undead";
+  }
+  const enchantableSlots = new Set([0, 2, 4, 7, 8, 9, 14, 15]);
+  if (enchantableSlots.has(slot) && !enchantName) return "no enchant on this item";
+  if (slot === 9 && Number(item?.permanentEnchant) === 2617 && playerClass === "Priest") {
+    return "has an enchant that is considered suboptimal";
+  }
+  return "";
+}
+
+function raidImporterGearFromCombatantInfo(combatantInfo, playerClass = "") {
+  return (Array.isArray(combatantInfo?.gear) ? combatantInfo.gear : [])
+    .filter(item => Number(item?.id || item?.itemID || item?.itemId || 0) > 0)
+    .map(item => ({
+      slot: raidImporterGearSlotName(item.slot),
+      itemId: Number(item.id || item.itemID || item.itemId || 0),
+      name: clean(item.name),
+      quality: item.quality || "",
+      permanentEnchant: item.permanentEnchant || "",
+      permanentEnchantName: clean(item.permanentEnchantName),
+      temporaryEnchant: item.temporaryEnchant || "",
+      temporaryEnchantName: clean(item.temporaryEnchantName),
+      issue: raidImporterEnchantIssue(item, playerClass)
+    }));
+}
+
+async function importRaidLogAnalysis({ guildId, query: params }) {
+  const reportCode = extractWarcraftLogsReportCode(params.reportCode || params.report || params.reportUrl || params.url);
+  if (!reportCode) {
+    const error = new Error("Warcraft-Logs-Link oder Report-Code fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const rpbConfig = await loadRpbConfigAll();
+  const classByName = await getGuildClassMap(guildId);
+  const base = await fetchReportBaseForAnalysis(reportCode);
+  const { token, report, players: rawPlayers, fights, fightIds } = base;
+  const players = rawPlayers.map(player => ({
+    ...player,
+    className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || "Unknown"
+  }));
+  const rpbFights = rpbIncludedFightsForAnalysis(fights);
+  const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : fightIds;
+  const bossFights = rpbFights.filter(fight => Number(fight.encounterID || 0) > 0);
+  const bossFightIds = new Set(bossFights.map(fight => Number(fight.id)));
+  const lastBossFight = bossFights[bossFights.length - 1] || rpbFights[rpbFights.length - 1] || fights[fights.length - 1];
+  const gearScope = lastBossFight
+    ? { startTime: Number(lastBossFight.startTime || 0), endTime: Number(lastBossFight.endTime || 0) }
+    : rpbFightScope;
+  const rpbStartTime = rpbFights.length ? Math.min(...rpbFights.map(fight => Number(fight.startTime || 0))) : 0;
+  const rpbEndTime = rpbFights.length ? Math.max(...rpbFights.map(fight => Number(fight.endTime || 0))) : Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
+  const rpbTimeScope = rpbEndTime > rpbStartTime ? { startTime: rpbStartTime, endTime: rpbEndTime } : rpbFightScope;
+  const allDeaths = await fetchReportEventsForAnalysis(token, reportCode, "Deaths", rpbFightScope);
+  const worldBuffDefinitions = {
+    "Nef/Ony": [22888, 355363],
+    Rend: [16609, 355366, 460940],
+    "ZG heart": [24425, 355365],
+    Songflower: [15366],
+    "Mol'dar": [22818],
+    Fengus: [22817],
+    "Slip'kik": [22820],
+    DMF: [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767],
+    "Zanza/BL": [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]
+  };
+  const consumableDefinitions = {
+    Flask: [17626, 17627, 17628, 17629],
+    Elixir: [24363, 17539, 11396, 16321, 16322, 16323, 16325, 16326, 16327, 16329],
+    Alcohol: [25804, 25722, 22789],
+    "Food Buff": [18125, 18141, 19710, 22730, 25661],
+    Scrolls: [8118, 12174, 12176, 12178, 12179],
+    "Weapon Enhancement": [2629, 25123]
+  };
+  const avoidableDamageDefinitions = {
+    "Cleave": [797, 3433, 3434, 3435, 5532, 11427, 15284, 15496, 15579, 15584, 15613, 15622, 15623, 15663, 16044, 17685, 19632, 19642, 20571, 20605, 20666, 20677, 20684, 20691, 22540, 26350, 27794, 19983, 845, 7369, 11608, 11609, 20569],
+    "Bomb": [8858, 9143, 22334]
+  };
+
+  const importedPlayers = [];
+  const concurrency = 3;
+  let index = 0;
+  async function worker() {
+    while (index < players.length) {
+      const player = players[index++];
+      const [castsTable, healingTable, damageDoneTable, damageTakenTable, buffsTable, debuffsTable, summaryTable] = await Promise.all([
+        fetchReportTableForAnalysis(token, reportCode, "Casts", rpbFightScope, { sourceId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "Healing", rpbFightScope, { sourceId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageDone", rpbFightScope, { sourceId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageTaken", rpbFightScope, { targetId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "Buffs", rpbTimeScope, { targetId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "Debuffs", rpbTimeScope, { targetId: player.id }),
+        fetchReportTableForAnalysis(token, reportCode, "Summary", gearScope, { sourceId: player.id })
+      ]);
+
+      const classConfig = rpbConfig.byClass?.[player.className] || { singleTarget: [], aoe: [], cooldowns: [] };
+      const casts = {};
+      [...classConfig.singleTarget, ...classConfig.aoe].forEach(cast => {
+        casts[cast.name] = raidImporterEntryTotal(castsTable, cast.ids);
+      });
+      const cooldowns = {};
+      classConfig.cooldowns.forEach(cooldown => {
+        cooldowns[cooldown.name] = raidImporterEntryTotal(castsTable, cooldown.ids);
+      });
+      const trinketsAndRacials = {};
+      (rpbConfig.trinketsAndRacials || []).forEach(item => {
+        const total = raidImporterEntryTotal(castsTable, item.ids);
+        if (total) trinketsAndRacials[item.name] = total;
+      });
+
+      const healing = {
+        total: raidImporterHealingSummary(healingTable),
+        bySpell: {},
+        byConfiguredCast: {}
+      };
+      raidImporterTableEntries(healingTable).forEach(entry => {
+        const label = clean(entry.name) || String(abilityIdFromTableEntry(entry));
+        healing.bySpell[label] = raidImporterHealingSummary({ entries: [entry] });
+      });
+      [...classConfig.singleTarget, ...classConfig.aoe].filter(cast => cast.hasOverheal).forEach(cast => {
+        healing.byConfiguredCast[cast.name] = raidImporterOverhealText(raidImporterHealingSummary(healingTable, cast.ids));
+      });
+
+      const criticalOutgoing = raidImporterTableEntries(damageDoneTable).reduce((sum, entry) => sum + Number(entry.critHitCount || 0) + Number(entry.critTickCount || 0), 0);
+      const resistOutgoing = raidImporterTableEntries(damageDoneTable).reduce((sum, entry) => {
+        const resistedHits = (entry.hitdetails || []).reduce((hitSum, detail) => /resisted/i.test(clean(detail.type)) ? hitSum + Number(detail.count || 0) : hitSum, 0);
+        const resists = (entry.missdetails || []).reduce((missSum, detail) => /resist/i.test(clean(detail.type)) ? missSum + Number(detail.count || 0) : missSum, 0);
+        return sum + resistedHits + resists;
+      }, 0);
+      const damageTakenAbilities = {};
+      raidImporterTableEntries(damageTakenTable).forEach(entry => {
+        (entry.abilities || []).forEach(ability => {
+          const label = clean(ability.name) || String(ability.guid || "");
+          damageTakenAbilities[label] = (damageTakenAbilities[label] || 0) + Number(ability.total || 0);
+        });
+      });
+      const avoidableDamage = {};
+      Object.entries(avoidableDamageDefinitions).forEach(([label, ids]) => {
+        const wanted = new Set(ids.map(Number));
+        avoidableDamage[label] = raidImporterTableEntries(damageTakenTable).reduce((sum, entry) => {
+          return sum + (entry.abilities || []).reduce((abilitySum, ability) => {
+            return wanted.has(Number(ability.guid || 0)) ? abilitySum + Number(ability.total || 0) : abilitySum;
+          }, 0);
+        }, 0);
+      });
+      const totalDamageTaken = raidImporterTableEntries(damageTakenTable).reduce((sum, entry) => sum + Number(entry.total || 0), 0);
+      const combatantInfo = summaryTable?.combatantInfo || {};
+      const gear = raidImporterGearFromCombatantInfo(combatantInfo, player.className);
+      const consumables = raidImporterAuraNames(buffsTable, consumableDefinitions);
+      const worldBuffs = raidImporterAuraNames(buffsTable, worldBuffDefinitions);
+      const playerDeaths = allDeaths.filter(event => eventSourceId(event) === Number(player.id) || eventTargetId(event) === Number(player.id));
+      const worldBuffsLostDueToDying = playerDeaths.some(event => bossFightIds.has(Number(event.fight || event.fightID || event.fightId))) && worldBuffs.length > 0;
+
+      importedPlayers.push({
+        id: player.id,
+        name: player.name,
+        server: player.server || "",
+        className: player.className,
+        stats: {
+          battleShoutUptimePercent: raidImporterAuraUptimePercent(buffsTable, [6673, 5242, 6192, 11549, 11550, 11551, 25289], Number(buffsTable.totalTime || 0)),
+          criticalHealsDone: healing.total.crits,
+          criticalOutgoing,
+          resistOutgoing,
+          deathsTotal: playerDeaths.length,
+          worldBuffsLostDueToDying
+        },
+        casts,
+        cooldowns,
+        trinketsAndRacials,
+        healing,
+        damageTaken: {
+          total: totalDamageTaken,
+          abilities: damageTakenAbilities,
+          avoidable: avoidableDamage
+        },
+        buffs: {
+          consumables,
+          worldBuffs,
+          rawAuras: raidImporterTableAuras(buffsTable).map(aura => ({
+            id: Number(aura.guid || 0),
+            name: clean(aura.name),
+            totalUses: Number(aura.totalUses || 0),
+            totalUptime: Number(aura.totalUptime || 0)
+          }))
+        },
+        debuffs: raidImporterTableAuras(debuffsTable).map(aura => ({
+          id: Number(aura.guid || 0),
+          name: clean(aura.name),
+          totalUses: Number(aura.totalUses || 0),
+          totalUptime: Number(aura.totalUptime || 0)
+        })),
+        gear,
+        enchantIssues: gear.filter(item => item.issue)
+      });
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(concurrency, players.length) }, () => worker()));
+  importedPlayers.sort((a, b) => a.name.localeCompare(b.name, "de"));
+
+  return {
+    success: true,
+    importer: "wcl-raid-player-analysis-v1",
+    generatedAt: new Date().toISOString(),
+    sources: {
+      casts: "WarcraftLogs table(Casts) per player",
+      healing: "WarcraftLogs table(Healing) per player",
+      damageDone: "WarcraftLogs table(DamageDone) per player",
+      damageTaken: "WarcraftLogs table(DamageTaken) per player",
+      buffs: "WarcraftLogs table(Buffs) per player",
+      debuffs: "WarcraftLogs table(Debuffs) per player",
+      gear: "WarcraftLogs table(Summary) gear snapshot",
+      deaths: "WarcraftLogs events(Deaths)"
+    },
+    report: {
+      code: reportCode,
+      url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
+      title: report.title || "",
+      raid: report.zone?.name || "",
+      raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : "",
+      includedFights: rpbFights.length,
+      bossFights: bossFights.length,
+      gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
+      scopeRule: "kill encounters plus trash from rpbIncludedFightsForAnalysis; gear from last included boss"
+    },
+    players: importedPlayers
+  };
+}
+
 async function buildLogAnalysisRows(analysis, type) {
   try {
     return type === "cla" ? await buildClaAnalysisRows(analysis) : await buildRpbAnalysisRows(analysis);
@@ -4719,6 +5059,7 @@ async function buildLogAnalysisCsv(analysis, type) {
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
   await ensureLogAnalysisSheetExportsTable();
+  await ensureCombatLogImportsTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "rpb").toLowerCase();
   if (!isUuid(id)) {
@@ -4743,6 +5084,13 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], type, guildId);
+  if (combatLogAnalysis) {
+    return {
+      success: true,
+      webAnalysis: combatLogAnalysis
+    };
+  }
   const stored = await buildStoredSheetWebAnalysis(result.rows[0], type);
   if (stored) {
     return {
@@ -4763,6 +5111,233 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
   return {
     success: true,
     webAnalysis: await buildRpbWebAnalysis(result.rows[0], { classByName, roleByName })
+  };
+}
+
+async function ensureCombatLogImportsTable() {
+  await ensureLogAnalysesTable();
+  await query(
+    `create table if not exists log_analysis_combat_imports (
+       id uuid primary key default gen_random_uuid(),
+       analysis_id uuid not null references log_analyses(id) on delete cascade,
+       file_name text,
+       payload jsonb not null default '{}'::jsonb,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (analysis_id)
+     )`
+  );
+  await query(
+    `create index if not exists log_analysis_combat_imports_analysis_idx
+     on log_analysis_combat_imports (analysis_id)`
+  );
+}
+
+function combatLogDateToIso(value) {
+  const match = clean(value).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!match) return "";
+  return `${match[3]}-${String(match[1]).padStart(2, "0")}-${String(match[2]).padStart(2, "0")}`;
+}
+
+function normalizeCombatLogRaidName(value) {
+  const text = clean(value);
+  const lower = text.toLowerCase();
+  if (lower.includes("geschmolzener kern") || lower.includes("molten core")) return "MC";
+  if (lower.includes("pechschwingenhort") || lower.includes("blackwing")) return "BWL";
+  if (lower.includes("naxx")) return "Naxx";
+  if (lower.includes("ahn'qiraj") || lower.includes("aq40")) return "AQ40";
+  if (lower.includes("zul'gurub") || lower.includes("zg")) return "ZG";
+  return text || "CombatLog";
+}
+
+async function importCombatLogAnalysis({ guildId, query: params, text }) {
+  requireMasterCode(params.masterCode);
+  await ensureCombatLogImportsTable();
+  const logText = String(text || params.logText || "");
+  if (!logText.trim()) {
+    const error = new Error("CombatLog-Datei fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const fileName = clean(params.fileName || params.filename || "WoWCombatLog.txt");
+  const parsed = parseCombatLogText(logText, { fileName });
+  const classByName = await getGuildClassMap(guildId);
+  const roleByName = new Map();
+  const summaryRoles = {};
+
+  Object.values(parsed.players || {}).forEach(player => {
+    const key = clean(player.name).toLowerCase();
+    const className = normalizeRpbClassName(classByName.get(key)) || normalizeRpbClassName(player.className) || "Unknown";
+    player.className = className;
+  });
+  parsed.playerList = Object.values(parsed.players || {})
+    .sort((a, b) => a.name.localeCompare(b.name, "de"))
+    .map(player => ({
+      name: player.name,
+      guid: player.guid || "",
+      className: player.className || "Unknown",
+      raidRole: roleByName.get(clean(player.name).toLowerCase()) || "",
+      activeSeconds: player.activeSeconds || 0,
+      castTotal: player.castTotal || 0,
+      healingDone: player.healingDone || 0,
+      overheal: player.overheal || 0,
+      overhealPercent: player.overhealPercent || 0,
+      healEvents: player.healEvents || 0
+    }));
+
+  const raid = normalizeCombatLogRaidName(parsed.zone || parsed.raid);
+  const raidDate = combatLogDateToIso(parsed.startedAt);
+  const reportCode = `combatlog-${Date.now()}-${randomUUID().slice(0, 8)}`;
+  const reportUrl = `combat-log://${encodeURIComponent(fileName)}`;
+  const title = clean(params.title) || `${raid} CombatLog`;
+  const summary = {
+    source: "combat-log",
+    raid,
+    raidDate,
+    fileName,
+    encounters: parsed.encounters.length,
+    players: parsed.playerList.length,
+    casts: parsed.totals.casts,
+    heals: parsed.totals.heals,
+    buffs: parsed.totals.buffs,
+    raidRoles: summaryRoles
+  };
+  const saved = await query(
+    `insert into log_analyses (
+       guild_id, report_code, report_url, title, raid, raid_date, status, summary, updated_at, analyzed_at
+     )
+     values ($1,$2,$3,$4,$5,nullif($6,'')::date,'combatlog_imported',$7::jsonb,now(),now())
+     returning *`,
+    [guildId, reportCode, reportUrl, title, raid, raidDate, JSON.stringify(summary)]
+  );
+  await query(
+    `insert into log_analysis_combat_imports (analysis_id, file_name, payload, updated_at)
+     values ($1,$2,$3::jsonb,now())
+     on conflict (analysis_id) do update
+       set file_name = excluded.file_name,
+           payload = excluded.payload,
+           updated_at = now()`,
+    [saved.rows[0].id, fileName, JSON.stringify(parsed)]
+  );
+  return {
+    success: true,
+    analysis: normalizeLogAnalysis(saved.rows[0]),
+    summary,
+    webUrl: `raid-analyse.html?id=${encodeURIComponent(saved.rows[0].id)}&type=rpb`
+  };
+}
+
+async function buildStoredCombatLogWebAnalysis(analysis, type, guildId) {
+  if (type !== "rpb") return null;
+  const result = await query(
+    `select payload
+     from log_analysis_combat_imports
+     where analysis_id = $1
+     limit 1`,
+    [analysis.id]
+  );
+  if (!result.rows.length) return null;
+  return buildCombatLogWebAnalysis(analysis, result.rows[0].payload || {}, guildId);
+}
+
+async function buildCombatLogWebAnalysis(analysis, payload, guildId) {
+  const classByName = await getGuildClassMap(guildId);
+  const roleByName = new Map(Object.entries(analysis.summary?.raidRoles || {}).map(([name, role]) => [
+    clean(name).toLowerCase(),
+    normalizeLogAnalysisRaidRole(role)
+  ]));
+  const players = Object.values(payload.players || {}).map(player => {
+    const key = clean(player.name).toLowerCase();
+    return {
+      id: player.guid || player.name,
+      name: player.name,
+      server: "",
+      className: normalizeRpbClassName(classByName.get(key)) || normalizeRpbClassName(player.className) || "Unknown",
+      raidRole: normalizeLogAnalysisRaidRole(roleByName.get(key) || player.raidRole)
+    };
+  }).sort((a, b) => {
+    const aIndex = rpbClassOrder.includes(a.className) ? rpbClassOrder.indexOf(a.className) : 999;
+    const bIndex = rpbClassOrder.includes(b.className) ? rpbClassOrder.indexOf(b.className) : 999;
+    if (aIndex !== bIndex) return aIndex - bIndex;
+    return a.name.localeCompare(b.name, "de");
+  });
+  const playerNames = players.map(player => player.name);
+  const rawByName = new Map(Object.values(payload.players || {}).map(player => [player.name, player]));
+  const valuesFor = fn => Object.fromEntries(playerNames.map(name => [name, fn(rawByName.get(name) || {})]));
+  const row = (label, values, options = {}) => ({ label, type: options.type || "count", tone: options.tone || "", values });
+  const headerRow = (label, options = {}) => ({ label, type: "header", tone: "sectionHeader", className: options.className || "", values: {} });
+  const activityRows = [
+    row("Sekunden aktiv", valuesFor(player => player.activeSeconds || ""), { tone: "activity" }),
+    row("Casts gesamt", valuesFor(player => player.castTotal || ""), { tone: "activity" }),
+    row("Heilung", valuesFor(player => player.healingDone || ""), { tone: "heal" }),
+    row("Overheal", valuesFor(player => player.overheal || ""), { tone: "heal" }),
+    row("Overheal %", valuesFor(player => player.overhealPercent ? `${player.overhealPercent}%` : ""), { tone: "heal" })
+  ];
+  const classRows = classNames => {
+    const rows = [];
+    classNames.forEach(className => {
+      const classPlayers = players.filter(player => player.className === className).map(player => player.name);
+      if (!classPlayers.length) return;
+      const spellNames = new Set();
+      classPlayers.forEach(name => {
+        Object.keys(rawByName.get(name)?.casts || {}).forEach(spell => spellNames.add(spell));
+      });
+      rows.push(headerRow(className, { className }));
+      [...spellNames].sort((a, b) => a.localeCompare(b, "de")).forEach(spell => {
+        rows.push(row(spell, Object.fromEntries(playerNames.map(name => [
+          name,
+          classPlayers.includes(name) ? (rawByName.get(name)?.casts?.[spell] || "") : ""
+        ])), { tone: "classCast" }));
+      });
+    });
+    return rows;
+  };
+  const healerRows = () => {
+    const healerNames = players
+      .filter(player => player.raidRole === "healer" || (!player.raidRole && ["Druid", "Paladin", "Priest", "Shaman"].includes(player.className)))
+      .map(player => player.name);
+    const spells = new Set();
+    healerNames.forEach(name => Object.keys(rawByName.get(name)?.healing || {}).forEach(spell => spells.add(spell)));
+    const rows = [
+      headerRow("Heiler"),
+      ...activityRows.filter(item => ["Sekunden aktiv", "Heilung", "Overheal", "Overheal %"].includes(item.label))
+    ];
+    [...spells].sort((a, b) => a.localeCompare(b, "de")).forEach(spell => {
+      rows.push(row(`${spell} (overheal%)`, Object.fromEntries(playerNames.map(name => {
+        if (!healerNames.includes(name)) return [name, ""];
+        const data = rawByName.get(name)?.healing?.[spell];
+        if (!data) return [name, ""];
+        const total = Number(data.amount || 0) + Number(data.overheal || 0);
+        const percent = total > 0 ? Math.round(Number(data.overheal || 0) * 100 / total) : 0;
+        return [name, `${data.casts || 0} (${percent}%)`];
+      })), { tone: "heal" }));
+    });
+    return rows;
+  };
+  const sections = [
+    { id: "general", label: "Allgemein", rows: [headerRow("CombatLog"), ...activityRows], compact: true, ignoreClassFilter: true },
+    { id: "caster-casts", label: "Zauberer - Zauber", rows: classRows(["Druid", "Mage", "Warlock", "Priest", "Shaman"]), hideEmptyRows: true },
+    { id: "healer", label: "Heiler", rows: healerRows(), hideEmptyRows: true },
+    { id: "healer-casts", label: "Heiler - Zauber", rows: healerRows(), hideEmptyRows: true },
+    { id: "physical-casts", label: "Nahkampf - Zauber", rows: classRows(["Druid", "Hunter", "Rogue", "Warrior"]), hideEmptyRows: true },
+    { id: "tank-casts", label: "Tank - Zauber", rows: classRows(["Druid", "Paladin", "Warrior"]), hideEmptyRows: true }
+  ];
+  return {
+    type: "rpb",
+    source: "combat-log",
+    generatedAt: new Date().toISOString(),
+    analysis: normalizeLogAnalysis(analysis),
+    report: {
+      title: analysis.title || payload.file || "CombatLog",
+      raid: payload.zone || analysis.raid || "",
+      raidDate: analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : combatLogDateToIso(payload.startedAt),
+      reportCode: analysis.report_code || "",
+      reportUrl: analysis.report_url || ""
+    },
+    players,
+    roleOptions: logAnalysisRaidRoleOptions,
+    sections,
+    warnings: payload.totals?.combatantInfo ? [] : ["Keine CombatantInfo-Daten im CombatLog gefunden."]
   };
 }
 
@@ -8657,6 +9232,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...webAnalysis, guild: guild.slug });
     }
 
+    if (action === "importRaidLogAnalysis") {
+      const imported = await importRaidLogAnalysis({ guildId: guild.id, query: req.query });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
     if (action === "setPublicLogAnalysisRaidRoles") {
       const saved = await setPublicLogAnalysisRaidRoles({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -8988,6 +9568,20 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     return res.status(404).json({ success: false, error: `Unsupported action: ${action}` });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/combat-log/import", async (req, res, next) => {
+  try {
+    const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+    const imported = await importCombatLogAnalysis({
+      guildId: guild.id,
+      query: req.query,
+      text: req.body
+    });
+    return res.json({ ...imported, guild: guild.slug });
   } catch (error) {
     next(error);
   }
