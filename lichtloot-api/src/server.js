@@ -5508,15 +5508,8 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
       webAnalysis: combatLogAnalysis
     };
   }
-  const stored = await buildStoredSheetWebAnalysis(result.rows[0], type);
-  if (stored) {
-    return {
-      success: true,
-      webAnalysis: stored
-    };
-  }
   if (type !== "rpb") {
-    const error = new Error("Für diese CLA-Auswertung wurden noch keine Sheet-Daten nach Railway exportiert.");
+    const error = new Error("Sheet-Daten sind für die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
     error.statusCode = 404;
     throw error;
   }
@@ -9692,8 +9685,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
-      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: req.query });
-      return res.json({ ...saved, guild: guild.slug });
+      const error = new Error("Sheet-Daten sind fuer die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
+      error.statusCode = 410;
+      throw error;
     }
 
     if (action === "guildDownloadLogAnalysis") {
@@ -10153,8 +10147,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
-      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: postParams });
-      return res.json({ ...saved, guild: guild.slug });
+      const error = new Error("Sheet-Daten sind fuer die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
+      error.statusCode = 410;
+      throw error;
     }
 
     if (action === "setPublicLogAnalysisRaidRoles") {
