@@ -1446,13 +1446,25 @@ async function upsertWorldbuffEvent(client, guildId, params) {
 async function findWorldbuffEventOrEntry(client, guildId, rowNumber) {
   if (!isUuid(rowNumber)) return { event: null, entry: null };
   const entryResult = await client.query(
-    `select we.*, e.id as event_id
+    `select we.*, e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name
      from worldbuff_entries we
      join worldbuff_events e on e.id = we.event_id
      where we.id = $1 and e.guild_id = $2`,
     [rowNumber, guildId]
   );
-  if (entryResult.rows[0]) return { event: { id: entryResult.rows[0].event_id }, entry: entryResult.rows[0] };
+  if (entryResult.rows[0]) {
+    const row = entryResult.rows[0];
+    return {
+      event: {
+        id: row.event_id,
+        buff: row.buff,
+        event_date: row.event_date,
+        event_time: row.event_time,
+        guild_name: row.guild_name
+      },
+      entry: row
+    };
+  }
 
   const eventResult = await client.query(
     `select *
@@ -1495,6 +1507,21 @@ async function setWorldbuffCaster({ guildId, query: params }) {
       event = nextOpen.rows[0] || null;
     }
     event = event || await upsertWorldbuffEvent(client, guildId, params);
+    const requestedBuff = normalizeWorldbuffName(params.buff);
+    const requestedGuild = clean(params.gilde || params.guild || params.fraktion || params.faction);
+    if (event && (requestedBuff || requestedGuild || note)) {
+      const updatedEvent = await client.query(
+        `update worldbuff_events
+         set buff = coalesce(nullif($2, ''), buff),
+             guild_name = coalesce(nullif($3, ''), guild_name),
+             note = coalesce(nullif($4, ''), note),
+             updated_at = now()
+         where id = $1 and guild_id = $5
+         returning *`,
+        [event.id, requestedBuff, requestedGuild, note, guildId]
+      );
+      event = updatedEvent.rows[0] || event;
+    }
     let savedId = found.entry?.id || "";
 
     if (found.entry) {
