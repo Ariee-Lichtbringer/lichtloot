@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LichtLoot Raid-Auswertung</title>
+  <style>
+    :root{
+      --bg:#101418;
+      --panel:#171d23;
+      --panel-2:#202832;
+      --line:#33404d;
+      --text:#f3f6f8;
+      --muted:#9aa8b5;
+      --accent:#d7b46a;
+      --good:#67d391;
+      --bad:#f07474;
+      --cell:#12171c;
+      --druid:#f6b26b;
+      --hunter:#b6d7a8;
+      --mage:#a4c2f4;
+      --paladin:#d5a6bd;
+      --priest:#efefef;
+      --rogue:#fff2cc;
+      --shaman:#6d9eeb;
+      --warlock:#b4a7d6;
+      --warrior:#e2d3c9;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    a{color:inherit}
+    .shell{min-height:100vh;padding:24px}
+    .top{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:18px;
+      align-items:end;
+      border-bottom:1px solid var(--line);
+      padding-bottom:18px;
+    }
+    .eyebrow{color:var(--accent);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+    h1{margin:6px 0 8px;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:0}
+    .meta{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:14px}
+    .meta span{padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+    .header-classes{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:12px;
+      max-width:1100px;
+    }
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:38px;
+      padding:0 13px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:var(--panel);
+      color:var(--text);
+      text-decoration:none;
+      font-weight:800;
+      font-size:14px;
+      cursor:pointer;
+    }
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#15100a}
+    .layout{
+      display:block;
+      align-items:start;
+      margin-top:18px;
+    }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:12px;
+      margin-bottom:12px;
+    }
+    input,select{
+      min-height:38px;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:#0f1419;
+      color:var(--text);
+      padding:0 12px;
+      font:inherit;
+    }
+    input{min-width:280px;flex:1}
+    .tabs{
+      display:flex;
+      gap:8px;
+      overflow:auto;
+      padding-bottom:8px;
+      margin-bottom:4px;
+    }
+    .tab{
+      border:1px solid var(--line);
+      background:var(--panel);
+      color:var(--muted);
+      border-radius:8px;
+      min-height:38px;
+      padding:0 13px;
+      font-weight:800;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .tab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
+    .tab.class-tab{color:#111;border-color:rgba(0,0,0,.25)}
+    .tab.class-tab.active{box-shadow:0 0 0 2px var(--accent) inset}
+    .class-overview{
+      display:none;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:14px;
+      margin:10px 0 12px;
+    }
+    .class-overview.show{display:block}
+    .role-editor{
+      display:none;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:12px;
+      margin:0 0 12px;
+    }
+    .role-editor.show{display:block}
+    .role-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+    .role-item{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 120px;
+      align-items:center;
+      gap:8px;
+      background:#0f1419;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:8px;
+    }
+    .role-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .role-item select{min-height:32px;padding:0 8px;font-size:12px}
+    .role-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .class-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .class-title h2{margin:0;font-size:20px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .stat{background:#0f1419;border:1px solid var(--line);border-radius:8px;padding:10px}
+    .stat strong{display:block;font-size:22px}
+    .stat span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .matrix-wrap{
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:8px;
+      background:var(--panel);
+    }
+    table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+    th,td{
+      border-right:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      padding:5px 7px;
+      font-size:12px;
+      text-align:center;
+      min-width:68px;
+      max-width:180px;
+      white-space:nowrap;
+    }
+    th:first-child,td:first-child{
+      position:sticky;
+      left:0;
+      z-index:2;
+      text-align:left;
+      min-width:210px;
+      max-width:240px;
+      background:#151c23;
+      color:var(--text);
+      white-space:normal;
+      font-weight:800;
+      box-shadow:3px 0 0 rgba(0,0,0,.12);
+      overflow-wrap:anywhere;
+    }
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:3;
+      background:#252f39;
+      color:#111;
+      font-weight:900;
+    }
+    thead th:first-child{z-index:4;color:var(--text)}
+    tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
+    tbody tr.tone-healing td{background:rgba(255,242,204,.12)}
+    tbody tr.tone-consumable td,
+    tbody tr.tone-consumableBlue td{background:#cfe2f3;color:#111}
+    tbody tr.tone-consumableGreen td{background:#93c47d;color:#111}
+    tbody tr.tone-muted td{background:#c9c9c9;color:#111}
+    tbody tr.tone-absorb td{background:#d9d2e9;color:#111}
+    tbody tr.tone-absorbNature td{background:#b6d7a8;color:#111}
+    tbody tr.tone-absorbArcane td{background:#fff2cc;color:#111}
+    tbody tr.tone-absorbFire td{background:#ea9999;color:#111}
+    tbody tr.tone-absorbFrost td{background:#9fc5e8;color:#111}
+    tbody tr.tone-absorbShadow td{background:#b4a7d6;color:#111}
+    tbody tr.tone-engineering td{background:#ead1dc;color:#111}
+    tbody tr.tone-engineeringTotal td{background:#f06d6d;color:#111;font-weight:900}
+    tbody tr.tone-interrupt td{background:#e6b8b7;color:#111}
+    tbody tr.tone-activity td{background:rgba(182,215,168,.13)}
+    tbody tr.tone-activityStrong td{background:#b7b7b7;color:#111;font-weight:900}
+    tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
+    tbody tr.tone-consumable td:first-child,
+    tbody tr.tone-consumableBlue td:first-child,
+    tbody tr.tone-consumableGreen td:first-child,
+    tbody tr.tone-muted td:first-child,
+    tbody tr.tone-absorb td:first-child,
+    tbody tr.tone-absorbNature td:first-child,
+    tbody tr.tone-absorbArcane td:first-child,
+    tbody tr.tone-absorbFire td:first-child,
+    tbody tr.tone-absorbFrost td:first-child,
+    tbody tr.tone-absorbShadow td:first-child,
+    tbody tr.tone-engineering td:first-child,
+    tbody tr.tone-engineeringTotal td:first-child,
+    tbody tr.tone-interrupt td:first-child,
+    tbody tr.tone-activityStrong td:first-child{
+      color:#111827;
+    }
+    tbody tr.tone-sectionHeader td{
+      background:#e5e7eb;
+      color:#111827;
+      font-weight:900;
+      border-top:3px solid #111827;
+      text-align:left;
+    }
+    tbody tr.tone-sectionHeader td.class-band{
+      text-align:center;
+      color:#111827;
+      border-top:3px solid #111827;
+    }
+    tbody tr.tone-sectionHeader td.class-gap{
+      background:#111820;
+      color:transparent;
+    }
+    tbody tr:hover td{background:rgba(215,180,106,.18)}
+    table.compact th,table.compact td{padding:5px 7px;font-size:12px;min-width:70px}
+    table.compact th:first-child,table.compact td:first-child{min-width:210px;max-width:240px}
+    td.empty{color:#4f5b66}
+    td.class-gap{
+      background:#0d1217!important;
+      color:transparent!important;
+    }
+    td.class-gap::selection{color:transparent}
+    td.hot{color:var(--good);font-weight:900}
+    td.text{white-space:normal;text-align:left;min-width:180px}
+    tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
+    .side{display:none}
+    .panel{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:14px;
+    }
+    .panel h3{margin:0 0 10px;font-size:15px}
+    .class-list{display:grid;gap:8px}
+    .top-class-list{
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+    }
+    .class-btn{
+      border:1px solid var(--line);
+      background:#10161b;
+      color:var(--text);
+      border-radius:8px;
+      min-height:32px;
+      padding:0 9px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+    }
+    .class-btn.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+    .class-name{display:flex;align-items:center;gap:8px}
+    .swatch{width:12px;height:12px;border-radius:3px;background:currentColor}
+    .hint,.error,.loading{color:var(--muted);padding:22px;text-align:center}
+    .error{color:var(--bad)}
+    @media (max-width:900px){
+      .shell{padding:14px}
+      .top,.layout{grid-template-columns:1fr}
+      .actions{justify-content:flex-start}
+      .side{position:static;max-height:none}
+      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+      input{min-width:100%}
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <div class="eyebrow">LichtLoot Web-Auswertung</div>
+        <h1 id="pageTitle">Raid-Auswertung</h1>
+        <div class="meta">
+          <span id="raidName">Raid wird geladen</span>
+          <span id="raidDate">-</span>
+          <span id="playerCount">0 Spieler</span>
+        </div>
+        <div id="classList" class="header-classes top-class-list"></div>
+      </div>
+      <div class="actions">
+        <a id="wclLink" class="btn" href="#" target="_blank" rel="noopener">WCL öffnen</a>
+        <a class="btn primary" href="gildenleitung.html">Zur Gildenleitung</a>
+      </div>
+    </header>
+
+    <section class="layout">
+      <div>
+        <div class="toolbar">
+          <input id="searchInput" type="search" placeholder="Spieler, Klasse oder Zeile suchen..." oninput="render()">
+          <select id="classSelect" onchange="selectClass(this.value)">
+            <option value="">Alle Klassen</option>
+          </select>
+          <button class="btn" type="button" onclick="toggleRoleEditor()">Rollen zuordnen</button>
+          <button class="btn" type="button" onclick="selectClass('')">Filter zurücksetzen</button>
+        </div>
+        <div id="tabs" class="tabs"></div>
+        <section id="roleEditor" class="role-editor"></section>
+        <section id="classOverview" class="class-overview"></section>
+        <div class="matrix-wrap">
+          <table id="analysisTable">
+            <tbody><tr><td class="loading">Auswertung wird geladen...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel">
+          <h3>Stand</h3>
+          <div id="statusText" class="hint">Direkt aus Warcraft Logs berechnet.</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+    const params = new URLSearchParams(location.search);
+    const state = {
+      data:null,
+      activeSection:"",
+      activeClass:"",
+      search:"",
+      rolesOpen:false,
+      savingRoles:false
+    };
+    const CLASS_COLORS = {
+      Druid:"var(--druid)",
+      Hunter:"var(--hunter)",
+      Mage:"var(--mage)",
+      Paladin:"var(--paladin)",
+      Priest:"var(--priest)",
+      Rogue:"var(--rogue)",
+      Shaman:"var(--shaman)",
+      Warlock:"var(--warlock)",
+      Warrior:"var(--warrior)",
+      Unknown:"#d1d5db"
+    };
+    const CLASS_LABELS = {
+      Druid:"Druiden",
+      Hunter:"Jäger",
+      Mage:"Magier",
+      Paladin:"Paladine",
+      Priest:"Priester",
+      Rogue:"Schurken",
+      Shaman:"Schamanen",
+      Warlock:"Hexenmeister",
+      Warrior:"Krieger",
+      Unknown:"Unbekannt"
+    };
+    const CLASS_ORDER = ["Druid","Hunter","Mage","Paladin","Priest","Rogue","Shaman","Warlock","Warrior"];
+
+    function escapeHtml(value){
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[char]));
+    }
+
+    function classColor(className){
+      return CLASS_COLORS[className] || "#d1d5db";
+    }
+
+    function playerMatchesSearch(player, rowLabel){
+      const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      state.search = q;
+      if(!q) return true;
+      return [player.name, player.className, rowLabel].some(value => String(value || "").toLowerCase().includes(q));
+    }
+
+    function visiblePlayers(section){
+      const players = state.data.players || [];
+      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
+      return players.filter(player => {
+        if(allowed && !allowed.has(player.name)) return false;
+        if(state.activeClass && !section.ignoreClassFilter && player.className !== state.activeClass) return false;
+        if(!state.search) return true;
+        return section.rows.some(row => playerMatchesSearch(player, row.label));
+      });
+    }
+
+    function visibleRows(section, players){
+      const q = state.search;
+      const baseRows = section.rows.filter(row => {
+        if(!q) return true;
+        if(String(row.label || "").toLowerCase().includes(q)) return true;
+        return players.some(player => String(row.values?.[player.name] || "").toLowerCase().includes(q));
+      });
+      const nonEmpty = row => {
+        if(row.type === "header") return true;
+        return players.some(player => {
+          const value = String(row.values?.[player.name] ?? "").trim();
+          return value && value !== "0" && value !== "0%" && value !== "0 (0%)";
+        });
+      };
+      const rows = section.hideEmptyRows ? baseRows.filter(nonEmpty) : baseRows;
+      if(!section.hideEmptyRows) return rows;
+      return rows.filter((row, index) => {
+        if(row.type !== "header") return true;
+        for(let i=index+1;i<rows.length;i++){
+          if(rows[i].type === "header") return false;
+          if(nonEmpty(rows[i])) return true;
+        }
+        return false;
+      });
+    }
+
+    function selectSection(id){
+      state.activeSection = id;
+      render();
+    }
+
+    function selectClass(className){
+      state.activeClass = className || "";
+      const select = document.getElementById("classSelect");
+      if(select) select.value = state.activeClass;
+      render();
+    }
+
+    function roleLabel(value){
+      const found = (state.data?.roleOptions || []).find(option => option.value === value);
+      return found ? found.label : "";
+    }
+
+    function toggleRoleEditor(){
+      state.rolesOpen = !state.rolesOpen;
+      renderRoleEditor();
+    }
+
+    function updateLocalRole(playerName, value){
+      const player = (state.data.players || []).find(item => item.name === playerName);
+      if(player) player.raidRole = value || "";
+    }
+
+    async function saveRaidRoles(){
+      if(!state.data || state.savingRoles) return;
+      state.savingRoles = true;
+      renderRoleEditor();
+      const roles = {};
+      (state.data.players || []).forEach(player => {
+        if(player.raidRole) roles[player.name] = player.raidRole;
+      });
+      const body = new URLSearchParams({
+        action:"setPublicLogAnalysisRaidRoles",
+        guild:params.get("guild") || "lichtloot",
+        id:params.get("id") || params.get("analysisId") || "",
+        roles:JSON.stringify(roles)
+      });
+      const response = await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+        body:body.toString()
+      });
+      const data = await response.json();
+      state.savingRoles = false;
+      if(!response.ok || data.success === false){
+        document.getElementById("statusText").textContent = data.error || "Rollen konnten nicht gespeichert werden.";
+        renderRoleEditor();
+        return;
+      }
+      await loadAnalysis();
+      state.rolesOpen = true;
+      renderRoleEditor();
+    }
+
+    function renderRoleEditor(){
+      const box = document.getElementById("roleEditor");
+      if(!box) return;
+      if(!state.rolesOpen || !state.data){
+        box.className = "role-editor";
+        box.innerHTML = "";
+        return;
+      }
+      const options = state.data.roleOptions || [{value:"",label:"Automatisch"}];
+      box.className = "role-editor show";
+      box.innerHTML = `
+        <div class="role-actions">
+          <strong>Raid-Rollen</strong>
+          <button class="btn primary" type="button" onclick="saveRaidRoles()">${state.savingRoles ? "Speichert..." : "Rollen speichern"}</button>
+          <button class="btn" type="button" onclick="toggleRoleEditor()">Schließen</button>
+        </div>
+        <div class="role-grid">
+          ${(state.data.players || []).map(player => `
+            <label class="role-item" style="color:${classColor(player.className)}">
+              <span class="role-name">${escapeHtml(player.name)}</span>
+              <select onchange="updateLocalRole('${escapeHtml(player.name)}', this.value)">
+                ${options.map(option => `<option value="${escapeHtml(option.value)}" ${player.raidRole === option.value ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
+              </select>
+            </label>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function classGroups(){
+      const groups = new Map();
+      (state.data?.players || []).forEach(player => {
+        const cls = player.className || "Unbekannt";
+        if(!groups.has(cls)) groups.set(cls, []);
+        groups.get(cls).push(player);
+      });
+      return Array.from(groups.entries()).sort((a,b) => {
+        const ai = CLASS_ORDER.includes(a[0]) ? CLASS_ORDER.indexOf(a[0]) : 999;
+        const bi = CLASS_ORDER.includes(b[0]) ? CLASS_ORDER.indexOf(b[0]) : 999;
+        return ai - bi || a[0].localeCompare(b[0],"de");
+      });
+    }
+
+    function renderClassControls(){
+      const groups = classGroups();
+      const list = document.getElementById("classList");
+      const select = document.getElementById("classSelect");
+      select.innerHTML = '<option value="">Alle Klassen</option>' + groups.map(([cls, players]) =>
+        `<option value="${escapeHtml(cls)}">${escapeHtml(CLASS_LABELS[cls] || cls)} (${players.length})</option>`
+      ).join("");
+      select.value = state.activeClass;
+      list.innerHTML = groups.map(([cls, players]) => `
+        <button class="class-btn ${state.activeClass === cls ? "active" : ""}" type="button" onclick="selectClass('${escapeHtml(cls)}')" style="color:${classColor(cls)}">
+          <span class="class-name"><span class="swatch"></span>${escapeHtml(CLASS_LABELS[cls] || cls)}</span>
+          <span>${players.length}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderTabs(){
+      const tabs = document.getElementById("tabs");
+      tabs.innerHTML = (state.data.sections || []).map(section => `
+        <button class="tab ${section.className ? "class-tab" : ""} ${state.activeSection === section.id ? "active" : ""}" type="button" onclick="selectSection('${escapeHtml(section.id)}')" style="${section.className ? `background:${classColor(section.className)}` : ""}">
+          ${escapeHtml(section.label)}
+        </button>
+      `).join("");
+    }
+
+    function renderClassOverview(section){
+      const box = document.getElementById("classOverview");
+      if(!state.activeClass){
+        box.className = "class-overview";
+        box.innerHTML = "";
+        return;
+      }
+      const players = (state.data.players || []).filter(player => player.className === state.activeClass);
+      const rows = section.rows || [];
+      let filled = 0;
+      let total = 0;
+      players.forEach(player => rows.forEach(row => {
+        const value = row.values?.[player.name];
+        const number = Number(String(value || "").replace(/\D/g,""));
+        if(value) filled++;
+        if(Number.isFinite(number)) total += number;
+      }));
+      box.className = "class-overview show";
+      box.innerHTML = `
+        <div class="class-title">
+          <h2 style="color:${classColor(state.activeClass)}">${escapeHtml(CLASS_LABELS[state.activeClass] || state.activeClass)}</h2>
+          <button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>${players.length}</strong><span>Spieler</span></div>
+          <div class="stat"><strong>${rows.length}</strong><span>Zeilen in diesem Reiter</span></div>
+          <div class="stat"><strong>${filled}</strong><span>gefüllte Felder</span></div>
+          <div class="stat"><strong>${Math.round(total).toLocaleString("de-DE")}</strong><span>Summe Werte</span></div>
+        </div>
+      `;
+    }
+
+    function renderTable(){
+      const section = (state.data.sections || []).find(item => item.id === state.activeSection) || state.data.sections[0];
+      const table = document.getElementById("analysisTable");
+      if(!section){
+        table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
+        return;
+      }
+      const players = visiblePlayers(section);
+      const rows = visibleRows(section, players);
+      renderClassOverview(section);
+      table.className = section.compact ? "compact" : "";
+      const head = `
+        <thead>
+          <tr>
+            <th>${escapeHtml(section.label)}</th>
+            ${players.map(player => `<th style="background:${classColor(player.className)}">${escapeHtml(player.name)}</th>`).join("")}
+          </tr>
+        </thead>
+      `;
+      let currentClass = "";
+      const body = rows.map(row => {
+        if(row.type === "header"){
+          currentClass = row.className || "";
+          if(row.className){
+            return `
+              <tr class="tone-sectionHeader">
+                <td style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>
+                ${players.map(player => player.className === row.className
+                  ? `<td class="class-band" style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>`
+                  : `<td class="class-gap"></td>`
+                ).join("")}
+              </tr>
+            `;
+          }
+          return `
+            <tr class="tone-sectionHeader">
+              <td colspan="${players.length + 1}">
+                ${escapeHtml(row.label)}
+              </td>
+            </tr>
+          `;
+        }
+        if(row.tone === "activity" || row.tone === "activityStrong"){
+          currentClass = "";
+        }
+        return `
+          <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""}">
+            <td>${escapeHtml(row.label)}</td>
+            ${players.map(player => {
+              const value = row.values?.[player.name] || "";
+              if(currentClass && player.className !== currentClass){
+                return `<td class="class-gap"></td>`;
+              }
+              const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
+              return `<td class="${cls}">${escapeHtml(value || "")}</td>`;
+            }).join("")}
+          </tr>
+        `;
+      }).join("");
+      table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${players.length + 1}" class="hint">Keine Treffer.</td></tr>`}</tbody>`;
+      document.getElementById("statusText").textContent = section.description || "Direkt aus Warcraft Logs berechnet.";
+    }
+
+    function render(){
+      if(!state.data) return;
+      state.search = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      renderTabs();
+      renderClassControls();
+      renderRoleEditor();
+      renderTable();
+    }
+
+    async function loadAnalysis(){
+      const id = params.get("id") || params.get("analysisId") || "";
+      const guild = params.get("guild") || "lichtloot";
+      if(!id){
+        document.getElementById("analysisTable").innerHTML = '<tbody><tr><td class="error">Keine Raid-ID übergeben.</td></tr></tbody>';
+        return;
+      }
+      const query = new URLSearchParams({
+        action:"getPublicLogAnalysisWeb",
+        guild,
+        id,
+        type:params.get("type") || "rpb",
+        t:Date.now()
+      });
+      const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
+      const data = await response.json();
+      if(!response.ok || data.success === false){
+        const message = String(data.error || "");
+        if(message.toLowerCase().includes("unsupported action")){
+          throw new Error("Die Webseite ist schon aktualisiert, aber die LichtLoot-API auf Railway noch nicht. Bitte die API ebenfalls deployen.");
+        }
+        throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
+      }
+      state.data = data.webAnalysis;
+      state.activeSection = state.data.sections?.[0]?.id || "";
+      document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
+      document.getElementById("raidName").textContent = state.data.report.raid || state.data.analysis.raid || "Raid";
+      document.getElementById("raidDate").textContent = state.data.report.raidDate || state.data.analysis.raidDate || "-";
+      document.getElementById("playerCount").textContent = `${state.data.players.length} Spieler`;
+      document.getElementById("wclLink").href = state.data.report.reportUrl || state.data.analysis.reportUrl || "#";
+      if((state.data.warnings || []).length){
+        document.getElementById("statusText").textContent = state.data.warnings.join(" ");
+      }
+      render();
+    }
+
+    loadAnalysis().catch(error => {
+      document.getElementById("analysisTable").innerHTML = `<tbody><tr><td class="error">${escapeHtml(error.message || "Auswertung konnte nicht geladen werden.")}</td></tr></tbody>`;
+      document.getElementById("statusText").textContent = "Bitte Warcraft-Logs-Zugang und Analyse-ID prüfen.";
+    });
+  </script>
+</body>
+</html>
