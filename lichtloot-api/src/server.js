@@ -24,8 +24,8 @@ const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 let rpbConfigAllCache = null;
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use("/downloads", express.static("public/downloads"));
 app.use(express.static("public"));
 
@@ -4718,7 +4718,7 @@ async function buildLogAnalysisCsv(analysis, type) {
 }
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
-  await ensureLogAnalysesTable();
+  await ensureLogAnalysisSheetExportsTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "rpb").toLowerCase();
   if (!isUuid(id)) {
@@ -4726,8 +4726,8 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
-  if (type !== "rpb") {
-    const error = new Error("Web-Auswertung ist aktuell zuerst für RPB verfügbar.");
+  if (!["rpb", "cla"].includes(type)) {
+    const error = new Error("Unbekannter Analyse-Typ.");
     error.statusCode = 400;
     throw error;
   }
@@ -4743,6 +4743,18 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const stored = await buildStoredSheetWebAnalysis(result.rows[0], type);
+  if (stored) {
+    return {
+      success: true,
+      webAnalysis: stored
+    };
+  }
+  if (type !== "rpb") {
+    const error = new Error("Für diese CLA-Auswertung wurden noch keine Sheet-Daten nach Railway exportiert.");
+    error.statusCode = 404;
+    throw error;
+  }
   const classByName = await getGuildClassMap(guildId);
   const roleByName = new Map(Object.entries(result.rows[0].summary?.raidRoles || {}).map(([name, role]) => [
     clean(name).toLowerCase(),
@@ -4752,6 +4764,340 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     success: true,
     webAnalysis: await buildRpbWebAnalysis(result.rows[0], { classByName, roleByName })
   };
+}
+
+async function ensureLogAnalysisSheetExportsTable() {
+  await ensureLogAnalysesTable();
+  await query(
+    `create table if not exists log_analysis_sheet_exports (
+       id uuid primary key default gen_random_uuid(),
+       analysis_id uuid not null references log_analyses(id) on delete cascade,
+       analysis_type text not null check (analysis_type in ('rpb', 'cla')),
+       sheet_name text not null,
+       sheet_order integer not null default 0,
+       payload jsonb not null default '{}'::jsonb,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (analysis_id, analysis_type, sheet_name)
+     )`
+  );
+  await query(
+    `create index if not exists log_analysis_sheet_exports_analysis_idx
+     on log_analysis_sheet_exports (analysis_id, analysis_type, sheet_order)`
+  );
+  await query(
+    `create table if not exists log_analysis_player_metrics (
+       id uuid primary key default gen_random_uuid(),
+       analysis_id uuid not null references log_analyses(id) on delete cascade,
+       analysis_type text not null check (analysis_type in ('rpb', 'cla')),
+       player_name text not null,
+       class_name text,
+       raid_role text,
+       sheet_name text not null,
+       category text,
+       metric_key text not null,
+       metric_label text not null,
+       value_text text,
+       value_number numeric,
+       row_index integer,
+       column_index integer,
+       item_id text,
+       item_name text,
+       style jsonb not null default '{}'::jsonb,
+       extra jsonb not null default '{}'::jsonb,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (analysis_id, analysis_type, player_name, sheet_name, metric_key, row_index, column_index)
+     )`
+  );
+  await query(
+    `create index if not exists log_analysis_player_metrics_lookup_idx
+     on log_analysis_player_metrics (analysis_id, analysis_type, player_name, sheet_name)`
+  );
+  await query(
+    `create index if not exists log_analysis_player_metrics_metric_idx
+     on log_analysis_player_metrics (analysis_id, analysis_type, metric_key)`
+  );
+}
+
+function normalizeSheetExportPayload(rawSheet, index = 0) {
+  const sheet = rawSheet && typeof rawSheet === "object" ? rawSheet : {};
+  const values = Array.isArray(sheet.values) ? sheet.values : (Array.isArray(sheet.data) ? sheet.data : []);
+  const backgrounds = Array.isArray(sheet.backgrounds) ? sheet.backgrounds : [];
+  const fontColors = Array.isArray(sheet.fontColors) ? sheet.fontColors : [];
+  const notes = Array.isArray(sheet.notes) ? sheet.notes : [];
+  return {
+    name: clean(sheet.name || sheet.sheetName || `Sheet ${index + 1}`),
+    order: Number.isFinite(Number(sheet.order)) ? Number(sheet.order) : index,
+    payload: {
+      values,
+      backgrounds,
+      fontColors,
+      notes,
+      mergedRanges: Array.isArray(sheet.mergedRanges) ? sheet.mergedRanges : [],
+      frozenRows: Number(sheet.frozenRows || 0),
+      frozenColumns: Number(sheet.frozenColumns || 0),
+      source: clean(sheet.source || "google-sheet")
+    }
+  };
+}
+
+function normalizeMetricKey(value) {
+  return slugPart(value || "wert") || "wert";
+}
+
+function numberFromMetricValue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  const text = clean(value);
+  if (!text) return null;
+  const match = text.replace(/\./g, "").replace(",", ".").match(/-?\d+(\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}
+
+function normalizePlayerMetricExport(rawEntry, index = 0) {
+  const entry = rawEntry && typeof rawEntry === "object" ? rawEntry : {};
+  const playerName = clean(entry.playerName || entry.player || entry.name || entry.charakter || entry.character);
+  const sheetName = clean(entry.sheetName || entry.sheet || entry.tab || "All");
+  const label = clean(entry.metricLabel || entry.label || entry.metric || entry.rowLabel || entry.nameOfMetric || entry.key);
+  const value = entry.valueText ?? entry.displayValue ?? entry.value ?? "";
+  const style = entry.style && typeof entry.style === "object" ? entry.style : {};
+  const extra = entry.extra && typeof entry.extra === "object" ? entry.extra : {};
+  return {
+    playerName,
+    className: normalizeRpbClassName(entry.className || entry.class || entry.klasse) || clean(entry.className || entry.class || entry.klasse),
+    raidRole: normalizeLogAnalysisRaidRole(entry.raidRole || entry.role || ""),
+    sheetName,
+    category: clean(entry.category || entry.section || entry.group || ""),
+    metricKey: normalizeMetricKey(entry.metricKey || entry.key || label || `metric-${index}`),
+    metricLabel: label || normalizeMetricKey(entry.metricKey || `metric-${index}`),
+    valueText: clean(value),
+    valueNumber: entry.valueNumber != null ? Number(entry.valueNumber) : numberFromMetricValue(value),
+    rowIndex: Number.isFinite(Number(entry.rowIndex ?? entry.row)) ? Number(entry.rowIndex ?? entry.row) : index,
+    columnIndex: Number.isFinite(Number(entry.columnIndex ?? entry.column)) ? Number(entry.columnIndex ?? entry.column) : 0,
+    itemId: clean(entry.itemId || entry.item_id),
+    itemName: clean(entry.itemName || entry.item || ""),
+    style,
+    extra
+  };
+}
+
+async function findLogAnalysisForSheetExport(guildId, params) {
+  const id = clean(params.id || params.analysisId);
+  if (isUuid(id)) {
+    const result = await query(
+      `select * from log_analyses where guild_id = $1 and id = $2 limit 1`,
+      [guildId, id]
+    );
+    if (result.rows.length) return result.rows[0];
+  }
+  const reportUrl = clean(params.reportUrl || params.url || params.logUrl);
+  const reportCode = clean(params.reportCode || extractWarcraftLogsReportCode(reportUrl));
+  if (!reportCode) return null;
+  const saved = await saveLogAnalysis({
+    guildId,
+    query: {
+      ...params,
+      reportCode,
+      reportUrl,
+      status: clean(params.status || "sheet_exported")
+    }
+  });
+  const result = await query(
+    `select * from log_analyses where guild_id = $1 and id = $2 limit 1`,
+    [guildId, saved.analysis.id]
+  );
+  return result.rows[0] || null;
+}
+
+async function saveLogAnalysisSheetExport({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureLogAnalysisSheetExportsTable();
+  const type = clean(params.type || params.analysisType || "rpb").toLowerCase();
+  if (!["rpb", "cla"].includes(type)) {
+    const error = new Error("Unbekannter Analyse-Typ.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const analysis = await findLogAnalysisForSheetExport(guildId, params);
+  if (!analysis) {
+    const error = new Error("Loganalyse wurde nicht gefunden oder Report-Code fehlt.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const rawSheets = typeof params.sheets === "string"
+    ? JSON.parse(params.sheets || "[]")
+    : (params.sheets || []);
+  const sheets = (Array.isArray(rawSheets) ? rawSheets : [rawSheets])
+    .map(normalizeSheetExportPayload)
+    .filter(sheet => sheet.name && Array.isArray(sheet.payload.values));
+  const rawPlayerMetrics = typeof params.playerMetrics === "string"
+    ? JSON.parse(params.playerMetrics || "[]")
+    : (params.playerMetrics || params.entries || []);
+  const playerMetrics = (Array.isArray(rawPlayerMetrics) ? rawPlayerMetrics : [rawPlayerMetrics])
+    .map(normalizePlayerMetricExport)
+    .filter(entry => entry.playerName && entry.sheetName && entry.metricKey);
+  if (!sheets.length) {
+    const error = new Error("Keine Sheet-Daten im Export gefunden.");
+    error.statusCode = 400;
+    throw error;
+  }
+  await query("delete from log_analysis_sheet_exports where analysis_id = $1 and analysis_type = $2", [analysis.id, type]);
+  await query("delete from log_analysis_player_metrics where analysis_id = $1 and analysis_type = $2", [analysis.id, type]);
+  for (const sheet of sheets) {
+    await query(
+      `insert into log_analysis_sheet_exports (analysis_id, analysis_type, sheet_name, sheet_order, payload)
+       values ($1,$2,$3,$4,$5::jsonb)
+       on conflict (analysis_id, analysis_type, sheet_name) do update
+         set sheet_order = excluded.sheet_order,
+             payload = excluded.payload,
+             updated_at = now()`,
+      [analysis.id, type, sheet.name, sheet.order, JSON.stringify(sheet.payload)]
+    );
+  }
+  for (const entry of playerMetrics) {
+    await query(
+      `insert into log_analysis_player_metrics (
+         analysis_id, analysis_type, player_name, class_name, raid_role,
+         sheet_name, category, metric_key, metric_label, value_text, value_number,
+         row_index, column_index, item_id, item_name, style, extra
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16::jsonb,$17::jsonb)
+       on conflict (analysis_id, analysis_type, player_name, sheet_name, metric_key, row_index, column_index)
+       do update set
+         class_name = excluded.class_name,
+         raid_role = excluded.raid_role,
+         category = excluded.category,
+         metric_label = excluded.metric_label,
+         value_text = excluded.value_text,
+         value_number = excluded.value_number,
+         item_id = excluded.item_id,
+         item_name = excluded.item_name,
+         style = excluded.style,
+         extra = excluded.extra,
+         updated_at = now()`,
+      [
+        analysis.id,
+        type,
+        entry.playerName,
+        entry.className,
+        entry.raidRole,
+        entry.sheetName,
+        entry.category,
+        entry.metricKey,
+        entry.metricLabel,
+        entry.valueText,
+        entry.valueNumber,
+        entry.rowIndex,
+        entry.columnIndex,
+        entry.itemId,
+        entry.itemName,
+        JSON.stringify(entry.style || {}),
+        JSON.stringify(entry.extra || {})
+      ]
+    );
+  }
+  const summaryPatch = {
+    [`${type}SheetExportedAt`]: new Date().toISOString(),
+    [`${type}SheetCount`]: sheets.length,
+    [`${type}SheetNames`]: sheets.map(sheet => sheet.name),
+    [`${type}PlayerMetricCount`]: playerMetrics.length
+  };
+  const result = await query(
+    `update log_analyses
+     set status = $3,
+         summary = coalesce(summary, '{}'::jsonb) || $4::jsonb,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [guildId, analysis.id, `${type}_sheet_exported`, JSON.stringify(summaryPatch)]
+  );
+  return {
+    success: true,
+    analysis: normalizeLogAnalysis(result.rows[0] || analysis),
+    type,
+    sheets: sheets.map(sheet => sheet.name),
+    sheetCount: sheets.length,
+    playerMetricCount: playerMetrics.length
+  };
+}
+
+function buildStoredSheetWebAnalysisFromRows(analysis, type, rows, metricRows = []) {
+  if (!rows.length) return null;
+  const playerMap = new Map();
+  metricRows.forEach(row => {
+    const name = clean(row.player_name);
+    if (!name || playerMap.has(name)) return;
+    playerMap.set(name, {
+      name,
+      className: normalizeRpbClassName(row.class_name) || row.class_name || "",
+      raidRole: normalizeLogAnalysisRaidRole(row.raid_role || "")
+    });
+  });
+  const sections = rows.map((row, index) => ({
+    id: `sheet-${slugPart(row.sheet_name || `tab-${index + 1}`) || index}`,
+    label: row.sheet_name || `Tab ${index + 1}`,
+    description: "Aus dem Google Sheet nach Railway exportiert.",
+    source: "sheet-export",
+    matrix: row.payload || { values: [] },
+    compact: true,
+    ignoreClassFilter: true
+  }));
+  const summary = analysis.summary || {};
+  return {
+    type,
+    source: "sheet-export",
+    generatedAt: summary[`${type}SheetExportedAt`] || analysis.updated_at || new Date().toISOString(),
+    analysis: normalizeLogAnalysis(analysis),
+    report: {
+      title: analysis.title || summary.title || `${type.toUpperCase()} Auswertung`,
+      raid: analysis.raid || summary.raid || "",
+      raidDate: analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : (summary.raidDate || ""),
+      reportCode: analysis.report_code || "",
+      reportUrl: analysis.report_url || ""
+    },
+    players: Array.from(playerMap.values()),
+    playerMetrics: metricRows.map(row => ({
+      playerName: row.player_name || "",
+      className: row.class_name || "",
+      raidRole: row.raid_role || "",
+      sheetName: row.sheet_name || "",
+      category: row.category || "",
+      metricKey: row.metric_key || "",
+      metricLabel: row.metric_label || "",
+      valueText: row.value_text || "",
+      valueNumber: row.value_number == null ? null : Number(row.value_number),
+      rowIndex: row.row_index,
+      columnIndex: row.column_index,
+      itemId: row.item_id || "",
+      itemName: row.item_name || "",
+      style: row.style || {},
+      extra: row.extra || {}
+    })),
+    roleOptions: logAnalysisRaidRoleOptions,
+    sections,
+    warnings: []
+  };
+}
+
+async function buildStoredSheetWebAnalysis(analysis, type) {
+  await ensureLogAnalysisSheetExportsTable();
+  const result = await query(
+    `select sheet_name, sheet_order, payload
+     from log_analysis_sheet_exports
+     where analysis_id = $1 and analysis_type = $2
+     order by sheet_order asc, sheet_name asc`,
+    [analysis.id, type]
+  );
+  const metrics = await query(
+    `select player_name, class_name, raid_role, sheet_name, category,
+            metric_key, metric_label, value_text, value_number,
+            row_index, column_index, item_id, item_name, style, extra
+     from log_analysis_player_metrics
+     where analysis_id = $1 and analysis_type = $2
+     order by player_name asc, sheet_name asc, row_index asc, column_index asc`,
+    [analysis.id, type]
+  );
+  return buildStoredSheetWebAnalysisFromRows(analysis, type, result.rows, metrics.rows);
 }
 
 async function setPublicLogAnalysisRaidRoles({ guildId, query: params }) {
@@ -8331,6 +8677,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
+      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildDownloadLogAnalysis") {
       return await downloadLogAnalysis({ guildId: guild.id, query: req.query, res });
     }
@@ -8770,6 +9121,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetLogAnalysisSheetUrl") {
       const saved = await setLogAnalysisSheetUrl({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
+      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
