@@ -307,6 +307,19 @@
     td.class-gap::selection{color:transparent}
     td.hot{color:#73e09b;font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
+    table.cla-table th,table.cla-table td{width:128px;min-width:128px;max-width:128px}
+    table.cla-table th:first-child,table.cla-table td:first-child{width:210px;min-width:210px;max-width:210px}
+    table.cla-table td.cla-score-good{background:#d9ead3!important;color:#111;font-weight:900}
+    table.cla-table td.cla-score-mid{background:#fff2cc!important;color:#111;font-weight:900}
+    table.cla-table td.cla-score-bad{background:#e06666!important;color:#111;font-weight:900}
+    table.cla-table td.cla-muted{background:#b7b7b7!important;color:#111}
+    .item-cell{font-weight:900;text-decoration:none}
+    .item-poor{color:#9d9d9d}
+    .item-common{color:#f3f4f6}
+    .item-uncommon{color:#1eff00}
+    .item-rare{color:#0070dd}
+    .item-epic{color:#a335ee}
+    .item-legendary{color:#ff8000}
     tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
     .side{display:none}
     .panel{
@@ -446,6 +459,63 @@
       }[char]));
     }
 
+    function cellText(value){
+      if(value && typeof value === "object") return String(value.text || value.name || "");
+      return String(value ?? "");
+    }
+
+    function cellTitle(value){
+      if(value && typeof value === "object") return value.title || value.tooltip || "";
+      return "";
+    }
+
+    function itemQualityClass(value){
+      const q = String(value?.quality || "").toLowerCase();
+      if(q.includes("legend")) return "item-legendary";
+      if(q.includes("epic") || q.includes("lila")) return "item-epic";
+      if(q.includes("rare") || q.includes("blau")) return "item-rare";
+      if(q.includes("uncommon") || q.includes("grün") || q.includes("green")) return "item-uncommon";
+      if(q.includes("poor") || q.includes("grau")) return "item-poor";
+      if(q.includes("common") || q.includes("weiß") || q.includes("white")) return "item-common";
+      return "";
+    }
+
+    function renderCellValue(value, fallback = ""){
+      const text = cellText(value) || fallback;
+      if(!text) return "";
+      if(value && typeof value === "object" && (value.itemId || value.quality || value.tooltip)){
+        const title = cellTitle(value);
+        const href = value.wowhead || (value.itemId ? `https://www.wowhead.com/classic/item=${encodeURIComponent(value.itemId)}` : "");
+        const attrs = `${title ? ` title="${escapeHtml(title)}"` : ""} class="item-cell ${itemQualityClass(value)}"`;
+        return href
+          ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener"${attrs}>${escapeHtml(text)}</a>`
+          : `<span${attrs}>${escapeHtml(text)}</span>`;
+      }
+      return escapeHtml(text);
+    }
+
+    function isClaSection(section){
+      return String(section?.id || "").startsWith("cla-");
+    }
+
+    function claScoreClass(value, label){
+      const text = cellText(value).trim();
+      if(!text || text === "—") return "cla-muted";
+      const number = Number((text.match(/-?\d+(\.\d+)?/) || [""])[0]);
+      if(/fehlende|auffällige|issues|problem/i.test(label || "")){
+        if(!Number.isFinite(number)) return text ? "cla-score-bad" : "cla-muted";
+        return number === 0 ? "cla-score-good" : number <= 2 ? "cla-score-mid" : "cla-score-bad";
+      }
+      if(text.toLowerCase() === "ja") return "cla-score-good";
+      if(text.toLowerCase() === "nein") return "cla-score-bad";
+      if(text.includes("%") && Number.isFinite(number)){
+        if(number >= 80) return "cla-score-good";
+        if(number >= 50) return "cla-score-mid";
+        return "cla-score-bad";
+      }
+      return "";
+    }
+
     function classColor(className){
       return CLASS_COLORS[className] || "#d1d5db";
     }
@@ -504,12 +574,12 @@
       const baseRows = sourceRows.filter(row => {
         if(!q) return true;
         if(String(row.label || "").toLowerCase().includes(q)) return true;
-        return players.some(player => String(row.values?.[player.name] || "").toLowerCase().includes(q));
+        return players.some(player => cellText(row.values?.[player.name]).toLowerCase().includes(q));
       });
       const nonEmpty = row => {
         if(row.type === "header") return true;
         return players.some(player => {
-          const value = String(row.values?.[player.name] ?? "").trim();
+          const value = cellText(row.values?.[player.name]).trim();
           return value && value !== "0" && value !== "0%" && value !== "0 (0%)";
         });
       };
@@ -700,7 +770,7 @@
       let total = 0;
       players.forEach(player => rows.forEach(row => {
         const value = row.values?.[player.name];
-        const number = Number(String(value || "").replace(/\D/g,""));
+        const number = Number(cellText(value).replace(/\D/g,""));
         if(value) filled++;
         if(Number.isFinite(number)) total += number;
       }));
@@ -719,11 +789,47 @@
       `;
     }
 
+    function renderClaTable(section){
+      const table = document.getElementById("analysisTable");
+      const players = visiblePlayers(section);
+      const rows = visibleRows(section, players).filter(row => row.type !== "header");
+      renderClassSubtabs(section);
+      renderClassOverview(section);
+      table.className = "compact cla-table";
+      const head = `
+        <thead>
+          <tr>
+            <th>Spieler</th>
+            ${rows.map((row, index) => `<th class="${state.highlightRow === `${row.label || ""}-${index}` ? "mark-col" : ""}">${escapeHtml(row.label)}</th>`).join("")}
+          </tr>
+        </thead>
+      `;
+      const body = players.map(player => `
+        <tr>
+          <td style="color:${classColor(player.className)}" onclick="selectHighlight('', '${escapeHtml(player.name)}')">${escapeHtml(player.name)}</td>
+          ${rows.map((row, index) => {
+            const rowKey = `${row.label || ""}-${index}`;
+            const value = row.values?.[player.name] || "";
+            const text = cellText(value);
+            const marked = `${state.highlightRow === rowKey ? " mark-col" : ""}${state.highlightPlayer === player.name ? " mark-row-cell" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
+            const score = value && typeof value === "object" ? "" : claScoreClass(value, row.label);
+            return `<td class="${text ? "text" : "empty"} ${score}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${renderCellValue(value, "")}</td>`;
+          }).join("")}
+        </tr>
+      `).join("");
+      table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${rows.length + 1}" class="hint">Keine Treffer.</td></tr>`}</tbody>`;
+      document.getElementById("statusText").textContent = section.description || "CLA-Auswertung.";
+    }
+
     function renderTable(){
       const section = (state.data.sections || []).find(item => item.id === state.activeSection) || state.data.sections[0];
       const table = document.getElementById("analysisTable");
       if(!section){
         table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
+        return;
+      }
+      if(isClaSection(section)){
+        renderClaTable(section);
         return;
       }
       const players = visiblePlayers(section);
@@ -783,9 +889,10 @@
               if(currentClass && player.className !== currentClass){
                 return `<td class="class-gap"></td>`;
               }
-              const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
+              const text = cellText(value);
+              const cls = text ? (row.type === "text" ? "text" : "hot") : "empty";
               const marked = `${state.highlightRow === rowKey ? " mark-row-cell" : ""}${state.highlightPlayer === player.name ? " mark-col" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
-              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${escapeHtml(value || (state.activeClass ? "·" : ""))}</td>`;
+              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${renderCellValue(value, state.activeClass ? "·" : "")}</td>`;
             }).join("")}
           </tr>
         `;
