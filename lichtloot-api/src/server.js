@@ -2996,6 +2996,15 @@ function playerActorsFromReport(report) {
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
 }
 
+function rpbIncludedFightsForAnalysis(fights) {
+  return (Array.isArray(fights) ? fights : []).filter(fight => {
+    const encounterId = Number(fight?.encounterID || 0);
+    const isBoss = encounterId > 0;
+    if (!isBoss) return true;
+    return fight.kill !== false;
+  });
+}
+
 function actorNameById(players) {
   const map = new Map();
   players.forEach(player => map.set(Number(player.id), player.name));
@@ -3030,7 +3039,7 @@ async function fetchReportBaseForAnalysis(reportCode) {
     "query($code:String!){"+
     "reportData{report(code:$code){"+
     "title startTime endTime zone{name}"+
-    "fights{ id name startTime endTime }"+
+    "fights{ id name startTime endTime encounterID kill }"+
     "masterData{actors{ id name server type subType }}"+
     "}}}";
   const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode });
@@ -3109,6 +3118,43 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
   } catch (error) {
     console.warn(`Warcraft-Logs-${dataType}-Tabelle konnte nicht geladen werden:`, error.message || error);
     return {};
+  }
+}
+
+async function getRaidAnalysisItemMetadataByIds(itemIds) {
+  const ids = Array.from(new Set((itemIds || []).map(id => clean(id)).filter(Boolean)));
+  if (!ids.length) return new Map();
+  try {
+    const result = await query(
+      `select item_id, name, quality, icon_url, slot, type, boss, category,
+              wowhead, stats_text, tooltip, needed, equip
+       from items
+       where item_id = any($1::text[])`,
+      [ids]
+    );
+    const map = new Map();
+    result.rows.forEach(row => {
+      if (!row.item_id) return;
+      map.set(String(row.item_id), {
+        itemId: row.item_id,
+        name: row.name || "",
+        quality: row.quality || "",
+        iconUrl: row.icon_url || "",
+        slot: row.slot || "",
+        type: row.type || "",
+        boss: row.boss || "",
+        category: row.category || "",
+        wowhead: row.wowhead || "",
+        statsText: row.stats_text || "",
+        tooltip: row.tooltip || "",
+        needed: row.needed || "",
+        equip: row.equip || ""
+      });
+    });
+    return map;
+  } catch (error) {
+    console.warn("Item-Metadaten für Raid-Auswertung konnten nicht geladen werden:", error.message || error);
+    return new Map();
   }
 }
 
@@ -3777,12 +3823,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const playersById = actorById(players);
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
-  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
-  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope);
-  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fullReportScope);
-  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fullReportScope);
-  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fullReportScope);
-  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fullReportScope);
+  const rpbFights = rpbIncludedFightsForAnalysis(fights);
+  const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
+  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
+  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
+  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", rpbFightScope);
+  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", rpbFightScope);
+  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", rpbFightScope);
+  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", rpbFightScope);
   const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", fullReportScope);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds.length ? fightIds : fullReportScope);
   const consumes = {};
@@ -3970,7 +4018,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     async function worker() {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
-        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fullReportScope, player.id);
+        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", rpbFightScope, player.id);
         const entries = Array.isArray(table.entries) ? table.entries : [];
         entries.forEach(entry => {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
@@ -4098,6 +4146,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
   });
 
+  const gearItemIds = [];
+  gearByPlayer.forEach(items => {
+    items.forEach(item => {
+      const id = clean(item.itemId || item.id);
+      if (id) gearItemIds.push(id);
+    });
+  });
+  const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+
   const playerNames = players.map(player => player.name);
   const countRow = (label, table, options = {}) => ({
     label,
@@ -4123,15 +4180,41 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     Number(table[label]?.[player] || 0) > 0 ? "ja" : ""
   ])), options);
   const gearEnchantIgnoredSlots = new Set(["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"]);
-  const formatClaGearItem = item => {
+  const gearItemMeta = item => itemMetaById.get(String(item?.itemId || item?.id || "")) || null;
+  const gearItemText = item => {
     if (!item) return "";
+    const meta = gearItemMeta(item);
     const enchant = item.permanentEnchantName || item.permanentEnchant || "";
-    return `${item.name || item.itemId || "Item"}${enchant ? ` [${enchant}]` : " [kein Enchant]"}`;
+    return `${meta?.name || item.name || item.itemId || "Item"}${enchant ? ` [${enchant}]` : " [kein Enchant]"}`;
   };
+  const gearItemCell = item => {
+    if (!item) return "";
+    const meta = gearItemMeta(item);
+    return {
+      text: gearItemText(item),
+      itemId: clean(item.itemId || item.id),
+      quality: meta?.quality || clean(item.quality),
+      iconUrl: meta?.iconUrl || clean(item.iconUrl || item.icon),
+      slot: meta?.slot || item.slotName || "",
+      boss: meta?.boss || "",
+      type: meta?.type || "",
+      wowhead: meta?.wowhead || "",
+      tooltip: meta?.tooltip || meta?.statsText || meta?.equip || "",
+      title: [
+        meta?.name || item.name || item.itemId || "Item",
+        meta?.quality ? `Qualität: ${meta.quality}` : "",
+        meta?.slot || item.slotName ? `Slot: ${meta?.slot || item.slotName}` : "",
+        meta?.boss ? `Quelle: ${meta.boss}` : "",
+        meta?.type ? `Typ: ${meta.type}` : "",
+        meta?.tooltip || meta?.statsText || meta?.equip || ""
+      ].filter(Boolean).join("\n")
+    };
+  };
+  const gearListText = items => items.map(gearItemText).join(", ");
   const playerGear = player => gearByPlayer.get(player) || [];
   const playerMissingEnchants = playerGearItems => playerGearItems
     .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !gearEnchantIgnoredSlots.has(item.slotName))
-    .map(formatClaGearItem);
+    .map(item => gearItemText(item));
   const playerExcludedGear = playerGearItems => playerGearItems
     .filter(item => claExcludedGear.some(([itemId]) => String(item.itemId || item.id) === String(itemId)));
   const claGearSlots = [
@@ -4154,7 +4237,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       }, { tone: "engineering" }),
       textRow("Auffällige/ausgeschlossene Items", Object.fromEntries(playerNames.map(player => [
         player,
-        playerExcludedGear(playerGear(player)).map(formatClaGearItem).join(", ")
+        gearListText(playerExcludedGear(playerGear(player)))
       ])), { tone: "trinket" }),
       countRow("Anzahl auffällige Items", {
         "Anzahl auffällige Items": Object.fromEntries(playerNames.map(player => [
@@ -4167,7 +4250,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     claExcludedGear.forEach(([itemId, itemName]) => {
       rows.push(textRow(itemName, Object.fromEntries(playerNames.map(player => {
         const found = playerGear(player).find(item => String(item.itemId || item.id) === String(itemId));
-        return [player, found ? formatClaGearItem(found) : ""];
+        return [player, found ? gearItemCell(found) : ""];
       })), { tone: "muted" }));
     });
     return rows;
@@ -4176,7 +4259,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     headerRow("Gear Listing"),
     ...claGearSlots.map(slot => textRow(slot, Object.fromEntries(playerNames.map(player => {
       const found = playerGear(player).find(item => item.slotName === slot);
-      return [player, formatClaGearItem(found)];
+      return [player, gearItemCell(found)];
     })), { tone: "classCast" }))
   ];
   const buildClaValidateRows = () => [
