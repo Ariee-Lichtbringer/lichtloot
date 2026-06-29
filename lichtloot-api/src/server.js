@@ -2885,15 +2885,57 @@ function parseWarcraftLogsEventsData(raw) {
   return Array.isArray(raw) ? raw : [];
 }
 
+function parseWarcraftLogsTableData(raw) {
+  if (!raw) return {};
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return raw && typeof raw === "object" ? raw : {};
+}
+
+function normalizeRpbClassName(value) {
+  const text = clean(value);
+  if (!text || /^unknown$/i.test(text) || /^player$/i.test(text)) return "";
+  const lower = text.toLowerCase();
+  const aliases = {
+    druide: "Druid",
+    druid: "Druid",
+    jäger: "Hunter",
+    jaeger: "Hunter",
+    hunter: "Hunter",
+    magier: "Mage",
+    mage: "Mage",
+    paladin: "Paladin",
+    priester: "Priest",
+    priest: "Priest",
+    schurke: "Rogue",
+    schurken: "Rogue",
+    rogue: "Rogue",
+    schamane: "Shaman",
+    schamanen: "Shaman",
+    shaman: "Shaman",
+    hexenmeister: "Warlock",
+    warlock: "Warlock",
+    krieger: "Warrior",
+    warrior: "Warrior"
+  };
+  return aliases[lower] || (rpbClassOrder.includes(text) ? text : "");
+}
+
 function playerActorsFromReport(report) {
   const actors = Array.isArray(report?.masterData?.actors) ? report.masterData.actors : [];
   return actors
-    .filter(actor => clean(actor.type).toLowerCase() === "player")
+    .filter(actor => clean(actor.type).toLowerCase() === "player" || normalizeRpbClassName(actor.subType || actor.type))
     .map(actor => ({
       id: Number(actor.id),
       name: clean(actor.name),
       server: clean(actor.server),
-      className: clean(actor.subType || actor.type)
+      className: normalizeRpbClassName(actor.subType || actor.type)
     }))
     .filter(actor => actor.id && actor.name)
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
@@ -2908,6 +2950,22 @@ function actorNameById(players) {
 function actorById(players) {
   const map = new Map();
   players.forEach(player => map.set(Number(player.id), player));
+  return map;
+}
+
+async function getGuildClassMap(guildId) {
+  const result = await query(
+    `select c.name, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1`,
+    [guildId]
+  );
+  const map = new Map();
+  result.rows.forEach(row => {
+    const className = normalizeRpbClassName(row.class_name);
+    if (row.name && className) map.set(clean(row.name).toLowerCase(), className);
+  });
   return map;
 }
 
@@ -2945,6 +3003,21 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
   } catch (error) {
     console.warn(`Warcraft-Logs-${dataType}-Events konnten nicht geladen werden:`, error.message || error);
     return [];
+  }
+}
+
+async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds) {
+  if (!fightIds.length) return {};
+  const gqlQuery =
+    "query($code:String!,$fightIDs:[Int]){"+
+    "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs)}}"+
+    "}";
+  try {
+    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
+    return parseWarcraftLogsTableData(data.reportData?.report?.table);
+  } catch (error) {
+    console.warn(`Warcraft-Logs-${dataType}-Tabelle konnte nicht geladen werden:`, error.message || error);
+    return {};
   }
 }
 
@@ -3308,6 +3381,23 @@ function displayAbilityName(event, preferExtra = false) {
   return rpbSpellNamesById[id] || (id ? `Unbekannter Spell (${id})` : "");
 }
 
+function inferClassFromSpellName(spellName) {
+  const text = clean(spellName).toLowerCase();
+  if (!text) return "";
+  const rules = [
+    ["Priest", ["mind blast", "shadow word", "flash heal", "greater heal", "prayer of healing", "power word", "inner fire", "shackle undead", "psychic scream", "mind control", "mind soothe", "holy fire", "smite", "renew", "fade"]],
+    ["Paladin", ["blessing of", "holy shock", "judgement", "exorcism", "hammer of justice", "divine shield", "cleanse", "purify", "seal of", "lay on hands"]],
+    ["Druid", ["faerie fire", "wrath", "starfire", "moonfire", "healing touch", "regrowth", "rejuvenation", "innervate", "bear form", "cat form", "dire bear", "hibernate", "abolish poison"]],
+    ["Mage", ["fireball", "frostbolt", "arcane missiles", "arcane brilliance", "arcane intellect", "counterspell", "detect magic", "fire blast", "pyroblast", "scorch", "ice block", "mana shield", "polymorph", "remove lesser curse"]],
+    ["Warlock", ["shadow bolt", "corruption", "curse of", "drain life", "drain mana", "drain soul", "immolate", "life tap", "searing pain", "soul fire", "banish", "fear"]],
+    ["Hunter", ["aimed shot", "arcane shot", "concussive shot", "distracting shot", "serpent sting", "tranquilizing shot", "viper sting", "wing clip", "aspect of", "feign death", "hunter's mark", "mend pet", "raptor strike"]],
+    ["Rogue", ["ambush", "backstab", "cheap shot", "distract", "eviscerate", "expose armor", "feint", "garrote", "gouge", "kick", "kidney shot", "rupture", "sinister strike", "slice and dice"]],
+    ["Warrior", ["battle shout", "berserker stance", "bloodthirst", "charge", "concussion blow", "defensive stance", "demoralizing shout", "execute", "hamstring", "heroic strike", "intercept", "intimidating shout", "mocking blow", "overpower", "pummel", "revenge", "shield bash", "shield block", "slam", "sunder armor", "taunt", "thunder clap"]]
+  ];
+  const found = rules.find(([, terms]) => terms.some(term => text.includes(term)));
+  return found ? found[0] : "";
+}
+
 async function buildClaAnalysisRows(analysis) {
   const { token, report, players, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds);
@@ -3442,16 +3532,17 @@ async function buildRpbAnalysisRows(analysis) {
   return rows;
 }
 
-async function buildRpbWebAnalysis(analysis) {
+async function buildRpbWebAnalysis(analysis, options = {}) {
   const base = await fetchReportBaseForAnalysis(analysis.report_code);
   const { token, report, fights, fightIds } = base;
-  const players = (base.players || []).slice().sort((a, b) => {
-    const classDiff = rpbClassOrder.indexOf(a.className) - rpbClassOrder.indexOf(b.className);
-    if (classDiff !== 0) return classDiff;
-    return a.name.localeCompare(b.name, "de");
-  });
+  const classByName = options.classByName instanceof Map ? options.classByName : new Map();
+  const players = (base.players || []).map(player => ({
+    ...player,
+    className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || ""
+  }));
   const playersById = actorById(players);
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
+  const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fightIds);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fightIds);
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fightIds);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
@@ -3464,6 +3555,8 @@ async function buildRpbWebAnalysis(analysis) {
   const interruptNames = {};
   const activeSeconds = {};
   const activeEventCounts = {};
+  const wclActiveSeconds = {};
+  const wclActivePercent = {};
   const healingTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
@@ -3504,13 +3597,28 @@ async function buildRpbWebAnalysis(analysis) {
 
   function addClassCast(event) {
     const player = playersById.get(eventSourceId(event));
-    if (!player || !player.className) return;
+    if (!player) return;
     if (labelForAbility(event, rpbConsumables) || labelForAbility(event, rpbEngineering)) return;
     const spell = displayAbilityName(event);
     if (!spell || /^\d+$/.test(spell)) return;
+    if (!player.className) player.className = inferClassFromSpellName(spell);
+    if (!player.className) return;
     if (!classCasts[player.className]) classCasts[player.className] = {};
     if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
     classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
+  }
+
+  if (castsTable && Array.isArray(castsTable.entries)) {
+    const tableTotalTime = Number(castsTable.totalTime || 0);
+    castsTable.entries.forEach(entry => {
+      const name = clean(entry.name);
+      if (!name) return;
+      const activeMs = Number(entry.activeTime || 0);
+      if (activeMs > 0) wclActiveSeconds[name] = Math.round(activeMs / 1000);
+      if (tableTotalTime > 0 && activeMs > 0) wclActivePercent[name] = `${Math.round(activeMs * 100 / tableTotalTime)}%`;
+      const player = players.find(item => item.name === name);
+      if (player && !player.className) player.className = normalizeRpbClassName(entry.type || entry.icon || entry.className);
+    });
   }
 
   castEvents.forEach(event => {
@@ -3521,6 +3629,17 @@ async function buildRpbWebAnalysis(analysis) {
   healingEvents.forEach(event => {
     markActive(event);
     addHealing(event);
+  });
+
+  players.forEach(player => {
+    if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
+    if (!player.className) player.className = "Unknown";
+  });
+  players.sort((a, b) => {
+    const aIndex = rpbClassOrder.includes(a.className) ? rpbClassOrder.indexOf(a.className) : 999;
+    const bIndex = rpbClassOrder.includes(b.className) ? rpbClassOrder.indexOf(b.className) : 999;
+    if (aIndex !== bIndex) return aIndex - bIndex;
+    return a.name.localeCompare(b.name, "de");
   });
 
   castEvents.forEach(event => {
@@ -3546,7 +3665,7 @@ async function buildRpbWebAnalysis(analysis) {
     const amount = Number(event.amount || 0);
     if (player && label) {
       addPlayerAmount(engineeringCounts, player, label, 1);
-      addPlayerAmount(engineeringDamage, player, "damage done with Engineering etc. total", amount);
+      addPlayerAmount(engineeringDamage, player, "Gesamtschaden durch Engineering etc.", amount);
     }
   });
 
@@ -3594,15 +3713,15 @@ async function buildRpbWebAnalysis(analysis) {
   const engineeringTone = label => label.indexOf("damage done") > -1 ? "engineeringTotal" : "engineering";
 
   const activityRows = [
-    customRow("WCL active seconds (event buckets)", Object.fromEntries(playerNames.map(player => [
+    customRow("Sekunden aktiv", Object.fromEntries(playerNames.map(player => [
       player,
-      formatCountValue(activeSeconds[player]?.size || 0)
+      formatCountValue(wclActiveSeconds[player] || activeSeconds[player]?.size || 0)
     ])), { tone: "activity" }),
-    customRow("Activity % of selected fights", Object.fromEntries(playerNames.map(player => [
+    customRow("Aktivität in %", Object.fromEntries(playerNames.map(player => [
       player,
-      activeSeconds[player]?.size ? `${Math.min(100, Math.round(activeSeconds[player].size * 100 / totalFightSeconds))}%` : ""
+      wclActivePercent[player] || (activeSeconds[player]?.size ? `${Math.min(100, Math.round(activeSeconds[player].size * 100 / totalFightSeconds))}%` : "")
     ])), { tone: "activity" }),
-    customRow("Activity events total", Object.fromEntries(playerNames.map(player => [
+    customRow("Aktive Events", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(activeEventCounts[player])
     ])), { tone: "activity" })
@@ -3698,7 +3817,7 @@ async function buildRpbWebAnalysis(analysis) {
   };
 
   const totalAbsorbed = {
-    label: "total absorbed",
+    label: "Gesamt absorbiert",
     type: "amount",
     tone: "total",
     values: Object.fromEntries(playerNames.map(player => {
@@ -3710,7 +3829,7 @@ async function buildRpbWebAnalysis(analysis) {
   };
 
   const interruptDetails = {
-    label: "names and sources of interrupted spells",
+    label: "Namen und Quellen der unterbrochenen Zauber",
     type: "text",
     values: Object.fromEntries(playerNames.map(player => [
       player,
@@ -3723,21 +3842,21 @@ async function buildRpbWebAnalysis(analysis) {
     ...activityRows,
     headerRow("Consumables"),
     ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
-    headerRow("Damage absorbed"),
+    headerRow("Absorbierter Schaden"),
     ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) })),
     totalAbsorbed,
-    headerRow("Engineering etc. (ø = avg. hits per use)"),
+    headerRow("Engineering etc. (ø = Treffer pro Nutzung)"),
     ...rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" })),
-    amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "engineeringTotal" }),
-    headerRow("Interrupted spells"),
-    countRow("# of interrupted spells", interrupts, { tone: "interrupt" }),
+    amountRow("Gesamtschaden durch Engineering etc.", engineeringDamage, { tone: "engineeringTotal" }),
+    headerRow("Unterbrochene Zauber"),
+    countRow("# unterbrochene Zauber", interrupts, { tone: "interrupt" }),
     interruptDetails
   ];
 
   const sections = [
     {
       id: "general",
-      label: "General",
+      label: "Allgemein",
       description: "Sheet-nahe Gesamtübersicht mit Aktivität, Consumables, Absorbs, Engineering und Interrupts.",
       rows: generalRows,
       hideEmptyRows: true,
@@ -3746,42 +3865,42 @@ async function buildRpbWebAnalysis(analysis) {
     },
     {
       id: "caster",
-      label: "Caster",
+      label: "Zauberer",
       description: "Caster-Übersicht: Aktivität und allgemeine Kennzahlen.",
       rows: activityRows,
       playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
     },
     {
       id: "caster-casts",
-      label: "Caster - casts",
+      label: "Zauberer - Zauber",
       description: "Klassenblöcke für Caster-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
       playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
     },
     {
       id: "healer",
-      label: "Healer",
+      label: "Heiler",
       description: "Heiler-Übersicht mit Healing, Overheal und Aktivität.",
       rows: activityRows.concat(healingRows.slice(0, 3)),
       playerFilter: healerNames
     },
     {
       id: "healer-casts",
-      label: "Healer - casts",
+      label: "Heiler - Zauber",
       description: "Heiler-Casts und Overheal pro Spell.",
       rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"]),
       playerFilter: namesForClasses(["Druid", "Paladin", "Priest", "Shaman"])
     },
     {
       id: "physical",
-      label: "Physical",
+      label: "Nahkampf",
       description: "Physical-Übersicht mit Aktivität und allgemeinen Kennzahlen.",
       rows: activityRows,
       playerFilter: namesForClasses(["Hunter", "Rogue", "Warrior", "Druid"])
     },
     {
       id: "physical-casts",
-      label: "Physical - casts",
+      label: "Nahkampf - Zauber",
       description: "Klassenblöcke für Physical-Casts wie im Sheet.",
       rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"]),
       playerFilter: namesForClasses(["Druid", "Hunter", "Rogue", "Warrior"])
@@ -3795,7 +3914,7 @@ async function buildRpbWebAnalysis(analysis) {
     },
     {
       id: "tank-casts",
-      label: "Tank - casts",
+      label: "Tank - Zauber",
       description: "Tank-Casts nach Klassenblöcken.",
       rows: rowsForClasses(["Druid", "Paladin", "Warrior"]),
       playerFilter: namesForClasses(["Druid", "Paladin", "Warrior"])
@@ -3893,9 +4012,10 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const classByName = await getGuildClassMap(guildId);
   return {
     success: true,
-    webAnalysis: await buildRpbWebAnalysis(result.rows[0])
+    webAnalysis: await buildRpbWebAnalysis(result.rows[0], { classByName })
   };
 }
 
