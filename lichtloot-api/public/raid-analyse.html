@@ -721,41 +721,7 @@
     }
 
     function hydrateSheetExportPlayers(){
-      if(!state.data || state.data.source !== "sheet-export") return;
-      const players = new Map();
-      const existingPlayers = Array.isArray(state.data.players) ? state.data.players : [];
-      const allowedNames = new Set(existingPlayers.map(player => normalizeNameKey(player.name)).filter(Boolean));
-      existingPlayers.forEach(player => {
-        if(player.name) players.set(normalizeNameKey(player.name), {
-          name:player.name,
-          className:player.className || "Unknown",
-          raidRole:player.raidRole || ""
-        });
-      });
-      (state.data.sections || []).forEach(section => {
-        const values = section.matrix?.values || [];
-        const backgrounds = section.matrix?.backgrounds || [];
-        values.forEach((row, rowIndex) => {
-          (Array.isArray(row) ? row : []).forEach((cell, colIndex) => {
-            const name = String(cell || "").trim();
-            if(!looksLikeSheetPlayerName(name)) return;
-            const key = normalizeNameKey(name);
-            if(allowedNames.size && !allowedNames.has(key)) return;
-            const bg = backgrounds[rowIndex]?.[colIndex] || "";
-            const className = classFromSheetColor(bg) || "Unknown";
-            const current = players.get(key);
-            if(!current || current.className === "Unknown"){
-              players.set(key, {name, className, raidRole:current?.raidRole || ""});
-            }
-          });
-        });
-      });
-      const inferred = Array.from(players.values()).sort((a,b) => {
-        const ai = CLASS_ORDER.includes(a.className) ? CLASS_ORDER.indexOf(a.className) : 999;
-        const bi = CLASS_ORDER.includes(b.className) ? CLASS_ORDER.indexOf(b.className) : 999;
-        return ai - bi || a.name.localeCompare(b.name, "de");
-      });
-      if(inferred.length) state.data.players = inferred;
+      return;
     }
 
     function playerClassByName(){
@@ -1472,6 +1438,14 @@
         table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
         return;
       }
+      if(state.data?.source === "sheet-export"){
+        renderClassSubtabs(null);
+        renderClassOverview(null);
+        table.className = "";
+        table.innerHTML = '<tbody><tr><td class="error">Sheet-Daten sind deaktiviert. Bitte den Warcraft-Importer verwenden.</td></tr></tbody>';
+        document.getElementById("statusText").textContent = "Keine Sheet-Daten mehr in der Raid-Analyse.";
+        return;
+      }
       if(isMatrixSection(section)){
         renderMatrixTable(section);
         return;
@@ -1583,7 +1557,6 @@
         throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
       }
       state.data = data.webAnalysis;
-      hydrateSheetExportPlayers();
       state.activeSection = state.data.sections?.[0]?.id || "";
       state.activeClass = "";
       document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
