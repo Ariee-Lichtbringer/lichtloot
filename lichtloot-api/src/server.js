@@ -3783,6 +3783,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fullReportScope);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fullReportScope);
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fullReportScope);
+  const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", fullReportScope);
+  const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds.length ? fightIds : fullReportScope);
   const consumes = {};
   const trinketsAndRacials = {};
   const absorbs = {};
@@ -3799,8 +3801,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const healingBySpell = {};
   const healingById = {};
   const classCasts = {};
+  const claCombatBuffs = {};
+  const claWorldBuffs = {};
+  const claIgnites = {};
   const damageHitsByPlayerAndAbility = {};
   const classCooldowns = {};
+  const gearByPlayer = new Map();
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
   const classCastSources = {};
@@ -3808,10 +3814,49 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
   }, 0) / 1000));
+  const claWorldBuffDefinitions = [
+    ["Nef/Ony", [22888, 355363]],
+    ["Rend", [16609, 355366, 460940]],
+    ["ZG Herz", [24425, 355365]],
+    ["Songflower", [15366]],
+    ["Mol'dar", [22818]],
+    ["Fengus", [22817]],
+    ["Slip'kik", [22820]],
+    ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767]],
+    ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]]
+  ];
+  const claCombatBuffDefinitions = [
+    ["Greater Fire Protection Potion", [17543]],
+    ["Greater Frost Protection Potion", [17544]],
+    ["Greater Nature Protection Potion", [17546]],
+    ["Greater Shadow Protection Potion", [17548]],
+    ["Greater Arcane Protection Potion", [17549]],
+    ["Greater Stoneshield Potion", [17540]],
+    ["Limited Invulnerability Potion", [3169]],
+    ["Free/Living Action Potion", [6615, 24364]],
+    ["Demonic/Dark Rune", [16666, 27869]],
+    ["Major Mana Potion", [17531]],
+    ["Major Healing Potion", [17534]],
+    ["Flask of the Titans", [17626]],
+    ["Supreme Power", [17628]],
+    ["Distilled Wisdom", [17627]],
+    ["Chromatic Resistance", [17629]]
+  ];
 
   function playerNameFromEvent(event, source = true) {
     const player = playersById.get(source ? eventSourceId(event) : eventTargetId(event));
     return player ? player.name : "";
+  }
+
+  function playerNameFromBuffEvent(event) {
+    return playerNameFromEvent(event, false) || playerNameFromEvent(event, true);
+  }
+
+  function labelForSpellId(spellId, definitions) {
+    const id = Number(spellId || 0);
+    if (!id) return "";
+    const found = definitions.find(([, ids]) => ids.includes(id));
+    return found ? found[0] : "";
   }
 
   function markActive(event) {
@@ -4010,6 +4055,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       addPlayerAmount(engineeringCounts, player, label, 1);
       addPlayerAmount(engineeringDamage, player, "Gesamtschaden durch Engineering etc.", amount);
     }
+    if (abilityId(event) === 12654 && player) {
+      addPlayerAmount(claIgnites, player, "Ignite Ticks", 1);
+      addPlayerAmount(claIgnites, player, "Ignite Schaden", amount);
+      const currentMax = Number(claIgnites["Max Ignite Tick"]?.[player] || 0);
+      if (amount > currentMax) {
+        if (!claIgnites["Max Ignite Tick"]) claIgnites["Max Ignite Tick"] = {};
+        claIgnites["Max Ignite Tick"][player] = amount;
+      }
+    }
   });
 
   interruptEvents.forEach(event => {
@@ -4019,6 +4073,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const interrupted = displayAbilityName(event, true) || "Interrupt";
     if (!interruptNames[player]) interruptNames[player] = new Set();
     interruptNames[player].add(interrupted);
+  });
+
+  combatantEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    if (!player || gearByPlayer.has(player)) return;
+    const gear = normalizeWarcraftLogsGear(event.gear || []);
+    if (gear.length) gearByPlayer.set(player, gear);
+    (Array.isArray(event.auras) ? event.auras : []).forEach(aura => {
+      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+      const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+      const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
+      if (worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
+      if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+    });
+  });
+
+  buffEvents.forEach(event => {
+    const player = playerNameFromBuffEvent(event);
+    const id = abilityId(event);
+    const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+    const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
+    if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
+    if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
   });
 
   const playerNames = players.map(player => player.name);
@@ -4040,6 +4117,102 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     tone: options.tone || "",
     values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
   });
+  const textRow = (label, values, options = {}) => customRow(label, values, { ...options, type: "text" });
+  const presenceRow = (label, table, options = {}) => textRow(label, Object.fromEntries(playerNames.map(player => [
+    player,
+    Number(table[label]?.[player] || 0) > 0 ? "ja" : ""
+  ])), options);
+  const gearEnchantIgnoredSlots = new Set(["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"]);
+  const formatClaGearItem = item => {
+    if (!item) return "";
+    const enchant = item.permanentEnchantName || item.permanentEnchant || "";
+    return `${item.name || item.itemId || "Item"}${enchant ? ` [${enchant}]` : " [kein Enchant]"}`;
+  };
+  const playerGear = player => gearByPlayer.get(player) || [];
+  const playerMissingEnchants = playerGearItems => playerGearItems
+    .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !gearEnchantIgnoredSlots.has(item.slotName))
+    .map(formatClaGearItem);
+  const playerExcludedGear = playerGearItems => playerGearItems
+    .filter(item => claExcludedGear.some(([itemId]) => String(item.itemId || item.id) === String(itemId)));
+  const claGearSlots = [
+    "Kopf", "Hals", "Schultern", "Rücken", "Brust", "Handgelenke", "Hände", "Taille",
+    "Beine", "Füße", "Ring 1", "Ring 2", "Schmuck 1", "Schmuck 2", "Waffenhand",
+    "Schildhand", "Distanz"
+  ];
+  const buildClaGearIssueRows = () => {
+    const rows = [
+      headerRow("Gear-Probleme"),
+      textRow("Fehlende Enchants", Object.fromEntries(playerNames.map(player => [
+        player,
+        playerMissingEnchants(playerGear(player)).join(", ")
+      ])), { tone: "interrupt" }),
+      countRow("Anzahl fehlende Enchants", {
+        "Anzahl fehlende Enchants": Object.fromEntries(playerNames.map(player => [
+          player,
+          playerMissingEnchants(playerGear(player)).length
+        ]))
+      }, { tone: "engineering" }),
+      textRow("Auffällige/ausgeschlossene Items", Object.fromEntries(playerNames.map(player => [
+        player,
+        playerExcludedGear(playerGear(player)).map(formatClaGearItem).join(", ")
+      ])), { tone: "trinket" }),
+      countRow("Anzahl auffällige Items", {
+        "Anzahl auffällige Items": Object.fromEntries(playerNames.map(player => [
+          player,
+          playerExcludedGear(playerGear(player)).length
+        ]))
+      }, { tone: "trinket" }),
+      headerRow("Auffällige Items im Detail")
+    ];
+    claExcludedGear.forEach(([itemId, itemName]) => {
+      rows.push(textRow(itemName, Object.fromEntries(playerNames.map(player => {
+        const found = playerGear(player).find(item => String(item.itemId || item.id) === String(itemId));
+        return [player, found ? formatClaGearItem(found) : ""];
+      })), { tone: "muted" }));
+    });
+    return rows;
+  };
+  const buildClaGearListingRows = () => [
+    headerRow("Gear Listing"),
+    ...claGearSlots.map(slot => textRow(slot, Object.fromEntries(playerNames.map(player => {
+      const found = playerGear(player).find(item => item.slotName === slot);
+      return [player, formatClaGearItem(found)];
+    })), { tone: "classCast" }))
+  ];
+  const buildClaValidateRows = () => [
+    headerRow("Validate"),
+    customRow("CombatantInfo vorhanden", Object.fromEntries(playerNames.map(player => [
+      player,
+      playerGear(player).length ? "ja" : "nein"
+    ])), { type: "text", tone: "activity" }),
+    countRow("Items erfasst", {
+      "Items erfasst": Object.fromEntries(playerNames.map(player => [player, playerGear(player).length]))
+    }, { tone: "activity" }),
+    countRow("Fehlende Enchants", {
+      "Fehlende Enchants": Object.fromEntries(playerNames.map(player => [player, playerMissingEnchants(playerGear(player)).length]))
+    }, { tone: "interrupt" }),
+    countRow("Auffällige Items", {
+      "Auffällige Items": Object.fromEntries(playerNames.map(player => [player, playerExcludedGear(playerGear(player)).length]))
+    }, { tone: "trinket" })
+  ];
+  const buildClaCombatBuffRows = () => [
+    headerRow("Combat Buffs"),
+    ...claCombatBuffDefinitions.map(([label]) => countRow(label, claCombatBuffs, { tone: generalConsumableTone(label) })),
+    headerRow("Consumables aus RPB"),
+    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
+    headerRow("Absorbs"),
+    ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) }))
+  ];
+  const buildClaWorldBuffRows = () => [
+    headerRow("World Buffs"),
+    ...claWorldBuffDefinitions.map(([label]) => presenceRow(label, claWorldBuffs, { tone: "consumableGreen" }))
+  ];
+  const buildClaIgniteRows = () => [
+    headerRow("Ignites"),
+    amountRow("Ignite Schaden", claIgnites, { tone: "engineeringTotal" }),
+    countRow("Ignite Ticks", claIgnites, { tone: "engineering" }),
+    amountRow("Max Ignite Tick", claIgnites, { tone: "trinket" })
+  ];
   const generalConsumableTone = label => {
     if (/Demonic Rune|Dark Rune|Healthstone|Mana Ruby|Mana Gems|Thistle Tea/i.test(label)) return "consumableGreen";
     if (/Poison Resistance|Runecloth Bandage/i.test(label)) return "muted";
@@ -4271,7 +4444,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     headerRow(label),
     customRow("Status", Object.fromEntries(playerNames.map(player => [
       player,
-      "CLA-Daten werden im nächsten Schritt aus der CLA-Logik befüllt"
+      "Noch nicht aus der CLA-Logik befüllt"
     ])), { type: "text", tone: "muted" })
   ];
 
@@ -4349,42 +4522,47 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       id: "cla-gear-issues",
       label: "gear issues",
       description: "CLA: Gear-Probleme und fehlende/auffällige Ausrüstung.",
-      rows: claInfoRows("gear issues"),
+      rows: buildClaGearIssueRows(),
+      hideEmptyRows: true,
       compact: true
     },
     {
       id: "cla-gear-listing",
       label: "gear listing",
       description: "CLA: Ausrüstungsliste pro Spieler.",
-      rows: claInfoRows("gear listing"),
+      rows: buildClaGearListingRows(),
+      hideEmptyRows: true,
       compact: true
     },
     {
       id: "cla-combat-buffs",
       label: "combat buffs",
       description: "CLA: Combat-Buffs, Verbrauchsgüter und Buff-Nutzung.",
-      rows: claInfoRows("combat buffs"),
+      rows: buildClaCombatBuffRows(),
+      hideEmptyRows: true,
       compact: true
     },
     {
       id: "cla-ignites",
       label: "ignites",
       description: "CLA: Ignite-Auswertung.",
-      rows: claInfoRows("ignites"),
+      rows: buildClaIgniteRows(),
+      hideEmptyRows: true,
       compact: true
     },
     {
       id: "cla-world-buffs",
       label: "world buffs",
       description: "CLA: Worldbuff-Übersicht.",
-      rows: claInfoRows("world buffs"),
+      rows: buildClaWorldBuffRows(),
+      hideEmptyRows: true,
       compact: true
     },
     {
       id: "cla-validate",
       label: "validate",
       description: "CLA: Log-Validierung.",
-      rows: claInfoRows("validate"),
+      rows: buildClaValidateRows(),
       compact: true
     }
   ];
@@ -4411,7 +4589,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     sections,
     warnings: (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length && !healingEvents.length)
       ? ["Keine Detail-Events von Warcraft Logs erhalten."]
-      : []
+      : (!combatantEvents.length ? ["Keine CombatantInfo-Daten von Warcraft Logs erhalten. CLA-Gear kann unvollständig sein."] : [])
   };
 }
 
