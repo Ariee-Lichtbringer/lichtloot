@@ -4267,6 +4267,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     interruptDetails
   ];
 
+  const claInfoRows = label => [
+    headerRow(label),
+    customRow("Status", Object.fromEntries(playerNames.map(player => [
+      player,
+      "CLA-Daten werden im nächsten Schritt aus der CLA-Logik befüllt"
+    ])), { type: "text", tone: "muted" })
+  ];
+
   const sections = [
     {
       id: "general",
@@ -4336,6 +4344,48 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       rows: rowsForClasses(["Druid", "Paladin", "Warrior"], tankPlayerNames),
       playerFilter: tankPlayerNames,
       hideEmptyRows: true
+    },
+    {
+      id: "cla-gear-issues",
+      label: "gear issues",
+      description: "CLA: Gear-Probleme und fehlende/auffällige Ausrüstung.",
+      rows: claInfoRows("gear issues"),
+      compact: true
+    },
+    {
+      id: "cla-gear-listing",
+      label: "gear listing",
+      description: "CLA: Ausrüstungsliste pro Spieler.",
+      rows: claInfoRows("gear listing"),
+      compact: true
+    },
+    {
+      id: "cla-combat-buffs",
+      label: "combat buffs",
+      description: "CLA: Combat-Buffs, Verbrauchsgüter und Buff-Nutzung.",
+      rows: claInfoRows("combat buffs"),
+      compact: true
+    },
+    {
+      id: "cla-ignites",
+      label: "ignites",
+      description: "CLA: Ignite-Auswertung.",
+      rows: claInfoRows("ignites"),
+      compact: true
+    },
+    {
+      id: "cla-world-buffs",
+      label: "world buffs",
+      description: "CLA: Worldbuff-Übersicht.",
+      rows: claInfoRows("world buffs"),
+      compact: true
+    },
+    {
+      id: "cla-validate",
+      label: "validate",
+      description: "CLA: Log-Validierung.",
+      rows: claInfoRows("validate"),
+      compact: true
     }
   ];
 
