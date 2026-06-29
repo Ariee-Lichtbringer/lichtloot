@@ -1087,7 +1087,7 @@
       if(button) button.disabled = true;
       if(box){
         box.className = "player-import-preview show";
-        box.innerHTML = '<div class="loading">Spielerliste wird aus Warcraft Logs geladen ...</div>';
+        box.innerHTML = renderPlayerImportProgress([{name:"Spielerliste"}], 0, "Spielerliste", "");
       }
       document.getElementById("statusText").textContent = "Spielerliste wird geladen.";
       try{
@@ -1133,7 +1133,7 @@
       }catch(error){
         if(box){
           box.className = "player-import-preview show";
-          box.innerHTML = `<div class="error">${escapeHtml(error.message || "Spielerdaten konnten nicht importiert werden.")}</div>`;
+          box.innerHTML = renderPlayerImportProgress([{name:"Import"}], 0, "", error.message || "Spielerdaten konnten nicht importiert werden.");
         }
         document.getElementById("statusText").textContent = error.message || "Spielerdaten konnten nicht importiert werden.";
       }finally{
