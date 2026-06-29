@@ -22,6 +22,7 @@ const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 let rpbConfigAllCache = null;
+let warcraftLogsNextRequestAt = 0;
 
 const defaultAllowedOrigins = [
   "https://lichtloot.de",
@@ -240,6 +241,25 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function waitForWarcraftLogsSlot() {
+  const minDelayMs = Number(process.env.WCL_REQUEST_DELAY_MS || 350);
+  const now = Date.now();
+  const waitMs = Math.max(0, warcraftLogsNextRequestAt - now);
+  warcraftLogsNextRequestAt = Math.max(now, warcraftLogsNextRequestAt) + minDelayMs;
+  if (waitMs > 0) await sleep(waitMs);
+}
+
+function readableWarcraftLogsHttpError(status, text) {
+  if (status === 429) {
+    return "Warcraft Logs blockt gerade wegen zu vieler Anfragen. Bitte 1-2 Minuten warten und den Import erneut starten.";
+  }
+  if (status === 502) {
+    return "Warcraft Logs Vanilla antwortet gerade mit 502. Bitte in 1-2 Minuten erneut versuchen.";
+  }
+  const cleaned = clean(String(text || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).slice(0, 220);
+  return `Warcraft Logs antwortet mit HTTP ${status}${cleaned ? `: ${cleaned}` : ""}`;
+}
+
 async function getWarcraftLogsAccessToken() {
   const clientId = clean(process.env.WCL_CLIENT_ID);
   const clientSecret = clean(process.env.WCL_CLIENT_SECRET);
@@ -283,7 +303,8 @@ async function warcraftLogsGraphql(token, gqlQuery, variables = {}) {
   let status = 0;
   let text = "";
 
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    await waitForWarcraftLogsSlot();
     const response = await fetch(`${baseUrl}/api/v2/client`, {
       method: "POST",
       headers: {
@@ -296,15 +317,14 @@ async function warcraftLogsGraphql(token, gqlQuery, variables = {}) {
     text = await response.text();
 
     if (response.ok) break;
-    if (![500, 502, 503, 504].includes(status) || attempt === 3) break;
-    await sleep(700 * attempt);
+    if (![429, 500, 502, 503, 504].includes(status) || attempt === 5) break;
+    const retryAfterSeconds = Number(response.headers.get("retry-after") || 0);
+    const retryDelay = retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : (status === 429 ? 2500 * attempt : 700 * attempt);
+    await sleep(retryDelay);
   }
 
   if (status < 200 || status >= 300) {
-    if (status === 502) {
-      throw new Error("Warcraft Logs Vanilla antwortet gerade mit 502. Bitte in 1-2 Minuten erneut versuchen.");
-    }
-    throw new Error(`GraphQL HTTP ${status}: ${text}`);
+    throw new Error(readableWarcraftLogsHttpError(status, text));
   }
 
   const data = JSON.parse(text);
@@ -3144,6 +3164,7 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
     return parseWarcraftLogsTableData(data.reportData?.report?.table);
   } catch (error) {
     console.warn(`Warcraft-Logs-${dataType}-Tabelle konnte nicht geladen werden:`, error.message || error);
+    if (options.strict) throw error;
     return {};
   }
 }
@@ -3275,17 +3296,17 @@ const rpbConsumables = [
   ["Greater Stoneshield Potion", ["Greater Stoneshield Potion"], [17540]],
   ["Limited Invulnerability Potion", ["Limited Invulnerability Potion"], [3169]],
   ["Living/Free Action Potion", ["Living Action Potion", "Free Action Potion"], [24364, 6615]],
-  ["Great Rage Potion", ["Great Rage Potion"], [6612]],
+  ["Great Rage Potion", ["Great Rage Potion"], [6613]],
   ["Mighty Rage Potion", ["Mighty Rage Potion"], [17528]],
   ["Major Healing Potion", ["Major Healing Potion"], [17534]],
   ["Major Mana Potion", ["Major Mana Potion"], [17531]],
-  ["all other Mana Potions", ["Superior Mana Potion", "Greater Mana Potion", "Mana Potion"], [17530, 2023, 2024]],
+  ["all other Mana Potions", ["Superior Mana Potion", "Greater Mana Potion", "Mana Potion"], [11903, 17530, 13443]],
   ["Demonic Rune/Dark Rune", ["Demonic Rune", "Dark Rune"], [16666, 27869]],
-  ["Major/Greater Healthstone", ["Major Healthstone", "Greater Healthstone", "Healthstone"], [23473, 5720, 6262, 6263]],
+  ["Major/Greater Healthstone", ["Major Healthstone", "Greater Healthstone", "Healthstone"], [23477, 23476, 23475, 11732]],
   ["Mana Ruby", ["Mana Ruby"], [10058]],
-  ["all other Mana Gems", ["Mana Citrine", "Mana Jade", "Mana Agate"], [10057, 10054, 5514]],
+  ["all other Mana Gems", ["Mana Citrine", "Mana Jade", "Mana Agate"], [5405, 10052, 10057]],
   ["Thistle Tea", ["Thistle Tea"], [9512]],
-  ["Elixir of Poison Resistance", ["Elixir of Poison Resistance"], [11349]],
+  ["Elixir of Poison Resistance", ["Elixir of Poison Resistance"], [26677]],
   ["Heavy Runecloth Bandage", ["Heavy Runecloth Bandage"], [18610]]
 ];
 
@@ -3294,8 +3315,8 @@ const rpbAbsorbs = [
   ["Nature Protection Potion", ["Nature Protection Potion"], [7254]],
   ["Greater Arcane Protection Potion", ["Greater Arcane Protection Potion"], [17549]],
   ["Greater Fire Protection Potion", ["Greater Fire Protection Potion"], [17543]],
-  ["Fire Protection Potion", ["Fire Protection Potion"], [7230]],
-  ["Frozen Rune", ["Frozen Rune"], [28764]],
+  ["Fire Protection Potion", ["Fire Protection Potion"], [7233]],
+  ["Frozen Rune", ["Frozen Rune"], [29432]],
   ["Greater Frost Protection Potion", ["Greater Frost Protection Potion"], [17544]],
   ["Frost Protection Potion", ["Frost Protection Potion"], [7239]],
   ["Frost Ward", ["Frost Ward"], [28609, 8462, 8461, 6143]],
@@ -3309,7 +3330,7 @@ const rpbEngineering = [
   ["Dense Dynamite", ["Dense Dynamite"], [19784, 23063]],
   ["Goblin Sapper Charge", ["Goblin Sapper Charge"], [13241]],
   ["Stratholme Holy Water", ["Stratholme Holy Water"], [17291]],
-  ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"], [8331]]
+  ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"], [23000]]
 ];
 
 const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
@@ -4765,6 +4786,23 @@ function raidImporterAuraNames(table, definitions) {
     .map(([label]) => label);
 }
 
+function raidImporterDefinitionObject(definitions) {
+  return Object.fromEntries((definitions || []).map(([label, , ids]) => [label, ids || []]));
+}
+
+function raidImporterTrackedCounts(table, definitions) {
+  return Object.fromEntries((definitions || []).map(([label, , ids]) => [
+    label,
+    raidImporterEntryTotal(table, ids || [])
+  ]));
+}
+
+function raidImporterNonZeroNames(counts) {
+  return Object.entries(counts || {})
+    .filter(([, value]) => Number(value || 0) > 0)
+    .map(([label]) => label);
+}
+
 function raidImporterGearSlotName(slot) {
   const names = {
     0: "Head",
@@ -4833,10 +4871,10 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
   const classByName = await getGuildClassMap(guildId);
   const base = await fetchReportBaseForAnalysis(reportCode);
   const { token, report, players: rawPlayers, fights, fightIds } = base;
-  const players = rawPlayers.map(player => ({
+  let players = rawPlayers.map(player => ({
     ...player,
     className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || "Unknown"
-  }));
+  })).sort((a, b) => a.name.localeCompare(b.name, "de"));
   const rpbFights = rpbIncludedFightsForAnalysis(fights);
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : fightIds;
   const bossFights = rpbFights.filter(fight => Number(fight.encounterID || 0) > 0);
@@ -4848,6 +4886,44 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
   const rpbStartTime = rpbFights.length ? Math.min(...rpbFights.map(fight => Number(fight.startTime || 0))) : 0;
   const rpbEndTime = rpbFights.length ? Math.max(...rpbFights.map(fight => Number(fight.endTime || 0))) : Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const rpbTimeScope = rpbEndTime > rpbStartTime ? { startTime: rpbStartTime, endTime: rpbEndTime } : rpbFightScope;
+  const reportInfo = {
+    code: reportCode,
+    url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
+    title: report.title || "",
+    raid: report.zone?.name || "",
+    raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : "",
+    includedFights: rpbFights.length,
+    bossFights: bossFights.length,
+    gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
+    scopeRule: "kill encounters plus trash from rpbIncludedFightsForAnalysis; gear from last included boss"
+  };
+  if (String(params.listOnly || params.playersOnly || "") === "1") {
+    return {
+      success: true,
+      importer: "wcl-raid-player-analysis-v1",
+      listOnly: true,
+      report: reportInfo,
+      players: players.map(player => ({
+        id: player.id,
+        name: player.name,
+        server: player.server || "",
+        className: player.className
+      }))
+    };
+  }
+  const wantedPlayerId = Number(params.playerId || 0);
+  const wantedPlayerName = clean(params.playerName || params.player || "").toLowerCase();
+  if (wantedPlayerId > 0 || wantedPlayerName) {
+    players = players.filter(player => {
+      if (wantedPlayerId > 0) return Number(player.id) === wantedPlayerId;
+      return clean(player.name).toLowerCase() === wantedPlayerName;
+    });
+    if (!players.length) {
+      const error = new Error("Spieler wurde im Warcraft-Logs-Report nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
   const allDeaths = await fetchReportEventsForAnalysis(token, reportCode, "Deaths", rpbFightScope);
   const worldBuffDefinitions = {
     "Nef/Ony": [22888, 355363],
@@ -4860,33 +4936,28 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
     DMF: [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767],
     "Zanza/BL": [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]
   };
-  const consumableDefinitions = {
-    Flask: [17626, 17627, 17628, 17629],
-    Elixir: [24363, 17539, 11396, 16321, 16322, 16323, 16325, 16326, 16327, 16329],
-    Alcohol: [25804, 25722, 22789],
-    "Food Buff": [18125, 18141, 19710, 22730, 25661],
-    Scrolls: [8118, 12174, 12176, 12178, 12179],
-    "Weapon Enhancement": [2629, 25123]
-  };
+  const consumableDefinitions = raidImporterDefinitionObject(rpbConsumables);
+  const absorbDefinitions = raidImporterDefinitionObject(rpbAbsorbs);
+  const engineeringDefinitions = raidImporterDefinitionObject(rpbEngineering);
   const avoidableDamageDefinitions = {
     "Cleave": [797, 3433, 3434, 3435, 5532, 11427, 15284, 15496, 15579, 15584, 15613, 15622, 15623, 15663, 16044, 17685, 19632, 19642, 20571, 20605, 20666, 20677, 20684, 20691, 22540, 26350, 27794, 19983, 845, 7369, 11608, 11609, 20569],
     "Bomb": [8858, 9143, 22334]
   };
 
   const importedPlayers = [];
-  const concurrency = 3;
+  const concurrency = 1;
   let index = 0;
   async function worker() {
     while (index < players.length) {
       const player = players[index++];
       const [castsTable, healingTable, damageDoneTable, damageTakenTable, buffsTable, debuffsTable, summaryTable] = await Promise.all([
-        fetchReportTableForAnalysis(token, reportCode, "Casts", rpbFightScope, { sourceId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "Healing", rpbFightScope, { sourceId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "DamageDone", rpbFightScope, { sourceId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "DamageTaken", rpbFightScope, { targetId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "Buffs", rpbTimeScope, { targetId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "Debuffs", rpbTimeScope, { targetId: player.id }),
-        fetchReportTableForAnalysis(token, reportCode, "Summary", gearScope, { sourceId: player.id })
+        fetchReportTableForAnalysis(token, reportCode, "Casts", rpbFightScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Healing", rpbFightScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageDone", rpbFightScope, { sourceId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "DamageTaken", rpbFightScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Buffs", rpbTimeScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Debuffs", rpbTimeScope, { targetId: player.id, strict: true }),
+        fetchReportTableForAnalysis(token, reportCode, "Summary", gearScope, { sourceId: player.id, strict: true })
       ]);
 
       const classConfig = rpbConfig.byClass?.[player.className] || { singleTarget: [], aoe: [], cooldowns: [] };
@@ -4945,7 +5016,17 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
       const totalDamageTaken = raidImporterTableEntries(damageTakenTable).reduce((sum, entry) => sum + Number(entry.total || 0), 0);
       const combatantInfo = summaryTable?.combatantInfo || {};
       const gear = raidImporterGearFromCombatantInfo(combatantInfo, player.className);
-      const consumables = raidImporterAuraNames(buffsTable, consumableDefinitions);
+      const consumableCounts = raidImporterTrackedCounts(castsTable, rpbConsumables);
+      const absorbBuffs = raidImporterAuraNames(buffsTable, absorbDefinitions);
+      const absorbCounts = Object.fromEntries(rpbAbsorbs.map(([label, , ids]) => [
+        label,
+        absorbBuffs.includes(label) ? 1 : raidImporterEntryTotal(buffsTable, ids || [])
+      ]));
+      const engineeringCounts = raidImporterTrackedCounts(castsTable, rpbEngineering);
+      const consumables = Array.from(new Set([
+        ...raidImporterAuraNames(buffsTable, consumableDefinitions),
+        ...raidImporterNonZeroNames(consumableCounts)
+      ]));
       const worldBuffs = raidImporterAuraNames(buffsTable, worldBuffDefinitions);
       const playerDeaths = allDeaths.filter(event => eventSourceId(event) === Number(player.id) || eventTargetId(event) === Number(player.id));
       const worldBuffsLostDueToDying = playerDeaths.some(event => bossFightIds.has(Number(event.fight || event.fightID || event.fightId))) && worldBuffs.length > 0;
@@ -4988,6 +5069,11 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
           totalUses: Number(aura.totalUses || 0),
           totalUptime: Number(aura.totalUptime || 0)
         })),
+        general: {
+          consumables: consumableCounts,
+          absorbs: absorbCounts,
+          engineering: engineeringCounts
+        },
         gear,
         enchantIssues: gear.filter(item => item.issue)
       });
@@ -5010,17 +5096,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
       gear: "WarcraftLogs table(Summary) gear snapshot",
       deaths: "WarcraftLogs events(Deaths)"
     },
-    report: {
-      code: reportCode,
-      url: normalizeWarcraftLogsReportUrl(params.reportUrl || params.url || "", reportCode),
-      title: report.title || "",
-      raid: report.zone?.name || "",
-      raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : "",
-      includedFights: rpbFights.length,
-      bossFights: bossFights.length,
-      gearSnapshotFight: lastBossFight ? lastBossFight.name : "",
-      scopeRule: "kill encounters plus trash from rpbIncludedFightsForAnalysis; gear from last included boss"
-    },
+    report: reportInfo,
     players: importedPlayers
   };
 }
