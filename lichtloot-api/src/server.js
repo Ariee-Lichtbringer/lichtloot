@@ -3945,6 +3945,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       })), { type: "text", tone: "healing" }));
     });
 
+  const headerRow = (label, options = {}) => ({
+    label,
+    type: "header",
+    tone: options.tone || "sectionHeader",
+    className: options.className || "",
+    values: {}
+  });
+
   function configuredCastRow(className, cast, kind) {
     const isHealingRow = cast.hasOverheal || healerClasses.has(className);
     return customRow(cast.name, Object.fromEntries(playerNames.map(player => {
@@ -4028,13 +4036,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const namesForClasses = classNames => players
     .filter(player => classNames.includes(player.className))
     .map(player => player.name);
-  const headerRow = (label, options = {}) => ({
-    label,
-    type: "header",
-    tone: options.tone || "sectionHeader",
-    className: options.className || "",
-    values: {}
-  });
   const rowsForClasses = classNames => {
     const rows = [];
     classNames.forEach(className => {
