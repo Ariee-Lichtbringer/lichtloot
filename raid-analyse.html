@@ -138,10 +138,10 @@
     th,td{
       border-right:1px solid var(--line);
       border-bottom:1px solid var(--line);
-      padding:8px 10px;
-      font-size:13px;
+      padding:6px 8px;
+      font-size:12px;
       text-align:center;
-      min-width:92px;
+      min-width:76px;
       max-width:220px;
       white-space:nowrap;
     }
@@ -150,8 +150,8 @@
       left:0;
       z-index:2;
       text-align:left;
-      min-width:310px;
-      max-width:360px;
+      min-width:285px;
+      max-width:330px;
       background:var(--panel-2);
       white-space:normal;
       font-weight:800;
@@ -167,10 +167,19 @@
     thead th:first-child{z-index:4;color:var(--text)}
     tbody tr:nth-child(even) td{background:rgba(255,255,255,.025)}
     tbody tr.tone-healing td{background:rgba(255,242,204,.12)}
-    tbody tr.tone-consumable td{background:rgba(255,229,153,.14)}
-    tbody tr.tone-absorb td{background:rgba(180,167,214,.18)}
-    tbody tr.tone-engineering td{background:rgba(246,178,107,.16)}
-    tbody tr.tone-interrupt td{background:rgba(164,194,244,.16)}
+    tbody tr.tone-consumable td,
+    tbody tr.tone-consumableBlue td{background:#cfe2f3;color:#111}
+    tbody tr.tone-consumableGreen td{background:#93c47d;color:#111}
+    tbody tr.tone-muted td{background:#c9c9c9;color:#111}
+    tbody tr.tone-absorb td{background:#d9d2e9;color:#111}
+    tbody tr.tone-absorbNature td{background:#b6d7a8;color:#111}
+    tbody tr.tone-absorbArcane td{background:#fff2cc;color:#111}
+    tbody tr.tone-absorbFire td{background:#ea9999;color:#111}
+    tbody tr.tone-absorbFrost td{background:#9fc5e8;color:#111}
+    tbody tr.tone-absorbShadow td{background:#b4a7d6;color:#111}
+    tbody tr.tone-engineering td{background:#ead1dc;color:#111}
+    tbody tr.tone-engineeringTotal td{background:#f06d6d;color:#111;font-weight:900}
+    tbody tr.tone-interrupt td{background:#e6b8b7;color:#111}
     tbody tr.tone-activity td{background:rgba(182,215,168,.13)}
     tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
     tbody tr.tone-sectionHeader td{
@@ -181,6 +190,8 @@
       text-align:left;
     }
     tbody tr:hover td{background:rgba(215,180,106,.18)}
+    table.compact th,table.compact td{padding:4px 6px;font-size:11px;min-width:68px}
+    table.compact th:first-child,table.compact td:first-child{min-width:270px;max-width:310px}
     td.empty{color:#4f5b66}
     td.hot{color:var(--good);font-weight:900}
     td.text{white-space:normal;text-align:left;min-width:180px}
@@ -334,7 +345,7 @@
       const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
       return players.filter(player => {
         if(allowed && !allowed.has(player.name)) return false;
-        if(state.activeClass && player.className !== state.activeClass) return false;
+        if(state.activeClass && !section.ignoreClassFilter && player.className !== state.activeClass) return false;
         if(!state.search) return true;
         return section.rows.some(row => playerMatchesSearch(player, row.label));
       });
@@ -342,10 +353,27 @@
 
     function visibleRows(section, players){
       const q = state.search;
-      return section.rows.filter(row => {
+      const baseRows = section.rows.filter(row => {
         if(!q) return true;
         if(String(row.label || "").toLowerCase().includes(q)) return true;
         return players.some(player => String(row.values?.[player.name] || "").toLowerCase().includes(q));
+      });
+      const nonEmpty = row => {
+        if(row.type === "header") return true;
+        return players.some(player => {
+          const value = String(row.values?.[player.name] ?? "").trim();
+          return value && value !== "0" && value !== "0%" && value !== "0 (0%)";
+        });
+      };
+      const rows = section.hideEmptyRows ? baseRows.filter(nonEmpty) : baseRows;
+      if(!section.hideEmptyRows) return rows;
+      return rows.filter((row, index) => {
+        if(row.type !== "header") return true;
+        for(let i=index+1;i<rows.length;i++){
+          if(rows[i].type === "header") return false;
+          if(nonEmpty(rows[i])) return true;
+        }
+        return false;
       });
     }
 
@@ -438,6 +466,7 @@
       const players = visiblePlayers(section);
       const rows = visibleRows(section, players);
       renderClassOverview(section);
+      table.className = section.compact ? "compact" : "";
       const head = `
         <thead>
           <tr>
