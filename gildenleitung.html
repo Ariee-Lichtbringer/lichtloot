@@ -2709,7 +2709,7 @@ async function loadWorldbuffMiniOverview(){
   box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4 });
+    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4, source:"railway" });
     if(result && result.success){
       worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
       renderWorldbuffMiniList();
@@ -4254,7 +4254,7 @@ async function loadWorldbuffPanel(){
   content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days });
+    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days, source:"railway" });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
       return;
