@@ -3063,24 +3063,226 @@ const rpbEngineering = [
   ["Ez-Thro Dynamite II", ["Ez-Thro Dynamite II"], [8331]]
 ];
 
+const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
+
 const rpbSpellNamesById = {
-  6552: "Pummel",
-  6554: "Pummel",
+  17: "Power Word: Shield",
+  72: "Shield Bash",
+  99: "Demoralizing Roar",
+  100: "Charge",
+  116: "Frostbolt",
+  118: "Polymorph",
+  120: "Cone of Cold",
+  122: "Frost Nova",
+  133: "Fireball",
+  136: "Mend Pet",
+  139: "Renew",
+  172: "Corruption",
+  284: "Heroic Strike",
+  325: "Lightning Shield",
+  339: "Entangling Roots",
+  348: "Immolate",
+  355: "Taunt",
+  408: "Kidney Shot",
+  453: "Mind Soothe",
+  498: "Divine Protection",
+  527: "Dispel Magic",
+  528: "Cure Disease",
+  552: "Abolish Disease",
+  585: "Smite",
+  586: "Fade",
+  589: "Shadow Word: Pain",
+  596: "Prayer of Healing",
+  603: "Curse of Doom",
+  605: "Mind Control",
+  633: "Lay on Hands",
+  642: "Divine Shield",
+  686: "Shadow Bolt",
+  689: "Drain Life",
+  703: "Garrote",
+  740: "Tranquility",
+  772: "Rend",
+  774: "Rejuvenation",
+  781: "Disengage",
+  853: "Hammer of Justice",
+  879: "Exorcism",
+  976: "Shadow Protection",
+  980: "Curse of Agony",
+  996: "Prayer of Healing",
+  1004: "Smite",
+  1064: "Chain Heal",
+  1079: "Rip",
+  1094: "Immolate",
+  1120: "Drain Soul",
+  1160: "Demoralizing Shout",
+  1464: "Slam",
+  1680: "Whirlwind",
+  1715: "Hamstring",
+  1752: "Sinister Strike",
+  1760: "Backstab",
   1766: "Kick",
   1767: "Kick",
   1768: "Kick",
   1769: "Kick",
+  1943: "Rupture",
+  1978: "Serpent Sting",
+  2006: "Resurrection",
+  2050: "Lesser Heal",
+  2054: "Heal",
+  2055: "Heal",
+  2060: "Greater Heal",
+  2061: "Flash Heal",
+  2098: "Eviscerate",
+  2136: "Fire Blast",
   2139: "Counterspell",
-  72: "Shield Bash",
+  2643: "Multi-Shot",
+  2812: "Holy Wrath",
+  2944: "Devouring Plague",
+  3044: "Arcane Shot",
+  3140: "Fireball",
+  3408: "Crippling Poison",
+  3747: "Power Word: Shield",
+  5143: "Arcane Missiles",
+  5176: "Wrath",
+  5185: "Healing Touch",
+  5308: "Execute",
+  5394: "Healing Stream Totem",
+  5487: "Bear Form",
+  5570: "Insect Swarm",
+  5676: "Searing Pain",
+  5857: "Hellfire Effect",
+  6065: "Power Word: Shield",
+  6066: "Power Word: Shield",
+  6074: "Renew",
+  6143: "Frost Ward",
+  6229: "Shadow Ward",
+  6353: "Soul Fire",
+  6358: "Seduction",
+  6359: "Fire Resistance",
+  6544: "Heroic Leap",
+  6552: "Pummel",
+  6554: "Pummel",
   1671: "Shield Bash",
   1672: "Shield Bash",
+  6572: "Revenge",
+  6770: "Sap",
+  6789: "Death Coil",
+  6807: "Maul",
+  6940: "Blessing of Sacrifice",
+  7328: "Redemption",
+  7373: "Hamstring",
+  7384: "Overpower",
+  7386: "Sunder Armor",
+  8050: "Flame Shock",
+  8056: "Frost Shock",
   8042: "Earth Shock",
   8044: "Earth Shock",
   8045: "Earth Shock",
   8046: "Earth Shock",
+  8184: "Fire Resistance Totem",
+  8190: "Magma Totem",
+  8331: "Ez-Thro Dynamite II",
+  8457: "Fire Ward",
+  8461: "Frost Ward",
+  8462: "Frost Ward",
+  8676: "Ambush",
+  8921: "Moonfire",
+  8936: "Regrowth",
+  9472: "Flash Heal",
+  9473: "Flash Heal",
+  9474: "Flash Heal",
+  9484: "Shackle Undead",
+  9512: "Thistle Tea",
+  9592: "Flash Heal",
+  9749: "Faerie Fire",
+  9888: "Healing Touch",
+  9889: "Healing Touch",
+  10054: "Mana Agate",
+  10057: "Mana Citrine",
+  10058: "Mana Ruby",
+  10060: "Power Infusion",
+  10278: "Blessing of Protection",
   10412: "Earth Shock",
   10413: "Earth Shock",
-  10414: "Earth Shock"
+  10414: "Earth Shock",
+  10605: "Chain Lightning",
+  10898: "Power Word: Shield",
+  10899: "Power Word: Shield",
+  10900: "Power Word: Shield",
+  10901: "Power Word: Shield",
+  10915: "Flash Heal",
+  10916: "Flash Heal",
+  10917: "Flash Heal",
+  10927: "Renew",
+  10928: "Renew",
+  10929: "Renew",
+  10931: "Prayer of Healing",
+  10933: "Smite",
+  10934: "Smite",
+  10937: "Power Word: Fortitude",
+  10938: "Power Word: Fortitude",
+  10945: "Mind Blast",
+  10946: "Mind Blast",
+  10947: "Mind Blast",
+  10951: "Inner Fire",
+  10952: "Inner Fire",
+  10953: "Mind Control",
+  10955: "Shackle Undead",
+  10957: "Shadow Word: Pain",
+  10958: "Shadow Word: Pain",
+  10963: "Greater Heal",
+  10964: "Greater Heal",
+  10965: "Greater Heal",
+  11349: "Elixir of Poison Resistance",
+  11357: "Blade Flurry",
+  11551: "Battle Shout",
+  11597: "Sunder Armor",
+  11659: "Shadow Bolt",
+  11660: "Shadow Bolt",
+  11661: "Shadow Bolt",
+  11739: "Shadow Ward",
+  11958: "Ice Block",
+  12472: "Icy Veins",
+  12654: "Ignite",
+  13021: "Blast Wave",
+  13033: "Ice Barrier",
+  13241: "Goblin Sapper Charge",
+  13877: "Blade Flurry",
+  15237: "Holy Nova",
+  15258: "Shadow Weaving",
+  15473: "Shadowform",
+  16666: "Demonic Rune",
+  17291: "Stratholme Holy Water",
+  17528: "Mighty Rage Potion",
+  17530: "Greater Mana Potion",
+  17531: "Major Mana Potion",
+  17534: "Major Healing Potion",
+  17540: "Greater Stoneshield Potion",
+  17543: "Greater Fire Protection Potion",
+  17544: "Greater Frost Protection Potion",
+  17546: "Greater Nature Protection Potion",
+  17548: "Greater Shadow Protection Potion",
+  17549: "Greater Arcane Protection Potion",
+  18610: "Heavy Runecloth Bandage",
+  19784: "Dense Dynamite",
+  20066: "Repentance",
+  20271: "Judgement",
+  25289: "Battle Shout",
+  25314: "Greater Heal",
+  25315: "Renew",
+  25316: "Prayer of Healing",
+  25363: "Smite",
+  25364: "Smite",
+  25372: "Mind Blast",
+  25375: "Mind Blast",
+  25384: "Holy Fire",
+  25396: "Healing Wave",
+  25398: "Prayer of Healing",
+  27869: "Dark Rune",
+  28609: "Frost Ward",
+  28610: "Shadow Ward",
+  28764: "Frozen Rune",
+  29166: "Innervate"
 };
 
 function matchingLabel(name, groups, id = 0) {
@@ -3103,7 +3305,7 @@ function displayAbilityName(event, preferExtra = false) {
   const name = preferExtra ? extraAbilityName(event) || abilityName(event) : abilityName(event) || extraAbilityName(event);
   if (name) return name;
   const id = preferExtra ? extraAbilityId(event) || abilityId(event) : abilityId(event) || extraAbilityId(event);
-  return rpbSpellNamesById[id] || (id ? String(id) : "");
+  return rpbSpellNamesById[id] || (id ? `Unbekannter Spell (${id})` : "");
 }
 
 async function buildClaAnalysisRows(analysis) {
@@ -3241,7 +3443,13 @@ async function buildRpbAnalysisRows(analysis) {
 }
 
 async function buildRpbWebAnalysis(analysis) {
-  const { token, report, players, fights, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
+  const base = await fetchReportBaseForAnalysis(analysis.report_code);
+  const { token, report, fights, fightIds } = base;
+  const players = (base.players || []).slice().sort((a, b) => {
+    const classDiff = rpbClassOrder.indexOf(a.className) - rpbClassOrder.indexOf(b.className);
+    if (classDiff !== 0) return classDiff;
+    return a.name.localeCompare(b.name, "de");
+  });
   const playersById = actorById(players);
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fightIds);
@@ -3259,6 +3467,7 @@ async function buildRpbWebAnalysis(analysis) {
   const healingTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
+  const classCasts = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
@@ -3293,7 +3502,21 @@ async function buildRpbWebAnalysis(analysis) {
     healingBySpell[spell][player].hits += 1;
   }
 
-  castEvents.forEach(markActive);
+  function addClassCast(event) {
+    const player = playersById.get(eventSourceId(event));
+    if (!player || !player.className) return;
+    if (labelForAbility(event, rpbConsumables) || labelForAbility(event, rpbEngineering)) return;
+    const spell = displayAbilityName(event);
+    if (!spell || /^\d+$/.test(spell)) return;
+    if (!classCasts[player.className]) classCasts[player.className] = {};
+    if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
+    classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
+  }
+
+  castEvents.forEach(event => {
+    markActive(event);
+    addClassCast(event);
+  });
   damageDoneEvents.forEach(markActive);
   healingEvents.forEach(event => {
     markActive(event);
@@ -3394,6 +3617,72 @@ async function buildRpbWebAnalysis(analysis) {
       })), { type: "text", tone: "healing" }));
     });
 
+  const classSections = rpbClassOrder
+    .filter(className => players.some(player => player.className === className))
+    .map(className => {
+      const classPlayers = players.filter(player => player.className === className).map(player => player.name);
+      const castRows = Object.keys(classCasts[className] || {})
+        .map(spell => {
+          const total = classPlayers.reduce((sum, player) => sum + Number(classCasts[className][spell]?.[player] || 0), 0);
+          return { spell, total };
+        })
+        .filter(row => row.total > 0)
+        .sort((a, b) => b.total - a.total || a.spell.localeCompare(b.spell, "de"))
+        .slice(0, 45)
+        .map(row => customRow(row.spell, Object.fromEntries(playerNames.map(player => [
+          player,
+          formatCountValue(classCasts[className][row.spell]?.[player])
+        ])), { tone: "classCast" }));
+
+      const classHealingRows = healerClasses.has(className)
+        ? Object.keys(healingBySpell)
+          .map(spell => {
+            const total = classPlayers.reduce((sum, player) => sum + Number(healingBySpell[spell]?.[player]?.amount || 0), 0);
+            return { spell, total };
+          })
+          .filter(row => row.total > 0)
+          .sort((a, b) => b.total - a.total || a.spell.localeCompare(b.spell, "de"))
+          .slice(0, 35)
+          .map(row => customRow(`${row.spell} (overheal%)`, Object.fromEntries(playerNames.map(player => {
+            const data = healingBySpell[row.spell]?.[player];
+            if (!data || !data.amount) return [player, ""];
+            const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
+            return [player, `${Math.round(data.amount)} (${pct}%)`];
+          })), { type: "text", tone: "healing" }))
+        : [];
+
+      const rows = castRows.concat(classHealingRows);
+      return {
+        id: `class-${className.toLowerCase()}`,
+        label: className,
+        className,
+        description: `${className}: klassenspezifische Casts${classHealingRows.length ? ", Heilung und Overheal" : ""}.`,
+        rows: rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })],
+        playerFilter: classPlayers
+      };
+    });
+  const classSectionByName = new Map(classSections.map(section => [section.className, section]));
+  const namesForClasses = classNames => players
+    .filter(player => classNames.includes(player.className))
+    .map(player => player.name);
+  const headerRow = (label, options = {}) => ({
+    label,
+    type: "header",
+    tone: options.tone || "sectionHeader",
+    className: options.className || "",
+    values: {}
+  });
+  const rowsForClasses = classNames => {
+    const rows = [];
+    classNames.forEach(className => {
+      const section = classSectionByName.get(className);
+      if (!section) return;
+      rows.push(headerRow(className, { className }));
+      rows.push(...section.rows);
+    });
+    return rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })];
+  };
+
   const totalAbsorbed = {
     label: "total absorbed",
     type: "amount",
@@ -3415,47 +3704,84 @@ async function buildRpbWebAnalysis(analysis) {
     ]))
   };
 
+  const generalRows = [
+    headerRow("Stats and Miscellaneous"),
+    ...activityRows,
+    headerRow("Consumables"),
+    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: "consumable" })),
+    headerRow("Damage absorbed"),
+    ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })),
+    totalAbsorbed,
+    headerRow("Engineering etc. (ø = avg. hits per use)"),
+    ...rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" })),
+    amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "total" }),
+    headerRow("Interrupted spells"),
+    countRow("# of interrupted spells", interrupts, { tone: "interrupt" }),
+    interruptDetails
+  ];
+
   const sections = [
     {
-      id: "activity",
-      label: "Aktivität",
-      description: "Aktive Sekunden und Aktivitätsanteil aus Cast-, Damage- und Healing-Events.",
-      rows: activityRows
+      id: "general",
+      label: "General",
+      description: "Sheet-nahe Gesamtübersicht mit Aktivität, Consumables, Absorbs, Engineering und Interrupts.",
+      rows: generalRows
     },
     {
-      id: "healing",
-      label: "Heiler",
-      description: "Healing, Overheal und Overheal-Prozent pro erkanntem Heilspell.",
-      rows: healingRows,
+      id: "caster",
+      label: "Caster",
+      description: "Caster-Übersicht: Aktivität und allgemeine Kennzahlen.",
+      rows: activityRows,
+      playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+    },
+    {
+      id: "caster-casts",
+      label: "Caster - casts",
+      description: "Klassenblöcke für Caster-Casts wie im Sheet.",
+      rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
+      playerFilter: namesForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+    },
+    {
+      id: "healer",
+      label: "Healer",
+      description: "Heiler-Übersicht mit Healing, Overheal und Aktivität.",
+      rows: activityRows.concat(healingRows.slice(0, 3)),
       playerFilter: healerNames
     },
     {
-      id: "consumables",
-      label: "Consumables",
-      description: "Tränke, Runen, Healthstones und ähnliche Nutzungen.",
-      rows: rpbConsumables.map(([label]) => countRow(label, consumes, { tone: "consumable" }))
+      id: "healer-casts",
+      label: "Healer - casts",
+      description: "Heiler-Casts und Overheal pro Spell.",
+      rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"]),
+      playerFilter: namesForClasses(["Druid", "Paladin", "Priest", "Shaman"])
     },
     {
-      id: "absorbs",
-      label: "Absorbs",
-      description: "Schutztränke, Wards und absorbierter Schaden.",
-      rows: rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)
+      id: "physical",
+      label: "Physical",
+      description: "Physical-Übersicht mit Aktivität und allgemeinen Kennzahlen.",
+      rows: activityRows,
+      playerFilter: namesForClasses(["Hunter", "Rogue", "Warrior", "Druid"])
     },
     {
-      id: "engineering",
-      label: "Engineering",
-      description: "Sapper, Dynamite, Holy Water und Engineering-Schaden.",
-      rows: rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" }))
-        .concat(amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "total" }))
+      id: "physical-casts",
+      label: "Physical - casts",
+      description: "Klassenblöcke für Physical-Casts wie im Sheet.",
+      rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"]),
+      playerFilter: namesForClasses(["Druid", "Hunter", "Rogue", "Warrior"])
     },
     {
-      id: "interrupts",
-      label: "Interrupts",
-      description: "Unterbrochene Zauber und erkannte Spellnamen.",
-      rows: [
-        countRow("# of interrupted spells", interrupts, { tone: "interrupt" }),
-        interruptDetails
-      ]
+      id: "tank",
+      label: "Tank",
+      description: "Tank-nahe Übersicht mit Aktivität und vermeidbarem Schaden.",
+      rows: activityRows.concat(rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)),
+      playerFilter: namesForClasses(["Druid", "Paladin", "Warrior"])
+    },
+    {
+      id: "tank-casts",
+      label: "Tank - casts",
+      description: "Tank-Casts nach Klassenblöcken.",
+      rows: rowsForClasses(["Druid", "Paladin", "Warrior"]),
+      playerFilter: namesForClasses(["Druid", "Paladin", "Warrior"])
     }
   ];
 
