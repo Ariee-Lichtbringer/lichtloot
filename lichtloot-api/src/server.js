@@ -3069,14 +3069,20 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
   }
 }
 
-async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds) {
+async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds, sourceId = null) {
   if (!fightIds.length) return {};
-  const gqlQuery =
-    "query($code:String!,$fightIDs:[Int]){"+
-    "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs)}}"+
-    "}";
+  const hasSource = Number(sourceId) > 0;
+  const gqlQuery = hasSource
+    ? "query($code:String!,$fightIDs:[Int],$sourceID:Int){"+
+      "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs,sourceID:$sourceID)}}"+
+      "}"
+    : "query($code:String!,$fightIDs:[Int]){"+
+      "reportData{report(code:$code){table(dataType:"+dataType+",fightIDs:$fightIDs)}}"+
+      "}";
   try {
-    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
+    const variables = { code: reportCode, fightIDs: fightIds };
+    if (hasSource) variables.sourceID = Number(sourceId);
+    const data = await warcraftLogsGraphql(token, gqlQuery, variables);
     return parseWarcraftLogsTableData(data.reportData?.report?.table);
   } catch (error) {
     console.warn(`Warcraft-Logs-${dataType}-Tabelle konnte nicht geladen werden:`, error.message || error);
@@ -3097,6 +3103,18 @@ function abilityId(event) {
     event?.sourceAbilityGameID ||
     event?.sourceAbility?.guid ||
     event?.sourceAbility?.id ||
+    0
+  );
+}
+
+function abilityIdFromTableEntry(entry) {
+  return Number(
+    entry?.guid ||
+    entry?.abilityGameID ||
+    entry?.abilityGameId ||
+    entry?.ability?.guid ||
+    entry?.ability?.id ||
+    entry?.id ||
     0
   );
 }
@@ -3751,9 +3769,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const healingBySpell = {};
   const healingById = {};
   const classCasts = {};
+  const damageHitsByPlayerAndAbility = {};
   const classCooldowns = {};
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
+  const classCastSources = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
@@ -3807,6 +3827,40 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     classCooldowns[player.className][cooldown.name][player.name] = (classCooldowns[player.className][cooldown.name][player.name] || 0) + 1;
   }
 
+  function addDamageHit(event) {
+    const player = playersById.get(eventSourceId(event));
+    if (!player) return;
+    const id = abilityId(event);
+    if (!id) return;
+    if (!damageHitsByPlayerAndAbility[player.name]) damageHitsByPlayerAndAbility[player.name] = {};
+    damageHitsByPlayerAndAbility[player.name][id] = (damageHitsByPlayerAndAbility[player.name][id] || 0) + 1;
+  }
+
+  function addConfiguredCastCount(player, cast, kind, count, source = "events") {
+    const amount = Number(count || 0);
+    if (!player || !player.className || !cast || !cast.name || amount <= 0) return;
+    let accepted = false;
+    if (!classCasts[player.className]) classCasts[player.className] = {};
+    if (!classCasts[player.className][cast.name]) classCasts[player.className][cast.name] = {};
+    if (!classCastSources[player.className]) classCastSources[player.className] = {};
+    if (!classCastSources[player.className][cast.name]) classCastSources[player.className][cast.name] = {};
+    if (source === "table") {
+      classCasts[player.className][cast.name][player.name] = amount;
+      classCastSources[player.className][cast.name][player.name] = "table";
+      accepted = true;
+    } else if (classCastSources[player.className][cast.name]?.[player.name] !== "table") {
+      classCasts[player.className][cast.name][player.name] = (classCasts[player.className][cast.name][player.name] || 0) + amount;
+      classCastSources[player.className][cast.name][player.name] = "events";
+      accepted = true;
+    }
+    if (!accepted) return;
+    if (kind === "aoe") {
+      aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + (cast.castTime * amount);
+    } else {
+      stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + (cast.castTime * amount);
+    }
+  }
+
   function addClassCast(event) {
     const player = playersById.get(eventSourceId(event));
     if (!player) return;
@@ -3819,16 +3873,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!spell || /^\d+$/.test(spell)) return;
     if (!player.className) player.className = inferClassFromSpellName(spell);
     if (!player.className) return;
-    if (!classCasts[player.className]) classCasts[player.className] = {};
-    if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
-    classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
     if (configuredCast) {
-      if (configuredAoeCast) {
-        aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + configuredCast.castTime;
-      } else {
-        stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + configuredCast.castTime;
-      }
+      addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", 1, "events");
     } else {
+      if (!classCasts[player.className]) classCasts[player.className] = {};
+      if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
+      classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
       const meta = rpbCastMeta(spell, player.className);
       if (meta.castTime > 0 && meta.kind === "aoe") {
         aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + meta.castTime;
@@ -3836,6 +3886,30 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + meta.castTime;
       }
     }
+  }
+
+  async function loadPlayerCastTables() {
+    const limitedPlayers = players.filter(player => player.id && player.className);
+    const concurrency = 4;
+    let index = 0;
+    async function worker() {
+      while (index < limitedPlayers.length) {
+        const player = limitedPlayers[index++];
+        const table = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", fightIds, player.id);
+        const entries = Array.isArray(table.entries) ? table.entries : [];
+        entries.forEach(entry => {
+          const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
+          if (!count) return;
+          const id = abilityIdFromTableEntry(entry);
+          const configuredStCast = findConfiguredCast(rpbConfig, player.className, id, "singleTarget");
+          const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
+          const configuredCast = configuredStCast || configuredAoeCast;
+          if (!configuredCast) return;
+          addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", count, "table");
+        });
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(concurrency, limitedPlayers.length) }, () => worker()));
   }
 
   if (castsTable && Array.isArray(castsTable.entries)) {
@@ -3851,12 +3925,17 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     });
   }
 
+  await loadPlayerCastTables();
+
   castEvents.forEach(event => {
     markActive(event);
     addClassCast(event);
     addClassCooldown(event);
   });
-  damageDoneEvents.forEach(markActive);
+  damageDoneEvents.forEach(event => {
+    markActive(event);
+    addDamageHit(event);
+  });
   healingEvents.forEach(event => {
     markActive(event);
     addHealing(event);
@@ -4016,8 +4095,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     return customRow(cast.name, Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
+      const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
       if (cast.hasOverheal) {
-        const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
         const data = cast.ids.reduce((sum, id) => {
           const row = healingById[id]?.[player];
           if (!row) return sum;
@@ -4025,11 +4104,17 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           sum.overheal += Number(row.overheal || 0);
           return sum;
         }, { amount: 0, overheal: 0 });
-        if (!castCount && !data.amount && !data.overheal) return [player, "0"];
+        if (!castCount) return [player, "0"];
         const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
         return [player, `${formatCountValue(castCount)} (${pct}%)`];
       }
-      return [player, formatCountValue(classCasts[className]?.[cast.name]?.[player])];
+      if (kind === "aoe" && castCount > 0) {
+        const ids = new Set(cast.ids || []);
+        if (/Blade Flurry/i.test(cast.name)) ids.add(22482);
+        const hits = Array.from(ids).reduce((sum, id) => sum + Number(damageHitsByPlayerAndAbility[player]?.[id] || 0), 0);
+        if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
+      }
+      return [player, formatCountValue(castCount)];
     })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast" });
   }
 
@@ -4087,7 +4172,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const explicit = namesForRolesOnly(roleNames);
     return explicit.length ? explicit : namesForRolesOrClasses(roleNames, fallbackClassNames);
   };
-  const rowsForClasses = classNames => {
+  const rowsForClasses = (classNames, scopeNamesOverride = null) => {
     const rows = [];
     const sections = classNames.map(className => classSectionByName.get(className)).filter(Boolean);
     classNames.forEach(className => {
@@ -4096,7 +4181,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       rows.push(headerRow(className, { className }));
       rows.push(...section.rows);
     });
-    const scopeNames = namesForClasses(classNames);
+    const scopeNames = Array.isArray(scopeNamesOverride) ? scopeNamesOverride : namesForClasses(classNames);
     if (scopeNames.length) rows.push(...buildActivityRows(scopeNames));
     sections.forEach(section => {
       if (!section.cooldownRows || !section.cooldownRows.length) return;
@@ -4105,6 +4190,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     });
     return rows.length ? rows : [customRow("Keine Klassencasts erkannt", {}, { tone: "classCast" })];
   };
+
+  const casterPlayerNames = namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"]);
+  const healerPlayerNames = roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"]);
+  const physicalPlayerNames = namesForRolesOrClasses(["melee", "cat", "hunter"], ["Druid", "Hunter", "Rogue", "Warrior"]);
+  const tankPlayerNames = namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"]);
 
   const totalAbsorbed = {
     label: "Gesamt absorbiert",
@@ -4157,60 +4247,60 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       id: "caster",
       label: "Zauberer",
       description: "Caster-Übersicht: Aktivität und allgemeine Kennzahlen.",
-      rows: buildActivityRows(namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])),
-      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"])
+      rows: buildActivityRows(casterPlayerNames),
+      playerFilter: casterPlayerNames
     },
     {
       id: "caster-casts",
       label: "Zauberer - Zauber",
       description: "Klassenblöcke für Caster-Casts wie im Sheet.",
-      rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
-      playerFilter: namesForRolesOrClasses(["caster", "owl", "shadow", "support"], ["Druid", "Mage", "Warlock", "Priest", "Shaman"]),
+      rows: rowsForClasses(["Druid", "Mage", "Warlock", "Priest", "Shaman"], casterPlayerNames),
+      playerFilter: casterPlayerNames,
       hideEmptyRows: true
     },
     {
       id: "healer",
       label: "Heiler",
       description: "Heiler-Übersicht mit Healing, Overheal und Aktivität.",
-      rows: buildActivityRows(roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])).concat(healingRows.slice(0, 3)),
-      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"])
+      rows: buildActivityRows(healerPlayerNames).concat(healingRows.slice(0, 3)),
+      playerFilter: healerPlayerNames
     },
     {
       id: "healer-casts",
       label: "Heiler - Zauber",
       description: "Heiler-Casts und Overheal pro Spell.",
-      rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"]),
-      playerFilter: roleAwareNames(["healer"], ["Druid", "Paladin", "Priest", "Shaman"]),
+      rows: rowsForClasses(["Druid", "Paladin", "Priest", "Shaman"], healerPlayerNames),
+      playerFilter: healerPlayerNames,
       hideEmptyRows: true
     },
     {
       id: "physical",
       label: "Nahkampf",
       description: "Physical-Übersicht mit Aktivität und allgemeinen Kennzahlen.",
-      rows: buildActivityRows(namesForRolesOrClasses(["melee", "cat", "hunter"], ["Hunter", "Rogue", "Warrior", "Druid"])),
-      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Hunter", "Rogue", "Warrior", "Druid"])
+      rows: buildActivityRows(physicalPlayerNames),
+      playerFilter: physicalPlayerNames
     },
     {
       id: "physical-casts",
       label: "Nahkampf - Zauber",
       description: "Klassenblöcke für Physical-Casts wie im Sheet.",
-      rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"]),
-      playerFilter: namesForRolesOrClasses(["melee", "cat", "hunter"], ["Druid", "Hunter", "Rogue", "Warrior"]),
+      rows: rowsForClasses(["Druid", "Hunter", "Rogue", "Warrior"], physicalPlayerNames),
+      playerFilter: physicalPlayerNames,
       hideEmptyRows: true
     },
     {
       id: "tank",
       label: "Tank",
       description: "Tank-nahe Übersicht mit Aktivität und vermeidbarem Schaden.",
-      rows: buildActivityRows(namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])).concat(rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)),
-      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"])
+      rows: buildActivityRows(tankPlayerNames).concat(rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)),
+      playerFilter: tankPlayerNames
     },
     {
       id: "tank-casts",
       label: "Tank - Zauber",
       description: "Tank-Casts nach Klassenblöcken.",
-      rows: rowsForClasses(["Druid", "Paladin", "Warrior"]),
-      playerFilter: namesForRolesOrClasses(["main_tank", "off_tank", "tank"], ["Druid", "Paladin", "Warrior"]),
+      rows: rowsForClasses(["Druid", "Paladin", "Warrior"], tankPlayerNames),
+      playerFilter: tankPlayerNames,
       hideEmptyRows: true
     }
   ];
