@@ -104,6 +104,14 @@
       padding-bottom:8px;
       margin-bottom:4px;
     }
+    .subtabs{
+      display:none;
+      gap:7px;
+      overflow:auto;
+      padding:2px 0 10px;
+      margin-bottom:2px;
+    }
+    .subtabs.show{display:flex}
     .tab{
       border:1px solid var(--line);
       background:var(--panel);
@@ -118,6 +126,18 @@
     .tab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
     .tab.class-tab{color:#111;border-color:rgba(0,0,0,.25)}
     .tab.class-tab.active{box-shadow:0 0 0 2px var(--accent) inset}
+    .subtab{
+      border:1px solid var(--line);
+      background:#10161b;
+      color:var(--text);
+      border-radius:8px;
+      min-height:32px;
+      padding:0 10px;
+      font-weight:900;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .subtab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
     .class-overview{
       display:none;
       background:var(--panel);
@@ -254,6 +274,19 @@
       color:transparent;
     }
     tbody tr:hover td{background:rgba(215,180,106,.18)}
+    th.mark-col,
+    td.mark-col{
+      background:rgba(215,180,106,.34)!important;
+      box-shadow:inset 2px 0 0 var(--accent), inset -2px 0 0 var(--accent);
+    }
+    tr.mark-row td{
+      background:rgba(215,180,106,.26)!important;
+    }
+    td.mark-cell{
+      background:rgba(215,180,106,.55)!important;
+      color:#111!important;
+      box-shadow:inset 0 0 0 2px var(--accent);
+    }
     table.compact th,table.compact td{padding:5px 7px;font-size:12px;min-width:70px}
     table.compact th:first-child,table.compact td:first-child{min-width:210px;max-width:240px}
     td.empty{color:#4f5b66}
@@ -339,6 +372,7 @@
           <button class="btn" type="button" onclick="selectClass('')">Filter zurücksetzen</button>
         </div>
         <div id="tabs" class="tabs"></div>
+        <div id="classSubtabs" class="subtabs"></div>
         <section id="roleEditor" class="role-editor"></section>
         <section id="classOverview" class="class-overview"></section>
         <div class="matrix-wrap">
@@ -364,6 +398,8 @@
       data:null,
       activeSection:"",
       activeClass:"",
+      highlightRow:"",
+      highlightPlayer:"",
       search:"",
       rolesOpen:false,
       savingRoles:false
@@ -416,7 +452,7 @@
       const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
       return players.filter(player => {
         if(allowed && !allowed.has(player.name)) return false;
-        if(state.activeClass && !section.ignoreClassFilter && player.className !== state.activeClass) return false;
+        if(state.activeClass && player.className !== state.activeClass) return false;
         if(!state.search) return true;
         return section.rows.some(row => playerMatchesSearch(player, row.label));
       });
@@ -450,6 +486,11 @@
 
     function selectSection(id){
       state.activeSection = id;
+      state.activeClass = "";
+      state.highlightRow = "";
+      state.highlightPlayer = "";
+      const select = document.getElementById("classSelect");
+      if(select) select.value = "";
       render();
     }
 
@@ -458,6 +499,12 @@
       const select = document.getElementById("classSelect");
       if(select) select.value = state.activeClass;
       render();
+    }
+
+    function selectHighlight(rowKey, playerName){
+      state.highlightRow = state.highlightRow === rowKey ? "" : rowKey;
+      state.highlightPlayer = state.highlightPlayer === playerName ? "" : playerName;
+      renderTable();
     }
 
     function roleLabel(value){
@@ -574,6 +621,30 @@
       `).join("");
     }
 
+    function renderClassSubtabs(section){
+      const box = document.getElementById("classSubtabs");
+      if(!box || !section){
+        return;
+      }
+      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
+      const sectionPlayers = (state.data.players || []).filter(player => !allowed || allowed.has(player.name));
+      const classes = CLASS_ORDER.filter(className => sectionPlayers.some(player => player.className === className));
+      if(!classes.length){
+        box.className = "subtabs";
+        box.innerHTML = "";
+        return;
+      }
+      box.className = "subtabs show";
+      box.innerHTML = `
+        <button class="subtab ${!state.activeClass ? "active" : ""}" type="button" onclick="selectClass('')">Alle</button>
+        ${classes.map(className => `
+          <button class="subtab ${state.activeClass === className ? "active" : ""}" type="button" onclick="selectClass('${escapeHtml(className)}')" style="color:${classColor(className)}">
+            ${escapeHtml(CLASS_LABELS[className] || className)}
+          </button>
+        `).join("")}
+      `;
+    }
+
     function renderClassOverview(section){
       const box = document.getElementById("classOverview");
       if(!state.activeClass){
@@ -615,18 +686,20 @@
       }
       const players = visiblePlayers(section);
       const rows = visibleRows(section, players);
+      renderClassSubtabs(section);
       renderClassOverview(section);
       table.className = section.compact ? "compact" : "";
       const head = `
         <thead>
           <tr>
             <th>${escapeHtml(section.label)}</th>
-            ${players.map(player => `<th style="background:${classColor(player.className)}">${escapeHtml(player.name)}</th>`).join("")}
+            ${players.map(player => `<th class="${state.highlightPlayer === player.name ? "mark-col" : ""}" style="background:${classColor(player.className)}" onclick="selectHighlight('', '${escapeHtml(player.name)}')">${escapeHtml(player.name)}</th>`).join("")}
           </tr>
         </thead>
       `;
       let currentClass = "";
-      const body = rows.map(row => {
+      const body = rows.map((row, rowIndex) => {
+        const rowKey = `${row.label || ""}-${rowIndex}`;
         if(row.type === "header"){
           currentClass = row.className || "";
           if(row.className){
@@ -652,15 +725,16 @@
           currentClass = "";
         }
         return `
-          <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""}">
-            <td>${escapeHtml(row.label)}</td>
+          <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""} ${state.highlightRow === rowKey ? "mark-row" : ""}">
+            <td onclick="selectHighlight('${escapeHtml(rowKey)}', '')">${escapeHtml(row.label)}</td>
             ${players.map(player => {
               const value = row.values?.[player.name] || "";
               if(currentClass && player.className !== currentClass){
                 return `<td class="class-gap"></td>`;
               }
               const cls = value ? (row.type === "text" ? "text" : "hot") : "empty";
-              return `<td class="${cls}">${escapeHtml(value || "")}</td>`;
+              const marked = `${state.highlightRow === rowKey ? " mark-row-cell" : ""}${state.highlightPlayer === player.name ? " mark-col" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
+              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${escapeHtml(value || "")}</td>`;
             }).join("")}
           </tr>
         `;
