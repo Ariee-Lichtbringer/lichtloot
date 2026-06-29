@@ -2905,6 +2905,12 @@ function actorNameById(players) {
   return map;
 }
 
+function actorById(players) {
+  const map = new Map();
+  players.forEach(player => map.set(Number(player.id), player));
+  return map;
+}
+
 async function fetchReportBaseForAnalysis(reportCode) {
   const token = await getWarcraftLogsAccessToken();
   const gqlQuery =
@@ -2922,6 +2928,7 @@ async function fetchReportBaseForAnalysis(reportCode) {
     token,
     report,
     players: playerActorsFromReport(report),
+    fights,
     fightIds: fights.map(fight => Number(fight.id))
   };
 }
@@ -3233,6 +3240,249 @@ async function buildRpbAnalysisRows(analysis) {
   return rows;
 }
 
+async function buildRpbWebAnalysis(analysis) {
+  const { token, report, players, fights, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
+  const playersById = actorById(players);
+  const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", fightIds);
+  const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", fightIds);
+  const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", fightIds);
+  const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", fightIds);
+  const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", fightIds);
+  const consumes = {};
+  const absorbs = {};
+  const engineeringCounts = {};
+  const engineeringDamage = {};
+  const interrupts = {};
+  const interruptNames = {};
+  const activeSeconds = {};
+  const activeEventCounts = {};
+  const healingTotals = {};
+  const overhealTotals = {};
+  const healingBySpell = {};
+  const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
+  const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
+    return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
+  }, 0) / 1000));
+
+  function playerNameFromEvent(event, source = true) {
+    const player = playersById.get(source ? eventSourceId(event) : eventTargetId(event));
+    return player ? player.name : "";
+  }
+
+  function markActive(event) {
+    const player = playerNameFromEvent(event, true);
+    if (!player) return;
+    if (!activeSeconds[player]) activeSeconds[player] = new Set();
+    const timestamp = Number(event.timestamp || event.time || 0);
+    if (timestamp) activeSeconds[player].add(Math.floor(timestamp / 1000));
+    activeEventCounts[player] = (activeEventCounts[player] || 0) + 1;
+  }
+
+  function addHealing(event) {
+    const player = playerNameFromEvent(event, true);
+    if (!player) return;
+    const amount = Number(event.amount || 0);
+    const overheal = Number(event.overheal || event.overhealing || event.overhealAmount || 0);
+    const spell = displayAbilityName(event) || "Unbekannter Heal";
+    healingTotals[player] = (healingTotals[player] || 0) + amount;
+    overhealTotals[player] = (overhealTotals[player] || 0) + overheal;
+    if (!healingBySpell[spell]) healingBySpell[spell] = {};
+    if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0 };
+    healingBySpell[spell][player].amount += amount;
+    healingBySpell[spell][player].overheal += overheal;
+    healingBySpell[spell][player].hits += 1;
+  }
+
+  castEvents.forEach(markActive);
+  damageDoneEvents.forEach(markActive);
+  healingEvents.forEach(event => {
+    markActive(event);
+    addHealing(event);
+  });
+
+  castEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    const label = labelForAbility(event, rpbConsumables);
+    if (player && label) addPlayerAmount(consumes, player, label, 1);
+  });
+
+  damageTakenEvents.forEach(event => {
+    const player = playerNameFromEvent(event, false);
+    const label = matchingLabel(
+      extraAbilityName(event) || abilityName(event),
+      rpbAbsorbs,
+      extraAbilityId(event) || abilityId(event)
+    );
+    const amount = Number(event.absorbed || event.absorb || event.amount || 0);
+    if (player && label && amount) addPlayerAmount(absorbs, player, label, amount);
+  });
+
+  damageDoneEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    const label = labelForAbility(event, rpbEngineering);
+    const amount = Number(event.amount || 0);
+    if (player && label) {
+      addPlayerAmount(engineeringCounts, player, label, 1);
+      addPlayerAmount(engineeringDamage, player, "damage done with Engineering etc. total", amount);
+    }
+  });
+
+  interruptEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    if (!player) return;
+    addPlayerAmount(interrupts, player, "# of interrupted spells", 1);
+    const interrupted = displayAbilityName(event, true) || "Interrupt";
+    if (!interruptNames[player]) interruptNames[player] = new Set();
+    interruptNames[player].add(interrupted);
+  });
+
+  const playerNames = players.map(player => player.name);
+  const countRow = (label, table, options = {}) => ({
+    label,
+    type: options.type || "count",
+    tone: options.tone || "",
+    values: Object.fromEntries(playerNames.map(player => [player, formatCountValue(table[label]?.[player])]))
+  });
+  const amountRow = (label, table, options = {}) => ({
+    label,
+    type: options.type || "amount",
+    tone: options.tone || "",
+    values: Object.fromEntries(playerNames.map(player => [player, formatCountValue(table[label]?.[player])]))
+  });
+  const customRow = (label, values, options = {}) => ({
+    label,
+    type: options.type || "count",
+    tone: options.tone || "",
+    values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
+  });
+
+  const activityRows = [
+    customRow("WCL active seconds (event buckets)", Object.fromEntries(playerNames.map(player => [
+      player,
+      formatCountValue(activeSeconds[player]?.size || 0)
+    ])), { tone: "activity" }),
+    customRow("Activity % of selected fights", Object.fromEntries(playerNames.map(player => [
+      player,
+      activeSeconds[player]?.size ? `${Math.min(100, Math.round(activeSeconds[player].size * 100 / totalFightSeconds))}%` : ""
+    ])), { tone: "activity" }),
+    customRow("Activity events total", Object.fromEntries(playerNames.map(player => [
+      player,
+      formatCountValue(activeEventCounts[player])
+    ])), { tone: "activity" })
+  ];
+
+  const healerNames = players
+    .filter(player => healerClasses.has(player.className) || healingTotals[player.name])
+    .map(player => player.name);
+  const healingRows = [
+    customRow("Total healing", Object.fromEntries(playerNames.map(player => [player, formatCountValue(healingTotals[player])])), { tone: "healing" }),
+    customRow("Total overheal", Object.fromEntries(playerNames.map(player => [player, formatCountValue(overhealTotals[player])])), { tone: "healing" }),
+    customRow("Overheal %", Object.fromEntries(playerNames.map(player => {
+      const healing = Number(healingTotals[player] || 0);
+      const overheal = Number(overhealTotals[player] || 0);
+      return [player, healing + overheal > 0 ? `${Math.round(overheal * 100 / (healing + overheal))}%` : ""];
+    })), { tone: "healing" })
+  ];
+  Object.keys(healingBySpell)
+    .sort((a, b) => a.localeCompare(b, "de"))
+    .forEach(spell => {
+      healingRows.push(customRow(`${spell} (overheal%)`, Object.fromEntries(playerNames.map(player => {
+        const data = healingBySpell[spell][player];
+        if (!data || !data.amount) return [player, ""];
+        const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
+        return [player, `${Math.round(data.amount)} (${pct}%)`];
+      })), { type: "text", tone: "healing" }));
+    });
+
+  const totalAbsorbed = {
+    label: "total absorbed",
+    type: "amount",
+    tone: "total",
+    values: Object.fromEntries(playerNames.map(player => {
+      const total = Object.keys(absorbs).reduce((sum, label) => {
+        return label.startsWith("Power Word") ? sum : sum + Number(absorbs[label]?.[player] || 0);
+      }, 0);
+      return [player, formatCountValue(total)];
+    }))
+  };
+
+  const interruptDetails = {
+    label: "names and sources of interrupted spells",
+    type: "text",
+    values: Object.fromEntries(playerNames.map(player => [
+      player,
+      interruptNames[player] ? Array.from(interruptNames[player]).join(", ") : ""
+    ]))
+  };
+
+  const sections = [
+    {
+      id: "activity",
+      label: "Aktivität",
+      description: "Aktive Sekunden und Aktivitätsanteil aus Cast-, Damage- und Healing-Events.",
+      rows: activityRows
+    },
+    {
+      id: "healing",
+      label: "Heiler",
+      description: "Healing, Overheal und Overheal-Prozent pro erkanntem Heilspell.",
+      rows: healingRows,
+      playerFilter: healerNames
+    },
+    {
+      id: "consumables",
+      label: "Consumables",
+      description: "Tränke, Runen, Healthstones und ähnliche Nutzungen.",
+      rows: rpbConsumables.map(([label]) => countRow(label, consumes, { tone: "consumable" }))
+    },
+    {
+      id: "absorbs",
+      label: "Absorbs",
+      description: "Schutztränke, Wards und absorbierter Schaden.",
+      rows: rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: "absorb" })).concat(totalAbsorbed)
+    },
+    {
+      id: "engineering",
+      label: "Engineering",
+      description: "Sapper, Dynamite, Holy Water und Engineering-Schaden.",
+      rows: rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" }))
+        .concat(amountRow("damage done with Engineering etc. total", engineeringDamage, { tone: "total" }))
+    },
+    {
+      id: "interrupts",
+      label: "Interrupts",
+      description: "Unterbrochene Zauber und erkannte Spellnamen.",
+      rows: [
+        countRow("# of interrupted spells", interrupts, { tone: "interrupt" }),
+        interruptDetails
+      ]
+    }
+  ];
+
+  return {
+    type: "rpb",
+    generatedAt: new Date().toISOString(),
+    analysis: normalizeLogAnalysis(analysis),
+    report: {
+      title: report.title || analysis.title || "",
+      raid: report.zone?.name || analysis.raid || "",
+      raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : (analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : ""),
+      reportCode: analysis.report_code || "",
+      reportUrl: analysis.report_url || ""
+    },
+    players: players.map(player => ({
+      id: player.id,
+      name: player.name,
+      server: player.server || "",
+      className: player.className || ""
+    })),
+    sections,
+    warnings: (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length && !healingEvents.length)
+      ? ["Keine Detail-Events von Warcraft Logs erhalten."]
+      : []
+  };
+}
+
 async function buildLogAnalysisRows(analysis, type) {
   try {
     return type === "cla" ? await buildClaAnalysisRows(analysis) : await buildRpbAnalysisRows(analysis);
@@ -3272,6 +3522,38 @@ function buildLogAnalysisFallbackRows(analysis, type, error = null) {
 
 async function buildLogAnalysisCsv(analysis, type) {
   return buildCsv(await buildLogAnalysisRows(analysis, type));
+}
+
+async function getPublicLogAnalysisWeb({ guildId, query: params }) {
+  await ensureLogAnalysesTable();
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType || "rpb").toLowerCase();
+  if (!isUuid(id)) {
+    const error = new Error("Loganalyse-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (type !== "rpb") {
+    const error = new Error("Web-Auswertung ist aktuell zuerst für RPB verfügbar.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1 and id = $2
+     limit 1`,
+    [guildId, id]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    webAnalysis: await buildRpbWebAnalysis(result.rows[0])
+  };
 }
 
 async function downloadLogAnalysis({ guildId, query: params, res }) {
@@ -6789,6 +7071,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicLogAnalyses") {
       const analyses = await getPublicLogAnalyses({ guildId: guild.id, query: req.query });
       return res.json({ ...analyses, guild: guild.slug });
+    }
+
+    if (action === "getPublicLogAnalysisWeb") {
+      const webAnalysis = await getPublicLogAnalysisWeb({ guildId: guild.id, query: req.query });
+      return res.json({ ...webAnalysis, guild: guild.slug });
     }
 
     if (action === "guildSaveLogAnalysis") {
