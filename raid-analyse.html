@@ -127,6 +127,34 @@
       margin:10px 0 12px;
     }
     .class-overview.show{display:block}
+    .role-editor{
+      display:none;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:12px;
+      margin:0 0 12px;
+    }
+    .role-editor.show{display:block}
+    .role-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+    .role-item{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 120px;
+      align-items:center;
+      gap:8px;
+      background:#0f1419;
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:8px;
+    }
+    .role-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .role-item select{min-height:32px;padding:0 8px;font-size:12px}
+    .role-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .class-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
     .class-title h2{margin:0;font-size:20px}
     .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
@@ -274,9 +302,11 @@
           <select id="classSelect" onchange="selectClass(this.value)">
             <option value="">Alle Klassen</option>
           </select>
+          <button class="btn" type="button" onclick="toggleRoleEditor()">Rollen zuordnen</button>
           <button class="btn" type="button" onclick="selectClass('')">Filter zurücksetzen</button>
         </div>
         <div id="tabs" class="tabs"></div>
+        <section id="roleEditor" class="role-editor"></section>
         <section id="classOverview" class="class-overview"></section>
         <div class="matrix-wrap">
           <table id="analysisTable">
@@ -301,7 +331,9 @@
       data:null,
       activeSection:"",
       activeClass:"",
-      search:""
+      search:"",
+      rolesOpen:false,
+      savingRoles:false
     };
     const CLASS_COLORS = {
       Druid:"var(--druid)",
@@ -393,6 +425,81 @@
       const select = document.getElementById("classSelect");
       if(select) select.value = state.activeClass;
       render();
+    }
+
+    function roleLabel(value){
+      const found = (state.data?.roleOptions || []).find(option => option.value === value);
+      return found ? found.label : "";
+    }
+
+    function toggleRoleEditor(){
+      state.rolesOpen = !state.rolesOpen;
+      renderRoleEditor();
+    }
+
+    function updateLocalRole(playerName, value){
+      const player = (state.data.players || []).find(item => item.name === playerName);
+      if(player) player.raidRole = value || "";
+    }
+
+    async function saveRaidRoles(){
+      if(!state.data || state.savingRoles) return;
+      state.savingRoles = true;
+      renderRoleEditor();
+      const roles = {};
+      (state.data.players || []).forEach(player => {
+        if(player.raidRole) roles[player.name] = player.raidRole;
+      });
+      const body = new URLSearchParams({
+        action:"setPublicLogAnalysisRaidRoles",
+        guild:params.get("guild") || "lichtloot",
+        id:params.get("id") || params.get("analysisId") || "",
+        roles:JSON.stringify(roles)
+      });
+      const response = await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+        body:body.toString()
+      });
+      const data = await response.json();
+      state.savingRoles = false;
+      if(!response.ok || data.success === false){
+        document.getElementById("statusText").textContent = data.error || "Rollen konnten nicht gespeichert werden.";
+        renderRoleEditor();
+        return;
+      }
+      await loadAnalysis();
+      state.rolesOpen = true;
+      renderRoleEditor();
+    }
+
+    function renderRoleEditor(){
+      const box = document.getElementById("roleEditor");
+      if(!box) return;
+      if(!state.rolesOpen || !state.data){
+        box.className = "role-editor";
+        box.innerHTML = "";
+        return;
+      }
+      const options = state.data.roleOptions || [{value:"",label:"Automatisch"}];
+      box.className = "role-editor show";
+      box.innerHTML = `
+        <div class="role-actions">
+          <strong>Raid-Rollen</strong>
+          <button class="btn primary" type="button" onclick="saveRaidRoles()">${state.savingRoles ? "Speichert..." : "Rollen speichern"}</button>
+          <button class="btn" type="button" onclick="toggleRoleEditor()">Schließen</button>
+        </div>
+        <div class="role-grid">
+          ${(state.data.players || []).map(player => `
+            <label class="role-item" style="color:${classColor(player.className)}">
+              <span class="role-name">${escapeHtml(player.name)}</span>
+              <select onchange="updateLocalRole('${escapeHtml(player.name)}', this.value)">
+                ${options.map(option => `<option value="${escapeHtml(option.value)}" ${player.raidRole === option.value ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
+              </select>
+            </label>
+          `).join("")}
+        </div>
+      `;
     }
 
     function classGroups(){
@@ -515,6 +622,7 @@
       state.search = (document.getElementById("searchInput").value || "").trim().toLowerCase();
       renderTabs();
       renderClassControls();
+      renderRoleEditor();
       renderTable();
     }
 
