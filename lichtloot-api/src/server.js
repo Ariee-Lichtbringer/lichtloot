@@ -3398,6 +3398,30 @@ function inferClassFromSpellName(spellName) {
   return found ? found[0] : "";
 }
 
+function rpbCastMeta(spellName, className = "") {
+  const text = clean(spellName).toLowerCase();
+  if (!text || text.startsWith("unbekannter spell")) return { castTime: 0, kind: "none" };
+  const rules = [
+    ["aoe", 0, ["cleave", "whirlwind", "multi-shot", "volley", "rain of fire", "hellfire", "blizzard", "arcane explosion", "cone of cold", "holy nova", "prayer of healing", "chain heal", "tranquility", "thunder clap", "sapper", "dynamite"]],
+    ["st", 3.5, ["greater heal"]],
+    ["st", 3.0, ["healing touch", "starfire", "fireball", "shadow bolt", "aimed shot", "pyroblast", "soul fire"]],
+    ["st", 2.5, ["frostbolt", "smite", "holy fire", "heal", "mind blast", "wrath", "lightning bolt", "chain lightning"]],
+    ["st", 2.0, ["regrowth", "flash heal", "flash of light", "shadow bolt volley"]],
+    ["st", 1.5, ["renew", "rejuvenation", "moonfire", "arcane missiles", "scorch", "fire blast", "holy shock", "immolate", "searing pain", "corruption", "drain life", "drain mana", "drain soul", "shoot", "arcane shot", "serpent sting", "exorcism", "judgement", "cleanse", "purify", "dispel magic", "abolish disease", "cure disease", "power word", "shadow word", "faerie fire", "insect swarm", "hibernate", "banish", "curse of", "shadowburn"]],
+    ["st", 1.0, ["heroic strike", "bloodthirst", "execute", "revenge", "sunder armor", "shield bash", "pummel", "kick", "sinister strike", "backstab", "eviscerate", "ambush", "gouge", "kidney shot", "rupture", "garrote", "slice and dice", "hamstring", "taunt", "battle shout", "demoralizing shout", "mortal strike", "overpower", "slam"]]
+  ];
+  const found = rules.find(([, , terms]) => terms.some(term => text.includes(term)));
+  if (!found) return { castTime: 0, kind: "none" };
+  let [, castTime, terms] = found;
+  const kind = found[0];
+  if (className === "Mage" && text.includes("fireball")) castTime = 3.5;
+  if (className === "Mage" && text.includes("frostbolt")) castTime = 2.5;
+  if (text.includes("arcane missiles")) castTime = 5;
+  if (text.includes("arcane explosion")) castTime = 1.5;
+  if (text.includes("cleave") || text.includes("whirlwind") || text.includes("thunder clap")) castTime = 1;
+  return { castTime, kind };
+}
+
 async function buildClaAnalysisRows(analysis) {
   const { token, report, players, fightIds } = await fetchReportBaseForAnalysis(analysis.report_code);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds);
@@ -3561,6 +3585,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const overhealTotals = {};
   const healingBySpell = {};
   const classCasts = {};
+  const stSecondsByPlayer = {};
+  const aoeSecondsByPlayer = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
@@ -3606,6 +3632,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!classCasts[player.className]) classCasts[player.className] = {};
     if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
     classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
+    const meta = rpbCastMeta(spell, player.className);
+    if (meta.castTime > 0 && meta.kind === "aoe") {
+      aoeSecondsByPlayer[player.name] = (aoeSecondsByPlayer[player.name] || 0) + meta.castTime;
+    } else if (meta.castTime > 0 && meta.kind === "st") {
+      stSecondsByPlayer[player.name] = (stSecondsByPlayer[player.name] || 0) + meta.castTime;
+    }
   }
 
   if (castsTable && Array.isArray(castsTable.entries)) {
@@ -3712,18 +3744,35 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   };
   const engineeringTone = label => label.indexOf("damage done") > -1 ? "engineeringTotal" : "engineering";
 
+  const maxTotalActiveSeconds = Math.max(1, ...playerNames.map(player => {
+    return Math.round((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0));
+  }));
   const activityRows = [
-    customRow("Sekunden aktiv", Object.fromEntries(playerNames.map(player => [
+    customRow("Sekunden aktiv auf Einzelziel", Object.fromEntries(playerNames.map(player => [
       player,
-      formatCountValue(wclActiveSeconds[player] || activeSeconds[player]?.size || 0)
+      formatCountValue(stSecondsByPlayer[player])
     ])), { tone: "activity" }),
-    customRow("Aktivität in %", Object.fromEntries(playerNames.map(player => [
+    customRow("Aktiv auf Einzelziel %", Object.fromEntries(playerNames.map(player => [
       player,
-      wclActivePercent[player] || (activeSeconds[player]?.size ? `${Math.min(100, Math.round(activeSeconds[player].size * 100 / totalFightSeconds))}%` : "")
+      stSecondsByPlayer[player] ? `${Math.round((stSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
     ])), { tone: "activity" }),
-    customRow("Aktive Events", Object.fromEntries(playerNames.map(player => [
+    customRow("Aktiv gesamt %", Object.fromEntries(playerNames.map(player => [
       player,
-      formatCountValue(activeEventCounts[player])
+      (stSecondsByPlayer[player] || aoeSecondsByPlayer[player])
+        ? `${Math.round(((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0)) * 100 / maxTotalActiveSeconds)}%`
+        : ""
+    ])), { tone: "activityStrong" }),
+    customRow("Aktiv auf AoE %", Object.fromEntries(playerNames.map(player => [
+      player,
+      aoeSecondsByPlayer[player] ? `${Math.round((aoeSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
+    ])), { tone: "activity" }),
+    customRow("Sekunden aktiv auf AoE", Object.fromEntries(playerNames.map(player => [
+      player,
+      formatCountValue(aoeSecondsByPlayer[player])
+    ])), { tone: "activity" }),
+    customRow("WCL-Aktivität gesamt", Object.fromEntries(playerNames.map(player => [
+      player,
+      wclActivePercent[player] || ""
     ])), { tone: "activity" })
   ];
 
