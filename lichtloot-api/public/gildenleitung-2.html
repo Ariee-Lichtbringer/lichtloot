@@ -1,0 +1,5586 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LichtLoot - Gildenleitung</title>
+<style>
+:root{
+  --gold:#facc15;
+  --bg:#08111f;
+  --panel:rgba(12,18,32,.78);
+  --panel2:rgba(2,6,23,.58);
+  --line:rgba(255,255,255,.10);
+  --soft:rgba(148,163,184,.18);
+  --text:#f8fafc;
+  --muted:#cbd5e1;
+  --blue:#60a5fa;
+  --green:#22c55e;
+  --red:#ef4444;
+  --violet:#a78bfa;
+  --cyan:#22d3ee;
+  --orange:#fb923c;
+  --ink:#111827;
+}
+
+*{box-sizing:border-box}
+.hidden{display:none!important}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:linear-gradient(rgba(8,17,31,.78), rgba(8,17,31,.90)),url('./images/back.jpeg');
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+
+button,input,select{font:inherit}
+
+.shell{
+  width:100%;
+  min-width:0;
+  padding:28px 26px 32px;
+}
+
+.app-frame{
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:220px minmax(0,1fr);
+}
+
+.sidebar{
+  position:sticky;
+  top:0;
+  min-height:100vh;
+  padding:24px 12px;
+  border-right:1px solid rgba(250,204,21,.16);
+  background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
+  backdrop-filter:blur(10px);
+}
+
+.side-logo{
+  width:170px;
+  height:112px;
+  object-fit:contain;
+  display:block;
+  margin:0 auto 22px;
+  filter:drop-shadow(0 14px 20px rgba(0,0,0,.55));
+}
+
+.side-nav{
+  display:grid;
+  gap:7px;
+}
+
+.side-link{
+  width:100%;
+  min-height:44px;
+  border:1px solid transparent;
+  border-radius:8px;
+  padding:9px 11px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#dbeafe;
+  background:transparent;
+  text-align:left;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.side-link:hover,
+.side-link.active{
+  border-color:rgba(250,204,21,.32);
+  background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(15,23,42,.28));
+  color:#fde68a;
+}
+
+.side-icon{
+  width:22px;
+  text-align:center;
+  color:#fbbf24;
+  font-size:18px;
+}
+
+.side-spacer{height:18px}
+
+.sidebar-foot{
+  position:absolute;
+  left:12px;
+  right:12px;
+  bottom:18px;
+}
+
+.dashboard-main{
+  min-width:0;
+}
+
+.topbar{
+  border:0;
+  border-radius:0;
+  background:transparent;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  backdrop-filter:blur(8px);
+}
+
+.brand{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:10px;
+  align-items:center;
+}
+
+.brand-logo{
+  width:74px;
+  height:54px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 16px rgba(0,0,0,.45));
+}
+
+.brand-copy{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.brand h1{
+  margin:0;
+  color:#fbbf24;
+  font-size:34px;
+  line-height:1;
+  letter-spacing:0;
+}
+
+.brand p{
+  margin:0;
+  color:#dbeafe;
+  font-weight:600;
+  font-size:13px;
+}
+
+.top-profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:54px;
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(250,204,21,.18);
+  background:rgba(2,6,23,.46);
+}
+
+.top-profile img{
+  width:38px;
+  height:38px;
+  object-fit:contain;
+}
+
+.top-profile strong{display:block;color:#f8fafc;font-size:14px}
+.top-profile span{display:block;color:#cbd5e1;font-size:12px}
+
+.nav{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn,
+.icon-btn{
+  border:1px solid rgba(148,163,184,.28);
+  background:linear-gradient(135deg,rgba(15,23,42,.82),rgba(2,6,23,.62));
+  color:#e5edf8;
+  font-weight:700;
+  border-radius:8px;
+  min-height:34px;
+  padding:7px 11px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.btn:hover,
+.icon-btn:hover{
+  border-color:rgba(250,204,21,.48);
+  background:linear-gradient(135deg,rgba(30,41,59,.82),rgba(15,23,42,.72));
+}
+
+.btn.danger{
+  border-color:rgba(248,113,113,.42);
+  background:rgba(127,29,29,.24);
+  color:#fecaca;
+}
+
+.btn.ghost{
+  background:rgba(15,23,42,.66);
+  border-color:rgba(148,163,184,.24);
+  color:#cbd5e1;
+}
+
+.panel{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(12,18,32,.82),rgba(2,6,23,.58));
+  padding:10px;
+  box-shadow:none;
+  backdrop-filter:blur(8px);
+}
+
+.quick-actions{
+  margin-top:18px;
+  border:1px solid rgba(250,204,21,.16);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(2,6,23,.62),rgba(12,18,32,.46));
+  display:grid;
+  grid-template-columns:repeat(5,minmax(150px,1fr));
+  overflow:hidden;
+}
+
+.quick-action{
+  min-height:76px;
+  border:0;
+  border-right:1px solid rgba(148,163,184,.16);
+  background:transparent;
+  color:#e5edf8;
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:12px;
+  align-items:center;
+  padding:14px 18px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.quick-action:last-child{border-right:0}
+.quick-action:hover{background:rgba(250,204,21,.08)}
+.quick-action .qa-icon{font-size:26px;color:#fbbf24}
+.quick-action strong{display:block;color:#fde68a;font-size:13px}
+.quick-action span{display:block;color:#cbd5e1;font-size:12px;margin-top:3px}
+
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 310px;
+  gap:18px;
+  align-items:start;
+  margin-top:18px;
+}
+
+.dashboard-column{
+  display:grid;
+  gap:14px;
+}
+
+.dashboard-column > details.panel:not([open]),
+.dashboard-column > .grid > details.panel:not([open]){
+  display:none;
+}
+
+.stat-grid{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(145px,1fr));
+  gap:12px;
+}
+
+.stat-card{
+  min-height:122px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(12,18,32,.84),rgba(2,6,23,.48));
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.stat-card .stat-icon{font-size:28px;color:#fbbf24}
+.stat-card span{color:#dbeafe;font-weight:800;font-size:13px}
+.stat-card strong{display:block;margin-top:5px;font-size:30px;color:#f8fafc}
+.stat-card .stat-subline{
+  margin-top:4px;
+  color:#c4b5fd;
+  font-size:12px;
+  font-weight:900;
+}
+.stat-card.blue strong{color:#60a5fa}
+.stat-card.violet strong{color:#c084fc}
+.stat-card.red strong{color:#f87171}
+.stat-card.green strong{color:#86efac}
+.stat-card a,
+.stat-card button{
+  align-self:flex-start;
+  border:0;
+  background:transparent;
+  color:#fbbf24;
+  font-weight:900;
+  padding:0;
+  cursor:pointer;
+}
+
+.dashboard-card{
+  border:1px solid rgba(250,204,21,.16);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(12,18,32,.82),rgba(2,6,23,.54));
+  padding:16px;
+}
+
+.dashboard-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+  margin-bottom:12px;
+}
+
+.dashboard-card-head h2{
+  margin:0;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.dashboard-card-head button{
+  border:0;
+  background:transparent;
+  color:#fbbf24;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.active-raid-list{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+}
+
+.active-raid-card{
+  min-height:210px;
+  display:grid;
+  grid-template-columns:78px 1fr;
+  gap:10px;
+  align-items:start;
+  position:relative;
+  overflow:hidden;
+  padding:12px;
+  border:1px solid rgba(250,204,21,.18);
+  border-radius:8px;
+  background:
+    linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
+    rgba(2,6,23,.34);
+  box-shadow:0 14px 28px rgba(0,0,0,.18);
+}
+
+.active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
+
+.active-raid-image{
+  width:78px;
+  height:122px;
+  border-radius:5px;
+  background-image:
+    linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
+    var(--raid-image);
+  background-size:cover;
+  background-position:center;
+  border:1px solid rgba(148,163,184,.16);
+  box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
+}
+
+.active-raid-body{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+
+.active-raid-title{
+  color:#f8fafc;
+  font-size:15px;
+  font-weight:900;
+  line-height:1.2;
+}
+
+.active-raid-meta{
+  margin-top:4px;
+  color:#cbd5e1;
+  font-weight:700;
+  font-size:12px;
+}
+
+.active-raid-side{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:stretch;
+}
+
+.active-raid-count{
+  color:#e5edf8;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.active-raid-count span{
+  color:#cbd5e1;
+  font-size:12px;
+  display:block;
+  font-weight:700;
+  margin-top:2px;
+}
+
+.active-raid-stats{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:8px;
+}
+
+.active-raid-stat{
+  display:flex;
+  gap:5px;
+  align-items:center;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:900;
+}
+
+.active-raid-stat strong{
+  color:#fde68a;
+}
+
+.active-raid-actions{
+  grid-column:1 / -1;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:stretch;
+  margin-top:0;
+}
+
+.active-raid-actions .small-btn{
+  flex:1 1 calc(50% - 8px);
+  min-width:105px;
+}
+
+.active-raid-lead-card{
+  grid-column:1 / -1;
+  border:1px solid rgba(250,204,21,.28);
+  border-radius:6px;
+  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
+  padding:8px 10px;
+  min-width:0;
+}
+
+.active-raid-lead-label{
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.active-raid-lead-pin{
+  display:block;
+  margin-top:4px;
+  color:#fbbf24;
+  font-size:20px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:1px;
+  word-break:break-word;
+}
+
+.active-raid-id{
+  display:block;
+  margin-top:6px;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:700;
+  white-space:normal;
+}
+
+.side-card{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.48));
+  padding:15px;
+}
+
+.side-card h3{
+  margin:0 0 12px;
+  color:#f8fafc;
+  font-size:15px;
+  text-transform:none;
+  letter-spacing:0;
+}
+
+.mini-list{
+  display:grid;
+  gap:9px;
+}
+
+.mini-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  color:#dbeafe;
+  font-size:13px;
+  font-weight:800;
+}
+
+.mini-action{
+  width:100%;
+  border:0;
+  background:transparent;
+  padding:0;
+  text-align:left;
+  cursor:pointer;
+}
+
+.mini-action:hover span:first-child{
+  color:#fde68a;
+}
+
+.mini-row span:last-child{color:#86efac}
+.mini-row small{
+  display:block;
+  margin-top:2px;
+  color:#94a3b8;
+  font-size:11px;
+}
+
+.auth-panel,
+.create-panel,
+.raid-panel,
+.player-panel,
+.p0-panel,
+.issue-panel{background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56))}
+
+.auth-panel{border-color:rgba(250,204,21,.18)}
+.create-panel{border-color:rgba(250,204,21,.22)}
+.raid-panel{border-color:rgba(250,204,21,.22)}
+.player-panel{border-color:rgba(250,204,21,.16)}
+.p0-panel{border-color:rgba(250,204,21,.20)}
+.issue-panel{border-color:rgba(250,204,21,.20)}
+
+.unlock{
+  display:grid;
+  grid-template-columns:1fr auto auto;
+  gap:8px;
+  align-items:end;
+}
+
+.field label{
+  display:block;
+  color:var(--gold);
+  text-transform:uppercase;
+  font-size:11px;
+  font-weight:900;
+  margin-bottom:4px;
+}
+
+.auth-panel .field label,
+.create-panel .field label{color:#facc15}
+.create-panel summary,
+.p0-panel summary,
+.issue-panel summary,
+.raid-panel summary,
+.player-panel summary{color:#fde68a}
+
+input,
+select{
+  width:100%;
+  min-height:34px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(2,6,23,.72);
+  color:white;
+  padding:7px 9px;
+  outline:none;
+  font-weight:600;
+  font-size:13px;
+}
+
+input:focus,
+select:focus{border-color:rgba(96,165,250,.75)}
+
+.status{
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(2,6,23,.42);
+  border-radius:8px;
+  padding:8px 10px;
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+}
+
+.status.good{color:#bbf7d0;border-color:rgba(34,197,94,.45)}
+.status.bad{color:#fecaca;border-color:rgba(239,68,68,.45)}
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(160px, 1fr));
+  gap:8px;
+  margin-top:8px;
+}
+
+.metric{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  padding:8px 10px;
+}
+
+.metric:nth-child(1),
+.metric:nth-child(2),
+.metric:nth-child(3),
+.metric:nth-child(4){border-color:rgba(255,255,255,.10);background:rgba(2,6,23,.32)}
+
+.metric span{
+  display:block;
+  color:var(--muted);
+  font-weight:800;
+  font-size:11px;
+}
+
+.metric strong{
+  display:block;
+  margin-top:2px;
+  font-size:20px;
+  color:var(--gold);
+}
+
+.metric:nth-child(1) strong,
+.metric:nth-child(2) strong,
+.metric:nth-child(3) strong,
+.metric:nth-child(4) strong{color:#fde68a}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-items:start;
+}
+
+.section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+
+.section-head h2{
+  margin:0;
+  color:var(--gold);
+  font-size:18px;
+}
+
+.create-panel summary,
+.p0-panel summary,
+.issue-panel summary,
+.worldbuff-panel summary,
+.raid-panel summary,
+.player-panel summary{
+  cursor:pointer;
+  font-size:18px;
+  font-weight:700;
+  list-style:none;
+}
+
+.create-panel summary::-webkit-details-marker,
+.p0-panel summary::-webkit-details-marker,
+.issue-panel summary::-webkit-details-marker,
+.worldbuff-panel summary::-webkit-details-marker,
+.raid-panel summary::-webkit-details-marker,
+.player-panel summary::-webkit-details-marker,
+.log-analysis-panel summary::-webkit-details-marker{display:none}
+
+.create-panel summary::after,
+.p0-panel summary::after,
+.issue-panel summary::after,
+.worldbuff-panel summary::after,
+.raid-panel summary::after,
+.player-panel summary::after,
+.log-analysis-panel summary::after{
+  content:" öffnen";
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+}
+
+.create-panel[open] summary::after,
+.p0-panel[open] summary::after,
+.issue-panel[open] summary::after,
+.worldbuff-panel[open] summary::after,
+.raid-panel[open] summary::after,
+.player-panel[open] summary::after,
+.log-analysis-panel[open] summary::after{content:" schließen"}
+
+.create-panel-body,
+.p0-panel-body,
+.issue-panel-body,
+.worldbuff-panel-body,
+.raid-panel-body,
+.player-panel-body,
+.log-analysis-body{
+  display:grid;
+  gap:8px;
+  margin-top:8px;
+}
+
+.create-grid{
+  display:grid;
+  grid-template-columns:1.2fr 150px 130px 1fr auto;
+  gap:8px;
+  align-items:end;
+}
+
+.create-result{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+  padding:8px 10px;
+  color:var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+.log-analysis-layout{
+  display:grid;
+  gap:10px;
+}
+
+.log-analysis-hero{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  padding:14px 18px;
+  border:1px solid rgba(96,165,250,.18);
+  border-radius:12px;
+  background:
+    radial-gradient(circle at 6% 0%,rgba(37,99,235,.18),transparent 30%),
+    linear-gradient(135deg,rgba(8,18,36,.94),rgba(2,6,23,.76));
+  box-shadow:0 18px 60px rgba(0,0,0,.22);
+}
+
+.log-analysis-title{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.log-analysis-mark{
+  width:46px;
+  height:46px;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 14px rgba(250,204,21,.22));
+}
+
+.log-analysis-hero h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:24px;
+  line-height:1;
+  text-transform:uppercase;
+}
+
+.log-analysis-hero h3 span{color:#fbbf24}
+
+.log-analysis-hero p{
+  margin:4px 0 0;
+  color:#cbd5e1;
+  font-weight:800;
+  font-size:13px;
+}
+
+.log-analysis-head-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.log-analysis-count{
+  min-width:86px;
+  padding:8px 12px;
+  border:1px solid rgba(96,165,250,.28);
+  border-radius:10px;
+  background:rgba(15,23,42,.74);
+  text-align:center;
+}
+
+.log-analysis-count span{
+  display:block;
+  color:#7aa7ff;
+  font-size:26px;
+  line-height:1;
+  font-weight:950;
+}
+
+.log-analysis-count small{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.log-analysis-toolbar{
+  display:grid;
+  grid-template-columns:minmax(260px,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border:1px solid rgba(96,165,250,.12);
+  border-radius:12px;
+  background:rgba(8,18,36,.70);
+}
+
+.log-analysis-table table{
+  min-width:900px;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.log-analysis-table td:first-child strong{
+  color:#e5e7eb;
+  font-size:16px;
+}
+
+.log-analysis-table th{
+  color:#e5e7eb;
+  background:rgba(8,18,36,.92);
+  letter-spacing:0;
+}
+
+.log-analysis-table td{
+  padding:10px 14px;
+  background:rgba(5,12,25,.42);
+}
+
+.log-raid-cell{
+  display:grid;
+  grid-template-columns:48px 1fr;
+  gap:12px;
+  align-items:center;
+  min-width:260px;
+}
+
+.log-raid-image{
+  width:48px;
+  height:48px;
+  border-radius:8px;
+  object-fit:cover;
+  border:1px solid rgba(250,204,21,.16);
+  box-shadow:0 10px 22px rgba(0,0,0,.24);
+}
+
+.log-raid-code{
+  display:block;
+  margin-top:3px;
+  color:#93a4bd;
+  font-size:13px;
+  font-weight:800;
+}
+
+.log-date-cell{
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  min-width:130px;
+}
+
+.log-date-icon{
+  color:#cbd5e1;
+  font-size:15px;
+  line-height:1.4;
+}
+
+.log-date-main{
+  color:#e5e7eb;
+  font-weight:900;
+}
+
+.log-date-sub{
+  margin-top:2px;
+  color:#94a3b8;
+  font-weight:800;
+  font-size:12px;
+}
+
+.log-analysis-empty{
+  padding:28px 14px;
+  text-align:center;
+  color:var(--muted);
+  font-weight:900;
+}
+
+.log-action-stack{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(112px,1fr));
+  gap:6px;
+  min-width:390px;
+}
+
+.log-action-stack .small-btn{
+  justify-content:center;
+}
+
+.log-analysis-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  padding:12px 16px;
+  border:1px solid rgba(96,165,250,.14);
+  border-radius:12px;
+  background:rgba(8,18,36,.70);
+  color:#cbd5e1;
+  font-weight:800;
+}
+
+.log-pagination{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.log-page-btn{
+  min-width:36px;
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:7px;
+  background:rgba(15,23,42,.66);
+  color:#e5e7eb;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.log-page-btn.active{
+  border-color:rgba(96,165,250,.62);
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+}
+
+.log-page-btn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+@media(max-width:760px){
+  .log-analysis-hero,
+  .log-analysis-toolbar{
+    grid-template-columns:1fr;
+    display:grid;
+  }
+
+  .log-analysis-count{
+    text-align:left;
+  }
+
+  .log-action-stack{
+    grid-template-columns:1fr 1fr;
+    min-width:0;
+  }
+}
+
+.created-raid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:8px;
+}
+
+.created-pin{
+  border:1px solid rgba(96,165,250,.32);
+  border-radius:8px;
+  padding:8px;
+  background:rgba(15,23,42,.65);
+}
+
+.created-pin span{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+}
+
+.created-pin strong{
+  display:block;
+  margin:3px 0 6px;
+  color:#bfdbfe;
+  font-size:18px;
+}
+
+.discord-copy-box{
+  margin-top:10px;
+}
+
+.discord-copy-text{
+  width:100%;
+  min-height:120px;
+  resize:vertical;
+  margin-top:6px;
+  padding:9px;
+  border-radius:8px;
+  border:1px solid rgba(250,204,21,.26);
+  background:rgba(2,6,23,.72);
+  color:#f8fafc;
+  font:600 12px/1.4 Arial, Helvetica, sans-serif;
+}
+
+.tools{
+  display:grid;
+  grid-template-columns:1fr 180px;
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.table-wrap{
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.24);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:1120px;
+}
+
+th,
+td{
+  padding:7px 8px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+  text-align:left;
+  vertical-align:top;
+}
+
+th{
+  position:sticky;
+  top:0;
+  background:rgba(2,6,23,.62);
+  color:#fde68a;
+  text-transform:uppercase;
+  font-size:11px;
+  z-index:1;
+}
+
+.raid-panel th,
+.player-panel th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+tr:hover td{background:rgba(250,204,21,.035)}
+
+.raid-title{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:150px;
+}
+
+.raid-title strong{
+  color:#f8fafc;
+  font-size:13px;
+}
+
+.raid-meta{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:800;
+}
+
+.raid-meta span{
+  padding:2px 5px;
+  border-radius:999px;
+  background:rgba(2,6,23,.34);
+  border:1px solid rgba(255,255,255,.10);
+}
+
+.pin{
+  color:#dbeafe;
+  font-weight:700;
+  font-family:Arial, Helvetica, sans-serif;
+  font-size:13px;
+}
+
+.muted{color:var(--muted)}
+.ok{color:#bbf7d0}
+.warn{color:#fde68a}
+.bad{color:#fecaca}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  min-height:24px;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(2,6,23,.42);
+  color:#e2e8f0;
+  font-size:11px;
+  font-weight:700;
+}
+
+.badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
+.badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
+.badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+
+.analysis-progress{
+  width:min(180px,100%);
+  margin-top:7px;
+}
+
+.analysis-progress-list{
+  display:grid;
+  gap:7px;
+  margin-top:8px;
+  min-width:190px;
+}
+
+.analysis-progress-row{
+  display:grid;
+  grid-template-columns:34px minmax(120px,1fr) 46px;
+  gap:7px;
+  align-items:center;
+}
+
+.analysis-progress-name{
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:950;
+}
+
+.analysis-progress-value{
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:900;
+  text-align:right;
+}
+
+.analysis-progress-track{
+  height:7px;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:999px;
+  background:rgba(15,23,42,.72);
+}
+
+.analysis-progress-fill{
+  height:100%;
+  min-width:8px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#2563eb,#22c55e);
+  box-shadow:0 0 14px rgba(34,197,94,.38);
+  transition:width .4s ease;
+}
+
+.analysis-progress-fill.is-failed{
+  min-width:100%;
+  background:linear-gradient(90deg,#92400e,#facc15);
+  box-shadow:0 0 12px rgba(250,204,21,.26);
+}
+
+.analysis-progress.is-running .analysis-progress-fill{
+  background:linear-gradient(90deg,#1d4ed8,#22c55e,#facc15);
+  background-size:220% 100%;
+  animation:analysisProgressPulse 1.8s linear infinite;
+}
+
+.analysis-progress-label{
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:900;
+}
+
+.analysis-warning{
+  margin-top:6px;
+  color:#fde68a;
+  font-size:10px;
+  font-weight:800;
+  max-width:260px;
+}
+
+.log-status-stack{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+}
+
+@keyframes analysisProgressPulse{
+  from{background-position:0 0}
+  to{background-position:220% 0}
+}
+
+.actions{
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  min-width:260px;
+}
+
+.action-row{
+  display:flex;
+  gap:5px;
+}
+
+.small-btn{
+  min-height:28px;
+  padding:5px 8px;
+  border-radius:7px;
+  border:1px solid rgba(148,163,184,.24);
+  background:rgba(15,23,42,.58);
+  color:#e5edf8;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  font-size:12px;
+}
+
+.small-btn.primary{
+  border-color:rgba(96,165,250,.38);
+  background:rgba(30,64,175,.22);
+  color:#bfdbfe;
+}
+
+.small-btn.danger{
+  border-color:rgba(248,113,113,.36);
+  background:rgba(127,29,29,.20);
+  color:#fecaca;
+}
+
+.small-btn.ghost{
+  border-color:rgba(148,163,184,.24);
+  background:rgba(15,23,42,.50);
+  color:#cbd5e1;
+}
+
+.small-btn.good{
+  border-color:rgba(34,197,94,.34);
+  background:rgba(22,101,52,.22);
+  color:#bbf7d0;
+}
+
+.small-btn:hover{
+  border-color:rgba(250,204,21,.46);
+  background:rgba(30,41,59,.72);
+}
+
+.reset-card{
+  border:1px solid rgba(96,165,250,.28);
+  background:rgba(15,23,42,.62);
+  border-radius:8px;
+  padding:8px;
+  margin-bottom:8px;
+}
+
+.reset-card h3{
+  margin:0 0 6px;
+  color:var(--gold);
+}
+
+.new-pin{
+  display:inline-block;
+  margin-top:6px;
+  padding:6px 9px;
+  border-radius:8px;
+  border:1px solid rgba(96,165,250,.45);
+  color:#bfdbfe;
+  font-size:18px;
+  font-weight:900;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(7px);
+}
+
+.modal.hidden{display:none}
+
+.modal-box{
+  width:min(1080px, calc(100vw - 24px));
+  min-width:min(640px, calc(100vw - 24px));
+  min-height:360px;
+  max-height:min(780px, calc(100vh - 24px));
+  overflow:hidden;
+  resize:both;
+  display:flex;
+  flex-direction:column;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(5,9,20,.96);
+  box-shadow:0 24px 80px rgba(0,0,0,.42);
+}
+
+.modal-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  padding:10px 12px;
+  border-bottom:1px solid rgba(148,163,184,.18);
+}
+
+.modal-title h2{
+  margin:0;
+  color:var(--gold);
+  font-size:20px;
+}
+
+.modal-title p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-weight:800;
+  font-size:12px;
+}
+
+.modal-content{
+  padding:10px;
+  overflow:auto;
+}
+
+.prio-toolbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+  padding:7px 9px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(15,23,42,.48);
+}
+
+.prio-toolbar-actions,
+.prio-row-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+.transfer-light{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 8px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:999px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.transfer-dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  box-shadow:0 0 12px currentColor;
+}
+
+.transfer-light.done{
+  color:#22c55e;
+  border-color:rgba(34,197,94,.38);
+  background:rgba(34,197,94,.10);
+}
+
+.transfer-light.open{
+  color:#ef4444;
+  border-color:rgba(239,68,68,.38);
+  background:rgba(239,68,68,.10);
+}
+
+.prio-table{
+  min-width:780px;
+}
+
+.bench-prio-row{
+  color:#94a3b8;
+  background:rgba(148,163,184,.10);
+}
+
+.bench-prio-row .item-with-tooltip,
+.bench-prio-row strong{
+  opacity:.58;
+}
+
+.bench-label{
+  display:inline-flex;
+  margin-left:6px;
+  padding:2px 7px;
+  border:1px solid rgba(148,163,184,.34);
+  border-radius:999px;
+  color:#cbd5e1;
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.epic{color:#c084fc}
+.rare{color:#60a5fa}
+.uncommon{color:#4ade80}
+.legendary{color:#fb923c}
+.class-warrior{color:#c69b6d}
+.class-paladin{color:#f48cba}
+.class-hunter{color:#aad372}
+.class-rogue{color:#fff468}
+.class-priest{color:#f0ebe0}
+.class-shaman{color:#0070dd}
+.class-mage{color:#3fc7eb}
+.class-warlock{color:#8788ee}
+.class-druid{color:#ff7c0a}
+
+.item-with-tooltip{
+  cursor:help;
+  font-weight:400;
+}
+
+.item-with-icon{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+.item-icon{
+  width:18px;
+  height:18px;
+  border-radius:3px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(2,6,23,.7);
+  object-fit:cover;
+}
+
+.tooltip{
+  position:fixed;
+  z-index:100;
+  width:330px;
+  max-width:calc(100vw - 24px);
+  padding:10px;
+  border-radius:8px;
+  background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));
+  border:1px solid rgba(148,163,184,.75);
+  box-shadow:0 0 28px rgba(0,0,0,.85);
+  pointer-events:none;
+  font-size:11px;
+  line-height:1.35;
+}
+
+.tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
+.tooltip-title.epic{color:#a335ee}
+.tooltip-title.rare{color:#0070dd}
+.tooltip-title.uncommon{color:#1eff00}
+.tooltip-title.legendary{color:#ff8000}
+.tooltip-ilvl{color:#ffd100;font-weight:900;margin-bottom:6px}
+.tooltip-row{display:flex;justify-content:space-between;gap:14px;color:white;margin-top:3px}
+.tooltip-stat{color:white;margin-top:3px}
+.tooltip-equip{color:#1eff00;margin-top:6px}
+.tooltip-extra{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
+.tooltip-extra strong{color:#facc15}
+
+.character-stack{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:5px;
+}
+
+.character-chip{
+  display:inline-flex;
+  gap:4px;
+  align-items:center;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(2,6,23,.38);
+  border-radius:999px;
+  padding:2px 7px;
+  font-size:11px;
+}
+
+.p0-toolbar{
+  display:grid;
+  grid-template-columns:150px 1fr auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.p0-points-input{
+  width:76px;
+  min-height:28px;
+  padding:4px 7px;
+}
+
+.p0-table{
+  min-width:920px;
+}
+
+.p0-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+.issue-toolbar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.issue-table{
+  min-width:1040px;
+}
+
+.issue-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+.issue-note{
+  max-width:320px;
+  white-space:normal;
+  color:#f8fafc;
+}
+
+.worldbuff-toolbar{
+  display:grid;
+  grid-template-columns:140px 140px 1fr auto auto auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.worldbuff-table{
+  min-width:1060px;
+}
+
+.worldbuff-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+
+.worldbuff-table tr.buff-day-row td{
+  background:var(--day-bg);
+}
+
+.worldbuff-table tr.buff-day-row:hover td{
+  background:var(--day-bg-hover);
+}
+
+.worldbuff-table tr.day-color-0{--day-bg:rgba(96,165,250,.055);--day-bg-hover:rgba(96,165,250,.10)}
+.worldbuff-table tr.day-color-1{--day-bg:rgba(250,204,21,.045);--day-bg-hover:rgba(250,204,21,.085)}
+
+.worldbuff-table td.buff-group-empty{
+  color:transparent;
+}
+
+.buff-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-width:74px;
+  font-weight:900;
+}
+
+.buff-hakkar{color:#86efac}
+.buff-ony{color:#fca5a5}
+.buff-nef{color:#f87171}
+.buff-rend{color:#fdba74}
+
+.worldbuff-caster{
+  min-width:150px;
+  min-height:30px;
+  padding:5px 8px;
+}
+
+.worldbuff-status{
+  min-width:120px;
+  min-height:30px;
+  padding:5px 8px;
+}
+
+.worldbuff-note-input{
+  min-width:260px;
+  min-height:30px;
+  padding:5px 8px;
+}
+
+.buff-create-grid{
+  display:grid;
+  grid-template-columns:120px 100px 120px 1fr 1fr 1.4fr auto;
+  gap:8px;
+  align-items:end;
+  margin:8px 0;
+  padding:8px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(15,23,42,.42);
+}
+
+.prio-p0{
+  display:inline-flex;
+  padding:2px 7px;
+  border-radius:999px;
+  border:1px solid rgba(34,197,94,.48);
+  color:#bbf7d0;
+  font-size:11px;
+  font-weight:900;
+}
+
+#prioModal .modal-box{border-color:rgba(96,165,250,.38)}
+#prioModal .modal-title h2{color:#fde68a}
+#messageModal .modal-box{
+  width:min(560px, calc(100vw - 24px));
+  min-width:min(420px, calc(100vw - 24px));
+  min-height:0;
+  resize:none;
+  border-color:rgba(250,204,21,.38);
+}
+#messageModal .modal-content{
+  display:grid;
+  gap:10px;
+}
+#messageModal textarea{
+  width:100%;
+  min-height:110px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(2,6,23,.72);
+  color:white;
+  padding:9px;
+  resize:vertical;
+  font-weight:600;
+}
+#messageModal .message-raid-preview{
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:8px;
+  padding:10px;
+  background:rgba(250,204,21,.08);
+  color:#e5edf8;
+  font-weight:800;
+}
+#messageModal .message-pin-preview{
+  display:inline-flex;
+  margin-top:8px;
+  padding:6px 10px;
+  border-radius:7px;
+  border:1px solid rgba(250,204,21,.38);
+  color:#fbbf24;
+  font-size:22px;
+  font-weight:950;
+  letter-spacing:1px;
+}
+#discordPostModal .modal-box{
+  width:min(620px, calc(100vw - 24px));
+}
+#discordPostText{
+  width:100%;
+  min-height:260px;
+  border-radius:8px;
+  border:1px solid rgba(250,204,21,.38);
+  background:rgba(2,6,23,.78);
+  color:#e5edf8;
+  padding:12px;
+  resize:vertical;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.prio-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+@media (max-width:1000px){
+  .app-frame{grid-template-columns:1fr}
+  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(250,204,21,.16)}
+  .sidebar-foot{position:static;margin-top:14px}
+  .side-logo{width:140px;height:80px;margin-bottom:10px}
+  .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .shell{padding:18px 12px 28px}
+  .dashboard-grid{grid-template-columns:1fr}
+  .quick-actions,
+  .stat-grid{grid-template-columns:1fr}
+  .active-raid-card{grid-template-columns:1fr}
+  .active-raid-side{align-items:flex-start}
+  .unlock,
+  .grid,
+  .create-grid,
+  .tools,
+  .summary,
+  .prio-actions{grid-template-columns:1fr}
+  .topbar{align-items:flex-start}
+  .nav{width:100%}
+  .btn{flex:1}
+  .p0-toolbar{grid-template-columns:1fr}
+  .worldbuff-toolbar{grid-template-columns:1fr}
+  .buff-create-grid{grid-template-columns:1fr}
+  .actions,
+  .action-row{grid-template-columns:1fr}
+  table{min-width:760px}
+}
+</style>
+</head>
+<body>
+<div class="app-frame">
+  <aside class="sidebar">
+    <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
+    <nav class="side-nav" aria-label="Gildenleitung Navigation">
+      <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
+      <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
+      <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
+      <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
+      <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
+      <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
+      <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
+      <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
+      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="side-icon">⚿</span>Admin</button>
+      <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
+      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="side-link" type="button" onclick="clearMasterCode()"><span class="side-icon">⚙</span>Sperren</button>
+    </div>
+  </aside>
+
+<main class="shell dashboard-main" id="dashboardTop">
+  <header class="topbar">
+    <div class="brand">
+      <img src="images/content.png" alt="LichtLoot" class="brand-logo" data-guild-brand-alt>
+      <div class="brand-copy">
+        <h1>Gildenleitung</h1>
+        <p>Raidlead-PINs, Raidstatus und Spielerlogins.</p>
+      </div>
+    </div>
+    <div class="nav" aria-label="Navigation">
+      <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
+      <div class="top-profile">
+        <img src="images/content.png" alt="">
+        <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="panel auth-panel compact-auth">
+    <div class="unlock">
+      <div class="field">
+        <label for="masterCode">Master-Code</label>
+        <input id="masterCode" type="password" placeholder="Master-Code eingeben" autocomplete="current-password" onkeydown="enterLoads(event)">
+      </div>
+      <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
+      <button class="btn ghost" type="button" onclick="clearMasterCode()">Sperren</button>
+    </div>
+    <div id="status" class="status" style="margin-top:12px">Bereit.</div>
+  </section>
+
+  <section class="quick-actions" aria-label="Schnellaktionen">
+    <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
+    <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
+    <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
+    <button class="quick-action" type="button" onclick="openLogAnalysisPanel()"><span class="qa-icon">◉</span><span><strong>Loganalysen</strong><span>WCL-Reports prüfen</span></span></button>
+    <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
+    <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
+    <button class="quick-action" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="qa-icon">⚿</span><span><strong>Admin</strong><span>SpielerLogin suchen</span></span></button>
+    <button class="quick-action" type="button" onclick="downloadGuildBackup()"><span class="qa-icon">⇩</span><span><strong>Sicherung</strong><span>Railway-Daten speichern</span></span></button>
+  </section>
+
+  <section class="stat-grid">
+    <div class="stat-card"><div><div class="stat-icon">⚔</div><span>Raids</span><strong id="raidCount">0</strong></div><button type="button" onclick="openRaidPanel()">Alle anzeigen →</button></div>
+    <div class="stat-card green"><div><div class="stat-icon">⚔</div><span>Geschlossene Eintragungen</span><strong id="openRaidCount">0</strong></div><button type="button" onclick="filterOpenRaids()">Eintragung zu anzeigen →</button></div>
+    <div class="stat-card blue"><div><div class="stat-icon">☷</div><span>Spielerlogins</span><strong id="playerCount">0</strong><div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div></div><button type="button" onclick="openPlayerPanel()">Alle anzeigen →</button></div>
+    <div class="stat-card red"><div><div class="stat-icon">✉</div><span>Postfach</span><strong id="issueCount">0</strong></div><button type="button" onclick="openIssueInboxPanel()">Öffnen →</button></div>
+  </section>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-column">
+      <section class="dashboard-card">
+        <div class="dashboard-card-head">
+          <h2>⚔ Aktive Raids</h2>
+          <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
+        </div>
+        <div id="activeRaidCards" class="active-raid-list">
+          <div class="muted">Noch keine Daten geladen.</div>
+        </div>
+      </section>
+
+  <details id="p0PlusPanel" class="panel p0-panel" ontoggle="if(this.open) loadP0PlusPanel()">
+    <summary>P0+ Liste</summary>
+    <div class="p0-panel-body">
+      <div id="p0PlusPanelContent" class="create-result">P0+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+    </div>
+  </details>
+
+  <details id="issueInboxPanel" class="panel issue-panel" ontoggle="if(this.open) loadIssueInboxPanel()">
+    <summary>Postfach</summary>
+    <div class="issue-panel-body">
+      <div id="issueInboxPanelContent" class="create-result">Meldungen aus dem Briefumschlag laden.</div>
+    </div>
+  </details>
+
+  <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
+    <summary>Loganalysen</summary>
+    <div class="log-analysis-body">
+      <div class="log-analysis-layout">
+        <div class="log-analysis-hero">
+          <div class="log-analysis-title">
+            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <div>
+              <h3>Warcraft Logs <span>Auswertungen</span></h3>
+              <p>Reports aus dem Logchannel und manuell eingetragene Links.</p>
+            </div>
+          </div>
+          <div class="log-analysis-head-actions">
+            <div class="log-analysis-count">
+              <span id="logAnalysisCount">0</span>
+              <small>Reports</small>
+            </div>
+            <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
+            <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
+            <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
+            <button class="btn danger" type="button" onclick="cleanupIncompleteRpbAnalyses()">Hängende RPB abbrechen</button>
+          </div>
+        </div>
+        <div class="log-analysis-toolbar">
+          <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
+          <button class="btn" type="button" onclick="saveManualLogAnalysis()">Link hinzufügen</button>
+        </div>
+      </div>
+      <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
+      <div class="table-wrap log-analysis-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Datum</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="logAnalysisRows">
+            <tr><td colspan="4" class="muted">Noch keine Loganalysen geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="logAnalysisFooter" class="log-analysis-footer"></div>
+    </div>
+  </details>
+
+  <details id="worldbuffPanel" class="panel worldbuff-panel" ontoggle="if(this.open) loadWorldbuffPanel()">
+    <summary>Worldbuffs</summary>
+    <div class="worldbuff-panel-body">
+      <div id="worldbuffPanelContent" class="create-result">Worldbuffs aus dem Sheet laden, Werfer setzen und Bot-Update vormerken.</div>
+    </div>
+  </details>
+
+  <details id="hordenbuffPanel" class="panel worldbuff-panel hordenbuff-panel" ontoggle="if(this.open) loadHordenbuffPanel()">
+    <summary>Hordenbuffs</summary>
+    <div class="worldbuff-panel-body">
+      <div id="hordenbuffPanelContent" class="create-result">Hordenbuff-Orga aus dem neuen Tab laden und Einträge bearbeiten.</div>
+    </div>
+  </details>
+
+  <div class="grid">
+    <details id="raidLeadPanel" class="panel raid-panel">
+      <summary>Raidlead-PINs</summary>
+      <div class="raid-panel-body">
+      <div class="tools">
+        <input id="raidSearch" type="search" placeholder="Raid, Datum, PIN oder Status suchen..." oninput="renderRaids()">
+        <input id="raidDateSearch" type="date" onchange="renderRaids()" aria-label="Datum suchen">
+      </div>
+      <div class="tools">
+        <select id="raidFilter" onchange="renderRaids()">
+          <option value="">Letzte 10</option>
+          <option value="offen">Offen</option>
+          <option value="geöffnet">Geöffnet</option>
+          <option value="geschlossen">Geschlossen</option>
+          <option value="archiviert">Archiviert</option>
+          <option value="alle">Alle anzeigen</option>
+        </select>
+        <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Datum</th>
+              <th>Prio-PIN</th>
+              <th>LeadPIN</th>
+              <th>P0+</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="raidRows">
+            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </details>
+
+    <details id="playerLoginPanel" class="panel player-panel">
+      <summary>Spielerlogins</summary>
+      <div class="player-panel-body">
+      <div id="lastReset" class="reset-card" style="display:none"></div>
+      <div class="tools">
+        <input id="playerSearch" type="search" placeholder="Spieler, Server oder Klasse suchen..." oninput="renderPlayers()">
+        <select id="classFilter" onchange="renderPlayers()">
+          <option value="">Alle Klassen</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Main & Twinks</th>
+              <th>Klassen</th>
+              <th>Login</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="playerRows">
+            <tr><td colspan="4" class="muted">Noch keine Daten geladen.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+    <aside class="dashboard-column">
+      <section class="side-card">
+        <h3>◎ Nächste Worldbuffs</h3>
+        <div id="worldbuffMiniList" class="mini-list">
+          <div class="mini-row"><span>Worldbuffs laden</span><span>→</span></div>
+        </div>
+      </section>
+      <section class="side-card">
+        <h3>☷ Letzte Spielerlogins</h3>
+        <div id="playerMiniList" class="mini-list">
+          <div class="mini-row"><span>Noch keine Daten</span><span>-</span></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+</div>
+
+<div id="prioModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="prioModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="prioModalTitle">Prioliste</h2>
+        <p id="prioModalSubline"></p>
+      </div>
+      <button class="btn danger" type="button" onclick="closePrioModal()">Schließen</button>
+    </div>
+    <div id="prioModalContent" class="modal-content">
+      <div class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<div id="messageModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="messageModalTitle">Nachricht senden</h2>
+        <p id="messageModalSubtitle">Empfänger als Charaktername eintragen.</p>
+      </div>
+      <button class="btn danger" type="button" onclick="closeMessageModal()">Schließen</button>
+    </div>
+    <div class="modal-content">
+      <div id="messageRaidPreview" class="message-raid-preview hidden"></div>
+      <div class="field">
+        <label for="messageRecipient">Charaktername</label>
+        <input id="messageRecipient" type="text" placeholder="z. B. Ariee">
+      </div>
+      <div class="field">
+        <label for="messageTitle">Betreff</label>
+        <input id="messageTitle" type="text" placeholder="Betreff">
+      </div>
+      <div class="field">
+        <label for="messageBody">Nachricht</label>
+        <textarea id="messageBody" placeholder="Nachricht schreiben"></textarea>
+      </div>
+      <button class="btn" type="button" onclick="submitMessageModal()">Nachricht senden</button>
+      <div id="messageModalStatus" class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<div id="discordPostModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="discordPostModalTitle">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="discordPostModalTitle">Discord-Post kopieren</h2>
+        <p>Fertigen Raid-Post kopieren und im passenden Discord-Channel einfügen.</p>
+      </div>
+      <button class="btn danger" type="button" onclick="closeDiscordPostModal()">Schließen</button>
+    </div>
+    <div class="modal-content">
+      <textarea id="discordPostText" readonly></textarea>
+      <button class="btn" type="button" onclick="copyDiscordPostText()">Text kopieren</button>
+      <div id="discordPostModalStatus" class="status">Bereit.</div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip" class="tooltip hidden"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
+const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
+const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
+const RAID_OPTIONS = {
+  mc:{ name:"Molten Core", short:"MC" },
+  bwl:{ name:"Blackwing Lair", short:"BWL" },
+  aq40:{ name:"Ahn'Qiraj 40", short:"AQ40" },
+  naxx:{ name:"Naxxramas", short:"NAXX" },
+  zg:{ name:"Zul Gurub", short:"ZG" },
+  aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
+  ony:{ name:"Onyxia", short:"ONY" }
+};
+
+function getCurrentGuildSlug(){
+  const params = new URLSearchParams(window.location.search);
+  const explicit = params.get("guild") || params.get("gilde");
+  if(explicit) return String(explicit).trim().toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  if(window.location.protocol === "file:") return "lichtloot";
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  const first = parts[0] || "";
+  if(first && !first.includes(".") && !["loot","data","images","js"].includes(first.toLowerCase())){
+    return first.toLowerCase().replace(/[^a-z0-9-]+/g,"-").replace(/^-+|-+$/g,"") || "lichtloot";
+  }
+  return "lichtloot";
+}
+
+function withGuildUrl(url){
+  const sep = String(url || "").includes("?") ? "&" : "?";
+  return String(url || "") + sep + CURRENT_GUILD_QUERY;
+}
+
+const GUILD_BRANDS = {
+  lichtloot: {
+    guildName: "Lichtbringer",
+    lootName: "LichtLoot",
+    footerName: "Lichtbringer Lootsystem"
+  }
+};
+
+function titleFromSlug(slug){
+  return String(slug || "gilde")
+    .split("-")
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getCurrentGuildBrand(){
+  const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
+  return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
+    guildName: fallback,
+    lootName: fallback + "Loot",
+    footerName: fallback + " Lootsystem"
+  };
+}
+
+const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
+let currentGuildInfo = null;
+
+async function fetchCurrentGuildInfo(){
+  try{
+    const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
+    const data = await response.json();
+    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    return currentGuildInfo;
+  }catch(error){
+    console.warn("Gildenbranding konnte nicht geladen werden.", error);
+    return null;
+  }
+}
+
+function lootTitleFromGuild(guild){
+  const slug = String(guild?.slug || CURRENT_GUILD_SLUG || "").trim();
+  if(slug === "lichtloot") return "LichtLoot";
+  return titleFromSlug(slug || guild?.name || "Lootsystem");
+}
+
+function applyGuildBrand(){
+  const guild = currentGuildInfo;
+  const brand = guild ? {
+    guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
+    lootName: lootTitleFromGuild(guild),
+    footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
+  } : CURRENT_GUILD_BRAND;
+  document.title = brand.lootName + " - Gildenleitung";
+  document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
+  document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
+  document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
+  document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => {
+    if(guild?.logoUrl) el.src = guild.logoUrl;
+  });
+  if(guild?.backgroundUrl){
+    document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
+  }
+  document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
+  document.querySelectorAll("[data-guild-onclick]").forEach(el => {
+    el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
+  });
+}
+const RAID_IMAGES = {
+  mc:"images/mc.jpg",
+  bwl:"images/bwl.jpg",
+  aq40:"images/aq40.jpg",
+  naxx:"images/naxx.jpg",
+  zg:"images/zg.jpg",
+  aq20:"images/aq20.jpg",
+  ony:"images/ony.jpg"
+};
+
+let guildData = { raids: [], players: [] };
+let p0PlusEntries = [];
+let issueReports = [];
+let logAnalyses = [];
+let logAnalysisRefreshTimer = null;
+let logAnalysisPage = 1;
+const LOG_ANALYSIS_PAGE_SIZE = 10;
+let guildSentMessages = [];
+let guildInboxTab = "reports";
+let worldbuffEntries = [];
+let hordenbuffEntries = [];
+let lootItemIndex = {};
+let lootDataLoaded = false;
+let lastOverviewLoadedAt = null;
+let dashboardRaidStats = {};
+let pendingMessageContext = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await fetchCurrentGuildInfo();
+  applyGuildBrand();
+  const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
+  if (saved) document.getElementById("masterCode").value = saved;
+  const raidDateSearch = document.getElementById("raidDateSearch");
+  if(raidDateSearch) raidDateSearch.value = "";
+  setDefaultCreateRaidDate();
+  if(saved) loadOverview();
+});
+
+function enterLoads(event){
+  if(event.key === "Enter") loadOverview();
+}
+
+function setStatus(message, type){
+  const el = document.getElementById("status");
+  el.textContent = message;
+  el.className = "status" + (type ? " " + type : "");
+}
+
+function setStatusHtml(html, type){
+  const el = document.getElementById("status");
+  el.innerHTML = html;
+  el.className = "status" + (type ? " " + type : "");
+}
+
+function clearMasterCode(){
+  sessionStorage.removeItem(MASTER_STORAGE_KEY);
+  document.getElementById("masterCode").value = "";
+  guildData = { raids: [], players: [] };
+  renderAll();
+  setStatus("Gildenleitung gesperrt.", "");
+}
+
+function apiJsonp(params){
+  return new Promise((resolve, reject) => {
+    const callbackName = "guildApi_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const query = new URLSearchParams(Object.assign({}, params, { callback: callbackName, t: Date.now() }));
+    const script = document.createElement("script");
+    let settled = false;
+
+    window[callbackName] = function(result){
+      settled = true;
+      cleanup();
+      resolve(result || {});
+    };
+
+    function cleanup(){
+      try{ delete window[callbackName]; }catch(error){ window[callbackName] = undefined; }
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    script.onerror = () => {
+      if(settled) return;
+      cleanup();
+      reject(new Error("Apps Script liefert die neue Gildenleitungs-Aktion noch nicht aus. Bitte den aktualisierten Code veröffentlichen."));
+    };
+
+    script.src = API_URL + "?" + query.toString();
+    document.body.appendChild(script);
+  });
+}
+
+function apiWrite(params){
+  return new Promise((resolve, reject) => {
+    const iframeName = "guildWriteFrame_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+    const iframe = document.createElement("iframe");
+    const form = document.createElement("form");
+    let settled = false;
+    let submitted = false;
+
+    iframe.name = iframeName;
+    iframe.style.display = "none";
+    form.style.display = "none";
+    form.method = "POST";
+    form.action = API_URL;
+    form.target = iframeName;
+
+    Object.entries(Object.assign({}, params, { t: Date.now() })).forEach(([key, value]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = value == null ? "" : String(value);
+      form.appendChild(input);
+    });
+
+    function cleanup(){
+      window.setTimeout(() => {
+        if(form.parentNode) form.parentNode.removeChild(form);
+        if(iframe.parentNode) iframe.parentNode.removeChild(iframe);
+      }, 1000);
+    }
+
+    iframe.onload = () => {
+      if(!submitted) return;
+      if(settled) return;
+      settled = true;
+      cleanup();
+      resolve({ success:true, submitted:true });
+    };
+
+    iframe.onerror = () => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error("Aktion konnte nicht an Apps Script gesendet werden."));
+    };
+
+    document.body.appendChild(iframe);
+    document.body.appendChild(form);
+    submitted = true;
+    form.submit();
+
+    window.setTimeout(() => {
+      if(settled) return;
+      settled = true;
+      cleanup();
+      resolve({ success:true, submitted:true, timeout:true });
+    }, 5000);
+  });
+}
+
+async function railwayApi(params){
+  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
+  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+  if(!response.ok){
+    const text = await response.text().catch(() => "");
+    throw new Error(text || ("Railway API HTTP " + response.status));
+  }
+  const result = await response.json().catch(() => {
+    throw new Error("Railway API hat keine gültige Antwort geliefert.");
+  });
+  return result || {};
+}
+
+async function railwayWrite(params){
+  try{
+    const response = await fetch(LICHTLOOT_API_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }))
+    });
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok){
+      throw new Error(result.error || result.message || ("Railway API HTTP " + response.status));
+    }
+    return result || {};
+  }catch(error){
+    if(location.protocol === "file:"){
+      throw new Error("Lokale Datei konnte Railway nicht beschreiben. Bitte Railway neu deployen oder die live Gildenleitungsseite öffnen.");
+    }
+    throw error;
+  }
+}
+
+async function downloadGuildBackup(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    alert("Bitte Master-Code eingeben.");
+    return;
+  }
+
+  setStatus("Sicherung wird erstellt ...", "");
+
+  try{
+    const result = await railwayApi({ action:"guildExportBackup", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Sicherung konnte nicht erstellt werden.", "bad");
+      return;
+    }
+
+    const guildSlug = result.guild || CURRENT_GUILD_SLUG || "gilde";
+    const stamp = new Date().toISOString().replace(/[:.]/g,"-");
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type:"application/json" });
+    const url = URL.createObjectURL(blob);
+    const fileName = `${guildSlug}-railway-sicherung-${stamp}.json`;
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    setStatusHtml(
+      `Sicherung wurde erstellt. Falls kein Download startet: <a href="${url}" download="${escapeAttr(fileName)}">Sicherung herunterladen</a>`,
+      "good"
+    );
+  }catch(error){
+    setStatus(error.message || "Sicherung konnte nicht erstellt werden.", "bad");
+    alert(error.message || "Sicherung konnte nicht erstellt werden.");
+  }
+}
+
+async function loadOverview(options){
+  options = options || {};
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  setStatus("Gildenleitung wird geladen ...", "");
+
+  try{
+    let result = await railwayApi({ action:"getGuildLeadershipOverview", masterCode }).catch(error => {
+      console.warn("Railway-Gildenleitung nicht ladbar, versuche Apps Script:", error);
+      return null;
+    });
+    if(!result || result.success === false){
+      if(result && result.error){
+        console.warn("Railway-Gildenleitung meldet Fehler, versuche Apps Script:", result.error);
+      }
+      result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
+    }
+    if(!result.success){
+      setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
+      return;
+    }
+
+    sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    guildData = {
+      raids: Array.isArray(result.raids) ? result.raids : [],
+      players: Array.isArray(result.players) ? result.players : []
+    };
+    lastOverviewLoadedAt = new Date();
+    fillClassFilter();
+    renderAll();
+    loadDashboardRaidStats();
+    loadWorldbuffMiniOverview();
+    if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
+  }catch(error){
+    setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
+  }
+}
+
+function renderAll(){
+  renderSummary();
+  renderDashboardCards();
+  renderPlayerMiniList();
+  renderRaids();
+  renderPlayers();
+}
+
+function scrollToDashboard(){
+  document.getElementById("dashboardTop")?.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function openDetailsPanel(id){
+  const panel = document.getElementById(id);
+  if(!panel) return;
+  document.querySelectorAll(".dashboard-column details.panel, .dashboard-column .grid details.panel").forEach(detail => {
+    if(detail.id !== id) detail.open = false;
+  });
+  panel.open = true;
+  panel.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function openRaidPanel(){
+  openDetailsPanel("raidLeadPanel");
+}
+
+function openPlayerPanel(){
+  openDetailsPanel("playerLoginPanel");
+}
+
+function openP0PlusPanel(){
+  openDetailsPanel("p0PlusPanel");
+}
+
+function openIssueInboxPanel(){
+  openDetailsPanel("issueInboxPanel");
+}
+
+function openLogAnalysisPanel(){
+  openDetailsPanel("logAnalysisPanel");
+}
+
+function openWorldbuffPanel(){
+  openDetailsPanel("worldbuffPanel");
+}
+
+function openHordenbuffPanel(){
+  openDetailsPanel("hordenbuffPanel");
+}
+
+function filterOpenRaids(){
+  const filter = document.getElementById("raidFilter");
+  if(filter) filter.value = "geöffnet";
+  openRaidPanel();
+  renderRaids();
+}
+
+function clearRaidFilters(){
+  document.getElementById("raidSearch").value = "";
+  document.getElementById("raidDateSearch").value = "";
+  document.getElementById("raidFilter").value = "";
+  renderRaids();
+}
+
+function renderSummary(){
+  const raids = guildData.raids || [];
+  const players = guildData.players || [];
+  const openRaids = raids.filter(raid => isOpenStatus(raid.status)).length;
+  const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
+
+  document.getElementById("raidCount").textContent = raids.length;
+  document.getElementById("openRaidCount").textContent = openRaids;
+  document.getElementById("playerCount").textContent = players.length;
+  document.getElementById("linkedCount").textContent = linked;
+  const issueCounter = document.getElementById("issueCount");
+  if(issueCounter) issueCounter.textContent = issueReports.length;
+}
+
+function getRaidKey(raid){
+  const text = normalize([
+    raid.raid,
+    raid.raidName,
+    raid.raidId
+  ].join(" "));
+
+  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
+  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
+  if(text.includes("mc") || text.includes("molten")) return "mc";
+  if(text.includes("naxx")) return "naxx";
+  if(text.includes("zg") || text.includes("zul")) return "zg";
+  if(text.includes("ony")) return "ony";
+  return "aq40";
+}
+
+function isAllowedP0RaidForRaid(raid){
+  return ["mc","bwl","aq40","naxx"].includes(getRaidKey(raid));
+}
+
+function hasP0PlusTransfer(raidOrResult){
+  return Boolean(
+    raidOrResult &&
+    (raidOrResult.p0PlusTransferred || Number(raidOrResult.p0PlusTransferCount || 0) > 0)
+  );
+}
+
+function renderP0TransferState(raidOrResult, compact){
+  if(!isAllowedP0RaidForRaid(raidOrResult || {})) return "";
+  const done = hasP0PlusTransfer(raidOrResult);
+  const label = done ? "P0+ übertragen" : "P0+ nicht übertragen";
+  return `<span class="transfer-light ${done ? "done" : "open"}" title="${escapeAttr(label)}"><span class="transfer-dot"></span>${compact ? "" : escapeHtml(label)}</span>`;
+}
+
+function isP0PlusPrio(prio){
+  return normalize(prio && (prio.P0Plus || prio.p0Plus)) === "ja";
+}
+
+function todayIsoDate(){
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function isRaidTodayOrFuture(raid){
+  const date = String(raid && raid.raidDate || "").trim();
+  if(!date) return false;
+  return date >= yesterdayIsoDate();
+}
+
+function getRaidCreatorName(raid){
+  return String(
+    raid?.createdBy ||
+    raid?.creator ||
+    raid?.created_by ||
+    raid?.erstelltVon ||
+    raid?.ersteller ||
+    "Unbekannt"
+  ).trim() || "Unbekannt";
+}
+
+function yesterdayIsoDate(){
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return [
+    yesterday.getFullYear(),
+    String(yesterday.getMonth() + 1).padStart(2, "0"),
+    String(yesterday.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function renderDashboardCards(){
+  const box = document.getElementById("activeRaidCards");
+  if(!box) return;
+
+  const raids = getDashboardActiveRaids();
+
+  if(!raids.length){
+    box.innerHTML = '<div class="muted">Keine aktiven Raids gefunden.</div>';
+    return;
+  }
+
+  box.innerHTML = raids.map(raid => {
+    const key = getRaidKey(raid);
+    const createdBy = getRaidCreatorName(raid);
+    return `
+      <article class="active-raid-card">
+        <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
+        <div class="active-raid-body">
+          <div>
+            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
+            <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
+            <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
+            <div class="active-raid-stats">
+              <span class="active-raid-stat">${escapeHtml(raid.guild || CURRENT_GUILD_BRAND.guildName)}</span>
+              <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
+              <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
+            </div>
+          </div>
+          <div class="active-raid-side">
+            <div class="active-raid-lead-card">
+              <span class="active-raid-lead-label">LeadPIN</span>
+              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
+              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
+              ${renderP0TransferState(raid)}
+            </div>
+            <div class="active-raid-actions">
+              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
+              <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
+              <button class="small-btn ghost" type="button" onclick="openDiscordPostModal('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
+              <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
+              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function getDashboardActiveRaids(){
+  return (guildData.raids || [])
+    .filter(raid => {
+      const status = normalize(raid.status || "");
+      return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
+    })
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+async function loadDashboardRaidStats(){
+  const raids = getDashboardActiveRaids();
+  if(!raids.length) return;
+
+  raids.forEach(raid => {
+    const raidId = String(raid.raidId || "");
+    if(!raidId) return;
+    dashboardRaidStats[raidId] = { prios:null, signups:null };
+  });
+
+  renderDashboardCards();
+}
+
+function renderPlayerMiniList(){
+  const box = document.getElementById("playerMiniList");
+  if(!box) return;
+  const players = (guildData.players || []).slice(-5).reverse();
+
+  if(!players.length){
+    box.innerHTML = '<div class="mini-row"><span>Noch keine Daten</span><span>-</span></div>';
+    return;
+  }
+
+  box.innerHTML = players.map(player => `
+    <div class="mini-row">
+      <span>${escapeHtml(player.char || "-")}</span>
+      <span>${escapeHtml(formatPlayerLoginTime(player))}</span>
+    </div>
+  `).join("");
+}
+
+function formatPlayerLoginTime(player){
+  const raw =
+    player.loginTime ||
+    player.lastLogin ||
+    player.updatedAt ||
+    player.createdAt ||
+    "";
+
+  if(raw){
+    const date = new Date(raw);
+    if(!isNaN(date.getTime())){
+      return date.toLocaleTimeString("de-DE",{ hour:"2-digit", minute:"2-digit" });
+    }
+    return String(raw);
+  }
+
+  if(lastOverviewLoadedAt){
+    return "Stand " + lastOverviewLoadedAt.toLocaleTimeString("de-DE",{ hour:"2-digit", minute:"2-digit" });
+  }
+
+  return "-";
+}
+
+function renderWorldbuffMiniList(){
+  const box = document.getElementById("worldbuffMiniList");
+  if(!box) return;
+  const entries = (worldbuffEntries || [])
+    .filter(isWorldbuffInMiniWindow)
+    .sort((a,b) => {
+      const dateA = parseWorldbuffDate(a.datum);
+      const dateB = parseWorldbuffDate(b.datum);
+      return ((dateA && dateA.getTime()) || 0) - ((dateB && dateB.getTime()) || 0) ||
+        String(a.uhrzeit || "").localeCompare(String(b.uhrzeit || ""));
+    })
+    .slice(0,5);
+
+  if(!entries.length){
+    box.innerHTML = '<button class="mini-row mini-action" type="button" onclick="openWorldbuffPanel()"><span>Keine Worldbuffs in den nächsten 4 Tagen</span><span>→</span></button>';
+    return;
+  }
+
+  box.innerHTML = entries.map(entry => `
+    <div class="mini-row">
+      <span>
+        ${escapeHtml(entry.buff || "Buff")} · ${escapeHtml(formatRaidDate(entry.datum))}
+        ${renderWorldbuffCasterMini(entry)}
+      </span>
+      <span>${escapeHtml(entry.uhrzeit || "")}</span>
+    </div>
+  `).join("");
+}
+
+async function loadWorldbuffMiniOverview(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const box = document.getElementById("worldbuffMiniList");
+  if(!masterCode || !box) return;
+
+  box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
+
+  try{
+    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4, source:"railway" });
+    if(result && result.success){
+      worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+      renderWorldbuffMiniList();
+      return;
+    }
+  }catch(error){}
+
+  box.innerHTML = '<button class="mini-row mini-action" type="button" onclick="openWorldbuffPanel()"><span>Worldbuffs öffnen</span><span>→</span></button>';
+}
+
+function isWorldbuffInMiniWindow(entry){
+  const date = parseWorldbuffDate(entry && entry.datum);
+  if(!date) return false;
+
+  const today = parseWorldbuffDate(todayIsoDate());
+  const end = new Date(today);
+  end.setDate(end.getDate() + 3);
+
+  return date >= today && date <= end;
+}
+
+function renderWorldbuffCasterMini(entry){
+  const guild = normalize(entry && (entry.gilde || entry.guild || entry.fraktion));
+  const caster = String(entry && (entry.charakter || entry.caster || entry.werfer) || "").trim();
+  if(!caster || !guild.includes("lichtbringer")) return "";
+  return `<small>${escapeHtml(caster)}</small>`;
+}
+
+function parseWorldbuffDate(value){
+  const text = String(value || "").trim();
+  let date = null;
+
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text)){
+    date = new Date(text + "T00:00:00");
+  }else{
+    const match = text.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if(match){
+      date = new Date(
+        Number(match[3]),
+        Number(match[2]) - 1,
+        Number(match[1])
+      );
+    }
+  }
+
+  return !date || isNaN(date.getTime()) ? null : date;
+}
+
+function fillClassFilter(){
+  const select = document.getElementById("classFilter");
+  const current = select.value;
+  const classes = Array.from(new Set((guildData.players || []).map(player => player.className).filter(Boolean))).sort();
+  select.innerHTML = '<option value="">Alle Klassen</option>' + classes.map(name => `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`).join("");
+  if(classes.includes(current)) select.value = current;
+}
+
+function renderRaids(){
+  const tbody = document.getElementById("raidRows");
+  const search = normalize(document.getElementById("raidSearch").value);
+  const filter = normalize(document.getElementById("raidFilter").value);
+  const dateSearch = document.getElementById("raidDateSearch").value;
+  const raids = (guildData.raids || []).filter(raid => {
+    const status = normalize(raid.status || "geschlossen");
+    const haystack = normalize([
+      raid.raid,
+      raid.raidName,
+      raid.raidDate,
+      raid.raidTime,
+      raid.playerPin,
+      raid.leadPin,
+      raid.status,
+      raid.guild
+    ].join(" "));
+    const isArchived = status === "archiviert" || status === "archive";
+    const filterMatches =
+      filter === "alle" ? true :
+      filter ? status === filter :
+      !isArchived;
+    const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
+    return filterMatches && dateMatches && (!search || haystack.includes(search));
+  }).slice(0, filter || search || dateSearch ? undefined : 10);
+
+  if(!raids.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = raids.map(raid => {
+    const status = raid.status || "geschlossen";
+    return `
+      <tr>
+        <td>
+          <div class="raid-title">
+            <strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong>
+            <div class="raid-meta">
+              <span>${escapeHtml(raid.raidId || "-")}</span>
+              ${raid.guild ? `<span>${escapeHtml(raid.guild)}</span>` : ""}
+            </div>
+          </div>
+        </td>
+        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
+        <td>${renderP0TransferState(raid)}</td>
+        <td>${statusBadge(status)}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
+            <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
+            <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
+            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
+            <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderPlayers(){
+  const tbody = document.getElementById("playerRows");
+  const search = normalize(document.getElementById("playerSearch").value);
+  const classFilter = normalize(document.getElementById("classFilter").value);
+  const groups = groupPlayersByMain(guildData.players || []).filter(group => {
+    const haystack = normalize([
+      group.main.char,
+      group.main.server,
+      group.main.className,
+      group.twinks.map(twink => [twink.char, twink.server, twink.className].join(" ")).join(" ")
+    ].join(" "));
+    const classMatches = !classFilter || group.characters.some(player => normalize(player.className) === classFilter);
+    return classMatches && (!search || haystack.includes(search));
+  });
+
+  if(!groups.length){
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Keine passenden Spielerlogins gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = groups.map(group => `
+    <tr>
+      <td>
+        <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
+        ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
+      </td>
+      <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
+      <td><span class="badge closed">verborgen</span></td>
+      <td>
+        <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function groupPlayersByMain(players){
+  const groups = new Map();
+  (players || []).forEach(player => {
+    const mainName = String(player.mainChar || player.char || "").trim();
+    const key = normalize(mainName || player.char || "") || String(player.rowNumber || Math.random());
+    if(!groups.has(key)){
+      groups.set(key, { main:null, characters:[] });
+    }
+    const group = groups.get(key);
+    group.characters.push(player);
+    if(!group.main || normalize(player.char) === normalize(mainName)){
+      group.main = player;
+    }
+  });
+
+  return Array.from(groups.values()).map(group => {
+    group.main = group.main || group.characters[0] || {};
+    group.twinks = group.characters.filter(player => player !== group.main);
+    group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
+    return group;
+  }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
+}
+
+function setDefaultCreateRaidDate(){
+  const field = document.getElementById("createRaidDate");
+  if(!field || field.value) return;
+  const now = new Date();
+  field.value = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function createRaidIdForGuildPage(raidKey){
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
+  const now = new Date();
+  const stamp = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0")
+  ].join("-") + "-" +
+  String(now.getHours()).padStart(2, "0") +
+  String(now.getMinutes()).padStart(2, "0") +
+  String(now.getSeconds()).padStart(2, "0");
+  return raid.short + "-" + stamp;
+}
+
+function randomCode(length){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for(let i = 0; i < length; i++){
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy){
+  const lines = [
+    "📣 Neuer Raid: " + raidName,
+    "🗓️ Datum: " + formatRaidDate(raidDate),
+    "⏰ Start: " + raidTime + " Uhr"
+  ];
+
+  if(guild){
+    lines.push("🏰 Gilde: " + guild);
+  }
+
+  if(createdBy){
+    lines.push("👤 Erstellt von: " + createdBy);
+  }
+
+  lines.push(
+    "",
+    "🔑 Prio-PIN: " + playerPin,
+    "➡️ Prios eintragen: " + new URL(withGuildUrl("index.html"), window.location.href).href,
+    "",
+    "Bitte tragt eure Prios rechtzeitig ein."
+  );
+
+  return lines.join("\n");
+}
+
+function buildRaidDirectLink(raid){
+  const raidId = encodeURIComponent(raid.raidId || raid.RaidID || raid.id || "");
+  return raidId ? withGuildUrl("index.html") + `&raidId=${raidId}` : withGuildUrl("index.html");
+}
+
+async function resetPlayerLogin(rowNumber){
+  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+  if(!player) return;
+
+  const ok = confirm(`Spielerlogin für ${player.char} zurücksetzen? Twinks mit gleichem Konto bekommen denselben neuen Login.`);
+  if(!ok) return;
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  setStatus("Spielerlogin wird zurückgesetzt ...", "");
+
+  try{
+    const result = await railwayWrite({
+      action:"guildResetPlayerLogin",
+      masterCode,
+      rowNumber:player.rowNumber,
+      char:player.char,
+      server:player.server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Spielerlogin konnte nicht zurückgesetzt werden.", "bad");
+      return;
+    }
+
+    showResetResult(result);
+    setStatus("Spielerlogin wurde zurückgesetzt.", "good");
+    await loadOverview();
+  }catch(error){
+    setStatus(error.message || "Reset fehlgeschlagen.", "bad");
+  }
+}
+
+async function deletePlayerLogin(rowNumber){
+  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+  if(!player) return;
+
+  const group = groupPlayersByMain(guildData.players || []).find(item => Number(item.main.rowNumber || 0) === Number(rowNumber));
+  const count = group ? group.characters.length : 1;
+  const ok = confirm(`Spielerlogin für ${player.char} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
+  if(!ok) return;
+
+  const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
+  if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
+    setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
+    return;
+  }
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  setStatus("Spielerlogin wird gelöscht ...", "");
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeletePlayerLogin",
+      masterCode,
+      char:player.char,
+      server:player.server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Spielerlogin konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    setStatus(`Spielerlogin wurde gelöscht (${Number(result.deletedCharacters || count)} Charaktere).`, "good");
+    await loadOverview();
+  }catch(error){
+    setStatus(error.message || "Löschen fehlgeschlagen.", "bad");
+  }
+}
+
+function showResetResult(result){
+  const box = document.getElementById("lastReset");
+  box.style.display = "block";
+  box.innerHTML = `
+    <h3>Neuer Spielerlogin</h3>
+    <div><strong>${escapeHtml(result.char || "")}</strong> ${escapeHtml(result.server || "")}</div>
+    <div class="new-pin">nicht sichtbar</div>
+    <div class="muted">${Number(result.updated || 0)} Charaktere aktualisiert.</div>
+  `;
+}
+
+async function copyText(elementId){
+  const element = document.getElementById(elementId);
+  const text = element ? (element.value || element.textContent || "").trim() : "";
+  if(!text) return;
+
+  try{
+    await navigator.clipboard.writeText(text);
+    setStatus("Kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
+async function copyPlainText(text){
+  const value = String(text || "").trim();
+  if(!value || value === "-"){
+    setStatus("Kein LeadPIN zum Kopieren vorhanden.", "bad");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(value);
+    setStatus("LeadPIN kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
+async function sendLeadPinToPlayer(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(!raid || !raid.leadPin){
+    setStatus("Für diesen Raid ist kein LeadPIN vorhanden.", "bad");
+    return;
+  }
+
+  const title = `LeadPIN für ${raid.raidName || raid.raid || "Raid"}`;
+  const body = [
+    `Du wurdest als Raidlead eingetragen. Dein LeadPIN lautet ${raid.leadPin}.`,
+    `Direkt zum Raid: ${buildRaidDirectLink(raid)}`
+  ].join("\n\n");
+
+  openMessageModal({
+    mode:"leadpin",
+    raid,
+    title,
+    body,
+    leadPin:raid.leadPin || "",
+    raidId:raid.raidId || "",
+    raidName:raid.raidName || raid.raid || "",
+    raidDate:raid.raidDate || "",
+    raidTime:raid.raidTime || ""
+  });
+}
+
+function sendGeneralMessageFromGuildPage(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  openMessageModal({
+    mode:"message",
+    title:"Nachricht der Gildenleitung",
+    body:""
+  });
+}
+
+function findRaidByAnyId(raidId){
+  return (guildData.raids || []).find(entry => {
+    return String(entry.raidId || "") === String(raidId) ||
+      String(entry.id || "") === String(raidId) ||
+      String(entry.RaidID || "") === String(raidId);
+  });
+}
+
+function buildRaidDiscordPostTextFromRaid(raid){
+  const raidName = raid.raidName || RAID_OPTIONS[getRaidKey(raid)]?.name || raid.raid || "Raid";
+  const raidDate = raid.raidDate || raid.datum || raid.date || "";
+  const raidTime = raid.raidTime || raid.uhrzeit || raid.time || "";
+  const guild = raid.guild || raid.gilde || CURRENT_GUILD_BRAND.guildName;
+  const playerPin = raid.playerPin || raid.prioPin || "-";
+  const createdBy = getRaidCreatorName(raid);
+
+  return buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy);
+}
+
+function openDiscordPostModal(raidId){
+  if(!raidId){
+    setStatus("Raid-ID fehlt.", "bad");
+    return;
+  }
+
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde in der Liste nicht gefunden.", "bad");
+    return;
+  }
+
+  const modal = document.getElementById("discordPostModal");
+  const textarea = document.getElementById("discordPostText");
+  const status = document.getElementById("discordPostModalStatus");
+
+  if(textarea) textarea.value = buildRaidDiscordPostTextFromRaid(raid);
+  if(status){
+    status.textContent = "Bereit zum Kopieren.";
+    status.className = "status";
+  }
+  if(modal) modal.classList.remove("hidden");
+}
+
+function closeDiscordPostModal(){
+  const modal = document.getElementById("discordPostModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+async function copyDiscordPostText(){
+  const textarea = document.getElementById("discordPostText");
+  const status = document.getElementById("discordPostModalStatus");
+  const text = textarea ? textarea.value : "";
+
+  if(!text.trim()){
+    if(status){
+      status.textContent = "Kein Discord-Text vorhanden.";
+      status.className = "status bad";
+    }
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(text);
+    if(status){
+      status.textContent = "Discord-Post kopiert.";
+      status.className = "status good";
+    }
+    setStatus("Discord-Post kopiert.", "good");
+  }catch(error){
+    if(textarea) textarea.select();
+    if(status){
+      status.textContent = "Kopieren ist im Browser gerade nicht erlaubt. Text ist markiert.";
+      status.className = "status bad";
+    }
+  }
+}
+
+function postRaidToDiscord(raidId){
+  openDiscordPostModal(raidId);
+}
+
+function openMessageModal(context){
+  pendingMessageContext = context || {};
+  const modal = document.getElementById("messageModal");
+  const title = document.getElementById("messageModalTitle");
+  const subtitle = document.getElementById("messageModalSubtitle");
+  const preview = document.getElementById("messageRaidPreview");
+  const recipient = document.getElementById("messageRecipient");
+  const titleField = document.getElementById("messageTitle");
+  const bodyField = document.getElementById("messageBody");
+  const status = document.getElementById("messageModalStatus");
+
+  if(title) title.textContent = context.mode === "leadpin" ? "LeadPIN senden" : "Nachricht senden";
+  if(subtitle) subtitle.textContent = "Empfänger als Charaktername eintragen. Der SpielerPin bleibt privat.";
+  if(recipient) recipient.value = "";
+  if(titleField) titleField.value = context.title || "";
+  if(bodyField) bodyField.value = context.body || "";
+  if(status){
+    status.textContent = "Bereit.";
+    status.className = "status";
+  }
+
+  if(preview){
+    if(context.mode === "leadpin" && context.raid){
+      preview.classList.remove("hidden");
+      preview.innerHTML =
+        `${escapeHtml(context.raidName || "Raid")} · ${escapeHtml(formatRaidDate(context.raidDate))} · ${escapeHtml(context.raidTime || "")} Uhr<br>` +
+        `<span class="message-pin-preview">${escapeHtml(context.leadPin || "-")}</span>`;
+    }else{
+      preview.classList.add("hidden");
+      preview.innerHTML = "";
+    }
+  }
+
+  if(modal) modal.classList.remove("hidden");
+  setTimeout(() => recipient && recipient.focus(), 30);
+}
+
+function closeMessageModal(){
+  const modal = document.getElementById("messageModal");
+  if(modal) modal.classList.add("hidden");
+  pendingMessageContext = null;
+}
+
+async function submitMessageModal(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const recipient = document.getElementById("messageRecipient").value.trim();
+  const title = document.getElementById("messageTitle").value.trim() || "Nachricht der Gildenleitung";
+  const body = document.getElementById("messageBody").value.trim();
+  const status = document.getElementById("messageModalStatus");
+
+  if(!masterCode || !recipient || !body){
+    if(status){
+      status.textContent = "Bitte Master-Code, Charaktername und Nachricht ausfüllen.";
+      status.className = "status bad";
+    }
+    return;
+  }
+
+  if(status){
+    status.textContent = "Nachricht wird gesendet ...";
+    status.className = "status";
+  }
+
+  try{
+    const context = pendingMessageContext || {};
+    const result = await railwayApi({
+      action:"sendPlayerMessage",
+      masterCode,
+      character:recipient,
+      title,
+      body,
+      raidId:context.raidId || "",
+      raidName:context.raidName || "",
+      raidDate:context.raidDate || "",
+      raidTime:context.raidTime || "",
+      leadPin:context.leadPin || "",
+      sender:"Gildenleitung"
+    });
+    if(!result.success){
+      if(status){
+        status.textContent = result.error || "Nachricht konnte nicht gesendet werden.";
+        status.className = "status bad";
+      }
+      return;
+    }
+    closeMessageModal();
+    setStatus("Nachricht wurde ins Spieler-Postfach gelegt.", "good");
+  }catch(error){
+    if(status){
+      status.textContent = error.message || "Nachricht konnte nicht gesendet werden.";
+      status.className = "status bad";
+    }
+  }
+}
+
+async function deleteRaidFromDashboard(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry =>
+    String(entry.raidId || "") === String(raidId) ||
+    String(entry.id || "") === String(raidId)
+  );
+  const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
+  if(!confirm(`${label} wirklich komplett löschen? Der Raid wird aus Railway entfernt.`)) return;
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      id:raid?.id || "",
+      raidId:raid?.raidId || raidId,
+      playerPin:raid?.playerPin || raid?.prioPin || "",
+      leadPin:raid?.leadPin || ""
+    });
+    if(!result.success || !result.deleted){
+      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    guildData.raids = (guildData.raids || []).filter(entry =>
+      String(entry.raidId || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raid?.id || "") &&
+      String(entry.raidId || "") !== String(raid?.raidId || "")
+    );
+    renderSummary();
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    setStatus("Raid wurde aus Railway gelöscht.", "good");
+    await loadOverview({ preserveStatus:true });
+  }catch(error){
+    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function setRaidStatusFromPage(raidId, status){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayApi({ action:"guildSetRaidStatus", masterCode, raidId, status });
+    if(!result.success){
+      setStatus(result.error || "Raidstatus konnte nicht geändert werden.", "bad");
+      return;
+    }
+
+    const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+    if(raid) raid.status = status;
+    renderSummary();
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    setStatus("Raidstatus wurde geändert.", "good");
+  }catch(error){
+    setStatus(error.message || "Raidstatus konnte nicht geändert werden.", "bad");
+  }
+}
+
+async function toggleRaidPrioStatus(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const nextStatus = raid && isOpenStatus(raid.status) ? "geschlossen" : "geöffnet";
+  await setRaidStatusFromPage(raidId,nextStatus);
+}
+
+async function activateRaidCardFromPage(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(raid && !isRaidTodayOrFuture(raid)){
+    setStatus("Nur Raids von gestern, heute oder der Zukunft können als Kachel aktiviert werden.", "bad");
+    return;
+  }
+  await setRaidStatusFromPage(raidId, "geöffnet");
+}
+
+async function archiveRaidFromPage(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const label = raid ? (raid.raidName || raid.raid || raid.raidId) : raidId;
+  const ok = confirm(`Raid ${label} archivieren? Er verschwindet aus der Standardliste, bleibt aber gespeichert.`);
+  if(!ok) return;
+  await setRaidStatusFromPage(raidId, "archiviert");
+}
+
+async function openPrioModal(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  document.getElementById("prioModalTitle").textContent = raid.raidName || raid.raid || "Prioliste";
+  document.getElementById("prioModalSubline").textContent = [
+    formatRaidDate(raid.raidDate),
+    raid.raidTime,
+    raid.guild,
+    "Prio-PIN " + (raid.playerPin || "-")
+  ].filter(Boolean).join(" · ");
+  document.getElementById("prioModalContent").innerHTML = '<div class="status">Prioliste wird geladen ...</div>';
+  document.getElementById("prioModal").classList.remove("hidden");
+
+  try{
+    await ensureLootDataLoaded();
+    const result = await railwayApi({
+      action:"getPublishedPrios",
+      raidId:raid.raidId || "",
+      raid:raid.raid || raid.raidName || "",
+      playerPin:raid.playerPin || raid.raidId || raid.leadPin || ""
+    });
+
+    if(!result.success && result.error){
+      document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(result.error)}</div>`;
+      return;
+    }
+
+    renderPrioModalContent(result, raid);
+  }catch(error){
+    document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Prioliste konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function closePrioModal(){
+  document.getElementById("prioModal").classList.add("hidden");
+}
+
+function renderPrioModalContent(result, raid){
+  const prios = sortPriosWithMainFirst(Array.isArray(result.prios) ? result.prios : []);
+  const listOpen = isPrioListVisibleForGuild(result, raid);
+  const raidStatus = listOpen ? "geöffnet" : "geschlossen";
+  const benchCount = prios.filter(isBenchPrio).length;
+  const transferState = { ...raid, ...result, raid: raid.raid, raidName: raid.raidName, raidId: raid.raidId };
+  const raidId = raid.raidId || raid.raidID || raid.id || "";
+  const toolbar = `
+    <div class="prio-toolbar">
+      <div class="prio-toolbar-actions">
+        ${statusBadge(raidStatus)}
+        ${renderP0TransferState(transferState)}
+      </div>
+      <div class="prio-toolbar-actions">
+        <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatusFromModal('${escapeAttr(raidId)}')">${listOpen ? "Prio schließen" : "Prio öffnen"}</button>
+        ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(transferState) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raidId)}')">P0+ Punkte übertragen</button>` : ""}
+        <div class="muted">${prios.length ? `${prios.length} Einträge${benchCount ? " · " + benchCount + " Bench" : ""}${listOpen ? "" : " · Items verborgen"}` : "Keine Einträge"}</div>
+      </div>
+    </div>
+  `;
+
+  if(!prios.length){
+    document.getElementById("prioModalContent").innerHTML = `
+      ${toolbar}
+      <div class="status">Für diesen Raid gibt es noch keine Prios.</div>
+    `;
+    return;
+  }
+
+  document.getElementById("prioModalContent").innerHTML = `
+    ${toolbar}
+    <div class="table-wrap">
+      <table class="prio-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Spieler</th>
+            <th>Klasse</th>
+            <th>P1</th>
+            <th>P2</th>
+            <th>P3</th>
+            <th>P0+</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${prios.map((prio, index) => `
+            <tr class="${isBenchPrio(prio) ? "bench-prio-row" : ""}">
+              <td>${index + 1}</td>
+              <td><strong>${escapeHtml(prio.Spieler || "-")}</strong>${isBenchPrio(prio) ? '<span class="bench-label">Bench</span>' : ""}</td>
+              <td><span class="${classColor(prio.Klasse)}">${escapeHtml(prio.Klasse || "-")}</span></td>
+              <td>${renderPrioValue(prio.P1, listOpen)}</td>
+              <td>${renderPrioValue(prio.P2, listOpen)}</td>
+              <td>${renderPrioValue(prio.P3, listOpen)}</td>
+              <td>${renderP0PlusChoice(prio, listOpen)}</td>
+              <td>${renderPrioRowActions(prio, raid, listOpen)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function isPrioListVisibleForGuild(result, raid){
+  const value = String(
+    result.published ??
+    result.open ??
+    result.status ??
+    raid.status ??
+    ""
+  ).trim().toLowerCase();
+
+  return (
+    result.published === true ||
+    value === "true" ||
+    value === "ja" ||
+    value === "offen" ||
+    value === "geöffnet" ||
+    value === "published"
+  );
+}
+
+function renderPrioValue(value, visible){
+  if(visible) return renderLootItem(value);
+  return value ? '<span class="badge open">gesetzt</span>' : '<span class="badge closed">-</span>';
+}
+
+function isBenchPrio(prio){
+  const value = normalize(prio && (prio.Bench || prio.bench || prio.Gebencht || prio.status));
+  return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
+}
+
+function sortPriosWithMainFirst(prios){
+  return prios
+    .map((prio,index)=>({prio,index}))
+    .sort((a,b)=>{
+      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
+      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
+      if(aMain !== bMain) return aMain ? -1 : 1;
+      return a.index-b.index;
+    })
+    .map(item=>item.prio);
+}
+
+function renderBenchAction(prio, raid){
+  if(!prio) return '<span class="badge closed">-</span>';
+  const active = isBenchPrio(prio);
+  const label = active ? "Mitnehmen" : "Bench";
+  const cls = active ? "ghost" : "primary";
+  const rowNumber = Number(prio.rowNumber || prio.RowNumber || prio.zeile || prio.Zeile || 0);
+  return `<button class="small-btn ${cls}" type="button" onclick="setPrioBenchFromModal('${escapeAttr(raid.raidId || raid.raidID || raid.id || "")}',${rowNumber},${active ? "false" : "true"},'${escapeQuotes(prio.Spieler || prio.player || "")}','${escapeQuotes(prio.Server || prio.server || "")}')">${label}</button>`;
+}
+
+function renderPrioRowActions(prio, raid, listOpen){
+  if(!prio) return '<span class="badge closed">-</span>';
+  const raidId = raid.raidId || raid.raidID || raid.id || "";
+  const player = prio.Spieler || prio.player || "";
+  const server = prio.Server || prio.server || "";
+  const p0Item = prio.P1 || prio.p1 || "";
+  const buttons = [renderBenchAction(prio, raid)];
+
+  if(listOpen && isAllowedP0RaidForRaid(raid) && isP0PlusPrio(prio) && p0Item){
+    buttons.push(`<button class="small-btn good" type="button" onclick="clearP0PlusForPlayerFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}','${escapeQuotes(p0Item)}')">Item erhalten</button>`);
+  }
+
+  buttons.push(`<button class="small-btn danger" type="button" onclick="deletePrioFromModal('${escapeAttr(raidId)}','${escapeQuotes(player)}','${escapeQuotes(server)}')">Löschen</button>`);
+
+  return `<div class="prio-row-actions">${buttons.join("")}</div>`;
+}
+
+async function toggleRaidPrioStatusFromModal(raidId){
+  await toggleRaidPrioStatus(raidId);
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  if(raid) openPrioModal(raidId);
+}
+
+async function transferP0PlusFromGuild(raidId){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+  if(!isAllowedP0RaidForRaid(raid)){
+    setStatus("P0+ Übertragung gibt es nur für MC, BWL, AQ40 und Naxxramas.", "bad");
+    return;
+  }
+
+  const label = `${raid.raidName || raid.raid || "Raid"} ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim();
+  const ok = confirm(`P0+ Punkte für ${label} nach Railway übertragen?`);
+  if(!ok) return;
+
+  try{
+    setStatus("P0+ Punkte werden nach Railway übertragen ...", "");
+    const result = await railwayApi({
+      action:"transferP0PlusPoints",
+      masterCode,
+      raidId: raid.raidId || "",
+      raid: getRaidKey(raid)
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+      return;
+    }
+
+    raid.p0PlusTransferred = Boolean(result.p0PlusTransferred || Number(result.p0PlusTransferCount || 0) > 0);
+    raid.p0PlusTransferCount = Number(result.p0PlusTransferCount || result.awarded || 0);
+    renderDashboardCards();
+    renderRaids();
+    await loadOverview({ preserveStatus:true });
+    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
+
+    const modal = document.getElementById("prioModal");
+    if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+  }
+}
+
+async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  const ok = confirm(`${player} hat "${itemName}" erhalten? Der P0+ Punkt wird entfernt.`);
+  if(!ok) return;
+
+  try{
+    const result = await railwayApi({
+      action:"clearP0PlusForPlayer",
+      masterCode,
+      raid:getRaidKey(raid),
+      player,
+      server,
+      item:itemName
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
+      return;
+    }
+
+    setStatus("Item erhalten gespeichert.", "good");
+    openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
+  }
+}
+
+async function deletePrioFromModal(raidId, player, server){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+
+  const ok = confirm(`Prio von ${player} für diesen Raid löschen?`);
+  if(!ok) return;
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeletePrio",
+      masterCode,
+      raidId,
+      raid:getRaidKey(raid),
+      player,
+      server
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Prio konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    setStatus("Prio gelöscht.", "good");
+    openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "Prio konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function setPrioBenchFromModal(raidId, rowNumber, bench, player, server){
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayApi({
+      action:"guildSetPrioBench",
+      masterCode,
+      raidId,
+      rowNumber,
+      player: player || "",
+      server: server || "",
+      bench: bench ? "ja" : "nein",
+      raid: raid ? (raid.raid || raid.raidName || "") : ""
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Bench konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+
+    setStatus(bench ? "Bench gesetzt: 0,5 Punkte vergeben." : "Bench entfernt.", "good");
+    if(raid) openPrioModal(raidId);
+  }catch(error){
+    setStatus(error.message || "Bench konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+function renderP0PlusChoice(prio, visible){
+  const active = normalize(prio.P0Plus) === "ja";
+  if(!active) return '<span class="badge closed">-</span>';
+  if(!visible) return '<span class="badge open">P0 gesetzt</span>';
+  return `<span class="prio-p0">${renderLootItem(prio.P1 || "P0+")}</span>`;
+}
+
+async function ensureLootDataLoaded(){
+  if(lootDataLoaded) return;
+  const files = ["mc","bwl","aq40","naxx","zg","aq20","ony","preraidbis"];
+  const results = await Promise.all(files.map(file =>
+    fetch(`data/${file}.json`).then(response => response.ok ? response.json() : []).catch(() => [])
+  ));
+  results.flat().forEach(item => {
+    const name = item && (item.name || item.Item || item.Itemname_DE || item.item);
+    if(!name) return;
+    lootItemIndex[itemKey(name)] = normalizeLootItem(item);
+  });
+  lootDataLoaded = true;
+}
+
+function normalizeLootItem(item){
+  return {
+    name:item.name || item.Item || item.Itemname_DE || item.item || "",
+    quality:normalizeQuality(item.quality || item["Qualität"] || item.Quality || item.Seltenheit || ""),
+    ilvl:item.ilvl || item.itemLevel || item.ItemLevel || "",
+    bind:item.bind || item.Bind || "",
+    slot:item.slot || item.Slot || "",
+    type:item.type || item.Typ || item.Type || "",
+    boss:item.boss || item.Boss || "",
+    itemId:item.itemId || item.itemID || item.ItemID || "",
+    icon:item.iconName || item.icon || item.Icon || "",
+    tooltip:item.tooltip || item.Tooltip_DE || item.Tooltip || item.statsText || "",
+    stats:Array.isArray(item.stats) ? item.stats : [],
+    dropChance:item.dropChance || item.dropchance || item.Dropchance || ""
+  };
+}
+
+function renderLootItem(itemName){
+  const name = String(itemName || "").trim();
+  if(!name) return '<span class="muted">-</span>';
+  const item = lootItemIndex[itemKey(name)];
+  const quality = item ? item.quality : "";
+  const displayName = item ? item.name : name;
+  const icon = item && item.icon ? `<img class="item-icon" src="${escapeAttr(getIconUrl(item.icon))}" alt="" loading="lazy" onerror="this.style.display='none'">` : "";
+  return `<span class="item-with-tooltip item-with-icon ${escapeAttr(quality)}" data-item="${escapeAttr(displayName)}" onmouseenter="showItemTooltip(event,this.dataset.item)" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()">${icon}<span>${escapeHtml(displayName)}</span></span>`;
+}
+
+function showItemTooltip(event, itemName){
+  const tooltip = document.getElementById("tooltip");
+  const item = lootItemIndex[itemKey(itemName)];
+  if(!tooltip) return;
+
+  if(!item){
+    tooltip.innerHTML = `<div class="tooltip-title epic">${escapeHtml(itemName)}</div><div class="tooltip-row">Keine Itemdetails gefunden.</div>`;
+  }else{
+    const tooltipLines = item.tooltip
+      ? String(item.tooltip).split("|").map(line => line.trim()).filter(Boolean).map(renderTooltipLine).join("")
+      : item.stats.map(renderTooltipLine).join("");
+    tooltip.innerHTML = `
+      <div class="tooltip-title ${escapeAttr(item.quality || "epic")}">${escapeHtml(item.name)}</div>
+      ${item.ilvl ? `<div class="tooltip-ilvl">${escapeHtml(item.ilvl)}</div>` : ""}
+      ${item.bind ? `<div class="tooltip-stat">${escapeHtml(item.bind)}</div>` : ""}
+      ${(item.slot || item.type) ? `<div class="tooltip-row"><span>${escapeHtml(item.slot || "")}</span><span>${escapeHtml(item.type || "")}</span></div>` : ""}
+      ${tooltipLines}
+      ${(item.boss || item.dropChance) ? `<div class="tooltip-extra">${item.boss ? `<div><strong>Boss:</strong> ${escapeHtml(item.boss)}</div>` : ""}${item.dropChance ? `<div><strong>Dropchance:</strong> ${escapeHtml(item.dropChance)}</div>` : ""}${item.itemId ? `<div><strong>ItemID:</strong> ${escapeHtml(item.itemId)}</div>` : ""}</div>` : ""}
+    `;
+  }
+
+  tooltip.classList.remove("hidden");
+  moveTooltip(event);
+}
+
+function renderTooltipLine(line){
+  const text = String(line || "").trim();
+  if(!text) return "";
+  const cls = /^(Anlegen:|Benutzen:|Chance bei Treffer:|Set:|\(\d+\)\s*Set:)/i.test(text) ? "tooltip-equip" : "tooltip-stat";
+  return `<div class="${cls}">${escapeHtml(text)}</div>`;
+}
+
+function getIconUrl(icon){
+  const raw = String(icon || "").trim();
+  if(!raw) return "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+  if(/^https?:\/\//i.test(raw)) return raw;
+  const clean = raw.toLowerCase().replace(/\.(jpg|jpeg|png|webp)$/i,"");
+  if(/^\d+$/.test(clean)) return "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
+  return "https://wow.zamimg.com/images/wow/icons/large/" + clean + ".jpg";
+}
+
+function moveTooltip(event){
+  const tooltip = document.getElementById("tooltip");
+  if(!tooltip || tooltip.classList.contains("hidden")) return;
+  const padding = 14;
+  const width = tooltip.offsetWidth || 330;
+  const height = tooltip.offsetHeight || 220;
+  let left = event.clientX + 16;
+  let top = event.clientY + 16;
+  if(left + width + padding > window.innerWidth) left = event.clientX - width - 16;
+  if(top + height + padding > window.innerHeight) top = event.clientY - height - 16;
+  tooltip.style.left = Math.max(padding, left) + "px";
+  tooltip.style.top = Math.max(padding, top) + "px";
+}
+
+function hideTooltip(){
+  const tooltip = document.getElementById("tooltip");
+  if(tooltip) tooltip.classList.add("hidden");
+}
+
+function normalizeQuality(value){
+  const q = normalize(value);
+  if(q.includes("legend")) return "legendary";
+  if(q.includes("episch") || q.includes("epic")) return "epic";
+  if(q.includes("selten") || q.includes("rare")) return "rare";
+  if(q.includes("ungew") || q.includes("uncommon")) return "uncommon";
+  return "";
+}
+
+function itemKey(value){
+  return normalize(value)
+    .replace(/[’']/g,"")
+    .replace(/[^a-z0-9äöüß]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function classColor(className){
+  const value = normalize(className);
+  if(value.includes("krieger") || value.includes("warrior")) return "class-warrior";
+  if(value.includes("paladin")) return "class-paladin";
+  if(value.includes("jäger") || value.includes("jaeger") || value.includes("hunter")) return "class-hunter";
+  if(value.includes("schurke") || value.includes("rogue")) return "class-rogue";
+  if(value.includes("priester") || value.includes("priest")) return "class-priest";
+  if(value.includes("schamane") || value.includes("shaman")) return "class-shaman";
+  if(value.includes("magier") || value.includes("mage")) return "class-mage";
+  if(value.includes("hexenmeister") || value.includes("warlock")) return "class-warlock";
+  if(value.includes("druide") || value.includes("druid")) return "class-druid";
+  return "";
+}
+
+function toggleP0PlusPanel(){
+  openP0PlusPanel();
+}
+
+async function loadP0PlusPanel(){
+  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
+
+  try{
+    const result = await railwayApi({ action:"getP0Plus" });
+    if(!result.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
+    await ensureLootDataLoaded();
+    renderP0PlusModalContent();
+  }catch(error){
+    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderP0PlusModalContent(){
+  const raids = Array.from(new Set(p0PlusEntries.map(entry => entry.raid).filter(Boolean))).sort();
+  document.getElementById("p0PlusPanelContent").innerHTML = `
+    <div class="p0-toolbar">
+      <select id="p0RaidFilter" onchange="renderP0PlusRows()">
+        <option value="">Alle Raids</option>
+        ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
+      </select>
+      <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+      <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+    </div>
+    <div class="table-wrap">
+      <table class="p0-table">
+        <thead>
+          <tr>
+            <th>Raid</th>
+            <th>Spieler</th>
+            <th>Item</th>
+            <th>Slot</th>
+            <th>Punkte</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="p0PlusRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderP0PlusRows();
+}
+
+function renderP0PlusRows(){
+  const tbody = document.getElementById("p0PlusRows");
+  if(!tbody) return;
+
+  const raidFilter = normalize(document.getElementById("p0RaidFilter").value);
+  const search = normalize(document.getElementById("p0Search").value);
+  const rows = p0PlusEntries.filter(entry => {
+    const haystack = normalize([entry.raid, entry.player, entry.item, entry.slot].join(" "));
+    return (!raidFilter || normalize(entry.raid) === raidFilter) && (!search || haystack.includes(search));
+  }).sort((a, b) => {
+    const raidCompare = String(a.raid || "").localeCompare(String(b.raid || ""));
+    if(raidCompare) return raidCompare;
+    const playerCompare = String(a.player || "").localeCompare(String(b.player || ""));
+    if(playerCompare) return playerCompare;
+    return String(a.item || "").localeCompare(String(b.item || ""));
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine P0+ Einträge gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((entry, index) => {
+    const sourceIndex = p0PlusEntries.indexOf(entry);
+    const inputId = `p0Points_${sourceIndex}`;
+    return `
+      <tr>
+        <td>${escapeHtml(entry.raid || "-")}</td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>${escapeHtml(entry.slot || "-")}</td>
+        <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
+        <td>
+          <div class="actions">
+            <button class="small-btn ghost" type="button" onclick="addP0PlusInput(${sourceIndex},0.5)">+0.5 Bench</button>
+            <button class="small-btn primary" type="button" onclick="saveP0PlusPoints(${sourceIndex})">Speichern</button>
+            <button class="small-btn danger" type="button" onclick="setP0PlusInput(${sourceIndex},0); saveP0PlusPoints(${sourceIndex})">Entfernen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function setP0PlusInput(index, value){
+  const field = document.getElementById(`p0Points_${index}`);
+  if(field) field.value = String(value);
+}
+
+function addP0PlusInput(index, amount){
+  const field = document.getElementById(`p0Points_${index}`);
+  if(!field) return;
+
+  const current = Number(String(field.value || "0").replace(",", ".")) || 0;
+  field.value = formatPoints(current + Number(amount || 0));
+}
+
+async function saveP0PlusPoints(index){
+  const entry = p0PlusEntries[index];
+  if(!entry) return;
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const field = document.getElementById(`p0Points_${index}`);
+  const points = Number(String(field ? field.value : entry.count).replace(",", "."));
+  if(!isFinite(points) || points < 0){
+    setStatus("P0+ Punkte müssen 0 oder größer sein.", "bad");
+    return;
+  }
+
+  try{
+    setStatus("P0+ Punkte werden gespeichert ...", "");
+    const result = await railwayApi({
+      action:"guildSetP0PlusPoints",
+      masterCode,
+      raid:entry.raid || "",
+      item:entry.item || "",
+      slot:entry.slot || "",
+      player:entry.player || "",
+      points
+    });
+
+    if(!result.success){
+      setStatus(result.error || "P0+ Punkte konnten nicht gespeichert werden.", "bad");
+      return;
+    }
+
+    if(result.deleted || points === 0){
+      p0PlusEntries.splice(index, 1);
+    }else{
+      entry.count = points;
+      entry.slot = result.slot || entry.slot || "";
+    }
+    renderP0PlusRows();
+    setStatus(points === 0 ? "P0+ Eintrag entfernt." : "P0+ Punkte gespeichert.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+ Punkte konnten nicht gespeichert werden.", "bad");
+  }
+}
+
+function formatPoints(value){
+  const number = Number(value || 0);
+  if(!isFinite(number)) return "0";
+  return String(number).replace(".", ".");
+}
+
+function toggleIssueInboxPanel(){
+  openIssueInboxPanel();
+}
+
+async function loadIssueInboxPanel(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    return;
+  }
+
+  document.getElementById("issueInboxPanelContent").innerHTML = '<div class="status">Postfach wird geladen ...</div>';
+
+  try{
+    const result = await railwayApi({ action:"guildGetIssueReports", masterCode });
+    if(!result.success){
+      document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "Postfach konnte nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    issueReports = Array.isArray(result.reports) ? result.reports : [];
+    try{
+      const sentResult = await railwayApi({ action:"guildGetSentPlayerMessages", masterCode });
+      guildSentMessages = sentResult && sentResult.success && Array.isArray(sentResult.messages) ? sentResult.messages : [];
+    }catch(sentError){
+      guildSentMessages = [];
+    }
+    await ensureLootDataLoaded();
+    renderSummary();
+    renderIssueInboxPanel();
+  }catch(error){
+    document.getElementById("issueInboxPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Postfach konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderIssueInboxPanel(){
+  document.getElementById("issueInboxPanelContent").innerHTML = `
+    <div class="issue-toolbar">
+      <button id="guildInboxReportsTab" class="small-btn ${guildInboxTab === "reports" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('reports')">Meldungen</button>
+      <button id="guildInboxSentTab" class="small-btn ${guildInboxTab === "sent" ? "primary" : "ghost"}" type="button" onclick="setGuildInboxTab('sent')">Verschickte LeadPINs</button>
+    </div>
+    <div class="issue-toolbar">
+      <input id="issueSearch" type="search" placeholder="Spieler, Item, Raid oder Hinweis suchen..." oninput="renderIssueRows()">
+      <button class="small-btn ghost" type="button" onclick="loadIssueInboxPanel()">Neu laden</button>
+    </div>
+    <div class="table-wrap">
+      <table class="issue-table">
+        <thead>
+          <tr>
+            <th>Zeit</th>
+            <th>Art</th>
+            <th>Raid</th>
+            <th>Item</th>
+            <th>Spieler</th>
+            <th>Hinweis</th>
+            <th>Quelle</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="issueRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderIssueRows();
+}
+
+function setGuildInboxTab(tab){
+  guildInboxTab = tab === "sent" ? "sent" : "reports";
+  renderIssueInboxPanel();
+}
+
+function renderIssueRows(){
+  const tbody = document.getElementById("issueRows");
+  if(!tbody) return;
+
+  if(guildInboxTab === "sent"){
+    renderGuildSentLeadPinRows(tbody);
+    return;
+  }
+
+  const search = normalize(document.getElementById("issueSearch").value);
+  const rows = issueReports.filter(report => {
+    const haystack = normalize([
+      report.time,
+      report.type,
+      report.source,
+      report.category,
+      report.raid,
+      report.item,
+      report.slot,
+      report.points,
+      report.player,
+      report.server,
+      report.note,
+      report.page
+    ].join(" "));
+    return !search || haystack.includes(search);
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Meldungen gefunden.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(report => `
+    <tr>
+      <td>${escapeHtml(report.time || "-")}</td>
+      <td>${escapeHtml(report.type || report.category || "-")}</td>
+      <td>${escapeHtml(report.raid || "-")}</td>
+      <td>${renderIssueItem(report)}<br><span class="muted">${escapeHtml(report.slot || "")}${report.points ? " · " + escapeHtml(report.points) + " Punkte" : ""}</span></td>
+      <td>${escapeHtml(report.player || "-")}<br><span class="muted">${escapeHtml(report.server || "")}</span></td>
+      <td class="issue-note">${escapeHtml(report.note || "-")}</td>
+      <td>${escapeHtml(report.source || "-")}<br><span class="muted">${escapeHtml(report.page || "")}</span></td>
+      <td><button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}')">Erledigt</button></td>
+    </tr>
+  `).join("");
+}
+
+function renderGuildSentLeadPinRows(tbody){
+  const search = normalize(document.getElementById("issueSearch").value);
+  const rows = guildSentMessages.filter(message => {
+    const haystack = normalize([
+      message.createdAt,
+      message.recipientNames,
+      message.raidName,
+      message.raidDate,
+      message.raidTime,
+      message.leadPin,
+      message.title
+    ].join(" "));
+    return !search || haystack.includes(search);
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Noch keine LeadPIN-Nachrichten verschickt.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(message => {
+    const directLink = message.raidId ? withGuildUrl("index.html") + `&raidId=${encodeURIComponent(message.raidId)}` : withGuildUrl("index.html");
+    return `
+      <tr>
+        <td>${escapeHtml(formatDateTime(message.createdAt) || "-")}</td>
+        <td>LeadPIN</td>
+        <td>${escapeHtml(message.raidName || "-")}<br><span class="muted">${escapeHtml(formatRaidDate(message.raidDate))} ${escapeHtml(message.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(message.leadPin || "-")}</span></td>
+        <td>${escapeHtml(message.recipientNames || "-")}</td>
+        <td class="issue-note">${escapeHtml(message.title || "LeadPIN")}</td>
+        <td><a href="${escapeAttr(directLink)}" target="_blank" rel="noopener">Raid öffnen</a></td>
+        <td>
+          <div class="actions">
+            <button class="small-btn ghost" type="button" onclick="copyPlainText('${escapeAttr(message.leadPin || "")}')">PIN kopieren</button>
+            <button class="small-btn danger" type="button" onclick="deleteGuildSentMessage('${escapeAttr(message.id)}')">Löschen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function deleteGuildSentMessage(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode || !id){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Verschickte LeadPIN-Nachricht wirklich löschen?")) return;
+
+  try{
+    const result = await railwayApi({ action:"guildDeletePlayerMessage", masterCode, id });
+    if(!result.success || !result.deleted){
+      setStatus(result.error || "Nachricht konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+    guildSentMessages = guildSentMessages.filter(message => String(message.id || "") !== String(id));
+    renderIssueRows();
+    setStatus("Nachricht gelöscht.", "good");
+  }catch(error){
+    setStatus(error.message || "Nachricht konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+function renderIssueItem(report){
+  const raw = String((report && report.item) || "").trim();
+  if(!raw) return '<span class="muted">-</span>';
+  const parts = raw
+    .split("|")
+    .map(part => part.trim())
+    .filter(Boolean);
+  const unique = [];
+  parts.forEach(part => {
+    if(!unique.some(existing => itemKey(existing) === itemKey(part))) unique.push(part);
+  });
+  const names = unique.length ? unique : [raw];
+  return names.map(renderLootItem).join("<br>");
+}
+
+async function resolveIssueReport(rowNumber){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!rowNumber) return;
+
+  try{
+    const result = await railwayApi({ action:"guildResolveIssueReport", masterCode, rowNumber });
+    if(!result.success){
+      setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
+      return;
+    }
+    issueReports = issueReports.filter(report => String(report.id || report.rowNumber || "") !== String(rowNumber));
+    renderSummary();
+    renderIssueRows();
+    if(result.notified){
+      setStatus("Meldung erledigt und automatische Antwort ins Spieler-Postfach gelegt.", "good");
+    }else if(result.notificationError){
+      setStatus(`Meldung erledigt, aber keine automatische Antwort gesendet: ${result.notificationError}`, "bad");
+    }else{
+      setStatus("Meldung erledigt und gelöscht.", "good");
+    }
+  }catch(error){
+    setStatus(error.message || "Meldung konnte nicht erledigt werden.", "bad");
+  }
+}
+
+function toggleWorldbuffPanel(){
+  openWorldbuffPanel();
+}
+
+async function loadWorldbuffPanel(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const content = document.getElementById("worldbuffPanelContent");
+  if(!masterCode){
+    content.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    return;
+  }
+
+  const daysField = document.getElementById("worldbuffDays");
+  const days = daysField ? daysField.value : "all";
+  content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
+
+  try{
+    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days, source:"railway" });
+    if(!result.success){
+      content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+    renderWorldbuffMiniList();
+    renderWorldbuffPanel(days);
+  }catch(error){
+    content.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Worldbuffs konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderWorldbuffPanel(days){
+  document.getElementById("worldbuffPanelContent").innerHTML = `
+    <div class="worldbuff-toolbar">
+      <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
+        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+        ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+      </select>
+      <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
+        <option value="">Alle Buffs</option>
+        <option value="Hakkar">Hakkar</option>
+        <option value="Ony">Ony</option>
+        <option value="Nef">Nef</option>
+        <option value="Rend">Rend</option>
+      </select>
+      <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
+      <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
+      <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
+      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
+    </div>
+    <div class="buff-create-grid">
+      <input id="newWorldbuffDate" type="date" aria-label="Datum">
+      <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+      <select id="newWorldbuffBuff" aria-label="Buff">
+        <option value="Hakkar">Hakkar</option>
+        <option value="Ony">Ony</option>
+        <option value="Nef">Nef</option>
+        <option value="Rend">Rend</option>
+      </select>
+      <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
+      <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
+      <input id="newWorldbuffNote" type="text" placeholder="Notiz">
+      <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
+    </div>
+    <div class="table-wrap">
+      <table class="worldbuff-table">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Datum</th>
+            <th>Uhrzeit</th>
+            <th>Buff</th>
+            <th>Gilde</th>
+            <th>Werfer</th>
+            <th>Status</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="worldbuffRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderWorldbuffRows();
+}
+
+function renderWorldbuffRows(){
+  const tbody = document.getElementById("worldbuffRows");
+  if(!tbody) return;
+
+  const buffFilter = document.getElementById("worldbuffFilter").value;
+  const search = normalize(document.getElementById("worldbuffSearch").value);
+  const rows = worldbuffEntries.filter(entry => {
+    const haystack = normalize([
+      entry.tag,
+      entry.datum,
+      entry.uhrzeit,
+      entry.buff,
+      entry.gilde,
+      entry.charakter,
+      entry.status,
+      entry.note
+    ].join(" "));
+    return (!buffFilter || worldbuffMatchesFilter(entry, buffFilter)) && (!search || haystack.includes(search));
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Worldbuffs gefunden.</td></tr>';
+    return;
+  }
+
+  const dateColorMap = buildBuffDateColorMap(rows);
+  tbody.innerHTML = rows.map((entry,rowIndex) => {
+    const index = worldbuffEntries.indexOf(entry);
+    const statusOptions = ["", "🟡 offen", "🟢 bestätigt", "erledigt"];
+    const statusValue = normalizeBuffStatus(entry.status || "");
+    if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
+    const dateClass = getBuffDateClass(entry, dateColorMap);
+    const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
+    const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
+
+    return `
+      <tr class="${dateClass}">
+        ${renderBuffGroupCell(formatWorldbuffDay(entry.tag, entry.datum), hideDateCells)}
+        ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
+        ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
+        <td>${renderWorldbuffBuffControl(entry, index)}</td>
+        <td>${escapeHtml(entry.gilde || "-")}</td>
+        <td><input id="worldbuffCaster_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
+        <td>
+          <select id="worldbuffStatus_${index}" class="worldbuff-status">
+            ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
+          </select>
+        </td>
+        <td><div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function worldbuffMatchesFilter(entry, buffFilter){
+  const wanted = String(buffFilter || "").trim();
+  const buff = String((entry && entry.buff) || "").trim();
+  if(!wanted || buff === wanted) return true;
+  return isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff) && isOnyNefBuff(wanted);
+}
+
+function formatWorldbuffDay(tag, datum){
+  const value = String(tag || "").trim();
+  const map = { So:"Sonntag", Mo:"Montag", Di:"Dienstag", Mi:"Mittwoch", Do:"Donnerstag", Fr:"Freitag", Sa:"Samstag" };
+  if(map[value]) return map[value];
+  if(value) return value;
+  const date = parseWorldbuffDate(datum);
+  if(!date) return "-";
+  return ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"][date.getDay()];
+}
+
+function isOnyNefBuff(buff){
+  const value = String(buff || "").trim().toLowerCase();
+  return value === "ony" || value === "nef";
+}
+
+function isWorldbuffOpenSlot(entry){
+  if(!entry || String(entry.charakter || "").trim()) return false;
+  const cleanStatus = String(entry.status || "").replace(/[🟡🟢✅🔴🟠⚪]/g,"").trim().toLowerCase();
+  return !cleanStatus || cleanStatus.includes("offen") || cleanStatus.includes("frei");
+}
+
+function getWorldbuffChoices(entry){
+  const buff = String((entry && entry.buff) || "").trim();
+  if(isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff)) return ["Ony", "Nef"];
+  const buffs = ["Hakkar", "Ony", "Nef", "Rend"];
+  return buffs.includes(buff) ? [buff] : buffs;
+}
+
+function renderWorldbuffBuffControl(entry, index){
+  const choices = getWorldbuffChoices(entry);
+  if(choices.length <= 1) return renderWorldbuffBadge(entry.buff);
+  const current = String((entry && entry.buff) || "").trim();
+  return `
+    <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff">
+      ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
+    </select>
+  `;
+}
+
+function renderWorldbuffBadge(buff){
+  const value = String(buff || "").trim();
+  const cls = "buff-" + value.toLowerCase();
+  const icon = value === "Hakkar" ? "🟢" : (value === "Rend" ? "🟠" : "🔴");
+  return `<span class="buff-pill ${escapeAttr(cls)}">${icon} ${escapeHtml(value || "-")}</span>`;
+}
+
+function buildBuffDateColorMap(rows){
+  const dates = [];
+  (rows || []).forEach(entry => {
+    const key = getBuffDateKey(entry);
+    if(key && !dates.includes(key)) dates.push(key);
+  });
+  return dates.reduce((map,key,index) => {
+    map[key] = "buff-day-row day-color-" + (index % 2);
+    return map;
+  }, {});
+}
+
+function getBuffDateClass(entry, dateColorMap){
+  const key = getBuffDateKey(entry);
+  return key && dateColorMap && dateColorMap[key] ? dateColorMap[key] : "";
+}
+
+function getBuffDateKey(entry){
+  return String((entry && entry.datum) || "").trim();
+}
+
+function renderBuffGroupCell(value, hidden){
+  return `<td class="${hidden ? "buff-group-empty" : ""}">${hidden ? "" : escapeHtml(value || "-")}</td>`;
+}
+
+function shouldHideBuffDateCells(rows, rowIndex){
+  if(rowIndex <= 0) return false;
+  return isSameBuffDate(rows[rowIndex - 1], rows[rowIndex]);
+}
+
+function shouldHideBuffTimeCell(rows, rowIndex){
+  if(rowIndex <= 0 || !isSameBuffDate(rows[rowIndex - 1], rows[rowIndex])) return false;
+  return getBuffTimeGroupKey(rows[rowIndex - 1]) === getBuffTimeGroupKey(rows[rowIndex]);
+}
+
+function isSameBuffDate(first, second){
+  const firstKey = getBuffDateKey(first);
+  return !!firstKey && firstKey === getBuffDateKey(second);
+}
+
+function getBuffTimeGroupKey(entry){
+  return [
+    getBuffDateKey(entry),
+    String((entry && entry.uhrzeit) || "").trim(),
+    String((entry && entry.buff) || "").trim()
+  ].join("|");
+}
+
+function normalizeBuffStatus(value){
+  const raw = String(value || "").trim();
+  const clean = raw.replace(/[🟡🟢✅]/g, "").trim().toLowerCase();
+  if(!raw) return "";
+  if(clean === "offen") return "🟡 offen";
+  if(clean === "bestätigt" || clean === "bestaetigt" || clean === "reserviert") return "🟢 bestätigt";
+  if(clean === "erledigt") return "erledigt";
+  return raw;
+}
+
+async function saveWorldbuffCaster(index){
+  const entry = worldbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const charakter = document.getElementById(`worldbuffCaster_${index}`).value.trim();
+  const status = document.getElementById(`worldbuffStatus_${index}`).value.trim();
+  const buffField = document.getElementById(`worldbuffBuff_${index}`);
+  const buff = buffField ? buffField.value.trim() : (entry.buff || "");
+
+  try{
+    const result = await railwayWrite({
+      action:"guildSetWorldbuffCaster",
+      masterCode,
+      rowNumber:entry.rowNumber,
+      buff,
+      datum:entry.datum || "",
+      uhrzeit:entry.uhrzeit || "",
+      gilde:entry.gilde || "",
+      charakter,
+      status
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Worldbuff konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+
+    entry.buff = buff;
+    entry.charakter = charakter;
+    entry.status = normalizeBuffStatus(status);
+    setStatus("Worldbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Worldbuff konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function requestWorldbuffReplacement(index){
+  const entry = worldbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const targetChoice = (prompt("Wohin posten? worldbuff, intern oder beide", "beide") || "beide").toLowerCase().trim();
+  const target = targetChoice.includes("intern") ? "guild" : targetChoice.includes("world") ? "worldbuff" : "both";
+  const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
+
+  try{
+    const result = await railwayWrite({
+      action:"guildRequestWorldbuffReplacement",
+      masterCode,
+      target,
+      rowNumber:entry.rowNumber || "",
+      buff:entry.buff || "",
+      datum:entry.datum || "",
+      uhrzeit:entry.uhrzeit || "",
+      gilde:entry.gilde || "",
+      charakter:entry.charakter || "",
+      status:entry.status || "",
+      note
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
+      return;
+    }
+
+    setStatus("Ersatzsuche wurde an den Bot übergeben.", "good");
+  }catch(error){
+    setStatus(error.message || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
+  }
+}
+
+async function deleteWorldbuffTerm(index){
+  const entry = worldbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const label = [entry.buff, entry.datum, entry.uhrzeit, entry.gilde].filter(Boolean).join(" · ");
+  if(!confirm("Diesen Worldbuff-Termin wirklich löschen?\n\n"+label)){
+    return;
+  }
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeleteWorldbuffTerm",
+      masterCode,
+      rowNumber:entry.rowNumber || "",
+      datum:entry.datum || "",
+      uhrzeit:entry.uhrzeit || "",
+      buff:entry.buff || "",
+      gilde:entry.gilde || "",
+      source:entry.source || ""
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Worldbuff-Termin konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    worldbuffEntries.splice(index, 1);
+    renderWorldbuffMiniList();
+    renderWorldbuffRows();
+    setStatus("Worldbuff-Termin gelöscht. Bot-Update wurde vorgemerkt.", "good");
+    window.setTimeout(() => loadWorldbuffPanel(), 1200);
+  }catch(error){
+    setStatus(error.message || "Worldbuff-Termin konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function createWorldbuffTerm(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const datum = document.getElementById("newWorldbuffDate").value;
+  const uhrzeit = document.getElementById("newWorldbuffTime").value;
+  const buff = document.getElementById("newWorldbuffBuff").value;
+  const gilde = document.getElementById("newWorldbuffGuild").value.trim();
+  const charakter = document.getElementById("newWorldbuffCaster").value.trim();
+  const note = document.getElementById("newWorldbuffNote").value.trim();
+
+  try{
+    const result = await railwayWrite({
+      action:"guildCreateBuffTerm",
+      masterCode,
+      target:"worldbuff",
+      datum,
+      uhrzeit,
+      buff,
+      gilde,
+      charakter,
+      status:"🟡 offen",
+      note
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Worldbuff-Termin konnte nicht erstellt werden.", "bad");
+      return;
+    }
+
+    await loadWorldbuffPanel();
+    setStatus("Worldbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Worldbuff-Termin konnte nicht erstellt werden.", "bad");
+  }
+}
+
+async function queueWorldbuffBotUpdate(updateType){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:updateType || "worldbuff_update" });
+    if(!result.success){
+      setStatus(result.error || "Bot-Update konnte nicht vorgemerkt werden.", "bad");
+      return;
+    }
+    setStatus("Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Bot-Update konnte nicht vorgemerkt werden.", "bad");
+  }
+}
+
+async function restoreDeletedWorldbuffTerms(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  if(!confirm("Gelöschte Worldbuff-Termine aus der Merkliste wiederherstellen?")){
+    return;
+  }
+
+  setStatus("Gelöschte Worldbuff-Termine werden wiederhergestellt ...", "");
+  try{
+    const result = await railwayApi({ action:"guildRestoreDeletedWorldbuffTerms", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Gelöschte Termine konnten nicht wiederhergestellt werden.", "bad");
+      return;
+    }
+
+    await loadWorldbuffPanel();
+    setStatus((result.restored || 0)+" Worldbuff-Termin(e) wiederhergestellt. "+(result.skipped || 0)+" übersprungen.", "good");
+  }catch(error){
+    setStatus(error.message || "Gelöschte Termine konnten nicht wiederhergestellt werden.", "bad");
+  }
+}
+
+async function syncPublicBuffTerms(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  setStatus("Termine werden nach Railway übernommen ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildSyncPublicBuffTerms", masterCode });
+    if(!result.success){
+      setStatus(result.error || "Termine konnten nicht übertragen werden.", "bad");
+      return;
+    }
+    setStatus((result.synced || 0)+" Termine wurden nach Railway übernommen.", "good");
+  }catch(error){
+    setStatus(error.message || "Termine konnten nicht übertragen werden.", "bad");
+  }
+}
+
+function toggleHordenbuffPanel(){
+  openHordenbuffPanel();
+}
+
+async function loadHordenbuffPanel(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const content = document.getElementById("hordenbuffPanelContent");
+  if(!masterCode){
+    content.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    return;
+  }
+
+  const daysField = document.getElementById("hordenbuffDays");
+  const days = daysField ? daysField.value : "all";
+  content.innerHTML = '<div class="status">Hordenbuffs werden geladen ...</div>';
+
+  try{
+    const result = await railwayApi({ action:"guildGetHordenbuffs", masterCode, days });
+    if(!result.success){
+      content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Hordenbuffs konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+
+    hordenbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+    renderWorldbuffMiniList();
+    renderHordenbuffPanel(days);
+  }catch(error){
+    content.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Hordenbuffs konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderHordenbuffPanel(days){
+  document.getElementById("hordenbuffPanelContent").innerHTML = `
+    <div class="worldbuff-toolbar">
+      <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
+        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+        ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+      </select>
+      <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
+        <option value="">Alle Status</option>
+        <option value="offen">offen</option>
+        <option value="zugeteilt">zugeteilt</option>
+        <option value="erledigt">erledigt</option>
+      </select>
+      <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
+      <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
+      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+    </div>
+    <div class="buff-create-grid">
+      <input id="newHordenbuffDate" type="date" aria-label="Datum">
+      <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+      <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
+      <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
+      <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
+      <input id="newHordenbuffNote" type="text" placeholder="Notiz">
+      <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
+    </div>
+    <div class="table-wrap">
+      <table class="worldbuff-table">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Datum</th>
+            <th>Uhrzeit</th>
+            <th>Buff</th>
+            <th>Fraktion</th>
+            <th>Charakter</th>
+            <th>Übernehmer</th>
+            <th>Status</th>
+            <th>Notiz</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="hordenbuffRows"></tbody>
+      </table>
+    </div>
+  `;
+  renderHordenbuffRows();
+}
+
+function renderHordenbuffRows(){
+  const tbody = document.getElementById("hordenbuffRows");
+  if(!tbody) return;
+
+  const statusFilter = normalize(document.getElementById("hordenbuffStatusFilter").value);
+  const search = normalize(document.getElementById("hordenbuffSearch").value);
+  const rows = hordenbuffEntries.filter(entry => {
+    const haystack = normalize([
+      entry.tag,
+      entry.datum,
+      entry.uhrzeit,
+      entry.buff,
+      entry.gilde,
+      entry.charakter,
+      entry.uebernehmer,
+      entry.status,
+      entry.note
+    ].join(" "));
+    return (!statusFilter || normalize(entry.status).includes(statusFilter)) && (!search || haystack.includes(search));
+  });
+
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="10" class="muted">Keine Hordenbuffs gefunden.</td></tr>';
+    return;
+  }
+
+  const dateColorMap = buildBuffDateColorMap(rows);
+  tbody.innerHTML = rows.map((entry,rowIndex) => {
+    const index = hordenbuffEntries.indexOf(entry);
+    const statusOptions = ["", "🟡 offen", "zugeteilt", "erledigt"];
+    const statusValue = normalizeBuffStatus(entry.status || "");
+    if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
+    const dateClass = getBuffDateClass(entry, dateColorMap);
+    const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
+    const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
+
+    return `
+      <tr class="${dateClass}">
+        ${renderBuffGroupCell(entry.tag || "-", hideDateCells)}
+        ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
+        ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
+        <td>${renderWorldbuffBadge(entry.buff)}</td>
+        <td>${escapeHtml(entry.gilde || "-")}</td>
+        <td><input id="hordenbuffChar_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
+        <td><input id="hordenbuffHelper_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.uebernehmer || "")}" placeholder="Übernehmer"></td>
+        <td>
+          <select id="hordenbuffStatus_${index}" class="worldbuff-status">
+            ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
+          </select>
+        </td>
+        <td><input id="hordenbuffNote_${index}" class="worldbuff-note-input" type="text" value="${escapeAttr(entry.note || "")}" placeholder="Notiz"></td>
+        <td>
+          <div class="action-row">
+            <button class="small-btn good" type="button" onclick="saveHordenbuffEntry(${index})">Speichern</button>
+            <button class="small-btn danger" type="button" onclick="deleteHordenbuffEntry(${index})">Löschen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function saveHordenbuffEntry(index){
+  const entry = hordenbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const charakter = document.getElementById(`hordenbuffChar_${index}`).value.trim();
+  const uebernehmer = document.getElementById(`hordenbuffHelper_${index}`).value.trim();
+  const status = document.getElementById(`hordenbuffStatus_${index}`).value.trim();
+  const note = document.getElementById(`hordenbuffNote_${index}`).value.trim();
+
+  try{
+    const result = await railwayWrite({
+      action:"guildSetHordenbuffEntry",
+      masterCode,
+      rowNumber:entry.rowNumber,
+      charakter,
+      uebernehmer,
+      status,
+      note
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Hordenbuff konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+
+    await loadHordenbuffPanel();
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
+    setStatus(result.autoAssigned ? "Hordenbuff automatisch zugeteilt. Bot-Update wurde vorgemerkt." : "Hordenbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Hordenbuff konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deleteHordenbuffEntry(index){
+  const entry = hordenbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const label = [entry.charakter, entry.uebernehmer].filter(Boolean).join(" / ") || `${entry.datum || ""} ${entry.uhrzeit || ""}`.trim() || "diese Zeile";
+  if(!confirm(`Hordenbuff-Eintrag "${label}" wirklich löschen?`)) return;
+
+  try{
+    const result = await railwayWrite({
+      action:"guildDeleteHordenbuffEntry",
+      masterCode,
+      rowNumber:entry.rowNumber,
+      eventId:entry.eventId,
+      datum:entry.datum,
+      uhrzeit:entry.uhrzeit,
+      name:entry.charakter || entry.uebernehmer || ""
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Hordenbuff konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    await loadHordenbuffPanel();
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
+    setStatus("Hordenbuff gelöscht. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Hordenbuff konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function createHordenbuffTerm(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const datum = document.getElementById("newHordenbuffDate").value;
+  const uhrzeit = document.getElementById("newHordenbuffTime").value;
+  const charakter = document.getElementById("newHordenbuffChar").value.trim();
+  const uebernehmer = document.getElementById("newHordenbuffHelper").value.trim();
+  const status = document.getElementById("newHordenbuffStatus").value.trim() || "🟡 offen";
+  const note = document.getElementById("newHordenbuffNote").value.trim() || "kommender Rend-Termin laut Lichtbuff";
+
+  try{
+    const result = await railwayWrite({
+      action:"guildCreateBuffTerm",
+      masterCode,
+      target:"hordenbuff",
+      datum,
+      uhrzeit,
+      buff:"Rend",
+      gilde:"Horde",
+      charakter,
+      uebernehmer,
+      status,
+      note
+    });
+
+    if(!result.success){
+      setStatus(result.error || "Hordenbuff-Termin konnte nicht erstellt werden.", "bad");
+      return;
+    }
+
+    await loadHordenbuffPanel();
+    await railwayWrite({ action:"guildQueueWorldbuffBotUpdate", masterCode, type:"hordenbuff_update" });
+    setStatus("Hordenbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Hordenbuff-Termin konnte nicht erstellt werden.", "bad");
+  }
+}
+
+async function loadLogAnalysisPanel(force, quiet){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!force && logAnalyses.length){
+    renderLogAnalyses();
+    return;
+  }
+
+  if(status && !quiet) status.textContent = "Loganalysen werden geladen ...";
+
+  try{
+    const result = await railwayApi({ action:"guildGetLogAnalyses", masterCode, limit:100 });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Loganalysen konnten nicht geladen werden.")}</span>`;
+      return;
+    }
+    logAnalyses = Array.isArray(result.analyses) ? result.analyses : [];
+    renderLogAnalyses();
+    if(status && !quiet) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Loganalysen konnten nicht geladen werden.")}</span>`;
+  }
+}
+
+async function saveManualLogAnalysis(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const input = document.getElementById("logAnalysisUrl");
+  const status = document.getElementById("logAnalysisStatus");
+  const reportUrl = (input?.value || "").trim();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!reportUrl){
+    if(status) status.innerHTML = '<span class="bad">Bitte Warcraft-Logs-Link einfügen.</span>';
+    return;
+  }
+
+  if(status) status.textContent = "Log wird aufgenommen ...";
+
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveLogAnalysis",
+      masterCode,
+      reportUrl,
+      status:"pending",
+      title:"Manuell hinzugefügt"
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Log konnte nicht gespeichert werden.")}</span>`;
+      return;
+    }
+    if(input) input.value = "";
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
+    setStatus("Loganalyse wurde aufgenommen.", "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Log konnte nicht gespeichert werden.")}</span>`;
+  }
+}
+
+function upsertLogAnalysis(entry){
+  if(!entry || !entry.id) return;
+  const index = logAnalyses.findIndex(item => String(item.id || "") === String(entry.id));
+  if(index === -1){
+    logAnalyses = [entry].concat(logAnalyses || []);
+  }else{
+    logAnalyses[index] = Object.assign({}, logAnalyses[index], entry);
+  }
+}
+
+function logAnalysisDownloadHref(url){
+  const value = String(url || "").trim();
+  if(!value) return "";
+  if(/^https?:\/\//i.test(value)){
+    try{
+      const parsed = new URL(value);
+      if(parsed.searchParams.get("action") === "guildDownloadLogAnalysis" && !parsed.pathname.includes("/api/apps-script")){
+        const base = String(LICHTLOOT_API_URL || "").replace(/\/api\/apps-script\/?$/,"").replace(/\/$/,"");
+        return base + "/api/apps-script" + parsed.search;
+      }
+    }catch(error){}
+    return value;
+  }
+  if(value.startsWith("/api/apps-script?")){
+    return LICHTLOOT_API_URL + value.slice("/api/apps-script".length);
+  }
+  return value;
+}
+
+function isLogAnalysisQueued(entry, type){
+  const status = normalize(entry && entry.status || "");
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const generatorStatus = normalize(summary[`${type}GeneratorStatus`] || "");
+  return status === `${type}_queued` || generatorStatus === "queued" || generatorStatus === "running" || generatorStatus === "started";
+}
+
+function getLogAnalysisTypeState(entry, type, url){
+  const status = normalize(entry && entry.status || "");
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const generatorStatus = normalize(summary[`${type}GeneratorStatus`] || "");
+  const lastRequested = normalize(summary.lastRequestedAnalysis || "");
+  if(url || status === `${type}_done` || generatorStatus === "done") return "done";
+  if(isLogAnalysisQueued(entry, type)) return "queued";
+  if(status === `${type}_failed` || generatorStatus === "failed") return "failed";
+  if(status === "failed" && lastRequested === type) return "failed";
+  return "pending";
+}
+
+function getLogAnalysisTypeError(entry, type){
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  return String(summary[`${type}GeneratorError`] || summary[`${type}GeneratorWarnings`] || "").trim();
+}
+
+function supportsLogAnalysisDiscordPost(entry){
+  return ["mc","bwl","aq40","naxx"].includes(getLogAnalysisRaidKey(entry));
+}
+
+function renderLogAnalysisAction(entry, type, url){
+  const label = type.toUpperCase();
+  const btnClass = type === "cla" ? "primary" : "good";
+  const state = getLogAnalysisTypeState(entry, type, url);
+  const clearButton = (url || state === "done" || state === "failed")
+    ? `<button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} löschen</button>`
+    : "";
+  const postButton = url && supportsLogAnalysisDiscordPost(entry)
+    ? `<button class="small-btn ghost" type="button" onclick="queueLogAnalysisDiscordPost('${escapeAttr(entry.id)}','${type}')">${label} in DC posten</button>`
+    : "";
+  if(url){
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${postButton}${clearButton}`;
+  }
+  if(state === "queued"){
+    return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button><button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} abbrechen</button>`;
+  }
+  const actionLabel = state === "failed" ? `${label} erneut` : `${label} erstellen`;
+  return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>${clearButton}`;
+}
+
+function scheduleLogAnalysisRefresh(){
+  if(logAnalysisRefreshTimer) clearTimeout(logAnalysisRefreshTimer);
+  const panel = document.getElementById("logAnalysisPanel");
+  const hasQueued = (logAnalyses || []).some(entry => isLogAnalysisQueued(entry, "cla") || isLogAnalysisQueued(entry, "rpb"));
+  if(!panel || !panel.open || !hasQueued) return;
+  logAnalysisRefreshTimer = setTimeout(() => loadLogAnalysisPanel(true, true), 15000);
+}
+
+function focusLogAnalysisInput(){
+  const input = document.getElementById("logAnalysisUrl");
+  if(input) input.focus();
+}
+
+function getLogAnalysisRaidKey(entry){
+  const text = String(entry?.raid || entry?.summary?.raid || entry?.title || "").toLowerCase();
+  if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
+  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
+  if(text.includes("naxx")) return "naxx";
+  if(text.includes("zg") || text.includes("zul")) return "zg";
+  if(text.includes("ony")) return "ony";
+  if(text.includes("mc") || text.includes("molten")) return "mc";
+  return "aq40";
+}
+
+function formatLogAnalysisTime(entry){
+  const summary = entry && entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const time = summary.raidTime || summary.startTime || "";
+  if(time) return String(time).replace(/\s*uhr$/i,"") + " Uhr";
+  const source = entry?.postedAt || entry?.createdAt || entry?.updatedAt || "";
+  if(!source) return "";
+  const date = new Date(source);
+  if(Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}) + " Uhr";
+}
+
+function setLogAnalysisPage(page){
+  const pages = Math.max(1, Math.ceil((logAnalyses || []).length / LOG_ANALYSIS_PAGE_SIZE));
+  logAnalysisPage = Math.max(1, Math.min(Number(page) || 1, pages));
+  renderLogAnalyses();
+}
+
+function getLogAnalysisActiveType(entry){
+  if(isLogAnalysisQueued(entry, "cla")) return "cla";
+  if(isLogAnalysisQueued(entry, "rpb")) return "rpb";
+  const status = normalize(entry && entry.status || "");
+  if(status === "cla_done") return "cla";
+  if(status === "rpb_done") return "rpb";
+  return "";
+}
+
+function getLogAnalysisProgress(entry, type, url){
+  if(!entry || !type) return null;
+  const state = getLogAnalysisTypeState(entry, type, url || "");
+  if(state === "done") return {percent:100, label:"100%", state};
+  if(state === "failed") return {percent:100, label:"Fehler", state};
+  if(state !== "queued") return {percent:0, label:"-", state};
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const startedRaw = summary.analysisRequestedAt || summary[`${type}GeneratorStartedAt`] || entry.updatedAt || entry.createdAt;
+  const startedAt = new Date(startedRaw || Date.now()).getTime();
+  const elapsed = Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now()));
+  const estimatedMs = type === "cla" ? 4 * 60 * 1000 : 7 * 60 * 1000;
+  const percent = Math.max(8, Math.min(96, Math.round((elapsed / estimatedMs) * 100)));
+  return {percent, label:`ca. ${percent}%`, state};
+}
+
+function renderLogAnalysisProgress(entry){
+  if(!entry || typeof entry !== "object") return "";
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const urls = {
+    cla: logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || ""),
+    rpb: logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "")
+  };
+  const rows = ["cla","rpb"].map(type => {
+    const progress = getLogAnalysisProgress(entry, type, urls[type]);
+    const running = progress.state === "queued";
+    const failed = progress.state === "failed";
+    const fillWidth = progress.state === "pending" ? 0 : progress.percent;
+    const label = progress.state === "pending" ? "wartet" : progress.label;
+    return `
+      <div class="analysis-progress-row">
+        <span class="analysis-progress-name">${type.toUpperCase()}</span>
+        <div class="analysis-progress ${running ? "is-running" : ""}">
+          <div class="analysis-progress-track">
+            <div class="analysis-progress-fill ${failed ? "is-failed" : ""}" style="width:${fillWidth}%"></div>
+          </div>
+        </div>
+        <span class="analysis-progress-value">${escapeHtml(label)}</span>
+      </div>
+    `;
+  }).join("");
+  const warnings = String(summary.claGeneratorWarnings || "")
+    .split("|")
+    .map(part => part.trim())
+    .filter(part => part && !/^populate(GearBreakdown|FrostResistance|Pulls):/i.test(part))
+    .join(" | ");
+  return `
+    <div class="analysis-progress-list">${rows}</div>
+    ${warnings ? `<div class="analysis-warning">CLA: ${escapeHtml(warnings)}</div>` : ""}
+  `;
+}
+
+function renderLogAnalyses(){
+  const tbody = document.getElementById("logAnalysisRows");
+  const count = document.getElementById("logAnalysisCount");
+  if(count) count.textContent = String((logAnalyses || []).length);
+  if(!tbody) return;
+  if(!logAnalyses.length){
+    tbody.innerHTML = '<tr><td colspan="4" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    renderLogAnalysisFooter(0, 0, 0);
+    scheduleLogAnalysisRefresh();
+    return;
+  }
+
+  const total = logAnalyses.length;
+  const pages = Math.max(1, Math.ceil(total / LOG_ANALYSIS_PAGE_SIZE));
+  if(logAnalysisPage > pages) logAnalysisPage = pages;
+  const start = (logAnalysisPage - 1) * LOG_ANALYSIS_PAGE_SIZE;
+  const visible = logAnalyses.slice(start, start + LOG_ANALYSIS_PAGE_SIZE);
+
+  tbody.innerHTML = visible.map(entry => {
+    const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+    const raid = entry.raid || summary.raid || "Nicht erkannt";
+    const date = entry.raidDate || summary.raidDate || "";
+    const raidKey = getLogAnalysisRaidKey(entry);
+    const raidImage = RAID_IMAGES[raidKey] || RAID_IMAGES.aq40;
+    let claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
+    let rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
+    if(isLogAnalysisQueued(entry, "cla") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(claDownloadUrl)) claDownloadUrl = "";
+    if(isLogAnalysisQueued(entry, "rpb") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(rpbDownloadUrl)) rpbDownloadUrl = "";
+    return `
+      <tr>
+        <td>
+          <div class="log-raid-cell">
+            <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
+            <div>
+              <strong>${escapeHtml(raid)}</strong>
+              <span class="log-raid-code">${escapeHtml(entry.reportCode || "")}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="log-date-cell">
+            <span class="log-date-icon">▣</span>
+            <div>
+              <div class="log-date-main">${escapeHtml(formatLogAnalysisDate(date))}</div>
+              <div class="log-date-sub">${escapeHtml(formatLogAnalysisTime(entry))}</div>
+            </div>
+          </div>
+        </td>
+        <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
+        <td>
+          <div class="log-action-stack">
+            ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
+            ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
+            <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
+            <a class="small-btn ghost" href="lichtloot-api/public/raid-analyse.html?id=${escapeAttr(entry.id)}&type=rpb&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}" target="_blank" rel="noopener">Web-Auswertung</a>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+  renderLogAnalysisFooter(start + 1, Math.min(start + LOG_ANALYSIS_PAGE_SIZE, total), total);
+  scheduleLogAnalysisRefresh();
+}
+
+function renderLogAnalysisFooter(from, to, total){
+  const footer = document.getElementById("logAnalysisFooter");
+  if(!footer) return;
+  if(!total){
+    footer.innerHTML = '<span>Keine Einträge</span>';
+    return;
+  }
+  const pages = Math.max(1, Math.ceil(total / LOG_ANALYSIS_PAGE_SIZE));
+  const buttons = [];
+  buttons.push(`<button class="log-page-btn" type="button" onclick="setLogAnalysisPage(${logAnalysisPage - 1})" ${logAnalysisPage <= 1 ? "disabled" : ""}>‹</button>`);
+  for(let page=1; page<=pages; page++){
+    buttons.push(`<button class="log-page-btn ${page === logAnalysisPage ? "active" : ""}" type="button" onclick="setLogAnalysisPage(${page})">${page}</button>`);
+  }
+  buttons.push(`<button class="log-page-btn" type="button" onclick="setLogAnalysisPage(${logAnalysisPage + 1})" ${logAnalysisPage >= pages ? "disabled" : ""}>›</button>`);
+  footer.innerHTML = `
+    <span>Zeige ${Math.max(0, from)}-${to} von ${total} Einträgen</span>
+    <div class="log-pagination">${buttons.join("")}</div>
+    <span>${LOG_ANALYSIS_PAGE_SIZE} Einträge pro Seite</span>
+  `;
+}
+
+function formatLogAnalysisDate(value){
+  if(!value) return "-";
+  const text = String(value);
+  if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return formatRaidDate(text);
+  return formatDateTime(text);
+}
+
+function renderLogAnalysisStatus(entry){
+  if(!entry || typeof entry !== "object"){
+    return '<span class="badge closed">eingegangen</span>';
+  }
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const claUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
+  const rpbUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
+  const states = [
+    {type:"cla", label:"CLA", state:getLogAnalysisTypeState(entry, "cla", claUrl)},
+    {type:"rpb", label:"RPB", state:getLogAnalysisTypeState(entry, "rpb", rpbUrl)}
+  ];
+  const rendered = states
+    .filter(item => item.state !== "pending")
+    .map(item => {
+      const text = item.state === "done" ? `${item.label} fertig` :
+        item.state === "queued" ? `${item.label} läuft` :
+        `${item.label} Fehler`;
+      const cls = item.state === "failed" ? "warn" : "open";
+      return `<span class="badge ${cls}">${escapeHtml(text)}</span>`;
+    });
+  if(rendered.length) return `<div class="log-status-stack">${rendered.join("")}</div>`;
+  return '<span class="badge closed">eingegangen</span>';
+}
+
+async function triggerLogAnalysis(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+
+  const label = String(type || "").toUpperCase();
+  if(status) status.textContent = `${label}-Analyse wird ausgelöst ...`;
+
+  try{
+    const result = await railwayWrite({
+      action:"guildRunLogAnalysis",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht gestartet werden.")}</span>`;
+      return;
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    const analysisStatus = normalize((result.analysis && result.analysis.status) || "");
+    const isQueued = analysisStatus.endsWith("_queued");
+    const isFailed = analysisStatus.endsWith("_failed");
+    const analysisType = normalize(type);
+    const generatorError = result.analysis ? getLogAnalysisTypeError(result.analysis, analysisType) : "";
+    if(status) status.innerHTML = isQueued
+      ? `<span class="ok">${label} wurde gestartet. Der Link erscheint hier, sobald Google fertig ist.</span>`
+      : isFailed
+        ? `<span class="bad">${escapeHtml(generatorError || label + " konnte nicht gestartet werden.")}</span>`
+        : `<span class="ok">${label} ist bereit.</span>`;
+    setStatus(isQueued ? `${label} wurde gestartet.` : isFailed ? `${label} konnte nicht gestartet werden.` : `${label} ist bereit.`, isFailed ? "bad" : "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gestartet werden.")}</span>`;
+  }
+}
+
+async function queueLogAnalysisDiscordPost(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  const label = String(type || "").toUpperCase();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm(`${label}-Analyse jetzt im passenden Discord-Logchannel posten?`)) return;
+
+  if(status) status.textContent = `${label}-Discord-Post wird vorgemerkt ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildQueueLogAnalysisPost",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für den Discord-Post vorgemerkt.`;
+    setStatus(`${label}-Discord-Post wurde vorgemerkt.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht zum Posten vorgemerkt werden.")}</span>`;
+  }
+}
+
+async function setLogAnalysisSheetUrl(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  const label = String(type || "").toUpperCase();
+  const sheetUrl = prompt(`${label}-Google-Sheet-Link einfügen`);
+  if(!sheetUrl) return;
+  if(!/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(sheetUrl.trim())){
+    if(status) status.innerHTML = '<span class="bad">Bitte einen Google-Sheets-Link einfügen.</span>';
+    return;
+  }
+
+  try{
+    const result = await railwayWrite({
+      action:"guildSetLogAnalysisSheetUrl",
+      masterCode,
+      id,
+      type,
+      sheetUrl: sheetUrl.trim()
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " Link konnte nicht gespeichert werden.")}</span>`;
+      return;
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${label}-Link wurde gespeichert.</span>`;
+    setStatus(`${label}-Link wurde gespeichert.`, "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " Link konnte nicht gespeichert werden.")}</span>`;
+  }
+}
+
+async function cleanupIncompleteClaAnalyses(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm("Unfertige und fehlerhafte CLA-Zwischenstände löschen? Fertige RPB-Links bleiben erhalten.")) return;
+
+  if(status) status.textContent = "Fehlerhafte CLA-Einträge werden bereinigt ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildCleanupIncompleteClaAnalyses",
+      masterCode
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "CLA konnte nicht bereinigt werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedCla || 0)}</span> fehlerhafte/unfertige CLA-Einträge bereinigt.`;
+    await loadLogAnalysisPanel(true, true);
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "CLA konnte nicht bereinigt werden.")}</span>`;
+  }
+}
+
+async function cleanupIncompleteRpbAnalyses(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm("Hängende oder fehlerhafte RPB-Zwischenstände abbrechen? Fertige CLA-Links bleiben erhalten.")) return;
+
+  if(status) status.textContent = "Hängende RPB-Einträge werden abgebrochen ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildCleanupIncompleteRpbAnalyses",
+      masterCode
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "RPB konnte nicht abgebrochen werden.")}</span>`;
+      return;
+    }
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedRpb || 0)}</span> hängende/fehlerhafte RPB-Einträge abgebrochen.`;
+    await loadLogAnalysisPanel(true, true);
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "RPB konnte nicht abgebrochen werden.")}</span>`;
+  }
+}
+
+async function clearLogAnalysisType(id, type){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  const label = String(type || "").toUpperCase();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  const otherLabel = String(type || "").toLowerCase() === "cla" ? "RPB" : "CLA";
+  const actionWord = (logAnalyses || []).some(entry => String(entry.id || "") === String(id) && isLogAnalysisQueued(entry, type)) ? "abbrechen" : "löschen";
+  if(!confirm(`${label} für diesen Raid ${actionWord}? ${otherLabel} und WCL bleiben erhalten.`)) return;
+
+  if(status) status.textContent = `${label} wird ${actionWord === "abbrechen" ? "abgebrochen" : "gelöscht"} ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildClearLogAnalysisType",
+      masterCode,
+      id,
+      type
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || label + " konnte nicht gelöscht werden.")}</span>`;
+      return;
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${label}</span> wurde für diesen Raid ${actionWord === "abbrechen" ? "abgebrochen" : "gelöscht"}.`;
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || label + " konnte nicht gelöscht werden.")}</span>`;
+  }
+}
+
+function isOpenStatus(status){
+  const value = normalize(status);
+  return value === "offen" || value === "geöffnet" || value === "published" || value === "true";
+}
+
+function statusBadge(status){
+  const value = normalize(status || "geschlossen");
+  const cls = isOpenStatus(value) ? "open" : (value === "archiviert" ? "warn" : "closed");
+  return `<span class="badge ${cls}">${escapeHtml(status || "geschlossen")}</span>`;
+}
+
+function formatRaidDate(value){
+  if(!value) return "-";
+  const parts = String(value).split("-");
+  if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+  return String(value);
+}
+
+function formatDateTime(value){
+  if(!value) return "-";
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString("de-DE",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
+  });
+}
+
+function normalize(value){
+  return String(value || "").trim().toLowerCase();
+}
+
+function escapeHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+function escapeAttr(value){
+  return escapeHtml(value).replace(/`/g,"&#096;");
+}
+
+function escapeQuotes(value){
+  return String(value || "")
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'");
+}
+</script>
+</body>
+</html>
