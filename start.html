@@ -2432,10 +2432,7 @@ function getRaidCreatorContextForStart(){
     : "";
 
   const playerLogin=String(storedPin || "").trim().toUpperCase();
-  const createdBy=String(selectedName
-    ? selectedName + (playerLogin ? " (SpielerLogin " + playerLogin + ")" : "")
-    : (playerLogin ? "SpielerLogin " + playerLogin : "")
-  ).trim();
+  const createdBy=String(selectedName || "").trim();
   return {createdBy,playerLogin};
 }
 
@@ -2491,6 +2488,11 @@ async function createRaidFromStart(){
   const creatorContext=getRaidCreatorContextForStart();
   if(!creatorContext.playerLogin){
     resultBox.innerHTML=`<span class="bad">Bitte erst mit deinem Spielerlogin einloggen, damit der Raid-Ersteller gespeichert werden kann.</span>`;
+    if(typeof focusMeinLichtLoot === "function") focusMeinLichtLoot();
+    return;
+  }
+  if(!creatorContext.createdBy){
+    resultBox.innerHTML=`<span class="bad">Bitte erst einen Charakter auswählen, damit nur der Spielername als Ersteller angezeigt wird.</span>`;
     if(typeof focusMeinLichtLoot === "function") focusMeinLichtLoot();
     return;
   }
