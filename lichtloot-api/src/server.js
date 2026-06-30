@@ -57,8 +57,8 @@ await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
 });
 
-await ensureRaidCreatedByColumn().catch(error => {
-  console.warn("Raid-Ersteller-Spalte konnte nicht vorbereitet werden:", error.message || error);
+await ensureRaidSchema().catch(error => {
+  console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
 await ensureBuffTables().catch(error => {
@@ -1054,8 +1054,22 @@ function requireMasterOrQueueToken(params = {}) {
   throw error;
 }
 
-async function ensureRaidCreatedByColumn() {
-  await query(`alter table raids add column if not exists created_by text`);
+async function ensureRaidSchema() {
+  await query(
+    `alter table raids
+       add column if not exists external_raid_id text,
+       add column if not exists raid_time text,
+       add column if not exists guild_name text,
+       add column if not exists player_link text,
+       add column if not exists p0plus_freigabe text not null default 'geschlossen',
+       add column if not exists created_by text`
+  );
+  await query(`alter table raids drop constraint if exists raids_guild_id_raid_type_raid_date_key`);
+  await query(
+    `create unique index if not exists idx_raids_guild_external_raid_id
+       on raids(guild_id, external_raid_id)
+       where external_raid_id is not null and external_raid_id <> ''`
+  );
 }
 
 async function ensureBuffTables() {
@@ -2423,7 +2437,9 @@ async function savePrio({ guildId, query: params }) {
            raid_time, guild_name, p0plus_freigabe
          )
          values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geöffnet'))
-         on conflict (guild_id, raid_type, raid_date) do update
+         on conflict (guild_id, external_raid_id)
+           where external_raid_id is not null and external_raid_id <> ''
+         do update
            set name = excluded.name,
                external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
                raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
@@ -5501,6 +5517,13 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const sheetAnalysis = await buildStoredSheetWebAnalysis(result.rows[0], type);
+  if (sheetAnalysis) {
+    return {
+      success: true,
+      webAnalysis: sheetAnalysis
+    };
+  }
   const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], type, guildId);
   if (combatLogAnalysis) {
     return {
@@ -5509,7 +5532,7 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     };
   }
   if (type !== "rpb") {
-    const error = new Error("Sheet-Daten sind für die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
+    const error = new Error("Für diese Auswertung wurden noch keine Sheet-Daten exportiert.");
     error.statusCode = 404;
     throw error;
   }
@@ -6418,7 +6441,10 @@ function buildLogAnalysisCallbackUrl(baseUrl) {
 
 async function startExternalLogAnalysisGenerator({ analysis, type, guildId, generatorRunId }) {
   const config = getLogAnalysisGeneratorConfig(type);
-  if (!config.url) return null;
+  if (!config.url) {
+    const prefix = type === "cla" ? "CLA" : "RPB";
+    throw new Error(`${prefix}_GENERATOR_URL fehlt in Railway. Bitte den Apps-Script-Web-App-Link des ${prefix}-Generators als Railway-Variable eintragen.`);
+  }
 
   const callbackBaseUrl = process.env.LICHTLOOT_API_URL || process.env.PUBLIC_API_URL || "";
   const legacyApiKey = clean(
@@ -7225,6 +7251,14 @@ async function createRandomRaid({ guildId, query: params }) {
     throw error;
   }
 
+  const creator = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller);
+  const creatorLogin = clean(params.creatorPlayerLogin || params.spielerLogin || params.loginPin);
+  if (!creator && !creatorLogin) {
+    const error = new Error("Spielerlogin fehlt. Bitte erst mit deinem Spielerlogin einloggen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   return createRaidRecord({
     guildId,
     query: {
@@ -7245,7 +7279,10 @@ async function createRaidRecord({ guildId, query: params }) {
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const status = normalizeStatus(params.status || "geschlossen");
   const p0plusFreigabe = normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || "geöffnet");
-  const createdBy = clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller);
+  const creatorLogin = clean(params.creatorPlayerLogin || params.spielerLogin || params.loginPin);
+  const createdBy =
+    clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) ||
+    (creatorLogin ? `SpielerLogin ${creatorLogin}` : "");
 
   const result = await query(
     `insert into raids (
@@ -7253,7 +7290,9 @@ async function createRaidRecord({ guildId, query: params }) {
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-     on conflict (guild_id, raid_type, raid_date) do update
+     on conflict (guild_id, external_raid_id)
+       where external_raid_id is not null and external_raid_id <> ''
+     do update
        set name = excluded.name,
            external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
            raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
@@ -9685,9 +9724,8 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
-      const error = new Error("Sheet-Daten sind fuer die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
-      error.statusCode = 410;
-      throw error;
+      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildDownloadLogAnalysis") {
@@ -10147,9 +10185,8 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
-      const error = new Error("Sheet-Daten sind fuer die Raid-Analyse deaktiviert. Bitte Warcraft-Logs-Importer verwenden.");
-      error.statusCode = 410;
-      throw error;
+      const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "setPublicLogAnalysisRaidRoles") {
