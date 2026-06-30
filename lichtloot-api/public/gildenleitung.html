@@ -841,13 +841,106 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .log-analysis-toolbar{
   display:grid;
-  grid-template-columns:minmax(260px,1fr) auto;
+  grid-template-columns:minmax(260px,1fr) auto auto;
   gap:10px;
   align-items:center;
   padding:12px;
   border:1px solid rgba(96,165,250,.12);
   border-radius:12px;
   background:rgba(8,18,36,.70);
+}
+
+.log-import-preview{
+  display:grid;
+  gap:10px;
+  border:1px solid rgba(34,197,94,.18);
+  border-radius:12px;
+  background:rgba(2,6,23,.54);
+  padding:12px;
+}
+
+.log-import-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.log-import-head strong{
+  display:block;
+  color:#e5e7eb;
+  font-size:16px;
+}
+
+.log-import-head span{
+  display:block;
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:850;
+}
+
+.log-import-summary{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.log-import-table{
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+}
+
+.log-import-table table{
+  width:100%;
+  min-width:980px;
+  border-collapse:collapse;
+}
+
+.log-import-table th,
+.log-import-table td{
+  padding:8px 10px;
+  border-bottom:1px solid rgba(148,163,184,.12);
+  background:rgba(5,12,25,.36);
+  color:#cbd5e1;
+  font-size:12px;
+  vertical-align:top;
+}
+
+.log-import-table th{
+  color:#f8fafc;
+  background:rgba(8,18,36,.9);
+  text-align:left;
+}
+
+.log-import-table td:first-child{
+  color:#e5e7eb;
+  font-weight:950;
+}
+
+.log-import-pill{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 7px;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:999px;
+  color:#cbd5e1;
+  background:rgba(15,23,42,.72);
+  font-size:11px;
+  font-weight:900;
+}
+
+.log-import-pill.warn{
+  border-color:rgba(250,204,21,.38);
+  color:#fde68a;
+}
+
+.log-import-pill.good{
+  border-color:rgba(34,197,94,.34);
+  color:#bbf7d0;
 }
 
 .log-analysis-table table{
@@ -1863,9 +1956,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
         <div class="log-analysis-toolbar">
           <input id="logAnalysisUrl" type="url" placeholder="Warcraft-Logs-Link einfügen">
           <button class="btn" type="button" onclick="saveManualLogAnalysis()">Link hinzufügen</button>
+          <button class="btn ghost" type="button" onclick="importRaidLogAnalysisPreview()">Raid-Daten importieren</button>
         </div>
       </div>
       <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
+      <div id="logImportPreview" class="log-import-preview" style="display:none"></div>
       <div class="table-wrap log-analysis-table">
         <table>
           <thead>
@@ -5044,6 +5139,136 @@ async function saveManualLogAnalysis(){
   }
 }
 
+function logImportValue(value){
+  if(value === null || value === undefined || value === "") return "-";
+  if(typeof value === "boolean") return value ? "ja" : "nein";
+  if(typeof value === "number") return Number.isFinite(value) ? String(Math.round(value * 100) / 100) : "-";
+  return String(value);
+}
+
+function logImportConfiguredHeal(player, pattern){
+  const data = player && player.healing && player.healing.byConfiguredCast ? player.healing.byConfiguredCast : {};
+  const key = Object.keys(data).find(name => pattern.test(name));
+  return key ? data[key] : "-";
+}
+
+function logImportCast(player, pattern){
+  const data = player && player.casts ? player.casts : {};
+  const key = Object.keys(data).find(name => pattern.test(name));
+  return key ? logImportValue(data[key]) : "-";
+}
+
+function logImportList(values, emptyText="-"){
+  const list = Array.isArray(values) ? values.filter(Boolean) : [];
+  if(!list.length) return emptyText;
+  return list.map(item => `<span class="log-import-pill good">${escapeHtml(String(item))}</span>`).join(" ");
+}
+
+function renderRaidLogImportPreview(result){
+  const box = document.getElementById("logImportPreview");
+  if(!box) return;
+  const players = Array.isArray(result.players) ? result.players.slice().sort((a,b) => String(a.name || "").localeCompare(String(b.name || ""),"de")) : [];
+  const report = result.report || {};
+  const sourceText = result.sources ? "Tabellenwerte aktiv" : "Quelle unbekannt";
+  const rows = players.map(player => {
+    const issues = Array.isArray(player.enchantIssues) ? player.enchantIssues : [];
+    const issueText = issues.length
+      ? issues.map(item => `<span class="log-import-pill warn">${escapeHtml(item.slot || "")}: ${escapeHtml(item.issue || "")}</span>`).join(" ")
+      : '<span class="log-import-pill good">ok</span>';
+    const worldBuffs = player.buffs && Array.isArray(player.buffs.worldBuffs) ? player.buffs.worldBuffs : [];
+    const consumables = player.buffs && Array.isArray(player.buffs.consumables) ? player.buffs.consumables : [];
+    return `
+      <tr>
+        <td>${escapeHtml(player.name || "")}<br><span class="muted">${escapeHtml(player.className || "")}</span></td>
+        <td>${escapeHtml(logImportValue(player.stats && player.stats.criticalHealsDone))}</td>
+        <td>${escapeHtml(logImportValue(player.stats && player.stats.criticalOutgoing))}</td>
+        <td>${escapeHtml(logImportValue(player.stats && player.stats.resistOutgoing))}</td>
+        <td>${escapeHtml(logImportCast(player,/shoot|schie/i))}</td>
+        <td>${escapeHtml(logImportConfiguredHeal(player,/flash heal|blitzheilung/i))}</td>
+        <td>${escapeHtml(logImportConfiguredHeal(player,/renew|erneuerung/i))}</td>
+        <td>${escapeHtml(logImportValue(player.damageTaken && player.damageTaken.total))}</td>
+        <td>${logImportList(consumables)}</td>
+        <td>${logImportList(worldBuffs)}</td>
+        <td>${issueText}</td>
+      </tr>
+    `;
+  }).join("");
+  box.style.display = "";
+  box.innerHTML = `
+    <div class="log-import-head">
+      <div>
+        <strong>${escapeHtml(report.title || "Raid-Import")}</strong>
+        <span>${escapeHtml(report.raid || "")} · ${escapeHtml(report.raidDate || "")} · ${escapeHtml(report.code || "")}</span>
+        <span>${escapeHtml(report.scopeRule || "")}</span>
+      </div>
+      <div class="log-import-summary">
+        <span class="log-import-pill good">${escapeHtml(sourceText)}</span>
+        <span class="log-import-pill">${players.length} Spieler</span>
+        <span class="log-import-pill">${escapeHtml(logImportValue(report.includedFights))} Fights</span>
+        <span class="log-import-pill">${escapeHtml(logImportValue(report.bossFights))} Bosse</span>
+      </div>
+    </div>
+    <div class="log-import-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Spieler</th>
+            <th>Crit Heals</th>
+            <th>Crit Out</th>
+            <th>Resist Out</th>
+            <th>Shoot</th>
+            <th>Flash Heal</th>
+            <th>Renew</th>
+            <th>Damage Taken</th>
+            <th>Consumables</th>
+            <th>Worldbuffs</th>
+            <th>Enchant-Issues</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="11">Keine Spielerdaten erhalten.</td></tr>'}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function importRaidLogAnalysisPreview(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const input = document.getElementById("logAnalysisUrl");
+  const status = document.getElementById("logAnalysisStatus");
+  const box = document.getElementById("logImportPreview");
+  const reportUrl = (input?.value || "").trim();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!reportUrl){
+    if(status) status.innerHTML = '<span class="bad">Bitte Warcraft-Logs-Link einfügen.</span>';
+    return;
+  }
+  if(box){
+    box.style.display = "";
+    box.innerHTML = '<div class="status">Raid-Daten werden aus Warcraft Logs importiert ...</div>';
+  }
+  if(status) status.textContent = "Raid-Daten werden importiert ...";
+  try{
+    const result = await railwayApi({
+      action:"importRaidLogAnalysis",
+      masterCode,
+      reportUrl
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Raid-Daten konnten nicht importiert werden.")}</span>`;
+      if(box) box.style.display = "none";
+      return;
+    }
+    renderRaidLogImportPreview(result);
+    if(status) status.innerHTML = `<span class="ok">${Array.isArray(result.players) ? result.players.length : 0}</span> Spieler importiert. Werte kommen aus WCL-Tabellen.`;
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Raid-Daten konnten nicht importiert werden.")}</span>`;
+    if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Raid-Daten konnten nicht importiert werden.")}</div>`;
+  }
+}
+
 function upsertLogAnalysis(entry){
   if(!entry || !entry.id) return;
   const index = logAnalyses.findIndex(item => String(item.id || "") === String(entry.id));
@@ -5184,7 +5409,8 @@ function getLogAnalysisProgress(entry, type, url){
   const elapsed = Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now()));
   const estimatedMs = type === "cla" ? 4 * 60 * 1000 : 7 * 60 * 1000;
   const percent = Math.max(8, Math.min(96, Math.round((elapsed / estimatedMs) * 100)));
-  return {percent, label:`ca. ${percent}%`, state};
+  const message = String(summary[`${type}GeneratorMessage`] || "").trim();
+  return {percent, label:message || `ca. ${percent}%`, state};
 }
 
 function renderLogAnalysisProgress(entry){
@@ -5277,7 +5503,7 @@ function renderLogAnalyses(){
             ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
             ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
-            <a class="small-btn ghost" href="lichtloot-api/public/raid-analyse.html?id=${escapeAttr(entry.id)}&type=rpb&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}" target="_blank" rel="noopener">Web-Auswertung</a>
+            <a class="small-btn ghost" href="raid-analyse.html?id=${escapeAttr(entry.id)}&type=rpb&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}" target="_blank" rel="noopener">Web-Auswertung</a>
           </div>
         </td>
       </tr>
