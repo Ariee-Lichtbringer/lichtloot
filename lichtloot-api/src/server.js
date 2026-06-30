@@ -27,7 +27,8 @@ let warcraftLogsNextRequestAt = 0;
 const defaultAllowedOrigins = [
   "https://lichtloot.de",
   "https://www.lichtloot.de",
-  "https://lichtloot-production.up.railway.app"
+  "https://lichtloot-production.up.railway.app",
+  "null"
 ];
 const configuredAllowedOrigins = clean(process.env.CORS_ORIGIN)
   .split(",")
@@ -6427,8 +6428,8 @@ async function runLogAnalysis({ guildId, query: params }) {
 
 function getLogAnalysisGeneratorConfig(type) {
   const prefix = type === "cla" ? "CLA" : "RPB";
-  const url = process.env[`${prefix}_GENERATOR_URL`] || process.env.LOG_ANALYSIS_GENERATOR_URL || "";
-  const token = process.env[`${prefix}_GENERATOR_TOKEN`] || process.env.LOG_ANALYSIS_GENERATOR_TOKEN || "";
+  const url = process.env[`${prefix}_GENERATOR_URL`] || "";
+  const token = process.env[`${prefix}_GENERATOR_TOKEN`] || "";
   return { url: clean(url), token: clean(token) };
 }
 
@@ -6508,7 +6509,9 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
   }
 
   const sheetUrl = clean(params.sheetUrl || params.spreadsheetUrl || params.url || params.downloadUrl);
-  const failed = clean(params.status).toLowerCase() === "failed" || clean(params.error);
+  const callbackStatus = clean(params.status).toLowerCase();
+  const inProgress = ["queued", "running", "started", "working"].includes(callbackStatus);
+  const failed = callbackStatus === "failed" || clean(params.error);
   const callbackRunId = clean(params.jobToken || params.generatorRunId || params.runId);
   const downloadUrlKey = type === "cla" ? "claDownloadUrl" : "rpbDownloadUrl";
   if (callbackRunId) {
@@ -6543,11 +6546,12 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
     }
   }
   const summaryPatch = {
-    [`${type}GeneratorStatus`]: failed ? "failed" : "done",
-    [`${type}GeneratorFinishedAt`]: new Date().toISOString(),
+    [`${type}GeneratorStatus`]: failed ? "failed" : inProgress ? "queued" : "done",
     [`${type}GeneratorError`]: clean(params.error || ""),
-    [`${type}GeneratorWarnings`]: clean(params.warnings || params.warning || "")
+    [`${type}GeneratorWarnings`]: clean(params.warnings || params.warning || ""),
+    [`${type}GeneratorMessage`]: clean(params.message || params.statusText || params.detail || "")
   };
+  if (!inProgress) summaryPatch[`${type}GeneratorFinishedAt`] = new Date().toISOString();
   if (sheetUrl) summaryPatch[downloadUrlKey] = sheetUrl;
 
   const result = await query(
@@ -6560,7 +6564,7 @@ async function completeExternalLogAnalysis({ guildId, query: params }) {
     [
       guildId,
       id,
-      failed ? `${type}_failed` : `${type}_done`,
+      failed ? `${type}_failed` : inProgress ? `${type}_queued` : `${type}_done`,
       JSON.stringify(summaryPatch)
     ]
   );
