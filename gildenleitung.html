@@ -1285,6 +1285,18 @@ tr:hover td{background:rgba(250,204,21,.035)}
   background:rgba(30,41,59,.72);
 }
 
+.role-control{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  min-width:220px;
+}
+.role-control select{
+  min-height:30px;
+  padding:5px 7px;
+  font-size:12px;
+}
+
 .reset-card{
   border:1px solid rgba(96,165,250,.28);
   background:rgba(15,23,42,.62);
@@ -1858,6 +1870,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
             <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
             <button class="btn danger" type="button" onclick="cleanupIncompleteRpbAnalyses()">Hängende RPB abbrechen</button>
+            <button class="btn danger" type="button" onclick="resetLogAnalyses()">Auswertung auf null</button>
           </div>
         </div>
         <div class="log-analysis-toolbar">
@@ -1955,12 +1968,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <tr>
               <th>Main & Twinks</th>
               <th>Klassen</th>
+              <th>Rolle</th>
               <th>Login</th>
               <th>Aktion</th>
             </tr>
           </thead>
           <tbody id="playerRows">
-            <tr><td colspan="4" class="muted">Noch keine Daten geladen.</td></tr>
+            <tr><td colspan="5" class="muted">Noch keine Daten geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -2855,7 +2869,7 @@ function renderPlayers(){
   });
 
   if(!groups.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="muted">Keine passenden Spielerlogins gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Keine passenden Spielerlogins gefunden.</td></tr>';
     return;
   }
 
@@ -2866,6 +2880,7 @@ function renderPlayers(){
         ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
       </td>
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
+      <td>${renderPlayerRoleControl(group)}</td>
       <td><span class="badge closed">verborgen</span></td>
       <td>
         <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
@@ -2873,6 +2888,58 @@ function renderPlayers(){
       </td>
     </tr>
   `).join("");
+}
+
+const PLAYER_LOGIN_ROLES=[
+  {value:"member",label:"Mitglied"},
+  {value:"gildenleitung",label:"Gildenleitung"},
+  {value:"gildenoffiziere",label:"Gildenoffiziere"},
+  {value:"raidoffiziere",label:"Raidoffiziere"}
+];
+function normalizePlayerLoginRole(value){
+  const raw=String(value || "").trim().toLowerCase();
+  if(raw === "gildenleitung" || raw === "leitung") return "gildenleitung";
+  if(raw === "gildenoffiziere" || raw === "gildenoffizier") return "gildenoffiziere";
+  if(raw === "raidoffiziere" || raw === "raidoffizier" || raw === "raidlead") return "raidoffiziere";
+  return "member";
+}
+function renderPlayerRoleControl(group){
+  const main=group.main || {};
+  const playerId=main.playerId || "";
+  const selected=normalizePlayerLoginRole(main.playerRole || main.role);
+  const selectId="role_"+String(playerId || main.rowNumber || "").replace(/[^a-zA-Z0-9_-]/g,"");
+  return `
+    <div class="role-control">
+      <select id="${escapeAttr(selectId)}">
+        ${PLAYER_LOGIN_ROLES.map(role => `<option value="${role.value}"${role.value === selected ? " selected" : ""}>${escapeHtml(role.label)}</option>`).join("")}
+      </select>
+      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}')">Speichern</button>
+    </div>
+  `;
+}
+
+async function setPlayerLoginRole(playerId, selectId){
+  const select=document.getElementById(selectId);
+  if(!playerId || !select) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  const role=select.value;
+  setStatus("Rolle wird gespeichert ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildSetPlayerLoginRole",
+      masterCode,
+      playerId,
+      role
+    });
+    if(!result.success){
+      setStatus(result.error || "Rolle konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    setStatus("Rolle wurde gespeichert.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "Rolle konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function groupPlayersByMain(players){
@@ -5494,6 +5561,36 @@ async function cleanupIncompleteRpbAnalyses(){
     await loadLogAnalysisPanel(true, true);
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "RPB konnte nicht abgebrochen werden.")}</span>`;
+  }
+}
+
+async function resetLogAnalyses(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!confirm("Alle gespeicherten Loganalyse-Einträge und Web-Auswertungen löschen? Die WarcraftLogs-Links in Discord und die Google-Sheets selbst bleiben unverändert.")) return;
+  if(!confirm("Wirklich alles in der Auswertungsseite auf null setzen?")) return;
+
+  if(status) status.textContent = "Auswertung wird auf null gesetzt ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildResetLogAnalyses",
+      masterCode
+    });
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Auswertung konnte nicht zurückgesetzt werden.")}</span>`;
+      return;
+    }
+    logAnalyses = [];
+    logAnalysisPage = 1;
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedAnalyses || 0)}</span> Auswertungseinträge gelöscht.`;
+    setStatus("Auswertung wurde auf null gesetzt.", "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Auswertung konnte nicht zurückgesetzt werden.")}</span>`;
   }
 }
 

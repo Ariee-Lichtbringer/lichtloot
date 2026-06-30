@@ -2368,6 +2368,33 @@ function syncRaidCreateBackdrop(){
   document.body.classList.toggle("raid-create-open", Boolean(raidCreateBox && !raidCreateBox.classList.contains("hidden")));
 }
 
+const RAID_CREATE_ALLOWED_ROLES=["gildenleitung","gildenoffiziere","raidoffiziere"];
+function normalizePlayerLoginRole(value){
+  const raw=String(value || "").trim().toLowerCase();
+  if(raw === "gildenleitung" || raw === "leitung") return "gildenleitung";
+  if(raw === "gildenoffiziere" || raw === "gildenoffizier") return "gildenoffiziere";
+  if(raw === "raidoffiziere" || raw === "raidoffizier" || raw === "raidlead") return "raidoffiziere";
+  return "member";
+}
+function canCurrentPlayerCreateRaid(){
+  return RAID_CREATE_ALLOWED_ROLES.includes(normalizePlayerLoginRole(window.currentPlayerLoginRole));
+}
+function refreshRaidCreateAccess(){
+  const allowed=canCurrentPlayerCreateRaid();
+  const box=document.getElementById("raidCreateBox");
+  if(!box) return allowed;
+  box.querySelectorAll("select,input,button.tool-btn").forEach(el=>{
+    el.disabled=!allowed;
+  });
+  const result=document.getElementById("createRaidResult");
+  if(result && !allowed){
+    result.innerHTML='<span class="warn">Zum Erstellen von Raids wende dich an die Gildenleitung.</span>';
+  }else if(result && allowed && result.textContent.includes("Gildenleitung")){
+    result.innerHTML='Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.';
+  }
+  return allowed;
+}
+
 function goHomeView(){
   placeSidebarDrawers();
   setDashboardCenterMode("dashboard");
@@ -2398,6 +2425,7 @@ function toggleRaidCreate(){
   if(raidCreateBox) raidCreateBox.classList.toggle("hidden");
   syncRaidCreateBackdrop();
   setDefaultRaidDate();
+  refreshRaidCreateAccess();
 }
 
 function getSelectedDashboardCharacterName(){
@@ -2474,6 +2502,11 @@ async function createRaidFromStart(){
   const guild=document.getElementById("createRaidGuild").value.trim();
 
   const resultBox=document.getElementById("createRaidResult");
+
+  if(!refreshRaidCreateAccess()){
+    resultBox.innerHTML=`<span class="bad">Zum Erstellen von Raids wende dich an die Gildenleitung.</span>`;
+    return;
+  }
 
   if(!raidDate){
     resultBox.innerHTML=`<span class="bad">Bitte Raid-Datum auswählen.</span>`;
@@ -4168,6 +4201,7 @@ function logoutLichtLootPlayer(){
   myWorldbuffEntries=[];
   myWorldbuffOpenSlots=[];
   myLichtlootCharacters=[];
+  window.currentPlayerLoginRole="member";
   myRaidCalendarPrioEntries=[];
   playerMailboxMessages=[];
   playerMailboxSentMessages=[];
@@ -4203,6 +4237,7 @@ function logoutLichtLootPlayer(){
   if(badge) badge.textContent="";
 
   renderRaidCalendar();
+  refreshRaidCreateAccess();
   document.getElementById("dashboardPlayerPin")?.focus();
 }
 
@@ -5238,6 +5273,7 @@ function normalizeLichtlootCharEntry(char){
   const className=char.className || char.class || char.Klasse || "";
   const mainChar=char.mainChar || char.MainChar || "";
   const isMain=Boolean(char.isMain || char.is_main || char.Main);
+  const playerRole=normalizePlayerLoginRole(char.playerRole || char.role || char.Rolle || char.rolle);
 
   if(!String(name).trim()) return null;
 
@@ -5246,7 +5282,11 @@ function normalizeLichtlootCharEntry(char){
     server:String(server || "").trim(),
     className:String(className || "").trim(),
     mainChar:String(mainChar || "").trim(),
-    isMain
+    isMain,
+    playerRole,
+    role:playerRole,
+    playerRoleLabel:char.playerRoleLabel || char.roleLabel || "",
+    canCreateRaid:Boolean(char.canCreateRaid)
   };
 }
 
@@ -5357,8 +5397,13 @@ async function loadLichtLootCharacters(){
     });
 
     myLichtlootCharacters=chars.slice();
+    const roleSource=chars.find(char=>char && char.playerRole) || chars[0] || {};
+    window.currentPlayerLoginRole=normalizePlayerLoginRole(roleSource.playerRole || roleSource.role);
+    refreshRaidCreateAccess();
 
     if(!chars.length){
+      window.currentPlayerLoginRole="member";
+      refreshRaidCreateAccess();
       status.innerHTML='<span class="warn">Zu diesem SpielerPin wurden noch keine Charaktere gefunden.</span>';
       if(select){
         select.innerHTML='<option value="">Keine Charaktere gefunden</option>';
@@ -5388,7 +5433,8 @@ async function loadLichtLootCharacters(){
       selectLichtLootCharacter();
     }
 
-    status.innerHTML='<span class="ok">✓ '+chars.length+' Charakter(e) geladen. Wähle einen Charakter aus und klicke auf „Prios anzeigen“.</span>';
+    const roleNote=canCurrentPlayerCreateRaid() ? ' · Raid-Erstellung freigeschaltet' : '';
+    status.innerHTML='<span class="ok">✓ '+chars.length+' Charakter(e) geladen'+roleNote+'. Wähle einen Charakter aus und klicke auf „Prios anzeigen“.</span>';
     loadMyWorldbuffs();
 
   }catch(error){
@@ -5485,6 +5531,7 @@ async function setSelectedMainCharacter(){
 let myWorldbuffEntries=[];
 let myWorldbuffOpenSlots=[];
 let myLichtlootCharacters=[];
+window.currentPlayerLoginRole="member";
 let myRaidCalendarPrioEntries=[];
 let raidCalendarMode="month";
 let raidCalendarCursor=new Date();
@@ -7213,6 +7260,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   await fetchCurrentGuildInfo();
   applyGuildBrand();
   placeSidebarDrawers();
+  refreshRaidCreateAccess();
   initMeinLichtLootAutoLogin();
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
