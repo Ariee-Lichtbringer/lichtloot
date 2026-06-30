@@ -5184,7 +5184,8 @@ function getLogAnalysisProgress(entry, type, url){
   const elapsed = Math.max(0, Date.now() - (Number.isFinite(startedAt) ? startedAt : Date.now()));
   const estimatedMs = type === "cla" ? 4 * 60 * 1000 : 7 * 60 * 1000;
   const percent = Math.max(8, Math.min(96, Math.round((elapsed / estimatedMs) * 100)));
-  return {percent, label:`ca. ${percent}%`, state};
+  const message = String(summary[`${type}GeneratorMessage`] || "").trim();
+  return {percent, label:message || `ca. ${percent}%`, state};
 }
 
 function renderLogAnalysisProgress(entry){
