@@ -1880,10 +1880,11 @@ async function getPlayerWorldbuffs({ guildId, query: params }) {
   const names = chars.map(char => clean(char.name).toLowerCase()).filter(Boolean);
   if (!names.length) return { success: true, buffs: [], openSlots: [] };
   const all = (await getWorldbuffs({ guildId, query: { days: params.days || 90, source: "railway" } })).buffs || [];
+  const blockedStatuses = new Set(["abgesagt", "cancelled", "gelöscht", "geloescht", "erledigt", "done", "fertig"]);
   const openSlots = all.filter(entry =>
     ["Hakkar", "Ony", "Nef"].includes(normalizeWorldbuffName(entry.buff)) &&
     !clean(entry.charakter) &&
-    normalizeWorldbuffStatus(entry.status) === "offen" &&
+    !blockedStatuses.has(normalizeWorldbuffStatus(entry.status)) &&
     clean(entry.gilde).toLowerCase() === "lichtbringer"
   );
   const buffs = all
