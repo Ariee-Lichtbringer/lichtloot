@@ -5460,7 +5460,6 @@ function selectLichtLootCharacter(){
   try{
     const data=JSON.parse(select.value);
     charField.value=data.name || '';
-    myWorldbuffDisplayCharacterName=String(data.name || "").trim();
 
     if(status && data.name){
       status.innerHTML='<span class="warn">Ausgewählt: <strong>'+safeHtml(data.name)+'</strong>'+(data.server ? ' – '+safeHtml(data.server) : '')+(data.isMain ? ' · Main' : '')+'. Klicke auf „Prios anzeigen“.</span>';
@@ -5858,7 +5857,12 @@ async function claimMyWorldbuff(){
       pin,
       rowNumber,
       buff,
-      charakter
+      charakter,
+      datum:slot.datum || slot.date || "",
+      uhrzeit:slot.uhrzeit || slot.time || "",
+      gilde:slot.gilde || slot.guild || "",
+      tag:slot.tag || "",
+      source:"player-worldbuff-claim"
     });
 
     if(!result.success){
