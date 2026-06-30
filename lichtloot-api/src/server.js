@@ -62,6 +62,10 @@ await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensurePlayerRoleSchema().catch(error => {
+  console.warn("Spielerrollen-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureBuffTables().catch(error => {
   console.warn("Buff-Tabellen konnten nicht vorbereitet werden:", error.message || error);
 });
@@ -800,7 +804,32 @@ function normalizePin(value) {
   return clean(value).toUpperCase();
 }
 
+const playerRoleLabels = {
+  member: "Mitglied",
+  gildenleitung: "Gildenleitung",
+  gildenoffiziere: "Gildenoffiziere",
+  raidoffiziere: "Raidoffiziere"
+};
+const raidCreateRoles = new Set(["gildenleitung", "gildenoffiziere", "raidoffiziere"]);
+
+function normalizePlayerRole(value) {
+  const raw = clean(value).toLowerCase();
+  if (raw === "gildenleitung" || raw === "leitung") return "gildenleitung";
+  if (raw === "gildenoffiziere" || raw === "gildenoffizier") return "gildenoffiziere";
+  if (raw === "raidoffiziere" || raw === "raidoffizier" || raw === "raidlead") return "raidoffiziere";
+  return "member";
+}
+
+function playerRoleLabel(value) {
+  return playerRoleLabels[normalizePlayerRole(value)] || playerRoleLabels.member;
+}
+
+function canPlayerRoleCreateRaid(value) {
+  return raidCreateRoles.has(normalizePlayerRole(value));
+}
+
 function normalizeCharacter(row) {
+  const playerRole = normalizePlayerRole(row.player_role || row.role);
   return {
     id: row.id,
     char: row.name,
@@ -811,13 +840,17 @@ function normalizeCharacter(row) {
     Klasse: row.class_name,
     mainChar: row.main_char || "",
     isMain: Boolean(row.is_main),
+    role: playerRole,
+    playerRole,
+    playerRoleLabel: playerRoleLabel(playerRole),
+    canCreateRaid: canPlayerRoleCreateRaid(playerRole),
     created_at: row.created_at
   };
 }
 
 async function findPlayerByPin(guildId, pin) {
   const result = await query(
-    "select id, player_pin from players where guild_id = $1 and player_pin = $2",
+    "select id, player_pin, role from players where guild_id = $1 and player_pin = $2",
     [guildId, normalizePin(pin)]
   );
   return result.rows[0] || null;
@@ -914,6 +947,7 @@ async function getCharactersByPin(guildId, pin) {
        c.class_name,
        c.is_main,
        c.created_at,
+       p.role as player_role,
        first_value(c.name) over (
          partition by p.id
          order by c.is_main desc, c.created_at asc
@@ -1070,6 +1104,13 @@ async function ensureRaidSchema() {
     `create unique index if not exists idx_raids_guild_external_raid_id
        on raids(guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''`
+  );
+}
+
+async function ensurePlayerRoleSchema() {
+  await query(
+    `alter table players
+       add column if not exists role text not null default 'member'`
   );
 }
 
@@ -2828,6 +2869,7 @@ async function getGuildLeadershipOverview(guildId, params) {
        c.is_main,
        c.created_at,
        p.id as player_id,
+       p.role as player_role,
        count(*) over (partition by p.id) as linked_characters,
        first_value(c.name) over (
          partition by p.id
@@ -2845,6 +2887,7 @@ async function getGuildLeadershipOverview(guildId, params) {
     raids: raidsResult.rows.map(normalizeRaidRow),
     players: playersResult.rows.map((row, index) => ({
       id: row.id,
+      playerId: row.player_id,
       rowNumber: index + 1,
       char: row.name,
       name: row.name,
@@ -2852,6 +2895,10 @@ async function getGuildLeadershipOverview(guildId, params) {
       className: row.class_name,
       Klasse: row.class_name,
       mainChar: row.main_char || row.name,
+      role: normalizePlayerRole(row.player_role),
+      playerRole: normalizePlayerRole(row.player_role),
+      playerRoleLabel: playerRoleLabel(row.player_role),
+      canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
       linkedCharacters: Number(row.linked_characters || 1),
       createdAt: row.created_at
     }))
@@ -7254,6 +7301,12 @@ async function createRandomRaid({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
+  const creatorPlayer = creatorLogin ? await findPlayerByPin(guildId, creatorLogin) : null;
+  if (!creatorPlayer || !canPlayerRoleCreateRaid(creatorPlayer.role)) {
+    const error = new Error("Zum Erstellen von Raids wende dich an die Gildenleitung.");
+    error.statusCode = 403;
+    throw error;
+  }
 
   return createRaidRecord({
     guildId,
@@ -8614,6 +8667,55 @@ async function deletePlayerLogin({ guildId, query: params }) {
   }
 }
 
+async function setPlayerLoginRole({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const playerId = clean(params.playerId || params.player_id || params.id);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const role = normalizePlayerRole(params.role || params.playerRole);
+  const values = [guildId, role];
+  const clauses = [];
+
+  if (playerId) {
+    values.push(playerId);
+    clauses.push(`id::text = $${values.length}`);
+  }
+
+  if (playerPin) {
+    values.push(playerPin);
+    clauses.push(`player_pin = $${values.length}`);
+  }
+
+  if (!clauses.length) {
+    const error = new Error("SpielerLogin fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `update players
+     set role = $2, updated_at = now()
+     where guild_id = $1
+       and (${clauses.join(" or ")})
+     returning id, player_pin, role`,
+    values
+  );
+
+  if (!result.rows.length) {
+    const error = new Error("SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    playerId: result.rows[0].id,
+    playerPin: result.rows[0].player_pin,
+    role: normalizePlayerRole(result.rows[0].role),
+    roleLabel: playerRoleLabel(result.rows[0].role),
+    canCreateRaid: canPlayerRoleCreateRaid(result.rows[0].role)
+  };
+}
+
 async function setGuildMasterCode({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const newCode = clean(params.newMasterCode || params.newCode || params.password);
@@ -9743,6 +9845,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "guildSetPlayerLoginRole") {
+      const saved = await setPlayerLoginRole({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildSetMasterCode") {
       const saved = await setGuildMasterCode({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -10092,6 +10199,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "movePlayerWorldbuff") {
       const moved = await movePlayerWorldbuff({ guildId: guild.id, query: postParams });
       return res.json({ ...moved, guild: guild.slug });
+    }
+
+    if (action === "guildSetPlayerLoginRole") {
+      const saved = await setPlayerLoginRole({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "createRaid") {
