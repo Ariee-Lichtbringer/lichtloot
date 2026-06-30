@@ -1438,14 +1438,6 @@
         table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
         return;
       }
-      if(state.data?.source === "sheet-export"){
-        renderClassSubtabs(null);
-        renderClassOverview(null);
-        table.className = "";
-        table.innerHTML = '<tbody><tr><td class="error">Sheet-Daten sind deaktiviert. Bitte den Warcraft-Importer verwenden.</td></tr></tbody>';
-        document.getElementById("statusText").textContent = "Keine Sheet-Daten mehr in der Raid-Analyse.";
-        return;
-      }
       if(isMatrixSection(section)){
         renderMatrixTable(section);
         return;
