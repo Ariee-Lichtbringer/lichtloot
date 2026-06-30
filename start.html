@@ -1944,6 +1944,7 @@ body.raid-create-open:before{
     <nav class="start-side-nav" aria-label="Startseite Navigation">
       <button class="start-side-link active" data-start-nav="dashboard" onclick="goHomeView()"><span class="start-side-icon">⌂</span><span>Dashboard</span></button>
       <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><span class="start-side-icon">✦</span><span>P0+ Liste</span></button>
+      <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><span class="start-side-icon">▣</span><span>Logs & Analysen</span></button>
       <button class="start-side-link" data-start-nav="worldbuff" onclick="showBuffOverview('worldbuff')"><span class="start-side-icon">◎</span><span>Worldbuffs</span></button>
       <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><span class="start-side-icon">☰</span><span>Raidregeln</span></button>
       <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><span class="start-side-icon">◆</span><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
@@ -2005,6 +2006,45 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
+      <section class="dash-panel logs-dashboard-section" id="logsDashboardSection">
+        <div class="logs-dashboard-hero">
+          <div class="logs-dashboard-title">
+            <img src="images/content.png" alt="">
+            <div>
+              <h2>Warcraft Logs <span>Auswertungen</span></h2>
+              <p>Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.</p>
+            </div>
+          </div>
+          <div class="logs-dashboard-actions">
+            <button class="right-inline-btn" onclick="loadDashboardLogAnalyses()">Neu laden</button>
+            <button class="right-inline-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'">Zur Verwaltung</button>
+          </div>
+        </div>
+        <div class="logs-dashboard-stats">
+          <div><strong id="logDashReports">0</strong><span>Reports</span></div>
+          <div><strong id="logDashCla">0</strong><span>CLA fertig</span></div>
+          <div><strong id="logDashRpb">0</strong><span>RPB fertig</span></div>
+          <div><strong id="logDashOpen">0</strong><span>offen</span></div>
+        </div>
+        <div class="logs-dashboard-tabs">
+          <button id="logDashTab40" class="logs-dashboard-tab active" type="button" onclick="setDashboardLogRaidGroup('40')">40er Raids</button>
+          <button id="logDashTab20" class="logs-dashboard-tab" type="button" onclick="setDashboardLogRaidGroup('20')">20er Raids</button>
+        </div>
+        <div class="logs-dashboard-search-card">
+          <label for="logsDashboardSearch">Suche</label>
+          <div class="logs-dashboard-search-row">
+            <input id="logsDashboardSearch" type="search" placeholder="Nach Raid, Datum, CLA, RPB oder WCL suchen..." oninput="renderDashboardLogAnalyses(dashboardLogAnalysesCache)">
+            <button type="button" onclick="clearDashboardLogSearch()">Zurücksetzen</button>
+          </div>
+          <div class="logs-dashboard-search-tags">
+            <span>Raid</span><span>Datum</span><span>CLA</span><span>RPB</span><span>WCL</span>
+          </div>
+        </div>
+        <div class="logs-table-wrap">
+          <div class="logs-table-head"><span>Raid</span><span>Datum</span><span>Status</span><span>Aktion</span></div>
+          <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
+        </div>
+      </section>
 </div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Login, Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Einloggen</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">Mit deinem SpielerLogin anmelden.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
@@ -2292,7 +2332,8 @@ function createRaidId(raid){
     String(now.getDate()).padStart(2,"0")+"-"+
     String(now.getHours()).padStart(2,"0")+
     String(now.getMinutes()).padStart(2,"0")+
-    String(now.getSeconds()).padStart(2,"0");
+    String(now.getSeconds()).padStart(2,"0")+"-"+
+    randomCode(2);
 
   return raids[raid].short+"-"+date;
 }
@@ -2381,7 +2422,7 @@ function getSelectedDashboardCharacterName(){
   return "";
 }
 
-function getRaidCreatedByForStart(){
+function getRaidCreatorContextForStart(){
   const dashboardName=getSelectedDashboardCharacterName();
   const selectedName = dashboardName || (typeof getSelectedMyLichtLootCharacterName === "function"
     ? getSelectedMyLichtLootCharacterName()
@@ -2390,7 +2431,16 @@ function getRaidCreatedByForStart(){
     ? getStoredLichtLootPlayerPin()
     : "";
 
-  return String(selectedName || (storedPin ? "SpielerLogin " + storedPin : "Spieler")).trim();
+  const playerLogin=String(storedPin || "").trim().toUpperCase();
+  const createdBy=String(selectedName
+    ? selectedName + (playerLogin ? " (SpielerLogin " + playerLogin + ")" : "")
+    : (playerLogin ? "SpielerLogin " + playerLogin : "")
+  ).trim();
+  return {createdBy,playerLogin};
+}
+
+function getRaidCreatedByForStart(){
+  return getRaidCreatorContextForStart().createdBy;
 }
 
 function buildRaidDiscordPostText(raidName, raidDate, raidTime, guild, playerPin, createdBy){
@@ -2438,10 +2488,17 @@ async function createRaidFromStart(){
     return;
   }
 
+  const creatorContext=getRaidCreatorContextForStart();
+  if(!creatorContext.playerLogin){
+    resultBox.innerHTML=`<span class="bad">Bitte erst mit deinem Spielerlogin einloggen, damit der Raid-Ersteller gespeichert werden kann.</span>`;
+    if(typeof focusMeinLichtLoot === "function") focusMeinLichtLoot();
+    return;
+  }
+
   const raidId=createRaidId(raid);
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
-  const createdBy=getRaidCreatedByForStart();
+  const createdBy=creatorContext.createdBy;
   const discordPostText=buildRaidDiscordPostText(r.name,raidDate,raidTime,guild,playerPin,createdBy);
 
   const raidData={
@@ -2460,6 +2517,8 @@ async function createRaidFromStart(){
     playerLink:"",
     createdBy:createdBy,
     erstelltVon:createdBy,
+    creatorPlayerLogin:creatorContext.playerLogin,
+    spielerLogin:creatorContext.playerLogin,
     createdAt:new Date().toISOString(),
     status:"geschlossen",
     p0PlusFreigabe:"geöffnet"
@@ -3478,6 +3537,7 @@ function openNextRaidLoot(){
 function refreshStartDashboard(){
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
+  loadDashboardLogAnalyses();
   if(typeof loadP0PlusOverview === "function"){
     const overlay=document.getElementById("p0plusOverlay");
     const wasHidden=overlay ? overlay.classList.contains("hidden") : true;
@@ -3488,6 +3548,10 @@ function refreshStartDashboard(){
 
 function showLogsDashboard(){
   goHomeView();
+  setStartNavActive("logs");
+  const section=document.getElementById("logsDashboardSection");
+  if(section) section.scrollIntoView({behavior:"smooth",block:"start"});
+  loadDashboardLogAnalyses();
 }
 
 let dashboardLogAnalysesCache = [];
@@ -7150,6 +7214,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   initMeinLichtLootAutoLogin();
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
+  loadDashboardLogAnalyses();
   document.addEventListener("click",event=>{
     const menu=document.getElementById("raidCalendarMenu");
     if(menu && !menu.classList.contains("hidden") && !menu.contains(event.target)){
