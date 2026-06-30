@@ -5397,6 +5397,7 @@ async function loadLichtLootCharacters(){
     });
 
     myLichtlootCharacters=chars.slice();
+    myWorldbuffDisplayCharacterName="";
     const roleSource=chars.find(char=>char && char.playerRole) || chars[0] || {};
     window.currentPlayerLoginRole=normalizePlayerLoginRole(roleSource.playerRole || roleSource.role);
     refreshRaidCreateAccess();
@@ -5459,6 +5460,7 @@ function selectLichtLootCharacter(){
   try{
     const data=JSON.parse(select.value);
     charField.value=data.name || '';
+    myWorldbuffDisplayCharacterName=String(data.name || "").trim();
 
     if(status && data.name){
       status.innerHTML='<span class="warn">Ausgewählt: <strong>'+safeHtml(data.name)+'</strong>'+(data.server ? ' – '+safeHtml(data.server) : '')+(data.isMain ? ' · Main' : '')+'. Klicke auf „Prios anzeigen“.</span>';
@@ -5531,6 +5533,7 @@ async function setSelectedMainCharacter(){
 let myWorldbuffEntries=[];
 let myWorldbuffOpenSlots=[];
 let myLichtlootCharacters=[];
+let myWorldbuffDisplayCharacterName="";
 window.currentPlayerLoginRole="member";
 let myRaidCalendarPrioEntries=[];
 let raidCalendarMode="month";
@@ -5624,16 +5627,22 @@ function renderMyWorldbuffs(){
   if(!content) return;
 
   const claimHtml=renderMyWorldbuffClaim();
+  const displayCharacter=String(myWorldbuffDisplayCharacterName || getSelectedMyLichtLootCharacterName() || "").trim();
+  const visibleEntries=displayCharacter
+    ? myWorldbuffEntries.filter(entry => dashboardWorldbuffTextKey(entry && entry.charakter) === dashboardWorldbuffTextKey(displayCharacter))
+    : myWorldbuffEntries;
 
-  if(!myWorldbuffEntries.length){
-    content.innerHTML=claimHtml+'<div class="status">Du bist aktuell für keinen Nicht-Horde-Worldbuff als Werfer eingetragen.</div>';
+  if(!visibleEntries.length){
+    const nameText=displayCharacter ? safeHtml(displayCharacter)+" ist" : "Du bist";
+    content.innerHTML=claimHtml+'<div class="status">'+nameText+' aktuell für keinen Nicht-Horde-Worldbuff als Werfer eingetragen.</div>';
     refreshMyWorldbuffClaimSlots();
     return;
   }
 
-  content.innerHTML=claimHtml+myWorldbuffEntries.map((entry,index)=>{
+  content.innerHTML=claimHtml+visibleEntries.map((entry,index)=>{
+    const sourceIndex=myWorldbuffEntries.indexOf(entry);
     const alternatives=Array.isArray(entry.alternatives) ? entry.alternatives : [];
-    const selectId="myWorldbuffMove_"+index;
+    const selectId="myWorldbuffMove_"+sourceIndex;
     const optionHtml=alternatives.length
       ? alternatives.map(slot => `<option value="${safeAttr(slot.rowNumber)}">${safeHtml([slot.tag, slot.datum, slot.uhrzeit, slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
       : '<option value="">Keine freien Ersatztermine</option>';
@@ -5648,11 +5657,11 @@ function renderMyWorldbuffs(){
           <span class="pill ${isOpenStatusText(entry.status) ? "open" : "closed"}">${safeHtml(entry.status || "eingetragen")}</span>
         </div>
         <div class="my-worldbuff-actions">
-          <button type="button" onclick="toggleMyWorldbuffMove(${index})">Verschieben</button>
+          <button type="button" onclick="toggleMyWorldbuffMove(${sourceIndex})">Verschieben</button>
         </div>
         <div id="${selectId}_box" class="my-worldbuff-move">
           <select id="${selectId}" ${alternatives.length ? "" : "disabled"}>${optionHtml}</select>
-          <button type="button" onclick="moveMyWorldbuff(${index})" ${alternatives.length ? "" : "disabled"}>Speichern</button>
+          <button type="button" onclick="moveMyWorldbuff(${sourceIndex})" ${alternatives.length ? "" : "disabled"}>Speichern</button>
         </div>
       </div>
     `;
@@ -5677,7 +5686,7 @@ function renderMyWorldbuffClaim(){
         <option value="Hakkar">Hakkar</option>
       </select>
       <select id="myWorldbuffClaimSlot" aria-label="Freier Termin" onchange="updateMyWorldbuffClaimMeta()"></select>
-      <select id="myWorldbuffClaimChar" aria-label="Charakter"></select>
+      <select id="myWorldbuffClaimChar" aria-label="Charakter" onchange="setMyWorldbuffDisplayCharacter(this.value)"></select>
       <button type="button" onclick="claimMyWorldbuff()">Eintragen</button>
       <div id="myWorldbuffClaimMeta" class="my-worldbuff-modal-meta">${safeHtml(summary)}</div>
     </div>
@@ -5732,7 +5741,7 @@ function refreshMyWorldbuffClaimSlots(){
     : '<option value="">Kein freier Termin für diesen Buff</option>';
   slotSelect.disabled=!matchingSlots.length;
 
-  const selectedName=getSelectedMyLichtLootCharacterName();
+  const selectedName=myWorldbuffDisplayCharacterName || getSelectedMyLichtLootCharacterName();
   const charList=getMyWorldbuffClaimCharacters();
   const charOptions=charList.length
     ? charList.map(char => {
@@ -5743,6 +5752,11 @@ function refreshMyWorldbuffClaimSlots(){
   charSelect.innerHTML=charOptions;
   charSelect.disabled=!charList.length;
   updateMyWorldbuffClaimMeta();
+}
+
+function setMyWorldbuffDisplayCharacter(name){
+  myWorldbuffDisplayCharacterName=String(name || "").trim();
+  renderMyWorldbuffs();
 }
 
 function getSelectedMyWorldbuffClaimSlot(){
@@ -5838,6 +5852,7 @@ async function claimMyWorldbuff(){
   }
 
   try{
+    myWorldbuffDisplayCharacterName=charakter;
     const result=await fetchRaidApiJsonp({
       action:"claimPlayerWorldbuff",
       pin,
