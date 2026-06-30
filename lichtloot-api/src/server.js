@@ -2347,7 +2347,6 @@ async function savePrio({ guildId, query: params }) {
 
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const raidName = displayRaidName(params.raidName || params.raid);
-  const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID);
   const prioPin = clean(params.raidPin || params.prioPin || params.PrioPIN || params.playerLinkPin);
   const p0Plus = clean(params.p0Plus).toLowerCase();
@@ -2432,34 +2431,9 @@ async function savePrio({ guildId, query: params }) {
     }
 
     if (!raidResult || !raidResult.rows.length) {
-      raidResult = await client.query(
-        `insert into raids (
-           guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
-           raid_time, guild_name, p0plus_freigabe
-         )
-         values ($1, $2, $3, $4, $5, $6, $7, $8, coalesce(nullif($9, ''), 'geöffnet'))
-         on conflict (guild_id, external_raid_id)
-           where external_raid_id is not null and external_raid_id <> ''
-         do update
-           set name = excluded.name,
-               external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
-               raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
-               raid_time = coalesce(excluded.raid_time, raids.raid_time),
-               guild_name = coalesce(excluded.guild_name, raids.guild_name),
-               updated_at = now()
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
-        [
-          guildId,
-          raidName,
-          raidType,
-          raidDate,
-          externalRaidId || null,
-          prioPin || null,
-          clean(params.raidTime || params.uhrzeit) || null,
-          clean(params.guild || params.gilde) || null,
-          clean(params.p0PlusFreigabe || params.p0PlusOverride)
-        ]
-      );
+      const error = new Error("Raid oder Prio-PIN wurde nicht gefunden. Bitte nutze den aktuellen Raid-Link.");
+      error.statusCode = 404;
+      throw error;
     }
 
     const p1 = await upsertItem(client, raidType, params.p1);
@@ -6716,6 +6690,24 @@ async function cleanupIncompleteRpbAnalyses({ guildId, query: params }) {
   };
 }
 
+async function resetLogAnalyses({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysisSheetExportsTable();
+  await ensureCombatLogImportsTable();
+
+  const result = await query(
+    `delete from log_analyses
+     where guild_id = $1
+     returning id`,
+    [guildId]
+  );
+
+  return {
+    success: true,
+    deletedAnalyses: result.rowCount
+  };
+}
+
 async function clearLogAnalysisType({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureLogAnalysesTable();
@@ -9736,6 +9728,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return await downloadLogAnalysis({ guildId: guild.id, query: req.query, res });
     }
 
+    if (action === "guildResetLogAnalyses") {
+      const reset = await resetLogAnalyses({ guildId: guild.id, query: req.query });
+      return res.json({ ...reset, guild: guild.slug });
+    }
+
     if (action === "guildResolveIssueReport") {
       const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
@@ -10206,6 +10203,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildCleanupIncompleteRpbAnalyses") {
       const cleaned = await cleanupIncompleteRpbAnalyses({ guildId: guild.id, query: postParams });
       return res.json({ ...cleaned, guild: guild.slug });
+    }
+
+    if (action === "guildResetLogAnalyses") {
+      const reset = await resetLogAnalyses({ guildId: guild.id, query: postParams });
+      return res.json({ ...reset, guild: guild.slug });
     }
 
     if (action === "guildClearLogAnalysisType") {
