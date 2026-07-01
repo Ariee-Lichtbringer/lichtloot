@@ -62,6 +62,10 @@ await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureDiscordChannelSchema().catch(error => {
+  console.warn("Discord-Channel-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensurePlayerRoleSchema().catch(error => {
   console.warn("Spielerrollen-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -1152,6 +1156,29 @@ async function ensureRaidSchema() {
   await query(
     `create index if not exists idx_raid_external_signups_guild_raid
        on raid_external_signups(guild_id, raid_id, raid_date)`
+  );
+}
+
+async function ensureDiscordChannelSchema() {
+  await query(
+    `create table if not exists discord_bot_channels (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       discord_guild_id text,
+       discord_guild_name text,
+       channel_id text not null,
+       channel_name text not null,
+       channel_type text,
+       category_name text,
+       position integer,
+       can_send boolean not null default true,
+       updated_at timestamptz not null default now(),
+       unique (guild_id, channel_id)
+     )`
+  );
+  await query(
+    `create index if not exists idx_discord_bot_channels_guild
+       on discord_bot_channels(guild_id, category_name, position, channel_name)`
   );
 }
 
@@ -2410,6 +2437,97 @@ async function getBotQueue({ guildId, query: params }) {
       payload: row.payload || {},
       createdAt: row.created_at
     }))
+  };
+}
+
+function normalizeDiscordChannelRow(row) {
+  return {
+    id: row.channel_id || "",
+    channelId: row.channel_id || "",
+    name: row.channel_name || "",
+    channelName: row.channel_name || "",
+    type: row.channel_type || "",
+    category: row.category_name || "",
+    categoryName: row.category_name || "",
+    discordGuildId: row.discord_guild_id || "",
+    discordGuildName: row.discord_guild_name || "",
+    canSend: row.can_send !== false,
+    updatedAt: row.updated_at || ""
+  };
+}
+
+async function saveDiscordBotChannels({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureDiscordChannelSchema();
+  const channels = Array.isArray(params.channels) ? params.channels : [];
+  const seen = new Set();
+  let saved = 0;
+
+  for (const raw of channels) {
+    const channelId = clean(raw.id || raw.channelId);
+    const channelName = clean(raw.name || raw.channelName);
+    if (!channelId || !channelName || seen.has(channelId)) continue;
+    seen.add(channelId);
+    await query(
+      `insert into discord_bot_channels (
+         guild_id, discord_guild_id, discord_guild_name, channel_id, channel_name,
+         channel_type, category_name, position, can_send, updated_at
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,now())
+       on conflict (guild_id, channel_id)
+       do update set
+         discord_guild_id = excluded.discord_guild_id,
+         discord_guild_name = excluded.discord_guild_name,
+         channel_name = excluded.channel_name,
+         channel_type = excluded.channel_type,
+         category_name = excluded.category_name,
+         position = excluded.position,
+         can_send = excluded.can_send,
+         updated_at = now()`,
+      [
+        guildId,
+        clean(raw.discordGuildId || raw.guildId),
+        clean(raw.discordGuildName || raw.guildName),
+        channelId,
+        channelName,
+        clean(raw.type || raw.channelType),
+        clean(raw.category || raw.categoryName),
+        Number.isFinite(Number(raw.position)) ? Number(raw.position) : null,
+        raw.canSend !== false
+      ]
+    );
+    saved += 1;
+  }
+
+  if (seen.size) {
+    await query(
+      `delete from discord_bot_channels
+       where guild_id = $1
+         and not (channel_id = any($2::text[]))`,
+      [guildId, Array.from(seen)]
+    );
+  }
+
+  return { success: true, saved };
+}
+
+async function getDiscordBotChannels({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureDiscordChannelSchema();
+  const result = await query(
+    `select *
+     from discord_bot_channels
+     where guild_id = $1
+       and can_send = true
+     order by
+       coalesce(category_name, ''),
+       coalesce(position, 999999),
+       lower(channel_name)`,
+    [guildId]
+  );
+  return {
+    success: true,
+    channels: result.rows.map(normalizeDiscordChannelRow)
   };
 }
 
@@ -10295,6 +10413,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...helper, guild: guild.slug });
     }
 
+    if (action === "guildGetDiscordBotChannels") {
+      const channels = await getDiscordBotChannels({ guildId: guild.id, query: req.query });
+      return res.json({ ...channels, guild: guild.slug });
+    }
+
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
@@ -10726,6 +10849,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
     const guild = await requireGuild(resolveGuildSlug(postParams.guild));
+
+    if (action === "lichtbotSaveDiscordChannels") {
+      const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
       const saved = await setHordenbuffEntry({ guildId: guild.id, query: postParams });
