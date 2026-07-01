@@ -1327,6 +1327,100 @@ select:focus{border-color:rgba(96,165,250,.75)}
   margin-top:10px;
 }
 
+.raid-helper-event-detail{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:start;
+  border-left:4px solid var(--raid-color,#a78bfa);
+  border-radius:8px;
+  background:rgba(2,6,23,.44);
+  border-top:1px solid rgba(148,163,184,.14);
+  border-right:1px solid rgba(148,163,184,.14);
+  border-bottom:1px solid rgba(148,163,184,.14);
+  padding:14px;
+}
+
+.raid-helper-event-detail + .raid-helper-event-detail{
+  margin-top:10px;
+}
+
+.raid-helper-event-detail h4{
+  margin:0;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.raid-helper-event-description{
+  margin-top:12px;
+  color:#cbd5e1;
+  white-space:pre-wrap;
+  line-height:1.45;
+  font-size:13px;
+  font-weight:700;
+}
+
+.raid-helper-event-actions{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  min-width:138px;
+}
+
+.raid-helper-attendance-wrap{
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+}
+
+.raid-helper-attendance-table{
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:820px;
+  width:100%;
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:850;
+}
+
+.raid-helper-attendance-table th,
+.raid-helper-attendance-table td{
+  border-right:1px solid rgba(148,163,184,.12);
+  border-bottom:1px solid rgba(148,163,184,.12);
+  padding:7px 8px;
+  text-align:center;
+  white-space:nowrap;
+}
+
+.raid-helper-attendance-table th:first-child,
+.raid-helper-attendance-table td:first-child{
+  position:sticky;
+  left:0;
+  z-index:1;
+  text-align:left;
+  background:#101522;
+}
+
+.raid-helper-attendance-table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#151a27;
+  color:#f8fafc;
+}
+
+.raid-helper-attendance-cell.signed{background:rgba(34,197,94,.64);color:#052e16}
+.raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
+.raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
+.raid-helper-attendance-cell.tentative{background:rgba(96,165,250,.46);color:#082f49}
+
+.raid-helper-loading{
+  padding:16px;
+  color:#bfdbfe;
+  font-weight:900;
+}
+
 .discord-preview-card{
   border-left:4px solid #7c3aed;
   border-radius:8px;
@@ -2731,11 +2825,19 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </div>
         <div id="raidHelperCalendarGrid" class="raid-helper-calendar"></div>
       </div>
-      <div id="raidHelperTab-currentEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">✓</div><h3>Current Events</h3><p>Hier erscheinen später alle laufenden Raidanmelder mit Post-Status und Teilnehmern.</p></div>
+      <div id="raidHelperTab-currentEvents" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>Current Events</h3><span>Laufende und offene Raidanmelder</span></div>
+          <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentEvents()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperCurrentEventsList" class="raid-helper-list"></div>
       </div>
-      <div id="raidHelperTab-pastEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">×</div><h3>Past Events</h3><p>Hier kommt das Archiv vergangener Raidanmelder mit Attendance-Auswertung hin.</p></div>
+      <div id="raidHelperTab-pastEvents" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>Past Events</h3><span>Archiv der vergangenen Raids</span></div>
+          <button class="small-btn ghost" type="button" onclick="renderRaidHelperPastEvents()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperPastEventsList" class="raid-helper-list"></div>
       </div>
       <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
@@ -2744,8 +2846,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </div>
         <div id="raidHelperScheduledList" class="raid-helper-list"></div>
       </div>
-      <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">▦</div><h3>Attendance</h3><p>Hier kommt die Teilnahmeübersicht nach Charakter, Klasse und Raid rein.</p></div>
+      <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter</span></div>
+          <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperAttendanceBox" class="raid-helper-attendance-wrap"><div class="raid-helper-loading">Attendance laden ...</div></div>
       </div>
       <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
@@ -3411,6 +3517,7 @@ async function loadOverview(options){
       raids: Array.isArray(result.raids) ? result.raids : [],
       players: Array.isArray(result.players) ? result.players : []
     };
+    raidHelperAttendanceCache = null;
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
     renderAll();
@@ -3427,6 +3534,8 @@ function renderAll(){
   renderSummary();
   renderDashboardCards();
   renderRaidHelperCalendar();
+  renderRaidHelperCurrentEvents();
+  renderRaidHelperPastEvents();
   renderRaidHelperScheduledEvents();
   renderRaidHelperTemplates();
   renderPlayerMiniList();
@@ -4061,6 +4170,7 @@ const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
+let raidHelperAttendanceCache = null;
 const RAID_HELPER_CLASS_ICONS = {
   Warrior:"krieger.png",
   Druid:"druide.png",
@@ -4160,7 +4270,10 @@ function setRaidHelperTab(tabName){
   });
   if(target === "createEvent") updateRaidHelperPreview();
   if(target === "calendar") renderRaidHelperCalendar();
+  if(target === "currentEvents") renderRaidHelperCurrentEvents();
+  if(target === "pastEvents") renderRaidHelperPastEvents();
   if(target === "scheduledEvents") renderRaidHelperScheduledEvents();
+  if(target === "attendance") loadRaidHelperAttendance();
   if(target === "templates") loadRaidHelperTemplates();
 }
 
@@ -4265,6 +4378,159 @@ function renderRaidHelperScheduledEvents(){
       </article>
     `;
   }).join("");
+}
+
+function raidHelperPastRaids(){
+  return (guildData.raids || [])
+    .filter(raid => String(raid.raidDate || "") < todayIsoDate() || ["archiviert","archive"].includes(normalize(raid.status || "")))
+    .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")));
+}
+
+function raidHelperCurrentRaids(){
+  return (guildData.raids || [])
+    .filter(raid => String(raid.raidDate || "") >= yesterdayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+function renderRaidHelperEventCard(raid, mode){
+  const key = getRaidKey(raid);
+  const createdBy = getRaidCreatorName(raid);
+  const statusText = raid.status || "geschlossen";
+  const slots = [
+    raid.maxPlayers ? "Gesamt " + raid.maxPlayers : "",
+    raid.tankSlots ? "Tanks " + raid.tankSlots : "",
+    raid.healSlots ? "Heals " + raid.healSlots : "",
+    raid.ddSlots ? "DD " + raid.ddSlots : ""
+  ].filter(Boolean).join(" · ");
+  const description = String(raid.description || raid.beschreibung || "").trim();
+  const raidId = raid.raidId || raid.id || "";
+  return `
+    <article class="raid-helper-event-detail" style="--raid-color:${raidHelperRaidColor(key)}">
+      <div>
+        <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
+        <div class="raid-helper-list-meta">
+          <span class="raid-helper-meta-pill">⚑ ${escapeHtml(createdBy)}</span>
+          <span class="raid-helper-meta-pill">▣ ${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+          <span class="raid-helper-meta-pill">◷ ${escapeHtml(raid.raidTime || "-")}</span>
+          <span class="raid-helper-meta-pill">${statusBadge(statusText)}</span>
+          ${slots ? `<span class="raid-helper-meta-pill">${escapeHtml(slots)}</span>` : ""}
+          ${raid.playerPin ? `<span class="raid-helper-meta-pill">PIN ${escapeHtml(raid.playerPin)}</span>` : ""}
+        </div>
+        ${description ? `<div class="raid-helper-event-description">${escapeHtml(description).slice(0,1200)}</div>` : ""}
+      </div>
+      <div class="raid-helper-event-actions">
+        ${mode === "current" ? `<button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>` : ""}
+        <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
+        <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
+      </div>
+    </article>
+  `;
+}
+
+function renderRaidHelperCurrentEvents(){
+  const box = document.getElementById("raidHelperCurrentEventsList");
+  if(!box) return;
+  const raids = raidHelperCurrentRaids();
+  box.innerHTML = raids.length
+    ? raids.slice(0,16).map(raid => renderRaidHelperEventCard(raid, "current")).join("")
+    : '<div class="muted">Keine aktuellen Raidanmelder gefunden.</div>';
+}
+
+function renderRaidHelperPastEvents(){
+  const box = document.getElementById("raidHelperPastEventsList");
+  if(!box) return;
+  const raids = raidHelperPastRaids();
+  box.innerHTML = raids.length
+    ? raids.slice(0,18).map(raid => renderRaidHelperEventCard(raid, "past")).join("")
+    : '<div class="muted">Noch keine vergangenen Raids gefunden.</div>';
+}
+
+function raidHelperAttendanceRaids(){
+  return (guildData.raids || [])
+    .slice()
+    .filter(raid => raid.raidId || raid.id)
+    .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
+    .slice(0,18);
+}
+
+async function loadRaidHelperAttendance(){
+  const box = document.getElementById("raidHelperAttendanceBox");
+  if(!box) return;
+  if(raidHelperAttendanceCache){
+    renderRaidHelperAttendance(raidHelperAttendanceCache);
+    return;
+  }
+  const raids = raidHelperAttendanceRaids();
+  if(!raids.length){
+    box.innerHTML = '<div class="raid-helper-loading">Keine Raids für Attendance gefunden.</div>';
+    return;
+  }
+  box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
+  const rows = [];
+  for(const raid of raids){
+    try{
+      const result = await railwayApi({
+        action:"getRaidHelper",
+        raidId:raid.raidId || raid.id,
+        playerPin:raid.playerPin || "",
+        t:Date.now()
+      });
+      rows.push({
+        raid:result.raid || raid,
+        signups:[...(result.signups || []), ...(result.externalSignups || [])]
+      });
+    }catch(error){
+      rows.push({ raid, signups:[] });
+    }
+  }
+  raidHelperAttendanceCache = rows;
+  renderRaidHelperAttendance(rows);
+}
+
+function renderRaidHelperAttendance(rows){
+  const box = document.getElementById("raidHelperAttendanceBox");
+  if(!box) return;
+  const players = new Map();
+  rows.forEach(entry => {
+    entry.signups.forEach(signup => {
+      const name = String(signup.player || signup.char || "").trim();
+      if(!name) return;
+      if(!players.has(name.toLowerCase())){
+        players.set(name.toLowerCase(), { name, className:signup.className || signup.klasse || "", cells:new Map(), signed:0 });
+      }
+      const player = players.get(name.toLowerCase());
+      const raidId = String(entry.raid.raidId || entry.raid.id || "");
+      const status = normalize(signup.status || "signed") || "signed";
+      player.cells.set(raidId, status);
+      if(status === "signed") player.signed += 1;
+    });
+  });
+  const playerList = Array.from(players.values()).sort((a,b) => b.signed - a.signed || a.name.localeCompare(b.name));
+  if(!playerList.length){
+    box.innerHTML = '<div class="raid-helper-loading">Noch keine Anmeldungen in den letzten Raids gefunden.</div>';
+    return;
+  }
+  const head = `
+    <tr>
+      <th>Charakter</th>
+      ${rows.map(entry => {
+        const key = getRaidKey(entry.raid);
+        return `<th title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")}">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
+      }).join("")}
+      <th>%</th>
+    </tr>
+  `;
+  const body = playerList.map(player => {
+    const cells = rows.map(entry => {
+      const raidId = String(entry.raid.raidId || entry.raid.id || "");
+      const status = player.cells.get(raidId) || "";
+      const label = status === "signed" ? "✓" : status === "bench" ? "B" : status === "absent" ? "A" : status === "tentative" ? "?" : "";
+      return `<td class="raid-helper-attendance-cell ${escapeAttr(status)}">${escapeHtml(label)}</td>`;
+    }).join("");
+    const percent = Math.round((player.signed / Math.max(rows.length, 1)) * 100);
+    return `<tr><td>${escapeHtml(player.name)}<br><span class="muted">${escapeHtml(player.className || "")}</span></td>${cells}<td>${percent}%</td></tr>`;
+  }).join("");
+  box.innerHTML = `<table class="raid-helper-attendance-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
 
 function raidHelperTemplateDefaults(raidKey){
