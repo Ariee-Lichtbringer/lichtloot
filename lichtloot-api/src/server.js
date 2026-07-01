@@ -1106,7 +1106,8 @@ async function ensureRaidSchema() {
        add column if not exists dd_slots integer,
        add column if not exists discord_channel_id text,
        add column if not exists discord_message_id text,
-       add column if not exists description text`
+       add column if not exists description text,
+       add column if not exists raid_image_url text`
   );
   await query(
     `alter table raid_signups
@@ -1313,6 +1314,8 @@ function normalizeRaidRow(row) {
     discordChannelId: row.discord_channel_id || "",
     discordMessageId: row.discord_message_id || "",
     description: row.description || "",
+    raidImageUrl: row.raid_image_url || "",
+    imageUrl: row.raid_image_url || "",
     signupCounts: row.signup_counts || null,
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
@@ -7511,10 +7514,10 @@ async function createRaidRecord({ guildId, query: params }) {
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
-       discord_channel_id, discord_message_id, description
+       discord_channel_id, discord_message_id, description, raid_image_url
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -7537,6 +7540,7 @@ async function createRaidRecord({ guildId, query: params }) {
            discord_channel_id = coalesce(excluded.discord_channel_id, raids.discord_channel_id),
            discord_message_id = coalesce(excluded.discord_message_id, raids.discord_message_id),
            description = coalesce(excluded.description, raids.description),
+           raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            updated_at = now()
      returning *`,
     [
@@ -7561,7 +7565,8 @@ async function createRaidRecord({ guildId, query: params }) {
       parseOptionalInteger(params.ddSlots || params.dds),
       clean(params.discordChannelId) || null,
       clean(params.discordMessageId || params.raidHelperMessageId) || null,
-      clean(params.description || params.beschreibung) || null
+      clean(params.description || params.beschreibung) || null,
+      clean(params.raidImageUrl || params.imageUrl || params.bildUrl) || null
     ]
   );
 
