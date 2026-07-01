@@ -7,7 +7,8 @@ alter table raids
   add column if not exists dd_slots integer,
   add column if not exists discord_channel_id text,
   add column if not exists discord_message_id text,
-  add column if not exists description text;
+  add column if not exists description text,
+  add column if not exists raid_image_url text;
 
 alter table raid_signups
   add column if not exists role text not null default 'flex',
