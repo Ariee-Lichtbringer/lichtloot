@@ -66,6 +66,10 @@ await ensureDiscordChannelSchema().catch(error => {
   console.warn("Discord-Channel-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureRaidHelperTemplateSchema().catch(error => {
+  console.warn("RaidHelper-Template-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensurePlayerRoleSchema().catch(error => {
   console.warn("Spielerrollen-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -1179,6 +1183,37 @@ async function ensureDiscordChannelSchema() {
   await query(
     `create index if not exists idx_discord_bot_channels_guild
        on discord_bot_channels(guild_id, category_name, position, channel_name)`
+  );
+}
+
+async function ensureRaidHelperTemplateSchema() {
+  await query(
+    `create table if not exists raid_helper_templates (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       template_key text,
+       raid_type text not null,
+       title text not null,
+       description text,
+       max_players integer,
+       tank_slots integer,
+       heal_slots integer,
+       dd_slots integer,
+       signup_deadline text,
+       discord_channel_id text,
+       raid_image_url text,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(
+    `create unique index if not exists idx_raid_helper_templates_guild_key
+       on raid_helper_templates(guild_id, lower(template_key))
+       where template_key is not null and template_key <> ''`
+  );
+  await query(
+    `create index if not exists idx_raid_helper_templates_guild
+       on raid_helper_templates(guild_id, raid_type, title)`
   );
 }
 
@@ -2529,6 +2564,150 @@ async function getDiscordBotChannels({ guildId, query: params }) {
     success: true,
     channels: result.rows.map(normalizeDiscordChannelRow)
   };
+}
+
+function normalizeRaidHelperTemplateRow(row) {
+  return {
+    id: row.id || "",
+    templateId: row.id || "",
+    key: row.template_key || "",
+    templateKey: row.template_key || "",
+    raid: row.raid_type || "",
+    raidType: row.raid_type || "",
+    title: row.title || "",
+    description: row.description || "",
+    maxPlayers: row.max_players ?? "",
+    tankSlots: row.tank_slots ?? "",
+    healSlots: row.heal_slots ?? "",
+    ddSlots: row.dd_slots ?? "",
+    signupDeadline: row.signup_deadline || "",
+    discordChannelId: row.discord_channel_id || "",
+    raidImageUrl: row.raid_image_url || "",
+    createdAt: row.created_at || "",
+    updatedAt: row.updated_at || ""
+  };
+}
+
+async function getRaidHelperTemplates({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidHelperTemplateSchema();
+  const result = await query(
+    `select *
+     from raid_helper_templates
+     where guild_id = $1
+     order by lower(raid_type), lower(title)`,
+    [guildId]
+  );
+  return { success: true, templates: result.rows.map(normalizeRaidHelperTemplateRow) };
+}
+
+async function saveRaidHelperTemplate({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidHelperTemplateSchema();
+  const templateId = clean(params.templateId || params.id);
+  const templateKey = clean(params.templateKey || params.key);
+  const raidType = normalizeRaidType(params.raid || params.raidType || params.raidName);
+  const title = clean(params.title || params.name);
+
+  if (!raidType || !title) {
+    const error = new Error("Raid und Titel sind für die Vorlage erforderlich.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const values = [
+    guildId,
+    templateKey || `${raidType}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")}`,
+    raidType,
+    title,
+    clean(params.description || params.text),
+    parseOptionalInteger(params.maxPlayers),
+    parseOptionalInteger(params.tankSlots),
+    parseOptionalInteger(params.healSlots),
+    parseOptionalInteger(params.ddSlots),
+    clean(params.signupDeadline || params.deadline),
+    clean(params.discordChannelId || params.channelId),
+    clean(params.raidImageUrl || params.imageUrl)
+  ];
+
+  let result;
+  if (templateId && isUuid(templateId)) {
+    result = await query(
+      `update raid_helper_templates
+       set template_key = $2,
+           raid_type = $3,
+           title = $4,
+           description = $5,
+           max_players = $6,
+           tank_slots = $7,
+           heal_slots = $8,
+           dd_slots = $9,
+           signup_deadline = $10,
+           discord_channel_id = $11,
+           raid_image_url = $12,
+           updated_at = now()
+       where guild_id = $1 and id = $13
+       returning *`,
+      [...values, templateId]
+    );
+  } else {
+    const existing = await query(
+      `select id
+       from raid_helper_templates
+       where guild_id = $1 and lower(template_key) = lower($2)
+       limit 1`,
+      [guildId, values[1]]
+    );
+    if (existing.rows[0]) {
+      result = await query(
+        `update raid_helper_templates
+         set template_key = $2,
+             raid_type = $3,
+             title = $4,
+             description = $5,
+             max_players = $6,
+             tank_slots = $7,
+             heal_slots = $8,
+             dd_slots = $9,
+             signup_deadline = $10,
+             discord_channel_id = $11,
+             raid_image_url = $12,
+             updated_at = now()
+         where guild_id = $1 and id = $13
+         returning *`,
+        [...values, existing.rows[0].id]
+      );
+    } else {
+      result = await query(
+        `insert into raid_helper_templates (
+           guild_id, template_key, raid_type, title, description, max_players,
+           tank_slots, heal_slots, dd_slots, signup_deadline, discord_channel_id, raid_image_url
+         )
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         returning *`,
+        values
+      );
+    }
+  }
+
+  return { success: true, template: normalizeRaidHelperTemplateRow(result.rows[0]) };
+}
+
+async function deleteRaidHelperTemplate({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidHelperTemplateSchema();
+  const templateId = clean(params.templateId || params.id);
+  if (!isUuid(templateId)) {
+    const error = new Error("Vorlagen-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `delete from raid_helper_templates
+     where guild_id = $1 and id = $2`,
+    [guildId, templateId]
+  );
+  return { success: true, deleted: result.rowCount };
 }
 
 async function queueRaidAnnouncement({ guildId, query: params }) {
@@ -10418,6 +10597,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...channels, guild: guild.slug });
     }
 
+    if (action === "guildGetRaidHelperTemplates") {
+      const templates = await getRaidHelperTemplates({ guildId: guild.id, query: req.query });
+      return res.json({ ...templates, guild: guild.slug });
+    }
+
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
@@ -10652,6 +10836,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "saveDiscordSignupRows") {
       const saved = await saveDiscordSignupRows({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSaveRaidHelperTemplate") {
+      const saved = await saveRaidHelperTemplate({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteRaidHelperTemplate") {
+      const deleted = await deleteRaidHelperTemplate({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildDeleteRaid" || action === "deleteRaid") {
@@ -10916,6 +11110,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "saveDiscordSignupRows") {
       const saved = await saveDiscordSignupRows({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSaveRaidHelperTemplate") {
+      const saved = await saveRaidHelperTemplate({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteRaidHelperTemplate") {
+      const deleted = await deleteRaidHelperTemplate({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildAdminCreateItem" || action === "guildAdminCreateltem") {
