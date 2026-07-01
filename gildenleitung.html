@@ -474,6 +474,24 @@ button,input,select{font:inherit}
   min-width:105px;
 }
 
+.active-raid-discord-tools{
+  grid-column:1 / -1;
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+}
+
+.active-raid-discord-tools select{
+  min-height:32px;
+  font-size:12px;
+}
+
+.active-raid-discord-tools .small-btn{
+  min-width:96px;
+}
+
 .active-raid-lead-card{
   grid-column:1 / -1;
   border:1px solid rgba(250,204,21,.28);
@@ -943,6 +961,19 @@ select:focus{border-color:rgba(96,165,250,.75)}
   color:#bfdbfe;
   font-size:12px;
   line-height:1.45;
+  font-weight:800;
+}
+
+.raid-helper-channel-picker{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+}
+
+.raid-helper-channel-id{
+  margin-top:8px;
+  font-size:11px;
+  color:#94a3b8;
   font-weight:800;
 }
 
@@ -2168,6 +2199,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .stat-grid{grid-template-columns:1fr}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
+  .active-raid-discord-tools{grid-template-columns:1fr}
   .active-raid-side{align-items:flex-start}
   .unlock,
   .grid,
@@ -2358,7 +2390,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
               </div>
               <div class="field">
                 <label for="raidHelperChannel">Discord-Channel</label>
-                <input id="raidHelperChannel" type="text" value="1508478036398571601" oninput="updateRaidHelperPreview()">
+                <div class="raid-helper-channel-picker">
+                  <select id="raidHelperChannelSelect" onchange="selectRaidHelperDiscordChannel()">
+                    <option value="1508478036398571601"># raid-anmelder</option>
+                  </select>
+                  <button class="icon-btn" type="button" onclick="loadRaidHelperDiscordChannels()">↻</button>
+                </div>
+                <input id="raidHelperChannel" type="text" value="1508478036398571601" oninput="updateRaidHelperPreview()" style="margin-top:8px">
+                <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
           </section>
@@ -3055,6 +3094,7 @@ async function loadOverview(options){
     fillClassFilter();
     renderAll();
     loadDashboardRaidStats();
+    loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
@@ -3179,6 +3219,27 @@ function renderP0TransferState(raidOrResult, compact){
   return `<span class="transfer-light ${done ? "done" : "open"}" title="${escapeAttr(label)}"><span class="transfer-dot"></span>${compact ? "" : escapeHtml(label)}</span>`;
 }
 
+function discordChannelSelectOptions(selectedChannelId){
+  const selected = String(selectedChannelId || RAID_HELPER_CHANNEL_ID).trim();
+  const channels = raidHelperDiscordChannels.slice();
+  const hasSelected = channels.some(channel => String(channel.channelId || channel.id) === selected);
+  const options = [];
+  if(selected && !hasSelected){
+    options.push(`<option value="${escapeAttr(selected)}"># ${escapeHtml(selected)} · manuell</option>`);
+  }
+  if(!channels.length && !selected){
+    options.push(`<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># raid-anmelder</option>`);
+  }
+  channels.forEach(channel => {
+    const id = String(channel.channelId || channel.id || "").trim();
+    const name = String(channel.channelName || channel.name || id).trim();
+    const category = String(channel.categoryName || channel.category || "").trim();
+    const label = (category ? category + " / " : "") + "# " + name;
+    options.push(`<option value="${escapeAttr(id)}"${id === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
+  });
+  return options.join("") || `<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># raid-anmelder</option>`;
+}
+
 function isP0PlusPrio(prio){
   return normalize(prio && (prio.P0Plus || prio.p0Plus)) === "ja";
 }
@@ -3257,7 +3318,13 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
-              <button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
+              <div class="active-raid-discord-tools">
+                <select id="raidDiscordChannel-${escapeAttr(raid.raidId || raid.id)}" aria-label="Discord-Channel für ${escapeAttr(raid.raidName || raid.raid || "Raid")}">
+                  ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
+                </select>
+                <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')">DC Text kopieren</button>
+                <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
+              </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
@@ -3668,6 +3735,7 @@ function buildRaidDirectLink(raid){
 
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
+let raidHelperDiscordChannels = [];
 const RAID_HELPER_CLASSES = [
   ["Tank","🛡"],
   ["Warrior","⚔"],
@@ -3722,6 +3790,7 @@ function initRaidHelperPanel(){
   const channel = document.getElementById("raidHelperChannel");
   if(channel && !channel.value.trim()) channel.value = RAID_HELPER_CHANNEL_ID;
   renderRaidHelperClassGrid();
+  loadRaidHelperDiscordChannels();
   updateRaidHelperDefaults();
 }
 
@@ -3742,6 +3811,77 @@ function setRaidHelperTab(tabName){
     panel.classList.toggle("hidden", panel.id !== "raidHelperTab-" + target);
   });
   if(target === "createEvent") updateRaidHelperPreview();
+}
+
+function renderRaidHelperDiscordChannels(){
+  const select = document.getElementById("raidHelperChannelSelect");
+  const input = document.getElementById("raidHelperChannel");
+  const hint = document.getElementById("raidHelperChannelHint");
+  if(!select) return;
+
+  const current = String(input?.value || RAID_HELPER_CHANNEL_ID).trim();
+  const channels = raidHelperDiscordChannels.slice();
+  const hasCurrent = channels.some(channel => String(channel.channelId || channel.id) === current);
+  const options = [];
+
+  if(current && !hasCurrent){
+    options.push(`<option value="${escapeAttr(current)}">${escapeHtml("# " + current + " · manuell")}</option>`);
+  }
+
+  options.push(...channels.map(channel => {
+    const id = String(channel.channelId || channel.id || "").trim();
+    const name = String(channel.channelName || channel.name || id).trim();
+    const category = String(channel.categoryName || channel.category || "").trim();
+    const label = (category ? category + " / " : "") + "# " + name;
+    return `<option value="${escapeAttr(id)}">${escapeHtml(label)}</option>`;
+  }));
+
+  if(!options.length){
+    options.push(`<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># raid-anmelder</option>`);
+  }
+
+  select.innerHTML = options.join("");
+  select.value = hasCurrent || current ? current : RAID_HELPER_CHANNEL_ID;
+  if(input && select.value) input.value = select.value;
+  if(hint){
+    hint.textContent = channels.length
+      ? `${channels.length} Bot-Channel geladen.`
+      : "Noch keine Bot-Channel geladen. Bot neu starten und danach aktualisieren.";
+  }
+  updateRaidHelperPreview();
+}
+
+function selectRaidHelperDiscordChannel(){
+  const select = document.getElementById("raidHelperChannelSelect");
+  const input = document.getElementById("raidHelperChannel");
+  if(input && select?.value) input.value = select.value;
+  updateRaidHelperPreview();
+}
+
+async function loadRaidHelperDiscordChannels(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const hint = document.getElementById("raidHelperChannelHint");
+  if(!masterCode){
+    renderRaidHelperDiscordChannels();
+    return;
+  }
+  if(hint) hint.textContent = "Bot-Channel werden geladen ...";
+  try{
+    const result = await railwayApi({
+      action:"guildGetDiscordBotChannels",
+      masterCode,
+      t:Date.now()
+    });
+    if(result && result.success){
+      raidHelperDiscordChannels = Array.isArray(result.channels) ? result.channels : [];
+      renderRaidHelperDiscordChannels();
+      renderDashboardCards();
+      return;
+    }
+    if(hint) hint.textContent = result?.error || "Bot-Channel konnten nicht geladen werden.";
+  }catch(error){
+    if(hint) hint.textContent = error.message || "Bot-Channel konnten nicht geladen werden.";
+  }
 }
 
 function updateRaidHelperDefaults(){
@@ -4202,6 +4342,28 @@ function postRaidToDiscord(raidId){
   openDiscordPostModal(raidId);
 }
 
+function getSelectedRaidDiscordChannel(raidId){
+  const select = document.getElementById("raidDiscordChannel-" + raidId);
+  const raid = findRaidByAnyId(raidId);
+  return String(select?.value || raid?.discordChannelId || RAID_HELPER_CHANNEL_ID).trim();
+}
+
+async function copyRaidDiscordText(raidId){
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde in der Liste nicht gefunden.", "bad");
+    return;
+  }
+  const text = buildRaidDiscordPostTextFromRaid(raid);
+  try{
+    await navigator.clipboard.writeText(text);
+    setStatus("DC Text kopiert.", "good");
+  }catch(error){
+    openDiscordPostModal(raidId);
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt. Text wurde geöffnet.", "bad");
+  }
+}
+
 async function queueRaidToDiscord(raidId){
   if(!raidId){
     setStatus("Raid-ID fehlt.", "bad");
@@ -4209,8 +4371,9 @@ async function queueRaidToDiscord(raidId){
   }
 
   const raid = findRaidByAnyId(raidId);
+  const channelId = getSelectedRaidDiscordChannel(raidId);
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} jetzt im Discord posten?`)) return;
+  if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?`)) return;
 
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -4224,7 +4387,7 @@ async function queueRaidToDiscord(raidId){
       action:"guildQueueRaidAnnouncement",
       masterCode,
       raidId,
-      channelId:(raid && raid.discordChannelId) || RAID_HELPER_CHANNEL_ID
+      channelId
     });
 
     if(!result.success){
