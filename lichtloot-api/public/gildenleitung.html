@@ -3187,6 +3187,7 @@ function buildRaidDirectLink(raid){
 }
 
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
+const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_DEFAULT_TEXT = {
   zg:
 `ZG Raid Samstag Start ca. 21 Uhr // Invite im Anschluss an AQ20
@@ -3244,6 +3245,11 @@ function updateRaidHelperDefaults(){
 
 function raidHelperValue(id){
   return String(document.getElementById(id)?.value || "").trim();
+}
+
+function defaultRaidHelperImageUrl(raidKey){
+  const key = String(raidKey || "raid").trim().toLowerCase();
+  return RAID_HELPER_IMAGE_BASE_URL + key + ".jpg";
 }
 
 function buildRaidHelperPreviewText(){
@@ -3352,7 +3358,8 @@ async function createRaidHelperSignup(){
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
       discordChannelId:RAID_HELPER_CHANNEL_ID,
-      description:raidHelperValue("raidHelperDescription")
+      description:raidHelperValue("raidHelperDescription"),
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
     });
 
     if(!created.success){
