@@ -1097,13 +1097,60 @@ async function ensureRaidSchema() {
        add column if not exists guild_name text,
        add column if not exists player_link text,
        add column if not exists p0plus_freigabe text not null default 'geschlossen',
-       add column if not exists created_by text`
+       add column if not exists created_by text,
+       add column if not exists raidhelper_enabled boolean not null default true,
+       add column if not exists signup_deadline text,
+       add column if not exists max_players integer,
+       add column if not exists tank_slots integer,
+       add column if not exists heal_slots integer,
+       add column if not exists dd_slots integer,
+       add column if not exists discord_channel_id text,
+       add column if not exists discord_message_id text,
+       add column if not exists description text`
+  );
+  await query(
+    `alter table raid_signups
+       add column if not exists role text not null default 'flex',
+       add column if not exists source text not null default 'lichtloot',
+       add column if not exists discord_user_id text,
+       add column if not exists discord_name text`
+  );
+  await query(
+    `create table if not exists raid_external_signups (
+       id uuid primary key default gen_random_uuid(),
+       raid_id uuid references raids(id) on delete cascade,
+       guild_id uuid not null references guilds(id) on delete cascade,
+       raid_type text not null,
+       raid_date date,
+       raid_time text,
+       player_name text not null,
+       class_name text,
+       role text not null default 'flex',
+       status text not null default 'signed',
+       source text not null default 'discord',
+       discord_user_id text,
+       discord_name text,
+       discord_channel_id text,
+       discord_message_id text,
+       note text,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
   );
   await query(`alter table raids drop constraint if exists raids_guild_id_raid_type_raid_date_key`);
   await query(
     `create unique index if not exists idx_raids_guild_external_raid_id
        on raids(guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''`
+  );
+  await query(`create index if not exists idx_raid_signups_raid_status on raid_signups(raid_id, status)`);
+  await query(
+    `create unique index if not exists idx_raid_external_signups_unique_source
+       on raid_external_signups(guild_id, coalesce(raid_id::text, ''), lower(player_name), source)`
+  );
+  await query(
+    `create index if not exists idx_raid_external_signups_guild_raid
+       on raid_external_signups(guild_id, raid_id, raid_date)`
   );
 }
 
@@ -1208,6 +1255,29 @@ function normalizeStatus(value) {
   return clean(value) || "geschlossen";
 }
 
+function normalizeSignupStatus(value) {
+  const raw = clean(value).toLowerCase();
+  if (["bench", "ersatzbank", "reserve"].includes(raw)) return "bench";
+  if (["tentative", "maybe", "vielleicht", "unsicher"].includes(raw)) return "tentative";
+  if (["absent", "abgemeldet", "abwesend", "nein"].includes(raw)) return "absent";
+  return "signed";
+}
+
+function normalizeSignupRole(value) {
+  const raw = clean(value).toLowerCase();
+  if (["tank", "tanks"].includes(raw)) return "tank";
+  if (["heal", "heiler", "heals", "healer"].includes(raw)) return "heal";
+  if (["dd", "dps", "damage"].includes(raw)) return "dd";
+  return "flex";
+}
+
+function parseOptionalInteger(value) {
+  const raw = clean(value);
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw, 10);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function raidPublicId(row) {
   return row.external_raid_id || row.id;
 }
@@ -1234,6 +1304,16 @@ function normalizeRaidRow(row) {
     leadPin: row.lead_pin || "",
     status: row.status || "geschlossen",
     p0PlusFreigabe: row.p0plus_freigabe || "geschlossen",
+    raidHelperEnabled: row.raidhelper_enabled !== false,
+    signupDeadline: row.signup_deadline || "",
+    maxPlayers: row.max_players === null || row.max_players === undefined ? "" : Number(row.max_players),
+    tankSlots: row.tank_slots === null || row.tank_slots === undefined ? "" : Number(row.tank_slots),
+    healSlots: row.heal_slots === null || row.heal_slots === undefined ? "" : Number(row.heal_slots),
+    ddSlots: row.dd_slots === null || row.dd_slots === undefined ? "" : Number(row.dd_slots),
+    discordChannelId: row.discord_channel_id || "",
+    discordMessageId: row.discord_message_id || "",
+    description: row.description || "",
+    signupCounts: row.signup_counts || null,
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
     playerLink: row.player_link || "",
@@ -2334,6 +2414,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
+  const channelId = clean(params.channelId || params.discordChannelId);
   return queueBotUpdate({
     guildId,
     query: {
@@ -2341,6 +2422,8 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
       type: "raid_announcement",
       payload: {
         raidId,
+        channelId,
+        discordChannelId: channelId,
         source: "gildenleitung"
       }
     }
@@ -7426,9 +7509,12 @@ async function createRaidRecord({ guildId, query: params }) {
   const result = await query(
     `insert into raids (
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
-       lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by
+       lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
+       raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
+       discord_channel_id, discord_message_id, description
      )
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+             $14, $15, $16, $17, $18, $19, $20, $21, $22)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -7442,6 +7528,15 @@ async function createRaidRecord({ guildId, query: params }) {
            status = excluded.status,
            p0plus_freigabe = excluded.p0plus_freigabe,
            created_by = coalesce(nullif(excluded.created_by, ''), raids.created_by),
+           raidhelper_enabled = excluded.raidhelper_enabled,
+           signup_deadline = coalesce(excluded.signup_deadline, raids.signup_deadline),
+           max_players = coalesce(excluded.max_players, raids.max_players),
+           tank_slots = coalesce(excluded.tank_slots, raids.tank_slots),
+           heal_slots = coalesce(excluded.heal_slots, raids.heal_slots),
+           dd_slots = coalesce(excluded.dd_slots, raids.dd_slots),
+           discord_channel_id = coalesce(excluded.discord_channel_id, raids.discord_channel_id),
+           discord_message_id = coalesce(excluded.discord_message_id, raids.discord_message_id),
+           description = coalesce(excluded.description, raids.description),
            updated_at = now()
      returning *`,
     [
@@ -7457,11 +7552,62 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.playerLink) || null,
       status,
       p0plusFreigabe,
-      createdBy || null
+      createdBy || null,
+      clean(params.raidHelperEnabled || params.raidhelperEnabled).toLowerCase() === "false" ? false : true,
+      clean(params.signupDeadline || params.anmeldeschluss) || null,
+      parseOptionalInteger(params.maxPlayers || params.maxSpieler),
+      parseOptionalInteger(params.tankSlots || params.tanks),
+      parseOptionalInteger(params.healSlots || params.heals || params.heiler),
+      parseOptionalInteger(params.ddSlots || params.dds),
+      clean(params.discordChannelId) || null,
+      clean(params.discordMessageId || params.raidHelperMessageId) || null,
+      clean(params.description || params.beschreibung) || null
     ]
   );
 
   return { success: true, ...normalizeRaidRow(result.rows[0]) };
+}
+
+function normalizeRaidSignupRow(row) {
+  return {
+    id: row.id,
+    characterId: row.character_id || "",
+    player: row.player_name || row.name || "",
+    char: row.player_name || row.name || "",
+    server: row.server || "",
+    className: row.class_name || "",
+    role: normalizeSignupRole(row.role),
+    status: normalizeSignupStatus(row.status),
+    note: row.note || "",
+    source: row.source || "lichtloot",
+    discordName: row.discord_name || "",
+    discordUserId: row.discord_user_id || "",
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function buildSignupCounts(signups, externalSignups = []) {
+  const counts = {
+    signed: 0,
+    bench: 0,
+    tentative: 0,
+    absent: 0,
+    total: 0,
+    tank: 0,
+    heal: 0,
+    dd: 0,
+    flex: 0,
+    external: externalSignups.length
+  };
+  [...signups, ...externalSignups].forEach(signup => {
+    const status = normalizeSignupStatus(signup.status);
+    const role = normalizeSignupRole(signup.role);
+    counts[status] = Number(counts[status] || 0) + 1;
+    if (status !== "absent") counts.total += 1;
+    counts[role] = Number(counts[role] || 0) + 1;
+  });
+  return counts;
 }
 
 async function findRaid(guildId, params) {
@@ -7525,6 +7671,299 @@ async function findRaid(guildId, params) {
   }
 
   return result.rows[0] || null;
+}
+
+async function findRaidForDiscordImport(guildId, params) {
+  const raidType = normalizeRaidType(params.raid || params.raidName);
+  const raidDate = clean(params.raidDate || params.datum || params.date);
+  const raidTime = clean(params.raidTime || params.uhrzeit || params.time);
+  const discordMessageId = clean(params.discordMessageId || params.raidHelperMessageId);
+  const discordChannelId = clean(params.discordChannelId);
+
+  if (discordMessageId) {
+    const values = [guildId, discordMessageId];
+    let channelClause = "";
+    if (discordChannelId) {
+      values.push(discordChannelId);
+      channelClause = `and coalesce(discord_channel_id, '') = $${values.length}`;
+    }
+    const byDiscord = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and discord_message_id = $2
+         ${channelClause}
+       order by created_at desc
+       limit 1`,
+      values
+    );
+    if (byDiscord.rows[0]) return byDiscord.rows[0];
+  }
+
+  if (raidType && raidDate) {
+    const result = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and lower(raid_type) = any($2)
+         and raid_date = $3
+         and ($4 = '' or coalesce(raid_time, '') = $4)
+       order by created_at desc
+       limit 1`,
+      [guildId, raidTypeSearchValues(raidType), parseDateValue(raidDate), raidTime]
+    );
+    if (result.rows[0]) return result.rows[0];
+  }
+
+  if (!raidType || !raidDate) return null;
+  const created = await createRaidRecord({
+    guildId,
+    query: {
+      raid: raidType,
+      raidName: clean(params.raidName) || displayRaidName(raidType),
+      raidDate,
+      raidTime,
+      raidId: `discord-${raidType}-${raidDate}-${raidTime || "time"}`,
+      status: "geschlossen",
+      p0PlusFreigabe: "geöffnet",
+      createdBy: "Discord-Import",
+      discordChannelId,
+      discordMessageId,
+      raidHelperEnabled: "true"
+    }
+  });
+  return findRaid(guildId, { raidId: created.raidId });
+}
+
+async function getRaidHelper({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const signupResult = await query(
+    `select
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
+       c.name as player_name, c.server, c.class_name
+     from raid_signups rs
+     join characters c on c.id = rs.character_id
+     where rs.raid_id = $1
+     order by
+       case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
+       case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
+       c.name asc`,
+    [raid.id]
+  );
+
+  const externalResult = await query(
+    `select id, player_name, class_name, role, status, note, source,
+            discord_user_id, discord_name, created_at, updated_at
+     from raid_external_signups
+     where guild_id = $1
+       and (raid_id = $2 or (raid_id is null and lower(raid_type) = any($3) and raid_date = $4))
+     order by player_name asc`,
+    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+
+  const signups = signupResult.rows.map(normalizeRaidSignupRow);
+  const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  return {
+    success: true,
+    raid: normalizeRaidRow(raid),
+    signups,
+    externalSignups,
+    counts: buildSignupCounts(signups, externalSignups)
+  };
+}
+
+async function saveRaidSignup({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  const charName = clean(params.char || params.character || params.player);
+  if (!playerPin || !charName) {
+    const error = new Error("SpielerLogin und Charakter fehlen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const character = await findCharacterForPin(guildId, playerPin, charName, params.server);
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu deinem SpielerLogin.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const status = normalizeSignupStatus(params.signupStatus || params.signup || params.status);
+  const role = normalizeSignupRole(params.signupRole || params.role);
+  const note = clean(params.note || params.comment);
+  const source = clean(params.source || "lichtloot");
+
+  const result = await query(
+    `insert into raid_signups (
+       raid_id, character_id, status, note, role, source, discord_user_id, discord_name
+     )
+     values ($1,$2,$3,$4,$5,$6,$7,$8)
+     on conflict (raid_id, character_id)
+     do update
+       set status = excluded.status,
+           note = excluded.note,
+           role = excluded.role,
+           source = excluded.source,
+           discord_user_id = coalesce(nullif(excluded.discord_user_id, ''), raid_signups.discord_user_id),
+           discord_name = coalesce(nullif(excluded.discord_name, ''), raid_signups.discord_name),
+           updated_at = now()
+     returning *`,
+    [
+      raid.id,
+      character.id,
+      status,
+      note,
+      role,
+      source,
+      clean(params.discordUserId),
+      clean(params.discordName)
+    ]
+  );
+
+  return {
+    success: true,
+    raid: normalizeRaidRow(raid),
+    signup: normalizeRaidSignupRow({
+      ...result.rows[0],
+      player_name: character.name,
+      server: character.server,
+      class_name: character.class_name
+    })
+  };
+}
+
+async function deleteRaidSignup({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) return { success: true, deleted: 0 };
+
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  const charName = clean(params.char || params.character || params.player);
+  if (!playerPin || !charName) {
+    const error = new Error("SpielerLogin und Charakter fehlen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const character = await findCharacterForPin(guildId, playerPin, charName, params.server);
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu deinem SpielerLogin.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const result = await query(
+    `delete from raid_signups
+     where raid_id = $1 and character_id = $2`,
+    [raid.id, character.id]
+  );
+  return { success: true, deleted: result.rowCount };
+}
+
+async function saveDiscordSignupRows({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const rows = Array.isArray(params.rows)
+    ? params.rows
+    : (() => {
+        try {
+          const parsed = JSON.parse(clean(params.rows || "[]"));
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      })();
+
+  const raid = await findRaidForDiscordImport(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid für Discord-Anmeldungen wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  let written = 0;
+  for (const row of rows) {
+    const playerName = clean(row.char || row.spieler || row.player || row.name);
+    if (!playerName) continue;
+    const source = clean(row.quelle || row.source || `Discord:${clean(params.discordChannelId)}:${clean(params.raidHelperMessageId || params.discordMessageId)}`);
+    const updateResult = await query(
+      `update raid_external_signups
+       set raid_date = $5,
+           raid_time = $6,
+           class_name = coalesce(nullif($7, ''), class_name),
+           role = $8,
+           status = $9,
+           discord_user_id = coalesce(nullif($10, ''), discord_user_id),
+           discord_name = coalesce(nullif($11, ''), discord_name),
+           discord_channel_id = coalesce(nullif($12, ''), discord_channel_id),
+           discord_message_id = coalesce(nullif($13, ''), discord_message_id),
+           note = $14,
+           updated_at = now()
+       where guild_id = $1
+         and raid_id = $2
+         and lower(player_name) = lower($3)
+         and source = $4`,
+      [
+        guildId,
+        raid.id,
+        playerName,
+        source,
+        parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
+        clean(params.raidTime || row.raidTime || raid.raid_time),
+        clean(row.klasse || row.className),
+        normalizeSignupRole(row.role || row.rolle),
+        normalizeSignupStatus(row.status),
+        clean(row.discordUserId),
+        clean(row.discordName || row.discord),
+        clean(params.discordChannelId || row.discordChannelId),
+        clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
+        clean(row.note || row.comment)
+      ]
+    );
+
+    if (!updateResult.rowCount) {
+      await query(
+        `insert into raid_external_signups (
+         raid_id, guild_id, raid_type, raid_date, raid_time, player_name, class_name,
+         role, status, source, discord_user_id, discord_name, discord_channel_id,
+         discord_message_id, note
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+        [
+          raid.id,
+          guildId,
+          normalizeRaidType(params.raid || row.raid || raid.raid_type),
+          parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
+          clean(params.raidTime || row.raidTime || raid.raid_time),
+          playerName,
+          clean(row.klasse || row.className),
+          normalizeSignupRole(row.role || row.rolle),
+          normalizeSignupStatus(row.status),
+          source,
+          clean(row.discordUserId),
+          clean(row.discordName || row.discord),
+          clean(params.discordChannelId || row.discordChannelId),
+          clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
+          clean(row.note || row.comment)
+        ]
+      );
+    }
+    written += 1;
+  }
+
+  return { success: true, raidId: raidPublicId(raid), written };
 }
 
 async function getPublishedPrios({ guildId, query: params }) {
@@ -9846,6 +10285,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ success: true, guild: guild.slug, raids, allRaids: raids, activeRaids: raids });
     }
 
+    if (action === "getRaidHelper" || action === "getRaidSignups") {
+      const helper = await getRaidHelper({ guildId: guild.id, query: req.query });
+      return res.json({ ...helper, guild: guild.slug });
+    }
+
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
@@ -10065,6 +10509,21 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "createRandomRaid") {
       const created = await createRandomRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "saveRaidSignup") {
+      const saved = await saveRaidSignup({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "deleteRaidSignup") {
+      const deleted = await deleteRaidSignup({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "saveDiscordSignupRows") {
+      const saved = await saveDiscordSignupRows({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildDeleteRaid" || action === "deleteRaid") {
@@ -10304,6 +10763,26 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "createRandomRaid") {
       const created = await createRandomRaid({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "getRaidHelper" || action === "getRaidSignups") {
+      const helper = await getRaidHelper({ guildId: guild.id, query: postParams });
+      return res.json({ ...helper, guild: guild.slug });
+    }
+
+    if (action === "saveRaidSignup") {
+      const saved = await saveRaidSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "deleteRaidSignup") {
+      const deleted = await deleteRaidSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "saveDiscordSignupRows") {
+      const saved = await saveDiscordSignupRows({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildAdminCreateItem" || action === "guildAdminCreateltem") {
