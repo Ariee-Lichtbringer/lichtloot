@@ -1269,6 +1269,54 @@ select:focus{border-color:rgba(96,165,250,.75)}
   font-weight:750;
 }
 
+.raid-helper-template-badge{
+  justify-self:start;
+  border:1px solid rgba(56,189,248,.35);
+  border-radius:999px;
+  padding:3px 8px;
+  color:#bae6fd;
+  background:rgba(14,165,233,.12);
+  font-size:11px;
+  font-weight:900;
+}
+
+.raid-helper-template-editor{
+  display:grid;
+  grid-template-columns:minmax(280px,.85fr) minmax(0,1.15fr);
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.raid-helper-template-editor textarea{
+  width:100%;
+  min-height:180px;
+  resize:vertical;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.28);
+  background:rgba(2,6,23,.72);
+  color:#f8fafc;
+  padding:9px;
+  outline:none;
+  font:600 13px/1.45 Arial, Helvetica, sans-serif;
+}
+
+.raid-helper-template-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+
+.raid-helper-template-fields{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.raid-helper-template-status{
+  margin-top:10px;
+}
+
 .discord-preview-card{
   border-left:4px solid #7c3aed;
   border-radius:8px;
@@ -2382,6 +2430,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
   .raid-helper-template-grid{grid-template-columns:1fr}
+  .raid-helper-template-editor,
+  .raid-helper-template-fields{grid-template-columns:1fr}
   .active-raid-side{align-items:flex-start}
   .unlock,
   .grid,
@@ -2690,7 +2740,74 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
           <div><h3>Custom Templates</h3><span>Vorlagen übernehmen und im Create-Event-Tab bearbeiten</span></div>
-          <button class="small-btn ghost" type="button" onclick="renderRaidHelperTemplates()">Aktualisieren</button>
+          <button class="small-btn ghost" type="button" onclick="loadRaidHelperTemplates()">Aktualisieren</button>
+        </div>
+        <div class="raid-helper-template-editor">
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">▱</span>
+              <div>
+                <h3>Vorlage bearbeiten</h3>
+                <p>Speichern, duplizieren oder als Raidanmelder übernehmen.</p>
+              </div>
+            </div>
+            <input id="raidHelperTemplateId" type="hidden">
+            <div class="raid-helper-template-fields">
+              <div class="field">
+                <label for="raidHelperTemplateRaid">Raid</label>
+                <select id="raidHelperTemplateRaid" onchange="updateRaidHelperTemplateDefaults(false)">
+                  <option value="zg">Zul Gurub</option>
+                  <option value="aq20">AQ20</option>
+                  <option value="aq40">AQ40</option>
+                  <option value="bwl">BWL</option>
+                  <option value="mc">MC</option>
+                  <option value="naxx">Naxxramas</option>
+                  <option value="ony">Onyxia</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateTitle">Titel</label>
+                <input id="raidHelperTemplateTitle" type="text" placeholder="ZG Raid 21 Uhr">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateMax">Gesamt</label>
+                <input id="raidHelperTemplateMax" type="number" min="1" value="20">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateTanks">Tanks</label>
+                <input id="raidHelperTemplateTanks" type="number" min="0" value="1">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateHeals">Heals</label>
+                <input id="raidHelperTemplateHeals" type="number" min="0" value="4">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateDds">DD</label>
+                <input id="raidHelperTemplateDds" type="number" min="0" value="15">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateDeadline">Anmeldeschluss</label>
+                <input id="raidHelperTemplateDeadline" type="time" value="20:30">
+              </div>
+              <div class="field">
+                <label for="raidHelperTemplateChannel">Discord-Channel</label>
+                <select id="raidHelperTemplateChannel"></select>
+              </div>
+            </div>
+          </section>
+          <section class="raid-helper-card">
+            <div class="field">
+              <label for="raidHelperTemplateDescription">Beschreibung / Regeln</label>
+              <textarea id="raidHelperTemplateDescription"></textarea>
+            </div>
+            <div class="raid-helper-template-actions">
+              <button class="small-btn primary" type="button" onclick="saveRaidHelperTemplate()">Speichern</button>
+              <button class="small-btn good" type="button" onclick="applyRaidHelperTemplateFromEditor()">Vorlage nutzen</button>
+              <button class="small-btn ghost" type="button" onclick="newRaidHelperTemplate()">Neu</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidHelperTemplate()">Löschen</button>
+            </div>
+            <div id="raidHelperTemplateStatus" class="status raid-helper-template-status">Bereit.</div>
+          </section>
         </div>
         <div id="raidHelperTemplateGrid" class="raid-helper-template-grid"></div>
       </div>
@@ -3933,6 +4050,7 @@ function buildRaidDirectLink(raid){
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 let raidHelperDiscordChannels = [];
+let raidHelperTemplates = [];
 const RAID_HELPER_CLASSES = [
   ["Tank","🛡"],
   ["Warrior","⚔"],
@@ -4010,7 +4128,7 @@ function setRaidHelperTab(tabName){
   if(target === "createEvent") updateRaidHelperPreview();
   if(target === "calendar") renderRaidHelperCalendar();
   if(target === "scheduledEvents") renderRaidHelperScheduledEvents();
-  if(target === "templates") renderRaidHelperTemplates();
+  if(target === "templates") loadRaidHelperTemplates();
 }
 
 function raidHelperUpcomingRaids(){
@@ -4116,34 +4234,286 @@ function renderRaidHelperScheduledEvents(){
   }).join("");
 }
 
+function raidHelperTemplateDefaults(raidKey){
+  const key = String(raidKey || "zg").trim().toLowerCase();
+  const twentyPlayer = ["zg","aq20"].includes(key);
+  const raid = RAID_OPTIONS[key] || RAID_OPTIONS.zg;
+  return {
+    id:"",
+    key:"default-" + key,
+    raid:key,
+    title:key === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung",
+    description:RAID_HELPER_DEFAULT_TEXT[key] || RAID_HELPER_DEFAULT_TEXT.default,
+    maxPlayers:twentyPlayer ? 20 : 40,
+    tankSlots:twentyPlayer ? 1 : 2,
+    healSlots:twentyPlayer ? 4 : 8,
+    ddSlots:twentyPlayer ? 15 : 30,
+    signupDeadline:twentyPlayer ? "20:30" : "19:30",
+    discordChannelId:RAID_HELPER_CHANNEL_ID,
+    raidImageUrl:defaultRaidHelperImageUrl(key),
+    builtin:true
+  };
+}
+
+function defaultRaidHelperTemplates(){
+  return ["zg","aq20","aq40","bwl","mc","naxx","ony"].map(raidHelperTemplateDefaults);
+}
+
+function raidHelperTemplateKey(template){
+  return String(template?.id || template?.key || template?.templateKey || template?.raid || "").trim();
+}
+
+function allRaidHelperTemplates(){
+  const custom = raidHelperTemplates.slice();
+  const seen = new Set(custom.map(item => normalize(item.key || item.templateKey || item.title || "")));
+  const defaults = defaultRaidHelperTemplates().filter(item => !seen.has(normalize(item.key || item.title)));
+  return custom.concat(defaults);
+}
+
+function setRaidHelperTemplateStatus(message, type){
+  const status = document.getElementById("raidHelperTemplateStatus");
+  if(!status) return;
+  status.textContent = message || "";
+  status.className = "status raid-helper-template-status" + (type ? " " + type : "");
+}
+
+function renderRaidHelperTemplateChannelSelect(selectedValue){
+  const select = document.getElementById("raidHelperTemplateChannel");
+  if(!select) return;
+  select.innerHTML = discordChannelSelectOptions(selectedValue || RAID_HELPER_CHANNEL_ID);
+  select.value = String(selectedValue || RAID_HELPER_CHANNEL_ID);
+}
+
+function updateRaidHelperTemplateDefaults(force){
+  const raidKey = document.getElementById("raidHelperTemplateRaid")?.value || "zg";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const mappings = [
+    ["raidHelperTemplateTitle", defaults.title],
+    ["raidHelperTemplateMax", defaults.maxPlayers],
+    ["raidHelperTemplateTanks", defaults.tankSlots],
+    ["raidHelperTemplateHeals", defaults.healSlots],
+    ["raidHelperTemplateDds", defaults.ddSlots],
+    ["raidHelperTemplateDeadline", defaults.signupDeadline],
+    ["raidHelperTemplateDescription", defaults.description]
+  ];
+  mappings.forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if(element && (force || !String(element.value || "").trim())) element.value = value;
+  });
+  renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || defaults.discordChannelId);
+}
+
+function fillRaidHelperTemplateEditor(template){
+  const item = template || raidHelperTemplateDefaults("zg");
+  const raidKey = String(item.raid || item.raidType || "zg").trim().toLowerCase();
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperTemplateId", item.builtin ? "" : (item.id || ""));
+  setValue("raidHelperTemplateRaid", RAID_OPTIONS[raidKey] ? raidKey : "zg");
+  setValue("raidHelperTemplateTitle", item.title || item.name || "");
+  setValue("raidHelperTemplateMax", item.maxPlayers ?? "");
+  setValue("raidHelperTemplateTanks", item.tankSlots ?? "");
+  setValue("raidHelperTemplateHeals", item.healSlots ?? "");
+  setValue("raidHelperTemplateDds", item.ddSlots ?? "");
+  setValue("raidHelperTemplateDeadline", item.signupDeadline || "");
+  setValue("raidHelperTemplateDescription", item.description || item.text || "");
+  renderRaidHelperTemplateChannelSelect(item.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  setRaidHelperTemplateStatus(item.builtin ? "Standard-Vorlage geladen. Speichern legt eine eigene Vorlage an." : "Vorlage geladen.", "good");
+}
+
+function newRaidHelperTemplate(){
+  fillRaidHelperTemplateEditor(raidHelperTemplateDefaults(document.getElementById("raidHelperTemplateRaid")?.value || "zg"));
+  document.getElementById("raidHelperTemplateId").value = "";
+  setRaidHelperTemplateStatus("Neue Vorlage bereit.", "");
+}
+
+function raidHelperTemplateFromEditor(){
+  const raidKey = raidHelperValue("raidHelperTemplateRaid") || "zg";
+  const title = raidHelperValue("raidHelperTemplateTitle");
+  const templateKey = `${raidKey}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return {
+    id:raidHelperValue("raidHelperTemplateId"),
+    key:templateKey,
+    raid:raidKey,
+    title,
+    description:raidHelperValue("raidHelperTemplateDescription"),
+    maxPlayers:raidHelperValue("raidHelperTemplateMax"),
+    tankSlots:raidHelperValue("raidHelperTemplateTanks"),
+    healSlots:raidHelperValue("raidHelperTemplateHeals"),
+    ddSlots:raidHelperValue("raidHelperTemplateDds"),
+    signupDeadline:raidHelperValue("raidHelperTemplateDeadline"),
+    discordChannelId:raidHelperValue("raidHelperTemplateChannel") || RAID_HELPER_CHANNEL_ID,
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+  };
+}
+
+function findRaidHelperTemplate(identifier){
+  const wanted = normalize(identifier);
+  return allRaidHelperTemplates().find(item => {
+    const keys = [
+      item.id,
+      item.key,
+      item.templateKey,
+      item.raid,
+      item.raidType,
+      item.title
+    ].map(normalize);
+    return keys.includes(wanted);
+  });
+}
+
+async function loadRaidHelperTemplates(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    renderRaidHelperTemplates();
+    return;
+  }
+  try{
+    const result = await railwayApi({ action:"guildGetRaidHelperTemplates", masterCode });
+    if(result.success){
+      raidHelperTemplates = Array.isArray(result.templates) ? result.templates : [];
+    }
+  }catch(error){
+    setRaidHelperTemplateStatus(error.message || "Vorlagen konnten nicht geladen werden.", "bad");
+  }
+  renderRaidHelperTemplates();
+}
+
 function renderRaidHelperTemplates(){
   const grid = document.getElementById("raidHelperTemplateGrid");
   if(!grid) return;
-  const keys = ["zg","aq20","aq40","bwl","mc","naxx","ony"];
-  grid.innerHTML = keys.map(key => {
-    const raid = RAID_OPTIONS[key] || {};
-    const text = RAID_HELPER_DEFAULT_TEXT[key] || RAID_HELPER_DEFAULT_TEXT.default;
+  renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  const list = allRaidHelperTemplates();
+  if(!document.getElementById("raidHelperTemplateTitle")?.value.trim()){
+    fillRaidHelperTemplateEditor(list[0] || raidHelperTemplateDefaults("zg"));
+  }
+  grid.innerHTML = list.map(item => {
+    const key = raidHelperTemplateKey(item);
+    const raidKey = String(item.raid || item.raidType || "zg").trim().toLowerCase();
+    const raid = RAID_OPTIONS[raidKey] || {};
+    const text = item.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
+    const badge = item.builtin ? "Standard" : "Gespeichert";
     return `
       <article class="raid-helper-template-card">
-        <h4>${escapeHtml(raid.name || key.toUpperCase())}</h4>
+        <span class="raid-helper-template-badge">${escapeHtml(badge)}</span>
+        <h4>${escapeHtml(item.title || raid.name || raidKey.toUpperCase())}</h4>
         <p>${escapeHtml(text.split("\\n").find(Boolean) || "Raidanmeldung")}</p>
-        <button class="small-btn primary" type="button" onclick="applyRaidHelperTemplate('${escapeAttr(key)}')">Vorlage nutzen</button>
+        <div class="raid-helper-template-actions">
+          <button class="small-btn ghost" type="button" onclick="editRaidHelperTemplate('${escapeAttr(key)}')">Bearbeiten</button>
+          <button class="small-btn primary" type="button" onclick="applyRaidHelperTemplate('${escapeAttr(key)}')">Vorlage nutzen</button>
+        </div>
       </article>
     `;
   }).join("");
 }
 
-function applyRaidHelperTemplate(raidKey){
+function editRaidHelperTemplate(identifier){
+  const template = findRaidHelperTemplate(identifier);
+  if(template) fillRaidHelperTemplateEditor(template);
+}
+
+function applyRaidHelperTemplateFromEditor(){
+  applyRaidHelperTemplateObject(raidHelperTemplateFromEditor());
+}
+
+function applyRaidHelperTemplate(identifier){
+  const template = findRaidHelperTemplate(identifier) || raidHelperTemplateDefaults(identifier);
+  applyRaidHelperTemplateObject(template);
+}
+
+function applyRaidHelperTemplateObject(template){
+  const raidKey = String(template.raid || template.raidType || "zg").trim().toLowerCase();
   const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.zg;
   const select = document.getElementById("raidHelperRaid");
   const title = document.getElementById("raidHelperTitle");
   const desc = document.getElementById("raidHelperDescription");
+  const max = document.getElementById("raidHelperMax");
+  const tanks = document.getElementById("raidHelperTanks");
+  const heals = document.getElementById("raidHelperHeals");
+  const dds = document.getElementById("raidHelperDds");
+  const deadline = document.getElementById("raidHelperDeadline");
+  const channel = document.getElementById("raidHelperChannel");
   if(select) select.value = raidKey;
-  if(title) title.value = raidKey === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung";
-  if(desc) desc.value = RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
+  if(title) title.value = template.title || (raidKey === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung");
+  if(desc) desc.value = template.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
+  if(max) max.value = template.maxPlayers ?? max.value;
+  if(tanks) tanks.value = template.tankSlots ?? tanks.value;
+  if(heals) heals.value = template.healSlots ?? heals.value;
+  if(dds) dds.value = template.ddSlots ?? dds.value;
+  if(deadline) deadline.value = template.signupDeadline || deadline.value;
+  if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
   setRaidHelperTab("createEvent");
   updateRaidHelperDefaults();
+  renderRaidHelperDiscordChannels();
   updateRaidHelperPreview();
+}
+
+async function saveRaidHelperTemplate(){
+  const template = raidHelperTemplateFromEditor();
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperTemplateStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!template.title){
+    setRaidHelperTemplateStatus("Bitte einen Titel eintragen.", "bad");
+    return;
+  }
+  setRaidHelperTemplateStatus("Vorlage wird gespeichert ...", "");
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperTemplate",
+      masterCode,
+      templateId:template.id,
+      templateKey:template.key,
+      raid:template.raid,
+      title:template.title,
+      description:template.description,
+      maxPlayers:template.maxPlayers,
+      tankSlots:template.tankSlots,
+      healSlots:template.healSlots,
+      ddSlots:template.ddSlots,
+      signupDeadline:template.signupDeadline,
+      discordChannelId:template.discordChannelId,
+      raidImageUrl:template.raidImageUrl
+    });
+    if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
+    const saved = result.template;
+    raidHelperTemplates = raidHelperTemplates.filter(item => String(item.id) !== String(saved.id));
+    raidHelperTemplates.push(saved);
+    fillRaidHelperTemplateEditor(saved);
+    renderRaidHelperTemplates();
+    setRaidHelperTemplateStatus("Vorlage gespeichert.", "good");
+  }catch(error){
+    setRaidHelperTemplateStatus(error.message || "Vorlage konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deleteRaidHelperTemplate(){
+  const templateId = raidHelperValue("raidHelperTemplateId");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!templateId){
+    setRaidHelperTemplateStatus("Standard-Vorlagen können nicht gelöscht werden.", "bad");
+    return;
+  }
+  if(!masterCode){
+    setRaidHelperTemplateStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Vorlage wirklich löschen?")) return;
+  setRaidHelperTemplateStatus("Vorlage wird gelöscht ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildDeleteRaidHelperTemplate", masterCode, templateId });
+    if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gelöscht werden.");
+    raidHelperTemplates = raidHelperTemplates.filter(item => String(item.id) !== String(templateId));
+    newRaidHelperTemplate();
+    renderRaidHelperTemplates();
+    setRaidHelperTemplateStatus("Vorlage gelöscht.", "good");
+  }catch(error){
+    setRaidHelperTemplateStatus(error.message || "Vorlage konnte nicht gelöscht werden.", "bad");
+  }
 }
 
 function renderRaidHelperDiscordChannels(){
@@ -4181,6 +4551,7 @@ function renderRaidHelperDiscordChannels(){
       ? `${channels.length} Bot-Channel geladen.`
       : "Noch keine Bot-Channel geladen. Bot neu starten und danach aktualisieren.";
   }
+  renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
   updateRaidHelperPreview();
 }
 
