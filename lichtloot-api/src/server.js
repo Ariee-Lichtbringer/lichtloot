@@ -1489,6 +1489,49 @@ async function getWorldbuffsFromSheets(params = {}) {
   return { success: true, buffs: filtered, entries: filtered };
 }
 
+function worldbuffMergeLookupKey(entry) {
+  const date = parseDateValue(entry.date || entry.datum);
+  const time = clean(entry.uhrzeit || entry.time).replace(/:00$/, "");
+  const buff = normalizeWorldbuffName(entry.buff);
+  const guild = clean(entry.gilde || entry.guild || entry.guild_name).toLowerCase();
+  if (!date || !time || !buff) return "";
+  return [date, time, buff, guild].join("|");
+}
+
+function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
+  const sheetByKey = new Map();
+  (sheetRows || []).forEach(row => {
+    const key = worldbuffMergeLookupKey(row);
+    if (!key) return;
+    const existing = sheetByKey.get(key);
+    if (!existing || clean(row.charakter || row.caster || row.werfer)) {
+      sheetByKey.set(key, row);
+    }
+  });
+
+  return (railwayRows || []).map(row => {
+    const sheet = sheetByKey.get(worldbuffMergeLookupKey(row));
+    if (!sheet) return row;
+    const charakter = clean(row.charakter || row.caster) || clean(sheet.charakter || sheet.caster || sheet.werfer);
+    const uebernehmer = clean(row.uebernehmer) || clean(sheet.uebernehmer || sheet.helfer);
+    const rowStatus = normalizeWorldbuffStatus(row.status);
+    const sheetStatus = normalizeWorldbuffStatus(sheet.status);
+    const status = charakter && rowStatus === "offen" && sheetStatus && sheetStatus !== "offen"
+      ? sheetStatus
+      : (rowStatus || sheetStatus || "offen");
+    return {
+      ...row,
+      charakter,
+      caster: charakter,
+      uebernehmer,
+      status,
+      notiz: clean(row.notiz || row.note) || clean(sheet.notiz || sheet.note),
+      note: clean(row.notiz || row.note) || clean(sheet.notiz || sheet.note),
+      source: clean(row.source) || clean(sheet.source) || "railway"
+    };
+  });
+}
+
 async function getWorldbuffs({ guildId, query: params }) {
   await ensureBuffTables();
   const days = clean(params.days || "14");
@@ -1525,8 +1568,14 @@ async function getWorldbuffs({ guildId, query: params }) {
   );
 
   const railwayRows = result.rows.map(normalizeWorldbuffDbRow);
-  if (railwayRows.length || source === "railway") {
+  if (source === "railway") {
     return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+  }
+
+  if (railwayRows.length) {
+    const sheetRows = (await getWorldbuffsFromSheets(params).catch(() => ({ buffs: [] }))).buffs || [];
+    const mergedRows = mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows);
+    return { success: true, source: "railway+sheet", buffs: mergedRows, entries: mergedRows };
   }
 
   const sheetRows = await getWorldbuffsFromSheets(params);
@@ -1851,7 +1900,7 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   try {
     await client.query("begin");
     for (const entry of sourceRows) {
-      await upsertWorldbuffEvent(client, guildId, {
+      const event = await upsertWorldbuffEvent(client, guildId, {
         datum: entry.datum,
         uhrzeit: entry.uhrzeit,
         buff: entry.buff,
@@ -1860,6 +1909,46 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
         note: entry.notiz || entry.note || "",
         source: entry.source || "sheet-import"
       });
+      const caster = clean(entry.charakter || entry.caster || entry.werfer);
+      if (caster) {
+        const existingEntry = await client.query(
+          `select id
+           from worldbuff_entries
+           where event_id = $1 and lower(coalesce(caster, '')) = lower($2)
+           order by updated_at desc, created_at desc
+           limit 1`,
+          [event.id, caster]
+        );
+        if (existingEntry.rows[0]) {
+          await client.query(
+            `update worldbuff_entries
+             set status = $2,
+                 note = coalesce(nullif($3, ''), note),
+                 source = coalesce(nullif($4, ''), source),
+                 updated_at = now()
+             where id = $1`,
+            [
+              existingEntry.rows[0].id,
+              normalizeWorldbuffStatus(entry.status || "bestätigt"),
+              clean(entry.notiz || entry.note),
+              clean(entry.source || "sheet-import")
+            ]
+          );
+        } else {
+          await client.query(
+            `insert into worldbuff_entries (event_id, caster, discord_name, status, note, source)
+             values ($1, $2, $3, $4, $5, $6)`,
+            [
+              event.id,
+              caster,
+              clean(entry.discord || entry.discordName),
+              normalizeWorldbuffStatus(entry.status || "bestätigt"),
+              clean(entry.notiz || entry.note),
+              clean(entry.source || "sheet-import")
+            ]
+          );
+        }
+      }
       synced += 1;
     }
     await client.query("commit");
@@ -1879,7 +1968,7 @@ async function getPlayerWorldbuffs({ guildId, query: params }) {
   const chars = await getPlayerCharacters(guildId, pin);
   const names = chars.map(char => clean(char.name).toLowerCase()).filter(Boolean);
   if (!names.length) return { success: true, buffs: [], openSlots: [] };
-  const all = (await getWorldbuffs({ guildId, query: { days: params.days || 90, source: "railway" } })).buffs || [];
+  const all = (await getWorldbuffs({ guildId, query: { days: params.days || 90 } })).buffs || [];
   const blockedStatuses = new Set(["abgesagt", "cancelled", "gelöscht", "geloescht", "erledigt", "done", "fertig"]);
   const openSlots = all.filter(entry =>
     ["Hakkar", "Ony", "Nef"].includes(normalizeWorldbuffName(entry.buff)) &&
