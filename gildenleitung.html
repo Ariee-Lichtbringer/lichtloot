@@ -1091,6 +1091,184 @@ select:focus{border-color:rgba(96,165,250,.75)}
   font-size:13px;
 }
 
+.raid-helper-view{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(15,23,42,.68),rgba(2,6,23,.48));
+  padding:12px;
+}
+
+.raid-helper-view-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.raid-helper-view-head h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.raid-helper-view-head span{
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:800;
+}
+
+.raid-helper-calendar{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+  overflow:hidden;
+}
+
+.raid-helper-calendar-day,
+.raid-helper-calendar-head{
+  min-height:132px;
+  border-right:1px solid rgba(148,163,184,.12);
+  border-bottom:1px solid rgba(148,163,184,.12);
+  background:rgba(2,6,23,.30);
+  padding:8px;
+}
+
+.raid-helper-calendar-head{
+  min-height:auto;
+  background:rgba(15,23,42,.72);
+  color:#94a3b8;
+  text-transform:uppercase;
+  font-size:11px;
+  font-weight:950;
+  text-align:center;
+  letter-spacing:.04em;
+}
+
+.raid-helper-calendar-day:nth-child(7n),
+.raid-helper-calendar-head:nth-child(7n){border-right:0}
+
+.raid-helper-calendar-date{
+  color:#cbd5e1;
+  font-weight:900;
+  text-align:right;
+  font-size:12px;
+}
+
+.raid-helper-calendar-date.outside{color:#64748b}
+
+.raid-helper-event-chip{
+  display:block;
+  margin-top:6px;
+  border-left:3px solid var(--raid-color,#a78bfa);
+  border-radius:6px;
+  padding:6px 7px;
+  background:
+    linear-gradient(90deg,rgba(2,6,23,.48),rgba(2,6,23,.58)),
+    var(--raid-bg);
+  background-size:cover;
+  background-position:center;
+  color:#f8fafc;
+  font-weight:900;
+  font-size:11px;
+  line-height:1.25;
+  overflow:hidden;
+}
+
+.raid-helper-event-chip small{
+  display:block;
+  color:#cbd5e1;
+  margin-top:3px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.raid-helper-list{
+  display:grid;
+  gap:8px;
+}
+
+.raid-helper-list-item{
+  display:grid;
+  grid-template-columns:48px 1fr auto;
+  gap:12px;
+  align-items:center;
+  border-left:4px solid var(--raid-color,#a78bfa);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+  border-top:1px solid rgba(148,163,184,.14);
+  border-right:1px solid rgba(148,163,184,.14);
+  border-bottom:1px solid rgba(148,163,184,.14);
+  padding:10px 12px;
+}
+
+.raid-helper-list-icon{
+  width:38px;
+  height:38px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(250,204,21,.25);
+  background:rgba(15,23,42,.72);
+  color:#facc15;
+  font-weight:950;
+}
+
+.raid-helper-list-title{
+  color:#f8fafc;
+  font-size:16px;
+  font-weight:950;
+}
+
+.raid-helper-list-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:6px;
+}
+
+.raid-helper-meta-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 7px;
+  border-radius:6px;
+  background:rgba(15,23,42,.78);
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:850;
+}
+
+.raid-helper-template-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+.raid-helper-template-card{
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(2,6,23,.40);
+  padding:12px;
+  display:grid;
+  gap:10px;
+}
+
+.raid-helper-template-card h4{
+  margin:0;
+  color:#f8fafc;
+  font-size:15px;
+}
+
+.raid-helper-template-card p{
+  margin:0;
+  color:#94a3b8;
+  line-height:1.35;
+  font-size:12px;
+  font-weight:750;
+}
+
 .discord-preview-card{
   border-left:4px solid #7c3aed;
   border-radius:8px;
@@ -2200,6 +2378,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
   .active-raid-discord-tools{grid-template-columns:1fr}
+  .raid-helper-calendar{grid-template-columns:1fr}
+  .raid-helper-calendar-head{display:none}
+  .raid-helper-list-item{grid-template-columns:1fr}
+  .raid-helper-template-grid{grid-template-columns:1fr}
   .active-raid-side{align-items:flex-start}
   .unlock,
   .grid,
@@ -2482,8 +2664,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <div id="raidHelperTab-createEmbed" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">{}</div><h3>Create Embed</h3><p>Hier kommt später ein freier Embed-Baukasten für Discord-Nachrichten hin.</p></div>
       </div>
-      <div id="raidHelperTab-calendar" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">◷</div><h3>Calendar</h3><p>Hier bauen wir die Kalenderansicht mit Raidterminen und Anmeldeschluss.</p></div>
+      <div id="raidHelperTab-calendar" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3 id="raidHelperCalendarTitle">Kalender</h3><span>Raidtermine aus LichtLoot</span></div>
+          <button class="small-btn ghost" type="button" onclick="renderRaidHelperCalendar()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperCalendarGrid" class="raid-helper-calendar"></div>
       </div>
       <div id="raidHelperTab-currentEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">✓</div><h3>Current Events</h3><p>Hier erscheinen später alle laufenden Raidanmelder mit Post-Status und Teilnehmern.</p></div>
@@ -2491,14 +2677,22 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <div id="raidHelperTab-pastEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">×</div><h3>Past Events</h3><p>Hier kommt das Archiv vergangener Raidanmelder mit Attendance-Auswertung hin.</p></div>
       </div>
-      <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">⏱</div><h3>Scheduled Events</h3><p>Hier planen wir wiederkehrende Raids und vorbereitete Discord-Posts.</p></div>
+      <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>Scheduled Events</h3><span>Zukünftige Raids, sortiert nach Datum</span></div>
+          <button class="small-btn ghost" type="button" onclick="renderRaidHelperScheduledEvents()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperScheduledList" class="raid-helper-list"></div>
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">▦</div><h3>Attendance</h3><p>Hier kommt die Teilnahmeübersicht nach Charakter, Klasse und Raid rein.</p></div>
       </div>
-      <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">▱</div><h3>Custom Templates</h3><p>Hier pflegen wir später Raidtexte, Slot-Vorgaben und Standardbilder als Vorlagen.</p></div>
+      <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>Custom Templates</h3><span>Vorlagen übernehmen und im Create-Event-Tab bearbeiten</span></div>
+          <button class="small-btn ghost" type="button" onclick="renderRaidHelperTemplates()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperTemplateGrid" class="raid-helper-template-grid"></div>
       </div>
       <div id="raidHelperTab-settings" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">⚙</div><h3>Server Settings</h3><p>Hier kommen Standard-Channel, Rollen und weitere Discord-Einstellungen hin.</p></div>
@@ -3105,6 +3299,9 @@ async function loadOverview(options){
 function renderAll(){
   renderSummary();
   renderDashboardCards();
+  renderRaidHelperCalendar();
+  renderRaidHelperScheduledEvents();
+  renderRaidHelperTemplates();
   renderPlayerMiniList();
   renderRaids();
   renderPlayers();
@@ -3811,6 +4008,142 @@ function setRaidHelperTab(tabName){
     panel.classList.toggle("hidden", panel.id !== "raidHelperTab-" + target);
   });
   if(target === "createEvent") updateRaidHelperPreview();
+  if(target === "calendar") renderRaidHelperCalendar();
+  if(target === "scheduledEvents") renderRaidHelperScheduledEvents();
+  if(target === "templates") renderRaidHelperTemplates();
+}
+
+function raidHelperUpcomingRaids(){
+  return (guildData.raids || [])
+    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+function raidHelperRaidColor(raidKey){
+  return {
+    zg:"#22c55e",
+    aq20:"#a78bfa",
+    aq40:"#c084fc",
+    bwl:"#ef4444",
+    mc:"#f97316",
+    naxx:"#60a5fa",
+    ony:"#fb923c"
+  }[raidKey] || "#a78bfa";
+}
+
+function parseIsoDateLocal(value){
+  const text = String(value || "").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(text)) return null;
+  const [year, month, day] = text.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function monthName(date){
+  return date.toLocaleDateString("de-DE", { month:"long", year:"numeric" });
+}
+
+function renderRaidHelperCalendar(){
+  const grid = document.getElementById("raidHelperCalendarGrid");
+  const title = document.getElementById("raidHelperCalendarTitle");
+  if(!grid) return;
+
+  const sourceDate = parseIsoDateLocal(raidHelperUpcomingRaids()[0]?.raidDate) || new Date();
+  const first = new Date(sourceDate.getFullYear(), sourceDate.getMonth(), 1);
+  const start = new Date(first);
+  start.setDate(first.getDate() - ((first.getDay() + 6) % 7));
+  if(title) title.textContent = monthName(first);
+
+  const raidsByDate = new Map();
+  (guildData.raids || []).forEach(raid => {
+    const date = String(raid.raidDate || "").trim();
+    if(!date) return;
+    if(!raidsByDate.has(date)) raidsByDate.set(date, []);
+    raidsByDate.get(date).push(raid);
+  });
+
+  const heads = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"]
+    .map(day => `<div class="raid-helper-calendar-head">${escapeHtml(day)}</div>`).join("");
+  const days = [];
+  for(let i = 0; i < 35; i++){
+    const day = new Date(start);
+    day.setDate(start.getDate() + i);
+    const iso = [
+      day.getFullYear(),
+      String(day.getMonth() + 1).padStart(2, "0"),
+      String(day.getDate()).padStart(2, "0")
+    ].join("-");
+    const outside = day.getMonth() !== first.getMonth();
+    const raids = (raidsByDate.get(iso) || []).slice().sort((a,b) => String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+    days.push(`
+      <div class="raid-helper-calendar-day">
+        <div class="raid-helper-calendar-date ${outside ? "outside" : ""}">${day.getDate()}</div>
+        ${raids.slice(0,4).map(raid => {
+          const key = getRaidKey(raid);
+          return `<span class="raid-helper-event-chip" style="--raid-color:${raidHelperRaidColor(key)};--raid-bg:url('${RAID_IMAGES[key] || RAID_IMAGES.aq40}')">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}<small>◷ ${escapeHtml(raid.raidTime || "-")} · 👥 ${escapeHtml(String(raid.maxPlayers || raid.signups || 0))}</small></span>`;
+        }).join("")}
+      </div>
+    `);
+  }
+  grid.innerHTML = heads + days.join("");
+}
+
+function renderRaidHelperScheduledEvents(){
+  const box = document.getElementById("raidHelperScheduledList");
+  if(!box) return;
+  const raids = raidHelperUpcomingRaids();
+  if(!raids.length){
+    box.innerHTML = '<div class="muted">Keine geplanten Raids gefunden.</div>';
+    return;
+  }
+  box.innerHTML = raids.slice(0,12).map(raid => {
+    const key = getRaidKey(raid);
+    const createdBy = getRaidCreatorName(raid);
+    return `
+      <article class="raid-helper-list-item" style="--raid-color:${raidHelperRaidColor(key)}">
+        <div class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[key]?.short || "R")}</div>
+        <div>
+          <div class="raid-helper-list-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</div>
+          <div class="raid-helper-list-meta">
+            <span class="raid-helper-meta-pill">⚑ ${escapeHtml(createdBy)}</span>
+            <span class="raid-helper-meta-pill">▣ ${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+            <span class="raid-helper-meta-pill">◷ ${escapeHtml(raid.raidTime || "-")}</span>
+            <span class="raid-helper-meta-pill"># ${escapeHtml(raid.discordChannelId || "Channel offen")}</span>
+          </div>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">Posten</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderRaidHelperTemplates(){
+  const grid = document.getElementById("raidHelperTemplateGrid");
+  if(!grid) return;
+  const keys = ["zg","aq20","aq40","bwl","mc","naxx","ony"];
+  grid.innerHTML = keys.map(key => {
+    const raid = RAID_OPTIONS[key] || {};
+    const text = RAID_HELPER_DEFAULT_TEXT[key] || RAID_HELPER_DEFAULT_TEXT.default;
+    return `
+      <article class="raid-helper-template-card">
+        <h4>${escapeHtml(raid.name || key.toUpperCase())}</h4>
+        <p>${escapeHtml(text.split("\\n").find(Boolean) || "Raidanmeldung")}</p>
+        <button class="small-btn primary" type="button" onclick="applyRaidHelperTemplate('${escapeAttr(key)}')">Vorlage nutzen</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function applyRaidHelperTemplate(raidKey){
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.zg;
+  const select = document.getElementById("raidHelperRaid");
+  const title = document.getElementById("raidHelperTitle");
+  const desc = document.getElementById("raidHelperDescription");
+  if(select) select.value = raidKey;
+  if(title) title.value = raidKey === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung";
+  if(desc) desc.value = RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
+  setRaidHelperTab("createEvent");
+  updateRaidHelperDefaults();
+  updateRaidHelperPreview();
 }
 
 function renderRaidHelperDiscordChannels(){
