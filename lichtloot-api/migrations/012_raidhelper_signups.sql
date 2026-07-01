@@ -45,3 +45,21 @@ create unique index if not exists idx_raid_external_signups_unique_source
 
 create index if not exists idx_raid_external_signups_guild_raid
   on raid_external_signups(guild_id, raid_id, raid_date);
+
+create table if not exists discord_bot_channels (
+  id uuid primary key default gen_random_uuid(),
+  guild_id uuid not null references guilds(id) on delete cascade,
+  discord_guild_id text,
+  discord_guild_name text,
+  channel_id text not null,
+  channel_name text not null,
+  channel_type text,
+  category_name text,
+  position integer,
+  can_send boolean not null default true,
+  updated_at timestamptz not null default now(),
+  unique (guild_id, channel_id)
+);
+
+create index if not exists idx_discord_bot_channels_guild
+  on discord_bot_channels(guild_id, category_name, position, channel_name);
