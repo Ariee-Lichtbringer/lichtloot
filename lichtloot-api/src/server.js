@@ -8020,6 +8020,9 @@ async function findRaid(guildId, params) {
 }
 
 async function findRaidForDiscordImport(guildId, params) {
+  const explicitRaid = await findRaid(guildId, params);
+  if (explicitRaid) return explicitRaid;
+
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const raidDate = clean(params.raidDate || params.datum || params.date);
   const raidTime = clean(params.raidTime || params.uhrzeit || params.time);
@@ -8039,7 +8042,10 @@ async function findRaidForDiscordImport(guildId, params) {
        where guild_id = $1
          and discord_message_id = $2
          ${channelClause}
-       order by created_at desc
+       order by
+         case when coalesce(created_by, '') = 'Discord-Import' then 1 else 0 end,
+         case when nullif(coalesce(description, ''), '') is not null then 0 else 1 end,
+         created_at desc
        limit 1`,
       values
     );
@@ -8054,7 +8060,11 @@ async function findRaidForDiscordImport(guildId, params) {
          and lower(raid_type) = any($2)
          and raid_date = $3
          and ($4 = '' or coalesce(raid_time, '') = $4)
-       order by created_at desc
+       order by
+         case when coalesce(created_by, '') = 'Discord-Import' then 1 else 0 end,
+         case when nullif(coalesce(raid_pin, ''), '') is not null then 0 else 1 end,
+         case when nullif(coalesce(description, ''), '') is not null then 0 else 1 end,
+         created_at desc
        limit 1`,
       [guildId, raidTypeSearchValues(raidType), parseDateValue(raidDate), raidTime]
     );
