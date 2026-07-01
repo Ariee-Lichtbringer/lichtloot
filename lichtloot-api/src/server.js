@@ -2730,6 +2730,50 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   });
 }
 
+async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const raidId = clean(params.raidId || params.id || "");
+  if (!raidId) return { success: false, error: "Raid-ID fehlt." };
+  return queueBotUpdate({
+    guildId,
+    query: {
+      ...params,
+      type: "raid_announcement_refresh",
+      payload: {
+        raidId,
+        channelId: clean(params.channelId || params.discordChannelId),
+        messageId: clean(params.messageId || params.discordMessageId || params.raidHelperMessageId),
+        source: "gildenleitung"
+      }
+    }
+  });
+}
+
+async function setRaidDiscordMessage({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const result = await query(
+    `update raids
+     set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
+         discord_message_id = coalesce(nullif($4, ''), discord_message_id),
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [
+      guildId,
+      raid.id,
+      clean(params.discordChannelId || params.channelId),
+      clean(params.discordMessageId || params.messageId || params.raidHelperMessageId)
+    ]
+  );
+  return { success: true, raid: normalizeRaidRow(result.rows[0]) };
+}
+
 async function queueLogAnalysisDiscordPost({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureLogAnalysesTable();
@@ -8175,6 +8219,66 @@ async function deleteRaidSignup({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount };
 }
 
+async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const signupId = clean(params.signupId || params.id);
+  const nextStatus = normalizeSignupStatus(params.signupStatus || params.status);
+  const shouldDelete = ["delete", "remove", "verwerfen"].includes(clean(params.mode || params.signupAction || params.actionMode).toLowerCase());
+  if (!signupId || !isUuid(signupId)) {
+    const error = new Error("Anmeldungs-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (shouldDelete) {
+    const externalDelete = await query(
+      `delete from raid_external_signups
+       where guild_id = $1 and id = $2`,
+      [guildId, signupId]
+    );
+    const localDelete = await query(
+      `delete from raid_signups rs
+       using raids r
+       where rs.raid_id = r.id
+         and r.guild_id = $1
+         and rs.id = $2`,
+      [guildId, signupId]
+    );
+    return { success: true, deleted: externalDelete.rowCount + localDelete.rowCount };
+  }
+
+  const externalUpdate = await query(
+    `update raid_external_signups
+     set status = $3,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [guildId, signupId, nextStatus]
+  );
+  if (externalUpdate.rows[0]) {
+    return { success: true, signup: normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" }) };
+  }
+
+  const localUpdate = await query(
+    `update raid_signups rs
+     set status = $3,
+         updated_at = now()
+     from raids r
+     where rs.raid_id = r.id
+       and r.guild_id = $1
+       and rs.id = $2
+     returning rs.*`,
+    [guildId, signupId, nextStatus]
+  );
+  if (localUpdate.rows[0]) {
+    return { success: true, signup: normalizeRaidSignupRow(localUpdate.rows[0]) };
+  }
+
+  const error = new Error("Anmeldung wurde nicht gefunden.");
+  error.statusCode = 404;
+  throw error;
+}
+
 async function saveDiscordSignupRows({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const rows = Array.isArray(params.rows)
@@ -8193,6 +8297,20 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     const error = new Error("Raid für Discord-Anmeldungen wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
+  }
+  const incomingChannelId = clean(params.discordChannelId);
+  const incomingMessageId = clean(params.raidHelperMessageId || params.discordMessageId);
+  if (incomingChannelId || incomingMessageId) {
+    await query(
+      `update raids
+       set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
+           discord_message_id = coalesce(nullif($4, ''), discord_message_id),
+           updated_at = now()
+       where guild_id = $1 and id = $2`,
+      [guildId, raid.id, incomingChannelId, incomingMessageId]
+    );
+    raid.discord_channel_id = incomingChannelId || raid.discord_channel_id;
+    raid.discord_message_id = incomingMessageId || raid.discord_message_id;
   }
 
   let written = 0;
@@ -10833,6 +10951,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "guildUpdateRaidHelperSignup") {
+      const saved = await adminUpdateRaidHelperSignup({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "saveDiscordSignupRows") {
       const saved = await saveDiscordSignupRows({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -11107,6 +11230,11 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "guildUpdateRaidHelperSignup") {
+      const saved = await adminUpdateRaidHelperSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "saveDiscordSignupRows") {
       const saved = await saveDiscordSignupRows({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
@@ -11171,6 +11299,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildQueueRaidAnnouncement") {
       const queued = await queueRaidAnnouncement({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueRaidAnnouncementRefresh") {
+      const queued = await queueRaidAnnouncementRefresh({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSetRaidDiscordMessage") {
+      const saved = await setRaidDiscordMessage({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildQueueLogAnalysisPost") {
