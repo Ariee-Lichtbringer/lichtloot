@@ -956,6 +956,16 @@ select:focus{border-color:rgba(96,165,250,.75)}
   border:1px solid rgba(148,163,184,.18);
 }
 
+.raid-helper-class-icon{
+  width:24px;
+  height:24px;
+  border-radius:5px;
+  object-fit:cover;
+  border:1px solid rgba(148,163,184,.24);
+  background:rgba(15,23,42,.82);
+  flex:0 0 auto;
+}
+
 .raid-helper-note{
   margin-top:10px;
   color:#bfdbfe;
@@ -4051,16 +4061,26 @@ const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
+const RAID_HELPER_CLASS_ICONS = {
+  Warrior:"krieger.png",
+  Druid:"druide.png",
+  Paladin:"Pala.png",
+  Rogue:"schurke.png",
+  Hunter:"jäger.png",
+  Priest:"priester.png",
+  Mage:"magier.png",
+  Warlock:"hexenmeister.png"
+};
 const RAID_HELPER_CLASSES = [
   ["Tank","🛡"],
-  ["Warrior","⚔"],
-  ["Druid","🌿"],
-  ["Paladin","✨"],
-  ["Rogue","🗡"],
-  ["Hunter","🏹"],
-  ["Priest","💠"],
-  ["Mage","🔥"],
-  ["Warlock","💀"],
+  ["Warrior","⚔", RAID_HELPER_CLASS_ICONS.Warrior],
+  ["Druid","🌿", RAID_HELPER_CLASS_ICONS.Druid],
+  ["Paladin","✨", RAID_HELPER_CLASS_ICONS.Paladin],
+  ["Rogue","🗡", RAID_HELPER_CLASS_ICONS.Rogue],
+  ["Hunter","🏹", RAID_HELPER_CLASS_ICONS.Hunter],
+  ["Priest","💠", RAID_HELPER_CLASS_ICONS.Priest],
+  ["Mage","🔥", RAID_HELPER_CLASS_ICONS.Mage],
+  ["Warlock","💀", RAID_HELPER_CLASS_ICONS.Warlock],
   ["Shaman","⚡"],
   ["Abwesenheit","🚫"]
 ];
@@ -4112,9 +4132,22 @@ function initRaidHelperPanel(){
 function renderRaidHelperClassGrid(){
   const grid = document.getElementById("raidHelperClassGrid");
   if(!grid) return;
-  grid.innerHTML = RAID_HELPER_CLASSES.map(([name, icon]) => `
-    <div class="raid-helper-class-chip"><span>${escapeHtml(icon)}</span>${escapeHtml(name)}</div>
+  grid.innerHTML = RAID_HELPER_CLASSES.map(([name, icon, image]) => `
+    <div class="raid-helper-class-chip">${raidHelperClassIconMarkup(name, icon, image)}${escapeHtml(name)}</div>
   `).join("");
+}
+
+function raidHelperClassIconUrl(className){
+  const filename = RAID_HELPER_CLASS_ICONS[className];
+  return filename ? RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(filename) : "";
+}
+
+function raidHelperClassIconMarkup(className, fallbackIcon, filename){
+  const image = filename || RAID_HELPER_CLASS_ICONS[className];
+  if(image){
+    return `<img class="raid-helper-class-icon" src="${escapeAttr(RAID_HELPER_IMAGE_BASE_URL + encodeURIComponent(image))}" alt="${escapeAttr(className)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${escapeAttr(fallbackIcon || "◆")}'}))">`;
+  }
+  return `<span>${escapeHtml(fallbackIcon || "◆")}</span>`;
 }
 
 function setRaidHelperTab(tabName){
@@ -4696,16 +4729,16 @@ function updateRaidHelperPreview(){
   if(rosterEl){
     const previewGroups = [
       ["Tank","🛡","Noch frei"],
-      ["Warrior","⚔","Char · Skillung"],
-      ["Druid","🌿","Char · Skillung"],
-      ["Paladin","✨","Char · Skillung"],
-      ["Priest","💠","Char · Skillung"],
-      ["Mage","🔥","Char · Skillung"],
+      ["Warrior","⚔","Char · Skillung", RAID_HELPER_CLASS_ICONS.Warrior],
+      ["Druid","🌿","Char · Skillung", RAID_HELPER_CLASS_ICONS.Druid],
+      ["Paladin","✨","Char · Skillung", RAID_HELPER_CLASS_ICONS.Paladin],
+      ["Priest","💠","Char · Skillung", RAID_HELPER_CLASS_ICONS.Priest],
+      ["Mage","🔥","Char · Skillung", RAID_HELPER_CLASS_ICONS.Mage],
       ["Abwesenheit","🚫","Optional"]
     ];
-    rosterEl.innerHTML = previewGroups.map(([name, icon, empty]) => `
+    rosterEl.innerHTML = previewGroups.map(([name, icon, empty, image]) => `
       <div class="discord-preview-group">
-        <h4>${escapeHtml(icon)} ${escapeHtml(name)} (0)</h4>
+        <h4>${raidHelperClassIconMarkup(name, icon, image)} ${escapeHtml(name)} (0)</h4>
         <span class="discord-preview-empty">${escapeHtml(empty)}</span>
       </div>
     `).join("");
