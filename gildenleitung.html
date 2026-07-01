@@ -760,14 +760,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .raid-helper-layout{
   display:grid;
-  grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);
-  gap:12px;
+  grid-template-columns:minmax(0,1.05fr) minmax(340px,.95fr);
+  gap:16px;
   align-items:start;
 }
 
 .raid-helper-form{
   display:grid;
-  gap:10px;
+  gap:12px;
 }
 
 .raid-helper-row{
@@ -785,7 +785,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-form textarea,
 .raid-helper-preview textarea{
   width:100%;
-  min-height:170px;
+  min-height:150px;
   resize:vertical;
   border-radius:8px;
   border:1px solid rgba(148,163,184,.28);
@@ -797,10 +797,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .raid-helper-preview{
-  border:1px solid rgba(96,165,250,.22);
+  display:grid;
+  gap:12px;
+  border:1px solid rgba(124,58,237,.32);
   border-radius:8px;
-  background:rgba(2,6,23,.36);
-  padding:10px;
+  background:linear-gradient(180deg,rgba(15,23,42,.84),rgba(2,6,23,.62));
+  padding:12px;
+  position:sticky;
+  top:18px;
 }
 
 .raid-helper-preview h3{
@@ -814,6 +818,369 @@ select:focus{border-color:rgba(96,165,250,.75)}
   font-weight:900;
   font-size:12px;
   margin-top:8px;
+}
+
+.raid-helper-panel{
+  overflow:hidden;
+  position:relative;
+}
+
+.raid-helper-panel::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:3px;
+  background:linear-gradient(90deg,#7c3aed,#60a5fa,#facc15);
+  opacity:.85;
+}
+
+.raid-helper-panel summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.raid-helper-summary{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.raid-helper-summary-icon,
+.raid-helper-card-icon{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(96,165,250,.32);
+  background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(124,58,237,.22));
+  color:#dbeafe;
+  font-size:18px;
+}
+
+.raid-helper-summary-copy strong{
+  display:block;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.raid-helper-summary-copy span{
+  display:block;
+  margin-top:2px;
+  color:#93c5fd;
+  font-size:12px;
+  font-weight:800;
+}
+
+.raid-helper-card{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(15,23,42,.76),rgba(2,6,23,.46));
+  padding:14px;
+}
+
+.raid-helper-card-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.raid-helper-card-head h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:15px;
+}
+
+.raid-helper-card-head p{
+  margin:2px 0 0;
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:700;
+}
+
+.raid-helper-slots .field{
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+  background:rgba(2,6,23,.30);
+  padding:8px;
+}
+
+.raid-helper-class-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+
+.raid-helper-class-chip{
+  min-height:38px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
+  padding:8px 9px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:#e5edf8;
+  font-weight:900;
+  font-size:12px;
+}
+
+.raid-helper-class-chip span:first-child{
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  border-radius:5px;
+  background:rgba(15,23,42,.82);
+  border:1px solid rgba(148,163,184,.18);
+}
+
+.raid-helper-note{
+  margin-top:10px;
+  color:#bfdbfe;
+  font-size:12px;
+  line-height:1.45;
+  font-weight:800;
+}
+
+.raid-helper-tabs{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.raid-helper-tab{
+  min-height:58px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(15,23,42,.46);
+  color:#e5edf8;
+  padding:9px 10px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  text-align:left;
+  cursor:pointer;
+  font-weight:900;
+}
+
+.raid-helper-tab:hover{
+  border-color:rgba(96,165,250,.40);
+  background:rgba(30,41,59,.58);
+}
+
+.raid-helper-tab.active{
+  border-color:rgba(124,58,237,.66);
+  background:linear-gradient(135deg,rgba(124,58,237,.34),rgba(96,165,250,.18));
+  color:#fff;
+}
+
+.raid-helper-tab-icon{
+  width:28px;
+  height:28px;
+  border-radius:7px;
+  display:grid;
+  place-items:center;
+  background:rgba(2,6,23,.58);
+  border:1px solid rgba(148,163,184,.14);
+  flex:0 0 auto;
+}
+
+.raid-helper-tab-copy{
+  min-width:0;
+}
+
+.raid-helper-tab-copy strong{
+  display:block;
+  font-size:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.raid-helper-tab-copy span{
+  display:block;
+  margin-top:2px;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.raid-helper-tab.active .raid-helper-tab-copy span{
+  color:#bfdbfe;
+}
+
+.raid-helper-tab-panel.hidden{
+  display:none!important;
+}
+
+.raid-helper-placeholder{
+  min-height:330px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(15,23,42,.68),rgba(2,6,23,.48));
+  display:grid;
+  place-items:center;
+  padding:32px;
+  text-align:center;
+}
+
+.raid-helper-placeholder-icon{
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  margin:0 auto 12px;
+  border-radius:10px;
+  border:1px solid rgba(96,165,250,.32);
+  background:rgba(96,165,250,.12);
+  color:#bfdbfe;
+  font-size:26px;
+}
+
+.raid-helper-placeholder h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:20px;
+}
+
+.raid-helper-placeholder p{
+  margin:8px auto 0;
+  max-width:520px;
+  color:#cbd5e1;
+  line-height:1.45;
+  font-weight:700;
+  font-size:13px;
+}
+
+.discord-preview-card{
+  border-left:4px solid #7c3aed;
+  border-radius:8px;
+  background:#1f2028;
+  border-top:1px solid rgba(255,255,255,.08);
+  border-right:1px solid rgba(255,255,255,.08);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:16px;
+  color:#f4f4f5;
+}
+
+.discord-preview-title{
+  margin:0;
+  color:#fff;
+  font-size:22px;
+  line-height:1.15;
+  font-weight:950;
+}
+
+.discord-preview-description{
+  margin:14px 0 0;
+  color:#e5e7eb;
+  white-space:pre-line;
+  line-height:1.42;
+  font-size:14px;
+}
+
+.discord-preview-meta{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+
+.discord-preview-meta div{
+  min-width:0;
+}
+
+.discord-preview-meta span,
+.discord-preview-section-title{
+  display:block;
+  color:#fff;
+  font-weight:950;
+  font-size:13px;
+}
+
+.discord-preview-meta strong{
+  display:block;
+  margin-top:4px;
+  color:#e5e7eb;
+  font-size:13px;
+}
+
+.discord-preview-pills{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+
+.discord-preview-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 8px;
+  border-radius:7px;
+  background:rgba(55,65,81,.72);
+  border:1px solid rgba(148,163,184,.16);
+  color:#f8fafc;
+  font-weight:900;
+  font-size:12px;
+}
+
+.discord-preview-roster{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px 12px;
+  margin-top:16px;
+}
+
+.discord-preview-group{
+  min-width:0;
+}
+
+.discord-preview-group h4{
+  margin:0 0 5px;
+  color:#fff;
+  font-size:13px;
+  text-decoration:underline;
+}
+
+.discord-preview-line{
+  display:block;
+  color:#e5e7eb;
+  font-size:12px;
+  line-height:1.35;
+  font-weight:800;
+}
+
+.discord-preview-empty{
+  color:#9ca3af;
+  font-size:12px;
+  font-weight:800;
+}
+
+.discord-preview-links{
+  margin-top:16px;
+  color:#60a5fa;
+  font-weight:950;
+  font-size:13px;
+}
+
+.discord-preview-image{
+  margin-top:14px;
+  width:100%;
+  aspect-ratio:16/7;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.10);
+  background-image:linear-gradient(rgba(2,6,23,.10),rgba(2,6,23,.20)),var(--preview-image);
+  background-size:cover;
+  background-position:center;
 }
 
 .create-result{
@@ -1799,6 +2166,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .dashboard-grid{grid-template-columns:1fr}
   .quick-actions,
   .stat-grid{grid-template-columns:1fr}
+  .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
   .active-raid-side{align-items:flex-start}
   .unlock,
@@ -1807,9 +2175,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .raid-helper-layout,
   .raid-helper-row,
   .raid-helper-slots,
+  .raid-helper-class-grid,
+  .discord-preview-meta,
+  .discord-preview-roster,
   .tools,
   .summary,
   .prio-actions{grid-template-columns:1fr}
+  .raid-helper-preview{position:relative;top:auto}
   .topbar{align-items:flex-start}
   .nav{width:100%}
   .btn{flex:1}
@@ -1908,71 +2280,133 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </section>
 
   <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()">
-    <summary>Raidanmelder erstellen</summary>
+    <summary>
+      <span class="raid-helper-summary">
+        <span class="raid-helper-summary-icon">▣</span>
+        <span class="raid-helper-summary-copy">
+          <strong>Raidanmelder erstellen</strong>
+          <span>Discord-Anmeldung mit Charakter, Skillung und Klassen-Gruppierung</span>
+        </span>
+      </span>
+    </summary>
     <div class="raid-helper-body">
-      <div class="raid-helper-layout">
+      <div class="raid-helper-tabs" role="tablist" aria-label="Raidanmelder Funktionen">
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="dashboard" onclick="setRaidHelperTab('dashboard')"><span class="raid-helper-tab-icon">⌂</span><span class="raid-helper-tab-copy"><strong>Dashboard</strong><span>Übersicht</span></span></button>
+        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>Create Event</strong><span>Raid erstellen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">{}</span><span class="raid-helper-tab-copy"><strong>Create Embed</strong><span>Embed bauen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Calendar</strong><span>Kalender</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Current Events</strong><span>Aktuelle Raids</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Past Events</strong><span>Vergangene</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="scheduledEvents" onclick="setRaidHelperTab('scheduledEvents')"><span class="raid-helper-tab-icon">⏱</span><span class="raid-helper-tab-copy"><strong>Scheduled Events</strong><span>Geplant</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Attendance</strong><span>Teilnahme</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Templates</strong><span>Vorlagen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="settings" onclick="setRaidHelperTab('settings')"><span class="raid-helper-tab-icon">⚙</span><span class="raid-helper-tab-copy"><strong>Settings</strong><span>Server</span></span></button>
+      </div>
+
+      <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
-          <div class="raid-helper-row">
-            <div class="field">
-              <label for="raidHelperRaid">Raid</label>
-              <select id="raidHelperRaid" onchange="updateRaidHelperDefaults()">
-                <option value="zg">Zul Gurub</option>
-                <option value="aq20">AQ20</option>
-                <option value="aq40">AQ40</option>
-                <option value="bwl">BWL</option>
-                <option value="mc">MC</option>
-                <option value="naxx">Naxxramas</option>
-                <option value="ony">Onyxia</option>
-              </select>
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">⚔</span>
+              <div>
+                <h3>Raid und Termin</h3>
+                <p>Grunddaten für den Discord-Post und die LichtLoot-Anmeldung.</p>
+              </div>
             </div>
-            <div class="field">
-              <label for="raidHelperTitle">Titel</label>
-              <input id="raidHelperTitle" type="text" placeholder="ZG Raid 21 Uhr" oninput="updateRaidHelperPreview()">
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="raidHelperRaid">Raid</label>
+                <select id="raidHelperRaid" onchange="updateRaidHelperDefaults()">
+                  <option value="zg">Zul Gurub</option>
+                  <option value="aq20">AQ20</option>
+                  <option value="aq40">AQ40</option>
+                  <option value="bwl">BWL</option>
+                  <option value="mc">MC</option>
+                  <option value="naxx">Naxxramas</option>
+                  <option value="ony">Onyxia</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="raidHelperTitle">Titel</label>
+                <input id="raidHelperTitle" type="text" placeholder="ZG Raid 21 Uhr" oninput="updateRaidHelperPreview()">
+              </div>
             </div>
-          </div>
-          <div class="raid-helper-row">
-            <div class="field">
-              <label for="raidHelperDate">Datum</label>
-              <input id="raidHelperDate" type="date" onchange="updateRaidHelperPreview()">
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="raidHelperDate">Datum</label>
+                <input id="raidHelperDate" type="date" onchange="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperTime">Startzeit</label>
+                <input id="raidHelperTime" type="time" value="21:00" onchange="updateRaidHelperPreview()">
+              </div>
             </div>
-            <div class="field">
-              <label for="raidHelperTime">Startzeit</label>
-              <input id="raidHelperTime" type="time" value="21:00" onchange="updateRaidHelperPreview()">
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="raidHelperLead">Raidlead</label>
+                <input id="raidHelperLead" type="text" placeholder="Burny" oninput="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperGuild">Gilde</label>
+                <input id="raidHelperGuild" type="text" placeholder="Lichtbringer" oninput="updateRaidHelperPreview()">
+              </div>
             </div>
-          </div>
-          <div class="raid-helper-row">
-            <div class="field">
-              <label for="raidHelperLead">Raidlead</label>
-              <input id="raidHelperLead" type="text" placeholder="Burny" oninput="updateRaidHelperPreview()">
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="raidHelperDeadline">Anmeldeschluss</label>
+                <input id="raidHelperDeadline" type="time" value="20:30" onchange="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperChannel">Discord-Channel</label>
+                <input id="raidHelperChannel" type="text" value="1508478036398571601" oninput="updateRaidHelperPreview()">
+              </div>
             </div>
-            <div class="field">
-              <label for="raidHelperGuild">Gilde</label>
-              <input id="raidHelperGuild" type="text" placeholder="Lichtbringer" oninput="updateRaidHelperPreview()">
+          </section>
+
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">☷</span>
+              <div>
+                <h3>Slots und Regeln</h3>
+                <p>Diese Werte steuern die Rollenübersicht im Discord-Embed.</p>
+              </div>
             </div>
-          </div>
-          <div class="raid-helper-slots">
-            <div class="field">
-              <label for="raidHelperMax">Gesamt</label>
-              <input id="raidHelperMax" type="number" min="1" value="20" oninput="updateRaidHelperPreview()">
+            <div class="raid-helper-slots">
+              <div class="field">
+                <label for="raidHelperMax">Gesamt</label>
+                <input id="raidHelperMax" type="number" min="1" value="20" oninput="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperTanks">Tanks</label>
+                <input id="raidHelperTanks" type="number" min="0" value="1" oninput="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperHeals">Heals</label>
+                <input id="raidHelperHeals" type="number" min="0" value="4" oninput="updateRaidHelperPreview()">
+              </div>
+              <div class="field">
+                <label for="raidHelperDds">DD</label>
+                <input id="raidHelperDds" type="number" min="0" value="15" oninput="updateRaidHelperPreview()">
+              </div>
             </div>
-            <div class="field">
-              <label for="raidHelperTanks">Tanks</label>
-              <input id="raidHelperTanks" type="number" min="0" value="1" oninput="updateRaidHelperPreview()">
+            <div class="field" style="margin-top:12px">
+              <label for="raidHelperDescription">Beschreibung / Regeln</label>
+              <textarea id="raidHelperDescription" oninput="updateRaidHelperPreview()"></textarea>
             </div>
-            <div class="field">
-              <label for="raidHelperHeals">Heals</label>
-              <input id="raidHelperHeals" type="number" min="0" value="4" oninput="updateRaidHelperPreview()">
+          </section>
+
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">▤</span>
+              <div>
+                <h3>Discord-Anmeldung</h3>
+                <p>Spieler wählen im Discord ihre Klasse und tragen Charakter plus Skillung ein.</p>
+              </div>
             </div>
-            <div class="field">
-              <label for="raidHelperDds">DD</label>
-              <input id="raidHelperDds" type="number" min="0" value="15" oninput="updateRaidHelperPreview()">
-            </div>
-          </div>
-          <div class="field">
-            <label for="raidHelperDescription">Beschreibung / Regeln</label>
-            <textarea id="raidHelperDescription" oninput="updateRaidHelperPreview()"></textarea>
-          </div>
-          <div class="raid-helper-channel">Discord-Channel: 1508478036398571601</div>
+            <div class="raid-helper-class-grid" id="raidHelperClassGrid"></div>
+            <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Warrior, Druid, Paladin, Rogue, Hunter, Priest, Mage, Warlock und Shaman. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
+          </section>
+
           <div class="tools">
             <button class="btn" type="button" onclick="createRaidHelperSignup()">Raidanmelder erstellen</button>
             <button class="btn ghost" type="button" onclick="copyRaidHelperPreview()">Vorschau kopieren</button>
@@ -1981,8 +2415,54 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </div>
         <div class="raid-helper-preview">
           <h3>Discord-Vorschau</h3>
-          <textarea id="raidHelperPreview" readonly></textarea>
+          <div class="discord-preview-card">
+            <h3 id="raidHelperPreviewTitle" class="discord-preview-title">ZG RAID 21 UHR</h3>
+            <div id="raidHelperPreviewDescription" class="discord-preview-description"></div>
+            <div class="discord-preview-meta">
+              <div><span>Raidlead</span><strong id="raidHelperPreviewLead">Gildenleitung</strong></div>
+              <div><span>Datum</span><strong id="raidHelperPreviewDate">-</strong></div>
+              <div><span>Start</span><strong id="raidHelperPreviewTime">21:00 Uhr</strong></div>
+            </div>
+            <div class="discord-preview-pills" id="raidHelperPreviewSlots"></div>
+            <div class="discord-preview-meta" style="grid-template-columns:1fr 1fr;margin-top:14px">
+              <div><span>Prio-PIN</span><strong>Wird beim Erstellen erzeugt</strong></div>
+              <div><span>Webansicht</span><strong>https://lichtloot.de/</strong></div>
+            </div>
+            <div class="discord-preview-section-title" style="margin-top:16px">Anmeldungen</div>
+            <div class="discord-preview-pills" id="raidHelperPreviewRoles"></div>
+            <div class="discord-preview-roster" id="raidHelperRosterPreview"></div>
+            <div class="discord-preview-links">Webansicht | Comp | Gcal</div>
+            <div id="raidHelperPreviewImage" class="discord-preview-image"></div>
+          </div>
+          <textarea id="raidHelperPreview" class="hidden" readonly></textarea>
         </div>
+      </div>
+      <div id="raidHelperTab-dashboard" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">⌂</div><h3>Raidanmelder Dashboard</h3><p>Hier sammeln wir als nächstes die wichtigsten Zahlen, aktive Anmelder und schnelle Aktionen.</p></div>
+      </div>
+      <div id="raidHelperTab-createEmbed" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">{}</div><h3>Create Embed</h3><p>Hier kommt später ein freier Embed-Baukasten für Discord-Nachrichten hin.</p></div>
+      </div>
+      <div id="raidHelperTab-calendar" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">◷</div><h3>Calendar</h3><p>Hier bauen wir die Kalenderansicht mit Raidterminen und Anmeldeschluss.</p></div>
+      </div>
+      <div id="raidHelperTab-currentEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">✓</div><h3>Current Events</h3><p>Hier erscheinen später alle laufenden Raidanmelder mit Post-Status und Teilnehmern.</p></div>
+      </div>
+      <div id="raidHelperTab-pastEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">×</div><h3>Past Events</h3><p>Hier kommt das Archiv vergangener Raidanmelder mit Attendance-Auswertung hin.</p></div>
+      </div>
+      <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">⏱</div><h3>Scheduled Events</h3><p>Hier planen wir wiederkehrende Raids und vorbereitete Discord-Posts.</p></div>
+      </div>
+      <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">▦</div><h3>Attendance</h3><p>Hier kommt die Teilnahmeübersicht nach Charakter, Klasse und Raid rein.</p></div>
+      </div>
+      <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">▱</div><h3>Custom Templates</h3><p>Hier pflegen wir später Raidtexte, Slot-Vorgaben und Standardbilder als Vorlagen.</p></div>
+      </div>
+      <div id="raidHelperTab-settings" class="raid-helper-tab-panel raid-helper-placeholder hidden">
+        <div><div class="raid-helper-placeholder-icon">⚙</div><h3>Server Settings</h3><p>Hier kommen Standard-Channel, Rollen und weitere Discord-Einstellungen hin.</p></div>
       </div>
     </div>
   </details>
@@ -3188,6 +3668,19 @@ function buildRaidDirectLink(raid){
 
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
+const RAID_HELPER_CLASSES = [
+  ["Tank","🛡"],
+  ["Warrior","⚔"],
+  ["Druid","🌿"],
+  ["Paladin","✨"],
+  ["Rogue","🗡"],
+  ["Hunter","🏹"],
+  ["Priest","💠"],
+  ["Mage","🔥"],
+  ["Warlock","💀"],
+  ["Shaman","⚡"],
+  ["Abwesenheit","🚫"]
+];
 const RAID_HELPER_DEFAULT_TEXT = {
   zg:
 `ZG Raid Samstag Start ca. 21 Uhr // Invite im Anschluss an AQ20
@@ -3226,7 +3719,29 @@ function initRaidHelperPanel(){
   }
   const guild = document.getElementById("raidHelperGuild");
   if(guild && !guild.value) guild.value = getCurrentGuildBrand().guildName;
+  const channel = document.getElementById("raidHelperChannel");
+  if(channel && !channel.value.trim()) channel.value = RAID_HELPER_CHANNEL_ID;
+  renderRaidHelperClassGrid();
   updateRaidHelperDefaults();
+}
+
+function renderRaidHelperClassGrid(){
+  const grid = document.getElementById("raidHelperClassGrid");
+  if(!grid) return;
+  grid.innerHTML = RAID_HELPER_CLASSES.map(([name, icon]) => `
+    <div class="raid-helper-class-chip"><span>${escapeHtml(icon)}</span>${escapeHtml(name)}</div>
+  `).join("");
+}
+
+function setRaidHelperTab(tabName){
+  const target = String(tabName || "createEvent");
+  document.querySelectorAll("[data-raid-helper-tab]").forEach(button => {
+    button.classList.toggle("active", button.dataset.raidHelperTab === target);
+  });
+  document.querySelectorAll(".raid-helper-tab-panel").forEach(panel => {
+    panel.classList.toggle("hidden", panel.id !== "raidHelperTab-" + target);
+  });
+  if(target === "createEvent") updateRaidHelperPreview();
 }
 
 function updateRaidHelperDefaults(){
@@ -3263,6 +3778,7 @@ function buildRaidHelperPreviewText(){
   const tanks = raidHelperValue("raidHelperTanks");
   const heals = raidHelperValue("raidHelperHeals");
   const dds = raidHelperValue("raidHelperDds");
+  const deadline = raidHelperValue("raidHelperDeadline");
   const parts = [];
   if(max) parts.push("Gesamt " + max);
   if(tanks) parts.push("Tanks " + tanks);
@@ -3277,7 +3793,11 @@ function buildRaidHelperPreviewText(){
     "🏳️ " + lead,
     "🗓️ " + formatRaidDate(date),
     "⏰ " + time + " Uhr",
+    deadline ? "⌛ Anmeldung bis " + deadline + " Uhr" : "",
     parts.length ? "👥 " + parts.join(" · ") : "",
+    "",
+    "Discord-Anmeldung: Klasse wählen, Charaktername und Skillung eintragen.",
+    "Gruppierung: Tank · Warrior · Druid · Paladin · Rogue · Hunter · Priest · Mage · Warlock · Shaman · Abwesenheit",
     "",
     "🌐 Webansicht: " + new URL(withGuildUrl("start.html"), window.location.href).href
   ].filter(line => line !== "").join("\n");
@@ -3286,6 +3806,69 @@ function buildRaidHelperPreviewText(){
 function updateRaidHelperPreview(){
   const preview = document.getElementById("raidHelperPreview");
   if(preview) preview.value = buildRaidHelperPreviewText();
+  const raidKey = raidHelperValue("raidHelperRaid") || "zg";
+  const title = raidHelperValue("raidHelperTitle") || (RAID_OPTIONS[raidKey]?.name || "Raid");
+  const date = raidHelperValue("raidHelperDate");
+  const time = raidHelperValue("raidHelperTime") || "20:00";
+  const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
+  const description = raidHelperValue("raidHelperDescription") || "";
+  const max = raidHelperValue("raidHelperMax");
+  const tanks = raidHelperValue("raidHelperTanks");
+  const heals = raidHelperValue("raidHelperHeals");
+  const dds = raidHelperValue("raidHelperDds");
+  const deadline = raidHelperValue("raidHelperDeadline");
+  const titleEl = document.getElementById("raidHelperPreviewTitle");
+  const descEl = document.getElementById("raidHelperPreviewDescription");
+  const leadEl = document.getElementById("raidHelperPreviewLead");
+  const dateEl = document.getElementById("raidHelperPreviewDate");
+  const timeEl = document.getElementById("raidHelperPreviewTime");
+  const slotsEl = document.getElementById("raidHelperPreviewSlots");
+  const rolesEl = document.getElementById("raidHelperPreviewRoles");
+  const rosterEl = document.getElementById("raidHelperRosterPreview");
+  const imageEl = document.getElementById("raidHelperPreviewImage");
+
+  if(titleEl) titleEl.textContent = title.toUpperCase();
+  if(descEl) descEl.textContent = description;
+  if(leadEl) leadEl.textContent = lead;
+  if(dateEl) dateEl.textContent = formatRaidDate(date);
+  if(timeEl) timeEl.textContent = time ? time + " Uhr" : "-";
+  if(slotsEl){
+    const pills = [];
+    if(max) pills.push(["👥","Gesamt " + max]);
+    if(tanks) pills.push(["🛡","Tanks " + tanks]);
+    if(heals) pills.push(["➕","Heals " + heals]);
+    if(dds) pills.push(["⚔","DD " + dds]);
+    if(deadline) pills.push(["⌛","bis " + deadline + " Uhr"]);
+    slotsEl.innerHTML = pills.map(([icon, label]) => `<span class="discord-preview-pill">${escapeHtml(icon)} ${escapeHtml(label)}</span>`).join("");
+  }
+  if(rolesEl){
+    rolesEl.innerHTML = [
+      ["🛡","Tanks 0"],
+      ["⚔","Melee 0"],
+      ["🏹","Ranged 0"],
+      ["➕","Healers 0" + (heals ? "/" + heals : "")]
+    ].map(([icon, label]) => `<span class="discord-preview-pill">${escapeHtml(icon)} ${escapeHtml(label)}</span>`).join("");
+  }
+  if(rosterEl){
+    const previewGroups = [
+      ["Tank","🛡","Noch frei"],
+      ["Warrior","⚔","Char · Skillung"],
+      ["Druid","🌿","Char · Skillung"],
+      ["Paladin","✨","Char · Skillung"],
+      ["Priest","💠","Char · Skillung"],
+      ["Mage","🔥","Char · Skillung"],
+      ["Abwesenheit","🚫","Optional"]
+    ];
+    rosterEl.innerHTML = previewGroups.map(([name, icon, empty]) => `
+      <div class="discord-preview-group">
+        <h4>${escapeHtml(icon)} ${escapeHtml(name)} (0)</h4>
+        <span class="discord-preview-empty">${escapeHtml(empty)}</span>
+      </div>
+    `).join("");
+  }
+  if(imageEl){
+    imageEl.style.setProperty("--preview-image", "url('" + defaultRaidHelperImageUrl(raidKey) + "')");
+  }
 }
 
 async function copyRaidHelperPreview(){
@@ -3357,7 +3940,8 @@ async function createRaidHelperSignup(){
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
-      discordChannelId:RAID_HELPER_CHANNEL_ID,
+      discordChannelId:raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID,
+      signupDeadline:raidHelperValue("raidHelperDeadline"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:defaultRaidHelperImageUrl(raidKey)
     });
