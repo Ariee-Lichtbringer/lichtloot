@@ -63,3 +63,28 @@ create table if not exists discord_bot_channels (
 
 create index if not exists idx_discord_bot_channels_guild
   on discord_bot_channels(guild_id, category_name, position, channel_name);
+
+create table if not exists raid_helper_templates (
+  id uuid primary key default gen_random_uuid(),
+  guild_id uuid not null references guilds(id) on delete cascade,
+  template_key text,
+  raid_type text not null,
+  title text not null,
+  description text,
+  max_players integer,
+  tank_slots integer,
+  heal_slots integer,
+  dd_slots integer,
+  signup_deadline text,
+  discord_channel_id text,
+  raid_image_url text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create unique index if not exists idx_raid_helper_templates_guild_key
+  on raid_helper_templates(guild_id, lower(template_key))
+  where template_key is not null and template_key <> '';
+
+create index if not exists idx_raid_helper_templates_guild
+  on raid_helper_templates(guild_id, raid_type, title);
