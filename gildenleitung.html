@@ -4395,7 +4395,12 @@ async function queueRaidToDiscord(raidId){
       return;
     }
 
-    setStatus("Discord-Post wurde vorgemerkt.", "good");
+    setStatus(
+      "Discord-Post wurde vorgemerkt" +
+      (result.rowNumber ? " (Queue " + result.rowNumber + ")" : "") +
+      ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten.",
+      "good"
+    );
   }catch(error){
     setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
   }
