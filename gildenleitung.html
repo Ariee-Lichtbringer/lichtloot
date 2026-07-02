@@ -1601,6 +1601,46 @@ select:focus{border-color:rgba(96,165,250,.75)}
   text-decoration:none;
 }
 
+.raid-helper-attendance-tabs{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.raid-helper-attendance-tab{
+  border:1px solid rgba(var(--attendance-accent,96,165,250),.24);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  color:#cbd5e1;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  text-align:left;
+  font:900 13px/1.2 Arial, Helvetica, sans-serif;
+}
+
+.raid-helper-attendance-tab span{
+  display:block;
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:12px;
+}
+
+.raid-helper-attendance-tab.active{
+  border-color:rgba(var(--attendance-accent,96,165,250),.72);
+  background:linear-gradient(135deg,rgba(var(--attendance-accent,96,165,250),.22),rgba(2,6,23,.62));
+  color:#f8fafc;
+  box-shadow:0 14px 36px rgba(0,0,0,.18);
+}
+
+.raid-helper-attendance-tab strong{
+  font-size:15px;
+}
+
 .raid-helper-attendance-wrap{
   overflow:auto;
   border:1px solid rgba(148,163,184,.14);
@@ -2772,6 +2812,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .raid-helper-template-fields,
   .raid-helper-event-detail,
   .raid-helper-event-editor-grid,
+  .raid-helper-attendance-tabs,
   .raid-helper-wcl-grid{grid-template-columns:1fr}
   .raid-helper-event-actions{flex-direction:row;flex-wrap:wrap}
   .raid-helper-signup-row{flex-direction:column}
@@ -3204,10 +3245,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, plus WarcraftLogs-Quellen</span></div>
+          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, direkt aus den Raidanmeldern</span></div>
           <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
         </div>
-        <div id="raidHelperWarcraftLogsSources" class="raid-helper-wcl-grid"></div>
+        <div id="raidHelperAttendanceTabs" class="raid-helper-attendance-tabs"></div>
         <div id="raidHelperAttendanceBox" class="raid-helper-attendance-wrap"><div class="raid-helper-loading">Attendance laden ...</div></div>
       </div>
       <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
@@ -4533,12 +4574,19 @@ let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
 let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
+let raidHelperAttendanceRaidKey = "bwl";
 let raidHelperEditingData = null;
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
   { key:"mc", label:"MC Teilnahmen", zone:"2000", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2000" },
   { key:"aq40", label:"AQ40 Teilnahmen", zone:"2005", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2005" },
   { key:"naxx", label:"NAXX Teilnahmen", zone:"2006", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2006" }
+];
+const RAID_HELPER_ATTENDANCE_TABS = [
+  { key:"bwl", label:"BWL", detail:"Blackwing Lair" },
+  { key:"mc", label:"MC", detail:"Molten Core" },
+  { key:"aq40", label:"AQ40", detail:"Tempel" },
+  { key:"naxx", label:"NAXX", detail:"Naxxramas" }
 ];
 const RAID_HELPER_CLASS_ICONS = {
   Warrior:"krieger.png",
@@ -5104,25 +5152,26 @@ function renderRaidHelperPastEvents(){
     : '<div class="muted">Noch keine vergangenen Raids gefunden.</div>';
 }
 
-function raidHelperAttendanceRaids(){
+function raidHelperAttendanceRaids(raidKey = raidHelperAttendanceRaidKey){
   return (guildData.raids || [])
     .slice()
-    .filter(raid => raid.raidId || raid.id)
+    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey)
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
     .slice(0,18);
 }
 
 async function loadRaidHelperAttendance(){
-  renderRaidHelperWarcraftLogsSources();
+  renderRaidHelperAttendanceTabs();
   const box = document.getElementById("raidHelperAttendanceBox");
   if(!box) return;
-  if(raidHelperAttendanceCache){
-    renderRaidHelperAttendance(raidHelperAttendanceCache);
+  const raidKey = raidHelperAttendanceRaidKey;
+  if(raidHelperAttendanceCache?.[raidKey]){
+    renderRaidHelperAttendance(raidHelperAttendanceCache[raidKey]);
     return;
   }
-  const raids = raidHelperAttendanceRaids();
+  const raids = raidHelperAttendanceRaids(raidKey);
   if(!raids.length){
-    box.innerHTML = '<div class="raid-helper-loading">Keine Raids für Attendance gefunden.</div>';
+    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Raidanmelder für Attendance gefunden.</div>`;
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
@@ -5143,7 +5192,8 @@ async function loadRaidHelperAttendance(){
       rows.push({ raid, signups:[] });
     }
   }
-  raidHelperAttendanceCache = rows;
+  raidHelperAttendanceCache = raidHelperAttendanceCache || {};
+  raidHelperAttendanceCache[raidKey] = rows;
   renderRaidHelperAttendance(rows);
 }
 
@@ -5178,11 +5228,11 @@ function renderRaidHelperAttendance(rows){
   const head = `
     <tr>
       <th>Charakter</th>
+      <th>Att.%</th>
       ${rows.map(entry => {
         const key = getRaidKey(entry.raid);
         return `<th title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")}">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
       }).join("")}
-      <th>%</th>
     </tr>
   `;
   const body = playerList.map(player => {
@@ -5195,9 +5245,16 @@ function renderRaidHelperAttendance(rows){
       return `<td class="raid-helper-attendance-cell ${escapeAttr(status)}"${action} title="${cell.signupId ? "Rechtsklick: Teilnahme entfernen" : ""}">${escapeHtml(label)}</td>`;
     }).join("");
     const percent = Math.round((player.signed / Math.max(rows.length, 1)) * 100);
-    return `<tr><td>${escapeHtml(player.name)}<br><span class="muted">${escapeHtml(player.className || "")}</span></td>${cells}<td>${percent}%</td></tr>`;
+    return `<tr><td>${escapeHtml(player.name)}<br><span class="muted">${escapeHtml(player.className || "")}</span></td><td>${percent}%</td>${cells}</tr>`;
   }).join("");
   box.innerHTML = `<table class="raid-helper-attendance-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+
+function setRaidHelperAttendanceRaid(raidKey){
+  const key = RAID_HELPER_ATTENDANCE_TABS.some(tab => tab.key === raidKey) ? raidKey : "bwl";
+  raidHelperAttendanceRaidKey = key;
+  renderRaidHelperAttendanceTabs();
+  loadRaidHelperAttendance();
 }
 
 async function removeRaidHelperAttendanceSignup(event, signupId, player){
@@ -5222,17 +5279,29 @@ async function removeRaidHelperAttendanceSignup(event, signupId, player){
   }
 }
 
+function renderRaidHelperAttendanceTabs(){
+  const box = document.getElementById("raidHelperAttendanceTabs");
+  if(!box) return;
+  box.innerHTML = RAID_HELPER_ATTENDANCE_TABS.map(tab => {
+    const count = raidHelperAttendanceRaids(tab.key).length;
+    const active = tab.key === raidHelperAttendanceRaidKey;
+    return `
+      <button class="raid-helper-attendance-tab${active ? " active" : ""}" type="button" style="--attendance-accent:${raidHelperRaidColorRgb(tab.key)}" onclick="setRaidHelperAttendanceRaid('${escapeAttr(tab.key)}')">
+        <span><strong>${escapeHtml(tab.label)}</strong><span>${escapeHtml(tab.detail)}</span></span>
+        <span class="raid-helper-meta-pill">${count}</span>
+      </button>
+    `;
+  }).join("");
+}
+
 function renderRaidHelperWarcraftLogsSources(){
-  const box = document.getElementById("raidHelperWarcraftLogsSources");
+  const box = document.getElementById("raidHelperAttendanceTabs");
   if(!box) return;
   box.innerHTML = RAID_HELPER_WCL_ATTENDANCE_SOURCES.map(source => `
-    <article class="raid-helper-wcl-card">
-      <div class="raid-helper-wcl-card-head">
-        <strong>${escapeHtml(source.label)}</strong>
-        <span class="raid-helper-meta-pill">Zone ${escapeHtml(source.zone)}</span>
-      </div>
-      <a href="${escapeAttr(source.url)}" target="_blank" rel="noopener">WarcraftLogs öffnen</a>
-    </article>
+    <button class="raid-helper-attendance-tab${source.key === raidHelperAttendanceRaidKey ? " active" : ""}" type="button" onclick="setRaidHelperAttendanceRaid('${escapeAttr(source.key)}')">
+      <span><strong>${escapeHtml(RAID_OPTIONS[source.key]?.short || source.key.toUpperCase())}</strong><span>${escapeHtml(source.label)}</span></span>
+      <span class="raid-helper-meta-pill">Zone ${escapeHtml(source.zone)}</span>
+    </button>
   `).join("");
 }
 
