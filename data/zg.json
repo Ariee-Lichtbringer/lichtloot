@@ -1372,8 +1372,8 @@
   {
     "raid": "ZG",
     "boss": "Bloodlord Mandokir",
-    "itemId": 19866,
-    "name": "Kriegsklinge der Hakkari",
+    "itemId": 19865,
+    "name": "Kriegsklinge der Hakkari (Offhand)",
     "slot": "Schildhand",
     "type": "Einhandschwerter",
     "quality": "Episch",
@@ -1384,13 +1384,13 @@
       "Anlegen: +40 Angriffskraft.",
       "(2) Set: Schwerter +6."
     ],
-    "tooltip": "Kriegsklinge der Hakkari | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.9 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. |   | Die Zwillingsklingen von Hakkari (0/2) |   Kriegsklinge der Hakkari |   Kriegsklinge der Hakkari |   | (2) Set: Schwerter +6. | '...den brodelnden Flammen des Hasses.'",
+    "tooltip": "Kriegsklinge der Hakkari (Offhand) | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.9 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. |   | Die Zwillingsklingen von Hakkari (0/2) |   Kriegsklinge der Hakkari |   Kriegsklinge der Hakkari (Offhand) |   | (2) Set: Schwerter +6. | '...den brodelnden Flammen des Hasses.'",
     "iconName": "inv_sword_55"
   },
   {
     "raid": "ZG",
     "boss": "Hakkar",
-    "itemId": 19865,
+    "itemId": 19866,
     "name": "Kriegsklinge der Hakkari",
     "slot": "Waffenhand",
     "type": "Einhandschwerter",
