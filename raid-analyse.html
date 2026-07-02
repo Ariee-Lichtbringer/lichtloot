@@ -170,7 +170,7 @@
     }
     async function loadList(){
       document.getElementById("listView").innerHTML='<div class="status">Auswertungen werden geladen...</div>';
-      const data=await api({action:"getPublicLogAnalyses",limit:60});
+      const data=await api({action:"getPublicLogAnalyses",limit:60,sheetOnly:"1"});
       state.analyses=Array.isArray(data.analyses)?data.analyses:[];
       const raids=[...new Set(state.analyses.map(raidName))].sort();
       document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
@@ -181,7 +181,18 @@
       if(!id){state.mode="list";return loadList();}
       document.getElementById("listView").classList.add("hidden");
       document.getElementById("detailView").classList.remove("hidden");
-      const data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined"});
+      let data;
+      try{
+        data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined"});
+      }catch(error){
+        state.mode="list";
+        history.replaceState(null,"","raid-analyse.html");
+        document.getElementById("detailView").classList.add("hidden");
+        document.getElementById("listView").classList.remove("hidden");
+        await loadList();
+        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese alte Auswertung hat noch keine Raidsheet-Daten. Ich zeige dir unten nur Auswertungen mit gespeicherten Raidsheets.</div>`);
+        return;
+      }
       state.detail=data.webAnalysis;
       state.sections=collectSections(state.detail);
       state.activeSection=state.sections[0]?.id||"";
@@ -200,7 +211,7 @@
       document.getElementById("listView").innerHTML=list.length?list.map(a=>`
         <article class="analysis-row">
           <div class="raid">${html(raidName(a))}</div>
-          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div></div>
+          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div><div class="meta"><span class="badge rpb">RPB ${Number(a.rpbSheetCount||0)}</span><span class="badge cla">CLA ${Number(a.claSheetCount||0)}</span></div></div>
           <a class="btn primary" href="raid-analyse.html?id=${encodeURIComponent(a.id)}">Öffnen</a>
         </article>`).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
     }
@@ -235,7 +246,7 @@
       if(!state.activeClass) return true;
       const rowText=key(row.join(" "));
       const classLabel=key(CLASS_LABEL[state.activeClass]||state.activeClass);
-      return rowText.includes(key(state.activeClass)) || rowText.includes(classLabel) || classes.includes(state.activeClass);
+      return rowText.includes(key(state.activeClass)) || rowText.includes(classLabel);
     }
     function renderTable(){
       const section=activeSection();

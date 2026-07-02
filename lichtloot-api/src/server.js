@@ -3961,6 +3961,8 @@ function normalizeLogAnalysis(row) {
     raidDate: row.raid_date ? new Date(row.raid_date).toISOString().slice(0, 10) : "",
     status: row.status || "pending",
     summary,
+    rpbSheetCount: Number(row.rpb_sheet_count || summary.rpbSheetCount || 0),
+    claSheetCount: Number(row.cla_sheet_count || summary.claSheetCount || 0),
     claDownloadUrl: summary.claDownloadUrl || "",
     rpbDownloadUrl: summary.rpbDownloadUrl || "",
     discordChannelId: row.discord_channel_id || "",
@@ -7372,15 +7374,35 @@ async function getLogAnalyses({ guildId, query: params }) {
 
 async function getPublicLogAnalyses({ guildId, query: params }) {
   await ensureLogAnalysesTable();
+  await ensureLogAnalysisSheetExportsTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 12), 1), 40);
+  const sheetOnly = ["1", "true", "ja", "yes"].includes(clean(params.sheetOnly || params.webReady).toLowerCase());
   const result = await query(
-    `select *
-     from log_analyses
-     where guild_id = $1
+    `select la.*,
+            coalesce((
+              select count(*)::int
+              from log_analysis_sheet_exports se
+              where se.analysis_id = la.id and se.analysis_type = 'rpb'
+            ), 0) as rpb_sheet_count,
+            coalesce((
+              select count(*)::int
+              from log_analysis_sheet_exports se
+              where se.analysis_id = la.id and se.analysis_type = 'cla'
+            ), 0) as cla_sheet_count
+     from log_analyses la
+     where la.guild_id = $1
+       and (
+         $3::boolean = false
+         or exists (
+           select 1
+           from log_analysis_sheet_exports se
+           where se.analysis_id = la.id
+         )
+       )
      order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
      limit $2`,
-    [guildId, limit]
+    [guildId, limit, sheetOnly]
   );
 
   return {
