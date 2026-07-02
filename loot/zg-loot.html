@@ -2090,6 +2090,7 @@ let prioCheckTimer = null;
 let p0DeadlineTimer = null;
 
 window.p0PlusWasClicked = false;
+window.selectedPrioItemIds = window.selectedPrioItemIds || {};
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 
@@ -2827,6 +2828,40 @@ function filterLootPageDisplayItems(items){
   return Array.isArray(items) ? items : [];
 }
 
+function lootDuplicateNameCount(itemName){
+  const wanted=String(itemName || "").trim().toLowerCase();
+  if(!wanted) return 0;
+  return (aq40Loot || []).filter(item => String(item.name || "").trim().toLowerCase() === wanted).length;
+}
+
+function lootItemDisplayLabel(item){
+  const name=String(item && item.name || "").trim();
+  if(!name) return "";
+  if(lootDuplicateNameCount(name) < 2) return name;
+  const meta=[item.slot,item.boss,item.itemId ? "ID "+item.itemId : ""].filter(Boolean).join(" · ");
+  return meta ? name+" ("+meta+")" : name;
+}
+
+function setSelectedPrioItemId(slot,itemId){
+  window.selectedPrioItemIds = window.selectedPrioItemIds || {};
+  window.selectedPrioItemIds[slot] = String(itemId || "").trim();
+}
+
+function getSelectedPrioItemId(slot){
+  window.selectedPrioItemIds = window.selectedPrioItemIds || {};
+  const saved=String(window.selectedPrioItemIds[slot] || "").trim();
+  if(saved) return saved;
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  return option ? String(option.dataset.itemId || "").trim() : "";
+}
+
+function rememberSelectedPrioOption(slot){
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  setSelectedPrioItemId(slot, option ? option.dataset.itemId : "");
+}
+
 function fillItems(){
   ["p1","p2","p3"].filter((id,index)=>index < PRIO_COUNT).forEach(id=>{
     const select=document.getElementById(id);
@@ -2835,7 +2870,8 @@ function fillItems(){
     aq40Loot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
-      option.textContent=item.name;
+      option.textContent=lootItemDisplayLabel(item);
+      option.dataset.itemId=item.itemId || "";
       select.appendChild(option);
     });
   });
@@ -2877,7 +2913,7 @@ function renderLootList(){
           alt=""
           loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"
         >
-        <span>${safe(item.name)}</span>
+        <span>${safe(lootItemDisplayLabel(item))}</span>
       </div>
       ${renderP0PlusBelowItem(item.name)}
     `;
@@ -2889,16 +2925,16 @@ function renderLootList(){
     const buttons=document.createElement("div");
     buttons.className="prio-buttons";
     const prioButtonParts = [
-      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>`
+      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P1</button>`
     ];
     if(PRIO_COUNT >= 2){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P2</button>`);
     }
     if(PRIO_COUNT >= 3){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P3</button>`);
     }
     if(SUPPORTS_P0PLUS){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0</button>`);
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P0</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -2922,19 +2958,20 @@ function renderLootList(){
   updateActiveButtons();
 }
 
-function setPrio(slot,itemName){
+function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
 
+  setSelectedPrioItemId(slot,itemId);
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML=
-    `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
+    `<span class="ok">✓ ${safe(itemName)} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
 
   autoSaveDraft();
   updateActiveButtons();
 }
 
-function setP0Plus(itemName){
+function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
@@ -2947,6 +2984,9 @@ function setP0Plus(itemName){
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
 
+  setSelectedPrioItemId("p1",itemId);
+  setSelectedPrioItemId("p2",itemId);
+  setSelectedPrioItemId("p3",itemId);
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
   document.getElementById("p3").value=itemName;
@@ -2961,6 +3001,7 @@ function setP0Plus(itemName){
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
+  ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -2969,6 +3010,9 @@ function updateActiveButtons(){
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
 
   const p0Closed=isP0DeadlineClosed();
 
@@ -3031,6 +3075,9 @@ function autoSaveDraft(){
     p1:document.getElementById("p1").value,
     p2:document.getElementById("p2").value,
     p3:document.getElementById("p3").value,
+    p1ItemId:getSelectedPrioItemId("p1"),
+    p2ItemId:getSelectedPrioItemId("p2"),
+    p3ItemId:getSelectedPrioItemId("p3"),
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
     timestamp:new Date().toLocaleString("de-DE")
@@ -3057,6 +3104,9 @@ function loadPlayerData(){
   document.getElementById("p1").value=data.p1||"";
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
+  setSelectedPrioItemId("p1",data.p1ItemId || "");
+  setSelectedPrioItemId("p2",data.p2ItemId || "");
+  setSelectedPrioItemId("p3",data.p3ItemId || "");
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
@@ -3424,6 +3474,9 @@ function buildSavePrioUrl(savePin, oldPin){
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
+    "&p1ItemId="+encodeURIComponent(p1ItemId)+
+    "&p2ItemId="+encodeURIComponent(p2ItemId)+
+    "&p3ItemId="+encodeURIComponent(p3ItemId)+
     "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
 
   if(oldPin && oldPin !== savePin){
@@ -5715,9 +5768,10 @@ async function loadGearPlanner(){
   }
 }
 
-function setPrio(slot,itemName){
+function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
+  setSelectedPrioItemId(slot,itemId);
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML =
     '<span class="ok">✓ '+safe(itemName)+' wurde auf '+slot.toUpperCase()+' gesetzt.</span>';
@@ -5726,7 +5780,7 @@ function setPrio(slot,itemName){
   updateActiveButtons();
 }
 
-function setP0Plus(itemName){
+function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
@@ -5738,6 +5792,9 @@ function setP0Plus(itemName){
 
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
+  setSelectedPrioItemId("p1",itemId);
+  setSelectedPrioItemId("p2",itemId);
+  setSelectedPrioItemId("p3",itemId);
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
   document.getElementById("p3").value=itemName;
@@ -5751,6 +5808,7 @@ function setP0Plus(itemName){
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
+  ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   renderSelectedPrioPreviews();
   autoSaveDraft();
   updateActiveButtons();
@@ -5775,6 +5833,9 @@ function loadPlayerData(){
   document.getElementById("p1").value=data.p1||"";
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
+  setSelectedPrioItemId("p1",data.p1ItemId || "");
+  setSelectedPrioItemId("p2",data.p2ItemId || "");
+  setSelectedPrioItemId("p3",data.p3ItemId || "");
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML =
@@ -9594,9 +9655,10 @@ function getPrioEntryValue(entry, names){
 }
 
 function getPrio3ItemId(itemName){
-  const item = findLootItem(itemName) || findAnyKnownLootItem(itemName, RAID_NAME);
+  const raw = String(itemName || "").trim();
+  const item = findLootItem(raw) || findAnyKnownLootItem(raw, RAID_NAME);
   if(item && item.itemId) return String(item.itemId).trim();
-  return String(itemName || "").trim();
+  return raw;
 }
 
 function exportPrio3CSV(){
@@ -9993,6 +10055,35 @@ function priosWithLiveDraft(prios){
   return [draft].concat(list.filter(prio => !samePrioCharacter(prio,draft)));
 }
 
+function prioOwnSortKey(entry){
+  return normalizeOwnPrioText(entry && (entry.Spieler || entry.player || entry.Player)) + "|" +
+    normalizeOwnPrioText(entry && (entry.Server || entry.server || entry.Realm));
+}
+
+function ownPrioSortPriority(entry){
+  const key=prioOwnSortKey(entry);
+  if(!key || key === "|") return 9;
+
+  const selectedName=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.name);
+  const selectedServer=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.server);
+  const formName=normalizeOwnPrioText(document.getElementById("playerName")?.value || "");
+  const formServer=normalizeOwnPrioText(document.getElementById("playerServer")?.value || "");
+  const selectedKey=(selectedName || formName) + "|" + (selectedServer || formServer);
+  if(selectedKey !== "|" && key === selectedKey) return 0;
+
+  const ownKeys=new Set((lichtlootLoggedInCharacters || []).map(char =>
+    normalizeOwnPrioText(char && char.name) + "|" + normalizeOwnPrioText(char && char.server)
+  ));
+  return ownKeys.has(key) ? 1 : 9;
+}
+
+function sortPriosWithOwnFirst(prios){
+  return (Array.isArray(prios) ? prios : [])
+    .map((prio,index)=>({prio,index,priority:ownPrioSortPriority(prio)}))
+    .sort((a,b)=> a.priority !== b.priority ? a.priority-b.priority : a.index-b.index)
+    .map(item=>item.prio);
+}
+
 function lichtlootBaseItemKey(value){
   const normalizer =
     typeof p0V9Key === "function" ? p0V9Key :
@@ -10135,17 +10226,18 @@ function getP0PlusEntriesForPlayerAndItem(playerName,itemName){
 }
 
 function getPrio3ItemId(itemName){
-  const token = lichtlootBuildTokenCache()[lichtlootBaseItemKey(itemName)];
+  const raw = String(itemName || "").trim();
+  const token = lichtlootBuildTokenCache()[lichtlootBaseItemKey(raw)];
   if(token && token.tokenItemId) return String(token.tokenItemId).trim();
 
-  const item = lichtlootFindItemForTokenKey(itemName);
+  const item = lichtlootFindItemForTokenKey(raw);
   if(item && item.tokenItemId) return String(item.tokenItemId).trim();
   if(item && item.itemId) return String(item.itemId).trim();
-  return String(itemName || "").trim();
+  return raw;
 }
 
 function renderCurrentPrios(){
-  const prios = filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || []));
+  const prios = sortPriosWithOwnFirst(filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || [])));
 
   if(currentPublishedMode){
     renderPublishedItems(prios);

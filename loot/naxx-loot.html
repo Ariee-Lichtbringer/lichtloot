@@ -9589,9 +9589,10 @@ function getPrioEntryValue(entry, names){
 }
 
 function getPrio3ItemId(itemName){
-  const item = findLootItem(itemName) || findAnyKnownLootItem(itemName, RAID_NAME);
+  const raw = String(itemName || "").trim();
+  const item = findLootItem(raw) || findAnyKnownLootItem(raw, RAID_NAME);
   if(item && item.itemId) return String(item.itemId).trim();
-  return String(itemName || "").trim();
+  return raw;
 }
 
 function exportPrio3CSV(){
@@ -9988,6 +9989,35 @@ function priosWithLiveDraft(prios){
   return [draft].concat(list.filter(prio => !samePrioCharacter(prio,draft)));
 }
 
+function prioOwnSortKey(entry){
+  return normalizeOwnPrioText(entry && (entry.Spieler || entry.player || entry.Player)) + "|" +
+    normalizeOwnPrioText(entry && (entry.Server || entry.server || entry.Realm));
+}
+
+function ownPrioSortPriority(entry){
+  const key=prioOwnSortKey(entry);
+  if(!key || key === "|") return 9;
+
+  const selectedName=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.name);
+  const selectedServer=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.server);
+  const formName=normalizeOwnPrioText(document.getElementById("playerName")?.value || "");
+  const formServer=normalizeOwnPrioText(document.getElementById("playerServer")?.value || "");
+  const selectedKey=(selectedName || formName) + "|" + (selectedServer || formServer);
+  if(selectedKey !== "|" && key === selectedKey) return 0;
+
+  const ownKeys=new Set((lichtlootLoggedInCharacters || []).map(char =>
+    normalizeOwnPrioText(char && char.name) + "|" + normalizeOwnPrioText(char && char.server)
+  ));
+  return ownKeys.has(key) ? 1 : 9;
+}
+
+function sortPriosWithOwnFirst(prios){
+  return (Array.isArray(prios) ? prios : [])
+    .map((prio,index)=>({prio,index,priority:ownPrioSortPriority(prio)}))
+    .sort((a,b)=> a.priority !== b.priority ? a.priority-b.priority : a.index-b.index)
+    .map(item=>item.prio);
+}
+
 function lichtlootBaseItemKey(value){
   const normalizer =
     typeof p0V9Key === "function" ? p0V9Key :
@@ -10130,17 +10160,18 @@ function getP0PlusEntriesForPlayerAndItem(playerName,itemName){
 }
 
 function getPrio3ItemId(itemName){
-  const token = lichtlootBuildTokenCache()[lichtlootBaseItemKey(itemName)];
+  const raw = String(itemName || "").trim();
+  const token = lichtlootBuildTokenCache()[lichtlootBaseItemKey(raw)];
   if(token && token.tokenItemId) return String(token.tokenItemId).trim();
 
-  const item = lichtlootFindItemForTokenKey(itemName);
+  const item = lichtlootFindItemForTokenKey(raw);
   if(item && item.tokenItemId) return String(item.tokenItemId).trim();
   if(item && item.itemId) return String(item.itemId).trim();
-  return String(itemName || "").trim();
+  return raw;
 }
 
 function renderCurrentPrios(){
-  const prios = filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || []));
+  const prios = sortPriosWithOwnFirst(filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || [])));
 
   if(currentPublishedMode){
     renderPublishedItems(prios);
