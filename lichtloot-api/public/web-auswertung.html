@@ -69,6 +69,7 @@
         <div id="meta" class="meta"></div>
       </div>
       <div class="actions">
+        <div id="sourceLinks" class="actions"></div>
         <a class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
         <button class="btn primary" type="button" onclick="reload()">Neu laden</button>
       </div>
@@ -135,6 +136,10 @@
     function matrixValues(section){return section?.matrix?.values || section?.payload?.values || [];}
     function matrixBackgrounds(section){return section?.matrix?.backgrounds || section?.payload?.backgrounds || [];}
     function matrixFontColors(section){return section?.matrix?.fontColors || section?.payload?.fontColors || [];}
+    function safeUrl(value){
+      const url=String(value||"").trim();
+      return /^https?:\/\//i.test(url) ? url : "";
+    }
     function clusterFor(label,type){
       if(type==="cla") return "all";
       const t=key(label);
@@ -217,7 +222,13 @@
     }
     function renderDetail(){
       const report=state.detail?.report||state.detail?.analysis||{};
+      const analysis=state.detail?.analysis||{};
       document.getElementById("pageTitle").textContent=report.title||"Raid-Auswertung";
+      document.getElementById("sourceLinks").innerHTML=[
+        safeUrl(analysis.rpbDownloadUrl) ? `<a class="btn ghost" href="${attr(analysis.rpbDownloadUrl)}" target="_blank" rel="noopener">RPB-Sheet</a>` : "",
+        safeUrl(analysis.claDownloadUrl) ? `<a class="btn ghost" href="${attr(analysis.claDownloadUrl)}" target="_blank" rel="noopener">CLA-Sheet</a>` : "",
+        safeUrl(analysis.reportUrl||report.reportUrl) ? `<a class="btn ghost" href="${attr(analysis.reportUrl||report.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
+      ].filter(Boolean).join("");
       document.getElementById("meta").innerHTML=[
         `<span class="badge">${html(report.raid||"Raid")}</span>`,
         `<span class="badge">${html(dateDisplay(report.raidDate||report.raid_date))}</span>`,
