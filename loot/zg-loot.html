@@ -3452,6 +3452,9 @@ function buildSavePrioUrl(savePin, oldPin){
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
 
   const isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
@@ -3459,8 +3462,10 @@ function buildSavePrioUrl(savePin, oldPin){
     p1 === p2 &&
     p2 === p3;
 
-  let url=APPS_SCRIPT_URL+
-    "?action=savePrio"+
+  const saveApiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL);
+  let url=saveApiUrl+
+    "?guild="+encodeURIComponent(currentGuildSlug())+
+    "&action=savePrio"+
     "&raid="+encodeURIComponent(RAID_NAME)+
     "&raidId="+encodeURIComponent(currentRaidId || "")+
     "&raidPin="+encodeURIComponent(pin)+
@@ -3491,8 +3496,18 @@ function buildSavePrioUrl(savePin, oldPin){
 }
 
 async function submitPrioWithPin(savePin, oldPin){
-  const response=await fetch(buildSavePrioUrl(savePin, oldPin));
-  return await response.json();
+  const response=await fetch(buildSavePrioUrl(savePin, oldPin), { cache:"no-store" });
+  const text=await response.text();
+  let data={};
+  try{
+    data=text ? JSON.parse(text) : {};
+  }catch(error){
+    throw new Error(text || "Railway-Antwort konnte nicht gelesen werden.");
+  }
+  if(!response.ok){
+    throw new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
+  }
+  return data;
 }
 
 function isPinConflictError(result){
@@ -3558,7 +3573,7 @@ async function savePrio(){
     }
 
     const playerPin = pinInfo.pin;
-    status.innerHTML=`<span class="warn">Speichere Prios im Sheet …</span>`;
+    status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
     let result=await submitPrioWithPin(playerPin, "");
 
@@ -3598,7 +3613,8 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>Bitte Apps-Script-Bereitstellung prüfen.`;
+    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
+    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -10055,35 +10071,6 @@ function priosWithLiveDraft(prios){
   return [draft].concat(list.filter(prio => !samePrioCharacter(prio,draft)));
 }
 
-function prioOwnSortKey(entry){
-  return normalizeOwnPrioText(entry && (entry.Spieler || entry.player || entry.Player)) + "|" +
-    normalizeOwnPrioText(entry && (entry.Server || entry.server || entry.Realm));
-}
-
-function ownPrioSortPriority(entry){
-  const key=prioOwnSortKey(entry);
-  if(!key || key === "|") return 9;
-
-  const selectedName=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.name);
-  const selectedServer=normalizeOwnPrioText(lichtlootSelectedCharacter && lichtlootSelectedCharacter.server);
-  const formName=normalizeOwnPrioText(document.getElementById("playerName")?.value || "");
-  const formServer=normalizeOwnPrioText(document.getElementById("playerServer")?.value || "");
-  const selectedKey=(selectedName || formName) + "|" + (selectedServer || formServer);
-  if(selectedKey !== "|" && key === selectedKey) return 0;
-
-  const ownKeys=new Set((lichtlootLoggedInCharacters || []).map(char =>
-    normalizeOwnPrioText(char && char.name) + "|" + normalizeOwnPrioText(char && char.server)
-  ));
-  return ownKeys.has(key) ? 1 : 9;
-}
-
-function sortPriosWithOwnFirst(prios){
-  return (Array.isArray(prios) ? prios : [])
-    .map((prio,index)=>({prio,index,priority:ownPrioSortPriority(prio)}))
-    .sort((a,b)=> a.priority !== b.priority ? a.priority-b.priority : a.index-b.index)
-    .map(item=>item.prio);
-}
-
 function lichtlootBaseItemKey(value){
   const normalizer =
     typeof p0V9Key === "function" ? p0V9Key :
@@ -10237,7 +10224,7 @@ function getPrio3ItemId(itemName){
 }
 
 function renderCurrentPrios(){
-  const prios = sortPriosWithOwnFirst(filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || [])));
+  const prios = filterPriosBySearch(priosWithLiveDraft(currentPublishedPrios || []));
 
   if(currentPublishedMode){
     renderPublishedItems(prios);
