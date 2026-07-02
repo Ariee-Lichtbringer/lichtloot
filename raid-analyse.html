@@ -3,593 +3,106 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>LichtLoot Raid-Auswertung</title>
+  <title>LichtLoot Web-Auswertung</title>
   <style>
     :root{
-      --bg:#101418;
-      --panel:#171d23;
-      --panel-2:#202832;
-      --line:#33404d;
-      --text:#f3f6f8;
-      --muted:#9aa8b5;
-      --accent:#d7b46a;
-      --good:#67d391;
-      --bad:#f07474;
-      --cell:#12171c;
-      --druid:#f6b26b;
-      --hunter:#b6d7a8;
-      --mage:#a4c2f4;
-      --paladin:#d5a6bd;
-      --priest:#efefef;
-      --rogue:#fff2cc;
-      --shaman:#6d9eeb;
-      --warlock:#b4a7d6;
-      --warrior:#e2d3c9;
+      --bg:#070d16;--panel:#0d1624;--panel2:#111d2e;--line:#263449;--soft:rgba(148,163,184,.16);
+      --text:#f8fafc;--muted:#a8b3c4;--gold:#facc15;--blue:#60a5fa;--green:#34d399;
+      --druid:#ff7c0a;--hunter:#aad372;--mage:#3fc7eb;--paladin:#f48cba;--priest:#f0ebe0;
+      --rogue:#fff468;--shaman:#0070dd;--warlock:#8788ee;--warrior:#c69b6d;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    }
-    a{color:inherit}
-    .shell{min-height:100vh;padding:20px 24px 30px}
-    .top{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      gap:18px;
-      align-items:end;
-      border-bottom:1px solid var(--line);
-      padding-bottom:18px;
-    }
-    .eyebrow{color:var(--accent);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-    h1{margin:6px 0 8px;font-size:clamp(28px,4vw,44px);line-height:1.05;letter-spacing:0}
-    .meta{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:14px}
-    .meta span{padding:7px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
-    .header-classes{
-      display:flex;
-      flex-wrap:wrap;
-      gap:7px;
-      margin-top:12px;
-      max-width:1100px;
-    }
-    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
-    .type-switch{
-      display:flex;
-      gap:6px;
-      align-items:center;
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:4px;
-      background:#0d1217;
-    }
-    .type-switch button{
-      border:0;
-      border-radius:6px;
-      min-height:30px;
-      padding:0 12px;
-      background:transparent;
-      color:var(--muted);
-      font-weight:900;
-      cursor:pointer;
-    }
-    .type-switch button.active{
-      background:var(--accent);
-      color:#15100a;
-    }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      min-height:38px;
-      padding:0 13px;
-      border:1px solid var(--line);
-      border-radius:8px;
-      background:var(--panel);
-      color:var(--text);
-      text-decoration:none;
-      font-weight:800;
-      font-size:14px;
-      cursor:pointer;
-    }
-    .btn.primary{background:var(--accent);border-color:var(--accent);color:#15100a}
-    .btn.good{background:#123322;border-color:#2f8f55;color:#c8f7d8}
-    .layout{
-      display:block;
-      align-items:start;
-      margin-top:18px;
-    }
-    .toolbar{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:12px;
-      margin-bottom:12px;
-    }
-    input,select{
-      min-height:38px;
-      border:1px solid var(--line);
-      border-radius:8px;
-      background:#0f1419;
-      color:var(--text);
-      padding:0 12px;
-      font:inherit;
-    }
-    input{min-width:280px;flex:1}
-    .tabs{
-      display:flex;
-      gap:8px;
-      overflow:auto;
-      padding-bottom:8px;
-      margin-bottom:4px;
-    }
-    .subtabs{
-      display:none;
-      gap:7px;
-      overflow:auto;
-      padding:2px 0 10px;
-      margin-bottom:2px;
-    }
-    .subtabs.show{display:flex}
-    .tab{
-      border:1px solid var(--line);
-      background:var(--panel);
-      color:var(--muted);
-      border-radius:8px;
-      min-height:38px;
-      padding:0 13px;
-      font-weight:800;
-      white-space:nowrap;
-      cursor:pointer;
-    }
-    .tab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
-    .tab.class-tab{color:#111;border-color:rgba(0,0,0,.25)}
-    .tab.class-tab.active{box-shadow:0 0 0 2px var(--accent) inset}
-    .subtab{
-      border:1px solid var(--line);
-      background:#10161b;
-      color:var(--text);
-      border-radius:8px;
-      min-height:32px;
-      padding:0 10px;
-      font-weight:900;
-      white-space:nowrap;
-      cursor:pointer;
-    }
-    .subtab.active{background:var(--accent);border-color:var(--accent);color:#15100a}
-    .class-overview{
-      display:none;
-      background:linear-gradient(180deg,#171f27,#141a20);
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:12px;
-      margin:10px 0 12px;
-    }
-    .class-overview.show{display:block}
-    .player-import-preview{
-      display:none;
-      gap:10px;
-      background:linear-gradient(180deg,#141f1a,#101820);
-      border:1px solid rgba(103,211,145,.28);
-      border-radius:8px;
-      padding:12px;
-      margin:0 0 12px;
-    }
-    .player-import-preview.show{display:grid}
-    .player-import-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .player-import-head strong{display:block;color:var(--text);font-size:17px}
-    .player-import-head span{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:800}
-    .player-import-badges{display:flex;gap:6px;flex-wrap:wrap}
-    .player-import-pill{
-      display:inline-flex;
-      min-height:22px;
-      align-items:center;
-      padding:3px 7px;
-      border-radius:999px;
-      border:1px solid rgba(154,168,181,.28);
-      background:#10171d;
-      color:#cbd5e1;
-      font-size:11px;
-      font-weight:900;
-    }
-    .player-import-pill.good{border-color:rgba(103,211,145,.35);color:#baf7d0}
-    .player-import-pill.warn{border-color:rgba(215,180,106,.45);color:#f1d487}
-    .player-import-table{
-      overflow:auto;
-      border:1px solid rgba(154,168,181,.18);
-      border-radius:8px;
-      background:#0e1318;
-    }
-    .player-import-table table{width:100%;min-width:1040px;border-collapse:collapse}
-    .player-import-table th,
-    .player-import-table td{
-      position:static;
-      width:auto;
-      min-width:96px;
-      max-width:none;
-      padding:8px 9px;
-      white-space:normal;
-      text-align:left;
-      box-shadow:none;
-      border-right:1px solid #2f3c48;
-      border-bottom:1px solid #2f3c48;
-      background:#182026;
-      color:#dbe5ef;
-      font-size:12px;
-      vertical-align:top;
-    }
-    .player-import-table th:first-child,
-    .player-import-table td:first-child{
-      position:sticky;
-      left:0;
-      z-index:2;
-      width:170px;
-      min-width:170px;
-      max-width:170px;
-      background:#1b232a;
-      color:var(--text);
-      font-weight:900;
-    }
-    .player-import-table th{background:#252f39;color:#f3f6f8;font-weight:900}
-    .role-editor{
-      display:none;
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:12px;
-      margin:0 0 12px;
-    }
-    .role-editor.show{display:block}
-    .role-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
-      gap:8px;
-      margin-top:10px;
-    }
-    .role-item{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) 120px;
-      align-items:center;
-      gap:8px;
-      background:#0f1419;
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:8px;
-    }
-    .role-name{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .role-item select{min-height:32px;padding:0 8px;font-size:12px}
-    .role-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .class-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-    .class-title h2{margin:0;font-size:18px}
-    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .stat{background:#10171d;border:1px solid #2d3b48;border-radius:8px;padding:9px 10px}
-    .stat strong{display:block;font-size:20px}
-    .stat span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-    .matrix-wrap{
-      overflow:auto;
-      border:1px solid var(--line);
-      border-radius:8px;
-      background:#0e1318;
-      box-shadow:0 12px 28px rgba(0,0,0,.18);
-    }
-    table{border-collapse:separate;border-spacing:0;width:max-content}
-    th,td{
-      border-right:1px solid #2f3c48;
-      border-bottom:1px solid #2f3c48;
-      padding:6px 9px;
-      font-size:13px;
-      line-height:1.18;
-      text-align:center;
-      width:112px;
-      min-width:112px;
-      max-width:112px;
-      white-space:nowrap;
-      background:#182026;
-    }
-    th:first-child,td:first-child{
-      position:sticky;
-      left:0;
-      z-index:2;
-      text-align:left;
-      width:290px;
-      min-width:290px;
-      max-width:290px;
-      background:#1b232a;
-      color:var(--text);
-      white-space:normal;
-      font-weight:800;
-      box-shadow:4px 0 0 rgba(0,0,0,.22);
-      overflow-wrap:anywhere;
-    }
-    thead th{
-      position:sticky;
-      top:0;
-      z-index:3;
-      background:#252f39;
-      color:#111;
-      font-weight:900;
-      height:30px;
-    }
-    thead th:first-child{z-index:4;color:var(--text)}
-    tbody tr:nth-child(even) td{background:#20282e}
-    tbody tr:nth-child(odd) td{background:#1a2228}
-    tbody tr.tone-healing td{background:rgba(255,242,204,.12)}
-    tbody tr.tone-consumable td,
-    tbody tr.tone-consumableBlue td{background:#cfe2f3;color:#111}
-    tbody tr.tone-consumableGreen td{background:#93c47d;color:#111}
-    tbody tr.tone-muted td{background:#c9c9c9;color:#111}
-    tbody tr.tone-absorb td{background:#d9d2e9;color:#111}
-    tbody tr.tone-absorbNature td{background:#b6d7a8;color:#111}
-    tbody tr.tone-absorbArcane td{background:#fff2cc;color:#111}
-    tbody tr.tone-absorbFire td{background:#ea9999;color:#111}
-    tbody tr.tone-absorbFrost td{background:#9fc5e8;color:#111}
-    tbody tr.tone-absorbShadow td{background:#b4a7d6;color:#111}
-    tbody tr.tone-engineering td{background:#ead1dc;color:#111}
-    tbody tr.tone-engineeringTotal td{background:#f06d6d;color:#111;font-weight:900}
-    tbody tr.tone-trinket td{background:#d9d2e9;color:#111}
-    tbody tr.tone-interrupt td{background:#e6b8b7;color:#111}
-    tbody tr.tone-activity td{background:#20322f}
-    tbody tr.tone-activityStrong td{background:#b7b7b7;color:#111;font-weight:900}
-    tbody tr.tone-classCast td{background:rgba(239,239,239,.06)}
-    tbody tr.tone-consumable td:first-child,
-    tbody tr.tone-consumableBlue td:first-child,
-    tbody tr.tone-consumableGreen td:first-child,
-    tbody tr.tone-muted td:first-child,
-    tbody tr.tone-absorb td:first-child,
-    tbody tr.tone-absorbNature td:first-child,
-    tbody tr.tone-absorbArcane td:first-child,
-    tbody tr.tone-absorbFire td:first-child,
-    tbody tr.tone-absorbFrost td:first-child,
-    tbody tr.tone-absorbShadow td:first-child,
-    tbody tr.tone-engineering td:first-child,
-    tbody tr.tone-engineeringTotal td:first-child,
-    tbody tr.tone-trinket td:first-child,
-    tbody tr.tone-interrupt td:first-child,
-    tbody tr.tone-activityStrong td:first-child{
-      color:#111827;
-    }
-    tbody tr.tone-sectionHeader td{
-      background:#e5e7eb;
-      color:#111827;
-      font-weight:900;
-      border-top:2px solid #0f1419;
-      text-align:left;
-      height:30px;
-    }
-    tbody tr.tone-sectionHeader td.class-band{
-      text-align:center;
-      color:#111827;
-      border-top:2px solid #0f1419;
-    }
-    tbody tr.tone-sectionHeader td.class-gap{
-      background:#111820;
-      color:transparent;
-    }
-    tbody tr:hover td{background:#2b3435}
-    th.mark-col,
-    td.mark-col{
-      background:rgba(215,180,106,.34)!important;
-      box-shadow:inset 2px 0 0 var(--accent), inset -2px 0 0 var(--accent);
-    }
-    tr.mark-row td{
-      background:rgba(215,180,106,.26)!important;
-    }
-    td.mark-cell{
-      background:rgba(215,180,106,.55)!important;
-      color:#111!important;
-      box-shadow:inset 0 0 0 2px var(--accent);
-    }
-    table.compact th,table.compact td{padding:6px 8px;font-size:13px;width:96px;min-width:96px;max-width:96px}
-    table.compact th:first-child,table.compact td:first-child{width:260px;min-width:260px;max-width:260px}
-    table.focused th,table.focused td{width:118px;min-width:118px;max-width:118px}
-    table.focused th:first-child,table.focused td:first-child{width:300px;min-width:300px;max-width:300px}
-    td.empty{color:#52616d}
-    td.class-gap{
-      background:#0d1217!important;
-      color:transparent!important;
-    }
-    td.class-gap::selection{color:transparent}
-    td.hot{color:#73e09b;font-weight:900}
-    td.text{white-space:normal;text-align:left;min-width:180px}
-    table.cla-table th,table.cla-table td{width:128px;min-width:128px;max-width:128px}
-    table.cla-table th:first-child,table.cla-table td:first-child{width:210px;min-width:210px;max-width:210px}
-    table.cla-table td.cla-score-good{background:#d9ead3!important;color:#111;font-weight:900}
-    table.cla-table td.cla-score-mid{background:#fff2cc!important;color:#111;font-weight:900}
-    table.cla-table td.cla-score-bad{background:#e06666!important;color:#111;font-weight:900}
-    table.cla-table td.cla-muted{background:#b7b7b7!important;color:#111}
-    table.sheet-table{width:max-content;min-width:auto;background:#0e141a}
-    table.sheet-table th,table.sheet-table td{width:108px;min-width:108px;max-width:108px;color:var(--text);background:#182126;white-space:normal;line-height:1.15;border-color:#2b3a48}
-    table.sheet-table th{background:#101820;color:#dbe5ef}
-    table.sheet-table th:first-child,table.sheet-table td:first-child{width:210px;min-width:210px;max-width:210px;color:#f2f5f7;background:#131b22}
-    table.sheet-table td{font-weight:700}
-    table.sheet-table td.sheet-wide,table.sheet-table th.sheet-wide{width:190px;min-width:190px;max-width:190px;text-align:left}
-    table.sheet-table td.sheet-name,table.sheet-table th.sheet-name{width:150px;min-width:150px;max-width:150px;text-align:left}
-    table.sheet-table td.sheet-empty{color:transparent;background:#0e141a}
-    table.sheet-table td.sheet-section{background:#e5e7eb!important;color:#111827!important;font-weight:900}
-    table.sheet-table td.sheet-good{background:rgba(90,150,112,.28)!important;color:#75e0a0!important}
-    table.sheet-table td.sheet-mid{background:rgba(215,180,106,.26)!important;color:#f0cd7b!important}
-    table.sheet-table td.sheet-bad{background:rgba(224,102,102,.32)!important;color:#ff9a9a!important}
-    table.sheet-table td.sheet-muted{background:rgba(148,163,184,.18)!important;color:#c8d0da!important}
-    table.sheet-table td.sheet-class-druid,table.sheet-table th.sheet-class-druid{background:rgba(255,184,107,.34)!important;color:#ffd4a3!important}
-    table.sheet-table td.sheet-class-hunter,table.sheet-table th.sheet-class-hunter{background:rgba(170,214,160,.28)!important;color:#c4f0bc!important}
-    table.sheet-table td.sheet-class-mage,table.sheet-table th.sheet-class-mage{background:rgba(166,200,255,.28)!important;color:#c9dcff!important}
-    table.sheet-table td.sheet-class-paladin,table.sheet-table th.sheet-class-paladin{background:rgba(216,163,191,.30)!important;color:#f1bfd8!important}
-    table.sheet-table td.sheet-class-priest,table.sheet-table th.sheet-class-priest{background:rgba(255,255,255,.16)!important;color:#f8fafc!important}
-    table.sheet-table td.sheet-class-rogue,table.sheet-table th.sheet-class-rogue{background:rgba(255,241,191,.22)!important;color:#fff1bf!important}
-    table.sheet-table td.sheet-class-warlock,table.sheet-table th.sheet-class-warlock{background:rgba(185,167,223,.30)!important;color:#d8c9ff!important}
-    table.sheet-table td.sheet-class-warrior,table.sheet-table th.sheet-class-warrior{background:rgba(223,209,198,.24)!important;color:#eaded5!important}
-    table.sheet-table td.sheet-player-header,
-    table.sheet-table th.sheet-player-header{
-      color:#111827!important;
-      font-weight:900;
-      text-align:center;
-    }
-    table.sheet-table td.sheet-label{color:#f3f6f8!important;background:#192229!important;text-align:left}
-    table.sheet-table td.sheet-value{color:#65d58d!important}
-    table.sheet-table td.sheet-note{color:#cdd6df!important}
-    .item-cell{font-weight:900;text-decoration:none}
-    .item-poor{color:#9d9d9d}
-    .item-common{color:#f3f4f6}
-    .item-uncommon{color:#1eff00}
-    .item-rare{color:#0070dd}
-    .item-epic{color:#a335ee}
-    .item-legendary{color:#ff8000}
-    tr.total td{font-weight:900;background:rgba(215,180,106,.12)}
-    .side{display:none}
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:8px;
-      padding:14px;
-    }
-    .panel h3{margin:0 0 10px;font-size:15px}
-    .class-list{display:grid;gap:8px}
-    .top-class-list{
-      display:flex;
-      flex-wrap:wrap;
-      gap:7px;
-    }
-    .class-btn{
-      border:1px solid var(--line);
-      background:#10161b;
-      color:var(--text);
-      border-radius:8px;
-      min-height:32px;
-      padding:0 9px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      cursor:pointer;
-      font-weight:800;
-      font-size:13px;
-    }
-    .class-btn.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-    .class-name{display:flex;align-items:center;gap:8px}
-    .swatch{width:12px;height:12px;border-radius:3px;background:currentColor}
-    .hint,.error,.loading{color:var(--muted);padding:22px;text-align:center}
-    .error{color:var(--bad)}
-    .player-import-progress{
-      display:grid;
-      gap:10px;
-      padding:14px;
-      border:1px solid rgba(215,180,106,.35);
-      border-radius:8px;
-      background:rgba(16,22,27,.92);
-      margin-bottom:12px;
-    }
-    .player-import-progress-head{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      color:var(--text);
-      font-weight:900;
-    }
-    .player-import-current{color:var(--accent)}
-    .player-import-bar{
-      height:12px;
-      border:1px solid var(--line);
-      border-radius:999px;
-      overflow:hidden;
-      background:#0b1116;
-    }
-    .player-import-bar span{
-      display:block;
-      height:100%;
-      width:0%;
-      background:linear-gradient(90deg,#d7b46a,#5bd188);
-      transition:width .25s ease;
-    }
-    .player-import-list{
-      display:flex;
-      flex-wrap:wrap;
-      gap:6px;
-      max-height:92px;
-      overflow:auto;
-    }
-    .player-import-name{
-      border:1px solid var(--line);
-      border-radius:999px;
-      padding:4px 8px;
-      color:var(--muted);
-      font-weight:800;
-      font-size:12px;
-      background:#10161b;
-    }
-    .player-import-name.done{color:#7ee2a0;border-color:rgba(126,226,160,.55)}
-    .player-import-name.active{color:#111;background:var(--accent);border-color:var(--accent)}
-    @media (max-width:900px){
-      .shell{padding:14px}
-      .top,.layout{grid-template-columns:1fr}
-      .actions{justify-content:flex-start}
-      .side{position:static;max-height:none}
-      .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-      input{min-width:100%}
-    }
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,rgba(7,13,22,.98),rgba(7,13,22,.92)),url("images/worldbuff-anleitung.jpg") center/cover fixed;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit}button,input,select{font:inherit}
+    .shell{max-width:1760px;margin:0 auto;padding:22px}
+    .top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;margin-bottom:14px}
+    .kicker{color:var(--gold);font-size:12px;font-weight:950;text-transform:uppercase}
+    h1{margin:4px 0 8px;font-size:32px;line-height:1.08;letter-spacing:0}
+    .lead{margin:0;color:var(--muted);font-weight:800;line-height:1.4}
+    .actions,.tabs,.classbar,.filters{display:flex;gap:8px;flex-wrap:wrap}
+    .btn,.tab,.class-btn{min-height:38px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.88);color:var(--text);padding:8px 12px;font-weight:950;text-decoration:none;cursor:pointer}
+    .btn.primary,.tab.active,.class-btn.active{border-color:var(--gold);background:var(--gold);color:#161200}
+    .btn.ghost{background:rgba(13,22,36,.48)}
+    .filters{padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.78);margin-bottom:14px}
+    input,select{min-height:38px;border:1px solid var(--line);border-radius:8px;background:#060b13;color:var(--text);padding:0 10px;font-weight:850}
+    input{min-width:260px;flex:1}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+    .panel{border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.84);box-shadow:0 18px 44px rgba(0,0,0,.28)}
+    .panel-pad{padding:14px}
+    .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .badge{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:12px;font-weight:950}
+    .badge.rpb{border-color:rgba(96,165,250,.42);color:#bfdbfe;background:rgba(96,165,250,.10)}
+    .badge.cla{border-color:rgba(250,204,21,.42);color:#fde68a;background:rgba(250,204,21,.10)}
+    .section-tools{display:grid;gap:10px;margin-bottom:10px}
+    .tab[data-type="cla"]{border-color:rgba(250,204,21,.35)}
+    .tab[data-type="rpb"]{border-color:rgba(96,165,250,.35)}
+    .tab small{display:block;color:inherit;opacity:.7;font-size:11px;font-weight:950;margin-top:2px}
+    .class-btn{min-height:34px;padding:6px 10px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#060b13;max-height:72vh}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:920px}
+    th,td{border-right:1px solid var(--soft);border-bottom:1px solid var(--soft);padding:7px 9px;white-space:pre-wrap;vertical-align:top;font-size:12px;font-weight:800}
+    th{position:sticky;top:0;z-index:3;background:#111827;color:#f8fafc;text-align:left}
+    th:first-child,td:first-child{position:sticky;left:0;z-index:2;background:#111827;min-width:220px}
+    thead th:first-child{z-index:4}
+    .list{display:grid;gap:8px}
+    .analysis-row{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82)}
+    .analysis-row:hover{border-color:rgba(250,204,21,.46)}
+    .raid{color:var(--gold);font-weight:950}
+    .title{font-weight:950}.sub{color:var(--muted);font-size:12px;font-weight:850;margin-top:3px}
+    .side{display:grid;gap:14px}
+    .side h2{margin:0 0 10px;font-size:16px}
+    .pills{display:flex;gap:6px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950;background:rgba(6,11,19,.82)}
+    .status{padding:16px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82);color:var(--muted);font-weight:850}
+    .error{border-color:rgba(248,113,113,.45);color:#fecdd3;background:rgba(248,113,113,.10)}
+    .hidden{display:none}
+    @media(max-width:1050px){.grid,.top{grid-template-columns:1fr}.analysis-row{grid-template-columns:1fr}.table-wrap{max-height:none}}
   </style>
 </head>
 <body>
   <main class="shell">
     <header class="top">
       <div>
-        <div class="eyebrow">LichtLoot Web-Auswertung</div>
-        <h1 id="pageTitle">Raid-Auswertung</h1>
-        <div class="meta">
-          <span id="raidName">Raid wird geladen</span>
-          <span id="raidDate">-</span>
-          <span id="playerCount">0 Spieler</span>
-        </div>
-        <div id="classList" class="header-classes top-class-list"></div>
+        <div class="kicker">LichtLoot</div>
+        <h1 id="pageTitle">Web-Auswertung</h1>
+        <p id="pageLead" class="lead">Neu aufgebaut: Grundlage sind nur die gespeicherten Raidsheets. RPB-Cluster und CLA-Reiter liegen gemeinsam auf einer Seite.</p>
+        <div id="meta" class="meta"></div>
       </div>
       <div class="actions">
-        <div class="type-switch" aria-label="Auswertungstyp">
-          <button id="typeRpb" type="button" onclick="switchAnalysisType('rpb')">RPB</button>
-          <button id="typeCla" type="button" onclick="switchAnalysisType('cla')">CLA</button>
-        </div>
-        <button id="importPlayersBtn" class="btn good" type="button" onclick="importPlayerDataForAnalysis()">Spielerdaten importieren</button>
-        <a id="wclLink" class="btn" href="#" target="_blank" rel="noopener">WCL öffnen</a>
-        <a class="btn primary" href="gildenleitung.html">Zur Gildenleitung</a>
+        <a class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
+        <button class="btn primary" type="button" onclick="reload()">Neu laden</button>
       </div>
     </header>
 
-    <section class="layout">
-      <div>
-        <div class="toolbar">
-          <input id="searchInput" type="search" placeholder="Spieler, Klasse oder Zeile suchen..." oninput="render()">
-          <select id="classSelect" onchange="selectClass(this.value)">
-            <option value="">Alle Klassen</option>
-          </select>
-          <button class="btn" type="button" onclick="toggleRoleEditor()">Rollen zuordnen</button>
-          <button class="btn" type="button" onclick="selectClass('')">Filter zurücksetzen</button>
-        </div>
-        <div id="tabs" class="tabs"></div>
-        <div id="classSubtabs" class="subtabs"></div>
-        <section id="roleEditor" class="role-editor"></section>
-        <section id="playerImportPreview" class="player-import-preview"></section>
-        <section id="classOverview" class="class-overview"></section>
-        <div class="matrix-wrap">
-          <table id="analysisTable">
-            <tbody><tr><td class="loading">Auswertung wird geladen...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
+    <section class="filters">
+      <input id="search" type="search" placeholder="Suchen..." oninput="renderCurrent()">
+      <select id="raidFilter" onchange="renderList()"><option value="">Alle Raids</option></select>
+      <button class="btn ghost" type="button" onclick="resetFilters()">Filter zurücksetzen</button>
+    </section>
 
-      <aside class="side">
-        <div class="panel">
-          <h3>Stand</h3>
-          <div id="statusText" class="hint">Direkt aus Warcraft Logs berechnet.</div>
+    <section id="listView" class="list"></section>
+
+    <section id="detailView" class="grid hidden">
+      <div>
+        <div class="panel panel-pad section-tools">
+          <div id="sectionTabs" class="tabs"></div>
+          <div id="classTabs" class="classbar"></div>
         </div>
+        <div class="table-wrap"><table id="sheetTable"><tbody><tr><td>Auswertung wird geladen...</td></tr></tbody></table></div>
+      </div>
+      <aside class="side">
+        <section class="panel panel-pad">
+          <h2>Reiter</h2>
+          <div id="sectionInfo" class="sub">-</div>
+        </section>
+        <section class="panel panel-pad">
+          <h2>Klassen im Cluster</h2>
+          <div id="classInfo" class="pills"></div>
+        </section>
+        <section class="panel panel-pad">
+          <h2>Hinweise</h2>
+          <div id="warnings" class="sub">Keine Hinweise.</div>
+        </section>
       </aside>
     </section>
   </main>
@@ -597,975 +110,172 @@
   <script>
     const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
     const params = new URLSearchParams(location.search);
-    const state = {
-      data:null,
-      activeSection:"",
-      activeClass:"",
-      highlightRow:"",
-      highlightPlayer:"",
-      search:"",
-      rolesOpen:false,
-      savingRoles:false
+    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", mode:params.get("id") ? "detail" : "list" };
+    const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
+    const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
+    const CLASS_COLOR = {Warrior:"var(--warrior)",Druid:"var(--druid)",Paladin:"var(--paladin)",Rogue:"var(--rogue)",Hunter:"var(--hunter)",Priest:"var(--priest)",Mage:"var(--mage)",Warlock:"var(--warlock)",Shaman:"var(--shaman)",Unknown:"#cbd5e1"};
+    const CLUSTER_CLASSES = {
+      healer:["Druid","Paladin","Priest","Shaman"],
+      healerCast:["Druid","Paladin","Priest","Shaman"],
+      caster:["Druid","Mage","Warlock","Priest","Shaman"],
+      casterCast:["Druid","Mage","Warlock","Priest","Shaman"],
+      physical:["Warrior","Rogue","Hunter","Druid"],
+      physicalCast:["Warrior","Rogue","Hunter","Druid"],
+      tank:["Warrior","Druid","Paladin"],
+      tankCast:["Warrior","Druid","Paladin"],
+      all:CLASS_ORDER
     };
-    const CLASS_COLORS = {
-      Druid:"var(--druid)",
-      Hunter:"var(--hunter)",
-      Mage:"var(--mage)",
-      Paladin:"var(--paladin)",
-      Priest:"var(--priest)",
-      Rogue:"var(--rogue)",
-      Shaman:"var(--shaman)",
-      Warlock:"var(--warlock)",
-      Warrior:"var(--warrior)",
-      Unknown:"#d1d5db"
-    };
-    const CLASS_LABELS = {
-      Druid:"Druiden",
-      Hunter:"Jäger",
-      Mage:"Magier",
-      Paladin:"Paladine",
-      Priest:"Priester",
-      Rogue:"Schurken",
-      Shaman:"Schamanen",
-      Warlock:"Hexenmeister",
-      Warrior:"Krieger",
-      Unknown:"Unbekannt"
-    };
-    const CLASS_ORDER = ["Druid","Hunter","Mage","Paladin","Priest","Rogue","Shaman","Warlock","Warrior"];
-    const SHEET_CLASS_COLORS = {
-      Druid:["#f6b26b","#ffb86b","#f9cb9c"],
-      Hunter:["#b6d7a8","#93c47d","#a8d08d"],
-      Mage:["#a4c2f4","#9fc5e8","#a6c8ff"],
-      Paladin:["#d5a6bd","#d9a7c7","#ead1dc"],
-      Priest:["#ffffff","#f3f3f3","#efefef"],
-      Rogue:["#fff2cc","#ffe599","#fff1bf"],
-      Warlock:["#b4a7d6","#b9a7df","#c9b8e8"],
-      Warrior:["#e2d3c9","#d7ccc8","#dcc9bd"]
-    };
-    const SHEET_NAME_BLOCKLIST = new Set([
-      "druids","druiden","hunters","jaeger","jäger","mages","magier","paladins","paladine",
-      "priests","priester","rogues","schurken","warlocks","hexenmeister","warriors","krieger",
-      "general","allgemein","caster","zauberer","healer","heiler","physical","nahkampf",
-      "tank","title","zone","date","amount","average","start","end","optional","metric",
-      "stats and miscellaneous","consumables","damage absorbed","trinkets and racials",
-      "class specific cooldowns","unterbrochene zauber","keine treffer"
-    ]);
 
-    function escapeHtml(value){
-      return String(value ?? "").replace(/[&<>"']/g, char => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[char]));
+    function html(value){return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function attr(value){return html(value);}
+    function key(value){return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();}
+    function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
+    function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
+    async function api(query){const url=API_URL+"?"+new URLSearchParams({...query,guild:params.get("guild")||"lichtloot",t:Date.now()});const res=await fetch(url,{cache:"no-store"});const data=await res.json().catch(()=>({}));if(!res.ok||data.success===false)throw new Error(data.error||"Daten konnten nicht geladen werden.");return data;}
+    function matrixValues(section){return section?.matrix?.values || section?.payload?.values || [];}
+    function matrixBackgrounds(section){return section?.matrix?.backgrounds || section?.payload?.backgrounds || [];}
+    function matrixFontColors(section){return section?.matrix?.fontColors || section?.payload?.fontColors || [];}
+    function clusterFor(label,type){
+      if(type==="cla") return "all";
+      const t=key(label);
+      if(t.includes("heiler")||t.includes("heal")) return t.includes("cast")||t.includes("zauber") ? "healerCast" : "healer";
+      if(t.includes("physical")||t.includes("physisch")||t.includes("nahkampf")||t.includes("melee")) return t.includes("cast")||t.includes("zauber") ? "physicalCast" : "physical";
+      if(t.includes("caster")||t.includes("zauberer")||t.includes("spell")) return t.includes("cast")||t.includes("zauber") ? "casterCast" : "caster";
+      if(t.includes("tank")) return t.includes("cast")||t.includes("zauber") ? "tankCast" : "tank";
+      return "all";
     }
-
-    function cellText(value){
-      if(value && typeof value === "object") return String(value.text || value.name || "");
-      return String(value ?? "");
+    function sectionLabel(section){
+      if(section.type==="cla") return section.label || "CLA";
+      const cluster = clusterFor(section.label, "rpb");
+      const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RBP"};
+      return map[cluster] || section.label || "RBP";
     }
-
-    function cellTitle(value){
-      if(value && typeof value === "object") return value.title || value.tooltip || "";
-      return "";
+    function collectSections(detail){
+      const out=[];
+      (detail?.rpb?.sections||[]).forEach(section=>out.push({...section,type:"rpb",cluster:clusterFor(section.label,"rpb")}));
+      (detail?.cla?.sections||[]).forEach(section=>out.push({...section,type:"cla",cluster:"all"}));
+      return out;
     }
-
-    function normalizeNameKey(value){
-      return String(value || "").trim().toLowerCase();
+    function allPlayers(){
+      const players=[...(state.detail?.rpb?.players||[]),...(state.detail?.cla?.players||[])];
+      const seen=new Map();
+      players.forEach(player=>{const name=String(player.name||"").trim();if(name&&!seen.has(name.toLowerCase()))seen.set(name.toLowerCase(),player);});
+      return Array.from(seen.values());
     }
-
-    function normalizeSheetLabel(value){
-      return normalizeNameKey(value)
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g,"")
-        .replace(/[^a-z0-9]+/g," ")
-        .trim();
+    function classesForSection(section){
+      const allowed = CLUSTER_CLASSES[section?.cluster || "all"] || CLASS_ORDER;
+      const present = new Set(allPlayers().map(p=>p.className||"Unknown"));
+      const classes = allowed.filter(cls => present.has(cls));
+      return classes.length ? classes : allowed.filter(cls => cls !== "Unknown");
     }
-
-    function parseColor(value){
-      const text = String(value || "").trim().toLowerCase();
-      if(!text) return null;
-      if(text.startsWith("#")){
-        const hex = text.length === 4
-          ? `#${text[1]}${text[1]}${text[2]}${text[2]}${text[3]}${text[3]}`
-          : text.slice(0,7);
-        const number = Number.parseInt(hex.slice(1), 16);
-        if(Number.isNaN(number)) return null;
-        return [(number >> 16) & 255, (number >> 8) & 255, number & 255];
-      }
-      const rgb = text.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-      return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+    async function loadList(){
+      document.getElementById("listView").innerHTML='<div class="status">Auswertungen werden geladen...</div>';
+      const data=await api({action:"getPublicLogAnalyses",limit:60});
+      state.analyses=Array.isArray(data.analyses)?data.analyses:[];
+      const raids=[...new Set(state.analyses.map(raidName))].sort();
+      document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
+      renderList();
     }
-
-    function colorDistance(a, b){
-      return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2 + (a[2]-b[2])**2);
+    async function loadDetail(){
+      const id=params.get("id")||params.get("analysisId")||"";
+      if(!id){state.mode="list";return loadList();}
+      document.getElementById("listView").classList.add("hidden");
+      document.getElementById("detailView").classList.remove("hidden");
+      const data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined"});
+      state.detail=data.webAnalysis;
+      state.sections=collectSections(state.detail);
+      state.activeSection=state.sections[0]?.id||"";
+      state.activeClass="";
+      renderDetail();
     }
-
-    function classFromSheetColor(color){
-      const rgb = parseColor(color);
-      if(!rgb) return "";
-      let best = {className:"", distance:999};
-      Object.entries(SHEET_CLASS_COLORS).forEach(([className, colors]) => {
-        colors.forEach(candidate => {
-          const distance = colorDistance(rgb, parseColor(candidate));
-          if(distance < best.distance) best = {className, distance};
-        });
-      });
-      return best.distance < 75 ? best.className : "";
+    function renderList(){
+      state.mode="list";
+      document.getElementById("detailView").classList.add("hidden");
+      document.getElementById("listView").classList.remove("hidden");
+      document.getElementById("pageTitle").textContent="Web-Auswertungen";
+      document.getElementById("meta").innerHTML="";
+      const q=key(document.getElementById("search").value);
+      const raid=document.getElementById("raidFilter").value;
+      const list=state.analyses.filter(a=>(!raid||raidName(a)===raid)&&(!q||key([a.title,a.raid,a.reportCode,raidName(a)].join(" ")).includes(q)));
+      document.getElementById("listView").innerHTML=list.length?list.map(a=>`
+        <article class="analysis-row">
+          <div class="raid">${html(raidName(a))}</div>
+          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div></div>
+          <a class="btn primary" href="raid-analyse.html?id=${encodeURIComponent(a.id)}">Öffnen</a>
+        </article>`).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
     }
-
-    function looksLikeSheetPlayerName(value){
-      const text = String(value || "").trim();
-      if(!text || text.length < 2 || text.length > 24) return false;
-      if(/[0-9%()[\]:,./]/.test(text)) return false;
-      const normalized = normalizeSheetLabel(text);
-      if(SHEET_NAME_BLOCKLIST.has(normalized)) return false;
-      return /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]+$/.test(text);
-    }
-
-    function hydrateSheetExportPlayers(){
-      return;
-    }
-
-    function playerClassByName(){
-      const byName = new Map();
-      (state.data?.players || []).forEach(player => byName.set(normalizeNameKey(player.name), player.className || "Unknown"));
-      return byName;
-    }
-
-    function itemQualityClass(value){
-      const q = String(value?.quality || "").toLowerCase();
-      if(q.includes("legend")) return "item-legendary";
-      if(q.includes("epic") || q.includes("lila")) return "item-epic";
-      if(q.includes("rare") || q.includes("blau")) return "item-rare";
-      if(q.includes("uncommon") || q.includes("grün") || q.includes("green")) return "item-uncommon";
-      if(q.includes("poor") || q.includes("grau")) return "item-poor";
-      if(q.includes("common") || q.includes("weiß") || q.includes("white")) return "item-common";
-      return "";
-    }
-
-    function renderCellValue(value, fallback = ""){
-      const text = cellText(value) || fallback;
-      if(!text) return "";
-      if(value && typeof value === "object" && (value.itemId || value.quality || value.tooltip)){
-        const title = cellTitle(value);
-        const href = value.wowhead || (value.itemId ? `https://www.wowhead.com/classic/item=${encodeURIComponent(value.itemId)}` : "");
-        const attrs = `${title ? ` title="${escapeHtml(title)}"` : ""} class="item-cell ${itemQualityClass(value)}"`;
-        return href
-          ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener"${attrs}>${escapeHtml(text)}</a>`
-          : `<span${attrs}>${escapeHtml(text)}</span>`;
-      }
-      return escapeHtml(text);
-    }
-
-    function isClaSection(section){
-      return String(section?.id || "").startsWith("cla-");
-    }
-
-    function claScoreClass(value, label){
-      const text = cellText(value).trim();
-      if(!text || text === "—") return "cla-muted";
-      const number = Number((text.match(/-?\d+(\.\d+)?/) || [""])[0]);
-      if(/fehlende|auffällige|issues|problem/i.test(label || "")){
-        if(!Number.isFinite(number)) return text ? "cla-score-bad" : "cla-muted";
-        return number === 0 ? "cla-score-good" : number <= 2 ? "cla-score-mid" : "cla-score-bad";
-      }
-      if(text.toLowerCase() === "ja") return "cla-score-good";
-      if(text.toLowerCase() === "nein") return "cla-score-bad";
-      if(text.includes("%") && Number.isFinite(number)){
-        if(number >= 80) return "cla-score-good";
-        if(number >= 50) return "cla-score-mid";
-        return "cla-score-bad";
-      }
-      return "";
-    }
-
-    function classColor(className){
-      return CLASS_COLORS[className] || "#d1d5db";
-    }
-
-    function playerMatchesSearch(player, rowLabel){
-      const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-      state.search = q;
-      if(!q) return true;
-      return [player.name, player.className, rowLabel].some(value => String(value || "").toLowerCase().includes(q));
-    }
-
-    function visiblePlayers(section){
-      const players = state.data.players || [];
-      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
-      return players.filter(player => {
-        if(allowed && !allowed.has(player.name)) return false;
-        if(state.activeClass && player.className !== state.activeClass) return false;
-        if(!state.search) return true;
-        return (section.rows || []).some(row => playerMatchesSearch(player, row.label));
-      });
-    }
-
-    function isClassBlockSection(section){
-      return ["caster-casts", "healer-casts", "physical-casts", "tank-casts"].includes(section?.id);
-    }
-
-    function sectionClasses(section){
-      if(!section) return [];
-      const allowed = Array.isArray(section.playerFilter) && section.playerFilter.length ? new Set(section.playerFilter) : null;
-      const sectionPlayers = (state.data.players || []).filter(player => !allowed || allowed.has(player.name));
-      return CLASS_ORDER.filter(className => sectionPlayers.some(player => player.className === className));
-    }
-
-    function rowsForActiveClass(section){
-      if(!state.activeClass || !isClassBlockSection(section)) return section.rows || [];
-      const rows = [];
-      let keep = false;
-      for(const row of section.rows || []){
-        if(row.type === "header"){
-          keep = row.className === state.activeClass;
-          if(keep) rows.push(row);
-          continue;
-        }
-        if(row.tone === "activity" || row.tone === "activityStrong"){
-          rows.push(row);
-          continue;
-        }
-        if(keep) rows.push(row);
-      }
-      return rows;
-    }
-
-    function visibleRows(section, players){
-      const q = state.search;
-      const sourceRows = rowsForActiveClass(section);
-      const baseRows = sourceRows.filter(row => {
-        if(!q) return true;
-        if(String(row.label || "").toLowerCase().includes(q)) return true;
-        return players.some(player => cellText(row.values?.[player.name]).toLowerCase().includes(q));
-      });
-      const nonEmpty = row => {
-        if(row.type === "header") return true;
-        return players.some(player => {
-          const value = cellText(row.values?.[player.name]).trim();
-          return value && value !== "0" && value !== "0%" && value !== "0 (0%)";
-        });
-      };
-      const rows = section.hideEmptyRows ? baseRows.filter(nonEmpty) : baseRows;
-      if(!section.hideEmptyRows) return rows;
-      return rows.filter((row, index) => {
-        if(row.type !== "header") return true;
-        for(let i=index+1;i<rows.length;i++){
-          if(rows[i].type === "header") return false;
-          if(nonEmpty(rows[i])) return true;
-        }
-        return false;
-      });
-    }
-
-    function selectSection(id){
-      state.activeSection = id;
-      const section = (state.data.sections || []).find(item => item.id === id);
-      const classes = sectionClasses(section);
-      state.activeClass = isClassBlockSection(section) && classes.length ? classes[0] : "";
-      state.highlightRow = "";
-      state.highlightPlayer = "";
-      const select = document.getElementById("classSelect");
-      if(select) select.value = state.activeClass;
-      render();
-    }
-
-    function selectClass(className){
-      state.activeClass = className || "";
-      const select = document.getElementById("classSelect");
-      if(select) select.value = state.activeClass;
-      render();
-    }
-
-    function selectHighlight(rowKey, playerName){
-      state.highlightRow = state.highlightRow === rowKey ? "" : rowKey;
-      state.highlightPlayer = state.highlightPlayer === playerName ? "" : playerName;
+    function renderDetail(){
+      const report=state.detail?.report||state.detail?.analysis||{};
+      document.getElementById("pageTitle").textContent=report.title||"Raid-Auswertung";
+      document.getElementById("meta").innerHTML=[
+        `<span class="badge">${html(report.raid||"Raid")}</span>`,
+        `<span class="badge">${html(dateDisplay(report.raidDate||report.raid_date))}</span>`,
+        state.detail?.rpb?'<span class="badge rpb">RPB Raidsheet</span>':'',
+        state.detail?.cla?'<span class="badge cla">CLA Raidsheet</span>':''
+      ].filter(Boolean).join("");
+      renderSectionTabs();
+      renderClassTabs();
       renderTable();
+      renderSide();
     }
-
-    function currentAnalysisType(){
-      return (params.get("type") || "rpb").toLowerCase() === "cla" ? "cla" : "rpb";
+    function renderSectionTabs(){
+      document.getElementById("sectionTabs").innerHTML=state.sections.map((section,index)=>`
+        <button class="tab ${section.id===state.activeSection?'active':''}" data-type="${attr(section.type)}" type="button" onclick="selectSection('${attr(section.id)}')">
+          ${html(sectionLabel(section))}<small>${html(section.type.toUpperCase())}${section.label&&sectionLabel(section)!==section.label?" · "+html(section.label):""}</small>
+        </button>`).join("") || '<div class="status">Keine Raidsheet-Reiter vorhanden.</div>';
     }
-
-    function switchAnalysisType(type){
-      const next = new URL(location.href);
-      next.searchParams.set("type", type);
-      location.href = next.toString();
+    function renderClassTabs(){
+      const section=activeSection();
+      const classes=classesForSection(section);
+      document.getElementById("classTabs").innerHTML='<button class="class-btn '+(!state.activeClass?'active':'')+'" type="button" onclick="selectClass(\'\')">Alle</button>'+
+        classes.map(cls=>`<button class="class-btn ${state.activeClass===cls?'active':''}" style="color:${CLASS_COLOR[cls]||'#cbd5e1'}" type="button" onclick="selectClass('${attr(cls)}')">${html(CLASS_LABEL[cls]||cls)}</button>`).join("");
     }
-
-    function renderTypeSwitch(){
-      const type = currentAnalysisType();
-      const rpb = document.getElementById("typeRpb");
-      const cla = document.getElementById("typeCla");
-      if(rpb) rpb.classList.toggle("active", type === "rpb");
-      if(cla) cla.classList.toggle("active", type === "cla");
-    }
-
-    function roleLabel(value){
-      const found = (state.data?.roleOptions || []).find(option => option.value === value);
-      return found ? found.label : "";
-    }
-
-    function analysisReportUrl(){
-      return state.data?.report?.reportUrl || state.data?.analysis?.reportUrl || "";
-    }
-
-    function analysisReportCode(){
-      return state.data?.report?.reportCode || state.data?.analysis?.reportCode || "";
-    }
-
-    function importText(value){
-      if(value === null || value === undefined || value === "") return "-";
-      if(typeof value === "boolean") return value ? "ja" : "nein";
-      if(typeof value === "number") return Number.isFinite(value) ? String(Math.round(value * 100) / 100) : "-";
-      return String(value);
-    }
-
-    function importConfiguredHeal(player, pattern){
-      const data = player?.healing?.byConfiguredCast || {};
-      const key = Object.keys(data).find(name => pattern.test(name));
-      return key ? data[key] : "-";
-    }
-
-    function importCast(player, pattern){
-      const data = player?.casts || {};
-      const key = Object.keys(data).find(name => pattern.test(name));
-      return key ? importText(data[key]) : "-";
-    }
-
-    function importPills(values, empty="-"){
-      const list = Array.isArray(values) ? values.filter(Boolean) : [];
-      if(!list.length) return escapeHtml(empty);
-      return list.map(value => `<span class="player-import-pill good">${escapeHtml(value)}</span>`).join(" ");
-    }
-
-    function renderPlayerImportProgress(players, doneCount, activeName, errorMessage){
-      const total = players.length || 0;
-      const percent = total ? Math.round(doneCount * 100 / total) : 0;
-      const chips = players.map((player, index) => {
-        const name = player.name || "";
-        const cls = index < doneCount ? " done" : (name === activeName ? " active" : "");
-        return `<span class="player-import-name${cls}">${escapeHtml(name)}</span>`;
-      }).join("");
-      return `
-        <div class="player-import-progress">
-          <div class="player-import-progress-head">
-            <span>${errorMessage ? "Import angehalten" : "Import läuft alphabetisch"}</span>
-            <span>${doneCount}/${total} Spieler · ${percent}%</span>
-          </div>
-          <div class="player-import-bar"><span style="width:${percent}%"></span></div>
-          <div class="player-import-current">${escapeHtml(errorMessage || (activeName ? `Aktuell: ${activeName}` : "Fertig"))}</div>
-          <div class="player-import-list">${chips}</div>
-        </div>
-      `;
-    }
-
-    function renderPlayerImportPreview(result, progressHtml=""){
-      const box = document.getElementById("playerImportPreview");
-      if(!box) return;
-      const report = result.report || {};
-      const players = Array.isArray(result.players) ? result.players.slice().sort((a,b) => String(a.name || "").localeCompare(String(b.name || ""),"de")) : [];
-      const body = players.map(player => {
-        const consumables = player.buffs?.consumables || [];
-        const worldBuffs = player.buffs?.worldBuffs || [];
-        const issues = Array.isArray(player.enchantIssues) ? player.enchantIssues : [];
-        const issueHtml = issues.length
-          ? issues.map(item => `<span class="player-import-pill warn">${escapeHtml(item.slot || "")}: ${escapeHtml(item.issue || "")}</span>`).join(" ")
-          : '<span class="player-import-pill good">ok</span>';
-        return `
-          <tr>
-            <td>${escapeHtml(player.name || "")}<br><span style="color:${classColor(player.className)}">${escapeHtml(player.className || "")}</span></td>
-            <td>${escapeHtml(importText(player.stats?.criticalHealsDone))}</td>
-            <td>${escapeHtml(importText(player.stats?.criticalOutgoing))}</td>
-            <td>${escapeHtml(importText(player.stats?.resistOutgoing))}</td>
-            <td>${escapeHtml(importCast(player,/shoot|schie/i))}</td>
-            <td>${escapeHtml(importConfiguredHeal(player,/flash heal|blitzheilung/i))}</td>
-            <td>${escapeHtml(importConfiguredHeal(player,/renew|erneuerung/i))}</td>
-            <td>${escapeHtml(importText(player.damageTaken?.total))}</td>
-            <td>${importPills(consumables)}</td>
-            <td>${importPills(worldBuffs)}</td>
-            <td>${issueHtml}</td>
-          </tr>
-        `;
-      }).join("");
-      box.className = "player-import-preview show";
-      box.innerHTML = `
-        ${progressHtml}
-        <div class="player-import-head">
-          <div>
-            <strong>Importierte Spielerdaten</strong>
-            <span>${escapeHtml(report.title || "")} · ${escapeHtml(report.raid || "")} · ${escapeHtml(report.raidDate || "")}</span>
-            <span>${escapeHtml(report.scopeRule || "")}</span>
-          </div>
-          <div class="player-import-badges">
-            <span class="player-import-pill good">WCL-Tabellenwerte</span>
-            <span class="player-import-pill">${players.length} Spieler</span>
-            <span class="player-import-pill">${escapeHtml(importText(report.includedFights))} Fights</span>
-            <span class="player-import-pill">${escapeHtml(importText(report.bossFights))} Bosse</span>
-          </div>
-        </div>
-        <div class="player-import-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Spieler</th>
-                <th>Crit Heals</th>
-                <th>Crit Out</th>
-                <th>Resist Out</th>
-                <th>Shoot</th>
-                <th>Flash Heal</th>
-                <th>Renew</th>
-                <th>Damage Taken</th>
-                <th>Consumables</th>
-                <th>Worldbuffs</th>
-                <th>Enchant-Issues</th>
-              </tr>
-            </thead>
-            <tbody>${body || '<tr><td colspan="11">Keine Spielerdaten erhalten.</td></tr>'}</tbody>
-          </table>
-        </div>
-      `;
-    }
-
-    async function fetchImportJson(query){
-      const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
-      const text = await response.text();
-      let result = null;
-      try{
-        result = JSON.parse(text);
-      }catch(error){
-        const cleaned = text.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,220);
-        throw new Error(cleaned || `API-Antwort konnte nicht gelesen werden (${response.status}).`);
-      }
-      if(!response.ok || result.success === false){
-        throw new Error(result.error || `API-Fehler (${response.status}).`);
-      }
-      return result;
-    }
-
-    async function importPlayerDataForAnalysis(){
-      const box = document.getElementById("playerImportPreview");
-      const button = document.getElementById("importPlayersBtn");
-      const reportUrl = analysisReportUrl();
-      const reportCode = analysisReportCode();
-      if(!reportUrl && !reportCode){
-        document.getElementById("statusText").textContent = "Kein Warcraft-Logs-Report für diese Auswertung gefunden.";
-        return;
-      }
-      if(button) button.disabled = true;
-      if(box){
-        box.className = "player-import-preview show";
-        box.innerHTML = renderPlayerImportProgress([{name:"Spielerliste"}], 0, "Spielerliste", "");
-      }
-      document.getElementById("statusText").textContent = "Spielerliste wird geladen.";
-      try{
-        const baseParams = {
-          action:"importRaidLogAnalysis",
-          guild:params.get("guild") || "lichtloot",
-          reportUrl,
-          reportCode
-        };
-        const listResult = await fetchImportJson(new URLSearchParams({...baseParams, listOnly:"1", t:Date.now()}));
-        const importPlayers = (Array.isArray(listResult.players) ? listResult.players : [])
-          .slice()
-          .sort((a,b)=>String(a.name || "").localeCompare(String(b.name || ""),"de"));
-        if(!importPlayers.length){
-          throw new Error("Keine Spieler im Warcraft-Logs-Report gefunden.");
-        }
-        const combined = {...listResult, players:[]};
-        renderPlayerImportPreview(combined, renderPlayerImportProgress(importPlayers, 0, importPlayers[0]?.name || "", ""));
-        document.getElementById("statusText").textContent = `Import startet: ${importPlayers.length} Spieler alphabetisch.`;
-
-        for(let i=0;i<importPlayers.length;i++){
-          const player = importPlayers[i];
-          renderPlayerImportPreview(combined, renderPlayerImportProgress(importPlayers, i, player.name || "", ""));
-          document.getElementById("statusText").textContent = `Importiere ${player.name || "Spieler"} (${i + 1}/${importPlayers.length}).`;
-          const playerResult = await fetchImportJson(new URLSearchParams({
-            ...baseParams,
-            playerId:String(player.id || ""),
-            playerName:player.name || "",
-            t:Date.now()
-          }));
-          const imported = Array.isArray(playerResult.players) ? playerResult.players : [];
-          combined.report = playerResult.report || combined.report;
-          imported.forEach(row => {
-            const key = String(row.name || "").toLowerCase();
-            combined.players = combined.players.filter(existing => String(existing.name || "").toLowerCase() !== key);
-            combined.players.push(row);
-          });
-          combined.players.sort((a,b)=>String(a.name || "").localeCompare(String(b.name || ""),"de"));
-          renderPlayerImportPreview(combined, renderPlayerImportProgress(importPlayers, i + 1, importPlayers[i + 1]?.name || "", ""));
-        }
-        renderPlayerImportPreview(combined, renderPlayerImportProgress(importPlayers, importPlayers.length, "", ""));
-        document.getElementById("statusText").textContent = `${combined.players.length} Spieler importiert.`;
-      }catch(error){
-        if(box){
-          box.className = "player-import-preview show";
-          box.innerHTML = renderPlayerImportProgress([{name:"Import"}], 0, "", error.message || "Spielerdaten konnten nicht importiert werden.");
-        }
-        document.getElementById("statusText").textContent = error.message || "Spielerdaten konnten nicht importiert werden.";
-      }finally{
-        if(button) button.disabled = false;
-      }
-    }
-
-    function toggleRoleEditor(){
-      state.rolesOpen = !state.rolesOpen;
-      renderRoleEditor();
-    }
-
-    function updateLocalRole(playerName, value){
-      const player = (state.data.players || []).find(item => item.name === playerName);
-      if(player) player.raidRole = value || "";
-    }
-
-    async function saveRaidRoles(){
-      if(!state.data || state.savingRoles) return;
-      state.savingRoles = true;
-      renderRoleEditor();
-      const roles = {};
-      (state.data.players || []).forEach(player => {
-        if(player.raidRole) roles[player.name] = player.raidRole;
-      });
-      const body = new URLSearchParams({
-        action:"setPublicLogAnalysisRaidRoles",
-        guild:params.get("guild") || "lichtloot",
-        id:params.get("id") || params.get("analysisId") || "",
-        roles:JSON.stringify(roles)
-      });
-      const response = await fetch(API_URL, {
-        method:"POST",
-        headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
-        body:body.toString()
-      });
-      const data = await response.json();
-      state.savingRoles = false;
-      if(!response.ok || data.success === false){
-        document.getElementById("statusText").textContent = data.error || "Rollen konnten nicht gespeichert werden.";
-        renderRoleEditor();
-        return;
-      }
-      await loadAnalysis();
-      state.rolesOpen = true;
-      renderRoleEditor();
-    }
-
-    function renderRoleEditor(){
-      const box = document.getElementById("roleEditor");
-      if(!box) return;
-      if(!state.rolesOpen || !state.data){
-        box.className = "role-editor";
-        box.innerHTML = "";
-        return;
-      }
-      const options = state.data.roleOptions || [{value:"",label:"Automatisch"}];
-      box.className = "role-editor show";
-      box.innerHTML = `
-        <div class="role-actions">
-          <strong>Raid-Rollen</strong>
-          <button class="btn primary" type="button" onclick="saveRaidRoles()">${state.savingRoles ? "Speichert..." : "Rollen speichern"}</button>
-          <button class="btn" type="button" onclick="toggleRoleEditor()">Schließen</button>
-        </div>
-        <div class="role-grid">
-          ${(state.data.players || []).map(player => `
-            <label class="role-item" style="color:${classColor(player.className)}">
-              <span class="role-name">${escapeHtml(player.name)}</span>
-              <select onchange="updateLocalRole('${escapeHtml(player.name)}', this.value)">
-                ${options.map(option => `<option value="${escapeHtml(option.value)}" ${player.raidRole === option.value ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
-              </select>
-            </label>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function classGroups(){
-      const groups = new Map();
-      (state.data?.players || []).forEach(player => {
-        const cls = player.className || "Unbekannt";
-        if(!groups.has(cls)) groups.set(cls, []);
-        groups.get(cls).push(player);
-      });
-      return Array.from(groups.entries()).sort((a,b) => {
-        const ai = CLASS_ORDER.includes(a[0]) ? CLASS_ORDER.indexOf(a[0]) : 999;
-        const bi = CLASS_ORDER.includes(b[0]) ? CLASS_ORDER.indexOf(b[0]) : 999;
-        return ai - bi || a[0].localeCompare(b[0],"de");
-      });
-    }
-
-    function renderClassControls(){
-      const groups = classGroups();
-      const list = document.getElementById("classList");
-      const select = document.getElementById("classSelect");
-      select.innerHTML = '<option value="">Alle Klassen</option>' + groups.map(([cls, players]) =>
-        `<option value="${escapeHtml(cls)}">${escapeHtml(CLASS_LABELS[cls] || cls)} (${players.length})</option>`
-      ).join("");
-      select.value = state.activeClass;
-      list.innerHTML = groups.map(([cls, players]) => `
-        <button class="class-btn ${state.activeClass === cls ? "active" : ""}" type="button" onclick="selectClass('${escapeHtml(cls)}')" style="color:${classColor(cls)}">
-          <span class="class-name"><span class="swatch"></span>${escapeHtml(CLASS_LABELS[cls] || cls)}</span>
-          <span>${players.length}</span>
-        </button>
-      `).join("");
-    }
-
-    function renderTabs(){
-      const tabs = document.getElementById("tabs");
-      tabs.innerHTML = (state.data.sections || []).map(section => `
-        <button class="tab ${section.className ? "class-tab" : ""} ${state.activeSection === section.id ? "active" : ""}" type="button" onclick="selectSection('${escapeHtml(section.id)}')" style="${section.className ? `background:${classColor(section.className)}` : ""}">
-          ${escapeHtml(section.label)}
-        </button>
-      `).join("");
-    }
-
-    function renderClassSubtabs(section){
-      const box = document.getElementById("classSubtabs");
-      if(!box || !section){
-        return;
-      }
-      const classes = sectionClasses(section);
-      if(!classes.length){
-        box.className = "subtabs";
-        box.innerHTML = "";
-        return;
-      }
-      box.className = "subtabs show";
-      const showAllButton = !isClassBlockSection(section);
-      box.innerHTML = `
-        ${showAllButton ? `<button class="subtab ${!state.activeClass ? "active" : ""}" type="button" onclick="selectClass('')">Alle</button>` : ""}
-        ${classes.map(className => `
-          <button class="subtab ${state.activeClass === className ? "active" : ""}" type="button" onclick="selectClass('${escapeHtml(className)}')" style="color:${classColor(className)}">
-            ${escapeHtml(CLASS_LABELS[className] || className)}
-          </button>
-        `).join("")}
-      `;
-    }
-
-    function renderClassOverview(section){
-      const box = document.getElementById("classOverview");
-      if(!state.activeClass){
-        box.className = "class-overview";
-        box.innerHTML = "";
-        return;
-      }
-      const players = (state.data.players || []).filter(player => player.className === state.activeClass);
-      const rows = rowsForActiveClass(section);
-      let filled = 0;
-      let total = 0;
-      players.forEach(player => rows.forEach(row => {
-        const value = row.values?.[player.name];
-        const number = Number(cellText(value).replace(/\D/g,""));
-        if(value) filled++;
-        if(Number.isFinite(number)) total += number;
-      }));
-      box.className = "class-overview show";
-      box.innerHTML = `
-        <div class="class-title">
-          <h2 style="color:${classColor(state.activeClass)}">${escapeHtml(CLASS_LABELS[state.activeClass] || state.activeClass)}</h2>
-          ${isClassBlockSection(section) ? "" : `<button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>`}
-        </div>
-        <div class="stats">
-          <div class="stat"><strong>${players.length}</strong><span>Spieler</span></div>
-          <div class="stat"><strong>${rows.length}</strong><span>Zeilen in diesem Reiter</span></div>
-          <div class="stat"><strong>${filled}</strong><span>gefüllte Felder</span></div>
-          <div class="stat"><strong>${Math.round(total).toLocaleString("de-DE")}</strong><span>Summe Werte</span></div>
-        </div>
-      `;
-    }
-
-    function renderClaTable(section){
-      const table = document.getElementById("analysisTable");
-      const players = visiblePlayers(section);
-      const rows = visibleRows(section, players).filter(row => row.type !== "header");
-      renderClassSubtabs(section);
-      renderClassOverview(section);
-      table.className = "compact cla-table";
-      const head = `
-        <thead>
-          <tr>
-            <th>Spieler</th>
-            ${rows.map((row, index) => `<th class="${state.highlightRow === `${row.label || ""}-${index}` ? "mark-col" : ""}">${escapeHtml(row.label)}</th>`).join("")}
-          </tr>
-        </thead>
-      `;
-      const body = players.map(player => `
-        <tr>
-          <td style="color:${classColor(player.className)}" onclick="selectHighlight('', '${escapeHtml(player.name)}')">${escapeHtml(player.name)}</td>
-          ${rows.map((row, index) => {
-            const rowKey = `${row.label || ""}-${index}`;
-            const value = row.values?.[player.name] || "";
-            const text = cellText(value);
-            const marked = `${state.highlightRow === rowKey ? " mark-col" : ""}${state.highlightPlayer === player.name ? " mark-row-cell" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
-            const score = value && typeof value === "object" ? "" : claScoreClass(value, row.label);
-            return `<td class="${text ? "text" : "empty"} ${score}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${renderCellValue(value, "")}</td>`;
-          }).join("")}
-        </tr>
-      `).join("");
-      table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${rows.length + 1}" class="hint">Keine Treffer.</td></tr>`}</tbody>`;
-      document.getElementById("statusText").textContent = section.description || "CLA-Auswertung.";
-    }
-
-    function isMatrixSection(section){
-      return Array.isArray(section?.matrix?.values);
-    }
-
-    function sheetCellTone(value, bg, visualIndex){
-      const text = String(value || "").trim();
-      if(!text) return "sheet-empty";
-      const className = classFromSheetColor(bg);
-      if(className && looksLikeSheetPlayerName(text)) return `sheet-player-header sheet-class-${className.toLowerCase()}`;
-      if(visualIndex === 0) return "sheet-label";
-      const rgb = parseColor(bg);
-      if(rgb){
-        const [r,g,b] = rgb;
-        if(r > 220 && g < 150 && b < 150) return "sheet-bad";
-        if(g > 160 && r < 210) return "sheet-good";
-        if(r > 220 && g > 175 && b < 170) return "sheet-mid";
-        if(Math.abs(r-g) < 12 && Math.abs(g-b) < 12 && r > 150) return "sheet-muted";
-      }
-      if(/^\d+(\.\d+)?(\s*\([^)]*\))?$/.test(text) || /^\d+%$/.test(text)) return "sheet-value";
-      return "sheet-note";
-    }
-
-    function shouldKeepSheetRow(row, compactCols, playersByName){
+    function activeSection(){return state.sections.find(s=>s.id===state.activeSection)||state.sections[0]||null;}
+    function rowMatchesClass(row, classes){
       if(!state.activeClass) return true;
-      const first = normalizeNameKey(row[compactCols[0]] || row[0] || "");
-      const firstClass = playersByName.get(first);
-      if(firstClass) return firstClass === state.activeClass;
-      return true;
+      const rowText=key(row.join(" "));
+      const classLabel=key(CLASS_LABEL[state.activeClass]||state.activeClass);
+      return rowText.includes(key(state.activeClass)) || rowText.includes(classLabel) || classes.includes(state.activeClass);
     }
-
-    function shouldKeepSheetColumn(rows, col, visualIndex, playersByName){
-      if(!state.activeClass || visualIndex === 0) return true;
-      const classes = new Set();
-      rows.forEach(({row}) => {
-        const className = playersByName.get(normalizeNameKey(row[col] || ""));
-        if(className) classes.add(className);
-      });
-      if(!classes.size) return true;
-      return classes.has(state.activeClass);
-    }
-
-    function renderSheetClassOverview(section, rows, cols){
-      const box = document.getElementById("classOverview");
-      if(!state.activeClass){
-        box.className = "class-overview";
-        box.innerHTML = "";
-        return;
-      }
-      const players = (state.data.players || []).filter(player => player.className === state.activeClass);
-      let filled = 0;
-      rows.forEach(({row}) => cols.forEach(col => {
-        const text = String(row[col] || "").trim();
-        if(text && text !== "0" && text !== "0%") filled++;
-      }));
-      box.className = "class-overview show";
-      box.innerHTML = `
-        <div class="class-title">
-          <h2 style="color:${classColor(state.activeClass)}">${escapeHtml(CLASS_LABELS[state.activeClass] || state.activeClass)}</h2>
-          <button class="btn" type="button" onclick="selectClass('')">Alle anzeigen</button>
-        </div>
-        <div class="stats">
-          <div class="stat"><strong>${players.length}</strong><span>Spieler</span></div>
-          <div class="stat"><strong>${rows.length}</strong><span>Zeilen in diesem Reiter</span></div>
-          <div class="stat"><strong>${filled}</strong><span>gefüllte Felder</span></div>
-          <div class="stat"><strong>${section.label}</strong><span>aktueller Reiter</span></div>
-        </div>
-      `;
-    }
-
-    function renderMatrixTable(section){
-      const table = document.getElementById("analysisTable");
-      renderClassSubtabs(section);
-      const values = section.matrix?.values || [];
-      const backgrounds = section.matrix?.backgrounds || [];
-      const fontColors = section.matrix?.fontColors || [];
-      const notes = section.matrix?.notes || [];
-      const q = state.search;
-      const playersByName = playerClassByName();
-      const rawRows = values.map((row, index) => ({ row: Array.isArray(row) ? row : [], index }));
-      const usedCols = new Set();
-      rawRows.forEach(item => {
-        item.row.forEach((cell, col) => {
-          if(String(cell || "").trim()) usedCols.add(col);
-        });
-      });
-      const colList = Array.from(usedCols).sort((a,b) => a - b);
-      const compactCols = colList.length ? colList : [0];
-      const rows = rawRows
-        .filter(item => compactCols.some(col => String(item.row[col] || "").trim()))
-        .filter(item => shouldKeepSheetRow(item.row, compactCols, playersByName))
-        .filter(item => !q || compactCols.some(col => String(item.row[col] || "").toLowerCase().includes(q)));
-      const visibleCols = compactCols.filter((col, visualIndex) => shouldKeepSheetColumn(rows, col, visualIndex, playersByName));
-      renderSheetClassOverview(section, rows, visibleCols);
-      table.className = "compact sheet-table";
-      const head = `
-        <thead>
-          <tr>
-            ${visibleCols.map((col, visualIndex) => `<th class="${sheetCellClass(rows, col, visualIndex)}">${visualIndex === 0 ? escapeHtml(section.label) : ""}</th>`).join("")}
-          </tr>
-        </thead>
-      `;
-      const body = rows.map(({row, index}) => `
-        <tr class="${state.highlightRow === `sheet-${index}` ? "mark-row" : ""}">
-          ${visibleCols.map((col, visualIndex) => {
-            const value = row[col] ?? "";
-            const bg = backgrounds[index]?.[col] || "";
-            const color = fontColors[index]?.[col] || "";
-            const note = notes[index]?.[col] || "";
-            const marked = `${state.highlightRow === `sheet-${index}` ? " mark-row-cell" : ""}${state.highlightPlayer === `col-${col}` ? " mark-col" : ""}${state.highlightRow === `sheet-${index}` && state.highlightPlayer === `col-${col}` ? " mark-cell" : ""}`;
-            const cls = `${value ? "text" : "sheet-empty"} ${sheetCellClass(rows, col, visualIndex)} ${sheetCellTone(value, bg, visualIndex)}${marked}`;
-            return `<td class="${cls}" ${note ? `title="${escapeHtml(note)}"` : ""} onclick="selectHighlight('sheet-${index}', 'col-${col}')">${escapeHtml(value)}</td>`;
-          }).join("")}
-        </tr>
-      `).join("");
-      table.innerHTML = head + `<tbody>${body || `<tr><td class="hint">Keine Treffer.</td></tr>`}</tbody>`;
-      document.getElementById("statusText").textContent = "Exakt aus dem Google Sheet nach Railway exportiert.";
-    }
-
-    function sheetCellClass(rows, col, visualIndex){
-      if(visualIndex === 0) return "sheet-wide";
-      const texts = rows.map(item => String(item.row[col] || "").trim()).filter(Boolean);
-      const longText = texts.some(text => text.length > 18 || text.includes(","));
-      const mostlyNames = texts.length && texts.every(text => /^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ' -]{1,24}$/.test(text));
-      if(longText) return "sheet-wide";
-      if(mostlyNames) return "sheet-name";
-      return "";
-    }
-
     function renderTable(){
-      const section = (state.data.sections || []).find(item => item.id === state.activeSection) || state.data.sections[0];
-      const table = document.getElementById("analysisTable");
-      if(!section){
-        table.innerHTML = '<tbody><tr><td class="hint">Keine Auswertungsdaten vorhanden.</td></tr></tbody>';
-        return;
-      }
-      if(isMatrixSection(section)){
-        renderMatrixTable(section);
-        return;
-      }
-      if(isClaSection(section)){
-        renderClaTable(section);
-        return;
-      }
-      const players = visiblePlayers(section);
-      const rows = visibleRows(section, players);
-      renderClassSubtabs(section);
-      renderClassOverview(section);
-      table.className = `${section.compact ? "compact" : ""} ${state.activeClass ? "focused" : ""}`.trim();
-      const head = `
-        <thead>
-          <tr>
-            <th>${escapeHtml(section.label)}</th>
-            ${players.map(player => `<th class="${state.highlightPlayer === player.name ? "mark-col" : ""}" style="background:${classColor(player.className)}" onclick="selectHighlight('', '${escapeHtml(player.name)}')">${escapeHtml(player.name)}</th>`).join("")}
-          </tr>
-        </thead>
-      `;
-      let currentClass = "";
-      const body = rows.map((row, rowIndex) => {
-        const rowKey = `${row.label || ""}-${rowIndex}`;
-        if(row.type === "header"){
-          currentClass = row.className || "";
-          if(row.className){
-            if(state.activeClass){
-              return `
-                <tr class="tone-sectionHeader">
-                  <td colspan="${players.length + 1}" style="background:${classColor(row.className)}">
-                    ${escapeHtml(CLASS_LABELS[row.className] || row.label)}
-                  </td>
-                </tr>
-              `;
-            }
-            return `
-              <tr class="tone-sectionHeader">
-                <td style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>
-                ${players.map(player => player.className === row.className
-                  ? `<td class="class-band" style="background:${classColor(row.className)}">${escapeHtml(CLASS_LABELS[row.className] || row.label)}</td>`
-                  : `<td class="class-gap"></td>`
-                ).join("")}
-              </tr>
-            `;
-          }
-          return `
-            <tr class="tone-sectionHeader">
-              <td colspan="${players.length + 1}">
-                ${escapeHtml(row.label)}
-              </td>
-            </tr>
-          `;
-        }
-        if(row.tone === "activity" || row.tone === "activityStrong"){
-          currentClass = "";
-        }
-        return `
-          <tr class="${row.tone === "total" ? "total" : ""} ${row.tone ? `tone-${row.tone}` : ""} ${state.highlightRow === rowKey ? "mark-row" : ""}">
-            <td onclick="selectHighlight('${escapeHtml(rowKey)}', '')">${escapeHtml(row.label)}</td>
-            ${players.map(player => {
-              const value = row.values?.[player.name] || "";
-              if(currentClass && player.className !== currentClass){
-                return `<td class="class-gap"></td>`;
-              }
-              const text = cellText(value);
-              const cls = text ? (row.type === "text" ? "text" : "hot") : "empty";
-              const marked = `${state.highlightRow === rowKey ? " mark-row-cell" : ""}${state.highlightPlayer === player.name ? " mark-col" : ""}${state.highlightRow === rowKey && state.highlightPlayer === player.name ? " mark-cell" : ""}`;
-              return `<td class="${cls}${marked}" onclick="selectHighlight('${escapeHtml(rowKey)}', '${escapeHtml(player.name)}')">${renderCellValue(value, state.activeClass ? "·" : "")}</td>`;
-            }).join("")}
-          </tr>
-        `;
-      }).join("");
-      table.innerHTML = head + `<tbody>${body || `<tr><td colspan="${players.length + 1}" class="hint">Keine Treffer.</td></tr>`}</tbody>`;
-      document.getElementById("statusText").textContent = section.description || "Direkt aus Warcraft Logs berechnet.";
+      const section=activeSection();
+      const table=document.getElementById("sheetTable");
+      if(!section){table.innerHTML='<tbody><tr><td>Keine Raidsheet-Daten vorhanden.</td></tr></tbody>';return;}
+      const values=matrixValues(section);
+      const bgs=matrixBackgrounds(section);
+      const fcs=matrixFontColors(section);
+      const q=key(document.getElementById("search").value);
+      const classes=classesForSection(section);
+      const rows=values.map((row,rowIndex)=>({row:Array.isArray(row)?row:[],rowIndex}))
+        .filter(item=>item.row.some(cell=>String(cell||"").trim()))
+        .filter(item=>(!q||key(item.row.join(" ")).includes(q)) && rowMatchesClass(item.row, classes));
+      const used=new Set();
+      rows.forEach(({row})=>row.forEach((cell,index)=>{if(String(cell||"").trim())used.add(index);}));
+      const cols=[...used].sort((a,b)=>a-b);
+      const body=rows.map(({row,rowIndex})=>`<tr>${cols.map(col=>{
+        const style=[];
+        const bg=bgs[rowIndex]?.[col]; const color=fcs[rowIndex]?.[col];
+        if(bg) style.push(`background:${String(bg).replace(/"/g,"")}`);
+        if(color) style.push(`color:${String(color).replace(/"/g,"")}`);
+        return `<td style="${attr(style.join(";"))}">${html(row[col]||"")}</td>`;
+      }).join("")}</tr>`).join("");
+      table.innerHTML=`<thead><tr>${cols.map((_,i)=>`<th>${i===0?html(section.label||sectionLabel(section)):""}</th>`).join("")}</tr></thead><tbody>${body||'<tr><td>Keine Treffer.</td></tr>'}</tbody>`;
     }
-
-    function render(){
-      if(!state.data) return;
-      state.search = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-      renderTabs();
-      renderTypeSwitch();
-      renderClassControls();
-      renderRoleEditor();
-      renderTable();
+    function renderSide(){
+      const section=activeSection();
+      const classes=classesForSection(section);
+      document.getElementById("sectionInfo").innerHTML=section?`${html(section.type.toUpperCase())} · ${html(section.label||sectionLabel(section))}`:"-";
+      document.getElementById("classInfo").innerHTML=classes.map(cls=>`<span class="pill" style="color:${CLASS_COLOR[cls]||'#cbd5e1'}">${html(CLASS_LABEL[cls]||cls)}</span>`).join("")||'<span class="sub">Keine Klassen erkannt.</span>';
+      const warnings=[...(state.detail?.rpb?.warnings||[]),...(state.detail?.cla?.warnings||[])];
+      document.getElementById("warnings").innerHTML=warnings.length?warnings.map(html).join("<br>"):"Keine Hinweise.";
     }
-
-    async function loadAnalysis(){
-      const id = params.get("id") || params.get("analysisId") || "";
-      const guild = params.get("guild") || "lichtloot";
-      if(!id){
-        document.getElementById("analysisTable").innerHTML = '<tbody><tr><td class="error">Keine Raid-ID übergeben.</td></tr></tbody>';
-        return;
-      }
-      const query = new URLSearchParams({
-        action:"getPublicLogAnalysisWeb",
-        guild,
-        id,
-        type:currentAnalysisType(),
-        t:Date.now()
-      });
-      const response = await fetch(API_URL + "?" + query.toString(), {cache:"no-store"});
-      const data = await response.json();
-      if(!response.ok || data.success === false){
-        const message = String(data.error || "");
-        if(message.toLowerCase().includes("unsupported action")){
-          throw new Error("Die Webseite ist schon aktualisiert, aber die LichtLoot-API auf Railway noch nicht. Bitte die API ebenfalls deployen.");
-        }
-        throw new Error(data.error || "Auswertung konnte nicht geladen werden.");
-      }
-      state.data = data.webAnalysis;
-      state.activeSection = state.data.sections?.[0]?.id || "";
-      state.activeClass = "";
-      document.getElementById("pageTitle").textContent = state.data.report.title || "Raid-Auswertung";
-      document.getElementById("raidName").textContent = state.data.report.raid || state.data.analysis.raid || "Raid";
-      document.getElementById("raidDate").textContent = state.data.report.raidDate || state.data.analysis.raidDate || "-";
-      document.getElementById("playerCount").textContent = `${(state.data.players || []).length} Spieler`;
-      document.getElementById("wclLink").href = state.data.report.reportUrl || state.data.analysis.reportUrl || "#";
-      if((state.data.warnings || []).length){
-        document.getElementById("statusText").textContent = state.data.warnings.join(" ");
-      }
-      render();
-    }
-
-    loadAnalysis().catch(error => {
-      document.getElementById("analysisTable").innerHTML = `<tbody><tr><td class="error">${escapeHtml(error.message || "Auswertung konnte nicht geladen werden.")}</td></tr></tbody>`;
-      document.getElementById("statusText").textContent = "Bitte Warcraft-Logs-Zugang und Analyse-ID prüfen.";
-    });
+    function selectSection(id){state.activeSection=id;state.activeClass="";renderDetail();}
+    function selectClass(cls){state.activeClass=cls||"";renderClassTabs();renderTable();}
+    function resetFilters(){document.getElementById("search").value="";document.getElementById("raidFilter").value="";state.activeClass="";renderCurrent();}
+    function renderCurrent(){state.mode==="detail"?renderDetail():renderList();}
+    function reload(){state.mode==="detail"?loadDetail().catch(showError):loadList().catch(showError);}
+    function showError(error){const box=state.mode==="detail"?document.getElementById("sheetTable"):document.getElementById("listView");if(box.tagName==="TABLE")box.innerHTML=`<tbody><tr><td class="error">${html(error.message||"Fehler")}</td></tr></tbody>`;else box.innerHTML=`<div class="status error">${html(error.message||"Fehler")}</div>`;}
+    (async()=>{try{state.mode==="detail"?await loadDetail():await loadList();}catch(error){showError(error);}})();
   </script>
 </body>
 </html>
