@@ -39,10 +39,30 @@ const configuredAllowedOrigins = clean(process.env.CORS_ORIGIN)
   .split(",")
   .map(origin => origin.trim())
   .filter(Boolean);
-const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredAllowedOrigins]);
-app.use(cors({
+function normalizeCorsOrigin(origin) {
+  const value = clean(origin).replace(/\/+$/, "");
+  if (!value || value === "null" || value === "*") return value;
+  try {
+    const url = new URL(value);
+    return `${url.protocol}//${url.host}`.toLowerCase();
+  } catch {
+    return value.toLowerCase();
+  }
+}
+const allowedOrigins = new Set([...defaultAllowedOrigins, ...configuredAllowedOrigins].map(normalizeCorsOrigin));
+function isAllowedCorsOrigin(origin) {
+  const normalized = normalizeCorsOrigin(origin);
+  if (!normalized || allowedOrigins.has("*") || allowedOrigins.has(normalized)) return true;
+  try {
+    const { protocol, hostname } = new URL(normalized);
+    return protocol === "https:" && (hostname === "lichtloot.de" || hostname.endsWith(".lichtloot.de"));
+  } catch {
+    return false;
+  }
+}
+const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has("*") || allowedOrigins.has(origin)) {
+    if (isAllowedCorsOrigin(origin)) {
       callback(null, true);
       return;
     }
@@ -51,8 +71,9 @@ app.use(cors({
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   optionsSuccessStatus: 204
-}));
-app.options("*", cors());
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use("/api/combat-log/import", express.text({ type: "*/*", limit: "120mb" }));
 app.use(express.json({ limit: "80mb" }));
 app.use(express.urlencoded({ extended: true, limit: "80mb" }));
@@ -87,6 +108,10 @@ await ensureBuffTables().catch(error => {
   console.warn("Buff-Tabellen konnten nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureItemIdentitySchema().catch(error => {
+  console.warn("Item-Eindeutigkeit konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
@@ -109,6 +134,10 @@ await importLootItemMetadata().catch(error => {
 
 await restoreLootItemsFromStaticDataOnce().catch(error => {
   console.warn("Lootdaten-Wiederherstellung konnte nicht angewendet werden:", error.message || error);
+});
+
+await applyZgHakkariOffhandCorrectionOnce().catch(error => {
+  console.warn("ZG-Hakkari-Schildhand konnte nicht korrigiert werden:", error.message || error);
 });
 
 await applyLootRaidAssignmentCorrectionsOnce().catch(error => {
@@ -3401,19 +3430,39 @@ async function findCharacterForPin(guildId, pin, charName, server) {
   return result.rows[0] || null;
 }
 
-async function upsertItem(client, raidType, itemName) {
+async function upsertItem(client, raidType, itemName, itemGameId = "") {
   const name = clean(itemName);
+  const itemId = clean(itemGameId);
   if (!name || name === "-") return null;
 
-  const result = await client.query(
-    `insert into items (raid_type, name)
-     values ($1, $2)
-     on conflict (raid_type, name) do update
-       set name = excluded.name
-     returning id, name`,
-    [raidType, name]
+  if (itemId) {
+    const existingById = await client.query(
+      `select id, name
+       from items
+       where lower(raid_type) = $1
+         and item_id = $2
+       order by created_at asc
+       limit 1`,
+      [normalizeRaidType(raidType), itemId]
+    );
+    if (existingById.rows.length) return existingById.rows[0];
+    return upsertLootItemRecord(client, { raid: raidType, name, itemId });
+  }
+
+  const existing = await client.query(
+    `select id, name
+     from items
+     where lower(raid_type) = $1
+       and lower(name) = lower($2)
+     order by
+       case when item_id is null then 1 else 0 end,
+       created_at asc
+     limit 1`,
+    [normalizeRaidType(raidType), name]
   );
-  return result.rows[0];
+  if (existing.rows.length) return existing.rows[0];
+
+  return upsertLootItemRecord(client, { raid: raidType, name });
 }
 
 async function savePrio({ guildId, query: params }) {
@@ -3519,9 +3568,9 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
 
-    const p1 = await upsertItem(client, raidType, params.p1);
-    const p2 = await upsertItem(client, raidType, params.p2);
-    const p3 = await upsertItem(client, raidType, params.p3);
+    const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
+    const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
+    const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
     const comment = JSON.stringify({
       p0Plus: p0Plus === "ja" || p0Plus === "true" ? "ja" : "nein",
       raidTime: clean(params.raidTime || params.uhrzeit),
@@ -3658,9 +3707,9 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     await client.query("begin");
 
     const character = await findOrCreateRaidleadCharacter(client, guildId, params);
-    const p1 = await upsertItem(client, raidType, params.p1);
-    const p2 = await upsertItem(client, raidType, params.p2);
-    const p3 = await upsertItem(client, raidType, params.p3);
+    const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
+    const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
+    const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
     const comment = JSON.stringify({
       p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
       raidTime: clean(params.raidTime || params.uhrzeit) || raid.raid_time || "",
@@ -10441,15 +10490,7 @@ async function seedDefaultLootItemsOnce() {
       const raidType = normalizeRaidType(item.raid_type || item.raid || "");
       const name = clean(item.name);
       if (!raidType || !name) continue;
-      await client.query(
-        `insert into items (raid_type, item_id, name, quality, icon_url)
-         values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
-         on conflict (raid_type, name) do update
-           set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
-               quality = coalesce(nullif(excluded.quality, ''), items.quality),
-               icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url)`,
-        [raidType, clean(item.item_id), name, clean(item.quality), clean(item.icon_url)]
-      );
+      await upsertLootItemRecord(client, item);
       imported += 1;
     }
 
@@ -10494,16 +10535,8 @@ async function applyLootItemCorrectionsOnce() {
       const raidType = normalizeRaidType(item.raid_type || item.raid || "");
       const name = clean(item.name);
       if (!raidType || !name) continue;
-      const result = await client.query(
-        `insert into items (raid_type, item_id, name, quality, icon_url)
-         values ($1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''))
-         on conflict (raid_type, name) do update
-           set item_id = excluded.item_id,
-               quality = excluded.quality,
-               icon_url = excluded.icon_url`,
-        [raidType, clean(item.item_id), name, clean(item.quality), clean(item.icon_url)]
-      );
-      upserted += result.rowCount;
+      const result = await upsertLootItemRecord(client, item, { preserveExisting: false });
+      if (result) upserted += 1;
     }
     const correctionNames = corrections.map(item => clean(item.name).toLowerCase()).filter(Boolean);
     const deleted = await client.query(
@@ -10612,14 +10645,13 @@ async function applyKaeseItemIdCorrection() {
     const aliases = ["Kaese", "Käse", "Cheese"];
     const raidTypes = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
     for (const raidType of raidTypes) {
-      await client.query(
-        `insert into items (raid_type, item_id, name, quality, icon_url)
-         values ($1, $2, 'Kaese', '', 'inv_misc_food_37')
-         on conflict (raid_type, name) do update
-           set item_id = excluded.item_id,
-               icon_url = coalesce(nullif(items.icon_url, ''), excluded.icon_url)`,
-        [raidType, "133993"]
-      );
+      await upsertLootItemRecord(client, {
+        raid: raidType,
+        itemId: "133993",
+        name: "Kaese",
+        quality: "",
+        iconName: "inv_misc_food_37"
+      });
     }
     await client.query(
       `update items
@@ -10658,6 +10690,119 @@ async function ensureLootItemMetadataColumns() {
   );
 }
 
+async function ensureItemIdentitySchema() {
+  await query(`alter table items drop constraint if exists items_raid_type_name_key`);
+  await query(`create index if not exists items_raid_type_name_idx on items (lower(raid_type), lower(name))`);
+  await query(`create index if not exists items_raid_type_item_id_idx on items (lower(raid_type), item_id) where item_id is not null`);
+}
+
+function definedItemField(value) {
+  const text = clean(value);
+  return text ? text : null;
+}
+
+async function upsertLootItemRecord(client, rawItem, options = {}) {
+  const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raidType || rawItem.raid || "");
+  const name = clean(rawItem.name || rawItem.item || rawItem.Item || "");
+  const itemId = clean(rawItem.item_id || rawItem.itemId || rawItem.ItemID || "");
+  if (!raidType || !name) return null;
+
+  const preserveExisting = options.preserveExisting !== false;
+  const lookupValues = [raidType];
+  let lookupClause = "";
+  if (itemId) {
+    lookupValues.push(itemId);
+    lookupClause = "lower(raid_type) = $1 and item_id = $2";
+  } else {
+    lookupValues.push(name);
+    lookupClause = "lower(raid_type) = $1 and lower(name) = lower($2) and item_id is null";
+  }
+
+  const existing = await client.query(
+    `select id from items where ${lookupClause} order by created_at asc limit 1`,
+    lookupValues
+  );
+
+  const values = [
+    raidType,
+    itemId,
+    name,
+    definedItemField(rawItem.quality),
+    definedItemField(rawItem.icon_url || rawItem.iconUrl || rawItem.iconName || rawItem.icon),
+    definedItemField(rawItem.slot),
+    definedItemField(rawItem.type || rawItem.itemType),
+    definedItemField(rawItem.boss),
+    definedItemField(rawItem.bind),
+    definedItemField(rawItem.category),
+    definedItemField(rawItem.wowhead),
+    definedItemField(rawItem.stats_text || rawItem.statsText),
+    definedItemField(rawItem.tooltip),
+    definedItemField(rawItem.needed),
+    definedItemField(rawItem.equip),
+    definedItemField(rawItem.price),
+    definedItemField(rawItem.dropchance || rawItem.dropChance),
+    definedItemField(rawItem.token_group || rawItem.tokenGroup),
+    definedItemField(rawItem.token_name || rawItem.tokenName),
+    definedItemField(rawItem.token_item_id || rawItem.tokenItemId)
+  ];
+
+  const setValue = preserveExisting ? "coalesce($VALUE, COLUMN)" : "$VALUE";
+  if (existing.rows.length) {
+    const id = existing.rows[0].id;
+    const result = await client.query(
+      `update items
+       set raid_type = $1,
+           item_id = ${setValue.replace("$VALUE", "$2").replace("COLUMN", "item_id")},
+           name = $3,
+           quality = ${setValue.replace("$VALUE", "$4").replace("COLUMN", "quality")},
+           icon_url = ${setValue.replace("$VALUE", "$5").replace("COLUMN", "icon_url")},
+           slot = ${setValue.replace("$VALUE", "$6").replace("COLUMN", "slot")},
+           type = ${setValue.replace("$VALUE", "$7").replace("COLUMN", "type")},
+           boss = ${setValue.replace("$VALUE", "$8").replace("COLUMN", "boss")},
+           bind = ${setValue.replace("$VALUE", "$9").replace("COLUMN", "bind")},
+           category = ${setValue.replace("$VALUE", "$10").replace("COLUMN", "category")},
+           wowhead = ${setValue.replace("$VALUE", "$11").replace("COLUMN", "wowhead")},
+           stats_text = ${setValue.replace("$VALUE", "$12").replace("COLUMN", "stats_text")},
+           tooltip = ${setValue.replace("$VALUE", "$13").replace("COLUMN", "tooltip")},
+           needed = ${setValue.replace("$VALUE", "$14").replace("COLUMN", "needed")},
+           equip = ${setValue.replace("$VALUE", "$15").replace("COLUMN", "equip")},
+           price = ${setValue.replace("$VALUE", "$16").replace("COLUMN", "price")},
+           dropchance = ${setValue.replace("$VALUE", "$17").replace("COLUMN", "dropchance")},
+           token_group = ${setValue.replace("$VALUE", "$18").replace("COLUMN", "token_group")},
+           token_name = ${setValue.replace("$VALUE", "$19").replace("COLUMN", "token_name")},
+           token_item_id = ${setValue.replace("$VALUE", "$20").replace("COLUMN", "token_item_id")}
+       where id = $21
+       returning id, raid_type, item_id, name, quality, icon_url,
+                 slot, type, boss, bind, category, wowhead,
+                 stats_text, tooltip, needed, equip, price, dropchance,
+                 token_group, token_name, token_item_id`,
+      [...values, id]
+    );
+    return result.rows[0] || null;
+  }
+
+  const result = await client.query(
+    `insert into items (
+       raid_type, item_id, name, quality, icon_url,
+       slot, type, boss, bind, category, wowhead,
+       stats_text, tooltip, needed, equip, price, dropchance,
+       token_group, token_name, token_item_id
+     )
+     values (
+       $1, nullif($2, ''), $3, $4, $5,
+       $6, $7, $8, $9, $10, $11,
+       $12, $13, $14, $15, $16, $17,
+       $18, $19, $20
+     )
+     returning id, raid_type, item_id, name, quality, icon_url,
+               slot, type, boss, bind, category, wowhead,
+               stats_text, tooltip, needed, equip, price, dropchance,
+               token_group, token_name, token_item_id`,
+    values
+  );
+  return result.rows[0] || null;
+}
+
 async function importLootItemMetadata() {
   const markerKey = "loot-item-metadata-import-latest";
   const client = await pool.connect();
@@ -10685,55 +10830,29 @@ async function importLootItemMetadata() {
         if (!raidType || !name) continue;
         candidates += 1;
 
-        const result = await client.query(
-          `update items
-           set item_id = coalesce(nullif($3, ''), item_id),
-               quality = coalesce(nullif($4, ''), quality),
-               icon_url = coalesce(nullif($5, ''), icon_url),
-               slot = nullif($6, ''),
-               type = nullif($7, ''),
-               boss = nullif($8, ''),
-               bind = nullif($9, ''),
-               category = nullif($10, ''),
-               wowhead = nullif($11, ''),
-               stats_text = nullif($12, ''),
-               tooltip = nullif($13, ''),
-               needed = nullif($14, ''),
-               equip = nullif($15, ''),
-               price = nullif($16, ''),
-               dropchance = nullif($17, ''),
-               token_group = nullif($18, ''),
-               token_name = nullif($19, ''),
-               token_item_id = nullif($20, '')
-           where lower(raid_type) = $1
-             and (
-               lower(name) = lower($2)
-               or (nullif($3, '') is not null and item_id = $3)
-             )`,
-          [
-            raidType,
-            name,
-            item.itemId,
-            item.quality,
-            item.iconName || item.icon,
-            item.slot,
-            item.type,
-            item.boss,
-            item.bind,
-            item.category,
-            item.wowhead,
-            item.statsText,
-            item.tooltip,
-            item.needed,
-            item.equip,
-            item.price,
-            item.dropchance || item.dropChance,
-            item.tokenGroup,
-            item.tokenName,
-            item.tokenItemId
-          ]
-        );
-        updated += result.rowCount;
+        const result = await upsertLootItemRecord(client, {
+          raid: raidType,
+          itemId: item.itemId,
+          name,
+          quality: item.quality,
+          iconName: item.iconName || item.icon,
+          slot: item.slot,
+          type: item.type,
+          boss: item.boss,
+          bind: item.bind,
+          category: item.category,
+          wowhead: item.wowhead,
+          statsText: item.statsText,
+          tooltip: item.tooltip,
+          needed: item.needed,
+          equip: item.equip,
+          price: item.price,
+          dropchance: item.dropchance || item.dropChance,
+          tokenGroup: item.tokenGroup,
+          tokenName: item.tokenName,
+          tokenItemId: item.tokenItemId
+        }, { preserveExisting: false });
+        if (result) updated += 1;
       }
     }
 
@@ -10786,63 +10905,29 @@ async function restoreLootItemsFromStaticDataOnce() {
         if (!raidType || !name) continue;
         candidates += 1;
 
-        const result = await client.query(
-          `insert into items (
-             raid_type, item_id, name, quality, icon_url,
-             slot, type, boss, bind, category, wowhead,
-             stats_text, tooltip, needed, equip, price, dropchance,
-             token_group, token_name, token_item_id
-           )
-           values (
-             $1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''),
-             nullif($6, ''), nullif($7, ''), nullif($8, ''), nullif($9, ''),
-             nullif($10, ''), nullif($11, ''), nullif($12, ''), nullif($13, ''),
-             nullif($14, ''), nullif($15, ''), nullif($16, ''), nullif($17, ''),
-             nullif($18, ''), nullif($19, ''), nullif($20, '')
-           )
-           on conflict (raid_type, name) do update
-             set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
-                 quality = coalesce(nullif(excluded.quality, ''), items.quality),
-                 icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url),
-                 slot = coalesce(nullif(excluded.slot, ''), items.slot),
-                 type = coalesce(nullif(excluded.type, ''), items.type),
-                 boss = coalesce(nullif(excluded.boss, ''), items.boss),
-                 bind = coalesce(nullif(excluded.bind, ''), items.bind),
-                 category = coalesce(nullif(excluded.category, ''), items.category),
-                 wowhead = coalesce(nullif(excluded.wowhead, ''), items.wowhead),
-                 stats_text = coalesce(nullif(excluded.stats_text, ''), items.stats_text),
-                 tooltip = coalesce(nullif(excluded.tooltip, ''), items.tooltip),
-                 needed = coalesce(nullif(excluded.needed, ''), items.needed),
-                 equip = coalesce(nullif(excluded.equip, ''), items.equip),
-                 price = coalesce(nullif(excluded.price, ''), items.price),
-                 dropchance = coalesce(nullif(excluded.dropchance, ''), items.dropchance),
-                 token_group = coalesce(nullif(excluded.token_group, ''), items.token_group),
-                 token_name = coalesce(nullif(excluded.token_name, ''), items.token_name),
-                 token_item_id = coalesce(nullif(excluded.token_item_id, ''), items.token_item_id)`,
-          [
-            raidType,
-            item.itemId,
-            name,
-            item.quality,
-            item.iconName || item.icon,
-            item.slot,
-            item.type,
-            item.boss,
-            item.bind,
-            item.category,
-            item.wowhead,
-            item.statsText,
-            item.tooltip,
-            item.needed,
-            item.equip,
-            item.price,
-            item.dropchance || item.dropChance,
-            item.tokenGroup,
-            item.tokenName,
-            item.tokenItemId
-          ]
-        );
-        upserted += result.rowCount;
+        const result = await upsertLootItemRecord(client, {
+          raid: raidType,
+          itemId: item.itemId,
+          name,
+          quality: item.quality,
+          iconName: item.iconName || item.icon,
+          slot: item.slot,
+          type: item.type,
+          boss: item.boss,
+          bind: item.bind,
+          category: item.category,
+          wowhead: item.wowhead,
+          statsText: item.statsText,
+          tooltip: item.tooltip,
+          needed: item.needed,
+          equip: item.equip,
+          price: item.price,
+          dropchance: item.dropchance || item.dropChance,
+          tokenGroup: item.tokenGroup,
+          tokenName: item.tokenName,
+          tokenItemId: item.tokenItemId
+        });
+        if (result) upserted += 1;
       }
     }
 
@@ -10854,6 +10939,83 @@ async function restoreLootItemsFromStaticDataOnce() {
     );
     await client.query("commit");
     console.log(`Lootdaten wiederhergestellt: ${upserted}/${candidates} Items`);
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function applyZgHakkariOffhandCorrectionOnce() {
+  const markerKey = "zg-hakkari-twinblades-two-itemids-v2";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const items = [
+      {
+        raid: "zg",
+        itemId: "19865",
+        name: "Kriegsklinge der Hakkari",
+        quality: "epic",
+        iconName: "inv_sword_55",
+        slot: "Waffenhand",
+        type: "Einhandschwerter",
+        boss: "Hakkar",
+        bind: "Wird beim Aufheben gebunden",
+        category: "Waffe",
+        statsText: "Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | (2) Set: Schwerter +6.",
+        tooltip: "Kriegsklinge der Hakkari | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Schwert | 59 - 110 Schaden Tempo 1,70 | (49.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari | (2) Set: Schwerter +6. | 'Geschmiedet in...'",
+        needed: "Benötigt Stufe 60",
+        equip: "Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+        dropchance: "Nov 56%"
+      },
+      {
+        raid: "zg",
+        itemId: "19866",
+        name: "Kriegsklinge der Hakkari",
+        quality: "epic",
+        iconName: "inv_sword_55",
+        slot: "Schildhand",
+        type: "Einhandschwerter",
+        boss: "Bloodlord Mandokir",
+        bind: "Wird beim Aufheben gebunden",
+        category: "Waffe",
+        statsText: "Anlegen: +40 Angriffskraft. | (2) Set: Schwerter +6.",
+        tooltip: "Kriegsklinge der Hakkari | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.94 Schaden pro Sekunde) | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. | '...den brodelnden Flammen des Hasses.' | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari | (2) Set: Schwerter +6.",
+        needed: "Benötigt Stufe 60",
+        equip: "Anlegen: +40 Angriffskraft.",
+        dropchance: ""
+      }
+    ];
+
+    let upserted = 0;
+    for (const item of items) {
+      const result = await upsertLootItemRecord(client, item, { preserveExisting: false });
+      if (result) upserted += 1;
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [markerKey, JSON.stringify({ upserted, itemIds: ["19865", "19866"] })]
+    );
+    await client.query("commit");
+    console.log("ZG-Hakkari-Zwillingsklingen korrigiert: 19865 Waffenhand, 19866 Schildhand");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -10984,25 +11146,18 @@ async function applyEterniumLockboxRaidItemsOnce() {
 
     let upserted = 0;
     for (const raidType of raidTypes) {
-      const result = await client.query(
-        `insert into items (
-           raid_type, item_id, name, quality, icon_url, slot, type, boss, category
-         )
-         values (
-           $1, '5760', 'Eterniumschließkassette', 'common', 'Inv_misc_ornatebox',
-           'Sonstiges', 'Sonstiges', 'Trash', 'Sonstiges'
-         )
-         on conflict (raid_type, name) do update
-           set item_id = excluded.item_id,
-               quality = excluded.quality,
-               icon_url = excluded.icon_url,
-               slot = excluded.slot,
-               type = excluded.type,
-               boss = excluded.boss,
-               category = excluded.category`,
-        [raidType]
-      );
-      upserted += result.rowCount;
+      const result = await upsertLootItemRecord(client, {
+        raid: raidType,
+        itemId: "5760",
+        name: "Eterniumschließkassette",
+        quality: "common",
+        iconName: "Inv_misc_ornatebox",
+        slot: "Sonstiges",
+        type: "Sonstiges",
+        boss: "Trash",
+        category: "Sonstiges"
+      }, { preserveExisting: false });
+      if (result) upserted += 1;
     }
 
     await client.query(
@@ -11293,44 +11448,31 @@ async function adminCreateItem({ guildId, query: params }) {
     throw error;
   }
 
-  const result = await query(
-    `insert into items (
-       raid_type, item_id, name, quality, icon_url,
-       slot, type, boss, bind, category, wowhead,
-       stats_text, tooltip, needed, equip, price, dropchance
-     )
-     values (
-       $1, nullif($2, ''), $3, nullif($4, ''), nullif($5, ''),
-       nullif($6, ''), nullif($7, ''), nullif($8, ''), nullif($9, ''), nullif($10, ''), nullif($11, ''),
-       nullif($12, ''), nullif($13, ''), nullif($14, ''), nullif($15, ''), nullif($16, ''), nullif($17, '')
-     )
-     on conflict (raid_type, name) do update
-       set item_id = coalesce(nullif(excluded.item_id, ''), items.item_id),
-           quality = coalesce(nullif(excluded.quality, ''), items.quality),
-           icon_url = coalesce(nullif(excluded.icon_url, ''), items.icon_url),
-           slot = coalesce(nullif(excluded.slot, ''), items.slot),
-           type = coalesce(nullif(excluded.type, ''), items.type),
-           boss = coalesce(nullif(excluded.boss, ''), items.boss),
-           bind = coalesce(nullif(excluded.bind, ''), items.bind),
-           category = coalesce(nullif(excluded.category, ''), items.category),
-           wowhead = coalesce(nullif(excluded.wowhead, ''), items.wowhead),
-           stats_text = coalesce(nullif(excluded.stats_text, ''), items.stats_text),
-           tooltip = coalesce(nullif(excluded.tooltip, ''), items.tooltip),
-           needed = coalesce(nullif(excluded.needed, ''), items.needed),
-           equip = coalesce(nullif(excluded.equip, ''), items.equip),
-           price = coalesce(nullif(excluded.price, ''), items.price),
-           dropchance = coalesce(nullif(excluded.dropchance, ''), items.dropchance)
-     returning id, raid_type, item_id, name, quality, icon_url,
-               slot, type, boss, bind, category, wowhead,
-               stats_text, tooltip, needed, equip, price, dropchance`,
-    [
-      raidType, itemId, name, quality, iconUrl,
-      slot, type, boss, bind, category, wowhead,
-      statsText, tooltip, needed, equip, price, dropchance
-    ]
-  );
-
-  return { success: true, item: result.rows[0] };
+  const client = await pool.connect();
+  try {
+    const item = await upsertLootItemRecord(client, {
+      raid: raidType,
+      itemId,
+      name,
+      quality,
+      iconName: iconUrl,
+      slot,
+      type,
+      boss,
+      bind,
+      category,
+      wowhead,
+      statsText,
+      tooltip,
+      needed,
+      equip,
+      price,
+      dropchance
+    });
+    return { success: true, item };
+  } finally {
+    client.release();
+  }
 }
 
 async function adminDeleteItem({ guildId, query: params }) {
