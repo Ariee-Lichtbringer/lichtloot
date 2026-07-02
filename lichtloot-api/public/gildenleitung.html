@@ -769,6 +769,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
   margin-top:8px;
 }
 
+.raid-helper-body{
+  --raid-helper-accent:96,165,250;
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(var(--raid-helper-accent),.10),rgba(2,6,23,.14) 34%,rgba(var(--raid-helper-accent),.045));
+  box-shadow:inset 0 0 0 1px rgba(var(--raid-helper-accent),.12);
+  padding:8px;
+}
+
 .create-grid{
   display:grid;
   grid-template-columns:1.2fr 150px 130px 1fr auto;
@@ -995,10 +1003,11 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .raid-helper-tab{
+  --tab-accent:96,165,250;
   min-height:58px;
-  border:1px solid rgba(148,163,184,.16);
+  border:1px solid rgba(var(--tab-accent),.24);
   border-radius:8px;
-  background:rgba(15,23,42,.46);
+  background:linear-gradient(135deg,rgba(var(--tab-accent),.10),rgba(15,23,42,.48));
   color:#e5edf8;
   padding:9px 10px;
   display:flex;
@@ -1010,14 +1019,15 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .raid-helper-tab:hover{
-  border-color:rgba(96,165,250,.40);
-  background:rgba(30,41,59,.58);
+  border-color:rgba(var(--tab-accent),.52);
+  background:linear-gradient(135deg,rgba(var(--tab-accent),.18),rgba(30,41,59,.60));
 }
 
 .raid-helper-tab.active{
-  border-color:rgba(124,58,237,.66);
-  background:linear-gradient(135deg,rgba(124,58,237,.34),rgba(96,165,250,.18));
+  border-color:rgba(var(--tab-accent),.78);
+  background:linear-gradient(135deg,rgba(var(--tab-accent),.34),rgba(var(--tab-accent),.15));
   color:#fff;
+  box-shadow:0 0 0 1px rgba(var(--tab-accent),.18),0 12px 32px rgba(var(--tab-accent),.13);
 }
 
 .raid-helper-tab-icon{
@@ -1026,10 +1036,21 @@ select:focus{border-color:rgba(96,165,250,.75)}
   border-radius:7px;
   display:grid;
   place-items:center;
-  background:rgba(2,6,23,.58);
-  border:1px solid rgba(148,163,184,.14);
+  background:rgba(var(--tab-accent),.13);
+  border:1px solid rgba(var(--tab-accent),.24);
   flex:0 0 auto;
 }
+
+.raid-helper-tab[data-raid-helper-tab="dashboard"]{--tab-accent:148,163,184}
+.raid-helper-tab[data-raid-helper-tab="createEvent"]{--tab-accent:34,197,94}
+.raid-helper-tab[data-raid-helper-tab="createEmbed"]{--tab-accent:56,189,248}
+.raid-helper-tab[data-raid-helper-tab="calendar"]{--tab-accent:250,204,21}
+.raid-helper-tab[data-raid-helper-tab="currentEvents"]{--tab-accent:124,58,237}
+.raid-helper-tab[data-raid-helper-tab="pastEvents"]{--tab-accent:239,68,68}
+.raid-helper-tab[data-raid-helper-tab="scheduledEvents"]{--tab-accent:249,115,22}
+.raid-helper-tab[data-raid-helper-tab="attendance"]{--tab-accent:20,184,166}
+.raid-helper-tab[data-raid-helper-tab="templates"]{--tab-accent:236,72,153}
+.raid-helper-tab[data-raid-helper-tab="settings"]{--tab-accent:100,116,139}
 
 .raid-helper-tab-copy{
   min-width:0;
@@ -1252,31 +1273,57 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .raid-helper-template-grid{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
 }
 
 .raid-helper-template-card{
-  border:1px solid rgba(148,163,184,.16);
-  border-radius:8px;
-  background:rgba(2,6,23,.40);
-  padding:12px;
-  display:grid;
+  border:1px solid rgba(96,165,250,.18);
+  border-radius:10px;
+  background:
+    linear-gradient(135deg,rgba(var(--template-accent,56,189,248),.13),rgba(2,6,23,.66) 48%,rgba(15,23,42,.82)),
+    rgba(2,6,23,.40);
+  padding:14px;
+  min-height:178px;
+  display:flex;
+  flex-direction:column;
   gap:10px;
+  box-shadow:0 16px 36px rgba(0,0,0,.18);
 }
 
 .raid-helper-template-card h4{
   margin:0;
   color:#f8fafc;
-  font-size:15px;
+  font-size:16px;
 }
 
 .raid-helper-template-card p{
   margin:0;
   color:#94a3b8;
-  line-height:1.35;
-  font-size:12px;
-  font-weight:750;
+  line-height:1.42;
+  font-size:13px;
+  font-weight:800;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.raid-helper-template-card-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.raid-helper-template-card-meta{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.raid-helper-template-card .raid-helper-template-actions{
+  margin-top:auto;
 }
 
 .raid-helper-template-badge{
@@ -1325,6 +1372,60 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .raid-helper-template-status{
   margin-top:10px;
+}
+
+.raid-helper-notify-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(8px);
+}
+
+.raid-helper-notify-modal{
+  width:min(540px,100%);
+  border:1px solid rgba(96,165,250,.3);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96));
+  box-shadow:0 24px 70px rgba(0,0,0,.42);
+  padding:16px;
+}
+
+.raid-helper-notify-modal h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.raid-helper-notify-modal p{
+  margin:7px 0 12px;
+  color:#94a3b8;
+  font-weight:800;
+  line-height:1.4;
+}
+
+.raid-helper-notify-modal textarea{
+  width:100%;
+  min-height:110px;
+  resize:vertical;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:10px;
+  background:rgba(2,6,23,.76);
+  color:#f8fafc;
+  padding:10px;
+  outline:none;
+  font:800 14px/1.45 Arial, Helvetica, sans-serif;
+}
+
+.raid-helper-notify-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:12px;
 }
 
 .raid-helper-event-detail{
@@ -1500,6 +1601,46 @@ select:focus{border-color:rgba(96,165,250,.75)}
   text-decoration:none;
 }
 
+.raid-helper-attendance-tabs{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+
+.raid-helper-attendance-tab{
+  border:1px solid rgba(var(--attendance-accent,96,165,250),.24);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  color:#cbd5e1;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px;
+  text-align:left;
+  font:900 13px/1.2 Arial, Helvetica, sans-serif;
+}
+
+.raid-helper-attendance-tab span{
+  display:block;
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:12px;
+}
+
+.raid-helper-attendance-tab.active{
+  border-color:rgba(var(--attendance-accent,96,165,250),.72);
+  background:linear-gradient(135deg,rgba(var(--attendance-accent,96,165,250),.22),rgba(2,6,23,.62));
+  color:#f8fafc;
+  box-shadow:0 14px 36px rgba(0,0,0,.18);
+}
+
+.raid-helper-attendance-tab strong{
+  font-size:15px;
+}
+
 .raid-helper-attendance-wrap{
   overflow:auto;
   border:1px solid rgba(148,163,184,.14);
@@ -1547,6 +1688,11 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
 .raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
 .raid-helper-attendance-cell.tentative{background:rgba(96,165,250,.46);color:#082f49}
+.p0-release-star{
+  color:#facc15;
+  margin-left:4px;
+  text-shadow:0 0 10px rgba(250,204,21,.42);
+}
 
 .raid-helper-loading{
   padding:16px;
@@ -2671,6 +2817,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .raid-helper-template-fields,
   .raid-helper-event-detail,
   .raid-helper-event-editor-grid,
+  .raid-helper-attendance-tabs,
   .raid-helper-wcl-grid{grid-template-columns:1fr}
   .raid-helper-event-actions{flex-direction:row;flex-wrap:wrap}
   .raid-helper-signup-row{flex-direction:column}
@@ -3034,17 +3181,79 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Scheduled Events</h3><span>Zukünftige Raids, sortiert nach Datum</span></div>
-          <button class="small-btn ghost" type="button" onclick="renderRaidHelperScheduledEvents()">Aktualisieren</button>
+          <div><h3>Scheduled Events</h3><span>Raidanmelder automatisch im Rhythmus neu erstellen</span></div>
+          <button class="small-btn ghost" type="button" onclick="loadRaidHelperSchedules()">Aktualisieren</button>
+        </div>
+        <div class="raid-helper-template-editor">
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">↻</span>
+              <div>
+                <h3>Rhythmus bearbeiten</h3>
+                <p>Nach Ablauf wird derselbe geplante Anmelder auf den nächsten Termin gedreht.</p>
+              </div>
+            </div>
+            <input id="raidHelperScheduleId" type="hidden">
+            <div class="raid-helper-template-fields">
+              <label>Raid <select id="raidHelperScheduleRaid" onchange="updateRaidHelperScheduleDefaults(false)">
+                <option value="naxx">Naxxramas</option>
+                <option value="aq40">Ahn'Qiraj 40</option>
+                <option value="bwl">Blackwing Lair</option>
+                <option value="mc">Molten Core</option>
+                <option value="aq20">Ahn'Qiraj 20</option>
+                <option value="zg">Zul Gurub</option>
+                <option value="ony">Onyxia</option>
+              </select></label>
+              <label>Titel <input id="raidHelperScheduleTitle" type="text" placeholder="Naxx Mittwoch 19:45"></label>
+              <label>Raidlead <input id="raidHelperScheduleLead" type="text" placeholder="maxmustermagier"></label>
+              <label>Wochentag <select id="raidHelperScheduleWeekday" onchange="document.getElementById('raidHelperScheduleNextDate').value = nextIsoDateForWeekday(this.value)">
+                <option value="1">Montag</option>
+                <option value="2">Dienstag</option>
+                <option value="3">Mittwoch</option>
+                <option value="4">Donnerstag</option>
+                <option value="5">Freitag</option>
+                <option value="6">Samstag</option>
+                <option value="7">Sonntag</option>
+              </select></label>
+              <label>Start <input id="raidHelperScheduleTime" type="time" value="19:45"></label>
+              <label>Rhythmus <select id="raidHelperScheduleInterval">
+                <option value="1">jede Woche</option>
+                <option value="2">alle 2 Wochen</option>
+                <option value="3">alle 3 Wochen</option>
+                <option value="4">alle 4 Wochen</option>
+              </select></label>
+              <label>Nächster Termin <input id="raidHelperScheduleNextDate" type="date"></label>
+              <label>Anmeldeschluss <input id="raidHelperScheduleDeadline" type="time"></label>
+              <label>Discord-Channel <select id="raidHelperScheduleChannel"></select></label>
+              <label>Gesamt <input id="raidHelperScheduleMax" type="number" min="1"></label>
+              <label>Tanks <input id="raidHelperScheduleTanks" type="number" min="0"></label>
+              <label>Heals <input id="raidHelperScheduleHeals" type="number" min="0"></label>
+              <label>DD <input id="raidHelperScheduleDds" type="number" min="0"></label>
+              <label class="raid-helper-editor-wide">Beschreibung <textarea id="raidHelperScheduleDescription"></textarea></label>
+            </div>
+            <div class="raid-helper-template-actions">
+              <button class="small-btn primary" type="button" onclick="saveRaidHelperSchedule()">Rhythmus speichern</button>
+              <button class="small-btn good" type="button" onclick="processRaidHelperSchedules()">Jetzt erzeugen/aktualisieren</button>
+              <button class="small-btn ghost" type="button" onclick="resetRaidHelperScheduleForm()">Neu</button>
+            </div>
+            <div id="raidHelperScheduleStatus" class="status">Bereit.</div>
+          </section>
+        </div>
+        <div class="raid-helper-view-head" style="padding:0;border:0">
+          <div><h3>Gespeicherte Rhythmen</h3><span>Diese Regeln drehen Anmelder automatisch weiter.</span></div>
+        </div>
+        <div id="raidHelperScheduleRules" class="raid-helper-list"></div>
+        <div class="raid-helper-view-head" style="padding:0;border:0">
+          <div><h3>Kommende Anmelder</h3><span>Aktuell angelegte Raidanmelder aus den Regeln und manuell erstellte Raids.</span></div>
         </div>
         <div id="raidHelperScheduledList" class="raid-helper-list"></div>
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, plus WarcraftLogs-Quellen</span></div>
+          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, direkt aus den Raidanmeldern</span></div>
           <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
         </div>
-        <div id="raidHelperWarcraftLogsSources" class="raid-helper-wcl-grid"></div>
+        <div id="raidHelperAttendanceTabs" class="raid-helper-attendance-tabs"></div>
         <div id="raidHelperAttendanceBox" class="raid-helper-attendance-wrap"><div class="raid-helper-loading">Attendance laden ...</div></div>
       </div>
       <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
@@ -3113,6 +3322,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-template-actions">
               <button class="small-btn primary" type="button" onclick="saveRaidHelperTemplate()">Speichern</button>
               <button class="small-btn good" type="button" onclick="applyRaidHelperTemplateFromEditor()">Vorlage nutzen</button>
+              <button class="small-btn ghost" type="button" onclick="planRaidHelperTemplateRepostFromEditor()">Repost planen</button>
               <button class="small-btn ghost" type="button" onclick="newRaidHelperTemplate()">Neu</button>
               <button class="small-btn danger" type="button" onclick="deleteRaidHelperTemplate()">Löschen</button>
             </div>
@@ -3730,6 +3940,7 @@ function renderAll(){
   renderRaidHelperCalendar();
   renderRaidHelperCurrentEvents();
   renderRaidHelperPastEvents();
+  renderRaidHelperScheduleRules();
   renderRaidHelperScheduledEvents();
   renderRaidHelperTemplates();
   renderRaidHelperWarcraftLogsSources();
@@ -4064,7 +4275,7 @@ async function loadWorldbuffMiniOverview(){
   box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days:4 });
     if(result && result.success){
       worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
       renderWorldbuffMiniList();
@@ -4363,15 +4574,25 @@ function buildRaidDirectLink(raid){
 
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
+const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
+let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
+let raidHelperAttendanceRaidKey = "bwl";
+let raidHelperP0ReleaseCache = null;
 let raidHelperEditingData = null;
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
   { key:"mc", label:"MC Teilnahmen", zone:"2000", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2000" },
   { key:"aq40", label:"AQ40 Teilnahmen", zone:"2005", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2005" },
   { key:"naxx", label:"NAXX Teilnahmen", zone:"2006", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2006" }
+];
+const RAID_HELPER_ATTENDANCE_TABS = [
+  { key:"bwl", label:"BWL", detail:"Blackwing Lair" },
+  { key:"mc", label:"MC", detail:"Molten Core" },
+  { key:"aq40", label:"AQ40", detail:"Tempel" },
+  { key:"naxx", label:"NAXX", detail:"Naxxramas" }
 ];
 const RAID_HELPER_CLASS_ICONS = {
   Warrior:"krieger.png",
@@ -4464,6 +4685,19 @@ function raidHelperClassIconMarkup(className, fallbackIcon, filename){
 
 function setRaidHelperTab(tabName){
   const target = String(tabName || "createEvent");
+  const tabAccents = {
+    dashboard:"148,163,184",
+    createEvent:"34,197,94",
+    createEmbed:"56,189,248",
+    calendar:"250,204,21",
+    currentEvents:"124,58,237",
+    pastEvents:"239,68,68",
+    scheduledEvents:"249,115,22",
+    attendance:"20,184,166",
+    templates:"236,72,153",
+    settings:"100,116,139"
+  };
+  document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
   document.querySelectorAll("[data-raid-helper-tab]").forEach(button => {
     button.classList.toggle("active", button.dataset.raidHelperTab === target);
   });
@@ -4474,7 +4708,11 @@ function setRaidHelperTab(tabName){
   if(target === "calendar") renderRaidHelperCalendar();
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
-  if(target === "scheduledEvents") renderRaidHelperScheduledEvents();
+  if(target === "scheduledEvents"){
+    renderRaidHelperScheduleRules();
+    renderRaidHelperScheduledEvents();
+    loadRaidHelperSchedules();
+  }
   if(target === "attendance"){
     renderRaidHelperWarcraftLogsSources();
     loadRaidHelperAttendance();
@@ -4728,7 +4966,7 @@ function currentRaidHelperEditPayload(){
     discordMessageId:existing.discordMessageId || "",
     signupDeadline:raidHelperValue("raidHelperEditDeadline"),
     description:raidHelperValue("raidHelperEditDescription"),
-    raidImageUrl:existing.raidImageUrl || defaultRaidHelperImageUrl(raidKey)
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
 }
 
@@ -4780,45 +5018,90 @@ async function loadRaidHelperEventSignups(){
 
 function renderRaidHelperSignupAdminRow(row){
   const id = row.id || "";
+  const player = row.player || row.char || "-";
   const status = normalize(row.status || "signed") || "signed";
   const statusLabel = status === "bench" ? "Bank" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Angemeldet";
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(row.player || row.char || "-")}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(statusLabel)} · ${escapeHtml(row.source || "")}</div>
       </div>
       <div class="raid-helper-signup-actions">
-        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed')">Angemeldet</button>
-        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','bench')">Bank</button>
-        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent')">Abwesend</button>
-        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}')">Verwerfen</button>
+        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Angemeldet</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','bench','${escapeAttr(player)}')">Bank</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent','${escapeAttr(player)}')">Abwesend</button>
+        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}','${escapeAttr(player)}')">Verwerfen</button>
       </div>
     </div>
   `;
 }
 
-async function updateRaidHelperSignupStatus(signupId, status){
+function raidHelperSignupNotifyPrompt(action, player){
+  const label = action === "bench" ? "auf die Bank setzen" : action === "absent" ? "auf Abwesend setzen" : action === "delete" ? "aus dem Raid entfernen" : "";
+  if(!label) return Promise.resolve("");
+  return new Promise(resolve => {
+    const backdrop = document.createElement("div");
+    backdrop.className = "raid-helper-notify-backdrop";
+    backdrop.innerHTML = `
+      <div class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-labelledby="raidHelperNotifyTitle">
+        <h3 id="raidHelperNotifyTitle">${escapeHtml(player || "Spieler")} ${escapeHtml(label)}</h3>
+        <p>Optional kannst du eine private Discord-Nachricht mitgeben. Ohne Text wird nur der Status gesendet.</p>
+        <textarea id="raidHelperNotifyText" placeholder="Kurzer Grund, z. B. Setup voll, falsche Rolle, heute Bank ..."></textarea>
+        <div class="raid-helper-notify-actions">
+          <button class="small-btn ghost" type="button" data-notify-cancel>Abbrechen</button>
+          <button class="small-btn" type="button" data-notify-empty>Ohne Nachricht</button>
+          <button class="small-btn primary" type="button" data-notify-send>Nachricht senden</button>
+        </div>
+      </div>
+    `;
+    const finish = value => {
+      backdrop.remove();
+      resolve(value);
+    };
+    backdrop.addEventListener("click", event => {
+      if(event.target === backdrop) finish(null);
+    });
+    backdrop.querySelector("[data-notify-cancel]")?.addEventListener("click", () => finish(null));
+    backdrop.querySelector("[data-notify-empty]")?.addEventListener("click", () => finish(""));
+    backdrop.querySelector("[data-notify-send]")?.addEventListener("click", () => finish(backdrop.querySelector("#raidHelperNotifyText")?.value.trim() || ""));
+    document.body.appendChild(backdrop);
+    window.setTimeout(() => backdrop.querySelector("#raidHelperNotifyText")?.focus(), 30);
+  });
+}
+
+function raidHelperSignupNoticeStatus(result, fallback){
+  if(result?.noticeQueued) return fallback + " Private Discord-Nachricht ist vorgemerkt.";
+  if(result?.noticeSkipped === "missing_discord_user") return fallback + " Keine private Nachricht möglich: Discord-ID fehlt bei dieser Anmeldung.";
+  if(result?.noticeSkipped) return fallback + " Private Nachricht konnte nicht vorgemerkt werden.";
+  return fallback;
+}
+
+async function updateRaidHelperSignupStatus(signupId, status, player = ""){
   const masterCode = document.getElementById("masterCode").value.trim();
   const raidId = getRaidHelperEditRaidId();
   if(!masterCode){
     setRaidHelperEditStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
+  const notifyMessage = await raidHelperSignupNotifyPrompt(status, player);
+  if(notifyMessage === null) return;
   setRaidHelperEditStatus("Anmeldung wird geändert ...", "");
   try{
-    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, status });
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, status, notifyMessage });
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
     await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
-    setRaidHelperEditStatus("Anmeldung geändert und Discord-Aktualisierung vorgemerkt.", "good");
+    setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung geändert."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Anmeldung konnte nicht geändert werden.", "bad");
   }
 }
 
-async function deleteRaidHelperSignup(signupId){
+async function deleteRaidHelperSignup(signupId, player = ""){
+  const notifyMessage = await raidHelperSignupNotifyPrompt("delete", player);
+  if(notifyMessage === null) return;
   if(!confirm("Diese Anmeldung wirklich verwerfen?")) return;
   const masterCode = document.getElementById("masterCode").value.trim();
   const raidId = getRaidHelperEditRaidId();
@@ -4828,12 +5111,12 @@ async function deleteRaidHelperSignup(signupId){
   }
   setRaidHelperEditStatus("Anmeldung wird verworfen ...", "");
   try{
-    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, mode:"delete" });
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, mode:"delete", notifyMessage });
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht verworfen werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
     await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
-    setRaidHelperEditStatus("Anmeldung verworfen und Discord-Aktualisierung vorgemerkt.", "good");
+    setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung verworfen."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Anmeldung konnte nicht verworfen werden.", "bad");
   }
@@ -4875,28 +5158,31 @@ function renderRaidHelperPastEvents(){
     : '<div class="muted">Noch keine vergangenen Raids gefunden.</div>';
 }
 
-function raidHelperAttendanceRaids(){
+function raidHelperAttendanceRaids(raidKey = raidHelperAttendanceRaidKey){
   return (guildData.raids || [])
     .slice()
-    .filter(raid => raid.raidId || raid.id)
+    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey)
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
     .slice(0,18);
 }
 
 async function loadRaidHelperAttendance(){
-  renderRaidHelperWarcraftLogsSources();
+  renderRaidHelperAttendanceTabs();
   const box = document.getElementById("raidHelperAttendanceBox");
   if(!box) return;
-  if(raidHelperAttendanceCache){
-    renderRaidHelperAttendance(raidHelperAttendanceCache);
+  const raidKey = raidHelperAttendanceRaidKey;
+  if(raidHelperAttendanceCache?.[raidKey]){
+    await loadRaidHelperP0Releases();
+    renderRaidHelperAttendance(raidHelperAttendanceCache[raidKey]);
     return;
   }
-  const raids = raidHelperAttendanceRaids();
+  const raids = raidHelperAttendanceRaids(raidKey);
   if(!raids.length){
-    box.innerHTML = '<div class="raid-helper-loading">Keine Raids für Attendance gefunden.</div>';
+    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Raidanmelder für Attendance gefunden.</div>`;
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
+  const releasePromise = loadRaidHelperP0Releases();
   const rows = [];
   for(const raid of raids){
     try{
@@ -4914,8 +5200,31 @@ async function loadRaidHelperAttendance(){
       rows.push({ raid, signups:[] });
     }
   }
-  raidHelperAttendanceCache = rows;
+  await releasePromise;
+  raidHelperAttendanceCache = raidHelperAttendanceCache || {};
+  raidHelperAttendanceCache[raidKey] = rows;
   renderRaidHelperAttendance(rows);
+}
+
+async function loadRaidHelperP0Releases(){
+  if(raidHelperP0ReleaseCache) return raidHelperP0ReleaseCache;
+  try{
+    const result = await railwayApi({ action:"getP0ReleaseList" });
+    const releases = result.releases || {};
+    raidHelperP0ReleaseCache = {};
+    Object.entries(releases).forEach(([raidKey, names]) => {
+      raidHelperP0ReleaseCache[raidKey] = new Set((Array.isArray(names) ? names : []).map(name => normalize(name)).filter(Boolean));
+    });
+  }catch(error){
+    console.warn("P0-Freigabeliste konnte nicht geladen werden:", error);
+    raidHelperP0ReleaseCache = {};
+  }
+  return raidHelperP0ReleaseCache;
+}
+
+function hasRaidHelperP0Release(playerName, raidKey){
+  const key = normalize(playerName);
+  return Boolean(key && raidHelperP0ReleaseCache?.[raidKey]?.has(key));
 }
 
 function renderRaidHelperAttendance(rows){
@@ -4932,7 +5241,12 @@ function renderRaidHelperAttendance(rows){
       const player = players.get(name.toLowerCase());
       const raidId = String(entry.raid.raidId || entry.raid.id || "");
       const status = normalize(signup.status || "signed") || "signed";
-      player.cells.set(raidId, status);
+      player.cells.set(raidId, {
+        status,
+        signupId:signup.id || signup.signupId || "",
+        raidId,
+        player:name
+      });
       if(status === "signed") player.signed += 1;
     });
   });
@@ -4944,37 +5258,92 @@ function renderRaidHelperAttendance(rows){
   const head = `
     <tr>
       <th>Charakter</th>
+      <th>Att.%</th>
       ${rows.map(entry => {
         const key = getRaidKey(entry.raid);
-        return `<th title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")}">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
+        const raidId = entry.raid.raidId || entry.raid.id || "";
+        return `<th oncontextmenu="deleteRaidHelperAttendanceRaid(event,'${escapeAttr(raidId)}')" title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")} · Rechtsklick: Termin löschen">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
       }).join("")}
-      <th>%</th>
     </tr>
   `;
   const body = playerList.map(player => {
     const cells = rows.map(entry => {
       const raidId = String(entry.raid.raidId || entry.raid.id || "");
-      const status = player.cells.get(raidId) || "";
+      const cell = player.cells.get(raidId) || {};
+      const status = cell.status || "";
       const label = status === "signed" ? "✓" : status === "bench" ? "B" : status === "absent" ? "A" : status === "tentative" ? "?" : "";
-      return `<td class="raid-helper-attendance-cell ${escapeAttr(status)}">${escapeHtml(label)}</td>`;
+      const action = cell.signupId ? ` oncontextmenu="removeRaidHelperAttendanceSignup(event,'${escapeAttr(cell.signupId)}','${escapeAttr(player.name)}')"` : "";
+      return `<td class="raid-helper-attendance-cell ${escapeAttr(status)}"${action} title="${cell.signupId ? "Rechtsklick: Teilnahme entfernen" : ""}">${escapeHtml(label)}</td>`;
     }).join("");
     const percent = Math.round((player.signed / Math.max(rows.length, 1)) * 100);
-    return `<tr><td>${escapeHtml(player.name)}<br><span class="muted">${escapeHtml(player.className || "")}</span></td>${cells}<td>${percent}%</td></tr>`;
+    const star = hasRaidHelperP0Release(player.name, raidHelperAttendanceRaidKey)
+      ? '<span class="p0-release-star" title="P0-Freigabe">★</span>'
+      : "";
+    return `<tr><td>${escapeHtml(player.name)}${star}<br><span class="muted">${escapeHtml(player.className || "")}</span></td><td>${percent}%</td>${cells}</tr>`;
   }).join("");
   box.innerHTML = `<table class="raid-helper-attendance-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
 
+function setRaidHelperAttendanceRaid(raidKey){
+  const key = RAID_HELPER_ATTENDANCE_TABS.some(tab => tab.key === raidKey) ? raidKey : "bwl";
+  raidHelperAttendanceRaidKey = key;
+  renderRaidHelperAttendanceTabs();
+  loadRaidHelperAttendance();
+}
+
+async function removeRaidHelperAttendanceSignup(event, signupId, player){
+  event.preventDefault();
+  if(!signupId) return;
+  const notifyMessage = await raidHelperSignupNotifyPrompt("delete", player);
+  if(notifyMessage === null) return;
+  if(!confirm(`${player || "Diesen Charakter"} aus diesem Termin entfernen?`)) return;
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, mode:"delete", notifyMessage });
+    if(!result.success) throw new Error(result.error || "Teilnahme konnte nicht entfernt werden.");
+    raidHelperAttendanceCache = null;
+    await loadRaidHelperAttendance();
+    setStatus(raidHelperSignupNoticeStatus(result, "Teilnahme entfernt."), result.noticeSkipped ? "bad" : "good");
+  }catch(error){
+    setStatus(error.message || "Teilnahme konnte nicht entfernt werden.", "bad");
+  }
+}
+
+async function deleteRaidHelperAttendanceRaid(event, raidId){
+  event.preventDefault();
+  if(!raidId) return;
+  await deleteRaidFromDashboard(raidId);
+  raidHelperAttendanceCache = null;
+  await loadRaidHelperAttendance();
+}
+
+function renderRaidHelperAttendanceTabs(){
+  const box = document.getElementById("raidHelperAttendanceTabs");
+  if(!box) return;
+  box.innerHTML = RAID_HELPER_ATTENDANCE_TABS.map(tab => {
+    const count = raidHelperAttendanceRaids(tab.key).length;
+    const active = tab.key === raidHelperAttendanceRaidKey;
+    return `
+      <button class="raid-helper-attendance-tab${active ? " active" : ""}" type="button" style="--attendance-accent:${raidHelperRaidColorRgb(tab.key)}" onclick="setRaidHelperAttendanceRaid('${escapeAttr(tab.key)}')">
+        <span><strong>${escapeHtml(tab.label)}</strong><span>${escapeHtml(tab.detail)}</span></span>
+        <span class="raid-helper-meta-pill">${count}</span>
+      </button>
+    `;
+  }).join("");
+}
+
 function renderRaidHelperWarcraftLogsSources(){
-  const box = document.getElementById("raidHelperWarcraftLogsSources");
+  const box = document.getElementById("raidHelperAttendanceTabs");
   if(!box) return;
   box.innerHTML = RAID_HELPER_WCL_ATTENDANCE_SOURCES.map(source => `
-    <article class="raid-helper-wcl-card">
-      <div class="raid-helper-wcl-card-head">
-        <strong>${escapeHtml(source.label)}</strong>
-        <span class="raid-helper-meta-pill">Zone ${escapeHtml(source.zone)}</span>
-      </div>
-      <a href="${escapeAttr(source.url)}" target="_blank" rel="noopener">WarcraftLogs öffnen</a>
-    </article>
+    <button class="raid-helper-attendance-tab${source.key === raidHelperAttendanceRaidKey ? " active" : ""}" type="button" onclick="setRaidHelperAttendanceRaid('${escapeAttr(source.key)}')">
+      <span><strong>${escapeHtml(RAID_OPTIONS[source.key]?.short || source.key.toUpperCase())}</strong><span>${escapeHtml(source.label)}</span></span>
+      <span class="raid-helper-meta-pill">Zone ${escapeHtml(source.zone)}</span>
+    </button>
   `).join("");
 }
 
@@ -5012,6 +5381,268 @@ function allRaidHelperTemplates(){
   const seen = new Set(custom.map(item => normalize(item.key || item.templateKey || item.title || "")));
   const defaults = defaultRaidHelperTemplates().filter(item => !seen.has(normalize(item.key || item.title)));
   return custom.concat(defaults);
+}
+
+function setRaidHelperScheduleStatus(message, type){
+  const status = document.getElementById("raidHelperScheduleStatus");
+  if(!status) return;
+  status.textContent = message || "";
+  status.className = "status raid-helper-template-status" + (type ? " " + type : "");
+}
+
+function renderRaidHelperScheduleChannelSelect(selectedValue){
+  const select = document.getElementById("raidHelperScheduleChannel");
+  if(!select) return;
+  select.innerHTML = discordChannelSelectOptions(selectedValue || RAID_HELPER_CHANNEL_ID);
+  select.value = String(selectedValue || RAID_HELPER_CHANNEL_ID);
+}
+
+function nextIsoDateForWeekday(weekday){
+  const today = new Date();
+  const target = Number(weekday || 3);
+  const todayWeekday = today.getDay() === 0 ? 7 : today.getDay();
+  const diff = (target - todayWeekday + 7) % 7;
+  const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diff);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function updateRaidHelperScheduleDefaults(force){
+  const raidKey = document.getElementById("raidHelperScheduleRaid")?.value || "naxx";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const weekday = document.getElementById("raidHelperScheduleWeekday");
+  const nextDate = document.getElementById("raidHelperScheduleNextDate");
+  const mappings = [
+    ["raidHelperScheduleTitle", raidKey === "zg" ? "ZG Raid 21 Uhr" : defaults.title],
+    ["raidHelperScheduleMax", defaults.maxPlayers],
+    ["raidHelperScheduleTanks", defaults.tankSlots],
+    ["raidHelperScheduleHeals", defaults.healSlots],
+    ["raidHelperScheduleDds", defaults.ddSlots],
+    ["raidHelperScheduleDeadline", defaults.signupDeadline],
+    ["raidHelperScheduleDescription", defaults.description]
+  ];
+  mappings.forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if(element && (force || !String(element.value || "").trim())) element.value = value;
+  });
+  if(nextDate && (force || !nextDate.value)){
+    nextDate.value = nextIsoDateForWeekday(weekday?.value || 3);
+  }
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || defaults.discordChannelId);
+}
+
+function resetRaidHelperScheduleForm(){
+  const currentRaid = document.getElementById("raidHelperScheduleRaid")?.value || "naxx";
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperScheduleId", "");
+  setValue("raidHelperScheduleRaid", currentRaid);
+  setValue("raidHelperScheduleLead", "maxmustermagier");
+  setValue("raidHelperScheduleWeekday", "3");
+  setValue("raidHelperScheduleTime", "19:45");
+  setValue("raidHelperScheduleInterval", "1");
+  setValue("raidHelperScheduleNextDate", nextIsoDateForWeekday(3));
+  updateRaidHelperScheduleDefaults(true);
+  setRaidHelperScheduleStatus("Neue Rhythmus-Regel bereit.", "");
+}
+
+function fillRaidHelperScheduleEditor(schedule){
+  const item = schedule || {};
+  const raidKey = String(item.raid || item.raidType || "naxx").trim().toLowerCase();
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperScheduleId", item.id || item.scheduleId || "");
+  setValue("raidHelperScheduleRaid", RAID_OPTIONS[raidKey] ? raidKey : "naxx");
+  setValue("raidHelperScheduleTitle", item.title || "");
+  setValue("raidHelperScheduleLead", item.createdBy || "maxmustermagier");
+  setValue("raidHelperScheduleWeekday", item.weekday || 3);
+  setValue("raidHelperScheduleTime", item.raidTime || "19:45");
+  setValue("raidHelperScheduleInterval", item.intervalWeeks || 1);
+  setValue("raidHelperScheduleNextDate", item.nextRaidDate || nextIsoDateForWeekday(item.weekday || 3));
+  setValue("raidHelperScheduleDeadline", item.signupDeadline || "");
+  setValue("raidHelperScheduleMax", item.maxPlayers ?? "");
+  setValue("raidHelperScheduleTanks", item.tankSlots ?? "");
+  setValue("raidHelperScheduleHeals", item.healSlots ?? "");
+  setValue("raidHelperScheduleDds", item.ddSlots ?? "");
+  setValue("raidHelperScheduleDescription", item.description || "");
+  renderRaidHelperScheduleChannelSelect(item.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  updateRaidHelperScheduleDefaults(false);
+  setRaidHelperScheduleStatus(item.id ? "Rhythmus geladen." : "Neue Rhythmus-Regel bereit.", item.id ? "good" : "");
+}
+
+function editRaidHelperSchedule(scheduleId){
+  const schedule = raidHelperSchedules.find(item => String(item.id || item.scheduleId) === String(scheduleId));
+  if(schedule) fillRaidHelperScheduleEditor(schedule);
+}
+
+function raidHelperScheduleFromEditor(){
+  const raidKey = raidHelperValue("raidHelperScheduleRaid") || "naxx";
+  const title = raidHelperValue("raidHelperScheduleTitle") || (RAID_OPTIONS[raidKey]?.name || "Raid") + " Anmeldung";
+  return {
+    id:raidHelperValue("raidHelperScheduleId"),
+    key:`schedule-${raidKey}-${raidHelperValue("raidHelperScheduleWeekday")}-${raidHelperValue("raidHelperScheduleTime")}`.replace(/[^a-zA-Z0-9-]+/g, "-").toLowerCase(),
+    raid:raidKey,
+    title,
+    createdBy:raidHelperValue("raidHelperScheduleLead") || "maxmustermagier",
+    weekday:raidHelperValue("raidHelperScheduleWeekday") || "3",
+    raidTime:raidHelperValue("raidHelperScheduleTime") || "19:45",
+    intervalWeeks:raidHelperValue("raidHelperScheduleInterval") || "1",
+    nextRaidDate:raidHelperValue("raidHelperScheduleNextDate"),
+    signupDeadline:raidHelperValue("raidHelperScheduleDeadline"),
+    discordChannelId:raidHelperValue("raidHelperScheduleChannel") || RAID_HELPER_CHANNEL_ID,
+    maxPlayers:raidHelperValue("raidHelperScheduleMax"),
+    tankSlots:raidHelperValue("raidHelperScheduleTanks"),
+    healSlots:raidHelperValue("raidHelperScheduleHeals"),
+    ddSlots:raidHelperValue("raidHelperScheduleDds"),
+    description:raidHelperValue("raidHelperScheduleDescription"),
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+  };
+}
+
+async function loadRaidHelperSchedules(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    renderRaidHelperScheduleRules();
+    renderRaidHelperScheduledEvents();
+    return;
+  }
+  setRaidHelperScheduleStatus("Rhythmen werden geladen ...", "");
+  try{
+    const result = await railwayApi({ action:"guildGetRaidHelperSchedules", masterCode });
+    if(result.success){
+      raidHelperSchedules = Array.isArray(result.schedules) ? result.schedules : [];
+      await loadOverview({ preserveStatus:true });
+      renderRaidHelperScheduleRules();
+      renderRaidHelperScheduledEvents();
+      if(!document.getElementById("raidHelperScheduleTitle")?.value.trim()) resetRaidHelperScheduleForm();
+      setRaidHelperScheduleStatus("Rhythmen geladen.", "good");
+      return;
+    }
+    throw new Error(result.error || "Rhythmen konnten nicht geladen werden.");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmen konnten nicht geladen werden.", "bad");
+  }
+}
+
+async function saveRaidHelperSchedule(){
+  const schedule = raidHelperScheduleFromEditor();
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!schedule.title || !schedule.nextRaidDate){
+    setRaidHelperScheduleStatus("Bitte Titel und nächsten Termin eintragen.", "bad");
+    return;
+  }
+  setRaidHelperScheduleStatus("Rhythmus wird gespeichert ...", "");
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperSchedule",
+      masterCode,
+      scheduleId:schedule.id,
+      scheduleKey:schedule.key,
+      raid:schedule.raid,
+      title:schedule.title,
+      createdBy:schedule.createdBy,
+      weekday:schedule.weekday,
+      raidTime:schedule.raidTime,
+      intervalWeeks:schedule.intervalWeeks,
+      nextRaidDate:schedule.nextRaidDate,
+      signupDeadline:schedule.signupDeadline,
+      discordChannelId:schedule.discordChannelId,
+      maxPlayers:schedule.maxPlayers,
+      tankSlots:schedule.tankSlots,
+      healSlots:schedule.healSlots,
+      ddSlots:schedule.ddSlots,
+      description:schedule.description,
+      raidImageUrl:defaultRaidHelperImageUrl(schedule.raid)
+    });
+    if(!result.success) throw new Error(result.error || "Rhythmus konnte nicht gespeichert werden.");
+    await loadRaidHelperSchedules();
+    setRaidHelperScheduleStatus("Rhythmus gespeichert und Anmelder aktualisiert.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmus konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deleteRaidHelperSchedule(scheduleId){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Rhythmus wirklich löschen? Der bereits erstellte Raid bleibt bestehen.")) return;
+  setRaidHelperScheduleStatus("Rhythmus wird gelöscht ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildDeleteRaidHelperSchedule", masterCode, scheduleId });
+    if(!result.success) throw new Error(result.error || "Rhythmus konnte nicht gelöscht werden.");
+    raidHelperSchedules = raidHelperSchedules.filter(item => String(item.id) !== String(scheduleId));
+    renderRaidHelperScheduleRules();
+    resetRaidHelperScheduleForm();
+    setRaidHelperScheduleStatus("Rhythmus gelöscht.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmus konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function processRaidHelperSchedules(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  setRaidHelperScheduleStatus("Geplante Anmelder werden aktualisiert ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode });
+    if(!result.success) throw new Error(result.error || "Geplante Anmelder konnten nicht aktualisiert werden.");
+    await loadRaidHelperSchedules();
+    setRaidHelperScheduleStatus("Geplante Anmelder aktualisiert.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Geplante Anmelder konnten nicht aktualisiert werden.", "bad");
+  }
+}
+
+function renderRaidHelperScheduleRules(){
+  const box = document.getElementById("raidHelperScheduleRules");
+  if(!box) return;
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  if(!raidHelperSchedules.length){
+    box.innerHTML = '<div class="muted">Noch keine Rhythmus-Regel gespeichert.</div>';
+    return;
+  }
+  box.innerHTML = raidHelperSchedules.map(schedule => {
+    const raidKey = String(schedule.raid || schedule.raidType || "raid").toLowerCase();
+    const weekday = ["","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"][Number(schedule.weekday || 0)] || "Wochentag offen";
+    const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id) === String(schedule.discordChannelId || ""));
+    const channelLabel = channel ? "# " + (channel.channelName || channel.name) : (schedule.discordChannelId ? "# " + schedule.discordChannelId : "Channel offen");
+    return `
+      <article class="raid-helper-list-item" style="--raid-color:${raidHelperRaidColor(raidKey)}">
+        <div class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[raidKey]?.short || "R")}</div>
+        <div>
+          <div class="raid-helper-list-title">${escapeHtml(schedule.title || RAID_OPTIONS[raidKey]?.name || "Raid")}</div>
+          <div class="raid-helper-list-meta">
+            <span class="raid-helper-meta-pill">↻ ${escapeHtml(weekday)} · alle ${escapeHtml(String(schedule.intervalWeeks || 1))} Woche(n)</span>
+            <span class="raid-helper-meta-pill">▣ ${escapeHtml(formatRaidDate(schedule.nextRaidDate))}</span>
+            <span class="raid-helper-meta-pill">◷ ${escapeHtml(schedule.raidTime || "-")}</span>
+            <span class="raid-helper-meta-pill">${escapeHtml(channelLabel)}</span>
+          </div>
+        </div>
+        <div class="raid-helper-template-actions">
+          <button class="small-btn ghost" type="button" onclick="editRaidHelperSchedule('${escapeAttr(schedule.id)}')">Bearbeiten</button>
+          <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(schedule.currentRaidId || ("schedule-" + schedule.id))}')">Posten</button>
+          <button class="small-btn danger" type="button" onclick="deleteRaidHelperSchedule('${escapeAttr(schedule.id)}')">Löschen</button>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 function setRaidHelperTemplateStatus(message, type){
@@ -5140,17 +5771,36 @@ function renderRaidHelperTemplates(){
     const text = item.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default;
     const badge = item.builtin ? "Standard" : "Gespeichert";
     return `
-      <article class="raid-helper-template-card">
-        <span class="raid-helper-template-badge">${escapeHtml(badge)}</span>
-        <h4>${escapeHtml(item.title || raid.name || raidKey.toUpperCase())}</h4>
+      <article class="raid-helper-template-card" style="--template-accent:${raidHelperRaidColorRgb(raidKey)}">
+        <div class="raid-helper-template-card-head">
+          <div>
+            <span class="raid-helper-template-badge">${escapeHtml(badge)}</span>
+            <h4>${escapeHtml(item.title || raid.name || raidKey.toUpperCase())}</h4>
+          </div>
+          <span class="raid-helper-list-icon" style="--raid-color:${raidHelperRaidColor(raidKey)}">${escapeHtml(raid.short || raidKey.toUpperCase())}</span>
+        </div>
         <p>${escapeHtml(text.split("\\n").find(Boolean) || "Raidanmeldung")}</p>
+        <div class="raid-helper-template-card-meta">
+          <span class="raid-helper-meta-pill">Gesamt ${escapeHtml(String(item.maxPlayers || "-"))}</span>
+          <span class="raid-helper-meta-pill">T ${escapeHtml(String(item.tankSlots || 0))}</span>
+          <span class="raid-helper-meta-pill">H ${escapeHtml(String(item.healSlots || 0))}</span>
+          <span class="raid-helper-meta-pill">DD ${escapeHtml(String(item.ddSlots || 0))}</span>
+        </div>
         <div class="raid-helper-template-actions">
           <button class="small-btn ghost" type="button" onclick="editRaidHelperTemplate('${escapeAttr(key)}')">Bearbeiten</button>
           <button class="small-btn primary" type="button" onclick="applyRaidHelperTemplate('${escapeAttr(key)}')">Vorlage nutzen</button>
+          <button class="small-btn ghost" type="button" onclick="planRaidHelperTemplateRepost('${escapeAttr(key)}')">Repost planen</button>
         </div>
       </article>
     `;
   }).join("");
+}
+
+function raidHelperRaidColorRgb(raidKey){
+  const hex = raidHelperRaidColor(raidKey).replace("#", "");
+  const value = hex.length === 3 ? hex.split("").map(char => char + char).join("") : hex;
+  const number = parseInt(value || "38bdf8", 16);
+  return `${(number >> 16) & 255},${(number >> 8) & 255},${number & 255}`;
 }
 
 function editRaidHelperTemplate(identifier){
@@ -5165,6 +5815,39 @@ function applyRaidHelperTemplateFromEditor(){
 function applyRaidHelperTemplate(identifier){
   const template = findRaidHelperTemplate(identifier) || raidHelperTemplateDefaults(identifier);
   applyRaidHelperTemplateObject(template);
+}
+
+function planRaidHelperTemplateRepost(identifier){
+  const template = findRaidHelperTemplate(identifier) || raidHelperTemplateDefaults(identifier);
+  planRaidHelperTemplateRepostObject(template);
+}
+
+function planRaidHelperTemplateRepostFromEditor(){
+  planRaidHelperTemplateRepostObject(raidHelperTemplateFromEditor());
+}
+
+function planRaidHelperTemplateRepostObject(template){
+  const raidKey = String(template.raid || template.raidType || "zg").trim().toLowerCase();
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperScheduleId", "");
+  setValue("raidHelperScheduleRaid", RAID_OPTIONS[raidKey] ? raidKey : "zg");
+  setValue("raidHelperScheduleTitle", template.title || RAID_OPTIONS[raidKey]?.name || "Raid Anmeldung");
+  setValue("raidHelperScheduleLead", "Gildenleitung");
+  setValue("raidHelperScheduleTime", document.getElementById("raidHelperScheduleTime")?.value || "19:45");
+  setValue("raidHelperScheduleInterval", "1");
+  setValue("raidHelperScheduleNextDate", nextIsoDateForWeekday(document.getElementById("raidHelperScheduleWeekday")?.value || 3));
+  setValue("raidHelperScheduleDeadline", template.signupDeadline || "");
+  setValue("raidHelperScheduleMax", template.maxPlayers ?? "");
+  setValue("raidHelperScheduleTanks", template.tankSlots ?? "");
+  setValue("raidHelperScheduleHeals", template.healSlots ?? "");
+  setValue("raidHelperScheduleDds", template.ddSlots ?? "");
+  setValue("raidHelperScheduleDescription", template.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default);
+  renderRaidHelperScheduleChannelSelect(template.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  setRaidHelperTab("scheduledEvents");
+  setRaidHelperScheduleStatus("Repost aus Vorlage vorbereitet. Wochentag und Uhrzeit prüfen, dann Rhythmus speichern.", "good");
 }
 
 function applyRaidHelperTemplateObject(template){
@@ -5221,7 +5904,7 @@ async function saveRaidHelperTemplate(){
       ddSlots:template.ddSlots,
       signupDeadline:template.signupDeadline,
       discordChannelId:template.discordChannelId,
-      raidImageUrl:template.raidImageUrl
+      raidImageUrl:defaultRaidHelperImageUrl(template.raid)
     });
     if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
     const saved = result.template;
@@ -5296,6 +5979,7 @@ function renderRaidHelperDiscordChannels(){
       : "Noch keine Bot-Channel geladen. Bot neu starten und danach aktualisieren.";
   }
   renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
   updateRaidHelperPreview();
 }
 
@@ -5351,8 +6035,8 @@ function raidHelperValue(id){
 }
 
 function defaultRaidHelperImageUrl(raidKey){
-  const key = String(raidKey || "raid").trim().toLowerCase();
-  return RAID_HELPER_IMAGE_BASE_URL + key + ".jpg";
+  const key = RAID_OPTIONS[String(raidKey || "").trim().toLowerCase()] ? String(raidKey || "").trim().toLowerCase() : "zg";
+  return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
 function buildRaidHelperPreviewText(){
@@ -6919,7 +7603,7 @@ async function loadWorldbuffPanel(){
   content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
       return;

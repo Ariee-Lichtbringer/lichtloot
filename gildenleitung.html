@@ -1688,6 +1688,11 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
 .raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
 .raid-helper-attendance-cell.tentative{background:rgba(96,165,250,.46);color:#082f49}
+.p0-release-star{
+  color:#facc15;
+  margin-left:4px;
+  text-shadow:0 0 10px rgba(250,204,21,.42);
+}
 
 .raid-helper-loading{
   padding:16px;
@@ -4575,6 +4580,7 @@ let raidHelperTemplates = [];
 let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
 let raidHelperAttendanceRaidKey = "bwl";
+let raidHelperP0ReleaseCache = null;
 let raidHelperEditingData = null;
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
@@ -5166,6 +5172,7 @@ async function loadRaidHelperAttendance(){
   if(!box) return;
   const raidKey = raidHelperAttendanceRaidKey;
   if(raidHelperAttendanceCache?.[raidKey]){
+    await loadRaidHelperP0Releases();
     renderRaidHelperAttendance(raidHelperAttendanceCache[raidKey]);
     return;
   }
@@ -5175,6 +5182,7 @@ async function loadRaidHelperAttendance(){
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
+  const releasePromise = loadRaidHelperP0Releases();
   const rows = [];
   for(const raid of raids){
     try{
@@ -5192,9 +5200,31 @@ async function loadRaidHelperAttendance(){
       rows.push({ raid, signups:[] });
     }
   }
+  await releasePromise;
   raidHelperAttendanceCache = raidHelperAttendanceCache || {};
   raidHelperAttendanceCache[raidKey] = rows;
   renderRaidHelperAttendance(rows);
+}
+
+async function loadRaidHelperP0Releases(){
+  if(raidHelperP0ReleaseCache) return raidHelperP0ReleaseCache;
+  try{
+    const result = await railwayApi({ action:"getP0ReleaseList" });
+    const releases = result.releases || {};
+    raidHelperP0ReleaseCache = {};
+    Object.entries(releases).forEach(([raidKey, names]) => {
+      raidHelperP0ReleaseCache[raidKey] = new Set((Array.isArray(names) ? names : []).map(name => normalize(name)).filter(Boolean));
+    });
+  }catch(error){
+    console.warn("P0-Freigabeliste konnte nicht geladen werden:", error);
+    raidHelperP0ReleaseCache = {};
+  }
+  return raidHelperP0ReleaseCache;
+}
+
+function hasRaidHelperP0Release(playerName, raidKey){
+  const key = normalize(playerName);
+  return Boolean(key && raidHelperP0ReleaseCache?.[raidKey]?.has(key));
 }
 
 function renderRaidHelperAttendance(rows){
@@ -5231,7 +5261,8 @@ function renderRaidHelperAttendance(rows){
       <th>Att.%</th>
       ${rows.map(entry => {
         const key = getRaidKey(entry.raid);
-        return `<th title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")}">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
+        const raidId = entry.raid.raidId || entry.raid.id || "";
+        return `<th oncontextmenu="deleteRaidHelperAttendanceRaid(event,'${escapeAttr(raidId)}')" title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")} · Rechtsklick: Termin löschen">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
       }).join("")}
     </tr>
   `;
@@ -5245,7 +5276,10 @@ function renderRaidHelperAttendance(rows){
       return `<td class="raid-helper-attendance-cell ${escapeAttr(status)}"${action} title="${cell.signupId ? "Rechtsklick: Teilnahme entfernen" : ""}">${escapeHtml(label)}</td>`;
     }).join("");
     const percent = Math.round((player.signed / Math.max(rows.length, 1)) * 100);
-    return `<tr><td>${escapeHtml(player.name)}<br><span class="muted">${escapeHtml(player.className || "")}</span></td><td>${percent}%</td>${cells}</tr>`;
+    const star = hasRaidHelperP0Release(player.name, raidHelperAttendanceRaidKey)
+      ? '<span class="p0-release-star" title="P0-Freigabe">★</span>'
+      : "";
+    return `<tr><td>${escapeHtml(player.name)}${star}<br><span class="muted">${escapeHtml(player.className || "")}</span></td><td>${percent}%</td>${cells}</tr>`;
   }).join("");
   box.innerHTML = `<table class="raid-helper-attendance-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
 }
@@ -5277,6 +5311,14 @@ async function removeRaidHelperAttendanceSignup(event, signupId, player){
   }catch(error){
     setStatus(error.message || "Teilnahme konnte nicht entfernt werden.", "bad");
   }
+}
+
+async function deleteRaidHelperAttendanceRaid(event, raidId){
+  event.preventDefault();
+  if(!raidId) return;
+  await deleteRaidFromDashboard(raidId);
+  raidHelperAttendanceCache = null;
+  await loadRaidHelperAttendance();
 }
 
 function renderRaidHelperAttendanceTabs(){
