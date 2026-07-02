@@ -1378,7 +1378,7 @@
     "type": "Einhandschwerter",
     "quality": "Episch",
     "icon": "135365",
-    "dropChance": "Mon Aug 03 2026 00:00:00 GMT+0200 (Central European Summer Time)",
+    "dropChance": "",
     "statsText": "Anlegen: +40 Angriffskraft. | (2) Set: Schwerter +6.",
     "stats": [
       "Anlegen: +40 Angriffskraft.",
