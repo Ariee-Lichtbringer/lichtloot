@@ -2299,16 +2299,7 @@ const raids = {
   aq20:{name:"AQ 20",short:"AQ20",lootPage:"loot/aq20-loot.html"},
   ony:{name:"Onyxia",short:"ONY",lootPage:"loot/ony-loot.html"}
 };
-const LOOT_JSON_URLS = {
-  mc:"data/mc.json",
-  bwl:"data/bwl.json",
-  aq40:"data/aq40.json",
-  naxx:"data/naxx.json",
-  preraidbis:"data/preraidbis.json",
-  zg:"data/zg.json",
-  aq20:"data/aq20.json",
-  ony:"data/ony.json"
-};
+const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",preraidbis:"",zg:"",aq20:"",ony:""};
 
 let lootDataByRaid = {};
 window.p0plusEntries = [];
@@ -3711,7 +3702,9 @@ function renderDashboardLogAnalyses(entries){
     const raidName=entry.raid || raids[raidKey]?.short || "Raid";
     const claUrl=dashboardLogUrl(entry,"cla");
     const rpbUrl=dashboardLogUrl(entry,"rpb");
+    const webUrl=entry.id ? `raid-analyse.html?id=${encodeURIComponent(entry.id)}&type=rpb` : "";
     const actions=[
+      webUrl ? `<a class="rpb" href="${safeAttr(webUrl)}" target="_blank" rel="noopener">Neu</a>` : "",
       claUrl ? `<a href="${safeAttr(claUrl)}" target="_blank" rel="noopener">CLA</a>` : "",
       rpbUrl ? `<a class="rpb" href="${safeAttr(rpbUrl)}" target="_blank" rel="noopener">RPB</a>` : "",
       entry.reportUrl ? `<a class="wcl" href="${safeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
@@ -5028,14 +5021,12 @@ function normalizeItemName(value){
 async function loadLootDataForRaid(raid){
   if(lootDataByRaid[raid]) return lootDataByRaid[raid];
 
-  const url = LOOT_JSON_URLS[raid];
-  if(!url) return [];
-
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
+    const response = await fetch(LICHTLOOT_API_URL + "?action=getLootItems&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG || "lichtloot") + "&raid=" + encodeURIComponent(raid) + "&t=" + Date.now(), {cache:"no-store"});
+    const payload = await response.json().catch(()=>null);
+    const rows = payload && Array.isArray(payload.items) ? payload.items : [];
 
-    const data = (Array.isArray(rows) ? rows : []).map(obj => {
+    const data = rows.map(obj => {
       const itemId = obj.itemId || obj.ItemID || obj.id || "";
       const iconName = obj.iconName || obj.IconName || obj.WowheadIcon || obj.icon || obj.Icon || "";
       const stats = Array.isArray(obj.stats)
@@ -5064,12 +5055,12 @@ async function loadLootDataForRaid(raid){
         boss:obj.boss || obj.Boss || "",
         dropchance:obj.dropChance || obj.Dropchance || obj.dropchance || ""
       };
-    }).filter(item=>item.name);
+    }).filter(item => item.name);
 
     lootDataByRaid[raid] = data;
-    return lootDataByRaid[raid];
+    return data;
   }catch(error){
-    console.error("GitHub-Itemdaten konnten nicht geladen werden:", raid, error);
+    console.warn("Railway-Lootdaten konnten nicht geladen werden:", raid, error);
     lootDataByRaid[raid] = [];
     return [];
   }

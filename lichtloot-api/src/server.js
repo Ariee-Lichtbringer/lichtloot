@@ -10491,176 +10491,15 @@ async function setGuildMasterCode({ guildId, query: params }) {
 }
 
 async function seedDefaultLootItemsOnce() {
-  const markerKey = "default-loot-items-v1";
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query(
-      `create table if not exists app_state (
-         key text primary key,
-         value text,
-         updated_at timestamptz not null default now()
-       )`
-    );
-    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
-    if (marker.rows.length) {
-      await client.query("commit");
-      return;
-    }
-
-    const raw = await readFile(new URL("./default-loot-items.json", import.meta.url), "utf8");
-    const items = JSON.parse(raw);
-    let imported = 0;
-    for (const item of Array.isArray(items) ? items : []) {
-      const raidType = normalizeRaidType(item.raid_type || item.raid || "");
-      const name = clean(item.name);
-      if (!raidType || !name) continue;
-      await upsertLootItemRecord(client, item);
-      imported += 1;
-    }
-
-    await client.query(
-      `insert into app_state (key, value, updated_at)
-       values ($1, $2, now())
-       on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, String(imported)]
-    );
-    await client.query("commit");
-    console.log(`Standard-Lootdaten importiert: ${imported} Items`);
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
+  return { success: true, skipped: true, source: "railway-only" };
 }
 
 async function applyLootItemCorrectionsOnce() {
-  const markerKey = "loot-item-corrections-v4-ony-backup-exact";
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query(
-      `create table if not exists app_state (
-         key text primary key,
-         value text,
-         updated_at timestamptz not null default now()
-       )`
-    );
-    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
-    if (marker.rows.length) {
-      await client.query("commit");
-      return;
-    }
-
-    const raw = await readFile(new URL("./default-loot-items.json", import.meta.url), "utf8");
-    const corrections = JSON.parse(raw).filter(item => normalizeRaidType(item.raid_type) === "ony");
-    let upserted = 0;
-    for (const item of corrections) {
-      const raidType = normalizeRaidType(item.raid_type || item.raid || "");
-      const name = clean(item.name);
-      if (!raidType || !name) continue;
-      const result = await upsertLootItemRecord(client, item, { preserveExisting: false });
-      if (result) upserted += 1;
-    }
-    const correctionNames = corrections.map(item => clean(item.name).toLowerCase()).filter(Boolean);
-    const deleted = await client.query(
-      `delete from items i
-       where lower(i.raid_type) = 'ony'
-         and not (lower(i.name) = any($1))
-         and not exists (
-           select 1 from prios pr
-           where pr.p1_item_id = i.id
-              or pr.p2_item_id = i.id
-              or pr.p3_item_id = i.id
-         )
-         and not exists (
-           select 1 from p0plus_points pp
-           where pp.item_id = i.id
-         )`,
-      [correctionNames]
-    );
-
-    await client.query(
-      `insert into app_state (key, value, updated_at)
-       values ($1, $2, now())
-       on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ upserted, deleted: deleted.rowCount })]
-    );
-    await client.query("commit");
-    console.log(`Lootdaten-Korrekturen angewendet: ${upserted} Ony-Items, ${deleted.rowCount} alte entfernt`);
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
+  return { success: true, skipped: true, source: "railway-only" };
 }
 
 async function applyLootSetPieceCleanupOnce() {
-  const markerKey = "loot-set-piece-cleanup-v1";
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query(
-      `create table if not exists app_state (
-         key text primary key,
-         value text,
-         updated_at timestamptz not null default now()
-       )`
-    );
-    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
-    if (marker.rows.length) {
-      await client.query("commit");
-      return;
-    }
-
-    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
-    const staticItemsByRaid = await Promise.all(raidKeys.map(raidKey => loadStaticLootItems(raidKey)));
-    const cleanupItems = staticItemsByRaid.flat()
-      .map(item => normalizeLootItemForApi(null, item))
-      .filter(isLootPageSetPiece)
-      .map(item => ({
-        raidType: normalizeRaidType(item.raidKey || item.raid),
-        name: clean(item.name).toLowerCase()
-      }))
-      .filter(item => item.raidType && item.name);
-
-    let deletedTotal = 0;
-    for (const item of cleanupItems) {
-      const deleted = await client.query(
-        `delete from items i
-         where lower(i.raid_type) = $1
-           and lower(i.name) = $2
-           and not exists (
-             select 1 from prios pr
-             where pr.p1_item_id = i.id
-                or pr.p2_item_id = i.id
-                or pr.p3_item_id = i.id
-           )
-           and not exists (
-             select 1 from p0plus_points pp
-             where pp.item_id = i.id
-           )`,
-        [item.raidType, item.name]
-      );
-      deletedTotal += deleted.rowCount;
-    }
-
-    await client.query(
-      `insert into app_state (key, value, updated_at)
-       values ($1, $2, now())
-       on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ candidates: cleanupItems.length, deleted: deletedTotal })]
-    );
-    await client.query("commit");
-    console.log(`Setteil-Bereinigung angewendet: ${deletedTotal}/${cleanupItems.length} Items entfernt`);
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
+  return { success: true, skipped: true, source: "railway-only" };
 }
 
 async function applyKaeseItemIdCorrection() {
@@ -10829,147 +10668,11 @@ async function upsertLootItemRecord(client, rawItem, options = {}) {
 }
 
 async function importLootItemMetadata() {
-  const markerKey = "loot-item-metadata-import-latest";
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query(
-      `create table if not exists app_state (
-         key text primary key,
-         value text,
-         updated_at timestamptz not null default now()
-       )`
-    );
-
-    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
-    let candidates = 0;
-    let updated = 0;
-    const sources = {};
-    for (const raidKey of raidKeys) {
-      const { items, source } = await loadLootMetadataSourceItems(raidKey);
-      sources[raidKey] = { source, count: items.length };
-      for (const rawItem of items) {
-        const item = normalizeLootItemForApi(null, rawItem);
-        const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raid || item.raidKey || item.raid || raidKey);
-        const name = clean(item.name);
-        if (!raidType || !name) continue;
-        candidates += 1;
-
-        const result = await upsertLootItemRecord(client, {
-          raid: raidType,
-          itemId: item.itemId,
-          name,
-          quality: item.quality,
-          iconName: item.iconName || item.icon,
-          slot: item.slot,
-          type: item.type,
-          boss: item.boss,
-          bind: item.bind,
-          category: item.category,
-          wowhead: item.wowhead,
-          statsText: item.statsText,
-          tooltip: item.tooltip,
-          needed: item.needed,
-          equip: item.equip,
-          price: item.price,
-          dropchance: item.dropchance || item.dropChance,
-          tokenGroup: item.tokenGroup,
-          tokenName: item.tokenName,
-          tokenItemId: item.tokenItemId
-        }, { preserveExisting: false });
-        if (result) updated += 1;
-      }
-    }
-
-    await client.query(
-      `insert into app_state (key, value, updated_at)
-       values ($1, $2, now())
-       on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ candidates, updated, sources })]
-    );
-    await client.query("commit");
-    console.log(`Item-Metadaten nach Railway übertragen: ${updated}/${candidates} Updates`);
-    return { success: true, candidates, updated, sources };
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
+  return { success: true, skipped: true, source: "railway-only" };
 }
 
 async function restoreLootItemsFromStaticDataOnce() {
-  const markerKey = "loot-items-restore-set-pieces-v3";
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query(
-      `create table if not exists app_state (
-         key text primary key,
-         value text,
-         updated_at timestamptz not null default now()
-       )`
-    );
-    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
-    if (marker.rows.length) {
-      await client.query("commit");
-      return;
-    }
-
-    const raidKeys = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
-    let candidates = 0;
-    let upserted = 0;
-    const sources = {};
-    for (const raidKey of raidKeys) {
-      const { items, source } = await loadLootMetadataSourceItems(raidKey);
-      sources[raidKey] = { source, count: items.length };
-      for (const rawItem of items) {
-        const item = normalizeLootItemForApi(null, rawItem);
-        const raidType = normalizeRaidType(rawItem.raid_type || rawItem.raid || item.raidKey || item.raid || raidKey);
-        const name = clean(item.name);
-        if (!raidType || !name) continue;
-        candidates += 1;
-
-        const result = await upsertLootItemRecord(client, {
-          raid: raidType,
-          itemId: item.itemId,
-          name,
-          quality: item.quality,
-          iconName: item.iconName || item.icon,
-          slot: item.slot,
-          type: item.type,
-          boss: item.boss,
-          bind: item.bind,
-          category: item.category,
-          wowhead: item.wowhead,
-          statsText: item.statsText,
-          tooltip: item.tooltip,
-          needed: item.needed,
-          equip: item.equip,
-          price: item.price,
-          dropchance: item.dropchance || item.dropChance,
-          tokenGroup: item.tokenGroup,
-          tokenName: item.tokenName,
-          tokenItemId: item.tokenItemId
-        });
-        if (result) upserted += 1;
-      }
-    }
-
-    await client.query(
-      `insert into app_state (key, value, updated_at)
-       values ($1, $2, now())
-       on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ candidates, upserted, sources })]
-    );
-    await client.query("commit");
-    console.log(`Lootdaten wiederhergestellt: ${upserted}/${candidates} Items`);
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
+  return { success: true, skipped: true, source: "railway-only" };
 }
 
 async function applyZgHakkariOffhandCorrectionOnce() {
@@ -11255,27 +10958,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function loadLootMetadataSourceItems(raidType) {
-  const raidKey = normalizeRaidType(raidType);
-  if (!raidKey) return { items: [], source: "none" };
-
-  try {
-    const raw = await readFile(new URL(`../public/data/${raidKey}.json`, import.meta.url), "utf8");
-    const parsed = JSON.parse(raw);
-    return { items: Array.isArray(parsed) ? parsed : [], source: "public/data" };
-  } catch (localError) {
-    try {
-      const response = await fetch(
-        `https://raw.githubusercontent.com/Ariee-Lichtbringer/lichtloot/main/data/${encodeURIComponent(raidKey)}.json`,
-        { cache: "no-store" }
-      );
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const parsed = await response.json();
-      return { items: Array.isArray(parsed) ? parsed : [], source: "github" };
-    } catch (githubError) {
-      console.warn(`Metadatenquelle fuer ${raidKey} nicht ladbar:`, githubError.message || githubError);
-      return { items: [], source: "missing" };
-    }
-  }
+  return { items: [], source: "railway-only" };
 }
 
 async function adminSearchItems({ guildId, query: params }) {
@@ -11368,21 +11051,7 @@ async function getLootItems({ query: params }) {
 }
 
 async function loadStaticLootItems(raidType) {
-  const raidKey = normalizeRaidType(raidType);
-  if (!raidKey) return [];
-  const cached = staticLootCache.get(raidKey);
-  if (cached && cached.expiresAt > Date.now()) return cached.items;
-
-  try {
-    const raw = await readFile(new URL(`../public/data/${raidKey}.json`, import.meta.url), "utf8");
-    const parsed = JSON.parse(raw);
-    const items = Array.isArray(parsed) ? parsed : [];
-    staticLootCache.set(raidKey, { items, expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
-    return items;
-  } catch (error) {
-    staticLootCache.set(raidKey, { items: [], expiresAt: Date.now() + STATIC_LOOT_CACHE_TTL_MS });
-    return [];
-  }
+  return [];
 }
 
 function normalizeLootItemForApi(row, detail = {}) {

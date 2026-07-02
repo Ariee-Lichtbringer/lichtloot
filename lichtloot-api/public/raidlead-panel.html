@@ -1257,6 +1257,17 @@ const RAID_API_URL =
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 function currentGuildName(){ return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot"; }
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
+function railwayLootItemsUrl(raid){
+  return RAID_API_URL + "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getLootItems&raid=" + encodeURIComponent(raid || currentRaidKey || "") + "&t=" + Date.now();
+}
+
+async function fetchRailwayLootRows(raid){
+  const response = await fetch(railwayLootItemsUrl(raid), {cache:"no-store"});
+  const payload = await response.json().catch(()=>null);
+  if(!response.ok || !payload || !payload.success) throw new Error((payload && payload.error) || "Lootdaten konnten nicht geladen werden.");
+  return Array.isArray(payload.items) ? payload.items : [];
+}
+
 function guildUrl(path){
   const slug=currentGuildSlug();
   if(slug === "lichtloot") return path;
@@ -1303,15 +1314,7 @@ const RAID_BACKGROUNDS = {
   ony:"./images/ony.jpg"
 };
 
-const LOOT_JSON_URLS = {
-  mc:"data/mc.json",
-  bwl:"data/bwl.json",
-  aq40:"data/aq40.json",
-  naxx:"data/naxx.json",
-  zg:"data/zg.json",
-  aq20:"data/aq20.json",
-  ony:"data/ony.json"
-};
+const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",zg:"",aq20:"",ony:""};
 
 let currentRaidKey = null;
 let currentRaidData = null;
@@ -2704,17 +2707,10 @@ async function loadItemVisualData(){
   itemVisualMap = {};
   itemIdMap = {};
 
-  const url = LOOT_JSON_URLS[currentRaidKey];
-
-  if(!url){
-    return;
-  }
-
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
+    const rows = await fetchRailwayLootRows(currentRaidKey);
 
-    (Array.isArray(rows) ? rows : []).forEach(obj => {
+    rows.forEach(obj => {
       const info = normalizeJsonLootItem(obj);
       if(!info.name) return;
 
@@ -2884,17 +2880,10 @@ function renderItem(itemName){
 async function loadItemIdsForExport(){
   itemIdMap = {};
 
-  const url = LOOT_JSON_URLS[currentRaidKey];
-
-  if(!url){
-    return;
-  }
-
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
+    const rows = await fetchRailwayLootRows(currentRaidKey);
 
-    (Array.isArray(rows) ? rows : []).forEach(obj => {
+    rows.forEach(obj => {
       const info = normalizeJsonLootItem(obj);
       if(!info.name || !info.itemId) return;
       itemIdMap[itemKey(info.name)] = info.itemId;
@@ -2983,14 +2972,10 @@ let addonItemInfoMap = {};
 async function loadLootDataForAddonExport(){
   addonItemInfoMap = {};
 
-  const url = LOOT_JSON_URLS[currentRaidKey];
-  if(!url) return;
-
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
+    const rows = await fetchRailwayLootRows(currentRaidKey);
 
-    (Array.isArray(rows) ? rows : []).forEach(obj => {
+    rows.forEach(obj => {
       const info = normalizeJsonLootItem(obj);
       if(!info.name) return;
 
