@@ -7070,7 +7070,7 @@ async function ensureLootDataLoaded(){
   if(lootDataLoaded) return;
   const raids = ["mc","bwl","aq40","naxx","zg","aq20","ony","preraidbis"];
   const results = await Promise.all(raids.map(raid =>
-    railwayGet({action:"getLootItems", raid}).then(result => Array.isArray(result.items) ? result.items : []).catch(() => [])
+    railwayApi({action:"getLootItems", raid}).then(result => Array.isArray(result.items) ? result.items : []).catch(() => [])
   ));
   results.flat().forEach(item => {
     const name = item && (item.name || item.Item || item.Itemname_DE || item.item);
