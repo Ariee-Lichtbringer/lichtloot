@@ -18,9 +18,14 @@ const worldbuffPublicCsvUrl =
 const worldbuffTickerCsvUrl =
   process.env.WORLDBUFF_TICKER_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
+const p0ReleaseCsvUrl =
+  process.env.P0_RELEASE_CSV_URL ||
+  "https://docs.google.com/spreadsheets/d/1ejape-5N42TDUIsglYZV1uPupQxYMiUK6JE1QiPJKbE/export?format=csv&gid=0";
 const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
+let p0ReleaseCache = null;
+let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
 let warcraftLogsNextRequestAt = 0;
 
@@ -70,6 +75,10 @@ await ensureRaidHelperTemplateSchema().catch(error => {
   console.warn("RaidHelper-Template-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureRaidHelperScheduleSchema().catch(error => {
+  console.warn("RaidHelper-Schedule-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensurePlayerRoleSchema().catch(error => {
   console.warn("Spielerrollen-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -88,6 +97,10 @@ await ensureLootItemMetadataColumns().catch(error => {
 
 await applyLootItemCorrectionsOnce().catch(error => {
   console.warn("Lootdaten-Korrekturen konnten nicht angewendet werden:", error.message || error);
+});
+
+await applyKaeseItemIdCorrection().catch(error => {
+  console.warn("Kaese-ItemID konnte nicht korrigiert werden:", error.message || error);
 });
 
 await importLootItemMetadata().catch(error => {
@@ -1217,6 +1230,42 @@ async function ensureRaidHelperTemplateSchema() {
   );
 }
 
+async function ensureRaidHelperScheduleSchema() {
+  await query(
+    `create table if not exists raid_helper_schedules (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       schedule_key text,
+       enabled boolean not null default true,
+       raid_type text not null,
+       title text not null,
+       description text,
+       max_players integer,
+       tank_slots integer,
+       heal_slots integer,
+       dd_slots integer,
+       signup_deadline text,
+       discord_channel_id text,
+       raid_image_url text,
+       created_by text,
+       recurrence text not null default 'weekly',
+       interval_weeks integer not null default 1,
+       weekday integer not null default 3,
+       raid_time text not null default '20:00',
+       next_raid_date date,
+       last_raid_date date,
+       last_raid_id uuid references raids(id) on delete set null,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (guild_id, schedule_key)
+     )`
+  );
+  await query(
+    `create index if not exists idx_raid_helper_schedules_guild
+       on raid_helper_schedules(guild_id, enabled, next_raid_date, raid_time)`
+  );
+}
+
 async function ensurePlayerRoleSchema() {
   await query(
     `alter table players
@@ -1632,6 +1681,45 @@ async function getWorldbuffsFromSheets(params = {}) {
     .sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
 
   return { success: true, buffs: filtered, entries: filtered };
+}
+
+function raidKeyFromP0ReleaseHeader(value) {
+  const raw = clean(value).toLowerCase();
+  if (!raw) return "";
+  if (raw.includes("aq40") || raw.includes("tempel")) return "aq40";
+  if (raw.includes("naxx")) return "naxx";
+  if (raw.includes("bwl") || raw.includes("blackwing")) return "bwl";
+  if (raw.includes("mc") || raw.includes("molten")) return "mc";
+  return "";
+}
+
+async function getP0ReleaseList() {
+  const now = Date.now();
+  if (p0ReleaseCache && now < p0ReleaseCacheUntil) {
+    return { success: true, releases: p0ReleaseCache };
+  }
+
+  const rows = parseCsvRows(await fetchText(p0ReleaseCsvUrl));
+  const releases = { mc: [], bwl: [], aq40: [], naxx: [] };
+  const raidColumns = new Map();
+  (rows[0] || []).forEach((cell, index) => {
+    const raidKey = raidKeyFromP0ReleaseHeader(cell);
+    if (raidKey) raidColumns.set(index, raidKey);
+  });
+
+  rows.slice(1).forEach(row => {
+    raidColumns.forEach((raidKey, index) => {
+      const player = clean(row[index]);
+      if (player && !releases[raidKey].some(existing => existing.toLowerCase() === player.toLowerCase())) {
+        releases[raidKey].push(player);
+      }
+    });
+  });
+
+  Object.keys(releases).forEach(key => releases[key].sort((a, b) => a.localeCompare(b, "de")));
+  p0ReleaseCache = releases;
+  p0ReleaseCacheUntil = now + 5 * 60 * 1000;
+  return { success: true, releases };
 }
 
 function worldbuffMergeLookupKey(entry) {
@@ -2588,6 +2676,443 @@ function normalizeRaidHelperTemplateRow(row) {
   };
 }
 
+function scheduleDateIso(value) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  const text = String(value);
+  if (/^\d{4}-\d{2}-\d{2}/.test(text)) return text.slice(0, 10);
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+}
+
+function normalizeRaidHelperScheduleRow(row) {
+  const id = row.id || "";
+  return {
+    id,
+    scheduleId: id,
+    key: row.schedule_key || "",
+    scheduleKey: row.schedule_key || "",
+    enabled: row.enabled !== false,
+    raid: row.raid_type || "",
+    raidType: row.raid_type || "",
+    title: row.title || "",
+    description: row.description || "",
+    maxPlayers: row.max_players ?? "",
+    tankSlots: row.tank_slots ?? "",
+    healSlots: row.heal_slots ?? "",
+    ddSlots: row.dd_slots ?? "",
+    signupDeadline: row.signup_deadline || "",
+    discordChannelId: row.discord_channel_id || "",
+    raidImageUrl: row.raid_image_url || "",
+    createdBy: row.created_by || "",
+    recurrence: row.recurrence || "weekly",
+    intervalWeeks: row.interval_weeks ?? 1,
+    weekday: row.weekday ?? 3,
+    raidTime: row.raid_time || "20:00",
+    nextRaidDate: scheduleDateIso(row.next_raid_date),
+    lastRaidDate: scheduleDateIso(row.last_raid_date),
+    lastRaidId: row.last_raid_id || "",
+    currentRaidId: id ? `schedule-${id}` : "",
+    createdAt: row.created_at || "",
+    updatedAt: row.updated_at || ""
+  };
+}
+
+function randomRaidCode(length = 3) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let index = 0; index < length; index += 1) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+function localDateOnly(value = new Date()) {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return new Date();
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatDateIso(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function resolveNextScheduleDate({ weekday, nextRaidDate, intervalWeeks }) {
+  const today = localDateOnly();
+  let next = nextRaidDate ? localDateOnly(nextRaidDate) : null;
+  const intervalDays = Math.max(1, Number(intervalWeeks) || 1) * 7;
+
+  if (!next) {
+    const target = Math.min(7, Math.max(1, Number(weekday) || 3));
+    const todayWeekday = today.getDay() === 0 ? 7 : today.getDay();
+    const diff = (target - todayWeekday + 7) % 7;
+    next = addDays(today, diff);
+  }
+
+  while (next < today) {
+    next = addDays(next, intervalDays);
+  }
+
+  return next;
+}
+
+async function processRaidHelperSchedules({ guildId }) {
+  await ensureRaidHelperScheduleSchema();
+  const schedules = await query(
+    `select *
+     from raid_helper_schedules
+     where guild_id = $1 and enabled = true
+     order by next_raid_date nulls first, raid_time, lower(title)`,
+    [guildId]
+  );
+
+  const processed = [];
+  for (const schedule of schedules.rows) {
+    const nextDate = resolveNextScheduleDate({
+      weekday: schedule.weekday,
+      nextRaidDate: scheduleDateIso(schedule.next_raid_date),
+      intervalWeeks: schedule.interval_weeks
+    });
+    const nextDateIso = formatDateIso(nextDate);
+    const externalRaidId = `schedule-${schedule.id}`;
+    const existing = await query(
+      `select id, raid_date, raid_pin, lead_pin
+       from raids
+       where guild_id = $1 and external_raid_id = $2
+       limit 1`,
+      [guildId, externalRaidId]
+    );
+    const existingRaid = existing.rows[0] || null;
+    const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
+    const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
+
+    if (dateChanged) {
+      await query("delete from raid_signups where guild_id = $1 and raid_id = $2", [guildId, existingRaid.id]);
+      await query("delete from raid_external_signups where guild_id = $1 and raid_id = $2", [guildId, existingRaid.id]);
+      await query(
+        `update raids
+         set discord_message_id = null, updated_at = now()
+         where guild_id = $1 and id = $2`,
+        [guildId, existingRaid.id]
+      );
+    }
+
+    const created = await createRaidRecord({
+      guildId,
+      query: {
+        raidId: externalRaidId,
+        raid: schedule.raid_type,
+        raidName: schedule.title,
+        raidDate: nextDateIso,
+        raidTime: schedule.raid_time,
+        guild: "Lichtbringer",
+        playerPin: dateChanged || !existingRaid?.raid_pin ? randomRaidCode(3) : existingRaid.raid_pin,
+        leadPin: dateChanged || !existingRaid?.lead_pin ? randomRaidCode(4) : existingRaid.lead_pin,
+        status: "geschlossen",
+        p0PlusFreigabe: "geöffnet",
+        createdBy: schedule.created_by || "Gildenleitung",
+        raidHelperEnabled: "true",
+        maxPlayers: schedule.max_players,
+        tankSlots: schedule.tank_slots,
+        healSlots: schedule.heal_slots,
+        ddSlots: schedule.dd_slots,
+        signupDeadline: schedule.signup_deadline,
+        discordChannelId: schedule.discord_channel_id,
+        description: schedule.description,
+        raidImageUrl: schedule.raid_image_url
+      }
+    });
+
+    await query(
+      `update raid_helper_schedules
+       set next_raid_date = $2,
+           last_raid_date = case when $3::boolean then $4::date else last_raid_date end,
+           last_raid_id = $5,
+           updated_at = now()
+       where guild_id = $1 and id = $6`,
+      [guildId, nextDateIso, dateChanged, existingDateIso || null, created.id || created.raidId || null, schedule.id]
+    );
+
+    processed.push({
+      scheduleId: schedule.id,
+      raidId: externalRaidId,
+      raidUuid: created.id || "",
+      nextRaidDate: nextDateIso,
+      advanced: dateChanged
+    });
+  }
+
+  return processed;
+}
+
+async function getRaidHelperSchedules({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await processRaidHelperSchedules({ guildId });
+  const result = await query(
+    `select *
+     from raid_helper_schedules
+     where guild_id = $1
+     order by enabled desc, next_raid_date nulls last, raid_time, lower(title)`,
+    [guildId]
+  );
+  return { success: true, schedules: result.rows.map(normalizeRaidHelperScheduleRow) };
+}
+
+async function saveRaidHelperSchedule({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidHelperScheduleSchema();
+  const scheduleId = clean(params.scheduleId || params.id);
+  const raidType = normalizeRaidType(params.raid || params.raidType || params.raidName);
+  const title = clean(params.title || params.name);
+  const weekday = Math.min(7, Math.max(1, Number(params.weekday || 3) || 3));
+  const intervalWeeks = Math.min(12, Math.max(1, Number(params.intervalWeeks || 1) || 1));
+  const raidTime = clean(params.raidTime || params.time || "20:00") || "20:00";
+
+  if (!raidType || !title) {
+    const error = new Error("Raid und Titel sind für den Rhythmus erforderlich.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const scheduleKey =
+    clean(params.scheduleKey || params.key) ||
+    `${raidType}-${weekday}-${raidTime}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+  const values = [
+    guildId,
+    scheduleKey,
+    params.enabled === false || clean(params.enabled).toLowerCase() === "false" ? false : true,
+    raidType,
+    title,
+    clean(params.description || params.text),
+    parseOptionalInteger(params.maxPlayers),
+    parseOptionalInteger(params.tankSlots),
+    parseOptionalInteger(params.healSlots),
+    parseOptionalInteger(params.ddSlots),
+    clean(params.signupDeadline || params.deadline),
+    clean(params.discordChannelId || params.channelId),
+    clean(params.raidImageUrl || params.imageUrl),
+    clean(params.createdBy || params.raidlead || params.lead) || "Gildenleitung",
+    "weekly",
+    intervalWeeks,
+    weekday,
+    raidTime,
+    parseDateValue(params.nextRaidDate || params.raidDate || params.date)
+  ];
+
+  let result;
+  if (scheduleId && isUuid(scheduleId)) {
+    result = await query(
+      `update raid_helper_schedules
+       set schedule_key = $2,
+           enabled = $3,
+           raid_type = $4,
+           title = $5,
+           description = $6,
+           max_players = $7,
+           tank_slots = $8,
+           heal_slots = $9,
+           dd_slots = $10,
+           signup_deadline = $11,
+           discord_channel_id = $12,
+           raid_image_url = $13,
+           created_by = $14,
+           recurrence = $15,
+           interval_weeks = $16,
+           weekday = $17,
+           raid_time = $18,
+           next_raid_date = coalesce($19, next_raid_date),
+           updated_at = now()
+       where guild_id = $1 and id = $20
+       returning *`,
+      [...values, scheduleId]
+    );
+  } else {
+    result = await query(
+      `insert into raid_helper_schedules (
+         guild_id, schedule_key, enabled, raid_type, title, description,
+         max_players, tank_slots, heal_slots, dd_slots, signup_deadline,
+         discord_channel_id, raid_image_url, created_by, recurrence,
+         interval_weeks, weekday, raid_time, next_raid_date
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+       on conflict (guild_id, schedule_key)
+       do update set
+         enabled = excluded.enabled,
+         raid_type = excluded.raid_type,
+         title = excluded.title,
+         description = excluded.description,
+         max_players = excluded.max_players,
+         tank_slots = excluded.tank_slots,
+         heal_slots = excluded.heal_slots,
+         dd_slots = excluded.dd_slots,
+         signup_deadline = excluded.signup_deadline,
+         discord_channel_id = excluded.discord_channel_id,
+         raid_image_url = excluded.raid_image_url,
+         created_by = excluded.created_by,
+         recurrence = excluded.recurrence,
+         interval_weeks = excluded.interval_weeks,
+         weekday = excluded.weekday,
+         raid_time = excluded.raid_time,
+         next_raid_date = coalesce(excluded.next_raid_date, raid_helper_schedules.next_raid_date),
+         updated_at = now()
+       returning *`,
+      values
+    );
+  }
+
+  await processRaidHelperSchedules({ guildId });
+  return { success: true, schedule: normalizeRaidHelperScheduleRow(result.rows[0]) };
+}
+
+async function deleteRaidHelperSchedule({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidHelperScheduleSchema();
+  const scheduleId = clean(params.scheduleId || params.id);
+  if (!isUuid(scheduleId)) {
+    const error = new Error("Schedule-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `delete from raid_helper_schedules
+     where guild_id = $1 and id = $2`,
+    [guildId, scheduleId]
+  );
+  return { success: true, deleted: result.rowCount };
+}
+
+function parseRaidHistoryImportEntries(raw) {
+  const text = clean(raw);
+  if (!text) return [];
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {}
+  return text
+    .split(/\r?\n/g)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split(/[;\t,]/g).map(part => part.trim());
+      return {
+        raid: parts[0],
+        date: parts[1],
+        time: parts[2],
+        title: parts.slice(3).join(" ").trim()
+      };
+    });
+}
+
+async function importRaidHelperHistory({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const entries = parseRaidHistoryImportEntries(params.entries || params.raids || params.importText);
+  const imported = [];
+  const skipped = [];
+  for (const entry of entries) {
+    const raidType = normalizeRaidType(entry.raid || entry.raidType || entry.type);
+    const raidDate = parseDateValue(entry.date || entry.raidDate || entry.datum);
+    const raidTime = clean(entry.time || entry.raidTime || entry.uhrzeit || "20:00") || "20:00";
+    if (!raidType || !raidDate) {
+      skipped.push(entry);
+      continue;
+    }
+    const raidId = `history-${raidType}-${raidDate}-${raidTime}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
+    const created = await createRaidRecord({
+      guildId,
+      query: {
+        raidId,
+        raid: raidType,
+        raidName: clean(entry.title || entry.raidName || entry.name) || `${displayRaidName(raidType)} ${raidDate}`,
+        raidDate,
+        raidTime,
+        guild: "Lichtbringer",
+        playerPin: clean(entry.playerPin || "") || randomRaidCode(3),
+        leadPin: clean(entry.leadPin || "") || randomRaidCode(4),
+        status: clean(entry.status || "archiviert"),
+        p0PlusFreigabe: "geschlossen",
+        createdBy: clean(entry.createdBy || "History-Import"),
+        raidHelperEnabled: "true",
+        maxPlayers: parseOptionalInteger(entry.maxPlayers) || (["zg", "aq20"].includes(raidType) ? 20 : 40),
+        tankSlots: parseOptionalInteger(entry.tankSlots) || (["zg", "aq20"].includes(raidType) ? 1 : 2),
+        healSlots: parseOptionalInteger(entry.healSlots) || (["zg", "aq20"].includes(raidType) ? 4 : 8),
+        ddSlots: parseOptionalInteger(entry.ddSlots) || (["zg", "aq20"].includes(raidType) ? 15 : 30),
+        description: clean(entry.description || "Vergangener Termin aus History-Import.")
+      }
+    });
+    const raid = await findRaid(guildId, { raidId: created.raidId || raidId });
+    let signupsWritten = 0;
+    const signups = Array.isArray(entry.signups) ? entry.signups : [];
+    if (raid && signups.length) {
+      for (const signup of signups) {
+        const playerName = clean(signup.player || signup.char || signup.name || signup.spieler);
+        if (!playerName) continue;
+        const source = clean(signup.source || `history-import:${raidId}`);
+        const values = [
+          raid.id,
+          guildId,
+          raidType,
+          raidDate,
+          raidTime,
+          playerName,
+          clean(signup.className || signup.klasse),
+          normalizeSignupRole(signup.role || signup.rolle || "flex"),
+          normalizeSignupStatus(signup.status || "signed"),
+          source,
+          clean(signup.discordUserId),
+          clean(signup.discordName || signup.discord),
+          clean(signup.note || "History-Import")
+        ];
+        const updateResult = await query(
+          `update raid_external_signups
+           set raid_date = $4,
+               raid_time = $5,
+               raid_type = $3,
+               class_name = coalesce(nullif($7, ''), class_name),
+               role = $8,
+               status = $9,
+               discord_user_id = coalesce(nullif($11, ''), discord_user_id),
+               discord_name = coalesce(nullif($12, ''), discord_name),
+               note = $13,
+               updated_at = now()
+           where raid_id = $1
+             and guild_id = $2
+             and lower(player_name) = lower($6)
+             and source = $10`,
+          values
+        );
+        if (!updateResult.rowCount) {
+          await query(
+            `insert into raid_external_signups (
+               raid_id, guild_id, raid_type, raid_date, raid_time, player_name,
+               class_name, role, status, source, discord_user_id, discord_name, note
+             )
+             values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+            values
+          );
+        }
+        signupsWritten += 1;
+      }
+    }
+    imported.push({ raidId: created.raidId || raidId, raid: raidType, raidDate, raidTime, signupsWritten });
+  }
+  return { success: true, imported, skipped };
+}
+
 async function getRaidHelperTemplates({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureRaidHelperTemplateSchema();
@@ -3357,6 +3882,9 @@ async function deletePrio({ guildId, query: params }) {
 
 async function getGuildLeadershipOverview(guildId, params) {
   requireMasterCode(params.masterCode);
+  await processRaidHelperSchedules({ guildId }).catch(error => {
+    console.warn("RaidHelper-Schedules konnten nicht verarbeitet werden:", error.message || error);
+  });
 
   const raidsResult = await query(
     `select r.*,
@@ -6031,6 +6559,64 @@ async function buildLogAnalysisCsv(analysis, type) {
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
   await ensureLogAnalysisSheetExportsTable();
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType || "combined").toLowerCase();
+  if (!isUuid(id)) {
+    const error = new Error("Loganalyse-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!["rpb", "cla", "combined"].includes(type)) {
+    const error = new Error("Unbekannter Analyse-Typ.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select *
+     from log_analyses
+     where guild_id = $1 and id = $2
+     limit 1`,
+    [guildId, id]
+  );
+  if (!result.rows.length) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (type === "combined") {
+    const rpb = await buildStoredSheetWebAnalysis(result.rows[0], "rpb");
+    const cla = await buildStoredSheetWebAnalysis(result.rows[0], "cla");
+    if (rpb || cla) {
+      return {
+        success: true,
+        webAnalysis: {
+          type: "combined",
+          source: "sheet-export",
+          analysis: normalizeLogAnalysis(result.rows[0]),
+          report: (rpb || cla)?.report || {},
+          rpb,
+          cla
+        }
+      };
+    }
+  } else {
+    const sheetAnalysis = await buildStoredSheetWebAnalysis(result.rows[0], type);
+    if (sheetAnalysis) {
+      return {
+        success: true,
+        webAnalysis: sheetAnalysis
+      };
+    }
+  }
+  {
+    const error = new Error("Für diese Auswertung wurden noch keine Raidsheet-Daten exportiert.");
+    error.statusCode = 404;
+    throw error;
+  }
+}
+
+async function getPublicLogAnalysisWebLegacy({ guildId, query: params }) {
+  await ensureLogAnalysisSheetExportsTable();
   await ensureCombatLogImportsTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "rpb").toLowerCase();
@@ -8234,9 +8820,17 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const signupId = clean(params.signupId || params.id);
   const nextStatus = normalizeSignupStatus(params.signupStatus || params.status);
   const shouldDelete = ["delete", "remove", "verwerfen"].includes(clean(params.mode || params.signupAction || params.actionMode).toLowerCase());
+  const notifyMessage = clean(params.notifyMessage || params.message || params.reason || "");
   if (!signupId || !isUuid(signupId)) {
     const error = new Error("Anmeldungs-ID fehlt.");
     error.statusCode = 400;
+    throw error;
+  }
+
+  const existingSignup = await findRaidHelperSignupForAdmin(guildId, signupId);
+  if (!existingSignup) {
+    const error = new Error("Anmeldung wurde nicht gefunden.");
+    error.statusCode = 404;
     throw error;
   }
 
@@ -8250,11 +8844,13 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
       `delete from raid_signups rs
        using raids r
        where rs.raid_id = r.id
-         and r.guild_id = $1
+       and r.guild_id = $1
          and rs.id = $2`,
       [guildId, signupId]
     );
-    return { success: true, deleted: externalDelete.rowCount + localDelete.rowCount };
+    const deleted = externalDelete.rowCount + localDelete.rowCount;
+    const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, existingSignup, "deleted", notifyMessage);
+    return { success: true, deleted, signup: existingSignup, queued: true, ...sideEffects };
   }
 
   const externalUpdate = await query(
@@ -8266,7 +8862,9 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
     [guildId, signupId, nextStatus]
   );
   if (externalUpdate.rows[0]) {
-    return { success: true, signup: normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" }) };
+    const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
+    const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup, status: nextStatus }, nextStatus, notifyMessage);
+    return { success: true, signup, queued: true, ...sideEffects };
   }
 
   const localUpdate = await query(
@@ -8281,12 +8879,112 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
     [guildId, signupId, nextStatus]
   );
   if (localUpdate.rows[0]) {
-    return { success: true, signup: normalizeRaidSignupRow(localUpdate.rows[0]) };
+    const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
+    const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, status: nextStatus }, nextStatus, notifyMessage);
+    return { success: true, signup, queued: true, ...sideEffects };
   }
 
   const error = new Error("Anmeldung wurde nicht gefunden.");
   error.statusCode = 404;
   throw error;
+}
+
+async function findRaidHelperSignupForAdmin(guildId, signupId) {
+  const external = await query(
+    `select
+       res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
+       res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
+       r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
+       r.discord_channel_id, r.discord_message_id
+     from raid_external_signups res
+     left join raids r on r.id = res.raid_id and r.guild_id = res.guild_id
+     where res.guild_id = $1 and res.id = $2
+     limit 1`,
+    [guildId, signupId]
+  );
+  if (external.rows[0]) {
+    const row = external.rows[0];
+    return {
+      ...normalizeRaidSignupRow({ ...row, source: row.source || "discord" }),
+      raidId: row.external_raid_id || row.raid_uuid || "",
+      raidName: row.raid_name || displayRaidName(row.raid_type),
+      raidDate: row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "",
+      raidTime: row.raid_time || "",
+      discordChannelId: row.discord_channel_id || "",
+      discordMessageId: row.discord_message_id || ""
+    };
+  }
+
+  const local = await query(
+    `select
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
+       c.name as player_name, c.server, c.class_name,
+       r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
+       r.discord_channel_id, r.discord_message_id
+     from raid_signups rs
+     join raids r on r.id = rs.raid_id and r.guild_id = $1
+     join characters c on c.id = rs.character_id
+     where rs.id = $2
+     limit 1`,
+    [guildId, signupId]
+  );
+  if (!local.rows[0]) return null;
+  const row = local.rows[0];
+  return {
+    ...normalizeRaidSignupRow(row),
+    raidId: row.external_raid_id || row.raid_uuid || "",
+    raidName: row.raid_name || displayRaidName(row.raid_type),
+    raidDate: row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "",
+    raidTime: row.raid_time || "",
+    discordChannelId: row.discord_channel_id || "",
+    discordMessageId: row.discord_message_id || ""
+  };
+}
+
+async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notifyMessage) {
+  let refreshQueued = false;
+  let noticeQueued = false;
+  let noticeSkipped = "";
+  if (signup?.raidId) {
+    const refresh = await enqueueBotUpdate({
+      guildId,
+      type: "raid_announcement_refresh",
+      payload: {
+        raidId: signup.raidId,
+        channelId: signup.discordChannelId || "",
+        discordChannelId: signup.discordChannelId || "",
+        messageId: signup.discordMessageId || "",
+        discordMessageId: signup.discordMessageId || "",
+        source: "raid_helper_admin"
+      }
+    }).catch(() => null);
+    refreshQueued = Boolean(refresh?.success);
+  }
+
+  const userId = clean(signup?.discordUserId || "");
+  if (!userId) {
+    return { refreshQueued, noticeQueued, noticeSkipped: "missing_discord_user" };
+  }
+  const notice = await enqueueBotUpdate({
+    guildId,
+    type: "raid_signup_notice",
+    payload: {
+      userId,
+      discordName: clean(signup.discordName || ""),
+      player: clean(signup.player || signup.char || ""),
+      raidId: clean(signup.raidId || ""),
+      raidName: clean(signup.raidName || "Raid"),
+      raidDate: clean(signup.raidDate || ""),
+      raidTime: clean(signup.raidTime || ""),
+      action: clean(action || ""),
+      message: notifyMessage,
+      source: "raid_helper_admin"
+    }
+  }).catch(() => null);
+  noticeQueued = Boolean(notice?.success);
+  if (!noticeQueued) noticeSkipped = "queue_failed";
+  return { refreshQueued, noticeQueued, noticeSkipped };
 }
 
 async function saveDiscordSignupRows({ guildId, query: params }) {
@@ -9885,6 +10583,38 @@ async function applyLootSetPieceCleanupOnce() {
   }
 }
 
+async function applyKaeseItemIdCorrection() {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const aliases = ["Kaese", "Käse", "Cheese"];
+    const raidTypes = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
+    for (const raidType of raidTypes) {
+      await client.query(
+        `insert into items (raid_type, item_id, name, quality, icon_url)
+         values ($1, $2, 'Kaese', '', 'inv_misc_food_37')
+         on conflict (raid_type, name) do update
+           set item_id = excluded.item_id,
+               icon_url = coalesce(nullif(items.icon_url, ''), excluded.icon_url)`,
+        [raidType, "133993"]
+      );
+    }
+    await client.query(
+      `update items
+       set item_id = $1,
+           icon_url = coalesce(nullif(icon_url, ''), 'inv_misc_food_37')
+       where lower(name) = any($2)`,
+      ["133993", aliases.map(name => name.toLowerCase())]
+    );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function ensureLootItemMetadataColumns() {
   await query(
     `alter table items
@@ -10730,6 +11460,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...templates, guild: guild.slug });
     }
 
+    if (action === "guildGetRaidHelperSchedules") {
+      const schedules = await getRaidHelperSchedules({ guildId: guild.id, query: req.query });
+      return res.json({ ...schedules, guild: guild.slug });
+    }
+
     if (action === "guildExportBackup" || action === "exportGuildBackup") {
       const backup = await exportGuildBackup({ guildId: guild.id, query: req.query });
       return res.json({ ...backup, guild: guild.slug });
@@ -10762,6 +11497,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "getPublicLogAnalysisWeb") {
       const webAnalysis = await getPublicLogAnalysisWeb({ guildId: guild.id, query: req.query });
+      return res.json({ ...webAnalysis, guild: guild.slug });
+    }
+
+    if (action === "getPublicLogAnalysisWebLegacy") {
+      const webAnalysis = await getPublicLogAnalysisWebLegacy({ guildId: guild.id, query: req.query });
       return res.json({ ...webAnalysis, guild: guild.slug });
     }
 
@@ -10981,6 +11721,27 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "guildSaveRaidHelperSchedule") {
+      const saved = await saveRaidHelperSchedule({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteRaidHelperSchedule") {
+      const deleted = await deleteRaidHelperSchedule({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildProcessRaidHelperSchedules") {
+      requireMasterCode(req.query.masterCode);
+      const processed = await processRaidHelperSchedules({ guildId: guild.id });
+      return res.json({ success: true, processed, guild: guild.slug });
+    }
+
+    if (action === "guildImportRaidHelperHistory") {
+      const imported = await importRaidHelperHistory({ guildId: guild.id, query: req.query });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
     if (action === "guildDeleteRaid" || action === "deleteRaid") {
       const deleted = await deleteRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
@@ -11044,6 +11805,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getP0Plus") {
       const points = await getP0Plus(guild.id);
       return res.json({ ...points, guild: guild.slug });
+    }
+
+    if (action === "getP0ReleaseList") {
+      const releases = await getP0ReleaseList();
+      return res.json({ ...releases, guild: guild.slug });
     }
 
     if (action === "getRaidP0PlusAudit") {
@@ -11258,6 +12024,27 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildDeleteRaidHelperTemplate") {
       const deleted = await deleteRaidHelperTemplate({ guildId: guild.id, query: postParams });
       return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildSaveRaidHelperSchedule") {
+      const saved = await saveRaidHelperSchedule({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteRaidHelperSchedule") {
+      const deleted = await deleteRaidHelperSchedule({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildProcessRaidHelperSchedules") {
+      requireMasterCode(postParams.masterCode);
+      const processed = await processRaidHelperSchedules({ guildId: guild.id });
+      return res.json({ success: true, processed, guild: guild.slug });
+    }
+
+    if (action === "guildImportRaidHelperHistory") {
+      const imported = await importRaidHelperHistory({ guildId: guild.id, query: postParams });
+      return res.json({ ...imported, guild: guild.slug });
     }
 
     if (action === "guildAdminCreateItem" || action === "guildAdminCreateltem") {
