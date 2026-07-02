@@ -3034,8 +3034,70 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Scheduled Events</h3><span>Zukünftige Raids, sortiert nach Datum</span></div>
-          <button class="small-btn ghost" type="button" onclick="renderRaidHelperScheduledEvents()">Aktualisieren</button>
+          <div><h3>Scheduled Events</h3><span>Raidanmelder automatisch im Rhythmus neu erstellen</span></div>
+          <button class="small-btn ghost" type="button" onclick="loadRaidHelperSchedules()">Aktualisieren</button>
+        </div>
+        <div class="raid-helper-template-editor">
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">↻</span>
+              <div>
+                <h3>Rhythmus bearbeiten</h3>
+                <p>Nach Ablauf wird derselbe geplante Anmelder auf den nächsten Termin gedreht.</p>
+              </div>
+            </div>
+            <input id="raidHelperScheduleId" type="hidden">
+            <div class="raid-helper-template-fields">
+              <label>Raid <select id="raidHelperScheduleRaid" onchange="updateRaidHelperScheduleDefaults(false)">
+                <option value="naxx">Naxxramas</option>
+                <option value="aq40">Ahn'Qiraj 40</option>
+                <option value="bwl">Blackwing Lair</option>
+                <option value="mc">Molten Core</option>
+                <option value="aq20">Ahn'Qiraj 20</option>
+                <option value="zg">Zul Gurub</option>
+                <option value="ony">Onyxia</option>
+              </select></label>
+              <label>Titel <input id="raidHelperScheduleTitle" type="text" placeholder="Naxx Mittwoch 19:45"></label>
+              <label>Raidlead <input id="raidHelperScheduleLead" type="text" placeholder="maxmustermagier"></label>
+              <label>Wochentag <select id="raidHelperScheduleWeekday" onchange="document.getElementById('raidHelperScheduleNextDate').value = nextIsoDateForWeekday(this.value)">
+                <option value="1">Montag</option>
+                <option value="2">Dienstag</option>
+                <option value="3">Mittwoch</option>
+                <option value="4">Donnerstag</option>
+                <option value="5">Freitag</option>
+                <option value="6">Samstag</option>
+                <option value="7">Sonntag</option>
+              </select></label>
+              <label>Start <input id="raidHelperScheduleTime" type="time" value="19:45"></label>
+              <label>Rhythmus <select id="raidHelperScheduleInterval">
+                <option value="1">jede Woche</option>
+                <option value="2">alle 2 Wochen</option>
+                <option value="3">alle 3 Wochen</option>
+                <option value="4">alle 4 Wochen</option>
+              </select></label>
+              <label>Nächster Termin <input id="raidHelperScheduleNextDate" type="date"></label>
+              <label>Anmeldeschluss <input id="raidHelperScheduleDeadline" type="time"></label>
+              <label>Discord-Channel <select id="raidHelperScheduleChannel"></select></label>
+              <label>Gesamt <input id="raidHelperScheduleMax" type="number" min="1"></label>
+              <label>Tanks <input id="raidHelperScheduleTanks" type="number" min="0"></label>
+              <label>Heals <input id="raidHelperScheduleHeals" type="number" min="0"></label>
+              <label>DD <input id="raidHelperScheduleDds" type="number" min="0"></label>
+              <label class="raid-helper-editor-wide">Beschreibung <textarea id="raidHelperScheduleDescription"></textarea></label>
+            </div>
+            <div class="raid-helper-template-actions">
+              <button class="small-btn primary" type="button" onclick="saveRaidHelperSchedule()">Rhythmus speichern</button>
+              <button class="small-btn good" type="button" onclick="processRaidHelperSchedules()">Jetzt erzeugen/aktualisieren</button>
+              <button class="small-btn ghost" type="button" onclick="resetRaidHelperScheduleForm()">Neu</button>
+            </div>
+            <div id="raidHelperScheduleStatus" class="status">Bereit.</div>
+          </section>
+        </div>
+        <div class="raid-helper-view-head" style="padding:0;border:0">
+          <div><h3>Gespeicherte Rhythmen</h3><span>Diese Regeln drehen Anmelder automatisch weiter.</span></div>
+        </div>
+        <div id="raidHelperScheduleRules" class="raid-helper-list"></div>
+        <div class="raid-helper-view-head" style="padding:0;border:0">
+          <div><h3>Kommende Anmelder</h3><span>Aktuell angelegte Raidanmelder aus den Regeln und manuell erstellte Raids.</span></div>
         </div>
         <div id="raidHelperScheduledList" class="raid-helper-list"></div>
       </div>
@@ -3730,6 +3792,7 @@ function renderAll(){
   renderRaidHelperCalendar();
   renderRaidHelperCurrentEvents();
   renderRaidHelperPastEvents();
+  renderRaidHelperScheduleRules();
   renderRaidHelperScheduledEvents();
   renderRaidHelperTemplates();
   renderRaidHelperWarcraftLogsSources();
@@ -4064,7 +4127,7 @@ async function loadWorldbuffMiniOverview(){
   box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days:4, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days:4 });
     if(result && result.success){
       worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
       renderWorldbuffMiniList();
@@ -4363,8 +4426,10 @@ function buildRaidDirectLink(raid){
 
 const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
+const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
+let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
 let raidHelperEditingData = null;
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
@@ -4474,7 +4539,11 @@ function setRaidHelperTab(tabName){
   if(target === "calendar") renderRaidHelperCalendar();
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
-  if(target === "scheduledEvents") renderRaidHelperScheduledEvents();
+  if(target === "scheduledEvents"){
+    renderRaidHelperScheduleRules();
+    renderRaidHelperScheduledEvents();
+    loadRaidHelperSchedules();
+  }
   if(target === "attendance"){
     renderRaidHelperWarcraftLogsSources();
     loadRaidHelperAttendance();
@@ -4728,7 +4797,7 @@ function currentRaidHelperEditPayload(){
     discordMessageId:existing.discordMessageId || "",
     signupDeadline:raidHelperValue("raidHelperEditDeadline"),
     description:raidHelperValue("raidHelperEditDescription"),
-    raidImageUrl:existing.raidImageUrl || defaultRaidHelperImageUrl(raidKey)
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
 }
 
@@ -4780,34 +4849,45 @@ async function loadRaidHelperEventSignups(){
 
 function renderRaidHelperSignupAdminRow(row){
   const id = row.id || "";
+  const player = row.player || row.char || "-";
   const status = normalize(row.status || "signed") || "signed";
   const statusLabel = status === "bench" ? "Bank" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Angemeldet";
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(row.player || row.char || "-")}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(statusLabel)} · ${escapeHtml(row.source || "")}</div>
       </div>
       <div class="raid-helper-signup-actions">
-        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed')">Angemeldet</button>
-        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','bench')">Bank</button>
-        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent')">Abwesend</button>
-        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}')">Verwerfen</button>
+        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Angemeldet</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','bench','${escapeAttr(player)}')">Bank</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent','${escapeAttr(player)}')">Abwesend</button>
+        <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}','${escapeAttr(player)}')">Verwerfen</button>
       </div>
     </div>
   `;
 }
 
-async function updateRaidHelperSignupStatus(signupId, status){
+function raidHelperSignupNotifyPrompt(action, player){
+  const label = action === "bench" ? "auf Bank setzen" : action === "absent" ? "auf Abwesend setzen" : action === "delete" ? "verwerfen" : "";
+  if(!label) return "";
+  const result = prompt(`Optionale Privatnachricht an ${player || "den Spieler"} zum ${label}:`, "");
+  if(result === null) return null;
+  return result.trim();
+}
+
+async function updateRaidHelperSignupStatus(signupId, status, player = ""){
   const masterCode = document.getElementById("masterCode").value.trim();
   const raidId = getRaidHelperEditRaidId();
   if(!masterCode){
     setRaidHelperEditStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
+  const notifyMessage = raidHelperSignupNotifyPrompt(status, player);
+  if(notifyMessage === null) return;
   setRaidHelperEditStatus("Anmeldung wird geändert ...", "");
   try{
-    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, status });
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, status, notifyMessage });
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
@@ -4818,7 +4898,9 @@ async function updateRaidHelperSignupStatus(signupId, status){
   }
 }
 
-async function deleteRaidHelperSignup(signupId){
+async function deleteRaidHelperSignup(signupId, player = ""){
+  const notifyMessage = raidHelperSignupNotifyPrompt("delete", player);
+  if(notifyMessage === null) return;
   if(!confirm("Diese Anmeldung wirklich verwerfen?")) return;
   const masterCode = document.getElementById("masterCode").value.trim();
   const raidId = getRaidHelperEditRaidId();
@@ -4828,7 +4910,7 @@ async function deleteRaidHelperSignup(signupId){
   }
   setRaidHelperEditStatus("Anmeldung wird verworfen ...", "");
   try{
-    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, mode:"delete" });
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, mode:"delete", notifyMessage });
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht verworfen werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
@@ -5012,6 +5094,268 @@ function allRaidHelperTemplates(){
   const seen = new Set(custom.map(item => normalize(item.key || item.templateKey || item.title || "")));
   const defaults = defaultRaidHelperTemplates().filter(item => !seen.has(normalize(item.key || item.title)));
   return custom.concat(defaults);
+}
+
+function setRaidHelperScheduleStatus(message, type){
+  const status = document.getElementById("raidHelperScheduleStatus");
+  if(!status) return;
+  status.textContent = message || "";
+  status.className = "status raid-helper-template-status" + (type ? " " + type : "");
+}
+
+function renderRaidHelperScheduleChannelSelect(selectedValue){
+  const select = document.getElementById("raidHelperScheduleChannel");
+  if(!select) return;
+  select.innerHTML = discordChannelSelectOptions(selectedValue || RAID_HELPER_CHANNEL_ID);
+  select.value = String(selectedValue || RAID_HELPER_CHANNEL_ID);
+}
+
+function nextIsoDateForWeekday(weekday){
+  const today = new Date();
+  const target = Number(weekday || 3);
+  const todayWeekday = today.getDay() === 0 ? 7 : today.getDay();
+  const diff = (target - todayWeekday + 7) % 7;
+  const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + diff);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function updateRaidHelperScheduleDefaults(force){
+  const raidKey = document.getElementById("raidHelperScheduleRaid")?.value || "naxx";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const weekday = document.getElementById("raidHelperScheduleWeekday");
+  const nextDate = document.getElementById("raidHelperScheduleNextDate");
+  const mappings = [
+    ["raidHelperScheduleTitle", raidKey === "zg" ? "ZG Raid 21 Uhr" : defaults.title],
+    ["raidHelperScheduleMax", defaults.maxPlayers],
+    ["raidHelperScheduleTanks", defaults.tankSlots],
+    ["raidHelperScheduleHeals", defaults.healSlots],
+    ["raidHelperScheduleDds", defaults.ddSlots],
+    ["raidHelperScheduleDeadline", defaults.signupDeadline],
+    ["raidHelperScheduleDescription", defaults.description]
+  ];
+  mappings.forEach(([id, value]) => {
+    const element = document.getElementById(id);
+    if(element && (force || !String(element.value || "").trim())) element.value = value;
+  });
+  if(nextDate && (force || !nextDate.value)){
+    nextDate.value = nextIsoDateForWeekday(weekday?.value || 3);
+  }
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || defaults.discordChannelId);
+}
+
+function resetRaidHelperScheduleForm(){
+  const currentRaid = document.getElementById("raidHelperScheduleRaid")?.value || "naxx";
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperScheduleId", "");
+  setValue("raidHelperScheduleRaid", currentRaid);
+  setValue("raidHelperScheduleLead", "maxmustermagier");
+  setValue("raidHelperScheduleWeekday", "3");
+  setValue("raidHelperScheduleTime", "19:45");
+  setValue("raidHelperScheduleInterval", "1");
+  setValue("raidHelperScheduleNextDate", nextIsoDateForWeekday(3));
+  updateRaidHelperScheduleDefaults(true);
+  setRaidHelperScheduleStatus("Neue Rhythmus-Regel bereit.", "");
+}
+
+function fillRaidHelperScheduleEditor(schedule){
+  const item = schedule || {};
+  const raidKey = String(item.raid || item.raidType || "naxx").trim().toLowerCase();
+  const setValue = (id, value) => {
+    const element = document.getElementById(id);
+    if(element) element.value = value ?? "";
+  };
+  setValue("raidHelperScheduleId", item.id || item.scheduleId || "");
+  setValue("raidHelperScheduleRaid", RAID_OPTIONS[raidKey] ? raidKey : "naxx");
+  setValue("raidHelperScheduleTitle", item.title || "");
+  setValue("raidHelperScheduleLead", item.createdBy || "maxmustermagier");
+  setValue("raidHelperScheduleWeekday", item.weekday || 3);
+  setValue("raidHelperScheduleTime", item.raidTime || "19:45");
+  setValue("raidHelperScheduleInterval", item.intervalWeeks || 1);
+  setValue("raidHelperScheduleNextDate", item.nextRaidDate || nextIsoDateForWeekday(item.weekday || 3));
+  setValue("raidHelperScheduleDeadline", item.signupDeadline || "");
+  setValue("raidHelperScheduleMax", item.maxPlayers ?? "");
+  setValue("raidHelperScheduleTanks", item.tankSlots ?? "");
+  setValue("raidHelperScheduleHeals", item.healSlots ?? "");
+  setValue("raidHelperScheduleDds", item.ddSlots ?? "");
+  setValue("raidHelperScheduleDescription", item.description || "");
+  renderRaidHelperScheduleChannelSelect(item.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  updateRaidHelperScheduleDefaults(false);
+  setRaidHelperScheduleStatus(item.id ? "Rhythmus geladen." : "Neue Rhythmus-Regel bereit.", item.id ? "good" : "");
+}
+
+function editRaidHelperSchedule(scheduleId){
+  const schedule = raidHelperSchedules.find(item => String(item.id || item.scheduleId) === String(scheduleId));
+  if(schedule) fillRaidHelperScheduleEditor(schedule);
+}
+
+function raidHelperScheduleFromEditor(){
+  const raidKey = raidHelperValue("raidHelperScheduleRaid") || "naxx";
+  const title = raidHelperValue("raidHelperScheduleTitle") || (RAID_OPTIONS[raidKey]?.name || "Raid") + " Anmeldung";
+  return {
+    id:raidHelperValue("raidHelperScheduleId"),
+    key:`schedule-${raidKey}-${raidHelperValue("raidHelperScheduleWeekday")}-${raidHelperValue("raidHelperScheduleTime")}`.replace(/[^a-zA-Z0-9-]+/g, "-").toLowerCase(),
+    raid:raidKey,
+    title,
+    createdBy:raidHelperValue("raidHelperScheduleLead") || "maxmustermagier",
+    weekday:raidHelperValue("raidHelperScheduleWeekday") || "3",
+    raidTime:raidHelperValue("raidHelperScheduleTime") || "19:45",
+    intervalWeeks:raidHelperValue("raidHelperScheduleInterval") || "1",
+    nextRaidDate:raidHelperValue("raidHelperScheduleNextDate"),
+    signupDeadline:raidHelperValue("raidHelperScheduleDeadline"),
+    discordChannelId:raidHelperValue("raidHelperScheduleChannel") || RAID_HELPER_CHANNEL_ID,
+    maxPlayers:raidHelperValue("raidHelperScheduleMax"),
+    tankSlots:raidHelperValue("raidHelperScheduleTanks"),
+    healSlots:raidHelperValue("raidHelperScheduleHeals"),
+    ddSlots:raidHelperValue("raidHelperScheduleDds"),
+    description:raidHelperValue("raidHelperScheduleDescription"),
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+  };
+}
+
+async function loadRaidHelperSchedules(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    renderRaidHelperScheduleRules();
+    renderRaidHelperScheduledEvents();
+    return;
+  }
+  setRaidHelperScheduleStatus("Rhythmen werden geladen ...", "");
+  try{
+    const result = await railwayApi({ action:"guildGetRaidHelperSchedules", masterCode });
+    if(result.success){
+      raidHelperSchedules = Array.isArray(result.schedules) ? result.schedules : [];
+      await loadOverview({ preserveStatus:true });
+      renderRaidHelperScheduleRules();
+      renderRaidHelperScheduledEvents();
+      if(!document.getElementById("raidHelperScheduleTitle")?.value.trim()) resetRaidHelperScheduleForm();
+      setRaidHelperScheduleStatus("Rhythmen geladen.", "good");
+      return;
+    }
+    throw new Error(result.error || "Rhythmen konnten nicht geladen werden.");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmen konnten nicht geladen werden.", "bad");
+  }
+}
+
+async function saveRaidHelperSchedule(){
+  const schedule = raidHelperScheduleFromEditor();
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!schedule.title || !schedule.nextRaidDate){
+    setRaidHelperScheduleStatus("Bitte Titel und nächsten Termin eintragen.", "bad");
+    return;
+  }
+  setRaidHelperScheduleStatus("Rhythmus wird gespeichert ...", "");
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperSchedule",
+      masterCode,
+      scheduleId:schedule.id,
+      scheduleKey:schedule.key,
+      raid:schedule.raid,
+      title:schedule.title,
+      createdBy:schedule.createdBy,
+      weekday:schedule.weekday,
+      raidTime:schedule.raidTime,
+      intervalWeeks:schedule.intervalWeeks,
+      nextRaidDate:schedule.nextRaidDate,
+      signupDeadline:schedule.signupDeadline,
+      discordChannelId:schedule.discordChannelId,
+      maxPlayers:schedule.maxPlayers,
+      tankSlots:schedule.tankSlots,
+      healSlots:schedule.healSlots,
+      ddSlots:schedule.ddSlots,
+      description:schedule.description,
+      raidImageUrl:defaultRaidHelperImageUrl(schedule.raid)
+    });
+    if(!result.success) throw new Error(result.error || "Rhythmus konnte nicht gespeichert werden.");
+    await loadRaidHelperSchedules();
+    setRaidHelperScheduleStatus("Rhythmus gespeichert und Anmelder aktualisiert.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmus konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deleteRaidHelperSchedule(scheduleId){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Rhythmus wirklich löschen? Der bereits erstellte Raid bleibt bestehen.")) return;
+  setRaidHelperScheduleStatus("Rhythmus wird gelöscht ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildDeleteRaidHelperSchedule", masterCode, scheduleId });
+    if(!result.success) throw new Error(result.error || "Rhythmus konnte nicht gelöscht werden.");
+    raidHelperSchedules = raidHelperSchedules.filter(item => String(item.id) !== String(scheduleId));
+    renderRaidHelperScheduleRules();
+    resetRaidHelperScheduleForm();
+    setRaidHelperScheduleStatus("Rhythmus gelöscht.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Rhythmus konnte nicht gelöscht werden.", "bad");
+  }
+}
+
+async function processRaidHelperSchedules(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  setRaidHelperScheduleStatus("Geplante Anmelder werden aktualisiert ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode });
+    if(!result.success) throw new Error(result.error || "Geplante Anmelder konnten nicht aktualisiert werden.");
+    await loadRaidHelperSchedules();
+    setRaidHelperScheduleStatus("Geplante Anmelder aktualisiert.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "Geplante Anmelder konnten nicht aktualisiert werden.", "bad");
+  }
+}
+
+function renderRaidHelperScheduleRules(){
+  const box = document.getElementById("raidHelperScheduleRules");
+  if(!box) return;
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  if(!raidHelperSchedules.length){
+    box.innerHTML = '<div class="muted">Noch keine Rhythmus-Regel gespeichert.</div>';
+    return;
+  }
+  box.innerHTML = raidHelperSchedules.map(schedule => {
+    const raidKey = String(schedule.raid || schedule.raidType || "raid").toLowerCase();
+    const weekday = ["","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"][Number(schedule.weekday || 0)] || "Wochentag offen";
+    const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id) === String(schedule.discordChannelId || ""));
+    const channelLabel = channel ? "# " + (channel.channelName || channel.name) : (schedule.discordChannelId ? "# " + schedule.discordChannelId : "Channel offen");
+    return `
+      <article class="raid-helper-list-item" style="--raid-color:${raidHelperRaidColor(raidKey)}">
+        <div class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[raidKey]?.short || "R")}</div>
+        <div>
+          <div class="raid-helper-list-title">${escapeHtml(schedule.title || RAID_OPTIONS[raidKey]?.name || "Raid")}</div>
+          <div class="raid-helper-list-meta">
+            <span class="raid-helper-meta-pill">↻ ${escapeHtml(weekday)} · alle ${escapeHtml(String(schedule.intervalWeeks || 1))} Woche(n)</span>
+            <span class="raid-helper-meta-pill">▣ ${escapeHtml(formatRaidDate(schedule.nextRaidDate))}</span>
+            <span class="raid-helper-meta-pill">◷ ${escapeHtml(schedule.raidTime || "-")}</span>
+            <span class="raid-helper-meta-pill">${escapeHtml(channelLabel)}</span>
+          </div>
+        </div>
+        <div class="raid-helper-template-actions">
+          <button class="small-btn ghost" type="button" onclick="editRaidHelperSchedule('${escapeAttr(schedule.id)}')">Bearbeiten</button>
+          <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(schedule.currentRaidId || ("schedule-" + schedule.id))}')">Posten</button>
+          <button class="small-btn danger" type="button" onclick="deleteRaidHelperSchedule('${escapeAttr(schedule.id)}')">Löschen</button>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 function setRaidHelperTemplateStatus(message, type){
@@ -5221,7 +5565,7 @@ async function saveRaidHelperTemplate(){
       ddSlots:template.ddSlots,
       signupDeadline:template.signupDeadline,
       discordChannelId:template.discordChannelId,
-      raidImageUrl:template.raidImageUrl
+      raidImageUrl:defaultRaidHelperImageUrl(template.raid)
     });
     if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
     const saved = result.template;
@@ -5296,6 +5640,7 @@ function renderRaidHelperDiscordChannels(){
       : "Noch keine Bot-Channel geladen. Bot neu starten und danach aktualisieren.";
   }
   renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
   updateRaidHelperPreview();
 }
 
@@ -5351,8 +5696,8 @@ function raidHelperValue(id){
 }
 
 function defaultRaidHelperImageUrl(raidKey){
-  const key = String(raidKey || "raid").trim().toLowerCase();
-  return RAID_HELPER_IMAGE_BASE_URL + key + ".jpg";
+  const key = RAID_OPTIONS[String(raidKey || "").trim().toLowerCase()] ? String(raidKey || "").trim().toLowerCase() : "zg";
+  return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
 function buildRaidHelperPreviewText(){
@@ -6919,7 +7264,7 @@ async function loadWorldbuffPanel(){
   content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
 
   try{
-    const result = await apiJsonp({ action:"guildGetWorldbuffs", masterCode, days, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
       return;
