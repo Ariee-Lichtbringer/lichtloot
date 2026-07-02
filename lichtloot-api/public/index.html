@@ -1961,15 +1961,7 @@ const raids = {
   aq20:{name:"AQ 20",short:"AQ20",lootPage:"loot/aq20-loot.html"},
   ony:{name:"Onyxia",short:"ONY",lootPage:"loot/ony-loot.html"}
 };
-const LOOT_JSON_URLS = {
-  mc:"data/mc.json",
-  bwl:"data/bwl.json",
-  aq40:"data/aq40.json",
-  naxx:"data/naxx.json",
-  zg:"data/zg.json",
-  aq20:"data/aq20.json",
-  ony:"data/ony.json"
-};
+const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",zg:"",aq20:"",ony:""};
 
 let lootDataByRaid = {};
 window.p0plusEntries = [];
@@ -3323,14 +3315,12 @@ function normalizeItemName(value){
 async function loadLootDataForRaid(raid){
   if(lootDataByRaid[raid]) return lootDataByRaid[raid];
 
-  const url = LOOT_JSON_URLS[raid];
-  if(!url) return [];
-
   try{
-    const response = await fetch(url + "?t=" + Date.now(), {cache:"no-store"});
-    const rows = await response.json();
+    const response = await fetch(LICHTLOOT_API_URL + "?action=getLootItems&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG || "lichtloot") + "&raid=" + encodeURIComponent(raid) + "&t=" + Date.now(), {cache:"no-store"});
+    const payload = await response.json().catch(()=>null);
+    const rows = payload && Array.isArray(payload.items) ? payload.items : [];
 
-    const data = (Array.isArray(rows) ? rows : []).map(obj => {
+    const data = rows.map(obj => {
       const itemId = obj.itemId || obj.ItemID || obj.id || "";
       const iconName = obj.iconName || obj.IconName || obj.WowheadIcon || obj.icon || obj.Icon || "";
       const stats = Array.isArray(obj.stats)
@@ -3359,29 +3349,15 @@ async function loadLootDataForRaid(raid){
         boss:obj.boss || obj.Boss || "",
         dropchance:obj.dropChance || obj.Dropchance || obj.dropchance || ""
       };
-    }).filter(item=>item.name);
+    }).filter(item => item.name);
 
     lootDataByRaid[raid] = data;
-    return lootDataByRaid[raid];
+    return data;
   }catch(error){
-    console.error("GitHub-Itemdaten konnten nicht geladen werden:", raid, error);
+    console.warn("Railway-Lootdaten konnten nicht geladen werden:", raid, error);
     lootDataByRaid[raid] = [];
     return [];
   }
-}
-
-function raidKeyFromEntryRaid(raid){
-  const value = String(raid || "").toLowerCase();
-
-  if(value.includes("mc") || value.includes("molten")) return "mc";
-  if(value.includes("bwl") || value.includes("blackwing")) return "bwl";
-  if(value.includes("aq40")) return "aq40";
-  if(value.includes("naxx")) return "naxx";
-  if(value.includes("zg") || value.includes("zul")) return "zg";
-  if(value.includes("aq20")) return "aq20";
-  if(value.includes("ony")) return "ony";
-
-  return value;
 }
 
 function findP0PlusItem(raid,itemName){
