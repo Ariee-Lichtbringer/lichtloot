@@ -246,7 +246,7 @@
   },
   {
     "raid_type": "mc",
-    "item_id": "205",
+    "item_id": "133993",
     "name": "Kaese",
     "quality": "",
     "icon_url": "inv_misc_food_37"
@@ -1205,7 +1205,7 @@
   },
   {
     "raid_type": "bwl",
-    "item_id": "205",
+    "item_id": "133993",
     "name": "Kaese",
     "quality": "",
     "icon_url": "inv_misc_food_37"
@@ -5360,6 +5360,13 @@
     "name": "Jins Band",
     "quality": "rare",
     "icon_url": "inv_jewelry_ring_44"
+  },
+  {
+    "raid_type": "zg",
+    "item_id": "19865",
+    "name": "Kriegsklinge der Hakkari (Offhand)",
+    "quality": "epic",
+    "icon_url": "inv_sword_55"
   },
   {
     "raid_type": "zg",

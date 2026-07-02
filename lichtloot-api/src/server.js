@@ -10948,7 +10948,7 @@ async function restoreLootItemsFromStaticDataOnce() {
 }
 
 async function applyZgHakkariOffhandCorrectionOnce() {
-  const markerKey = "zg-hakkari-twinblades-two-itemids-v2";
+  const markerKey = "zg-hakkari-offhand-display-name-v5";
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -10969,6 +10969,23 @@ async function applyZgHakkariOffhandCorrectionOnce() {
       {
         raid: "zg",
         itemId: "19865",
+        name: "Kriegsklinge der Hakkari (Offhand)",
+        quality: "epic",
+        iconName: "inv_sword_55",
+        slot: "Schildhand",
+        type: "Einhandschwerter",
+        boss: "Bloodlord Mandokir",
+        bind: "Wird beim Aufheben gebunden",
+        category: "Waffe",
+        statsText: "Anlegen: +40 Angriffskraft. | (2) Set: Schwerter +6.",
+        tooltip: "Kriegsklinge der Hakkari (Offhand) | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.94 Schaden pro Sekunde) | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. | '...den brodelnden Flammen des Hasses.' | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari (Offhand) | (2) Set: Schwerter +6.",
+        needed: "Benötigt Stufe 60",
+        equip: "Anlegen: +40 Angriffskraft.",
+        dropchance: ""
+      },
+      {
+        raid: "zg",
+        itemId: "19866",
         name: "Kriegsklinge der Hakkari",
         quality: "epic",
         iconName: "inv_sword_55",
@@ -10978,27 +10995,10 @@ async function applyZgHakkariOffhandCorrectionOnce() {
         bind: "Wird beim Aufheben gebunden",
         category: "Waffe",
         statsText: "Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | (2) Set: Schwerter +6.",
-        tooltip: "Kriegsklinge der Hakkari | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Schwert | 59 - 110 Schaden Tempo 1,70 | (49.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari | (2) Set: Schwerter +6. | 'Geschmiedet in...'",
+        tooltip: "Kriegsklinge der Hakkari | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Waffenhand Schwert | 59 - 110 Schaden Tempo 1,70 | (49.7 Schaden pro Sekunde) | Benötigt Stufe 60 | Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari (Offhand) | (2) Set: Schwerter +6. | 'Geschmiedet in...'",
         needed: "Benötigt Stufe 60",
         equip: "Anlegen: +28 Angriffskraft. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
         dropchance: "Nov 56%"
-      },
-      {
-        raid: "zg",
-        itemId: "19866",
-        name: "Kriegsklinge der Hakkari",
-        quality: "epic",
-        iconName: "inv_sword_55",
-        slot: "Schildhand",
-        type: "Einhandschwerter",
-        boss: "Bloodlord Mandokir",
-        bind: "Wird beim Aufheben gebunden",
-        category: "Waffe",
-        statsText: "Anlegen: +40 Angriffskraft. | (2) Set: Schwerter +6.",
-        tooltip: "Kriegsklinge der Hakkari | Gegenstandsstufe 66 | Wird beim Aufheben gebunden | Einzigartig | Schildhand Schwert | 57 - 106 Schaden Tempo 1,70 | (47.94 Schaden pro Sekunde) | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Anlegen: +40 Angriffskraft. | '...den brodelnden Flammen des Hasses.' | Die Zwillingsklingen von Hakkari (0/2) | Kriegsklinge der Hakkari | Kriegsklinge der Hakkari | (2) Set: Schwerter +6.",
-        needed: "Benötigt Stufe 60",
-        equip: "Anlegen: +40 Angriffskraft.",
-        dropchance: ""
       }
     ];
 
@@ -11008,14 +11008,67 @@ async function applyZgHakkariOffhandCorrectionOnce() {
       if (result) upserted += 1;
     }
 
+    const mainhand = await client.query(
+      `select id from items
+       where lower(raid_type) = 'zg'
+         and item_id = '19866'
+       order by created_at asc
+       limit 1`
+    );
+    const mainhandId = mainhand.rows[0]?.id || "";
+    const offhand = await client.query(
+      `select id from items
+       where lower(raid_type) = 'zg'
+         and item_id = '19865'
+       order by created_at asc
+       limit 1`
+    );
+    const offhandId = offhand.rows[0]?.id || "";
+    let removedWrongRows = 0;
+    let movedReferences = 0;
+    if (mainhandId) {
+      const wrongRows = await client.query(
+        `select id from items
+         where lower(raid_type) = 'zg'
+           and lower(name) = lower('Kriegsklinge der Hakkari')
+           and coalesce(item_id, '') <> '19866'`
+      );
+      for (const row of wrongRows.rows) {
+        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [mainhandId, row.id]);
+        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [mainhandId, row.id]);
+        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [mainhandId, row.id]);
+        const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [mainhandId, row.id]);
+        movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
+        const deleted = await client.query("delete from items where id = $1", [row.id]);
+        removedWrongRows += deleted.rowCount;
+      }
+    }
+    if (offhandId) {
+      const wrongRows = await client.query(
+        `select id from items
+         where lower(raid_type) = 'zg'
+           and lower(name) = lower('Kriegsklinge der Hakkari (Offhand)')
+           and coalesce(item_id, '') <> '19865'`
+      );
+      for (const row of wrongRows.rows) {
+        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [offhandId, row.id]);
+        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [offhandId, row.id]);
+        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [offhandId, row.id]);
+        const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [offhandId, row.id]);
+        movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
+        const deleted = await client.query("delete from items where id = $1", [row.id]);
+        removedWrongRows += deleted.rowCount;
+      }
+    }
+
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ upserted, itemIds: ["19865", "19866"] })]
+      [markerKey, JSON.stringify({ upserted, itemIds: ["19865", "19866"], removedWrongRows, movedReferences })]
     );
     await client.query("commit");
-    console.log("ZG-Hakkari-Zwillingsklingen korrigiert: 19865 Waffenhand, 19866 Schildhand");
+    console.log("ZG-Hakkari-Zwillingsklingen korrigiert: 19865 Offhand, 19866 Waffenhand");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
