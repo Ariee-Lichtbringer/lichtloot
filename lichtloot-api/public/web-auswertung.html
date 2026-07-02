@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LichtLoot Web-Auswertung</title>
+  <style>
+    :root{
+      --bg:#070d16;--panel:#0d1624;--panel2:#111d2e;--line:#263449;--soft:rgba(148,163,184,.16);
+      --text:#f8fafc;--muted:#a8b3c4;--gold:#facc15;--blue:#60a5fa;--green:#34d399;
+      --druid:#ff7c0a;--hunter:#aad372;--mage:#3fc7eb;--paladin:#f48cba;--priest:#f0ebe0;
+      --rogue:#fff468;--shaman:#0070dd;--warlock:#8788ee;--warrior:#c69b6d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(180deg,rgba(7,13,22,.98),rgba(7,13,22,.92)),url("images/worldbuff-anleitung.jpg") center/cover fixed;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit}button,input,select{font:inherit}
+    .shell{max-width:1760px;margin:0 auto;padding:22px}
+    .top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;margin-bottom:14px}
+    .kicker{color:var(--gold);font-size:12px;font-weight:950;text-transform:uppercase}
+    h1{margin:4px 0 8px;font-size:32px;line-height:1.08;letter-spacing:0}
+    .lead{margin:0;color:var(--muted);font-weight:800;line-height:1.4}
+    .actions,.tabs,.classbar,.filters{display:flex;gap:8px;flex-wrap:wrap}
+    .btn,.tab,.class-btn{min-height:38px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.88);color:var(--text);padding:8px 12px;font-weight:950;text-decoration:none;cursor:pointer}
+    .btn.primary,.tab.active,.class-btn.active{border-color:var(--gold);background:var(--gold);color:#161200}
+    .btn.ghost{background:rgba(13,22,36,.48)}
+    .filters{padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.78);margin-bottom:14px}
+    input,select{min-height:38px;border:1px solid var(--line);border-radius:8px;background:#060b13;color:var(--text);padding:0 10px;font-weight:850}
+    input{min-width:260px;flex:1}
+    .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+    .panel{border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.84);box-shadow:0 18px 44px rgba(0,0,0,.28)}
+    .panel-pad{padding:14px}
+    .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+    .badge{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:12px;font-weight:950}
+    .badge.rpb{border-color:rgba(96,165,250,.42);color:#bfdbfe;background:rgba(96,165,250,.10)}
+    .badge.cla{border-color:rgba(250,204,21,.42);color:#fde68a;background:rgba(250,204,21,.10)}
+    .section-tools{display:grid;gap:10px;margin-bottom:10px}
+    .tab[data-type="cla"]{border-color:rgba(250,204,21,.35)}
+    .tab[data-type="rpb"]{border-color:rgba(96,165,250,.35)}
+    .tab small{display:block;color:inherit;opacity:.7;font-size:11px;font-weight:950;margin-top:2px}
+    .class-btn{min-height:34px;padding:6px 10px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:#060b13;max-height:72vh}
+    table{border-collapse:separate;border-spacing:0;width:100%;min-width:920px}
+    th,td{border-right:1px solid var(--soft);border-bottom:1px solid var(--soft);padding:7px 9px;white-space:pre-wrap;vertical-align:top;font-size:12px;font-weight:800}
+    th{position:sticky;top:0;z-index:3;background:#111827;color:#f8fafc;text-align:left}
+    th:first-child,td:first-child{position:sticky;left:0;z-index:2;background:#111827;min-width:220px}
+    thead th:first-child{z-index:4}
+    .list{display:grid;gap:8px}
+    .analysis-row{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82)}
+    .analysis-row:hover{border-color:rgba(250,204,21,.46)}
+    .raid{color:var(--gold);font-weight:950}
+    .title{font-weight:950}.sub{color:var(--muted);font-size:12px;font-weight:850;margin-top:3px}
+    .side{display:grid;gap:14px}
+    .side h2{margin:0 0 10px;font-size:16px}
+    .pills{display:flex;gap:6px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950;background:rgba(6,11,19,.82)}
+    .status{padding:16px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82);color:var(--muted);font-weight:850}
+    .error{border-color:rgba(248,113,113,.45);color:#fecdd3;background:rgba(248,113,113,.10)}
+    .hidden{display:none}
+    @media(max-width:1050px){.grid,.top{grid-template-columns:1fr}.analysis-row{grid-template-columns:1fr}.table-wrap{max-height:none}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div>
+        <div class="kicker">LichtLoot</div>
+        <h1 id="pageTitle">Web-Auswertung</h1>
+        <p id="pageLead" class="lead">Neu aufgebaut: Grundlage sind nur die gespeicherten Raidsheets. RPB-Cluster und CLA-Reiter liegen gemeinsam auf einer Seite.</p>
+        <div id="meta" class="meta"></div>
+      </div>
+      <div class="actions">
+        <a class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
+        <button class="btn primary" type="button" onclick="reload()">Neu laden</button>
+      </div>
+    </header>
+
+    <section class="filters">
+      <input id="search" type="search" placeholder="Suchen..." oninput="renderCurrent()">
+      <select id="raidFilter" onchange="renderList()"><option value="">Alle Raids</option></select>
+      <button class="btn ghost" type="button" onclick="resetFilters()">Filter zurücksetzen</button>
+    </section>
+
+    <section id="listView" class="list"></section>
+
+    <section id="detailView" class="grid hidden">
+      <div>
+        <div class="panel panel-pad section-tools">
+          <div id="sectionTabs" class="tabs"></div>
+          <div id="classTabs" class="classbar"></div>
+        </div>
+        <div class="table-wrap"><table id="sheetTable"><tbody><tr><td>Auswertung wird geladen...</td></tr></tbody></table></div>
+      </div>
+      <aside class="side">
+        <section class="panel panel-pad">
+          <h2>Reiter</h2>
+          <div id="sectionInfo" class="sub">-</div>
+        </section>
+        <section class="panel panel-pad">
+          <h2>Klassen im Cluster</h2>
+          <div id="classInfo" class="pills"></div>
+        </section>
+        <section class="panel panel-pad">
+          <h2>Hinweise</h2>
+          <div id="warnings" class="sub">Keine Hinweise.</div>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+    const params = new URLSearchParams(location.search);
+    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", mode:params.get("id") ? "detail" : "list" };
+    const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
+    const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
+    const CLASS_COLOR = {Warrior:"var(--warrior)",Druid:"var(--druid)",Paladin:"var(--paladin)",Rogue:"var(--rogue)",Hunter:"var(--hunter)",Priest:"var(--priest)",Mage:"var(--mage)",Warlock:"var(--warlock)",Shaman:"var(--shaman)",Unknown:"#cbd5e1"};
+    const CLUSTER_CLASSES = {
+      healer:["Druid","Paladin","Priest","Shaman"],
+      healerCast:["Druid","Paladin","Priest","Shaman"],
+      caster:["Druid","Mage","Warlock","Priest","Shaman"],
+      casterCast:["Druid","Mage","Warlock","Priest","Shaman"],
+      physical:["Warrior","Rogue","Hunter","Druid"],
+      physicalCast:["Warrior","Rogue","Hunter","Druid"],
+      tank:["Warrior","Druid","Paladin"],
+      tankCast:["Warrior","Druid","Paladin"],
+      all:CLASS_ORDER
+    };
+
+    function html(value){return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function attr(value){return html(value);}
+    function key(value){return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();}
+    function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
+    function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
+    async function api(query){const url=API_URL+"?"+new URLSearchParams({...query,guild:params.get("guild")||"lichtloot",t:Date.now()});const res=await fetch(url,{cache:"no-store"});const data=await res.json().catch(()=>({}));if(!res.ok||data.success===false)throw new Error(data.error||"Daten konnten nicht geladen werden.");return data;}
+    function matrixValues(section){return section?.matrix?.values || section?.payload?.values || [];}
+    function matrixBackgrounds(section){return section?.matrix?.backgrounds || section?.payload?.backgrounds || [];}
+    function matrixFontColors(section){return section?.matrix?.fontColors || section?.payload?.fontColors || [];}
+    function clusterFor(label,type){
+      if(type==="cla") return "all";
+      const t=key(label);
+      if(t.includes("heiler")||t.includes("heal")) return t.includes("cast")||t.includes("zauber") ? "healerCast" : "healer";
+      if(t.includes("physical")||t.includes("physisch")||t.includes("nahkampf")||t.includes("melee")) return t.includes("cast")||t.includes("zauber") ? "physicalCast" : "physical";
+      if(t.includes("caster")||t.includes("zauberer")||t.includes("spell")) return t.includes("cast")||t.includes("zauber") ? "casterCast" : "caster";
+      if(t.includes("tank")) return t.includes("cast")||t.includes("zauber") ? "tankCast" : "tank";
+      return "all";
+    }
+    function sectionLabel(section){
+      if(section.type==="cla") return section.label || "CLA";
+      const cluster = clusterFor(section.label, "rpb");
+      const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RBP"};
+      return map[cluster] || section.label || "RBP";
+    }
+    function collectSections(detail){
+      const out=[];
+      (detail?.rpb?.sections||[]).forEach(section=>out.push({...section,type:"rpb",cluster:clusterFor(section.label,"rpb")}));
+      (detail?.cla?.sections||[]).forEach(section=>out.push({...section,type:"cla",cluster:"all"}));
+      return out;
+    }
+    function allPlayers(){
+      const players=[...(state.detail?.rpb?.players||[]),...(state.detail?.cla?.players||[])];
+      const seen=new Map();
+      players.forEach(player=>{const name=String(player.name||"").trim();if(name&&!seen.has(name.toLowerCase()))seen.set(name.toLowerCase(),player);});
+      return Array.from(seen.values());
+    }
+    function classesForSection(section){
+      const allowed = CLUSTER_CLASSES[section?.cluster || "all"] || CLASS_ORDER;
+      const present = new Set(allPlayers().map(p=>p.className||"Unknown"));
+      const classes = allowed.filter(cls => present.has(cls));
+      return classes.length ? classes : allowed.filter(cls => cls !== "Unknown");
+    }
+    async function loadList(){
+      document.getElementById("listView").innerHTML='<div class="status">Auswertungen werden geladen...</div>';
+      const data=await api({action:"getPublicLogAnalyses",limit:60,sheetOnly:"1"});
+      state.analyses=Array.isArray(data.analyses)?data.analyses:[];
+      const raids=[...new Set(state.analyses.map(raidName))].sort();
+      document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
+      renderList();
+    }
+    async function loadDetail(){
+      const id=params.get("id")||params.get("analysisId")||"";
+      if(!id){state.mode="list";return loadList();}
+      document.getElementById("listView").classList.add("hidden");
+      document.getElementById("detailView").classList.remove("hidden");
+      let data;
+      try{
+        data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined"});
+      }catch(error){
+        state.mode="list";
+        history.replaceState(null,"","web-auswertung.html");
+        document.getElementById("detailView").classList.add("hidden");
+        document.getElementById("listView").classList.remove("hidden");
+        await loadList();
+        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese alte Auswertung hat noch keine Raidsheet-Daten. Ich zeige dir unten nur Auswertungen mit gespeicherten Raidsheets.</div>`);
+        return;
+      }
+      state.detail=data.webAnalysis;
+      state.sections=collectSections(state.detail);
+      state.activeSection=state.sections[0]?.id||"";
+      state.activeClass="";
+      renderDetail();
+    }
+    function renderList(){
+      state.mode="list";
+      document.getElementById("detailView").classList.add("hidden");
+      document.getElementById("listView").classList.remove("hidden");
+      document.getElementById("pageTitle").textContent="Web-Auswertungen";
+      document.getElementById("meta").innerHTML="";
+      const q=key(document.getElementById("search").value);
+      const raid=document.getElementById("raidFilter").value;
+      const list=state.analyses.filter(a=>(!raid||raidName(a)===raid)&&(!q||key([a.title,a.raid,a.reportCode,raidName(a)].join(" ")).includes(q)));
+      document.getElementById("listView").innerHTML=list.length?list.map(a=>`
+        <article class="analysis-row">
+          <div class="raid">${html(raidName(a))}</div>
+          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div><div class="meta"><span class="badge rpb">RPB ${Number(a.rpbSheetCount||0)}</span><span class="badge cla">CLA ${Number(a.claSheetCount||0)}</span></div></div>
+          <a class="btn primary" href="web-auswertung.html?id=${encodeURIComponent(a.id)}">Öffnen</a>
+        </article>`).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
+    }
+    function renderDetail(){
+      const report=state.detail?.report||state.detail?.analysis||{};
+      document.getElementById("pageTitle").textContent=report.title||"Raid-Auswertung";
+      document.getElementById("meta").innerHTML=[
+        `<span class="badge">${html(report.raid||"Raid")}</span>`,
+        `<span class="badge">${html(dateDisplay(report.raidDate||report.raid_date))}</span>`,
+        state.detail?.rpb?'<span class="badge rpb">RPB Raidsheet</span>':'',
+        state.detail?.cla?'<span class="badge cla">CLA Raidsheet</span>':''
+      ].filter(Boolean).join("");
+      renderSectionTabs();
+      renderClassTabs();
+      renderTable();
+      renderSide();
+    }
+    function renderSectionTabs(){
+      document.getElementById("sectionTabs").innerHTML=state.sections.map((section,index)=>`
+        <button class="tab ${section.id===state.activeSection?'active':''}" data-type="${attr(section.type)}" type="button" onclick="selectSection('${attr(section.id)}')">
+          ${html(sectionLabel(section))}<small>${html(section.type.toUpperCase())}${section.label&&sectionLabel(section)!==section.label?" · "+html(section.label):""}</small>
+        </button>`).join("") || '<div class="status">Keine Raidsheet-Reiter vorhanden.</div>';
+    }
+    function renderClassTabs(){
+      const section=activeSection();
+      const classes=classesForSection(section);
+      document.getElementById("classTabs").innerHTML='<button class="class-btn '+(!state.activeClass?'active':'')+'" type="button" onclick="selectClass(\'\')">Alle</button>'+
+        classes.map(cls=>`<button class="class-btn ${state.activeClass===cls?'active':''}" style="color:${CLASS_COLOR[cls]||'#cbd5e1'}" type="button" onclick="selectClass('${attr(cls)}')">${html(CLASS_LABEL[cls]||cls)}</button>`).join("");
+    }
+    function activeSection(){return state.sections.find(s=>s.id===state.activeSection)||state.sections[0]||null;}
+    function rowMatchesClass(row, classes){
+      if(!state.activeClass) return true;
+      const rowText=key(row.join(" "));
+      const classLabel=key(CLASS_LABEL[state.activeClass]||state.activeClass);
+      return rowText.includes(key(state.activeClass)) || rowText.includes(classLabel);
+    }
+    function renderTable(){
+      const section=activeSection();
+      const table=document.getElementById("sheetTable");
+      if(!section){table.innerHTML='<tbody><tr><td>Keine Raidsheet-Daten vorhanden.</td></tr></tbody>';return;}
+      const values=matrixValues(section);
+      const bgs=matrixBackgrounds(section);
+      const fcs=matrixFontColors(section);
+      const q=key(document.getElementById("search").value);
+      const classes=classesForSection(section);
+      const rows=values.map((row,rowIndex)=>({row:Array.isArray(row)?row:[],rowIndex}))
+        .filter(item=>item.row.some(cell=>String(cell||"").trim()))
+        .filter(item=>(!q||key(item.row.join(" ")).includes(q)) && rowMatchesClass(item.row, classes));
+      const used=new Set();
+      rows.forEach(({row})=>row.forEach((cell,index)=>{if(String(cell||"").trim())used.add(index);}));
+      const cols=[...used].sort((a,b)=>a-b);
+      const body=rows.map(({row,rowIndex})=>`<tr>${cols.map(col=>{
+        const style=[];
+        const bg=bgs[rowIndex]?.[col]; const color=fcs[rowIndex]?.[col];
+        if(bg) style.push(`background:${String(bg).replace(/"/g,"")}`);
+        if(color) style.push(`color:${String(color).replace(/"/g,"")}`);
+        return `<td style="${attr(style.join(";"))}">${html(row[col]||"")}</td>`;
+      }).join("")}</tr>`).join("");
+      table.innerHTML=`<thead><tr>${cols.map((_,i)=>`<th>${i===0?html(section.label||sectionLabel(section)):""}</th>`).join("")}</tr></thead><tbody>${body||'<tr><td>Keine Treffer.</td></tr>'}</tbody>`;
+    }
+    function renderSide(){
+      const section=activeSection();
+      const classes=classesForSection(section);
+      document.getElementById("sectionInfo").innerHTML=section?`${html(section.type.toUpperCase())} · ${html(section.label||sectionLabel(section))}`:"-";
+      document.getElementById("classInfo").innerHTML=classes.map(cls=>`<span class="pill" style="color:${CLASS_COLOR[cls]||'#cbd5e1'}">${html(CLASS_LABEL[cls]||cls)}</span>`).join("")||'<span class="sub">Keine Klassen erkannt.</span>';
+      const warnings=[...(state.detail?.rpb?.warnings||[]),...(state.detail?.cla?.warnings||[])];
+      document.getElementById("warnings").innerHTML=warnings.length?warnings.map(html).join("<br>"):"Keine Hinweise.";
+    }
+    function selectSection(id){state.activeSection=id;state.activeClass="";renderDetail();}
+    function selectClass(cls){state.activeClass=cls||"";renderClassTabs();renderTable();}
+    function resetFilters(){document.getElementById("search").value="";document.getElementById("raidFilter").value="";state.activeClass="";renderCurrent();}
+    function renderCurrent(){state.mode==="detail"?renderDetail():renderList();}
+    function reload(){state.mode==="detail"?loadDetail().catch(showError):loadList().catch(showError);}
+    function showError(error){const box=state.mode==="detail"?document.getElementById("sheetTable"):document.getElementById("listView");if(box.tagName==="TABLE")box.innerHTML=`<tbody><tr><td class="error">${html(error.message||"Fehler")}</td></tr></tbody>`;else box.innerHTML=`<div class="status error">${html(error.message||"Fehler")}</div>`;}
+    (async()=>{try{state.mode==="detail"?await loadDetail():await loadList();}catch(error){showError(error);}})();
+  </script>
+</body>
+</html>

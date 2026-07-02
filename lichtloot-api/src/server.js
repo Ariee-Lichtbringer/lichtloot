@@ -6795,7 +6795,7 @@ async function importCombatLogAnalysis({ guildId, query: params, text }) {
     success: true,
     analysis: normalizeLogAnalysis(saved.rows[0]),
     summary,
-    webUrl: `raid-analyse.html?id=${encodeURIComponent(saved.rows[0].id)}&type=rpb`
+    webUrl: `web-auswertung.html?id=${encodeURIComponent(saved.rows[0].id)}`
   };
 }
 
