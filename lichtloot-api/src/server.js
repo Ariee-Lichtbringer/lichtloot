@@ -78,7 +78,15 @@ app.use("/api/combat-log/import", express.text({ type: "*/*", limit: "120mb" }))
 app.use(express.json({ limit: "80mb" }));
 app.use(express.urlencoded({ extended: true, limit: "80mb" }));
 app.use("/downloads", express.static("public/downloads"));
-app.use(express.static("public"));
+app.use(express.static("public", {
+  setHeaders(res, filePath) {
+    if (/\.(html|json)$/i.test(filePath)) {
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+  }
+}));
 
 await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
@@ -216,10 +224,6 @@ app.get("/api/dashboard", async (req, res, next) => {
 
 function clean(value) {
   return String(value || "").trim();
-}
-
-function normalizedPersonKey(value) {
-  return clean(value).replace(/\s+/g, " ").toLowerCase();
 }
 
 function resolveGuildSlug(value) {
@@ -1509,41 +1513,6 @@ function normalizeHordenbuffRow(row) {
   };
 }
 
-function dedupeHordenbuffRows(rows) {
-  const byHelper = new Map();
-  const withoutHelper = [];
-
-  for (const row of rows.map(normalizeHordenbuffRow)) {
-    const helperKey = normalizedPersonKey(row.uebernehmer);
-    if (!helperKey) {
-      withoutHelper.push(row);
-      continue;
-    }
-
-    const key = `${row.eventId}|${helperKey}`;
-    const existing = byHelper.get(key);
-    if (!existing) {
-      byHelper.set(key, row);
-      continue;
-    }
-
-    if (!existing.charakter && row.charakter) existing.charakter = row.charakter;
-    if ((!existing.status || existing.status === "offen") && row.status) existing.status = row.status;
-    if (!existing.note && row.note) {
-      existing.note = row.note;
-      existing.notiz = row.notiz || row.note;
-    }
-  }
-
-  return [...withoutHelper, ...byHelper.values()].sort((a, b) => {
-    const dateCompare = String(a.date || "").localeCompare(String(b.date || ""));
-    if (dateCompare) return dateCompare;
-    const timeCompare = String(a.uhrzeit || "").localeCompare(String(b.uhrzeit || ""));
-    if (timeCompare) return timeCompare;
-    return String(a.uebernehmer || a.charakter || "").localeCompare(String(b.uebernehmer || b.charakter || ""));
-  });
-}
-
 function parseCsvRows(text) {
   const rows = [];
   let row = [];
@@ -2398,7 +2367,7 @@ async function getHordenbuffs({ guildId, query: params }) {
     values
   );
 
-  return { success: true, buffs: dedupeHordenbuffRows(result.rows) };
+  return { success: true, buffs: result.rows.map(normalizeHordenbuffRow) };
 }
 
 async function setHordenbuffEntry({ guildId, query: params }) {
@@ -2431,52 +2400,6 @@ async function setHordenbuffEntry({ guildId, query: params }) {
     const hordeChar = clean(params.uebernehmer || params.hordeChar || params.horde_char);
     const status = normalizeHordenbuffStatus(params.status);
     const note = clean(params.note || params.notiz);
-    const hordeCharKey = normalizedPersonKey(hordeChar);
-    let existingHordeEntry = null;
-
-    if (hordeCharKey) {
-      const existingHorde = await client.query(
-        `select he.*
-         from hordenbuff_entries he
-         where he.event_id = $1
-           and lower(regexp_replace(trim(coalesce(he.horde_char, '')), '\\s+', ' ', 'g')) = $2
-           and ($3::uuid is null or he.id <> $3::uuid)
-         order by
-           case when nullif(he.ally_char, '') is not null then 0 else 1 end,
-           he.updated_at desc,
-           he.created_at desc
-         limit 1`,
-        [event.id, hordeCharKey, rowNumber && isUuid(rowNumber) ? rowNumber : null]
-      );
-      existingHordeEntry = existingHorde.rows[0] || null;
-    }
-
-    if (existingHordeEntry) {
-      const mergedAllyChar = allyChar || existingHordeEntry.ally_char || "";
-      const mergedStatus = mergedAllyChar && status === "offen"
-        ? "zugeteilt"
-        : (status || existingHordeEntry.status || (mergedAllyChar ? "zugeteilt" : "offen"));
-      const mergedNote = note || existingHordeEntry.note || "";
-      const merged = await client.query(
-        `update hordenbuff_entries
-         set ally_char = $2,
-             horde_char = $3,
-             status = $4,
-             note = $5,
-             updated_at = now()
-         where id = $1
-         returning *`,
-        [existingHordeEntry.id, mergedAllyChar, hordeChar, mergedStatus, mergedNote]
-      );
-
-      if (existingEntry) {
-        await client.query("delete from hordenbuff_entries where id = $1", [rowNumber]);
-      }
-
-      await client.query("commit");
-      return { success: true, rowNumber: merged.rows[0].id, mergedDuplicate: true };
-    }
-
     const shouldAutoAssign = hordeChar && !allyChar && status !== "erledigt";
 
     if (shouldAutoAssign) {
@@ -9326,6 +9249,23 @@ async function getPublishedPrios({ guildId, query: params }) {
   };
 }
 
+async function getPrioCheck({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    return { success: true, check: null };
+  }
+
+  return {
+    success: true,
+    check: {
+      raid: raidPublicId(raid),
+      counts: {},
+      missingPrio: [],
+      updatedAt: new Date().toISOString()
+    }
+  };
+}
+
 async function validateLeadPin({ guildId, query: params }) {
   const leadPin = clean(params.leadPin || params.raidleadPin);
   if (!leadPin) {
@@ -12052,6 +11992,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublishedPrios") {
       const prios = await getPublishedPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...prios, guild: guild.slug });
+    }
+
+    if (action === "getPrioCheck") {
+      const check = await getPrioCheck({ guildId: guild.id, query: req.query });
+      return res.json({ ...check, guild: guild.slug });
     }
 
     if (action === "getCharacterGearFromWCL") {
