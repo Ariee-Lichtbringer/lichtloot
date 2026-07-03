@@ -595,11 +595,25 @@ button,input,select{font:inherit}
 .p0-panel{border-color:rgba(250,204,21,.20)}
 .issue-panel{border-color:rgba(250,204,21,.20)}
 
+.compact-auth{
+  width:max-content;
+  max-width:100%;
+}
+
 .unlock{
   display:grid;
-  grid-template-columns:1fr auto auto;
+  grid-template-columns:190px auto;
   gap:8px;
   align-items:end;
+}
+
+.compact-auth .status{
+  display:inline-flex;
+  width:auto;
+  min-width:0;
+  max-width:100%;
+  align-items:center;
+  white-space:nowrap;
 }
 
 .field label{
@@ -2866,9 +2880,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
       <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
-    <div class="sidebar-foot">
-      <button class="side-link" type="button" onclick="clearMasterCode()"><span class="side-icon">⚙</span>Sperren</button>
-    </div>
   </aside>
 
 <main class="shell dashboard-main" id="dashboardTop">
@@ -2894,24 +2905,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <div class="unlock">
       <div class="field">
         <label for="masterCode">Master-Code</label>
-        <input id="masterCode" type="password" placeholder="Master-Code eingeben" autocomplete="current-password" onkeydown="enterLoads(event)">
+        <input id="masterCode" type="text" placeholder="Master-Code" autocomplete="off" onkeydown="enterLoads(event)">
       </div>
       <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
-      <button class="btn ghost" type="button" onclick="clearMasterCode()">Sperren</button>
     </div>
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
-  </section>
-
-  <section class="quick-actions" aria-label="Schnellaktionen">
-    <button class="quick-action" type="button" onclick="openRaidPanel()"><span class="qa-icon">🛡</span><span><strong>Raids verwalten</strong><span>PINs und Status</span></span></button>
-    <button class="quick-action" type="button" onclick="openRaidHelperPanel()"><span class="qa-icon">▣</span><span><strong>Raidanmelder erstellen</strong><span>Discord-Post vorbereiten</span></span></button>
-    <button class="quick-action" type="button" onclick="openP0PlusPanel()"><span class="qa-icon">✦</span><span><strong>P0+ Liste</strong><span>Punkte korrigieren</span></span></button>
-    <button class="quick-action" type="button" onclick="sendGeneralMessageFromGuildPage()"><span class="qa-icon">✉</span><span><strong>Nachricht senden</strong><span>An Charakter</span></span></button>
-    <button class="quick-action" type="button" onclick="openLogAnalysisPanel()"><span class="qa-icon">◉</span><span><strong>Loganalysen</strong><span>WCL-Reports prüfen</span></span></button>
-    <button class="quick-action" type="button" onclick="openWorldbuffPanel()"><span class="qa-icon">◎</span><span><strong>Worldbuffs</strong><span>Buffs organisieren</span></span></button>
-    <button class="quick-action" type="button" onclick="openHordenbuffPanel()"><span class="qa-icon">◇</span><span><strong>Hordenbuffs</strong><span>Rend-Helfer planen</span></span></button>
-    <button class="quick-action" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="qa-icon">⚿</span><span><strong>Admin</strong><span>SpielerLogin suchen</span></span></button>
-    <button class="quick-action" type="button" onclick="downloadGuildBackup()"><span class="qa-icon">⇩</span><span><strong>Sicherung</strong><span>Railway-Daten speichern</span></span></button>
   </section>
 
   <section class="stat-grid">
