@@ -3233,7 +3233,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <div id="raidHelperTab-scheduledEvents" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
           <div><h3>Scheduled Events</h3><span>Raidanmelder automatisch im Rhythmus neu erstellen</span></div>
-          <button class="small-btn ghost" type="button" onclick="loadRaidHelperSchedules()">Aktualisieren</button>
+          <div class="raid-helper-template-actions">
+            <button class="small-btn ghost" type="button" onclick="loadRaidHelperSchedules()">Aktualisieren</button>
+            <button class="small-btn good" type="button" onclick="restoreMcRaidHelperSchedule()">MC wiederherstellen</button>
+          </div>
         </div>
         <div class="raid-helper-template-editor">
           <section class="raid-helper-card">
@@ -5690,6 +5693,55 @@ async function processRaidHelperSchedules(){
     setRaidHelperScheduleStatus("Geplante Anmelder aktualisiert.", "good");
   }catch(error){
     setRaidHelperScheduleStatus(error.message || "Geplante Anmelder konnten nicht aktualisiert werden.", "bad");
+  }
+}
+
+function hasRaidHelperScheduleForRaid(raidKey){
+  const wanted = String(raidKey || "").trim().toLowerCase();
+  return raidHelperSchedules.some(schedule => {
+    const key = String(schedule.raid || schedule.raidType || "").trim().toLowerCase();
+    return key === wanted && schedule.enabled !== false;
+  });
+}
+
+async function restoreMcRaidHelperSchedule(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setRaidHelperScheduleStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(hasRaidHelperScheduleForRaid("mc")){
+    setRaidHelperScheduleStatus("MC-Rhythmus ist bereits vorhanden.", "good");
+    return;
+  }
+  const defaults = raidHelperTemplateDefaults("mc");
+  setRaidHelperScheduleStatus("MC-Rhythmus wird wiederhergestellt ...", "");
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperSchedule",
+      masterCode,
+      scheduleKey:"schedule-mc-restored",
+      raid:"mc",
+      title:defaults.title || "Molten Core Anmeldung",
+      createdBy:"Gildenleitung",
+      weekday:"3",
+      raidTime:"19:45",
+      intervalWeeks:"1",
+      nextRaidDate:nextIsoDateForWeekday(3),
+      signupDeadline:defaults.signupDeadline || "19:30",
+      discordChannelId:document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID,
+      maxPlayers:defaults.maxPlayers || 40,
+      tankSlots:defaults.tankSlots || 2,
+      healSlots:defaults.healSlots || 8,
+      ddSlots:defaults.ddSlots || 30,
+      description:defaults.description || RAID_HELPER_DEFAULT_TEXT.default,
+      raidImageUrl:defaultRaidHelperImageUrl("mc")
+    });
+    if(!result.success) throw new Error(result.error || "MC-Rhythmus konnte nicht wiederhergestellt werden.");
+    await loadRaidHelperSchedules();
+    setRaidHelperScheduleStatus("MC-Rhythmus wiederhergestellt und Anmelder aktualisiert.", "good");
+  }catch(error){
+    setRaidHelperScheduleStatus(error.message || "MC-Rhythmus konnte nicht wiederhergestellt werden.", "bad");
   }
 }
 
@@ -8613,6 +8665,14 @@ function renderLogAnalysisAction(entry, type, url){
   return `<button class="small-btn ${btnClass}" type="button" onclick="triggerLogAnalysis('${escapeAttr(entry.id)}','${type}')">${actionLabel}</button>${clearButton}`;
 }
 
+function renderLogAnalysisDetailAction(entry){
+  if(!entry || !entry.id) return "";
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const href = `raid-analyse.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
+  const isCombatLog = String(entry.reportUrl || "").startsWith("combat-log://") || summary.source === "combat-log" || summary.combatLog === true;
+  return `<a class="small-btn ghost" href="${escapeAttr(href)}" target="_blank" rel="noopener">${isCombatLog ? "Combatlog öffnen" : "Analyse öffnen"}</a>`;
+}
+
 function scheduleLogAnalysisRefresh(){
   if(logAnalysisRefreshTimer) clearTimeout(logAnalysisRefreshTimer);
   const panel = document.getElementById("logAnalysisPanel");
@@ -8767,9 +8827,10 @@ function renderLogAnalyses(){
         <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
         <td>
           <div class="log-action-stack">
+            ${renderLogAnalysisDetailAction(entry)}
             ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
             ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
-            <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
+            ${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""}
           </div>
         </td>
       </tr>
