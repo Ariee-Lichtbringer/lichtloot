@@ -2701,7 +2701,7 @@ async function loadLootFromSheet(){
 
   try{
     const result=await loadAq40LootWithFallback();
-    aq40Loot=filterLootPageDisplayItems(result.items);
+    aq40Loot=Array.isArray(result.items) ? result.items : [];
     if(!aq40Loot.length){
       throw new Error("Keine AQ40-Lootdaten gefunden.");
     }
