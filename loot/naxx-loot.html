@@ -94,6 +94,10 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
 .tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
 .tooltip-p0 strong{color:#facc15;font-size:11px}
+.tooltip-token-rewards{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
+.tooltip-token-rewards strong{display:block;color:#facc15;font-size:11px;margin-bottom:5px}
+.tooltip-token-reward{display:flex;align-items:center;gap:6px;margin-top:4px;color:#c084fc;font-weight:800}
+.tooltip-token-reward img{width:18px;height:18px;border-radius:3px;border:1px solid rgba(250,204,21,.35);object-fit:cover}
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
 
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
@@ -2645,8 +2649,8 @@ async function loadLootFromSheet(){
 
   try{
     const result=await loadAq40LootWithFallback();
-    aq40Loot=filterLootPageDisplayItems(result.items);
-    if(!aq40Loot.length){
+    aq40Loot=Array.isArray(result.items) ? result.items : [];
+    if(!filterLootPageDisplayItems(aq40Loot).length){
       throw new Error("Keine Naxx-Lootdaten gefunden.");
     }
 
@@ -2819,7 +2823,38 @@ function isLootPageSetPiece(item){
 }
 
 function filterLootPageDisplayItems(items){
-  return Array.isArray(items) ? items : [];
+  return (Array.isArray(items) ? items : []).filter(item => !isNaxxT3RewardItem(item));
+}
+
+function isNaxxT3RewardItem(item){
+  if(!item) return false;
+  const tokenGroup=String(item.tokenGroup || "");
+  const tokenItemId=String(item.tokenItemId || "").trim();
+  return /^NAXX:T3:/i.test(tokenGroup) && Boolean(tokenItemId);
+}
+
+function naxxT3RewardsForToken(item){
+  const itemId=String(item && item.itemId || "").trim();
+  if(!itemId) return [];
+  return (Array.isArray(aq40Loot) ? aq40Loot : [])
+    .filter(reward => isNaxxT3RewardItem(reward) && String(reward.tokenItemId || "").trim() === itemId)
+    .sort((a,b)=>String(a.name || "").localeCompare(String(b.name || ""),"de"));
+}
+
+function buildNaxxT3RewardTooltipHtml(item){
+  const rewards=naxxT3RewardsForToken(item);
+  if(!rewards.length) return "";
+  return `
+    <div class="tooltip-token-rewards">
+      <strong>T3-Setteile aus diesem Token:</strong>
+      ${rewards.map(reward=>`
+        <div class="tooltip-token-reward">
+          <img src="${safe(iconSrc(reward))}" alt="">
+          <span>${safe(reward.name || "")}</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function fillItems(){
@@ -2827,7 +2862,7 @@ function fillItems(){
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
 
-    aq40Loot.forEach(item=>{
+    filterLootPageDisplayItems(aq40Loot).forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -2842,7 +2877,7 @@ function renderLootList(){
 
   list.innerHTML="";
 
-  const filteredLoot=aq40Loot.filter(item=>{
+  const filteredLoot=filterLootPageDisplayItems(aq40Loot).filter(item=>{
     return [
       item.name,
       item.slot,
@@ -3901,6 +3936,7 @@ function showTooltip(event,item){
       ${typeof gearTooltipExtraHtml === "function" ? gearTooltipExtraHtml(item) : ""}
     `}
     ${item.boss ? `<div class="tooltip-p0"><strong>Boss:</strong> ${safe(item.boss)}</div>` : ""}
+    ${buildNaxxT3RewardTooltipHtml(item)}
   `;
 
   tooltip.classList.remove("hidden");
