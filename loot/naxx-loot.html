@@ -2757,9 +2757,9 @@ function mapAq40JsonLoot(items){
     Stats_DE: Array.isArray(obj.stats) ? obj.stats.join("|") : (obj.statsText || obj.Stats_DE || ""),
     Tooltip_DE: obj.tooltip || obj.Tooltip_DE || "",
     Dropchance: obj.dropChance || obj.Dropchance || "",
-    tokenGroup: obj.tokenGroup || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
-    tokenName: obj.tokenName || obj.TokenName || "",
-    tokenItemId: obj.tokenItemId || obj.TokenItemId || ""
+    tokenGroup: obj.tokenGroup || obj.token_group || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
+    tokenName: obj.tokenName || obj.token_name || obj.TokenName || "",
+    tokenItemId: obj.tokenItemId || obj.token_item_id || obj.TokenItemId || ""
   })).filter(item=>item.name);
 }
 
@@ -2791,9 +2791,9 @@ function mapAq40SheetLootRow(obj){
     equip: obj.Anlegen || "",
     price: obj.Preis || "",
     dropchance: obj.Dropchance || obj.dropChance || "",
-    tokenGroup: obj.tokenGroup || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
-    tokenName: obj.tokenName || obj.TokenName || "",
-    tokenItemId: obj.tokenItemId || obj.TokenItemId || ""
+    tokenGroup: obj.tokenGroup || obj.token_group || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
+    tokenName: obj.tokenName || obj.token_name || obj.TokenName || "",
+    tokenItemId: obj.tokenItemId || obj.token_item_id || obj.TokenItemId || ""
   };
 }
 
@@ -6513,9 +6513,9 @@ function mapLootDatabaseEntry(obj){
     equip:obj.equip || obj.Anlegen || "",
     boss:obj.boss || obj.Boss || "",
     dropchance:obj.dropchance || obj.Dropchance || obj.dropChance || "",
-    tokenGroup:obj.tokenGroup || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
-    tokenName:obj.tokenName || obj.TokenName || "",
-    tokenItemId:obj.tokenItemId || obj.TokenItemId || "",
+    tokenGroup:obj.tokenGroup || obj.token_group || obj.TokenGroup || obj.tokenKey || obj.TokenKey || "",
+    tokenName:obj.tokenName || obj.token_name || obj.TokenName || "",
+    tokenItemId:obj.tokenItemId || obj.token_item_id || obj.TokenItemId || "",
     raidKey:raidKeyFromEntryRaid(obj.raid || obj.Raid || "")
   };
 }
