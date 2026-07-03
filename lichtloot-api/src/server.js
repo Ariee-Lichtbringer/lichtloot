@@ -8527,7 +8527,23 @@ async function createRaidRecord({ guildId, query: params }) {
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
-       set name = excluded.name,
+       set name = coalesce(
+             nullif(
+               excluded.name,
+               case excluded.raid_type
+                 when 'mc' then 'Molten Core'
+                 when 'bwl' then 'Blackwing Lair'
+                 when 'aq40' then 'Ahn''Qiraj 40'
+                 when 'naxx' then 'Naxxramas'
+                 when 'zg' then 'Zul''Gurub'
+                 when 'aq20' then 'AQ 20'
+                 when 'ony' then 'Onyxia'
+                 else ''
+               end
+             ),
+             raids.name,
+             excluded.name
+           ),
            external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
            raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
            lead_pin = coalesce(excluded.lead_pin, raids.lead_pin),
