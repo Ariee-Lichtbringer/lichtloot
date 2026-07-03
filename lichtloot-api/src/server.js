@@ -3486,7 +3486,9 @@ async function savePrio({ guildId, query: params }) {
   }
 
   const raidType = normalizeRaidType(params.raid || params.raidName);
-  const raidName = displayRaidName(params.raidName || params.raid);
+  const incomingRaidName = clean(params.raidName);
+  const defaultRaidName = displayRaidName(raidType);
+  const raidName = incomingRaidName && incomingRaidName !== defaultRaidName ? incomingRaidName : "";
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID);
   const prioPin = clean(params.raidPin || params.prioPin || params.PrioPIN || params.playerLinkPin);
   const p0Plus = clean(params.p0Plus).toLowerCase();
