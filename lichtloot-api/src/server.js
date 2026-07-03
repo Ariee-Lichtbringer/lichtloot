@@ -1225,11 +1225,19 @@ async function ensureRaidSchema() {
        discord_name text,
        discord_channel_id text,
        discord_message_id text,
+       approval_status text not null default 'pending',
+       approved_by_discord_id text,
+       approved_by_discord_name text,
+       approved_at timestamptz,
        source text not null default 'discord-p0',
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
   );
+  await query(`alter table p0_discord_signups add column if not exists approval_status text not null default 'pending'`);
+  await query(`alter table p0_discord_signups add column if not exists approved_by_discord_id text`);
+  await query(`alter table p0_discord_signups add column if not exists approved_by_discord_name text`);
+  await query(`alter table p0_discord_signups add column if not exists approved_at timestamptz`);
   await query(
     `create unique index if not exists idx_p0_discord_signups_one_per_user
      on p0_discord_signups(guild_id, raid_id, discord_user_id)`
@@ -9362,6 +9370,21 @@ async function getPublishedPrios({ guildId, query: params }) {
 
 async function findP0DiscordRaid(guildId, params) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
+  const prioPin = clean(params.raidPin || params.prioPin || params.playerPin || params.pin);
+  if (prioPin) {
+    const raid = await findRaid(guildId, {
+      ...params,
+      raid: raidType,
+      playerPin: prioPin,
+      prioPin,
+      raidPin: prioPin
+    });
+    if (raid) {
+      const allowed = new Set(["mc", "bwl", "aq40", "naxx"]);
+      return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
+    }
+  }
+
   const rawRaidDate = clean(params.raidDate || params.date || params.datum);
   const raidDate = rawRaidDate ? parseDateValue(rawRaidDate) : "";
   const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
@@ -9393,6 +9416,7 @@ async function findP0DiscordRaid(guildId, params) {
 }
 
 function normalizeP0SignupRow(row) {
+  const approvalStatus = clean(row.approval_status || "pending") || "pending";
   return {
     id: row.id,
     player: row.player_name || "",
@@ -9403,6 +9427,12 @@ function normalizeP0SignupRow(row) {
     itemId: row.item_id || "",
     discordUserId: row.discord_user_id || "",
     discordName: row.discord_name || "",
+    approvalStatus,
+    approved: approvalStatus === "approved",
+    rejected: approvalStatus === "rejected",
+    approvedByDiscordId: row.approved_by_discord_id || "",
+    approvedByDiscordName: row.approved_by_discord_name || "",
+    approvedAt: row.approved_at || "",
     updatedAt: row.updated_at,
     createdAt: row.created_at
   };
@@ -9572,9 +9602,10 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     const signupResult = await client.query(
       `insert into p0_discord_signups (
          guild_id, raid_id, character_id, item_id, player_name, server, item_name,
-         discord_user_id, discord_name, discord_channel_id, discord_message_id
+         discord_user_id, discord_name, discord_channel_id, discord_message_id,
+         approval_status, approved_by_discord_id, approved_by_discord_name, approved_at
        )
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', null, null, null)
        on conflict (guild_id, raid_id, discord_user_id) do update
          set character_id = excluded.character_id,
              item_id = excluded.item_id,
@@ -9584,6 +9615,10 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
              discord_name = excluded.discord_name,
              discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), p0_discord_signups.discord_channel_id),
              discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), p0_discord_signups.discord_message_id),
+             approval_status = 'pending',
+             approved_by_discord_id = null,
+             approved_by_discord_name = null,
+             approved_at = null,
              updated_at = now()
        returning *`,
       [
@@ -9600,12 +9635,24 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         clean(params.discordMessageId)
       ]
     );
+    const itemSignupResult = await client.query(
+      `select *
+       from p0_discord_signups
+       where guild_id = $1
+         and raid_id = $2
+         and item_id = $3
+       order by
+         case approval_status when 'approved' then 0 when 'pending' then 1 else 2 end,
+         lower(player_name) asc`,
+      [guildId, raid.id, item.id]
+    );
 
     await client.query("commit");
     return {
       success: true,
       raid: normalizeRaidRow(raid),
       signup: normalizeP0SignupRow(signupResult.rows[0]),
+      itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow),
       syncedPrio: true
     };
   } catch (error) {
@@ -9614,6 +9661,69 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
   } finally {
     client.release();
   }
+}
+
+async function reviewP0DiscordSignup({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const signupId = clean(params.signupId || params.id);
+  const rawStatus = clean(params.status || params.value || params.approvalStatus).toLowerCase();
+  const approvedValues = new Set(["approved", "valid", "gueltig", "gültig", "ja", "true", "ok"]);
+  const rejectedValues = new Set(["rejected", "invalid", "ungueltig", "ungültig", "nein", "false", "no"]);
+
+  if (!isUuid(signupId)) {
+    const error = new Error("P0+-Anmeldung fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!approvedValues.has(rawStatus) && !rejectedValues.has(rawStatus)) {
+    const error = new Error("Prüfstatus fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const approvalStatus = approvedValues.has(rawStatus) ? "approved" : "rejected";
+  const result = await query(
+    `update p0_discord_signups
+     set approval_status = $3,
+         approved_by_discord_id = $4,
+         approved_by_discord_name = $5,
+         approved_at = case when $3 = 'approved' then now() else null end,
+         updated_at = now()
+     where guild_id = $1 and id = $2
+     returning *`,
+    [
+      guildId,
+      signupId,
+      approvalStatus,
+      clean(params.reviewerDiscordId || params.discordUserId),
+      clean(params.reviewerDiscordName || params.discordName || params.reviewer)
+    ]
+  );
+
+  if (!result.rows[0]) {
+    const error = new Error("P0+-Anmeldung wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const signup = result.rows[0];
+  const itemSignupResult = await query(
+    `select *
+     from p0_discord_signups
+     where guild_id = $1
+       and raid_id = $2
+       and item_id = $3
+     order by
+       case approval_status when 'approved' then 0 when 'pending' then 1 else 2 end,
+       lower(player_name) asc`,
+    [guildId, signup.raid_id, signup.item_id]
+  );
+
+  return {
+    success: true,
+    signup: normalizeP0SignupRow(signup),
+    itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow)
+  };
 }
 
 async function getPrioCheck({ guildId, query: params }) {
@@ -12095,6 +12205,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
+      const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: req.query });
+      return res.json({ ...reviewed, guild: guild.slug });
+    }
+
     if (action === "getP0Plus") {
       const points = await getP0Plus(guild.id);
       return res.json({ ...points, guild: guild.slug });
@@ -12297,6 +12412,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
       const saved = await saveP0DiscordSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
+      const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...reviewed, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
