@@ -94,6 +94,10 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
 .tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
 .tooltip-p0 strong{color:#facc15;font-size:11px}
+.tooltip-token-rewards{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
+.tooltip-token-rewards strong{display:block;color:#facc15;font-size:11px;margin-bottom:5px}
+.tooltip-token-reward{display:flex;align-items:center;gap:6px;margin-top:4px;color:#c084fc;font-weight:800}
+.tooltip-token-reward img{width:18px;height:18px;border-radius:3px;border:1px solid rgba(250,204,21,.35);object-fit:cover}
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
 
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
@@ -2847,6 +2851,8 @@ function mapAq40SheetLootRow(obj){
 
 function isLootPageSetPiece(item){
   if(!item) return false;
+  if(isAq40T25RewardItem(item)) return true;
+
   const stats = Array.isArray(item.stats) ? item.stats.join(" | ") : "";
   const text = [
     item.name,
@@ -2870,8 +2876,87 @@ function isLootPageSetPiece(item){
   return hasClassRestriction || hasTokenRewardLink || isArmorReward;
 }
 
+const AQ40_T25_TOKEN_REWARD_RULES = {
+  "20928": {slots:["SHOULDER","FEET"], classes:["WARRIOR","HUNTER","ROGUE","PRIEST"]},
+  "20932": {slots:["SHOULDER","FEET"], classes:["PALADIN","SHAMAN","MAGE","WARLOCK","DRUID"]},
+  "20930": {slots:["HEAD"], classes:["PALADIN","HUNTER","ROGUE","SHAMAN","DRUID"]},
+  "20926": {slots:["HEAD"], classes:["WARRIOR","PRIEST","MAGE","WARLOCK"]},
+  "20927": {slots:["LEGS"], classes:["WARRIOR","ROGUE","PRIEST","MAGE"]},
+  "20931": {slots:["LEGS"], classes:["PALADIN","HUNTER","SHAMAN","WARLOCK","DRUID"]},
+  "20929": {slots:["CHEST"], classes:["WARRIOR","PALADIN","HUNTER","ROGUE","SHAMAN"]},
+  "20933": {slots:["CHEST"], classes:["PRIEST","MAGE","WARLOCK","DRUID"]}
+};
+
+const AQ40_T25_CLASS_LABELS = {
+  DRUID:"Druide",
+  HUNTER:"Jäger",
+  MAGE:"Magier",
+  PALADIN:"Paladin",
+  PRIEST:"Priester",
+  ROGUE:"Schurke",
+  SHAMAN:"Schamane",
+  WARLOCK:"Hexenmeister",
+  WARRIOR:"Krieger"
+};
+
+function isAq40T25RewardItem(item){
+  return /^AQ40:T2\.5:/i.test(String(item && item.tokenGroup || ""));
+}
+
+function aq40T25TokenRule(item){
+  const itemId=String(item && (item.itemId || item.ItemID || item.id) || "").trim();
+  return AQ40_T25_TOKEN_REWARD_RULES[itemId] || null;
+}
+
+function aq40T25RewardParts(item){
+  const match=String(item && item.tokenGroup || "").match(/^AQ40:T2\.5:([^:]+):([^:]+)$/i);
+  if(!match) return null;
+  return {slot:match[1].toUpperCase(), classKey:match[2].toUpperCase()};
+}
+
+function aq40T25RewardsForToken(item){
+  const rule=aq40T25TokenRule(item);
+  if(!rule) return [];
+
+  return (aq40Loot || [])
+    .filter(reward => {
+      const parts=aq40T25RewardParts(reward);
+      if(!parts) return false;
+      return rule.slots.includes(parts.slot) && rule.classes.includes(parts.classKey);
+    })
+    .sort((a,b) => {
+      const ap=aq40T25RewardParts(a) || {};
+      const bp=aq40T25RewardParts(b) || {};
+      const slotCompare=String(ap.slot || "").localeCompare(String(bp.slot || ""), "de");
+      if(slotCompare) return slotCompare;
+      return String(a.name || "").localeCompare(String(b.name || ""), "de");
+    });
+}
+
+function buildAq40T25RewardTooltipHtml(item, htmlEscaper){
+  const rewards=aq40T25RewardsForToken(item);
+  if(!rewards.length) return "";
+  const esc=htmlEscaper || safe;
+
+  return `
+    <div class="tooltip-token-rewards">
+      <strong>T2.5 Setitems aus diesem Token:</strong>
+      ${rewards.map(reward => {
+        const parts=aq40T25RewardParts(reward) || {};
+        const classLabel=AQ40_T25_CLASS_LABELS[parts.classKey] || parts.classKey || "";
+        return `
+          <div class="tooltip-token-reward">
+            <img src="${getIconUrl(reward.icon)}" alt="" loading="lazy" onerror="iconFallback(this)">
+            <span>${esc(reward.name || "")}${classLabel ? ` (${esc(classLabel)})` : ""}</span>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function filterLootPageDisplayItems(items){
-  return Array.isArray(items) ? items : [];
+  return (Array.isArray(items) ? items : []).filter(item => !isAq40T25RewardItem(item));
 }
 
 function fillItems(){
@@ -2879,7 +2964,7 @@ function fillItems(){
     const select=document.getElementById(id);
     select.innerHTML=`<option value="">Item auswählen</option>`;
 
-    aq40Loot.forEach(item=>{
+    filterLootPageDisplayItems(aq40Loot).forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
       option.textContent=item.name;
@@ -2894,7 +2979,7 @@ function renderLootList(){
 
   list.innerHTML="";
 
-  const filteredLoot=aq40Loot.filter(item=>{
+  const filteredLoot=filterLootPageDisplayItems(aq40Loot).filter(item=>{
     return [
       item.name,
       item.slot,
@@ -3957,6 +4042,7 @@ function showTooltip(event,item){
       ${typeof gearTooltipExtraHtml === "function" ? gearTooltipExtraHtml(item) : ""}
     `}
     ${item.boss ? `<div class="tooltip-p0"><strong>Boss:</strong> ${safe(item.boss)}</div>` : ""}
+    ${buildAq40T25RewardTooltipHtml(item, safe)}
   `;
 
   tooltip.classList.remove("hidden");
@@ -7852,7 +7938,7 @@ function showP0PlusTooltip(event,raid,itemName){
   if(item.dps) statHtml.push(`<div class="tooltip-stat">${safeHtml(item.dps)}</div>`);
   (item.stats || []).forEach(stat => statHtml.push(`<div class="tooltip-stat">${safeHtml(stat)}</div>`));
   if(item.needed) statHtml.push(`<div class="tooltip-stat">${safeHtml(item.needed)}</div>`);
-  tooltip.innerHTML = `<div class="tooltip-title ${item.quality || "epic"}">${safeHtml(item.name || itemName)}</div>${item.ilvl?`<div class="tooltip-ilvl">${safeHtml(item.ilvl)}</div>`:""}${item.bind?`<div class="tooltip-bind">${safeHtml(item.bind)}</div>`:""}${(item.slot || item.type)?`<div class="tooltip-row"><span>${safeHtml(item.slot || "")}</span><span>${safeHtml(item.type || "")}</span></div>`:""}${lines || statHtml.join("")}${item.equip?`<div class="tooltip-equip">${safeHtml(item.equip)}</div>`:""}${typeof gearTooltipExtraHtml === "function" ? gearTooltipExtraHtml(item) : ""}${item.dropchance?`<div class="tooltip-p0"><strong>Dropchance:</strong> ${safeHtml(item.dropchance)}%</div>`:""}${item.boss?`<div class="tooltip-p0"><strong>Boss:</strong> ${safeHtml(item.boss)}</div>`:""}${buildTooltipP0PlusHtml(item.name || itemName,true)}`;
+  tooltip.innerHTML = `<div class="tooltip-title ${item.quality || "epic"}">${safeHtml(item.name || itemName)}</div>${item.ilvl?`<div class="tooltip-ilvl">${safeHtml(item.ilvl)}</div>`:""}${item.bind?`<div class="tooltip-bind">${safeHtml(item.bind)}</div>`:""}${(item.slot || item.type)?`<div class="tooltip-row"><span>${safeHtml(item.slot || "")}</span><span>${safeHtml(item.type || "")}</span></div>`:""}${lines || statHtml.join("")}${item.equip?`<div class="tooltip-equip">${safeHtml(item.equip)}</div>`:""}${typeof gearTooltipExtraHtml === "function" ? gearTooltipExtraHtml(item) : ""}${item.dropchance?`<div class="tooltip-p0"><strong>Dropchance:</strong> ${safeHtml(item.dropchance)}%</div>`:""}${item.boss?`<div class="tooltip-p0"><strong>Boss:</strong> ${safeHtml(item.boss)}</div>`:""}${buildAq40T25RewardTooltipHtml(item,safeHtml)}${buildTooltipP0PlusHtml(item.name || itemName,true)}`;
   moveP0PlusTooltip(event);
   tooltip.classList.remove("hidden");
 }
