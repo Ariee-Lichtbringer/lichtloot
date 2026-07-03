@@ -1938,6 +1938,58 @@ select:focus{border-color:rgba(96,165,250,.75)}
   background:rgba(8,18,36,.70);
 }
 
+.combatlog-upload-grid{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) minmax(180px,280px) auto;
+  gap:10px;
+  align-items:center;
+  padding:12px;
+  border:1px solid rgba(34,197,94,.16);
+  border-radius:12px;
+  background:rgba(8,18,36,.70);
+}
+
+.combatlog-upload-grid input[type="file"]{
+  min-height:40px;
+  padding:8px 10px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.62);
+  color:#e5edf8;
+  font-weight:800;
+}
+
+.combatlog-preview-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(120px,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+
+.combatlog-preview-card{
+  min-height:82px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+  padding:12px;
+}
+
+.combatlog-preview-card span{
+  display:block;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.combatlog-preview-card strong{
+  display:block;
+  margin-top:8px;
+  color:#f8fafc;
+  font-size:24px;
+  line-height:1;
+}
+
 .log-analysis-table table{
   min-width:900px;
   border-collapse:separate;
@@ -2873,6 +2925,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
+      <button class="side-link" type="button" onclick="openCombatlogUploadPanel()"><span class="side-icon">⇧</span>Combatlog Upload</button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
@@ -3395,6 +3448,33 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </table>
       </div>
       <div id="logAnalysisFooter" class="log-analysis-footer"></div>
+    </div>
+  </details>
+
+  <details id="combatlogUploadPanel" class="panel log-analysis-panel">
+    <summary>Combatlog Upload</summary>
+    <div class="log-analysis-body">
+      <div class="log-analysis-layout">
+        <div class="log-analysis-hero">
+          <div class="log-analysis-title">
+            <img class="log-analysis-mark" src="images/content.png" alt="">
+            <div>
+              <h3>Combatlog <span>Direktauswertung</span></h3>
+              <p>WoWCombatLog.txt hochladen und direkt in LichtLoot auswerten.</p>
+            </div>
+          </div>
+          <div class="log-analysis-head-actions">
+            <button class="btn" type="button" onclick="openLogAnalysisPanel()">Logliste öffnen</button>
+          </div>
+        </div>
+        <div class="combatlog-upload-grid">
+          <input id="combatlogFile" type="file" accept=".txt,.log,text/plain">
+          <input id="combatlogTitle" type="text" placeholder="Titel optional, z. B. Naxx Testlog">
+          <button class="btn good" type="button" onclick="uploadCombatlogFile()">Combatlog hochladen</button>
+        </div>
+      </div>
+      <div id="combatlogUploadStatus" class="create-result">Bereit. Lade eine WoWCombatLog.txt hoch, dann erstellen wir daraus eine Test-Auswertung.</div>
+      <div id="combatlogUploadPreview" class="combatlog-preview-grid hidden"></div>
     </div>
   </details>
 
@@ -3983,6 +4063,10 @@ function openIssueInboxPanel(){
 
 function openLogAnalysisPanel(){
   openDetailsPanel("logAnalysisPanel");
+}
+
+function openCombatlogUploadPanel(){
+  openDetailsPanel("combatlogUploadPanel");
 }
 
 function openWorldbuffPanel(){
@@ -8382,6 +8466,76 @@ async function saveManualLogAnalysis(){
   }
 }
 
+async function uploadCombatlogFile(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const fileInput = document.getElementById("combatlogFile");
+  const titleInput = document.getElementById("combatlogTitle");
+  const status = document.getElementById("combatlogUploadStatus");
+  const preview = document.getElementById("combatlogUploadPreview");
+  const file = fileInput?.files?.[0];
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!file){
+    if(status) status.innerHTML = '<span class="bad">Bitte zuerst eine Combatlog-Datei auswählen.</span>';
+    return;
+  }
+  if(file.size > 120 * 1024 * 1024){
+    if(status) status.innerHTML = '<span class="bad">Datei ist zu groß. Bitte zuerst mit einem kleineren Log testen.</span>';
+    return;
+  }
+
+  if(status) status.textContent = "Combatlog wird gelesen ...";
+  try{
+    const text = await file.text();
+    if(!text.trim()){
+      if(status) status.innerHTML = '<span class="bad">Die Datei ist leer.</span>';
+      return;
+    }
+    const base = LICHTLOOT_API_URL.replace(/\/api\/apps-script$/,"");
+    const query = new URLSearchParams({
+      guild: CURRENT_GUILD_SLUG,
+      masterCode,
+      fileName: file.name,
+      title: (titleInput?.value || "").trim(),
+      t: Date.now()
+    });
+    if(status) status.textContent = "Combatlog wird hochgeladen und ausgewertet ...";
+    const response = await fetch(base + "/api/combat-log/import?" + query.toString(), {
+      method:"POST",
+      headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body:text
+    });
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok || !result.success){
+      throw new Error(result.error || result.message || ("Upload fehlgeschlagen: HTTP " + response.status));
+    }
+    if(result.analysis) upsertLogAnalysis(result.analysis);
+    renderLogAnalyses();
+    const summary = result.summary || {};
+    if(preview){
+      preview.classList.remove("hidden");
+      preview.innerHTML = [
+        ["Raid", summary.raid || "-"],
+        ["Datum", summary.raidDate ? formatRaidDate(summary.raidDate) : "-"],
+        ["Spieler", summary.players || 0],
+        ["Bosskämpfe", summary.encounters || 0],
+        ["Casts", summary.casts || 0],
+        ["Heals", summary.heals || 0],
+        ["Buffs", summary.buffs || 0],
+        ["Datei", summary.fileName || file.name]
+      ].map(([label,value]) => `<div class="combatlog-preview-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+    }
+    if(status){
+      status.innerHTML = '<span class="ok">Combatlog importiert.</span> Die Auswertung liegt jetzt in der Logliste.';
+    }
+    setStatus("Combatlog wurde importiert.", "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Combatlog konnte nicht importiert werden.")}</span>`;
+  }
+}
+
 function upsertLogAnalysis(entry){
   if(!entry || !entry.id) return;
   const index = logAnalyses.findIndex(item => String(item.id || "") === String(entry.id));
@@ -8616,7 +8770,6 @@ function renderLogAnalyses(){
             ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
             ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
             <a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>
-            <a class="small-btn ghost" href="https://lichtloot-production.up.railway.app/web-auswertung.html?id=${escapeAttr(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}" target="_blank" rel="noopener">Web-Auswertung</a>
           </div>
         </td>
       </tr>
