@@ -1211,6 +1211,46 @@ async function ensureRaidSchema() {
     `create index if not exists idx_raid_external_signups_guild_raid
        on raid_external_signups(guild_id, raid_id, raid_date)`
   );
+  await query(
+    `create table if not exists p0_discord_signups (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       raid_id uuid not null references raids(id) on delete cascade,
+       character_id uuid references characters(id) on delete set null,
+       item_id uuid references items(id) on delete set null,
+       player_name text not null,
+       server text,
+       item_name text not null,
+       discord_user_id text not null,
+       discord_name text,
+       discord_channel_id text,
+       discord_message_id text,
+       source text not null default 'discord-p0',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(
+    `create unique index if not exists idx_p0_discord_signups_one_per_user
+     on p0_discord_signups(guild_id, raid_id, discord_user_id)`
+  );
+  await query(`create index if not exists idx_p0_discord_signups_raid on p0_discord_signups(guild_id, raid_id)`);
+  await query(
+    `create table if not exists discord_player_links (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       discord_user_id text not null,
+       character_id uuid not null references characters(id) on delete cascade,
+       discord_name text,
+       source text not null default 'discord-p0',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(
+    `create unique index if not exists idx_discord_player_links_user_char
+       on discord_player_links(guild_id, discord_user_id, character_id)`
+  );
 }
 
 async function ensureDiscordChannelSchema() {
@@ -6660,6 +6700,20 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
         }
       };
     }
+    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], "rpb", guildId);
+    if (combatLogAnalysis) {
+      return {
+        success: true,
+        webAnalysis: {
+          type: "combined",
+          source: "combat-log",
+          analysis: normalizeLogAnalysis(result.rows[0]),
+          report: combatLogAnalysis.report || {},
+          rpb: combatLogAnalysis,
+          cla: null
+        }
+      };
+    }
   } else {
     const sheetAnalysis = await buildStoredSheetWebAnalysis(result.rows[0], type);
     if (sheetAnalysis) {
@@ -6668,9 +6722,16 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
         webAnalysis: sheetAnalysis
       };
     }
+    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], type, guildId);
+    if (combatLogAnalysis) {
+      return {
+        success: true,
+        webAnalysis: combatLogAnalysis
+      };
+    }
   }
   {
-    const error = new Error("Für diese Auswertung wurden noch keine Raidsheet-Daten exportiert.");
+    const error = new Error("Für diese Auswertung wurden noch keine Detaildaten gespeichert.");
     error.statusCode = 404;
     throw error;
   }
@@ -6897,6 +6958,17 @@ async function buildCombatLogWebAnalysis(analysis, payload, guildId) {
   const valuesFor = fn => Object.fromEntries(playerNames.map(name => [name, fn(rawByName.get(name) || {})]));
   const row = (label, values, options = {}) => ({ label, type: options.type || "count", tone: options.tone || "", values });
   const headerRow = (label, options = {}) => ({ label, type: "header", tone: "sectionHeader", className: options.className || "", values: {} });
+  const rowsToMatrix = rows => [
+    ["Wert", ...playerNames],
+    ...(Array.isArray(rows) ? rows : []).map(entry => [
+      entry?.label || "",
+      ...playerNames.map(name => entry?.values?.[name] ?? "")
+    ])
+  ];
+  const withMatrix = section => ({
+    ...section,
+    matrix: section.matrix || { values: rowsToMatrix(section.rows || []) }
+  });
   const activityRows = [
     row("Sekunden aktiv", valuesFor(player => player.activeSeconds || ""), { tone: "activity" }),
     row("Casts gesamt", valuesFor(player => player.castTotal || ""), { tone: "activity" }),
@@ -6945,14 +7017,35 @@ async function buildCombatLogWebAnalysis(analysis, payload, guildId) {
     });
     return rows;
   };
+  const buffTotals = new Map();
+  playerNames.forEach(name => {
+    Object.entries(rawByName.get(name)?.buffs || {}).forEach(([spell, count]) => {
+      buffTotals.set(spell, Number(buffTotals.get(spell) || 0) + Number(count || 0));
+    });
+  });
+  const buffRows = [...buffTotals.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"))
+    .slice(0, 120)
+    .map(([spell]) => row(spell, Object.fromEntries(playerNames.map(name => [
+      name,
+      rawByName.get(name)?.buffs?.[spell] || ""
+    ])), { tone: "buff" }));
+  const encounterRows = Array.isArray(payload.encounters) ? payload.encounters.map(encounter => [
+    encounter.name || encounter.boss || "Boss",
+    encounter.startedAt || encounter.start || "",
+    encounter.endedAt || encounter.end || "",
+    encounter.success === true ? "Ja" : (encounter.success === false ? "Nein" : "")
+  ]) : [];
   const sections = [
     { id: "general", label: "Allgemein", rows: [headerRow("CombatLog"), ...activityRows], compact: true, ignoreClassFilter: true },
+    { id: "bosses", label: "Bosskämpfe", matrix: { values: [["Boss", "Start", "Ende", "Erfolg"], ...encounterRows] }, compact: true, ignoreClassFilter: true },
+    { id: "buffs", label: "Buffs", rows: [headerRow("Buffs"), ...buffRows], hideEmptyRows: true },
     { id: "caster-casts", label: "Zauberer - Zauber", rows: classRows(["Druid", "Mage", "Warlock", "Priest", "Shaman"]), hideEmptyRows: true },
     { id: "healer", label: "Heiler", rows: healerRows(), hideEmptyRows: true },
     { id: "healer-casts", label: "Heiler - Zauber", rows: healerRows(), hideEmptyRows: true },
     { id: "physical-casts", label: "Nahkampf - Zauber", rows: classRows(["Druid", "Hunter", "Rogue", "Warrior"]), hideEmptyRows: true },
     { id: "tank-casts", label: "Tank - Zauber", rows: classRows(["Druid", "Paladin", "Warrior"]), hideEmptyRows: true }
-  ];
+  ].map(withMatrix);
   return {
     type: "rpb",
     source: "combat-log",
@@ -9265,6 +9358,262 @@ async function getPublishedPrios({ guildId, query: params }) {
       };
     })
   };
+}
+
+async function findP0DiscordRaid(guildId, params) {
+  const raidType = normalizeRaidType(params.raid || params.raidName);
+  const rawRaidDate = clean(params.raidDate || params.date || params.datum);
+  const raidDate = rawRaidDate ? parseDateValue(rawRaidDate) : "";
+  const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
+  if (raidType && raidDate) {
+    const values = [guildId, raidTypeSearchValues(raidType), raidDate];
+    let timeClause = "";
+    if (raidTime) {
+      values.push(raidTime);
+      timeClause = `and coalesce(raid_time, '') = $${values.length}`;
+    }
+    const result = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and lower(raid_type) = any($2)
+         and raid_date = $3
+         ${timeClause}
+       order by created_at desc
+       limit 1`,
+      values
+    );
+    if (result.rows[0]) return result.rows[0];
+  }
+
+  const raid = await findRaid(guildId, params);
+  if (!raid) return null;
+  const allowed = new Set(["mc", "bwl", "aq40", "naxx"]);
+  return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
+}
+
+function normalizeP0SignupRow(row) {
+  return {
+    id: row.id,
+    player: row.player_name || "",
+    char: row.player_name || "",
+    server: row.server || "",
+    item: row.item_name || "",
+    itemName: row.item_name || "",
+    itemId: row.item_id || "",
+    discordUserId: row.discord_user_id || "",
+    discordName: row.discord_name || "",
+    updatedAt: row.updated_at,
+    createdAt: row.created_at
+  };
+}
+
+async function getP0DiscordSignupContext({ guildId, query: params }) {
+  const raid = await findP0DiscordRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const itemResult = await query(
+    `select
+       i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
+       i.slot, i.type, i.boss, i.bind, i.category, i.wowhead,
+       i.stats_text, i.tooltip, i.needed, i.equip, i.price, i.dropchance,
+       coalesce(sum(pp.points), 0)::numeric as p0plus_points,
+       count(pp.id)::int as p0plus_count
+     from items i
+     left join p0plus_points pp on pp.guild_id = $2 and pp.item_id = i.id
+     where lower(i.raid_type) = any($1)
+        or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
+     group by i.id
+     order by i.name asc`,
+    [raidTypeSearchValues(raid.raid_type), guildId]
+  );
+
+  const signupResult = await query(
+    `select *
+     from p0_discord_signups
+     where guild_id = $1 and raid_id = $2
+     order by item_name asc, player_name asc`,
+    [guildId, raid.id]
+  );
+
+  return {
+    success: true,
+    raid: normalizeRaidRow(raid),
+    raidId: raidPublicId(raid),
+    items: itemResult.rows.map(row => ({
+      ...normalizeLootItemForApi(row),
+      p0PlusPoints: Number(row.p0plus_points || 0),
+      p0PlusCount: Number(row.p0plus_count || 0)
+    })),
+    signups: signupResult.rows.map(normalizeP0SignupRow)
+  };
+}
+
+async function findOrCreateDiscordP0Character(client, guildId, params) {
+  const player = clean(params.player || params.char || params.spieler);
+  const server = clean(params.server) || "Everlook";
+  const playerPin = normalizePin(params.playerPin || params.pin || params.password || params.passwort || params.meinLichtloot);
+  const discordUserId = clean(params.discordUserId);
+
+  if (!player) {
+    const error = new Error("Charakter fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (playerPin) {
+    const verified = await findCharacterForPin(guildId, playerPin, player, server);
+    if (!verified) {
+      const error = new Error("Mein-Lichtloot Login/PIN passt nicht zu diesem Charakter.");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (discordUserId) {
+      await client.query(
+        `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+         values ($1, $2, $3, $4, 'discord-p0')
+         on conflict (guild_id, discord_user_id, character_id) do update
+           set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+               updated_at = now()`,
+        [guildId, discordUserId, verified.id, clean(params.discordName)]
+      );
+    }
+    return verified;
+  }
+
+  if (discordUserId) {
+    const linked = await client.query(
+      `select c.id, c.name, c.server, c.class_name, c.created_at
+       from discord_player_links dpl
+       join characters c on c.id = dpl.character_id
+       join players p on p.id = c.player_id
+       where dpl.guild_id = $1
+         and dpl.discord_user_id = $2
+         and p.guild_id = $1
+         and lower(c.name) = lower($3)
+       order by
+         case when lower(c.server) = lower($4) then 0 else 1 end,
+         dpl.updated_at desc
+       limit 1`,
+      [guildId, discordUserId, player, server]
+    );
+    if (linked.rows[0]) return linked.rows[0];
+  }
+
+  const error = new Error("Bitte einmal deinen Mein-Lichtloot Login/PIN für diesen Charakter eingeben.");
+  error.statusCode = 403;
+  throw error;
+}
+
+async function saveP0DiscordSignup({ guildId, query: params }) {
+  const raid = await findP0DiscordRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const discordUserId = clean(params.discordUserId);
+  const itemId = clean(params.itemId || params.lootItemId);
+  const itemName = clean(params.item || params.itemName);
+  if (!discordUserId) {
+    const error = new Error("Discord-User fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!itemId && !itemName) {
+    const error = new Error("Item fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const item = itemId
+      ? (await client.query(
+          `select id, name from items where id::text = $1 and lower(raid_type) = any($2) limit 1`,
+          [itemId, raidTypeSearchValues(raid.raid_type)]
+        )).rows[0]
+      : await upsertItem(client, raid.raid_type, itemName);
+
+    if (!item) {
+      const error = new Error("Item wurde nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const character = await findOrCreateDiscordP0Character(client, guildId, params);
+    const comment = JSON.stringify({
+      p0Plus: "ja",
+      p0Item: item.name,
+      raidTime: raid.raid_time || "",
+      source: "discord-p0",
+      discordUserId
+    });
+
+    await client.query(
+      `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
+       values ($1, $2, $3, null, null, $4)
+       on conflict (raid_id, character_id) do update
+         set p1_item_id = excluded.p1_item_id,
+             p2_item_id = null,
+             p3_item_id = null,
+             comment = excluded.comment,
+             updated_at = now()`,
+      [raid.id, character.id, item.id, comment]
+    );
+
+    const signupResult = await client.query(
+      `insert into p0_discord_signups (
+         guild_id, raid_id, character_id, item_id, player_name, server, item_name,
+         discord_user_id, discord_name, discord_channel_id, discord_message_id
+       )
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       on conflict (guild_id, raid_id, discord_user_id) do update
+         set character_id = excluded.character_id,
+             item_id = excluded.item_id,
+             player_name = excluded.player_name,
+             server = excluded.server,
+             item_name = excluded.item_name,
+             discord_name = excluded.discord_name,
+             discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), p0_discord_signups.discord_channel_id),
+             discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), p0_discord_signups.discord_message_id),
+             updated_at = now()
+       returning *`,
+      [
+        guildId,
+        raid.id,
+        character.id,
+        item.id,
+        character.name,
+        character.server,
+        item.name,
+        discordUserId,
+        clean(params.discordName),
+        clean(params.discordChannelId),
+        clean(params.discordMessageId)
+      ]
+    );
+
+    await client.query("commit");
+    return {
+      success: true,
+      raid: normalizeRaidRow(raid),
+      signup: normalizeP0SignupRow(signupResult.rows[0]),
+      syncedPrio: true
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function getPrioCheck({ guildId, query: params }) {
@@ -11681,6 +12030,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...prios, guild: guild.slug });
     }
 
+    if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
+      const context = await getP0DiscordSignupContext({ guildId: guild.id, query: req.query });
+      return res.json({ ...context, guild: guild.slug });
+    }
+
     if (action === "getPrioCheck") {
       const check = await getPrioCheck({ guildId: guild.id, query: req.query });
       return res.json({ ...check, guild: guild.slug });
@@ -11733,6 +12087,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetPrioBench") {
       const saved = await setPrioBench({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
+      const saved = await saveP0DiscordSignup({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -11928,6 +12287,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "getRaidHelper" || action === "getRaidSignups") {
       const helper = await getRaidHelper({ guildId: guild.id, query: postParams });
       return res.json({ ...helper, guild: guild.slug });
+    }
+
+    if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
+      const context = await getP0DiscordSignupContext({ guildId: guild.id, query: postParams });
+      return res.json({ ...context, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
+      const saved = await saveP0DiscordSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
