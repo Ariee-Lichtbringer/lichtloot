@@ -3235,6 +3235,9 @@ tr:hover td{background:rgba(250,204,21,.035)}
           <div><h3>Scheduled Events</h3><span>Raidanmelder automatisch im Rhythmus neu erstellen</span></div>
           <div class="raid-helper-template-actions">
             <button class="small-btn ghost" type="button" onclick="loadRaidHelperSchedules()">Aktualisieren</button>
+            <button class="small-btn good" type="button" onclick="restoreRaids0307()">MC + BWL 03.07 wiederherstellen</button>
+            <button class="small-btn primary" type="button" onclick="restoreBurnyMcRaid()">MC 03.07 wiederherstellen</button>
+            <button class="small-btn primary" type="button" onclick="restoreBwlRaid0307()">BWL 03.07 wiederherstellen</button>
             <button class="small-btn good" type="button" onclick="restoreMcRaidHelperSchedule()">MC wiederherstellen</button>
           </div>
         </div>
@@ -4180,7 +4183,7 @@ function todayIsoDate(){
 function isRaidTodayOrFuture(raid){
   const date = String(raid && raid.raidDate || "").trim();
   if(!date) return false;
-  return date >= yesterdayIsoDate();
+  return date >= todayIsoDate();
 }
 
 function getRaidCreatorName(raid){
@@ -4251,7 +4254,7 @@ function renderDashboardCards(){
               </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Raid löschen</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
             </div>
           </div>
         </div>
@@ -4917,7 +4920,7 @@ function raidHelperPastRaids(){
 
 function raidHelperCurrentRaids(){
   return (guildData.raids || [])
-    .filter(raid => String(raid.raidDate || "") >= yesterdayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
+    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
@@ -4933,6 +4936,7 @@ function renderRaidHelperEventCard(raid, mode){
   ].filter(Boolean).join(" · ");
   const description = String(raid.description || raid.beschreibung || "").trim();
   const raidId = raid.raidId || raid.id || "";
+  const isArchived = ["archiviert","archive"].includes(normalize(statusText));
   return `
     <article class="raid-helper-event-detail" style="--raid-color:${raidHelperRaidColor(key)}">
       <div>
@@ -4950,6 +4954,8 @@ function renderRaidHelperEventCard(raid, mode){
       <div class="raid-helper-event-actions">
         ${mode === "current" ? `<button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>` : ""}
         ${mode === "current" ? `<button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>` : ""}
+        <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}')">Prios</button>
+        ${!isArchived ? `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raidId)}')">Archivieren</button>` : ""}
         <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
         <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
       </div>
@@ -6373,6 +6379,141 @@ async function createRaidHelperSignup(){
   }
 }
 
+async function restoreBurnyMcRaid(){
+  return restoreDeletedRaidHelperEvent({
+    originalRaidId:"MC-2026-07-02-131457-8B",
+    raid:"mc",
+    raidName:"Molten Core",
+    raidDate:"2026-07-03",
+    raidTime:"21:00",
+    playerPin:"XXX",
+    createdBy:"Burny",
+    maxPlayers:40,
+    tankSlots:2,
+    healSlots:8,
+    ddSlots:30,
+    signupDeadline:"20:30",
+    label:"MC-Raid vom 03.07.2026"
+  });
+}
+
+async function restoreBwlRaid0307(){
+  return restoreDeletedRaidHelperEvent({
+    originalRaidId:"BWL-2026-07-03-194500",
+    raid:"bwl",
+    raidName:"Blackwing Lair",
+    raidDate:"2026-07-03",
+    raidTime:"19:45",
+    playerPin:randomCode(3),
+    createdBy:"Lichtbringer",
+    maxPlayers:40,
+    tankSlots:2,
+    healSlots:8,
+    ddSlots:30,
+    signupDeadline:"19:15",
+    label:"BWL-Raid vom 03.07.2026 um 19:45"
+  });
+}
+
+async function restoreRaids0307(){
+  const status = document.getElementById("raidHelperScheduleStatus") || document.getElementById("raidHelperStatus");
+  if(status){
+    status.textContent = "MC und BWL vom 03.07.2026 werden wiederhergestellt ...";
+    status.className = "status";
+  }
+  const mc = await restoreBurnyMcRaid();
+  const bwl = await restoreBwlRaid0307();
+  await loadOverview({ preserveStatus:true });
+  setRaidHelperTab("pastEvents");
+  if(status){
+    status.innerHTML =
+      '<span class="good">MC und BWL vom 03.07.2026 sind wieder in Vergangene.</span><br>' +
+      [mc, bwl].filter(Boolean).map(entry =>
+        escapeHtml(entry.label) + ': PIN <strong>' + escapeHtml(entry.playerPin || "-") + '</strong>'
+      ).join(' · ');
+    status.className = "status good";
+  }
+}
+
+async function restoreDeletedRaidHelperEvent(config){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("raidHelperScheduleStatus") || document.getElementById("raidHelperStatus");
+  if(!masterCode){
+    if(status){
+      status.textContent = "Bitte Master-Code eingeben.";
+      status.className = "status bad";
+    }
+    return;
+  }
+
+  const originalRaidId = config.originalRaidId;
+  const existing = (guildData.raids || []).find(raid => {
+    const raidId = String(raid.raidId || raid.RaidID || raid.externalRaidId || "");
+    const raidDate = String(raid.raidDate || raid.datum || "").slice(0, 10);
+    const raidTime = String(raid.raidTime || raid.uhrzeit || "").slice(0, 5);
+    const raidKey = String(getRaidKey(raid) || "").toLowerCase();
+    const createdBy = String(getRaidCreatorName(raid) || "").toLowerCase();
+    const configuredCreator = String(config.createdBy || "").toLowerCase();
+    return raidId === originalRaidId ||
+      (raidKey === config.raid && raidDate === config.raidDate && raidTime === config.raidTime && (!configuredCreator || createdBy === configuredCreator));
+  });
+  const raidId = String(existing?.raidId || existing?.RaidID || existing?.externalRaidId || originalRaidId);
+  const playerPin = config.playerPin || randomCode(3);
+  const leadPin = randomCode(4);
+  if(status){
+    status.textContent = config.label + " wird wiederhergestellt ...";
+    status.className = "status";
+  }
+
+  try{
+    const created = await railwayWrite({
+      action:"createRaid",
+      masterCode,
+      raidId,
+      raid:config.raid,
+      raidName:config.raidName,
+      raidDate:config.raidDate,
+      raidTime:config.raidTime,
+      datum:config.raidDate,
+      uhrzeit:config.raidTime,
+      guild:"lichtloot",
+      gilde:"lichtloot",
+      playerPin,
+      leadPin,
+      status:"geschlossen",
+      p0PlusFreigabe:"geöffnet",
+      createdBy:config.createdBy || "Lichtbringer",
+      erstelltVon:config.createdBy || "Lichtbringer",
+      raidHelperEnabled:"true",
+      maxPlayers:config.maxPlayers || 40,
+      tankSlots:config.tankSlots || 2,
+      healSlots:config.healSlots || 8,
+      ddSlots:config.ddSlots || 30,
+      discordChannelId:RAID_HELPER_CHANNEL_ID,
+      signupDeadline:config.signupDeadline || "",
+      description:"Wiederhergestellter vergangener Raidanmelder.",
+      raidImageUrl:defaultRaidHelperImageUrl(config.raid)
+    });
+    if(!created.success) throw new Error(created.error || config.label + " konnte nicht wiederhergestellt werden.");
+    await loadOverview({ preserveStatus:true });
+    renderRaidHelperPastEvents();
+    if(status){
+      status.innerHTML =
+        '<span class="good">' + escapeHtml(config.label) + ' ist wiederhergestellt und liegt bei Geschlossen/Vergangene.</span><br>' +
+        'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
+        'Status: <strong>geschlossen</strong>';
+      status.className = "status good";
+    }
+    return { label:config.label, playerPin, leadPin, raidId };
+  }catch(error){
+    if(status){
+      status.textContent = error.message || config.label + " konnte nicht wiederhergestellt werden.";
+      status.className = "status bad";
+    }
+    throw error;
+  }
+}
+
 async function resetPlayerLogin(rowNumber){
   const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
   if(!player) return;
@@ -6780,36 +6921,31 @@ async function deleteRaidFromDashboard(raidId){
     String(entry.id || "") === String(raidId)
   );
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} wirklich komplett löschen? Der Raid wird aus Railway entfernt.`)) return;
+  if(!confirm(`${label} archivieren? Der Raid bleibt gespeichert und die Prios bleiben erhalten.`)) return;
 
   try{
     const result = await railwayApi({
-      action:"guildDeleteRaid",
+      action:"guildSetRaidStatus",
       masterCode,
-      id:raid?.id || "",
       raidId:raid?.raidId || raidId,
-      playerPin:raid?.playerPin || raid?.prioPin || "",
-      leadPin:raid?.leadPin || ""
+      status:"archiviert"
     });
-    if(!result.success || !result.deleted){
-      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
+    if(!result.success){
+      setStatus(result.error || "Raid konnte nicht archiviert werden.", "bad");
       return;
     }
 
-    guildData.raids = (guildData.raids || []).filter(entry =>
-      String(entry.raidId || "") !== String(raidId) &&
-      String(entry.id || "") !== String(raidId) &&
-      String(entry.id || "") !== String(raid?.id || "") &&
-      String(entry.raidId || "") !== String(raid?.raidId || "")
-    );
+    if(raid) raid.status = "archiviert";
     renderSummary();
     renderDashboardCards();
     loadDashboardRaidStats();
     renderRaids();
-    setStatus("Raid wurde aus Railway gelöscht.", "good");
+    renderRaidHelperCurrentEvents();
+    renderRaidHelperPastEvents();
+    setStatus("Raid wurde archiviert.", "good");
     await loadOverview({ preserveStatus:true });
   }catch(error){
-    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
+    setStatus(error.message || "Raid konnte nicht archiviert werden.", "bad");
   }
 }
 
@@ -6848,7 +6984,7 @@ async function toggleRaidPrioStatus(raidId){
 async function activateRaidCardFromPage(raidId){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
   if(raid && !isRaidTodayOrFuture(raid)){
-    setStatus("Nur Raids von gestern, heute oder der Zukunft können als Kachel aktiviert werden.", "bad");
+    setStatus("Nur Raids von heute oder der Zukunft können als Kachel aktiviert werden.", "bad");
     return;
   }
   await setRaidStatusFromPage(raidId, "geöffnet");
