@@ -76,7 +76,9 @@
     th,td{border-right:1px solid #d7dee9;border-bottom:1px solid #d7dee9;padding:8px 10px;white-space:pre-wrap;vertical-align:top;font-size:12px;font-weight:800;color:#172033;background:#f8fafc}
     tbody tr:nth-child(even) td{background:#eef3f9}
     tbody tr:hover td{background:#dbeafe}
-    td:first-child{position:sticky;left:0;z-index:2;background:#e2e8f0;min-width:220px;color:#0f172a}
+    th{position:sticky;top:0;z-index:3;background:#1e293b;color:#f8fafc;text-align:left}
+    th.row-num,td.row-num{position:sticky;left:0;z-index:4;width:54px;min-width:54px;max-width:54px;text-align:right;background:#dbe3ee;color:#475569}
+    td:empty::after{content:"";display:block;min-width:42px}
     .list{display:grid;gap:8px}
     .list-head{display:grid;gap:5px;padding:14px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82)}
     .list-head h2{margin:0;font-size:18px;line-height:1.2}
@@ -810,15 +812,19 @@
       const player=rowPlayer(row);
       return !player || normalizeClassName(player.className || player.Klasse) === state.activeClass;
     }
-    function columnsForRows(rows, section, pColByIndex){
-      const maxCols=Math.max(0,...rows.map(item=>item.row.length));
-      if(!state.activeClass || !pColByIndex.size) return Array.from({length:maxCols},(_,index)=>index);
-      const keep=new Set([0]);
-      for(let index=1;index<maxCols;index++){
-        const player=pColByIndex.get(index);
-        if(!player || normalizeClassName(player.className || player.Klasse)===state.activeClass) keep.add(index);
+    function sheetColumnName(index){
+      let n=index+1;
+      let name="";
+      while(n>0){
+        const rem=(n-1)%26;
+        name=String.fromCharCode(65+rem)+name;
+        n=Math.floor((n-1)/26);
       }
-      return Array.from(keep).sort((a,b)=>a-b);
+      return name;
+    }
+    function columnsForRows(rows){
+      const maxCols=Math.max(0,...rows.map(item=>item.row.length));
+      return Array.from({length:maxCols},(_,index)=>index);
     }
     function renderTable(){
       const section=activeSection();
@@ -833,14 +839,12 @@
       const bgs=matrixBackgrounds(section);
       const fcs=matrixFontColors(section);
       const q=key(document.getElementById("search").value);
-      const pCols=playerColumns(section);
-      const pColByIndex=new Map();
-      pCols.forEach((col,name)=>pColByIndex.set(col, playerFromName(name)));
       const rows=values.map((row,rowIndex)=>({row:Array.isArray(row)?row:[],rowIndex}))
         .filter(item=>item.row.some(cell=>String(cell||"").trim()))
-        .filter(item=>(!q||key(item.row.join(" ")).includes(q)) && rowMatchesClass(item.row, section));
-      const cols=columnsForRows(rows, section, pColByIndex);
-      const body=rows.map(({row,rowIndex})=>`<tr>${cols.map(col=>{
+        .filter(item=>(!q||key(item.row.join(" ")).includes(q)));
+      const cols=columnsForRows(rows);
+      const head=`<thead><tr><th class="row-num">#</th>${cols.map(col=>`<th>${sheetColumnName(col)}</th>`).join("")}</tr></thead>`;
+      const body=rows.map(({row,rowIndex})=>`<tr><td class="row-num">${rowIndex+1}</td>${cols.map(col=>{
         const style=[];
         const bg=bgs[rowIndex]?.[col]; const color=fcs[rowIndex]?.[col];
         if(bg && !["#000000","#ffffff","white","black"].includes(String(bg).toLowerCase())) style.push(`background:${String(bg).replace(/"/g,"")}`);
@@ -848,9 +852,9 @@
         return `<td style="${attr(style.join(";"))}">${html(row[col]||"")}</td>`;
       }).join("")}</tr>`).join("");
       if(tableTitle){
-        tableTitle.innerHTML=`<span>${html(sectionLabel(section))}</span><span>${html(section.type.toUpperCase())} · ${rows.length} Zeilen · ${cols.length} Spalten${state.activeClass?" · "+html(CLASS_LABEL[state.activeClass]||state.activeClass):""}</span>`;
+        tableTitle.innerHTML=`<span>${html(sectionLabel(section))}</span><span>${html(section.type.toUpperCase())} · ${rows.length} Zeilen · ${cols.length} Spalten · Rohansicht</span>`;
       }
-      table.innerHTML=`<tbody>${body||'<tr><td>Keine Treffer.</td></tr>'}</tbody>`;
+      table.innerHTML=`${head}<tbody>${body||'<tr><td>Keine Treffer.</td></tr>'}</tbody>`;
     }
     function renderSide(){
       const section=activeSection();
