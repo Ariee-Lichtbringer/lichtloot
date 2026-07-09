@@ -246,7 +246,17 @@
       return "all";
     }
     function sectionLabel(section){
-      if(section.type==="cla") return section.label || "CLA";
+      if(section.type==="cla"){
+        const label=String(section.label||"");
+        const t=key(label);
+        if(t.includes("combat") || t.includes("buffs") || t.includes("consum")) return "Combat Buffs";
+        if(t.includes("gear") || t.includes("enchant") || t.includes("issues")) return "Gear Issues";
+        if(t.includes("world")) return "World Buffs";
+        if(t.includes("frost")) return "Frost Resistance";
+        if(t.includes("ignite")) return "Ignites";
+        if(t.includes("validate")) return "Validate";
+        return label || "CLA";
+      }
       const cluster = clusterFor(section.label, "rpb");
       const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RPB"};
       return map[cluster] || section.label || "RPB";
@@ -254,7 +264,17 @@
     function collectSections(detail){
       const out=[];
       (detail?.rpb?.sections||[]).forEach(section=>out.push({...section,type:"rpb",cluster:clusterFor(section.label,"rpb")}));
-      (detail?.cla?.sections||[]).forEach(section=>out.push({...section,type:"cla",cluster:"all"}));
+      const claSections=(detail?.cla?.sections||[]).map(section=>({...section,type:"cla",cluster:"all"}));
+      const hasUsefulCla=claSections.some(section=>!key(section.label).includes("validate"));
+      claSections
+        .filter(section=>!hasUsefulCla || !key(section.label).includes("validate"))
+        .sort((a,b)=>{
+          const order=["combat buffs","gear issues","world buffs","frost resistance","ignites"];
+          const ai=order.findIndex(part=>key(sectionLabel(a)).includes(part));
+          const bi=order.findIndex(part=>key(sectionLabel(b)).includes(part));
+          return (ai<0?999:ai)-(bi<0?999:bi);
+        })
+        .forEach(section=>out.push(section));
       return out;
     }
     function allPlayers(){
@@ -311,6 +331,21 @@
       });
       return cols;
     }
+    function playerFromName(name){
+      return playerByName().get(playerKey(name)) || prioCharacterForName(name) || null;
+    }
+    function rowPlayer(row){
+      const name=String(row?.[0]||"").trim();
+      return isLikelyPlayerCharacterName(name) ? playerFromName(name) : null;
+    }
+    function metricHeaderForRow(values,rowIndex){
+      for(let r=rowIndex-1;r>=0;r--){
+        const row=Array.isArray(values[r])?values[r]:[];
+        const filled=row.filter(cell=>String(cell||"").trim()).length;
+        if(filled >= 2 && !rowPlayer(row)) return row;
+      }
+      return [];
+    }
     function metricLabelForCell(row,col){
       const left=String(row[col-1]||"").trim();
       const first=String(row[0]||"").trim();
@@ -321,15 +356,39 @@
     function metricEntriesForPlayer(player){
       const entries=[];
       state.sections.forEach(section=>{
+        const values=matrixForSection(section);
         const col=playerColumns(section).get(player.name);
-        if(col === undefined) return;
-        matrixForSection(section).slice(1).forEach(row=>{
-          const value=row[col];
-          const label=metricLabelForCell(row,col);
-          if(label && valueIsFilled(value)) entries.push({section,label,value:String(value),percent:percentFromCell(value),number:numberFromCell(value)});
+        if(col !== undefined){
+          values.slice(1).forEach(row=>{
+            const value=row[col];
+            const label=metricLabelForCell(row,col);
+            if(label && valueIsFilled(value)) entries.push({section,label,value:String(value),percent:percentFromCell(value),number:numberFromCell(value)});
+          });
+          return;
+        }
+        values.forEach((row,rowIndex)=>{
+          const rowOwner=rowPlayer(row);
+          if(!rowOwner || playerKey(rowOwner.name) !== playerKey(player.name)) return;
+          const header=metricHeaderForRow(values,rowIndex);
+          row.forEach((value,colIndex)=>{
+            if(colIndex===0 || !valueIsFilled(value)) return;
+            const label=String(header[colIndex]||`Spalte ${colIndex+1}`).trim();
+            if(label) entries.push({section,label,value:String(value),percent:percentFromCell(value),number:numberFromCell(value)});
+          });
         });
       });
       return entries;
+    }
+    function importantMetricEntries(player){
+      const skip=["start","end","optional","title","server","klasse"];
+      return metricEntriesForPlayer(player)
+        .filter(entry=>!skip.some(part=>key(entry.label)===part))
+        .sort((a,b)=>{
+          const order=["total average","average","flask","elixir","world buff","gear","enchant","battle shout","critical","miss","crushing","potion","rune","healthstone"];
+          const ai=order.findIndex(part=>key(a.label).includes(part));
+          const bi=order.findIndex(part=>key(b.label).includes(part));
+          return (ai<0?999:ai)-(bi<0?999:bi);
+        });
     }
     function firstMetric(player, tests){
       const entries=metricEntriesForPlayer(player);
@@ -408,7 +467,7 @@
         const battle=firstMetric(player,["battle shout uptime on you"]);
         const miss=firstMetric(player,["miss outgoing"]);
         const crit=firstMetric(player,["critical outgoing","critical heals done"]);
-        const consume=metricEntriesForPlayer(player).filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test))).slice(0,2);
+        const sheetMetrics=importantMetricEntries(player).filter(entry=>entry!==battle && entry!==miss && entry!==crit).slice(0,4);
         const battlePercent=battle?.percent;
         const battleClass=battlePercent===null||battlePercent===undefined?"":battlePercent<35?"bad":battlePercent<50?"warn":"";
         return `<button class="player-card" type="button" onclick="openCharacterProfile(${attr(JSON.stringify(player.name))})">
@@ -420,7 +479,7 @@
             ${battle?`<div><div class="metric"><span>Battle Shout</span><strong>${html(battle.value)}</strong></div><div class="bar ${battleClass}"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div></div>`:""}
             ${crit?`<div class="metric"><span>Crit</span><strong>${html(crit.value)}</strong></div>`:""}
             ${miss?`<div class="metric"><span>Miss</span><strong>${html(miss.value)}</strong></div>`:""}
-            ${consume.length?consume.map(entry=>`<div class="metric"><span>${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join(""):`<div class="metric"><span>Consumables</span><strong>-</strong></div>`}
+            ${sheetMetrics.length?sheetMetrics.map(entry=>`<div class="metric"><span>${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join(""):`<div class="metric"><span>Sheet-Werte</span><strong>-</strong></div>`}
           </div>
         </button>`;
       }).join("");
@@ -481,6 +540,7 @@
         const consumes=metricEntriesForPlayer(player)
           .filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test)))
           .slice(0,6);
+        const metrics=importantMetricEntries(player);
         return {
           id:fallback?.id || report.id || "",
           title:report.title || fallback?.title || "Auswertung",
@@ -488,7 +548,7 @@
           date:report.raidDate || report.raid_date || fallback?.raidDate || fallback?.summary?.raidDate || "",
           reportCode:report.reportCode || fallback?.reportCode || "",
           player,
-          battle,crit,miss,crushing,consumes
+          battle,crit,miss,crushing,consumes,metrics
         };
       });
     }
@@ -501,7 +561,7 @@
       const battleValues=rows.map(row=>row.battle?.percent).filter(value=>value !== null && value !== undefined);
       const avgBattle=battleValues.length ? Math.round(battleValues.reduce((sum,value)=>sum+value,0)/battleValues.length)+"%" : "-";
       const lowBattle=rows.filter(row=>(row.battle?.percent ?? 100) < 35).length;
-      const consumeCount=rows.reduce((sum,row)=>sum+row.consumes.length,0);
+      const metricCount=rows.reduce((sum,row)=>sum+(row.metrics?.length||0),0);
       document.getElementById("characterProfileTitle").innerHTML=`${html(player.name||name)} <span class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</span>`;
       document.getElementById("characterProfileMeta").textContent=loadingText || `${rows.length} gespeicherte Raid-Auswertungen gefunden`;
       const history=rows
@@ -519,7 +579,10 @@
                 <div class="history-metric"><span>Battle Shout</span><strong>${html(row.battle?.value||"-")}</strong></div>
                 <div class="history-metric"><span>Crit</span><strong>${html(row.crit?.value||"-")}</strong></div>
                 <div class="history-metric"><span>Miss</span><strong>${html(row.miss?.value||"-")}</strong></div>
-                <div class="history-metric"><span>Consumables</span><strong>${html(row.consumes.map(c=>`${c.label}: ${c.value}`).join(", ") || "-")}</strong></div>
+                <div class="history-metric"><span>Sheet-Infos</span><strong>${html((row.metrics||[]).length || "-")}</strong></div>
+              </div>
+              <div class="metric-list" style="margin-top:10px">
+                ${(row.metrics||[]).map(entry=>`<div class="metric"><span>${html(sectionLabel(entry.section))} · ${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join("") || '<div class="sub">Keine weiteren Sheet-Infos gefunden.</div>'}
               </div>
             </div>
           </article>`;
@@ -529,7 +592,7 @@
           ${profileStat("Raids",rows.length||"-","mit gespeicherten Details")}
           ${profileStat("Battle Shout",avgBattle,"Durchschnitt")}
           ${profileStat("Warnungen",lowBattle,"Battle Shout unter 35%")}
-          ${profileStat("Consumables",consumeCount,"gefundene Einträge")}
+          ${profileStat("Sheet-Infos",metricCount,"gefundene Werte")}
         </div>
         <section class="panel panel-pad">
           <h2>Raid-Historie</h2>
@@ -674,11 +737,11 @@
         classes.map(cls=>`<button class="class-btn ${state.activeClass===cls?'active':''}" style="color:${CLASS_COLOR[cls]||'#cbd5e1'}" type="button" onclick="selectClass('${attr(cls)}')">${html(CLASS_LABEL[cls]||cls)}</button>`).join("");
     }
     function activeSection(){return state.sections.find(s=>s.id===state.activeSection)||state.sections[0]||null;}
-    function rowMatchesClass(row, classes){
+    function rowMatchesClass(row, section){
       if(!state.activeClass) return true;
-      const rowText=key(row.join(" "));
-      const classLabel=key(CLASS_LABEL[state.activeClass]||state.activeClass);
-      return rowText.includes(key(state.activeClass)) || rowText.includes(classLabel);
+      if(playerColumns(section).size) return true;
+      const player=rowPlayer(row);
+      return !player || normalizeClassName(player.className || player.Klasse) === state.activeClass;
     }
     function renderTable(){
       const section=activeSection();
@@ -688,12 +751,21 @@
       const bgs=matrixBackgrounds(section);
       const fcs=matrixFontColors(section);
       const q=key(document.getElementById("search").value);
-      const classes=classesForSection(section);
+      const pCols=playerColumns(section);
+      const pColByIndex=new Map();
+      pCols.forEach((col,name)=>pColByIndex.set(col, playerFromName(name)));
       const rows=values.map((row,rowIndex)=>({row:Array.isArray(row)?row:[],rowIndex}))
         .filter(item=>item.row.some(cell=>String(cell||"").trim()))
-        .filter(item=>(!q||key(item.row.join(" ")).includes(q)) && rowMatchesClass(item.row, classes));
+        .filter(item=>(!q||key(item.row.join(" ")).includes(q)) && rowMatchesClass(item.row, section));
       const used=new Set();
-      rows.forEach(({row})=>row.forEach((cell,index)=>{if(String(cell||"").trim())used.add(index);}));
+      rows.forEach(({row})=>row.forEach((cell,index)=>{
+        if(!String(cell||"").trim()) return;
+        if(state.activeClass && pCols.size){
+          const player=pColByIndex.get(index);
+          if(index > 0 && (!player || normalizeClassName(player.className || player.Klasse) !== state.activeClass)) return;
+        }
+        used.add(index);
+      }));
       const cols=[...used].sort((a,b)=>a-b);
       const body=rows.map(({row,rowIndex})=>`<tr>${cols.map(col=>{
         const style=[];
