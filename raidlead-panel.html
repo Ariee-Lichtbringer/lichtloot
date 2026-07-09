@@ -1802,8 +1802,11 @@ async function loadPriosFromSheet(leadPin){
       server: p.Server || "",
       class: p.Klasse || "",
       p1: p.P1 || "",
+      p1ItemId: p.P1ItemId || p.p1ItemId || p.p1_item_id || "",
       p2: p.P2 || "",
+      p2ItemId: p.P2ItemId || p.p2ItemId || p.p2_item_id || "",
       p3: p.P3 || "",
+      p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
@@ -3392,6 +3395,7 @@ function renderItem(itemName){
 
 async function loadItemIdsForExport(){
   itemIdMap = {};
+  const itemIdsByName = {};
 
   try{
     const rows = await fetchRailwayLootRows(currentRaidKey);
@@ -3399,15 +3403,23 @@ async function loadItemIdsForExport(){
     rows.forEach(obj => {
       const info = normalizeJsonLootItem(obj);
       if(!info.name || !info.itemId) return;
-      itemIdMap[itemKey(info.name)] = info.itemId;
+      const key = itemKey(info.name);
+      itemIdsByName[key] = itemIdsByName[key] || new Set();
+      itemIdsByName[key].add(String(info.itemId));
+    });
+
+    Object.entries(itemIdsByName).forEach(([key, ids]) => {
+      const values = Array.from(ids);
+      itemIdMap[key] = values.length === 1 ? values[0] : "";
     });
   }catch(error){
     console.error("ItemIDs für Export konnten nicht geladen werden:", currentRaidKey, error);
   }
 }
 
-function formatItemForPrio3(itemName){
+function formatItemForPrio3(itemName, itemIdOverride){
   const name = String(itemName || "").trim();
+  const overrideId = String(itemIdOverride || "").trim();
 
   if(!name || name === "-"){
     return "-0";
@@ -3420,7 +3432,7 @@ function formatItemForPrio3(itemName){
     return /\d/.test(itemText) ? itemId + "-" + itemText : name;
   }
 
-  const id = itemIdMap[itemKey(name)];
+  const id = overrideId || itemIdMap[itemKey(name)];
 
   if(!id){
     return name;
@@ -3450,9 +3462,9 @@ async function downloadPrio3ReforgedExport(){
     const player = entry.player || "";
     const playerClass = entry.class || "";
 
-    const p1 = formatItemForPrio3(entry.p1);
-    const p2 = formatItemForPrio3(entry.p2);
-    const p3 = formatItemForPrio3(entry.p3);
+    const p1 = formatItemForPrio3(entry.p1, entry.p1ItemId);
+    const p2 = formatItemForPrio3(entry.p2, entry.p2ItemId);
+    const p3 = formatItemForPrio3(entry.p3, entry.p3ItemId);
 
     content +=
       player + "\t\t" +

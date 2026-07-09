@@ -9550,8 +9550,11 @@ async function getPublishedPrios({ guildId, query: params }) {
        c.is_main,
        c.created_at as character_created_at,
        i1.name as p1,
+       i1.item_id as p1_item_id,
        i2.name as p2,
-       i3.name as p3
+       i2.item_id as p2_item_id,
+       i3.name as p3,
+       i3.item_id as p3_item_id
      from prios pr
      join characters c on c.id = pr.character_id
      left join items i1 on i1.id = pr.p1_item_id
@@ -9596,10 +9599,16 @@ async function getPublishedPrios({ guildId, query: params }) {
         main: Boolean(row.is_main),
         P1: row.p1 || "",
         p1: row.p1 || "",
+        P1ItemId: row.p1_item_id || "",
+        p1ItemId: row.p1_item_id || "",
         P2: row.p2 || "",
         p2: row.p2 || "",
+        P2ItemId: row.p2_item_id || "",
+        p2ItemId: row.p2_item_id || "",
         P3: row.p3 || "",
         p3: row.p3 || "",
+        P3ItemId: row.p3_item_id || "",
+        p3ItemId: row.p3_item_id || "",
         P0Plus: meta.p0Plus || "nein",
         p0Plus: meta.p0Plus || "nein",
         Bench: row.bench || "",
