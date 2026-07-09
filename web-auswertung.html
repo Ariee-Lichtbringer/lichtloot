@@ -269,57 +269,15 @@
         if(t.includes("validate")) return "Validate";
         return label || "CLA";
       }
-      const cluster = clusterFor(section.label, "rpb");
-      const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RPB"};
-      return map[cluster] || section.label || "RPB";
-    }
-    function sectionIdentity(section){
-      const type=section?.type||"";
-      const cluster=section?.cluster||clusterFor(section?.label,type);
-      const labelKey=key(section?.label||"");
-      if(type==="rpb"){
-        if(cluster==="all") return "rpb-all";
-        return `rpb-${cluster}`;
-      }
-      if(labelKey.includes("gear")) return "cla-gear";
-      if(labelKey.includes("combat") || labelKey.includes("buff")) return "cla-combat";
-      if(labelKey.includes("world")) return "cla-world";
-      if(labelKey.includes("frost")) return "cla-frost";
-      if(labelKey.includes("ignite")) return "cla-ignites";
-      if(labelKey.includes("pull")) return "cla-pulls";
-      return `${type}-${labelKey||section?.id||""}`;
-    }
-    function preferredSectionScore(section){
-      const labelKey=key(section?.label||"");
-      let score=0;
-      if(labelKey.includes("allgemein") || labelKey.includes("general") || labelKey==="all") score+=20;
-      if(labelKey.includes("casts") || labelKey.includes("zauber")) score+=10;
-      if(labelKey.includes("listing")) score-=4;
-      if(labelKey.includes("world buffs")) score+=6;
-      if(labelKey.includes("combat buffs")) score+=8;
-      return score;
+      return section.label || "RPB";
     }
     function collectSections(detail){
       const out=[];
-      const grouped=new Map();
-      (detail?.rpb?.sections||[]).forEach(section=>{
-        const enriched={...section,type:"rpb",cluster:clusterFor(section.label,"rpb")};
-        const id=sectionIdentity(enriched);
-        const old=grouped.get(id);
-        if(!old || preferredSectionScore(enriched)>preferredSectionScore(old)) grouped.set(id,enriched);
-      });
-      grouped.forEach(section=>out.push(section));
+      (detail?.rpb?.sections||[]).forEach((section,index)=>out.push({...section,id:section.id||`rpb-${index}`,type:"rpb",cluster:clusterFor(section.label,"rpb")}));
       const claSections=(detail?.cla?.sections||[]).map(section=>({...section,type:"cla",cluster:"all"}));
       const hasUsefulCla=claSections.some(section=>!key(section.label).includes("validate"));
-      const claGrouped=new Map();
       claSections
         .filter(section=>!hasUsefulCla || !key(section.label).includes("validate"))
-        .forEach(section=>{
-          const id=sectionIdentity(section);
-          const old=claGrouped.get(id);
-          if(!old || preferredSectionScore(section)>preferredSectionScore(old)) claGrouped.set(id,section);
-        });
-      Array.from(claGrouped.values())
         .sort((a,b)=>{
           const order=["combat buffs","gear issues","world buffs","frost resistance","ignites"];
           const ai=order.findIndex(part=>key(sectionLabel(a)).includes(part));
