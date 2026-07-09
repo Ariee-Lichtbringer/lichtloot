@@ -8819,8 +8819,11 @@ function getLogAnalysisSheetExportCount(entry, type){
 function renderLogAnalysisExportNote(entry, type, url){
   if(!url) return "";
   const exported = getLogAnalysisSheetExportCount(entry, type);
-  if(exported > 0) return "";
-  return `<button class="log-export-note" type="button" title="Google-Sheet jetzt nach Railway uebertragen." onclick="importLogAnalysisSheetExport('${escapeAttr(entry.id)}','${type}')">${type.toUpperCase()} übertragen</button>`;
+  const label = exported > 0 ? `${type.toUpperCase()} neu übertragen` : `${type.toUpperCase()} übertragen`;
+  const title = exported > 0
+    ? "Google-Sheet erneut nach Railway uebertragen und alte Sheet-Daten ersetzen."
+    : "Google-Sheet jetzt nach Railway uebertragen.";
+  return `<button class="log-export-note" type="button" title="${escapeAttr(title)}" onclick="importLogAnalysisSheetExport('${escapeAttr(entry.id)}','${type}')">${escapeHtml(label)}</button>`;
 }
 
 function renderLogAnalysisAction(entry, type, url){
@@ -9124,6 +9127,9 @@ async function importLogAnalysisSheetExport(id, type){
     return;
   }
   const label = String(type || "").toUpperCase();
+  const entry = (logAnalyses || []).find(item => String(item.id || "") === String(id));
+  const existingCount = getLogAnalysisSheetExportCount(entry, String(type || "").toLowerCase());
+  if(existingCount > 0 && !confirm(`${label} wurde schon übertragen. Jetzt aus dem Google-Sheet neu nach Railway übertragen?`)) return;
   if(status) status.textContent = `${label} wird nach Railway übertragen ...`;
   try{
     const result = await railwayWrite({
