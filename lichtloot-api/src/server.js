@@ -7188,6 +7188,248 @@ function normalizePlayerMetricExport(rawEntry, index = 0) {
   };
 }
 
+const logAnalysisRpbImportSheets = [
+  "All",
+  "General",
+  "Allgemein",
+  "Caster",
+  "Zauberer",
+  "Caster - casts",
+  "Zauberer - Zauber",
+  "Healer",
+  "Heiler",
+  "Healer - casts",
+  "Heiler - Zauber",
+  "Physical",
+  "Nahkampf",
+  "Physical - casts",
+  "Nahkampf - Zauber",
+  "Tank",
+  "Tank - casts",
+  "Tank - Zauber"
+];
+
+const logAnalysisClaImportSheets = [
+  "combat buffs",
+  "gear issues",
+  "world buffs",
+  "gear listing",
+  "ignites",
+  "frost resistance",
+  "pulls"
+];
+
+function parseGoogleSpreadsheetId(value) {
+  const match = clean(value).match(/\/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
+  return match ? match[1] : "";
+}
+
+async function fetchGoogleSheetCsv(spreadsheetId, sheetName) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(spreadsheetId)}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) return null;
+    const text = await response.text();
+    if (/<!doctype html|<html/i.test(text)) return null;
+    const values = parseCsvRows(text);
+    const hasCells = values.some(row => row.some(cell => clean(cell)));
+    return hasCells ? values : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function metricKeyFromLabel(value) {
+  return normalizeMetricKey(value);
+}
+
+function rowHasOnlyOneFilledCell(row) {
+  return (row || []).filter(cell => clean(cell)).length === 1;
+}
+
+function nearestSheetCategory(values, rowIndex) {
+  for (let r = rowIndex; r >= 0; r--) {
+    const first = clean(values[r]?.[0]);
+    if (first && rowHasOnlyOneFilledCell(values[r])) return first;
+  }
+  return "";
+}
+
+function firstRowLabel(row) {
+  for (let c = 0; c < Math.min((row || []).length, 4); c++) {
+    const value = clean(row[c]);
+    if (value) return value;
+  }
+  return "";
+}
+
+function detectPlayerHeaderRow(values, knownPlayers) {
+  let bestRow = -1;
+  let bestScore = 0;
+  const maxRows = Math.min(values.length, 15);
+  for (let r = 0; r < maxRows; r++) {
+    let score = 0;
+    for (let c = 1; c < (values[r] || []).length; c++) {
+      if (knownPlayers.has(clean(values[r][c]).toLowerCase())) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestRow = r;
+    }
+  }
+  return bestScore >= 2 ? bestRow : -1;
+}
+
+function detectMetricHeaderRow(values) {
+  let bestRow = -1;
+  let bestScore = 0;
+  const maxRows = Math.min(values.length, 15);
+  for (let r = 0; r < maxRows; r++) {
+    let score = 0;
+    for (let c = 1; c < (values[r] || []).length; c++) {
+      if (clean(values[r][c])) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestRow = r;
+    }
+  }
+  return bestScore >= 2 ? bestRow : -1;
+}
+
+function extractSheetImportMetrics({ values, sheetName, type, classByPlayer }) {
+  const metrics = [];
+  const knownPlayers = new Set(classByPlayer.keys());
+  const headerRow = detectPlayerHeaderRow(values, knownPlayers);
+  if (headerRow >= 0) {
+    const playerColumns = [];
+    for (let c = 1; c < (values[headerRow] || []).length; c++) {
+      const name = clean(values[headerRow][c]);
+      if (knownPlayers.has(name.toLowerCase())) playerColumns.push({ name, column: c });
+    }
+    for (let r = headerRow + 1; r < values.length; r++) {
+      const label = firstRowLabel(values[r]);
+      if (!label || rowHasOnlyOneFilledCell(values[r])) continue;
+      playerColumns.forEach(player => {
+        const value = clean(values[r]?.[player.column]);
+        if (!value) return;
+        metrics.push({
+          playerName: player.name,
+          className: classByPlayer.get(player.name.toLowerCase()) || "",
+          sheetName,
+          category: nearestSheetCategory(values, r),
+          metricKey: metricKeyFromLabel(label),
+          metricLabel: label,
+          valueText: value,
+          rowIndex: r,
+          columnIndex: player.column,
+          style: {},
+          extra: { importSource: "google-csv", analysisType: type }
+        });
+      });
+    }
+    return metrics;
+  }
+
+  const metricHeaderRow = detectMetricHeaderRow(values);
+  if (metricHeaderRow < 0) return metrics;
+  const headers = values[metricHeaderRow] || [];
+  for (let r = metricHeaderRow + 1; r < values.length; r++) {
+    const playerName = clean(values[r]?.[0]);
+    if (!knownPlayers.has(playerName.toLowerCase())) continue;
+    for (let c = 1; c < (values[r] || []).length; c++) {
+      const label = clean(headers[c]);
+      const value = clean(values[r][c]);
+      if (!label || !value) continue;
+      metrics.push({
+        playerName,
+        className: classByPlayer.get(playerName.toLowerCase()) || "",
+        sheetName,
+        category: sheetName,
+        metricKey: metricKeyFromLabel(label),
+        metricLabel: label,
+        valueText: value,
+        rowIndex: r,
+        columnIndex: c,
+        style: {},
+        extra: { importSource: "google-csv", analysisType: type }
+      });
+    }
+  }
+  return metrics;
+}
+
+async function importLogAnalysisSheetExportFromUrl({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysisSheetExportsTable();
+  const id = clean(params.id || params.analysisId);
+  const type = clean(params.type || params.analysisType || "").toLowerCase();
+  if (!isUuid(id) || !["cla", "rpb"].includes(type)) {
+    const error = new Error("Loganalyse oder Typ fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select * from log_analyses where guild_id = $1 and id = $2 limit 1`,
+    [guildId, id]
+  );
+  const analysis = result.rows[0];
+  if (!analysis) {
+    const error = new Error("Loganalyse wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const summary = analysis.summary || {};
+  const sheetUrl = clean(params.sheetUrl || summary[`${type}DownloadUrl`]);
+  const spreadsheetId = parseGoogleSpreadsheetId(sheetUrl);
+  if (!spreadsheetId) {
+    const error = new Error(`${type.toUpperCase()}-Sheet-Link fehlt.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const classByPlayer = await getGuildClassMap(guildId);
+  const candidates = type === "cla" ? logAnalysisClaImportSheets : logAnalysisRpbImportSheets;
+  const sheets = [];
+  const playerMetrics = [];
+  for (const sheetName of candidates) {
+    const values = await fetchGoogleSheetCsv(spreadsheetId, sheetName);
+    if (!values) continue;
+    sheets.push({
+      name: sheetName,
+      order: sheets.length,
+      values,
+      backgrounds: [],
+      fontColors: [],
+      notes: [],
+      source: "google-csv"
+    });
+    playerMetrics.push(...extractSheetImportMetrics({ values, sheetName, type, classByPlayer }));
+  }
+
+  if (!sheets.length) {
+    const error = new Error("Google-Sheet konnte nicht gelesen werden. Bitte pruefen, ob der Link freigegeben ist.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return saveLogAnalysisSheetExport({
+    guildId,
+    query: {
+      ...params,
+      id,
+      type,
+      sheetUrl,
+      sheets,
+      playerMetrics
+    }
+  });
+}
+
 async function findLogAnalysisForSheetExport(guildId, params) {
   const id = clean(params.id || params.analysisId);
   if (isUuid(id)) {
