@@ -45,8 +45,12 @@
     .alert-title{font-weight:950}
     .alert-text{color:var(--muted);font-size:12px;font-weight:850;margin-top:2px}
     .player-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-    .player-card{border:1px solid var(--line);border-radius:8px;background:rgba(15,23,42,.88);padding:10px;display:grid;gap:8px;min-height:132px;text-align:left;color:var(--text);cursor:pointer}
+    .player-card{border:1px solid var(--line);border-radius:8px;background:rgba(15,23,42,.88);padding:10px;display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px;min-height:132px;text-align:left;color:var(--text);cursor:pointer}
     .player-card:hover,.player-card:focus-visible{border-color:rgba(250,204,21,.62);outline:none;transform:translateY(-1px)}
+    .active-strip{display:grid;align-content:center;justify-items:center;min-height:100%;border-radius:7px;background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.35);color:#86efac;font-size:11px;font-weight:950;writing-mode:vertical-rl;text-orientation:mixed}
+    .active-strip.warn{background:rgba(250,204,21,.18);border-color:rgba(250,204,21,.42);color:#fde68a}
+    .active-strip.bad{background:rgba(251,113,133,.18);border-color:rgba(251,113,133,.42);color:#fecdd3}
+    .player-card-body{display:grid;gap:8px;min-width:0}
     .player-head{display:flex;justify-content:space-between;gap:8px;align-items:start}
     .player-name{font-weight:950;overflow-wrap:anywhere}
     .player-class{font-size:11px;font-weight:950;text-transform:uppercase}
@@ -273,7 +277,13 @@
     }
     function collectSections(detail){
       const out=[];
-      (detail?.rpb?.sections||[]).forEach((section,index)=>out.push({...section,id:section.id||`rpb-${index}`,type:"rpb",cluster:clusterFor(section.label,"rpb")}));
+      const seenRpbPayloads=new Set();
+      (detail?.rpb?.sections||[]).forEach((section,index)=>{
+        const fingerprint=JSON.stringify(matrixValues(section).map(row=>(row||[]).map(cell=>String(cell||"").trim())).filter(row=>row.some(Boolean)));
+        if(seenRpbPayloads.has(fingerprint)) return;
+        seenRpbPayloads.add(fingerprint);
+        out.push({...section,id:section.id||`rpb-${index}`,type:"rpb",cluster:clusterFor(section.label,"rpb")});
+      });
       const claSections=(detail?.cla?.sections||[]).map(section=>({...section,type:"cla",cluster:"all"}));
       const hasUsefulCla=claSections.some(section=>!key(section.label).includes("validate"));
       claSections
@@ -477,19 +487,25 @@
         const battle=firstMetric(player,["battle shout uptime on you"]);
         const miss=firstMetric(player,["miss outgoing"]);
         const crit=firstMetric(player,["critical outgoing","critical heals done"]);
+        const activeTotal=firstMetric(player,["relative active % total"]);
         const sheetMetrics=importantMetricEntries(player).filter(entry=>entry!==battle && entry!==miss && entry!==crit).slice(0,4);
         const battlePercent=battle?.percent;
         const battleClass=battlePercent===null||battlePercent===undefined?"":battlePercent<35?"bad":battlePercent<50?"warn":"";
+        const activePercent=activeTotal?.percent;
+        const activeClass=activePercent===null||activePercent===undefined?"":activePercent<55?"bad":activePercent<75?"warn":"";
         return `<button class="player-card" type="button" onclick="openCharacterProfile(${attr(JSON.stringify(player.name))})">
-          <div class="player-head">
-            <div><div class="player-name">${html(player.name)}</div><div class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</div></div>
-            <span class="pill">${html(player.role||player.cluster||"Raid")}</span>
-          </div>
-          <div class="metric-list">
-            ${battle?`<div><div class="metric"><span>Battle Shout</span><strong>${html(battle.value)}</strong></div><div class="bar ${battleClass}"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div></div>`:""}
-            ${crit?`<div class="metric"><span>Crit</span><strong>${html(crit.value)}</strong></div>`:""}
-            ${miss?`<div class="metric"><span>Miss</span><strong>${html(miss.value)}</strong></div>`:""}
-            ${sheetMetrics.length?sheetMetrics.map(entry=>`<div class="metric"><span>${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join(""):`<div class="metric"><span>Sheet-Werte</span><strong>-</strong></div>`}
+          <div class="active-strip ${activeClass}" title="relative active % total">${html(activeTotal?.value||"-")}</div>
+          <div class="player-card-body">
+            <div class="player-head">
+              <div><div class="player-name">${html(player.name)}</div><div class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</div></div>
+              <span class="pill">${html(player.role||player.cluster||"Raid")}</span>
+            </div>
+            <div class="metric-list">
+              ${battle?`<div><div class="metric"><span>Battle Shout</span><strong>${html(battle.value)}</strong></div><div class="bar ${battleClass}"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div></div>`:""}
+              ${crit?`<div class="metric"><span>Crit</span><strong>${html(crit.value)}</strong></div>`:""}
+              ${miss?`<div class="metric"><span>Miss</span><strong>${html(miss.value)}</strong></div>`:""}
+              ${sheetMetrics.length?sheetMetrics.map(entry=>`<div class="metric"><span>${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join(""):`<div class="metric"><span>Sheet-Werte</span><strong>-</strong></div>`}
+            </div>
           </div>
         </button>`;
       }).join("");

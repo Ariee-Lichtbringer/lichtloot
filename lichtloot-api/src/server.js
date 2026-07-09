@@ -7189,24 +7189,15 @@ function normalizePlayerMetricExport(rawEntry, index = 0) {
 }
 
 const logAnalysisRpbImportSheets = [
-  "All",
   "General",
-  "Allgemein",
   "Caster",
-  "Zauberer",
   "Caster - casts",
-  "Zauberer - Zauber",
   "Healer",
-  "Heiler",
   "Healer - casts",
-  "Heiler - Zauber",
   "Physical",
-  "Nahkampf",
   "Physical - casts",
-  "Nahkampf - Zauber",
   "Tank",
-  "Tank - casts",
-  "Tank - Zauber"
+  "Tank - casts"
 ];
 
 const logAnalysisClaImportSheets = [
@@ -7241,6 +7232,10 @@ async function fetchGoogleSheetCsv(spreadsheetId, sheetName) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function sheetValuesFingerprint(values) {
+  return JSON.stringify((values || []).map(row => (row || []).map(cell => clean(cell))).filter(row => row.some(Boolean)));
 }
 
 function metricKeyFromLabel(value) {
@@ -7396,9 +7391,13 @@ async function importLogAnalysisSheetExportFromUrl({ guildId, query: params }) {
   const candidates = type === "cla" ? logAnalysisClaImportSheets : logAnalysisRpbImportSheets;
   const sheets = [];
   const playerMetrics = [];
+  const seenSheetPayloads = new Set();
   for (const sheetName of candidates) {
     const values = await fetchGoogleSheetCsv(spreadsheetId, sheetName);
     if (!values) continue;
+    const fingerprint = sheetValuesFingerprint(values);
+    if (seenSheetPayloads.has(fingerprint)) continue;
+    seenSheetPayloads.add(fingerprint);
     sheets.push({
       name: sheetName,
       order: sheets.length,
