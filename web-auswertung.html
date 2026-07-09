@@ -26,9 +26,36 @@
     .filters{padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.78);margin-bottom:14px}
     input,select{min-height:38px;border:1px solid var(--line);border-radius:8px;background:#060b13;color:var(--text);padding:0 10px;font-weight:850}
     input{min-width:260px;flex:1}
+    .detail{display:grid;gap:14px}
     .grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
     .panel{border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.84);box-shadow:0 18px 44px rgba(0,0,0,.28)}
     .panel-pad{padding:14px}
+    .dashboard{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:14px;align-items:start}
+    .score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+    .score-card{border:1px solid var(--line);border-radius:8px;background:rgba(6,11,19,.74);padding:12px;min-height:86px}
+    .score-label{color:var(--muted);font-size:12px;font-weight:950;text-transform:uppercase}
+    .score-value{font-size:28px;font-weight:950;line-height:1.05;margin-top:6px}
+    .score-note{color:var(--muted);font-size:12px;font-weight:850;margin-top:6px}
+    .alert-list{display:grid;gap:8px}
+    .alert{display:grid;grid-template-columns:8px minmax(0,1fr);gap:10px;align-items:start;border:1px solid var(--line);border-radius:8px;background:rgba(6,11,19,.72);padding:10px}
+    .alert::before{content:"";width:8px;height:100%;min-height:38px;border-radius:999px;background:var(--gold)}
+    .alert.good::before{background:var(--green)}
+    .alert.bad::before{background:#fb7185}
+    .alert-title{font-weight:950}
+    .alert-text{color:var(--muted);font-size:12px;font-weight:850;margin-top:2px}
+    .player-board{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+    .player-card{border:1px solid var(--line);border-radius:8px;background:rgba(6,11,19,.76);padding:10px;display:grid;gap:8px;min-height:132px;text-align:left;color:var(--text);cursor:pointer}
+    .player-card:hover,.player-card:focus-visible{border-color:rgba(250,204,21,.62);outline:none;transform:translateY(-1px)}
+    .player-head{display:flex;justify-content:space-between;gap:8px;align-items:start}
+    .player-name{font-weight:950;overflow-wrap:anywhere}
+    .player-class{font-size:11px;font-weight:950;text-transform:uppercase}
+    .metric-list{display:grid;gap:6px}
+    .metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px;font-weight:850;color:var(--muted)}
+    .metric strong{color:var(--text)}
+    .bar{height:7px;border-radius:999px;background:rgba(148,163,184,.18);overflow:hidden}
+    .bar span{display:block;height:100%;background:var(--green);border-radius:999px}
+    .bar.warn span{background:var(--gold)}
+    .bar.bad span{background:#fb7185}
     .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
     .badge{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:var(--muted);font-size:12px;font-weight:950}
     .badge.rpb{border-color:rgba(96,165,250,.42);color:#bfdbfe;background:rgba(96,165,250,.10)}
@@ -45,6 +72,8 @@
     th:first-child,td:first-child{position:sticky;left:0;z-index:2;background:#111827;min-width:220px}
     thead th:first-child{z-index:4}
     .list{display:grid;gap:8px}
+    .list-head{display:grid;gap:5px;padding:14px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82)}
+    .list-head h2{margin:0;font-size:18px;line-height:1.2}
     .analysis-row{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82)}
     .analysis-row:hover{border-color:rgba(250,204,21,.46)}
     .raid{color:var(--gold);font-weight:950}
@@ -53,10 +82,24 @@
     .side h2{margin:0 0 10px;font-size:16px}
     .pills{display:flex;gap:6px;flex-wrap:wrap}
     .pill{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950;background:rgba(6,11,19,.82)}
+    .disabled-action{display:inline-flex;align-items:center;justify-content:center;min-height:38px;border:1px solid var(--line);border-radius:8px;background:rgba(148,163,184,.10);color:var(--muted);padding:8px 12px;font-weight:950}
+    .profile-modal{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;background:rgba(2,6,12,.72);backdrop-filter:blur(8px)}
+    .profile-box{width:min(1180px,100%);max-height:min(860px,92vh);overflow:auto;border:1px solid var(--line);border-radius:8px;background:#08111e;box-shadow:0 24px 80px rgba(0,0,0,.55)}
+    .profile-head{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding:16px;border-bottom:1px solid var(--line);background:rgba(8,17,30,.96)}
+    .profile-title{font-size:26px;font-weight:950;line-height:1.1}
+    .profile-body{display:grid;gap:14px;padding:16px}
+    .profile-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .raid-history{display:grid;gap:9px}
+    .history-row{display:grid;grid-template-columns:88px 110px minmax(0,1fr);gap:12px;align-items:center;border:1px solid var(--line);border-radius:8px;background:rgba(6,11,19,.72);padding:10px}
+    .history-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .history-metric{display:grid;gap:2px;color:var(--muted);font-size:12px;font-weight:850}
+    .history-metric strong{color:var(--text);font-size:14px}
     .status{padding:16px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82);color:var(--muted);font-weight:850}
     .error{border-color:rgba(248,113,113,.45);color:#fecdd3;background:rgba(248,113,113,.10)}
-    .hidden{display:none}
+    .hidden{display:none!important}
+    @media(max-width:1250px){.dashboard,.score-grid{grid-template-columns:1fr 1fr}}
     @media(max-width:1050px){.grid,.top{grid-template-columns:1fr}.analysis-row{grid-template-columns:1fr}.table-wrap{max-height:none}}
+    @media(max-width:720px){.dashboard,.score-grid,.profile-stats,.history-row,.history-metrics{grid-template-columns:1fr}.shell{padding:14px}h1{font-size:25px}.profile-modal{padding:8px}.profile-head{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -83,35 +126,51 @@
 
     <section id="listView" class="list"></section>
 
-    <section id="detailView" class="grid hidden">
-      <div>
-        <div class="panel panel-pad section-tools">
-          <div id="sectionTabs" class="tabs"></div>
-          <div id="classTabs" class="classbar"></div>
+    <section id="detailView" class="detail hidden">
+      <div id="overviewDashboard" class="dashboard"></div>
+      <div class="grid">
+        <div>
+          <div class="panel panel-pad section-tools">
+            <div id="sectionTabs" class="tabs"></div>
+            <div id="classTabs" class="classbar"></div>
+          </div>
+          <div class="table-wrap"><table id="sheetTable"><tbody><tr><td>Auswertung wird geladen...</td></tr></tbody></table></div>
         </div>
-        <div class="table-wrap"><table id="sheetTable"><tbody><tr><td>Auswertung wird geladen...</td></tr></tbody></table></div>
+        <aside class="side">
+          <section class="panel panel-pad">
+            <h2>Reiter</h2>
+            <div id="sectionInfo" class="sub">-</div>
+          </section>
+          <section class="panel panel-pad">
+            <h2>Klassen im Cluster</h2>
+            <div id="classInfo" class="pills"></div>
+          </section>
+          <section class="panel panel-pad">
+            <h2>Hinweise</h2>
+            <div id="warnings" class="sub">Keine Hinweise.</div>
+          </section>
+        </aside>
       </div>
-      <aside class="side">
-        <section class="panel panel-pad">
-          <h2>Reiter</h2>
-          <div id="sectionInfo" class="sub">-</div>
-        </section>
-        <section class="panel panel-pad">
-          <h2>Klassen im Cluster</h2>
-          <div id="classInfo" class="pills"></div>
-        </section>
-        <section class="panel panel-pad">
-          <h2>Hinweise</h2>
-          <div id="warnings" class="sub">Keine Hinweise.</div>
-        </section>
-      </aside>
+    </section>
+    <section id="characterProfile" class="profile-modal hidden" role="dialog" aria-modal="true" aria-labelledby="characterProfileTitle">
+      <div class="profile-box">
+        <div class="profile-head">
+          <div>
+            <div class="kicker">Charakterprofil</div>
+            <div id="characterProfileTitle" class="profile-title">Charakter</div>
+            <div id="characterProfileMeta" class="sub">Raid-Historie wird geladen ...</div>
+          </div>
+          <button class="btn ghost" type="button" onclick="closeCharacterProfile()">Schließen</button>
+        </div>
+        <div id="characterProfileBody" class="profile-body"></div>
+      </div>
     </section>
   </main>
 
   <script>
     const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
     const params = new URLSearchParams(location.search);
-    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", mode:params.get("id") ? "detail" : "list" };
+    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", mode:params.get("id") ? "detail" : "list", historyCache:new Map(), activeProfile:"", prioCharacters:new Map(), prioCharactersLoaded:false, listRefreshTimer:null };
     const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
     const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
     const CLASS_COLOR = {Warrior:"var(--warrior)",Druid:"var(--druid)",Paladin:"var(--paladin)",Rogue:"var(--rogue)",Hunter:"var(--hunter)",Priest:"var(--priest)",Mage:"var(--mage)",Warlock:"var(--warlock)",Shaman:"var(--shaman)",Unknown:"#cbd5e1"};
@@ -130,15 +189,52 @@
     function html(value){return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
     function attr(value){return html(value);}
     function key(value){return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();}
+    function normalizeClassName(value){
+      const text=String(value||"").trim();
+      const lower=key(text);
+      const aliases={
+        druide:"Druid",druiden:"Druid",druid:"Druid",
+        jaeger:"Hunter",jager:"Hunter",hunter:"Hunter",
+        magier:"Mage",mage:"Mage",
+        paladin:"Paladin",
+        priester:"Priest",priest:"Priest",
+        schurke:"Rogue",schurken:"Rogue",rogue:"Rogue",
+        schamane:"Shaman",schamanen:"Shaman",shaman:"Shaman",
+        hexenmeister:"Warlock",warlock:"Warlock",
+        krieger:"Warrior",warrior:"Warrior"
+      };
+      return aliases[lower] || (CLASS_ORDER.includes(text) ? text : "");
+    }
     function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
     function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
     async function api(query){const url=API_URL+"?"+new URLSearchParams({...query,guild:params.get("guild")||"lichtloot",t:Date.now()});const res=await fetch(url,{cache:"no-store"});const data=await res.json().catch(()=>({}));if(!res.ok||data.success===false)throw new Error(data.error||"Daten konnten nicht geladen werden.");return data;}
-    function matrixValues(section){return section?.matrix?.values || section?.payload?.values || [];}
+    function rowsToMatrix(section){
+      const rows=Array.isArray(section?.rows)?section.rows:[];
+      if(!rows.length)return[];
+      const players=allPlayers().map(player=>player.name).filter(Boolean);
+      return [["Wert",...players],...rows.map(row=>[row?.label||"",...players.map(name=>row?.values?.[name]??"")])];
+    }
+    function matrixValues(section){return section?.matrix?.values || section?.payload?.values || rowsToMatrix(section);}
     function matrixBackgrounds(section){return section?.matrix?.backgrounds || section?.payload?.backgrounds || [];}
     function matrixFontColors(section){return section?.matrix?.fontColors || section?.payload?.fontColors || [];}
     function safeUrl(value){
       const url=String(value||"").trim();
       return /^https?:\/\//i.test(url) ? url : "";
+    }
+    function isLikelyPlayerCharacterName(value){
+      const name=String(value||"").trim();
+      if(name.length < 2 || name.length > 16) return false;
+      const normalized=key(name);
+      const blocked=new Set([
+        "player","unknown","unbekannt","raid","wert","boss","start","ende","erfolg","gesamt",
+        "druid","druids","druide","druiden","hunter","hunters","jaeger","jager","mage","mages","magier",
+        "paladin","paladins","priest","priests","priester","rogue","rogues","schurke","schurken",
+        "shaman","shamans","schamane","schamanen","warlock","warlocks","hexenmeister","warrior","warriors","krieger",
+        "caster","healer","tank","physical","nahkampf","zauberer","allgemein","buffs","bosskaempfe","bosskampfe"
+      ]);
+      if(blocked.has(normalized)) return false;
+      if(/\s/.test(name) || /[0-9]/.test(name)) return false;
+      return /^\p{L}[\p{L}'-]*$/u.test(name);
     }
     function clusterFor(label,type){
       if(type==="cla") return "all";
@@ -152,8 +248,8 @@
     function sectionLabel(section){
       if(section.type==="cla") return section.label || "CLA";
       const cluster = clusterFor(section.label, "rpb");
-      const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RBP"};
-      return map[cluster] || section.label || "RBP";
+      const map = {healer:"Heiler",healerCast:"Heiler Cast",caster:"Caster",casterCast:"Caster Cast",physical:"Physical",physicalCast:"Physical Cast",tank:"Tank",tankCast:"Tank Cast",all:"RPB"};
+      return map[cluster] || section.label || "RPB";
     }
     function collectSections(detail){
       const out=[];
@@ -164,7 +260,14 @@
     function allPlayers(){
       const players=[...(state.detail?.rpb?.players||[]),...(state.detail?.cla?.players||[])];
       const seen=new Map();
-      players.forEach(player=>{const name=String(player.name||"").trim();if(name&&!seen.has(name.toLowerCase()))seen.set(name.toLowerCase(),player);});
+      players.forEach(player=>{
+        const name=String(player.name||"").trim();
+        if(!isLikelyPlayerCharacterName(name)) return;
+        const prioChar=prioCharacterForName(name);
+        if(state.prioCharactersLoaded && !prioChar) return;
+        const className=normalizeClassName(prioChar?.className || prioChar?.Klasse || player.className || player.Klasse) || "Unknown";
+        if(!seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), {...player,...(prioChar||{}),name,className});
+      });
       return Array.from(seen.values());
     }
     function classesForSection(section){
@@ -173,9 +276,313 @@
       const classes = allowed.filter(cls => present.has(cls));
       return classes.length ? classes : allowed.filter(cls => cls !== "Unknown");
     }
-    async function loadList(){
-      document.getElementById("listView").innerHTML='<div class="status">Auswertungen werden geladen...</div>';
-      const data=await api({action:"getPublicLogAnalyses",limit:60,sheetOnly:"1"});
+    function numberFromCell(value){
+      const match=String(value||"").replace(",",".").match(/-?\d+(?:\.\d+)?/);
+      return match ? Number(match[0]) : null;
+    }
+    function percentFromCell(value){
+      const match=String(value||"").replace(",",".").match(/-?\d+(?:\.\d+)?\s*%/);
+      return match ? Number(match[0].replace("%","")) : null;
+    }
+    function valueIsFilled(value){
+      const text=String(value??"").trim();
+      return !!text && text !== "0" && text !== "0%" && text !== "0 (0%)";
+    }
+    function playerKey(name){return key(name).replace(/\s+/g,"");}
+    function prioCharacterForName(name){return state.prioCharacters.get(playerKey(name)) || null;}
+    function playerByName(){
+      const map=new Map();
+      allPlayers().forEach(player=>map.set(playerKey(player.name), player));
+      return map;
+    }
+    function matrixForSection(section){
+      const rows=matrixValues(section);
+      return Array.isArray(rows) ? rows.filter(Array.isArray) : [];
+    }
+    function playerColumns(section){
+      const rows=matrixForSection(section);
+      const players=playerByName();
+      const cols=new Map();
+      rows.slice(0,3).forEach(row=>{
+        row.forEach((cell,col)=>{
+          const player=players.get(playerKey(cell));
+          if(player && !cols.has(player.name)) cols.set(player.name,col);
+        });
+      });
+      return cols;
+    }
+    function metricLabelForCell(row,col){
+      const left=String(row[col-1]||"").trim();
+      const first=String(row[0]||"").trim();
+      if(first) return first;
+      if(left && !playerByName().has(playerKey(left))) return left;
+      return left || "";
+    }
+    function metricEntriesForPlayer(player){
+      const entries=[];
+      state.sections.forEach(section=>{
+        const col=playerColumns(section).get(player.name);
+        if(col === undefined) return;
+        matrixForSection(section).slice(1).forEach(row=>{
+          const value=row[col];
+          const label=metricLabelForCell(row,col);
+          if(label && valueIsFilled(value)) entries.push({section,label,value:String(value),percent:percentFromCell(value),number:numberFromCell(value)});
+        });
+      });
+      return entries;
+    }
+    function firstMetric(player, tests){
+      const entries=metricEntriesForPlayer(player);
+      return entries.find(entry=>tests.some(test=>key(entry.label).includes(test))) || null;
+    }
+    function findRowsByLabel(tests){
+      const rows=[];
+      state.sections.forEach(section=>{
+        const cols=playerColumns(section);
+        matrixForSection(section).slice(1).forEach(row=>{
+          const rowLabels=new Set();
+          cols.forEach((col)=>rowLabels.add(metricLabelForCell(row,col)));
+          rowLabels.forEach(label=>{
+            const labelKey=key(label);
+            if(label && tests.some(test=>labelKey.includes(test))) rows.push({section,row,label,cols});
+          });
+        });
+      });
+      return rows;
+    }
+    function averagePercentForRows(rows){
+      const values=[];
+      rows.forEach(({row,cols})=>{
+        cols.forEach(col=>{
+          const percent=percentFromCell(row[col]);
+          if(percent !== null) values.push(percent);
+        });
+      });
+      if(!values.length) return null;
+      return Math.round(values.reduce((sum,value)=>sum+value,0)/values.length);
+    }
+    function buildRaidAlerts(){
+      const alerts=[];
+      const battleRows=findRowsByLabel(["battle shout uptime on you"]);
+      battleRows.forEach(({row,cols})=>{
+        cols.forEach((col,name)=>{
+          const percent=percentFromCell(row[col]);
+          if(percent !== null && percent < 35) alerts.push({type:"bad",title:"Battle Shout niedrig",text:`${name}: ${percent}% Uptime`});
+        });
+      });
+      findRowsByLabel(["living/free action potion","limited invulnerability potion","mighty rage potion","major mana potion","demonic rune","dark rune"]).forEach(({row,label,cols})=>{
+        const used=[];
+        cols.forEach((col,name)=>{if(valueIsFilled(row[col])) used.push(name);});
+        if(used.length) alerts.push({type:"good",title:label,text:`Genutzt von ${used.slice(0,7).join(", ")}${used.length>7?" ...":""}`});
+      });
+      findRowsByLabel(["crushing blow incoming"]).forEach(({row,cols})=>{
+        cols.forEach((col,name)=>{
+          const percent=percentFromCell(row[col]);
+          if(percent !== null && percent >= 3) alerts.push({type:"bad",title:"Crushing Blows",text:`${name}: ${row[col]}`});
+        });
+      });
+      state.sections.forEach(section=>{
+        matrixForSection(section).forEach(row=>{
+          row.forEach(cell=>{
+            const text=String(cell||"");
+            const match=text.match(/uptime% - overall:\s*(\d+(?:\.\d+)?)%/i);
+            if(match && Number(match[1]) < 75) alerts.push({type:"bad",title:"Debuff-Uptime auffaellig",text:`${text}`});
+          });
+        });
+      });
+      return alerts.slice(0,8);
+    }
+    function renderDashboard(){
+      const players=allPlayers();
+      const battleAvg=averagePercentForRows(findRowsByLabel(["battle shout uptime on you"]));
+      const alerts=buildRaidAlerts();
+      const activePlayers=players.filter(player=>!state.activeClass || player.className===state.activeClass);
+      const scoreCards=[
+        {label:"Spieler",value:players.length||"-",note:"erkannte Charaktere"},
+        {label:"Auswertung",value:state.sections.length||"-",note:"RPB/CLA-Reiter"},
+        {label:"Battle Shout",value:battleAvg===null?"-":battleAvg+"%",note:"Durchschnitt, falls vorhanden"},
+        {label:"Hinweise",value:alerts.filter(a=>a.type==="bad").length,note:"automatisch erkannt"}
+      ];
+      const playerCards=activePlayers.map(player=>{
+        const className=player.className||"Unknown";
+        const battle=firstMetric(player,["battle shout uptime on you"]);
+        const miss=firstMetric(player,["miss outgoing"]);
+        const crit=firstMetric(player,["critical outgoing","critical heals done"]);
+        const consume=metricEntriesForPlayer(player).filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test))).slice(0,2);
+        const battlePercent=battle?.percent;
+        const battleClass=battlePercent===null||battlePercent===undefined?"":battlePercent<35?"bad":battlePercent<50?"warn":"";
+        return `<button class="player-card" type="button" onclick="openCharacterProfile(${attr(JSON.stringify(player.name))})">
+          <div class="player-head">
+            <div><div class="player-name">${html(player.name)}</div><div class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</div></div>
+            <span class="pill">${html(player.role||player.cluster||"Raid")}</span>
+          </div>
+          <div class="metric-list">
+            ${battle?`<div><div class="metric"><span>Battle Shout</span><strong>${html(battle.value)}</strong></div><div class="bar ${battleClass}"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div></div>`:""}
+            ${crit?`<div class="metric"><span>Crit</span><strong>${html(crit.value)}</strong></div>`:""}
+            ${miss?`<div class="metric"><span>Miss</span><strong>${html(miss.value)}</strong></div>`:""}
+            ${consume.length?consume.map(entry=>`<div class="metric"><span>${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join(""):`<div class="metric"><span>Consumables</span><strong>-</strong></div>`}
+          </div>
+        </button>`;
+      }).join("");
+      document.getElementById("overviewDashboard").innerHTML=`
+        <section class="panel panel-pad">
+          <div class="score-grid">${scoreCards.map(card=>`<div class="score-card"><div class="score-label">${html(card.label)}</div><div class="score-value">${html(card.value)}</div><div class="score-note">${html(card.note)}</div></div>`).join("")}</div>
+          <div class="player-board">${playerCards || '<div class="status">Keine Spieler erkannt.</div>'}</div>
+        </section>
+        <aside class="panel panel-pad">
+          <h2>Auffaelligkeiten</h2>
+          <div class="alert-list">${alerts.length?alerts.map(alert=>`<div class="alert ${attr(alert.type)}"><div><div class="alert-title">${html(alert.title)}</div><div class="alert-text">${html(alert.text)}</div></div></div>`).join(""):'<div class="alert good"><div><div class="alert-title">Keine groben Auffaelligkeiten</div><div class="alert-text">In den geladenen Reitern wurde nichts Kritisches erkannt.</div></div></div>'}</div>
+        </aside>`;
+    }
+    async function ensureAnalysesLoaded(){
+      if(state.analyses.length) return;
+      const data=await api({action:"getPublicLogAnalyses",limit:80,webReady:"true"});
+      state.analyses=Array.isArray(data.analyses)?data.analyses:[];
+    }
+    async function ensurePrioCharactersLoaded(){
+      if(state.prioCharactersLoaded) return;
+      state.prioCharactersLoaded=true;
+      try{
+        const data=await api({action:"getPublicPrioCharacters"});
+        const chars=Array.isArray(data.characters)?data.characters:[];
+        chars.forEach(char=>{
+          const name=String(char.name||char.player||char.Spieler||"").trim();
+          if(!isLikelyPlayerCharacterName(name)) return;
+          state.prioCharacters.set(playerKey(name), {
+            ...char,
+            name,
+            className: normalizeClassName(char.className || char.Klasse || char.class_name) || "Unknown"
+          });
+        });
+      }catch(error){
+        state.prioCharactersLoaded=false;
+      }
+    }
+    function withAnalysisContext(webAnalysis, fn){
+      const oldDetail=state.detail;
+      const oldSections=state.sections;
+      state.detail=webAnalysis;
+      state.sections=collectSections(webAnalysis);
+      try{return fn();}
+      finally{state.detail=oldDetail;state.sections=oldSections;}
+    }
+    function analysisReport(webAnalysis, fallback){
+      return webAnalysis?.report || webAnalysis?.analysis || fallback || {};
+    }
+    function extractCharacterSnapshot(webAnalysis, fallback, name){
+      return withAnalysisContext(webAnalysis, ()=>{
+        const player=allPlayers().find(p=>playerKey(p.name)===playerKey(name));
+        if(!player) return null;
+        const report=analysisReport(webAnalysis, fallback);
+        const battle=firstMetric(player,["battle shout uptime on you"]);
+        const crit=firstMetric(player,["critical outgoing","critical heals done"]);
+        const miss=firstMetric(player,["miss outgoing"]);
+        const crushing=firstMetric(player,["crushing blow incoming"]);
+        const consumes=metricEntriesForPlayer(player)
+          .filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test)))
+          .slice(0,6);
+        return {
+          id:fallback?.id || report.id || "",
+          title:report.title || fallback?.title || "Auswertung",
+          raid:raidName({...fallback,...report}),
+          date:report.raidDate || report.raid_date || fallback?.raidDate || fallback?.summary?.raidDate || "",
+          reportCode:report.reportCode || fallback?.reportCode || "",
+          player,
+          battle,crit,miss,crushing,consumes
+        };
+      });
+    }
+    function profileStat(label,value,note){
+      return `<div class="score-card"><div class="score-label">${html(label)}</div><div class="score-value">${html(value)}</div><div class="score-note">${html(note)}</div></div>`;
+    }
+    function renderCharacterProfile(name, rows, loadingText){
+      const player=rows[0]?.player || allPlayers().find(p=>playerKey(p.name)===playerKey(name)) || {name};
+      const className=player.className||"Unknown";
+      const battleValues=rows.map(row=>row.battle?.percent).filter(value=>value !== null && value !== undefined);
+      const avgBattle=battleValues.length ? Math.round(battleValues.reduce((sum,value)=>sum+value,0)/battleValues.length)+"%" : "-";
+      const lowBattle=rows.filter(row=>(row.battle?.percent ?? 100) < 35).length;
+      const consumeCount=rows.reduce((sum,row)=>sum+row.consumes.length,0);
+      document.getElementById("characterProfileTitle").innerHTML=`${html(player.name||name)} <span class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</span>`;
+      document.getElementById("characterProfileMeta").textContent=loadingText || `${rows.length} gespeicherte Raid-Auswertungen gefunden`;
+      const history=rows
+        .sort((a,b)=>String(b.date).localeCompare(String(a.date)))
+        .map(row=>{
+          const battlePercent=row.battle?.percent;
+          const battleClass=battlePercent===null||battlePercent===undefined?"":battlePercent<35?"bad":battlePercent<50?"warn":"";
+          return `<article class="history-row">
+            <div class="raid">${html(row.raid)}</div>
+            <div class="sub">${html(dateDisplay(row.date))}</div>
+            <div>
+              <div class="title">${html(row.title)}</div>
+              ${row.battle?`<div class="bar ${battleClass}" style="margin-top:8px"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div>`:""}
+              <div class="history-metrics" style="margin-top:8px">
+                <div class="history-metric"><span>Battle Shout</span><strong>${html(row.battle?.value||"-")}</strong></div>
+                <div class="history-metric"><span>Crit</span><strong>${html(row.crit?.value||"-")}</strong></div>
+                <div class="history-metric"><span>Miss</span><strong>${html(row.miss?.value||"-")}</strong></div>
+                <div class="history-metric"><span>Consumables</span><strong>${html(row.consumes.map(c=>`${c.label}: ${c.value}`).join(", ") || "-")}</strong></div>
+              </div>
+            </div>
+          </article>`;
+        }).join("");
+      document.getElementById("characterProfileBody").innerHTML=`
+        <div class="profile-stats">
+          ${profileStat("Raids",rows.length||"-","mit gespeicherten Details")}
+          ${profileStat("Battle Shout",avgBattle,"Durchschnitt")}
+          ${profileStat("Warnungen",lowBattle,"Battle Shout unter 35%")}
+          ${profileStat("Consumables",consumeCount,"gefundene Einträge")}
+        </div>
+        <section class="panel panel-pad">
+          <h2>Raid-Historie</h2>
+          <div class="raid-history">${history || '<div class="status">Für diesen Charakter wurden noch keine gespeicherten Detaildaten gefunden.</div>'}</div>
+        </section>`;
+    }
+    async function openCharacterProfile(name){
+      state.activeProfile=name;
+      document.getElementById("characterProfile").classList.remove("hidden");
+      const current=state.detail ? extractCharacterSnapshot(state.detail, state.detail?.analysis, name) : null;
+      renderCharacterProfile(name, current?[current]:[], "Aktuelle Auswertung wird angezeigt. Raid-Historie wird geladen ...");
+      try{
+        await ensureAnalysesLoaded();
+        const candidates=state.analyses.filter(a=>Number(a.rpbSheetCount||0)+Number(a.claSheetCount||0)>0);
+        const rows=[];
+        for(const entry of candidates){
+          if(state.activeProfile!==name) return;
+          let webAnalysis=state.historyCache.get(entry.id);
+          if(!webAnalysis){
+            try{
+              const data=await api({action:"getPublicLogAnalysisWeb",id:entry.id,type:"combined"});
+              webAnalysis=data.webAnalysis;
+              state.historyCache.set(entry.id, webAnalysis);
+            }catch(error){
+              continue;
+            }
+          }
+          const snapshot=extractCharacterSnapshot(webAnalysis, entry, name);
+          if(snapshot) rows.push(snapshot);
+          renderCharacterProfile(name, rows.length?rows:(current?[current]:[]), `Raid-Historie wird geladen ... ${rows.length} Treffer`);
+        }
+        renderCharacterProfile(name, rows.length?rows:(current?[current]:[]), `${rows.length} gespeicherte Raid-Auswertungen gefunden`);
+      }catch(error){
+        document.getElementById("characterProfileMeta").textContent="Raid-Historie konnte nicht geladen werden.";
+      }
+    }
+    function closeCharacterProfile(){
+      state.activeProfile="";
+      document.getElementById("characterProfile").classList.add("hidden");
+    }
+    function startListAutoRefresh(){
+      if(state.listRefreshTimer) return;
+      state.listRefreshTimer=setInterval(()=>{
+        if(state.mode==="list") loadList({silent:true}).catch(()=>{});
+      },30000);
+    }
+    function stopListAutoRefresh(){
+      if(state.listRefreshTimer) clearInterval(state.listRefreshTimer);
+      state.listRefreshTimer=null;
+    }
+    async function loadList(options={}){
+      if(!options.silent) document.getElementById("listView").innerHTML='<div class="status">Fertige Auswertungen werden geladen...</div>';
+      const data=await api({action:"getPublicLogAnalyses",limit:60,webReady:"true"});
       state.analyses=Array.isArray(data.analyses)?data.analyses:[];
       const raids=[...new Set(state.analyses.map(raidName))].sort();
       document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
@@ -184,6 +591,7 @@
     async function loadDetail(){
       const id=params.get("id")||params.get("analysisId")||"";
       if(!id){state.mode="list";return loadList();}
+      stopListAutoRefresh();
       document.getElementById("listView").classList.add("hidden");
       document.getElementById("detailView").classList.remove("hidden");
       let data;
@@ -195,17 +603,19 @@
         document.getElementById("detailView").classList.add("hidden");
         document.getElementById("listView").classList.remove("hidden");
         await loadList();
-        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese alte Auswertung hat noch keine Raidsheet-Daten. Ich zeige dir unten nur Auswertungen mit gespeicherten Raidsheets.</div>`);
+        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese Auswertung hat noch keine gespeicherten Detaildaten. Ich zeige dir unten die vorhandenen Logeinträge.</div>`);
         return;
       }
       state.detail=data.webAnalysis;
       state.sections=collectSections(state.detail);
       state.activeSection=state.sections[0]?.id||"";
       state.activeClass="";
+      await ensurePrioCharactersLoaded();
       renderDetail();
     }
     function renderList(){
       state.mode="list";
+      startListAutoRefresh();
       document.getElementById("detailView").classList.add("hidden");
       document.getElementById("listView").classList.remove("hidden");
       document.getElementById("pageTitle").textContent="Web-Auswertungen";
@@ -213,12 +623,22 @@
       const q=key(document.getElementById("search").value);
       const raid=document.getElementById("raidFilter").value;
       const list=state.analyses.filter(a=>(!raid||raidName(a)===raid)&&(!q||key([a.title,a.raid,a.reportCode,raidName(a)].join(" ")).includes(q)));
-      document.getElementById("listView").innerHTML=list.length?list.map(a=>`
+      const head=`
+        <div class="list-head">
+          <h2>Fertige Auswertungen</h2>
+          <div class="sub">${list.length} exportierte RPB/CLA-Auswertungen gefunden. Die Liste aktualisiert sich automatisch, sobald ein fertiges Sheet nach Railway exportiert wurde.</div>
+        </div>`;
+      document.getElementById("listView").innerHTML=list.length?head+list.map(a=>{
+        const hasDetails=Number(a.rpbSheetCount||0)+Number(a.claSheetCount||0)>0;
+        return `
         <article class="analysis-row">
           <div class="raid">${html(raidName(a))}</div>
           <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div><div class="meta"><span class="badge rpb">RPB ${Number(a.rpbSheetCount||0)}</span><span class="badge cla">CLA ${Number(a.claSheetCount||0)}</span></div></div>
-          <a class="btn primary" href="web-auswertung.html?id=${encodeURIComponent(a.id)}">Öffnen</a>
-        </article>`).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
+          ${hasDetails
+            ? `<a class="btn primary" href="web-auswertung.html?id=${encodeURIComponent(a.id)}&guild=${encodeURIComponent(params.get("guild")||"lichtloot")}">Auswertung öffnen</a>`
+            : `<span class="disabled-action">Details fehlen</span>`}
+        </article>`;
+      }).join(""):'<div class="status">Noch keine fertigen RPB/CLA-Auswertungen gefunden. Sobald der Generator ein Sheet nach Railway exportiert, erscheint es hier automatisch.</div>';
     }
     function renderDetail(){
       const report=state.detail?.report||state.detail?.analysis||{};
@@ -232,9 +652,10 @@
       document.getElementById("meta").innerHTML=[
         `<span class="badge">${html(report.raid||"Raid")}</span>`,
         `<span class="badge">${html(dateDisplay(report.raidDate||report.raid_date))}</span>`,
-        state.detail?.rpb?'<span class="badge rpb">RPB Raidsheet</span>':'',
+        state.detail?.rpb?`<span class="badge rpb">${state.detail?.source==="combat-log"||state.detail?.rpb?.source==="combat-log"?"Combatlog":"RPB Raidsheet"}</span>`:'',
         state.detail?.cla?'<span class="badge cla">CLA Raidsheet</span>':''
       ].filter(Boolean).join("");
+      renderDashboard();
       renderSectionTabs();
       renderClassTabs();
       renderTable();
@@ -292,7 +713,7 @@
       document.getElementById("warnings").innerHTML=warnings.length?warnings.map(html).join("<br>"):"Keine Hinweise.";
     }
     function selectSection(id){state.activeSection=id;state.activeClass="";renderDetail();}
-    function selectClass(cls){state.activeClass=cls||"";renderClassTabs();renderTable();}
+    function selectClass(cls){state.activeClass=cls||"";renderDashboard();renderClassTabs();renderTable();}
     function resetFilters(){document.getElementById("search").value="";document.getElementById("raidFilter").value="";state.activeClass="";renderCurrent();}
     function renderCurrent(){state.mode==="detail"?renderDetail():renderList();}
     function reload(){state.mode==="detail"?loadDetail().catch(showError):loadList().catch(showError);}

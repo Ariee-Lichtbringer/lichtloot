@@ -9726,6 +9726,38 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   };
 }
 
+async function getPublicPrioCharacters({ guildId }) {
+  const result = await query(
+    `select
+       c.name,
+       c.server,
+       c.class_name,
+       bool_or(coalesce(c.is_main, false)) as is_main,
+       count(distinct pr.raid_id)::int as raid_count,
+       max(r.raid_date) as last_raid_date
+     from prios pr
+     join raids r on r.id = pr.raid_id
+     join characters c on c.id = pr.character_id
+     where r.guild_id = $1
+     group by lower(c.name), lower(coalesce(c.server, '')), c.name, c.server, c.class_name
+     order by c.name asc`,
+    [guildId]
+  );
+
+  return {
+    success: true,
+    characters: result.rows.map(row => ({
+      name: row.name || "",
+      server: row.server || "",
+      className: row.class_name || "",
+      Klasse: row.class_name || "",
+      isMain: Boolean(row.is_main),
+      raidCount: Number(row.raid_count || 0),
+      lastRaidDate: row.last_raid_date ? new Date(row.last_raid_date).toISOString().slice(0, 10) : ""
+    }))
+  };
+}
+
 async function getPrioCheck({ guildId, query: params }) {
   const raid = await findRaid(guildId, params);
   if (!raid) {
@@ -12138,6 +12170,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublishedPrios") {
       const prios = await getPublishedPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...prios, guild: guild.slug });
+    }
+
+    if (action === "getPublicPrioCharacters") {
+      const characters = await getPublicPrioCharacters({ guildId: guild.id });
+      return res.json({ ...characters, guild: guild.slug });
     }
 
     if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
