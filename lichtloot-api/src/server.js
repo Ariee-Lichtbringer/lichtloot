@@ -11426,7 +11426,7 @@ async function restoreLootItemsFromStaticDataOnce() {
 }
 
 async function applyZgHakkariOffhandCorrectionOnce() {
-  const markerKey = "zg-hakkari-offhand-display-name-v5";
+  const markerKey = "zg-hakkari-offhand-item-id-135365-v1";
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -11446,7 +11446,7 @@ async function applyZgHakkariOffhandCorrectionOnce() {
     const items = [
       {
         raid: "zg",
-        itemId: "19865",
+        itemId: "135365",
         name: "Kriegsklinge der Hakkari (Offhand)",
         quality: "epic",
         iconName: "inv_sword_55",
@@ -11497,7 +11497,7 @@ async function applyZgHakkariOffhandCorrectionOnce() {
     const offhand = await client.query(
       `select id from items
        where lower(raid_type) = 'zg'
-         and item_id = '19865'
+         and item_id = '135365'
        order by created_at asc
        limit 1`
     );
@@ -11526,7 +11526,7 @@ async function applyZgHakkariOffhandCorrectionOnce() {
         `select id from items
          where lower(raid_type) = 'zg'
            and lower(name) = lower('Kriegsklinge der Hakkari (Offhand)')
-           and coalesce(item_id, '') <> '19865'`
+           and coalesce(item_id, '') <> '135365'`
       );
       for (const row of wrongRows.rows) {
         const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [offhandId, row.id]);
@@ -11543,10 +11543,10 @@ async function applyZgHakkariOffhandCorrectionOnce() {
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
        on conflict (key) do update set value = excluded.value, updated_at = now()`,
-      [markerKey, JSON.stringify({ upserted, itemIds: ["19865", "19866"], removedWrongRows, movedReferences })]
+      [markerKey, JSON.stringify({ upserted, itemIds: ["135365", "19866"], removedWrongRows, movedReferences })]
     );
     await client.query("commit");
-    console.log("ZG-Hakkari-Zwillingsklingen korrigiert: 19865 Offhand, 19866 Waffenhand");
+    console.log("ZG-Hakkari-Zwillingsklingen korrigiert: 135365 Offhand, 19866 Waffenhand");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
