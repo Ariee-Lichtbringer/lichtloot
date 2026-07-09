@@ -343,7 +343,7 @@
       const rows=matrixForSection(section);
       const players=playerByName();
       const cols=new Map();
-      rows.slice(0,3).forEach(row=>{
+      rows.forEach(row=>{
         row.forEach((cell,col)=>{
           const player=players.get(playerKey(cell));
           if(player && !cols.has(player.name)) cols.set(player.name,col);
@@ -412,6 +412,31 @@
     }
     function firstMetric(player, tests){
       const entries=metricEntriesForPlayer(player);
+      return entries.find(entry=>tests.some(test=>key(entry.label).includes(test))) || null;
+    }
+    function metricAllowedForPlayer(entry, player){
+      const label=key(entry?.label||"");
+      const section=key(sectionLabel(entry?.section)||"");
+      const className=player?.className || "Unknown";
+      const healerClasses=["Priest","Paladin","Druid","Shaman"];
+      const casterClasses=["Mage","Warlock","Priest","Druid","Shaman"];
+      const physicalClasses=["Warrior","Rogue","Hunter","Druid","Paladin"];
+      const tankClasses=["Warrior","Druid","Paladin"];
+      const isHealerMetric=section.includes("healer") || label.includes("heal") || label.includes("renew") || label.includes("rejuvenation") || label.includes("overheal");
+      const isCasterMetric=section.includes("caster") && !section.includes("physical");
+      const isPhysicalMetric=section.includes("physical");
+      const isTankMetric=section.includes("tank");
+      if(isHealerMetric && !healerClasses.includes(className)) return false;
+      if(isCasterMetric && !casterClasses.includes(className)) return false;
+      if(isPhysicalMetric && !physicalClasses.includes(className)) return false;
+      if(isTankMetric && !tankClasses.includes(className)) return false;
+      return true;
+    }
+    function allowedMetricEntries(player){
+      return metricEntriesForPlayer(player).filter(entry=>metricAllowedForPlayer(entry, player));
+    }
+    function playerMetric(player, tests){
+      const entries=allowedMetricEntries(player);
       return entries.find(entry=>tests.some(test=>key(entry.label).includes(test))) || null;
     }
     function findRowsByLabel(tests){
@@ -484,11 +509,11 @@
       ];
       const playerCards=activePlayers.map(player=>{
         const className=player.className||"Unknown";
-        const battle=firstMetric(player,["battle shout uptime on you"]);
-        const miss=firstMetric(player,["miss outgoing"]);
-        const crit=firstMetric(player,["critical outgoing","critical heals done"]);
-        const activeTotal=firstMetric(player,["relative active % total"]);
-        const sheetMetrics=importantMetricEntries(player).filter(entry=>entry!==battle && entry!==miss && entry!==crit).slice(0,4);
+        const battle=playerMetric(player,["battle shout uptime on you"]);
+        const miss=playerMetric(player,["miss outgoing"]);
+        const crit=playerMetric(player,["critical outgoing","critical heals done"]);
+        const activeTotal=playerMetric(player,["relative active % total"]);
+        const sheetMetrics=importantMetricEntries(player).filter(entry=>metricAllowedForPlayer(entry, player) && entry!==battle && entry!==miss && entry!==crit && entry!==activeTotal).slice(0,4);
         const battlePercent=battle?.percent;
         const battleClass=battlePercent===null||battlePercent===undefined?"":battlePercent<35?"bad":battlePercent<50?"warn":"";
         const activePercent=activeTotal?.percent;
@@ -559,15 +584,15 @@
         const player=allPlayers().find(p=>playerKey(p.name)===playerKey(name));
         if(!player) return null;
         const report=analysisReport(webAnalysis, fallback);
-        const battle=firstMetric(player,["battle shout uptime on you"]);
-        const crit=firstMetric(player,["critical outgoing","critical heals done"]);
-        const miss=firstMetric(player,["miss outgoing"]);
-        const crushing=firstMetric(player,["crushing blow incoming"]);
-        const activeTotal=firstMetric(player,["relative active % total"]);
-        const consumes=metricEntriesForPlayer(player)
+        const battle=playerMetric(player,["battle shout uptime on you"]);
+        const crit=playerMetric(player,["critical outgoing","critical heals done"]);
+        const miss=playerMetric(player,["miss outgoing"]);
+        const crushing=playerMetric(player,["crushing blow incoming"]);
+        const activeTotal=playerMetric(player,["relative active % total"]);
+        const consumes=allowedMetricEntries(player)
           .filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test)))
           .slice(0,6);
-        const metrics=importantMetricEntries(player);
+        const metrics=importantMetricEntries(player).filter(entry=>metricAllowedForPlayer(entry, player));
         return {
           id:fallback?.id || report.id || "",
           title:report.title || fallback?.title || "Auswertung",

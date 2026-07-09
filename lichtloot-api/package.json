@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "check": "node --check src/server.js"
+    "check": "node --check src/server.js",
+    "sheet:read": "node scripts/read-log-sheet.mjs",
+    "db:migrate:contracts": "node scripts/run-sql-file.mjs migrations/014_foerderverein_contract_files.sql",
+    "db:import:contracts": "node scripts/import-foerderverein-contracts.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
