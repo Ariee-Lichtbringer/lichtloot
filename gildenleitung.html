@@ -8823,7 +8823,7 @@ function renderLogAnalysisExportNote(entry, type, url){
   const title = exported > 0
     ? "Google-Sheet erneut nach Railway uebertragen und alte Sheet-Daten ersetzen."
     : "Google-Sheet jetzt nach Railway uebertragen.";
-  return `<button class="log-export-note" type="button" title="${escapeAttr(title)}" onclick="importLogAnalysisSheetExport('${escapeAttr(entry.id)}','${type}')">${escapeHtml(label)}</button>`;
+  return `<button class="small-btn ghost" type="button" title="${escapeAttr(title)}" onclick="importLogAnalysisSheetExport('${escapeAttr(entry.id)}','${type}')">${escapeHtml(label)}</button>`;
 }
 
 function renderLogAnalysisAction(entry, type, url){
