@@ -2080,6 +2080,21 @@ select:focus{border-color:rgba(96,165,250,.75)}
   justify-content:center;
 }
 
+.log-export-note{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:5px 8px;
+  border:1px solid rgba(251,191,36,.34);
+  border-radius:7px;
+  background:rgba(120,53,15,.18);
+  color:#fde68a;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+}
+
 .log-analysis-footer{
   display:flex;
   align-items:center;
@@ -8781,6 +8796,21 @@ function supportsLogAnalysisDiscordPost(entry){
   return ["mc","bwl","aq40","naxx"].includes(getLogAnalysisRaidKey(entry));
 }
 
+function getLogAnalysisSheetExportCount(entry, type){
+  if(!entry || !type) return 0;
+  const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
+  const direct = Number(entry[`${type}SheetCount`] || 0);
+  const fromSummary = Number(summary[`${type}SheetCount`] || 0);
+  return Math.max(0, direct, fromSummary);
+}
+
+function renderLogAnalysisExportNote(entry, type, url){
+  if(!url) return "";
+  const exported = getLogAnalysisSheetExportCount(entry, type);
+  if(exported > 0) return "";
+  return `<span class="log-export-note" title="Das Google-Sheet ist fertig, aber die Daten wurden noch nicht nach Railway uebertragen.">${type.toUpperCase()} nicht übertragen</span>`;
+}
+
 function renderLogAnalysisAction(entry, type, url){
   const label = type.toUpperCase();
   const btnClass = type === "cla" ? "primary" : "good";
@@ -8792,7 +8822,7 @@ function renderLogAnalysisAction(entry, type, url){
     ? `<button class="small-btn ghost" type="button" onclick="queueLogAnalysisDiscordPost('${escapeAttr(entry.id)}','${type}')">${label} in DC posten</button>`
     : "";
   if(url){
-    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${postButton}${clearButton}`;
+    return `<a class="small-btn ${btnClass}" href="${escapeAttr(url)}" target="_blank" rel="noopener">${label} öffnen</a>${renderLogAnalysisExportNote(entry, type, url)}${postButton}${clearButton}`;
   }
   if(state === "queued"){
     return `<button class="small-btn ${btnClass}" type="button" disabled>${label} läuft</button><button class="small-btn danger" type="button" onclick="clearLogAnalysisType('${escapeAttr(entry.id)}','${type}')">${label} abbrechen</button>`;
@@ -8804,9 +8834,13 @@ function renderLogAnalysisAction(entry, type, url){
 function renderLogAnalysisDetailAction(entry){
   if(!entry || !entry.id) return "";
   const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-  const href = `raid-analyse.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
+  const hasSheetData = getLogAnalysisSheetExportCount(entry, "cla") + getLogAnalysisSheetExportCount(entry, "rpb") > 0;
+  const href = hasSheetData
+    ? `web-auswertung.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`
+    : `raid-analyse.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
   const isCombatLog = String(entry.reportUrl || "").startsWith("combat-log://") || summary.source === "combat-log" || summary.combatLog === true;
-  return `<a class="small-btn ghost" href="${escapeAttr(href)}" target="_blank" rel="noopener">${isCombatLog ? "Combatlog öffnen" : "Analyse öffnen"}</a>`;
+  const label = isCombatLog ? "Combatlog öffnen" : hasSheetData ? "Auswertung öffnen" : "Analyse öffnen";
+  return `<a class="small-btn ghost" href="${escapeAttr(href)}" target="_blank" rel="noopener">${label}</a>`;
 }
 
 function scheduleLogAnalysisRefresh(){
