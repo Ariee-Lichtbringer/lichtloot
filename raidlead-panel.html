@@ -311,6 +311,14 @@ select{
   background:rgba(250,204,21,.10);
 }
 
+.item-picker-meta{
+  display:block;
+  margin-top:2px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:800;
+}
+
 .raidlead-item-empty{
   color:#94a3b8;
   font-weight:800;
@@ -1485,7 +1493,10 @@ let currentPrios = [];
 let currentReleased = false;
 let itemIdMap = {};
 let itemVisualMap = {};
+let itemVisualList = [];
+let itemVisualByIdMap = {};
 let raidleadItemOptions = [];
+let raidleadItemOptionMap = {};
 let raidleadItemOptionsRaidKey = "";
 let currentP0PlusEntries = [];
 let currentPrioCheck = null;
@@ -2147,18 +2158,40 @@ function renderRaidleadItemPicker(slot,label){
   `;
 }
 
+function raidleadItemOptionKey(info,index){
+  const itemId = String(info?.itemId || "").trim();
+  if(itemId) return "id:" + itemId;
+  return "name:" + itemKey(info?.name || "") + ":" + index;
+}
+
+function raidleadItemOptionSearchText(info){
+  return [
+    info?.name,
+    info?.slot,
+    info?.type,
+    info?.boss,
+    info?.itemId
+  ].filter(Boolean).join(" ");
+}
+
+function raidleadItemInfoByKey(optionKey){
+  return raidleadItemOptionMap[String(optionKey || "")] || itemVisualMap[itemKey(optionKey)] || null;
+}
+
 function renderRaidleadItemOptions(){
   return (raidleadItemOptions || [])
-    .map(name => `<option value="${safe(name)}"></option>`)
+    .map(info => `<option value="${safe(raidleadItemOptionSearchText(info))}"></option>`)
     .join("");
 }
 
-function renderRaidleadPickerItem(name){
-  const info = itemVisualMap[itemKey(name)] || {};
+function renderRaidleadPickerItem(option){
+  const info = typeof option === "object" ? option : (raidleadItemInfoByKey(option) || itemVisualMap[itemKey(option)] || {name:option});
+  const name = info.name || String(option || "");
   const quality = info.quality || "epic";
   const iconName = info.iconName || "";
+  const meta = [info.slot, info.boss, info.itemId ? "ID " + info.itemId : ""].filter(Boolean).join(" · ");
   const tooltipAttrs = `
-    onmouseenter="showTooltip(event,'${escapeQuotes(name)}')"
+    onmouseenter="showTooltip(event,'${escapeQuotes(name)}','${escapeQuotes(info.itemId || "")}')"
     onmousemove="moveTooltip(event)"
     onmouseleave="hideTooltip()"
   `;
@@ -2166,26 +2199,29 @@ function renderRaidleadPickerItem(name){
   return `
     <span class="item-name item-${safe(quality)} item-with-icon" ${tooltipAttrs}>
       <img class="item-icon" src="${getIconUrl(iconName)}" alt="" loading="lazy" onerror="iconFallback(this)">
-      <span>${safe(name)}</span>
+      <span>${safe(name)}${meta ? `<small class="item-picker-meta">${safe(meta)}</small>` : ""}</span>
     </span>
   `;
 }
 
 function renderRaidleadItemOptionsForSlot(slot,filter){
   const needle = itemKey(filter || "");
-  const names = (raidleadItemOptions || [])
-    .filter(name => !needle || itemKey(name).includes(needle))
+  const items = (raidleadItemOptions || [])
+    .filter(info => !needle || itemKey(raidleadItemOptionSearchText(info)).includes(needle))
     .slice(0,80);
 
-  if(!names.length){
+  if(!items.length){
     return `<div class="raidlead-item-empty">Kein Item gefunden.</div>`;
   }
 
-  return names.map(name => `
-    <button class="raidlead-item-option" type="button" data-item="${safe(name)}" onclick="selectRaidleadPrioItemFromButton('${safe(slot)}',this)">
-      ${renderRaidleadPickerItem(name)}
+  return items.map((info,index) => {
+    const optionKey = raidleadItemOptionKey(info,index);
+    raidleadItemOptionMap[optionKey] = info;
+    return `
+    <button class="raidlead-item-option" type="button" data-item-key="${safe(optionKey)}" onclick="selectRaidleadPrioItemFromButton('${safe(slot)}',this)">
+      ${renderRaidleadPickerItem(info)}
     </button>
-  `).join("");
+  `}).join("");
 }
 
 async function loadRaidleadItemOptions(){
@@ -2195,16 +2231,20 @@ async function loadRaidleadItemOptions(){
   }
 
   try{
-    const visualNames = Object.values(itemVisualMap || {}).map(info => info.name).filter(Boolean);
-    if(visualNames.length){
-      raidleadItemOptions = [...new Set(visualNames)].sort((a,b) => a.localeCompare(b,"de"));
+    raidleadItemOptionMap = {};
+    const visualItems = (itemVisualList || []).filter(info => info && info.name);
+    if(visualItems.length){
+      raidleadItemOptions = visualItems.sort((a,b) => raidleadItemOptionSearchText(a).localeCompare(raidleadItemOptionSearchText(b),"de"));
     }else{
       const rows = await fetchRailwayLootRows(currentRaidKey);
-      raidleadItemOptions = [...new Set(rows
-        .map(obj => normalizeJsonLootItem(obj).name)
-        .filter(Boolean))]
-        .sort((a,b) => a.localeCompare(b,"de"));
+      raidleadItemOptions = rows
+        .map(obj => normalizeJsonLootItem(obj))
+        .filter(info => info.name)
+        .sort((a,b) => raidleadItemOptionSearchText(a).localeCompare(raidleadItemOptionSearchText(b),"de"));
     }
+    raidleadItemOptions.forEach((info,index) => {
+      raidleadItemOptionMap[raidleadItemOptionKey(info,index)] = info;
+    });
     raidleadItemOptionsRaidKey = currentRaidKey;
     refreshRaidleadItemPickerLists();
   }catch(error){
@@ -2242,16 +2282,19 @@ function filterRaidleadItemPicker(slot){
   if(list) list.innerHTML = renderRaidleadItemOptionsForSlot(slot, search?.value || "");
 }
 
-function selectRaidleadPrioItem(slot,name){
+function selectRaidleadPrioItem(slot,optionKey){
+  const info = raidleadItemInfoByKey(optionKey) || {name:optionKey};
+  const name = info.name || "";
   const input = document.getElementById("raidleadPrio" + slot);
   const trigger = document.getElementById("raidleadPrio" + slot + "Trigger");
   const menu = document.getElementById("raidleadPrio" + slot + "Menu");
   const search = document.getElementById("raidleadPrio" + slot + "Search");
 
   if(input) input.value = name;
+  if(input) input.dataset.itemId = info.itemId || "";
   if(trigger){
     trigger.innerHTML = `
-      <span>${renderRaidleadPickerItem(name)}</span>
+      <span>${renderRaidleadPickerItem(info)}</span>
       <span>⌄</span>
     `;
   }
@@ -2261,7 +2304,7 @@ function selectRaidleadPrioItem(slot,name){
 }
 
 function selectRaidleadPrioItemFromButton(slot,button){
-  selectRaidleadPrioItem(slot, button?.dataset?.item || "");
+  selectRaidleadPrioItem(slot, button?.dataset?.itemKey || "");
 }
 
 function renderRaidRowsOnly(){
@@ -2785,6 +2828,10 @@ function raidleadPrioValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
+function raidleadPrioItemId(id){
+  return String(document.getElementById(id)?.dataset?.itemId || "").trim();
+}
+
 async function saveRaidleadPrioForPlayer(){
   const status = document.getElementById("raidleadPrioStatus");
   const saveButton = document.querySelector('button[onclick="saveRaidleadPrioForPlayer()"]');
@@ -2798,13 +2845,18 @@ async function saveRaidleadPrioForPlayer(){
   const server = raidleadPrioValue("raidleadPrioServer");
   const playerClass = raidleadPrioValue("raidleadPrioClass");
   const p1 = raidleadPrioValue("raidleadPrioP1");
+  const p1ItemId = raidleadPrioItemId("raidleadPrioP1");
   const isP0Plus = hasP0Control() && Boolean(document.getElementById("raidleadPrioP0Plus")?.checked);
   let p2 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP2");
   let p3 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP3");
+  let p2ItemId = isP1OnlyRaid() ? "" : raidleadPrioItemId("raidleadPrioP2");
+  let p3ItemId = isP1OnlyRaid() ? "" : raidleadPrioItemId("raidleadPrioP3");
 
   if(isP0Plus && !isP1OnlyRaid()){
     p2 = p2 || p1;
     p3 = p3 || p1;
+    p2ItemId = p2ItemId || p1ItemId;
+    p3ItemId = p3ItemId || p1ItemId;
   }
 
   if(!player || !server || !playerClass || !p1 || (!isP1OnlyRaid() && !isP0Plus && (!p2 || !p3))){
@@ -2834,6 +2886,9 @@ async function saveRaidleadPrioForPlayer(){
     "&p1=" + encodeURIComponent(p1) +
     "&p2=" + encodeURIComponent(p2) +
     "&p3=" + encodeURIComponent(p3) +
+    "&p1ItemId=" + encodeURIComponent(p1ItemId) +
+    "&p2ItemId=" + encodeURIComponent(p2ItemId) +
+    "&p3ItemId=" + encodeURIComponent(p3ItemId) +
     "&p0Plus=" + encodeURIComponent(isP0Plus ? "ja" : "nein") +
     "&t=" + Date.now();
 
@@ -3157,6 +3212,8 @@ function normalizeJsonLootItem(obj){
 }
 async function loadItemVisualData(){
   itemVisualMap = {};
+  itemVisualList = [];
+  itemVisualByIdMap = {};
   itemIdMap = {};
 
   try{
@@ -3167,9 +3224,11 @@ async function loadItemVisualData(){
       if(!info.name) return;
 
       const key = itemKey(info.name);
-      itemVisualMap[key] = info;
+      itemVisualList.push(info);
+      if(!itemVisualMap[key]) itemVisualMap[key] = info;
 
       if(info.itemId){
+        itemVisualByIdMap[info.itemId] = info;
         itemIdMap[key] = info.itemId;
       }
     });
@@ -3222,7 +3281,9 @@ function iconFallback(img){
   img.src = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 }
 
-function findItemInfo(itemName){
+function findItemInfo(itemName,itemId){
+  const id = String(itemId || "").trim();
+  if(id && itemVisualByIdMap[id]) return itemVisualByIdMap[id];
   return itemVisualMap[itemKey(itemName)] || null;
 }
 
@@ -3244,9 +3305,9 @@ function renderTooltipLines(text){
     }).join("");
 }
 
-function showTooltip(event,itemName){
+function showTooltip(event,itemName,itemId){
   const tooltip = document.getElementById("tooltip");
-  const item = findItemInfo(itemName);
+  const item = findItemInfo(itemName,itemId);
   if(!tooltip || !item) return;
 
   const stats = (item.stats || [])
