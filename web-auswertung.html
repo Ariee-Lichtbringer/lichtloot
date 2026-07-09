@@ -563,6 +563,7 @@
         const crit=firstMetric(player,["critical outgoing","critical heals done"]);
         const miss=firstMetric(player,["miss outgoing"]);
         const crushing=firstMetric(player,["crushing blow incoming"]);
+        const activeTotal=firstMetric(player,["relative active % total"]);
         const consumes=metricEntriesForPlayer(player)
           .filter(entry=>["potion","rune","healthstone","mana ruby"].some(test=>key(entry.label).includes(test)))
           .slice(0,6);
@@ -574,7 +575,7 @@
           date:report.raidDate || report.raid_date || fallback?.raidDate || fallback?.summary?.raidDate || "",
           reportCode:report.reportCode || fallback?.reportCode || "",
           player,
-          battle,crit,miss,crushing,consumes,metrics
+          battle,crit,miss,crushing,activeTotal,consumes,metrics
         };
       });
     }
@@ -597,7 +598,9 @@
       const player=rows[0]?.player || allPlayers().find(p=>playerKey(p.name)===playerKey(name)) || {name};
       const className=player.className||"Unknown";
       const battleValues=rows.map(row=>row.battle?.percent).filter(value=>value !== null && value !== undefined);
+      const activeValues=rows.map(row=>row.activeTotal?.percent).filter(value=>value !== null && value !== undefined);
       const avgBattle=battleValues.length ? Math.round(battleValues.reduce((sum,value)=>sum+value,0)/battleValues.length)+"%" : "-";
+      const avgActive=activeValues.length ? Math.round(activeValues.reduce((sum,value)=>sum+value,0)/activeValues.length)+"%" : "-";
       const lowBattle=rows.filter(row=>(row.battle?.percent ?? 100) < 35).length;
       const metricCount=rows.reduce((sum,row)=>sum+(row.metrics?.length||0),0);
       document.getElementById("characterProfileTitle").innerHTML=`${html(player.name||name)} <span class="player-class" style="color:${CLASS_COLOR[className]||'#cbd5e1'}">${html(CLASS_LABEL[className]||className)}</span>`;
@@ -616,9 +619,9 @@
               ${row.battle?`<div class="bar ${battleClass}" style="margin-top:8px"><span style="width:${Math.max(0,Math.min(100,battlePercent||0))}%"></span></div>`:""}
               <div class="history-metrics" style="margin-top:8px">
                 <div class="history-metric"><span>Battle Shout</span><strong>${html(row.battle?.value||"-")}</strong></div>
+                <div class="history-metric"><span>Active %</span><strong>${html(row.activeTotal?.value||"-")}</strong></div>
                 <div class="history-metric"><span>Crit</span><strong>${html(row.crit?.value||"-")}</strong></div>
                 <div class="history-metric"><span>Miss</span><strong>${html(row.miss?.value||"-")}</strong></div>
-                <div class="history-metric"><span>Sheet-Infos</span><strong>${html((row.metrics||[]).length || "-")}</strong></div>
               </div>
               <div class="metric-compact">
                 ${shownMetrics.map(entry=>`<div class="metric-chip"><span>${html(sectionLabel(entry.section))} · ${html(entry.label)}</span><strong>${html(entry.value)}</strong></div>`).join("") || '<div class="sub">Keine weiteren Sheet-Infos gefunden.</div>'}
@@ -629,6 +632,7 @@
       document.getElementById("characterProfileBody").innerHTML=`
         <div class="profile-stats">
           ${profileStat("Raids",rows.length||"-","mit gespeicherten Details")}
+          ${profileStat("Active %",avgActive,"Durchschnitt")}
           ${profileStat("Battle Shout",avgBattle,"Durchschnitt")}
           ${profileStat("Warnungen",lowBattle,"Battle Shout unter 35%")}
           ${profileStat("Sheet-Infos",metricCount,"gefundene Werte")}
