@@ -2070,10 +2070,16 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .log-action-stack{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(112px,1fr));
+  display:flex;
+  flex-direction:column;
   gap:6px;
-  min-width:390px;
+  min-width:520px;
+}
+
+.log-action-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(118px,1fr));
+  gap:6px;
 }
 
 .log-action-stack .small-btn{
@@ -9003,10 +9009,12 @@ function renderLogAnalyses(){
         <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
         <td>
           <div class="log-action-stack">
-            ${renderLogAnalysisDetailAction(entry)}
-            ${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}
-            ${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}
-            ${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""}
+            <div class="log-action-row">
+              ${renderLogAnalysisDetailAction(entry)}
+              ${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""}
+            </div>
+            <div class="log-action-row">${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}</div>
+            <div class="log-action-row">${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}</div>
           </div>
         </td>
       </tr>

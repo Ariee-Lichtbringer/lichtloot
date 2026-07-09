@@ -12202,6 +12202,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildImportLogAnalysisSheetExport") {
+      const imported = await importLogAnalysisSheetExportFromUrl({ guildId: guild.id, query: req.query });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
     if (action === "guildDownloadLogAnalysis") {
       return await downloadLogAnalysis({ guildId: guild.id, query: req.query, res });
     }
@@ -12843,6 +12848,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSaveLogAnalysisSheetExport" || action === "saveLogAnalysisSheetExport") {
       const saved = await saveLogAnalysisSheetExport({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildImportLogAnalysisSheetExport") {
+      const imported = await importLogAnalysisSheetExportFromUrl({ guildId: guild.id, query: postParams });
+      return res.json({ ...imported, guild: guild.slug });
     }
 
     if (action === "setPublicLogAnalysisRaidRoles") {
