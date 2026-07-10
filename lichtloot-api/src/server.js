@@ -8996,14 +8996,10 @@ async function findRaid(guildId, params) {
     } else {
       identityClauses.push(`external_raid_id = $${values.length}`);
     }
-  }
-
-  if (leadPin) {
+  } else if (leadPin) {
     values.push(leadPin);
     identityClauses.push(`lead_pin = $${values.length}`);
-  }
-
-  if (prioPin) {
+  } else if (prioPin) {
     values.push(prioPin);
     identityClauses.push(`raid_pin = $${values.length}`);
   }
