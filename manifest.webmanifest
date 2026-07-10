@@ -1,0 +1,20 @@
+{
+  "name": "LichtLoot",
+  "short_name": "LichtLoot",
+  "description": "LichtLoot Lootsystem und Raid-Dashboard",
+  "lang": "de",
+  "start_url": "start.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#05070b",
+  "theme_color": "#05070b",
+  "icons": [
+    {
+      "src": "images/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

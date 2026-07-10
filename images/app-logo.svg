@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="300" viewBox="0 0 820 300">
+  <defs>
+    <radialGradient id="sigil" cx="50%" cy="45%" r="64%">
+      <stop offset="0" stop-color="#fff7ad"/>
+      <stop offset=".38" stop-color="#facc15"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </radialGradient>
+    <linearGradient id="word" x1="160" y1="84" x2="660" y2="220">
+      <stop offset="0" stop-color="#fff8bf"/>
+      <stop offset=".45" stop-color="#facc15"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="820" height="300" fill="none"/>
+  <circle cx="138" cy="150" r="90" fill="#05070b" opacity=".92"/>
+  <circle cx="138" cy="150" r="74" fill="url(#sigil)"/>
+  <path d="M138 68c11 43 39 68 82 81-46 12-72 39-82 118-10-79-36-106-82-118 43-13 71-38 82-81z" fill="#fff8bf"/>
+  <path d="M138 102c7 24 24 40 48 48-26 8-42 26-48 72-6-46-22-64-48-72 24-8 41-24 48-48z" fill="#f59e0b"/>
+  <text x="250" y="146" font-family="Arial, Helvetica, sans-serif" font-size="74" font-weight="900" fill="url(#word)">LICHTLOOT</text>
+  <text x="254" y="202" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="800" fill="#cbd5e1" letter-spacing="3">LOOTSYSTEM</text>
+</svg>

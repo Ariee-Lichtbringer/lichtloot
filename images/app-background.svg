@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset=".52" stop-color="#06111f"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <radialGradient id="light" cx="52%" cy="23%" r="54%">
+      <stop offset="0" stop-color="#facc15" stop-opacity=".38"/>
+      <stop offset=".34" stop-color="#b7791f" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#020617" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1800" height="1200" fill="url(#sky)"/>
+  <rect width="1800" height="1200" fill="url(#light)"/>
+  <path d="M0 840c170-82 318-116 444-102 142 16 224 86 358 92 158 8 283-80 430-100 177-24 357 48 568 138v332H0z" fill="#07111f" opacity=".86"/>
+  <path d="M0 968c225-80 394-106 548-78 132 24 252 82 408 72 186-12 340-110 526-100 105 6 203 38 318 92v246H0z" fill="#020617" opacity=".9"/>
+  <g opacity=".18" stroke="#facc15" stroke-width="2">
+    <path d="M168 200h240M1328 220h310M1060 146h150M542 314h180"/>
+    <path d="M352 196l38-38 38 38-38 38zM1478 215l34-34 34 34-34 34zM1140 144l28-28 28 28-28 28z"/>
+  </g>
+</svg>
