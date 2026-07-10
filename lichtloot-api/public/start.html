@@ -6464,7 +6464,7 @@ async function loadRaidPrioListIntoDetail(entry){
   const block=document.getElementById("raidPrioListBlock");
   if(!block) return;
 
-  const raidId=entry.raidId || "";
+  const raidId=entry.externalRaidId || entry.raidId || "";
   const raidKey=entry.raid || raidKeyFromEntryRaid(entry.raidName || "");
   const pin=entry.prioPin || entry.raidPin || entry.externalRaidId || "";
 
@@ -6479,7 +6479,7 @@ async function loadRaidPrioListIntoDetail(entry){
       raid:raidKey
     };
     if(raidId) request.raidId=raidId;
-    if(pin) request.playerPin=pin;
+    if(!raidId && pin) request.playerPin=pin;
 
     const result=await fetchRaidApiJsonp(request);
 
