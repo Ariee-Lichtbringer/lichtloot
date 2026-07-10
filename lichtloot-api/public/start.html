@@ -4348,6 +4348,11 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/apps-script?"+search.toString());
   }
 
+  if(params.action === "getPublishedPrios"){
+    const search=new URLSearchParams(params);
+    return await fetchRailwayApi("/api/apps-script?"+search.toString());
+  }
+
   return null;
 }
 
