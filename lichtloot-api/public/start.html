@@ -1424,6 +1424,61 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .tooltip-title{font-size:14px!important}.tooltip-row,.tooltip-stat,.tooltip-bind,.tooltip-equip{font-size:12px!important;line-height:1.3!important}
 @media(max-width:700px){#myPrioDetailModal .myprio-detail-box{min-width:0!important;width:calc(100vw - 18px)!important;height:calc(100vh - 18px)!important;resize:none!important}#myPrioDetailModal .myprio-own-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
+@media(max-width:700px){
+  #myPrioDetailModal.report-modal{padding:8px!important}
+  #myPrioDetailModal .report-head{
+    position:sticky!important;
+    top:0!important;
+    z-index:8!important;
+    padding-bottom:8px!important;
+    background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(7,13,26,.98))!important;
+  }
+  #myPrioDetailModal #myPrioDetailContent{padding-right:0!important}
+  #myPrioDetailModal .myprio-detail-title{font-size:20px!important;overflow-wrap:anywhere!important}
+  #myPrioDetailModal .myprio-own-summary{grid-template-columns:1fr!important;gap:7px!important}
+  #myPrioDetailModal .raid-prio-list-block{padding:9px!important;margin-top:8px!important}
+  #myPrioDetailModal .raid-prio-list-block h3{font-size:17px!important}
+  #myPrioDetailModal .raid-prio-list-block .myprio-table-wrap{
+    border:0!important;
+    background:transparent!important;
+    overflow:visible!important;
+  }
+  #myPrioDetailModal .raid-prio-list-block .myprio-table,
+  #myPrioDetailModal .raid-prio-list-block .myprio-table tbody,
+  #myPrioDetailModal .raid-prio-list-block .myprio-table tr,
+  #myPrioDetailModal .raid-prio-list-block .myprio-table td{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  #myPrioDetailModal .raid-prio-list-block .myprio-table thead{display:none!important}
+  #myPrioDetailModal .raid-prio-list-block .myprio-table tr{
+    margin:0 0 10px!important;
+    padding:10px!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:10px!important;
+    background:rgba(2,6,23,.62)!important;
+  }
+  #myPrioDetailModal .raid-prio-list-block .myprio-table td{
+    padding:7px 0!important;
+    border-bottom:1px solid rgba(255,255,255,.08)!important;
+    overflow-wrap:anywhere!important;
+    line-height:1.35!important;
+  }
+  #myPrioDetailModal .raid-prio-list-block .myprio-table td:last-child{border-bottom:0!important}
+  #myPrioDetailModal .raid-prio-list-block .myprio-table td:before{
+    content:attr(data-label);
+    display:block;
+    margin-bottom:3px;
+    color:#facc15;
+    font-size:10px;
+    font-weight:950;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  #myPrioDetailModal .raid-prio-list-block .myprio-table td[data-label="#"]{display:none!important}
+}
+
 
 
 
@@ -2167,7 +2222,7 @@ body.raid-create-open:before{
       <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
       <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><span class="start-side-icon">✚</span><span>Raid erstellen</span></button>
       <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
-    </nav><div class="start-side-spacer"></div><button class="start-side-link" onclick="goHomeView()"><span class="start-side-icon">▣</span><span>Sperren</span></button>
+    </nav>
   </aside>
   <main class="start-main">
     <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/app-icon.svg" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
@@ -6719,13 +6774,13 @@ function renderFullRaidPrioTable(prios, entry){
   sortedPrios.forEach((prio,index)=>{
     const rowEntry={raid:entry.raid,raidName:entry.raidName};
     html+=`<tr>
-      <td>${index+1}</td>
-      <td>${safeHtml(prio.Spieler || "")}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
-      <td>${safeHtml(prio.Klasse || "")}</td>
-      <td>${myPrioItemHtml(rowEntry, prio.P1)}</td>
-      <td>${myPrioItemHtml(rowEntry, prio.P2)}</td>
-      <td>${myPrioItemHtml(rowEntry, prio.P3)}</td>
-      <td><strong>${safeHtml(prio.P0Plus || "nein")}</strong></td>
+      <td data-label="#">${index+1}</td>
+      <td data-label="Spieler">${safeHtml(prio.Spieler || "")}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
+      <td data-label="Klasse">${safeHtml(prio.Klasse || "")}</td>
+      <td data-label="P1">${myPrioItemHtml(rowEntry, prio.P1)}</td>
+      <td data-label="P2">${myPrioItemHtml(rowEntry, prio.P2)}</td>
+      <td data-label="P3">${myPrioItemHtml(rowEntry, prio.P3)}</td>
+      <td data-label="P0/P0+"><strong>${safeHtml(prio.P0Plus || "nein")}</strong></td>
     </tr>`;
   });
 
