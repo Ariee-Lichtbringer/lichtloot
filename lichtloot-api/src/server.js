@@ -3823,6 +3823,13 @@ async function getPlayerPrioHistory(guildId, params) {
     throw error;
   }
 
+  const historyParams = [guildId, character.name];
+  let historyServerClause = "";
+  if (clean(character.server)) {
+    historyParams.push(character.server);
+    historyServerClause = `and lower(c.server) = lower($${historyParams.length})`;
+  }
+
   const result = await query(
     `select
        pr.id,
@@ -3845,10 +3852,14 @@ async function getPlayerPrioHistory(guildId, params) {
      left join items i1 on i1.id = pr.p1_item_id
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
-     where pr.character_id = $1
+     join characters c on c.id = pr.character_id
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+       ${historyServerClause}
      order by r.raid_date desc, pr.updated_at desc
-     limit 25`,
-    [character.id]
+     limit 100`,
+    historyParams
   );
 
   const pointsResult = await query(
