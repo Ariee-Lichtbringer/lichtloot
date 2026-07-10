@@ -1033,7 +1033,7 @@ body{
   background:rgba(2,6,23,.38);
   padding:12px;
   margin-top:12px;
-  overflow:auto;
+  overflow:visible;
 }
 .raid-prio-list-count{
   color:#94a3b8;
@@ -1042,11 +1042,12 @@ body{
   margin:0 0 8px;
 }
 .raid-prio-list-block .myprio-table-wrap{
-  max-height:360px;
-  overflow:auto;
+  max-height:none;
+  overflow:visible;
 }
 .raid-prio-list-block .myprio-table{
-  min-width:1420px;
+  min-width:0;
+  width:100%;
   table-layout:fixed;
 }
 .raid-prio-list-block .myprio-table th:nth-child(1),
@@ -1312,14 +1313,14 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 /* === FINAL: Mein-LichtLoot Priolisten-Modal feiner und resizebar === */
 #myPrioDetailModal.report-modal{z-index:52000!important;padding:14px!important;align-items:center!important;justify-content:center!important}
 #myPrioDetailModal .myprio-detail-box{
-  width:min(940px,calc(100vw - 32px))!important;
-  height:min(760px,calc(100vh - 32px))!important;
+  width:min(1180px,calc(100vw - 32px))!important;
+  height:auto!important;
   min-width:520px!important;
   min-height:420px!important;
   max-width:calc(100vw - 20px)!important;
   max-height:calc(100vh - 20px)!important;
   resize:both!important;
-  overflow:hidden!important;
+  overflow:auto!important;
   border-radius:14px!important;
   padding:16px!important;
   font-size:13px!important;
@@ -1337,10 +1338,10 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 #myPrioDetailModal .my-own-p0-block{border-radius:10px!important;margin-top:8px!important;max-height:150px!important;overflow:auto!important}
 #myPrioDetailModal .myprio-detail-row{grid-template-columns:46px minmax(0,1fr)!important;gap:8px!important;padding:6px 0!important;font-size:13px!important}
 #myPrioDetailModal .raid-prio-list-block{border-radius:12px!important;margin-top:10px!important;padding:10px!important;max-height:none!important;overflow:visible!important}
-#myPrioDetailModal .raid-prio-list-block .myprio-table-wrap{max-height:360px!important;overflow:auto!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table-wrap{max-height:none!important;overflow:visible!important}
 #myPrioDetailModal .raid-prio-list-block h3{font-size:18px!important;margin:2px 0 6px!important}
 #myPrioDetailModal .raid-prio-list-block .myprio-detail-subtitle{font-size:12px!important}
-#myPrioDetailModal .raid-prio-list-block .myprio-table{min-width:980px!important;font-size:12px!important;table-layout:fixed!important}
+#myPrioDetailModal .raid-prio-list-block .myprio-table{min-width:0!important;width:100%!important;font-size:12px!important;table-layout:fixed!important}
 #myPrioDetailModal .raid-prio-list-block .myprio-table th,
 #myPrioDetailModal .raid-prio-list-block .myprio-table td{padding:7px 8px!important;line-height:1.25!important}
 #myPrioDetailModal .raid-prio-list-block .myprio-table th{font-size:11px!important;letter-spacing:.04em!important}
