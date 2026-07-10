@@ -1707,7 +1707,10 @@ function worldbuffCsvRowsToBuffs(text) {
 
 function worldbuffTickerRowsToBuffs(text) {
   return parseCsvRows(text).map(row => {
-    const cells = row.map(clean).filter(Boolean);
+    let cells = row.map(clean).filter(Boolean);
+    if (cells.length < 3) {
+      cells = splitWorldbuffTickerTextLine(cells.join(" "));
+    }
     if (cells.length < 3) return null;
     const dateCell = cells.find(cell => /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(cell) || /^\d{4}-\d{2}-\d{2}$/.test(cell));
     const timeCell = cells.find(cell => /^\d{1,2}:\d{2}(?::\d{2})?$/.test(cell));
@@ -1721,6 +1724,31 @@ function worldbuffTickerRowsToBuffs(text) {
       source: "Worldbuffticker"
     });
   }).filter(Boolean);
+}
+
+function splitWorldbuffTickerTextLine(line) {
+  const text = clean(line).replace(/\s+/g, " ");
+  if (!text || /^\/{3,}$/.test(text)) return [];
+  const buffWords = "(Hakkar|ZG|Ony|Onyxia|Nef|Nefarian|Rend)";
+  const dateWords = "(\\d{1,2}\\.\\d{1,2}\\.\\d{4}|\\d{4}-\\d{2}-\\d{2})";
+  const dayWords = "(?:Mo|Di|Mi|Do|Fr|Sa|So|Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag)";
+  const timeWords = "(\\d{1,2}:\\d{2}(?::\\d{2})?)";
+  const patterns = [
+    new RegExp(`^${buffWords}\\s+${dateWords}\\s+${dayWords}\\s+${timeWords}\\s+(.+)$`, "i"),
+    new RegExp(`^${dateWords}\\s+${dayWords}\\s+${timeWords}\\s+${buffWords}\\s+(.+)$`, "i"),
+    new RegExp(`^${buffWords}\\s+${dateWords}\\s+${timeWords}\\s+(.+)$`, "i"),
+    new RegExp(`^${dateWords}\\s+${timeWords}\\s+${buffWords}\\s+(.+)$`, "i")
+  ];
+
+  for (const [index, pattern] of patterns.entries()) {
+    const match = text.match(pattern);
+    if (!match) continue;
+    if (index === 0 || index === 2) {
+      return [match[1], match[2], match[3], match[4]];
+    }
+    return [match[3], match[1], match[2], match[4]];
+  }
+  return [];
 }
 
 function worldbuffTimestamp(entry) {
@@ -2439,9 +2467,54 @@ async function setHordenbuffEntry({ guildId, query: params }) {
     }
 
     if (existingEntry) {
-      event = { id: existingEntry.event_id };
+      event = {
+        id: existingEntry.event_id,
+        buff: existingEntry.buff,
+        event_date: existingEntry.event_date,
+        event_time: existingEntry.event_time,
+        faction: existingEntry.faction,
+        event_status: existingEntry.event_status,
+        event_note: existingEntry.event_note
+      };
     } else {
       event = await upsertHordenbuffEvent(client, guildId, params);
+    }
+
+    const requestedDate = parseDateValue(params.datum || params.date || params.eventDate || event.event_date);
+    const requestedTime = clean(params.uhrzeit || params.time || params.eventTime || event.event_time);
+    const requestedFaction = clean(params.gilde || params.guild || params.fraktion || params.faction || event.faction || "Horde");
+    const eventChanged = existingEntry && (
+      requestedDate !== parseDateValue(event.event_date) ||
+      requestedTime !== clean(event.event_time) ||
+      requestedFaction !== clean(event.faction || "Horde")
+    );
+
+    if (eventChanged) {
+      const targetEvent = await upsertHordenbuffEvent(client, guildId, {
+        ...params,
+        datum: requestedDate,
+        uhrzeit: requestedTime,
+        faction: requestedFaction,
+        fraktion: requestedFaction,
+        buff: event.buff || "Rend",
+        eventStatus: event.event_status || "offen",
+        eventNote: event.event_note || ""
+      });
+      await client.query(
+        `update hordenbuff_entries
+         set event_id = $2,
+             updated_at = now()
+         where event_id = $1`,
+        [event.id, targetEvent.id]
+      );
+      await client.query(
+        `delete from hordenbuff_events
+         where id = $1
+           and guild_id = $2
+           and not exists (select 1 from hordenbuff_entries where event_id = $1)`,
+        [event.id, guildId]
+      );
+      event = targetEvent;
     }
 
     const allyChar = clean(params.charakter || params.allyChar || params.ally_char);
@@ -2509,6 +2582,7 @@ async function setHordenbuffEntry({ guildId, query: params }) {
     }
 
     await client.query("commit");
+    await enqueueBotUpdate({ guildId, type: "hordenbuff_update", payload: { source: "hordenbuff_saved" } }).catch(() => {});
     return { success: true, rowNumber: saved.rows[0].id };
   } catch (error) {
     await client.query("rollback").catch(() => {});

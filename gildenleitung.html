@@ -8009,7 +8009,7 @@ function renderWorldbuffRows(){
       <tr class="${dateClass}">
         ${renderBuffGroupCell(formatWorldbuffDay(entry.tag, entry.datum), hideDateCells)}
         ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
-        ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
+        <td class="${hideTimeCell ? "buff-group-empty" : ""}">${hideTimeCell ? "" : `<input id="worldbuffTime_${index}" class="worldbuff-status" type="time" value="${escapeAttr(entry.uhrzeit || "")}" aria-label="Uhrzeit">`}</td>
         <td>${renderWorldbuffBuffControl(entry, index)}</td>
         <td>${escapeHtml(entry.gilde || "-")}</td>
         <td><input id="worldbuffCaster_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
@@ -8145,6 +8145,8 @@ async function saveWorldbuffCaster(index){
 
   const charakter = document.getElementById(`worldbuffCaster_${index}`).value.trim();
   const status = document.getElementById(`worldbuffStatus_${index}`).value.trim();
+  const timeField = document.getElementById(`worldbuffTime_${index}`);
+  const uhrzeit = timeField ? timeField.value.trim() : (entry.uhrzeit || "");
   const buffField = document.getElementById(`worldbuffBuff_${index}`);
   const buff = buffField ? buffField.value.trim() : (entry.buff || "");
 
@@ -8155,7 +8157,7 @@ async function saveWorldbuffCaster(index){
       rowNumber:entry.rowNumber,
       buff,
       datum:entry.datum || "",
-      uhrzeit:entry.uhrzeit || "",
+      uhrzeit,
       gilde:entry.gilde || "",
       charakter,
       status
@@ -8167,8 +8169,10 @@ async function saveWorldbuffCaster(index){
     }
 
     entry.buff = buff;
+    entry.uhrzeit = uhrzeit;
     entry.charakter = charakter;
     entry.status = normalizeBuffStatus(status);
+    renderWorldbuffRows();
     setStatus("Worldbuff gespeichert. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Worldbuff konnte nicht gespeichert werden.", "bad");
@@ -8479,7 +8483,7 @@ function renderHordenbuffRows(){
       <tr class="${dateClass}">
         ${renderBuffGroupCell(entry.tag || "-", hideDateCells)}
         ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
-        ${renderBuffGroupCell(entry.uhrzeit || "-", hideTimeCell)}
+        <td class="${hideTimeCell ? "buff-group-empty" : ""}">${hideTimeCell ? "" : `<input id="hordenbuffTime_${index}" class="worldbuff-status" type="time" value="${escapeAttr(entry.uhrzeit || "")}" aria-label="Uhrzeit">`}</td>
         <td>${renderWorldbuffBadge(entry.buff)}</td>
         <td>${escapeHtml(entry.gilde || "-")}</td>
         <td><input id="hordenbuffChar_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
@@ -8513,12 +8517,17 @@ async function saveHordenbuffEntry(index){
   const uebernehmer = document.getElementById(`hordenbuffHelper_${index}`).value.trim();
   const status = document.getElementById(`hordenbuffStatus_${index}`).value.trim();
   const note = document.getElementById(`hordenbuffNote_${index}`).value.trim();
+  const timeField = document.getElementById(`hordenbuffTime_${index}`);
+  const uhrzeit = timeField ? timeField.value.trim() : (entry.uhrzeit || "");
 
   try{
     const result = await railwayWrite({
       action:"guildSetHordenbuffEntry",
       masterCode,
       rowNumber:entry.rowNumber,
+      eventId:entry.eventId,
+      datum:entry.datum || "",
+      uhrzeit,
       charakter,
       uebernehmer,
       status,
