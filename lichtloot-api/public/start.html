@@ -6478,6 +6478,8 @@ async function loadRaidPrioListIntoDetail(entry){
       action:"getPublishedPrios",
       raid:raidKey
     };
+    if(entry.raidDate) request.raidDate=entry.raidDate;
+    if(entry.raidTime) request.raidTime=entry.raidTime;
     if(raidId) request.raidId=raidId;
     if(!raidId && pin) request.playerPin=pin;
 

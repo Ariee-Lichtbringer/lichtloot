@@ -8986,6 +8986,8 @@ async function findRaid(guildId, params) {
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const raidType = normalizeRaidType(params.raid || params.raidName);
+  const raidDate = clean(params.raidDate || params.date || params.datum);
+  const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
   const values = [guildId];
   const identityClauses = [];
 
@@ -8995,6 +8997,15 @@ async function findRaid(guildId, params) {
       identityClauses.push(`id = $${values.length}`);
     } else {
       identityClauses.push(`external_raid_id = $${values.length}`);
+    }
+  } else if (raidType && raidDate) {
+    values.push(raidTypeSearchValues(raidType));
+    identityClauses.push(`lower(raid_type) = any($${values.length})`);
+    values.push(raidDate);
+    identityClauses.push(`raid_date = $${values.length}::date`);
+    if (raidTime) {
+      values.push(raidTime);
+      identityClauses.push(`coalesce(raid_time, '') = $${values.length}`);
     }
   } else if (leadPin) {
     values.push(leadPin);
