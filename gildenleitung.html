@@ -286,7 +286,7 @@ button,input,select{font:inherit}
 .stat-grid{
   margin-top:18px;
   display:grid;
-  grid-template-columns:repeat(4,minmax(145px,1fr));
+  grid-template-columns:repeat(3,minmax(145px,1fr));
   gap:12px;
 }
 
@@ -2994,7 +2994,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
   <section class="stat-grid">
     <div class="stat-card"><div><div class="stat-icon">⚔</div><span>Raids</span><strong id="raidCount">0</strong></div><button type="button" onclick="openRaidPanel()">Alle anzeigen →</button></div>
-    <div class="stat-card green"><div><div class="stat-icon">⚔</div><span>Geschlossene Eintragungen</span><strong id="openRaidCount">0</strong></div><button type="button" onclick="filterOpenRaids()">Eintragung zu anzeigen →</button></div>
     <div class="stat-card blue"><div><div class="stat-icon">☷</div><span>Spielerlogins</span><strong id="playerCount">0</strong><div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div></div><button type="button" onclick="openPlayerPanel()">Alle anzeigen →</button></div>
     <div class="stat-card red"><div><div class="stat-icon">✉</div><span>Postfach</span><strong id="issueCount">0</strong></div><button type="button" onclick="openIssueInboxPanel()">Öffnen →</button></div>
   </section>
@@ -4127,11 +4126,9 @@ function clearRaidFilters(){
 function renderSummary(){
   const raids = guildData.raids || [];
   const players = guildData.players || [];
-  const openRaids = raids.filter(raid => isOpenStatus(raid.status)).length;
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
 
   document.getElementById("raidCount").textContent = raids.length;
-  document.getElementById("openRaidCount").textContent = openRaids;
   document.getElementById("playerCount").textContent = players.length;
   document.getElementById("linkedCount").textContent = linked;
   const issueCounter = document.getElementById("issueCount");
@@ -4294,7 +4291,7 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
+      return isOpenStatus(status) && status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
     })
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
