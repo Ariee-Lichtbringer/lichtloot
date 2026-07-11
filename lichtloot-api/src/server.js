@@ -1479,9 +1479,15 @@ function raidPublicId(row) {
   return row.external_raid_id || row.id;
 }
 
+function displayStoredGuildName(value) {
+  const raw = clean(value);
+  return raw.toLowerCase() === "lichtloot" ? "Lichtbringer" : raw;
+}
+
 function normalizeRaidRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
   const p0PlusTransferCount = Number(row.p0plus_transfer_count || 0);
+  const guildName = displayStoredGuildName(row.guild_name || "");
   return {
     id: row.id,
     raidId: raidPublicId(row),
@@ -1494,8 +1500,8 @@ function normalizeRaidRow(row) {
     raidTime: row.raid_time || "",
     time: row.raid_time || "",
     uhrzeit: row.raid_time || "",
-    guild: row.guild_name || "",
-    gilde: row.guild_name || "",
+    guild: guildName,
+    gilde: guildName,
     playerPin: row.raid_pin || "",
     prioPin: row.raid_pin || "",
     leadPin: row.lead_pin || "",
@@ -9003,7 +9009,7 @@ async function createRaidRecord({ guildId, query: params }) {
       prioPin || null,
       leadPin || null,
       clean(params.raidTime || params.uhrzeit) || null,
-      clean(params.guild || params.gilde) || null,
+      clean(params.guildName || params.displayGuild || params.gilde || params.guild) || null,
       clean(params.playerLink) || null,
       status,
       p0plusFreigabe,

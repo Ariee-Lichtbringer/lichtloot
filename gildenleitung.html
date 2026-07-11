@@ -3534,7 +3534,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <div class="tools">
         <select id="raidFilter" onchange="renderRaids()">
-          <option value="">Letzte 10</option>
+          <option value="">Alle offenen & geschlossenen</option>
           <option value="offen">Offen</option>
           <option value="geöffnet">Geöffnet</option>
           <option value="geschlossen">Geschlossen</option>
@@ -3737,6 +3737,15 @@ function getCurrentGuildBrand(){
 
 const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
 let currentGuildInfo = null;
+
+function displayGuildNameForRaid(value){
+  const raw = String(value || "").trim();
+  const normalized = normalize(raw);
+  if(!raw || normalized === normalize(CURRENT_GUILD_SLUG) || normalized === "lichtloot"){
+    return CURRENT_GUILD_BRAND.guildName;
+  }
+  return raw;
+}
 
 async function fetchCurrentGuildInfo(){
   try{
@@ -4074,6 +4083,7 @@ function openDetailsPanel(id){
 }
 
 function openRaidPanel(){
+  clearRaidFilters(false);
   openDetailsPanel("raidLeadPanel");
 }
 
@@ -4116,11 +4126,11 @@ function filterOpenRaids(){
   renderRaids();
 }
 
-function clearRaidFilters(){
+function clearRaidFilters(shouldRender = true){
   document.getElementById("raidSearch").value = "";
   document.getElementById("raidDateSearch").value = "";
   document.getElementById("raidFilter").value = "";
-  renderRaids();
+  if(shouldRender) renderRaids();
 }
 
 function renderSummary(){
@@ -4254,7 +4264,7 @@ function renderDashboardCards(){
             <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
             <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
             <div class="active-raid-stats">
-              <span class="active-raid-stat">${escapeHtml(raid.guild || CURRENT_GUILD_BRAND.guildName)}</span>
+              <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
               <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
               <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
             </div>
@@ -4291,9 +4301,10 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return isOpenStatus(status) && status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
+      return status !== "archiviert" && status !== "archive";
     })
-    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+    .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
+    .slice(0, 6);
 }
 
 async function loadDashboardRaidStats(){
@@ -4468,7 +4479,7 @@ function renderRaids(){
       !isArchived;
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     return filterMatches && dateMatches && (!search || haystack.includes(search));
-  }).slice(0, filter || search || dateSearch ? undefined : 10);
+  });
 
   if(!raids.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
@@ -4484,7 +4495,7 @@ function renderRaids(){
             <strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong>
             <div class="raid-meta">
               <span>${escapeHtml(raid.raidId || "-")}</span>
-              ${raid.guild ? `<span>${escapeHtml(raid.guild)}</span>` : ""}
+              <span>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
             </div>
           </div>
         </td>
@@ -6364,8 +6375,10 @@ async function createRaidHelperSignup(){
       raidTime,
       datum:raidDate,
       uhrzeit:raidTime,
-      guild,
+      guild:CURRENT_GUILD_SLUG,
       gilde:guild,
+      guildName:guild,
+      displayGuild:guild,
       playerPin,
       leadPin,
       status:"geschlossen",
@@ -6500,8 +6513,10 @@ async function restoreDeletedRaidHelperEvent(config){
       raidTime:config.raidTime,
       datum:config.raidDate,
       uhrzeit:config.raidTime,
-      guild:"lichtloot",
-      gilde:"lichtloot",
+      guild:CURRENT_GUILD_SLUG,
+      gilde:getCurrentGuildBrand().guildName,
+      guildName:getCurrentGuildBrand().guildName,
+      displayGuild:getCurrentGuildBrand().guildName,
       playerPin,
       leadPin,
       status:"geschlossen",
@@ -6705,7 +6720,7 @@ function buildRaidDiscordPostTextFromRaid(raid){
   const raidName = raid.raidName || RAID_OPTIONS[getRaidKey(raid)]?.name || raid.raid || "Raid";
   const raidDate = raid.raidDate || raid.datum || raid.date || "";
   const raidTime = raid.raidTime || raid.uhrzeit || raid.time || "";
-  const guild = raid.guild || raid.gilde || CURRENT_GUILD_BRAND.guildName;
+  const guild = displayGuildNameForRaid(raid.gilde || raid.guild || CURRENT_GUILD_BRAND.guildName);
   const playerPin = raid.playerPin || raid.prioPin || "-";
   const createdBy = getRaidCreatorName(raid);
 
@@ -7033,7 +7048,7 @@ async function openPrioModal(raidId){
   document.getElementById("prioModalSubline").textContent = [
     formatRaidDate(raid.raidDate),
     raid.raidTime,
-    raid.guild,
+    displayGuildNameForRaid(raid.guild || raid.gilde),
     "Prio-PIN " + (raid.playerPin || "-")
   ].filter(Boolean).join(" · ");
   document.getElementById("prioModalContent").innerHTML = '<div class="status">Prioliste wird geladen ...</div>';
