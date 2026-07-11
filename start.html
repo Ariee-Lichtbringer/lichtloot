@@ -5639,23 +5639,32 @@ function getMainLichtLootCharacter(){
   }) || myLichtlootCharacters[0];
 }
 
-function sortRaidPriosWithOwnMainFirst(prios){
+function sortRaidPriosWithOwnMainFirst(prios, entry){
   const list=Array.isArray(prios) ? prios.slice() : [];
   const mainChar=getMainLichtLootCharacter();
   const mainKey=mainChar ? lichtlootPrioSortKey(mainChar.name, mainChar.server) : "";
   const ownKeys=new Set((myLichtlootCharacters || []).map(char=>lichtlootPrioSortKey(char.name, char.server)));
+  const ownNames=new Set((myLichtlootCharacters || []).map(char=>String(char && char.name || "").trim().toLowerCase()).filter(Boolean));
+  const detailOwnKey=entry ? lichtlootPrioSortKey(entry.player || entry.Spieler, entry.server || entry.Server) : "";
+  const detailOwnName=String(entry && (entry.player || entry.Spieler) || "").trim().toLowerCase();
 
   return list
     .map((prio,index)=>({prio,index}))
     .sort((a,b)=>{
       const aKey=lichtlootPrioSortKey(a.prio && (a.prio.Spieler || a.prio.player), a.prio && (a.prio.Server || a.prio.server));
       const bKey=lichtlootPrioSortKey(b.prio && (b.prio.Spieler || b.prio.player), b.prio && (b.prio.Server || b.prio.server));
+      const aName=String(a.prio && (a.prio.Spieler || a.prio.player) || "").trim().toLowerCase();
+      const bName=String(b.prio && (b.prio.Spieler || b.prio.player) || "").trim().toLowerCase();
       const aOwnMain=mainKey && aKey === mainKey;
       const bOwnMain=mainKey && bKey === mainKey;
       if(aOwnMain !== bOwnMain) return aOwnMain ? -1 : 1;
 
-      const aOwn=ownKeys.has(aKey);
-      const bOwn=ownKeys.has(bKey);
+      const aDetailOwn=(detailOwnKey && aKey === detailOwnKey) || (detailOwnName && aName === detailOwnName);
+      const bDetailOwn=(detailOwnKey && bKey === detailOwnKey) || (detailOwnName && bName === detailOwnName);
+      if(aDetailOwn !== bDetailOwn) return aDetailOwn ? -1 : 1;
+
+      const aOwn=ownKeys.has(aKey) || ownNames.has(aName);
+      const bOwn=ownKeys.has(bKey) || ownNames.has(bName);
       if(aOwn !== bOwn) return aOwn ? -1 : 1;
 
       const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
@@ -6836,7 +6845,7 @@ function renderFullRaidPrioTable(prios, entry){
     return '<div class="status">Für diesen Raid wurden keine Prios gefunden.</div>';
   }
 
-  const sortedPrios=sortRaidPriosWithOwnMainFirst(prios);
+  const sortedPrios=sortRaidPriosWithOwnMainFirst(prios, entry);
   const raidInfo=[
     entry.raidName || entry.raid || "Raid",
     formatMyPrioDateOnly(entry.raidDate || entry.createdAt),
