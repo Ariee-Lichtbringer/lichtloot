@@ -4214,10 +4214,26 @@ function todayIsoDate(){
   ].join("-");
 }
 
+function twoWeeksAgoIsoDate(){
+  const date = new Date();
+  date.setDate(date.getDate() - 14);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
 function isRaidTodayOrFuture(raid){
   const date = String(raid && raid.raidDate || "").trim();
   if(!date) return false;
   return date >= todayIsoDate();
+}
+
+function isRaidInLastTwoWeeks(raid){
+  const date = String(raid && raid.raidDate || "").trim();
+  if(!date) return false;
+  return date >= twoWeeksAgoIsoDate();
 }
 
 function getRaidCreatorName(raid){
@@ -4301,9 +4317,9 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive";
+      return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
     })
-    .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")))
     .slice(0, 6);
 }
 
@@ -4476,7 +4492,7 @@ function renderRaids(){
     const filterMatches =
       filter === "alle" ? true :
       filter ? status === filter :
-      !isArchived;
+      (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     return filterMatches && dateMatches && (!search || haystack.includes(search));
   });
