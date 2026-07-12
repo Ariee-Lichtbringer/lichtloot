@@ -2949,6 +2949,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
       <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
       <button class="side-link" type="button" onclick="openRaidHelperPanel()"><span class="side-icon">▣</span>Raidanmelder</button>
+      <button class="side-link" type="button" onclick="openPoPostPanel()"><span class="side-icon">☰</span>PO Post</button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
@@ -3416,6 +3417,91 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </div>
       <div id="raidHelperTab-settings" class="raid-helper-tab-panel raid-helper-placeholder hidden">
         <div><div class="raid-helper-placeholder-icon">⚙</div><h3>Server Settings</h3><p>Hier kommen Standard-Channel, Rollen und weitere Discord-Einstellungen hin.</p></div>
+      </div>
+    </div>
+  </details>
+
+  <details id="poPostPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initPoPostPanel()">
+    <summary>
+      <span class="raid-helper-summary">
+        <span class="raid-helper-summary-icon">☰</span>
+        <span class="raid-helper-summary-copy">
+          <strong>PO Post</strong>
+          <span>PO-Liste aus einem Discord-Channel lesen und als eigenen Post erstellen.</span>
+        </span>
+      </span>
+    </summary>
+    <div class="raid-helper-body">
+      <div class="raid-helper-layout">
+        <div class="raid-helper-form">
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">☰</span>
+              <div>
+                <h3>PO-Liste erstellen</h3>
+                <p>Unabhängig vom Raidanmelder: Quelle lesen, Zielpost schreiben, Freigaben steuern.</p>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poPostSourceChannel">PO-Quelle</label>
+                <select id="poPostSourceChannel"></select>
+              </div>
+              <div class="field">
+                <label for="poPostTargetChannel">Posten nach</label>
+                <select id="poPostTargetChannel"></select>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poPostReviewRecipient">Freigabe per DM an</label>
+                <input id="poPostReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename">
+              </div>
+              <div class="field">
+                <label for="poPostTitle">Titel</label>
+                <input id="poPostTitle" type="text" value="PO Liste">
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poPostLimit">Nachrichten prüfen</label>
+                <input id="poPostLimit" type="number" min="50" max="2000" value="800">
+              </div>
+              <div class="field">
+                <label for="poPostRaid">Raid-Hinweis</label>
+                <select id="poPostRaid">
+                  <option value="">Ohne Raidbindung</option>
+                  <option value="aq40">AQ40</option>
+                  <option value="bwl">BWL</option>
+                  <option value="mc">MC</option>
+                  <option value="naxx">Naxxramas</option>
+                  <option value="aq20">AQ20</option>
+                  <option value="zg">ZG</option>
+                  <option value="ony">Onyxia</option>
+                </select>
+              </div>
+            </div>
+            <div class="tools">
+              <button class="btn" type="button" onclick="queuePoPost()">PO Post erstellen</button>
+              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
+            </div>
+            <div id="poPostStatus" class="status">Bereit.</div>
+          </section>
+        </div>
+        <div class="raid-helper-preview">
+          <h3>Discord-Ablauf</h3>
+          <div class="discord-preview-card">
+            <h3 class="discord-preview-title">PO LISTE</h3>
+            <div class="discord-preview-description">
+              Der Bot liest alle Nachrichten aus der PO-Quelle, erkennt Zeilen wie <strong>PO Itemname</strong> oder <strong>P0 Itemname</strong> und postet daraus eine sortierte Liste.
+            </div>
+            <div class="discord-preview-meta">
+              <div><span>Quelle</span><strong id="poPostPreviewSource">Channel wählen</strong></div>
+              <div><span>Ziel</span><strong id="poPostPreviewTarget">Channel wählen</strong></div>
+              <div><span>Freigabe</span><strong id="poPostPreviewReview">Discord-Person eintragen</strong></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </details>
@@ -4089,6 +4175,10 @@ function openRaidPanel(){
 
 function openRaidHelperPanel(){
   openDetailsPanel("raidHelperPanel");
+}
+
+function openPoPostPanel(){
+  openDetailsPanel("poPostPanel");
 }
 
 function openPlayerPanel(){
@@ -6172,7 +6262,107 @@ function renderRaidHelperDiscordChannels(){
   }
   renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
   renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  renderPoPostChannelSelects();
   updateRaidHelperPreview();
+}
+
+function poPostChannelOptions(selectedValue){
+  const selected = String(selectedValue || "").trim();
+  const options = raidHelperDiscordChannels.map(channel => {
+    const id = String(channel.channelId || channel.id || "").trim();
+    const name = String(channel.channelName || channel.name || id).trim();
+    const category = String(channel.categoryName || channel.category || "").trim();
+    const label = (category ? category + " / " : "") + "# " + name;
+    return `<option value="${escapeAttr(id)}">${escapeHtml(label)}</option>`;
+  });
+  if(selected && !raidHelperDiscordChannels.some(channel => String(channel.channelId || channel.id) === selected)){
+    options.unshift(`<option value="${escapeAttr(selected)}">${escapeHtml("# " + selected + " · manuell")}</option>`);
+  }
+  if(!options.length){
+    options.push(`<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># Channel laden</option>`);
+  }
+  return options.join("");
+}
+
+function renderPoPostChannelSelects(){
+  ["poPostSourceChannel","poPostTargetChannel"].forEach(id => {
+    const select = document.getElementById(id);
+    if(!select) return;
+    const current = select.value || RAID_HELPER_CHANNEL_ID;
+    select.innerHTML = poPostChannelOptions(current);
+    select.value = current;
+    if(!select.value && select.options.length) select.selectedIndex = 0;
+  });
+  updatePoPostPreview();
+}
+
+function selectedPoPostChannelLabel(id){
+  const select = document.getElementById(id);
+  return select?.selectedOptions?.[0]?.textContent?.trim() || "Channel wählen";
+}
+
+function updatePoPostPreview(){
+  const source = document.getElementById("poPostPreviewSource");
+  const target = document.getElementById("poPostPreviewTarget");
+  const review = document.getElementById("poPostPreviewReview");
+  if(source) source.textContent = selectedPoPostChannelLabel("poPostSourceChannel");
+  if(target) target.textContent = selectedPoPostChannelLabel("poPostTargetChannel");
+  if(review) review.textContent = document.getElementById("poPostReviewRecipient")?.value.trim() || "Discord-Person eintragen";
+}
+
+function initPoPostPanel(){
+  renderPoPostChannelSelects();
+  loadRaidHelperDiscordChannels();
+  ["poPostSourceChannel","poPostTargetChannel"].forEach(id => {
+    const select = document.getElementById(id);
+    if(select && !select.dataset.poBound){
+      select.addEventListener("change", updatePoPostPreview);
+      select.dataset.poBound = "1";
+    }
+  });
+  const recipient = document.getElementById("poPostReviewRecipient");
+  if(recipient && !recipient.dataset.poBound){
+    recipient.addEventListener("input", updatePoPostPreview);
+    recipient.dataset.poBound = "1";
+  }
+}
+
+async function queuePoPost(){
+  const status = document.getElementById("poPostStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const sourceChannelId = document.getElementById("poPostSourceChannel")?.value || "";
+  const targetChannelId = document.getElementById("poPostTargetChannel")?.value || sourceChannelId;
+  const reviewRecipient = document.getElementById("poPostReviewRecipient")?.value.trim() || "";
+  const title = document.getElementById("poPostTitle")?.value.trim() || "PO Liste";
+  const raid = document.getElementById("poPostRaid")?.value || "";
+  const limit = document.getElementById("poPostLimit")?.value || "800";
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  if(!sourceChannelId || !targetChannelId){
+    if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
+    return;
+  }
+  try{
+    if(status) status.textContent = "PO Post wird an den Bot übergeben ...";
+    const result = await railwayWrite({
+      action:"guildQueuePoPost",
+      masterCode,
+      sourceChannelId,
+      targetChannelId,
+      reviewRecipient,
+      title,
+      raid,
+      limit
+    });
+    if(!result.success) throw new Error(result.error || "PO Post konnte nicht queued werden.");
+    if(status){
+      status.innerHTML = '<span class="good">PO Post ist in der Bot-Warteschlange.</span>';
+    }
+  }catch(error){
+    if(status) status.textContent = error.message || "PO Post konnte nicht erstellt werden.";
+  }
 }
 
 function selectRaidHelperDiscordChannel(){

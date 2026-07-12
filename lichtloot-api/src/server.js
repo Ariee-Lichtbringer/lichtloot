@@ -169,6 +169,40 @@ app.get("/db-health", async (req, res, next) => {
   }
 });
 
+app.get("/api/foerderverein/contracts/:sha256/download", async (req, res, next) => {
+  try {
+    const sha256 = String(req.params.sha256 || "").trim().toLowerCase();
+    if (!/^[a-f0-9]{64}$/.test(sha256)) {
+      return res.status(400).json({ success: false, error: "Ungültiger Vertragslink." });
+    }
+
+    const result = await query(
+      `select file_name, mime_type, file_data, file_size_bytes
+       from foerderverein_contract_files
+       where source_context = 'foerderverein'
+         and lower(sha256) = $1
+       limit 1`,
+      [sha256]
+    );
+
+    const contract = result.rows[0];
+    if (!contract) {
+      return res.status(404).json({ success: false, error: "Vertrag nicht gefunden." });
+    }
+
+    const filename = String(contract.file_name || "vertrag.pdf").replace(/["\r\n]/g, "_");
+    res.setHeader("Content-Type", contract.mime_type || "application/octet-stream");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.setHeader("Cache-Control", "private, no-store");
+    if (contract.file_size_bytes) {
+      res.setHeader("Content-Length", String(contract.file_size_bytes));
+    }
+    res.send(contract.file_data);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
   try {
     let html = "";
@@ -3435,6 +3469,37 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
         messageId: clean(params.messageId || params.discordMessageId || params.raidHelperMessageId),
         source: "gildenleitung"
       }
+    }
+  });
+}
+
+async function queuePoPost({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
+  const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || sourceChannelId;
+  const reviewRecipient = clean(params.reviewRecipient || params.reviewUserId || params.approvalUserId || params.freigabeAn);
+  if (!sourceChannelId) {
+    const error = new Error("PO-Quellchannel fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!targetChannelId) {
+    const error = new Error("PO-Zielchannel fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const limit = Math.max(50, Math.min(2000, Number(params.limit || 800) || 800));
+  return enqueueBotUpdate({
+    guildId,
+    type: "po_post",
+    payload: {
+      sourceChannelId,
+      targetChannelId,
+      reviewRecipient,
+      title: clean(params.title) || "PO Liste",
+      raid: clean(params.raid || params.raidName),
+      limit,
+      source: "gildenleitung"
     }
   });
 }
@@ -12895,6 +12960,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueRaidAnnouncementRefresh") {
       const queued = await queueRaidAnnouncementRefresh({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueuePoPost") {
+      const queued = await queuePoPost({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
