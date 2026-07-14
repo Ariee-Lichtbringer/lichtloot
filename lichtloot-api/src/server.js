@@ -1886,6 +1886,7 @@ function worldbuffMergeLookupKey(entry) {
 
 function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
   const sheetByKey = new Map();
+  const railwayKeys = new Set();
   (sheetRows || []).forEach(row => {
     const key = worldbuffMergeLookupKey(row);
     if (!key) return;
@@ -1895,7 +1896,9 @@ function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
     }
   });
 
-  return (railwayRows || []).map(row => {
+  const merged = (railwayRows || []).map(row => {
+    const rowKey = worldbuffMergeLookupKey(row);
+    if (rowKey) railwayKeys.add(rowKey);
     const sheet = sheetByKey.get(worldbuffMergeLookupKey(row));
     if (!sheet) return row;
     const charakter = clean(row.charakter || row.caster) || clean(sheet.charakter || sheet.caster || sheet.werfer);
@@ -1916,6 +1919,16 @@ function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
       source: clean(row.source) || clean(sheet.source) || "railway"
     };
   });
+
+  (sheetRows || []).forEach(row => {
+    const key = worldbuffMergeLookupKey(row);
+    if (key && !railwayKeys.has(key)) {
+      merged.push(row);
+      railwayKeys.add(key);
+    }
+  });
+
+  return merged.sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
 }
 
 async function getWorldbuffs({ guildId, query: params }) {
@@ -9852,6 +9865,7 @@ function normalizeP0SignupRow(row) {
 }
 
 async function getP0DiscordSignupContext({ guildId, query: params }) {
+  await ensureRaidSchema();
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
@@ -9954,6 +9968,7 @@ async function findOrCreateDiscordP0Character(client, guildId, params) {
 }
 
 async function saveP0DiscordSignup({ guildId, query: params }) {
+  await ensureRaidSchema();
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
@@ -10078,6 +10093,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
 async function reviewP0DiscordSignup({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  await ensureRaidSchema();
   const signupId = clean(params.signupId || params.id);
   const rawStatus = clean(params.status || params.value || params.approvalStatus).toLowerCase();
   const approvedValues = new Set(["approved", "valid", "gueltig", "gültig", "ja", "true", "ok"]);
