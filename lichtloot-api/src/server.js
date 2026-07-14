@@ -3579,6 +3579,14 @@ async function savePoPostEntries({ guildId, query: params }) {
   const postKey = clean(params.postKey || params.poPostKey || params.postId || "po-liste");
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || "");
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId || "");
+  const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
+  let releaseNames = new Set();
+  try {
+    const releaseResult = await getP0ReleaseList();
+    releaseNames = new Set((releaseResult.releases?.[raidKey] || []).map(name => clean(name).toLowerCase()).filter(Boolean));
+  } catch (error) {
+    console.warn("P0-Freigabeliste konnte fuer PO-Post nicht geladen werden:", error.message || error);
+  }
   let entries = params.entries || [];
   if (typeof entries === "string") {
     try { entries = JSON.parse(entries || "[]"); } catch { entries = []; }
@@ -3616,7 +3624,11 @@ async function savePoPostEntries({ guildId, query: params }) {
       const poMessageId = clean(entry.messageId || entry.discordMessageId);
       const approval = approvalByKey.get(poMessageId)
         || approvalByKey.get(`${playerName.toLowerCase()}|${itemName.toLowerCase()}`)
-        || { approvalStatus: "pending", approvedBy: "", approvedAt: null };
+        || (
+          releaseNames.has(playerName.toLowerCase())
+            ? { approvalStatus: "approved", approvedBy: "P0-Freigabeliste", approvedAt: new Date().toISOString() }
+            : { approvalStatus: "pending", approvedBy: "", approvedAt: null }
+        );
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
@@ -3630,7 +3642,7 @@ async function savePoPostEntries({ guildId, query: params }) {
           sourceChannelId,
           targetChannelId,
           clean(params.messageId || params.discordMessageId),
-          normalizeRaidType(params.raid || params.raidName).toUpperCase(),
+          raidKey.toUpperCase(),
           clean(params.title) || "PO Liste",
           playerName,
           itemName,
