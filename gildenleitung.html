@@ -7989,12 +7989,15 @@ function renderPoPostEntryRows(){
     const status = String(entry.approvalStatus || "pending").toLowerCase();
     const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
     const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    const releaseStar = String(entry.approvedBy || "").toLowerCase().includes("freigabeliste")
+      ? '<span class="p0-release-star" title="P0-Freigabe aus dem Raidanmelder">★</span>'
+      : "";
     return `
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
         <td>${escapeHtml(entry.raid || "-")}</td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong>${releaseStar}</td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>
           <div class="actions">
