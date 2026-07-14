@@ -9844,6 +9844,11 @@ function normalize(value){
   return String(value || "").trim().toLowerCase();
 }
 
+function setValue(id, value){
+  const field = document.getElementById(id);
+  if(field) field.value = value == null ? "" : String(value);
+}
+
 function escapeHtml(value){
   return String(value == null ? "" : value)
     .replace(/&/g,"&amp;")
