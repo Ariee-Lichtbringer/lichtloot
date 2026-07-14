@@ -3438,8 +3438,18 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">☰</span>
               <div>
-                <h3>PO-Liste erstellen</h3>
-                <p>Unabhängig vom Raidanmelder: Quelle lesen, Zielpost schreiben, Freigaben steuern.</p>
+                <h3>PO-Post erstellen & bearbeiten</h3>
+                <p>Unabhängig vom Raidanmelder: Quelle lesen, denselben Zielpost aktualisieren, Freigaben steuern.</p>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poPostSavedSelect">Gespeicherter PO-Post</label>
+                <select id="poPostSavedSelect" onchange="loadSelectedPoPostConfig()"></select>
+              </div>
+              <div class="field">
+                <label for="poPostKey">Post-ID</label>
+                <input id="poPostKey" type="text" placeholder="z. B. aq40-main-po">
               </div>
             </div>
             <div class="raid-helper-row">
@@ -3482,7 +3492,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
               </div>
             </div>
             <div class="tools">
-              <button class="btn" type="button" onclick="queuePoPost()">PO Post erstellen</button>
+              <button class="btn" type="button" onclick="queuePoPost()">PO Post aktualisieren</button>
+              <button class="btn ghost" type="button" onclick="savePoPostConfig()">Post speichern</button>
+              <button class="btn ghost" type="button" onclick="newPoPostConfig()">Neu</button>
+              <button class="btn danger" type="button" onclick="deletePoPostConfig()">Löschen</button>
               <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
             <div id="poPostStatus" class="status">Bereit.</div>
@@ -3768,6 +3781,7 @@ const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
+const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -6311,12 +6325,14 @@ function updatePoPostPreview(){
 }
 
 function initPoPostPanel(){
+  renderPoPostConfigSelect();
   renderPoPostChannelSelects();
   loadRaidHelperDiscordChannels();
-  ["poPostSourceChannel","poPostTargetChannel"].forEach(id => {
+  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey"].forEach(id => {
     const select = document.getElementById(id);
     if(select && !select.dataset.poBound){
       select.addEventListener("change", updatePoPostPreview);
+      select.addEventListener("input", updatePoPostPreview);
       select.dataset.poBound = "1";
     }
   });
@@ -6327,38 +6343,155 @@ function initPoPostPanel(){
   }
 }
 
+function readPoPostConfigs(){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(PO_POST_CONFIG_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(error){
+    return [];
+  }
+}
+
+function writePoPostConfigs(configs){
+  localStorage.setItem(PO_POST_CONFIG_STORAGE_KEY, JSON.stringify(configs || []));
+}
+
+function makePoPostKey(title){
+  const base = String(title || "po-liste")
+    .toLowerCase()
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"")
+    .slice(0,40);
+  return base || "po-liste";
+}
+
+function getPoPostFormConfig(){
+  const title = document.getElementById("poPostTitle")?.value.trim() || "PO Liste";
+  let postKey = document.getElementById("poPostKey")?.value.trim() || "";
+  if(!postKey){
+    postKey = makePoPostKey(title);
+    setValue("poPostKey", postKey);
+  }
+  const sourceChannelId = document.getElementById("poPostSourceChannel")?.value || "";
+  return {
+    postKey,
+    sourceChannelId,
+    targetChannelId: document.getElementById("poPostTargetChannel")?.value || sourceChannelId,
+    reviewRecipient: document.getElementById("poPostReviewRecipient")?.value.trim() || "",
+    title,
+    raid: document.getElementById("poPostRaid")?.value || "",
+    limit: document.getElementById("poPostLimit")?.value || "800"
+  };
+}
+
+function setPoPostFormConfig(config){
+  if(!config) return;
+  setValue("poPostKey", config.postKey || makePoPostKey(config.title));
+  setValue("poPostReviewRecipient", config.reviewRecipient || "");
+  setValue("poPostTitle", config.title || "PO Liste");
+  setValue("poPostLimit", config.limit || "800");
+  setValue("poPostRaid", config.raid || "");
+  const source = document.getElementById("poPostSourceChannel");
+  const target = document.getElementById("poPostTargetChannel");
+  if(source) source.value = config.sourceChannelId || "";
+  if(target) target.value = config.targetChannelId || config.sourceChannelId || "";
+  updatePoPostPreview();
+}
+
+function renderPoPostConfigSelect(){
+  const select = document.getElementById("poPostSavedSelect");
+  if(!select) return;
+  const configs = readPoPostConfigs();
+  select.innerHTML = '<option value="">Neuen PO-Post bearbeiten</option>' + configs.map(config => (
+    `<option value="${escapeAttr(config.postKey || "")}">${escapeHtml(config.title || config.postKey || "PO Post")}</option>`
+  )).join("");
+}
+
+function loadSelectedPoPostConfig(){
+  const key = document.getElementById("poPostSavedSelect")?.value || "";
+  const config = readPoPostConfigs().find(item => item.postKey === key);
+  if(config) setPoPostFormConfig(config);
+}
+
+function savePoPostConfig(){
+  const status = document.getElementById("poPostStatus");
+  const config = getPoPostFormConfig();
+  if(!config.sourceChannelId || !config.targetChannelId){
+    if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
+    return false;
+  }
+  const configs = readPoPostConfigs();
+  const index = configs.findIndex(item => item.postKey === config.postKey);
+  if(index >= 0) configs[index] = config;
+  else configs.push(config);
+  writePoPostConfigs(configs);
+  renderPoPostConfigSelect();
+  const select = document.getElementById("poPostSavedSelect");
+  if(select) select.value = config.postKey;
+  if(status) status.innerHTML = '<span class="good">PO-Post-Einstellungen gespeichert.</span>';
+  return true;
+}
+
+function deletePoPostConfig(){
+  const status = document.getElementById("poPostStatus");
+  const key = document.getElementById("poPostSavedSelect")?.value || document.getElementById("poPostKey")?.value.trim() || "";
+  if(!key){
+    if(status) status.textContent = "Kein gespeicherter PO-Post ausgewählt.";
+    return;
+  }
+  writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
+  renderPoPostConfigSelect();
+  if(status) status.innerHTML = '<span class="good">Gespeicherter PO-Post entfernt.</span>';
+}
+
+function newPoPostConfig(){
+  setPoPostFormConfig({
+    postKey:"",
+    sourceChannelId:"",
+    targetChannelId:"",
+    reviewRecipient:"",
+    title:"PO Liste",
+    raid:"",
+    limit:"800"
+  });
+  const select = document.getElementById("poPostSavedSelect");
+  if(select) select.value = "";
+  const status = document.getElementById("poPostStatus");
+  if(status) status.textContent = "Neuer PO-Post vorbereitet.";
+}
+
 async function queuePoPost(){
   const status = document.getElementById("poPostStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
-  const sourceChannelId = document.getElementById("poPostSourceChannel")?.value || "";
-  const targetChannelId = document.getElementById("poPostTargetChannel")?.value || sourceChannelId;
-  const reviewRecipient = document.getElementById("poPostReviewRecipient")?.value.trim() || "";
-  const title = document.getElementById("poPostTitle")?.value.trim() || "PO Liste";
-  const raid = document.getElementById("poPostRaid")?.value || "";
-  const limit = document.getElementById("poPostLimit")?.value || "800";
+  const config = getPoPostFormConfig();
   if(!masterCode){
     if(status) status.textContent = "Bitte erst Master-Code eingeben.";
     return;
   }
-  if(!sourceChannelId || !targetChannelId){
+  if(!config.sourceChannelId || !config.targetChannelId){
     if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
     return;
   }
   try{
+    savePoPostConfig();
     if(status) status.textContent = "PO Post wird an den Bot übergeben ...";
     const result = await railwayWrite({
       action:"guildQueuePoPost",
       masterCode,
-      sourceChannelId,
-      targetChannelId,
-      reviewRecipient,
-      title,
-      raid,
-      limit
+      postKey: config.postKey,
+      sourceChannelId: config.sourceChannelId,
+      targetChannelId: config.targetChannelId,
+      reviewRecipient: config.reviewRecipient,
+      title: config.title,
+      raid: config.raid,
+      limit: config.limit
     });
     if(!result.success) throw new Error(result.error || "PO Post konnte nicht queued werden.");
     if(status){
-      status.innerHTML = '<span class="good">PO Post ist in der Bot-Warteschlange.</span>';
+      status.innerHTML = result.skipped
+        ? '<span class="warn">PO Post war gerade schon in der Warteschlange. Kein neuer Auftrag erstellt.</span>'
+        : '<span class="good">PO Post ist in der Bot-Warteschlange.</span>';
     }
   }catch(error){
     if(status) status.textContent = error.message || "PO Post konnte nicht erstellt werden.";

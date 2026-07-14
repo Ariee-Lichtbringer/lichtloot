@@ -2729,6 +2729,33 @@ async function queueBotUpdate({ guildId, query: params }) {
 
 async function enqueueBotUpdate({ guildId, type, payload }) {
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  if (type === "po_post") {
+    const payloadJson = JSON.stringify(payload || {});
+    const existing = await query(
+      `select id, type, payload, status, created_at
+       from bot_update_queue
+       where guild_id = $1
+         and type = $2
+         and payload = $3::jsonb
+         and (
+           status = 'open'
+           or (status = 'done' and coalesce(resolved_at, created_at) > now() - interval '2 minutes')
+         )
+       order by created_at desc
+       limit 1`,
+      [guildId, type, payloadJson]
+    );
+    if (existing.rows[0]) {
+      return {
+        success: true,
+        skipped: true,
+        reason: "po_post_recently_queued",
+        rowNumber: existing.rows[0].id,
+        type: existing.rows[0].type,
+        payload: existing.rows[0].payload || {}
+      };
+    }
+  }
   const result = await query(
     `insert into bot_update_queue (guild_id, type, payload)
      values ($1, $2, $3::jsonb)
@@ -3491,6 +3518,7 @@ async function queuePoPost({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || sourceChannelId;
   const reviewRecipient = clean(params.reviewRecipient || params.reviewUserId || params.approvalUserId || params.freigabeAn);
+  const postKey = clean(params.postKey || params.poPostKey || params.postId || params.id);
   if (!sourceChannelId) {
     const error = new Error("PO-Quellchannel fehlt.");
     error.statusCode = 400;
@@ -3509,6 +3537,7 @@ async function queuePoPost({ guildId, query: params }) {
       sourceChannelId,
       targetChannelId,
       reviewRecipient,
+      postKey,
       title: clean(params.title) || "PO Liste",
       raid: clean(params.raid || params.raidName),
       limit,
