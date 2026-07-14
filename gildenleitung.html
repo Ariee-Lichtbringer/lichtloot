@@ -7933,10 +7933,12 @@ function renderP0PlusModalContent(){
         <table class="p0-table">
           <thead>
             <tr>
+              <th>Status</th>
               <th>Post</th>
               <th>Raid</th>
               <th>Spieler</th>
               <th>Item</th>
+              <th>Aktion</th>
             </tr>
           </thead>
           <tbody id="poPostEntryRows"></tbody>
@@ -7976,21 +7978,67 @@ function renderPoPostEntryRows(){
   const tbody = document.getElementById("poPostEntryRows");
   if(!tbody) return;
   if(!document.getElementById("masterCode").value.trim()){
-    tbody.innerHTML = '<tr><td colspan="4" class="muted">Master-Code eingeben, um PO-Post-Einträge zu laden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um PO-Post-Einträge zu laden.</td></tr>';
     return;
   }
   if(!poPostEntries.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.</td></tr>';
     return;
   }
-  tbody.innerHTML = poPostEntries.map(entry => `
-    <tr>
-      <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
-      <td>${escapeHtml(entry.raid || "-")}</td>
-      <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
-      <td>${renderLootItem(entry.item || "-")}</td>
-    </tr>
-  `).join("");
+  tbody.innerHTML = poPostEntries.map((entry, index) => {
+    const status = String(entry.approvalStatus || "pending").toLowerCase();
+    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
+    const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    return `
+      <tr>
+        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
+        <td>${escapeHtml(entry.raid || "-")}</td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromGuild(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromGuild(${index},'rejected')">Ablehnen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function reviewPoPostEntryFromGuild(index, status){
+  const entry = poPostEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
+    const result = await railwayWrite({
+      action:"guildReviewPoPostEntry",
+      masterCode,
+      postKey:entry.postKey || "",
+      sourceChannelId:entry.sourceChannelId || "",
+      targetChannelId:entry.targetChannelId || "",
+      messageId:entry.messageId || "",
+      status,
+      reviewer:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    poPostEntries[index] = Object.assign({}, entry, result.entry || {}, {
+      approvalStatus: status === "approved" ? "approved" : "rejected"
+    });
+    renderPoPostEntryRows();
+    setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function renderP0ReviewRows(){

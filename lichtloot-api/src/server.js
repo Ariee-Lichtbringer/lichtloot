@@ -3561,9 +3561,15 @@ async function ensurePoPostEntriesSchema() {
        item_name text not null default '',
        po_message_id text not null default '',
        po_created_at timestamptz,
+       approval_status text not null default 'pending',
+       approved_by text not null default '',
+       approved_at timestamptz,
        updated_at timestamptz not null default now()
      )`
   );
+  await query(`alter table po_post_entries add column if not exists approval_status text not null default 'pending'`);
+  await query(`alter table po_post_entries add column if not exists approved_by text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists approved_at timestamptz`);
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
 }
 
@@ -3582,18 +3588,42 @@ async function savePoPostEntries({ guildId, query: params }) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    const approvalResult = await client.query(
+      `select po_message_id, player_name, item_name, approval_status, approved_by, approved_at
+       from po_post_entries
+       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4`,
+      [guildId, postKey, sourceChannelId, targetChannelId]
+    );
+    const approvalByKey = new Map();
+    for (const row of approvalResult.rows) {
+      const status = {
+        approvalStatus: row.approval_status || "pending",
+        approvedBy: row.approved_by || "",
+        approvedAt: row.approved_at || null
+      };
+      const poMessageId = clean(row.po_message_id);
+      if (poMessageId) approvalByKey.set(poMessageId, status);
+      approvalByKey.set(`${clean(row.player_name).toLowerCase()}|${clean(row.item_name).toLowerCase()}`, status);
+    }
     await client.query(
       `delete from po_post_entries
        where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4`,
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
     for (const entry of entries) {
+      const playerName = clean(entry.player || entry.char || entry.name);
+      const itemName = clean(entry.item || entry.itemName);
+      const poMessageId = clean(entry.messageId || entry.discordMessageId);
+      const approval = approvalByKey.get(poMessageId)
+        || approvalByKey.get(`${playerName.toLowerCase()}|${itemName.toLowerCase()}`)
+        || { approvalStatus: "pending", approvedBy: "", approvedAt: null };
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-           raid, title, player_name, item_name, po_message_id, po_created_at
+           raid, title, player_name, item_name, po_message_id, po_created_at,
+           approval_status, approved_by, approved_at
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
         [
           guildId,
           postKey,
@@ -3602,10 +3632,13 @@ async function savePoPostEntries({ guildId, query: params }) {
           clean(params.messageId || params.discordMessageId),
           normalizeRaidType(params.raid || params.raidName).toUpperCase(),
           clean(params.title) || "PO Liste",
-          clean(entry.player || entry.char || entry.name),
-          clean(entry.item || entry.itemName),
-          clean(entry.messageId || entry.discordMessageId),
-          clean(entry.createdAt) || null
+          playerName,
+          itemName,
+          poMessageId,
+          clean(entry.createdAt) || null,
+          approval.approvalStatus || "pending",
+          approval.approvedBy || "",
+          approval.approvedAt || null
         ]
       );
     }
@@ -3641,8 +3674,113 @@ async function getPoPostEntries({ guildId, query: params }) {
       player: row.player_name || "",
       item: row.item_name || "",
       messageId: row.po_message_id || "",
+      approvalStatus: row.approval_status || "pending",
+      approved: row.approval_status === "approved",
+      approvedBy: row.approved_by || "",
+      approvedAt: row.approved_at || "",
       updatedAt: row.updated_at
     }))
+  };
+}
+
+async function getPoPostApprovals({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || params.postId || "");
+  const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || "");
+  const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId || "");
+  const values = [guildId];
+  const clauses = ["guild_id = $1"];
+  if (postKey) {
+    values.push(postKey);
+    clauses.push(`post_key = $${values.length}`);
+  }
+  if (sourceChannelId) {
+    values.push(sourceChannelId);
+    clauses.push(`source_channel_id = $${values.length}`);
+  }
+  if (targetChannelId) {
+    values.push(targetChannelId);
+    clauses.push(`target_channel_id = $${values.length}`);
+  }
+  const result = await query(
+    `select *
+     from po_post_entries
+     where ${clauses.join(" and ")}`,
+    values
+  );
+  return {
+    success: true,
+    entries: result.rows.map(row => ({
+      player: row.player_name || "",
+      item: row.item_name || "",
+      messageId: row.po_message_id || "",
+      approvalStatus: row.approval_status || "pending",
+      approved: row.approval_status === "approved"
+    }))
+  };
+}
+
+async function reviewPoPostEntry({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePoPostEntriesSchema();
+  const messageId = clean(params.messageId || params.poMessageId || params.discordMessageId);
+  const postKey = clean(params.postKey || params.poPostKey || "");
+  const sourceChannelId = clean(params.sourceChannelId || "");
+  const targetChannelId = clean(params.targetChannelId || "");
+  const rawStatus = clean(params.status || params.value || "approved").toLowerCase();
+  const approvalStatus = ["rejected", "invalid", "ungueltig", "ungültig", "nein"].includes(rawStatus) ? "rejected" : "approved";
+  const result = await query(
+    `update po_post_entries
+     set approval_status = $6,
+         approved_by = $7,
+         approved_at = case when $6 = 'approved' then now() else null end,
+         updated_at = now()
+     where guild_id = $1
+       and post_key = $2
+       and source_channel_id = $3
+       and target_channel_id = $4
+       and po_message_id = $5
+     returning *`,
+    [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung")]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    const error = new Error("PO-Eintrag wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  await enqueueBotUpdate({
+    guildId,
+    type: "po_post",
+    payload: {
+      postKey: row.post_key,
+      sourceChannelId: row.source_channel_id,
+      targetChannelId: row.target_channel_id,
+      raid: row.raid,
+      title: row.title,
+      source: "po_review",
+      reviewMessageId: row.po_message_id,
+      reviewStatus: approvalStatus,
+      queuedAt: new Date().toISOString()
+    }
+  }).catch(error => console.warn("PO-Post konnte nach Freigabe nicht queued werden:", error.message || error));
+  return {
+    success: true,
+    entry: {
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      player: row.player_name || "",
+      item: row.item_name || "",
+      messageId: row.po_message_id || "",
+      approvalStatus: row.approval_status || "pending",
+      approved: row.approval_status === "approved",
+      approvedBy: row.approved_by || "",
+      approvedAt: row.approved_at || ""
+    }
   };
 }
 
@@ -12808,6 +12946,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
+      const list = await getPoPostApprovals({ guildId: guild.id, query: req.query });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "getPrioCheck") {
       const check = await getPrioCheck({ guildId: guild.id, query: req.query });
       return res.json({ ...check, guild: guild.slug });
@@ -12876,6 +13019,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "reviewPoPostEntry" || action === "guildReviewPoPostEntry") {
+      const reviewed = await reviewPoPostEntry({ guildId: guild.id, query: req.query });
+      return res.json({ ...reviewed, guild: guild.slug });
     }
 
     if (action === "getP0Plus") {
@@ -13087,6 +13235,11 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
+      const list = await getPoPostApprovals({ guildId: guild.id, query: postParams });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
       const saved = await saveP0DiscordSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
@@ -13100,6 +13253,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "reviewPoPostEntry" || action === "guildReviewPoPostEntry") {
+      const reviewed = await reviewPoPostEntry({ guildId: guild.id, query: postParams });
+      return res.json({ ...reviewed, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
