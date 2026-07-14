@@ -9872,8 +9872,15 @@ async function findP0DiscordRaid(guildId, params) {
 
 function normalizeP0SignupRow(row) {
   const approvalStatus = clean(row.approval_status || "pending") || "pending";
+  const raidType = row.raid_type || row.raid || "";
   return {
     id: row.id,
+    raidId: row.raid_public_id || row.raid_id || "",
+    raid: normalizeRaidType(raidType).toUpperCase(),
+    raidName: row.raid_name || displayRaidName(raidType),
+    raidDate: row.raid_date || "",
+    raidTime: row.raid_time || "",
+    prioPin: row.player_link || row.prio_pin || "",
     player: row.player_name || "",
     char: row.player_name || "",
     server: row.server || "",
@@ -9882,6 +9889,8 @@ function normalizeP0SignupRow(row) {
     itemId: row.item_id || "",
     discordUserId: row.discord_user_id || "",
     discordName: row.discord_name || "",
+    discordChannelId: row.discord_channel_id || "",
+    discordMessageId: row.discord_message_id || "",
     approvalStatus,
     approved: approvalStatus === "approved",
     rejected: approvalStatus === "rejected",
@@ -9890,6 +9899,51 @@ function normalizeP0SignupRow(row) {
     approvedAt: row.approved_at || "",
     updatedAt: row.updated_at,
     createdAt: row.created_at
+  };
+}
+
+async function getP0DiscordSignupList({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidSchema();
+  const rawStatus = clean(params.status || "pending").toLowerCase();
+  const statusFilter = rawStatus === "all" ? "" : rawStatus;
+  const values = [guildId];
+  let statusClause = "";
+  if (statusFilter) {
+    values.push(statusFilter);
+    statusClause = `and lower(pds.approval_status) = $${values.length}`;
+  }
+  const raidFilter = normalizeRaidType(params.raid || params.raidName);
+  let raidClause = "";
+  if (raidFilter) {
+    values.push(raidTypeSearchValues(raidFilter));
+    raidClause = `and lower(r.raid_type) = any($${values.length})`;
+  }
+
+  const result = await query(
+    `select
+       pds.*,
+       r.raid_type,
+       r.raid_date,
+       r.raid_time,
+       r.player_link,
+       coalesce(nullif(r.external_raid_id, ''), r.id::text) as raid_public_id
+     from p0_discord_signups pds
+     join raids r on r.id = pds.raid_id
+     where pds.guild_id = $1
+       ${statusClause}
+       ${raidClause}
+     order by
+       case pds.approval_status when 'pending' then 0 when 'approved' then 1 else 2 end,
+       r.raid_date desc nulls last,
+       r.raid_time desc nulls last,
+       pds.updated_at desc`,
+    values
+  );
+
+  return {
+    success: true,
+    entries: result.rows.map(normalizeP0SignupRow)
   };
 }
 
@@ -10165,6 +10219,23 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   }
 
   const signup = result.rows[0];
+  if (clean(signup.discord_channel_id)) {
+    const raidResult = await query(`select * from raids where id = $1 and guild_id = $2 limit 1`, [signup.raid_id, guildId]);
+    const raid = raidResult.rows[0] || {};
+    await enqueueBotUpdate({
+      guildId,
+      type: "p0_post_refresh",
+      payload: {
+        raid: raid.raid_type || "",
+        raidId: raidPublicId(raid),
+        raidDate: raid.raid_date || "",
+        raidTime: raid.raid_time || "",
+        raidPin: raid.player_link || "",
+        channelId: signup.discord_channel_id,
+        source: "p0_review"
+      }
+    }).catch(error => console.warn("P0 Discordpost konnte nicht queued werden:", error.message || error));
+  }
   const itemSignupResult = await query(
     `select *
      from p0_discord_signups
@@ -12627,6 +12698,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...context, guild: guild.slug });
     }
 
+    if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
+      const list = await getP0DiscordSignupList({ guildId: guild.id, query: req.query });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "getPrioCheck") {
       const check = await getPrioCheck({ guildId: guild.id, query: req.query });
       return res.json({ ...check, guild: guild.slug });
@@ -12889,6 +12965,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
       const context = await getP0DiscordSignupContext({ guildId: guild.id, query: postParams });
       return res.json({ ...context, guild: guild.slug });
+    }
+
+    if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
+      const list = await getP0DiscordSignupList({ guildId: guild.id, query: postParams });
+      return res.json({ ...list, guild: guild.slug });
     }
 
     if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
