@@ -3900,6 +3900,7 @@ const RAID_IMAGES = {
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let p0ReviewEntries = [];
+let poPostEntries = [];
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -7862,10 +7863,13 @@ async function loadP0PlusPanel(){
 
   try{
     const masterCode = document.getElementById("masterCode").value.trim();
-    const [result, reviewResult] = await Promise.all([
+    const [result, reviewResult, poResult] = await Promise.all([
       railwayApi({ action:"getP0Plus" }),
       masterCode
         ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
+        : Promise.resolve({ success:true, entries:[], noMaster:true }),
+      masterCode
+        ? railwayApi({ action:"guildGetPoPostEntries", masterCode })
         : Promise.resolve({ success:true, entries:[], noMaster:true })
     ]);
     if(!result.success){
@@ -7876,9 +7880,14 @@ async function loadP0PlusPanel(){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "P0+-Freigaben konnten nicht geladen werden.")}</div>`;
       return;
     }
+    if(poResult && !poResult.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(poResult.error || "PO-Post-Einträge konnten nicht geladen werden.")}</div>`;
+      return;
+    }
 
     p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
     p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
+    poPostEntries = Array.isArray(poResult.entries) ? poResult.entries : [];
     await ensureLootDataLoaded();
     renderP0PlusModalContent();
   }catch(error){
@@ -7913,6 +7922,27 @@ function renderP0PlusModalContent(){
         </table>
       </div>
     </div>
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>PO-Post Einträge</h3>
+          <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Post</th>
+              <th>Raid</th>
+              <th>Spieler</th>
+              <th>Item</th>
+            </tr>
+          </thead>
+          <tbody id="poPostEntryRows"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="p0-toolbar">
       <select id="p0RaidFilter" onchange="renderP0PlusRows()">
         <option value="">Alle Raids</option>
@@ -7938,7 +7968,29 @@ function renderP0PlusModalContent(){
     </div>
   `;
   renderP0ReviewRows();
+  renderPoPostEntryRows();
   renderP0PlusRows();
+}
+
+function renderPoPostEntryRows(){
+  const tbody = document.getElementById("poPostEntryRows");
+  if(!tbody) return;
+  if(!document.getElementById("masterCode").value.trim()){
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Master-Code eingeben, um PO-Post-Einträge zu laden.</td></tr>';
+    return;
+  }
+  if(!poPostEntries.length){
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = poPostEntries.map(entry => `
+    <tr>
+      <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
+      <td>${escapeHtml(entry.raid || "-")}</td>
+      <td><strong>${escapeHtml(entry.player || "-")}</strong></td>
+      <td>${renderLootItem(entry.item || "-")}</td>
+    </tr>
+  `).join("");
 }
 
 function renderP0ReviewRows(){

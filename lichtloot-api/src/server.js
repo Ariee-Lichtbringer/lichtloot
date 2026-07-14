@@ -3546,6 +3546,106 @@ async function queuePoPost({ guildId, query: params }) {
   });
 }
 
+async function ensurePoPostEntriesSchema() {
+  await query(
+    `create table if not exists po_post_entries (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       post_key text not null default '',
+       source_channel_id text not null default '',
+       target_channel_id text not null default '',
+       discord_message_id text not null default '',
+       raid text not null default '',
+       title text not null default 'PO Liste',
+       player_name text not null default '',
+       item_name text not null default '',
+       po_message_id text not null default '',
+       po_created_at timestamptz,
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
+}
+
+async function savePoPostEntries({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || params.postId || "po-liste");
+  const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || "");
+  const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId || "");
+  let entries = params.entries || [];
+  if (typeof entries === "string") {
+    try { entries = JSON.parse(entries || "[]"); } catch { entries = []; }
+  }
+  if (!Array.isArray(entries)) entries = [];
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `delete from po_post_entries
+       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4`,
+      [guildId, postKey, sourceChannelId, targetChannelId]
+    );
+    for (const entry of entries) {
+      await client.query(
+        `insert into po_post_entries (
+           guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+           raid, title, player_name, item_name, po_message_id, po_created_at
+         )
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [
+          guildId,
+          postKey,
+          sourceChannelId,
+          targetChannelId,
+          clean(params.messageId || params.discordMessageId),
+          normalizeRaidType(params.raid || params.raidName).toUpperCase(),
+          clean(params.title) || "PO Liste",
+          clean(entry.player || entry.char || entry.name),
+          clean(entry.item || entry.itemName),
+          clean(entry.messageId || entry.discordMessageId),
+          clean(entry.createdAt) || null
+        ]
+      );
+    }
+    await client.query("commit");
+    return { success: true, saved: entries.length };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function getPoPostEntries({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePoPostEntriesSchema();
+  const result = await query(
+    `select *
+     from po_post_entries
+     where guild_id = $1
+     order by updated_at desc, lower(player_name) asc, lower(item_name) asc
+     limit 500`,
+    [guildId]
+  );
+  return {
+    success: true,
+    entries: result.rows.map(row => ({
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      player: row.player_name || "",
+      item: row.item_name || "",
+      messageId: row.po_message_id || "",
+      updatedAt: row.updated_at
+    }))
+  };
+}
+
 async function setRaidDiscordMessage({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const raid = await findRaid(guildId, params);
@@ -12703,6 +12803,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries") {
+      const list = await getPoPostEntries({ guildId: guild.id, query: req.query });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "getPrioCheck") {
       const check = await getPrioCheck({ guildId: guild.id, query: req.query });
       return res.json({ ...check, guild: guild.slug });
@@ -12766,6 +12871,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: req.query });
       return res.json({ ...reviewed, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
+      const saved = await savePoPostEntries({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "getP0Plus") {
@@ -12972,6 +13082,11 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries") {
+      const list = await getPoPostEntries({ guildId: guild.id, query: postParams });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
       const saved = await saveP0DiscordSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
@@ -12980,6 +13095,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...reviewed, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
+      const saved = await savePoPostEntries({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
