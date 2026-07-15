@@ -3040,7 +3040,14 @@ async function processRaidHelperSchedules({ guildId }) {
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
 
     if (dateChanged) {
-      await query("delete from raid_signups where guild_id = $1 and raid_id = $2", [guildId, existingRaid.id]);
+      await query(
+        `delete from raid_signups rs
+         using raids r
+         where r.id = rs.raid_id
+           and r.guild_id = $1
+           and rs.raid_id = $2`,
+        [guildId, existingRaid.id]
+      );
       await query("delete from raid_external_signups where guild_id = $1 and raid_id = $2", [guildId, existingRaid.id]);
       await query(
         `update raids
@@ -3264,7 +3271,7 @@ async function findRaidForHistoryImport(guildId, raidType, raidDate, raidTime) {
             (
               select count(*)::int
               from raid_signups rs
-              where rs.guild_id = r.guild_id and rs.raid_id = r.id
+              where rs.raid_id = r.id
             ) +
             (
               select count(*)::int
@@ -11338,7 +11345,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
          (
            select count(*)::int
            from raid_signups rs
-           where rs.guild_id = r.guild_id and rs.raid_id = r.id
+           where rs.raid_id = r.id
          ) +
          (
            select count(*)::int
