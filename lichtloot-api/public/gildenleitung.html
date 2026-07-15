@@ -7805,8 +7805,15 @@ async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
       setStatus(result.error || "P0+ Eintrag konnte nicht entfernt werden.", "bad");
       return;
     }
+    if(Number(result.deleted || 0) < 1){
+      setStatus("Kein passender P0+ Punkt gefunden. Bitte PO+ Liste prüfen.", "bad");
+      return;
+    }
 
     setStatus("Item erhalten gespeichert.", "good");
+    if(document.getElementById("p0PlusPanel")?.open){
+      loadP0PlusPanel().catch(() => {});
+    }
     openPrioModal(raidId);
   }catch(error){
     setStatus(error.message || "P0+ Eintrag konnte nicht entfernt werden.", "bad");

@@ -11158,17 +11158,31 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
     throw error;
   }
 
-  const result = await query(
+  let result = await query(
     `delete from p0plus_points pp
      using items i
      where pp.item_id = i.id
        and pp.guild_id = $1
        and pp.character_id = $2
-       and i.raid_type = $3
+       and lower(i.raid_type) = any($3)
        and lower(i.name) = lower($4)
      returning pp.id`,
-    [guildId, character.id, raidType, itemName]
+    [guildId, character.id, raidTypeSearchValues(raidType), itemName]
   );
+
+  if (!result.rowCount) {
+    result = await query(
+      `delete from p0plus_points pp
+       using items i
+       where pp.item_id = i.id
+         and pp.guild_id = $1
+         and pp.character_id = $2
+         and lower(i.raid_type) = any($3)
+         and regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($4), '[^a-z0-9]+', '', 'g')
+       returning pp.id`,
+      [guildId, character.id, raidTypeSearchValues(raidType), itemName]
+    );
+  }
 
   return { success: true, deleted: result.rowCount };
 }
