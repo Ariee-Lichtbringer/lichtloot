@@ -78,16 +78,17 @@ button,input,select{font:inherit}
 
 .side-link{
   width:100%;
-  min-height:44px;
+  min-height:82px;
   border:1px solid transparent;
   border-radius:8px;
-  padding:9px 11px;
+  padding:5px;
   display:flex;
   align-items:center;
-  gap:10px;
+  justify-content:center;
+  gap:0;
   color:#dbeafe;
   background:transparent;
-  text-align:left;
+  text-align:center;
   font-weight:800;
   cursor:pointer;
 }
@@ -104,6 +105,15 @@ button,input,select{font:inherit}
   text-align:center;
   color:#fbbf24;
   font-size:18px;
+}
+
+.side-icon-img{
+  display:block;
+  width:min(100%, 128px);
+  aspect-ratio:1;
+  border-radius:8px;
+  object-fit:cover;
+  box-shadow:0 8px 18px rgba(0,0,0,.35);
 }
 
 .side-spacer{height:18px}
@@ -2964,15 +2974,15 @@ tr:hover td{background:rgba(250,204,21,.035)}
   <aside class="sidebar">
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
-      <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()"><span class="side-icon">☰</span>PO Post</button>
-      <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
-      <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
-      <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
-      <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
-      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="side-icon">⚿</span>Admin</button>
-      <button class="side-link" type="button" onclick="downloadGuildLootCsv()"><span class="side-icon">⇩</span>Sicherung</button>
-      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
+      <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="Post" title="Post"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""></button>
+      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin" title="Admin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""></button>
+      <button class="side-link" type="button" onclick="downloadGuildLootCsv()" aria-label="Sicherung" title="Sicherung"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""></button>
+      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'" aria-label="Raidlead" title="Raidlead"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""></button>
     </nav>
   </aside>
 
