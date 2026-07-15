@@ -11118,7 +11118,7 @@ async function exportGuildBackup({ guildId, query: params }) {
          p.id as player_id,
          p.player_pin,
          p.security_question,
-         p.security_answer_hash,
+         p.security_answer,
          p.created_at as player_created_at,
          p.updated_at as player_updated_at,
          c.id as character_id,
