@@ -1572,6 +1572,22 @@ function normalizeHordenbuffStatus(value) {
   return clean(value);
 }
 
+function normalizeBuffDateKey(value) {
+  if (!value) return "";
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return parseDateValue(value);
+}
+
+function normalizeHordenbuffFaction(value, fallback = "Horde") {
+  let text = clean(value)
+    .replace(/[🟢🔴🟠⚪🟡]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  text = text.replace(/^(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag)\s*[·\-–—|]\s*/i, "").trim();
+  if (!text || text === "-") return fallback;
+  return text;
+}
+
 function normalizeWorldbuffStatus(value) {
   const raw = clean(value).replace(/[🟡🟢✅🔴🟠⚪]/g, "").trim().toLowerCase();
   if (!raw) return "offen";
@@ -2453,8 +2469,8 @@ async function movePlayerWorldbuff({ guildId, query: params }) {
 async function upsertHordenbuffEvent(client, guildId, params) {
   const eventDate = parseDateValue(params.datum || params.date || params.eventDate);
   const eventTime = clean(params.uhrzeit || params.time || params.eventTime || "19:35");
-  const buff = clean(params.buff || "Rend") || "Rend";
-  const faction = clean(params.gilde || params.faction || "Horde") || "Horde";
+  const buff = normalizeWorldbuffName(params.buff || "Rend") || "Rend";
+  const faction = normalizeHordenbuffFaction(params.gilde || params.guild || params.fraktion || params.faction || "Horde");
   const status = normalizeHordenbuffStatus(params.eventStatus || params.status || "offen");
   const note = clean(params.eventNote || "");
 
@@ -2472,7 +2488,85 @@ async function upsertHordenbuffEvent(client, guildId, params) {
   return result.rows[0];
 }
 
+async function cleanupDuplicateHordenbuffs(guildId) {
+  await ensureBuffTables();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const eventsResult = await client.query(
+      `select *
+       from hordenbuff_events
+       where guild_id = $1
+         and event_date >= current_date
+       order by event_date asc, event_time asc, created_at asc`,
+      [guildId]
+    );
+    const groups = new Map();
+    for (const event of eventsResult.rows) {
+      const canonicalBuff = normalizeWorldbuffName(event.buff || "Rend") || "Rend";
+      const key = [normalizeBuffDateKey(event.event_date), clean(event.event_time), canonicalBuff.toLowerCase()].join("|");
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push({ ...event, canonicalBuff });
+    }
+
+    for (const group of groups.values()) {
+      const ranked = [...group].sort((a, b) => {
+        const aFaction = normalizeHordenbuffFaction(a.faction, "");
+        const bFaction = normalizeHordenbuffFaction(b.faction, "");
+        const aScore = aFaction && aFaction !== "Horde" ? 0 : 1;
+        const bScore = bFaction && bFaction !== "Horde" ? 0 : 1;
+        return aScore - bScore || new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      });
+      const keeper = ranked[0];
+      const bestFaction = ranked.map(row => normalizeHordenbuffFaction(row.faction, "")).find(Boolean)
+        || normalizeHordenbuffFaction(keeper.faction);
+
+      await client.query(
+        `update hordenbuff_events
+         set buff = $3,
+             faction = $4,
+             updated_at = now()
+         where guild_id = $1 and id = $2`,
+        [guildId, keeper.id, keeper.canonicalBuff, bestFaction]
+      );
+
+      for (const duplicate of ranked.slice(1)) {
+        await client.query(
+          `update hordenbuff_entries
+           set event_id = $2,
+               updated_at = now()
+           where event_id = $1`,
+          [duplicate.id, keeper.id]
+        );
+        await client.query("delete from hordenbuff_events where guild_id = $1 and id = $2", [guildId, duplicate.id]);
+      }
+    }
+
+    await client.query(
+      `delete from hordenbuff_entries he
+       using hordenbuff_events e
+       where he.event_id = e.id
+         and e.guild_id = $1
+         and nullif(he.ally_char, '') is null
+         and nullif(he.horde_char, '') is null
+         and lower(coalesce(he.status, 'offen')) = 'offen'
+         and (
+           nullif(he.note, '') is null
+           or lower(he.note) = lower('kommender Rend-Termin laut Lichtbuff')
+         )`,
+      [guildId]
+    );
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    console.warn("Hordenbuff-Duplikate konnten nicht automatisch bereinigt werden:", error.message || error);
+  } finally {
+    client.release();
+  }
+}
+
 async function getHordenbuffs({ guildId, query: params }) {
+  await cleanupDuplicateHordenbuffs(guildId);
   const days = clean(params.days || "all");
   const values = [guildId];
   let windowClause = "";
@@ -2574,6 +2668,25 @@ async function setHordenbuffEntry({ guildId, query: params }) {
     const hordeChar = clean(params.uebernehmer || params.hordeChar || params.horde_char);
     const status = normalizeHordenbuffStatus(params.status);
     const note = clean(params.note || params.notiz);
+    const isEmptyOpenSlot = !allyChar && !hordeChar && status === "offen" && !note;
+
+    if (isEmptyOpenSlot) {
+      if (existingEntry) {
+        await client.query("delete from hordenbuff_entries where id = $1", [rowNumber]);
+      } else {
+        await client.query(
+          `update hordenbuff_events
+           set status = 'offen',
+               updated_at = now()
+           where id = $1 and guild_id = $2`,
+          [event.id, guildId]
+        );
+      }
+      await client.query("commit");
+      await enqueueBotUpdate({ guildId, type: "hordenbuff_update", payload: { source: "hordenbuff_empty_slot_saved" } }).catch(() => {});
+      return { success: true, eventId: event.id, emptySlot: true };
+    }
+
     const shouldAutoAssign = hordeChar && !allyChar && status !== "erledigt";
 
     if (shouldAutoAssign) {
