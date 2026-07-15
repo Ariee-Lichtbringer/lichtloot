@@ -3467,8 +3467,18 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">☰</span>
               <div>
-                <h3>PO-Liste erstellen</h3>
-                <p>Unabhängig vom Raidanmelder: Quelle lesen, Zielpost schreiben, Freigaben steuern.</p>
+                <h3>PO-Post erstellen & bearbeiten</h3>
+                <p>Unabhängig vom Raidanmelder: Quelle lesen, denselben Zielpost aktualisieren, Freigaben steuern.</p>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poPostSavedSelect">Gespeicherter PO-Post</label>
+                <select id="poPostSavedSelect" onchange="loadSelectedPoPostConfig()"></select>
+              </div>
+              <div class="field">
+                <label for="poPostKey">Post-ID</label>
+                <input id="poPostKey" type="text" placeholder="z. B. aq40-main-po">
               </div>
             </div>
             <div class="raid-helper-row">
@@ -3511,7 +3521,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
               </div>
             </div>
             <div class="tools">
-              <button class="btn" type="button" onclick="queuePoPost()">PO Post erstellen</button>
+              <button class="btn" type="button" onclick="queuePoPost()">PO Post aktualisieren</button>
+              <button class="btn ghost" type="button" onclick="savePoPostConfig()">Post speichern</button>
+              <button class="btn ghost" type="button" onclick="newPoPostConfig()">Neu</button>
+              <button class="btn danger" type="button" onclick="deletePoPostConfig()">Löschen</button>
               <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
             <div id="poPostStatus" class="status">Bereit.</div>
@@ -3797,6 +3810,7 @@ const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
+const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -3914,6 +3928,9 @@ const RAID_IMAGES = {
 
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
+let p0ReviewEntries = [];
+let poPostEntries = [];
+let poPostRaidFilter = "";
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -6477,12 +6494,14 @@ function updatePoPostPreview(){
 }
 
 function initPoPostPanel(){
+  renderPoPostConfigSelect();
   renderPoPostChannelSelects();
   loadRaidHelperDiscordChannels();
-  ["poPostSourceChannel","poPostTargetChannel"].forEach(id => {
+  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey"].forEach(id => {
     const select = document.getElementById(id);
     if(select && !select.dataset.poBound){
       select.addEventListener("change", updatePoPostPreview);
+      select.addEventListener("input", updatePoPostPreview);
       select.dataset.poBound = "1";
     }
   });
@@ -6493,38 +6512,160 @@ function initPoPostPanel(){
   }
 }
 
+function readPoPostConfigs(){
+  try{
+    const parsed = JSON.parse(localStorage.getItem(PO_POST_CONFIG_STORAGE_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(error){
+    return [];
+  }
+}
+
+function writePoPostConfigs(configs){
+  localStorage.setItem(PO_POST_CONFIG_STORAGE_KEY, JSON.stringify(configs || []));
+}
+
+function makePoPostKey(title){
+  const base = String(title || "po-liste")
+    .toLowerCase()
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"")
+    .slice(0,40);
+  return base || "po-liste";
+}
+
+function getPoPostFormConfig(){
+  const title = document.getElementById("poPostTitle")?.value.trim() || "PO Liste";
+  let postKey = document.getElementById("poPostKey")?.value.trim() || "";
+  if(!postKey){
+    postKey = makePoPostKey(title);
+    setValue("poPostKey", postKey);
+  }
+  const sourceChannelId = document.getElementById("poPostSourceChannel")?.value || "";
+  return {
+    postKey,
+    sourceChannelId,
+    targetChannelId: document.getElementById("poPostTargetChannel")?.value || sourceChannelId,
+    reviewRecipient: document.getElementById("poPostReviewRecipient")?.value.trim() || "",
+    title,
+    raid: document.getElementById("poPostRaid")?.value || "",
+    limit: document.getElementById("poPostLimit")?.value || "800"
+  };
+}
+
+function setPoPostFormConfig(config){
+  if(!config) return;
+  setValue("poPostKey", config.postKey || makePoPostKey(config.title));
+  setValue("poPostReviewRecipient", config.reviewRecipient || "");
+  setValue("poPostTitle", config.title || "PO Liste");
+  setValue("poPostLimit", config.limit || "800");
+  setValue("poPostRaid", config.raid || "");
+  const source = document.getElementById("poPostSourceChannel");
+  const target = document.getElementById("poPostTargetChannel");
+  if(source) source.value = config.sourceChannelId || "";
+  if(target) target.value = config.targetChannelId || config.sourceChannelId || "";
+  updatePoPostPreview();
+}
+
+function renderPoPostConfigSelect(){
+  const select = document.getElementById("poPostSavedSelect");
+  if(!select) return;
+  const configs = readPoPostConfigs();
+  select.innerHTML = '<option value="">Neuen PO-Post bearbeiten</option>' + configs.map(config => (
+    `<option value="${escapeAttr(config.postKey || "")}">${escapeHtml(config.title || config.postKey || "PO Post")}</option>`
+  )).join("");
+}
+
+function loadSelectedPoPostConfig(){
+  const key = document.getElementById("poPostSavedSelect")?.value || "";
+  const config = readPoPostConfigs().find(item => item.postKey === key);
+  if(config) setPoPostFormConfig(config);
+}
+
+function savePoPostConfig(){
+  const status = document.getElementById("poPostStatus");
+  const config = getPoPostFormConfig();
+  if(!config.sourceChannelId || !config.targetChannelId){
+    if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
+    return false;
+  }
+  const configs = readPoPostConfigs();
+  const index = configs.findIndex(item => item.postKey === config.postKey);
+  if(index >= 0) configs[index] = config;
+  else configs.push(config);
+  writePoPostConfigs(configs);
+  renderPoPostConfigSelect();
+  const select = document.getElementById("poPostSavedSelect");
+  if(select) select.value = config.postKey;
+  if(status) status.innerHTML = '<span class="good">PO-Post-Einstellungen gespeichert.</span>';
+  return true;
+}
+
+function deletePoPostConfig(){
+  const status = document.getElementById("poPostStatus");
+  const key = document.getElementById("poPostSavedSelect")?.value || document.getElementById("poPostKey")?.value.trim() || "";
+  if(!key){
+    if(status) status.textContent = "Kein gespeicherter PO-Post ausgewählt.";
+    return;
+  }
+  writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
+  renderPoPostConfigSelect();
+  if(status) status.innerHTML = '<span class="good">Gespeicherter PO-Post entfernt.</span>';
+}
+
+async function newPoPostConfig(){
+  const current = getPoPostFormConfig();
+  const suffix = Date.now().toString(36).slice(-6);
+  const nextConfig = {
+    ...current,
+    postKey:`${makePoPostKey(current.title || "po-liste")}-${suffix}`,
+    title:current.title || "PO Liste",
+    limit:current.limit || "800"
+  };
+  setPoPostFormConfig(nextConfig);
+  const select = document.getElementById("poPostSavedSelect");
+  if(select) select.value = "";
+  const status = document.getElementById("poPostStatus");
+  if(nextConfig.sourceChannelId && nextConfig.targetChannelId && document.getElementById("masterCode")?.value.trim()){
+    if(status) status.textContent = "Neuer PO-Post wird erstellt ...";
+    await queuePoPost();
+  }else if(status){
+    status.textContent = "Neuer PO-Post vorbereitet. Bitte Quelle/Ziel wählen und dann aktualisieren.";
+  }
+}
+
 async function queuePoPost(){
   const status = document.getElementById("poPostStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
-  const sourceChannelId = document.getElementById("poPostSourceChannel")?.value || "";
-  const targetChannelId = document.getElementById("poPostTargetChannel")?.value || sourceChannelId;
-  const reviewRecipient = document.getElementById("poPostReviewRecipient")?.value.trim() || "";
-  const title = document.getElementById("poPostTitle")?.value.trim() || "PO Liste";
-  const raid = document.getElementById("poPostRaid")?.value || "";
-  const limit = document.getElementById("poPostLimit")?.value || "800";
+  const config = getPoPostFormConfig();
   if(!masterCode){
     if(status) status.textContent = "Bitte erst Master-Code eingeben.";
     return;
   }
-  if(!sourceChannelId || !targetChannelId){
+  if(!config.sourceChannelId || !config.targetChannelId){
     if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
     return;
   }
   try{
+    savePoPostConfig();
     if(status) status.textContent = "PO Post wird an den Bot übergeben ...";
     const result = await railwayWrite({
       action:"guildQueuePoPost",
       masterCode,
-      sourceChannelId,
-      targetChannelId,
-      reviewRecipient,
-      title,
-      raid,
-      limit
+      postKey: config.postKey,
+      sourceChannelId: config.sourceChannelId,
+      targetChannelId: config.targetChannelId,
+      reviewRecipient: config.reviewRecipient,
+      title: config.title,
+      raid: config.raid,
+      limit: config.limit
     });
     if(!result.success) throw new Error(result.error || "PO Post konnte nicht queued werden.");
     if(status){
-      status.innerHTML = '<span class="good">PO Post ist in der Bot-Warteschlange.</span>';
+      status.innerHTML = result.skipped
+        ? '<span class="warn">PO Post war gerade schon in der Warteschlange. Kein neuer Auftrag erstellt.</span>'
+        : '<span class="good">PO Post ist in der Bot-Warteschlange.</span>';
     }
   }catch(error){
     if(status) status.textContent = error.message || "PO Post konnte nicht erstellt werden.";
@@ -7888,13 +8029,32 @@ async function loadP0PlusPanel(){
   document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"getP0Plus" });
+    const masterCode = document.getElementById("masterCode").value.trim();
+    const [result, reviewResult, poResult] = await Promise.all([
+      railwayApi({ action:"getP0Plus" }),
+      masterCode
+        ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
+        : Promise.resolve({ success:true, entries:[], noMaster:true }),
+      masterCode
+        ? railwayApi({ action:"guildGetPoPostEntries", masterCode })
+        : Promise.resolve({ success:true, entries:[], noMaster:true })
+    ]);
     if(!result.success){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
       return;
     }
+    if(reviewResult && !reviewResult.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "P0+-Freigaben konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    if(poResult && !poResult.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(poResult.error || "PO-Post-Einträge konnten nicht geladen werden.")}</div>`;
+      return;
+    }
 
     p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
+    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
+    poPostEntries = Array.isArray(poResult.entries) ? poResult.entries : [];
     await ensureLootDataLoaded();
     renderP0PlusModalContent();
   }catch(error){
@@ -7905,6 +8065,58 @@ async function loadP0PlusPanel(){
 function renderP0PlusModalContent(){
   const raids = Array.from(new Set(p0PlusEntries.map(entry => entry.raid).filter(Boolean))).sort();
   document.getElementById("p0PlusPanelContent").innerHTML = `
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>P0+ Freigaben</h3>
+          <p>Offene Discord-Anmeldungen prüfen. Nach Freigabe aktualisiert der Bot den DC-Post mit grünem Haken.</p>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Raid</th>
+              <th>Spieler</th>
+              <th>Item</th>
+              <th>Discord</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="p0ReviewRows"></tbody>
+        </table>
+      </div>
+    </div>
+      <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>PO-Post Einträge</h3>
+          <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
+        </div>
+      </div>
+      <div class="p0-toolbar">
+        ${["","naxx","aq40","bwl","mc"].map(raid => `
+          <button class="small-btn ${poPostRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoPostRaidFilter('${escapeAttr(raid)}')">${escapeHtml(raid ? raid.toUpperCase() : "Alle")}</button>
+        `).join("")}
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Post</th>
+              <th>Raid</th>
+              <th>Spieler</th>
+              <th>Item</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="poPostEntryRows"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="p0-toolbar">
       <select id="p0RaidFilter" onchange="renderP0PlusRows()">
         <option value="">Alle Raids</option>
@@ -7929,7 +8141,164 @@ function renderP0PlusModalContent(){
       </table>
     </div>
   `;
+  renderP0ReviewRows();
+  renderPoPostEntryRows();
   renderP0PlusRows();
+}
+
+function setPoPostRaidFilter(raid){
+  poPostRaidFilter = String(raid || "").toLowerCase();
+  renderP0PlusModalContent();
+}
+
+function renderPoPostEntryRows(){
+  const tbody = document.getElementById("poPostEntryRows");
+  if(!tbody) return;
+  if(!document.getElementById("masterCode").value.trim()){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um PO-Post-Einträge zu laden.</td></tr>';
+    return;
+  }
+  const rows = poPostEntries.filter(entry => !poPostRaidFilter || normalize(entry.raid) === poPostRaidFilter);
+  if(!rows.length){
+    const emptyText = poPostRaidFilter
+      ? `Keine aktiven PO-Post-Einträge für ${poPostRaidFilter.toUpperCase()} gefunden.`
+      : "Noch keine aktiven PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.";
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(entry => {
+    const index = poPostEntries.indexOf(entry);
+    const status = String(entry.approvalStatus || "pending").toLowerCase();
+    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
+    const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    const releaseStar = String(entry.approvedBy || "").toLowerCase().includes("freigabeliste")
+      ? '<span class="p0-release-star" title="P0-Freigabe aus dem Raidanmelder">★</span>'
+      : "";
+    return `
+      <tr>
+        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
+        <td>${escapeHtml(entry.raid || "-")}</td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong>${releaseStar}</td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromGuild(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromGuild(${index},'rejected')">Ablehnen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function reviewPoPostEntryFromGuild(index, status){
+  const entry = poPostEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
+    const result = await railwayWrite({
+      action:"guildReviewPoPostEntry",
+      masterCode,
+      postKey:entry.postKey || "",
+      sourceChannelId:entry.sourceChannelId || "",
+      targetChannelId:entry.targetChannelId || "",
+      messageId:entry.messageId || "",
+      status,
+      reviewer:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    poPostEntries[index] = Object.assign({}, entry, result.entry || {}, {
+      approvalStatus: status === "approved" ? "approved" : "rejected"
+    });
+    renderPoPostEntryRows();
+    setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+function renderP0ReviewRows(){
+  const tbody = document.getElementById("p0ReviewRows");
+  if(!tbody) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um P0+-Freigaben zu laden.</td></tr>';
+    return;
+  }
+  if(!p0ReviewEntries.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine P0+-Anmeldungen gefunden.</td></tr>';
+    return;
+  }
+
+  const rows = [...p0ReviewEntries].sort((a,b) => {
+    const statusOrder = { pending:0, approved:1, rejected:2 };
+    const s = (statusOrder[a.approvalStatus] ?? 9) - (statusOrder[b.approvalStatus] ?? 9);
+    if(s) return s;
+    return String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || ""));
+  });
+
+  tbody.innerHTML = rows.map(entry => {
+    const index = p0ReviewEntries.indexOf(entry);
+    const status = String(entry.approvalStatus || "pending").toLowerCase();
+    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
+    const statusClass = status === "approved" ? "done" : status === "rejected" ? "closed" : "open";
+    const raidLabel = [entry.raidName || entry.raid || "-", entry.raidDate || "", entry.raidTime || ""].filter(Boolean).join(" · ");
+    return `
+      <tr>
+        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td>${escapeHtml(raidLabel)}</td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong><br><span class="muted">${escapeHtml(entry.server || "")}</span></td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>${escapeHtml(entry.discordName || "-")}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'rejected')">Ablehnen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function reviewP0DiscordSignupFromGuild(index, status){
+  const entry = p0ReviewEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus(status === "approved" ? "P0+ wird freigegeben ..." : "P0+ wird abgelehnt ...", "");
+    const result = await railwayWrite({
+      action:"reviewP0DiscordSignup",
+      masterCode,
+      signupId:entry.id,
+      status,
+      reviewer:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "P0+-Freigabe konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    p0ReviewEntries[index] = Object.assign({}, entry, result.signup || {}, {
+      approvalStatus: status === "approved" ? "approved" : "rejected"
+    });
+    renderP0ReviewRows();
+    setStatus(status === "approved" ? "P0+ freigegeben. Der DC-Post bekommt den grünen Haken." : "P0+ abgelehnt.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+-Freigabe konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function renderP0PlusRows(){
@@ -9758,6 +10127,11 @@ function formatDateTime(value){
 
 function normalize(value){
   return String(value || "").trim().toLowerCase();
+}
+
+function setValue(id, value){
+  const field = document.getElementById(id);
+  if(field) field.value = value == null ? "" : String(value);
 }
 
 function escapeHtml(value){

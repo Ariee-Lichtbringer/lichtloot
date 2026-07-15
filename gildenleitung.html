@@ -3930,6 +3930,7 @@ let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let p0ReviewEntries = [];
 let poPostEntries = [];
+let poPostRaidFilter = "";
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -8088,12 +8089,17 @@ function renderP0PlusModalContent(){
         </table>
       </div>
     </div>
-    <div class="p0-review-block">
+      <div class="p0-review-block">
       <div class="section-head">
         <div>
           <h3>PO-Post Einträge</h3>
           <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
         </div>
+      </div>
+      <div class="p0-toolbar">
+        ${["","naxx","aq40","bwl","mc"].map(raid => `
+          <button class="small-btn ${poPostRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoPostRaidFilter('${escapeAttr(raid)}')">${escapeHtml(raid ? raid.toUpperCase() : "Alle")}</button>
+        `).join("")}
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -8140,6 +8146,11 @@ function renderP0PlusModalContent(){
   renderP0PlusRows();
 }
 
+function setPoPostRaidFilter(raid){
+  poPostRaidFilter = String(raid || "").toLowerCase();
+  renderP0PlusModalContent();
+}
+
 function renderPoPostEntryRows(){
   const tbody = document.getElementById("poPostEntryRows");
   if(!tbody) return;
@@ -8147,11 +8158,16 @@ function renderPoPostEntryRows(){
     tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um PO-Post-Einträge zu laden.</td></tr>';
     return;
   }
-  if(!poPostEntries.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.</td></tr>';
+  const rows = poPostEntries.filter(entry => !poPostRaidFilter || normalize(entry.raid) === poPostRaidFilter);
+  if(!rows.length){
+    const emptyText = poPostRaidFilter
+      ? `Keine aktiven PO-Post-Einträge für ${poPostRaidFilter.toUpperCase()} gefunden.`
+      : "Noch keine aktiven PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.";
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
     return;
   }
-  tbody.innerHTML = poPostEntries.map((entry, index) => {
+  tbody.innerHTML = rows.map(entry => {
+    const index = poPostEntries.indexOf(entry);
     const status = String(entry.approvalStatus || "pending").toLowerCase();
     const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
     const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";

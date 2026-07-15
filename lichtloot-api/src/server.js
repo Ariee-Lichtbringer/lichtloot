@@ -3622,18 +3622,44 @@ async function ensurePoPostEntriesSchema() {
        title text not null default 'PO Liste',
        player_name text not null default '',
        item_name text not null default '',
+       discord_user_id text not null default '',
+       discord_name text not null default '',
        po_message_id text not null default '',
        po_created_at timestamptz,
        approval_status text not null default 'pending',
        approved_by text not null default '',
        approved_at timestamptz,
+       archived_at timestamptz,
        updated_at timestamptz not null default now()
      )`
   );
+  await query(`alter table po_post_entries add column if not exists discord_user_id text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists discord_name text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approval_status text not null default 'pending'`);
   await query(`alter table po_post_entries add column if not exists approved_by text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approved_at timestamptz`);
+  await query(`alter table po_post_entries add column if not exists archived_at timestamptz`);
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
+  await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
+}
+
+async function resolvePoPostPlayerName(client, guildId, entry) {
+  const fallback = clean(entry.player || entry.char || entry.name);
+  const discordUserId = clean(entry.discordUserId || entry.discord_user_id);
+  if (!discordUserId) return fallback;
+  const linked = await client.query(
+    `select c.name
+     from discord_player_links dpl
+     join characters c on c.id = dpl.character_id
+     join players p on p.id = c.player_id
+     where dpl.guild_id = $1
+       and dpl.discord_user_id = $2
+       and p.guild_id = $1
+     order by coalesce(c.is_main, false) desc, dpl.updated_at desc, c.name asc
+     limit 1`,
+    [guildId, discordUserId]
+  );
+  return clean(linked.rows[0]?.name) || fallback;
 }
 
 async function savePoPostEntries({ guildId, query: params }) {
@@ -3662,7 +3688,7 @@ async function savePoPostEntries({ guildId, query: params }) {
     const approvalResult = await client.query(
       `select po_message_id, player_name, item_name, approval_status, approved_by, approved_at
        from po_post_entries
-       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4`,
+       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
     const approvalByKey = new Map();
@@ -3678,11 +3704,11 @@ async function savePoPostEntries({ guildId, query: params }) {
     }
     await client.query(
       `delete from po_post_entries
-       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4`,
+       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
     for (const entry of entries) {
-      const playerName = clean(entry.player || entry.char || entry.name);
+      const playerName = await resolvePoPostPlayerName(client, guildId, entry);
       const itemName = clean(entry.item || entry.itemName);
       const poMessageId = clean(entry.messageId || entry.discordMessageId);
       const approval = approvalByKey.get(poMessageId)
@@ -3695,10 +3721,10 @@ async function savePoPostEntries({ guildId, query: params }) {
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-           raid, title, player_name, item_name, po_message_id, po_created_at,
+           raid, title, player_name, item_name, discord_user_id, discord_name, po_message_id, po_created_at,
            approval_status, approved_by, approved_at
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [
           guildId,
           postKey,
@@ -3709,6 +3735,8 @@ async function savePoPostEntries({ guildId, query: params }) {
           clean(params.title) || "PO Liste",
           playerName,
           itemName,
+          clean(entry.discordUserId || entry.discord_user_id),
+          clean(entry.discordName || entry.discord_name),
           poMessageId,
           clean(entry.createdAt) || null,
           approval.approvalStatus || "pending",
@@ -3730,13 +3758,20 @@ async function savePoPostEntries({ guildId, query: params }) {
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensurePoPostEntriesSchema();
+  const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
+  const values = [guildId];
+  const clauses = ["guild_id = $1", "archived_at is null"];
+  if (raidKey) {
+    values.push(raidKey);
+    clauses.push(`lower(raid) = $${values.length}`);
+  }
   const result = await query(
     `select *
      from po_post_entries
-     where guild_id = $1
+     where ${clauses.join(" and ")}
      order by updated_at desc, lower(player_name) asc, lower(item_name) asc
      limit 500`,
-    [guildId]
+    values
   );
   return {
     success: true,
@@ -3748,11 +3783,14 @@ async function getPoPostEntries({ guildId, query: params }) {
       title: row.title || "PO Liste",
       player: row.player_name || "",
       item: row.item_name || "",
+      discordUserId: row.discord_user_id || "",
+      discordName: row.discord_name || "",
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
       approvedAt: row.approved_at || "",
+      archivedAt: row.archived_at || "",
       updatedAt: row.updated_at
     }))
   };
@@ -3781,7 +3819,7 @@ async function getPoPostApprovals({ guildId, query: params }) {
   const result = await query(
     `select *
      from po_post_entries
-     where ${clauses.join(" and ")}`,
+     where ${clauses.join(" and ")} and archived_at is null`,
     values
   );
   return {
@@ -3794,6 +3832,31 @@ async function getPoPostApprovals({ guildId, query: params }) {
       approved: row.approval_status === "approved"
     }))
   };
+}
+
+async function resolvePoPostPlayers({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  let entries = params.entries || [];
+  if (typeof entries === "string") {
+    try { entries = JSON.parse(entries || "[]"); } catch { entries = []; }
+  }
+  if (!Array.isArray(entries)) entries = [];
+  const client = await pool.connect();
+  try {
+    const resolved = [];
+    for (const entry of entries.slice(0, 500)) {
+      const player = await resolvePoPostPlayerName(client, guildId, entry);
+      const copy = { ...entry, player };
+      if (player && clean(entry.player) && player.toLowerCase() !== clean(entry.player).toLowerCase()) {
+        copy.originalPlayer = clean(entry.player);
+      }
+      resolved.push(copy);
+    }
+    return { success: true, entries: resolved };
+  } finally {
+    client.release();
+  }
 }
 
 async function reviewPoPostEntry({ guildId, query: params }) {
@@ -3816,6 +3879,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
        and source_channel_id = $3
        and target_channel_id = $4
        and po_message_id = $5
+       and archived_at is null
      returning *`,
     [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung")]
   );
@@ -3857,6 +3921,22 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       approvedAt: row.approved_at || ""
     }
   };
+}
+
+async function archivePoPostEntriesForRaid(client, guildId, raidType) {
+  await ensurePoPostEntriesSchema();
+  const raidKey = normalizeRaidType(raidType).toLowerCase();
+  if (!raidKey) return 0;
+  const result = await client.query(
+    `update po_post_entries
+     set archived_at = now(),
+         updated_at = now()
+     where guild_id = $1
+       and lower(raid) = $2
+       and archived_at is null`,
+    [guildId, raidKey]
+  );
+  return result.rowCount || 0;
 }
 
 async function setRaidDiscordMessage({ guildId, query: params }) {
@@ -11508,7 +11588,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
         [guildId, row.character_id, row.item_id, "Raidlead Transfer", transferNote]
       );
     }
+    const archivedPoPostEntries = await archivePoPostEntriesForRaid(client, guildId, raid.raid_type);
     await client.query("commit");
+    raid.archived_po_post_entries = archivedPoPostEntries;
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -11530,6 +11612,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     success: true,
     awarded: candidates.length,
     candidates: candidates.length,
+    archivedPoPostEntries: Number(raid.archived_po_post_entries || 0),
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount
   };
@@ -13069,6 +13152,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "lichtbotResolvePoPostPlayers" || action === "resolvePoPostPlayers") {
+      const resolved = await resolvePoPostPlayers({ guildId: guild.id, query: req.query });
+      return res.json({ ...resolved, guild: guild.slug });
+    }
+
     if (action === "getPrioCheck") {
       const check = await getPrioCheck({ guildId: guild.id, query: req.query });
       return res.json({ ...check, guild: guild.slug });
@@ -13356,6 +13444,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
       const list = await getPoPostApprovals({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "lichtbotResolvePoPostPlayers" || action === "resolvePoPostPlayers") {
+      const resolved = await resolvePoPostPlayers({ guildId: guild.id, query: postParams });
+      return res.json({ ...resolved, guild: guild.slug });
     }
 
     if (action === "lichtbotSaveP0Signup" || action === "saveP0DiscordSignup") {
