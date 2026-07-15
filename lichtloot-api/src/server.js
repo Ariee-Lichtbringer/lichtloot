@@ -3871,15 +3871,6 @@ async function savePoPostEntries({ guildId, query: params }) {
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensurePoPostEntriesSchema();
-  await query(
-    `update po_post_entries
-     set archived_at = null,
-         updated_at = now()
-     where guild_id = $1
-       and archived_at is not null
-       and archived_at > now() - interval '2 hours'`,
-    [guildId]
-  );
   const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
@@ -4045,51 +4036,20 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   };
 }
 
-async function restoreOverArchivedPoPostEntries(client, guildId, raidType) {
+async function archivePoPostEntriesForRaid(client, guildId, raidType) {
   await ensurePoPostEntriesSchema();
   const raidKey = normalizeRaidType(raidType).toLowerCase();
   if (!raidKey) return 0;
   const result = await client.query(
     `update po_post_entries
-     set archived_at = null,
+     set archived_at = now(),
          updated_at = now()
      where guild_id = $1
        and lower(raid) = $2
-       and archived_at is not null
-       and archived_at > now() - interval '2 hours'`,
+       and archived_at is null`,
     [guildId, raidKey]
   );
   return result.rowCount || 0;
-}
-
-async function archiveTransferredPoPostEntries(client, guildId, raidType, candidates) {
-  await ensurePoPostEntriesSchema();
-  const raidKey = normalizeRaidType(raidType).toLowerCase();
-  const pairs = (Array.isArray(candidates) ? candidates : [])
-    .map(row => ({
-      player: clean(row.player).toLowerCase(),
-      item: clean(row.item_name).toLowerCase()
-    }))
-    .filter(row => row.player && row.item);
-  if (!raidKey || !pairs.length) return 0;
-
-  let archived = 0;
-  for (const pair of pairs) {
-    const result = await client.query(
-      `update po_post_entries
-       set archived_at = now(),
-           updated_at = now()
-       where guild_id = $1
-         and lower(raid) = $2
-         and lower(player_name) = $3
-         and lower(item_name) = $4
-         and approval_status = 'approved'
-         and archived_at is null`,
-      [guildId, raidKey, pair.player, pair.item]
-    );
-    archived += result.rowCount || 0;
-  }
-  return archived;
 }
 
 async function setRaidDiscordMessage({ guildId, query: params }) {
@@ -11725,7 +11685,6 @@ async function transferP0PlusPoints({ guildId, query: params }) {
 
   try {
     await client.query("begin");
-    await restoreOverArchivedPoPostEntries(client, guildId, raid.raid_type);
     for (const row of candidates) {
       await client.query(
         `delete from p0plus_points
@@ -11742,7 +11701,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
         [guildId, row.character_id, row.item_id, "Raidlead Transfer", transferNote]
       );
     }
-    const archivedPoPostEntries = await archiveTransferredPoPostEntries(client, guildId, raid.raid_type, candidates);
+    const archivedPoPostEntries = await archivePoPostEntriesForRaid(client, guildId, raid.raid_type);
     await client.query("commit");
     raid.archived_po_post_entries = archivedPoPostEntries;
   } catch (error) {
