@@ -2965,16 +2965,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()"><span class="side-icon">⌂</span>Dashboard</button>
-      <button class="side-link" type="button" onclick="openRaidPanel()"><span class="side-icon">⚔</span>Raids</button>
-      <button class="side-link" type="button" onclick="openRaidHelperPanel()"><span class="side-icon">▣</span>Raidanmelder</button>
       <button class="side-link" type="button" onclick="openPoPostPanel()"><span class="side-icon">☰</span>PO Post</button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()"><span class="side-icon">✦</span>P0+ Liste</button>
-      <button class="side-link" type="button" onclick="openIssueInboxPanel()"><span class="side-icon">✉</span>Postfach</button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()"><span class="side-icon">◉</span>Loganalysen</button>
-      <button class="side-link" type="button" onclick="openCombatlogUploadPanel()"><span class="side-icon">⇧</span>Combatlog Upload</button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
-      <button class="side-link" type="button" onclick="openPlayerPanel()"><span class="side-icon">♟</span>Spielerlogins</button>
       <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="side-icon">⚿</span>Admin</button>
       <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
       <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
@@ -3029,7 +3024,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </div>
       </section>
 
-  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()">
+  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()" hidden>
     <summary>
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">▣</span>
@@ -3587,7 +3582,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
   </details>
 
-  <details id="combatlogUploadPanel" class="panel log-analysis-panel">
+  <details id="combatlogUploadPanel" class="panel log-analysis-panel" hidden>
     <summary>Combatlog Upload</summary>
     <div class="log-analysis-body">
       <div class="log-analysis-layout">
