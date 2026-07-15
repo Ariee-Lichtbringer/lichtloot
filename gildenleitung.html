@@ -2971,7 +2971,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <button class="side-link" type="button" onclick="openWorldbuffPanel()"><span class="side-icon">◎</span>Worldbuffs</button>
       <button class="side-link" type="button" onclick="openHordenbuffPanel()"><span class="side-icon">◇</span>Hordenbuffs</button>
       <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'"><span class="side-icon">⚿</span>Admin</button>
-      <button class="side-link" type="button" onclick="downloadGuildBackup()"><span class="side-icon">⇩</span>Sicherung</button>
+      <button class="side-link" type="button" onclick="downloadGuildLootCsv()"><span class="side-icon">⇩</span>Sicherung</button>
       <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'"><span class="side-icon">⚿</span>Raidlead-Panel</button>
     </nav>
   </aside>
@@ -4121,6 +4121,135 @@ async function downloadGuildBackup(){
   }catch(error){
     setStatus(error.message || "Sicherung konnte nicht erstellt werden.", "bad");
     alert(error.message || "Sicherung konnte nicht erstellt werden.");
+  }
+}
+
+function csvValue(value){
+  const text = value == null ? "" : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadBlobFile(blob, fileName){
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return url;
+}
+
+function buildLootCsvRows(result){
+  const headers = [
+    "Typ",
+    "Raid",
+    "Raidname",
+    "Raiddatum",
+    "Raidzeit",
+    "Raid-ID",
+    "Status",
+    "Charakter",
+    "Server",
+    "Klasse",
+    "Item",
+    "Prio 1",
+    "Prio 2",
+    "Prio 3",
+    "PO+",
+    "Punkte",
+    "Quelle",
+    "Notiz",
+    "Erstellt am",
+    "Aktualisiert am"
+  ];
+  const rows = [headers];
+
+  (Array.isArray(result.prios) ? result.prios : []).forEach(entry => {
+    rows.push([
+      "PRIO",
+      entry.raid_type || entry.raid || "",
+      entry.raid_name || "",
+      entry.raid_date || "",
+      entry.raid_time || "",
+      entry.external_raid_id || entry.raid_pin || entry.raid_id || "",
+      entry.status || "",
+      entry.player || "",
+      entry.server || "",
+      entry.class_name || "",
+      "",
+      entry.p1 || "",
+      entry.p2 || "",
+      entry.p3 || "",
+      commentMeta(entry.comment).p0Plus || "",
+      "",
+      "",
+      entry.comment || "",
+      entry.created_at || "",
+      entry.updated_at || ""
+    ]);
+  });
+
+  (Array.isArray(result.p0plusPoints) ? result.p0plusPoints : []).forEach(entry => {
+    rows.push([
+      "PO+",
+      entry.raid_type || entry.raid || "",
+      "",
+      "",
+      "",
+      entry.note || "",
+      "",
+      entry.player || "",
+      entry.server || "",
+      entry.class_name || "",
+      entry.item_name || entry.item || "",
+      "",
+      "",
+      "",
+      "ja",
+      entry.points || "",
+      entry.source || "",
+      entry.note || "",
+      entry.created_at || "",
+      entry.updated_at || ""
+    ]);
+  });
+
+  return rows;
+}
+
+async function downloadGuildLootCsv(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    alert("Bitte Master-Code eingeben.");
+    return;
+  }
+
+  setStatus("CSV-Sicherung wird erstellt ...", "");
+
+  try{
+    const result = await railwayApi({ action:"guildExportBackup", masterCode });
+    if(!result.success){
+      setStatus(result.error || "CSV-Sicherung konnte nicht erstellt werden.", "bad");
+      return;
+    }
+
+    const rows = buildLootCsvRows(result);
+    const csv = "\uFEFF" + rows.map(row => row.map(csvValue).join(";")).join("\r\n");
+    const guildSlug = result.guild || CURRENT_GUILD_SLUG || "gilde";
+    const stamp = new Date().toISOString().replace(/[:.]/g,"-");
+    const fileName = `${guildSlug}-po-plus-prios-${stamp}.csv`;
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+    const url = downloadBlobFile(blob, fileName);
+    setStatusHtml(
+      `CSV-Sicherung wurde erstellt. Falls kein Download startet: <a href="${url}" download="${escapeAttr(fileName)}">CSV herunterladen</a>`,
+      "good"
+    );
+  }catch(error){
+    setStatus(error.message || "CSV-Sicherung konnte nicht erstellt werden.", "bad");
+    alert(error.message || "CSV-Sicherung konnte nicht erstellt werden.");
   }
 }
 
