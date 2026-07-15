@@ -3876,8 +3876,7 @@ async function getPoPostEntries({ guildId, query: params }) {
      set archived_at = null,
          updated_at = now()
      where guild_id = $1
-       and archived_at is not null
-       and archived_at > now() - interval '2 hours'`,
+       and archived_at is not null`,
     [guildId]
   );
   const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
