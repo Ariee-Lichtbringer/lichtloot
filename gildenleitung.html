@@ -2744,20 +2744,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-bottom:8px;
 }
 
-.po-post-filterbar{
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  align-items:center;
-  margin:8px 0;
-}
-
-.po-post-filterbar .small-btn{
-  min-width:74px;
-  flex:0 0 auto;
-  text-align:center;
-}
-
 .p0-points-input{
   width:76px;
   min-height:28px;
@@ -8110,7 +8096,7 @@ function renderP0PlusModalContent(){
           <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
         </div>
       </div>
-      <div class="po-post-filterbar">
+      <div class="p0-toolbar">
         ${["","naxx","aq40","bwl","mc"].map(raid => `
           <button class="small-btn ${poPostRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoPostRaidFilter('${escapeAttr(raid)}')">${escapeHtml(raid ? raid.toUpperCase() : "Alle")}</button>
         `).join("")}
