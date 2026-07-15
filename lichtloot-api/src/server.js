@@ -3257,11 +3257,41 @@ function parseRaidHistoryImportEntries(raw) {
     });
 }
 
+async function findRaidForHistoryImport(guildId, raidType, raidDate, raidTime) {
+  const result = await query(
+    `select r.*,
+            (select count(*)::int from prios pr where pr.raid_id = r.id) as prio_count,
+            (
+              select count(*)::int
+              from raid_signups rs
+              where rs.guild_id = r.guild_id and rs.raid_id = r.id
+            ) +
+            (
+              select count(*)::int
+              from raid_external_signups res
+              where res.guild_id = r.guild_id and res.raid_id = r.id
+            ) as signup_count
+     from raids r
+     where r.guild_id = $1
+       and lower(r.raid_type) = any($2)
+       and r.raid_date = $3
+     order by
+       case when (select count(*) from prios pr where pr.raid_id = r.id) > 0 then 0 else 1 end,
+       case when coalesce(r.created_by, '') = 'History-Import' then 1 else 0 end,
+       case when $4 = '' or coalesce(r.raid_time, '') = $4 then 0 else 1 end,
+       r.created_at asc
+     limit 1`,
+    [guildId, raidTypeSearchValues(raidType), raidDate, clean(raidTime)]
+  );
+  return result.rows[0] || null;
+}
+
 async function importRaidHelperHistory({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const entries = parseRaidHistoryImportEntries(params.entries || params.raids || params.importText);
   const imported = [];
   const skipped = [];
+  const warnings = [];
   for (const entry of entries) {
     const raidType = normalizeRaidType(entry.raid || entry.raidType || entry.type);
     const raidDate = parseDateValue(entry.date || entry.raidDate || entry.datum);
@@ -3271,29 +3301,34 @@ async function importRaidHelperHistory({ guildId, query: params }) {
       continue;
     }
     const raidId = `history-${raidType}-${raidDate}-${raidTime}`.toLowerCase().replace(/[^a-z0-9-]+/g, "-");
-    const created = await createRaidRecord({
-      guildId,
-      query: {
-        raidId,
-        raid: raidType,
-        raidName: clean(entry.title || entry.raidName || entry.name) || `${displayRaidName(raidType)} ${raidDate}`,
-        raidDate,
-        raidTime,
-        guild: "Lichtbringer",
-        playerPin: clean(entry.playerPin || "") || randomRaidCode(3),
-        leadPin: clean(entry.leadPin || "") || randomRaidCode(4),
-        status: clean(entry.status || "archiviert"),
-        p0PlusFreigabe: "geschlossen",
-        createdBy: clean(entry.createdBy || "History-Import"),
-        raidHelperEnabled: "true",
-        maxPlayers: parseOptionalInteger(entry.maxPlayers) || (["zg", "aq20"].includes(raidType) ? 20 : 40),
-        tankSlots: parseOptionalInteger(entry.tankSlots) || (["zg", "aq20"].includes(raidType) ? 1 : 2),
-        healSlots: parseOptionalInteger(entry.healSlots) || (["zg", "aq20"].includes(raidType) ? 4 : 8),
-        ddSlots: parseOptionalInteger(entry.ddSlots) || (["zg", "aq20"].includes(raidType) ? 15 : 30),
-        description: clean(entry.description || "Vergangener Termin aus History-Import.")
-      }
-    });
-    const raid = await findRaid(guildId, { raidId: created.raidId || raidId });
+    const matchedExisting = await findRaidForHistoryImport(guildId, raidType, raidDate, raidTime);
+    let created = null;
+    if (!matchedExisting) {
+      created = await createRaidRecord({
+        guildId,
+        query: {
+          raidId,
+          raid: raidType,
+          raidName: clean(entry.title || entry.raidName || entry.name) || `${displayRaidName(raidType)} ${raidDate}`,
+          raidDate,
+          raidTime,
+          guild: "Lichtbringer",
+          playerPin: clean(entry.playerPin || "") || randomRaidCode(3),
+          leadPin: clean(entry.leadPin || "") || randomRaidCode(4),
+          status: clean(entry.status || "archiviert"),
+          p0PlusFreigabe: "geschlossen",
+          createdBy: clean(entry.createdBy || "History-Import"),
+          raidHelperEnabled: "true",
+          maxPlayers: parseOptionalInteger(entry.maxPlayers) || (["zg", "aq20"].includes(raidType) ? 20 : 40),
+          tankSlots: parseOptionalInteger(entry.tankSlots) || (["zg", "aq20"].includes(raidType) ? 1 : 2),
+          healSlots: parseOptionalInteger(entry.healSlots) || (["zg", "aq20"].includes(raidType) ? 4 : 8),
+          ddSlots: parseOptionalInteger(entry.ddSlots) || (["zg", "aq20"].includes(raidType) ? 15 : 30),
+          description: clean(entry.description || "Vergangener Termin aus History-Import.")
+        }
+      });
+    }
+    const raid = matchedExisting || await findRaid(guildId, { raidId: created.raidId || raidId });
+    const targetRaidId = raidPublicId(raid);
     let signupsWritten = 0;
     const signups = Array.isArray(entry.signups) ? entry.signups : [];
     if (raid && signups.length) {
@@ -3347,9 +3382,30 @@ async function importRaidHelperHistory({ guildId, query: params }) {
         signupsWritten += 1;
       }
     }
-    imported.push({ raidId: created.raidId || raidId, raid: raidType, raidDate, raidTime, signupsWritten });
+    const prioCountResult = raid
+      ? await query("select count(*)::int as count from prios where raid_id = $1", [raid.id])
+      : { rows: [{ count: 0 }] };
+    const prioCount = Number(prioCountResult.rows[0]?.count || 0);
+    if (signupsWritten > 0 && prioCount === 0) {
+      warnings.push({
+        raidId: targetRaidId || raidId,
+        raid: raidType,
+        raidDate,
+        raidTime,
+        message: "Attendance importiert, aber keine Prioliste an diesem Raid gefunden."
+      });
+    }
+    imported.push({
+      raidId: targetRaidId || raidId,
+      raid: raidType,
+      raidDate,
+      raidTime,
+      signupsWritten,
+      prioCount,
+      reusedExistingRaid: Boolean(matchedExisting)
+    });
   }
-  return { success: true, imported, skipped };
+  return { success: true, imported, skipped, warnings };
 }
 
 async function getRaidHelperTemplates({ guildId, query: params }) {
@@ -9606,12 +9662,26 @@ async function getRaidHelper({ guildId, query: params }) {
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
   const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  const prioCountResult = await query("select count(*)::int as count from prios where raid_id = $1", [raid.id]);
+  const prioCount = Number(prioCountResult.rows[0]?.count || 0);
+  const signupCount = signups.length + externalSignups.length;
+  const warnings = [];
+  if (signupCount > 0 && prioCount === 0) {
+    warnings.push("Attendance vorhanden, aber keine Prioliste gespeichert.");
+  }
   return {
     success: true,
-    raid: normalizeRaidRow(raid),
+    raid: {
+      ...normalizeRaidRow(raid),
+      signupCount,
+      prioCount,
+      warnings
+    },
     signups,
     externalSignups,
-    counts: buildSignupCounts(signups, externalSignups)
+    counts: buildSignupCounts(signups, externalSignups),
+    prioCount,
+    warnings
   };
 }
 
@@ -11206,7 +11276,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
     return { success: true, generatedAt: new Date().toISOString(), raids: [] };
   }
 
-  const [priosResult, p0PlusResult] = await Promise.all([
+  const [priosResult, p0PlusResult, signupCountsResult] = await Promise.all([
     query(
       `select
          pr.id,
@@ -11261,6 +11331,23 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
        where r.id = any($1::uuid[])
        order by pp.created_at desc, c.name asc, i.name asc`,
       [raidIds]
+    ),
+    query(
+      `select
+         r.id as raid_id,
+         (
+           select count(*)::int
+           from raid_signups rs
+           where rs.guild_id = r.guild_id and rs.raid_id = r.id
+         ) +
+         (
+           select count(*)::int
+           from raid_external_signups res
+           where res.guild_id = r.guild_id and res.raid_id = r.id
+         ) as signup_count
+       from raids r
+       where r.id = any($1::uuid[])`,
+      [raidIds]
     )
   ]);
 
@@ -11305,19 +11392,31 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
     p0PlusByRaid.get(row.raid_id).push(entry);
   }
 
+  const signupCountByRaid = new Map();
+  for (const row of signupCountsResult.rows) {
+    signupCountByRaid.set(row.raid_id, Number(row.signup_count || 0));
+  }
+
   const raids = raidRows.map(row => {
     const prios = priosByRaid.get(row.id) || [];
     const p0Plus = p0PlusByRaid.get(row.id) || [];
     const p0PlusPrios = prios.filter(entry => normalizeStatus(entry.p0Plus).toLowerCase() === "ja");
+    const signupCount = signupCountByRaid.get(row.id) || 0;
+    const warnings = [];
+    if (signupCount > 0 && prios.length === 0) {
+      warnings.push("Attendance vorhanden, aber keine Prioliste gespeichert.");
+    }
     return {
       ...normalizeRaidRow(row),
       raidDate: formatBackupDate(row.raid_date),
       date: formatBackupDate(row.raid_date),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      signupCount,
       prioCount: prios.length,
       p0PlusPrioCount: p0PlusPrios.length,
       p0PlusTransferCount: p0Plus.length,
+      warnings,
       prios,
       p0PlusPrios,
       p0PlusTransfers: p0Plus

@@ -1698,6 +1698,24 @@ select:focus{border-color:rgba(96,165,250,.75)}
   color:#f8fafc;
 }
 
+.raid-helper-attendance-table thead th.attendance-warning{
+  box-shadow:inset 0 0 0 2px rgba(250,204,21,.48);
+}
+
+.attendance-warning-mark{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:15px;
+  height:15px;
+  margin-left:4px;
+  border-radius:50%;
+  background:#facc15;
+  color:#422006;
+  font-size:11px;
+  font-weight:950;
+}
+
 .raid-helper-attendance-cell.signed{background:rgba(34,197,94,.64);color:#052e16}
 .raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
 .raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
@@ -5495,7 +5513,15 @@ function renderRaidHelperAttendance(rows){
       ${rows.map(entry => {
         const key = getRaidKey(entry.raid);
         const raidId = entry.raid.raidId || entry.raid.id || "";
-        return `<th oncontextmenu="deleteRaidHelperAttendanceRaid(event,'${escapeAttr(raidId)}')" title="${escapeAttr(entry.raid.raidName || entry.raid.raid || "Raid")} · Rechtsklick: Termin löschen">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
+        const warnings = Array.isArray(entry.raid.warnings) ? entry.raid.warnings.filter(Boolean) : [];
+        const warningText = warnings.join(" ");
+        const warningMark = warningText ? '<span class="attendance-warning-mark">!</span>' : "";
+        const title = [
+          entry.raid.raidName || entry.raid.raid || "Raid",
+          warningText ? "Warnung: " + warningText : "",
+          "Rechtsklick: Termin löschen"
+        ].filter(Boolean).join(" · ");
+        return `<th class="${warningText ? "attendance-warning" : ""}" oncontextmenu="deleteRaidHelperAttendanceRaid(event,'${escapeAttr(raidId)}')" title="${escapeAttr(title)}">${escapeHtml(RAID_OPTIONS[key]?.short || key.toUpperCase())}${warningMark}<br><span class="muted">${escapeHtml(formatRaidDate(entry.raid.raidDate))}</span></th>`;
       }).join("")}
     </tr>
   `;
