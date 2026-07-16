@@ -3558,6 +3558,31 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
             <div id="poPostStatus" class="status">Bereit.</div>
+            <div class="po-post-list-block">
+              <div class="section-head compact">
+                <div>
+                  <h3>Gespeicherte PO-Posts</h3>
+                  <p>Post-IDs prüfen und alte Sammelposts sauber entfernen.</p>
+                </div>
+                <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
+              </div>
+              <div class="table-wrap">
+                <table class="po-post-config-table">
+                  <thead>
+                    <tr>
+                      <th>Post-ID</th>
+                      <th>Raid</th>
+                      <th>Quelle</th>
+                      <th>Ziel</th>
+                      <th>Einträge</th>
+                      <th>Zuletzt</th>
+                      <th>Aktion</th>
+                    </tr>
+                  </thead>
+                  <tbody id="poPostConfigRows"></tbody>
+                </table>
+              </div>
+            </div>
           </section>
         </div>
         <div class="raid-helper-preview">
@@ -3962,6 +3987,7 @@ let p0ReviewEntries = [];
 let poPostEntries = [];
 let poPostRaidFilter = "";
 let poPostKeyFilter = "";
+let poPostStoredEntries = [];
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -6526,8 +6552,10 @@ function updatePoPostPreview(){
 
 function initPoPostPanel(){
   renderPoPostConfigSelect();
+  renderPoPostConfigRows();
   renderPoPostChannelSelects();
   loadRaidHelperDiscordChannels();
+  loadPoPostStoredEntries();
   ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey"].forEach(id => {
     const select = document.getElementById(id);
     if(select && !select.dataset.poBound){
@@ -6554,6 +6582,105 @@ function readPoPostConfigs(){
 
 function writePoPostConfigs(configs){
   localStorage.setItem(PO_POST_CONFIG_STORAGE_KEY, JSON.stringify(configs || []));
+}
+
+function poPostChannelLabelById(channelId){
+  const id = String(channelId || "").trim();
+  if(!id) return "-";
+  const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id || "") === id);
+  if(!channel) return "#" + id;
+  const name = String(channel.channelName || channel.name || id).trim();
+  const category = String(channel.categoryName || channel.category || "").trim();
+  return (category ? category + " / " : "") + "# " + name;
+}
+
+function poPostConfigGroups(){
+  const groups = new Map();
+  function ensure(key){
+    const cleanKey = String(key || "").trim();
+    if(!cleanKey) return null;
+    if(!groups.has(cleanKey)){
+      groups.set(cleanKey, {
+        postKey: cleanKey,
+        raid: "",
+        title: "",
+        sourceChannelId: "",
+        targetChannelId: "",
+        count: 0,
+        updatedAt: "",
+        local: false,
+        railway: false
+      });
+    }
+    return groups.get(cleanKey);
+  }
+  readPoPostConfigs().forEach(config => {
+    const group = ensure(config.postKey);
+    if(!group) return;
+    group.local = true;
+    group.raid = group.raid || config.raid || "";
+    group.title = group.title || config.title || "PO Liste";
+    group.sourceChannelId = group.sourceChannelId || config.sourceChannelId || "";
+    group.targetChannelId = group.targetChannelId || config.targetChannelId || config.sourceChannelId || "";
+  });
+  (poPostStoredEntries || []).forEach(entry => {
+    const group = ensure(entry.postKey);
+    if(!group) return;
+    group.railway = true;
+    group.count += 1;
+    group.raid = group.raid || entry.raid || "";
+    group.title = group.title || entry.title || "PO Liste";
+    group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
+    group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
+    if(entry.updatedAt && (!group.updatedAt || String(entry.updatedAt) > String(group.updatedAt))){
+      group.updatedAt = entry.updatedAt;
+    }
+  });
+  return Array.from(groups.values()).sort((a,b) => {
+    const raidCompare = String(a.raid || "").localeCompare(String(b.raid || ""));
+    if(raidCompare) return raidCompare;
+    return String(a.postKey || "").localeCompare(String(b.postKey || ""));
+  });
+}
+
+function renderPoPostConfigRows(){
+  const tbody = document.getElementById("poPostConfigRows");
+  if(!tbody) return;
+  const rows = poPostConfigGroups();
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Posts gespeichert.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(row => `
+    <tr>
+      <td><strong>${escapeHtml(row.postKey)}</strong><div class="muted">${escapeHtml(row.title || "PO Liste")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}</div></td>
+      <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
+      <td>${escapeHtml(String(row.count || 0))}</td>
+      <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
+      <td>
+        <button class="small-btn ghost" type="button" onclick="loadPoPostConfigFromRow('${escapeAttr(row.postKey)}')">Öffnen</button>
+        <button class="small-btn danger" type="button" onclick="deletePoPostEverywhere('${escapeAttr(row.postKey)}')">Löschen</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function loadPoPostStoredEntries(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    poPostStoredEntries = [];
+    renderPoPostConfigRows();
+    return;
+  }
+  try{
+    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, t:Date.now() });
+    poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
+  }catch(error){
+    poPostStoredEntries = [];
+  }
+  renderPoPostConfigRows();
 }
 
 function makePoPostKey(title){
@@ -6614,6 +6741,30 @@ function loadSelectedPoPostConfig(){
   if(config) setPoPostFormConfig(config);
 }
 
+function loadPoPostConfigFromRow(postKey){
+  const key = String(postKey || "").trim();
+  const config = readPoPostConfigs().find(item => item.postKey === key);
+  if(config){
+    setPoPostFormConfig(config);
+  }else{
+    const entry = (poPostStoredEntries || []).find(item => item.postKey === key);
+    if(entry){
+      setPoPostFormConfig({
+        postKey:key,
+        sourceChannelId:entry.sourceChannelId || "",
+        targetChannelId:entry.targetChannelId || entry.sourceChannelId || "",
+        title:entry.title || "PO Liste",
+        raid:normalize(entry.raid || ""),
+        limit:"800"
+      });
+    }
+  }
+  const select = document.getElementById("poPostSavedSelect");
+  if(select) select.value = key;
+  const status = document.getElementById("poPostStatus");
+  if(status) status.innerHTML = `<span class="good">PO-Post ${escapeHtml(key)} geöffnet.</span>`;
+}
+
 function savePoPostConfig(){
   const status = document.getElementById("poPostStatus");
   const config = getPoPostFormConfig();
@@ -6627,6 +6778,7 @@ function savePoPostConfig(){
   else configs.push(config);
   writePoPostConfigs(configs);
   renderPoPostConfigSelect();
+  renderPoPostConfigRows();
   const select = document.getElementById("poPostSavedSelect");
   if(select) select.value = config.postKey;
   if(status) status.innerHTML = '<span class="good">PO-Post-Einstellungen gespeichert.</span>';
@@ -6642,7 +6794,45 @@ function deletePoPostConfig(){
   }
   writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
   renderPoPostConfigSelect();
+  renderPoPostConfigRows();
   if(status) status.innerHTML = '<span class="good">Gespeicherter PO-Post entfernt.</span>';
+}
+
+async function deletePoPostEverywhere(postKey){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poPostStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!key){
+    if(status) status.textContent = "Post-ID fehlt.";
+    return;
+  }
+  if(!confirm(`PO-Post "${key}" wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)){
+    return;
+  }
+  writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
+  if(status) status.textContent = `PO-Post ${key} wird gelöscht ...`;
+  try{
+    if(masterCode){
+      const group = poPostConfigGroups().find(item => item.postKey === key) || {};
+      const result = await railwayWrite({
+        action:"guildDeletePoPost",
+        masterCode,
+        postKey:key,
+        sourceChannelId:group.sourceChannelId || "",
+        targetChannelId:group.targetChannelId || "",
+        title:group.title || "PO Liste",
+        raid:group.raid || ""
+      });
+      if(!result.success) throw new Error(result.error || "PO-Post konnte nicht gelöscht werden.");
+      if(status) status.innerHTML = `<span class="good">PO-Post gelöscht. Railway-Einträge: ${escapeHtml(String(result.deleted || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
+    }else if(status){
+      status.innerHTML = '<span class="warn">Lokal entfernt. Für Railway/Discord bitte Master-Code eingeben und erneut löschen.</span>';
+    }
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
+  }
+  renderPoPostConfigSelect();
+  await loadPoPostStoredEntries();
 }
 
 async function newPoPostConfig(){
@@ -6727,6 +6917,7 @@ async function loadRaidHelperDiscordChannels(){
     if(result && result.success){
       raidHelperDiscordChannels = Array.isArray(result.channels) ? result.channels : [];
       renderRaidHelperDiscordChannels();
+      renderPoPostConfigRows();
       renderDashboardCards();
       return;
     }

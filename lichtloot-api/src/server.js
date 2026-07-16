@@ -4009,6 +4009,80 @@ async function deletePoPostEntry({ guildId, query: params }) {
   };
 }
 
+async function deletePoPost({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || params.postId || "");
+  const sourceChannelId = clean(params.sourceChannelId || "");
+  const targetChannelId = clean(params.targetChannelId || "");
+
+  if (!postKey) {
+    const error = new Error("Post-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const values = [guildId, postKey];
+  const clauses = ["guild_id = $1", "post_key = $2", "archived_at is null"];
+  if (sourceChannelId) {
+    values.push(sourceChannelId);
+    clauses.push(`source_channel_id = $${values.length}`);
+  }
+  if (targetChannelId) {
+    values.push(targetChannelId);
+    clauses.push(`target_channel_id = $${values.length}`);
+  }
+
+  const result = await query(
+    `update po_post_entries
+     set archived_at = now(), updated_at = now()
+     where ${clauses.join(" and ")}
+     returning post_key, source_channel_id, target_channel_id, discord_message_id, title, raid`,
+    values
+  );
+
+  const payloads = new Map();
+  for (const row of result.rows || []) {
+    const key = [
+      row.post_key || postKey,
+      row.source_channel_id || sourceChannelId,
+      row.target_channel_id || targetChannelId,
+      row.discord_message_id || ""
+    ].join("|");
+    payloads.set(key, {
+      postKey: row.post_key || postKey,
+      sourceChannelId: row.source_channel_id || sourceChannelId,
+      targetChannelId: row.target_channel_id || targetChannelId || row.source_channel_id || sourceChannelId,
+      messageId: row.discord_message_id || "",
+      title: row.title || "PO Liste",
+      raid: row.raid || "",
+      source: "gildenleitung"
+    });
+  }
+  if (!payloads.size) {
+    payloads.set(postKey, {
+      postKey,
+      sourceChannelId,
+      targetChannelId: targetChannelId || sourceChannelId,
+      messageId: "",
+      title: clean(params.title) || "PO Liste",
+      raid: clean(params.raid || params.raidName),
+      source: "gildenleitung"
+    });
+  }
+
+  for (const payload of payloads.values()) {
+    await enqueueBotUpdate({ guildId, type: "po_post_delete", payload });
+  }
+
+  return {
+    success: true,
+    deleted: result.rowCount || 0,
+    queued: payloads.size,
+    postKey
+  };
+}
+
 async function savePoPostEntry({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -13439,6 +13513,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {
+      const deleted = await deletePoPost({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
     if (action === "lichtbotSavePoPostEntry" || action === "savePoPostEntry") {
       const saved = await savePoPostEntry({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -13685,6 +13764,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotDeletePoPostEntry" || action === "deletePoPostEntry") {
       const deleted = await deletePoPostEntry({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {
+      const deleted = await deletePoPost({ guildId: guild.id, query: postParams });
       return res.json({ ...deleted, guild: guild.slug });
     }
 
