@@ -6744,6 +6744,7 @@ function poPostConfigGroups(){
         sourceChannelId: "",
         targetChannelId: "",
         count: 0,
+        archivedCount: 0,
         updatedAt: "",
         local: false,
         railway: false
@@ -6764,7 +6765,8 @@ function poPostConfigGroups(){
     const group = ensure(entry.postKey);
     if(!group) return;
     group.railway = true;
-    group.count += 1;
+    if(entry.archivedAt) group.archivedCount += 1;
+    else group.count += 1;
     group.raid = group.raid || entry.raid || "";
     group.title = group.title || entry.title || "PO Liste";
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
@@ -6790,7 +6792,7 @@ function renderPoPostConfigRows(){
   }
   tbody.innerHTML = rows.map(row => `
     <tr class="${selectedPoPostKey === row.postKey ? "selected-row" : ""}">
-      <td><button class="po-post-id-button" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO Liste")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}</div></td>
+      <td><button class="po-post-id-button" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO Liste")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}${row.archivedCount && !row.count ? " · archiviert" : ""}</div></td>
       <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
@@ -6798,7 +6800,9 @@ function renderPoPostConfigRows(){
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
         <button class="small-btn ghost" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
-        <button class="small-btn danger" type="button" onclick="deletePoPostEverywhere('${escapeAttr(row.postKey)}')">Löschen</button>
+        ${row.archivedCount && !row.count
+          ? `<button class="small-btn good" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+          : `<button class="small-btn danger" type="button" onclick="deletePoPostEverywhere('${escapeAttr(row.postKey)}')">Löschen</button>`}
       </td>
     </tr>
   `).join("");
@@ -6814,7 +6818,7 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, t:Date.now() });
+    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
   }catch(error){
     poPostStoredEntries = [];
@@ -7019,6 +7023,38 @@ async function deletePoPostEverywhere(postKey){
     if(status) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
   }
   renderPoPostConfigSelect();
+  await loadPoPostStoredEntries();
+}
+
+async function restorePoPostEverywhere(postKey){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poPostStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!key){
+    if(status) status.textContent = "Post-ID fehlt.";
+    return;
+  }
+  if(!masterCode){
+    if(status) status.textContent = "Bitte Master-Code eingeben.";
+    return;
+  }
+  const group = poPostConfigGroups().find(item => item.postKey === key) || {};
+  if(status) status.textContent = `PO-Post ${key} wird wiederhergestellt ...`;
+  try{
+    const result = await railwayWrite({
+      action:"guildRestorePoPost",
+      masterCode,
+      postKey:key,
+      sourceChannelId:group.sourceChannelId || "",
+      targetChannelId:group.targetChannelId || "",
+      title:group.title || "PO Liste",
+      raid:group.raid || ""
+    });
+    if(!result.success) throw new Error(result.error || "PO-Post konnte nicht wiederhergestellt werden.");
+    if(status) status.innerHTML = `<span class="good">PO-Post wiederhergestellt. Einträge: ${escapeHtml(String(result.restored || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Post konnte nicht wiederhergestellt werden.";
+  }
   await loadPoPostStoredEntries();
 }
 
