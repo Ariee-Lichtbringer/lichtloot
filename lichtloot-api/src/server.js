@@ -3929,6 +3929,164 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   };
 }
 
+async function deletePoPostEntry({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || "");
+  const sourceChannelId = clean(params.sourceChannelId || "");
+  const targetChannelId = clean(params.targetChannelId || "");
+  const discordUserId = clean(params.discordUserId || params.userId);
+  const itemName = clean(params.item || params.itemName);
+
+  if (!discordUserId) {
+    const error = new Error("Discord-User fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const values = [guildId, discordUserId];
+  const clauses = ["guild_id = $1", "discord_user_id = $2", "archived_at is null"];
+  if (postKey) {
+    values.push(postKey);
+    clauses.push(`post_key = $${values.length}`);
+  }
+  if (sourceChannelId) {
+    values.push(sourceChannelId);
+    clauses.push(`source_channel_id = $${values.length}`);
+  }
+  if (targetChannelId) {
+    values.push(targetChannelId);
+    clauses.push(`target_channel_id = $${values.length}`);
+  }
+  if (itemName) {
+    values.push(itemName);
+    clauses.push(`regexp_replace(lower(item_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  }
+
+  const result = await query(
+    `delete from po_post_entries
+     where ${clauses.join(" and ")}
+     returning *`,
+    values
+  );
+
+  return {
+    success: true,
+    deleted: result.rowCount || 0,
+    entries: result.rows.map(row => ({
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      player: row.player_name || "",
+      item: row.item_name || "",
+      messageId: row.po_message_id || ""
+    }))
+  };
+}
+
+async function savePoPostEntry({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || "");
+  const sourceChannelId = clean(params.sourceChannelId || "");
+  const targetChannelId = clean(params.targetChannelId || "");
+  const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
+  const title = clean(params.title) || "PO Liste";
+  const player = clean(params.player || params.char || params.spieler);
+  const server = clean(params.server) || "Everlook";
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  const itemName = clean(params.item || params.itemName);
+  const discordUserId = clean(params.discordUserId || params.userId);
+  const discordName = clean(params.discordName || params.userName);
+
+  if (!postKey || !sourceChannelId || !targetChannelId) {
+    const error = new Error("PO-Post-Konfiguration fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!player || !playerPin || !itemName || !discordUserId) {
+    const error = new Error("Charakter, SpielerLogin, Item oder Discord-User fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const character = await findCharacterForPin(guildId, playerPin, player, server);
+  if (!character) {
+    const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+       values ($1, $2, $3, $4, 'discord-po')
+       on conflict (guild_id, discord_user_id, character_id) do update
+         set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+             updated_at = now()`,
+      [guildId, discordUserId, character.id, discordName]
+    );
+    await client.query(
+      `delete from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and source_channel_id = $3
+         and target_channel_id = $4
+         and discord_user_id = $5
+         and archived_at is null`,
+      [guildId, postKey, sourceChannelId, targetChannelId, discordUserId]
+    );
+    const result = await client.query(
+      `insert into po_post_entries (
+         guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+         raid, title, player_name, item_name, discord_user_id, discord_name,
+         po_message_id, po_created_at, approval_status, approved_by, approved_at
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'',now(),'pending','',null)
+       returning *`,
+      [
+        guildId,
+        postKey,
+        sourceChannelId,
+        targetChannelId,
+        clean(params.discordMessageId || params.messageId),
+        raidKey,
+        title,
+        character.name,
+        itemName,
+        discordUserId,
+        discordName
+      ]
+    );
+    await client.query("commit");
+    const row = result.rows[0];
+    return {
+      success: true,
+      entry: {
+        postKey: row.post_key || "",
+        sourceChannelId: row.source_channel_id || "",
+        targetChannelId: row.target_channel_id || "",
+        raid: row.raid || "",
+        title: row.title || "PO Liste",
+        player: row.player_name || "",
+        item: row.item_name || "",
+        discordUserId: row.discord_user_id || "",
+        discordName: row.discord_name || "",
+        approvalStatus: row.approval_status || "pending"
+      }
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function archivePoPostEntriesForRaid(client, guildId, raidType) {
   await ensurePoPostEntriesSchema();
   const raidKey = normalizeRaidType(raidType).toLowerCase();
@@ -13253,6 +13411,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...reviewed, guild: guild.slug });
     }
 
+    if (action === "lichtbotDeletePoPostEntry" || action === "deletePoPostEntry") {
+      const deleted = await deletePoPostEntry({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSavePoPostEntry" || action === "savePoPostEntry") {
+      const saved = await savePoPostEntry({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "getP0Plus") {
       const points = await getP0Plus(guild.id);
       return res.json({ ...points, guild: guild.slug });
@@ -13490,6 +13658,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "reviewPoPostEntry" || action === "guildReviewPoPostEntry") {
       const reviewed = await reviewPoPostEntry({ guildId: guild.id, query: postParams });
       return res.json({ ...reviewed, guild: guild.slug });
+    }
+
+    if (action === "lichtbotDeletePoPostEntry" || action === "deletePoPostEntry") {
+      const deleted = await deletePoPostEntry({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSavePoPostEntry" || action === "savePoPostEntry") {
+      const saved = await savePoPostEntry({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
