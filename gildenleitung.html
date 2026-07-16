@@ -869,6 +869,42 @@ select:focus{border-color:rgba(96,165,250,.75)}
   font-size:15px;
 }
 
+.po-post-layout{
+  grid-template-columns:minmax(0,.9fr) minmax(460px,1.1fr);
+}
+
+.po-post-config-table,
+.po-post-entry-table{
+  min-width:0;
+}
+
+.po-post-id-button{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:#dbeafe;
+  font:900 13px/1.15 Arial, Helvetica, sans-serif;
+  padding:0;
+  text-align:left;
+  cursor:pointer;
+}
+
+.po-post-id-button:hover{
+  color:#fde68a;
+}
+
+.po-post-entry-panel{
+  min-height:520px;
+}
+
+.po-post-entry-panel .table-wrap{
+  max-height:640px;
+}
+
+tr.selected-row td{
+  background:rgba(96,165,250,.10);
+}
+
 .raid-helper-channel{
   color:#93c5fd;
   font-weight:900;
@@ -3491,7 +3527,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="raid-helper-layout">
+      <div class="raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
@@ -3585,18 +3621,27 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
           </section>
         </div>
-        <div class="raid-helper-preview">
-          <h3>Discord-Ablauf</h3>
-          <div class="discord-preview-card">
-            <h3 class="discord-preview-title">PO LISTE</h3>
-            <div class="discord-preview-description">
-              Der Bot liest alle Nachrichten aus der PO-Quelle, erkennt Zeilen wie <strong>PO Itemname</strong> oder <strong>P0 Itemname</strong> und postet daraus eine sortierte Liste.
+        <div class="raid-helper-preview po-post-entry-panel">
+          <div class="section-head compact">
+            <div>
+              <h3>PO-Einträge</h3>
+              <p id="poPostEntryPanelHint">Post-ID links anklicken, dann erscheinen hier die Einträge.</p>
             </div>
-            <div class="discord-preview-meta">
-              <div><span>Quelle</span><strong id="poPostPreviewSource">Channel wählen</strong></div>
-              <div><span>Ziel</span><strong id="poPostPreviewTarget">Channel wählen</strong></div>
-              <div><span>Freigabe</span><strong id="poPostPreviewReview">Discord-Person eintragen</strong></div>
-            </div>
+            <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
+          </div>
+          <div class="table-wrap">
+            <table class="po-post-entry-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Spieler</th>
+                  <th>Item</th>
+                  <th>Datum</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="poPostDetailRows"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -3988,6 +4033,7 @@ let poPostEntries = [];
 let poPostRaidFilter = "";
 let poPostKeyFilter = "";
 let poPostStoredEntries = [];
+let selectedPoPostKey = "";
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -6652,19 +6698,20 @@ function renderPoPostConfigRows(){
     return;
   }
   tbody.innerHTML = rows.map(row => `
-    <tr>
-      <td><strong>${escapeHtml(row.postKey)}</strong><div class="muted">${escapeHtml(row.title || "PO Liste")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}</div></td>
+    <tr class="${selectedPoPostKey === row.postKey ? "selected-row" : ""}">
+      <td><button class="po-post-id-button" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO Liste")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}</div></td>
       <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
       <td>${escapeHtml(String(row.count || 0))}</td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
-        <button class="small-btn ghost" type="button" onclick="loadPoPostConfigFromRow('${escapeAttr(row.postKey)}')">Öffnen</button>
+        <button class="small-btn ghost" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
         <button class="small-btn danger" type="button" onclick="deletePoPostEverywhere('${escapeAttr(row.postKey)}')">Löschen</button>
       </td>
     </tr>
   `).join("");
+  renderPoPostDetailRows();
 }
 
 async function loadPoPostStoredEntries(){
@@ -6675,12 +6722,57 @@ async function loadPoPostStoredEntries(){
     return;
   }
   try{
+    await ensureLootDataLoaded();
     const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
   }catch(error){
     poPostStoredEntries = [];
   }
   renderPoPostConfigRows();
+}
+
+function selectPoPostForReview(postKey){
+  selectedPoPostKey = String(postKey || "").trim();
+  loadPoPostConfigFromRow(selectedPoPostKey);
+  renderPoPostConfigRows();
+  renderPoPostDetailRows();
+}
+
+function renderPoPostDetailRows(){
+  const tbody = document.getElementById("poPostDetailRows");
+  if(!tbody) return;
+  const hint = document.getElementById("poPostEntryPanelHint");
+  if(!selectedPoPostKey){
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Links eine Post-ID anklicken.</td></tr>';
+    if(hint) hint.textContent = "Post-ID links anklicken, dann erscheinen hier die Einträge.";
+    return;
+  }
+  const rows = (poPostStoredEntries || []).filter(entry => entry.postKey === selectedPoPostKey);
+  if(hint) hint.textContent = `${selectedPoPostKey} · ${rows.length} Eintrag/Einträge`;
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">Keine aktiven Einträge für ${escapeHtml(selectedPoPostKey)} gefunden.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(entry => {
+    const index = poPostStoredEntries.indexOf(entry);
+    const status = String(entry.approvalStatus || "pending").toLowerCase();
+    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
+    const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    return `
+      <tr>
+        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.discordName || "")}</div></td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function makePoPostKey(title){
@@ -8322,41 +8414,6 @@ function renderP0PlusModalContent(){
         </table>
       </div>
     </div>
-      <div class="p0-review-block">
-      <div class="section-head">
-        <div>
-          <h3>PO-Post Einträge</h3>
-          <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
-        </div>
-      </div>
-      <div class="p0-raid-tabs">
-        ${["","naxx","aq40","bwl","mc"].map(raid => `
-          <button class="small-btn ${poPostRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoPostRaidFilter('${escapeAttr(raid)}')">${escapeHtml(raid ? raid.toUpperCase() : "Alle")}</button>
-        `).join("")}
-      </div>
-      <div class="p0-post-filter">
-        <label for="poPostKeyFilter">Post-ID</label>
-        <input id="poPostKeyFilter" type="text" value="${escapeAttr(poPostKeyFilter)}" placeholder="z. B. po-liste-l6lavf" onkeydown="if(event.key==='Enter') applyPoPostKeyFilter()">
-        <button class="small-btn primary" type="button" onclick="applyPoPostKeyFilter()">Post laden</button>
-        <button class="small-btn ghost" type="button" onclick="usePoPostPosterKey()">Aus PO Post</button>
-        <div class="p0-post-filter-note">${escapeHtml(poPostKeyFilter ? "Aktiver PO-Post: " + poPostKeyFilter : "Ohne Post-ID werden alle aktiven PO-Posts angezeigt.")}</div>
-      </div>
-      <div class="table-wrap">
-        <table class="p0-table">
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Post</th>
-              <th>Raid</th>
-              <th>Spieler</th>
-              <th>Item</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="poPostEntryRows"></tbody>
-        </table>
-      </div>
-    </div>
     <div class="p0-toolbar">
       <select id="p0RaidFilter" onchange="renderP0PlusRows()">
         <option value="">Alle Raids</option>
@@ -8382,7 +8439,6 @@ function renderP0PlusModalContent(){
     </div>
   `;
   renderP0ReviewRows();
-  renderPoPostEntryRows();
   renderP0PlusRows();
 }
 
@@ -8480,6 +8536,41 @@ async function reviewPoPostEntryFromGuild(index, status){
       approvalStatus: status === "approved" ? "approved" : "rejected"
     });
     renderPoPostEntryRows();
+    setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function reviewPoPostEntryFromPostPanel(index, status){
+  const entry = poPostStoredEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
+    const result = await railwayWrite({
+      action:"guildReviewPoPostEntry",
+      masterCode,
+      postKey:entry.postKey || "",
+      sourceChannelId:entry.sourceChannelId || "",
+      targetChannelId:entry.targetChannelId || "",
+      messageId:entry.messageId || "",
+      status,
+      reviewer:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    poPostStoredEntries[index] = Object.assign({}, entry, result.entry || {}, {
+      approvalStatus: status === "approved" ? "approved" : "rejected"
+    });
+    renderPoPostConfigRows();
+    renderPoPostDetailRows();
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");

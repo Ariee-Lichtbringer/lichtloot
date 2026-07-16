@@ -3802,6 +3802,8 @@ async function getPoPostEntries({ guildId, query: params }) {
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
       messageId: row.po_message_id || "",
+      createdAt: row.po_created_at || row.updated_at || "",
+      poCreatedAt: row.po_created_at || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
