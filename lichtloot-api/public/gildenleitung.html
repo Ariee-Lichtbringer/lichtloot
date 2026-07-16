@@ -632,6 +632,74 @@ button,input,select{font:inherit}
   white-space:nowrap;
 }
 
+body.guild-locked .app-frame{
+  display:flex;
+  min-height:100vh;
+}
+
+body.guild-locked .sidebar,
+body.guild-locked .dashboard-main > :not(.auth-panel){
+  display:none!important;
+}
+
+body.guild-locked .dashboard-main{
+  width:min(760px,calc(100vw - 28px));
+  max-width:760px;
+  min-height:100vh;
+  margin:0 auto;
+  padding:24px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+body.guild-locked .auth-panel{
+  width:100%;
+  max-width:720px;
+  padding:30px;
+  border-color:rgba(250,204,21,.42);
+  box-shadow:0 28px 90px rgba(0,0,0,.45);
+}
+
+body.guild-locked .auth-panel::before{
+  content:"Gildenleitung freischalten";
+  display:block;
+  margin:0 0 8px;
+  color:#facc15;
+  font-size:30px;
+  font-weight:900;
+  line-height:1.1;
+}
+
+body.guild-locked .auth-panel::after{
+  content:"Bitte Master-Code eingeben. Danach wird die Gildenleitungsseite sichtbar.";
+  display:block;
+  margin:10px 0 0;
+  color:#cbd5e1;
+  font-size:14px;
+  font-weight:700;
+}
+
+body.guild-locked .compact-auth{
+  width:100%;
+}
+
+body.guild-locked .unlock{
+  grid-template-columns:1fr;
+  gap:14px;
+}
+
+body.guild-locked .auth-panel input{
+  min-height:54px;
+  font-size:18px;
+  padding:0 16px;
+}
+
+body.guild-locked .auth-panel .btn{
+  min-height:54px;
+  font-size:16px;
+}
+
 .field label{
   display:block;
   color:var(--gold);
@@ -3049,7 +3117,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 </style>
 </head>
-<body>
+<body class="guild-locked">
 <div class="app-frame">
   <aside class="sidebar">
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
@@ -4090,11 +4158,16 @@ function setStatusHtml(html, type){
   el.className = "status" + (type ? " " + type : "");
 }
 
+function setGuildLocked(locked){
+  document.body.classList.toggle("guild-locked", Boolean(locked));
+}
+
 function clearMasterCode(){
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
   document.getElementById("masterCode").value = "";
   guildData = { raids: [], players: [] };
   renderAll();
+  setGuildLocked(true);
   setStatus("Gildenleitung gesperrt.", "");
 }
 
@@ -4391,6 +4464,7 @@ async function loadOverview(options){
   options = options || {};
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
+    setGuildLocked(true);
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
@@ -4409,11 +4483,13 @@ async function loadOverview(options){
       result = await apiJsonp({ action:"getGuildLeadershipOverview", masterCode });
     }
     if(!result.success){
+      setGuildLocked(true);
       setStatus(result.error || "Master-Code konnte nicht geprüft werden.", "bad");
       return;
     }
 
     sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    setGuildLocked(false);
     guildData = {
       raids: Array.isArray(result.raids) ? result.raids : [],
       players: Array.isArray(result.players) ? result.players : []
@@ -4427,6 +4503,7 @@ async function loadOverview(options){
     loadWorldbuffMiniOverview();
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
+    setGuildLocked(true);
     setStatus(error.message || "Die Gildenleitung ist gerade nicht erreichbar.", "bad");
   }
 }
