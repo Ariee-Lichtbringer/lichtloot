@@ -260,6 +260,34 @@ function clean(value) {
   return String(value || "").trim();
 }
 
+function poItemAliasKey(value) {
+  return clean(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+const PO_ITEM_ALIASES = {
+  brust4werte: "Formel: Brust - Große Werte",
+  gressil: "Gressil, Vorbote des Untergangs",
+  thc: "Zehrende Kälte"
+};
+
+function normalizePoItemName(value) {
+  const raw = clean(value);
+  return PO_ITEM_ALIASES[poItemAliasKey(raw)] || raw;
+}
+
+function poItemAliasVariants(value) {
+  const normalized = normalizePoItemName(value);
+  const variants = new Set([clean(value), normalized]);
+  for (const [alias, target] of Object.entries(PO_ITEM_ALIASES)) {
+    if (target === normalized) variants.add(alias);
+  }
+  return [...variants].filter(Boolean);
+}
+
 function resolveGuildSlug(value) {
   const slug = slugify(value || defaultGuildSlug);
   if (!slug) return defaultGuildSlug;
@@ -3646,6 +3674,7 @@ async function ensurePoPostEntriesSchema() {
 async function resolvePoPostPlayerName(client, guildId, entry) {
   const fallback = clean(entry.player || entry.char || entry.name);
   const discordUserId = clean(entry.discordUserId || entry.discord_user_id);
+  if (fallback) return fallback;
   if (!discordUserId) return fallback;
   const linked = await client.query(
     `select c.name
@@ -3700,7 +3729,7 @@ async function savePoPostEntries({ guildId, query: params }) {
       };
       const poMessageId = clean(row.po_message_id);
       if (poMessageId) approvalByKey.set(poMessageId, status);
-      approvalByKey.set(`${clean(row.player_name).toLowerCase()}|${clean(row.item_name).toLowerCase()}`, status);
+      approvalByKey.set(`${clean(row.player_name).toLowerCase()}|${normalizePoItemName(row.item_name).toLowerCase()}`, status);
     }
     await client.query(
       `delete from po_post_entries
@@ -3709,7 +3738,7 @@ async function savePoPostEntries({ guildId, query: params }) {
     );
     for (const entry of entries) {
       const playerName = await resolvePoPostPlayerName(client, guildId, entry);
-      const itemName = clean(entry.item || entry.itemName);
+      const itemName = normalizePoItemName(entry.item || entry.itemName);
       const poMessageId = clean(entry.messageId || entry.discordMessageId);
       const approval = approvalByKey.get(poMessageId)
         || approvalByKey.get(`${playerName.toLowerCase()}|${itemName.toLowerCase()}`)
@@ -3798,7 +3827,7 @@ async function getPoPostEntries({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
-      item: row.item_name || "",
+      item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
       messageId: row.po_message_id || "",
@@ -3844,7 +3873,7 @@ async function getPoPostApprovals({ guildId, query: params }) {
     success: true,
     entries: result.rows.map(row => ({
       player: row.player_name || "",
-      item: row.item_name || "",
+      item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved"
@@ -3931,7 +3960,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
-      item: row.item_name || "",
+      item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
@@ -3948,7 +3977,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || "");
   const targetChannelId = clean(params.targetChannelId || "");
   const discordUserId = clean(params.discordUserId || params.userId);
-  const itemName = clean(params.item || params.itemName);
+  const itemName = normalizePoItemName(params.item || params.itemName);
   const playerName = clean(params.player || params.char || params.spieler);
 
   if (!discordUserId && !playerName) {
@@ -3984,8 +4013,12 @@ async function deletePoPostEntry({ guildId, query: params }) {
     clauses.push(`target_channel_id = $${values.length}`);
   }
   if (itemName) {
-    values.push(itemName);
-    clauses.push(`regexp_replace(lower(item_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+    const itemClauses = [];
+    for (const variant of poItemAliasVariants(itemName)) {
+      values.push(variant);
+      itemClauses.push(`regexp_replace(lower(item_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+    }
+    clauses.push(`(${itemClauses.join(" or ")})`);
   }
 
   const result = await query(
@@ -4005,7 +4038,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
-      item: row.item_name || "",
+      item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || ""
     }))
   };
@@ -4096,7 +4129,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server) || "Everlook";
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
-  const itemName = clean(params.item || params.itemName);
+  const itemName = normalizePoItemName(params.item || params.itemName);
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName);
 
@@ -4172,7 +4205,7 @@ async function savePoPostEntry({ guildId, query: params }) {
         raid: row.raid || "",
         title: row.title || "PO Liste",
         player: row.player_name || "",
-        item: row.item_name || "",
+        item: normalizePoItemName(row.item_name || ""),
         discordUserId: row.discord_user_id || "",
         discordName: row.discord_name || "",
         approvalStatus: row.approval_status || "pending"
