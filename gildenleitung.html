@@ -8563,6 +8563,7 @@ function renderP0PlusModalContent(){
             <th>Item</th>
             <th>Slot</th>
             <th>Punkte</th>
+            <th>Datum</th>
             <th>Aktion</th>
           </tr>
         </thead>
@@ -8837,7 +8838,7 @@ function renderP0PlusRows(){
   });
 
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine P0+ Einträge gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine P0+ Einträge gefunden.</td></tr>';
     return;
   }
 
@@ -8851,6 +8852,7 @@ function renderP0PlusRows(){
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>${escapeHtml(entry.slot || "-")}</td>
         <td><input id="${inputId}" class="p0-points-input" type="number" min="0" step="0.5" value="${escapeAttr(formatPoints(entry.count))}"></td>
+        <td>${escapeHtml(formatDateTime(entry.createdAt || entry.created_at || entry.updatedAt || entry.updated_at) || "-")}</td>
         <td>
           <div class="actions">
             <button class="small-btn ghost" type="button" onclick="addP0PlusInput(${sourceIndex},0.5)">+0.5 Bench</button>

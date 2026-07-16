@@ -3677,6 +3677,7 @@ async function ensurePoPostEntriesSchema() {
 async function resolvePoPostPlayerName(client, guildId, entry) {
   const fallback = clean(entry.player || entry.char || entry.name);
   const discordUserId = clean(entry.discordUserId || entry.discord_user_id);
+  if (entry.preservePlayerName === true || clean(entry.preservePlayerName).toLowerCase() === "true") return fallback;
   if (fallback) return fallback;
   if (!discordUserId) return fallback;
   const linked = await client.query(
@@ -11341,8 +11342,17 @@ async function getP0Plus(guildId) {
       count: 0,
       points: 0,
       source: row.source || "",
-      createdAt: row.created_at
+      createdAt: row.created_at,
+      created_at: row.created_at
     };
+    if (row.created_at) {
+      const currentTime = current.createdAt ? new Date(current.createdAt).getTime() : 0;
+      const rowTime = new Date(row.created_at).getTime();
+      if (!Number.isNaN(rowTime) && rowTime > currentTime) {
+        current.createdAt = row.created_at;
+        current.created_at = row.created_at;
+      }
+    }
     const points = Number(row.points) || 0;
     current.count += points;
     current.points += points;
