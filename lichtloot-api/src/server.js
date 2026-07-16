@@ -3954,16 +3954,20 @@ async function deletePoPostEntry({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
+  if (!itemName) {
+    const error = new Error("Item fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
-  if (discordUserId) {
-    values.push(discordUserId);
-    clauses.push(`discord_user_id = $${values.length}`);
-  }
   if (playerName) {
     values.push(playerName);
     clauses.push(`regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  } else if (discordUserId) {
+    values.push(discordUserId);
+    clauses.push(`discord_user_id = $${values.length}`);
   }
   if (postKey) {
     values.push(postKey);

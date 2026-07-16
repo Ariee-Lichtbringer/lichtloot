@@ -8068,9 +8068,7 @@ async function loadP0PlusPanel(){
 
   try{
     const masterCode = document.getElementById("masterCode").value.trim();
-    const activePostKey = getActivePoPostKey();
-    if(activePostKey && !poPostKeyFilter) poPostKeyFilter = activePostKey;
-    const [result, reviewResult, poResult] = await Promise.all([
+    const [result, reviewResult, initialPoResult] = await Promise.all([
       railwayApi({ action:"getP0Plus" }),
       masterCode
         ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
@@ -8079,6 +8077,10 @@ async function loadP0PlusPanel(){
         ? railwayApi({ action:"guildGetPoPostEntries", masterCode, postKey:poPostKeyFilter })
         : Promise.resolve({ success:true, entries:[], noMaster:true })
     ]);
+    let poResult = initialPoResult;
+    if(masterCode && poPostKeyFilter && poResult && poResult.success && !(poResult.entries || []).length){
+      poResult = await railwayApi({ action:"guildGetPoPostEntries", masterCode });
+    }
     if(!result.success){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
       return;
@@ -8146,7 +8148,7 @@ function renderP0PlusModalContent(){
         <input id="poPostKeyFilter" type="text" value="${escapeAttr(poPostKeyFilter)}" placeholder="z. B. po-liste-l6lavf" onkeydown="if(event.key==='Enter') applyPoPostKeyFilter()">
         <button class="small-btn primary" type="button" onclick="applyPoPostKeyFilter()">Post laden</button>
         <button class="small-btn ghost" type="button" onclick="usePoPostPosterKey()">Aus PO Post</button>
-        <div class="p0-post-filter-note">${escapeHtml(poPostKeyFilter ? "Aktiver PO-Post: " + poPostKeyFilter : "Die Post-ID wird automatisch aus dem PO-Post-Bereich übernommen.")}</div>
+        <div class="p0-post-filter-note">${escapeHtml(poPostKeyFilter ? "Aktiver PO-Post: " + poPostKeyFilter : "Ohne Post-ID werden alle aktiven PO-Posts angezeigt.")}</div>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
