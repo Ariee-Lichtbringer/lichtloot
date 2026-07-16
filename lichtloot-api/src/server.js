@@ -3761,6 +3761,8 @@ async function getPoPostEntries({ guildId, query: params }) {
   const rawRaidKey = clean(params.raid || params.raidName);
   const raidKey = rawRaidKey ? normalizeRaidType(rawRaidKey).toLowerCase() : "";
   const postKey = clean(params.postKey || params.poPostKey || params.postId);
+  const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
+  const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId);
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
   if (raidKey) {
@@ -3770,6 +3772,14 @@ async function getPoPostEntries({ guildId, query: params }) {
   if (postKey) {
     values.push(postKey);
     clauses.push(`post_key = $${values.length}`);
+  }
+  if (sourceChannelId) {
+    values.push(sourceChannelId);
+    clauses.push(`source_channel_id = $${values.length}`);
+  }
+  if (targetChannelId) {
+    values.push(targetChannelId);
+    clauses.push(`target_channel_id = $${values.length}`);
   }
   const result = await query(
     `select *
@@ -3937,15 +3947,24 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const targetChannelId = clean(params.targetChannelId || "");
   const discordUserId = clean(params.discordUserId || params.userId);
   const itemName = clean(params.item || params.itemName);
+  const playerName = clean(params.player || params.char || params.spieler);
 
-  if (!discordUserId) {
-    const error = new Error("Discord-User fehlt.");
+  if (!discordUserId && !playerName) {
+    const error = new Error("Discord-User oder Spieler fehlt.");
     error.statusCode = 400;
     throw error;
   }
 
-  const values = [guildId, discordUserId];
-  const clauses = ["guild_id = $1", "discord_user_id = $2", "archived_at is null"];
+  const values = [guildId];
+  const clauses = ["guild_id = $1", "archived_at is null"];
+  if (discordUserId) {
+    values.push(discordUserId);
+    clauses.push(`discord_user_id = $${values.length}`);
+  }
+  if (playerName) {
+    values.push(playerName);
+    clauses.push(`regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  }
   if (postKey) {
     values.push(postKey);
     clauses.push(`post_key = $${values.length}`);
