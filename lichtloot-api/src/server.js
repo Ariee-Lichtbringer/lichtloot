@@ -3756,7 +3756,7 @@ async function savePoPostEntries({ guildId, query: params }) {
 }
 
 async function getPoPostEntries({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   const rawRaidKey = clean(params.raid || params.raidName);
   const raidKey = rawRaidKey ? normalizeRaidType(rawRaidKey).toLowerCase() : "";
@@ -13163,7 +13163,7 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
-    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries") {
+    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries" || action === "lichtbotGetPoPostEntries") {
       const list = await getPoPostEntries({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
     }
@@ -13457,7 +13457,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
-    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries") {
+    if (action === "getPoPostEntries" || action === "guildGetPoPostEntries" || action === "lichtbotGetPoPostEntries") {
       const list = await getPoPostEntries({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
     }

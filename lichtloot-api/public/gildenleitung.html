@@ -2759,10 +2759,17 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .p0-post-filter{
   display:grid;
-  grid-template-columns:180px minmax(220px,1fr) auto;
+  grid-template-columns:180px minmax(220px,1fr) auto auto;
   gap:8px;
   align-items:center;
   margin-bottom:8px;
+}
+
+.p0-post-filter-note{
+  grid-column:2 / -1;
+  color:#94a3b8;
+  font-size:12px;
+  font-weight:800;
 }
 
 .p0-points-input{
@@ -8061,6 +8068,8 @@ async function loadP0PlusPanel(){
 
   try{
     const masterCode = document.getElementById("masterCode").value.trim();
+    const activePostKey = getActivePoPostKey();
+    if(activePostKey && !poPostKeyFilter) poPostKeyFilter = activePostKey;
     const [result, reviewResult, poResult] = await Promise.all([
       railwayApi({ action:"getP0Plus" }),
       masterCode
@@ -8136,6 +8145,8 @@ function renderP0PlusModalContent(){
         <label for="poPostKeyFilter">Post-ID</label>
         <input id="poPostKeyFilter" type="text" value="${escapeAttr(poPostKeyFilter)}" placeholder="z. B. po-liste-l6lavf" onkeydown="if(event.key==='Enter') applyPoPostKeyFilter()">
         <button class="small-btn primary" type="button" onclick="applyPoPostKeyFilter()">Post laden</button>
+        <button class="small-btn ghost" type="button" onclick="usePoPostPosterKey()">Aus PO Post</button>
+        <div class="p0-post-filter-note">${escapeHtml(poPostKeyFilter ? "Aktiver PO-Post: " + poPostKeyFilter : "Die Post-ID wird automatisch aus dem PO-Post-Bereich übernommen.")}</div>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -8187,8 +8198,23 @@ function setPoPostRaidFilter(raid){
   renderP0PlusModalContent();
 }
 
+function getActivePoPostKey(){
+  const formKey = document.getElementById("poPostKey")?.value.trim();
+  if(formKey) return formKey;
+  const selectedKey = document.getElementById("poPostSavedSelect")?.value.trim();
+  if(selectedKey) return selectedKey;
+  const configs = readPoPostConfigs();
+  const matchingRaid = configs.find(config => !poPostRaidFilter || normalize(config.raid) === poPostRaidFilter);
+  return (matchingRaid || configs[0] || {}).postKey || "";
+}
+
 function applyPoPostKeyFilter(){
   poPostKeyFilter = document.getElementById("poPostKeyFilter")?.value.trim() || "";
+  loadP0PlusPanel();
+}
+
+function usePoPostPosterKey(){
+  poPostKeyFilter = getActivePoPostKey();
   loadP0PlusPanel();
 }
 
