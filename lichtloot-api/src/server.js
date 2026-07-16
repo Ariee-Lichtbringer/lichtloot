@@ -3758,12 +3758,18 @@ async function savePoPostEntries({ guildId, query: params }) {
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensurePoPostEntriesSchema();
-  const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
+  const rawRaidKey = clean(params.raid || params.raidName);
+  const raidKey = rawRaidKey ? normalizeRaidType(rawRaidKey).toLowerCase() : "";
+  const postKey = clean(params.postKey || params.poPostKey || params.postId);
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
   if (raidKey) {
     values.push(raidKey);
     clauses.push(`lower(raid) = $${values.length}`);
+  }
+  if (postKey) {
+    values.push(postKey);
+    clauses.push(`post_key = $${values.length}`);
   }
   const result = await query(
     `select *
@@ -10320,7 +10326,8 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
     values.push(statusFilter);
     statusClause = `and lower(pds.approval_status) = $${values.length}`;
   }
-  const raidFilter = normalizeRaidType(params.raid || params.raidName);
+  const rawRaidFilter = clean(params.raid || params.raidName);
+  const raidFilter = rawRaidFilter ? normalizeRaidType(rawRaidFilter) : "";
   let raidClause = "";
   if (raidFilter) {
     values.push(raidTypeSearchValues(raidFilter));

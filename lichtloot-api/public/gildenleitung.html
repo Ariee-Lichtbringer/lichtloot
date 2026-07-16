@@ -2744,6 +2744,27 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-bottom:8px;
 }
 
+.p0-raid-tabs{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:8px;
+}
+
+.p0-raid-tabs .small-btn{
+  width:100%;
+  justify-content:center;
+  min-height:34px;
+}
+
+.p0-post-filter{
+  display:grid;
+  grid-template-columns:180px minmax(220px,1fr) auto;
+  gap:8px;
+  align-items:center;
+  margin-bottom:8px;
+}
+
 .p0-points-input{
   width:76px;
   min-height:28px;
@@ -2966,7 +2987,9 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .topbar{align-items:flex-start}
   .nav{width:100%}
   .btn{flex:1}
-  .p0-toolbar{grid-template-columns:1fr}
+  .p0-toolbar,
+  .p0-post-filter{grid-template-columns:1fr}
+  .p0-raid-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
   .worldbuff-toolbar{grid-template-columns:1fr}
   .buff-create-grid{grid-template-columns:1fr}
   .actions,
@@ -3931,6 +3954,7 @@ let p0PlusEntries = [];
 let p0ReviewEntries = [];
 let poPostEntries = [];
 let poPostRaidFilter = "";
+let poPostKeyFilter = "";
 let issueReports = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
@@ -8043,7 +8067,7 @@ async function loadP0PlusPanel(){
         ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
         : Promise.resolve({ success:true, entries:[], noMaster:true }),
       masterCode
-        ? railwayApi({ action:"guildGetPoPostEntries", masterCode })
+        ? railwayApi({ action:"guildGetPoPostEntries", masterCode, postKey:poPostKeyFilter })
         : Promise.resolve({ success:true, entries:[], noMaster:true })
     ]);
     if(!result.success){
@@ -8103,10 +8127,15 @@ function renderP0PlusModalContent(){
           <p>Die aktuellen PO-Nachrichten, die der Bot aus dem Discord-Channel in den PO-Post übernommen hat.</p>
         </div>
       </div>
-      <div class="p0-toolbar">
+      <div class="p0-raid-tabs">
         ${["","naxx","aq40","bwl","mc"].map(raid => `
           <button class="small-btn ${poPostRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoPostRaidFilter('${escapeAttr(raid)}')">${escapeHtml(raid ? raid.toUpperCase() : "Alle")}</button>
         `).join("")}
+      </div>
+      <div class="p0-post-filter">
+        <label for="poPostKeyFilter">Post-ID</label>
+        <input id="poPostKeyFilter" type="text" value="${escapeAttr(poPostKeyFilter)}" placeholder="z. B. po-liste-l6lavf" onkeydown="if(event.key==='Enter') applyPoPostKeyFilter()">
+        <button class="small-btn primary" type="button" onclick="applyPoPostKeyFilter()">Post laden</button>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -8156,6 +8185,11 @@ function renderP0PlusModalContent(){
 function setPoPostRaidFilter(raid){
   poPostRaidFilter = String(raid || "").toLowerCase();
   renderP0PlusModalContent();
+}
+
+function applyPoPostKeyFilter(){
+  poPostKeyFilter = document.getElementById("poPostKeyFilter")?.value.trim() || "";
+  loadP0PlusPanel();
 }
 
 function renderPoPostEntryRows(){
