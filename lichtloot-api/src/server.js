@@ -271,7 +271,9 @@ function poItemAliasKey(value) {
 const PO_ITEM_ALIASES = {
   brust4werte: "Formel: Brust - Große Werte",
   gressil: "Gressil, Vorbote des Untergangs",
-  thc: "Zehrende Kälte"
+  thc: "Die zehrende Kälte",
+  zehrendekalte: "Die zehrende Kälte",
+  diezehrendekalte: "Die zehrende Kälte"
 };
 
 function normalizePoItemName(value) {
@@ -3631,6 +3633,7 @@ async function queuePoPost({ guildId, query: params }) {
       postKey,
       title: clean(params.title) || "PO Liste",
       raid: clean(params.raid || params.raidName),
+      note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
       limit,
       source: "gildenleitung"
     }
@@ -3736,9 +3739,16 @@ async function savePoPostEntries({ guildId, query: params }) {
        where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
+    const seenPlayers = new Set();
+    let savedCount = 0;
     for (const entry of entries) {
       const playerName = await resolvePoPostPlayerName(client, guildId, entry);
       const itemName = normalizePoItemName(entry.item || entry.itemName);
+      const playerKey = clean(playerName).toLowerCase();
+      if (!playerKey || seenPlayers.has(playerKey)) {
+        continue;
+      }
+      seenPlayers.add(playerKey);
       const poMessageId = clean(entry.messageId || entry.discordMessageId);
       const approval = approvalByKey.get(poMessageId)
         || approvalByKey.get(`${playerName.toLowerCase()}|${itemName.toLowerCase()}`)
@@ -3773,9 +3783,10 @@ async function savePoPostEntries({ guildId, query: params }) {
           approval.approvedAt || null
         ]
       );
+      savedCount += 1;
     }
     await client.query("commit");
-    return { success: true, saved: entries.length };
+    return { success: true, saved: savedCount };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -4028,9 +4039,28 @@ async function deletePoPostEntry({ guildId, query: params }) {
     values
   );
 
+  const payloads = new Map();
+  for (const row of result.rows || []) {
+    const key = [row.post_key, row.source_channel_id, row.target_channel_id].join("|");
+    payloads.set(key, {
+      postKey: row.post_key || postKey,
+      sourceChannelId: row.source_channel_id || sourceChannelId,
+      targetChannelId: row.target_channel_id || targetChannelId || row.source_channel_id || sourceChannelId,
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      source: "po_entry_delete",
+      queuedAt: new Date().toISOString()
+    });
+  }
+  for (const payload of payloads.values()) {
+    await enqueueBotUpdate({ guildId, type: "po_post", payload })
+      .catch(error => console.warn("PO-Post konnte nach Eintrag-Löschung nicht queued werden:", error.message || error));
+  }
+
   return {
     success: true,
     deleted: result.rowCount || 0,
+    queued: payloads.size,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",
       sourceChannelId: row.source_channel_id || "",
@@ -4168,9 +4198,12 @@ async function savePoPostEntry({ guildId, query: params }) {
          and post_key = $2
          and source_channel_id = $3
          and target_channel_id = $4
-         and discord_user_id = $5
+         and (
+           discord_user_id = $5
+           or regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($6), '[^a-z0-9]+', '', 'g')
+         )
          and archived_at is null`,
-      [guildId, postKey, sourceChannelId, targetChannelId, discordUserId]
+      [guildId, postKey, sourceChannelId, targetChannelId, discordUserId, character.name]
     );
     const result = await client.query(
       `insert into po_post_entries (

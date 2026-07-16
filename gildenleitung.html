@@ -832,6 +832,10 @@ select:focus{border-color:rgba(96,165,250,.75)}
   gap:10px;
 }
 
+.raid-helper-row .field.wide{
+  grid-column:1 / -1;
+}
+
 .raid-helper-slots{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -850,6 +854,10 @@ select:focus{border-color:rgba(96,165,250,.75)}
   padding:9px;
   outline:none;
   font:600 13px/1.45 Arial, Helvetica, sans-serif;
+}
+
+#poPostNote{
+  min-height:72px;
 }
 
 .raid-helper-preview{
@@ -3047,7 +3055,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="Post" title="Post"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">Post</span></button>
+      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO Post" title="PO Post"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO Post</span></button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
@@ -3584,6 +3592,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
                   <option value="zg">ZG</option>
                   <option value="ony">Onyxia</option>
                 </select>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field wide">
+                <label for="poPostNote">Ergänzende Nachricht</label>
+                <textarea id="poPostNote" rows="3" placeholder="Zusatztext der Raidleitung für diesen PO-Post"></textarea>
               </div>
             </div>
             <div class="tools">
@@ -6602,7 +6616,7 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadRaidHelperDiscordChannels();
   loadPoPostStoredEntries();
-  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey"].forEach(id => {
+  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey","poPostNote"].forEach(id => {
     const select = document.getElementById(id);
     if(select && !select.dataset.poBound){
       select.addEventListener("change", updatePoPostPreview);
@@ -6768,6 +6782,7 @@ function renderPoPostDetailRows(){
           <div class="actions">
             <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
             <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
+            <button class="small-btn danger" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
           </div>
         </td>
       </tr>
@@ -6800,6 +6815,7 @@ function getPoPostFormConfig(){
     reviewRecipient: document.getElementById("poPostReviewRecipient")?.value.trim() || "",
     title,
     raid: document.getElementById("poPostRaid")?.value || "",
+    note: document.getElementById("poPostNote")?.value.trim() || "",
     limit: document.getElementById("poPostLimit")?.value || "800"
   };
 }
@@ -6811,6 +6827,7 @@ function setPoPostFormConfig(config){
   setValue("poPostTitle", config.title || "PO Liste");
   setValue("poPostLimit", config.limit || "800");
   setValue("poPostRaid", config.raid || "");
+  setValue("poPostNote", config.note || config.message || "");
   const source = document.getElementById("poPostSourceChannel");
   const target = document.getElementById("poPostTargetChannel");
   if(source) source.value = config.sourceChannelId || "";
@@ -6847,6 +6864,7 @@ function loadPoPostConfigFromRow(postKey){
         targetChannelId:entry.targetChannelId || entry.sourceChannelId || "",
         title:entry.title || "PO Liste",
         raid:normalize(entry.raid || ""),
+        note:entry.note || "",
         limit:"800"
       });
     }
@@ -6972,6 +6990,7 @@ async function queuePoPost(){
       reviewRecipient: config.reviewRecipient,
       title: config.title,
       raid: config.raid,
+      note: config.note,
       limit: config.limit
     });
     if(!result.success) throw new Error(result.error || "PO Post konnte nicht queued werden.");
@@ -8574,6 +8593,41 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function deletePoPostEntryFromPostPanel(index){
+  const entry = poPostStoredEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const player = entry.player || "-";
+  const item = entry.item || "-";
+  if(!confirm(`PO-Eintrag von ${player} für ${item} wirklich löschen?`)){
+    return;
+  }
+  try{
+    setStatus("PO-Eintrag wird gelöscht ...", "");
+    const result = await railwayWrite({
+      action:"deletePoPostEntry",
+      masterCode,
+      postKey:entry.postKey || "",
+      sourceChannelId:entry.sourceChannelId || "",
+      targetChannelId:entry.targetChannelId || "",
+      player:entry.player || "",
+      item:entry.item || ""
+    });
+    if(!result.success || Number(result.deleted || 0) <= 0){
+      setStatus(result.error || "PO-Eintrag wurde nicht gefunden.", "bad");
+      return;
+    }
+    await loadPoPostStoredEntries();
+    setStatus("PO-Eintrag gelöscht. Der DC-Post wird aktualisiert.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Eintrag konnte nicht gelöscht werden.", "bad");
   }
 }
 
