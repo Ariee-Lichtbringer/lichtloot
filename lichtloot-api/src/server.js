@@ -3668,6 +3668,7 @@ async function ensurePoPostEntriesSchema() {
   );
   await query(`alter table po_post_entries add column if not exists discord_user_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists discord_name text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists class_name text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approval_status text not null default 'pending'`);
   await query(`alter table po_post_entries add column if not exists approved_by text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approved_at timestamptz`);
@@ -3724,7 +3725,7 @@ async function savePoPostEntries({ guildId, query: params }) {
   try {
     await client.query("begin");
     const approvalResult = await client.query(
-      `select po_message_id, player_name, item_name, approval_status, approved_by, approved_at,
+      `select po_message_id, player_name, item_name, class_name, approval_status, approved_by, approved_at,
               luck_by, luck_by_discord_id, luck_at
        from po_post_entries
        where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
@@ -3734,6 +3735,7 @@ async function savePoPostEntries({ guildId, query: params }) {
     for (const row of approvalResult.rows) {
       const status = {
         approvalStatus: row.approval_status || "pending",
+        className: row.class_name || "",
         approvedBy: row.approved_by || "",
         approvedAt: row.approved_at || null,
         luckBy: row.luck_by || "",
@@ -3770,10 +3772,10 @@ async function savePoPostEntries({ guildId, query: params }) {
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-           raid, title, player_name, item_name, discord_user_id, discord_name, po_message_id, po_created_at,
+           raid, title, player_name, item_name, discord_user_id, discord_name, class_name, po_message_id, po_created_at,
            approval_status, approved_by, approved_at, luck_by, luck_by_discord_id, luck_at
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
         [
           guildId,
           postKey,
@@ -3786,6 +3788,7 @@ async function savePoPostEntries({ guildId, query: params }) {
           itemName,
           clean(entry.discordUserId || entry.discord_user_id),
           clean(entry.discordName || entry.discord_name),
+          clean(entry.className || entry.class_name || entry.klasse || approval.className || ""),
           poMessageId,
           clean(entry.createdAt) || null,
           approval.approvalStatus || "pending",
@@ -3853,6 +3856,8 @@ async function getPoPostEntries({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
+      className: row.class_name || "",
+      Klasse: row.class_name || "",
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
@@ -3902,6 +3907,8 @@ async function getPoPostApprovals({ guildId, query: params }) {
     success: true,
     entries: result.rows.map(row => ({
       player: row.player_name || "",
+      className: row.class_name || "",
+      Klasse: row.class_name || "",
       item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
@@ -3939,7 +3946,7 @@ async function resolvePoPostPlayers({ guildId, query: params }) {
 }
 
 async function reviewPoPostEntry({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   const messageId = clean(params.messageId || params.poMessageId || params.discordMessageId);
   const postKey = clean(params.postKey || params.poPostKey || "");
@@ -3977,6 +3984,9 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       targetChannelId: row.target_channel_id,
       raid: row.raid,
       title: row.title,
+      mode: clean(params.mode || params.poMode),
+      note: clean(params.note || params.message || params.raidleadMessage),
+      itemOptions: clean(params.itemOptions || params.items || params.itemList),
       source: "po_review",
       reviewMessageId: row.po_message_id,
       reviewStatus: approvalStatus,
@@ -3992,6 +4002,8 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
+      className: row.class_name || "",
+      Klasse: row.class_name || "",
       item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
@@ -4303,6 +4315,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const itemName = normalizePoItemName(params.item || params.itemName);
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName);
+  const className = clean(params.className || params.class || params.klasse);
 
   if (!postKey || !sourceChannelId || !targetChannelId) {
     const error = new Error("PO-Post-Konfiguration fehlt.");
@@ -4349,10 +4362,10 @@ async function savePoPostEntry({ guildId, query: params }) {
     const result = await client.query(
       `insert into po_post_entries (
          guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-         raid, title, player_name, item_name, discord_user_id, discord_name,
+         raid, title, player_name, item_name, discord_user_id, discord_name, class_name,
          po_message_id, po_created_at, approval_status, approved_by, approved_at
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'',now(),'pending','',null)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',now(),'pending','',null)
        returning *`,
       [
         guildId,
@@ -4365,7 +4378,8 @@ async function savePoPostEntry({ guildId, query: params }) {
         character.name,
         itemName,
         discordUserId,
-        discordName
+        discordName,
+        className || character.class_name || ""
       ]
     );
     await client.query("commit");
@@ -4379,6 +4393,8 @@ async function savePoPostEntry({ guildId, query: params }) {
         raid: row.raid || "",
         title: row.title || "PO Liste",
         player: row.player_name || "",
+        className: row.class_name || "",
+        Klasse: row.class_name || "",
         item: normalizePoItemName(row.item_name || ""),
         discordUserId: row.discord_user_id || "",
         discordName: row.discord_name || "",

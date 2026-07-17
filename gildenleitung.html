@@ -7067,7 +7067,7 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     return `
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.discordName || "")}</div></td>
+        <td><strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div></td>
         <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
         <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
         <td>
