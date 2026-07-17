@@ -4426,16 +4426,20 @@ async function savePoPostEntry({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
-  if (!player || !playerPin || !itemName || !discordUserId) {
-    const error = new Error("Charakter, SpielerLogin, Item oder Discord-User fehlt.");
+  if (!player || !itemName || !discordUserId) {
+    const error = new Error("Charakter, Item oder Discord-User fehlt.");
     error.statusCode = 400;
     throw error;
   }
 
-  const character = await findCharacterForPin(guildId, playerPin, player, server);
+  const character = playerPin
+    ? await findCharacterForPin(guildId, playerPin, player, server)
+    : await findCharacter(guildId, player, server);
   if (!character) {
-    const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
-    error.statusCode = 403;
+    const error = new Error(playerPin
+      ? "SpielerLogin passt nicht zu diesem Charakter."
+      : "Charakter wurde in LichtLoot nicht gefunden.");
+    error.statusCode = playerPin ? 403 : 404;
     throw error;
   }
 
