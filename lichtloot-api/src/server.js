@@ -933,6 +933,58 @@ const playerRoleLabels = {
   raidoffiziere: "Raidoffiziere"
 };
 const raidCreateRoles = new Set(["gildenleitung", "gildenoffiziere", "raidoffiziere"]);
+const poReviewOfficerNames = new Set([
+  "aeranor",
+  "andytheke",
+  "ariee",
+  "bambow",
+  "belly",
+  "bimm",
+  "bimmii",
+  "bimmi",
+  "blondie",
+  "bruno55",
+  "burny",
+  "cutiepie",
+  "dennis",
+  "eiereule",
+  "emori",
+  "erzcastiel",
+  "evalina",
+  "gimillion",
+  "gimlion",
+  "giminiufnsak",
+  "grashupfer",
+  "immobimm",
+  "juksi",
+  "kaese",
+  "kase",
+  "kraz",
+  "lagertha",
+  "linara",
+  "linari",
+  "lissy",
+  "liya",
+  "loujsa",
+  "marshmallow",
+  "milina",
+  "milkshake",
+  "pinari",
+  "ronary",
+  "rubina",
+  "schepperle",
+  "sillanou",
+  "sillasou",
+  "veltharos"
+]);
+
+function normalizeReviewName(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
 
 function normalizePlayerRole(value) {
   const raw = clean(value).toLowerCase();
@@ -3928,6 +3980,8 @@ async function canReviewPoPost({ guildId, query: params }) {
   await ensureRaidSchema();
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName || params.displayName);
+  const normalizedDiscordName = normalizeReviewName(discordName);
+  const allowlistedByName = Boolean(normalizedDiscordName && poReviewOfficerNames.has(normalizedDiscordName));
   if (!discordUserId && !discordName) return { success: true, allowed: false, roles: [], roleLabels: [] };
   const values = [guildId];
   const clauses = [];
@@ -3949,11 +4003,13 @@ async function canReviewPoPost({ guildId, query: params }) {
     values
   );
   const roles = result.rows.map(row => normalizePlayerRole(row.role)).filter(Boolean);
+  const allowedByRole = roles.some(role => raidCreateRoles.has(role));
   return {
     success: true,
-    allowed: roles.some(role => raidCreateRoles.has(role)),
-    roles,
-    roleLabels: roles.map(role => playerRoleLabel(role))
+    allowed: allowedByRole || allowlistedByName,
+    roles: allowlistedByName && !roles.length ? ["offiziersliste"] : roles,
+    roleLabels: allowlistedByName && !roles.length ? ["Offiziersliste"] : roles.map(role => playerRoleLabel(role)),
+    allowlistedByName
   };
 }
 
