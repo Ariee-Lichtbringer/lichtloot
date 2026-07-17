@@ -3845,6 +3845,16 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <input id="poSignupPostKey" type="text" placeholder="z. B. naxx-po-anmelder" oninput="updatePoSignupPreview()">
               </div>
               <div class="field">
+                <label for="poSignupDate">Raid-Datum</label>
+                <input id="poSignupDate" type="date" oninput="updatePoSignupPreview()" onchange="updatePoSignupPreview()">
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poSignupTime">Raid-Uhrzeit</label>
+                <input id="poSignupTime" type="time" oninput="updatePoSignupPreview()" onchange="updatePoSignupPreview()">
+              </div>
+              <div class="field">
                 <label for="poSignupReviewRecipient">Freigabe per DM an</label>
                 <input id="poSignupReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename" oninput="updatePoSignupPreview()">
               </div>
@@ -3882,6 +3892,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div id="poSignupPreviewDescription" class="discord-preview-description"></div>
             <div class="discord-preview-meta">
               <span id="poSignupPreviewRaid">AQ40</span>
+              <span id="poSignupPreviewDate">Termin fehlt</span>
               <span id="poSignupPreviewTarget"># channel</span>
             </div>
             <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
@@ -6916,15 +6927,19 @@ function updatePoSignupDefaults(overwriteTitle=true){
 function updatePoSignupPreview(){
   const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
   const raid = document.getElementById("poSignupRaid")?.value || "";
+  const raidDate = document.getElementById("poSignupDate")?.value || "";
+  const raidTime = document.getElementById("poSignupTime")?.value || "";
   const note = document.getElementById("poSignupNote")?.value.trim() || "";
   const titleEl = document.getElementById("poSignupPreviewTitle");
   const descEl = document.getElementById("poSignupPreviewDescription");
   const raidEl = document.getElementById("poSignupPreviewRaid");
+  const dateEl = document.getElementById("poSignupPreviewDate");
   const targetEl = document.getElementById("poSignupPreviewTarget");
   const itemsEl = document.getElementById("poSignupPreviewItems");
   if(titleEl) titleEl.textContent = title.toUpperCase();
   if(descEl) descEl.textContent = note;
   if(raidEl) raidEl.textContent = raid ? raid.toUpperCase() : "Raid";
+  if(dateEl) dateEl.textContent = raidDate || raidTime ? `${formatRaidDate(raidDate) || raidDate || "Datum fehlt"} · ${raidTime || "Uhrzeit fehlt"} Uhr` : "Termin fehlt";
   if(targetEl) targetEl.textContent = selectedPoPostChannelLabel("poSignupTargetChannel");
   const items = poSignupItemLines();
   if(itemsEl){
@@ -7072,6 +7087,8 @@ function getPoSignupConfig(){
     reviewRecipient: document.getElementById("poSignupReviewRecipient")?.value.trim() || "",
     title,
     raid,
+    raidDate: document.getElementById("poSignupDate")?.value || "",
+    raidTime: document.getElementById("poSignupTime")?.value || "",
     limit:"800",
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
@@ -7156,7 +7173,7 @@ function initPoPostPanel(){
       select.dataset.poBound = "1";
     }
   });
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -7552,6 +7569,10 @@ async function createPoSignupPost(){
     if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
     return;
   }
+  if(!config.raidDate || !config.raidTime){
+    if(status) status.textContent = "Bitte Raid-Datum und Raid-Uhrzeit eintragen.";
+    return;
+  }
   if(!config.itemOptions){
     if(status) status.textContent = "Bitte mindestens ein Item eintragen oder P0+-Items laden.";
     return;
@@ -7575,6 +7596,8 @@ async function createPoSignupPost(){
       reviewRecipient: config.reviewRecipient,
       title: config.title,
       raid: config.raid,
+      raidDate: config.raidDate,
+      raidTime: config.raidTime,
       limit: config.limit,
       mode: config.mode,
       note: config.note,

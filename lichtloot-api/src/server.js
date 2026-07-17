@@ -3633,6 +3633,8 @@ async function queuePoPost({ guildId, query: params }) {
       postKey,
       title: clean(params.title) || "PO Liste",
       raid: clean(params.raid || params.raidName),
+      raidDate: clean(params.raidDate || params.date || params.datum),
+      raidTime: clean(params.raidTime || params.time || params.uhrzeit),
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
       mode: clean(params.mode || params.poMode),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
