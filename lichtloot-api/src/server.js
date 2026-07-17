@@ -3924,7 +3924,7 @@ async function getPoPostApprovals({ guildId, query: params }) {
 
 async function canReviewPoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  await ensurePlayerSchema();
+  await ensurePlayerRoleSchema();
   await ensureRaidSchema();
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName || params.displayName);
