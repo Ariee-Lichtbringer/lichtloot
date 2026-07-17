@@ -949,6 +949,20 @@ select:focus{border-color:rgba(96,165,250,.75)}
   grid-template-columns:minmax(0,.9fr) minmax(460px,1.1fr);
 }
 
+.po-post-tabs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.raid-helper-tab[data-po-post-tab="post"]{--tab-accent:96,165,250}
+.raid-helper-tab[data-po-post-tab="signup"]{--tab-accent:34,197,94}
+
+.po-post-tab-panel.hidden{
+  display:none!important;
+}
+
 .po-post-config-table,
 .po-post-entry-table{
   min-width:0;
@@ -975,6 +989,55 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-post-entry-panel .table-wrap{
   max-height:640px;
+}
+
+.po-signup-preview-list{
+  display:grid;
+  gap:7px;
+  margin:14px 0;
+}
+
+.po-signup-preview-item{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:7px;
+  background:rgba(15,23,42,.48);
+  color:#e5edf8;
+  font-weight:850;
+}
+
+.po-signup-preview-menu{
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px solid rgba(96,165,250,.38);
+  border-radius:8px;
+  background:rgba(30,41,59,.70);
+  color:#dbeafe;
+  font-weight:900;
+}
+
+.po-signup-preview-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.po-signup-preview-actions button{
+  min-height:36px;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:7px;
+  background:rgba(15,23,42,.76);
+  color:#e5edf8;
+  font-weight:900;
 }
 
 tr.selected-row td{
@@ -3603,7 +3666,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="raid-helper-layout po-post-layout">
+      <div class="po-post-tabs" role="tablist" aria-label="PO Post Funktionen">
+        <button class="raid-helper-tab active" type="button" data-po-post-tab="post" onclick="setPoPostTab('post')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Post</strong><span>Liste pflegen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-po-post-tab="signup" onclick="setPoPostTab('signup')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Item-Menü erstellen</span></span></button>
+      </div>
+      <div id="poPostTab-post" class="po-post-tab-panel raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
@@ -3723,6 +3790,109 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 </tr>
               </thead>
               <tbody id="poPostDetailRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout hidden">
+        <div class="raid-helper-form">
+          <section class="raid-helper-card">
+            <div class="raid-helper-card-head">
+              <span class="raid-helper-card-icon">▣</span>
+              <div>
+                <h3>PO-Anmelder erstellen</h3>
+                <p>Ein eigener Discord-Post mit Item-Auswahl unten und Anmeldung per Maske.</p>
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poSignupRaid">Raid</label>
+                <select id="poSignupRaid" onchange="updatePoSignupDefaults()">
+                  <option value="aq40">AQ40</option>
+                  <option value="bwl">BWL</option>
+                  <option value="mc">MC</option>
+                  <option value="naxx">Naxxramas</option>
+                  <option value="aq20">AQ20</option>
+                  <option value="zg">ZG</option>
+                  <option value="ony">Onyxia</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="poSignupTitle">Titel</label>
+                <input id="poSignupTitle" type="text" value="PO-Anmelder" oninput="updatePoSignupPreview()">
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poSignupPostKey">Post-ID</label>
+                <input id="poSignupPostKey" type="text" placeholder="z. B. naxx-po-anmelder" oninput="updatePoSignupPreview()">
+              </div>
+              <div class="field">
+                <label for="poSignupReviewRecipient">Freigabe per DM an</label>
+                <input id="poSignupReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename" oninput="updatePoSignupPreview()">
+              </div>
+            </div>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poSignupSourceChannel">PO-Quelle</label>
+                <select id="poSignupSourceChannel" onchange="updatePoSignupPreview()"></select>
+              </div>
+              <div class="field">
+                <label for="poSignupTargetChannel">Posten nach</label>
+                <select id="poSignupTargetChannel" onchange="updatePoSignupPreview()"></select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="poSignupItems">Items für das Auswahlmenü</label>
+              <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
+            </div>
+            <div class="field">
+              <label for="poSignupNote">Beschreibung / Regeln</label>
+              <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
+            </div>
+            <div class="tools">
+              <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
+              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
+              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
+            </div>
+            <div id="poSignupStatus" class="status">Bereit.</div>
+          </section>
+        </div>
+        <div class="raid-helper-preview">
+          <div class="discord-preview-card">
+            <div class="discord-preview-label">Vorschau</div>
+            <h3 id="poSignupPreviewTitle" class="discord-preview-title">PO-ANMELDER</h3>
+            <div id="poSignupPreviewDescription" class="discord-preview-description"></div>
+            <div class="discord-preview-meta">
+              <span id="poSignupPreviewRaid">AQ40</span>
+              <span id="poSignupPreviewTarget"># channel</span>
+            </div>
+            <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
+            <div class="po-signup-preview-menu"><span>Item auswählen und PO eintragen</span><span>⌄</span></div>
+            <div class="po-signup-preview-actions">
+              <button type="button">PO eintragen</button>
+              <button type="button">PO-Eintrag löschen</button>
+            </div>
+          </div>
+          <div class="section-head compact">
+            <div>
+              <h3>PO-Anmeldungen</h3>
+              <p id="poSignupEntryPanelHint">Post-ID wählen oder PO-Anmelder posten.</p>
+            </div>
+            <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
+          </div>
+          <div class="table-wrap">
+            <table class="po-post-entry-table">
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Spieler</th>
+                  <th>Item</th>
+                  <th>Datum</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="poSignupDetailRows"></tbody>
             </table>
           </div>
         </div>
@@ -6662,7 +6832,7 @@ function poPostChannelOptions(selectedValue){
 }
 
 function renderPoPostChannelSelects(){
-  ["poPostSourceChannel","poPostTargetChannel"].forEach(id => {
+  ["poPostSourceChannel","poPostTargetChannel","poSignupSourceChannel","poSignupTargetChannel"].forEach(id => {
     const select = document.getElementById(id);
     if(!select) return;
     const current = select.value || RAID_HELPER_CHANNEL_ID;
@@ -6671,6 +6841,7 @@ function renderPoPostChannelSelects(){
     if(!select.value && select.options.length) select.selectedIndex = 0;
   });
   updatePoPostPreview();
+  updatePoSignupPreview();
 }
 
 function selectedPoPostChannelLabel(id){
@@ -6687,18 +6858,235 @@ function updatePoPostPreview(){
   if(review) review.textContent = document.getElementById("poPostReviewRecipient")?.value.trim() || "Discord-Person eintragen";
 }
 
+function setPoPostTab(tabName){
+  const active = tabName === "signup" ? "signup" : "post";
+  document.querySelectorAll("[data-po-post-tab]").forEach(button => {
+    button.classList.toggle("active", button.dataset.poPostTab === active);
+  });
+  document.querySelectorAll(".po-post-tab-panel").forEach(panel => {
+    panel.classList.toggle("hidden", panel.id !== `poPostTab-${active}`);
+  });
+  if(active === "signup"){
+    updatePoSignupDefaults(false);
+    updatePoSignupPreview();
+  }
+}
+
+function poSignupItemLines(){
+  const text = document.getElementById("poSignupItems")?.value || "";
+  const seen = new Set();
+  return text.split(/\r?\n|;/)
+    .map(line => line.trim())
+    .filter(Boolean)
+    .filter(line => {
+      const key = normalize(line);
+      if(!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0,25);
+}
+
+function updatePoSignupDefaults(overwriteTitle=true){
+  const raid = document.getElementById("poSignupRaid")?.value || "aq40";
+  const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
+  const title = document.getElementById("poSignupTitle");
+  const key = document.getElementById("poSignupPostKey");
+  if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
+  if(key && !key.value.trim()) key.value = `${raid}-po-anmelder`;
+  updatePoSignupPreview();
+}
+
+function updatePoSignupPreview(){
+  const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
+  const raid = document.getElementById("poSignupRaid")?.value || "";
+  const note = document.getElementById("poSignupNote")?.value.trim() || "";
+  const titleEl = document.getElementById("poSignupPreviewTitle");
+  const descEl = document.getElementById("poSignupPreviewDescription");
+  const raidEl = document.getElementById("poSignupPreviewRaid");
+  const targetEl = document.getElementById("poSignupPreviewTarget");
+  const itemsEl = document.getElementById("poSignupPreviewItems");
+  if(titleEl) titleEl.textContent = title.toUpperCase();
+  if(descEl) descEl.textContent = note;
+  if(raidEl) raidEl.textContent = raid ? raid.toUpperCase() : "Raid";
+  if(targetEl) targetEl.textContent = selectedPoPostChannelLabel("poSignupTargetChannel");
+  const items = poSignupItemLines();
+  if(itemsEl){
+    const previewItems = items.slice(0,8);
+    itemsEl.innerHTML = previewItems.length
+      ? previewItems.map((item, index) => `<div class="po-signup-preview-item"><span>${escapeHtml(item)}</span><span>${index + 1}</span></div>`).join("") + (items.length > previewItems.length ? `<div class="muted">+ ${escapeHtml(String(items.length - previewItems.length))} weitere Items</div>` : "")
+      : '<div class="muted">Noch keine Items eingetragen.</div>';
+  }
+  renderPoSignupReviewRows();
+}
+
+async function fillPoSignupItemsFromP0Plus(){
+  const status = document.getElementById("poSignupStatus");
+  const field = document.getElementById("poSignupItems");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!field) return;
+  if(status) status.textContent = "P0+-Items werden geladen ...";
+  try{
+    const [result, backup] = await Promise.all([
+      railwayApi({ action:"getP0Plus", t:Date.now() }),
+      masterCode ? railwayApi({ action:"guildExportBackup", masterCode, t:Date.now() }).catch(() => null) : Promise.resolve(null)
+    ]);
+    if(!result.success) throw new Error(result.error || "P0+-Items konnten nicht geladen werden.");
+    const current = poSignupItemLines();
+    const seen = new Set(current.map(item => normalize(item)));
+    const items = [...current];
+    function addItem(value){
+      const item = String(value || "").trim();
+      const key = normalize(item);
+      if(!item || !key || seen.has(key)) return;
+      seen.add(key);
+      items.push(item);
+    }
+    (Array.isArray(result.entries) ? result.entries : []).forEach(entry => {
+      addItem(entry.item || entry.itemName);
+    });
+    (Array.isArray(backup?.p0plusPoints) ? backup.p0plusPoints : []).forEach(entry => {
+      addItem(entry.item_name || entry.item || entry.note);
+    });
+    (Array.isArray(backup?.prios) ? backup.prios : []).forEach(entry => {
+      const meta = commentMeta(entry.comment);
+      if(normalize(meta.p0Plus) !== "ja") return;
+      addItem(meta.p0Item || entry.p1 || entry.P1);
+    });
+    (Array.isArray(backup?.raids) ? backup.raids : []).forEach(raid => {
+      (Array.isArray(raid.p0PlusPrios) ? raid.p0PlusPrios : []).forEach(entry => {
+        addItem(entry.p0Item || entry.p1);
+      });
+      (Array.isArray(raid.p0PlusTransfers) ? raid.p0PlusTransfers : []).forEach(entry => {
+        addItem(entry.item);
+      });
+    });
+    field.value = items.slice(0,25).join("\n");
+    updatePoSignupPreview();
+    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(Math.min(items.length, 25)))} Item(s) in der Liste.</span>`;
+  }catch(error){
+    if(status) status.textContent = error.message || "P0+-Items konnten nicht geladen werden.";
+  }
+}
+
+async function fillPoSignupItemsFromCurrentP0PlusOnly(){
+  const status = document.getElementById("poSignupStatus");
+  const field = document.getElementById("poSignupItems");
+  if(!field) return;
+  try{
+    const result = await railwayApi({ action:"getP0Plus", t:Date.now() });
+    if(!result.success) throw new Error(result.error || "P0+-Items konnten nicht geladen werden.");
+    const current = poSignupItemLines();
+    const seen = new Set(current.map(item => normalize(item)));
+    const items = [...current];
+    (Array.isArray(result.entries) ? result.entries : []).forEach(entry => {
+      const item = String(entry.item || entry.itemName || "").trim();
+      const key = normalize(item);
+      if(!item || !key || seen.has(key)) return;
+      seen.add(key);
+      items.push(item);
+    });
+    field.value = items.slice(0,25).join("\n");
+    updatePoSignupPreview();
+    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(items.length))} Item(s) in der Liste.</span>`;
+  }catch(error){
+    if(status) status.textContent = error.message || "P0+-Items konnten nicht geladen werden.";
+  }
+}
+
+function getPoSignupConfig(){
+  const raid = document.getElementById("poSignupRaid")?.value || "aq40";
+  const title = document.getElementById("poSignupTitle")?.value.trim() || `${RAID_OPTIONS[raid]?.short || raid.toUpperCase()} PO-Anmelder`;
+  let postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
+  if(!postKey){
+    postKey = `${raid}-po-anmelder`;
+    setValue("poSignupPostKey", postKey);
+  }
+  const sourceChannelId = document.getElementById("poSignupSourceChannel")?.value || "";
+  return {
+    postKey,
+    sourceChannelId,
+    targetChannelId: document.getElementById("poSignupTargetChannel")?.value || sourceChannelId,
+    reviewRecipient: document.getElementById("poSignupReviewRecipient")?.value.trim() || "",
+    title,
+    raid,
+    limit:"800",
+    mode:"signup",
+    note:document.getElementById("poSignupNote")?.value.trim() || "",
+    itemOptions:poSignupItemLines().join("\n")
+  };
+}
+
+function poPostEntryRowsForKey(postKey){
+  const key = String(postKey || "").trim();
+  return (poPostStoredEntries || []).filter(entry => entry.postKey === key);
+}
+
+function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
+  if(!tbody) return;
+  const key = String(postKey || "").trim();
+  if(!key){
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Post-ID ausgewählt.</td></tr>';
+    if(hint) hint.textContent = emptyText || "Post-ID wählen.";
+    return;
+  }
+  const rows = poPostEntryRowsForKey(key);
+  if(hint) hint.textContent = `${key} · ${rows.length} Eintrag/Einträge`;
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="5" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(entry => {
+    const index = poPostStoredEntries.indexOf(entry);
+    const status = String(entry.approvalStatus || "pending").toLowerCase();
+    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
+    const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    return `
+      <tr>
+        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td><strong>${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.discordName || "")}</div></td>
+        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
+        <td>
+          <div class="actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
+            <button class="small-btn danger" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderPoSignupReviewRows(){
+  const tbody = document.getElementById("poSignupDetailRows");
+  const hint = document.getElementById("poSignupEntryPanelHint");
+  const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
+  renderPoPostEntryReviewRows(tbody, hint, key, "Post-ID wählen oder PO-Anmelder posten.");
+}
+
 function initPoPostPanel(){
   renderPoPostConfigSelect();
   renderPoPostConfigRows();
   renderPoPostChannelSelects();
   loadRaidHelperDiscordChannels();
   loadPoPostStoredEntries();
+  updatePoSignupDefaults(false);
   ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey","poPostNote"].forEach(id => {
     const select = document.getElementById(id);
     if(select && !select.dataset.poBound){
       select.addEventListener("change", updatePoPostPreview);
       select.addEventListener("input", updatePoPostPreview);
       select.dataset.poBound = "1";
+    }
+  });
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
+    const field = document.getElementById(id);
+    if(field && !field.dataset.poSignupBound){
+      field.addEventListener("change", updatePoSignupPreview);
+      field.addEventListener("input", updatePoSignupPreview);
+      field.dataset.poSignupBound = "1";
     }
   });
   const recipient = document.getElementById("poPostReviewRecipient");
@@ -6788,6 +7176,7 @@ function renderPoPostConfigRows(){
   const rows = poPostConfigGroups();
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Posts gespeichert.</td></tr>';
+    renderPoSignupReviewRows();
     return;
   }
   tbody.innerHTML = rows.map(row => `
@@ -6807,6 +7196,7 @@ function renderPoPostConfigRows(){
     </tr>
   `).join("");
   renderPoPostDetailRows();
+  renderPoSignupReviewRows();
 }
 
 async function loadPoPostStoredEntries(){
@@ -6831,44 +7221,13 @@ function selectPoPostForReview(postKey){
   loadPoPostConfigFromRow(selectedPoPostKey);
   renderPoPostConfigRows();
   renderPoPostDetailRows();
+  renderPoSignupReviewRows();
 }
 
 function renderPoPostDetailRows(){
   const tbody = document.getElementById("poPostDetailRows");
-  if(!tbody) return;
   const hint = document.getElementById("poPostEntryPanelHint");
-  if(!selectedPoPostKey){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Links eine Post-ID anklicken.</td></tr>';
-    if(hint) hint.textContent = "Post-ID links anklicken, dann erscheinen hier die Einträge.";
-    return;
-  }
-  const rows = (poPostStoredEntries || []).filter(entry => entry.postKey === selectedPoPostKey);
-  if(hint) hint.textContent = `${selectedPoPostKey} · ${rows.length} Eintrag/Einträge`;
-  if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="5" class="muted">Keine aktiven Einträge für ${escapeHtml(selectedPoPostKey)} gefunden.</td></tr>`;
-    return;
-  }
-  tbody.innerHTML = rows.map(entry => {
-    const index = poPostStoredEntries.indexOf(entry);
-    const status = String(entry.approvalStatus || "pending").toLowerCase();
-    const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
-    const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
-    return `
-      <tr>
-        <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.discordName || "")}</div></td>
-        <td>${renderLootItem(entry.item || "-")}</td>
-        <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
-        <td>
-          <div class="actions">
-            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
-            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
-            <button class="small-btn danger" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join("");
+  renderPoPostEntryReviewRows(tbody, hint, selectedPoPostKey, "Post-ID links anklicken, dann erscheinen hier die Einträge.");
 }
 
 function makePoPostKey(title){
@@ -7076,6 +7435,58 @@ async function newPoPostConfig(){
     await queuePoPost();
   }else if(status){
     status.textContent = "Neuer PO-Post vorbereitet. Bitte Quelle/Ziel wählen und dann aktualisieren.";
+  }
+}
+
+async function createPoSignupPost(){
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const config = getPoSignupConfig();
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  if(!config.sourceChannelId || !config.targetChannelId){
+    if(status) status.textContent = "Bitte Quelle und Ziel-Channel wählen.";
+    return;
+  }
+  if(!config.itemOptions){
+    if(status) status.textContent = "Bitte mindestens ein Item eintragen oder P0+-Items laden.";
+    return;
+  }
+  try{
+    const configs = readPoPostConfigs();
+    const index = configs.findIndex(item => item.postKey === config.postKey);
+    if(index >= 0) configs[index] = Object.assign({}, configs[index], config);
+    else configs.push(config);
+    writePoPostConfigs(configs);
+    selectedPoPostKey = config.postKey;
+    renderPoPostConfigSelect();
+    renderPoPostConfigRows();
+    if(status) status.textContent = "PO-Anmelder wird an den Bot übergeben ...";
+    const result = await railwayWrite({
+      action:"guildQueuePoPost",
+      masterCode,
+      postKey: config.postKey,
+      sourceChannelId: config.sourceChannelId,
+      targetChannelId: config.targetChannelId,
+      reviewRecipient: config.reviewRecipient,
+      title: config.title,
+      raid: config.raid,
+      limit: config.limit,
+      mode: config.mode,
+      note: config.note,
+      itemOptions: config.itemOptions
+    });
+    if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht queued werden.");
+    if(status){
+      status.innerHTML = result.skipped
+        ? '<span class="warn">PO-Anmelder war gerade schon in der Warteschlange.</span>'
+        : '<span class="good">PO-Anmelder ist in der Bot-Warteschlange.</span>';
+    }
+    await loadPoPostStoredEntries();
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Anmelder konnte nicht erstellt werden.";
   }
 }
 

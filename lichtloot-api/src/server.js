@@ -3634,6 +3634,8 @@ async function queuePoPost({ guildId, query: params }) {
       title: clean(params.title) || "PO Liste",
       raid: clean(params.raid || params.raidName),
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
+      mode: clean(params.mode || params.poMode),
+      itemOptions: clean(params.itemOptions || params.items || params.itemList),
       limit,
       source: "gildenleitung"
     }
