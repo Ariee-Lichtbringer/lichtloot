@@ -1968,6 +1968,7 @@ function worldbuffMergeLookupKey(entry) {
 
 function canonicalWorldbuffGuildForDedupe(entry) {
   const guild = clean(entry.gilde || entry.guild || entry.guild_name);
+  if (!guild || guild === "-") return "lichtbringer";
   if (guild.toLowerCase().includes("lichtbringer")) return "lichtbringer";
   return guild.toLowerCase();
 }
