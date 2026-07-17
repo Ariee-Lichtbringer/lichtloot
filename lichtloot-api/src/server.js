@@ -3922,6 +3922,31 @@ async function getPoPostApprovals({ guildId, query: params }) {
   };
 }
 
+async function canReviewPoPost({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePlayerSchema();
+  await ensureRaidSchema();
+  const discordUserId = clean(params.discordUserId || params.userId);
+  if (!discordUserId) return { success: true, allowed: false, roles: [], roleLabels: [] };
+  const result = await query(
+    `select distinct p.role
+     from discord_player_links dpl
+     join characters c on c.id = dpl.character_id
+     join players p on p.id = c.player_id
+     where dpl.guild_id = $1
+       and dpl.discord_user_id = $2
+       and p.guild_id = $1`,
+    [guildId, discordUserId]
+  );
+  const roles = result.rows.map(row => normalizePlayerRole(row.role)).filter(Boolean);
+  return {
+    success: true,
+    allowed: roles.some(role => raidCreateRoles.has(role)),
+    roles,
+    roleLabels: roles.map(role => playerRoleLabel(role))
+  };
+}
+
 async function resolvePoPostPlayers({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -13672,6 +13697,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "lichtbotCanReviewPoPost" || action === "canReviewPoPost") {
+      const permission = await canReviewPoPost({ guildId: guild.id, query: req.query });
+      return res.json({ ...permission, guild: guild.slug });
+    }
+
     if (action === "lichtbotResolvePoPostPlayers" || action === "resolvePoPostPlayers") {
       const resolved = await resolvePoPostPlayers({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
@@ -13989,6 +14019,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
       const list = await getPoPostApprovals({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "lichtbotCanReviewPoPost" || action === "canReviewPoPost") {
+      const permission = await canReviewPoPost({ guildId: guild.id, query: postParams });
+      return res.json({ ...permission, guild: guild.slug });
     }
 
     if (action === "lichtbotResolvePoPostPlayers" || action === "resolvePoPostPlayers") {
