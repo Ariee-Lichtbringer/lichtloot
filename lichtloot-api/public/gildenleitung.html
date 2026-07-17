@@ -7104,6 +7104,58 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
   }
 }
 
+function poSignupCleanItemLines(values){
+  const blocked = new Set([
+    "worldbuff übersicht",
+    "worldbuff uebersicht",
+    "worldbuffs",
+    "hordenbuff übersicht",
+    "hordenbuff uebersicht",
+    "hordenbuffs",
+    "po-anmelder",
+    "po anmelder",
+    "p0-anmelder",
+    "p0 anmelder",
+    "anmeldungen"
+  ]);
+  const seen = new Set();
+  const items = [];
+  (Array.isArray(values) ? values : String(values || "").split(/[\n;,]+/)).forEach(value => {
+    const item = String(value || "").trim();
+    const key = normalize(item);
+    if(!item || !key || blocked.has(key) || seen.has(key)) return;
+    seen.add(key);
+    items.push(item);
+  });
+  return items.slice(0,25);
+}
+
+async function poSignupLoadFallbackItems(raid){
+  const raidKey = poSignupNormalizeRaid(raid || "");
+  const [p0Result, lootResult] = await Promise.all([
+    railwayApi({ action:"getP0Plus", raid:raidKey, t:Date.now() }).catch(() => null),
+    railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() }).catch(() => null)
+  ]);
+  const values = [];
+  (Array.isArray(p0Result?.entries) ? p0Result.entries : []).forEach(entry => {
+    if(!poSignupRaidMatches(entry.raid || entry.raidType || raidKey)) return;
+    values.push(entry.item || entry.itemName);
+  });
+  (Array.isArray(lootResult?.items) ? lootResult.items : []).forEach(item => {
+    values.push(item.name || item.Item || item.Itemname_DE || item.item);
+  });
+  return poSignupCleanItemLines(values);
+}
+
+async function ensurePoSignupItemOptions(config){
+  const currentItems = poSignupCleanItemLines(config.itemOptions || "");
+  if(currentItems.length){
+    return Object.assign({}, config, { itemOptions: currentItems.join("\n") });
+  }
+  const loadedItems = await poSignupLoadFallbackItems(config.raid || "");
+  return Object.assign({}, config, { itemOptions: loadedItems.join("\n") });
+}
+
 function getPoSignupConfig(){
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
   const title = document.getElementById("poSignupTitle")?.value.trim() || `${RAID_OPTIONS[raid]?.short || raid.toUpperCase()} PO-Anmelder`;
@@ -7717,7 +7769,7 @@ async function newPoPostConfig(){
 async function createPoSignupPost(){
   const status = document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
-  const config = getPoSignupConfig();
+  let config = getPoSignupConfig();
   if(!masterCode){
     if(status) status.textContent = "Bitte erst Master-Code eingeben.";
     return;
@@ -7731,7 +7783,17 @@ async function createPoSignupPost(){
     return;
   }
   if(!config.itemOptions){
-    if(status) status.textContent = "Bitte mindestens ein Item eintragen oder P0+-Items laden.";
+    if(status) status.textContent = "Itemliste wird automatisch aus LichtLoot geladen ...";
+    config = await ensurePoSignupItemOptions(config);
+    setValue("poSignupItems", config.itemOptions || "");
+    updatePoSignupPreview();
+  }else{
+    config = await ensurePoSignupItemOptions(config);
+    setValue("poSignupItems", config.itemOptions || "");
+    updatePoSignupPreview();
+  }
+  if(!config.itemOptions){
+    if(status) status.textContent = "Keine Items gefunden. Bitte mindestens ein Item eintragen oder P0+-Items laden.";
     return;
   }
   try{
