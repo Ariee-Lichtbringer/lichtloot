@@ -3883,6 +3883,31 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
             <div id="poSignupStatus" class="status">Bereit.</div>
+            <div class="po-post-list-block">
+              <div class="section-head compact">
+                <div>
+                  <h3>Gespeicherte PO-Anmelder</h3>
+                  <p>Bestehende Anmelder öffnen, aktualisieren und alte Sammelposts entfernen.</p>
+                </div>
+                <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
+              </div>
+              <div class="table-wrap">
+                <table class="po-post-config-table">
+                  <thead>
+                    <tr>
+                      <th>Post-ID</th>
+                      <th>Raid</th>
+                      <th>Quelle</th>
+                      <th>Ziel</th>
+                      <th>Einträge</th>
+                      <th>Zuletzt</th>
+                      <th>Aktion</th>
+                    </tr>
+                  </thead>
+                  <tbody id="poSignupConfigRows"></tbody>
+                </table>
+              </div>
+            </div>
           </section>
         </div>
         <div class="raid-helper-preview">
@@ -7226,6 +7251,12 @@ function poPostConfigGroups(){
         count: 0,
         archivedCount: 0,
         updatedAt: "",
+        mode: "",
+        raidDate: "",
+        raidTime: "",
+        itemOptions: "",
+        reviewRecipient: "",
+        note: "",
         local: false,
         railway: false
       });
@@ -7240,6 +7271,12 @@ function poPostConfigGroups(){
     group.title = group.title || config.title || "PO Liste";
     group.sourceChannelId = group.sourceChannelId || config.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || config.targetChannelId || config.sourceChannelId || "";
+    group.mode = group.mode || config.mode || "";
+    group.raidDate = group.raidDate || config.raidDate || "";
+    group.raidTime = group.raidTime || config.raidTime || "";
+    group.itemOptions = group.itemOptions || config.itemOptions || "";
+    group.reviewRecipient = group.reviewRecipient || config.reviewRecipient || "";
+    group.note = group.note || config.note || "";
   });
   (poPostStoredEntries || []).forEach(entry => {
     const group = ensure(entry.postKey);
@@ -7251,6 +7288,7 @@ function poPostConfigGroups(){
     group.title = group.title || entry.title || "PO Liste";
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
+    group.mode = group.mode || entry.mode || "";
     if(entry.updatedAt && (!group.updatedAt || String(entry.updatedAt) > String(group.updatedAt))){
       group.updatedAt = entry.updatedAt;
     }
@@ -7260,6 +7298,11 @@ function poPostConfigGroups(){
     if(raidCompare) return raidCompare;
     return String(a.postKey || "").localeCompare(String(b.postKey || ""));
   });
+}
+
+function isPoSignupConfigGroup(row){
+  const marker = `${row.mode || ""} ${row.title || ""} ${row.postKey || ""}`.toLowerCase();
+  return marker.includes("signup") || marker.includes("anmelder");
 }
 
 function renderPoPostConfigRows(){
@@ -7293,6 +7336,7 @@ function renderPoPostConfigRows(){
   `).join("");
   renderPoPostDetailRows();
   renderPoSignupReviewRows();
+  renderPoSignupConfigRows();
 }
 
 async function runPoPostRowAction(select, postKey){
@@ -7307,6 +7351,59 @@ async function runPoPostRowAction(select, postKey){
   if(action === "refresh"){
     selectPoPostForReview(key);
     await queuePoPost();
+    return;
+  }
+  if(action === "restore"){
+    await restorePoPostEverywhere(key);
+    return;
+  }
+  if(action === "delete"){
+    await deletePoPostEverywhere(key);
+  }
+}
+
+function renderPoSignupConfigRows(){
+  const tbody = document.getElementById("poSignupConfigRows");
+  if(!tbody) return;
+  const rows = poPostConfigGroups().filter(isPoSignupConfigGroup);
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(row => `
+    <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
+      <td><button class="po-post-id-button" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO-Anmelder")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}${row.archivedCount && !row.count ? " · archiviert" : ""}</div></td>
+      <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
+      <td>${escapeHtml(String(row.count || 0))}</td>
+      <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
+      <td>
+        <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
+          <option value="">Aktion wählen</option>
+          <option value="open">Öffnen</option>
+          <option value="refresh">Post aktualisieren</option>
+          ${row.archivedCount && !row.count
+            ? `<option value="restore">Wiederherstellen</option>`
+            : `<option value="delete">Löschen</option>`}
+        </select>
+      </td>
+    </tr>
+  `).join("");
+}
+
+async function runPoSignupRowAction(select, postKey){
+  const action = select?.value || "";
+  if(select) select.value = "";
+  const key = String(postKey || "").trim();
+  if(!action || !key) return;
+  if(action === "open"){
+    selectPoSignupForReview(key);
+    return;
+  }
+  if(action === "refresh"){
+    selectPoSignupForReview(key);
+    await createPoSignupPost();
     return;
   }
   if(action === "restore"){
@@ -7341,6 +7438,58 @@ function selectPoPostForReview(postKey){
   renderPoPostConfigRows();
   renderPoPostDetailRows();
   renderPoSignupReviewRows();
+}
+
+function setPoSignupFormConfig(config){
+  if(!config) return;
+  setValue("poSignupPostKey", config.postKey || "");
+  setValue("poSignupReviewRecipient", config.reviewRecipient || "");
+  setValue("poSignupTitle", config.title || "PO-Anmelder");
+  setValue("poSignupRaid", config.raid || "aq40");
+  setValue("poSignupDate", config.raidDate || "");
+  setValue("poSignupTime", config.raidTime || "");
+  setValue("poSignupItems", config.itemOptions || "");
+  setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
+  const source = document.getElementById("poSignupSourceChannel");
+  const target = document.getElementById("poSignupTargetChannel");
+  if(source) source.value = config.sourceChannelId || "";
+  if(target) target.value = config.targetChannelId || config.sourceChannelId || "";
+  updatePoSignupPreview();
+}
+
+function loadPoSignupConfigFromRow(postKey){
+  const key = String(postKey || "").trim();
+  const config = readPoPostConfigs().find(item => item.postKey === key);
+  if(config){
+    setPoSignupFormConfig(config);
+  }else{
+    const group = poPostConfigGroups().find(item => item.postKey === key);
+    if(group){
+      setPoSignupFormConfig({
+        postKey:key,
+        sourceChannelId:group.sourceChannelId || "",
+        targetChannelId:group.targetChannelId || group.sourceChannelId || "",
+        title:group.title || "PO-Anmelder",
+        raid:normalize(group.raid || "aq40"),
+        raidDate:group.raidDate || "",
+        raidTime:group.raidTime || "",
+        reviewRecipient:group.reviewRecipient || "",
+        note:group.note || "",
+        itemOptions:group.itemOptions || ""
+      });
+    }
+  }
+  const status = document.getElementById("poSignupStatus");
+  if(status) status.innerHTML = `<span class="good">PO-Anmelder ${escapeHtml(key)} geöffnet.</span>`;
+}
+
+function selectPoSignupForReview(postKey){
+  const key = String(postKey || "").trim();
+  selectedPoPostKey = key;
+  loadPoSignupConfigFromRow(key);
+  renderPoSignupConfigRows();
+  renderPoSignupReviewRows();
+  renderPoPostConfigRows();
 }
 
 function renderPoPostDetailRows(){
