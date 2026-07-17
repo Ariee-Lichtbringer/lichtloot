@@ -11395,7 +11395,14 @@ async function deleteGuildPrio({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount };
 }
 
-async function getP0Plus(guildId) {
+async function getP0Plus(guildId, params = {}) {
+  const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  const values = [guildId];
+  let raidClause = "";
+  if (raidType && raidType !== "raid") {
+    values.push(raidTypeSearchValues(raidType));
+    raidClause = `and lower(coalesce(i.raid_type, '')) = any($${values.length})`;
+  }
   const result = await query(
     `select
        coalesce(i.raid_type, 'Raid') as raid,
@@ -11411,8 +11418,9 @@ async function getP0Plus(guildId) {
      join characters c on c.id = pp.character_id
      left join items i on i.id = pp.item_id
      where pp.guild_id = $1
+       ${raidClause}
      order by raid asc, item asc, player asc`,
-    [guildId]
+    values
   );
 
   const grouped = new Map();
@@ -13768,7 +13776,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getP0Plus") {
-      const points = await getP0Plus(guild.id);
+      const points = await getP0Plus(guild.id, req.query);
       return res.json({ ...points, guild: guild.slug });
     }
 

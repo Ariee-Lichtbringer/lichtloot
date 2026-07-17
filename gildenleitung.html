@@ -6929,13 +6929,38 @@ function poSignupCommentMeta(comment){
 }
 
 function poSignupSelectedRaidKey(){
-  return normalize(document.getElementById("poSignupRaid")?.value || "");
+  return poSignupNormalizeRaid(document.getElementById("poSignupRaid")?.value || "");
+}
+
+function poSignupNormalizeRaid(value){
+  const key = normalize(value)
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"");
+  const aliases = {
+    "molten-core":"mc",
+    "blackwing-lair":"bwl",
+    "ahn-qiraj":"aq40",
+    "ahn-qiraj-40":"aq40",
+    "aq-40":"aq40",
+    "temple-of-ahn-qiraj":"aq40",
+    "naxxramas":"naxx",
+    "zul-gurub":"zg",
+    "zg-20":"zg",
+    "zul-gurub-20":"zg",
+    "aq-20":"aq20",
+    "ahn-qiraj-20":"aq20",
+    "ruins-of-ahn-qiraj":"aq20",
+    "onyxia":"ony",
+    "onyxia-s-lair":"ony"
+  };
+  return aliases[key] || key;
 }
 
 function poSignupRaidMatches(value){
   const wanted = poSignupSelectedRaidKey();
-  const got = normalize(value || "");
-  return !wanted || !got || got === wanted;
+  const got = poSignupNormalizeRaid(value || "");
+  return Boolean(wanted && got && got === wanted);
 }
 
 async function fillPoSignupItemsFromP0Plus(){
@@ -6946,13 +6971,12 @@ async function fillPoSignupItemsFromP0Plus(){
   if(status) status.textContent = "P0+-Items werden geladen ...";
   try{
     const [result, backup] = await Promise.all([
-      railwayApi({ action:"getP0Plus", t:Date.now() }),
+      railwayApi({ action:"getP0Plus", raid:poSignupSelectedRaidKey(), t:Date.now() }),
       masterCode ? railwayApi({ action:"guildExportBackup", masterCode, t:Date.now() }).catch(() => null) : Promise.resolve(null)
     ]);
     if(!result.success) throw new Error(result.error || "P0+-Items konnten nicht geladen werden.");
-    const current = poSignupItemLines();
-    const seen = new Set(current.map(item => normalize(item)));
-    const items = [...current];
+    const seen = new Set();
+    const items = [];
     function addItem(value){
       const item = String(value || "").trim();
       const key = normalize(item);
@@ -6985,7 +7009,7 @@ async function fillPoSignupItemsFromP0Plus(){
     });
     field.value = items.slice(0,25).join("\n");
     updatePoSignupPreview();
-    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(Math.min(items.length, 25)))} Item(s) in der Liste.</span>`;
+    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(Math.min(items.length, 25)))} Item(s) für ${escapeHtml(poSignupSelectedRaidKey().toUpperCase())} geladen.</span>`;
   }catch(error){
     if(status) status.textContent = error.message || "P0+-Items konnten nicht geladen werden.";
   }
@@ -6996,11 +7020,10 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
   const field = document.getElementById("poSignupItems");
   if(!field) return;
   try{
-    const result = await railwayApi({ action:"getP0Plus", t:Date.now() });
+    const result = await railwayApi({ action:"getP0Plus", raid:poSignupSelectedRaidKey(), t:Date.now() });
     if(!result.success) throw new Error(result.error || "P0+-Items konnten nicht geladen werden.");
-    const current = poSignupItemLines();
-    const seen = new Set(current.map(item => normalize(item)));
-    const items = [...current];
+    const seen = new Set();
+    const items = [];
     (Array.isArray(result.entries) ? result.entries : []).forEach(entry => {
       if(!poSignupRaidMatches(entry.raid || entry.raidType)) return;
       const item = String(entry.item || entry.itemName || "").trim();
@@ -7011,7 +7034,7 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
     });
     field.value = items.slice(0,25).join("\n");
     updatePoSignupPreview();
-    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(items.length))} Item(s) in der Liste.</span>`;
+    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(items.length))} Item(s) für ${escapeHtml(poSignupSelectedRaidKey().toUpperCase())} geladen.</span>`;
   }catch(error){
     if(status) status.textContent = error.message || "P0+-Items konnten nicht geladen werden.";
   }
