@@ -2661,6 +2661,24 @@ tr:hover td{background:rgba(250,204,21,.035)}
   background:rgba(30,41,59,.72);
 }
 
+.small-select{
+  min-height:30px;
+  min-width:142px;
+  padding:5px 8px;
+  border-radius:7px;
+  border:1px solid rgba(148,163,184,.24);
+  background:rgba(15,23,42,.72);
+  color:#e5edf8;
+  font-weight:800;
+  font-size:12px;
+  outline:none;
+}
+
+.small-select:focus{
+  border-color:rgba(250,204,21,.46);
+  box-shadow:0 0 0 2px rgba(250,204,21,.10);
+}
+
 .role-control{
   display:flex;
   gap:6px;
@@ -7234,15 +7252,42 @@ function renderPoPostConfigRows(){
       <td>${escapeHtml(String(row.count || 0))}</td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
-        <button class="small-btn ghost" type="button" onclick="selectPoPostForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
-        ${row.archivedCount && !row.count
-          ? `<button class="small-btn good" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
-          : `<button class="small-btn danger" type="button" onclick="deletePoPostEverywhere('${escapeAttr(row.postKey)}')">Löschen</button>`}
+        <select class="small-select" onchange="runPoPostRowAction(this,'${escapeAttr(row.postKey)}')">
+          <option value="">Aktion wählen</option>
+          <option value="open">Öffnen</option>
+          <option value="refresh">Post aktualisieren</option>
+          ${row.archivedCount && !row.count
+            ? `<option value="restore">Wiederherstellen</option>`
+            : `<option value="delete">Löschen</option>`}
+        </select>
       </td>
     </tr>
   `).join("");
   renderPoPostDetailRows();
   renderPoSignupReviewRows();
+}
+
+async function runPoPostRowAction(select, postKey){
+  const action = select?.value || "";
+  if(select) select.value = "";
+  const key = String(postKey || "").trim();
+  if(!action || !key) return;
+  if(action === "open"){
+    selectPoPostForReview(key);
+    return;
+  }
+  if(action === "refresh"){
+    selectPoPostForReview(key);
+    await queuePoPost();
+    return;
+  }
+  if(action === "restore"){
+    await restorePoPostEverywhere(key);
+    return;
+  }
+  if(action === "delete"){
+    await deletePoPostEverywhere(key);
+  }
 }
 
 async function loadPoPostStoredEntries(){
