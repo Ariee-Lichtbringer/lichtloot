@@ -2608,8 +2608,29 @@ function findAnyKnownLootItem(itemName, raid){
   return null;
 }
 
-function itemHtml(itemName){
-  const item=findAnyKnownLootItem(itemName, RAID_NAME);
+function findAnyKnownLootItemByGameId(itemId, raid){
+  const wanted=String(itemId || "").trim();
+  if(!wanted) return null;
+
+  const raidKey = raidKeyFromEntryRaid ? raidKeyFromEntryRaid(raid || RAID_NAME) : RAID_NAME;
+  const lists=[];
+  if(raidKey === RAID_NAME) lists.push({key:RAID_NAME,items:aq40Loot || []});
+  if(window.lootDataByRaid && window.lootDataByRaid[raidKey]) lists.push({key:raidKey,items:window.lootDataByRaid[raidKey] || []});
+  if(raidKey !== RAID_NAME) lists.push({key:RAID_NAME,items:aq40Loot || []});
+  if(window.lootDataByRaid){
+    Object.keys(window.lootDataByRaid).forEach(key=>lists.push({key,items:window.lootDataByRaid[key] || []}));
+  }
+
+  for(const list of lists){
+    const found=(list.items || []).find(item => String(item.itemId || item.id || item.ItemID || "").trim() === wanted);
+    if(found) return Object.assign({raidKey:list.key}, found);
+  }
+
+  return null;
+}
+
+function itemHtml(itemName,itemId){
+  const item=findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
 
   if(!item){
     return `<span class="p0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>`;
@@ -2618,7 +2639,7 @@ function itemHtml(itemName){
   return `
     <span
       class="item-with-icon"
-      onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
+      onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
     >
@@ -3902,7 +3923,7 @@ function renderPublishedChecks(prios){
 ${
  String(prio.P0Plus).toLowerCase()==="ja"
  ?
- itemHtml(prio.P1)
+ itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))
  :
  '<span class="cross">✗</span>'
 }
@@ -3929,10 +3950,10 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?itemHtml(prio.P1):'nein'}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
+        <td>${String(prio.P0Plus).toLowerCase()==="ja"?itemHtml(prio.P1, prioItemIdForSlot(prio,"p1")):'nein'}</td>
       </tr>
     `;
   });
@@ -4559,16 +4580,16 @@ function renderSelectedPrioPreviews(){
       preview.innerHTML="Noch kein Item gewählt.";
       return;
     }
-    preview.innerHTML=itemHtml(value);
+    preview.innerHTML=itemHtml(value,getSelectedPrioItemId(id));
   });
   renderOwnSelectionCard();
 }
 
-function ownSelectionValueHtml(value){
+function ownSelectionValueHtml(value,itemId){
   if(!value){
     return '<span>Noch kein Item gewählt.</span>';
   }
-  return '<strong>'+itemHtml(value)+'</strong>';
+  return '<strong>'+itemHtml(value,itemId)+'</strong>';
 }
 
 function renderOwnSelectionCard(){
@@ -4578,21 +4599,24 @@ function renderOwnSelectionCard(){
   const p1=document.getElementById("p1")?.value || "";
   const p2=PRIO_COUNT >= 2 ? (document.getElementById("p2")?.value || "") : "";
   const p3=PRIO_COUNT >= 3 ? (document.getElementById("p3")?.value || "") : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
   const isP0Plus=SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) && p1 && p1===p2 && p2===p3;
 
   const rows=[
-    '<div class="own-selection-row"><span>P1</span><span>'+ownSelectionValueHtml(p1)+'</span></div>'
+    '<div class="own-selection-row"><span>P1</span><span>'+ownSelectionValueHtml(p1,p1ItemId)+'</span></div>'
   ];
 
   if(PRIO_COUNT >= 2){
-    rows.push('<div class="own-selection-row"><span>P2</span><span>'+ownSelectionValueHtml(p2)+'</span></div>');
+    rows.push('<div class="own-selection-row"><span>P2</span><span>'+ownSelectionValueHtml(p2,p2ItemId)+'</span></div>');
   }
 
   if(PRIO_COUNT >= 3){
-    rows.push('<div class="own-selection-row"><span>P3</span><span>'+ownSelectionValueHtml(p3)+'</span></div>');
+    rows.push('<div class="own-selection-row"><span>P3</span><span>'+ownSelectionValueHtml(p3,p3ItemId)+'</span></div>');
   }
 
-  rows.push('<div class="own-selection-row"><span>P0+</span><span>'+(isP0Plus ? ownSelectionValueHtml(p1) : '<span>Nein</span>')+'</span></div>');
+  rows.push('<div class="own-selection-row"><span>P0+</span><span>'+(isP0Plus ? ownSelectionValueHtml(p1,p1ItemId) : '<span>Nein</span>')+'</span></div>');
 
   content.innerHTML=rows.join("");
 }
@@ -7431,14 +7455,14 @@ function buildTooltipP0PlusHtml(itemName, useSafeHtml){
   return `<div class="tooltip-p0"><strong>🏆 P0+ Punkte:</strong><ul>${entries.map(e => `<li>${esc(getP0Player(e) || "?")}: ${esc(getP0Points(e) || 0)}</li>`).join("")}</ul></div>`;
 }
 
-function itemHtml(itemName){
+function itemHtml(itemName,itemId){
   if(!itemName) return "";
-  const item = findAnyKnownLootItem(itemName, RAID_NAME);
+  const item = findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
   const p0Line = renderP0PlusBelowItem(itemName);
   if(!item){
     return `<span class="p0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>${p0Line}`;
   }
-  return `<span class="item-with-icon" onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()"><img class="item-icon" src="${getIconUrl(item.icon)}" alt="" loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"><span class="${item.quality}" style="font-weight:400;cursor:pointer">${safe(item.name)}</span></span>${p0Line}`;
+  return `<span class="item-with-icon" onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()"><img class="item-icon" src="${getIconUrl(item.icon)}" alt="" loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"><span class="${item.quality}" style="font-weight:400;cursor:pointer">${safe(item.name)}</span></span>${p0Line}`;
 }
 
 function p0PlusItemHtml(entry){
@@ -8118,9 +8142,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${p0PlusCellForPrioV4(prio)}</td>
       </tr>
     `;
@@ -8427,9 +8451,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${p0PlusCellForPrioV4(prio)}</td>
       </tr>
     `;
@@ -9315,9 +9339,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Points(prio)}</td>
       </tr>
     `;
@@ -9415,9 +9439,23 @@ function lichtlootPrioP0Item(prio){
   ).trim();
 }
 
+function prioItemIdForSlot(prio,slot){
+  if(!prio) return "";
+  const upper=String(slot || "").toUpperCase();
+  const lower=upper.toLowerCase();
+  return String(
+    prio[upper+"ItemId"] ||
+    prio[lower+"ItemId"] ||
+    prio[upper+"ItemID"] ||
+    prio[lower+"_item_id"] ||
+    ""
+  ).trim();
+}
+
 function renderPrioP0Choice(prio){
   const isP0 = lichtlootPrioIsP0(prio);
   const itemName = lichtlootPrioP0Item(prio);
+  const itemId = prioItemIdForSlot(prio,"p1");
 
   if(!isP0 || !itemName){
     return '<div class="prio-p0-choice"><span class="empty">-</span></div>';
@@ -9426,7 +9464,7 @@ function renderPrioP0Choice(prio){
   return `
     <div class="prio-p0-choice">
       <strong>P0 gewählt</strong>
-      ${itemHtml(itemName)}
+      ${itemHtml(itemName,itemId)}
     </div>
   `;
 }
@@ -9498,9 +9536,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${renderPrioP0Points(prio)}</td>
       </tr>
@@ -9549,9 +9587,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
       </tr>
     `;
@@ -9603,6 +9641,7 @@ function buildTooltipP0PlusHtml(itemName, useSafeHtml){
 function renderPrioP0Choice(prio){
   const isP0 = lichtlootPrioIsP0(prio);
   const itemName = lichtlootPrioP0Item(prio);
+  const itemId = prioItemIdForSlot(prio,"p1");
 
   if(!isP0 || !itemName){
     return '<div class="prio-p0-choice"><span class="empty">-</span></div>';
@@ -9611,7 +9650,7 @@ function renderPrioP0Choice(prio){
   return `
     <div class="prio-p0-choice">
       <strong>P0 gewählt</strong>
-      ${itemHtml(itemName)}
+      ${itemHtml(itemName,itemId)}
     </div>
   `;
 }
@@ -9909,10 +9948,10 @@ function isOwnPublishedPrio(prio){
   return true;
 }
 
-function ownClosedPrioItemHtml(itemName){
+function ownClosedPrioItemHtml(itemName,itemId){
   if(!itemName) return '<span class="cross">✗</span>';
 
-  const item=findAnyKnownLootItem(itemName, RAID_NAME);
+  const item=findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
   if(!item){
     return '<span class="p0plus-item">'+safe(itemName)+'</span>';
   }
@@ -9920,7 +9959,7 @@ function ownClosedPrioItemHtml(itemName){
   return `
     <span
       class="item-with-icon"
-      onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
+      onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
     >
@@ -9930,9 +9969,9 @@ function ownClosedPrioItemHtml(itemName){
   `;
 }
 
-function closedPrioCell(prio,itemName){
+function closedPrioCell(prio,itemName,itemId){
   if(isOwnPublishedPrio(prio)){
-    return ownClosedPrioItemHtml(itemName);
+    return ownClosedPrioItemHtml(itemName,itemId);
   }
   return itemName ? '<span class="check">✓</span>' : '<span class="cross">✗</span>';
 }
@@ -10007,8 +10046,11 @@ function getLiveDraftPrio(){
     Server:server,
     Klasse:playerClass,
     P1:p1,
+    P1ItemId:getSelectedPrioItemId("p1"),
     P2:p2,
+    P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
     P3:p3,
+    P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
     P0Plus:isP0Plus ? "ja" : "nein",
     P0Item:isP0Plus ? p1 : ""
   };
@@ -10021,8 +10063,11 @@ function prioDraftSignature(prio){
     normalizeOwnPrioText(prio.Server || prio.server || prio.Realm),
     normalizeOwnPrioText(prio.Klasse || prio.class || prio.Class),
     normalizeOwnPrioText(prio.P1 || prio.p1),
+    normalizeOwnPrioText(prio.P1ItemId || prio.p1ItemId || prio.P1ItemID || prio.p1_item_id),
     normalizeOwnPrioText(prio.P2 || prio.p2),
+    normalizeOwnPrioText(prio.P2ItemId || prio.p2ItemId || prio.P2ItemID || prio.p2_item_id),
     normalizeOwnPrioText(prio.P3 || prio.p3),
+    normalizeOwnPrioText(prio.P3ItemId || prio.p3ItemId || prio.P3ItemID || prio.p3_item_id),
     normalizeOwnPrioText(lichtlootPrioIsP0(prio) ? "ja" : "nein")
   ].join("|");
 }
@@ -10262,9 +10307,9 @@ function renderPublishedChecks(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}${liveRow ? '<span class="live-prio-hint">Deine aktuelle Auswahl</span>' : (ownRow ? '<span class="own-prio-hint">Deine Prio</span>' : '')}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${closedPrioCell(prio, prio.P1)}</td>
-        <td>${closedPrioCell(prio, prio.P2)}</td>
-        <td>${closedPrioCell(prio, prio.P3)}</td>
+        <td>${closedPrioCell(prio, prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${closedPrioCell(prio, prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${closedPrioCell(prio, prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${prioActionCellHtml(prio,index,ownRow)}</td>
       </tr>
@@ -10289,9 +10334,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}${liveRow ? '<span class="live-prio-hint">Deine aktuelle Auswahl</span>' : (ownRow ? '<span class="own-prio-hint">Deine Prio</span>' : '')}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${prioActionCellHtml(prio,index,ownRow)}</td>
       </tr>
