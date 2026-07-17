@@ -3803,7 +3803,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
                   <th>Status</th>
                   <th>Spieler</th>
                   <th>Item</th>
-                  <th>Datum</th>
                   <th>Aktion</th>
                 </tr>
               </thead>
@@ -3906,7 +3905,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
                   <th>Status</th>
                   <th>Spieler</th>
                   <th>Item</th>
-                  <th>Datum</th>
                   <th>Aktion</th>
                 </tr>
               </thead>
@@ -7090,14 +7088,14 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
   if(!tbody) return;
   const key = String(postKey || "").trim();
   if(!key){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Post-ID ausgewählt.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Post-ID ausgewählt.</td></tr>';
     if(hint) hint.textContent = emptyText || "Post-ID wählen.";
     return;
   }
   const rows = poPostEntryRowsForKey(key);
   if(hint) hint.textContent = `${key} · ${rows.length} Eintrag/Einträge`;
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="5" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(entry => {
@@ -7110,17 +7108,30 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td><strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div></td>
         <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
-        <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
         <td>
-          <div class="actions">
-            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
-            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
-            <button class="small-btn danger" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
-          </div>
+          <select class="small-select" onchange="runPoPostEntryAction(this,${index})">
+            <option value="">Aktion wählen</option>
+            ${status === "approved" ? "" : '<option value="approved">Freigeben</option>'}
+            ${status === "rejected" ? "" : '<option value="rejected">Ablehnen</option>'}
+            <option value="delete">Löschen</option>
+          </select>
         </td>
       </tr>
     `;
   }).join("");
+}
+
+async function runPoPostEntryAction(select, index){
+  const action = select?.value || "";
+  if(select) select.value = "";
+  if(!action) return;
+  if(action === "delete"){
+    await deletePoPostEntryFromPostPanel(index);
+    return;
+  }
+  if(action === "approved" || action === "rejected"){
+    await reviewPoPostEntryFromPostPanel(index, action);
+  }
 }
 
 function renderPoSignupReviewRows(){
