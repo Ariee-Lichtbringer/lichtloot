@@ -3204,7 +3204,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO Post" title="PO Post"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO Post</span></button>
+      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
@@ -3678,17 +3678,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">☰</span>
         <span class="raid-helper-summary-copy">
-          <strong>PO Post</strong>
-          <span>PO-Liste aus einem Discord-Channel lesen und als eigenen Post erstellen.</span>
+          <strong>PO-Anmelder</strong>
+          <span>PO-Anmelder mit Item-Auswahl erstellen und verwalten.</span>
         </span>
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="po-post-tabs" role="tablist" aria-label="PO Post Funktionen">
-        <button class="raid-helper-tab active" type="button" data-po-post-tab="post" onclick="setPoPostTab('post')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Post</strong><span>Liste pflegen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-po-post-tab="signup" onclick="setPoPostTab('signup')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Item-Menü erstellen</span></span></button>
-      </div>
-      <div id="poPostTab-post" class="po-post-tab-panel raid-helper-layout po-post-layout">
+      <div class="po-post-tabs hidden" role="tablist" aria-label="PO-Anmelder Funktionen"></div>
+      <div id="poPostTab-post" class="po-post-tab-panel raid-helper-layout po-post-layout hidden">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
@@ -3811,7 +3808,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
           </div>
         </div>
       </div>
-      <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout hidden">
+      <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
@@ -3875,7 +3872,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
-              <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
+              <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach deinen Charakter ein.</textarea>
             </div>
             <div class="tools">
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
@@ -7460,7 +7457,7 @@ function setPoSignupFormConfig(config){
   setValue("poSignupDate", config.raidDate || "");
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
-  setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
+  setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
   if(source) source.value = config.sourceChannelId || "";
