@@ -3927,16 +3927,26 @@ async function canReviewPoPost({ guildId, query: params }) {
   await ensurePlayerSchema();
   await ensureRaidSchema();
   const discordUserId = clean(params.discordUserId || params.userId);
-  if (!discordUserId) return { success: true, allowed: false, roles: [], roleLabels: [] };
+  const discordName = clean(params.discordName || params.userName || params.displayName);
+  if (!discordUserId && !discordName) return { success: true, allowed: false, roles: [], roleLabels: [] };
+  const values = [guildId];
+  const clauses = [];
+  if (discordUserId) {
+    values.push(discordUserId);
+    clauses.push(`dpl.discord_user_id = $${values.length}`);
+  }
+  if (discordName) {
+    values.push(discordName);
+    clauses.push(`regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  }
   const result = await query(
     `select distinct p.role
-     from discord_player_links dpl
-     join characters c on c.id = dpl.character_id
+     from characters c
      join players p on p.id = c.player_id
-     where dpl.guild_id = $1
-       and dpl.discord_user_id = $2
-       and p.guild_id = $1`,
-    [guildId, discordUserId]
+     left join discord_player_links dpl on dpl.character_id = c.id and dpl.guild_id = $1
+     where p.guild_id = $1
+       and (${clauses.join(" or ")})`,
+    values
   );
   const roles = result.rows.map(row => normalizePlayerRole(row.role)).filter(Boolean);
   return {
@@ -4050,6 +4060,8 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const discordUserId = clean(params.discordUserId || params.userId);
   const itemName = normalizePoItemName(params.item || params.itemName);
   const playerName = clean(params.player || params.char || params.spieler);
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  const server = clean(params.server) || "Everlook";
 
   if (!discordUserId && !playerName) {
     const error = new Error("Discord-User oder Spieler fehlt.");
@@ -4060,6 +4072,14 @@ async function deletePoPostEntry({ guildId, query: params }) {
     const error = new Error("Item fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+  if (playerPin && playerName) {
+    const character = await findCharacterForPin(guildId, playerPin, playerName, server);
+    if (!character) {
+      const error = new Error("Spielerlogin passt nicht zu diesem Charakter.");
+      error.statusCode = 403;
+      throw error;
+    }
   }
 
   const values = [guildId];
