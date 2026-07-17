@@ -3689,6 +3689,7 @@ async function queuePoPost({ guildId, query: params }) {
       raidTime: clean(params.raidTime || params.time || params.uhrzeit),
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
       mode: clean(params.mode || params.poMode),
+      groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
       limit,
       source: "gildenleitung"
