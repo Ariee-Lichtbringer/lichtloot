@@ -6920,6 +6920,14 @@ function updatePoSignupPreview(){
   renderPoSignupReviewRows();
 }
 
+function poSignupCommentMeta(comment){
+  try{
+    return JSON.parse(comment || "{}") || {};
+  }catch(error){
+    return {};
+  }
+}
+
 async function fillPoSignupItemsFromP0Plus(){
   const status = document.getElementById("poSignupStatus");
   const field = document.getElementById("poSignupItems");
@@ -6949,7 +6957,7 @@ async function fillPoSignupItemsFromP0Plus(){
       addItem(entry.item_name || entry.item || entry.note);
     });
     (Array.isArray(backup?.prios) ? backup.prios : []).forEach(entry => {
-      const meta = commentMeta(entry.comment);
+      const meta = poSignupCommentMeta(entry.comment);
       if(normalize(meta.p0Plus) !== "ja") return;
       addItem(meta.p0Item || entry.p1 || entry.P1);
     });
