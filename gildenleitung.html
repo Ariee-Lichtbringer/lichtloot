@@ -6928,6 +6928,16 @@ function poSignupCommentMeta(comment){
   }
 }
 
+function poSignupSelectedRaidKey(){
+  return normalize(document.getElementById("poSignupRaid")?.value || "");
+}
+
+function poSignupRaidMatches(value){
+  const wanted = poSignupSelectedRaidKey();
+  const got = normalize(value || "");
+  return !wanted || !got || got === wanted;
+}
+
 async function fillPoSignupItemsFromP0Plus(){
   const status = document.getElementById("poSignupStatus");
   const field = document.getElementById("poSignupItems");
@@ -6951,17 +6961,21 @@ async function fillPoSignupItemsFromP0Plus(){
       items.push(item);
     }
     (Array.isArray(result.entries) ? result.entries : []).forEach(entry => {
+      if(!poSignupRaidMatches(entry.raid || entry.raidType)) return;
       addItem(entry.item || entry.itemName);
     });
     (Array.isArray(backup?.p0plusPoints) ? backup.p0plusPoints : []).forEach(entry => {
+      if(!poSignupRaidMatches(entry.raid_type || entry.raid || entry.raidType)) return;
       addItem(entry.item_name || entry.item || entry.note);
     });
     (Array.isArray(backup?.prios) ? backup.prios : []).forEach(entry => {
+      if(!poSignupRaidMatches(entry.raid_type || entry.raid || entry.raidType)) return;
       const meta = poSignupCommentMeta(entry.comment);
       if(normalize(meta.p0Plus) !== "ja") return;
       addItem(meta.p0Item || entry.p1 || entry.P1);
     });
     (Array.isArray(backup?.raids) ? backup.raids : []).forEach(raid => {
+      if(!poSignupRaidMatches(raid.raid || raid.raidType || raid.raid_type)) return;
       (Array.isArray(raid.p0PlusPrios) ? raid.p0PlusPrios : []).forEach(entry => {
         addItem(entry.p0Item || entry.p1);
       });
@@ -6988,6 +7002,7 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
     const seen = new Set(current.map(item => normalize(item)));
     const items = [...current];
     (Array.isArray(result.entries) ? result.entries : []).forEach(entry => {
+      if(!poSignupRaidMatches(entry.raid || entry.raidType)) return;
       const item = String(entry.item || entry.itemName || "").trim();
       const key = normalize(item);
       if(!item || !key || seen.has(key)) return;
@@ -7053,7 +7068,7 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td><strong>${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.discordName || "")}</div></td>
-        <td>${renderLootItem(entry.item || "-")}</td>
+        <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
         <td>${escapeHtml(formatDateTime(entry.createdAt || entry.poCreatedAt || entry.updatedAt) || "-")}</td>
         <td>
           <div class="actions">

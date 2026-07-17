@@ -3671,6 +3671,9 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists approval_status text not null default 'pending'`);
   await query(`alter table po_post_entries add column if not exists approved_by text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approved_at timestamptz`);
+  await query(`alter table po_post_entries add column if not exists luck_by text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists luck_by_discord_id text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists luck_at timestamptz`);
   await query(`alter table po_post_entries add column if not exists archived_at timestamptz`);
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
   await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
@@ -3721,7 +3724,8 @@ async function savePoPostEntries({ guildId, query: params }) {
   try {
     await client.query("begin");
     const approvalResult = await client.query(
-      `select po_message_id, player_name, item_name, approval_status, approved_by, approved_at
+      `select po_message_id, player_name, item_name, approval_status, approved_by, approved_at,
+              luck_by, luck_by_discord_id, luck_at
        from po_post_entries
        where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
       [guildId, postKey, sourceChannelId, targetChannelId]
@@ -3731,7 +3735,10 @@ async function savePoPostEntries({ guildId, query: params }) {
       const status = {
         approvalStatus: row.approval_status || "pending",
         approvedBy: row.approved_by || "",
-        approvedAt: row.approved_at || null
+        approvedAt: row.approved_at || null,
+        luckBy: row.luck_by || "",
+        luckByDiscordId: row.luck_by_discord_id || "",
+        luckAt: row.luck_at || null
       };
       const poMessageId = clean(row.po_message_id);
       if (poMessageId) approvalByKey.set(poMessageId, status);
@@ -3764,9 +3771,9 @@ async function savePoPostEntries({ guildId, query: params }) {
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
            raid, title, player_name, item_name, discord_user_id, discord_name, po_message_id, po_created_at,
-           approval_status, approved_by, approved_at
+           approval_status, approved_by, approved_at, luck_by, luck_by_discord_id, luck_at
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
         [
           guildId,
           postKey,
@@ -3783,7 +3790,10 @@ async function savePoPostEntries({ guildId, query: params }) {
           clean(entry.createdAt) || null,
           approval.approvalStatus || "pending",
           approval.approvedBy || "",
-          approval.approvedAt || null
+          approval.approvedAt || null,
+          approval.luckBy || "",
+          approval.luckByDiscordId || "",
+          approval.luckAt || null
         ]
       );
       savedCount += 1;
@@ -3853,6 +3863,9 @@ async function getPoPostEntries({ guildId, query: params }) {
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
       approvedAt: row.approved_at || "",
+      luckBy: row.luck_by || "",
+      luckByDiscordId: row.luck_by_discord_id || "",
+      luckAt: row.luck_at || "",
       archivedAt: row.archived_at || "",
       updatedAt: row.updated_at
     }))
@@ -3892,7 +3905,10 @@ async function getPoPostApprovals({ guildId, query: params }) {
       item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
-      approved: row.approval_status === "approved"
+      approved: row.approval_status === "approved",
+      luckBy: row.luck_by || "",
+      luckByDiscordId: row.luck_by_discord_id || "",
+      luckAt: row.luck_at || ""
     }))
   };
 }
@@ -4076,6 +4092,63 @@ async function deletePoPostEntry({ guildId, query: params }) {
       item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || ""
     }))
+  };
+}
+
+async function setPoPostEntryLuck({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || "");
+  const sourceChannelId = clean(params.sourceChannelId || "");
+  const targetChannelId = clean(params.targetChannelId || "");
+  const playerName = clean(params.player || params.char || params.spieler);
+  const itemName = normalizePoItemName(params.item || params.itemName);
+  const luckBy = clean(params.luckBy || params.discordName || params.userName || "");
+  const luckByDiscordId = clean(params.luckByDiscordId || params.discordUserId || params.userId || "");
+
+  if (!postKey || !sourceChannelId || !targetChannelId || !playerName || !itemName) {
+    const error = new Error("PO-Eintrag für Kleeblatt fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `update po_post_entries
+     set luck_by = $6,
+         luck_by_discord_id = $7,
+         luck_at = now(),
+         updated_at = now()
+     where guild_id = $1
+       and post_key = $2
+       and source_channel_id = $3
+       and target_channel_id = $4
+       and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($5), '[^a-z0-9]+', '', 'g')
+       and regexp_replace(lower(item_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($8), '[^a-z0-9]+', '', 'g')
+       and archived_at is null
+     returning *`,
+    [guildId, postKey, sourceChannelId, targetChannelId, playerName, luckBy, luckByDiscordId, itemName]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    const error = new Error("PO-Eintrag wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    entry: {
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      player: row.player_name || "",
+      item: normalizePoItemName(row.item_name || ""),
+      messageId: row.po_message_id || "",
+      luckBy: row.luck_by || "",
+      luckByDiscordId: row.luck_by_discord_id || "",
+      luckAt: row.luck_at || ""
+    }
   };
 }
 
@@ -13658,6 +13731,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...deleted, guild: guild.slug });
     }
 
+    if (action === "lichtbotSetPoPostLuck" || action === "setPoPostEntryLuck") {
+      const saved = await setPoPostEntryLuck({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {
       const deleted = await deletePoPost({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
@@ -13915,6 +13993,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotDeletePoPostEntry" || action === "deletePoPostEntry") {
       const deleted = await deletePoPostEntry({ guildId: guild.id, query: postParams });
       return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "lichtbotSetPoPostLuck" || action === "setPoPostEntryLuck") {
+      const saved = await setPoPostEntryLuck({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {
