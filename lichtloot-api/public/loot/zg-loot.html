@@ -2857,6 +2857,23 @@ function rememberSelectedPrioOption(slot){
   setSelectedPrioItemId(slot, option ? option.dataset.itemId : "");
 }
 
+function selectPrioOption(slot,itemName,itemId){
+  const select=document.getElementById(slot);
+  if(!select) return;
+
+  const wantedId=String(itemId || "").trim();
+  const wantedName=String(itemName || "").trim();
+  const options=Array.from(select.options || []);
+  const option=(wantedId ? options.find(item => String(item.dataset.itemId || "").trim() === wantedId) : null) ||
+    options.find(item => item.value === wantedName);
+
+  if(option){
+    option.selected=true;
+  }else{
+    select.value=wantedName;
+  }
+}
+
 function fillItems(){
   ["p1","p2","p3"].filter((id,index)=>index < PRIO_COUNT).forEach(id=>{
     const select=document.getElementById(id);
@@ -2920,16 +2937,16 @@ function renderLootList(){
     const buttons=document.createElement("div");
     buttons.className="prio-buttons";
     const prioButtonParts = [
-      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P1</button>`
+      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P1</button>`
     ];
     if(PRIO_COUNT >= 2){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P2</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P2</button>`);
     }
     if(PRIO_COUNT >= 3){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P3</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P3</button>`);
     }
     if(SUPPORTS_P0PLUS){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P0</button>`);
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P0</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -2958,7 +2975,7 @@ function setPrio(slot,itemName,itemId){
   window.lastSavedPrioSignature = "";
 
   setSelectedPrioItemId(slot,itemId);
-  document.getElementById(slot).value=itemName;
+  selectPrioOption(slot,itemName,itemId);
   document.getElementById("playerStatus").innerHTML=
     `<span class="ok">✓ ${safe(itemName)} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
 
@@ -2982,9 +2999,9 @@ function setP0Plus(itemName,itemId){
   setSelectedPrioItemId("p1",itemId);
   setSelectedPrioItemId("p2",itemId);
   setSelectedPrioItemId("p3",itemId);
-  document.getElementById("p1").value=itemName;
-  document.getElementById("p2").value=itemName;
-  document.getElementById("p3").value=itemName;
+  selectPrioOption("p1",itemName,itemId);
+  selectPrioOption("p2",itemName,itemId);
+  selectPrioOption("p3",itemName,itemId);
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="ok">✓ ${itemName} wurde aktiv als P0 gesetzt.</span>`;
@@ -3025,7 +3042,7 @@ function updateActiveButtons(){
 
   if(window.p0PlusWasClicked && p1 && p1===p2 && p2===p3){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
+      .querySelectorAll(p1ItemId ? `.mini-btn[data-item-id="${cssEscape(p1ItemId)}"][data-prio="p0plus"]` : `.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
       .forEach(btn=>btn.classList.add("p0active"));
     renderCurrentPrios();
     return;
@@ -3033,19 +3050,19 @@ function updateActiveButtons(){
 
   if(p1){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`)
+      .querySelectorAll(p1ItemId ? `.mini-btn[data-item-id="${cssEscape(p1ItemId)}"][data-prio="p1"]` : `.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
   if(p2){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`)
+      .querySelectorAll(p2ItemId ? `.mini-btn[data-item-id="${cssEscape(p2ItemId)}"][data-prio="p2"]` : `.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
   if(p3){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`)
+      .querySelectorAll(p3ItemId ? `.mini-btn[data-item-id="${cssEscape(p3ItemId)}"][data-prio="p3"]` : `.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
@@ -3096,12 +3113,12 @@ function loadPlayerData(){
 
   document.getElementById("playerServer").value=data.server||"";
   document.getElementById("playerClass").value=data.class||"";
-  document.getElementById("p1").value=data.p1||"";
-  document.getElementById("p2").value=data.p2||"";
-  document.getElementById("p3").value=data.p3||"";
   setSelectedPrioItemId("p1",data.p1ItemId || "");
   setSelectedPrioItemId("p2",data.p2ItemId || "");
   setSelectedPrioItemId("p3",data.p3ItemId || "");
+  selectPrioOption("p1",data.p1 || "",data.p1ItemId || "");
+  selectPrioOption("p2",data.p2 || "",data.p2ItemId || "");
+  selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
@@ -5783,7 +5800,7 @@ function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
   setSelectedPrioItemId(slot,itemId);
-  document.getElementById(slot).value=itemName;
+  selectPrioOption(slot,itemName,itemId);
   document.getElementById("playerStatus").innerHTML =
     '<span class="ok">✓ '+safe(itemName)+' wurde auf '+slot.toUpperCase()+' gesetzt.</span>';
   renderSelectedPrioPreviews();
@@ -5806,9 +5823,9 @@ function setP0Plus(itemName,itemId){
   setSelectedPrioItemId("p1",itemId);
   setSelectedPrioItemId("p2",itemId);
   setSelectedPrioItemId("p3",itemId);
-  document.getElementById("p1").value=itemName;
-  document.getElementById("p2").value=itemName;
-  document.getElementById("p3").value=itemName;
+  selectPrioOption("p1",itemName,itemId);
+  selectPrioOption("p2",itemName,itemId);
+  selectPrioOption("p3",itemName,itemId);
   document.getElementById("playerStatus").innerHTML =
     '<span class="ok">✓ '+safe(itemName)+' wurde aktiv als P0 gesetzt.</span>';
   renderSelectedPrioPreviews();
@@ -5841,12 +5858,12 @@ function loadPlayerData(){
   }
 
   const data=JSON.parse(saved);
-  document.getElementById("p1").value=data.p1||"";
-  document.getElementById("p2").value=data.p2||"";
-  document.getElementById("p3").value=data.p3||"";
   setSelectedPrioItemId("p1",data.p1ItemId || "");
   setSelectedPrioItemId("p2",data.p2ItemId || "");
   setSelectedPrioItemId("p3",data.p3ItemId || "");
+  selectPrioOption("p1",data.p1 || "",data.p1ItemId || "");
+  selectPrioOption("p2",data.p2 || "",data.p2ItemId || "");
+  selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML =
