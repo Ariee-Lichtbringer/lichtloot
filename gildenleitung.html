@@ -3841,8 +3841,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <div class="raid-helper-row">
               <div class="field">
-                <label for="poSignupPostKey">Post-ID</label>
-                <input id="poSignupPostKey" type="text" placeholder="z. B. naxx-po-anmelder" oninput="updatePoSignupPreview()">
+                <label for="poSignupPostKey">Anmelde-ID</label>
+                <input id="poSignupPostKey" type="text" placeholder="z. B. naxx-po-anmelder-20260722-1945-a1b2" oninput="updatePoSignupPreview()">
               </div>
               <div class="field">
                 <label for="poSignupDate">Raid-Datum</label>
@@ -3879,6 +3879,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <div class="tools">
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
+              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
               <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
               <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
@@ -6939,13 +6940,23 @@ function poSignupItemLines(){
     .slice(0,25);
 }
 
+function makePoSignupKey(raid, raidDate, raidTime){
+  const raidPart = poSignupNormalizeRaid(raid || "raid") || "raid";
+  const datePart = String(raidDate || "").replace(/[^0-9]+/g,"") || todayIsoDate().replace(/[^0-9]+/g,"");
+  const timePart = String(raidTime || "").replace(/[^0-9]+/g,"") || "zeit";
+  const suffix = Date.now().toString(36).slice(-4);
+  return `${raidPart}-po-anmelder-${datePart}-${timePart}-${suffix}`;
+}
+
 function updatePoSignupDefaults(overwriteTitle=true){
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
+  const raidDate = document.getElementById("poSignupDate")?.value || "";
+  const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
   const title = document.getElementById("poSignupTitle");
   const key = document.getElementById("poSignupPostKey");
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
-  if(key && !key.value.trim()) key.value = `${raid}-po-anmelder`;
+  if(key && !key.value.trim()) key.value = makePoSignupKey(raid, raidDate, raidTime);
   updatePoSignupPreview();
 }
 
@@ -7101,7 +7112,7 @@ function getPoSignupConfig(){
   const title = document.getElementById("poSignupTitle")?.value.trim() || `${RAID_OPTIONS[raid]?.short || raid.toUpperCase()} PO-Anmelder`;
   let postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
   if(!postKey){
-    postKey = `${raid}-po-anmelder`;
+    postKey = makePoSignupKey(raid, document.getElementById("poSignupDate")?.value || "", document.getElementById("poSignupTime")?.value || "");
     setValue("poSignupPostKey", postKey);
   }
   const sourceChannelId = document.getElementById("poSignupSourceChannel")?.value || "";
@@ -7762,6 +7773,22 @@ async function createPoSignupPost(){
   }catch(error){
     if(status) status.textContent = error.message || "PO-Anmelder konnte nicht erstellt werden.";
   }
+}
+
+function newPoSignupConfig(){
+  const raid = document.getElementById("poSignupRaid")?.value || "aq40";
+  const raidDate = document.getElementById("poSignupDate")?.value || "";
+  const raidTime = document.getElementById("poSignupTime")?.value || "";
+  const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
+  setValue("poSignupTitle", `${label} PO-Anmelder`);
+  setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
+  setValue("poSignupItems", "");
+  selectedPoPostKey = "";
+  updatePoSignupPreview();
+  renderPoSignupConfigRows();
+  renderPoSignupReviewRows();
+  const status = document.getElementById("poSignupStatus");
+  if(status) status.innerHTML = '<span class="good">Neuer PO-Anmelder mit eigener Anmelde-ID vorbereitet.</span>';
 }
 
 async function queuePoPost(){
