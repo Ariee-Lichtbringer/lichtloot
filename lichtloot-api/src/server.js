@@ -4432,28 +4432,35 @@ async function savePoPostEntry({ guildId, query: params }) {
     throw error;
   }
 
-  const character = playerPin
+  let character = playerPin
     ? await findCharacterForPin(guildId, playerPin, player, server)
     : await findCharacter(guildId, player, server);
-  if (!character) {
-    const error = new Error(playerPin
-      ? "SpielerLogin passt nicht zu diesem Charakter."
-      : "Charakter wurde in LichtLoot nicht gefunden.");
-    error.statusCode = playerPin ? 403 : 404;
+  if (playerPin && !character) {
+    const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+    error.statusCode = 403;
     throw error;
+  }
+  if (!character) {
+    character = {
+      id: "",
+      name: player,
+      class_name: className
+    };
   }
 
   const client = await pool.connect();
   try {
     await client.query("begin");
-    await client.query(
-      `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
-       values ($1, $2, $3, $4, 'discord-po')
-       on conflict (guild_id, discord_user_id, character_id) do update
-         set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
-             updated_at = now()`,
-      [guildId, discordUserId, character.id, discordName]
-    );
+    if (character.id) {
+      await client.query(
+        `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+         values ($1, $2, $3, $4, 'discord-po')
+         on conflict (guild_id, discord_user_id, character_id) do update
+           set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+               updated_at = now()`,
+        [guildId, discordUserId, character.id, discordName]
+      );
+    }
     await client.query(
       `delete from po_post_entries
        where guild_id = $1
