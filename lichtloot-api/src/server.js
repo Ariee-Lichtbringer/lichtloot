@@ -1966,6 +1966,46 @@ function worldbuffMergeLookupKey(entry) {
   return [date, time, buff, guild].join("|");
 }
 
+function canonicalWorldbuffGuildForDedupe(entry) {
+  const guild = clean(entry.gilde || entry.guild || entry.guild_name);
+  if (guild.toLowerCase().includes("lichtbringer")) return "lichtbringer";
+  return guild.toLowerCase();
+}
+
+function worldbuffDedupeKey(entry) {
+  const date = parseDateValue(entry.date || entry.datum);
+  const time = clean(entry.uhrzeit || entry.time).replace(/:00$/, "");
+  const buff = normalizeWorldbuffName(entry.buff);
+  const guild = canonicalWorldbuffGuildForDedupe(entry);
+  if (!date || !time || !buff) return "";
+  return [date, time, buff, guild].join("|");
+}
+
+function worldbuffRowScore(entry) {
+  let score = 0;
+  if (clean(entry.charakter || entry.caster || entry.werfer)) score += 20;
+  if (normalizeWorldbuffStatus(entry.status) === "bestätigt") score += 10;
+  if (clean(entry.eventId || entry.rowNumber)) score += 2;
+  if (clean(entry.gilde || entry.guild || entry.guild_name).toLowerCase() === "lichtbringer") score += 1;
+  return score;
+}
+
+function dedupeWorldbuffRows(rows) {
+  const byKey = new Map();
+  (rows || []).forEach(row => {
+    const key = worldbuffDedupeKey(row);
+    if (!key) {
+      byKey.set(`unique:${byKey.size}`, row);
+      return;
+    }
+    const existing = byKey.get(key);
+    if (!existing || worldbuffRowScore(row) >= worldbuffRowScore(existing)) {
+      byKey.set(key, row);
+    }
+  });
+  return [...byKey.values()].sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
+}
+
 function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
   const sheetByKey = new Map();
   const railwayKeys = new Set();
@@ -2010,7 +2050,7 @@ function mergeWorldbuffRowsWithSheetRows(railwayRows, sheetRows) {
     }
   });
 
-  return merged.sort((a, b) => worldbuffTimestamp(a) - worldbuffTimestamp(b));
+  return dedupeWorldbuffRows(merged);
 }
 
 async function getWorldbuffs({ guildId, query: params }) {
@@ -2050,7 +2090,8 @@ async function getWorldbuffs({ guildId, query: params }) {
 
   const railwayRows = result.rows.map(normalizeWorldbuffDbRow);
   if (source === "railway") {
-    return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+    const dedupedRows = dedupeWorldbuffRows(railwayRows);
+    return { success: true, source: "railway", buffs: dedupedRows, entries: dedupedRows };
   }
 
   if (railwayRows.length) {
