@@ -4097,9 +4097,11 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   const postKey = clean(params.postKey || params.poPostKey || "");
   const sourceChannelId = clean(params.sourceChannelId || "");
   const targetChannelId = clean(params.targetChannelId || "");
+  const playerName = clean(params.player || params.char || params.spieler);
+  const itemName = normalizePoItemName(params.item || params.itemName);
   const rawStatus = clean(params.status || params.value || "approved").toLowerCase();
   const approvalStatus = ["rejected", "invalid", "ungueltig", "ungültig", "nein"].includes(rawStatus) ? "rejected" : "approved";
-  const result = await query(
+  let result = await query(
     `update po_post_entries
      set approval_status = $6,
          approved_by = $7,
@@ -4114,7 +4116,32 @@ async function reviewPoPostEntry({ guildId, query: params }) {
      returning *`,
     [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung")]
   );
-  const row = result.rows[0];
+  let row = result.rows[0];
+  if (!row && playerName && itemName) {
+    const values = [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung")];
+    const itemClauses = [];
+    for (const variant of poItemAliasVariants(itemName)) {
+      values.push(variant);
+      itemClauses.push(`regexp_replace(lower(item_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+    }
+    result = await query(
+      `update po_post_entries
+       set approval_status = $6,
+           approved_by = $7,
+           approved_at = case when $6 = 'approved' then now() else null end,
+           updated_at = now()
+       where guild_id = $1
+         and post_key = $2
+         and source_channel_id = $3
+         and target_channel_id = $4
+         and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($5), '[^a-z0-9]+', '', 'g')
+         and (${itemClauses.join(" or ")})
+         and archived_at is null
+       returning *`,
+      values
+    );
+    row = result.rows[0];
+  }
   if (!row) {
     const error = new Error("PO-Eintrag wurde nicht gefunden.");
     error.statusCode = 404;
