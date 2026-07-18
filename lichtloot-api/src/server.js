@@ -11002,6 +11002,7 @@ async function getPublishedPrios({ guildId, query: params }) {
        c.class_name,
        c.is_main,
        c.created_at as character_created_at,
+       p.player_pin,
        i1.name as p1,
        i1.item_id as p1_item_id,
        i2.name as p2,
@@ -11010,11 +11011,17 @@ async function getPublishedPrios({ guildId, query: params }) {
        i3.item_id as p3_item_id
      from prios pr
      join characters c on c.id = pr.character_id
+     join players p on p.id = c.player_id
      left join items i1 on i1.id = pr.p1_item_id
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
      where pr.raid_id = $1
-     order by c.is_main desc, c.created_at asc, c.class_name asc, c.name asc`,
+     order by
+       case when p.player_pin ilike 'RL%' then 1 else 0 end,
+       c.is_main desc,
+       c.created_at asc,
+       c.class_name asc,
+       c.name asc`,
     [raid.id]
   );
 
@@ -11037,7 +11044,7 @@ async function getPublishedPrios({ guildId, query: params }) {
     p0PlusTransferCount,
     published,
     open: raidStatus !== "geöffnet" && !published,
-    prios: result.rows.map((row, index) => {
+    prios: mergePublishedPrioRows(result.rows).map((row, index) => {
       const meta = commentMeta(row.comment);
       return {
         id: row.id,
@@ -11069,6 +11076,61 @@ async function getPublishedPrios({ guildId, query: params }) {
       };
     })
   };
+}
+
+function publishedPrioPlayerKey(row) {
+  return clean(row?.player)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function publishedPrioRowScore(row) {
+  let score = 0;
+  if (!/^RL/i.test(clean(row?.player_pin))) score += 100;
+  if (row?.is_main) score += 20;
+  if (row?.p1) score += 5;
+  if (row?.p2) score += 5;
+  if (row?.p3) score += 5;
+  if (clean(row?.comment)) score += 2;
+  return score;
+}
+
+function mergePublishedPrioRows(rows) {
+  const groups = new Map();
+  for (const row of rows || []) {
+    const key = publishedPrioPlayerKey(row);
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+
+  const merged = [];
+  for (const groupRows of groups.values()) {
+    const sorted = [...groupRows].sort((a, b) => publishedPrioRowScore(b) - publishedPrioRowScore(a));
+    const keep = { ...sorted[0] };
+    for (const row of sorted.slice(1)) {
+      keep.p1 = keep.p1 || row.p1 || "";
+      keep.p1_item_id = keep.p1_item_id || row.p1_item_id || "";
+      keep.p2 = keep.p2 || row.p2 || "";
+      keep.p2_item_id = keep.p2_item_id || row.p2_item_id || "";
+      keep.p3 = keep.p3 || row.p3 || "";
+      keep.p3_item_id = keep.p3_item_id || row.p3_item_id || "";
+      keep.comment = clean(keep.comment) ? keep.comment : row.comment;
+      keep.bench = clean(keep.bench) ? keep.bench : row.bench;
+      keep.server = clean(keep.server) ? keep.server : row.server;
+      keep.class_name = clean(keep.class_name) ? keep.class_name : row.class_name;
+    }
+    merged.push(keep);
+  }
+
+  return merged.sort((a, b) => {
+    const pinScore = (/^RL/i.test(clean(a.player_pin)) ? 1 : 0) - (/^RL/i.test(clean(b.player_pin)) ? 1 : 0);
+    if (pinScore) return pinScore;
+    if (Boolean(a.is_main) !== Boolean(b.is_main)) return a.is_main ? -1 : 1;
+    return clean(a.class_name).localeCompare(clean(b.class_name), "de") || clean(a.player).localeCompare(clean(b.player), "de");
+  });
 }
 
 async function findP0DiscordRaid(guildId, params) {
@@ -13290,7 +13352,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "naxx-po-item-alias-cleanup-v2";
+  const markerKey = "naxx-po-item-alias-cleanup-v3";
   const raidTypes = raidTypeSearchValues("naxx").map(value => value.toLowerCase());
   const corrections = [
     {
@@ -13426,8 +13488,8 @@ async function applyNaxxPoItemAliasCleanupOnce() {
       `select
          r.id as raid_id,
          lower(trim(c.name)) as character_key,
-         lower(coalesce(trim(c.server), '')) as server_key,
          array_agg(pr.id order by
+           case when p.player_pin ilike 'RL%' then 1 else 0 end,
            ((case when pr.p1_item_id is not null then 1 else 0 end) +
             (case when pr.p2_item_id is not null then 1 else 0 end) +
             (case when pr.p3_item_id is not null then 1 else 0 end)) desc,
@@ -13436,6 +13498,7 @@ async function applyNaxxPoItemAliasCleanupOnce() {
            pr.created_at desc nulls last
          ) as prio_ids,
          array_agg(pr.character_id order by
+           case when p.player_pin ilike 'RL%' then 1 else 0 end,
            ((case when pr.p1_item_id is not null then 1 else 0 end) +
             (case when pr.p2_item_id is not null then 1 else 0 end) +
             (case when pr.p3_item_id is not null then 1 else 0 end)) desc,
@@ -13446,9 +13509,10 @@ async function applyNaxxPoItemAliasCleanupOnce() {
        from prios pr
        join raids r on r.id = pr.raid_id
        join characters c on c.id = pr.character_id
+       join players p on p.id = c.player_id
        where lower(r.raid_type) = any($1)
          and nullif(trim(c.name), '') is not null
-       group by r.id, lower(trim(c.name)), lower(coalesce(trim(c.server), ''))
+       group by r.id, lower(trim(c.name))
        having count(*) > 1`,
       [raidTypes]
     );
