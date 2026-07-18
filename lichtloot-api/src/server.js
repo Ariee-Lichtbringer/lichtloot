@@ -4698,7 +4698,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
   const title = clean(params.title) || "PO Liste";
   const player = clean(params.player || params.char || params.spieler);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const itemName = normalizePoItemName(params.item || params.itemName);
   const discordUserId = clean(params.discordUserId || params.userId);
@@ -4718,7 +4718,9 @@ async function savePoPostEntry({ guildId, query: params }) {
 
   let character = playerPin
     ? await findCharacterForPin(guildId, playerPin, player, server)
-    : await findCharacter(guildId, player, server);
+    : server
+      ? await findCharacter(guildId, player, server)
+      : null;
   if (playerPin && !character) {
     const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
     error.statusCode = 403;
@@ -4795,6 +4797,7 @@ async function savePoPostEntry({ guildId, query: params }) {
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
+      server: character.server || server,
       approvalStatus: row.approval_status || "pending"
     };
     const prioSync = await tryAutoSyncPoSignupPrio({ guildId, params, entry });
@@ -5138,23 +5141,39 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
   const server = clean(params.server);
   const className = clean(params.className || params.class || params.klasse);
 
-  if (!player || !server || !className) {
-    const error = new Error("Spieler, Server oder Klasse fehlt.");
+  if (!player || !className) {
+    const error = new Error("Spieler oder Klasse fehlt.");
     error.statusCode = 400;
     throw error;
   }
 
-  const existing = await client.query(
-    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
-     from characters c
-     join players p on p.id = c.player_id
-     where p.guild_id = $1
-       and lower(c.name) = lower($2)
-       and lower(c.server) = lower($3)
-     order by c.created_at asc
-     limit 1`,
-    [guildId, player, server]
-  );
+  let existing = { rows: [] };
+  if (server) {
+    existing = await client.query(
+      `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1
+         and lower(c.name) = lower($2)
+         and lower(c.server) = lower($3)
+       order by c.is_main desc, c.created_at asc
+       limit 1`,
+      [guildId, player, server]
+    );
+  }
+
+  if (!existing.rows.length) {
+    existing = await client.query(
+      `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1
+         and lower(c.name) = lower($2)
+       order by c.is_main desc, c.created_at asc
+       limit 1`,
+      [guildId, player]
+    );
+  }
 
   if (existing.rows.length) {
     const character = existing.rows[0];
@@ -5199,7 +5218,7 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
     `insert into characters (player_id, name, server, class_name, is_main)
      values ($1, $2, $3, $4, true)
      returning id, name, server, class_name, created_at`,
-    [createdPlayer.id, player, server, className]
+    [createdPlayer.id, player, server || "Lichtbringer", className]
   );
 
   return characterResult.rows[0];
@@ -5299,6 +5318,17 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     await client.query("begin");
 
     const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    const discordUserId = clean(params.discordUserId);
+    if (discordUserId) {
+      await client.query(
+        `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+         values ($1, $2, $3, $4, 'discord-po')
+         on conflict (guild_id, discord_user_id, character_id) do update
+           set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+               updated_at = now()`,
+        [guildId, discordUserId, character.id, clean(params.discordName)]
+      );
+    }
     const item = await upsertItem(client, raidType, itemName, params.itemId || params.itemGameId || params.p1ItemId);
     if (!item) {
       const error = new Error("Item wurde nicht gefunden.");
@@ -5320,7 +5350,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       p0Item: item.name,
       raidTime: raid.raid_time || clean(params.raidTime || params.uhrzeit),
       source: "po-bot",
-      discordUserId: clean(params.discordUserId)
+      discordUserId
     });
 
     const prioResult = await client.query(
@@ -5376,7 +5406,7 @@ async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
         item: entry.item,
         discordUserId: entry.discordUserId,
         discordName: entry.discordName,
-        server: clean(params.server) || "Lichtbringer"
+        server: clean(params.server || entry.server)
       }
     });
   } catch (error) {
@@ -5465,7 +5495,7 @@ async function syncPoPostEntriesToPrios({ guildId, query: params }) {
           item: entry.item,
           discordUserId: entry.discordUserId,
           discordName: entry.discordName,
-          server: clean(params.server) || "Lichtbringer"
+          server: clean(params.server || entry.server)
         }
       });
       synced.push(saved);
