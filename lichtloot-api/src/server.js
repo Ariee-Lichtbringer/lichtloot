@@ -156,6 +156,10 @@ await applyEterniumLockboxRaidItemsOnce().catch(error => {
   console.warn("Eterniumschließkassette konnte nicht für alle Raids ergänzt werden:", error.message || error);
 });
 
+await applyNaxxPoItemAliasCleanupOnce().catch(error => {
+  console.warn("Naxx-PO-Item-Dubletten konnten nicht zusammengeführt werden:", error.message || error);
+});
+
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api", build: "item-create-v2" });
 });
@@ -3778,7 +3782,7 @@ async function queuePoPost({ guildId, query: params }) {
       raidDate: clean(params.raidDate || params.date || params.datum),
       raidTime: clean(params.raidTime || params.time || params.uhrzeit),
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
-      mode: clean(params.mode || params.poMode),
+      mode: clean(params.mode || params.poMode) || "signup",
       groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
       limit,
@@ -13264,6 +13268,164 @@ async function applyEterniumLockboxRaidItemsOnce() {
     );
     await client.query("commit");
     console.log("Eterniumschließkassette für MC, BWL und Naxx ergänzt");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function applyNaxxPoItemAliasCleanupOnce() {
+  const markerKey = "naxx-po-item-alias-cleanup-v1";
+  const raidTypes = raidTypeSearchValues("naxx").map(value => value.toLowerCase());
+  const corrections = [
+    {
+      targetName: "Amulett von Vek'nilash",
+      aliases: ["Amulett von Veknilash"]
+    },
+    {
+      targetName: "Die gebundene Essenz Saphirons",
+      aliases: ["Gebundene Essenz von Saphiron", "Gebundene Essenz Saphirons"]
+    }
+  ];
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists app_state (
+         key text primary key,
+         value text,
+         updated_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query("select value from app_state where key = $1", [markerKey]);
+    if (marker.rows.length) {
+      await client.query("commit");
+      return;
+    }
+
+    const itemsResult = await client.query(
+      `select id, name, raid_type
+       from items
+       where lower(raid_type) = any($1)
+       order by created_at asc`,
+      [raidTypes]
+    );
+    const naxxItems = itemsResult.rows || [];
+    const itemByLookup = new Map();
+    for (const item of naxxItems) {
+      const key = itemLookupKey(item.name);
+      if (key && !itemByLookup.has(key)) itemByLookup.set(key, item);
+    }
+
+    let movedReferences = 0;
+    let removedDuplicateItems = 0;
+    let renamedItems = 0;
+    let rewrittenComments = 0;
+    let removedDuplicateP0PlusRows = 0;
+
+    for (const correction of corrections) {
+      const targetKey = itemLookupKey(correction.targetName);
+      const aliasKeys = new Set(correction.aliases.map(itemLookupKey).filter(Boolean));
+      let targetItem = itemByLookup.get(targetKey);
+      if (!targetItem) {
+        const aliasItem = naxxItems.find(item => aliasKeys.has(itemLookupKey(item.name)));
+        if (!aliasItem) continue;
+        const renamed = await client.query(
+          `update items
+           set name = $2
+           where id = $1
+           returning id, name, raid_type`,
+          [aliasItem.id, correction.targetName]
+        );
+        targetItem = renamed.rows[0];
+        renamedItems += renamed.rowCount;
+        itemByLookup.set(targetKey, targetItem);
+        aliasKeys.delete(itemLookupKey(aliasItem.name));
+      }
+
+      const duplicateItems = naxxItems.filter(item => {
+        if (!targetItem || item.id === targetItem.id) return false;
+        return aliasKeys.has(itemLookupKey(item.name));
+      });
+
+      for (const duplicate of duplicateItems) {
+        const p1 = await client.query("update prios set p1_item_id = $1 where p1_item_id = $2", [targetItem.id, duplicate.id]);
+        const p2 = await client.query("update prios set p2_item_id = $1 where p2_item_id = $2", [targetItem.id, duplicate.id]);
+        const p3 = await client.query("update prios set p3_item_id = $1 where p3_item_id = $2", [targetItem.id, duplicate.id]);
+        const p0 = await client.query("update p0plus_points set item_id = $1 where item_id = $2", [targetItem.id, duplicate.id]);
+        movedReferences += p1.rowCount + p2.rowCount + p3.rowCount + p0.rowCount;
+        const deleted = await client.query("delete from items where id = $1", [duplicate.id]);
+        removedDuplicateItems += deleted.rowCount;
+      }
+
+      const comments = await client.query(
+        `select pr.id, pr.comment
+         from prios pr
+         join raids r on r.id = pr.raid_id
+         where lower(r.raid_type) = any($1)
+           and pr.comment is not null
+           and pr.comment <> ''`,
+        [raidTypes]
+      );
+      for (const row of comments.rows || []) {
+        let meta;
+        try {
+          meta = JSON.parse(row.comment || "{}") || {};
+        } catch {
+          continue;
+        }
+        if (!meta.p0Item || !aliasKeys.has(itemLookupKey(meta.p0Item))) continue;
+        meta.p0Item = correction.targetName;
+        const updated = await client.query(
+          "update prios set comment = $2, updated_at = now() where id = $1",
+          [row.id, JSON.stringify(meta)]
+        );
+        rewrittenComments += updated.rowCount;
+      }
+
+      const deduped = await client.query(
+        `delete from p0plus_points pp
+         using (
+           select ctid
+           from (
+             select ctid,
+                    row_number() over (
+                      partition by guild_id, character_id, item_id, source, coalesce(note, '')
+                      order by ctid
+                    ) as rn
+             from p0plus_points
+             where item_id = $1
+           ) ranked
+           where rn > 1
+         ) duplicate_rows
+         where pp.ctid = duplicate_rows.ctid`,
+        [targetItem.id]
+      );
+      removedDuplicateP0PlusRows += deduped.rowCount;
+    }
+
+    await client.query(
+      `insert into app_state (key, value, updated_at)
+       values ($1, $2, now())
+       on conflict (key) do update set value = excluded.value, updated_at = now()`,
+      [
+        markerKey,
+        JSON.stringify({
+          corrections: corrections.length,
+          movedReferences,
+          removedDuplicateItems,
+          renamedItems,
+          rewrittenComments,
+          removedDuplicateP0PlusRows
+        })
+      ]
+    );
+    await client.query("commit");
+    console.log(
+      `Naxx-PO-Item-Dubletten bereinigt: ${removedDuplicateItems} Items entfernt, ${movedReferences} Referenzen verschoben`
+    );
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
