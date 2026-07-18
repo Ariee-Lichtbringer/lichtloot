@@ -3967,6 +3967,7 @@ async function getPoPostEntries({ guildId, query: params }) {
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
+      discordMessageId: row.discord_message_id || "",
       messageId: row.po_message_id || "",
       createdAt: row.po_created_at || row.updated_at || "",
       poCreatedAt: row.po_created_at || "",
