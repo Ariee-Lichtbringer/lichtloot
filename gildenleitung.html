@@ -991,6 +991,32 @@ select:focus{border-color:rgba(96,165,250,.75)}
   max-height:640px;
 }
 
+.po-signup-prio-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:42px;
+  padding:10px 12px;
+  border:1px solid rgba(148,163,184,.25);
+  border-radius:8px;
+  background:rgba(15,23,42,.55);
+  color:#e5e7eb;
+  font-weight:800;
+}
+
+.po-signup-prio-option input{
+  width:18px;
+  height:18px;
+  accent-color:#facc15;
+}
+
+.po-signup-prio-hint{
+  margin-top:6px;
+  color:#9ca3af;
+  font-size:12px;
+  line-height:1.35;
+}
+
 .po-signup-preview-list{
   display:grid;
   gap:7px;
@@ -3684,130 +3710,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="po-post-tabs hidden" role="tablist" aria-label="PO-Anmelder Funktionen"></div>
-      <div id="poPostTab-post" class="po-post-tab-panel raid-helper-layout po-post-layout hidden">
-        <div class="raid-helper-form">
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
-              <span class="raid-helper-card-icon">☰</span>
-              <div>
-                <h3>PO-Post erstellen & bearbeiten</h3>
-                <p>Unabhängig vom Raidanmelder: Quelle lesen, denselben Zielpost aktualisieren, Freigaben steuern.</p>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostSavedSelect">Gespeicherter PO-Post</label>
-                <select id="poPostSavedSelect" onchange="loadSelectedPoPostConfig()"></select>
-              </div>
-              <div class="field">
-                <label for="poPostKey">Post-ID</label>
-                <input id="poPostKey" type="text" placeholder="z. B. aq40-main-po">
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostSourceChannel">PO-Quelle</label>
-                <select id="poPostSourceChannel"></select>
-              </div>
-              <div class="field">
-                <label for="poPostTargetChannel">Posten nach</label>
-                <select id="poPostTargetChannel"></select>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostReviewRecipient">Freigabe per DM an</label>
-                <input id="poPostReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename">
-              </div>
-              <div class="field">
-                <label for="poPostTitle">Titel</label>
-                <input id="poPostTitle" type="text" value="PO Liste">
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostLimit">Nachrichten prüfen</label>
-                <input id="poPostLimit" type="number" min="50" max="2000" value="800">
-              </div>
-              <div class="field">
-                <label for="poPostRaid">Raid-Hinweis</label>
-                <select id="poPostRaid">
-                  <option value="">Ohne Raidbindung</option>
-                  <option value="aq40">AQ40</option>
-                  <option value="bwl">BWL</option>
-                  <option value="mc">MC</option>
-                  <option value="naxx">Naxxramas</option>
-                  <option value="aq20">AQ20</option>
-                  <option value="zg">ZG</option>
-                  <option value="ony">Onyxia</option>
-                </select>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field wide">
-                <label for="poPostNote">Ergänzende Nachricht</label>
-                <textarea id="poPostNote" rows="3" placeholder="Zusatztext der Raidleitung für diesen PO-Post"></textarea>
-              </div>
-            </div>
-            <div class="tools">
-              <button class="btn" type="button" onclick="queuePoPost()">PO Post aktualisieren</button>
-              <button class="btn ghost" type="button" onclick="savePoPostConfig()">Post speichern</button>
-              <button class="btn ghost" type="button" onclick="newPoPostConfig()">Neu</button>
-              <button class="btn danger" type="button" onclick="deletePoPostConfig()">Löschen</button>
-              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
-            </div>
-            <div id="poPostStatus" class="status">Bereit.</div>
-            <div class="po-post-list-block">
-              <div class="section-head compact">
-                <div>
-                  <h3>Gespeicherte PO-Posts</h3>
-                  <p>Post-IDs prüfen und alte Sammelposts sauber entfernen.</p>
-                </div>
-                <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
-              </div>
-              <div class="table-wrap">
-                <table class="po-post-config-table">
-                  <thead>
-                    <tr>
-                      <th>Post-ID</th>
-                      <th>Raid</th>
-                      <th>Quelle</th>
-                      <th>Ziel</th>
-                      <th>Einträge</th>
-                      <th>Zuletzt</th>
-                      <th>Aktion</th>
-                    </tr>
-                  </thead>
-                  <tbody id="poPostConfigRows"></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-        <div class="raid-helper-preview po-post-entry-panel">
-          <div class="section-head compact">
-            <div>
-              <h3>PO-Einträge</h3>
-              <p id="poPostEntryPanelHint">Post-ID links anklicken, dann erscheinen hier die Einträge.</p>
-            </div>
-            <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
-          </div>
-          <div class="table-wrap">
-            <table class="po-post-entry-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Spieler</th>
-                  <th>Item</th>
-                  <th>Aktion</th>
-                </tr>
-              </thead>
-              <tbody id="poPostDetailRows"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
       <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
@@ -3872,20 +3774,19 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
-              <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach deinen Charakter ein.</textarea>
+              <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
             </div>
             <div class="tools">
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
               <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
               <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
-              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
             </div>
             <div id="poSignupStatus" class="status">Bereit.</div>
             <div class="po-post-list-block">
               <div class="section-head compact">
                 <div>
                   <h3>Gespeicherte PO-Anmelder</h3>
-                  <p>Bestehende Anmelder öffnen, aktualisieren und alte Sammelposts entfernen.</p>
+                  <p>Bestehende Anmelder öffnen und alte Anmelder archivieren. Archivierte Einträge bleiben als Backup gespeichert.</p>
                 </div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
@@ -5093,7 +4994,7 @@ async function loadWorldbuffMiniOverview(){
   box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days:4, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days:4 });
     if(result && result.success){
       worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
       renderWorldbuffMiniList();
@@ -7244,20 +7145,9 @@ function renderPoSignupReviewRows(){
 }
 
 function initPoPostPanel(){
-  renderPoPostConfigSelect();
-  renderPoPostConfigRows();
   renderPoPostChannelSelects();
-  loadRaidHelperDiscordChannels();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey","poPostNote"].forEach(id => {
-    const select = document.getElementById(id);
-    if(select && !select.dataset.poBound){
-      select.addEventListener("change", updatePoPostPreview);
-      select.addEventListener("input", updatePoPostPreview);
-      select.dataset.poBound = "1";
-    }
-  });
   ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
@@ -7266,11 +7156,6 @@ function initPoPostPanel(){
       field.dataset.poSignupBound = "1";
     }
   });
-  const recipient = document.getElementById("poPostReviewRecipient");
-  if(recipient && !recipient.dataset.poBound){
-    recipient.addEventListener("input", updatePoPostPreview);
-    recipient.dataset.poBound = "1";
-  }
 }
 
 function readPoPostConfigs(){
@@ -7367,7 +7252,11 @@ function isPoSignupConfigGroup(row){
 
 function renderPoPostConfigRows(){
   const tbody = document.getElementById("poPostConfigRows");
-  if(!tbody) return;
+  if(!tbody){
+    renderPoSignupReviewRows();
+    renderPoSignupConfigRows();
+    return;
+  }
   const rows = poPostConfigGroups();
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Posts gespeichert.</td></tr>';
@@ -7386,8 +7275,6 @@ function renderPoPostConfigRows(){
         <select class="small-select" onchange="runPoPostRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
-          <option value="refresh">Post aktualisieren</option>
-          <option value="copy_entries">Einträge übernehmen</option>
           ${row.archivedCount && !row.count
             ? `<option value="restore">Wiederherstellen</option>`
             : `<option value="delete">Löschen</option>`}
@@ -7409,11 +7296,6 @@ async function runPoPostRowAction(select, postKey){
     selectPoPostForReview(key);
     return;
   }
-  if(action === "refresh"){
-    selectPoPostForReview(key);
-    await queuePoPost();
-    return;
-  }
   if(action === "restore"){
     await restorePoPostEverywhere(key);
     return;
@@ -7426,7 +7308,9 @@ async function runPoPostRowAction(select, postKey){
 function renderPoSignupConfigRows(){
   const tbody = document.getElementById("poSignupConfigRows");
   if(!tbody) return;
-  const rows = poPostConfigGroups().filter(isPoSignupConfigGroup);
+  const rows = poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     return;
@@ -7443,10 +7327,7 @@ function renderPoSignupConfigRows(){
         <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
-          <option value="refresh">Post aktualisieren</option>
-          ${row.archivedCount && !row.count
-            ? `<option value="restore">Wiederherstellen</option>`
-            : `<option value="delete">Löschen</option>`}
+          <option value="archive">Archivieren</option>
         </select>
       </td>
     </tr>
@@ -7462,62 +7343,12 @@ async function runPoSignupRowAction(select, postKey){
     selectPoSignupForReview(key);
     return;
   }
-  if(action === "refresh"){
-    selectPoSignupForReview(key);
-    await createPoSignupPost();
-    return;
-  }
-  if(action === "copy_entries"){
-    selectPoSignupForReview(key);
-    await copyPoSignupEntriesInto(key);
-    return;
-  }
-  if(action === "restore"){
-    await restorePoPostEverywhere(key);
+  if(action === "archive"){
+    await archivePoSignupEverywhere(key);
     return;
   }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
-  }
-}
-
-async function copyPoSignupEntriesInto(targetPostKey){
-  const status = document.getElementById("poSignupStatus");
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  if(!masterCode){
-    if(status) status.textContent = "Bitte zuerst Mastercode eintragen.";
-    return;
-  }
-  const targetKey = String(targetPostKey || "").trim();
-  if(!targetKey) return;
-  const defaultSource = targetKey.includes("aq40") ? "aq40-po-anmelder-20260717-zeit-fan6" : "";
-  const sourceKey = window.prompt("Alte PO-Anmelder-ID, aus der die Einträge übernommen werden sollen:", defaultSource);
-  if(!sourceKey || !sourceKey.trim()) return;
-  const config = getPoSignupFormConfig();
-  try{
-    if(status) status.textContent = "PO-Einträge werden übernommen ...";
-    const result = await railwayWrite({
-      action:"guildCopyPoPostEntries",
-      masterCode,
-      fromPostKey:sourceKey.trim(),
-      toPostKey:targetKey,
-      sourceChannelId:config.sourceChannelId,
-      targetChannelId:config.targetChannelId,
-      targetSourceChannelId:config.sourceChannelId,
-      targetTargetChannelId:config.targetChannelId,
-      title:config.title,
-      raid:config.raid,
-      raidDate:config.raidDate,
-      raidTime:config.raidTime,
-      mode:config.mode || "signup",
-      itemOptions:config.itemOptions
-    });
-    if(!result.success) throw new Error(result.error || "PO-Einträge konnten nicht übernommen werden.");
-    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(result.copied || 0))} PO-Einträge übernommen. Der PO-Bot aktualisiert den Post gleich.</span>`;
-    await loadPoPostStoredEntries();
-    renderPoSignupReviewRows();
-  }catch(error){
-    if(status) status.textContent = error.message || "PO-Einträge konnten nicht übernommen werden.";
   }
 }
 
@@ -7555,7 +7386,7 @@ function setPoSignupFormConfig(config){
   setValue("poSignupDate", config.raidDate || "");
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
-  setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
+  setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
   if(source) source.value = config.sourceChannelId || "";
@@ -7754,6 +7585,43 @@ async function deletePoPostEverywhere(postKey){
     }
   }catch(error){
     if(status) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
+  }
+  renderPoPostConfigSelect();
+  await loadPoPostStoredEntries();
+}
+
+async function archivePoSignupEverywhere(postKey){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!key){
+    if(status) status.textContent = "Anmelde-ID fehlt.";
+    return;
+  }
+  if(!confirm(`PO-Anmelder "${key}" archivieren? Er verschwindet aus der Liste, bleibt aber in Railway als Backup gespeichert.`)){
+    return;
+  }
+  const group = poPostConfigGroups().find(item => item.postKey === key) || {};
+  writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
+  if(status) status.textContent = `PO-Anmelder ${key} wird archiviert ...`;
+  try{
+    if(masterCode){
+      const result = await railwayWrite({
+        action:"guildDeletePoPost",
+        masterCode,
+        postKey:key,
+        sourceChannelId:group.sourceChannelId || "",
+        targetChannelId:group.targetChannelId || "",
+        title:group.title || "PO-Anmelder",
+        raid:group.raid || ""
+      });
+      if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht archiviert werden.");
+      if(status) status.innerHTML = `<span class="good">PO-Anmelder archiviert. Backup bleibt in Railway gespeichert.</span>`;
+    }else if(status){
+      status.innerHTML = '<span class="warn">Lokal aus der Liste entfernt. Für Railway bitte Master-Code eingeben und erneut archivieren.</span>';
+    }
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Anmelder konnte nicht archiviert werden.";
   }
   renderPoPostConfigSelect();
   await loadPoPostStoredEntries();
@@ -9428,7 +9296,7 @@ function renderPoPostEntryRows(){
   if(!rows.length){
     const emptyText = poPostRaidFilter
       ? `Keine aktiven PO-Post-Einträge für ${poPostRaidFilter.toUpperCase()} gefunden.`
-      : "Noch keine aktiven PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.";
+      : "Noch keine aktiven PO-Post-Einträge gespeichert.";
     tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
     return;
   }
@@ -9991,7 +9859,7 @@ async function loadWorldbuffPanel(){
   content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days, source:"railway" });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
       return;
