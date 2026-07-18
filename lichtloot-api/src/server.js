@@ -3880,7 +3880,7 @@ async function savePoPostEntries({ guildId, query: params }) {
             ? { approvalStatus: "approved", approvedBy: "P0-Freigabeliste", approvedAt: new Date().toISOString() }
             : { approvalStatus: "pending", approvedBy: "", approvedAt: null }
         );
-      const resolvedClassName = clean(entry.className || entry.class_name || entry.klasse || approval.className || "");
+      const resolvedClassName = normalizeLichtLootClassName(entry.className || entry.class_name || entry.klasse || approval.className || "");
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
@@ -3976,8 +3976,8 @@ async function getPoPostEntries({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
-      className: row.class_name || "",
-      Klasse: row.class_name || "",
+      className: normalizeLichtLootClassName(row.class_name || ""),
+      Klasse: normalizeLichtLootClassName(row.class_name || ""),
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
@@ -4721,7 +4721,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const itemName = normalizePoItemName(params.item || params.itemName);
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName);
-  const className = clean(params.className || params.class || params.klasse);
+  const className = normalizeLichtLootClassName(params.className || params.class || params.klasse);
 
   if (!postKey || !sourceChannelId || !targetChannelId) {
     const error = new Error("PO-Post-Konfiguration fehlt.");
@@ -4799,7 +4799,7 @@ async function savePoPostEntry({ guildId, query: params }) {
         itemName,
         discordUserId,
         discordName,
-        className || character.class_name || ""
+        className || normalizeLichtLootClassName(character.class_name || "")
       ]
     );
     await client.query("commit");
@@ -4811,8 +4811,8 @@ async function savePoPostEntry({ guildId, query: params }) {
       raid: row.raid || "",
       title: row.title || "PO Liste",
       player: row.player_name || "",
-      className: row.class_name || "",
-      Klasse: row.class_name || "",
+      className: normalizeLichtLootClassName(row.class_name || ""),
+      Klasse: normalizeLichtLootClassName(row.class_name || ""),
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: row.discord_user_id || "",
       discordName: row.discord_name || "",
@@ -5047,7 +5047,7 @@ async function savePrio({ guildId, query: params }) {
              updated_at = now()
          where guild_id = $1
            and (external_raid_id = $2 or id::text = $2)
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, status`,
         [
           guildId,
           externalRaidId,
@@ -5072,7 +5072,7 @@ async function savePrio({ guildId, query: params }) {
          where guild_id = $1
            and raid_pin = $2
            and lower(raid_type) = any($8)
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, status`,
         [
           guildId,
           prioPin,
@@ -5097,7 +5097,7 @@ async function savePrio({ guildId, query: params }) {
              updated_at = now()
          where guild_id = $1
            and raid_pin = $2
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, status`,
         [
           guildId,
           prioPin,
@@ -5116,13 +5116,25 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
 
+    const previousPrio = await client.query(
+      `select comment
+       from prios
+       where raid_id = $1 and character_id = $2
+       limit 1`,
+      [raidResult.rows[0].id, character.id]
+    );
+    const previousMeta = commentMeta(previousPrio.rows[0]?.comment);
     const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
     const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
     const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
+    const p0Enabled = p0Plus === "ja" || p0Plus === "true";
+    const p0Item = p0Enabled ? (p1 || p2 || p3) : null;
     const comment = JSON.stringify({
-      p0Plus: p0Plus === "ja" || p0Plus === "true" ? "ja" : "nein",
-      raidTime: clean(params.raidTime || params.uhrzeit),
-      source: "railway"
+      ...previousMeta,
+      p0Plus: p0Enabled ? "ja" : "nein",
+      p0Item: p0Enabled ? (p0Item?.name || previousMeta.p0Item || "") : "",
+      raidTime: clean(params.raidTime || params.uhrzeit) || previousMeta.raidTime || raidResult.rows[0].raid_time || "",
+      source: previousMeta.source || "railway"
     });
 
     const prioResult = await client.query(
@@ -5139,13 +5151,28 @@ async function savePrio({ guildId, query: params }) {
     );
 
     await client.query("commit");
+    let poPostSync = null;
+    try {
+      poPostSync = await syncLichtLootPrioToPoSignupPost({
+        guildId,
+        raid: raidResult.rows[0],
+        character,
+        item: p0Item,
+        p0Plus: p0Enabled ? "ja" : "nein",
+        meta: previousMeta,
+        params
+      });
+    } catch (syncError) {
+      poPostSync = { success: false, error: syncError.message || String(syncError) };
+    }
     return {
       success: true,
       characterPin: normalizePin(pin),
       playerPin: normalizePin(pin),
       tempPin: normalizePin(pin),
       prioId: prioResult.rows[0].id,
-      raidId: raidResult.rows[0].external_raid_id || raidResult.rows[0].id
+      raidId: raidResult.rows[0].external_raid_id || raidResult.rows[0].id,
+      poPostSync
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -5158,7 +5185,7 @@ async function savePrio({ guildId, query: params }) {
 async function findOrCreateRaidleadCharacter(client, guildId, params) {
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
-  const className = clean(params.className || params.class || params.klasse);
+  const className = normalizeLichtLootClassName(params.className || params.class || params.klasse);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin || params.characterPin || params.masterCharacterPin);
 
   if (!player) {
@@ -5299,13 +5326,25 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     await client.query("begin");
 
     const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    const previousPrio = await client.query(
+      `select comment
+       from prios
+       where raid_id = $1 and character_id = $2
+       limit 1`,
+      [raid.id, character.id]
+    );
+    const previousMeta = commentMeta(previousPrio.rows[0]?.comment);
     const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
     const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
     const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
+    const p0Enabled = clean(params.p0Plus).toLowerCase() === "ja" || clean(params.p0Plus).toLowerCase() === "true";
+    const p0Item = p0Enabled ? (p1 || p2 || p3) : null;
     const comment = JSON.stringify({
-      p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
-      raidTime: clean(params.raidTime || params.uhrzeit) || raid.raid_time || "",
-      source: "raidlead"
+      ...previousMeta,
+      p0Plus: p0Enabled ? "ja" : "nein",
+      p0Item: p0Enabled ? (p0Item?.name || previousMeta.p0Item || "") : "",
+      raidTime: clean(params.raidTime || params.uhrzeit) || previousMeta.raidTime || raid.raid_time || "",
+      source: previousMeta.source || "raidlead"
     });
 
     const prioResult = await client.query(
@@ -5322,13 +5361,28 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     );
 
     await client.query("commit");
+    let poPostSync = null;
+    try {
+      poPostSync = await syncLichtLootPrioToPoSignupPost({
+        guildId,
+        raid,
+        character,
+        item: p0Item,
+        p0Plus: p0Enabled ? "ja" : "nein",
+        meta: previousMeta,
+        params
+      });
+    } catch (syncError) {
+      poPostSync = { success: false, error: syncError.message || String(syncError) };
+    }
     return {
       success: true,
       prioId: prioResult.rows[0].id,
       raidId: raidPublicId(raid),
       player: character.name,
       server: character.server,
-      className: character.class_name
+      className: normalizeLichtLootClassName(character.class_name),
+      poPostSync
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -5454,7 +5508,7 @@ async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
         playerPin: normalizePin(params.playerPin || params.pin || params.spielerLogin || params.characterPin || params.masterCharacterPin),
         spielerLogin: normalizePin(params.spielerLogin || params.playerPin || params.pin || params.characterPin || params.masterCharacterPin),
         player: entry.player,
-        className: entry.className || entry.Klasse || "",
+        className: normalizeLichtLootClassName(entry.className || entry.Klasse || ""),
         item: entry.item,
         discordUserId: entry.discordUserId,
         discordName: entry.discordName,
@@ -5657,6 +5711,169 @@ async function deleteStalePoSignupPrios({ guildId, raid, postKey, activeEntries 
   return cleaned;
 }
 
+async function normalizePoPostEntryClasses(guildId, postKey = "") {
+  await ensurePoPostEntriesSchema();
+  const values = [guildId];
+  const clauses = ["guild_id = $1", "archived_at is null"];
+  if (clean(postKey)) {
+    values.push(clean(postKey));
+    clauses.push(`post_key = $${values.length}`);
+  }
+
+  const result = await query(
+    `select id, class_name
+     from po_post_entries
+     where ${clauses.join(" and ")}`,
+    values
+  );
+
+  let updated = 0;
+  for (const row of result.rows || []) {
+    const normalized = normalizeLichtLootClassName(row.class_name || "");
+    if (normalized && normalized !== clean(row.class_name || "")) {
+      await query(
+        `update po_post_entries
+         set class_name = $2,
+             updated_at = now()
+         where id = $1`,
+        [row.id, normalized]
+      );
+      updated++;
+    }
+  }
+  return updated;
+}
+
+async function findPoSignupPostForRaid(client, guildId, raid, preferredPostKey = "") {
+  const postKey = clean(preferredPostKey);
+  if (postKey) {
+    const byKey = await client.query(
+      `select post_key, source_channel_id, target_channel_id, discord_message_id, raid, title
+       from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and archived_at is null
+       order by updated_at desc
+       limit 1`,
+      [guildId, postKey]
+    );
+    if (byKey.rows[0]) return byKey.rows[0];
+  }
+
+  const raidType = normalizeRaidType(raid?.raid_type || raid?.raid || raid?.name || "");
+  const raidKeys = raidTypeSearchValues(raidType).map(value => clean(value).toLowerCase()).filter(Boolean);
+  if (!raidKeys.length) return null;
+
+  const byRaid = await client.query(
+    `select post_key, source_channel_id, target_channel_id, discord_message_id, raid, title
+     from po_post_entries
+     where guild_id = $1
+       and lower(raid) = any($2)
+       and archived_at is null
+     order by updated_at desc
+     limit 1`,
+    [guildId, raidKeys]
+  );
+  return byRaid.rows[0] || null;
+}
+
+async function syncLichtLootPrioToPoSignupPost({ guildId, raid, character, item, p0Plus, meta = {}, params = {} }) {
+  await ensurePoPostEntriesSchema();
+  const enabled = ["ja", "true", "1", "yes"].includes(clean(p0Plus).toLowerCase());
+  const preferredPostKey = clean(meta.poPostKey || meta.postKey || meta.poPostId || params.poPostKey || params.postKey || params.postId);
+  const playerName = clean(character?.name || params.player || params.char || params.spieler);
+  const itemName = normalizePoItemName(item?.name || params.p0Item || meta.p0Item || "");
+  if (!playerName) return { skipped: true, reason: "player_missing" };
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const post = await findPoSignupPostForRaid(client, guildId, raid, preferredPostKey);
+    if (!post?.post_key) {
+      await client.query("commit");
+      return { skipped: true, reason: "po_post_not_found" };
+    }
+
+    const existing = await client.query(
+      `select *
+       from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
+         and archived_at is null
+       order by updated_at desc
+       limit 1`,
+      [guildId, post.post_key, playerName]
+    );
+    const previous = existing.rows[0] || {};
+
+    const deleteResult = await client.query(
+      `delete from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
+         and archived_at is null`,
+      [guildId, post.post_key, playerName]
+    );
+
+    let saved = 0;
+    if (enabled && itemName) {
+      await client.query(
+        `insert into po_post_entries (
+           guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+           raid, title, player_name, item_name, discord_user_id, discord_name, class_name,
+           po_message_id, po_created_at, approval_status, approved_by, approved_at,
+           luck_by, luck_by_discord_id, luck_at
+         )
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,now(),$14,$15,$16,$17,$18,$19)`,
+        [
+          guildId,
+          post.post_key,
+          previous.source_channel_id || post.source_channel_id || "",
+          previous.target_channel_id || post.target_channel_id || post.source_channel_id || "",
+          previous.discord_message_id || post.discord_message_id || "",
+          previous.raid || post.raid || normalizeRaidType(raid?.raid_type || raid?.raid || ""),
+          previous.title || post.title || `${displayRaidName(raid?.raid_type || post.raid)} PO-Anmelder`,
+          playerName,
+          itemName,
+          previous.discord_user_id || clean(params.discordUserId || meta.discordUserId),
+          previous.discord_name || clean(params.discordName || meta.discordName),
+          normalizeLichtLootClassName(character?.class_name || params.className || params.class || params.klasse),
+          previous.po_message_id || "",
+          previous.approval_status || "pending",
+          previous.approved_by || "",
+          previous.approved_at || null,
+          previous.luck_by || "",
+          previous.luck_by_discord_id || "",
+          previous.luck_at || null
+        ]
+      );
+      saved = 1;
+    }
+
+    await client.query("commit");
+
+    const payload = {
+      postKey: post.post_key,
+      sourceChannelId: previous.source_channel_id || post.source_channel_id || "",
+      targetChannelId: previous.target_channel_id || post.target_channel_id || post.source_channel_id || "",
+      messageId: previous.discord_message_id || post.discord_message_id || clean(params.discordMessageId || params.messageId || ""),
+      discordMessageId: previous.discord_message_id || post.discord_message_id || clean(params.discordMessageId || params.messageId || ""),
+      raid: previous.raid || post.raid || normalizeRaidType(raid?.raid_type || raid?.raid || ""),
+      title: previous.title || post.title || `${displayRaidName(raid?.raid_type || post.raid)} PO-Anmelder`,
+      source: "lichtloot_prio_sync",
+      queuedAt: new Date().toISOString()
+    };
+    await enqueueBotUpdate({ guildId, type: "po_post", payload });
+    return { success: true, postKey: post.post_key, saved, deleted: deleteResult.rowCount || 0 };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function syncPoPostEntriesToPrios({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -5673,6 +5890,7 @@ async function syncPoPostEntriesToPrios({ guildId, query: params }) {
     error.statusCode = 400;
     throw error;
   }
+  const classRowsNormalized = await normalizePoPostEntryClasses(guildId, postKey);
 
   const entriesResult = await query(
     `select player_name, class_name, item_name, discord_user_id, discord_name
@@ -5688,7 +5906,7 @@ async function syncPoPostEntriesToPrios({ guildId, query: params }) {
   const entries = entriesResult.rows
     .map(row => ({
       player: clean(row.player_name),
-      className: clean(row.class_name),
+      className: normalizeLichtLootClassName(row.class_name),
       item: normalizePoItemName(row.item_name || ""),
       discordUserId: clean(row.discord_user_id),
       discordName: clean(row.discord_name)
@@ -5735,6 +5953,7 @@ async function syncPoPostEntriesToPrios({ guildId, query: params }) {
     success: true,
     postKey,
     total: entries.length,
+    classRowsNormalized,
     synced: synced.length,
     staleDeleted: staleCleaned.filter(entry => entry.deleted).length,
     staleCleared: staleCleaned.filter(entry => entry.cleared).length,
@@ -6170,6 +6389,43 @@ function normalizeRpbClassName(value) {
     warrior: "Warrior"
   };
   return aliases[lower] || (rpbClassOrder.includes(text) ? text : "");
+}
+
+function classAliasKey(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeLichtLootClassName(value) {
+  const text = clean(value);
+  if (!text || /^unknown$/i.test(text) || /^player$/i.test(text)) return "";
+  const aliases = {
+    warrior: "Krieger",
+    krieger: "Krieger",
+    priest: "Priester",
+    priester: "Priester",
+    mage: "Magier",
+    magier: "Magier",
+    paladin: "Paladin",
+    rogue: "Schurke",
+    schurke: "Schurke",
+    schurken: "Schurke",
+    hunter: "Jäger",
+    jaeger: "Jäger",
+    jager: "Jäger",
+    druid: "Druide",
+    druide: "Druide",
+    shaman: "Schamane",
+    schamane: "Schamane",
+    schamanen: "Schamane",
+    warlock: "Hexenmeister",
+    hexenmeister: "Hexenmeister",
+    hexer: "Hexenmeister"
+  };
+  return aliases[classAliasKey(text)] || text;
 }
 
 function playerActorsFromReport(report) {
