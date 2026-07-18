@@ -4346,6 +4346,136 @@ async function setPoPostEntryLuck({ guildId, query: params }) {
   };
 }
 
+async function copyPoPostEntries({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const fromPostKey = clean(params.fromPostKey || params.sourcePostKey || params.oldPostKey || params.oldId || params.fromId);
+  const toPostKey = clean(params.toPostKey || params.targetPostKey || params.newPostKey || params.newId || params.toId || params.postKey);
+  const targetSourceChannelId = clean(params.targetSourceChannelId || params.toSourceChannelId || params.sourceChannelId || "");
+  const targetTargetChannelId = clean(params.targetTargetChannelId || params.toTargetChannelId || params.targetChannelId || "");
+  const title = clean(params.title);
+  const raid = normalizeRaidType(params.raid || params.raidName).toUpperCase();
+
+  if (!fromPostKey || !toPostKey) {
+    const error = new Error("Alte und neue PO-Post-ID fehlen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (fromPostKey === toPostKey) {
+    const error = new Error("Quelle und Ziel sind identisch.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const sourceResult = await client.query(
+      `select *
+       from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and archived_at is null
+       order by updated_at asc, lower(player_name) asc, lower(item_name) asc`,
+      [guildId, fromPostKey]
+    );
+    const rows = sourceResult.rows || [];
+    if (!rows.length) {
+      const error = new Error("Keine aktiven PO-Einträge für die alte Post-ID gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const targetGroups = new Set();
+    for (const row of rows) {
+      const sourceChannelId = targetSourceChannelId || row.source_channel_id || "";
+      const targetChannelId = targetTargetChannelId || row.target_channel_id || sourceChannelId;
+      if (!sourceChannelId || !targetChannelId) continue;
+      targetGroups.add(`${sourceChannelId}|${targetChannelId}`);
+    }
+    for (const groupKey of targetGroups) {
+      const [sourceChannelId, targetChannelId] = groupKey.split("|");
+      await client.query(
+        `delete from po_post_entries
+         where guild_id = $1
+           and post_key = $2
+           and source_channel_id = $3
+           and target_channel_id = $4
+           and archived_at is null`,
+        [guildId, toPostKey, sourceChannelId, targetChannelId]
+      );
+    }
+
+    let copied = 0;
+    for (const row of rows) {
+      const sourceChannelId = targetSourceChannelId || row.source_channel_id || "";
+      const targetChannelId = targetTargetChannelId || row.target_channel_id || sourceChannelId;
+      if (!sourceChannelId || !targetChannelId) continue;
+      await client.query(
+        `insert into po_post_entries (
+           guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+           raid, title, player_name, item_name, discord_user_id, discord_name, class_name,
+           po_message_id, po_created_at, approval_status, approved_by, approved_at,
+           luck_by, luck_by_discord_id, luck_at, archived_at, updated_at
+         )
+         values ($1,$2,$3,$4,'',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,null,now())`,
+        [
+          guildId,
+          toPostKey,
+          sourceChannelId,
+          targetChannelId,
+          raid || row.raid || "",
+          title || row.title || "PO-Anmelder",
+          row.player_name || "",
+          normalizePoItemName(row.item_name || ""),
+          row.discord_user_id || "",
+          row.discord_name || "",
+          row.class_name || "",
+          row.po_message_id || "",
+          row.po_created_at || row.updated_at || null,
+          row.approval_status || "pending",
+          row.approved_by || "",
+          row.approved_at || null,
+          row.luck_by || "",
+          row.luck_by_discord_id || "",
+          row.luck_at || null
+        ]
+      );
+      copied += 1;
+    }
+    await client.query("commit");
+
+    await Promise.all([...targetGroups].map(groupKey => {
+      const [sourceChannelId, targetChannelId] = groupKey.split("|");
+      return enqueueBotUpdate({
+        guildId,
+        type: "po_post",
+        payload: {
+          postKey: toPostKey,
+          sourceChannelId,
+          targetChannelId,
+          title: title || rows[0]?.title || "PO-Anmelder",
+          raid: raid || rows[0]?.raid || "",
+          raidDate: clean(params.raidDate || params.date || params.datum),
+          raidTime: clean(params.raidTime || params.time || params.uhrzeit),
+          mode: clean(params.mode || params.poMode) || "signup",
+          itemOptions: clean(params.itemOptions || params.items || params.itemList),
+          source: "po_copy",
+          copiedFromPostKey: fromPostKey,
+          queuedAt: new Date().toISOString()
+        }
+      });
+    })).catch(error => console.warn("PO-Post konnte nach Kopieren nicht queued werden:", error.message || error));
+
+    return { success: true, copied, fromPostKey, toPostKey };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function deletePoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -13958,6 +14088,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildCopyPoPostEntries" || action === "lichtbotCopyPoPostEntries" || action === "copyPoPostEntries") {
+      const copied = await copyPoPostEntries({ guildId: guild.id, query: req.query });
+      return res.json({ ...copied, guild: guild.slug });
+    }
+
     if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {
       const deleted = await deletePoPost({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
@@ -14225,6 +14360,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSetPoPostLuck" || action === "setPoPostEntryLuck") {
       const saved = await setPoPostEntryLuck({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildCopyPoPostEntries" || action === "lichtbotCopyPoPostEntries" || action === "copyPoPostEntries") {
+      const copied = await copyPoPostEntries({ guildId: guild.id, query: postParams });
+      return res.json({ ...copied, guild: guild.slug });
     }
 
     if (action === "guildDeletePoPost" || action === "lichtbotDeletePoPost" || action === "deletePoPost") {

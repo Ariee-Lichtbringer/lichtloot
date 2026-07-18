@@ -7387,6 +7387,7 @@ function renderPoPostConfigRows(){
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
           <option value="refresh">Post aktualisieren</option>
+          <option value="copy_entries">Einträge übernehmen</option>
           ${row.archivedCount && !row.count
             ? `<option value="restore">Wiederherstellen</option>`
             : `<option value="delete">Löschen</option>`}
@@ -7466,12 +7467,57 @@ async function runPoSignupRowAction(select, postKey){
     await createPoSignupPost();
     return;
   }
+  if(action === "copy_entries"){
+    selectPoSignupForReview(key);
+    await copyPoSignupEntriesInto(key);
+    return;
+  }
   if(action === "restore"){
     await restorePoPostEverywhere(key);
     return;
   }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
+  }
+}
+
+async function copyPoSignupEntriesInto(targetPostKey){
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    if(status) status.textContent = "Bitte zuerst Mastercode eintragen.";
+    return;
+  }
+  const targetKey = String(targetPostKey || "").trim();
+  if(!targetKey) return;
+  const defaultSource = targetKey.includes("aq40") ? "aq40-po-anmelder-20260717-zeit-fan6" : "";
+  const sourceKey = window.prompt("Alte PO-Anmelder-ID, aus der die Einträge übernommen werden sollen:", defaultSource);
+  if(!sourceKey || !sourceKey.trim()) return;
+  const config = getPoSignupFormConfig();
+  try{
+    if(status) status.textContent = "PO-Einträge werden übernommen ...";
+    const result = await railwayWrite({
+      action:"guildCopyPoPostEntries",
+      masterCode,
+      fromPostKey:sourceKey.trim(),
+      toPostKey:targetKey,
+      sourceChannelId:config.sourceChannelId,
+      targetChannelId:config.targetChannelId,
+      targetSourceChannelId:config.sourceChannelId,
+      targetTargetChannelId:config.targetChannelId,
+      title:config.title,
+      raid:config.raid,
+      raidDate:config.raidDate,
+      raidTime:config.raidTime,
+      mode:config.mode || "signup",
+      itemOptions:config.itemOptions
+    });
+    if(!result.success) throw new Error(result.error || "PO-Einträge konnten nicht übernommen werden.");
+    if(status) status.innerHTML = `<span class="good">${escapeHtml(String(result.copied || 0))} PO-Einträge übernommen. Der PO-Bot aktualisiert den Post gleich.</span>`;
+    await loadPoPostStoredEntries();
+    renderPoSignupReviewRows();
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Einträge konnten nicht übernommen werden.";
   }
 }
 
