@@ -3768,6 +3768,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <select id="poSignupTargetChannel" onchange="updatePoSignupPreview()"></select>
               </div>
             </div>
+            <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
+              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
+              <span>
+                <strong>LichtLoot-ID erstellen</strong>
+                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
+              </span>
+            </label>
             <div class="field">
               <label for="poSignupItems">Items für das Auswahlmenü</label>
               <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
@@ -4114,6 +4121,7 @@ const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
+let poSignupGeneratedLichtlootRaid = null;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -6859,6 +6867,7 @@ function updatePoSignupDefaults(overwriteTitle=true){
 }
 
 function updatePoSignupPreview(){
+  resetPoSignupLichtlootRaidIfStale();
   const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
   const raid = document.getElementById("poSignupRaid")?.value || "";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
@@ -7066,6 +7075,7 @@ function getPoSignupConfig(){
     setValue("poSignupPostKey", postKey);
   }
   const sourceChannelId = document.getElementById("poSignupSourceChannel")?.value || "";
+  const prio = poSignupGeneratedLichtlootRaid;
   return {
     postKey,
     sourceChannelId,
@@ -7078,8 +7088,138 @@ function getPoSignupConfig(){
     limit:"800",
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
-    itemOptions:poSignupItemLines().join("\n")
+    itemOptions:poSignupItemLines().join("\n"),
+    createLichtlootRaid: Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked),
+    lichtlootRaidId: prio?.raidId || "",
+    lichtlootPlayerPin: prio?.playerPin || "",
+    lichtlootLeadPin: prio?.leadPin || ""
   };
+}
+
+function poSignupLichtlootFingerprint(config){
+  return [
+    poSignupNormalizeRaid(config?.raid || ""),
+    config?.raidDate || "",
+    config?.raidTime || "",
+    config?.postKey || ""
+  ].join("|");
+}
+
+function poSignupLichtlootCreatorName(){
+  const recipient = document.getElementById("poSignupReviewRecipient")?.value.trim();
+  return recipient || "Gildenleitung";
+}
+
+function resetPoSignupLichtlootRaidIfStale(){
+  if(!poSignupGeneratedLichtlootRaid) return;
+  const config = getPoSignupConfig();
+  if(poSignupGeneratedLichtlootRaid.fingerprint !== poSignupLichtlootFingerprint(config)){
+    poSignupGeneratedLichtlootRaid = null;
+  }
+}
+
+async function ensurePoSignupLichtlootRaid(config, options={}){
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const checked = Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked);
+  if(!checked) return config;
+  if(!masterCode) throw new Error("Bitte erst Master-Code eingeben.");
+  if(!config.raidDate || !config.raidTime) throw new Error("Bitte Raid-Datum und Raid-Uhrzeit eintragen.");
+
+  const fingerprint = poSignupLichtlootFingerprint(config);
+  if(poSignupGeneratedLichtlootRaid?.fingerprint === fingerprint && poSignupGeneratedLichtlootRaid.playerPin){
+    const reusedText = buildRaidDiscordPostText(
+      RAID_OPTIONS[config.raid]?.name || config.title || config.raid,
+      config.raidDate,
+      config.raidTime,
+      getCurrentGuildBrand().guildName,
+      poSignupGeneratedLichtlootRaid.playerPin,
+      poSignupGeneratedLichtlootRaid.createdBy
+    );
+    setValue("poSignupNote", reusedText);
+    updatePoSignupPreview();
+    return Object.assign({}, config, {
+      note:reusedText,
+      lichtlootRaidId:poSignupGeneratedLichtlootRaid.raidId,
+      lichtlootPlayerPin:poSignupGeneratedLichtlootRaid.playerPin,
+      lichtlootLeadPin:poSignupGeneratedLichtlootRaid.leadPin || ""
+    });
+  }
+
+  const raidKey = poSignupNormalizeRaid(config.raid || "aq40") || "aq40";
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
+  const raidName = raid.name || config.title || raidKey.toUpperCase();
+  const playerPin = randomCode(3);
+  const leadPin = randomCode(4);
+  const raidId = createRaidIdForGuildPage(raidKey);
+  const createdBy = poSignupLichtlootCreatorName();
+
+  if(status && !options.silent){
+    status.textContent = "LichtLoot-Prio-ID wird erstellt ...";
+    status.className = "status";
+  }
+
+  const result = await railwayWrite({
+    action:"createRaid",
+    masterCode,
+    raidId,
+    raid:raidKey,
+    raidName,
+    raidDate:config.raidDate,
+    raidTime:config.raidTime,
+    datum:config.raidDate,
+    uhrzeit:config.raidTime,
+    guild:CURRENT_GUILD_SLUG,
+    gilde:getCurrentGuildBrand().guildName,
+    guildName:getCurrentGuildBrand().guildName,
+    displayGuild:getCurrentGuildBrand().guildName,
+    playerPin,
+    leadPin,
+    status:"geschlossen",
+    p0PlusFreigabe:"geöffnet",
+    createdBy,
+    erstelltVon:createdBy,
+    raidHelperEnabled:"false",
+    description:config.note || ""
+  });
+  if(!result.success){
+    throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
+  }
+
+  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, playerPin, createdBy);
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId, playerPin, leadPin, createdBy };
+  setValue("poSignupNote", note);
+  updatePoSignupPreview();
+  if(status && !options.silent){
+    status.innerHTML = `<span class="good">LichtLoot-Prio-ID erstellt. Prio-PIN: <strong>${escapeHtml(playerPin)}</strong></span>`;
+    status.className = "status good";
+  }
+  return Object.assign({}, config, {
+    note,
+    lichtlootRaidId:raidId,
+    lichtlootPlayerPin:playerPin,
+    lichtlootLeadPin:leadPin
+  });
+}
+
+async function handlePoSignupPrioOptionChange(){
+  const checkbox = document.getElementById("poSignupCreateLichtlootRaid");
+  const status = document.getElementById("poSignupStatus");
+  if(!checkbox?.checked){
+    poSignupGeneratedLichtlootRaid = null;
+    updatePoSignupPreview();
+    return;
+  }
+  try{
+    let config = getPoSignupConfig();
+    config = await ensurePoSignupLichtlootRaid(config);
+  }catch(error){
+    if(status){
+      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+      status.className = "status bad";
+    }
+    if(checkbox) checkbox.checked = false;
+  }
 }
 
 function poPostEntryRowsForKey(postKey){
@@ -7148,7 +7288,7 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote","poSignupCreateLichtlootRaid"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -7387,6 +7527,15 @@ function setPoSignupFormConfig(config){
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
+  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
+  poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
+    fingerprint:poSignupLichtlootFingerprint(config),
+    raidId:config.lichtlootRaidId || "",
+    playerPin:config.lichtlootPlayerPin || "",
+    leadPin:config.lichtlootLeadPin || "",
+    createdBy:config.createdBy || config.erstelltVon || poSignupLichtlootCreatorName()
+  } : null;
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
   if(source) source.value = config.sourceChannelId || "";
@@ -7696,6 +7845,17 @@ async function createPoSignupPost(){
     if(status) status.textContent = "Bitte Raid-Datum und Raid-Uhrzeit eintragen.";
     return;
   }
+  if(config.createLichtlootRaid){
+    try{
+      config = await ensurePoSignupLichtlootRaid(config);
+    }catch(error){
+      if(status){
+        status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+        status.className = "status bad";
+      }
+      return;
+    }
+  }
   if(!config.itemOptions){
     if(status) status.textContent = "Itemliste wird automatisch aus LichtLoot geladen ...";
     config = await ensurePoSignupItemOptions(config);
@@ -7734,7 +7894,11 @@ async function createPoSignupPost(){
       limit: config.limit,
       mode: config.mode,
       note: config.note,
-      itemOptions: config.itemOptions
+      itemOptions: config.itemOptions,
+      createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
+      lichtlootRaidId: config.lichtlootRaidId || "",
+      lichtlootPlayerPin: config.lichtlootPlayerPin || "",
+      lichtlootLeadPin: config.lichtlootLeadPin || ""
     });
     if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht queued werden.");
     if(status){
@@ -7753,9 +7917,13 @@ function newPoSignupConfig(){
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
   setValue("poSignupTitle", `${label} PO-Anmelder`);
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
+  setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
+  if(prioCheckbox) prioCheckbox.checked = false;
+  poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
   renderPoSignupConfigRows();
