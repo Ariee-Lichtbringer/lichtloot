@@ -5143,8 +5143,8 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
   const className = clean(params.className || params.class || params.klasse);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin || params.characterPin || params.masterCharacterPin);
 
-  if (!player || !className) {
-    const error = new Error("Spieler oder Klasse fehlt.");
+  if (!player) {
+    const error = new Error("Spieler fehlt.");
     error.statusCode = 400;
     throw error;
   }
@@ -5211,6 +5211,12 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
       return updated.rows[0];
     }
     return character;
+  }
+
+  if (!className) {
+    const error = new Error("Klasse fehlt und der Charakter wurde in LichtLoot nicht gefunden.");
+    error.statusCode = 400;
+    throw error;
   }
 
   let createdPlayer = null;
@@ -5379,11 +5385,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
     const prioResult = await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = prios.p2_item_id,
-             p3_item_id = prios.p3_item_id,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()
        returning id`,
@@ -11668,11 +11674,11 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
     await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = null,
-             p3_item_id = null,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()`,
       [raid.id, character.id, item.id, comment]
