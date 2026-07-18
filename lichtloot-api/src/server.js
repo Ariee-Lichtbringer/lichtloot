@@ -13290,7 +13290,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "naxx-po-item-alias-cleanup-v1";
+  const markerKey = "naxx-po-item-alias-cleanup-v2";
   const raidTypes = raidTypeSearchValues("naxx").map(value => value.toLowerCase());
   const corrections = [
     {
@@ -13337,6 +13337,9 @@ async function applyNaxxPoItemAliasCleanupOnce() {
     let renamedItems = 0;
     let rewrittenComments = 0;
     let removedDuplicateP0PlusRows = 0;
+    let mergedDuplicatePrioGroups = 0;
+    let removedDuplicatePrioRows = 0;
+    let movedDuplicateP0PlusRows = 0;
 
     for (const correction of corrections) {
       const targetKey = itemLookupKey(correction.targetName);
@@ -13419,6 +13422,116 @@ async function applyNaxxPoItemAliasCleanupOnce() {
       removedDuplicateP0PlusRows += deduped.rowCount;
     }
 
+    const duplicatePrioGroups = await client.query(
+      `select
+         r.id as raid_id,
+         lower(trim(c.name)) as character_key,
+         lower(coalesce(trim(c.server), '')) as server_key,
+         array_agg(pr.id order by
+           ((case when pr.p1_item_id is not null then 1 else 0 end) +
+            (case when pr.p2_item_id is not null then 1 else 0 end) +
+            (case when pr.p3_item_id is not null then 1 else 0 end)) desc,
+           case when pr.comment is not null and pr.comment <> '' then 1 else 0 end desc,
+           pr.updated_at desc nulls last,
+           pr.created_at desc nulls last
+         ) as prio_ids,
+         array_agg(pr.character_id order by
+           ((case when pr.p1_item_id is not null then 1 else 0 end) +
+            (case when pr.p2_item_id is not null then 1 else 0 end) +
+            (case when pr.p3_item_id is not null then 1 else 0 end)) desc,
+           case when pr.comment is not null and pr.comment <> '' then 1 else 0 end desc,
+           pr.updated_at desc nulls last,
+           pr.created_at desc nulls last
+         ) as character_ids
+       from prios pr
+       join raids r on r.id = pr.raid_id
+       join characters c on c.id = pr.character_id
+       where lower(r.raid_type) = any($1)
+         and nullif(trim(c.name), '') is not null
+       group by r.id, lower(trim(c.name)), lower(coalesce(trim(c.server), ''))
+       having count(*) > 1`,
+      [raidTypes]
+    );
+
+    for (const group of duplicatePrioGroups.rows || []) {
+      const prioIds = Array.isArray(group.prio_ids) ? group.prio_ids.filter(Boolean) : [];
+      const characterIds = Array.isArray(group.character_ids) ? group.character_ids.filter(Boolean) : [];
+      if (prioIds.length < 2 || !characterIds.length) continue;
+
+      const keepPrioId = prioIds[0];
+      const keepCharacterId = characterIds[0];
+      const duplicateCharacterIds = [...new Set(characterIds.slice(1).filter(id => id !== keepCharacterId))];
+
+      const mergeRowsResult = await client.query(
+        `select id, p1_item_id, p2_item_id, p3_item_id, comment, bench
+         from prios
+         where id = any($1::uuid[])`,
+        [prioIds]
+      );
+      const rows = mergeRowsResult.rows || [];
+      const keep = rows.find(row => String(row.id) === String(keepPrioId)) || rows[0] || {};
+      const pickItem = key => keep[key] || (rows.find(row => row[key]) || {})[key] || null;
+      const pickText = key => clean(keep[key]) || clean((rows.find(row => clean(row[key])) || {})[key]);
+
+      if (duplicateCharacterIds.length) {
+        const movedP0Plus = await client.query(
+          `update p0plus_points
+           set character_id = $1
+           where character_id = any($2::uuid[])`,
+          [keepCharacterId, duplicateCharacterIds]
+        );
+        movedDuplicateP0PlusRows += movedP0Plus.rowCount;
+      }
+
+      await client.query(
+        `update prios
+         set p1_item_id = $2,
+             p2_item_id = $3,
+             p3_item_id = $4,
+             comment = nullif($5, ''),
+             bench = $6,
+             updated_at = now()
+         where id = $1`,
+        [
+          keepPrioId,
+          pickItem("p1_item_id"),
+          pickItem("p2_item_id"),
+          pickItem("p3_item_id"),
+          pickText("comment"),
+          pickText("bench")
+        ]
+      );
+
+      const deletedDuplicatePrios = await client.query(
+        `delete from prios
+         where id = any($1::uuid[])
+           and id <> $2`,
+        [prioIds, keepPrioId]
+      );
+      removedDuplicatePrioRows += deletedDuplicatePrios.rowCount;
+
+      const dedupedMovedP0Plus = await client.query(
+        `delete from p0plus_points pp
+         using (
+           select ctid
+           from (
+             select ctid,
+                    row_number() over (
+                      partition by guild_id, character_id, item_id, source, coalesce(note, '')
+                      order by ctid
+                    ) as rn
+             from p0plus_points
+             where character_id = $1
+           ) ranked
+           where rn > 1
+         ) duplicate_rows
+         where pp.ctid = duplicate_rows.ctid`,
+        [keepCharacterId]
+      );
+      removedDuplicateP0PlusRows += dedupedMovedP0Plus.rowCount;
+      mergedDuplicatePrioGroups += 1;
+    }
+
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
@@ -13431,13 +13544,16 @@ async function applyNaxxPoItemAliasCleanupOnce() {
           removedDuplicateItems,
           renamedItems,
           rewrittenComments,
-          removedDuplicateP0PlusRows
+          removedDuplicateP0PlusRows,
+          mergedDuplicatePrioGroups,
+          removedDuplicatePrioRows,
+          movedDuplicateP0PlusRows
         })
       ]
     );
     await client.query("commit");
     console.log(
-      `Naxx-PO-Item-Dubletten bereinigt: ${removedDuplicateItems} Items entfernt, ${movedReferences} Referenzen verschoben`
+      `Naxx-PO-Item-Dubletten bereinigt: ${removedDuplicateItems} Items entfernt, ${movedReferences} Referenzen verschoben, ${mergedDuplicatePrioGroups} Prio-Gruppen zusammengeführt`
     );
   } catch (error) {
     await client.query("rollback").catch(() => {});
