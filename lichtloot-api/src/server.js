@@ -4311,6 +4311,21 @@ async function deletePoPostEntry({ guildId, query: params }) {
     values
   );
 
+  const prioCleanup = [];
+  for (const row of result.rows || []) {
+    const cleanup = await deletePoSignupPrioForEntry({
+      guildId,
+      params,
+      postKey: row.post_key || postKey,
+      entry: {
+        player: row.player_name || playerName,
+        item: row.item_name || itemName,
+        server
+      }
+    });
+    prioCleanup.push(cleanup);
+  }
+
   const payloads = new Map();
   for (const row of result.rows || []) {
     const key = [row.post_key, row.source_channel_id, row.target_channel_id].join("|");
@@ -4334,6 +4349,9 @@ async function deletePoPostEntry({ guildId, query: params }) {
   return {
     success: true,
     deleted: result.rowCount || 0,
+    priosDeleted: prioCleanup.filter(entry => entry?.deleted).length,
+    priosCleared: prioCleanup.filter(entry => entry?.cleared).length,
+    prioCleanup,
     queued: payloads.size,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",
@@ -5374,10 +5392,12 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       [raid.id, character.id]
     );
     const previousMeta = commentMeta(existing.rows[0]?.comment);
+    const poPostKey = clean(params.postKey || params.poPostKey || params.postId || previousMeta.poPostKey || previousMeta.postKey);
     const comment = JSON.stringify({
       ...previousMeta,
       p0Plus: "ja",
       p0Item: item.name,
+      poPostKey,
       raidTime: raid.raid_time || clean(params.raidTime || params.uhrzeit),
       source: "po-bot",
       discordUserId
@@ -5475,6 +5495,168 @@ async function autoSyncPoSignupEntriesToPrios({ guildId, params, entries }) {
   };
 }
 
+function poSignupPrioEntryKey(player, item) {
+  return `${poItemAliasKey(player)}|${poItemAliasKey(normalizePoItemName(item))}`;
+}
+
+async function findPoSignupItemForRaid(guildId, raid, itemName) {
+  const variants = poItemAliasVariants(itemName);
+  if (!variants.length) return null;
+  const values = [raidTypeSearchValues(normalizeRaidType(raid.raid_type || ""))];
+  const clauses = [];
+  for (const variant of variants) {
+    values.push(variant);
+    clauses.push(`regexp_replace(lower(name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  }
+  const result = await query(
+    `select id, name
+     from items
+     where lower(raid_type) = any($1)
+       and (${clauses.join(" or ")})
+     order by case when item_id is null then 1 else 0 end, created_at asc
+     limit 1`,
+    values
+  );
+  return result.rows[0] || null;
+}
+
+async function findPoSignupCharacter(guildId, playerName, server = "") {
+  if (!clean(playerName)) return null;
+  const result = await query(
+    `select c.id, c.name, c.server, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($2), '[^a-z0-9]+', '', 'g')
+     order by
+       case when $3 <> '' and lower(c.server) = lower($3) then 0 else 1 end,
+       c.is_main desc,
+       c.created_at asc
+     limit 1`,
+    [guildId, playerName, clean(server)]
+  );
+  return result.rows[0] || null;
+}
+
+function poSignupPrioWasImported(meta) {
+  const source = clean(meta.source).toLowerCase();
+  return clean(meta.p0Plus).toLowerCase() === "ja" && (!source || source === "po-bot" || source === "discord-p0" || source === "po-anmelder");
+}
+
+function poSignupPrioPostMatches(meta, postKey) {
+  const metaPostKey = clean(meta.poPostKey || meta.postKey || meta.poPostId);
+  return !clean(postKey) || !metaPostKey || metaPostKey === clean(postKey);
+}
+
+async function clearOrDeleteImportedPoSignupPrio(prioRow, itemId) {
+  const allSlotsArePoItem = [prioRow.p1_item_id, prioRow.p2_item_id, prioRow.p3_item_id]
+    .every(id => clean(id) === clean(itemId));
+  if (allSlotsArePoItem) {
+    await query(`delete from prios where id = $1`, [prioRow.id]);
+    return { deleted: true };
+  }
+
+  const meta = commentMeta(prioRow.comment);
+  const nextMeta = {
+    ...meta,
+    p0Plus: "nein",
+    p0Item: ""
+  };
+  await query(
+    `update prios
+     set comment = $2,
+         updated_at = now()
+     where id = $1`,
+    [prioRow.id, JSON.stringify(nextMeta)]
+  );
+  return { cleared: true };
+}
+
+async function deletePoSignupPrioForEntry({ guildId, params, postKey, entry }) {
+  const raidPin = poSignupPrioPinFromParams(params);
+  if (!raidPin) return { skipped: true, reason: "missing_lichtloot_pin" };
+
+  const raid = await findRaid(guildId, {
+    ...params,
+    prioPin: raidPin,
+    playerPin: raidPin
+  });
+  if (!raid) return { skipped: true, reason: "raid_not_found" };
+
+  const character = await findPoSignupCharacter(guildId, entry.player, entry.server || params.server);
+  if (!character) return { skipped: true, reason: "character_not_found", player: entry.player };
+
+  const item = await findPoSignupItemForRaid(guildId, raid, entry.item);
+  if (!item) return { skipped: true, reason: "item_not_found", item: entry.item };
+
+  const prioResult = await query(
+    `select id, p1_item_id, p2_item_id, p3_item_id, comment
+     from prios
+     where raid_id = $1
+       and character_id = $2
+     limit 1`,
+    [raid.id, character.id]
+  );
+  const prio = prioResult.rows[0];
+  if (!prio) return { skipped: true, reason: "prio_not_found", player: character.name, item: item.name };
+
+  const meta = commentMeta(prio.comment);
+  const metaItem = normalizePoItemName(meta.p0Item || item.name);
+  const itemMatches = poItemAliasKey(metaItem) === poItemAliasKey(item.name)
+    || [prio.p1_item_id, prio.p2_item_id, prio.p3_item_id].some(id => clean(id) === clean(item.id));
+
+  if (!poSignupPrioWasImported(meta) || !poSignupPrioPostMatches(meta, postKey) || !itemMatches) {
+    return { skipped: true, reason: "prio_not_imported_or_not_matching", player: character.name, item: item.name };
+  }
+
+  const result = await clearOrDeleteImportedPoSignupPrio(prio, item.id);
+  return {
+    ...result,
+    player: character.name,
+    item: item.name,
+    raidId: raidPublicId(raid)
+  };
+}
+
+async function deleteStalePoSignupPrios({ guildId, raid, postKey, activeEntries }) {
+  const activeKeys = new Set((activeEntries || []).map(entry => poSignupPrioEntryKey(entry.player, entry.item)));
+  const result = await query(
+    `select
+       pr.id,
+       pr.p1_item_id,
+       pr.p2_item_id,
+       pr.p3_item_id,
+       pr.comment,
+       c.name as player_name,
+       coalesce(i1.name, i2.name, i3.name, '') as item_name,
+       coalesce(i1.id, i2.id, i3.id) as item_id
+     from prios pr
+     join characters c on c.id = pr.character_id
+     left join items i1 on i1.id = pr.p1_item_id
+     left join items i2 on i2.id = pr.p2_item_id
+     left join items i3 on i3.id = pr.p3_item_id
+     where pr.raid_id = $1`,
+    [raid.id]
+  );
+
+  const cleaned = [];
+  for (const row of result.rows || []) {
+    const meta = commentMeta(row.comment);
+    const itemName = normalizePoItemName(meta.p0Item || row.item_name || "");
+    const key = poSignupPrioEntryKey(row.player_name, itemName);
+    if (!itemName || activeKeys.has(key)) continue;
+    if (!poSignupPrioWasImported(meta) || !poSignupPrioPostMatches(meta, postKey)) continue;
+
+    const cleanup = await clearOrDeleteImportedPoSignupPrio(row, row.item_id || row.p1_item_id);
+    cleaned.push({
+      ...cleanup,
+      player: row.player_name,
+      item: itemName
+    });
+  }
+  return cleaned;
+}
+
 async function syncPoPostEntriesToPrios({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -5540,13 +5722,25 @@ async function syncPoPostEntriesToPrios({ guildId, query: params }) {
     }
   }
 
+  const raid = await findRaid(guildId, {
+    ...params,
+    prioPin: raidPin,
+    playerPin: raidPin
+  });
+  const staleCleaned = raid
+    ? await deleteStalePoSignupPrios({ guildId, raid, postKey, activeEntries: entries })
+    : [];
+
   return {
     success: true,
     postKey,
     total: entries.length,
     synced: synced.length,
+    staleDeleted: staleCleaned.filter(entry => entry.deleted).length,
+    staleCleared: staleCleaned.filter(entry => entry.cleared).length,
     failed: errors.length,
-    errors
+    errors,
+    staleCleaned
   };
 }
 
