@@ -2959,13 +2959,22 @@ function logAnalysisPostChannelId(raid) {
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  const wantedType = clean(params.type || params.queueType || "");
+  const limit = Math.max(1, Math.min(50, Number(params.limit || 10) || 10));
+  const values = [guildId];
+  let where = `guild_id = $1 and status = 'open'`;
+  if (wantedType) {
+    values.push(wantedType);
+    where += ` and type = $${values.length}`;
+  }
+  values.push(limit);
   const result = await query(
     `select id, type, payload, created_at
      from bot_update_queue
-     where guild_id = $1 and status = 'open'
+     where ${where}
      order by created_at asc
-     limit 10`,
-    [guildId]
+     limit $${values.length}`,
+    values
   );
   return {
     success: true,
