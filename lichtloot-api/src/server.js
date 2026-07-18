@@ -4717,7 +4717,8 @@ async function savePoPostEntry({ guildId, query: params }) {
   }
 
   let character = playerPin
-    ? await findCharacterForPin(guildId, playerPin, player, server)
+    ? (await findCharacterForPin(guildId, playerPin, player, server)
+      || await findCharacterForPin(guildId, playerPin, player, ""))
     : server
       ? await findCharacter(guildId, player, server)
       : null;
@@ -5140,11 +5141,33 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
   const className = clean(params.className || params.class || params.klasse);
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin || params.characterPin || params.masterCharacterPin);
 
   if (!player || !className) {
     const error = new Error("Spieler oder Klasse fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+
+  if (playerPin) {
+    const verified = await findCharacterForPin(guildId, playerPin, player, server)
+      || await findCharacterForPin(guildId, playerPin, player, "");
+    if (!verified) {
+      const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+      error.statusCode = 403;
+      throw error;
+    }
+    if (className && clean(verified.class_name).toLowerCase() !== className.toLowerCase()) {
+      const updated = await client.query(
+        `update characters
+         set class_name = $1, updated_at = now()
+         where id = $2
+         returning id, name, server, class_name, created_at`,
+        [className, verified.id]
+      );
+      return updated.rows[0];
+    }
+    return verified;
   }
 
   let existing = { rows: [] };
@@ -5293,10 +5316,11 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
 
 async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  const raidLookupPin = clean(params.raidPin || params.prioPin || params.lichtlootRaidId || params.lichtlootPlayerPin || params.playerLinkPin || params.playerPin);
   const raid = await findRaid(guildId, {
     ...params,
-    prioPin: params.raidPin || params.prioPin || params.playerPin,
-    playerPin: params.raidPin || params.prioPin || params.playerPin
+    prioPin: raidLookupPin,
+    playerPin: raidLookupPin
   });
   if (!raid) {
     const error = new Error("Raid wurde für diese LichtLoot-ID nicht gefunden.");
@@ -5385,7 +5409,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 }
 
 function poSignupPrioPinFromParams(params) {
-  return clean(params.raidPin || params.prioPin || params.playerPin || params.lichtlootPlayerPin || params.lichtlootRaidId || "");
+  return clean(params.raidPin || params.prioPin || params.lichtlootRaidId || params.lichtlootPlayerPin || params.playerLinkPin || params.playerPin || "");
 }
 
 async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
@@ -5400,7 +5424,9 @@ async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
         ...params,
         raidPin,
         prioPin: raidPin,
-        playerPin: raidPin,
+        lichtlootRaidId: raidPin,
+        playerPin: normalizePin(params.playerPin || params.pin || params.spielerLogin || params.characterPin || params.masterCharacterPin),
+        spielerLogin: normalizePin(params.spielerLogin || params.playerPin || params.pin || params.characterPin || params.masterCharacterPin),
         player: entry.player,
         className: entry.className || entry.Klasse || "",
         item: entry.item,
