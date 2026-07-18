@@ -3787,6 +3787,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
               <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
               <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
+              <button class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()">POs in Prioliste übertragen</button>
             </div>
             <div id="poSignupStatus" class="status">Bereit.</div>
             <div class="po-post-list-block">
@@ -7467,6 +7468,7 @@ function renderPoSignupConfigRows(){
         <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
+          <option value="sync-prios">POs in Prioliste übertragen</option>
           <option value="archive">Archivieren</option>
         </select>
       </td>
@@ -7487,8 +7489,80 @@ async function runPoSignupRowAction(select, postKey){
     await archivePoSignupEverywhere(key);
     return;
   }
+  if(action === "sync-prios"){
+    await syncPoSignupPriosForPost(key);
+    return;
+  }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
+  }
+}
+
+function poSignupConfigForKey(postKey){
+  const key = String(postKey || "").trim();
+  return readPoPostConfigs().find(item => item.postKey === key) || null;
+}
+
+function poSignupLichtlootPinForConfig(config){
+  return String(
+    config?.lichtlootPlayerPin ||
+    config?.playerPin ||
+    config?.prioPin ||
+    config?.lichtlootRaidId ||
+    ""
+  ).trim();
+}
+
+async function syncCurrentPoSignupPrios(){
+  const config = getPoSignupConfig();
+  await syncPoSignupPriosForPost(config.postKey, config);
+}
+
+async function syncPoSignupPriosForPost(postKey, providedConfig){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!key){
+    if(status) status.innerHTML = '<span class="bad">Bitte erst einen PO-Anmelder auswählen.</span>';
+    return;
+  }
+
+  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
+  let raidPin = poSignupLichtlootPinForConfig(config);
+  if(!raidPin){
+    raidPin = prompt("Welche LichtLoot Prio-ID/PIN soll für diesen PO-Anmelder benutzt werden?", "") || "";
+  }
+  raidPin = raidPin.trim();
+  if(!raidPin){
+    if(status) status.innerHTML = '<span class="bad">Keine LichtLoot-ID eingetragen. Es wurde nichts übertragen.</span>';
+    return;
+  }
+
+  try{
+    if(status) status.textContent = "POs werden in die LichtLoot-Prioliste übertragen ...";
+    const result = await railwayWrite({
+      action:"guildSyncPoSignupPrios",
+      masterCode,
+      postKey:key,
+      raidPin,
+      raid: config.raid || "",
+      raidName: config.raid || "",
+      server:"Lichtbringer"
+    });
+    const failedText = result.failed ? `, ${result.failed} Fehler` : "";
+    if(status){
+      status.innerHTML = `<span class="${result.failed ? "warn" : "good"}">${escapeHtml(String(result.synced || 0))} PO(s) in die Prioliste übertragen${escapeHtml(failedText)}.</span>`;
+    }
+    if(result.errors?.length){
+      const preview = result.errors.slice(0, 4).map(error => `${error.player || "-"} / ${error.item || "-"}: ${error.error || "Fehler"}`).join("\n");
+      alert(`Einige Einträge konnten nicht übertragen werden:\n${preview}`);
+    }
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "POs konnten nicht übertragen werden.")}</span>`;
   }
 }
 
