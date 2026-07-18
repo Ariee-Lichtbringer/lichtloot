@@ -3739,6 +3739,10 @@ async function queuePoPost({ guildId, query: params }) {
       raidDate: clean(params.raidDate || params.date || params.datum),
       raidTime: clean(params.raidTime || params.time || params.uhrzeit),
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
+      createLichtlootRaid: clean(params.createLichtlootRaid || params.createPrioRaid || ""),
+      lichtlootRaidId: clean(params.lichtlootRaidId || params.raidPin || params.prioPin || params.playerPin || ""),
+      lichtlootPlayerPin: clean(params.lichtlootPlayerPin || params.raidPin || params.prioPin || params.playerPin || ""),
+      lichtlootLeadPin: clean(params.lichtlootLeadPin || params.leadPin || ""),
       mode: clean(params.mode || params.poMode),
       groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
@@ -3858,6 +3862,7 @@ async function savePoPostEntries({ guildId, query: params }) {
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
     const seenPlayers = new Set();
+    const savedEntries = [];
     let savedCount = 0;
     for (const entry of entries) {
       const playerName = await resolvePoPostPlayerName(client, guildId, entry);
@@ -3875,6 +3880,7 @@ async function savePoPostEntries({ guildId, query: params }) {
             ? { approvalStatus: "approved", approvedBy: "P0-Freigabeliste", approvedAt: new Date().toISOString() }
             : { approvalStatus: "pending", approvedBy: "", approvedAt: null }
         );
+      const resolvedClassName = clean(entry.className || entry.class_name || entry.klasse || approval.className || "");
       await client.query(
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
@@ -3894,7 +3900,7 @@ async function savePoPostEntries({ guildId, query: params }) {
           itemName,
           clean(entry.discordUserId || entry.discord_user_id),
           clean(entry.discordName || entry.discord_name),
-          clean(entry.className || entry.class_name || entry.klasse || approval.className || ""),
+          resolvedClassName,
           poMessageId,
           clean(entry.createdAt) || null,
           approval.approvalStatus || "pending",
@@ -3906,9 +3912,17 @@ async function savePoPostEntries({ guildId, query: params }) {
         ]
       );
       savedCount += 1;
+      savedEntries.push({
+        player: playerName,
+        className: resolvedClassName,
+        item: itemName,
+        discordUserId: clean(entry.discordUserId || entry.discord_user_id),
+        discordName: clean(entry.discordName || entry.discord_name)
+      });
     }
     await client.query("commit");
-    return { success: true, saved: savedCount };
+    const prioSync = await autoSyncPoSignupEntriesToPrios({ guildId, params, entries: savedEntries });
+    return { success: true, saved: savedCount, prioSync };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -4769,22 +4783,25 @@ async function savePoPostEntry({ guildId, query: params }) {
     );
     await client.query("commit");
     const row = result.rows[0];
+    const entry = {
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO Liste",
+      player: row.player_name || "",
+      className: row.class_name || "",
+      Klasse: row.class_name || "",
+      item: normalizePoItemName(row.item_name || ""),
+      discordUserId: row.discord_user_id || "",
+      discordName: row.discord_name || "",
+      approvalStatus: row.approval_status || "pending"
+    };
+    const prioSync = await tryAutoSyncPoSignupPrio({ guildId, params, entry });
     return {
       success: true,
-      entry: {
-        postKey: row.post_key || "",
-        sourceChannelId: row.source_channel_id || "",
-        targetChannelId: row.target_channel_id || "",
-        raid: row.raid || "",
-        title: row.title || "PO Liste",
-        player: row.player_name || "",
-        className: row.class_name || "",
-        Klasse: row.class_name || "",
-        item: normalizePoItemName(row.item_name || ""),
-        discordUserId: row.discord_user_id || "",
-        discordName: row.discord_name || "",
-        approvalStatus: row.approval_status || "pending"
-      }
+      entry,
+      prioSync
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -5335,6 +5352,65 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   } finally {
     client.release();
   }
+}
+
+function poSignupPrioPinFromParams(params) {
+  return clean(params.raidPin || params.prioPin || params.playerPin || params.lichtlootPlayerPin || params.lichtlootRaidId || "");
+}
+
+async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
+  const raidPin = poSignupPrioPinFromParams(params);
+  if (!raidPin) {
+    return { skipped: true, reason: "missing_lichtloot_pin" };
+  }
+  try {
+    return await savePoSignupPrioFromBot({
+      guildId,
+      query: {
+        ...params,
+        raidPin,
+        prioPin: raidPin,
+        playerPin: raidPin,
+        player: entry.player,
+        className: entry.className || entry.Klasse || "",
+        item: entry.item,
+        discordUserId: entry.discordUserId,
+        discordName: entry.discordName,
+        server: clean(params.server) || "Lichtbringer"
+      }
+    });
+  } catch (error) {
+    return {
+      success: false,
+      player: entry.player,
+      item: entry.item,
+      error: error.message || String(error)
+    };
+  }
+}
+
+async function autoSyncPoSignupEntriesToPrios({ guildId, params, entries }) {
+  const raidPin = poSignupPrioPinFromParams(params);
+  if (!raidPin) {
+    return { skipped: true, reason: "missing_lichtloot_pin" };
+  }
+  const synced = [];
+  const errors = [];
+  for (const entry of entries || []) {
+    const result = await tryAutoSyncPoSignupPrio({ guildId, params, entry });
+    if (result?.success) {
+      synced.push(result);
+    } else if (!result?.skipped) {
+      errors.push(result);
+    }
+  }
+  return {
+    success: true,
+    total: entries.length,
+    synced: synced.length,
+    failed: errors.length,
+    errors
+  };
 }
 
 async function syncPoPostEntriesToPrios({ guildId, query: params }) {
