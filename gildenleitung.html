@@ -3041,12 +3041,16 @@ tr:hover td{background:rgba(250,204,21,.035)}
   background:var(--day-bg);
 }
 
+.worldbuff-table tr.buff-day-row td:first-child{
+  box-shadow:inset 4px 0 0 var(--day-accent);
+}
+
 .worldbuff-table tr.buff-day-row:hover td{
   background:var(--day-bg-hover);
 }
 
-.worldbuff-table tr.day-color-0{--day-bg:rgba(96,165,250,.055);--day-bg-hover:rgba(96,165,250,.10)}
-.worldbuff-table tr.day-color-1{--day-bg:rgba(250,204,21,.045);--day-bg-hover:rgba(250,204,21,.085)}
+.worldbuff-table tr.day-color-0{--day-bg:rgba(59,130,246,.18);--day-bg-hover:rgba(59,130,246,.27);--day-accent:#60a5fa}
+.worldbuff-table tr.day-color-1{--day-bg:rgba(250,204,21,.15);--day-bg-hover:rgba(250,204,21,.24);--day-accent:#facc15}
 
 .worldbuff-table td.buff-group-empty{
   color:transparent;
