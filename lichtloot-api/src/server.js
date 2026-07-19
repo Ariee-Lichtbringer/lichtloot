@@ -13667,7 +13667,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "po-item-alias-cleanup-aq40-naxx-v2";
+  const markerKey = "po-item-alias-cleanup-aq40-naxx-v3";
   const raidTypes = [
     ...raidTypeSearchValues("aq40"),
     ...raidTypeSearchValues("naxx")
@@ -13680,6 +13680,10 @@ async function applyNaxxPoItemAliasCleanupOnce() {
     {
       targetName: "Die gebundene Essenz Saphirons",
       aliases: ["Gebundene Essenz von Saphiron", "Gebundene Essenz Saphirons"]
+    },
+    {
+      targetName: "Fetisch des Sandhäschers",
+      aliases: ["Fetisch des Sandhäscher"]
     }
   ];
   const client = await pool.connect();
