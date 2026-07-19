@@ -13667,7 +13667,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "po-item-alias-cleanup-aq40-naxx-v1";
+  const markerKey = "po-item-alias-cleanup-aq40-naxx-v2";
   const raidTypes = [
     ...raidTypeSearchValues("aq40"),
     ...raidTypeSearchValues("naxx")
@@ -13724,7 +13724,8 @@ async function applyNaxxPoItemAliasCleanupOnce() {
     for (const correction of corrections) {
       const targetKey = itemLookupKey(correction.targetName);
       const aliasKeys = new Set(correction.aliases.map(itemLookupKey).filter(Boolean));
-      let targetItem = itemByLookup.get(targetKey);
+      let targetItem = naxxItems.find(item => clean(item.name).toLowerCase() === clean(correction.targetName).toLowerCase());
+      if (!targetItem) targetItem = itemByLookup.get(targetKey);
       if (!targetItem) {
         const aliasItem = naxxItems.find(item => aliasKeys.has(itemLookupKey(item.name)));
         if (!aliasItem) continue;
@@ -13743,7 +13744,8 @@ async function applyNaxxPoItemAliasCleanupOnce() {
 
       const duplicateItems = naxxItems.filter(item => {
         if (!targetItem || item.id === targetItem.id) return false;
-        return aliasKeys.has(itemLookupKey(item.name));
+        const lookupKey = itemLookupKey(item.name);
+        return lookupKey === targetKey || aliasKeys.has(lookupKey);
       });
 
       for (const duplicate of duplicateItems) {
