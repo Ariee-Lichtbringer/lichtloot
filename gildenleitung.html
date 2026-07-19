@@ -1017,6 +1017,55 @@ select:focus{border-color:rgba(96,165,250,.75)}
   line-height:1.35;
 }
 
+.po-signup-item-tools{
+  display:grid;
+  gap:10px;
+  margin:12px 0;
+}
+
+.po-signup-item-tool-row{
+  display:grid;
+  grid-template-columns:minmax(150px,.8fr) minmax(0,1.4fr) auto;
+  gap:8px;
+  align-items:end;
+}
+
+.po-signup-item-results{
+  display:grid;
+  gap:6px;
+  max-height:220px;
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  padding:8px;
+}
+
+.po-signup-item-result{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:7px;
+  background:rgba(15,23,42,.6);
+  color:#e5edf8;
+  padding:7px 8px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.po-signup-item-result:hover{
+  border-color:rgba(250,204,21,.55);
+}
+
+.po-signup-item-result strong{
+  color:#facc15;
+  font-size:12px;
+  white-space:nowrap;
+}
+
 .po-signup-preview-list{
   display:grid;
   gap:7px;
@@ -3775,6 +3824,25 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
               </span>
             </label>
+            <div class="po-signup-item-tools">
+              <div class="po-signup-item-tool-row">
+                <div class="field">
+                  <label for="poSignupTemplateRaid">40er-Vorlage</label>
+                  <select id="poSignupTemplateRaid">
+                    <option value="mc">MC</option>
+                    <option value="bwl">BWL</option>
+                    <option value="aq40">AQ40</option>
+                    <option value="naxx">Naxxramas</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
+                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
+                </div>
+                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
+              </div>
+              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
+            </div>
             <div class="field">
               <label for="poSignupItems">Items für das Auswahlmenü</label>
               <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
@@ -4123,6 +4191,8 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
+const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx"];
+const poSignupLootSearchCache = {};
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -6845,6 +6915,130 @@ function poSignupItemLines(){
       return true;
     })
     .slice(0,25);
+}
+
+function poSignupAllItemLines(){
+  const text = document.getElementById("poSignupItems")?.value || "";
+  const seen = new Set();
+  const items = [];
+  text.split(/\r?\n|;/).forEach(line => {
+    const item = line.trim();
+    const key = normalize(item);
+    if(!item || !key || seen.has(key)) return;
+    seen.add(key);
+    items.push(item);
+  });
+  return items;
+}
+
+function poSignupTemplateRaidKey(){
+  return poSignupNormalizeRaid(document.getElementById("poSignupTemplateRaid")?.value || poSignupSelectedRaidKey() || "aq40");
+}
+
+function setPoSignupItems(values, options={}){
+  const field = document.getElementById("poSignupItems");
+  if(!field) return [];
+  const items = poSignupCleanItemLines(values);
+  field.value = items.join("\n");
+  updatePoSignupPreview();
+  if(options.status){
+    const status = document.getElementById("poSignupStatus");
+    if(status) status.innerHTML = options.status(items);
+  }
+  return items;
+}
+
+function addPoSignupItem(value){
+  const status = document.getElementById("poSignupStatus");
+  const item = String(value || "").trim();
+  if(!item) return;
+  const current = poSignupAllItemLines();
+  const key = normalize(item);
+  if(current.some(existing => normalize(existing) === key)){
+    if(status) status.innerHTML = `<span class="warn">${escapeHtml(item)} ist schon in der Auswahl.</span>`;
+    return;
+  }
+  if(current.length >= 25){
+    if(status) status.innerHTML = '<span class="warn">Discord erlaubt maximal 25 Items im Dropdown. Bitte erst ein Item entfernen.</span>';
+    return;
+  }
+  setPoSignupItems([...current, item]);
+  if(status) status.innerHTML = `<span class="good">${escapeHtml(item)} wurde hinzugefügt.</span>`;
+}
+
+async function loadPoSignupLootItems(raid){
+  const raidKey = poSignupNormalizeRaid(raid || "");
+  if(!raidKey) return [];
+  if(poSignupLootSearchCache[raidKey]) return poSignupLootSearchCache[raidKey];
+  const result = await railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() });
+  if(!result.success) throw new Error(result.error || "Lootliste konnte nicht geladen werden.");
+  const items = [];
+  (Array.isArray(result.items) ? result.items : []).forEach(row => {
+    items.push(row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName);
+  });
+  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items);
+  return poSignupLootSearchCache[raidKey];
+}
+
+async function loadPoSignupTemplateItems(){
+  const status = document.getElementById("poSignupStatus");
+  const raidKey = poSignupTemplateRaidKey();
+  if(status) status.textContent = "Vorlage wird geladen ...";
+  try{
+    const values = [];
+    const [p0Result, lootItems] = await Promise.all([
+      railwayApi({ action:"getP0Plus", raid:raidKey, t:Date.now() }).catch(() => null),
+      loadPoSignupLootItems(raidKey).catch(() => [])
+    ]);
+    (Array.isArray(p0Result?.entries) ? p0Result.entries : []).forEach(entry => {
+      const entryRaid = poSignupNormalizeRaid(entry.raid || entry.raidType || raidKey);
+      if(entryRaid !== raidKey) return;
+      values.push(entry.item || entry.itemName);
+    });
+    if(!values.length) values.push(...lootItems);
+    const items = setPoSignupItems(values, {
+      status: loaded => `<span class="good">${escapeHtml(String(loaded.length))} Item(s) für ${escapeHtml(raidKey.toUpperCase())} geladen.</span>`
+    });
+    if(!items.length && status) status.innerHTML = `<span class="warn">Für ${escapeHtml(raidKey.toUpperCase())} wurden keine Items gefunden.</span>`;
+  }catch(error){
+    if(status) status.textContent = error.message || "Vorlage konnte nicht geladen werden.";
+  }
+}
+
+async function renderPoSignupLootSearchResults(){
+  const box = document.getElementById("poSignupLootSearchResults");
+  const input = document.getElementById("poSignupLootSearch");
+  const query = input?.value.trim() || "";
+  if(!box) return;
+  if(query.length < 2){
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  box.classList.remove("hidden");
+  box.innerHTML = '<div class="muted">Suche läuft ...</div>';
+  try{
+    const raidKey = poSignupTemplateRaidKey();
+    const words = normalize(query).split(/\s+/).filter(Boolean);
+    const items = await loadPoSignupLootItems(raidKey);
+    const current = new Set(poSignupAllItemLines().map(item => normalize(item)));
+    const matches = items
+      .filter(item => {
+        const key = normalize(item);
+        return words.every(word => key.includes(word));
+      })
+      .slice(0,25);
+    if(!matches.length){
+      box.innerHTML = `<div class="muted">Keine Treffer für ${escapeHtml(query)}.</div>`;
+      return;
+    }
+    box.innerHTML = matches.map(item => {
+      const exists = current.has(normalize(item));
+      return `<button class="po-signup-item-result" type="button" onclick="addPoSignupItem('${escapeJsString(item)}')" ${exists ? "disabled" : ""}><strong>${escapeHtml(item)}</strong><span>${exists ? "schon in Auswahl" : "hinzufügen"}</span></button>`;
+    }).join("");
+  }catch(error){
+    box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Suche konnte nicht geladen werden.")}</div>`;
+  }
 }
 
 function makePoSignupKey(raid, raidDate, raidTime){
@@ -11588,6 +11782,16 @@ function escapeHtml(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
+}
+
+function escapeJsString(value){
+  return String(value == null ? "" : value)
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,"\\r")
+    .replace(/\n/g,"\\n")
+    .replace(/\u2028/g,"\\u2028")
+    .replace(/\u2029/g,"\\u2029");
 }
 
 function escapeAttr(value){
