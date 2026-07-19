@@ -1348,9 +1348,14 @@ function requireMasterCode(value) {
   }
 }
 
+function isMasterCode(value) {
+  const code = clean(value);
+  return code === masterCode || Array.from(masterCodeOverrides.values()).includes(code);
+}
+
 function requireMasterOrQueueToken(params = {}) {
   const code = clean(params.masterCode);
-  if (code === masterCode || Array.from(masterCodeOverrides.values()).includes(code)) return;
+  if (isMasterCode(code)) return;
   if (lichtbotQueueToken && clean(params.queueToken) === lichtbotQueueToken) return;
   const error = new Error("Nicht erlaubt.");
   error.statusCode = 403;
@@ -4439,6 +4444,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
 async function deletePoPostEntry({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
+  const isMasterRequest = isMasterCode(params.masterCode);
   const postKey = clean(params.postKey || params.poPostKey || "");
   const sourceChannelId = clean(params.sourceChannelId || "");
   const targetChannelId = clean(params.targetChannelId || "");
@@ -4448,7 +4454,12 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const server = clean(params.server) || "Everlook";
 
-  if (!discordUserId && !playerName) {
+  if (!isMasterRequest && !discordUserId) {
+    const error = new Error("Discord-User fehlt. Du kannst nur deinen eigenen PO-Eintrag löschen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (isMasterRequest && !discordUserId && !playerName) {
     const error = new Error("Discord-User oder Spieler fehlt.");
     error.statusCode = 400;
     throw error;
@@ -4469,7 +4480,10 @@ async function deletePoPostEntry({ guildId, query: params }) {
 
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
-  if (playerName) {
+  if (!isMasterRequest) {
+    values.push(discordUserId);
+    clauses.push(`discord_user_id = $${values.length}`);
+  } else if (playerName) {
     values.push(playerName);
     clauses.push(`regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
   } else if (discordUserId) {
