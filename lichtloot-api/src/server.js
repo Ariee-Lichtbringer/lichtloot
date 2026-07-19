@@ -5207,11 +5207,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
     const prioResult = await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = prios.p2_item_id,
-             p3_item_id = prios.p3_item_id,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()
        returning id`,
