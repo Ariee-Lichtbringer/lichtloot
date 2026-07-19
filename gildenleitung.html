@@ -1017,55 +1017,6 @@ select:focus{border-color:rgba(96,165,250,.75)}
   line-height:1.35;
 }
 
-.po-signup-item-tools{
-  display:grid;
-  gap:10px;
-  margin:12px 0;
-}
-
-.po-signup-item-tool-row{
-  display:grid;
-  grid-template-columns:minmax(150px,.8fr) minmax(0,1.4fr) auto;
-  gap:8px;
-  align-items:end;
-}
-
-.po-signup-item-results{
-  display:grid;
-  gap:6px;
-  max-height:220px;
-  overflow:auto;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;
-  background:rgba(2,6,23,.48);
-  padding:8px;
-}
-
-.po-signup-item-result{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  min-height:34px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:7px;
-  background:rgba(15,23,42,.6);
-  color:#e5edf8;
-  padding:7px 8px;
-  text-align:left;
-  cursor:pointer;
-}
-
-.po-signup-item-result:hover{
-  border-color:rgba(250,204,21,.55);
-}
-
-.po-signup-item-result strong{
-  color:#facc15;
-  font-size:12px;
-  white-space:nowrap;
-}
-
 .po-signup-preview-list{
   display:grid;
   gap:7px;
@@ -3824,28 +3775,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
               </span>
             </label>
-            <div class="po-signup-item-tools">
-              <div class="po-signup-item-tool-row">
-                <div class="field">
-                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
-                  <select id="poSignupTemplateRaid">
-                    <option value="mc">MC</option>
-                    <option value="bwl">BWL</option>
-                    <option value="aq40">AQ40</option>
-                    <option value="naxx">Naxxramas</option>
-                    <option value="zg">ZG</option>
-                    <option value="aq20">AQ20</option>
-                    <option value="ony">Onyxia</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
-                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
-                </div>
-                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
-              </div>
-              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
-            </div>
             <div class="field">
               <label for="poSignupItems">Items für das Auswahlmenü</label>
               <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
@@ -3858,7 +3787,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
               <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
               <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
-              <button class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()">POs in Prioliste übertragen</button>
             </div>
             <div id="poSignupStatus" class="status">Bereit.</div>
             <div class="po-post-list-block">
@@ -4194,8 +4122,6 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
-const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
-const poSignupLootSearchCache = {};
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -5076,9 +5002,9 @@ async function loadWorldbuffMiniOverview(){
   box.innerHTML = '<div class="mini-row"><span>Worldbuffs werden geladen</span><span>...</span></div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days:4 });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, source:"railway", days:4 });
     if(result && result.success){
-      worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+      worldbuffEntries = collapseWorldbuffDailySlots(Array.isArray(result.buffs) ? result.buffs : []);
       renderWorldbuffMiniList();
       return;
     }
@@ -6920,130 +6846,6 @@ function poSignupItemLines(){
     .slice(0,25);
 }
 
-function poSignupAllItemLines(){
-  const text = document.getElementById("poSignupItems")?.value || "";
-  const seen = new Set();
-  const items = [];
-  text.split(/\r?\n|;/).forEach(line => {
-    const item = line.trim();
-    const key = normalize(item);
-    if(!item || !key || seen.has(key)) return;
-    seen.add(key);
-    items.push(item);
-  });
-  return items;
-}
-
-function poSignupTemplateRaidKey(){
-  return poSignupNormalizeRaid(document.getElementById("poSignupTemplateRaid")?.value || poSignupSelectedRaidKey() || "aq40");
-}
-
-function setPoSignupItems(values, options={}){
-  const field = document.getElementById("poSignupItems");
-  if(!field) return [];
-  const items = poSignupCleanItemLines(values);
-  field.value = items.join("\n");
-  updatePoSignupPreview();
-  if(options.status){
-    const status = document.getElementById("poSignupStatus");
-    if(status) status.innerHTML = options.status(items);
-  }
-  return items;
-}
-
-function addPoSignupItem(value){
-  const status = document.getElementById("poSignupStatus");
-  const item = String(value || "").trim();
-  if(!item) return;
-  const current = poSignupAllItemLines();
-  const key = normalize(item);
-  if(current.some(existing => normalize(existing) === key)){
-    if(status) status.innerHTML = `<span class="warn">${escapeHtml(item)} ist schon in der Auswahl.</span>`;
-    return;
-  }
-  if(current.length >= 25){
-    if(status) status.innerHTML = '<span class="warn">Discord erlaubt maximal 25 Items im Dropdown. Bitte erst ein Item entfernen.</span>';
-    return;
-  }
-  setPoSignupItems([...current, item]);
-  if(status) status.innerHTML = `<span class="good">${escapeHtml(item)} wurde hinzugefügt.</span>`;
-}
-
-async function loadPoSignupLootItems(raid){
-  const raidKey = poSignupNormalizeRaid(raid || "");
-  if(!raidKey) return [];
-  if(poSignupLootSearchCache[raidKey]) return poSignupLootSearchCache[raidKey];
-  const result = await railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() });
-  if(!result.success) throw new Error(result.error || "Lootliste konnte nicht geladen werden.");
-  const items = [];
-  (Array.isArray(result.items) ? result.items : []).forEach(row => {
-    items.push(row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName);
-  });
-  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items);
-  return poSignupLootSearchCache[raidKey];
-}
-
-async function loadPoSignupTemplateItems(){
-  const status = document.getElementById("poSignupStatus");
-  const raidKey = poSignupTemplateRaidKey();
-  if(status) status.textContent = "Vorlage wird geladen ...";
-  try{
-    const values = [];
-    const [p0Result, lootItems] = await Promise.all([
-      railwayApi({ action:"getP0Plus", raid:raidKey, t:Date.now() }).catch(() => null),
-      loadPoSignupLootItems(raidKey).catch(() => [])
-    ]);
-    (Array.isArray(p0Result?.entries) ? p0Result.entries : []).forEach(entry => {
-      const entryRaid = poSignupNormalizeRaid(entry.raid || entry.raidType || raidKey);
-      if(entryRaid !== raidKey) return;
-      values.push(entry.item || entry.itemName);
-    });
-    if(!values.length) values.push(...lootItems);
-    const items = setPoSignupItems(values, {
-      status: loaded => `<span class="good">${escapeHtml(String(loaded.length))} Item(s) für ${escapeHtml(raidKey.toUpperCase())} geladen.</span>`
-    });
-    if(!items.length && status) status.innerHTML = `<span class="warn">Für ${escapeHtml(raidKey.toUpperCase())} wurden keine Items gefunden.</span>`;
-  }catch(error){
-    if(status) status.textContent = error.message || "Vorlage konnte nicht geladen werden.";
-  }
-}
-
-async function renderPoSignupLootSearchResults(){
-  const box = document.getElementById("poSignupLootSearchResults");
-  const input = document.getElementById("poSignupLootSearch");
-  const query = input?.value.trim() || "";
-  if(!box) return;
-  if(query.length < 2){
-    box.classList.add("hidden");
-    box.innerHTML = "";
-    return;
-  }
-  box.classList.remove("hidden");
-  box.innerHTML = '<div class="muted">Suche läuft ...</div>';
-  try{
-    const raidKey = poSignupTemplateRaidKey();
-    const words = normalize(query).split(/\s+/).filter(Boolean);
-    const items = await loadPoSignupLootItems(raidKey);
-    const current = new Set(poSignupAllItemLines().map(item => normalize(item)));
-    const matches = items
-      .filter(item => {
-        const key = normalize(item);
-        return words.every(word => key.includes(word));
-      })
-      .slice(0,25);
-    if(!matches.length){
-      box.innerHTML = `<div class="muted">Keine Treffer für ${escapeHtml(query)}.</div>`;
-      return;
-    }
-    box.innerHTML = matches.map(item => {
-      const exists = current.has(normalize(item));
-      return `<button class="po-signup-item-result" type="button" onclick="addPoSignupItem('${escapeJsString(item)}')" ${exists ? "disabled" : ""}><strong>${escapeHtml(item)}</strong><span>${exists ? "schon in Auswahl" : "hinzufügen"}</span></button>`;
-    }).join("");
-  }catch(error){
-    box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Suche konnte nicht geladen werden.")}</div>`;
-  }
-}
-
 function makePoSignupKey(raid, raidDate, raidTime){
   const raidPart = poSignupNormalizeRaid(raid || "raid") || "raid";
   const datePart = String(raidDate || "").replace(/[^0-9]+/g,"") || todayIsoDate().replace(/[^0-9]+/g,"");
@@ -7665,7 +7467,6 @@ function renderPoSignupConfigRows(){
         <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
-          <option value="sync-prios">POs in Prioliste übertragen</option>
           <option value="archive">Archivieren</option>
         </select>
       </td>
@@ -7686,80 +7487,8 @@ async function runPoSignupRowAction(select, postKey){
     await archivePoSignupEverywhere(key);
     return;
   }
-  if(action === "sync-prios"){
-    await syncPoSignupPriosForPost(key);
-    return;
-  }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
-  }
-}
-
-function poSignupConfigForKey(postKey){
-  const key = String(postKey || "").trim();
-  return readPoPostConfigs().find(item => item.postKey === key) || null;
-}
-
-function poSignupLichtlootPinForConfig(config){
-  return String(
-    config?.lichtlootPlayerPin ||
-    config?.playerPin ||
-    config?.prioPin ||
-    config?.lichtlootRaidId ||
-    ""
-  ).trim();
-}
-
-async function syncCurrentPoSignupPrios(){
-  const config = getPoSignupConfig();
-  await syncPoSignupPriosForPost(config.postKey, config);
-}
-
-async function syncPoSignupPriosForPost(postKey, providedConfig){
-  const key = String(postKey || "").trim();
-  const status = document.getElementById("poSignupStatus");
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  if(!masterCode){
-    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
-    return;
-  }
-  if(!key){
-    if(status) status.innerHTML = '<span class="bad">Bitte erst einen PO-Anmelder auswählen.</span>';
-    return;
-  }
-
-  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
-  let raidPin = poSignupLichtlootPinForConfig(config);
-  if(!raidPin){
-    raidPin = prompt("Welche LichtLoot Prio-ID/PIN soll für diesen PO-Anmelder benutzt werden?", "") || "";
-  }
-  raidPin = raidPin.trim();
-  if(!raidPin){
-    if(status) status.innerHTML = '<span class="bad">Keine LichtLoot-ID eingetragen. Es wurde nichts übertragen.</span>';
-    return;
-  }
-
-  try{
-    if(status) status.textContent = "POs werden in die LichtLoot-Prioliste übertragen ...";
-    const result = await railwayWrite({
-      action:"guildSyncPoSignupPrios",
-      masterCode,
-      postKey:key,
-      raidPin,
-      raid: config.raid || "",
-      raidName: config.raid || "",
-      server:"Lichtbringer"
-    });
-    const failedText = result.failed ? `, ${result.failed} Fehler` : "";
-    if(status){
-      status.innerHTML = `<span class="${result.failed ? "warn" : "good"}">${escapeHtml(String(result.synced || 0))} PO(s) in die Prioliste übertragen${escapeHtml(failedText)}.</span>`;
-    }
-    if(result.errors?.length){
-      const preview = result.errors.slice(0, 4).map(error => `${error.player || "-"} / ${error.item || "-"}: ${error.error || "Fehler"}`).join("\n");
-      alert(`Einige Einträge konnten nicht übertragen werden:\n${preview}`);
-    }
-  }catch(error){
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "POs konnten nicht übertragen werden.")}</span>`;
   }
 }
 
@@ -10298,13 +10027,13 @@ async function loadWorldbuffPanel(){
   content.innerHTML = '<div class="status">Worldbuffs werden geladen ...</div>';
 
   try{
-    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, days });
+    const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, source:"railway", days });
     if(!result.success){
       content.innerHTML = `<div class="status bad">${escapeHtml(result.error || "Worldbuffs konnten nicht geladen werden.")}</div>`;
       return;
     }
 
-    worldbuffEntries = Array.isArray(result.buffs) ? result.buffs : [];
+    worldbuffEntries = collapseWorldbuffDailySlots(Array.isArray(result.buffs) ? result.buffs : []);
     renderWorldbuffMiniList();
     renderWorldbuffPanel(days);
   }catch(error){
@@ -10441,6 +10170,48 @@ function formatWorldbuffDay(tag, datum){
 function isOnyNefBuff(buff){
   const value = String(buff || "").trim().toLowerCase();
   return value === "ony" || value === "nef";
+}
+
+function worldbuffDailySlotKey(entry){
+  if(!entry || !entry.datum || !entry.buff) return "";
+  const buff = String(entry.buff || "").trim().toLowerCase();
+  if(buff === "hakkar") return entry.datum + "|hakkar";
+  if(buff === "ony" || buff === "nef") return entry.datum + "|ony-nef";
+  return entry.datum + "|" + buff;
+}
+
+function worldbuffEntryPriority(entry){
+  let score = 0;
+  const caster = String((entry && entry.charakter) || "").trim();
+  const status = String((entry && entry.status) || "").replace(/[🟡🟢✅🔴🟠⚪]/g,"").trim().toLowerCase();
+  const source = String((entry && entry.source) || "").trim().toLowerCase();
+  const guild = String((entry && entry.gilde) || "").trim().toLowerCase();
+  if(caster) score += 1000;
+  if(status.includes("bestätigt") || status.includes("bestaetigt")) score += 200;
+  if(source.includes("railway") || source.includes("player-worldbuff")) score += 80;
+  if(source.includes("sheet")) score += 30;
+  if(guild.includes("lichtbringer")) score += 20;
+  if(guild && guild !== "-") score += 5;
+  return score;
+}
+
+function collapseWorldbuffDailySlots(entries){
+  const bySlot = new Map();
+  (Array.isArray(entries) ? entries : []).forEach(entry => {
+    const key = worldbuffDailySlotKey(entry);
+    if(!key) return;
+    const current = bySlot.get(key);
+    if(!current || worldbuffEntryPriority(entry) > worldbuffEntryPriority(current)){
+      bySlot.set(key, entry);
+    }
+  });
+  return Array.from(bySlot.values()).sort((a,b) => {
+    const dateA = parseWorldbuffDate(a && a.datum);
+    const dateB = parseWorldbuffDate(b && b.datum);
+    const timeA = String((a && a.uhrzeit) || "");
+    const timeB = String((b && b.uhrzeit) || "");
+    return (dateA ? dateA.getTime() : 0) - (dateB ? dateB.getTime() : 0) || timeA.localeCompare(timeB);
+  });
 }
 
 function isWorldbuffOpenSlot(entry){
@@ -11785,16 +11556,6 @@ function escapeHtml(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-}
-
-function escapeJsString(value){
-  return String(value == null ? "" : value)
-    .replace(/\\/g,"\\\\")
-    .replace(/'/g,"\\'")
-    .replace(/\r/g,"\\r")
-    .replace(/\n/g,"\\n")
-    .replace(/\u2028/g,"\\u2028")
-    .replace(/\u2029/g,"\\u2029");
 }
 
 function escapeAttr(value){
