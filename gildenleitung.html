@@ -3827,12 +3827,15 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="po-signup-item-tools">
               <div class="po-signup-item-tool-row">
                 <div class="field">
-                  <label for="poSignupTemplateRaid">40er-Vorlage</label>
+                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
                   <select id="poSignupTemplateRaid">
                     <option value="mc">MC</option>
                     <option value="bwl">BWL</option>
                     <option value="aq40">AQ40</option>
                     <option value="naxx">Naxxramas</option>
+                    <option value="zg">ZG</option>
+                    <option value="aq20">AQ20</option>
+                    <option value="ony">Onyxia</option>
                   </select>
                 </div>
                 <div class="field">
@@ -4191,7 +4194,7 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
-const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx"];
+const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
 const poSignupLootSearchCache = {};
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
