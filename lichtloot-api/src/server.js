@@ -4377,9 +4377,11 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   const postKey = clean(params.postKey || params.poPostKey || "");
   const sourceChannelId = clean(params.sourceChannelId || "");
   const targetChannelId = clean(params.targetChannelId || "");
+  const playerName = clean(params.player || params.playerName || params.character || params.char);
+  const itemName = normalizePoItemName(params.item || params.itemName || "");
   const rawStatus = clean(params.status || params.value || "approved").toLowerCase();
   const approvalStatus = ["rejected", "invalid", "ungueltig", "ungültig", "nein"].includes(rawStatus) ? "rejected" : "approved";
-  const result = await query(
+  let result = await query(
     `update po_post_entries
      set approval_status = $6,
          approved_by = $7,
@@ -4394,6 +4396,24 @@ async function reviewPoPostEntry({ guildId, query: params }) {
      returning *`,
     [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung")]
   );
+  if (!result.rows[0] && playerName && itemName) {
+    result = await query(
+      `update po_post_entries
+       set approval_status = $6,
+           approved_by = $7,
+           approved_at = case when $6 = 'approved' then now() else null end,
+           updated_at = now()
+       where guild_id = $1
+         and post_key = $2
+         and source_channel_id = $3
+         and target_channel_id = $4
+         and lower(player_name) = lower($5)
+         and lower(item_name) = lower($8)
+         and archived_at is null
+       returning *`,
+      [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), itemName]
+    );
+  }
   const row = result.rows[0];
   if (!row) {
     const error = new Error("PO-Eintrag wurde nicht gefunden.");
