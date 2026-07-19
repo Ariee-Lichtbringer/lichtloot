@@ -4452,7 +4452,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const itemName = normalizePoItemName(params.item || params.itemName);
   const playerName = clean(params.player || params.char || params.spieler);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
 
   if (!isMasterRequest && !discordUserId) {
     const error = new Error("Discord-User fehlt. Du kannst nur deinen eigenen PO-Eintrag löschen.");
@@ -4775,7 +4775,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
   const title = clean(params.title) || "PO Liste";
   const player = clean(params.player || params.char || params.spieler);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const itemName = normalizePoItemName(params.item || params.itemName);
   const discordUserId = clean(params.discordUserId || params.userId);
@@ -5364,7 +5364,23 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   try {
     await client.query("begin");
 
-    const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+    let character = null;
+    if (playerPin) {
+      character = await findCharacterForPin(
+        guildId,
+        playerPin,
+        params.player || params.char || params.spieler,
+        clean(params.server)
+      );
+      if (!character) {
+        const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+        error.statusCode = 403;
+        throw error;
+      }
+    } else {
+      character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    }
     const item = await upsertItem(client, raidType, itemName, params.itemId || params.itemGameId || params.p1ItemId);
     if (!item) {
       const error = new Error("Item wurde nicht gefunden.");
