@@ -991,6 +991,81 @@ select:focus{border-color:rgba(96,165,250,.75)}
   max-height:640px;
 }
 
+.po-signup-prio-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:42px;
+  padding:10px 12px;
+  border:1px solid rgba(148,163,184,.25);
+  border-radius:8px;
+  background:rgba(15,23,42,.55);
+  color:#e5e7eb;
+  font-weight:800;
+}
+
+.po-signup-prio-option input{
+  width:18px;
+  height:18px;
+  accent-color:#facc15;
+}
+
+.po-signup-prio-hint{
+  margin-top:6px;
+  color:#9ca3af;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.po-signup-item-tools{
+  display:grid;
+  gap:10px;
+  margin:12px 0;
+}
+
+.po-signup-item-tool-row{
+  display:grid;
+  grid-template-columns:minmax(150px,.8fr) minmax(0,1.4fr) auto;
+  gap:8px;
+  align-items:end;
+}
+
+.po-signup-item-results{
+  display:grid;
+  gap:6px;
+  max-height:220px;
+  overflow:auto;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.48);
+  padding:8px;
+}
+
+.po-signup-item-result{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:34px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:7px;
+  background:rgba(15,23,42,.6);
+  color:#e5edf8;
+  padding:7px 8px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.po-signup-item-result:hover{
+  border-color:rgba(250,204,21,.55);
+}
+
+.po-signup-item-result strong{
+  color:#facc15;
+  font-size:12px;
+  white-space:nowrap;
+}
+
 .po-signup-preview-list{
   display:grid;
   gap:7px;
@@ -3208,7 +3283,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO Post" title="PO Post"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO Post</span></button>
+      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
       <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
       <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
@@ -3682,140 +3757,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">☰</span>
         <span class="raid-helper-summary-copy">
-          <strong>PO Post</strong>
-          <span>PO-Liste aus einem Discord-Channel lesen und als eigenen Post erstellen.</span>
+          <strong>PO-Anmelder</strong>
+          <span>PO-Anmelder mit Item-Auswahl erstellen und verwalten.</span>
         </span>
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="po-post-tabs" role="tablist" aria-label="PO Post Funktionen">
-        <button class="raid-helper-tab active" type="button" data-po-post-tab="post" onclick="setPoPostTab('post')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Post</strong><span>Liste pflegen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-po-post-tab="signup" onclick="setPoPostTab('signup')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Item-Menü erstellen</span></span></button>
-      </div>
-      <div id="poPostTab-post" class="po-post-tab-panel raid-helper-layout po-post-layout">
-        <div class="raid-helper-form">
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
-              <span class="raid-helper-card-icon">☰</span>
-              <div>
-                <h3>PO-Post erstellen & bearbeiten</h3>
-                <p>Unabhängig vom Raidanmelder: Quelle lesen, denselben Zielpost aktualisieren, Freigaben steuern.</p>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostSavedSelect">Gespeicherter PO-Post</label>
-                <select id="poPostSavedSelect" onchange="loadSelectedPoPostConfig()"></select>
-              </div>
-              <div class="field">
-                <label for="poPostKey">Post-ID</label>
-                <input id="poPostKey" type="text" placeholder="z. B. aq40-main-po">
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostSourceChannel">PO-Quelle</label>
-                <select id="poPostSourceChannel"></select>
-              </div>
-              <div class="field">
-                <label for="poPostTargetChannel">Posten nach</label>
-                <select id="poPostTargetChannel"></select>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostReviewRecipient">Freigabe per DM an</label>
-                <input id="poPostReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename">
-              </div>
-              <div class="field">
-                <label for="poPostTitle">Titel</label>
-                <input id="poPostTitle" type="text" value="PO Liste">
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
-                <label for="poPostLimit">Nachrichten prüfen</label>
-                <input id="poPostLimit" type="number" min="50" max="2000" value="800">
-              </div>
-              <div class="field">
-                <label for="poPostRaid">Raid-Hinweis</label>
-                <select id="poPostRaid">
-                  <option value="">Ohne Raidbindung</option>
-                  <option value="aq40">AQ40</option>
-                  <option value="bwl">BWL</option>
-                  <option value="mc">MC</option>
-                  <option value="naxx">Naxxramas</option>
-                  <option value="aq20">AQ20</option>
-                  <option value="zg">ZG</option>
-                  <option value="ony">Onyxia</option>
-                </select>
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field wide">
-                <label for="poPostNote">Ergänzende Nachricht</label>
-                <textarea id="poPostNote" rows="3" placeholder="Zusatztext der Raidleitung für diesen PO-Post"></textarea>
-              </div>
-            </div>
-            <div class="tools">
-              <button class="btn" type="button" onclick="queuePoPost()">PO Post aktualisieren</button>
-              <button class="btn ghost" type="button" onclick="savePoPostConfig()">Post speichern</button>
-              <button class="btn ghost" type="button" onclick="newPoPostConfig()">Neu</button>
-              <button class="btn danger" type="button" onclick="deletePoPostConfig()">Löschen</button>
-              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
-            </div>
-            <div id="poPostStatus" class="status">Bereit.</div>
-            <div class="po-post-list-block">
-              <div class="section-head compact">
-                <div>
-                  <h3>Gespeicherte PO-Posts</h3>
-                  <p>Post-IDs prüfen und alte Sammelposts sauber entfernen.</p>
-                </div>
-                <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
-              </div>
-              <div class="table-wrap">
-                <table class="po-post-config-table">
-                  <thead>
-                    <tr>
-                      <th>Post-ID</th>
-                      <th>Raid</th>
-                      <th>Quelle</th>
-                      <th>Ziel</th>
-                      <th>Einträge</th>
-                      <th>Zuletzt</th>
-                      <th>Aktion</th>
-                    </tr>
-                  </thead>
-                  <tbody id="poPostConfigRows"></tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-        <div class="raid-helper-preview po-post-entry-panel">
-          <div class="section-head compact">
-            <div>
-              <h3>PO-Einträge</h3>
-              <p id="poPostEntryPanelHint">Post-ID links anklicken, dann erscheinen hier die Einträge.</p>
-            </div>
-            <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
-          </div>
-          <div class="table-wrap">
-            <table class="po-post-entry-table">
-              <thead>
-                <tr>
-                  <th>Status</th>
-                  <th>Spieler</th>
-                  <th>Item</th>
-                  <th>Aktion</th>
-                </tr>
-              </thead>
-              <tbody id="poPostDetailRows"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout hidden">
+      <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
@@ -3873,6 +3821,35 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <select id="poSignupTargetChannel" onchange="updatePoSignupPreview()"></select>
               </div>
             </div>
+            <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
+              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
+              <span>
+                <strong>LichtLoot-ID erstellen</strong>
+                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
+              </span>
+            </label>
+            <div class="po-signup-item-tools">
+              <div class="po-signup-item-tool-row">
+                <div class="field">
+                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
+                  <select id="poSignupTemplateRaid">
+                    <option value="mc">MC</option>
+                    <option value="bwl">BWL</option>
+                    <option value="aq40">AQ40</option>
+                    <option value="naxx">Naxxramas</option>
+                    <option value="zg">ZG</option>
+                    <option value="aq20">AQ20</option>
+                    <option value="ony">Onyxia</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
+                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
+                </div>
+                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
+              </div>
+              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
+            </div>
             <div class="field">
               <label for="poSignupItems">Items für das Auswahlmenü</label>
               <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
@@ -3885,14 +3862,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
               <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
               <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
-              <button class="btn ghost" type="button" onclick="loadRaidHelperDiscordChannels()">Channel aktualisieren</button>
+              <button class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()">POs in Prioliste übertragen</button>
             </div>
             <div id="poSignupStatus" class="status">Bereit.</div>
             <div class="po-post-list-block">
               <div class="section-head compact">
                 <div>
                   <h3>Gespeicherte PO-Anmelder</h3>
-                  <p>Bestehende Anmelder öffnen, aktualisieren und alte Sammelposts entfernen.</p>
+                  <p>Bestehende Anmelder öffnen und alte Anmelder archivieren. Archivierte Einträge bleiben als Backup gespeichert.</p>
                 </div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
@@ -4220,6 +4197,9 @@ const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
+let poSignupGeneratedLichtlootRaid = null;
+const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
+const poSignupLootSearchCache = {};
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -6944,6 +6924,130 @@ function poSignupItemLines(){
     .slice(0,25);
 }
 
+function poSignupAllItemLines(){
+  const text = document.getElementById("poSignupItems")?.value || "";
+  const seen = new Set();
+  const items = [];
+  text.split(/\r?\n|;/).forEach(line => {
+    const item = line.trim();
+    const key = normalize(item);
+    if(!item || !key || seen.has(key)) return;
+    seen.add(key);
+    items.push(item);
+  });
+  return items;
+}
+
+function poSignupTemplateRaidKey(){
+  return poSignupNormalizeRaid(document.getElementById("poSignupTemplateRaid")?.value || poSignupSelectedRaidKey() || "aq40");
+}
+
+function setPoSignupItems(values, options={}){
+  const field = document.getElementById("poSignupItems");
+  if(!field) return [];
+  const items = poSignupCleanItemLines(values);
+  field.value = items.join("\n");
+  updatePoSignupPreview();
+  if(options.status){
+    const status = document.getElementById("poSignupStatus");
+    if(status) status.innerHTML = options.status(items);
+  }
+  return items;
+}
+
+function addPoSignupItem(value){
+  const status = document.getElementById("poSignupStatus");
+  const item = String(value || "").trim();
+  if(!item) return;
+  const current = poSignupAllItemLines();
+  const key = normalize(item);
+  if(current.some(existing => normalize(existing) === key)){
+    if(status) status.innerHTML = `<span class="warn">${escapeHtml(item)} ist schon in der Auswahl.</span>`;
+    return;
+  }
+  if(current.length >= 25){
+    if(status) status.innerHTML = '<span class="warn">Discord erlaubt maximal 25 Items im Dropdown. Bitte erst ein Item entfernen.</span>';
+    return;
+  }
+  setPoSignupItems([...current, item]);
+  if(status) status.innerHTML = `<span class="good">${escapeHtml(item)} wurde hinzugefügt.</span>`;
+}
+
+async function loadPoSignupLootItems(raid){
+  const raidKey = poSignupNormalizeRaid(raid || "");
+  if(!raidKey) return [];
+  if(poSignupLootSearchCache[raidKey]) return poSignupLootSearchCache[raidKey];
+  const result = await railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() });
+  if(!result.success) throw new Error(result.error || "Lootliste konnte nicht geladen werden.");
+  const items = [];
+  (Array.isArray(result.items) ? result.items : []).forEach(row => {
+    items.push(row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName);
+  });
+  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items);
+  return poSignupLootSearchCache[raidKey];
+}
+
+async function loadPoSignupTemplateItems(){
+  const status = document.getElementById("poSignupStatus");
+  const raidKey = poSignupTemplateRaidKey();
+  if(status) status.textContent = "Vorlage wird geladen ...";
+  try{
+    const values = [];
+    const [p0Result, lootItems] = await Promise.all([
+      railwayApi({ action:"getP0Plus", raid:raidKey, t:Date.now() }).catch(() => null),
+      loadPoSignupLootItems(raidKey).catch(() => [])
+    ]);
+    (Array.isArray(p0Result?.entries) ? p0Result.entries : []).forEach(entry => {
+      const entryRaid = poSignupNormalizeRaid(entry.raid || entry.raidType || raidKey);
+      if(entryRaid !== raidKey) return;
+      values.push(entry.item || entry.itemName);
+    });
+    if(!values.length) values.push(...lootItems);
+    const items = setPoSignupItems(values, {
+      status: loaded => `<span class="good">${escapeHtml(String(loaded.length))} Item(s) für ${escapeHtml(raidKey.toUpperCase())} geladen.</span>`
+    });
+    if(!items.length && status) status.innerHTML = `<span class="warn">Für ${escapeHtml(raidKey.toUpperCase())} wurden keine Items gefunden.</span>`;
+  }catch(error){
+    if(status) status.textContent = error.message || "Vorlage konnte nicht geladen werden.";
+  }
+}
+
+async function renderPoSignupLootSearchResults(){
+  const box = document.getElementById("poSignupLootSearchResults");
+  const input = document.getElementById("poSignupLootSearch");
+  const query = input?.value.trim() || "";
+  if(!box) return;
+  if(query.length < 2){
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  box.classList.remove("hidden");
+  box.innerHTML = '<div class="muted">Suche läuft ...</div>';
+  try{
+    const raidKey = poSignupTemplateRaidKey();
+    const words = normalize(query).split(/\s+/).filter(Boolean);
+    const items = await loadPoSignupLootItems(raidKey);
+    const current = new Set(poSignupAllItemLines().map(item => normalize(item)));
+    const matches = items
+      .filter(item => {
+        const key = normalize(item);
+        return words.every(word => key.includes(word));
+      })
+      .slice(0,25);
+    if(!matches.length){
+      box.innerHTML = `<div class="muted">Keine Treffer für ${escapeHtml(query)}.</div>`;
+      return;
+    }
+    box.innerHTML = matches.map(item => {
+      const exists = current.has(normalize(item));
+      return `<button class="po-signup-item-result" type="button" onclick="addPoSignupItem('${escapeJsString(item)}')" ${exists ? "disabled" : ""}><strong>${escapeHtml(item)}</strong><span>${exists ? "schon in Auswahl" : "hinzufügen"}</span></button>`;
+    }).join("");
+  }catch(error){
+    box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Suche konnte nicht geladen werden.")}</div>`;
+  }
+}
+
 function makePoSignupKey(raid, raidDate, raidTime){
   const raidPart = poSignupNormalizeRaid(raid || "raid") || "raid";
   const datePart = String(raidDate || "").replace(/[^0-9]+/g,"") || todayIsoDate().replace(/[^0-9]+/g,"");
@@ -6965,6 +7069,7 @@ function updatePoSignupDefaults(overwriteTitle=true){
 }
 
 function updatePoSignupPreview(){
+  resetPoSignupLichtlootRaidIfStale();
   const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
   const raid = document.getElementById("poSignupRaid")?.value || "";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
@@ -7172,6 +7277,7 @@ function getPoSignupConfig(){
     setValue("poSignupPostKey", postKey);
   }
   const sourceChannelId = document.getElementById("poSignupSourceChannel")?.value || "";
+  const prio = poSignupGeneratedLichtlootRaid;
   return {
     postKey,
     sourceChannelId,
@@ -7184,8 +7290,138 @@ function getPoSignupConfig(){
     limit:"800",
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
-    itemOptions:poSignupItemLines().join("\n")
+    itemOptions:poSignupItemLines().join("\n"),
+    createLichtlootRaid: Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked),
+    lichtlootRaidId: prio?.raidId || "",
+    lichtlootPlayerPin: prio?.playerPin || "",
+    lichtlootLeadPin: prio?.leadPin || ""
   };
+}
+
+function poSignupLichtlootFingerprint(config){
+  return [
+    poSignupNormalizeRaid(config?.raid || ""),
+    config?.raidDate || "",
+    config?.raidTime || "",
+    config?.postKey || ""
+  ].join("|");
+}
+
+function poSignupLichtlootCreatorName(){
+  const recipient = document.getElementById("poSignupReviewRecipient")?.value.trim();
+  return recipient || "Gildenleitung";
+}
+
+function resetPoSignupLichtlootRaidIfStale(){
+  if(!poSignupGeneratedLichtlootRaid) return;
+  const config = getPoSignupConfig();
+  if(poSignupGeneratedLichtlootRaid.fingerprint !== poSignupLichtlootFingerprint(config)){
+    poSignupGeneratedLichtlootRaid = null;
+  }
+}
+
+async function ensurePoSignupLichtlootRaid(config, options={}){
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const checked = Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked);
+  if(!checked) return config;
+  if(!masterCode) throw new Error("Bitte erst Master-Code eingeben.");
+  if(!config.raidDate || !config.raidTime) throw new Error("Bitte Raid-Datum und Raid-Uhrzeit eintragen.");
+
+  const fingerprint = poSignupLichtlootFingerprint(config);
+  if(poSignupGeneratedLichtlootRaid?.fingerprint === fingerprint && poSignupGeneratedLichtlootRaid.playerPin){
+    const reusedText = buildRaidDiscordPostText(
+      RAID_OPTIONS[config.raid]?.name || config.title || config.raid,
+      config.raidDate,
+      config.raidTime,
+      getCurrentGuildBrand().guildName,
+      poSignupGeneratedLichtlootRaid.playerPin,
+      poSignupGeneratedLichtlootRaid.createdBy
+    );
+    setValue("poSignupNote", reusedText);
+    updatePoSignupPreview();
+    return Object.assign({}, config, {
+      note:reusedText,
+      lichtlootRaidId:poSignupGeneratedLichtlootRaid.raidId,
+      lichtlootPlayerPin:poSignupGeneratedLichtlootRaid.playerPin,
+      lichtlootLeadPin:poSignupGeneratedLichtlootRaid.leadPin || ""
+    });
+  }
+
+  const raidKey = poSignupNormalizeRaid(config.raid || "aq40") || "aq40";
+  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.aq40;
+  const raidName = raid.name || config.title || raidKey.toUpperCase();
+  const playerPin = randomCode(3);
+  const leadPin = randomCode(4);
+  const raidId = createRaidIdForGuildPage(raidKey);
+  const createdBy = poSignupLichtlootCreatorName();
+
+  if(status && !options.silent){
+    status.textContent = "LichtLoot-Prio-ID wird erstellt ...";
+    status.className = "status";
+  }
+
+  const result = await railwayWrite({
+    action:"createRaid",
+    masterCode,
+    raidId,
+    raid:raidKey,
+    raidName,
+    raidDate:config.raidDate,
+    raidTime:config.raidTime,
+    datum:config.raidDate,
+    uhrzeit:config.raidTime,
+    guild:CURRENT_GUILD_SLUG,
+    gilde:getCurrentGuildBrand().guildName,
+    guildName:getCurrentGuildBrand().guildName,
+    displayGuild:getCurrentGuildBrand().guildName,
+    playerPin,
+    leadPin,
+    status:"geschlossen",
+    p0PlusFreigabe:"geöffnet",
+    createdBy,
+    erstelltVon:createdBy,
+    raidHelperEnabled:"false",
+    description:config.note || ""
+  });
+  if(!result.success){
+    throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
+  }
+
+  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, playerPin, createdBy);
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId, playerPin, leadPin, createdBy };
+  setValue("poSignupNote", note);
+  updatePoSignupPreview();
+  if(status && !options.silent){
+    status.innerHTML = `<span class="good">LichtLoot-Prio-ID erstellt. Prio-PIN: <strong>${escapeHtml(playerPin)}</strong></span>`;
+    status.className = "status good";
+  }
+  return Object.assign({}, config, {
+    note,
+    lichtlootRaidId:raidId,
+    lichtlootPlayerPin:playerPin,
+    lichtlootLeadPin:leadPin
+  });
+}
+
+async function handlePoSignupPrioOptionChange(){
+  const checkbox = document.getElementById("poSignupCreateLichtlootRaid");
+  const status = document.getElementById("poSignupStatus");
+  if(!checkbox?.checked){
+    poSignupGeneratedLichtlootRaid = null;
+    updatePoSignupPreview();
+    return;
+  }
+  try{
+    let config = getPoSignupConfig();
+    config = await ensurePoSignupLichtlootRaid(config);
+  }catch(error){
+    if(status){
+      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+      status.className = "status bad";
+    }
+    if(checkbox) checkbox.checked = false;
+  }
 }
 
 function poPostEntryRowsForKey(postKey){
@@ -7251,21 +7487,10 @@ function renderPoSignupReviewRows(){
 }
 
 function initPoPostPanel(){
-  renderPoPostConfigSelect();
-  renderPoPostConfigRows();
   renderPoPostChannelSelects();
-  loadRaidHelperDiscordChannels();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poPostSourceChannel","poPostTargetChannel","poPostTitle","poPostRaid","poPostLimit","poPostKey","poPostNote"].forEach(id => {
-    const select = document.getElementById(id);
-    if(select && !select.dataset.poBound){
-      select.addEventListener("change", updatePoPostPreview);
-      select.addEventListener("input", updatePoPostPreview);
-      select.dataset.poBound = "1";
-    }
-  });
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote","poSignupCreateLichtlootRaid"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -7273,11 +7498,6 @@ function initPoPostPanel(){
       field.dataset.poSignupBound = "1";
     }
   });
-  const recipient = document.getElementById("poPostReviewRecipient");
-  if(recipient && !recipient.dataset.poBound){
-    recipient.addEventListener("input", updatePoPostPreview);
-    recipient.dataset.poBound = "1";
-  }
 }
 
 function readPoPostConfigs(){
@@ -7374,7 +7594,11 @@ function isPoSignupConfigGroup(row){
 
 function renderPoPostConfigRows(){
   const tbody = document.getElementById("poPostConfigRows");
-  if(!tbody) return;
+  if(!tbody){
+    renderPoSignupReviewRows();
+    renderPoSignupConfigRows();
+    return;
+  }
   const rows = poPostConfigGroups();
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Posts gespeichert.</td></tr>';
@@ -7393,7 +7617,6 @@ function renderPoPostConfigRows(){
         <select class="small-select" onchange="runPoPostRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
-          <option value="refresh">Post aktualisieren</option>
           ${row.archivedCount && !row.count
             ? `<option value="restore">Wiederherstellen</option>`
             : `<option value="delete">Löschen</option>`}
@@ -7415,11 +7638,6 @@ async function runPoPostRowAction(select, postKey){
     selectPoPostForReview(key);
     return;
   }
-  if(action === "refresh"){
-    selectPoPostForReview(key);
-    await queuePoPost();
-    return;
-  }
   if(action === "restore"){
     await restorePoPostEverywhere(key);
     return;
@@ -7432,7 +7650,9 @@ async function runPoPostRowAction(select, postKey){
 function renderPoSignupConfigRows(){
   const tbody = document.getElementById("poSignupConfigRows");
   if(!tbody) return;
-  const rows = poPostConfigGroups().filter(isPoSignupConfigGroup);
+  const rows = poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     return;
@@ -7449,10 +7669,8 @@ function renderPoSignupConfigRows(){
         <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
           <option value="">Aktion wählen</option>
           <option value="open">Öffnen</option>
-          <option value="refresh">Post aktualisieren</option>
-          ${row.archivedCount && !row.count
-            ? `<option value="restore">Wiederherstellen</option>`
-            : `<option value="delete">Löschen</option>`}
+          <option value="sync-prios">POs in Prioliste übertragen</option>
+          <option value="archive">Archivieren</option>
         </select>
       </td>
     </tr>
@@ -7468,17 +7686,84 @@ async function runPoSignupRowAction(select, postKey){
     selectPoSignupForReview(key);
     return;
   }
-  if(action === "refresh"){
-    selectPoSignupForReview(key);
-    await createPoSignupPost();
+  if(action === "archive"){
+    await archivePoSignupEverywhere(key);
     return;
   }
-  if(action === "restore"){
-    await restorePoPostEverywhere(key);
+  if(action === "sync-prios"){
+    await syncPoSignupPriosForPost(key);
     return;
   }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
+  }
+}
+
+function poSignupConfigForKey(postKey){
+  const key = String(postKey || "").trim();
+  return readPoPostConfigs().find(item => item.postKey === key) || null;
+}
+
+function poSignupLichtlootPinForConfig(config){
+  return String(
+    config?.lichtlootPlayerPin ||
+    config?.playerPin ||
+    config?.prioPin ||
+    config?.lichtlootRaidId ||
+    ""
+  ).trim();
+}
+
+async function syncCurrentPoSignupPrios(){
+  const config = getPoSignupConfig();
+  await syncPoSignupPriosForPost(config.postKey, config);
+}
+
+async function syncPoSignupPriosForPost(postKey, providedConfig){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(!key){
+    if(status) status.innerHTML = '<span class="bad">Bitte erst einen PO-Anmelder auswählen.</span>';
+    return;
+  }
+
+  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
+  let raidPin = poSignupLichtlootPinForConfig(config);
+  if(!raidPin){
+    raidPin = prompt("Welche LichtLoot Prio-ID/PIN soll für diesen PO-Anmelder benutzt werden?", "") || "";
+  }
+  raidPin = raidPin.trim();
+  if(!raidPin){
+    if(status) status.innerHTML = '<span class="bad">Keine LichtLoot-ID eingetragen. Es wurde nichts übertragen.</span>';
+    return;
+  }
+
+  try{
+    if(status) status.textContent = "POs werden in die LichtLoot-Prioliste übertragen ...";
+    const result = await railwayWrite({
+      action:"guildSyncPoSignupPrios",
+      masterCode,
+      postKey:key,
+      raidPin,
+      raid: config.raid || "",
+      raidName: config.raid || "",
+      server:"Lichtbringer"
+    });
+    const failedText = result.failed ? `, ${result.failed} Fehler` : "";
+    if(status){
+      status.innerHTML = `<span class="${result.failed ? "warn" : "good"}">${escapeHtml(String(result.synced || 0))} PO(s) in die Prioliste übertragen${escapeHtml(failedText)}.</span>`;
+    }
+    if(result.errors?.length){
+      const preview = result.errors.slice(0, 4).map(error => `${error.player || "-"} / ${error.item || "-"}: ${error.error || "Fehler"}`).join("\n");
+      alert(`Einige Einträge konnten nicht übertragen werden:\n${preview}`);
+    }
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "POs konnten nicht übertragen werden.")}</span>`;
   }
 }
 
@@ -7517,6 +7802,15 @@ function setPoSignupFormConfig(config){
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
+  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
+  poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
+    fingerprint:poSignupLichtlootFingerprint(config),
+    raidId:config.lichtlootRaidId || "",
+    playerPin:config.lichtlootPlayerPin || "",
+    leadPin:config.lichtlootLeadPin || "",
+    createdBy:config.createdBy || config.erstelltVon || poSignupLichtlootCreatorName()
+  } : null;
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
   if(source) source.value = config.sourceChannelId || "";
@@ -7720,6 +8014,43 @@ async function deletePoPostEverywhere(postKey){
   await loadPoPostStoredEntries();
 }
 
+async function archivePoSignupEverywhere(postKey){
+  const key = String(postKey || "").trim();
+  const status = document.getElementById("poSignupStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!key){
+    if(status) status.textContent = "Anmelde-ID fehlt.";
+    return;
+  }
+  if(!confirm(`PO-Anmelder "${key}" archivieren? Er verschwindet aus der Liste, bleibt aber in Railway als Backup gespeichert.`)){
+    return;
+  }
+  const group = poPostConfigGroups().find(item => item.postKey === key) || {};
+  writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
+  if(status) status.textContent = `PO-Anmelder ${key} wird archiviert ...`;
+  try{
+    if(masterCode){
+      const result = await railwayWrite({
+        action:"guildDeletePoPost",
+        masterCode,
+        postKey:key,
+        sourceChannelId:group.sourceChannelId || "",
+        targetChannelId:group.targetChannelId || "",
+        title:group.title || "PO-Anmelder",
+        raid:group.raid || ""
+      });
+      if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht archiviert werden.");
+      if(status) status.innerHTML = `<span class="good">PO-Anmelder archiviert. Backup bleibt in Railway gespeichert.</span>`;
+    }else if(status){
+      status.innerHTML = '<span class="warn">Lokal aus der Liste entfernt. Für Railway bitte Master-Code eingeben und erneut archivieren.</span>';
+    }
+  }catch(error){
+    if(status) status.textContent = error.message || "PO-Anmelder konnte nicht archiviert werden.";
+  }
+  renderPoPostConfigSelect();
+  await loadPoPostStoredEntries();
+}
+
 async function restorePoPostEverywhere(postKey){
   const key = String(postKey || "").trim();
   const status = document.getElementById("poPostStatus");
@@ -7789,6 +8120,17 @@ async function createPoSignupPost(){
     if(status) status.textContent = "Bitte Raid-Datum und Raid-Uhrzeit eintragen.";
     return;
   }
+  if(config.createLichtlootRaid){
+    try{
+      config = await ensurePoSignupLichtlootRaid(config);
+    }catch(error){
+      if(status){
+        status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+        status.className = "status bad";
+      }
+      return;
+    }
+  }
   if(!config.itemOptions){
     if(status) status.textContent = "Itemliste wird automatisch aus LichtLoot geladen ...";
     config = await ensurePoSignupItemOptions(config);
@@ -7827,7 +8169,11 @@ async function createPoSignupPost(){
       limit: config.limit,
       mode: config.mode,
       note: config.note,
-      itemOptions: config.itemOptions
+      itemOptions: config.itemOptions,
+      createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
+      lichtlootRaidId: config.lichtlootRaidId || "",
+      lichtlootPlayerPin: config.lichtlootPlayerPin || "",
+      lichtlootLeadPin: config.lichtlootLeadPin || ""
     });
     if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht queued werden.");
     if(status){
@@ -7846,9 +8192,13 @@ function newPoSignupConfig(){
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
   setValue("poSignupTitle", `${label} PO-Anmelder`);
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
+  setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
+  if(prioCheckbox) prioCheckbox.checked = false;
+  poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
   renderPoSignupConfigRows();
@@ -9389,7 +9739,7 @@ function renderPoPostEntryRows(){
   if(!rows.length){
     const emptyText = poPostRaidFilter
       ? `Keine aktiven PO-Post-Einträge für ${poPostRaidFilter.toUpperCase()} gefunden.`
-      : "Noch keine aktiven PO-Post-Einträge gespeichert. Einmal PO Post aktualisieren, dann erscheinen sie hier.";
+      : "Noch keine aktiven PO-Post-Einträge gespeichert.";
     tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
     return;
   }
@@ -11481,6 +11831,16 @@ function escapeHtml(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
+}
+
+function escapeJsString(value){
+  return String(value == null ? "" : value)
+    .replace(/\\/g,"\\\\")
+    .replace(/'/g,"\\'")
+    .replace(/\r/g,"\\r")
+    .replace(/\n/g,"\\n")
+    .replace(/\u2028/g,"\\u2028")
+    .replace(/\u2029/g,"\\u2029");
 }
 
 function escapeAttr(value){

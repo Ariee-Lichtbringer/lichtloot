@@ -1863,6 +1863,20 @@ body.raid-create-open:before{
 .instance-card p{
   overflow-wrap:anywhere!important;
 }
+.instance-card .dashboard-raid-date{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:26px!important;
+  margin:0 0 8px!important;
+  padding:5px 8px!important;
+  border:1px solid rgba(250,204,21,.48)!important;
+  border-radius:6px!important;
+  background:linear-gradient(90deg,rgba(250,204,21,.18),rgba(15,23,42,.58))!important;
+  color:#fef3c7!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  line-height:1.25!important;
+}
 .instance-card .raid-btn{
   min-height:38px!important;
   align-self:end!important;
@@ -2919,6 +2933,14 @@ function formatRaidDateForDisplay(value){
   return value;
 }
 
+function formatRaidDateWithWeekday(value){
+  if(!value) return "-";
+  const parsed=parseActiveRaidDate(value);
+  if(!parsed) return formatRaidDateForDisplay(value);
+  const weekdays=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  return weekdays[parsed.getDay()]+", "+formatRaidDateForDisplay(value);
+}
+
 function formatP0DeadlineForDisplay(dateValue,timeValue){
   if(!dateValue || !timeValue) return "-";
   const raidStart=new Date(dateValue+"T"+timeValue+":00");
@@ -3153,7 +3175,7 @@ function renderStartDashboard(entries){
     window.dashboardNextRaid=next;
     const name=next.raidName || next.name || raids[next._raidKey].name;
     setDashboardText("nextRaidName",name);
-    setDashboardText("nextRaidDate",formatRaidDateForDisplay(activeRaidDate(next)));
+    setDashboardText("nextRaidDate",formatRaidDateWithWeekday(activeRaidDate(next)));
     setDashboardText("nextRaidTime",formatRaidTimeForDisplay(activeRaidTime(next)) + " Uhr");
     setDashboardText("nextRaidGuild",activeRaidGuild(next) || CURRENT_GUILD_BRAND.guildName);
     setDashboardText("nextRaidStatus",dashboardPrioLabel(next));
@@ -3223,7 +3245,6 @@ function renderUpcomingRaidCards(list){
     const raidKey=entry._raidKey;
     const name=entry.raidName || entry.name || raids[raidKey].name;
     const pin=activeRaidPin(entry);
-    const date=formatRaidDateForDisplay(activeRaidDate(entry));
     const time=formatRaidTimeForDisplay(activeRaidTime(entry));
     const guild=activeRaidGuild(entry) || CURRENT_GUILD_BRAND.guildName;
     const buttonLabel="Zur Prio";
@@ -3232,7 +3253,7 @@ function renderUpcomingRaidCards(list){
       '<img src="'+safeAttr(raidImagePath(raidKey))+'" alt="">'+
       '<div>'+
         '<h3>'+safeHtml(name)+'</h3>'+
-        '<p>'+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
+        '<p class="dashboard-raid-date">'+safeHtml(formatRaidDateWithWeekday(activeRaidDate(entry)))+' · '+safeHtml(time)+' Uhr</p>'+
         '<p>Gilde: '+safeHtml(guild)+'</p>'+
         '<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p>'+
         '<p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>'+
