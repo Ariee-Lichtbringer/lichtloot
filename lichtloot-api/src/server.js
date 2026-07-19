@@ -5156,10 +5156,11 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
 
 async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  const raidPin = poSignupPrioPinFromParams(params);
   const raid = await findRaid(guildId, {
     ...params,
-    prioPin: params.raidPin || params.prioPin || params.playerPin,
-    playerPin: params.raidPin || params.prioPin || params.playerPin
+    prioPin: raidPin,
+    playerPin: raidPin
   });
   if (!raid) {
     const error = new Error("Raid wurde für diese LichtLoot-ID nicht gefunden.");
@@ -5180,7 +5181,18 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   try {
     await client.query("begin");
 
-    const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    const character = await findPoSignupCharacterForPrio(client, guildId, params);
+    const discordUserId = clean(params.discordUserId);
+    if (discordUserId) {
+      await client.query(
+        `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+         values ($1, $2, $3, $4, 'discord-po')
+         on conflict (guild_id, discord_user_id, character_id) do update
+           set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+               updated_at = now()`,
+        [guildId, discordUserId, character.id, clean(params.discordName)]
+      );
+    }
     const item = await upsertItem(client, raidType, itemName, params.itemId || params.itemGameId || params.p1ItemId);
     if (!item) {
       const error = new Error("Item wurde nicht gefunden.");
@@ -5202,7 +5214,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       p0Item: item.name,
       raidTime: raid.raid_time || clean(params.raidTime || params.uhrzeit),
       source: "po-bot",
-      discordUserId: clean(params.discordUserId)
+      discordUserId
     });
 
     const prioResult = await client.query(
@@ -5238,6 +5250,103 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
 function poSignupPrioPinFromParams(params) {
   return clean(params.raidPin || params.prioPin || params.lichtlootRaidId || params.lichtlootPlayerPin || params.playerLinkPin || params.playerPin || "");
+}
+
+function poSignupOwnerPinFromParams(params) {
+  const raidPin = normalizePin(poSignupPrioPinFromParams(params));
+  const directCandidates = [
+    params.spielerLogin,
+    params.loginPin,
+    params.creatorPlayerLogin,
+    params.characterPin,
+    params.masterCharacterPin,
+    params.meinLichtloot,
+    params.ownerPlayerPin,
+    params.playerLoginPin
+  ];
+  for (const candidate of directCandidates) {
+    const pin = normalizePin(candidate);
+    if (pin && pin !== raidPin) return pin;
+  }
+
+  const hasSeparateRaidPin = clean(params.raidPin || params.prioPin || params.lichtlootRaidId || params.lichtlootPlayerPin || params.playerLinkPin);
+  for (const candidate of [params.playerPin, params.pin]) {
+    const pin = normalizePin(candidate);
+    if (hasSeparateRaidPin && pin && pin !== raidPin) return pin;
+  }
+  return "";
+}
+
+async function findPoSignupLinkedCharacter(client, guildId, params) {
+  const discordUserId = clean(params.discordUserId);
+  const player = clean(params.player || params.char || params.spieler);
+  const server = clean(params.server);
+  if (!discordUserId) return null;
+
+  const values = [guildId, discordUserId];
+  let playerClause = "";
+  if (player) {
+    values.push(player);
+    playerClause = `and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`;
+  }
+  let serverOrder = "1";
+  if (server) {
+    values.push(server);
+    serverOrder = `case when lower(c.server) = lower($${values.length}) then 0 else 1 end`;
+  }
+
+  const result = await client.query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from discord_player_links dpl
+     join characters c on c.id = dpl.character_id
+     join players p on p.id = c.player_id
+     where dpl.guild_id = $1
+       and dpl.discord_user_id = $2
+       and p.guild_id = $1
+       ${playerClause}
+     order by
+       case when p.player_pin ilike 'RL%' then 1 else 0 end,
+       ${serverOrder},
+       c.is_main desc,
+       dpl.updated_at desc,
+       c.created_at asc
+     limit 1`,
+    values
+  );
+  return result.rows[0] || null;
+}
+
+async function findPoSignupCharacterForPrio(client, guildId, params) {
+  const player = clean(params.player || params.char || params.spieler);
+  const server = clean(params.server) || "Everlook";
+  const className = normalizeLichtLootClassName(params.className || params.class || params.klasse);
+  const ownerPin = poSignupOwnerPinFromParams(params);
+
+  if (ownerPin && player) {
+    const character = await findCharacterForPin(guildId, ownerPin, player, server);
+    if (character) {
+      if (className && clean(character.class_name).toLowerCase() !== className.toLowerCase()) {
+        const updated = await client.query(
+          `update characters
+           set class_name = $1, updated_at = now()
+           where id = $2
+           returning id, name, server, class_name, created_at`,
+          [className, character.id]
+        );
+        return updated.rows[0];
+      }
+      return character;
+    }
+  }
+
+  const linkedCharacter = await findPoSignupLinkedCharacter(client, guildId, params);
+  if (linkedCharacter) return linkedCharacter;
+
+  return findOrCreateRaidleadCharacter(client, guildId, {
+    ...params,
+    server,
+    className: className || clean(params.className || params.class || params.klasse)
+  });
 }
 
 async function tryAutoSyncPoSignupPrio({ guildId, params, entry }) {
