@@ -274,6 +274,8 @@ function poItemAliasKey(value) {
 
 const PO_ITEM_ALIASES = {
   brust4werte: "Formel: Brust - Große Werte",
+  gebundeneessenzvonsaphiron: "Die gebundene Essenz Saphirons",
+  gebundeneessenzsaphirons: "Die gebundene Essenz Saphirons",
   gressil: "Gressil, Vorbote des Untergangs",
   thc: "Die zehrende Kälte",
   zehrendekalte: "Die zehrende Kälte",
@@ -13664,7 +13666,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "naxx-po-item-alias-cleanup-v3";
+  const markerKey = "naxx-po-item-alias-cleanup-v4";
   const raidTypes = raidTypeSearchValues("naxx").map(value => value.toLowerCase());
   const corrections = [
     {
