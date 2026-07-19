@@ -273,6 +273,7 @@ function poItemAliasKey(value) {
 }
 
 const PO_ITEM_ALIASES = {
+  amulettvonveknilash: "Amulett von Vek'nilash",
   brust4werte: "Formel: Brust - Große Werte",
   gebundeneessenzvonsaphiron: "Die gebundene Essenz Saphirons",
   gebundeneessenzsaphirons: "Die gebundene Essenz Saphirons",
@@ -13666,8 +13667,11 @@ async function applyEterniumLockboxRaidItemsOnce() {
 }
 
 async function applyNaxxPoItemAliasCleanupOnce() {
-  const markerKey = "naxx-po-item-alias-cleanup-v4";
-  const raidTypes = raidTypeSearchValues("naxx").map(value => value.toLowerCase());
+  const markerKey = "po-item-alias-cleanup-aq40-naxx-v1";
+  const raidTypes = [
+    ...raidTypeSearchValues("aq40"),
+    ...raidTypeSearchValues("naxx")
+  ].map(value => value.toLowerCase());
   const corrections = [
     {
       targetName: "Amulett von Vek'nilash",
