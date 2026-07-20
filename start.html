@@ -2026,6 +2026,84 @@ body.raid-create-open:before{
   min-height:30px!important;
   font-size:11.5px!important;
 }
+.start-po-login-callout{
+  position:relative;
+  min-height:58px;
+  max-width:430px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  padding:9px 10px 9px 14px;
+  border-radius:8px;
+  border:2px solid rgba(250,204,21,.72);
+  background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(15,23,42,.82));
+  box-shadow:0 10px 24px rgba(0,0,0,.30),0 0 0 3px rgba(250,204,21,.08);
+}
+.start-po-login-callout:before{
+  content:"";
+  position:absolute;
+  left:-28px;
+  top:50%;
+  width:24px;
+  height:4px;
+  transform:translateY(-50%) rotate(-8deg);
+  background:#facc15;
+  border-radius:999px;
+  box-shadow:-7px -7px 0 -2px #facc15,-7px 7px 0 -2px #facc15;
+}
+.start-po-arrow{
+  min-width:42px;
+  min-height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:#facc15;
+  color:#111827;
+  font-weight:950;
+  transform:rotate(-7deg);
+  box-shadow:0 4px 0 rgba(161,98,7,.95);
+}
+.start-po-login-copy{min-width:0}
+.start-po-login-copy span{
+  display:block;
+  color:#fde68a;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.start-po-login-copy strong{
+  display:block;
+  color:#fff;
+  font-size:20px;
+  line-height:1.05;
+  letter-spacing:.08em;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.start-po-login-copy small{
+  display:block;
+  color:#dbeafe;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.25;
+}
+.start-po-login-callout button{
+  min-height:32px;
+  padding:7px 9px;
+  border-radius:7px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(2,6,23,.70);
+  color:#f8fafc;
+  font-weight:950;
+  cursor:pointer;
+}
+@media(max-width:1180px){
+  .start-po-login-callout{order:5;width:100%;max-width:none}
+  .start-po-login-callout:before{display:none}
+}
 
 </style>
 </head>
@@ -2276,7 +2354,7 @@ body.raid-create-open:before{
         <button type="button" onclick="openPrioPage('ony')">ONY</button>
       </div>
     </section>
-    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><button class="start-top-btn" onclick="installLichtLootApp()">App installieren</button><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-top-btn" onclick="installLichtLootApp()">App installieren</button><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -4092,6 +4170,7 @@ function syncHiddenPinFromDashboard(){
   hydrateDashboardPlayerPin();
   const source=document.getElementById("dashboardPlayerPin");
   const pin=source ? source.value.trim() : "";
+  if(pin) updateStartPoLoginCallout(pin);
   const targets=["myPriosPin","twinkPlayerPin"];
   targets.forEach(id=>{
     const target=document.getElementById(id);
@@ -4520,6 +4599,36 @@ function rememberLichtLootPlayerPin(pin){
     try{ localStorage.setItem(key, cleanPin); }catch(error){}
     try{ sessionStorage.setItem(key, cleanPin); }catch(error){}
   });
+  updateStartPoLoginCallout(cleanPin);
+}
+
+function updateStartPoLoginCallout(pin){
+  const box=document.getElementById("startPoLoginCallout");
+  const value=document.getElementById("startPoLoginValue");
+  if(!box || !value) return;
+  const cleanPin=String(pin || "").trim().toUpperCase();
+  if(!cleanPin){
+    box.classList.add("hidden");
+    value.textContent="----";
+    return;
+  }
+  value.textContent=cleanPin;
+  box.classList.remove("hidden");
+}
+
+async function copyStartPoLogin(){
+  const pin=getStoredLichtLootPlayerPin() || document.getElementById("dashboardPlayerPin")?.value.trim() || "";
+  const cleanPin=String(pin || "").trim().toUpperCase();
+  if(!cleanPin) return;
+  try{
+    await navigator.clipboard.writeText(cleanPin);
+    const button=document.querySelector("#startPoLoginCallout button");
+    if(button){
+      const oldText=button.textContent;
+      button.textContent="kopiert";
+      window.setTimeout(()=>{ button.textContent=oldText; },1200);
+    }
+  }catch(error){}
 }
 
 function hydrateDashboardPlayerPin(){
@@ -4532,6 +4641,7 @@ function hydrateDashboardPlayerPin(){
     if(my && !my.value.trim()) my.value=saved;
     if(twink && !twink.value.trim()) twink.value=saved;
   }
+  updateStartPoLoginCallout(saved);
   return saved;
 }
 
@@ -4545,6 +4655,7 @@ function logoutLichtLootPlayer(){
     const el=document.getElementById(id);
     if(el) el.value="";
   });
+  updateStartPoLoginCallout("");
 
   myWorldbuffEntries=[];
   myWorldbuffOpenSlots=[];
