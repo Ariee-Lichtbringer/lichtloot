@@ -2435,7 +2435,7 @@ body.raid-create-open:before{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card app-download-card" id="appDownloadCard"><img src="images/content.png" alt=""><div><h2>LichtLoot App</h2><p>Als App auf den Homescreen laden und direkt Priolisten eintragen.</p></div><div class="app-download-actions"><button class="right-inline-btn" onclick="installLichtLootApp()">App installieren</button><a class="right-inline-btn" href="start.html?install=1">Download-Link öffnen</a></div><p id="appInstallHint" class="app-install-note">iPhone: In Safari teilen öffnen und “Zum Home-Bildschirm” wählen.</p></section><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Login, Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><div class="right-pin-row"><input id="dashboardPlayerPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="dashboardPriosEnter(event)"><button class="right-inline-btn" onclick="dashboardLoadLichtLoot()">Einloggen</button></div><p id="dashboardMyStatus" class="dashboard-inline-status">Mit deinem SpielerLogin anmelden.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card app-download-card" id="appDownloadCard"><img src="images/content.png" alt=""><div><h2>LichtLoot App</h2><p>Als App auf den Homescreen laden und direkt Priolisten eintragen.</p></div><div class="app-download-actions"><button class="right-inline-btn" onclick="installLichtLootApp()">App installieren</button><a class="right-inline-btn" href="start.html?install=1">Download-Link öffnen</a></div><p id="appInstallHint" class="app-install-note">iPhone: In Safari teilen öffnen und “Zum Home-Bildschirm” wählen.</p></section><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -4167,10 +4167,7 @@ async function loadDashboardLogAnalyses(){
 }
 
 function syncHiddenPinFromDashboard(){
-  hydrateDashboardPlayerPin();
-  const source=document.getElementById("dashboardPlayerPin");
-  const pin=source ? source.value.trim() : "";
-  if(pin) updateStartPoLoginCallout(pin);
+  const pin=hydrateDashboardPlayerPin();
   const targets=["myPriosPin","twinkPlayerPin"];
   targets.forEach(id=>{
     const target=document.getElementById(id);
@@ -4232,7 +4229,7 @@ async function dashboardLoadLichtLoot(){
   const box=document.getElementById("myPriosBox");
   if(box) box.classList.add("hidden");
   if(!pin){
-    if(status) status.innerHTML='<span class="bad">Bitte SpielerLogin eingeben.</span>';
+    if(status) status.innerHTML='<span class="bad">Bitte zuerst auf der Startseite einloggen.</span>';
     return;
   }
   if(status) status.innerHTML='<span class="warn">Login wird geprüft und Charaktere werden geladen …</span>';
@@ -4574,8 +4571,6 @@ function focusMeinLichtLoot(){
   hydrateDashboardPlayerPin();
   const card=document.getElementById("meinLichtLootCard");
   if(card) card.scrollIntoView({behavior:"smooth",block:"center"});
-  const input=document.getElementById("dashboardPlayerPin");
-  if(input) input.focus();
 }
 
 function getStoredLichtLootPlayerPin(){
@@ -4589,7 +4584,10 @@ function getStoredLichtLootPlayerPin(){
 }
 
 function lichtLootPlayerPinStorageKeys(){
-  return ["lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+  const keys=[];
+  if(typeof CURRENT_GUILD_SLUG!=="undefined" && CURRENT_GUILD_SLUG) keys.push("lichtlootPlayerPin_" + CURRENT_GUILD_SLUG);
+  keys.push("lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin");
+  return keys;
 }
 
 function rememberLichtLootPlayerPin(pin){
@@ -4617,7 +4615,7 @@ function updateStartPoLoginCallout(pin){
 }
 
 async function copyStartPoLogin(){
-  const pin=getStoredLichtLootPlayerPin() || document.getElementById("dashboardPlayerPin")?.value.trim() || "";
+  const pin=getStoredLichtLootPlayerPin();
   const cleanPin=String(pin || "").trim().toUpperCase();
   if(!cleanPin) return;
   try{
@@ -4666,7 +4664,7 @@ function logoutLichtLootPlayer(){
   playerMailboxSentMessages=[];
 
   const dashboardStatus=document.getElementById("dashboardMyStatus");
-  if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Du kannst jetzt einen anderen SpielerLogin eingeben.";
+  if(dashboardStatus) dashboardStatus.innerHTML="Ausgeloggt. Bitte auf der Startseite neu einloggen.";
 
   const dashSelect=document.getElementById("dashboardCharSelect");
   if(dashSelect) dashSelect.innerHTML='<option value="">Erst einloggen</option>';
@@ -4697,7 +4695,11 @@ function logoutLichtLootPlayer(){
 
   renderRaidCalendar();
   refreshRaidCreateAccess();
-  document.getElementById("dashboardPlayerPin")?.focus();
+  window.setTimeout(()=>{
+    const target=new URL("github-index.html", window.location.href);
+    target.searchParams.set("guild", CURRENT_GUILD_SLUG);
+    window.location.href=target.toString();
+  },450);
 }
 
 function initMeinLichtLootAutoLogin(){
@@ -5917,6 +5919,7 @@ async function loadLichtLootCharacters(){
     if(!chars.length){
       window.currentPlayerLoginRole="member";
       refreshRaidCreateAccess();
+      rememberLichtLootPlayerPin(pin);
       status.innerHTML='<span class="warn">Zu diesem SpielerPin wurden noch keine Charaktere gefunden.</span>';
       if(select){
         select.innerHTML='<option value="">Keine Charaktere gefunden</option>';
