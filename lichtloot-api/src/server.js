@@ -5460,6 +5460,75 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   }
 }
 
+async function syncPoSignupPrios({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey || params.postId);
+  const raidPin = clean(params.raidPin || params.prioPin || params.playerPin || params.pin);
+  if (!postKey) {
+    const error = new Error("PO-Anmelder-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!raidPin) {
+    const error = new Error("LichtLoot Prio-ID/PIN fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const entriesResult = await query(
+    `select *
+     from po_post_entries
+     where guild_id = $1
+       and post_key = $2
+       and approval_status = 'approved'
+       and archived_at is null
+     order by updated_at asc, lower(player_name) asc, lower(item_name) asc`,
+    [guildId, postKey]
+  );
+
+  let synced = 0;
+  const errors = [];
+  for (const entry of entriesResult.rows) {
+    try {
+      await savePoSignupPrioFromBot({
+        guildId,
+        query: {
+          ...params,
+          raidPin,
+          prioPin: raidPin,
+          player: entry.player_name,
+          char: entry.player_name,
+          item: entry.item_name,
+          itemName: entry.item_name,
+          server: clean(params.server || entry.server || "Lichtbringer"),
+          className: entry.class_name,
+          discordUserId: entry.discord_user_id,
+          discordName: entry.discord_name,
+          masterCode: params.masterCode
+        }
+      });
+      synced += 1;
+    } catch (error) {
+      errors.push({
+        player: entry.player_name || "",
+        item: entry.item_name || "",
+        error: error.message || String(error)
+      });
+    }
+  }
+
+  return {
+    success: true,
+    postKey,
+    raidPin,
+    total: entriesResult.rows.length,
+    synced,
+    failed: errors.length,
+    errors
+  };
+}
+
 function commentMeta(comment) {
   try {
     return JSON.parse(comment || "{}") || {};
@@ -14586,6 +14655,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildSyncPoSignupPrios") {
+      const synced = await syncPoSignupPrios({ guildId: guild.id, query: req.query });
+      return res.json({ ...synced, guild: guild.slug });
+    }
+
     if (action === "deletePrio" || action === "deletePlayerPrio") {
       const deleted = await deletePrio({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
@@ -14938,6 +15012,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSavePoSignupPrio") {
       const saved = await savePoSignupPrioFromBot({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSyncPoSignupPrios") {
+      const synced = await syncPoSignupPrios({ guildId: guild.id, query: postParams });
+      return res.json({ ...synced, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
