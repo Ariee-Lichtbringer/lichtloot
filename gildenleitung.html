@@ -3907,7 +3907,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-row">
               <div class="field">
                 <label for="poSignupRaid">Raid</label>
-                <select id="poSignupRaid" onchange="updatePoSignupDefaults()">
+                <select id="poSignupRaid" onchange="updatePoSignupDefaults(true,true)">
                   <option value="aq40">AQ40</option>
                   <option value="bwl">BWL</option>
                   <option value="mc">MC</option>
@@ -7188,7 +7188,7 @@ function makePoSignupKey(raid, raidDate, raidTime){
   return `${raidPart}-po-anmelder-${datePart}-${timePart}-${suffix}`;
 }
 
-function updatePoSignupDefaults(overwriteTitle=true){
+function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
@@ -7196,7 +7196,7 @@ function updatePoSignupDefaults(overwriteTitle=true){
   const title = document.getElementById("poSignupTitle");
   const key = document.getElementById("poSignupPostKey");
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
-  if(key && !key.value.trim()) key.value = makePoSignupKey(raid, raidDate, raidTime);
+  if(key && (forceNewKey || !key.value.trim())) key.value = makePoSignupKey(raid, raidDate, raidTime);
   updatePoSignupPreview();
 }
 
