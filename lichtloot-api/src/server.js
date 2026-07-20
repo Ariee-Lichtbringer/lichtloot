@@ -5389,6 +5389,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     await client.query("begin");
 
     const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+    const discordUserId = clean(params.discordUserId);
     let character = null;
     if (playerPin) {
       character = await findCharacterForPin(
@@ -5402,6 +5403,38 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
         error.statusCode = 403;
         throw error;
       }
+      if (discordUserId) {
+        await client.query(
+          `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+           values ($1, $2, $3, $4, 'discord-po-sync')
+           on conflict (guild_id, discord_user_id, character_id) do update
+             set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+                 updated_at = now()`,
+          [guildId, discordUserId, character.id, clean(params.discordName)]
+        );
+      }
+    } else if (discordUserId) {
+      const linked = await client.query(
+        `select c.id, c.name, c.server, c.class_name, c.created_at
+         from discord_player_links dpl
+         join characters c on c.id = dpl.character_id
+         join players p on p.id = c.player_id
+         where dpl.guild_id = $1
+           and dpl.discord_user_id = $2
+           and p.guild_id = $1
+           and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
+         order by
+           case when lower(c.server) = lower($4) then 0 else 1 end,
+           dpl.updated_at desc
+         limit 1`,
+        [guildId, discordUserId, clean(params.player || params.char || params.spieler), clean(params.server)]
+      );
+      if (!linked.rows[0]) {
+        const error = new Error("SpielerLogin-Link für diesen Discord-PO wurde nicht gefunden. Bitte PO im Discord einmal mit SpielerLogin eintragen.");
+        error.statusCode = 403;
+        throw error;
+      }
+      character = linked.rows[0];
     } else {
       character = await findOrCreateRaidleadCharacter(client, guildId, params);
     }
@@ -5431,11 +5464,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
     const prioResult = await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = prios.p2_item_id,
-             p3_item_id = prios.p3_item_id,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()
        returning id`,
@@ -5501,7 +5534,7 @@ async function syncPoSignupPrios({ guildId, query: params }) {
           char: entry.player_name,
           item: entry.item_name,
           itemName: entry.item_name,
-          server: clean(params.server || entry.server || "Lichtbringer"),
+          server: clean(params.server || entry.server || ""),
           className: entry.class_name,
           discordUserId: entry.discord_user_id,
           discordName: entry.discord_name,
@@ -11653,11 +11686,11 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
     await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = null,
-             p3_item_id = null,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()`,
       [raid.id, character.id, item.id, comment]

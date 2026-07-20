@@ -8128,8 +8128,7 @@ async function syncPoSignupPriosForPost(postKey, providedConfig){
       postKey:key,
       raidPin,
       raid: config.raid || "",
-      raidName: config.raid || "",
-      server:"Lichtbringer"
+      raidName: config.raid || ""
     });
     if(!result.success) throw new Error(result.error || "POs konnten nicht übertragen werden.");
     const failedText = result.failed ? `, ${result.failed} Fehler` : "";
