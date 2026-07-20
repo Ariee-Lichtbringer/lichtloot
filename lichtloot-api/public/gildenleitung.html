@@ -1280,6 +1280,86 @@ select:focus{border-color:rgba(96,165,250,.75)}
   min-width:88px;
 }
 
+.po-signup-action-stack{
+  display:grid;
+  gap:6px;
+  min-width:105px;
+}
+
+.po-signup-action-stack .small-btn{
+  width:100%;
+}
+
+.po-signup-config-title{
+  display:block;
+  color:#f8fafc;
+  font-size:13px;
+  font-weight:950;
+  line-height:1.15;
+}
+
+.po-signup-config-key{
+  display:block;
+  margin-top:4px;
+  color:#94a3b8;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.25;
+  word-break:break-all;
+}
+
+.po-post-id-button.po-signup-config-key{
+  margin-top:0;
+  color:#dbeafe;
+  font-size:11px;
+}
+
+.po-signup-channel-stack{
+  display:grid;
+  gap:5px;
+  min-width:118px;
+}
+
+.po-signup-channel-line{
+  display:flex;
+  gap:5px;
+  align-items:flex-start;
+  color:#dbeafe;
+  font-size:11px;
+  font-weight:850;
+  line-height:1.2;
+}
+
+.po-signup-channel-line span:first-child{
+  min-width:32px;
+  color:#facc15;
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-signup-count-box{
+  display:inline-grid;
+  gap:2px;
+  min-width:76px;
+  padding:6px 8px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(15,23,42,.66);
+}
+
+.po-signup-count-box strong{
+  color:#f8fafc;
+  font-size:17px;
+  line-height:1;
+}
+
+.po-signup-count-box small{
+  color:#86efac;
+  font-size:10px;
+  font-weight:900;
+}
+
 tr.selected-row td{
   background:rgba(96,165,250,.10);
 }
@@ -4063,8 +4143,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
                     <tr>
                       <th>Post-ID</th>
                       <th>Raid</th>
-                      <th>Quelle</th>
-                      <th>Ziel</th>
+                      <th>Kanäle</th>
                       <th>Einträge</th>
                       <th>Zuletzt</th>
                       <th>Aktion</th>
@@ -7637,7 +7716,12 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     return;
   }
   const rows = poPostEntryRowsForKey(key);
-  if(hint) hint.textContent = `${key} · ${rows.length} Eintrag/Einträge`;
+  if(hint){
+    const approved = rows.filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "approved").length;
+    const rejected = rows.filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "rejected").length;
+    const open = Math.max(0, rows.length - approved - rejected);
+    hint.textContent = `${key} · ${rows.length} Einträge · ${approved} freigegeben · ${open} offen`;
+  }
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="4" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
     return;
@@ -7720,6 +7804,22 @@ function poPostChannelLabelById(channelId){
   const name = String(channel.channelName || channel.name || id).trim();
   const category = String(channel.categoryName || channel.category || "").trim();
   return (category ? category + " / " : "") + "# " + name;
+}
+
+function poSignupChannelShortLabel(channelId){
+  const id = String(channelId || "").trim();
+  if(!id) return "-";
+  const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id || "") === id);
+  if(!channel) return "#" + id;
+  const name = String(channel.channelName || channel.name || id).replace(/^#+\s*/,"").trim();
+  return "#" + (name || id);
+}
+
+function poSignupRowTitle(row){
+  const raid = row.raid ? String(row.raid).toUpperCase() : "PO";
+  const title = String(row.title || "").trim();
+  if(title && title.toLowerCase() !== "po liste") return title;
+  return `${raid} PO-Anmeldung`;
 }
 
 function poPostConfigGroups(){
@@ -7862,20 +7962,26 @@ function renderPoSignupConfigRows(){
     .filter(isPoSignupConfigGroup)
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     updatePoSignupTransferState();
     return;
   }
   tbody.innerHTML = rows.map(row => `
     <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
-      <td><button class="po-post-id-button" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO-Anmelder")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}${row.archivedCount && !row.count ? " · archiviert" : ""}</div></td>
-      <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
-      <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
-      <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
-      <td>${escapeHtml(String(row.count || 0))}<div class="muted">${escapeHtml(String(row.approvedCount || 0))} freigegeben</div></td>
+      <td>
+        <button class="po-post-id-button po-signup-config-key" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button>
+      </td>
+      <td><strong>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</strong><div class="muted">${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</div></td>
+      <td>
+        <div class="po-signup-channel-stack">
+          <div class="po-signup-channel-line"><span>Von</span><strong>${escapeHtml(poSignupChannelShortLabel(row.sourceChannelId))}</strong></div>
+          <div class="po-signup-channel-line"><span>Nach</span><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId))}</strong></div>
+        </div>
+      </td>
+      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
-        <div class="po-signup-direct-actions">
+        <div class="po-signup-action-stack">
           <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
           <button class="small-btn good" type="button" ${row.approvedCount ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
           <button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>
