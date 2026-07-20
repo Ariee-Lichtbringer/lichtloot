@@ -1323,6 +1323,42 @@ select:focus{border-color:rgba(96,165,250,.75)}
   min-width:88px;
 }
 
+.po-entry-correction-control{
+  display:grid;
+  gap:5px;
+  margin-top:7px;
+}
+
+.po-entry-correction-label{
+  color:#facc15;
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-entry-correction-input{
+  width:100%;
+  min-height:30px;
+  border:1px solid rgba(148,163,184,.32);
+  border-radius:7px;
+  background:rgba(2,6,23,.72);
+  color:#e5edf8;
+  font-size:12px;
+  font-weight:800;
+  padding:6px 8px;
+}
+
+.po-entry-correction-input:focus{
+  outline:2px solid rgba(250,204,21,.28);
+  border-color:rgba(250,204,21,.7);
+}
+
+.po-entry-correction-note{
+  color:#93c5fd;
+  font-size:11px;
+  line-height:1.25;
+}
+
 .po-signup-action-stack{
   display:grid;
   gap:6px;
@@ -4493,6 +4529,8 @@ const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLU
 let poSignupGeneratedLichtlootRaid = null;
 const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
 const poSignupLootSearchCache = {};
+let poSignupCorrectionCharacters = [];
+let poSignupCorrectionCharactersLoaded = false;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -7300,6 +7338,95 @@ async function loadPoSignupLootItems(raid){
   return poSignupLootSearchCache[raidKey];
 }
 
+function normalizePoSignupCorrectionCharacters(backup){
+  const rows = Array.isArray(backup?.playersAndCharacters) ? backup.playersAndCharacters : [];
+  const byId = new Map();
+  rows.forEach(row => {
+    const id = String(row?.character_id || row?.characterId || "").trim();
+    const name = String(row?.character_name || row?.characterName || row?.name || "").trim();
+    if(!id || !name) return;
+    byId.set(id, {
+      id,
+      name,
+      server:String(row?.server || "").trim(),
+      className:String(row?.class_name || row?.className || "").trim(),
+      playerPin:String(row?.player_pin || row?.playerPin || "").trim()
+    });
+  });
+  return Array.from(byId.values()).sort((a,b) => {
+    const nameCompare = a.name.localeCompare(b.name, "de", {sensitivity:"base"});
+    if(nameCompare) return nameCompare;
+    return a.server.localeCompare(b.server, "de", {sensitivity:"base"});
+  });
+}
+
+async function ensurePoSignupCorrectionCharacters(){
+  if(poSignupCorrectionCharactersLoaded) return poSignupCorrectionCharacters;
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode) return [];
+  const result = await railwayApi({ action:"guildExportBackup", masterCode, t:Date.now() });
+  if(!result.success) throw new Error(result.error || "Spielerlogins konnten nicht geladen werden.");
+  poSignupCorrectionCharacters = normalizePoSignupCorrectionCharacters(result);
+  poSignupCorrectionCharactersLoaded = true;
+  return poSignupCorrectionCharacters;
+}
+
+function poSignupEntryRaidKey(entry){
+  return poSignupNormalizeRaid(entry?.raid || document.getElementById("poSignupRaid")?.value || "");
+}
+
+async function ensurePoSignupCorrectionDataForEntries(){
+  await ensurePoSignupCorrectionCharacters().catch(error => {
+    console.warn("PO-Spielerlogins konnten nicht geladen werden.", error);
+    return [];
+  });
+  const raids = new Set();
+  (poPostStoredEntries || []).forEach(entry => {
+    const raid = poSignupEntryRaidKey(entry);
+    if(raid) raids.add(raid);
+  });
+  const currentRaid = poSignupSelectedRaidKey();
+  if(currentRaid) raids.add(currentRaid);
+  await Promise.all(Array.from(raids).map(raid => loadPoSignupLootItems(raid).catch(error => {
+    console.warn("PO-Items konnten nicht geladen werden.", raid, error);
+    return [];
+  })));
+}
+
+function poSignupFindCorrectionCharacter(entry){
+  const playerKey = normalize(entry?.player || "");
+  const classKey = normalize(entry?.className || entry?.Klasse || "");
+  return poSignupCorrectionCharacters.find(char => normalize(char.name) === playerKey && (!classKey || normalize(char.className) === classKey))
+    || poSignupCorrectionCharacters.find(char => normalize(char.name) === playerKey)
+    || null;
+}
+
+function poSignupCorrectionCharacterOptions(entry){
+  const matched = poSignupFindCorrectionCharacter(entry);
+  const selectedId = matched?.id || "";
+  const options = ['<option value="">Spielerlogin auswählen...</option>'];
+  poSignupCorrectionCharacters.forEach(char => {
+    const meta = [char.className, char.server, char.playerPin].filter(Boolean).join(" · ");
+    const label = meta ? `${char.name} · ${meta}` : char.name;
+    options.push(`<option value="${escapeAttr(char.id)}" ${char.id === selectedId ? "selected" : ""}>${escapeHtml(label)}</option>`);
+  });
+  return options.join("");
+}
+
+function poSignupCorrectionItemOptions(entry, index){
+  const raidKey = poSignupEntryRaidKey(entry);
+  const items = poSignupLootSearchCache[raidKey] || [];
+  return items.map(item => `<option value="${escapeAttr(item)}"></option>`).join("");
+}
+
+function poSignupCorrectionItemValue(index){
+  return document.getElementById(`poEntryItemCorrection-${index}`)?.value.trim() || "";
+}
+
+function poSignupCorrectionCharacterValue(index){
+  return document.getElementById(`poEntryCharacterCorrection-${index}`)?.value.trim() || "";
+}
+
 async function loadPoSignupTemplateItems(){
   const status = document.getElementById("poSignupStatus");
   const raidKey = poSignupTemplateRaidKey();
@@ -7792,17 +7919,36 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     const status = String(entry.approvalStatus || "pending").toLowerCase();
     const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
     const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
+    const itemListId = `poEntryItemOptions-${index}`;
     return `
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
-        <td><strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div></td>
-        <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
+        <td>
+          <strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong>
+          <div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div>
+          <div class="po-entry-correction-control">
+            <span class="po-entry-correction-label">Spielerlogin zuordnen</span>
+            <select id="poEntryCharacterCorrection-${index}" class="po-entry-correction-input">
+              ${poSignupCorrectionCharacterOptions(entry)}
+            </select>
+          </div>
+        </td>
+        <td>
+          ${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}
+          <div class="po-entry-correction-control">
+            <span class="po-entry-correction-label">Item aus Datenbank</span>
+            <input id="poEntryItemCorrection-${index}" class="po-entry-correction-input" list="${itemListId}" value="${escapeAttr(entry.item || "")}" placeholder="Item suchen...">
+            <datalist id="${itemListId}">${poSignupCorrectionItemOptions(entry, index)}</datalist>
+          </div>
+        </td>
         <td>
           <div class="po-signup-direct-actions">
+            <button class="small-btn ghost" type="button" onclick="savePoPostEntryCorrection(${index})">Korrigieren</button>
             <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
             <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
             <button class="small-btn ghost" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
           </div>
+          <div class="po-entry-correction-note">Erst korrigieren, dann freigeben/übertragen.</div>
         </td>
       </tr>
     `;
@@ -8229,6 +8375,7 @@ async function loadPoPostStoredEntries(){
     await ensureLootDataLoaded();
     const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
+    await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
     poPostStoredEntries = [];
   }
@@ -10290,6 +10437,51 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function savePoPostEntryCorrection(index){
+  const entry = poPostStoredEntries[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const characterId = poSignupCorrectionCharacterValue(index);
+  const itemName = poSignupCorrectionItemValue(index);
+  if(!characterId || !itemName){
+    setStatus("Bitte Spielerlogin und Item auswählen.", "bad");
+    return;
+  }
+  try{
+    setStatus("PO-Eintrag wird korrigiert ...", "");
+    const result = await railwayWrite({
+      action:"guildUpdatePoPostEntry",
+      masterCode,
+      id:entry.id || "",
+      postKey:entry.postKey || "",
+      sourceChannelId:entry.sourceChannelId || "",
+      targetChannelId:entry.targetChannelId || "",
+      messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
+      characterId,
+      correctedItem:itemName
+    });
+    if(!result.success){
+      setStatus(result.error || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
+      return;
+    }
+    poPostStoredEntries[index] = Object.assign({}, entry, result.entry || {});
+    renderPoPostConfigRows();
+    renderPoPostDetailRows();
+    renderPoSignupReviewRows();
+    updatePoSignupPreview();
+    setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und Discord-Zuordnung sind gespeichert.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
   }
 }
 
