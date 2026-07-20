@@ -4113,10 +4113,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
               </div>
               <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
             </div>
-            <div class="field">
-              <label for="poSignupItems">Items für das Auswahlmenü</label>
-              <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
-            </div>
+            <textarea id="poSignupItems" class="hidden" aria-hidden="true"></textarea>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
