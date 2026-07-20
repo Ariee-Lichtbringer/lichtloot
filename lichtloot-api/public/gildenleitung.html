@@ -4070,15 +4070,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <input id="poSignupTime" type="time" oninput="updatePoSignupPreview()" onchange="updatePoSignupPreview()">
               </div>
               <div class="field">
-                <label for="poSignupReviewRecipient">Freigabe per DM an</label>
-                <input id="poSignupReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename" oninput="updatePoSignupPreview()">
-              </div>
-            </div>
-            <div class="raid-helper-row">
-              <div class="field">
                 <label for="poSignupSourceChannel">Discord-Channel</label>
                 <select id="poSignupSourceChannel" onchange="syncPoSignupChannelSelection();updatePoSignupPreview()"></select>
               </div>
+              <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
               <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
             <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
