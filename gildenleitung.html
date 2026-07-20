@@ -7799,8 +7799,16 @@ function poSignupCorrectionCharacterValue(index){
 function samePoPostEntryIdentity(left, right){
   if(!left || !right) return false;
   if(left.id && right.id && String(left.id) === String(right.id)) return true;
-  const keys = ["postKey", "sourceChannelId", "targetChannelId", "messageId", "discordMessageId"];
-  return keys.every(key => String(left[key] || "") === String(right[key] || ""));
+  const samePost = ["postKey", "sourceChannelId", "targetChannelId"].every(key =>
+    String(left[key] || "") && String(left[key] || "") === String(right[key] || "")
+  );
+  if(!samePost) return false;
+  if(left.messageId && right.messageId && String(left.messageId) === String(right.messageId)) return true;
+  const leftPlayer = normalize(left.player || left.playerName || "");
+  const rightPlayer = normalize(right.player || right.playerName || "");
+  const leftItem = normalize(left.item || left.itemName || "");
+  const rightItem = normalize(right.item || right.itemName || "");
+  return !!leftPlayer && !!leftItem && leftPlayer === rightPlayer && leftItem === rightItem;
 }
 
 function updatePoPostEntryCaches(originalEntry, updatedEntry){
@@ -10800,10 +10808,14 @@ async function reviewPoPostEntryFromGuild(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
@@ -10840,10 +10852,14 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
