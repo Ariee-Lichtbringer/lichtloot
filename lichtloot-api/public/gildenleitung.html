@@ -985,6 +985,41 @@ select:focus{border-color:rgba(96,165,250,.75)}
   margin-bottom:12px;
 }
 
+.po-signup-current{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 0 10px;
+  padding:10px 12px;
+  border:1px solid rgba(250,204,21,.42);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.78));
+  box-shadow:0 12px 28px rgba(0,0,0,.18);
+}
+
+.po-signup-current span:first-child{
+  color:#facc15;
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-signup-current strong{
+  display:block;
+  margin-top:2px;
+  color:#f8fafc;
+  font-size:14px;
+  line-height:1.15;
+}
+
+.po-signup-current small{
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:850;
+  text-align:right;
+}
+
 .po-signup-step{
   min-height:46px;
   display:grid;
@@ -1026,7 +1061,20 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-step.is-active{
   border-color:rgba(250,204,21,.48);
-  background:rgba(113,63,18,.22);
+  background:rgba(113,63,18,.32);
+  box-shadow:0 0 0 2px rgba(250,204,21,.24),0 12px 24px rgba(0,0,0,.18);
+  position:relative;
+}
+
+.po-signup-step.is-active::after{
+  content:"Aktuell";
+  position:absolute;
+  right:8px;
+  top:6px;
+  color:#facc15;
+  font-size:9px;
+  font-weight:950;
+  text-transform:uppercase;
 }
 
 .po-signup-step.is-active .po-signup-step-num{
@@ -3889,6 +3937,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <h3>PO-Anmeldung erstellen</h3>
                 <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
               </div>
+            </div>
+            <div class="po-signup-current" id="poSignupCurrentStep">
+              <span>Aktueller Schritt<strong>1. Post vorbereiten</strong></span>
+              <small>Raid, Channel und Items wählen</small>
             </div>
             <div class="po-signup-steps" id="poSignupSteps">
               <div class="po-signup-step is-active" data-po-signup-step="setup">
@@ -7917,6 +7969,16 @@ function updatePoSignupSteps(currentState){
   const hasEntries = Number(state.total || 0) > 0;
   const canSync = Boolean(state.can);
   const active = !hasPost ? "setup" : !canSync ? "review" : "sync";
+  const current = document.getElementById("poSignupCurrentStep");
+  const labels = {
+    setup:["1. Post vorbereiten","Raid, Channel und Items wählen"],
+    review:["2. Einträge prüfen", hasEntries ? `${state.approved || 0} von ${state.total || 0} Einträgen freigegeben` : "Discord-Post senden und Anmeldungen sammeln"],
+    sync:["3. In LichtLoot übertragen", `${state.approved || 0} freigegebene Einträge bereit`]
+  };
+  if(current){
+    const [title, text] = labels[active] || labels.setup;
+    current.innerHTML = `<span>Aktueller Schritt<strong>${escapeHtml(title)}</strong></span><small>${escapeHtml(text)}</small>`;
+  }
   document.querySelectorAll("[data-po-signup-step]").forEach(step => {
     const name = step.dataset.poSignupStep || "";
     step.classList.toggle("is-done", (name === "setup" && hasPost) || (name === "review" && hasEntries) || (name === "sync" && canSync));
