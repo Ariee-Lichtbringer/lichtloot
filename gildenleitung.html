@@ -4076,13 +4076,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </div>
             <div class="raid-helper-row">
               <div class="field">
-                <label for="poSignupSourceChannel">PO-Quelle</label>
-                <select id="poSignupSourceChannel" onchange="updatePoSignupPreview()"></select>
+                <label for="poSignupSourceChannel">Discord-Channel</label>
+                <select id="poSignupSourceChannel" onchange="syncPoSignupChannelSelection();updatePoSignupPreview()"></select>
               </div>
-              <div class="field">
-                <label for="poSignupTargetChannel">Posten nach</label>
-                <select id="poSignupTargetChannel" onchange="updatePoSignupPreview()"></select>
-              </div>
+              <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
             <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
               <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
@@ -4140,9 +4137,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
                     <tr>
                       <th>Post-ID</th>
                       <th>Raid</th>
-                      <th>Kanäle</th>
+                      <th>Channel</th>
                       <th>Einträge</th>
-                      <th>Zuletzt</th>
                       <th>Aktion</th>
                     </tr>
                   </thead>
@@ -7146,6 +7142,12 @@ function selectedPoPostChannelLabel(id){
   return select?.selectedOptions?.[0]?.textContent?.trim() || "Channel wählen";
 }
 
+function syncPoSignupChannelSelection(){
+  const source = document.getElementById("poSignupSourceChannel");
+  const target = document.getElementById("poSignupTargetChannel");
+  if(source && target) target.value = source.value || "";
+}
+
 function updatePoPostPreview(){
   const source = document.getElementById("poPostPreviewSource");
   const target = document.getElementById("poPostPreviewTarget");
@@ -7360,6 +7362,7 @@ function updatePoSignupPreview(){
   if(descEl) descEl.textContent = note;
   if(raidEl) raidEl.textContent = raid ? raid.toUpperCase() : "Raid";
   if(dateEl) dateEl.textContent = raidDate || raidTime ? `${formatRaidDate(raidDate) || raidDate || "Datum fehlt"} · ${raidTime || "Uhrzeit fehlt"} Uhr` : "Termin fehlt";
+  syncPoSignupChannelSelection();
   if(targetEl) targetEl.textContent = selectedPoPostChannelLabel("poSignupTargetChannel");
   const items = poSignupItemLines();
   if(itemsEl){
@@ -7544,6 +7547,7 @@ async function ensurePoSignupItemOptions(config){
 }
 
 function getPoSignupConfig(){
+  syncPoSignupChannelSelection();
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
   const title = document.getElementById("poSignupTitle")?.value.trim() || `${RAID_OPTIONS[raid]?.short || raid.toUpperCase()} PO-Anmelder`;
   let postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
@@ -7556,7 +7560,7 @@ function getPoSignupConfig(){
   return {
     postKey,
     sourceChannelId,
-    targetChannelId: document.getElementById("poSignupTargetChannel")?.value || sourceChannelId,
+    targetChannelId: sourceChannelId,
     reviewRecipient: document.getElementById("poSignupReviewRecipient")?.value.trim() || "",
     title,
     raid,
@@ -7959,7 +7963,7 @@ function renderPoSignupConfigRows(){
     .filter(isPoSignupConfigGroup)
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     updatePoSignupTransferState();
     return;
   }
@@ -7971,12 +7975,10 @@ function renderPoSignupConfigRows(){
       <td><strong>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</strong><div class="muted">${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</div></td>
       <td>
         <div class="po-signup-channel-stack">
-          <div class="po-signup-channel-line"><span>Von</span><strong>${escapeHtml(poSignupChannelShortLabel(row.sourceChannelId))}</strong></div>
-          <div class="po-signup-channel-line"><span>Nach</span><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId))}</strong></div>
+          <div class="po-signup-channel-line"><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</strong></div>
         </div>
       </td>
       <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
-      <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
         <div class="po-signup-action-stack">
           <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
@@ -8203,8 +8205,9 @@ function setPoSignupFormConfig(config){
   } : null;
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
-  if(source) source.value = config.sourceChannelId || "";
-  if(target) target.value = config.targetChannelId || config.sourceChannelId || "";
+  const channelId = config.sourceChannelId || config.targetChannelId || "";
+  if(source) source.value = channelId;
+  if(target) target.value = channelId;
   updatePoSignupPreview();
 }
 
