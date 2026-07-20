@@ -1196,55 +1196,13 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-preview-list{
   display:grid;
-  gap:7px;
-  margin:14px 0;
-}
-
-.po-signup-preview-item{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:8px 10px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:7px;
-  background:rgba(15,23,42,.48);
-  color:#e5edf8;
-  font-weight:850;
-}
-
-.po-signup-preview-menu{
-  min-height:42px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-top:12px;
-  padding:10px 12px;
-  border:1px solid rgba(96,165,250,.38);
-  border-radius:8px;
-  background:rgba(30,41,59,.70);
-  color:#dbeafe;
-  font-weight:900;
-}
-
-.po-signup-preview-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:10px;
-}
-
-.po-signup-preview-actions button{
-  min-height:36px;
-  border:1px solid rgba(148,163,184,.24);
-  border-radius:7px;
-  background:rgba(15,23,42,.76);
-  color:#e5edf8;
-  font-weight:900;
+  gap:9px;
+  margin:16px 0 12px;
 }
 
 .po-signup-preview-details{
-  border:0;
+  border-left-color:#facc15;
+  min-height:0;
 }
 
 .po-signup-preview-details summary{
@@ -1268,6 +1226,91 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-preview-details[open] summary::after{
   content:"⌃";
+}
+
+.po-signup-discord-embed{
+  display:grid;
+  gap:10px;
+  margin-top:12px;
+}
+
+.po-signup-discord-title{
+  color:#fff;
+  font-size:15px;
+  font-weight:950;
+  line-height:1.2;
+}
+
+.po-signup-discord-text{
+  color:#f4f4f5;
+  font-size:13px;
+  line-height:1.4;
+  white-space:pre-line;
+}
+
+.po-signup-discord-section{
+  margin-top:6px;
+  color:#f4f4f5;
+  font-size:13px;
+  font-weight:950;
+}
+
+.po-signup-preview-item{
+  display:grid;
+  gap:3px;
+  color:#f4f4f5;
+  font-size:13px;
+  line-height:1.3;
+}
+
+.po-signup-preview-item strong{
+  color:#fff;
+  font-weight:950;
+}
+
+.po-signup-preview-player-line{
+  color:#e5e7eb;
+  font-size:13px;
+}
+
+.po-signup-preview-player-line .approved{
+  color:#22c55e;
+  font-weight:950;
+}
+
+.po-signup-preview-empty{
+  color:#cbd5e1;
+  font-size:13px;
+  font-weight:800;
+}
+
+.po-signup-discord-footer{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px 14px;
+  margin-top:8px;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.08);
+  color:#f4f4f5;
+  font-size:12px;
+}
+
+.po-signup-discord-footer span{
+  display:block;
+  color:#fff;
+  font-weight:950;
+}
+
+.po-signup-discord-footer code{
+  display:inline-block;
+  max-width:100%;
+  margin-top:3px;
+  padding:2px 5px;
+  border-radius:4px;
+  background:rgba(88,101,242,.18);
+  color:#dbeafe;
+  white-space:normal;
+  word-break:break-all;
 }
 
 .po-signup-direct-actions{
@@ -4146,18 +4189,17 @@ tr:hover td{background:rgba(250,204,21,.035)}
         <div class="raid-helper-preview">
           <details class="discord-preview-card po-signup-preview-details" open>
             <summary>Discord-Vorschau</summary>
-            <h3 id="poSignupPreviewTitle" class="discord-preview-title">PO-ANMELDER</h3>
-            <div id="poSignupPreviewDescription" class="discord-preview-description"></div>
-            <div class="discord-preview-meta">
-              <span id="poSignupPreviewRaid">AQ40</span>
-              <span id="poSignupPreviewDate">Termin fehlt</span>
-              <span id="poSignupPreviewTarget"># channel</span>
-            </div>
-            <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
-            <div class="po-signup-preview-menu"><span>Item auswählen und PO eintragen</span><span>⌄</span></div>
-            <div class="po-signup-preview-actions">
-              <button type="button">PO eintragen</button>
-              <button type="button">PO-Eintrag löschen</button>
+            <div class="po-signup-discord-embed">
+              <div id="poSignupPreviewTitle" class="po-signup-discord-title">PO-ANMELDER</div>
+              <div id="poSignupPreviewDescription" class="po-signup-discord-text"></div>
+              <div class="po-signup-discord-section" id="poSignupPreviewSignupTitle">Anmeldungen (0)</div>
+              <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
+              <div class="po-signup-discord-footer">
+                <div><span>Post-ID</span><code id="poSignupPreviewPostId">-</code></div>
+                <div><span>Raid</span><div id="poSignupPreviewRaid">AQ40</div></div>
+                <div><span>Termin</span><div id="poSignupPreviewDate">Termin fehlt</div></div>
+                <div><span>Channel</span><div id="poSignupPreviewTarget"># channel</div></div>
+              </div>
             </div>
           </details>
           <div class="section-head compact">
@@ -7343,28 +7385,51 @@ function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
 function updatePoSignupPreview(){
   resetPoSignupLichtlootRaidIfStale();
   const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
+  const postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
   const raid = document.getElementById("poSignupRaid")?.value || "";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const note = document.getElementById("poSignupNote")?.value.trim() || "";
   const titleEl = document.getElementById("poSignupPreviewTitle");
   const descEl = document.getElementById("poSignupPreviewDescription");
+  const signupTitleEl = document.getElementById("poSignupPreviewSignupTitle");
+  const postIdEl = document.getElementById("poSignupPreviewPostId");
   const raidEl = document.getElementById("poSignupPreviewRaid");
   const dateEl = document.getElementById("poSignupPreviewDate");
   const targetEl = document.getElementById("poSignupPreviewTarget");
   const itemsEl = document.getElementById("poSignupPreviewItems");
   if(titleEl) titleEl.textContent = title.toUpperCase();
   if(descEl) descEl.textContent = note;
+  if(postIdEl) postIdEl.textContent = postKey || "-";
   if(raidEl) raidEl.textContent = raid ? raid.toUpperCase() : "Raid";
   if(dateEl) dateEl.textContent = raidDate || raidTime ? `${formatRaidDate(raidDate) || raidDate || "Datum fehlt"} · ${raidTime || "Uhrzeit fehlt"} Uhr` : "Termin fehlt";
   syncPoSignupChannelSelection();
   if(targetEl) targetEl.textContent = selectedPoPostChannelLabel("poSignupTargetChannel");
   const items = poSignupItemLines();
   if(itemsEl){
-    const previewItems = items.slice(0,8);
-    itemsEl.innerHTML = previewItems.length
-      ? previewItems.map((item, index) => `<div class="po-signup-preview-item"><span>${escapeHtml(item)}</span><span>${index + 1}</span></div>`).join("") + (items.length > previewItems.length ? `<div class="muted">+ ${escapeHtml(String(items.length - previewItems.length))} weitere Items</div>` : "")
-      : '<div class="muted">Noch keine Items eingetragen.</div>';
+    const rows = poPostEntryRowsForKey(postKey);
+    const grouped = new Map();
+    rows.forEach(entry => {
+      const item = String(entry.item || entry.itemName || "-").trim() || "-";
+      if(!grouped.has(item)) grouped.set(item, []);
+      grouped.get(item).push(entry);
+    });
+    if(signupTitleEl) signupTitleEl.textContent = `Anmeldungen (${rows.length})`;
+    if(grouped.size){
+      itemsEl.innerHTML = Array.from(grouped.entries()).map(([item, entries]) => {
+        const players = entries.map(entry => {
+          const status = String(entry.approvalStatus || "pending").toLowerCase();
+          const approved = status === "approved" ? ' <span class="approved">✓</span>' : "";
+          return `${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}${approved}`;
+        }).join(", ");
+        return `<div class="po-signup-preview-item"><strong>${renderLootItem(item)} (${entries.length})</strong><div class="po-signup-preview-player-line">${players}</div></div>`;
+      }).join("");
+    }else{
+      const previewItems = items.slice(0,6);
+      itemsEl.innerHTML = previewItems.length
+        ? previewItems.map((item, index) => `<div class="po-signup-preview-item"><strong>${renderLootItem(item)}</strong><div class="po-signup-preview-player-line">Noch keine Anmeldung</div></div>`).join("") + (items.length > previewItems.length ? `<div class="po-signup-preview-empty">+ ${escapeHtml(String(items.length - previewItems.length))} weitere Items</div>` : "")
+        : '<div class="po-signup-preview-empty">Noch keine Anmeldungen. Sobald Spieler im Discord eintragen, erscheinen sie hier wie im Post.</div>';
+    }
   }
   renderPoSignupReviewRows();
 }
@@ -8168,6 +8233,7 @@ async function loadPoPostStoredEntries(){
     poPostStoredEntries = [];
   }
   renderPoPostConfigRows();
+  updatePoSignupPreview();
 }
 
 function selectPoPostForReview(postKey){
@@ -10220,6 +10286,7 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     renderPoPostConfigRows();
     renderPoPostDetailRows();
     renderPoSignupReviewRows();
+    updatePoSignupPreview();
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
@@ -10257,6 +10324,7 @@ async function deletePoPostEntryFromPostPanel(index){
     await loadPoPostStoredEntries();
     renderPoPostDetailRows();
     renderPoSignupReviewRows();
+    updatePoSignupPreview();
     setStatus("PO-Eintrag gelöscht. Der DC-Post wird aktualisiert.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gelöscht werden.", "bad");
