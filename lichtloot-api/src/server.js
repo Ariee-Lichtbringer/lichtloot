@@ -4695,7 +4695,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const itemName = normalizePoItemName(params.item || params.itemName);
   const playerName = clean(params.player || params.char || params.spieler);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
 
   if (!discordUserId && !playerName) {
     const error = new Error("Discord-User oder Spieler fehlt.");
@@ -5010,7 +5010,7 @@ async function savePoPostEntry({ guildId, query: params }) {
   const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
   const title = clean(params.title) || "PO Liste";
   const player = clean(params.player || params.char || params.spieler);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
   const itemName = normalizePoItemName(params.item || params.itemName);
@@ -5235,14 +5235,8 @@ async function resolveBotQueue({ guildId, query: params }) {
 }
 
 async function findCharacterForPin(guildId, pin, charName, server) {
-  const params = [guildId, normalizePin(pin), clean(charName)];
-  let serverClause = "";
-
-  if (clean(server)) {
-    params.push(clean(server));
-    serverClause = `and lower(c.server) = lower($${params.length})`;
-  }
-
+  const normalizedPin = normalizePin(pin);
+  const characterName = clean(charName);
   const result = await query(
     `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
      from players p
@@ -5250,10 +5244,9 @@ async function findCharacterForPin(guildId, pin, charName, server) {
      where p.guild_id = $1
        and p.player_pin = $2
        and lower(c.name) = lower($3)
-       ${serverClause}
      order by c.created_at asc
      limit 1`,
-    params
+    [guildId, normalizedPin, characterName]
   );
   return result.rows[0] || null;
 }
@@ -11871,7 +11864,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
 
 async function findOrCreateDiscordP0Character(client, guildId, params) {
   const player = clean(params.player || params.char || params.spieler);
-  const server = clean(params.server) || "Everlook";
+  const server = clean(params.server);
   const playerPin = normalizePin(params.playerPin || params.pin || params.password || params.passwort || params.meinLichtloot);
   const discordUserId = clean(params.discordUserId);
 
