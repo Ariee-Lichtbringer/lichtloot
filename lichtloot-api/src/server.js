@@ -1020,6 +1020,10 @@ function normalizePin(value) {
   return clean(value).toUpperCase();
 }
 
+function isInternalPlayerPin(value) {
+  return /^RL/i.test(clean(value));
+}
+
 const playerRoleLabels = {
   member: "Mitglied",
   gildenleitung: "Gildenleitung",
@@ -5429,14 +5433,19 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
          limit 1`,
         [guildId, discordUserId, clean(params.player || params.char || params.spieler), clean(params.server)]
       );
-      if (!linked.rows[0]) {
+      character = linked.rows[0] || await findExistingPoCharacter(client, guildId, params);
+      if (!character) {
         const error = new Error("SpielerLogin-Link für diesen Discord-PO wurde nicht gefunden. Bitte PO im Discord einmal mit SpielerLogin eintragen.");
         error.statusCode = 403;
         throw error;
       }
-      character = linked.rows[0];
     } else {
-      character = await findOrCreateRaidleadCharacter(client, guildId, params);
+      character = await findExistingPoCharacter(client, guildId, params);
+      if (!character) {
+        const error = new Error("Charakter wurde keinem LichtLoot-Spielerlogin zugeordnet. Bitte PO im Discord einmal mit SpielerLogin eintragen.");
+        error.statusCode = 403;
+        throw error;
+      }
     }
     const item = await upsertItem(client, raidType, itemName, params.itemId || params.itemGameId || params.p1ItemId);
     if (!item) {
@@ -5461,6 +5470,52 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       source: "po-bot",
       discordUserId: clean(params.discordUserId)
     });
+
+    const oldPoRows = await client.query(
+      `select pr.id, pr.character_id, pr.comment,
+              c.name as character_name, c.server, p.player_pin,
+              i1.name as p1_name, i2.name as p2_name, i3.name as p3_name
+       from prios pr
+       join characters c on c.id = pr.character_id
+       join players p on p.id = c.player_id
+       left join items i1 on i1.id = pr.p1_item_id
+       left join items i2 on i2.id = pr.p2_item_id
+       left join items i3 on i3.id = pr.p3_item_id
+       where pr.raid_id = $1
+         and pr.character_id <> $2
+         and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')`,
+      [raid.id, character.id, character.name]
+    );
+    const oldMatches = oldPoRows.rows.filter(row => {
+      const meta = commentMeta(row.comment);
+      const poSource = ["po-bot", "discord-p0", "discord-po-sync"].includes(clean(meta.source));
+      return poPrioRowMatchesItem(row, item.name) && (poSource || isInternalPlayerPin(row.player_pin));
+    });
+    if (oldMatches.length) {
+      if (existing.rows[0]) {
+        await client.query(
+          `delete from prios where id = any($1::uuid[])`,
+          [oldMatches.map(row => row.id)]
+        );
+      } else {
+        const keep = oldMatches[0];
+        await client.query(
+          `update prios
+           set character_id = $1,
+               p1_item_id = $2,
+               p2_item_id = $2,
+               p3_item_id = $2,
+               comment = $3,
+               updated_at = now()
+           where id = $4`,
+          [character.id, item.id, comment, keep.id]
+        );
+        const duplicates = oldMatches.slice(1).map(row => row.id);
+        if (duplicates.length) {
+          await client.query(`delete from prios where id = any($1::uuid[])`, [duplicates]);
+        }
+      }
+    }
 
     const prioResult = await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
@@ -5491,6 +5546,37 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   } finally {
     client.release();
   }
+}
+
+function poPrioRowMatchesItem(row, itemName) {
+  const wanted = normalizePoItemName(itemName).toLowerCase();
+  if (!wanted) return false;
+  const names = [
+    row.p1_name,
+    row.p2_name,
+    row.p3_name,
+    commentMeta(row.comment).p0Item
+  ].map(value => normalizePoItemName(value).toLowerCase()).filter(Boolean);
+  return names.includes(wanted);
+}
+
+async function findExistingPoCharacter(client, guildId, params) {
+  const player = clean(params.player || params.char || params.spieler);
+  if (!player) return null;
+  const result = await client.query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and p.player_pin not ilike 'RL%'
+       and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($2), '[^a-z0-9]+', '', 'g')
+     order by
+       case when lower(c.server) = lower($3) then 0 else 1 end,
+       c.created_at asc
+     limit 1`,
+    [guildId, player, clean(params.server)]
+  );
+  return result.rows[0] || null;
 }
 
 async function syncPoSignupPrios({ guildId, query: params }) {
