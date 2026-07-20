@@ -228,6 +228,21 @@ button,input,select{font:inherit}
   background:linear-gradient(135deg,rgba(30,41,59,.82),rgba(15,23,42,.72));
 }
 
+.btn:disabled,
+.small-btn:disabled{
+  opacity:.48;
+  cursor:not-allowed;
+  border-color:rgba(148,163,184,.16);
+  background:rgba(15,23,42,.38);
+  color:#94a3b8;
+}
+
+.btn:disabled:hover,
+.small-btn:disabled:hover{
+  border-color:rgba(148,163,184,.16);
+  background:rgba(15,23,42,.38);
+}
+
 .btn.danger{
   border-color:rgba(248,113,113,.42);
   background:rgba(127,29,29,.24);
@@ -963,6 +978,71 @@ select:focus{border-color:rgba(96,165,250,.75)}
   display:none!important;
 }
 
+.po-signup-steps{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.po-signup-step{
+  min-height:46px;
+  display:grid;
+  grid-template-columns:28px 1fr;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  border:1px solid rgba(148,163,184,.22);
+  background:rgba(15,23,42,.46);
+}
+
+.po-signup-step-num{
+  width:26px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:rgba(30,41,59,.82);
+  color:#cbd5e1;
+  font-weight:950;
+  font-size:12px;
+}
+
+.po-signup-step strong{
+  display:block;
+  color:#e5edf8;
+  font-size:12px;
+  line-height:1.15;
+}
+
+.po-signup-step span:last-child{
+  display:block;
+  margin-top:2px;
+  color:#94a3b8;
+  font-size:11px;
+  line-height:1.2;
+}
+
+.po-signup-step.is-active{
+  border-color:rgba(250,204,21,.48);
+  background:rgba(113,63,18,.22);
+}
+
+.po-signup-step.is-active .po-signup-step-num{
+  background:#facc15;
+  color:#111827;
+}
+
+.po-signup-step.is-done{
+  border-color:rgba(34,197,94,.36);
+}
+
+.po-signup-step.is-done .po-signup-step-num{
+  background:#22c55e;
+  color:#052e16;
+}
+
 .po-post-config-table,
 .po-post-entry-table{
   min-width:0;
@@ -1113,6 +1193,43 @@ select:focus{border-color:rgba(96,165,250,.75)}
   background:rgba(15,23,42,.76);
   color:#e5edf8;
   font-weight:900;
+}
+
+.po-signup-preview-details{
+  border:0;
+}
+
+.po-signup-preview-details summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  cursor:pointer;
+  color:#dbeafe;
+  font-weight:950;
+}
+
+.po-signup-preview-details summary::-webkit-details-marker{
+  display:none;
+}
+
+.po-signup-preview-details summary::after{
+  content:"⌄";
+  color:#93c5fd;
+}
+
+.po-signup-preview-details[open] summary::after{
+  content:"⌃";
+}
+
+.po-signup-direct-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+.po-signup-direct-actions .small-btn{
+  min-width:88px;
 }
 
 tr.selected-row td{
@@ -3757,8 +3874,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">☰</span>
         <span class="raid-helper-summary-copy">
-          <strong>PO-Anmelder</strong>
-          <span>PO-Anmelder mit Item-Auswahl erstellen und verwalten.</span>
+          <strong>PO-Anmeldungen</strong>
+          <span>Discord-POs erstellen, prüfen und nach LichtLoot übertragen.</span>
         </span>
       </span>
     </summary>
@@ -3769,8 +3886,22 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▣</span>
               <div>
-                <h3>PO-Anmelder erstellen</h3>
-                <p>Ein eigener Discord-Post mit Item-Auswahl unten und Anmeldung per Maske.</p>
+                <h3>PO-Anmeldung erstellen</h3>
+                <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
+              </div>
+            </div>
+            <div class="po-signup-steps" id="poSignupSteps">
+              <div class="po-signup-step is-active" data-po-signup-step="setup">
+                <span class="po-signup-step-num">1</span>
+                <span><strong>Post vorbereiten</strong><span>Raid, Channel und Items wählen</span></span>
+              </div>
+              <div class="po-signup-step" data-po-signup-step="review">
+                <span class="po-signup-step-num">2</span>
+                <span><strong>Einträge prüfen</strong><span>Spieler freigeben oder ablehnen</span></span>
+              </div>
+              <div class="po-signup-step" data-po-signup-step="sync">
+                <span class="po-signup-step-num">3</span>
+                <span><strong>Übertragen</strong><span>Grüne Haken in LichtLoot schreiben</span></span>
               </div>
             </div>
             <div class="raid-helper-row">
@@ -3859,17 +3990,18 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
             </div>
             <div class="tools">
-              <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
-              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
-              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
-              <button class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()">POs in Prioliste übertragen</button>
+              <button class="btn" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
+              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
+              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items übernehmen</button>
+              <button id="poSignupSyncPriosBtn" class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
             </div>
+            <div id="poSignupTransferHint" class="muted">Erst PO-Anmelder posten und Einträge freigeben. Danach können grüne Haken in die LichtLoot-Prioliste übertragen werden.</div>
             <div id="poSignupStatus" class="status">Bereit.</div>
             <div class="po-post-list-block">
               <div class="section-head compact">
                 <div>
-                  <h3>Gespeicherte PO-Anmelder</h3>
-                  <p>Bestehende Anmelder öffnen und alte Anmelder archivieren. Archivierte Einträge bleiben als Backup gespeichert.</p>
+                  <h3>Gespeicherte PO-Anmeldungen</h3>
+                  <p>Bestehende Anmeldung öffnen, freigegebene Einträge übertragen oder alte Anmeldung archivieren.</p>
                 </div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
@@ -3893,8 +4025,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
           </section>
         </div>
         <div class="raid-helper-preview">
-          <div class="discord-preview-card">
-            <div class="discord-preview-label">Vorschau</div>
+          <details class="discord-preview-card po-signup-preview-details" open>
+            <summary>Discord-Vorschau</summary>
             <h3 id="poSignupPreviewTitle" class="discord-preview-title">PO-ANMELDER</h3>
             <div id="poSignupPreviewDescription" class="discord-preview-description"></div>
             <div class="discord-preview-meta">
@@ -3908,7 +4040,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <button type="button">PO eintragen</button>
               <button type="button">PO-Eintrag löschen</button>
             </div>
-          </div>
+          </details>
           <div class="section-head compact">
             <div>
               <h3>PO-Anmeldungen</h3>
@@ -7454,12 +7586,11 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
         <td><strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div></td>
         <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
         <td>
-          <select class="small-select" onchange="runPoPostEntryAction(this,${index})">
-            <option value="">Aktion wählen</option>
-            ${status === "approved" ? "" : '<option value="approved">Freigeben</option>'}
-            ${status === "rejected" ? "" : '<option value="rejected">Ablehnen</option>'}
-            <option value="delete">Löschen</option>
-          </select>
+          <div class="po-signup-direct-actions">
+            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
+            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
+            <button class="small-btn ghost" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
+          </div>
         </td>
       </tr>
     `;
@@ -7484,6 +7615,7 @@ function renderPoSignupReviewRows(){
   const hint = document.getElementById("poSignupEntryPanelHint");
   const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
   renderPoPostEntryReviewRows(tbody, hint, key, "Post-ID wählen oder PO-Anmelder posten.");
+  updatePoSignupTransferState();
 }
 
 function initPoPostPanel(){
@@ -7544,6 +7676,9 @@ function poPostConfigGroups(){
         itemOptions: "",
         reviewRecipient: "",
         note: "",
+        approvedCount: 0,
+        pendingCount: 0,
+        rejectedCount: 0,
         local: false,
         railway: false
       });
@@ -7570,7 +7705,13 @@ function poPostConfigGroups(){
     if(!group) return;
     group.railway = true;
     if(entry.archivedAt) group.archivedCount += 1;
-    else group.count += 1;
+    else{
+      group.count += 1;
+      const status = String(entry.approvalStatus || "pending").toLowerCase();
+      if(status === "approved") group.approvedCount += 1;
+      else if(status === "rejected") group.rejectedCount += 1;
+      else group.pendingCount += 1;
+    }
     group.raid = group.raid || entry.raid || "";
     group.title = group.title || entry.title || "PO Liste";
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
@@ -7611,7 +7752,7 @@ function renderPoPostConfigRows(){
       <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
-      <td>${escapeHtml(String(row.count || 0))}</td>
+      <td>${escapeHtml(String(row.count || 0))}<div class="muted">${escapeHtml(String(row.approvedCount || 0))} freigegeben</div></td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
         <select class="small-select" onchange="runPoPostRowAction(this,'${escapeAttr(row.postKey)}')">
@@ -7655,6 +7796,7 @@ function renderPoSignupConfigRows(){
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    updatePoSignupTransferState();
     return;
   }
   tbody.innerHTML = rows.map(row => `
@@ -7663,18 +7805,18 @@ function renderPoSignupConfigRows(){
       <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
-      <td>${escapeHtml(String(row.count || 0))}</td>
+      <td>${escapeHtml(String(row.count || 0))}<div class="muted">${escapeHtml(String(row.approvedCount || 0))} freigegeben</div></td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
-        <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
-          <option value="">Aktion wählen</option>
-          <option value="open">Öffnen</option>
-          <option value="sync-prios">POs in Prioliste übertragen</option>
-          <option value="archive">Archivieren</option>
-        </select>
+        <div class="po-signup-direct-actions">
+          <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
+          <button class="small-btn good" type="button" ${row.approvedCount ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+          <button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>
+        </div>
       </td>
     </tr>
   `).join("");
+  updatePoSignupTransferState();
 }
 
 async function runPoSignupRowAction(select, postKey){
@@ -7714,6 +7856,59 @@ function poSignupLichtlootPinForConfig(config){
   ).trim();
 }
 
+function poSignupApprovedCountForKey(postKey){
+  return poPostEntryRowsForKey(postKey)
+    .filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "approved")
+    .length;
+}
+
+function poSignupTransferState(postKey, providedConfig){
+  const key = String(postKey || "").trim();
+  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
+  const approved = poSignupApprovedCountForKey(key);
+  const total = poPostEntryRowsForKey(key).length;
+  const raidPin = poSignupLichtlootPinForConfig(config);
+  if(!key) return { can:false, approved, total, raidPin, reason:"Erst einen PO-Anmelder öffnen." };
+  if(!total) return { can:false, approved, total, raidPin, reason:"Noch keine PO-Anmeldungen vorhanden." };
+  if(!approved) return { can:false, approved, total, raidPin, reason:"Erst mindestens einen Eintrag freigeben." };
+  if(!raidPin) return { can:true, approved, total, raidPin, reason:"Beim Übertragen wird nach der LichtLoot Prio-ID gefragt." };
+  return { can:true, approved, total, raidPin, reason:`${approved} freigegebene Einträge können übertragen werden.` };
+}
+
+function updatePoSignupTransferState(){
+  const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
+  const state = poSignupTransferState(key);
+  const btn = document.getElementById("poSignupSyncPriosBtn");
+  const hint = document.getElementById("poSignupTransferHint");
+  if(btn){
+    btn.disabled = !state.can;
+    btn.title = state.reason;
+    btn.textContent = state.can
+      ? `Freigegebene Einträge übertragen (${state.approved})`
+      : "Freigegebene Einträge übertragen";
+  }
+  if(hint){
+    hint.textContent = state.can
+      ? `${state.reason} Es werden nur grüne Haken übertragen.`
+      : state.reason;
+  }
+  updatePoSignupSteps(state);
+}
+
+function updatePoSignupSteps(currentState){
+  const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
+  const state = currentState || poSignupTransferState(key);
+  const hasPost = Boolean(key);
+  const hasEntries = Number(state.total || 0) > 0;
+  const canSync = Boolean(state.can);
+  const active = !hasPost ? "setup" : !canSync ? "review" : "sync";
+  document.querySelectorAll("[data-po-signup-step]").forEach(step => {
+    const name = step.dataset.poSignupStep || "";
+    step.classList.toggle("is-done", (name === "setup" && hasPost) || (name === "review" && hasEntries) || (name === "sync" && canSync));
+    step.classList.toggle("is-active", name === active);
+  });
+}
+
 async function syncCurrentPoSignupPrios(){
   const config = getPoSignupConfig();
   await syncPoSignupPriosForPost(config.postKey, config);
@@ -7733,6 +7928,11 @@ async function syncPoSignupPriosForPost(postKey, providedConfig){
   }
 
   const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
+  const transferState = poSignupTransferState(key, config);
+  if(!transferState.can){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(transferState.reason)}</span>`;
+    return;
+  }
   let raidPin = poSignupLichtlootPinForConfig(config);
   if(!raidPin){
     raidPin = prompt("Welche LichtLoot Prio-ID/PIN soll für diesen PO-Anmelder benutzt werden?", "") || "";
@@ -7754,16 +7954,26 @@ async function syncPoSignupPriosForPost(postKey, providedConfig){
       raidName: config.raid || "",
       server:"Lichtbringer"
     });
+    if(!result.success) throw new Error(result.error || "POs konnten nicht übertragen werden.");
     const failedText = result.failed ? `, ${result.failed} Fehler` : "";
     if(status){
-      status.innerHTML = `<span class="${result.failed ? "warn" : "good"}">${escapeHtml(String(result.synced || 0))} PO(s) in die Prioliste übertragen${escapeHtml(failedText)}.</span>`;
+      const synced = Number(result.synced || 0);
+      const total = Number(result.total || 0);
+      const msg = synced
+        ? `${synced} von ${total || synced} freigegebenen PO-Einträgen in die Prioliste übertragen${failedText}.`
+        : `Keine freigegebenen PO-Einträge übertragen${failedText}.`;
+      status.innerHTML = `<span class="${result.failed || !synced ? "warn" : "good"}">${escapeHtml(msg)}</span>`;
     }
     if(result.errors?.length){
       const preview = result.errors.slice(0, 4).map(error => `${error.player || "-"} / ${error.item || "-"}: ${error.error || "Fehler"}`).join("\n");
       alert(`Einige Einträge konnten nicht übertragen werden:\n${preview}`);
     }
   }catch(error){
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "POs konnten nicht übertragen werden.")}</span>`;
+    const raw = error.message || "POs konnten nicht übertragen werden.";
+    const friendly = raw.includes("Unbekannte POST-Aktion")
+      ? "Die Übertragung ist auf Railway noch nicht aktiv. Bitte Seite neu laden und erneut versuchen."
+      : raw;
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(friendly)}</span>`;
   }
 }
 
@@ -9832,6 +10042,7 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     });
     renderPoPostConfigRows();
     renderPoPostDetailRows();
+    renderPoSignupReviewRows();
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
@@ -9867,6 +10078,8 @@ async function deletePoPostEntryFromPostPanel(index){
       return;
     }
     await loadPoPostStoredEntries();
+    renderPoPostDetailRows();
+    renderPoSignupReviewRows();
     setStatus("PO-Eintrag gelöscht. Der DC-Post wird aktualisiert.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gelöscht werden.", "bad");
