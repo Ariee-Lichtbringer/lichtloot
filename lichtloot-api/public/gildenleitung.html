@@ -1353,6 +1353,134 @@ select:focus{border-color:rgba(96,165,250,.75)}
   border-color:rgba(250,204,21,.7);
 }
 
+.po-entry-item-results{
+  display:grid;
+  gap:4px;
+  max-height:170px;
+  overflow:auto;
+  margin-top:6px;
+  padding:5px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:7px;
+  background:rgba(2,6,23,.46);
+}
+
+.po-entry-item-choice{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  border:0;
+  border-radius:6px;
+  background:transparent;
+  color:#dbeafe;
+  padding:4px 6px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.po-entry-item-choice:hover,
+.po-entry-item-choice:focus{
+  outline:none;
+  background:rgba(96,165,250,.14);
+}
+
+.po-entry-item-choice.selected{
+  background:rgba(250,204,21,.16);
+  box-shadow:inset 0 0 0 1px rgba(250,204,21,.45);
+}
+
+.po-entry-loot-picker{
+  position:fixed;
+  inset:0;
+  z-index:64000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.72);
+  backdrop-filter:blur(8px);
+}
+
+.po-entry-loot-picker-box{
+  width:min(980px,calc(100vw - 32px));
+  max-height:min(760px,calc(100vh - 32px));
+  display:grid;
+  grid-template-rows:auto auto minmax(0,1fr);
+  gap:12px;
+  border:1px solid rgba(250,204,21,.42);
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(8,13,26,.98),rgba(3,7,18,.96));
+  box-shadow:0 22px 60px rgba(0,0,0,.56);
+  padding:16px;
+}
+
+.po-entry-loot-picker-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.po-entry-loot-picker-title{
+  color:#facc15;
+  font-size:18px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-entry-loot-picker-sub{
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:800;
+  margin-top:3px;
+}
+
+.po-entry-loot-picker-search{
+  min-height:38px;
+  width:100%;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:8px;
+  background:rgba(2,6,23,.72);
+  color:#f8fafc;
+  font-weight:850;
+  padding:9px 11px;
+}
+
+.po-entry-loot-picker-list{
+  overflow:auto;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:8px;
+  padding-right:4px;
+}
+
+.po-entry-loot-picker-item{
+  min-height:44px;
+  border:1px solid rgba(148,163,184,.20);
+  border-radius:8px;
+  background:rgba(15,23,42,.70);
+  color:#e5edf8;
+  text-align:left;
+  padding:8px 9px;
+  cursor:pointer;
+}
+
+.po-entry-loot-picker-item:hover,
+.po-entry-loot-picker-item:focus{
+  outline:none;
+  border-color:rgba(250,204,21,.60);
+  background:rgba(30,41,59,.82);
+}
+
+.po-entry-loot-picker-meta{
+  display:block;
+  margin-top:3px;
+  color:#94a3b8;
+  font-size:11px;
+  font-weight:800;
+}
+
 .po-entry-correction-note{
   color:#93c5fd;
   font-size:11px;
@@ -4517,6 +4645,20 @@ tr:hover td{background:rgba(250,204,21,.035)}
   </div>
 </div>
 
+<div id="poEntryLootPicker" class="po-entry-loot-picker hidden" role="dialog" aria-modal="true" aria-labelledby="poEntryLootPickerTitle" onclick="closePoSignupCorrectionLootPickerOnBackdrop(event)">
+  <div class="po-entry-loot-picker-box">
+    <div class="po-entry-loot-picker-head">
+      <div>
+        <div id="poEntryLootPickerTitle" class="po-entry-loot-picker-title">Raid-Lootliste</div>
+        <div id="poEntryLootPickerSub" class="po-entry-loot-picker-sub">Item aus der Lootliste auswählen.</div>
+      </div>
+      <button class="small-btn danger" type="button" onclick="closePoSignupCorrectionLootPicker()">Schließen</button>
+    </div>
+    <input id="poEntryLootPickerSearch" class="po-entry-loot-picker-search" type="search" placeholder="Item, Boss, Slot oder ItemID suchen..." oninput="renderPoSignupCorrectionLootPickerItems()">
+    <div id="poEntryLootPickerList" class="po-entry-loot-picker-list"></div>
+  </div>
+</div>
+
 <div id="tooltip" class="tooltip hidden"></div>
 
 <script>
@@ -4529,8 +4671,11 @@ const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLU
 let poSignupGeneratedLichtlootRaid = null;
 const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
 const poSignupLootSearchCache = {};
+const poSignupLootItemDataCache = {};
+const poSignupLootSearchLoading = {};
 let poSignupCorrectionCharacters = [];
 let poSignupCorrectionCharactersLoaded = false;
+let poSignupActiveLootPickerIndex = null;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -7331,10 +7476,17 @@ async function loadPoSignupLootItems(raid){
   const result = await railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() });
   if(!result.success) throw new Error(result.error || "Lootliste konnte nicht geladen werden.");
   const items = [];
+  const itemObjects = [];
   (Array.isArray(result.items) ? result.items : []).forEach(row => {
-    items.push(row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName);
+    const name = row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName;
+    if(!name) return;
+    const normalized = normalizeLootItem(row);
+    lootItemIndex[itemKey(name)] = normalized;
+    items.push(name);
+    itemObjects.push(normalized);
   });
-  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items);
+  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items, { limit:null });
+  poSignupLootItemDataCache[raidKey] = itemObjects;
   return poSignupLootSearchCache[raidKey];
 }
 
@@ -7372,7 +7524,35 @@ async function ensurePoSignupCorrectionCharacters(){
 }
 
 function poSignupEntryRaidKey(entry){
-  return poSignupNormalizeRaid(entry?.raid || document.getElementById("poSignupRaid")?.value || "");
+  const config = poSignupConfigForEntry(entry);
+  const candidates = [
+    entry?.raid,
+    entry?.raidType,
+    config?.raid,
+    entry?.title,
+    entry?.postKey,
+    config?.title,
+    config?.postKey
+  ];
+  for(const value of candidates){
+    const raid = poSignupNormalizeRaid(value || "");
+    if(PO_SIGNUP_TEMPLATE_RAIDS.includes(raid)) return raid;
+  }
+  const itemText = normalize([entry?.item, entry?.itemName, entry?.note].filter(Boolean).join(" "));
+  if(itemText.includes("hakkar") || itemText.includes("jindos") || itemText.includes("razzashi") || itemText.includes("gurubashi")) return "zg";
+  if(itemText.includes("qiraji") || itemText.includes("huhuran") || itemText.includes("cthun") || itemText.includes("vek")) return "aq40";
+  if(itemText.includes("saphiron") || itemText.includes("kelthuzad") || itemText.includes("naxx")) return "naxx";
+  if(itemText.includes("ragnaros") || itemText.includes("sulfuron") || itemText.includes("molten")) return "mc";
+  if(itemText.includes("chromaggus") || itemText.includes("nefarian") || itemText.includes("blackwing")) return "bwl";
+  return poSignupSelectedRaidKey() || "";
+}
+
+function poSignupConfigForEntry(entry){
+  const key = String(entry?.postKey || "").trim();
+  if(!key) return null;
+  return readPoPostConfigs().find(config => String(config.postKey || "").trim() === key)
+    || poPostConfigGroups().find(config => String(config.postKey || "").trim() === key)
+    || null;
 }
 
 async function ensurePoSignupCorrectionDataForEntries(){
@@ -7389,8 +7569,32 @@ async function ensurePoSignupCorrectionDataForEntries(){
   if(currentRaid) raids.add(currentRaid);
   await Promise.all(Array.from(raids).map(raid => loadPoSignupLootItems(raid).catch(error => {
     console.warn("PO-Items konnten nicht geladen werden.", raid, error);
+    poSignupLootSearchCache[raid] = [];
     return [];
   })));
+}
+
+function ensurePoSignupReviewItemsLoaded(rows, rerender){
+  const raids = new Set();
+  (Array.isArray(rows) ? rows : []).forEach(entry => {
+    const raid = poSignupEntryRaidKey(entry);
+    if(raid && !poSignupLootSearchCache[raid] && !poSignupLootSearchLoading[raid]){
+      raids.add(raid);
+    }
+  });
+  if(!raids.size) return;
+  raids.forEach(raid => {
+    poSignupLootSearchLoading[raid] = loadPoSignupLootItems(raid)
+      .catch(error => {
+        console.warn("PO-Itemliste konnte nicht geladen werden.", raid, error);
+        poSignupLootSearchCache[raid] = [];
+        return [];
+      })
+      .finally(() => {
+        delete poSignupLootSearchLoading[raid];
+        if(typeof rerender === "function") rerender();
+      });
+  });
 }
 
 function poSignupFindCorrectionCharacter(entry){
@@ -7414,9 +7618,158 @@ function poSignupCorrectionCharacterOptions(entry){
 }
 
 function poSignupCorrectionItemOptions(entry, index){
+  return poSignupCorrectionItemList(entry).map(item => `<option value="${escapeAttr(item)}"></option>`).join("");
+}
+
+function poSignupCorrectionItemList(entry){
   const raidKey = poSignupEntryRaidKey(entry);
   const items = poSignupLootSearchCache[raidKey] || [];
-  return items.map(item => `<option value="${escapeAttr(item)}"></option>`).join("");
+  if(items.length) return items;
+  const fallback = poSignupCleanItemLines([entry?.item, entry?.itemName]);
+  return fallback;
+}
+
+function poSignupCorrectionItemObjects(entry){
+  const raidKey = poSignupEntryRaidKey(entry);
+  const objects = poSignupLootItemDataCache[raidKey] || [];
+  if(objects.length) return objects;
+  return poSignupCorrectionItemList(entry).map(name => lootItemIndex[itemKey(name)] || { name });
+}
+
+function poSignupCorrectionItemSearchText(item){
+  return [
+    item?.name,
+    item?.boss,
+    item?.slot,
+    item?.type,
+    item?.quality,
+    item?.source,
+    item?.itemId,
+    item?.tooltip
+  ].filter(Boolean).join(" ");
+}
+
+function poSignupCorrectionItemSelectOptions(entry){
+  const raidKey = poSignupEntryRaidKey(entry);
+  const items = poSignupCorrectionItemList(entry);
+  const loading = raidKey && poSignupLootSearchLoading[raidKey];
+  const options = [
+    `<option value="">${loading ? "Itemliste lädt..." : "Item auswählen..."}</option>`
+  ];
+  items.forEach(item => {
+    options.push(`<option value="${escapeAttr(item)}">${escapeHtml(item)}</option>`);
+  });
+  return options.join("");
+}
+
+function applyPoSignupCorrectionItem(index, value){
+  const field = document.getElementById(`poEntryItemCorrection-${index}`);
+  if(field && value){
+    field.value = value;
+    field.dataset.selectedItem = value;
+    filterPoSignupCorrectionItems(index);
+  }
+}
+
+function filterPoSignupCorrectionItems(index){
+  const field = document.getElementById(`poEntryItemCorrection-${index}`);
+  const list = document.getElementById(`poEntryItemResults-${index}`);
+  if(!field || !list) return;
+  const search = normalize(field.value || "");
+  if(field.dataset.selectedItem && normalize(field.dataset.selectedItem) !== search){
+    field.dataset.selectedItem = "";
+  }
+  list.querySelectorAll("[data-po-item-name]").forEach(button => {
+    const name = normalize(button.dataset.poSearch || button.dataset.poItemName || "");
+    const selected = normalize(button.dataset.poItemName || "") === normalize(field.dataset.selectedItem || "");
+    button.hidden = Boolean(search) && !name.includes(search);
+    button.classList.toggle("selected", selected);
+  });
+}
+
+function renderPoSignupCorrectionItemResults(entry, index){
+  const items = poSignupCorrectionItemObjects(entry);
+  if(!items.length) return '<div class="muted">Keine Itemliste geladen.</div>';
+  return items.map(item => {
+    const name = item?.name || "";
+    if(!name) return "";
+    const searchText = [name, item?.boss, item?.slot, item?.quality, item?.source].filter(Boolean).join(" ");
+    return `
+      <button class="po-entry-item-choice" type="button" data-po-item-name="${escapeAttr(name)}" data-po-search="${escapeAttr(searchText)}" onclick="applyPoSignupCorrectionItem(${index}, '${escapeAttr(escapeQuotes(name))}')">
+        ${renderLootItem(name)}
+      </button>
+    `;
+  }).join("");
+}
+
+async function openPoSignupCorrectionLootPicker(index){
+  poSignupActiveLootPickerIndex = index;
+  const entry = poPostStoredEntries[index];
+  const picker = document.getElementById("poEntryLootPicker");
+  const title = document.getElementById("poEntryLootPickerTitle");
+  const sub = document.getElementById("poEntryLootPickerSub");
+  const search = document.getElementById("poEntryLootPickerSearch");
+  const list = document.getElementById("poEntryLootPickerList");
+  if(!entry || !picker || !search || !list) return;
+  const raidKey = poSignupEntryRaidKey(entry);
+  if(title) title.textContent = `Raid-Lootliste ${raidKey ? raidKey.toUpperCase() : ""}`;
+  if(sub) sub.textContent = "Item aus der Lootliste des PO-Raids auswählen. Tooltip wie in der normalen Lootliste.";
+  picker.classList.remove("hidden");
+  const current = document.getElementById(`poEntryItemCorrection-${index}`)?.value.trim() || "";
+  search.value = current && current.length > 2 ? current : "";
+  list.innerHTML = '<div class="muted">Lootliste wird geladen ...</div>';
+  try{
+    if(raidKey) await loadPoSignupLootItems(raidKey);
+    renderPoSignupCorrectionLootPickerItems();
+    window.setTimeout(() => search.focus(), 50);
+  }catch(error){
+    list.innerHTML = `<div class="muted">${escapeHtml(error.message || "Lootliste konnte nicht geladen werden.")}</div>`;
+  }
+}
+
+function closePoSignupCorrectionLootPicker(){
+  const picker = document.getElementById("poEntryLootPicker");
+  if(picker) picker.classList.add("hidden");
+  hideTooltip();
+  poSignupActiveLootPickerIndex = null;
+}
+
+function closePoSignupCorrectionLootPickerOnBackdrop(event){
+  if(event.target && event.target.id === "poEntryLootPicker") closePoSignupCorrectionLootPicker();
+}
+
+function renderPoSignupCorrectionLootPickerItems(){
+  const list = document.getElementById("poEntryLootPickerList");
+  const search = document.getElementById("poEntryLootPickerSearch");
+  const index = poSignupActiveLootPickerIndex;
+  const entry = Number.isInteger(index) ? poPostStoredEntries[index] : null;
+  if(!list || !entry) return;
+  const words = normalize(search?.value || "").split(/\s+/).filter(Boolean);
+  const items = poSignupCorrectionItemObjects(entry);
+  const matches = items.filter(item => {
+    const text = normalize(poSignupCorrectionItemSearchText(item));
+    return !words.length || words.every(word => text.includes(word));
+  }).slice(0,120);
+  if(!matches.length){
+    list.innerHTML = '<div class="muted">Keine Items gefunden.</div>';
+    return;
+  }
+  list.innerHTML = matches.map(item => {
+    const name = item?.name || "";
+    if(!name) return "";
+    const meta = [item?.slot, item?.type, item?.boss, item?.itemId ? "ID " + item.itemId : ""].filter(Boolean).join(" · ");
+    return `
+      <button class="po-entry-loot-picker-item" type="button" onclick="selectPoSignupCorrectionLootItem(${index}, '${escapeJsString(name)}')">
+        ${renderLootItem(name)}
+        ${meta ? `<span class="po-entry-loot-picker-meta">${escapeHtml(meta)}</span>` : ""}
+      </button>
+    `;
+  }).join("");
+}
+
+function selectPoSignupCorrectionLootItem(index, itemName){
+  applyPoSignupCorrectionItem(index, itemName);
+  closePoSignupCorrectionLootPicker();
 }
 
 function poSignupCorrectionItemValue(index){
@@ -7425,6 +7778,27 @@ function poSignupCorrectionItemValue(index){
 
 function poSignupCorrectionCharacterValue(index){
   return document.getElementById(`poEntryCharacterCorrection-${index}`)?.value.trim() || "";
+}
+
+function samePoPostEntryIdentity(left, right){
+  if(!left || !right) return false;
+  if(left.id && right.id && String(left.id) === String(right.id)) return true;
+  const keys = ["postKey", "sourceChannelId", "targetChannelId", "messageId", "discordMessageId"];
+  return keys.every(key => String(left[key] || "") === String(right[key] || ""));
+}
+
+function updatePoPostEntryCaches(originalEntry, updatedEntry){
+  const merged = Object.assign({}, originalEntry || {}, updatedEntry || {});
+  poPostStoredEntries = (poPostStoredEntries || []).map(entry =>
+    samePoPostEntryIdentity(entry, originalEntry) || samePoPostEntryIdentity(entry, merged)
+      ? Object.assign({}, entry, merged)
+      : entry
+  );
+  poPostEntries = (poPostEntries || []).map(entry =>
+    samePoPostEntryIdentity(entry, originalEntry) || samePoPostEntryIdentity(entry, merged)
+      ? Object.assign({}, entry, merged)
+      : entry
+  );
 }
 
 async function loadPoSignupTemplateItems(){
@@ -7587,8 +7961,10 @@ function poSignupNormalizeRaid(value){
     "temple-of-ahn-qiraj":"aq40",
     "naxxramas":"naxx",
     "zul-gurub":"zg",
+    "zulgurub":"zg",
     "zg-20":"zg",
     "zul-gurub-20":"zg",
+    "zulgurub-20":"zg",
     "aq-20":"aq20",
     "ahn-qiraj-20":"aq20",
     "ruins-of-ahn-qiraj":"aq20",
@@ -7681,7 +8057,8 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
   }
 }
 
-function poSignupCleanItemLines(values){
+function poSignupCleanItemLines(values, options={}){
+  const limit = Object.prototype.hasOwnProperty.call(options, "limit") ? options.limit : 25;
   const blocked = new Set([
     "worldbuff übersicht",
     "worldbuff uebersicht",
@@ -7704,7 +8081,7 @@ function poSignupCleanItemLines(values){
     seen.add(key);
     items.push(item);
   });
-  return items.slice(0,25);
+  return limit ? items.slice(0, limit) : items;
 }
 
 async function poSignupLoadFallbackItems(raid){
@@ -7914,12 +8291,15 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     tbody.innerHTML = `<tr><td colspan="4" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
     return;
   }
+  ensurePoSignupReviewItemsLoaded(rows, () => {
+    renderPoPostDetailRows();
+    renderPoSignupReviewRows();
+  });
   tbody.innerHTML = rows.map(entry => {
     const index = poPostStoredEntries.indexOf(entry);
     const status = String(entry.approvalStatus || "pending").toLowerCase();
     const statusLabel = status === "approved" ? "freigegeben" : status === "rejected" ? "abgelehnt" : "offen";
     const statusClass = status === "approved" ? "open" : status === "rejected" ? "closed" : "warn";
-    const itemListId = `poEntryItemOptions-${index}`;
     return `
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
@@ -7937,8 +8317,10 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
           ${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}
           <div class="po-entry-correction-control">
             <span class="po-entry-correction-label">Item aus Datenbank</span>
-            <input id="poEntryItemCorrection-${index}" class="po-entry-correction-input" list="${itemListId}" value="${escapeAttr(entry.item || "")}" placeholder="Item suchen...">
-            <datalist id="${itemListId}">${poSignupCorrectionItemOptions(entry, index)}</datalist>
+            <div class="po-signup-item-tool-row" style="grid-template-columns:minmax(0,1fr) auto">
+              <input id="poEntryItemCorrection-${index}" class="po-entry-correction-input" value="${escapeAttr(entry.item || "")}" placeholder="Lootliste öffnen..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly name="po-db-item-${index}-${escapeAttr(entry.id || entry.messageId || entry.postKey || "entry")}" onclick="openPoSignupCorrectionLootPicker(${index})" onfocus="openPoSignupCorrectionLootPicker(${index})">
+              <button class="small-btn ghost" type="button" onclick="openPoSignupCorrectionLootPicker(${index})">Lootliste</button>
+            </div>
           </div>
         </td>
         <td>
@@ -10379,6 +10761,8 @@ async function reviewPoPostEntryFromGuild(index, status){
   }
   try{
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
+    const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
+    const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
@@ -10386,6 +10770,10 @@ async function reviewPoPostEntryFromGuild(index, status){
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      raidPin,
+      prioPin:raidPin,
+      lichtlootRaidId:raidPin,
+      lichtlootPlayerPin:raidPin,
       status,
       reviewer:"Gildenleitung"
     });
@@ -10413,6 +10801,8 @@ async function reviewPoPostEntryFromPostPanel(index, status){
   }
   try{
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
+    const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
+    const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
@@ -10420,6 +10810,10 @@ async function reviewPoPostEntryFromPostPanel(index, status){
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      raidPin,
+      prioPin:raidPin,
+      lichtlootRaidId:raidPin,
+      lichtlootPlayerPin:raidPin,
       status,
       reviewer:"Gildenleitung"
     });
@@ -10450,6 +10844,8 @@ async function savePoPostEntryCorrection(index){
   }
   const characterId = poSignupCorrectionCharacterValue(index);
   const itemName = poSignupCorrectionItemValue(index);
+  const correctionConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
+  const raidPin = poSignupLichtlootPinForConfig(correctionConfig);
   if(!characterId || !itemName){
     setStatus("Bitte Spielerlogin und Item auswählen.", "bad");
     return;
@@ -10465,6 +10861,12 @@ async function savePoPostEntryCorrection(index){
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
       discordMessageId:entry.discordMessageId || "",
+      raid:poSignupEntryRaidKey(entry) || entry.raid || "",
+      raidName:poSignupEntryRaidKey(entry) || entry.raid || "",
+      raidPin,
+      prioPin:raidPin,
+      lichtlootRaidId:raidPin,
+      lichtlootPlayerPin:raidPin,
       player:entry.player || "",
       item:entry.item || "",
       characterId,
@@ -10474,12 +10876,24 @@ async function savePoPostEntryCorrection(index){
       setStatus(result.error || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
       return;
     }
-    poPostStoredEntries[index] = Object.assign({}, entry, result.entry || {});
+    const updatedEntry = Object.assign({}, entry, result.entry || {}, {
+      item:(result.entry && result.entry.item) || itemName,
+      player:(result.entry && result.entry.player) || entry.player,
+      className:(result.entry && result.entry.className) || entry.className
+    });
+    updatePoPostEntryCaches(entry, updatedEntry);
     renderPoPostConfigRows();
     renderPoPostDetailRows();
     renderPoSignupReviewRows();
+    renderPoPostEntryRows();
     updatePoSignupPreview();
-    setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und Discord-Zuordnung sind gespeichert.", "good");
+    if(result.prioSync && result.prioSync.success === false){
+      setStatus("PO-Eintrag korrigiert, aber LichtLoot-Prio konnte nicht aktualisiert werden: " + (result.prioSync.error || "unbekannter Fehler"), "bad");
+    }else if(result.prioSync && result.prioSync.success){
+      setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und LichtLoot-Prio sind aktualisiert.", "good");
+    }else{
+      setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und Discord-Zuordnung sind gespeichert.", "good");
+    }
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
   }
