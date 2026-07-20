@@ -5334,7 +5334,7 @@ async function savePrio({ guildId, query: params }) {
              updated_at = now()
          where guild_id = $1
            and (external_raid_id = $2 or id::text = $2)
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
         [
           guildId,
           externalRaidId,
@@ -5359,7 +5359,7 @@ async function savePrio({ guildId, query: params }) {
          where guild_id = $1
            and raid_pin = $2
            and lower(raid_type) = any($8)
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
         [
           guildId,
           prioPin,
@@ -5384,7 +5384,7 @@ async function savePrio({ guildId, query: params }) {
              updated_at = now()
          where guild_id = $1
            and raid_pin = $2
-         returning id, external_raid_id, name, raid_type, raid_date, status`,
+         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
         [
           guildId,
           prioPin,
@@ -5425,14 +5425,19 @@ async function savePrio({ guildId, query: params }) {
       [raidResult.rows[0].id, character.id, p1?.id || null, p2?.id || null, p3?.id || null, comment]
     );
 
+    const savedRaid = raidResult.rows[0];
     await client.query("commit");
+    const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, savedRaid, "lichtloot_prio_saved")
+      .catch(error => ({ success: false, error: error.message || String(error) }));
     return {
       success: true,
       characterPin: normalizePin(pin),
       playerPin: normalizePin(pin),
       tempPin: normalizePin(pin),
       prioId: prioResult.rows[0].id,
-      raidId: raidResult.rows[0].external_raid_id || raidResult.rows[0].id
+      raidId: savedRaid.external_raid_id || savedRaid.id,
+      p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
+      p0PostRefresh
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -5565,13 +5570,17 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     );
 
     await client.query("commit");
+    const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, raid, "raidlead_prio_saved")
+      .catch(error => ({ success: false, error: error.message || String(error) }));
     return {
       success: true,
       prioId: prioResult.rows[0].id,
       raidId: raidPublicId(raid),
       player: character.name,
       server: character.server,
-      className: character.class_name
+      className: character.class_name,
+      p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
+      p0PostRefresh
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -11657,6 +11666,52 @@ function normalizeP0SignupRow(row) {
   };
 }
 
+function isP0PostRefreshRaid(raidType) {
+  return new Set(["mc", "bwl", "aq40", "naxx"]).has(normalizeRaidType(raidType));
+}
+
+async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
+  if (!raid || !isP0PostRefreshRaid(raid.raid_type || raid.raid)) {
+    return { success: true, skipped: true, reason: "unsupported_raid" };
+  }
+
+  const signupChannelResult = await query(
+    `select discord_channel_id, discord_message_id
+     from p0_discord_signups
+     where guild_id = $1
+       and raid_id = $2
+       and coalesce(discord_channel_id, '') <> ''
+     order by updated_at desc, created_at desc
+     limit 1`,
+    [guildId, raid.id]
+  );
+  const signupChannel = signupChannelResult.rows[0] || {};
+  const channelId = clean(signupChannel.discord_channel_id || raid.discord_channel_id || "");
+  if (!channelId) {
+    return { success: true, skipped: true, reason: "missing_channel" };
+  }
+  const normalizedRaid = normalizeRaidRow(raid);
+
+  return enqueueBotUpdate({
+    guildId,
+    type: "p0_post_refresh",
+    payload: {
+      raid: raid.raid_type || "",
+      raidId: raidPublicId(raid),
+      raidDate: normalizedRaid.raidDate,
+      raidTime: normalizedRaid.raidTime,
+      raidPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+      prioPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+      playerPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+      channelId,
+      discordChannelId: channelId,
+      messageId: clean(signupChannel.discord_message_id || ""),
+      discordMessageId: clean(signupChannel.discord_message_id || ""),
+      source
+    }
+  });
+}
+
 async function getP0DiscordSignupList({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureRaidSchema();
@@ -11735,17 +11790,82 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by item_name asc, player_name asc`,
     [guildId, raid.id]
   );
+  const prioResult = await query(
+    `select
+       pr.id,
+       pr.character_id,
+       pr.comment,
+       pr.created_at,
+       pr.updated_at,
+       c.name as player_name,
+       c.server,
+       i.id as item_id,
+       i.name as item_name
+     from prios pr
+     join characters c on c.id = pr.character_id
+     join players p on p.id = c.player_id and p.guild_id = $1
+     left join items i on i.id = pr.p1_item_id
+     where pr.raid_id = $2
+     order by lower(coalesce(i.name, '')) asc, lower(c.name) asc`,
+    [guildId, raid.id]
+  );
+  const signupRows = signupResult.rows.map(normalizeP0SignupRow);
+  const signupCharacterIds = new Set(signupResult.rows.map(row => clean(row.character_id)).filter(Boolean));
+  const signupPlayerKeys = new Set(signupRows.map(row => `${clean(row.player).toLowerCase()}|${clean(row.server).toLowerCase()}`));
+  const normalizedRaid = normalizeRaidRow(raid);
+  const lichtlootP0Rows = prioResult.rows
+    .filter(row => {
+      const meta = commentMeta(row.comment);
+      return clean(meta.p0Plus).toLowerCase() === "ja" && clean(row.item_name);
+    })
+    .filter(row => {
+      const characterId = clean(row.character_id);
+      const playerKey = `${clean(row.player_name).toLowerCase()}|${clean(row.server).toLowerCase()}`;
+      return !signupCharacterIds.has(characterId) && !signupPlayerKeys.has(playerKey);
+    })
+    .map(row => ({
+      id: row.id,
+      raidId: raidPublicId(raid),
+      raid: normalizeRaidType(raid.raid_type).toUpperCase(),
+      raidName: normalizedRaid.raidName,
+      raidDate: normalizedRaid.raidDate,
+      raidTime: normalizedRaid.raidTime,
+      prioPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+      player: row.player_name || "",
+      char: row.player_name || "",
+      server: row.server || "",
+      item: row.item_name || "",
+      itemName: row.item_name || "",
+      itemId: row.item_id || "",
+      discordUserId: "",
+      discordName: "LichtLoot",
+      discordChannelId: "",
+      discordMessageId: "",
+      approvalStatus: "approved",
+      approved: true,
+      rejected: false,
+      approvedByDiscordId: "",
+      approvedByDiscordName: "LichtLoot",
+      approvedAt: row.updated_at || row.created_at || "",
+      updatedAt: row.updated_at,
+      createdAt: row.created_at,
+      source: "lichtloot"
+    }));
 
   return {
     success: true,
-    raid: normalizeRaidRow(raid),
+    raid: normalizedRaid,
     raidId: raidPublicId(raid),
     items: itemResult.rows.map(row => ({
       ...normalizeLootItemForApi(row),
       p0PlusPoints: Number(row.p0plus_points || 0),
       p0PlusCount: Number(row.p0plus_count || 0)
     })),
-    signups: signupResult.rows.map(normalizeP0SignupRow)
+    signups: [...signupRows, ...lichtlootP0Rows].sort((a, b) => {
+      const itemCompare = String(a.item || "").localeCompare(String(b.item || ""));
+      if (itemCompare) return itemCompare;
+      return String(a.player || "").localeCompare(String(b.player || ""));
+    })
   };
 }
 
