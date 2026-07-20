@@ -7074,6 +7074,20 @@ function poSignupTemplateRaidKey(){
   return poSignupNormalizeRaid(document.getElementById("poSignupTemplateRaid")?.value || poSignupSelectedRaidKey() || "aq40");
 }
 
+function syncPoSignupTemplateRaid(loadItems=false){
+  const raid = poSignupSelectedRaidKey() || "aq40";
+  const template = document.getElementById("poSignupTemplateRaid");
+  const search = document.getElementById("poSignupLootSearch");
+  const results = document.getElementById("poSignupLootSearchResults");
+  if(template) template.value = raid;
+  if(search) search.value = "";
+  if(results){
+    results.classList.add("hidden");
+    results.innerHTML = "";
+  }
+  if(loadItems) void loadPoSignupTemplateItems();
+}
+
 function setPoSignupItems(values, options={}){
   const field = document.getElementById("poSignupItems");
   if(!field) return [];
@@ -7197,6 +7211,7 @@ function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
   const key = document.getElementById("poSignupPostKey");
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
   if(key && (forceNewKey || !key.value.trim())) key.value = makePoSignupKey(raid, raidDate, raidTime);
+  if(forceNewKey) syncPoSignupTemplateRaid(true);
   updatePoSignupPreview();
 }
 
