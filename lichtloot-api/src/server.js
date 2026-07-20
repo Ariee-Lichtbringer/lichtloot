@@ -3984,6 +3984,10 @@ async function queuePoPost({ guildId, query: params }) {
       mode: clean(params.mode || params.poMode) || "signup",
       groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
+      createLichtlootRaid: clean(params.createLichtlootRaid || params.createRaid || ""),
+      lichtlootRaidId: clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId || ""),
+      lichtlootPlayerPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || ""),
+      lichtlootLeadPin: clean(params.lichtlootLeadPin || params.leadPin || ""),
       limit,
       source: "gildenleitung"
     }
