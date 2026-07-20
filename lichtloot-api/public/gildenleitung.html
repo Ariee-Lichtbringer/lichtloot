@@ -1386,8 +1386,9 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-item-choice.selected{
-  background:rgba(250,204,21,.16);
-  box-shadow:inset 0 0 0 1px rgba(250,204,21,.45);
+  background:rgba(34,197,94,.14);
+  box-shadow:inset 0 0 0 1px rgba(34,197,94,.34);
+  color:#dcfce7;
 }
 
 .po-entry-loot-picker{
@@ -3786,7 +3787,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <div class="dashboard-column">
       <section class="dashboard-card">
         <div class="dashboard-card-head">
-          <h2>⚔ Aktive Raids</h2>
+          <h2>⚔ Raids der kommenden 2 Wochen</h2>
           <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
         </div>
         <div id="activeRaidCards" class="active-raid-list">
@@ -5366,10 +5367,26 @@ function twoWeeksAgoIsoDate(){
   ].join("-");
 }
 
+function twoWeeksAheadIsoDate(){
+  const date = new Date();
+  date.setDate(date.getDate() + 14);
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0")
+  ].join("-");
+}
+
 function isRaidTodayOrFuture(raid){
   const date = String(raid && raid.raidDate || "").trim();
   if(!date) return false;
   return date >= todayIsoDate();
+}
+
+function isRaidInNextTwoWeeks(raid){
+  const date = String(raid && raid.raidDate || "").trim();
+  if(!date) return false;
+  return date >= todayIsoDate() && date <= twoWeeksAheadIsoDate();
 }
 
 function isRaidInLastTwoWeeks(raid){
@@ -5406,7 +5423,7 @@ function renderDashboardCards(){
   const raids = getDashboardActiveRaids();
 
   if(!raids.length){
-    box.innerHTML = '<div class="muted">Keine aktiven Raids gefunden.</div>';
+    box.innerHTML = '<div class="muted">Keine Raids in den kommenden 2 Wochen gefunden.</div>';
     return;
   }
 
@@ -5459,10 +5476,9 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
+      return status !== "archiviert" && status !== "archive" && isRaidInNextTwoWeeks(raid);
     })
-    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")))
-    .slice(0, 6);
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
 async function loadDashboardRaidStats(){
@@ -7783,8 +7799,16 @@ function poSignupCorrectionCharacterValue(index){
 function samePoPostEntryIdentity(left, right){
   if(!left || !right) return false;
   if(left.id && right.id && String(left.id) === String(right.id)) return true;
-  const keys = ["postKey", "sourceChannelId", "targetChannelId", "messageId", "discordMessageId"];
-  return keys.every(key => String(left[key] || "") === String(right[key] || ""));
+  const samePost = ["postKey", "sourceChannelId", "targetChannelId"].every(key =>
+    String(left[key] || "") && String(left[key] || "") === String(right[key] || "")
+  );
+  if(!samePost) return false;
+  if(left.messageId && right.messageId && String(left.messageId) === String(right.messageId)) return true;
+  const leftPlayer = normalize(left.player || left.playerName || "");
+  const rightPlayer = normalize(right.player || right.playerName || "");
+  const leftItem = normalize(left.item || left.itemName || "");
+  const rightItem = normalize(right.item || right.itemName || "");
+  return !!leftPlayer && !!leftItem && leftPlayer === rightPlayer && leftItem === rightItem;
 }
 
 function updatePoPostEntryCaches(originalEntry, updatedEntry){
@@ -8432,6 +8456,11 @@ function poPostConfigGroups(){
         itemOptions: "",
         reviewRecipient: "",
         note: "",
+        raidPin: "",
+        prioPin: "",
+        lichtlootRaidId: "",
+        lichtlootPlayerPin: "",
+        lichtlootLeadPin: "",
         approvedCount: 0,
         pendingCount: 0,
         rejectedCount: 0,
@@ -8455,6 +8484,11 @@ function poPostConfigGroups(){
     group.itemOptions = group.itemOptions || config.itemOptions || "";
     group.reviewRecipient = group.reviewRecipient || config.reviewRecipient || "";
     group.note = group.note || config.note || "";
+    group.raidPin = group.raidPin || config.raidPin || config.prioPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
+    group.prioPin = group.prioPin || config.prioPin || config.raidPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
+    group.lichtlootRaidId = group.lichtlootRaidId || config.lichtlootRaidId || config.raidPin || config.prioPin || config.lichtlootPlayerPin || "";
+    group.lichtlootPlayerPin = group.lichtlootPlayerPin || config.lichtlootPlayerPin || config.raidPin || config.prioPin || config.lichtlootRaidId || "";
+    group.lichtlootLeadPin = group.lichtlootLeadPin || config.lichtlootLeadPin || config.leadPin || "";
   });
   (poPostStoredEntries || []).forEach(entry => {
     const group = ensure(entry.postKey);
@@ -8473,6 +8507,11 @@ function poPostConfigGroups(){
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
     group.mode = group.mode || entry.mode || "";
+    group.raidPin = group.raidPin || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
+    group.prioPin = group.prioPin || entry.prioPin || entry.raidPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
+    group.lichtlootRaidId = group.lichtlootRaidId || entry.lichtlootRaidId || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || "";
+    group.lichtlootPlayerPin = group.lichtlootPlayerPin || entry.lichtlootPlayerPin || entry.raidPin || entry.prioPin || entry.lichtlootRaidId || "";
+    group.lichtlootLeadPin = group.lichtlootLeadPin || entry.lichtlootLeadPin || entry.leadPin || "";
     if(entry.updatedAt && (!group.updatedAt || String(entry.updatedAt) > String(group.updatedAt))){
       group.updatedAt = entry.updatedAt;
     }
@@ -8603,7 +8642,9 @@ async function runPoSignupRowAction(select, postKey){
 
 function poSignupConfigForKey(postKey){
   const key = String(postKey || "").trim();
-  return readPoPostConfigs().find(item => item.postKey === key) || null;
+  return readPoPostConfigs().find(item => item.postKey === key)
+    || poPostConfigGroups().find(item => item.postKey === key)
+    || null;
 }
 
 function poSignupLichtlootPinForConfig(config){
@@ -10323,7 +10364,8 @@ async function transferP0PlusFromGuild(raidId){
     renderDashboardCards();
     renderRaids();
     await loadOverview({ preserveStatus:true });
-    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
+    const skipped = Number(result.skipped || 0);
+    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.${skipped ? " " + skipped + " doppelte übersprungen." : ""}`, "good");
 
     const modal = document.getElementById("prioModal");
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
@@ -10766,10 +10808,14 @@ async function reviewPoPostEntryFromGuild(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
@@ -10806,10 +10852,14 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
