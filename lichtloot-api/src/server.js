@@ -5599,12 +5599,15 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
 
-    const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
-    const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
-    const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
+    const p0Selected = p0Plus === "ja" || p0Plus === "true";
+    const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
+    const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
+    const p1 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p1, p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID));
+    const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
+    const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
     const comment = JSON.stringify({
-      p0Plus: p0Plus === "ja" || p0Plus === "true" ? "ja" : "nein",
-      p0Item: (p0Plus === "ja" || p0Plus === "true") ? (p1?.name || "") : "",
+      p0Plus: p0Selected ? "ja" : "nein",
+      p0Item: p0Selected ? (p1?.name || "") : "",
       raidTime: clean(params.raidTime || params.uhrzeit),
       source: "railway"
     });
@@ -5623,7 +5626,7 @@ async function savePrio({ guildId, query: params }) {
     );
 
     const savedRaid = raidResult.rows[0];
-    const poPostRefreshPayloads = (p0Plus === "ja" || p0Plus === "true") && p1
+    const poPostRefreshPayloads = p0Selected && p1
       ? await syncPoPostEntryFromPrio(client, guildId, {
           raid: savedRaid,
           character,
@@ -5863,11 +5866,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
     const prioResult = await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = null,
-             p3_item_id = null,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()
        returning id`,
