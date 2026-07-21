@@ -2090,6 +2090,7 @@ let prioCheckTimer = null;
 let p0DeadlineTimer = null;
 
 window.p0PlusWasClicked = false;
+window.p0PlusSelectedItem = "";
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 
@@ -2919,6 +2920,7 @@ function renderLootList(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
 
   document.getElementById(slot).value=itemName;
@@ -2933,6 +2935,7 @@ function setP0Plus(itemName){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
+    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML=
       `<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     updateActiveButtons();
@@ -2940,6 +2943,7 @@ function setP0Plus(itemName){
   }
 
   window.p0PlusWasClicked = true;
+  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
 
   document.getElementById("p1").value=itemName;
@@ -2955,6 +2959,7 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   autoSaveDraft();
   updateActiveButtons();
@@ -3028,6 +3033,7 @@ function autoSaveDraft(){
     p3:document.getElementById("p3").value,
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
+    p0PlusSelectedItem:window.p0PlusSelectedItem || "",
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -3054,6 +3060,7 @@ function loadPlayerData(){
   document.getElementById("p3").value=data.p3||"";
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
@@ -3472,7 +3479,7 @@ async function savePrio(){
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
 
   if(SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked)){
-    const p0Item=p1 || p2 || p3;
+    const p0Item=window.p0PlusSelectedItem || p1 || p2 || p3;
     if(p0Item){
       p1=p0Item;
       if(PRIO_COUNT >= 2) p2=p0Item;
@@ -5737,6 +5744,7 @@ async function loadGearPlanner(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML =
@@ -5750,6 +5758,7 @@ function setP0Plus(itemName){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
+    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML =
       '<span class="bad">'+safe(getP0DeadlineClosedMessage())+'</span>';
     updateActiveButtons();
@@ -5757,6 +5766,7 @@ function setP0Plus(itemName){
   }
 
   window.p0PlusWasClicked = true;
+  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
@@ -5770,6 +5780,7 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   renderSelectedPrioPreviews();
   autoSaveDraft();
@@ -5796,6 +5807,7 @@ function loadPlayerData(){
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML =
     '<span class="warn">Gespeicherte Auswahl für '+safe(data.player || "")+' wurde geladen.</span>';

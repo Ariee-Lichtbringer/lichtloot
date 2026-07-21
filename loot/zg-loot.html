@@ -2993,6 +2993,7 @@ function renderLootList(){
 
 function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
 
   setSelectedPrioItemId(slot,itemId);
@@ -3008,6 +3009,7 @@ function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
+    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML=
       `<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     updateActiveButtons();
@@ -3015,6 +3017,7 @@ function setP0Plus(itemName,itemId){
   }
 
   window.p0PlusWasClicked = true;
+  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
 
   setSelectedPrioItemId("p1",itemId);
@@ -3033,6 +3036,7 @@ function setP0Plus(itemName,itemId){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   autoSaveDraft();
@@ -3113,6 +3117,7 @@ function autoSaveDraft(){
     p3ItemId:getSelectedPrioItemId("p3"),
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
+    p0PlusSelectedItem:window.p0PlusSelectedItem || "",
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -3142,6 +3147,7 @@ function loadPlayerData(){
   selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
@@ -3566,7 +3572,7 @@ async function savePrio(){
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
 
   if(SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked)){
-    const p0Item=p1 || p2 || p3;
+    const p0Item=window.p0PlusSelectedItem || p1 || p2 || p3;
     if(p0Item){
       p1=p0Item;
       if(PRIO_COUNT >= 2) p2=p0Item;
@@ -5834,6 +5840,7 @@ async function loadGearPlanner(){
 
 function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   setSelectedPrioItemId(slot,itemId);
   selectPrioOption(slot,itemName,itemId);
@@ -5848,6 +5855,7 @@ function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
+    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML =
       '<span class="bad">'+safe(getP0DeadlineClosedMessage())+'</span>';
     updateActiveButtons();
@@ -5855,6 +5863,7 @@ function setP0Plus(itemName,itemId){
   }
 
   window.p0PlusWasClicked = true;
+  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
   setSelectedPrioItemId("p1",itemId);
   setSelectedPrioItemId("p2",itemId);
@@ -5871,6 +5880,7 @@ function setP0Plus(itemName,itemId){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   renderSelectedPrioPreviews();
@@ -5901,6 +5911,7 @@ function loadPlayerData(){
   selectPrioOption("p2",data.p2 || "",data.p2ItemId || "");
   selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML =
     '<span class="warn">Gespeicherte Auswahl für '+safe(data.player || "")+' wurde geladen.</span>';
