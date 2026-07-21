@@ -3604,14 +3604,30 @@ function isPinConflictError(result){
 
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
-  const player=document.getElementById("playerName").value.trim();
-  const server=document.getElementById("playerServer").value;
-  const playerClass=document.getElementById("playerClass").value;
+  let player=document.getElementById("playerName").value.trim();
+  let server=document.getElementById("playerServer").value;
+  let playerClass=document.getElementById("playerClass").value;
   let p1=document.getElementById("p1").value;
   let p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   let p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
   const status=document.getElementById("playerStatus");
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
+  const selectedCharacter = typeof lichtlootSelectedCharacter !== "undefined" ? lichtlootSelectedCharacter : null;
+
+  if(selectedCharacter){
+    if(!player && selectedCharacter.name){
+      player=selectedCharacter.name;
+      document.getElementById("playerName").value=player;
+    }
+    if(!server && selectedCharacter.server){
+      server=selectedCharacter.server;
+      document.getElementById("playerServer").value=server;
+    }
+    if(!playerClass && selectedCharacter.className){
+      playerClass=selectedCharacter.className;
+      document.getElementById("playerClass").value=playerClass;
+    }
+  }
 
   if(SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked)){
     const p0Item=window.p0PlusSelectedItem || p1 || p2 || p3;
