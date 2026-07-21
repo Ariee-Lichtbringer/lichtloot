@@ -268,6 +268,33 @@ function clean(value) {
   return String(value || "").trim();
 }
 
+function prioClassOrderSql(column = "c.class_name") {
+  return `case lower(coalesce(${column}, ''))
+    when 'warrior' then 1
+    when 'krieger' then 1
+    when 'druid' then 2
+    when 'druide' then 2
+    when 'druiden' then 2
+    when 'paladin' then 3
+    when 'rogue' then 4
+    when 'schurke' then 4
+    when 'schurken' then 4
+    when 'hunter' then 5
+    when 'jaeger' then 5
+    when 'jäger' then 5
+    when 'priest' then 6
+    when 'priester' then 6
+    when 'mage' then 7
+    when 'magier' then 7
+    when 'warlock' then 8
+    when 'hexenmeister' then 8
+    when 'shaman' then 9
+    when 'schamane' then 9
+    when 'schamanen' then 9
+    else 99
+  end`;
+}
+
 function poItemAliasKey(value) {
   return clean(value)
     .toLowerCase()
@@ -11921,7 +11948,7 @@ async function getPublishedPrios({ guildId, query: params }) {
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
      where pr.raid_id = $1
-     order by c.is_main desc, c.created_at asc, c.class_name asc, c.name asc`,
+     order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
     [raid.id]
   );
 
@@ -13333,7 +13360,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
        left join items i2 on i2.id = pr.p2_item_id
        left join items i3 on i3.id = pr.p3_item_id
        where pr.raid_id = any($1::uuid[])
-       order by c.is_main desc, c.created_at asc, c.class_name asc, c.name asc`,
+       order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
       [raidIds]
     ),
     query(
