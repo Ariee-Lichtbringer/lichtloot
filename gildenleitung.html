@@ -8293,7 +8293,11 @@ async function handlePoSignupPrioOptionChange(){
 
 function poPostEntryRowsForKey(postKey){
   const key = String(postKey || "").trim();
-  return (poPostStoredEntries || []).filter(entry => entry.postKey === key);
+  return (poPostStoredEntries || []).filter(entry => {
+    if(entry.postKey !== key) return false;
+    if(entry.configOnly) return false;
+    return String(entry.player || "").trim() || String(entry.item || entry.itemName || "").trim();
+  });
 }
 
 function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
@@ -8494,8 +8498,9 @@ function poPostConfigGroups(){
     const group = ensure(entry.postKey);
     if(!group) return;
     group.railway = true;
+    const configOnly = Boolean(entry.configOnly) || (!String(entry.player || "").trim() && !String(entry.item || entry.itemName || "").trim());
     if(entry.archivedAt) group.archivedCount += 1;
-    else{
+    else if(!configOnly){
       group.count += 1;
       const status = String(entry.approvalStatus || "pending").toLowerCase();
       if(status === "approved") group.approvedCount += 1;
@@ -8507,6 +8512,8 @@ function poPostConfigGroups(){
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
     group.mode = group.mode || entry.mode || "";
+    group.raidDate = group.raidDate || entry.raidDate || "";
+    group.raidTime = group.raidTime || entry.raidTime || "";
     group.raidPin = group.raidPin || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
     group.prioPin = group.prioPin || entry.prioPin || entry.raidPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
     group.lichtlootRaidId = group.lichtlootRaidId || entry.lichtlootRaidId || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || "";
@@ -10281,13 +10288,30 @@ function isBenchPrio(prio){
   return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
 }
 
+function prioClassSortIndex(className){
+  const key = normalize(className);
+  const order = {
+    warrior: 1, krieger: 1,
+    druid: 2, druide: 2, druiden: 2,
+    paladin: 3,
+    rogue: 4, schurke: 4, schurken: 4,
+    hunter: 5, jaeger: 5, jager: 5, jäger: 5,
+    priest: 6, priester: 6,
+    mage: 7, magier: 7,
+    warlock: 8, hexenmeister: 8,
+    shaman: 9, schamane: 9, schamanen: 9
+  };
+  return order[key] || 99;
+}
+
 function sortPriosWithMainFirst(prios){
   return prios
     .map((prio,index)=>({prio,index}))
     .sort((a,b)=>{
-      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
-      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
-      if(aMain !== bMain) return aMain ? -1 : 1;
+      const classCompare = prioClassSortIndex(a.prio && (a.prio.Klasse || a.prio.className)) - prioClassSortIndex(b.prio && (b.prio.Klasse || b.prio.className));
+      if(classCompare) return classCompare;
+      const nameCompare = String(a.prio && (a.prio.Spieler || a.prio.player) || "").localeCompare(String(b.prio && (b.prio.Spieler || b.prio.player) || ""), "de", {sensitivity:"base"});
+      if(nameCompare) return nameCompare;
       return a.index-b.index;
     })
     .map(item=>item.prio);
