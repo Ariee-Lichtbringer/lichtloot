@@ -4019,6 +4019,7 @@ async function ensurePoPostEntriesSchema() {
        approved_by text not null default '',
        approved_at timestamptz,
        archived_at timestamptz,
+       created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
   );
@@ -4032,6 +4033,7 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists luck_by_discord_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists luck_at timestamptz`);
   await query(`alter table po_post_entries add column if not exists archived_at timestamptz`);
+  await query(`alter table po_post_entries add column if not exists created_at timestamptz not null default now()`);
   await query(`alter table po_post_entries add column if not exists raid_pin text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_game_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_slot text not null default ''`);
@@ -5197,7 +5199,7 @@ async function syncPoPostEntryFromPrio(client, guildId, { raid, character, item,
          and target_channel_id = $4
          and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($5), '[^a-z0-9]+', '', 'g')
          and archived_at is null
-       order by updated_at desc, created_at desc`,
+       order by updated_at desc, po_created_at desc nulls last`,
       [guildId, config.post_key, config.source_channel_id, config.target_channel_id, character.name]
     );
 
