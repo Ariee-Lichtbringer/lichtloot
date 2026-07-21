@@ -4098,6 +4098,10 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists item_game_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_slot text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_boss text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists raid_date text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists raid_time text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists mode text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists config_only boolean not null default false`);
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
   await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
 }
@@ -4130,6 +4134,9 @@ async function savePoPostEntries({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || "");
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId || "");
   const raidKey = normalizeRaidType(params.raid || params.raidName).toLowerCase();
+  const raidDate = clean(params.raidDate || params.date || params.datum);
+  const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
+  const mode = clean(params.mode || params.poMode);
   const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
   let releaseNames = new Set();
   try {
@@ -4196,9 +4203,9 @@ async function savePoPostEntries({ guildId, query: params }) {
         `insert into po_post_entries (
            guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
            raid, title, player_name, item_name, discord_user_id, discord_name, class_name, po_message_id, po_created_at,
-           approval_status, approved_by, approved_at, luck_by, luck_by_discord_id, luck_at, raid_pin
+           approval_status, approved_by, approved_at, luck_by, luck_by_discord_id, luck_at, raid_pin, raid_date, raid_time, mode, config_only
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,false)`,
         [
           guildId,
           postKey,
@@ -4220,7 +4227,10 @@ async function savePoPostEntries({ guildId, query: params }) {
           approval.luckBy || "",
           approval.luckByDiscordId || "",
           approval.luckAt || null,
-          raidPin
+          raidPin,
+          raidDate,
+          raidTime,
+          mode
         ]
       );
       savedCount += 1;
@@ -4280,6 +4290,9 @@ async function getPoPostEntries({ guildId, query: params }) {
       targetChannelId: row.target_channel_id || "",
       raid: row.raid || "",
       title: row.title || "PO Liste",
+      mode: row.mode || "",
+      raidDate: row.raid_date || "",
+      raidTime: row.raid_time || "",
       raidPin: row.raid_pin || "",
       prioPin: row.raid_pin || "",
       lichtlootRaidId: row.raid_pin || "",
@@ -4305,7 +4318,8 @@ async function getPoPostEntries({ guildId, query: params }) {
       luckByDiscordId: row.luck_by_discord_id || "",
       luckAt: row.luck_at || "",
       archivedAt: row.archived_at || "",
-      updatedAt: row.updated_at
+      updatedAt: row.updated_at,
+      configOnly: Boolean(row.config_only)
     }))
   };
 }
@@ -4317,12 +4331,18 @@ async function setPoPostDiscordMessage({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || "");
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId || "");
   const discordMessageId = clean(params.discordMessageId || params.messageId || "");
+  const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
+  const title = clean(params.title) || "PO-Anmelder";
+  const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
+  const raidDate = clean(params.raidDate || params.date || params.datum);
+  const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
+  const mode = clean(params.mode || params.poMode || "signup");
   if (!postKey || !discordMessageId) {
     const error = new Error("PO-Post-ID oder Discord-Nachricht fehlt.");
     error.statusCode = 400;
     throw error;
   }
-  const values = [guildId, postKey, discordMessageId];
+  const values = [guildId, postKey, discordMessageId, raidKey, title, raidPin, raidDate, raidTime, mode];
   const clauses = ["guild_id = $1", "post_key = $2", "archived_at is null"];
   if (sourceChannelId) {
     values.push(sourceChannelId);
@@ -4335,13 +4355,30 @@ async function setPoPostDiscordMessage({ guildId, query: params }) {
   const result = await query(
     `update po_post_entries
      set discord_message_id = $3,
+         raid = coalesce(nullif($4, ''), raid),
+         title = coalesce(nullif($5, ''), title),
+         raid_pin = coalesce(nullif($6, ''), raid_pin),
+         raid_date = coalesce(nullif($7, ''), raid_date),
+         raid_time = coalesce(nullif($8, ''), raid_time),
+         mode = coalesce(nullif($9, ''), mode),
          updated_at = now()
      where ${clauses.join(" and ")}`,
     values
   );
+  if (!result.rowCount) {
+    await query(
+      `insert into po_post_entries (
+         guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+         raid, title, raid_pin, raid_date, raid_time, mode, config_only
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true)`,
+      [guildId, postKey, sourceChannelId, targetChannelId || sourceChannelId, discordMessageId, raidKey, title, raidPin, raidDate, raidTime, mode]
+    );
+  }
   return {
     success: true,
     updated: result.rowCount || 0,
+    insertedConfig: !result.rowCount,
     postKey,
     discordMessageId
   };
@@ -4370,7 +4407,7 @@ async function getPoPostApprovals({ guildId, query: params }) {
   const result = await query(
     `select *
      from po_post_entries
-     where ${clauses.join(" and ")} and archived_at is null`,
+     where ${clauses.join(" and ")} and archived_at is null and coalesce(config_only, false) = false`,
     values
   );
   return {
