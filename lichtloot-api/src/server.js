@@ -4015,6 +4015,8 @@ async function queuePoPost({ guildId, query: params }) {
       raid: clean(params.raid || params.raidName),
       raidDate: clean(params.raidDate || params.date || params.datum),
       raidTime: clean(params.raidTime || params.time || params.uhrzeit),
+      guildName: clean(params.guildName || params.displayGuild || params.guild || params.gilde),
+      createdBy: clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) || "Gildenleitung",
       note: clean(params.note || params.message || params.raidleadMessage || params.extraMessage),
       mode: clean(params.mode || params.poMode) || "signup",
       groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
@@ -11070,6 +11072,32 @@ async function createRaid({ guildId, query: params }) {
   return createRaidRecord({ guildId, query: params });
 }
 
+async function createRaidForBot({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const raidType = normalizeRaidType(params.raid || params.raidName);
+  if (!raidType) {
+    const error = new Error("Raidtyp fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const prioPin = clean(params.playerPin || params.prioPin || params.raidPin) || randomRaidCode(3);
+  return createRaidRecord({
+    guildId,
+    query: {
+      ...params,
+      raid: raidType,
+      playerPin: prioPin,
+      prioPin,
+      leadPin: clean(params.leadPin || params.raidleadPin) || randomRaidCode(4),
+      status: params.status || "geschlossen",
+      p0PlusFreigabe: params.p0PlusFreigabe || "geöffnet",
+      raidHelperEnabled: clean(params.raidHelperEnabled || params.raidhelperEnabled || "false"),
+      createdBy: clean(params.createdBy || params.erstelltVon) || "Gildenleitung",
+      guildName: clean(params.guildName || params.gilde || params.guild) || "Lichtbringer"
+    }
+  });
+}
+
 async function createRandomRaid({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"]);
@@ -15208,6 +15236,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...created, guild: guild.slug });
     }
 
+    if (action === "lichtbotCreateRaid") {
+      const created = await createRaidForBot({ guildId: guild.id, query: req.query });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
     if (action === "createRandomRaid") {
       const created = await createRandomRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...created, guild: guild.slug });
@@ -15610,6 +15643,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "createRaid") {
       const created = await createRaid({ guildId: guild.id, query: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "lichtbotCreateRaid") {
+      const created = await createRaidForBot({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
     }
 
