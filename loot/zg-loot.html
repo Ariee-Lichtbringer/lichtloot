@@ -3559,11 +3559,23 @@ async function savePrio(){
   const player=document.getElementById("playerName").value.trim();
   const server=document.getElementById("playerServer").value;
   const playerClass=document.getElementById("playerClass").value;
-  const p1=document.getElementById("p1").value;
-  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
-  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  let p1=document.getElementById("p1").value;
+  let p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
+  let p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
   const status=document.getElementById("playerStatus");
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
+
+  if(SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked)){
+    const p0Item=p1 || p2 || p3;
+    if(p0Item){
+      p1=p0Item;
+      if(PRIO_COUNT >= 2) p2=p0Item;
+      if(PRIO_COUNT >= 3) p3=p0Item;
+      document.getElementById("p1").value=p0Item;
+      if(PRIO_COUNT >= 2) document.getElementById("p2").value=p0Item;
+      if(PRIO_COUNT >= 3) document.getElementById("p3").value=p0Item;
+    }
+  }
 
   const isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
