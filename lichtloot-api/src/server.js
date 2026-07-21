@@ -5530,9 +5530,11 @@ async function findCharacterForPin(guildId, pin, charName, server) {
      where p.guild_id = $1
        and p.player_pin = $2
        and lower(c.name) = lower($3)
-     order by c.created_at asc
+     order by
+       case when lower(c.server) = lower($4) then 0 else 1 end,
+       c.created_at asc
      limit 1`,
-    [guildId, normalizedPin, characterName]
+    [guildId, normalizedPin, characterName, clean(server)]
   );
   return result.rows[0] || null;
 }
@@ -5575,6 +5577,45 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
   const error = new Error(`Item "${name}" wurde nicht in der ${displayRaidName(raidType)}-Datenbank gefunden.`);
   error.statusCode = 400;
   throw error;
+}
+
+function normalizePrioCharacterKey(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+async function removeDuplicatePriosForCharacterName(client, raidId, character) {
+  const playerName = clean(character?.name);
+  if (!raidId || !character?.id || !playerName) return 0;
+
+  const targetKey = normalizePrioCharacterKey(playerName);
+  if (!targetKey) return 0;
+
+  const existing = await client.query(
+    `select pr.id, c.name
+     from prios pr
+     join characters c on c.id = pr.character_id
+     where pr.raid_id = $1
+       and pr.character_id <> $2`,
+    [raidId, character.id]
+  );
+  const duplicateIds = existing.rows
+    .filter(row => normalizePrioCharacterKey(row.name) === targetKey)
+    .map(row => row.id)
+    .filter(Boolean);
+
+  if (!duplicateIds.length) return 0;
+
+  const deleted = await client.query(
+    `delete from prios
+     where id = any($1::uuid[])
+     returning id`,
+    [duplicateIds]
+  );
+  return deleted.rowCount || 0;
 }
 
 async function savePrio({ guildId, query: params }) {
@@ -5690,6 +5731,7 @@ async function savePrio({ guildId, query: params }) {
     const p1 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p1, p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID));
     const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
     const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
+    await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
     const comment = JSON.stringify({
       p0Plus: p0Selected ? "ja" : "nein",
       p0Item: p0Selected ? (p1?.name || "") : "",
@@ -5847,6 +5889,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     const p1 = await upsertItem(client, raidType, params.p1, params.p1ItemId || params.p1_item_id || params.p1ItemID);
     const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
     const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
+    await removeDuplicatePriosForCharacterName(client, raid.id, character);
     const comment = JSON.stringify({
       p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
       p0Item: clean(params.p0Plus).toLowerCase() === "ja" ? (p1?.name || "") : "",
@@ -5933,6 +5976,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
+    await removeDuplicatePriosForCharacterName(client, raid.id, character);
 
     const existing = await client.query(
       `select p1_item_id, p2_item_id, p3_item_id, comment
@@ -12313,6 +12357,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     }
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
+    await removeDuplicatePriosForCharacterName(client, raid.id, character);
     const comment = JSON.stringify({
       p0Plus: "ja",
       p0Item: item.name,
@@ -13020,6 +13065,62 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount };
 }
 
+async function resetRaidP0PlusTransfer({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const raidType = normalizeRaidType(params.raid);
+  const raidId = clean(params.raidId || params.id);
+  const values = [guildId, raidType];
+  let raidClause = "r.guild_id = $1 and r.raid_type = $2";
+
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raidId)) {
+    values.push(raidId);
+    raidClause += ` and r.id = $${values.length}`;
+  } else if (raidId) {
+    values.push(raidId);
+    raidClause += ` and (r.external_raid_id = $${values.length} or r.raid_pin = $${values.length})`;
+  }
+
+  const raidResult = await query(
+    `select r.*
+     from raids r
+     where ${raidClause}
+     order by r.raid_date desc, coalesce(r.raid_time, '') desc, r.created_at desc
+     limit 1`,
+    values
+  );
+
+  const raid = raidResult.rows[0];
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const transferNotes = Array.from(new Set([
+    `RaidID: ${raidPublicId(raid)}`,
+    `RaidID: ${raid.id}`,
+    raid.raid_pin ? `RaidID: ${raid.raid_pin}` : ""
+  ].filter(Boolean)));
+
+  const deleteResult = await query(
+    `delete from p0plus_points
+     where guild_id = $1
+       and source = 'Raidlead Transfer'
+       and note = any($2::text[])
+     returning id`,
+    [guildId, transferNotes]
+  );
+
+  return {
+    success: true,
+    raidId: raidPublicId(raid),
+    deleted: deleteResult.rowCount,
+    p0PlusTransferred: false,
+    p0PlusTransferCount: 0
+  };
+}
+
 async function exportGuildBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -13395,6 +13496,18 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
+  }
+
+  if (raid.raid_date) {
+    const raidDateText = raid.raid_date.toISOString().slice(0, 10);
+    const raidTimeText = clean(raid.raid_time) || "00:00";
+    const raidStartsAtBerlin = new Date(`${raidDateText}T${raidTimeText}:00`);
+    const nowBerlin = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+    if (Number.isFinite(raidStartsAtBerlin.getTime()) && nowBerlin < raidStartsAtBerlin) {
+      const error = new Error("P0+ Punkte können erst nach Raidbeginn übertragen werden.");
+      error.statusCode = 409;
+      throw error;
+    }
   }
 
   const transferNotes = Array.from(new Set([
@@ -15485,6 +15598,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "clearP0PlusForPlayer") {
       const cleared = await clearP0PlusForPlayer({ guildId: guild.id, query: req.query });
       return res.json({ ...cleared, guild: guild.slug });
+    }
+
+    if (action === "resetRaidP0PlusTransfer") {
+      const reset = await resetRaidP0PlusTransfer({ guildId: guild.id, query: req.query });
+      return res.json({ ...reset, guild: guild.slug });
     }
 
     if (action === "transferP0PlusPoints") {
