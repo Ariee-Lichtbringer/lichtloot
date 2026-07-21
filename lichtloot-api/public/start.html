@@ -1863,20 +1863,6 @@ body.raid-create-open:before{
 .instance-card p{
   overflow-wrap:anywhere!important;
 }
-.instance-card .dashboard-raid-date{
-  display:inline-flex!important;
-  align-items:center!important;
-  min-height:26px!important;
-  margin:0 0 8px!important;
-  padding:5px 8px!important;
-  border:1px solid rgba(250,204,21,.48)!important;
-  border-radius:6px!important;
-  background:linear-gradient(90deg,rgba(250,204,21,.18),rgba(15,23,42,.58))!important;
-  color:#fef3c7!important;
-  font-size:12px!important;
-  font-weight:950!important;
-  line-height:1.25!important;
-}
 .instance-card .raid-btn{
   min-height:38px!important;
   align-self:end!important;
@@ -2334,16 +2320,14 @@ body.raid-create-open:before{
   <main class="start-main">
     <section class="mobile-prio-home" aria-label="Prioliste eintragen">
       <div>
-        <div class="mobile-prio-eyebrow">LichtLoot App</div>
+        <div class="mobile-prio-eyebrow">LichtLoot</div>
         <h1>Prioliste eintragen</h1>
         <p>Öffne den aktuellen Raid, setze deine Prios und prüfe danach alles in Mein LichtLoot.</p>
       </div>
       <div class="mobile-prio-actions">
         <button class="mobile-prio-primary" type="button" onclick="openNextRaidLoot()">Aktuellen Raid öffnen</button>
         <button type="button" onclick="document.getElementById('meinLichtLootCard').scrollIntoView({behavior:'smooth',block:'start'})">Mein LichtLoot</button>
-        <button id="mobileInstallAppBtn" type="button" onclick="installLichtLootApp()">App installieren</button>
       </div>
-      <p id="mobileInstallHint" class="mobile-install-hint">iPhone: Teilen öffnen und “Zum Home-Bildschirm” wählen.</p>
       <div class="mobile-prio-raid-chips" aria-label="Direkte Prioseiten">
         <button type="button" onclick="openPrioPage('mc')">MC</button>
         <button type="button" onclick="openPrioPage('bwl')">BWL</button>
@@ -2354,7 +2338,7 @@ body.raid-create-open:before{
         <button type="button" onclick="openPrioPage('ony')">ONY</button>
       </div>
     </section>
-    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-top-btn" onclick="installLichtLootApp()">App installieren</button><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -2435,7 +2419,7 @@ body.raid-create-open:before{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card app-download-card" id="appDownloadCard"><img src="images/content.png" alt=""><div><h2>LichtLoot App</h2><p>Als App auf den Homescreen laden und direkt Priolisten eintragen.</p></div><div class="app-download-actions"><button class="right-inline-btn" onclick="installLichtLootApp()">App installieren</button><a class="right-inline-btn" href="start.html?install=1">Download-Link öffnen</a></div><p id="appInstallHint" class="app-install-note">iPhone: In Safari teilen öffnen und “Zum Home-Bildschirm” wählen.</p></section><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -2696,7 +2680,6 @@ let lootDataByRaid = {};
 window.p0plusEntries = [];
 window.activeRaidCards = {};
 window.activeRaidCardsByRaid = {};
-let lichtLootInstallPrompt = null;
 
 function randomCode(length){
   const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -3011,14 +2994,6 @@ function formatRaidDateForDisplay(value){
   return value;
 }
 
-function formatRaidDateWithWeekday(value){
-  if(!value) return "-";
-  const parsed=parseActiveRaidDate(value);
-  if(!parsed) return formatRaidDateForDisplay(value);
-  const weekdays=["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
-  return weekdays[parsed.getDay()]+", "+formatRaidDateForDisplay(value);
-}
-
 function formatP0DeadlineForDisplay(dateValue,timeValue){
   if(!dateValue || !timeValue) return "-";
   const raidStart=new Date(dateValue+"T"+timeValue+":00");
@@ -3128,10 +3103,9 @@ function activeRaidIsTodayOrFuture(raid){
   if(!timestamp) return true;
   const raidDay=new Date(timestamp);
   raidDay.setHours(0,0,0,0);
-  const yesterday=new Date();
-  yesterday.setDate(yesterday.getDate()-1);
-  yesterday.setHours(0,0,0,0);
-  return raidDay.getTime() >= yesterday.getTime();
+  const today=new Date();
+  today.setHours(0,0,0,0);
+  return raidDay.getTime() >= today.getTime();
 }
 
 function renderActiveRaidCard(raidKey,raid){
@@ -3253,7 +3227,7 @@ function renderStartDashboard(entries){
     window.dashboardNextRaid=next;
     const name=next.raidName || next.name || raids[next._raidKey].name;
     setDashboardText("nextRaidName",name);
-    setDashboardText("nextRaidDate",formatRaidDateWithWeekday(activeRaidDate(next)));
+    setDashboardText("nextRaidDate",formatRaidDateForDisplay(activeRaidDate(next)));
     setDashboardText("nextRaidTime",formatRaidTimeForDisplay(activeRaidTime(next)) + " Uhr");
     setDashboardText("nextRaidGuild",activeRaidGuild(next) || CURRENT_GUILD_BRAND.guildName);
     setDashboardText("nextRaidStatus",dashboardPrioLabel(next));
@@ -3312,7 +3286,7 @@ function renderUpcomingRaidCards(list){
   const container=document.getElementById("upcomingRaidCards");
   if(!container) return;
 
-  const entries=(list || []).filter(entry=>entry && entry._raidKey);
+  const entries=(list || []).filter(entry=>entry && entry._raidKey).slice(0,6);
   window.dashboardUpcomingRaidCards=entries;
   if(!entries.length){
     container.innerHTML='<article class="dash-panel instance-card"><div><h3>Keine kommenden Raids</h3><p>Aktuell sind keine kommenden Raids geladen.</p></div><button class="raid-btn loot-btn" onclick="toggleRaidCreate()">Raid erstellen</button></article>';
@@ -3323,6 +3297,7 @@ function renderUpcomingRaidCards(list){
     const raidKey=entry._raidKey;
     const name=entry.raidName || entry.name || raids[raidKey].name;
     const pin=activeRaidPin(entry);
+    const date=formatRaidDateForDisplay(activeRaidDate(entry));
     const time=formatRaidTimeForDisplay(activeRaidTime(entry));
     const guild=activeRaidGuild(entry) || CURRENT_GUILD_BRAND.guildName;
     const buttonLabel="Zur Prio";
@@ -3331,7 +3306,7 @@ function renderUpcomingRaidCards(list){
       '<img src="'+safeAttr(raidImagePath(raidKey))+'" alt="">'+
       '<div>'+
         '<h3>'+safeHtml(name)+'</h3>'+
-        '<p class="dashboard-raid-date">'+safeHtml(formatRaidDateWithWeekday(activeRaidDate(entry)))+' · '+safeHtml(time)+' Uhr</p>'+
+        '<p>'+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
         '<p>Gilde: '+safeHtml(guild)+'</p>'+
         '<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p>'+
         '<p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>'+
@@ -5065,47 +5040,6 @@ function openPrioPage(raid){
     return;
   }
   window.location.href=withGuildUrl(raidConfig.lootPage);
-}
-
-function showInstallHint(message){
-  const hint=document.getElementById("mobileInstallHint");
-  if(hint){
-    hint.textContent=message;
-    hint.classList.add("show");
-  }
-  const cardHint=document.getElementById("appInstallHint");
-  if(cardHint){
-    cardHint.textContent=message;
-    cardHint.classList.add("show");
-  }
-}
-
-async function installLichtLootApp(){
-  if(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches){
-    showInstallHint("LichtLoot ist bereits als App geöffnet.");
-    return;
-  }
-  if(lichtLootInstallPrompt){
-    lichtLootInstallPrompt.prompt();
-    const result=await lichtLootInstallPrompt.userChoice.catch(()=>null);
-    if(result && result.outcome === "accepted"){
-      showInstallHint("LichtLoot wird als App installiert.");
-      lichtLootInstallPrompt=null;
-      return;
-    }
-  }
-  const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isIos){
-    showInstallHint("iPhone: In Safari teilen öffnen und “Zum Home-Bildschirm” wählen.");
-    return;
-  }
-  showInstallHint("Wenn kein App-Fenster erscheint: Browser-Menü öffnen und “App installieren” wählen.");
-}
-
-function openInstallDownloadHint(){
-  const card=document.getElementById("appDownloadCard") || document.querySelector(".mobile-prio-home");
-  if(card) card.scrollIntoView({behavior:"smooth",block:"start"});
-  installLichtLootApp();
 }
 
 function handlePinEnter(event,raid){
@@ -7802,30 +7736,12 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
   loadDashboardLogAnalyses();
-  if(new URLSearchParams(window.location.search).get("install") === "1"){
-    setTimeout(openInstallDownloadHint,350);
-  }
   document.addEventListener("click",event=>{
     const menu=document.getElementById("raidCalendarMenu");
     if(menu && !menu.classList.contains("hidden") && !menu.contains(event.target)){
       closeRaidCalendarMenu();
     }
   });
-});
-
-if("serviceWorker" in navigator && window.location.protocol !== "file:"){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("sw.js").catch(error=>{
-      console.warn("LichtLoot App-Modus konnte nicht vorbereitet werden.", error);
-    });
-  });
-}
-
-window.addEventListener("beforeinstallprompt",event=>{
-  event.preventDefault();
-  lichtLootInstallPrompt=event;
-  const button=document.getElementById("mobileInstallAppBtn");
-  if(button) button.hidden=false;
 });
 
 </script>
