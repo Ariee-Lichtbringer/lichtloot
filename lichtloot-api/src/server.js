@@ -96,6 +96,10 @@ await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensurePrioSchema().catch(error => {
+  console.warn("Prio-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureDiscordChannelSchema().catch(error => {
   console.warn("Discord-Channel-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -1468,6 +1472,33 @@ async function ensureRaidSchema() {
   await query(
     `create unique index if not exists idx_discord_player_links_user_char
        on discord_player_links(guild_id, discord_user_id, character_id)`
+  );
+}
+
+async function ensurePrioSchema() {
+  await query(
+    `alter table prios
+       add column if not exists created_at timestamptz not null default now(),
+       add column if not exists updated_at timestamptz not null default now()`
+  );
+  await query(
+    `delete from prios
+     where id in (
+       select id
+       from (
+         select id,
+                row_number() over (
+                  partition by raid_id, character_id
+                  order by coalesce(updated_at, created_at) desc, created_at desc, id desc
+                ) as rn
+         from prios
+       ) duplicates
+       where rn > 1
+     )`
+  );
+  await query(
+    `create unique index if not exists idx_prios_raid_character_unique
+       on prios(raid_id, character_id)`
   );
 }
 
@@ -5097,8 +5128,9 @@ async function savePoPostEntry({ guildId, query: params }) {
              updated_at = now()`,
       [guildId, discordUserId, character.id, discordName]
     );
-    await client.query(
-      `delete from po_post_entries
+    const existingEntries = await client.query(
+      `select *
+       from po_post_entries
        where guild_id = $1
          and post_key = $2
          and source_channel_id = $3
@@ -5107,37 +5139,87 @@ async function savePoPostEntry({ guildId, query: params }) {
            discord_user_id = $5
            or regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($6), '[^a-z0-9]+', '', 'g')
          )
-         and archived_at is null`,
+         and archived_at is null
+       order by updated_at desc, po_created_at desc nulls last`,
       [guildId, postKey, sourceChannelId, targetChannelId, discordUserId, character.name]
     );
-    const result = await client.query(
-      `insert into po_post_entries (
-         guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-         raid, title, player_name, item_name, discord_user_id, discord_name, class_name,
-         po_message_id, po_created_at, approval_status, approved_by, approved_at, raid_pin,
-         item_game_id, item_slot, item_boss
-       )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',now(),'pending','',null,$13,$14,$15,$16)
-       returning *`,
-      [
-        guildId,
-        postKey,
-        sourceChannelId,
-        targetChannelId,
-        clean(params.discordMessageId || params.messageId),
-        raidKey,
-        title,
-        character.name,
-        itemName,
-        discordUserId,
-        discordName,
-        className || character.class_name || "",
-        raidPin,
-        itemGameId,
-        itemSlot,
-        itemBoss
-      ]
-    );
+    const existingEntry = existingEntries.rows[0] || null;
+    const duplicateIds = existingEntries.rows.slice(1).map(row => row.id).filter(Boolean);
+    if (duplicateIds.length) {
+      await client.query(
+        `update po_post_entries
+         set archived_at = now(), updated_at = now()
+         where id = any($1::uuid[])`,
+        [duplicateIds]
+      );
+    }
+
+    const result = existingEntry
+      ? await client.query(
+          `update po_post_entries
+           set discord_message_id = $2,
+               raid = $3,
+               title = $4,
+               player_name = $5,
+               item_name = $6,
+               discord_user_id = $7,
+               discord_name = $8,
+               class_name = $9,
+               po_created_at = now(),
+               approval_status = 'pending',
+               approved_by = '',
+               approved_at = null,
+               raid_pin = $10,
+               item_game_id = $11,
+               item_slot = $12,
+               item_boss = $13,
+               updated_at = now()
+           where id = $1
+           returning *`,
+          [
+            existingEntry.id,
+            clean(params.discordMessageId || params.messageId),
+            raidKey,
+            title,
+            character.name,
+            itemName,
+            discordUserId,
+            discordName,
+            className || character.class_name || "",
+            raidPin,
+            itemGameId,
+            itemSlot,
+            itemBoss
+          ]
+        )
+      : await client.query(
+          `insert into po_post_entries (
+             guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+             raid, title, player_name, item_name, discord_user_id, discord_name, class_name,
+             po_message_id, po_created_at, approval_status, approved_by, approved_at, raid_pin,
+             item_game_id, item_slot, item_boss
+           )
+           values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'',now(),'pending','',null,$13,$14,$15,$16)
+           returning *`,
+          [
+            guildId,
+            postKey,
+            sourceChannelId,
+            targetChannelId,
+            clean(params.discordMessageId || params.messageId),
+            raidKey,
+            title,
+            character.name,
+            itemName,
+            discordUserId,
+            discordName,
+            className || character.class_name || "",
+            raidPin,
+            itemGameId,
+            itemSlot,
+            itemBoss
+          ]
+        );
     await client.query("commit");
     const row = result.rows[0];
     return {
@@ -5495,6 +5577,7 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
 
 async function savePrio({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
+  await ensurePrioSchema();
   const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
   const player = params.player || params.char || params.spieler;
   const server = params.server;
@@ -5731,6 +5814,7 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
 
 async function savePrioAsRaidlead({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
+  await ensurePrioSchema();
   const raid = await findRaid(guildId, params);
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
@@ -5815,6 +5899,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
 async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
+  await ensurePrioSchema();
   const raid = await findRaid(guildId, {
     ...params,
     prioPin: params.raidPin || params.prioPin || params.playerPin,
