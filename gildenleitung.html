@@ -622,24 +622,6 @@ button,input,select{font:inherit}
   min-width:105px;
 }
 
-.active-raid-discord-tools{
-  grid-column:1 / -1;
-  width:100%;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:8px;
-  align-items:center;
-}
-
-.active-raid-discord-tools select{
-  min-height:32px;
-  font-size:12px;
-}
-
-.active-raid-discord-tools .small-btn{
-  min-width:96px;
-}
-
 .active-raid-lead-card{
   grid-column:1 / -1;
   border:1px solid rgba(250,204,21,.28);
@@ -1133,7 +1115,70 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-post-layout{
-  grid-template-columns:minmax(0,.9fr) minmax(460px,1.1fr);
+  grid-template-columns:minmax(520px,1fr) minmax(360px,.62fr);
+}
+
+.po-post-list-block{
+  margin-top:12px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
+  overflow:hidden;
+}
+
+.po-post-list-summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  cursor:pointer;
+}
+
+.po-post-list-summary::-webkit-details-marker{
+  display:none;
+}
+
+.po-post-list-summary h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:15px;
+}
+
+.po-post-list-summary p{
+  margin:3px 0 0;
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.3;
+}
+
+.po-post-list-summary span{
+  flex:0 0 auto;
+  color:#facc15;
+  font-size:12px;
+  font-weight:950;
+}
+
+.po-post-list-block[open] .po-post-list-summary span{
+  color:#cbd5e1;
+}
+
+.po-post-list-block[open] .po-post-list-summary span::before{
+  content:"schließen";
+}
+
+.po-post-list-block[open] .po-post-list-summary span{
+  font-size:0;
+}
+
+.po-post-list-block[open] .po-post-list-summary span::before{
+  font-size:12px;
+}
+
+.po-post-list-block .section-head,
+.po-post-list-block .table-wrap{
+  margin:0 12px 12px;
 }
 
 .po-post-tabs{
@@ -1315,6 +1360,79 @@ select:focus{border-color:rgba(96,165,250,.75)}
   color:#9ca3af;
   font-size:12px;
   line-height:1.35;
+}
+
+.po-signup-action-guide{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr;
+  gap:10px;
+  margin:12px 0 10px;
+}
+
+.po-signup-action-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  min-height:112px;
+  padding:12px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(15,23,42,.52);
+}
+
+.po-signup-action-card::before{
+  content:"➜";
+  position:absolute;
+  left:10px;
+  top:-19px;
+  color:var(--po-action-color,#facc15);
+  font-size:34px;
+  font-weight:950;
+  transform:rotate(16deg);
+  text-shadow:0 2px 0 rgba(0,0,0,.55);
+}
+
+.po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
+.po-signup-action-transfer{--po-action-color:#facc15;border-color:rgba(250,204,21,.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
+.po-signup-action-helper{--po-action-color:#60a5fa;border-color:rgba(96,165,250,.34)}
+
+.po-signup-action-card strong{
+  display:block;
+  margin-left:24px;
+  color:#f8fafc;
+  font-size:14px;
+  line-height:1.15;
+}
+
+.po-signup-action-card small{
+  display:block;
+  margin:4px 0 0 24px;
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.po-signup-action-buttons{
+  display:grid;
+  gap:8px;
+  align-self:end;
+}
+
+.po-signup-action-card .btn{
+  width:100%;
+}
+
+.po-signup-discord-button{
+  background:linear-gradient(135deg,rgba(21,128,61,.95),rgba(22,101,52,.82));
+  border-color:rgba(74,222,128,.58);
+  color:#ecfdf5;
+}
+
+.po-signup-transfer-button{
+  background:linear-gradient(135deg,rgba(161,98,7,.92),rgba(15,23,42,.78));
+  border-color:rgba(250,204,21,.58);
+  color:#fef3c7;
 }
 
 .po-signup-item-tools{
@@ -3922,7 +4040,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .active-raid-card{grid-template-columns:1fr}
   .active-raid-group-grid{grid-template-columns:1fr}
   .active-raid-topline{grid-template-columns:1fr}
-  .active-raid-discord-tools{grid-template-columns:1fr}
   .raid-helper-calendar{grid-template-columns:1fr}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
@@ -3947,6 +4064,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .discord-preview-meta,
   .discord-preview-roster,
   .tools,
+  .po-signup-action-guide,
   .summary,
   .prio-actions{grid-template-columns:1fr}
   .raid-helper-preview{position:relative;top:auto}
@@ -4484,24 +4602,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
               </div>
             </div>
-            <div class="po-signup-current" id="poSignupCurrentStep">
-              <span>Aktueller Schritt<strong>1. Post vorbereiten</strong></span>
-              <small>Raid, Channel und Items wählen</small>
-            </div>
-            <div class="po-signup-steps" id="poSignupSteps">
-              <div class="po-signup-step is-active" data-po-signup-step="setup">
-                <span class="po-signup-step-num">1</span>
-                <span><strong>Post vorbereiten</strong><span>Raid, Channel und Items wählen</span></span>
-              </div>
-              <div class="po-signup-step" data-po-signup-step="review">
-                <span class="po-signup-step-num">2</span>
-                <span><strong>Einträge prüfen</strong><span>Spieler freigeben oder ablehnen</span></span>
-              </div>
-              <div class="po-signup-step" data-po-signup-step="sync">
-                <span class="po-signup-step-num">3</span>
-                <span><strong>Übertragen</strong><span>Grüne Haken in LichtLoot schreiben</span></span>
-              </div>
-            </div>
             <div class="raid-helper-row">
               <div class="field">
                 <label for="poSignupRaid">Raid</label>
@@ -4542,13 +4642,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
               <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
-            <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
-              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
-              <span>
-                <strong>LichtLoot-ID erstellen</strong>
-                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
-              </span>
-            </label>
             <div class="po-signup-item-tools">
               <div class="po-signup-item-tool-row">
                 <div class="field">
@@ -4576,20 +4669,48 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <label for="poSignupNote">Beschreibung / Regeln</label>
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
             </div>
-            <div class="tools">
-              <button class="btn" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
-              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
-              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items übernehmen</button>
-              <button id="poSignupSyncPriosBtn" class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
+            <div class="po-signup-action-guide">
+              <div class="po-signup-action-card po-signup-action-main">
+                <div>
+                  <strong>1. Discord-Post senden</strong>
+                  <small>Hier starten. Der Bot erstellt den Anmelder im ausgewählten Discord-Channel.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button class="btn po-signup-discord-button" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
+                </div>
+              </div>
+              <div class="po-signup-action-card po-signup-action-transfer">
+                <div>
+                  <strong>2. Grüne Haken übertragen</strong>
+                  <small>Nur freigegebene Einträge werden danach in LichtLoot geschrieben.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button id="poSignupSyncPriosBtn" class="btn po-signup-transfer-button" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
+                </div>
+              </div>
+              <div class="po-signup-action-card po-signup-action-helper">
+                <div>
+                  <strong>Hilfen</strong>
+                  <small>Items aus aktuellen P0+-Punkten übernehmen oder den Entwurf zurücksetzen.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items übernehmen</button>
+                  <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
+                </div>
+              </div>
             </div>
             <div id="poSignupTransferHint" class="muted">Erst PO-Anmelder posten und Einträge freigeben. Danach können grüne Haken in die LichtLoot-Prioliste übertragen werden.</div>
             <div id="poSignupStatus" class="status">Bereit.</div>
-            <div class="po-post-list-block">
-              <div class="section-head compact">
+            <details class="po-post-list-block">
+              <summary class="po-post-list-summary">
                 <div>
                   <h3>Gespeicherte PO-Anmeldungen</h3>
                   <p>Bestehende Anmeldung öffnen, freigegebene Einträge übertragen oder alte Anmeldung archivieren.</p>
                 </div>
+                <span>öffnen</span>
+              </summary>
+              <div class="section-head compact">
+                <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
               <div class="table-wrap">
@@ -4606,25 +4727,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
                   <tbody id="poSignupConfigRows"></tbody>
                 </table>
               </div>
-            </div>
+            </details>
           </section>
         </div>
         <div class="raid-helper-preview">
-          <details class="discord-preview-card po-signup-preview-details" open>
-            <summary>Discord-Vorschau</summary>
-            <div class="po-signup-discord-embed">
-              <div id="poSignupPreviewTitle" class="po-signup-discord-title">PO-ANMELDER</div>
-              <div id="poSignupPreviewDescription" class="po-signup-discord-text"></div>
-              <div class="po-signup-discord-section" id="poSignupPreviewSignupTitle">Anmeldungen (0)</div>
-              <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
-              <div class="po-signup-discord-footer">
-                <div><span>Post-ID</span><code id="poSignupPreviewPostId">-</code></div>
-                <div><span>Raid</span><div id="poSignupPreviewRaid">AQ40</div></div>
-                <div><span>Termin</span><div id="poSignupPreviewDate">Termin fehlt</div></div>
-                <div><span>Channel</span><div id="poSignupPreviewTarget"># channel</div></div>
-              </div>
-            </div>
-          </details>
           <div class="section-head compact">
             <div>
               <h3>PO-Anmeldungen</h3>
@@ -5733,12 +5839,6 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
-              <div class="active-raid-discord-tools">
-                <select id="raidDiscordChannel-${escapeAttr(raid.raidId || raid.id)}" aria-label="Discord-Channel für ${escapeAttr(raid.raidName || raid.raid || "Raid")}">
-                  ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
-                </select>
-                <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')">DC Text kopieren</button>
-              </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
@@ -8457,7 +8557,7 @@ function getPoSignupConfig(){
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
     itemOptions:poSignupItemLines().join("\n"),
-    createLichtlootRaid: Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked),
+    createLichtlootRaid: true,
     lichtlootRaidId: prio?.raidId || "",
     lichtlootPlayerPin: prio?.playerPin || "",
     lichtlootLeadPin: prio?.leadPin || ""
@@ -8489,8 +8589,6 @@ function resetPoSignupLichtlootRaidIfStale(){
 async function ensurePoSignupLichtlootRaid(config, options={}){
   const status = document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
-  const checked = Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked);
-  if(!checked) return config;
   if(!masterCode) throw new Error("Bitte erst Master-Code eingeben.");
   if(!config.raidDate || !config.raidTime) throw new Error("Bitte Raid-Datum und Raid-Uhrzeit eintragen.");
 
@@ -8568,26 +8666,6 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     lichtlootPlayerPin:playerPin,
     lichtlootLeadPin:leadPin
   });
-}
-
-async function handlePoSignupPrioOptionChange(){
-  const checkbox = document.getElementById("poSignupCreateLichtlootRaid");
-  const status = document.getElementById("poSignupStatus");
-  if(!checkbox?.checked){
-    poSignupGeneratedLichtlootRaid = null;
-    updatePoSignupPreview();
-    return;
-  }
-  try{
-    let config = getPoSignupConfig();
-    config = await ensurePoSignupLichtlootRaid(config);
-  }catch(error){
-    if(status){
-      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
-      status.className = "status bad";
-    }
-    if(checkbox) checkbox.checked = false;
-  }
 }
 
 function poPostEntryRowsForKey(postKey){
@@ -8689,7 +8767,7 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote","poSignupCreateLichtlootRaid"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -9130,8 +9208,6 @@ function setPoSignupFormConfig(config){
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
-  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
-  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
   poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
     fingerprint:poSignupLichtlootFingerprint(config),
     raidId:config.lichtlootRaidId || "",
@@ -9521,12 +9597,10 @@ function newPoSignupConfig(){
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
-  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
   setValue("poSignupTitle", `${label} PO-Anmelder`);
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
   setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
-  if(prioCheckbox) prioCheckbox.checked = false;
   poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
@@ -12332,29 +12406,36 @@ async function loadHordenbuffPanel(){
 function renderHordenbuffPanel(days){
   document.getElementById("hordenbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
-      <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
-        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
-        ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
-      </select>
-      <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
-        <option value="">Alle Status</option>
-        <option value="offen">offen</option>
-        <option value="zugeteilt">zugeteilt</option>
-        <option value="erledigt">erledigt</option>
-      </select>
-      <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
-      <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
-      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
-      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+      <div class="worldbuff-filter-card">
+        <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
+          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+          ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+        </select>
+        <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
+          <option value="">Alle Status</option>
+          <option value="offen">offen</option>
+          <option value="zugeteilt">zugeteilt</option>
+          <option value="erledigt">erledigt</option>
+        </select>
+        <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
+      </div>
+      <div class="worldbuff-action-card">
+        <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
+        <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+        <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+      </div>
     </div>
-    <div class="buff-create-grid">
-      <input id="newHordenbuffDate" type="date" aria-label="Datum">
-      <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
-      <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
-      <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
-      <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
-      <input id="newHordenbuffNote" type="text" placeholder="Notiz">
-      <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
+    <div class="worldbuff-create-card">
+      <h3 class="worldbuff-create-title">Neuen Hordenbuff-Termin hier eintragen</h3>
+      <div class="buff-create-grid">
+        <input id="newHordenbuffDate" type="date" aria-label="Datum">
+        <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+        <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
+        <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
+        <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
+        <input id="newHordenbuffNote" type="text" placeholder="Notiz">
+        <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table class="worldbuff-table">
