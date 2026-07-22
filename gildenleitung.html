@@ -10398,6 +10398,38 @@ async function transferP0PlusFromGuild(raidId){
   }
 }
 
+async function queueP0PlusBackup(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = document.getElementById("p0BackupRaid")?.value || "all40";
+  const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
+  const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
+  if(!ok) return;
+
+  try{
+    setStatus("PO+ Sicherung wird für den Bot vorbereitet ...", "");
+    const result = await railwayApi({
+      action:"guildQueueP0PlusBackup",
+      masterCode,
+      raid
+    });
+
+    if(!result.success){
+      setStatus(result.error || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
+      return;
+    }
+
+    const count = Array.isArray(result.queued) ? result.queued.length : 0;
+    setStatus(`PO+ Sicherung vorbereitet: ${count || 1} Datei(en) werden vom Lichtbuff-Bot gepostet.`, "good");
+  }catch(error){
+    setStatus(error.message || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
+  }
+}
+
 async function clearP0PlusForPlayerFromModal(raidId, player, server, itemName){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId || "") === String(raidId));
   const masterCode = document.getElementById("masterCode").value.trim();
@@ -10728,6 +10760,14 @@ function renderP0PlusModalContent(){
         ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
       </select>
       <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+      <select id="p0BackupRaid">
+        <option value="all40">Alle 40er</option>
+        <option value="naxx">NAXX</option>
+        <option value="aq40">AQ40</option>
+        <option value="bwl">BWL</option>
+        <option value="mc">MC</option>
+      </select>
+      <button class="small-btn good" type="button" onclick="queueP0PlusBackup()">PO+ Sicherung posten</button>
       <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
     </div>
     <div class="table-wrap">
