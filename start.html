@@ -1762,11 +1762,102 @@ body.raid-create-open:before{
 }
 .start-sidebar .prio-page-link:hover{border-color:rgba(250,204,21,.48);background:rgba(250,204,21,.14)}
 
+.start-side-group{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.28);
+  overflow:hidden;
+}
+
+.start-side-group-toggle{
+  width:100%;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:9px 12px;
+  border:0;
+  background:rgba(15,23,42,.42);
+  color:#facc15;
+  font-weight:950;
+  text-align:left;
+  cursor:pointer;
+}
+
+.start-side-group-arrow{
+  color:#cbd5e1;
+  transition:transform .16s ease;
+}
+
+.start-side-group:not(.collapsed) .start-side-group-arrow{
+  transform:rotate(90deg);
+}
+
+.start-side-group-items{
+  display:grid;
+  gap:6px;
+  padding:8px;
+  border-top:1px solid rgba(148,163,184,.14);
+}
+
+.start-side-group.collapsed .start-side-group-items{
+  display:none;
+}
+
+.start-side-group .start-side-link{
+  min-height:38px;
+  padding:8px 10px;
+  font-size:13px;
+}
+
+.start-side-group .prio-pages-drawer{
+  margin:2px 0 2px 34px;
+}
+
 
 
 /* === FINAL: PrioPIN in Raid-Instanzkarten === */
 .instance-card p[id^="dash-"][id$="-summary"]{white-space:pre-line!important}
 .instance-card .dash-prio-pin{display:block;color:#facc15;font-size:12px;font-weight:950;margin-top:4px}
+
+.raid-card-group{
+  display:grid;
+  gap:12px;
+  margin-top:10px;
+}
+
+#upcomingRaidCards{
+  display:block!important;
+}
+
+.raid-card-group + .raid-card-group{
+  margin-top:18px;
+  padding-top:14px;
+  border-top:1px solid rgba(250,204,21,.18);
+}
+
+.raid-card-group-title{
+  color:#facc15;
+  font-size:14px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.raid-card-date{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin:2px 0 8px;
+  padding:6px 8px;
+  border:1px solid rgba(250,204,21,.36);
+  border-radius:7px;
+  background:rgba(250,204,21,.10);
+  color:#fde68a!important;
+  font-size:13px!important;
+  font-weight:950!important;
+}
 
 
 
@@ -2297,24 +2388,40 @@ body.raid-create-open:before{
     <img src="images/content.png" alt="Lichtbringer Lootsystem" class="start-sidebar-logo" data-guild-brand-alt>
     <nav class="start-side-nav" aria-label="Startseite Navigation">
       <button class="start-side-link active" data-start-nav="dashboard" onclick="goHomeView()"><span class="start-side-icon">⌂</span><span>Dashboard</span></button>
-      <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><span class="start-side-icon">✦</span><span>P0+ Liste</span></button>
-      <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><span class="start-side-icon">▣</span><span>Logs & Analysen</span></button>
-      <button class="start-side-link" data-start-nav="worldbuff" onclick="showBuffOverview('worldbuff')"><span class="start-side-icon">◎</span><span>Worldbuffs</span></button>
-      <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><span class="start-side-icon">☰</span><span>Raidregeln</span></button>
-      <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><span class="start-side-icon">◆</span><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
-      <div id="prioPagesDrawer" class="prio-pages-drawer hidden">
-        <button class="prio-page-link" onclick="openPrioPage('mc')"><span>Molten Core</span><span>MC</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('bwl')"><span>Blackwing Lair</span><span>BWL</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('aq40')"><span>Ahn'Qiraj 40</span><span>AQ40</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('naxx')"><span>Naxxramas</span><span>NAXX</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('zg')"><span>Zul'Gurub</span><span>ZG</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('aq20')"><span>AQ 20</span><span>AQ20</span></button>
-        <button class="prio-page-link" onclick="openPrioPage('ony')"><span>Onyxia</span><span>ONY</span></button>
+      <div class="start-side-group collapsed" data-start-group="buffs">
+        <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('buffs')"><span>Buffs</span><span class="start-side-group-arrow">›</span></button>
+        <div class="start-side-group-items">
+          <button class="start-side-link" data-start-nav="worldbuff" onclick="showBuffOverview('worldbuff')"><span class="start-side-icon">◎</span><span>Worldbuffs</span></button>
+          <button class="start-side-link" data-start-nav="hordenbuff" onclick="showBuffOverview('hordenbuff')"><span class="start-side-icon">●</span><span>Hordenbuffs</span></button>
+        </div>
       </div>
-      <button class="start-side-link" data-start-nav="raidlead" onclick="toggleRaidleadLogin()"><span class="start-side-icon">♚</span><span>Raidlead-Panel</span></button>
-      <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
-      <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><span class="start-side-icon">✚</span><span>Raid erstellen</span></button>
-      <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
+      <div class="start-side-group collapsed" data-start-group="raidinfos">
+        <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
+        <div class="start-side-group-items">
+          <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><span class="start-side-icon">▣</span><span>Logs & Analysen</span></button>
+          <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><span class="start-side-icon">☰</span><span>Raidregeln</span></button>
+          <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><span class="start-side-icon">✦</span><span>P0+ Liste</span></button>
+          <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><span class="start-side-icon">◆</span><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
+          <div id="prioPagesDrawer" class="prio-pages-drawer hidden">
+            <button class="prio-page-link" onclick="openPrioPage('mc')"><span>Molten Core</span><span>MC</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('bwl')"><span>Blackwing Lair</span><span>BWL</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('aq40')"><span>Ahn'Qiraj 40</span><span>AQ40</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('naxx')"><span>Naxxramas</span><span>NAXX</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('zg')"><span>Zul'Gurub</span><span>ZG</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('aq20')"><span>AQ 20</span><span>AQ20</span></button>
+            <button class="prio-page-link" onclick="openPrioPage('ony')"><span>Onyxia</span><span>ONY</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="start-side-group collapsed" data-start-group="raidorga">
+        <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidorga')"><span>Raidorga</span><span class="start-side-group-arrow">›</span></button>
+        <div class="start-side-group-items">
+          <button class="start-side-link" data-start-nav="raidlead" onclick="toggleRaidleadLogin()"><span class="start-side-icon">♚</span><span>Raidleadpanel</span></button>
+          <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
+          <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><span class="start-side-icon">✚</span><span>Raid erstellen</span></button>
+          <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
+        </div>
+      </div>
     </nav>
   </aside>
   <main class="start-main">
@@ -2419,7 +2526,7 @@ body.raid-create-open:before{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold" open><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold"><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -2712,11 +2819,26 @@ function placeSidebarDrawers(){
   if(document.body && raidCreateBox && raidCreateBox.parentNode !== document.body) document.body.appendChild(raidCreateBox);
 }
 
+function toggleStartSideGroup(group){
+  const target=document.querySelector(`.start-side-group[data-start-group="${group}"]`);
+  if(!target) return;
+  target.classList.toggle("collapsed");
+}
+
+function closeStartSideGroups(){
+  document.querySelectorAll(".start-side-group").forEach(group=>group.classList.add("collapsed"));
+}
+
 function setStartNavActive(key){
   document.querySelectorAll(".start-side-link[data-start-nav]").forEach(btn=>{
     btn.classList.toggle("active", btn.dataset.startNav === key);
     btn.classList.toggle("is-soft-active", btn.dataset.startNav === key && key !== "dashboard");
   });
+  const groupByKey={worldbuff:"buffs",hordenbuff:"buffs",logs:"raidinfos",p0plus:"raidinfos",prioPages:"raidinfos",raidlead:"raidorga",create:"raidorga"};
+  const groupName=groupByKey[key];
+  if(groupName){
+    document.querySelector(`.start-side-group[data-start-group="${groupName}"]`)?.classList.remove("collapsed");
+  }
 }
 
 function setDashboardCenterMode(mode){
@@ -2775,6 +2897,7 @@ function goHomeView(){
   if(raidleadLoginBox) raidleadLoginBox.classList.add("hidden");
   if(p0plusOverlay) p0plusOverlay.classList.add("hidden");
   if(oldPinBox) oldPinBox.classList.add("hidden");
+  closeStartSideGroups();
 
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -3286,14 +3409,16 @@ function renderUpcomingRaidCards(list){
   const container=document.getElementById("upcomingRaidCards");
   if(!container) return;
 
-  const entries=(list || []).filter(entry=>entry && entry._raidKey).slice(0,6);
+  const entries=(list || []).filter(entry=>entry && entry._raidKey).slice(0,8);
   window.dashboardUpcomingRaidCards=entries;
   if(!entries.length){
     container.innerHTML='<article class="dash-panel instance-card"><div><h3>Keine kommenden Raids</h3><p>Aktuell sind keine kommenden Raids geladen.</p></div><button class="raid-btn loot-btn" onclick="toggleRaidCreate()">Raid erstellen</button></article>';
     return;
   }
 
-  container.innerHTML=entries.map((entry,index)=>{
+  const raidSize=(raidKey)=>["zg","aq20"].includes(String(raidKey || "").toLowerCase()) ? "20" : "40";
+  const renderCards=(groupEntries)=>groupEntries.map((entry)=>{
+    const index=entries.indexOf(entry);
     const raidKey=entry._raidKey;
     const name=entry.raidName || entry.name || raids[raidKey].name;
     const pin=activeRaidPin(entry);
@@ -3306,7 +3431,7 @@ function renderUpcomingRaidCards(list){
       '<img src="'+safeAttr(raidImagePath(raidKey))+'" alt="">'+
       '<div>'+
         '<h3>'+safeHtml(name)+'</h3>'+
-        '<p>'+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
+        '<p class="raid-card-date">⌚ '+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
         '<p>Gilde: '+safeHtml(guild)+'</p>'+
         '<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p>'+
         '<p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>'+
@@ -3314,6 +3439,17 @@ function renderUpcomingRaidCards(list){
       '<button class="raid-btn loot-btn" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button>'+
     '</article>';
   }).join("");
+  const groups=[
+    {title:"40er Raids", entries:entries.filter(entry=>raidSize(entry._raidKey) === "40")},
+    {title:"20er Raids", entries:entries.filter(entry=>raidSize(entry._raidKey) === "20")}
+  ].filter(group=>group.entries.length);
+
+  container.innerHTML=groups.map(group=>
+    '<div class="raid-card-group">'+
+      '<div class="raid-card-group-title">'+safeHtml(group.title)+'</div>'+
+      '<div class="instance-grid">'+renderCards(group.entries)+'</div>'+
+    '</div>'
+  ).join("");
 }
 
 function openUpcomingRaidCard(index){
