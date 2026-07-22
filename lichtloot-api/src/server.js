@@ -12,6 +12,7 @@ const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const p0PlusTransferExportChannelId = process.env.P0PLUS_TRANSFER_EXPORT_CHANNEL_ID || "1529393614247952434";
+const worldbuffBackupChannelId = process.env.WORLDBUFF_BACKUP_CHANNEL_ID || p0PlusTransferExportChannelId;
 const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
@@ -2826,6 +2827,52 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   }
   await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_import" } }).catch(() => {});
   return { success: true, synced, skippedOccupied };
+}
+
+async function queueWorldbuffBackup({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  if (!worldbuffBackupChannelId) return { success: true, skipped: true, reason: "no_export_channel" };
+
+  const days = clean(params.days || "all");
+  const result = await getWorldbuffs({ guildId, query: { source: "railway", days } });
+  const rows = [
+    ["Tag", "Datum", "Uhrzeit", "Buff", "Gilde", "Werfer", "Status", "Notiz", "Quelle", "Row-ID"]
+  ];
+
+  for (const entry of result.buffs || []) {
+    rows.push([
+      entry.tag || "",
+      entry.datum || "",
+      entry.uhrzeit || "",
+      entry.buff || "",
+      entry.gilde || "",
+      entry.charakter || "",
+      entry.status || "",
+      entry.note || entry.notiz || "",
+      entry.source || "",
+      entry.rowNumber || ""
+    ]);
+  }
+
+  if (rows.length === 1) {
+    rows.push(["", "", "", "", "", "", "", "Keine Worldbuff-Termine gefunden.", "", ""]);
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const queued = await enqueueBotUpdate({
+    guildId,
+    type: "worldbuff_backup_export",
+    payload: {
+      channelId: worldbuffBackupChannelId,
+      days,
+      createdDate: today,
+      filename: `worldbuff-sicherung-${today}.xlsx`,
+      count: Math.max(rows.length - 1, 0),
+      sheets: [{ name: "Worldbuffs", rows }]
+    }
+  });
+
+  return { ...queued, count: Math.max(rows.length - 1, 0) };
 }
 
 async function getPlayerWorldbuffs({ guildId, query: params }) {
@@ -15678,6 +15725,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...buffs, guild: guild.slug });
     }
 
+    if (action === "guildQueueWorldbuffBackup") {
+      const queued = await queueWorldbuffBackup({ guildId: guild.id, query: req.query });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
     if (action === "guildGetHordenbuffs" || action === "getPublicHordenbuffs") {
       const buffs = await getHordenbuffs({ guildId: guild.id, query: req.query });
       return res.json({ ...buffs, guild: guild.slug });
@@ -16357,6 +16409,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueWorldbuffBotUpdate") {
       const queued = await queueBotUpdate({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueWorldbuffBackup") {
+      const queued = await queueWorldbuffBackup({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
