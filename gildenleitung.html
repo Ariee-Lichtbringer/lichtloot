@@ -11512,6 +11512,7 @@ function renderWorldbuffPanel(days){
       <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
       <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
       <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn good" type="button" onclick="queueWorldbuffBackup()">Worldbuff-Sicherung posten</button>
       <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
     </div>
     <div class="buff-create-grid">
@@ -11934,6 +11935,32 @@ async function queueWorldbuffBotUpdate(updateType){
     setStatus("Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
     setStatus(error.message || "Bot-Update konnte nicht vorgemerkt werden.", "bad");
+  }
+}
+
+async function queueWorldbuffBackup(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const days = document.getElementById("worldbuffDays")?.value || "all";
+  const label = days === "all" ? "alle offenen Worldbuffs" : `Worldbuffs der nächsten ${days} Tage`;
+  if(!confirm(`${label} als Excel-Sicherung in den Backup-Channel posten?`)){
+    return;
+  }
+
+  try{
+    setStatus("Worldbuff-Sicherung wird für den Bot vorbereitet ...", "");
+    const result = await railwayApi({ action:"guildQueueWorldbuffBackup", masterCode, days });
+    if(!result.success){
+      setStatus(result.error || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
+      return;
+    }
+    setStatus(`Worldbuff-Sicherung vorbereitet: ${Number(result.count || 0)} Termin(e) werden gepostet.`, "good");
+  }catch(error){
+    setStatus(error.message || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
   }
 }
 
