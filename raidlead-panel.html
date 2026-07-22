@@ -2168,6 +2168,39 @@ function renderPlainP0Cell(entry,currentReleased,isP0Plus){
   return currentReleased ? renderItem(entry.p1) : '<span class="check">✓</span>';
 }
 
+function bossTokenNoticeConfig(){
+  if(currentRaidKey === "bwl"){
+    return {
+      label: "Kopf posten",
+      text: "Kopf von Nefarian"
+    };
+  }
+  if(currentRaidKey === "ony"){
+    return {
+      label: "Kopf posten",
+      text: "Kopf von Onyxia"
+    };
+  }
+  if(currentRaidKey === "zg"){
+    return {
+      label: "Herz posten",
+      text: "Herz von Hakkar"
+    };
+  }
+  return null;
+}
+
+function renderBossTokenNoticeButton(entry){
+  const config = bossTokenNoticeConfig();
+  if(!config) return "";
+  return `
+    <button class="btn neutral small-btn"
+      onclick="postBossTokenNotice('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
+      ${safe(config.label)}
+    </button>
+  `;
+}
+
 function renderTooltipP0Plus(itemName){
   if(!isAllowedP0Raid()) return "";
   const entries = getP0PlusEntriesForItem(itemName);
@@ -2210,6 +2243,7 @@ function renderRows(){
         Löschen
       </button>
       ${clearButton}
+      ${renderBossTokenNoticeButton(entry)}
     `;
 
     if(!currentReleased){
@@ -2614,6 +2648,51 @@ async function clearP0PlusForPlayer(player,server,itemName){
   }catch(error){
     console.error(error);
     alert("Fehler beim Löschen der P0+ Punkte.");
+  }
+}
+
+async function postBossTokenNotice(player,server){
+  if(!currentRaidData || !currentRaidData.raidId || !currentRaidKey){
+    alert("Kein aktiver Raid geladen.");
+    return;
+  }
+
+  const config = bossTokenNoticeConfig();
+  if(!config){
+    alert("Diese Meldung gibt es nur für Ony, BWL und ZG.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Discord-Post im Worldbuff-Channel erstellen?\n\n" +
+    "Spieler: " + player + "\n" +
+    "Meldung: " + player + " hat den " + config.text + " erhalten."
+  );
+  if(!confirmed) return;
+
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=queueRaidleadBossTokenNotice" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&raid=" + encodeURIComponent(currentRaidKey) +
+    "&player=" + encodeURIComponent(player || "") +
+    "&server=" + encodeURIComponent(server || "") +
+    "&raidDate=" + encodeURIComponent(getRaidDateLabel()) +
+    "&raidTime=" + encodeURIComponent(getRaidTimeLabel()) +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url, {cache:"no-store"});
+    const result = await response.json();
+    if(!response.ok || !result || result.error || result.success === false){
+      alert((result && result.error) || "Discord-Post konnte nicht angestoßen werden.");
+      return;
+    }
+    alert("Discord-Post wurde für den Worldbuff-Channel angestoßen.");
+  }catch(error){
+    console.error(error);
+    alert("Discord-Post konnte nicht gesendet werden.");
   }
 }
 
