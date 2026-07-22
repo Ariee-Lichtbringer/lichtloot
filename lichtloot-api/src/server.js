@@ -13244,6 +13244,41 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
   });
 }
 
+async function queueManualP0PlusBackup({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+
+  const requestedRaid = clean(params.raid || params.raidType || "all40").toLowerCase();
+  const raidTypes = requestedRaid === "all" || requestedRaid === "all40" || requestedRaid === "40"
+    ? ["naxx", "aq40", "bwl", "mc"]
+    : [normalizeRaidType(requestedRaid)];
+  const queued = [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  for (const raidType of raidTypes.filter(Boolean)) {
+    const exportResult = await queueP0PlusTransferCsvExport({
+      guildId,
+      raid: {
+        raid_type: raidType,
+        raid: raidType,
+        name: raidType.toUpperCase(),
+        raid_date: today,
+        raid_time: "",
+        external_raid_id: `MANUELL-${raidType.toUpperCase()}-${today}`
+      },
+      awardedRows: [],
+      skippedRows: []
+    });
+    queued.push({
+      raid: raidType,
+      rowNumber: exportResult.rowNumber || "",
+      skipped: Boolean(exportResult.skipped),
+      reason: exportResult.reason || ""
+    });
+  }
+
+  return { success: true, queued };
+}
+
 async function setP0PlusPoints({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -15944,6 +15979,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildQueueP0PlusBackup") {
+      const queued = await queueManualP0PlusBackup({ guildId: guild.id, query: req.query });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
     if (action === "clearP0PlusForPlayer") {
       const cleared = await clearP0PlusForPlayer({ guildId: guild.id, query: req.query });
       return res.json({ ...cleared, guild: guild.slug });
@@ -16317,6 +16357,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueWorldbuffBotUpdate") {
       const queued = await queueBotUpdate({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueP0PlusBackup") {
+      const queued = await queueManualP0PlusBackup({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
