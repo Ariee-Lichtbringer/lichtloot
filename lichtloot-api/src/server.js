@@ -11,6 +11,7 @@ const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
+const p0PlusTransferExportChannelId = process.env.P0PLUS_TRANSFER_EXPORT_CHANNEL_ID || "1529393614247952434";
 const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
@@ -98,6 +99,10 @@ await ensureRaidSchema().catch(error => {
 
 await ensurePrioSchema().catch(error => {
   console.warn("Prio-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
+await ensureP0PlusAuditSchema().catch(error => {
+  console.warn("P0+-Audit-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
 await ensureDiscordChannelSchema().catch(error => {
@@ -1527,6 +1532,31 @@ async function ensurePrioSchema() {
     `create unique index if not exists idx_prios_raid_character_unique
        on prios(raid_id, character_id)`
   );
+}
+
+async function ensureP0PlusAuditSchema() {
+  await query(
+    `create table if not exists p0plus_point_audit (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       character_id uuid references characters(id) on delete set null,
+       item_id uuid references items(id) on delete set null,
+       raid_id uuid references raids(id) on delete set null,
+       raid_type text,
+       player_name text,
+       server text,
+       item_name text,
+       old_points numeric not null default 0,
+       new_points numeric not null default 0,
+       delta_points numeric not null default 0,
+       action text not null,
+       source text not null,
+       note text,
+       created_at timestamptz not null default now()
+     )`
+  );
+  await query(`create index if not exists idx_p0plus_point_audit_guild_created on p0plus_point_audit(guild_id, created_at desc)`);
+  await query(`create index if not exists idx_p0plus_point_audit_raid on p0plus_point_audit(guild_id, raid_type, raid_id)`);
 }
 
 async function ensureDiscordChannelSchema() {
@@ -12735,10 +12765,12 @@ async function findPrioForRaidAndPlayer(raidId, player, server) {
        pr.id,
        pr.character_id,
        pr.p1_item_id,
+       i.name as item_name,
        c.name as player,
        c.server
      from prios pr
      join characters c on c.id = pr.character_id
+     left join items i on i.id = pr.p1_item_id
      where pr.raid_id = $1
        and lower(c.name) = lower($2)
        ${serverClause}
@@ -12782,6 +12814,7 @@ async function setPrioBench({ guildId, query: params }) {
     await client.query("update prios set bench = $1, updated_at = now() where id = $2", [bench, prio.id]);
 
     if (prio.p1_item_id) {
+      const oldPoints = await getP0PlusPointTotal(client, guildId, prio.character_id, prio.p1_item_id);
       await client.query(
         `delete from p0plus_points
          where guild_id = $1 and character_id = $2 and item_id = $3 and source = 'Bench' and note = $4`,
@@ -12794,6 +12827,24 @@ async function setPrioBench({ guildId, query: params }) {
            values ($1, $2, $3, 0.5, 'Bench', $4)`,
           [guildId, prio.character_id, prio.p1_item_id, note]
         );
+      }
+      const newPoints = await getP0PlusPointTotal(client, guildId, prio.character_id, prio.p1_item_id);
+      if (oldPoints !== newPoints) {
+        await insertP0PlusAudit(client, {
+          guildId,
+          characterId: prio.character_id,
+          itemId: prio.p1_item_id,
+          raidId: raid.id,
+          raidType: raid.raid_type,
+          playerName: prio.player || "",
+          server: prio.server || "",
+          itemName: prio.item_name || "",
+          oldPoints,
+          newPoints,
+          action: bench ? "bench_add" : "bench_remove",
+          source: "Gildenleitung Bench",
+          note
+        });
       }
     }
 
@@ -13033,6 +13084,129 @@ async function findCharacterByName(guildId, charName, server) {
   return result.rows[0] || null;
 }
 
+async function getP0PlusPointTotal(client, guildId, characterId, itemId) {
+  const result = await client.query(
+    `select coalesce(sum(points), 0)::numeric as points
+     from p0plus_points
+     where guild_id = $1 and character_id = $2 and item_id = $3`,
+    [guildId, characterId, itemId]
+  );
+  return Number(result.rows[0]?.points || 0);
+}
+
+async function insertP0PlusAudit(client, {
+  guildId,
+  characterId,
+  itemId,
+  raidId = null,
+  raidType = "",
+  playerName = "",
+  server = "",
+  itemName = "",
+  oldPoints = 0,
+  newPoints = 0,
+  action = "",
+  source = "",
+  note = ""
+}) {
+  await client.query(
+    `insert into p0plus_point_audit
+       (guild_id, character_id, item_id, raid_id, raid_type, player_name, server, item_name,
+        old_points, new_points, delta_points, action, source, note)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+    [
+      guildId,
+      characterId || null,
+      itemId || null,
+      raidId || null,
+      raidType || "",
+      playerName || "",
+      server || "",
+      itemName || "",
+      oldPoints,
+      newPoints,
+      Number(newPoints || 0) - Number(oldPoints || 0),
+      action || "",
+      source || "",
+      note || ""
+    ]
+  );
+}
+
+function formatCsvDateTime(value) {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return clean(value);
+  return date.toISOString();
+}
+
+async function buildP0PlusTransferExportCsv({ guildId, raid, awardedRows, skippedRows = [] }) {
+  const raidType = normalizeRaidType(raid?.raid_type || raid?.raid || "");
+  const current = await getP0Plus(guildId, { raid: raidType });
+  const rows = [];
+  rows.push(["Export", "PO+ Raiduebertragung"]);
+  rows.push(["Erstellt", new Date().toISOString()]);
+  rows.push(["Raid", raid?.name || raidType]);
+  rows.push(["Raid-ID", raidPublicId(raid || {})]);
+  rows.push(["Datum", raid?.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : ""]);
+  rows.push(["Uhrzeit", raid?.raid_time || ""]);
+  rows.push([]);
+  rows.push(["UEBERTRAGEN"]);
+  rows.push(["Spieler", "Server", "Item", "Punkte", "Quelle", "Notiz"]);
+  for (const row of awardedRows || []) {
+    rows.push([row.player || "", row.server || "", row.item_name || row.item || "", 1, "Raidlead Transfer", `RaidID: ${raidPublicId(raid || {})}`]);
+  }
+  if (skippedRows.length) {
+    rows.push([]);
+    rows.push(["UEBERSPRUNGEN"]);
+    rows.push(["Spieler", "Item", "Grund"]);
+    for (const row of skippedRows) {
+      rows.push([row.player || "", row.item || "", row.reason || ""]);
+    }
+  }
+  rows.push([]);
+  rows.push(["AKTUELLER PO+ STAND", raidType]);
+  rows.push(["Raid", "Spieler", "Server", "Item", "Slot", "Punkte", "Quelle", "Letzte Aenderung"]);
+  for (const entry of current.entries || []) {
+    rows.push([
+      entry.raid || raidType,
+      entry.player || "",
+      entry.server || "",
+      entry.item || "",
+      entry.slot || "",
+      entry.count ?? entry.points ?? "",
+      entry.source || "",
+      formatCsvDateTime(entry.createdAt || entry.created_at || "")
+    ]);
+  }
+  return buildCsv(rows);
+}
+
+async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows }) {
+  if (!p0PlusTransferExportChannelId) return { success: true, skipped: true, reason: "no_export_channel" };
+  const raidType = normalizeRaidType(raid?.raid_type || raid?.raid || "");
+  const raidDate = raid?.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : "";
+  const fileSafeRaid = clean(raidType || "raid").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "raid";
+  const fileSafeDate = clean(raidDate).replace(/[^0-9-]+/g, "") || new Date().toISOString().slice(0, 10);
+  const csv = await buildP0PlusTransferExportCsv({ guildId, raid, awardedRows, skippedRows });
+  return enqueueBotUpdate({
+    guildId,
+    type: "p0plus_transfer_export",
+    payload: {
+      channelId: p0PlusTransferExportChannelId,
+      raid: raidType,
+      raidName: raid?.name || raidType,
+      raidDate,
+      raidTime: raid?.raid_time || "",
+      raidId: raidPublicId(raid || {}),
+      awarded: (awardedRows || []).length,
+      skipped: (skippedRows || []).length,
+      filename: `po-plus-${fileSafeRaid}-${fileSafeDate}.csv`,
+      csv
+    }
+  });
+}
+
 async function setP0PlusPoints({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
@@ -13060,6 +13234,7 @@ async function setP0PlusPoints({ guildId, query: params }) {
   try {
     await client.query("begin");
     const item = await upsertItem(client, raidType, itemName);
+    const oldPoints = await getP0PlusPointTotal(client, guildId, character.id, item.id);
 
     await client.query(
       `delete from p0plus_points
@@ -13074,6 +13249,21 @@ async function setP0PlusPoints({ guildId, query: params }) {
         [guildId, character.id, item.id, points, "Gildenleitung", slot ? `Slot: ${slot}` : ""]
       );
     }
+
+    await insertP0PlusAudit(client, {
+      guildId,
+      characterId: character.id,
+      itemId: item.id,
+      raidType,
+      playerName: character.name || player,
+      server: character.server || server,
+      itemName,
+      oldPoints,
+      newPoints: points,
+      action: points > 0 ? "manual_set" : "manual_clear",
+      source: "Gildenleitung",
+      note: slot ? `Slot: ${slot}` : ""
+    });
 
     await client.query("commit");
     return { success: true, deleted: points === 0, raid: raidType, player, item: itemName, slot, count: points, points };
@@ -13100,33 +13290,66 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
     throw error;
   }
 
-  let result = await query(
-    `delete from p0plus_points pp
-     using items i
-     where pp.item_id = i.id
-       and pp.guild_id = $1
-       and pp.character_id = $2
-       and lower(i.raid_type) = any($3)
-       and lower(i.name) = lower($4)
-     returning pp.id`,
-    [guildId, character.id, raidTypeSearchValues(raidType), itemName]
-  );
-
-  if (!result.rowCount) {
-    result = await query(
-      `delete from p0plus_points pp
-       using items i
-       where pp.item_id = i.id
-         and pp.guild_id = $1
-         and pp.character_id = $2
-         and lower(i.raid_type) = any($3)
-         and regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($4), '[^a-z0-9]+', '', 'g')
-       returning pp.id`,
-      [guildId, character.id, raidTypeSearchValues(raidType), itemName]
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    let itemResult = await client.query(
+      `select id, name
+       from items
+       where lower(raid_type) = any($1)
+         and lower(name) = lower($2)
+       order by created_at asc
+       limit 1`,
+      [raidTypeSearchValues(raidType), itemName]
     );
+    if (!itemResult.rowCount) {
+      itemResult = await client.query(
+        `select id, name
+         from items
+         where lower(raid_type) = any($1)
+           and regexp_replace(lower(name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($2), '[^a-z0-9]+', '', 'g')
+         order by created_at asc
+         limit 1`,
+        [raidTypeSearchValues(raidType), itemName]
+      );
+    }
+    const item = itemResult.rows[0];
+    let deleted = 0;
+    let oldPoints = 0;
+    if (item) {
+      oldPoints = await getP0PlusPointTotal(client, guildId, character.id, item.id);
+      const result = await client.query(
+        `delete from p0plus_points
+         where guild_id = $1 and character_id = $2 and item_id = $3
+         returning id`,
+        [guildId, character.id, item.id]
+      );
+      deleted = result.rowCount;
+      if (deleted || oldPoints) {
+        await insertP0PlusAudit(client, {
+          guildId,
+          characterId: character.id,
+          itemId: item.id,
+          raidType,
+          playerName: character.name || player,
+          server: character.server || server,
+          itemName: item.name || itemName,
+          oldPoints,
+          newPoints: 0,
+          action: "item_received_clear",
+          source: "PO item erhalten",
+          note: "PO+ Eintrag entfernt, weil Item erhalten wurde."
+        });
+      }
+    }
+    await client.query("commit");
+    return { success: true, deleted };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
   }
-
-  return { success: true, deleted: result.rowCount };
 }
 
 async function resetRaidP0PlusTransfer({ guildId, query: params }) {
@@ -13585,6 +13808,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     `select
        pr.character_id,
        c.name as player,
+       c.server,
        i.id as item_id,
        i.name as item_name,
        pr.comment
@@ -13604,24 +13828,17 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   const candidates = priosResult.rows.filter(row => commentMeta(row.comment).p0Plus === "ja");
   const dedupedCandidates = [];
   const seenCharacters = new Set();
-  const seenItems = new Set();
   const skipped = [];
 
   for (const row of candidates) {
     const characterKey = normalizeTransferKey(row.player) || clean(row.character_id).toLowerCase();
-    const itemKey = normalizeTransferKey(row.item_name) || clean(row.item_id).toLowerCase();
 
     if (seenCharacters.has(characterKey)) {
       skipped.push({ player: row.player || "", item: row.item_name || "", reason: "charakter-doppelt" });
       continue;
     }
-    if (seenItems.has(itemKey)) {
-      skipped.push({ player: row.player || "", item: row.item_name || "", reason: "item-doppelt" });
-      continue;
-    }
 
     seenCharacters.add(characterKey);
-    seenItems.add(itemKey);
     dedupedCandidates.push(row);
   }
 
@@ -13629,6 +13846,13 @@ async function transferP0PlusPoints({ guildId, query: params }) {
 
   try {
     await client.query("begin");
+    const oldPointTotals = new Map();
+    for (const row of dedupedCandidates) {
+      oldPointTotals.set(
+        `${row.character_id}:${row.item_id}`,
+        await getP0PlusPointTotal(client, guildId, row.character_id, row.item_id)
+      );
+    }
     if (dedupedCandidates.length) {
       const characterIds = dedupedCandidates.map(row => row.character_id);
       const itemNames = dedupedCandidates.map(row => row.item_name);
@@ -13658,6 +13882,22 @@ async function transferP0PlusPoints({ guildId, query: params }) {
          values ($1, $2, $3, 1, $4, $5)`,
         [guildId, row.character_id, row.item_id, "Raidlead Transfer", transferNote]
       );
+      const newPoints = await getP0PlusPointTotal(client, guildId, row.character_id, row.item_id);
+      await insertP0PlusAudit(client, {
+        guildId,
+        characterId: row.character_id,
+        itemId: row.item_id,
+        raidId: raid.id,
+        raidType: raid.raid_type,
+        playerName: row.player || "",
+        server: row.server || "",
+        itemName: row.item_name || "",
+        oldPoints: oldPointTotals.get(`${row.character_id}:${row.item_id}`) || 0,
+        newPoints,
+        action: "raid_transfer",
+        source: "PO übertragen",
+        note: transferNote
+      });
     }
     const archivedPoPostEntries = await archivePoPostEntriesForRaid(client, guildId, raid.raid_type);
     await client.query("commit");
@@ -13678,6 +13918,12 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     [guildId, transferNotes]
   );
   const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
+  const exportResult = await queueP0PlusTransferCsvExport({
+    guildId,
+    raid,
+    awardedRows: dedupedCandidates,
+    skippedRows: skipped
+  }).catch(error => ({ success: false, error: error.message || String(error) }));
 
   return {
     success: true,
@@ -13687,7 +13933,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     skippedEntries: skipped,
     archivedPoPostEntries: Number(raid.archived_po_post_entries || 0),
     p0PlusTransferred: p0PlusTransferCount > 0,
-    p0PlusTransferCount
+    p0PlusTransferCount,
+    exportQueued: Boolean(exportResult && exportResult.success && !exportResult.skipped),
+    exportResult
   };
 }
 
