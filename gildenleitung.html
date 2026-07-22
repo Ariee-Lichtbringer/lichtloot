@@ -76,6 +76,52 @@ button,input,select{font:inherit}
   gap:7px;
 }
 
+.side-group{
+  display:grid;
+  gap:6px;
+  margin-top:8px;
+}
+
+.side-group-toggle{
+  width:100%;
+  min-height:38px;
+  border:1px solid rgba(250,204,21,.18);
+  border-radius:8px;
+  padding:7px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#fde68a;
+  background:rgba(250,204,21,.08);
+  font-weight:900;
+  cursor:pointer;
+}
+
+.side-group-toggle:hover{
+  border-color:rgba(250,204,21,.36);
+  background:rgba(250,204,21,.14);
+}
+
+.side-group-toggle::after{
+  content:"▾";
+  color:#fbbf24;
+  font-size:13px;
+}
+
+.side-group.collapsed .side-group-toggle::after{
+  content:"▸";
+}
+
+.side-group-items{
+  display:grid;
+  gap:6px;
+}
+
+.side-group.collapsed .side-group-items{
+  display:none;
+}
+
 .side-link{
   width:100%;
   min-height:44px;
@@ -120,6 +166,19 @@ button,input,select{font:inherit}
 .side-label{
   min-width:0;
   line-height:1.1;
+}
+
+.side-count{
+  margin-left:auto;
+  min-width:22px;
+  height:22px;
+  border-radius:999px;
+  display:inline-grid;
+  place-items:center;
+  background:rgba(248,113,113,.18);
+  color:#fca5a5;
+  font-size:12px;
+  font-weight:950;
 }
 
 .side-spacer{height:18px}
@@ -298,7 +357,7 @@ button,input,select{font:inherit}
 
 .dashboard-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 310px;
+  grid-template-columns:minmax(0,1fr);
   gap:18px;
   align-items:start;
   margin-top:18px;
@@ -317,7 +376,7 @@ button,input,select{font:inherit}
 .stat-grid{
   margin-top:18px;
   display:grid;
-  grid-template-columns:repeat(3,minmax(145px,1fr));
+  grid-template-columns:repeat(2,minmax(145px,1fr));
   gap:12px;
 }
 
@@ -509,7 +568,7 @@ button,input,select{font:inherit}
   grid-column:1 / -1;
   width:100%;
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto auto;
+  grid-template-columns:minmax(0,1fr) auto;
   gap:8px;
   align-items:center;
 }
@@ -3736,14 +3795,26 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
       <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
-      <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-      <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-      <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+      <div class="side-group" id="sideGroupBuffs">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBuffs')"><span>Buffs</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+        </div>
+      </div>
+      <div class="side-group" id="sideGroupRaidorga">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
+          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
+          <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
+          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
+        </div>
+      </div>
+      <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
       <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin" title="Admin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin</span></button>
       <button class="side-link" type="button" onclick="downloadGuildLootCsv()" aria-label="Sicherung" title="Sicherung"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">Sicherung</span></button>
-      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'" aria-label="Raidlead" title="Raidlead"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidlead</span></button>
     </nav>
   </aside>
 
@@ -3758,7 +3829,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
     <div class="nav" aria-label="Navigation">
       <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
-      <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
         <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
@@ -3780,7 +3850,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   <section class="stat-grid">
     <div class="stat-card"><div><div class="stat-icon">⚔</div><span>Raids</span><strong id="raidCount">0</strong></div><button type="button" onclick="openRaidPanel()">Alle anzeigen →</button></div>
     <div class="stat-card blue"><div><div class="stat-icon">☷</div><span>Spielerlogins</span><strong id="playerCount">0</strong><div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div></div><button type="button" onclick="openPlayerPanel()">Alle anzeigen →</button></div>
-    <div class="stat-card red"><div><div class="stat-icon">✉</div><span>Postfach</span><strong id="issueCount">0</strong></div><button type="button" onclick="openIssueInboxPanel()">Öffnen →</button></div>
   </section>
 
   <div class="dashboard-grid">
@@ -4566,21 +4635,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </details>
   </div>
 </div>
-
-    <aside class="dashboard-column">
-      <section class="side-card">
-        <h3>◎ Nächste Worldbuffs</h3>
-        <div id="worldbuffMiniList" class="mini-list">
-          <div class="mini-row"><span>Worldbuffs laden</span><span>→</span></div>
-        </div>
-      </section>
-      <section class="side-card">
-        <h3>☷ Letzte Spielerlogins</h3>
-        <div id="playerMiniList" class="mini-list">
-          <div class="mini-row"><span>Noch keine Daten</span><span>-</span></div>
-        </div>
-      </section>
-    </aside>
   </div>
 </main>
 </div>
@@ -5211,6 +5265,11 @@ function scrollToDashboard(){
   document.getElementById("dashboardTop")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
+function toggleSideGroup(id){
+  const group = document.getElementById(id);
+  if(group) group.classList.toggle("collapsed");
+}
+
 function openDetailsPanel(id){
   const panel = document.getElementById(id);
   if(!panel) return;
@@ -5452,14 +5511,12 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
-              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
               <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
               <div class="active-raid-discord-tools">
                 <select id="raidDiscordChannel-${escapeAttr(raid.raidId || raid.id)}" aria-label="Discord-Channel für ${escapeAttr(raid.raidName || raid.raid || "Raid")}">
                   ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
                 </select>
                 <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')">DC Text kopieren</button>
-                <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
               </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
