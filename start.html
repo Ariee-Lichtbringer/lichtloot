@@ -2413,9 +2413,9 @@ body.raid-create-open:before{
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span>Logs & Analysen</span></button>
-          <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><img class="start-side-icon-img" src="images/dashboard-icons/raidlead-panel.jpg" alt=""><span>Raidregeln</span></button>
+          <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span></button>
           <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><img class="start-side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span>P0+ Liste</span></button>
-          <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/po-plus.jpg" alt=""><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
+          <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/prioseiten.svg" alt=""><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
           <div id="prioPagesDrawer" class="prio-pages-drawer hidden">
             <button class="prio-page-link" onclick="openPrioPage('mc')"><span>Molten Core</span><span>MC</span></button>
             <button class="prio-page-link" onclick="openPrioPage('bwl')"><span>Blackwing Lair</span><span>BWL</span></button>
@@ -2432,7 +2432,7 @@ body.raid-create-open:before{
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="raidlead" onclick="toggleRaidleadLogin()"><img class="start-side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span>Raidleadpanel</span></button>
           <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
-          <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><img class="start-side-icon-img" src="images/dashboard-icons/po-post.jpg" alt=""><span>Raid erstellen</span></button>
+          <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><img class="start-side-icon-img" src="images/dashboard-icons/raid-erstellen.svg" alt=""><span>Raid erstellen</span></button>
           <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
         </div>
       </div>
@@ -2459,7 +2459,7 @@ body.raid-create-open:before{
         <button type="button" onclick="openPrioPage('ony')">ONY</button>
       </div>
     </section>
-    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-top-btn" onclick="refreshStartDashboard()">↻ Aktualisieren</button><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -2473,29 +2473,8 @@ body.raid-create-open:before{
             <button class="text-link-btn" onclick="goHomeView()">Dashboard anzeigen →</button>
           </div>
         </div>
-        <div class="buff-overview-tabs" role="tablist">
-          <button id="buffTabWorld" class="buff-tab active" onclick="showBuffOverview('worldbuff')">Worldbuffs</button>
-          <button id="buffTabHorde" class="buff-tab" onclick="showBuffOverview('hordenbuff')">Hordenbuffs</button>
-        </div>
-        <div class="buff-addon-card">
-          <div>
-            <strong>LichtBuff Addon</strong>
-            <span>Addon herunterladen und aktuelle Termine fuer den Import vorbereiten.</span>
-          </div>
-          <div class="buff-addon-card-actions">
-            <a class="right-inline-btn buff-addon-download" href="https://lichtloot-production.up.railway.app/downloads/LichtBuff-clean-0.2.9.zip" download><img class="buff-addon-download-icon" src="images/lichtbuff-addon-icon.svg" alt="">Addon herunterladen</a>
-            <button class="right-inline-btn" onclick="copyStartLichtBuffAddonExport()">Termine aktualisieren</button>
-          </div>
-        </div>
         <div class="buff-overview-search-row">
           <input id="buffOverviewSearch" type="search" placeholder="Datum, Name, Buff oder Gilde suchen..." oninput="renderCurrentBuffOverview()">
-        </div>
-        <div id="startLichtBuffAddonExportBox" class="buff-addon-export-box">
-          <textarea id="startLichtBuffAddonExportText" class="buff-addon-export-text" readonly aria-label="LichtBuff Addon Export"></textarea>
-          <div class="buff-addon-export-actions">
-            <button class="right-inline-btn" onclick="selectStartLichtBuffAddonExport()">Text markieren</button>
-            <button class="right-inline-btn" onclick="copyStartLichtBuffAddonExport()">Kopieren</button>
-          </div>
         </div>
         <div id="buffOverviewContent" class="buff-overview-content"><div class="status">Noch keine Daten geladen.</div></div>
       </section>
