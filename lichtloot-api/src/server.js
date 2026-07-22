@@ -13,6 +13,7 @@ const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const p0PlusTransferExportChannelId = process.env.P0PLUS_TRANSFER_EXPORT_CHANNEL_ID || "1529393614247952434";
 const worldbuffBackupChannelId = process.env.WORLDBUFF_BACKUP_CHANNEL_ID || p0PlusTransferExportChannelId;
+const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
@@ -2861,9 +2862,10 @@ async function queueWorldbuffBackup({ guildId, query: params }) {
   const today = new Date().toISOString().slice(0, 10);
   const queued = await enqueueBotUpdate({
     guildId,
-    type: "worldbuff_backup_export",
+    type: "p0plus_transfer_export",
     payload: {
       channelId: worldbuffBackupChannelId,
+      backupKind: "worldbuff",
       days,
       createdDate: today,
       filename: `worldbuff-sicherung-${today}.xlsx`,
@@ -12787,6 +12789,67 @@ async function setRaidStatus({ guildId, query: params }) {
   return { success: true, ...normalizeRaidRow(result.rows[0]) };
 }
 
+function bossTokenNoticeForRaid(raidType) {
+  switch (normalizeRaidType(raidType)) {
+    case "bwl":
+      return { token: "Kopf von Nefarian", label: "Kopf von Nefarian" };
+    case "ony":
+      return { token: "Kopf von Onyxia", label: "Kopf von Onyxia" };
+    case "zg":
+      return { token: "Herz von Hakkar", label: "Herz von Hakkar" };
+    default:
+      return null;
+  }
+}
+
+async function queueRaidleadBossTokenNotice({ guildId, query: params }) {
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (raid.lead_pin && leadPin !== raid.lead_pin) {
+    const error = new Error("LeadPIN passt nicht zu diesem Raid.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const raidType = normalizeRaidType(params.raid || raid.raid_type || raid.raid || "");
+  const notice = bossTokenNoticeForRaid(raidType);
+  if (!notice) {
+    const error = new Error("Bosskopf-/Herz-Meldungen gibt es nur für BWL, Ony und ZG.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const player = clean(params.player || params.charakter || params.character);
+  if (!player) {
+    const error = new Error("Spieler fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return enqueueBotUpdate({
+    guildId,
+    type: "boss_token_notice",
+    payload: {
+      channelId: worldbuffAnnouncementChannelId,
+      raid: raidType,
+      raidName: raid.raid_name || raid.name || raidType,
+      raidId: raidPublicId(raid),
+      raidDate: clean(params.raidDate || params.date || "") || (raid.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : ""),
+      raidTime: clean(params.raidTime || params.time || "") || clean(raid.raid_time || ""),
+      player,
+      server: clean(params.server || ""),
+      token: notice.token,
+      source: "raidlead_panel"
+    }
+  });
+}
+
 async function setP0PlusOverride({ guildId, query: params }) {
   const enabled = ["true", "ja", "1", "geöffnet", "offen"].includes(clean(params.enabled || params.value).toLowerCase());
   return setRaidStatus({
@@ -15909,6 +15972,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "validateLeadPin") {
       const raid = await validateLeadPin({ guildId: guild.id, query: req.query });
       return res.json({ ...raid, guild: guild.slug });
+    }
+
+    if (action === "queueRaidleadBossTokenNotice") {
+      const queued = await queueRaidleadBossTokenNotice({ guildId: guild.id, query: req.query });
+      return res.json({ ...queued, guild: guild.slug });
     }
 
     if (action === "savePrio") {
