@@ -750,9 +750,13 @@ button,input,select{font:inherit}
 
 .unlock{
   display:grid;
-  grid-template-columns:190px auto minmax(220px,360px);
+  grid-template-columns:minmax(180px,250px) minmax(180px,250px) minmax(220px,360px);
   gap:10px;
   align-items:end;
+}
+
+.unlock > .btn{
+  width:100%;
 }
 
 .login-summary-card{
