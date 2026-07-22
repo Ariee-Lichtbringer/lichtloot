@@ -13140,46 +13140,83 @@ function formatCsvDateTime(value) {
   return date.toISOString();
 }
 
-async function buildP0PlusTransferExportCsv({ guildId, raid, awardedRows, skippedRows = [] }) {
+function p0PlusExportKey(player, server, item) {
+  return [
+    clean(player).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, ""),
+    clean(server).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, ""),
+    clean(item).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "")
+  ].join("|");
+}
+
+async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skippedRows = [] }) {
   const raidType = normalizeRaidType(raid?.raid_type || raid?.raid || "");
   const current = await getP0Plus(guildId, { raid: raidType });
-  const rows = [];
-  rows.push(["Export", "PO+ Raiduebertragung"]);
-  rows.push(["Erstellt", new Date().toISOString()]);
-  rows.push(["Raid", raid?.name || raidType]);
-  rows.push(["Raid-ID", raidPublicId(raid || {})]);
-  rows.push(["Datum", raid?.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : ""]);
-  rows.push(["Uhrzeit", raid?.raid_time || ""]);
-  rows.push([]);
-  rows.push(["UEBERTRAGEN"]);
-  rows.push(["Spieler", "Server", "Item", "Punkte", "Quelle", "Notiz"]);
+  const awardedByKey = new Map();
   for (const row of awardedRows || []) {
-    rows.push([row.player || "", row.server || "", row.item_name || row.item || "", 1, "Raidlead Transfer", `RaidID: ${raidPublicId(raid || {})}`]);
+    const key = p0PlusExportKey(row.player, row.server, row.item_name || row.item);
+    awardedByKey.set(key, (awardedByKey.get(key) || 0) + 1);
   }
-  if (skippedRows.length) {
-    rows.push([]);
-    rows.push(["UEBERSPRUNGEN"]);
-    rows.push(["Spieler", "Item", "Grund"]);
-    for (const row of skippedRows) {
-      rows.push([row.player || "", row.item || "", row.reason || ""]);
-    }
-  }
-  rows.push([]);
-  rows.push(["AKTUELLER PO+ STAND", raidType]);
-  rows.push(["Raid", "Spieler", "Server", "Item", "Slot", "Punkte", "Quelle", "Letzte Aenderung"]);
+
+  const currentRows = [
+    ["Raid", "Spieler", "Server", "Item", "Slot", "PO+ Punkte pre Raid", "Uebertragung", "Aktuelle Punkte", "Quelle", "Letzte Aenderung"]
+  ];
   for (const entry of current.entries || []) {
-    rows.push([
+    const currentPoints = Number(entry.count ?? entry.points ?? 0);
+    const awarded = awardedByKey.get(p0PlusExportKey(entry.player, entry.server, entry.item)) || 0;
+    currentRows.push([
       entry.raid || raidType,
       entry.player || "",
       entry.server || "",
       entry.item || "",
       entry.slot || "",
-      entry.count ?? entry.points ?? "",
+      currentPoints - awarded,
+      awarded,
+      currentPoints,
       entry.source || "",
       formatCsvDateTime(entry.createdAt || entry.created_at || "")
     ]);
   }
-  return buildCsv(rows);
+  if (skippedRows.length) {
+    currentRows.push([]);
+    currentRows.push(["Uebersprungen"]);
+    currentRows.push(["Spieler", "Item", "Grund"]);
+    for (const row of skippedRows) {
+      currentRows.push([row.player || "", row.item || "", row.reason || ""]);
+    }
+  }
+
+  const receivedResult = await query(
+    `select player_name, server, item_name, old_points, new_points, delta_points, source, note, created_at
+     from p0plus_point_audit
+     where guild_id = $1
+       and lower(coalesce(raid_type, '')) = any($2)
+       and action = 'item_received_clear'
+     order by created_at desc, player_name asc, item_name asc`,
+    [guildId, raidTypeSearchValues(raidType)]
+  );
+  const receivedRows = [
+    ["Spieler", "Server", "Item", "Punkte vorher", "Punkte nachher", "Aenderung", "Quelle", "Notiz", "Datum"]
+  ];
+  for (const row of receivedResult.rows) {
+    receivedRows.push([
+      row.player_name || "",
+      row.server || "",
+      row.item_name || "",
+      Number(row.old_points || 0),
+      Number(row.new_points || 0),
+      Number(row.delta_points || 0),
+      row.source || "",
+      row.note || "",
+      formatCsvDateTime(row.created_at || "")
+    ]);
+  }
+  if (receivedRows.length === 1) {
+    receivedRows.push(["", "", "Noch keine protokollierten Items erhalten.", "", "", "", "", "", ""]);
+  }
+  return [
+    { name: "PO+ aktuell", rows: currentRows },
+    { name: "Items erhalten", rows: receivedRows }
+  ];
 }
 
 async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows }) {
@@ -13188,7 +13225,7 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
   const raidDate = raid?.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : "";
   const fileSafeRaid = clean(raidType || "raid").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "raid";
   const fileSafeDate = clean(raidDate).replace(/[^0-9-]+/g, "") || new Date().toISOString().slice(0, 10);
-  const csv = await buildP0PlusTransferExportCsv({ guildId, raid, awardedRows, skippedRows });
+  const sheets = await buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skippedRows });
   return enqueueBotUpdate({
     guildId,
     type: "p0plus_transfer_export",
@@ -13201,8 +13238,8 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
       raidId: raidPublicId(raid || {}),
       awarded: (awardedRows || []).length,
       skipped: (skippedRows || []).length,
-      filename: `po-plus-${fileSafeRaid}-${fileSafeDate}.csv`,
-      csv
+      filename: `po-plus-${fileSafeRaid}-${fileSafeDate}.xlsx`,
+      sheets
     }
   });
 }
