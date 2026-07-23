@@ -2485,7 +2485,6 @@ body.raid-create-open:before{
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
-      <section class="dash-panel raid-instance-section" id="guildSignupPanel"><div class="section-head"><div><div class="section-title">LichtLoot Gilde werden</div><p style="color:#cbd5e1;font-size:13px;font-weight:800;line-height:1.45;margin-top:6px">Für Gilden, die LichtLoot mit eigener Startseite, SpielerLogins und Raidverwaltung nutzen möchten.</p></div><button class="text-link-btn" onclick="window.location.href='gilde-anmelden.html'">Gilde anmelden →</button></div></section>
       <section class="dash-panel logs-dashboard-section" id="logsDashboardSection">
         <div class="logs-dashboard-hero">
           <div class="logs-dashboard-title">
@@ -3774,6 +3773,7 @@ async function getDashboardBuffEntries(kind,days){
   const allUpcoming=days === "all";
   const requestDays=allUpcoming ? 3650 : (days || 14);
   const guildMasterCode=sessionStorage.getItem(GUILD_MASTER_STORAGE_KEY) || "";
+  const allowLegacyBuffFallback=CURRENT_GUILD_SLUG === "lichtloot";
   let entries=[];
 
   try{
@@ -3788,7 +3788,7 @@ async function getDashboardBuffEntries(kind,days){
 
   try{
     if(!entries.length){
-      const data=await fetchRaidApiJsonp({action:publicAction,days:requestDays});
+      const data=await fetchRaidApiJsonp({action:publicAction,days:requestDays,allowSheetFallback:String(allowLegacyBuffFallback)});
       if(data && data.success !== false){
         const raw=data.buffs || data.entries || data.rows || data.data || [];
         if(Array.isArray(raw)) entries=raw.map(normalizeDashboardWorldbuff).filter(Boolean);
@@ -3798,7 +3798,7 @@ async function getDashboardBuffEntries(kind,days){
     console.warn('Public-Buffliste nicht ladbar:', publicAction, error);
   }
 
-  if(!entries.length){
+  if(!entries.length && allowLegacyBuffFallback){
     entries=await loadBuffCsvEntries(kind);
   }
   return dedupeDashboardBuffs(entries)
@@ -4966,13 +4966,17 @@ async function fetchRailwayReadAction(params){
   }
 
   if(params.action === "getPublicWorldbuffs" || params.action === "guildGetWorldbuffs"){
-    const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
+    const search=new URLSearchParams({action:params.action});
+    if(params.days) search.set("days", params.days);
+    if(params.allowSheetFallback) search.set("allowSheetFallback", params.allowSheetFallback);
+    return await fetchRailwayApi("/api/apps-script?"+search.toString());
   }
 
   if(params.action === "getPublicHordenbuffs" || params.action === "guildGetHordenbuffs"){
-    const days=params.days ? "&days="+encodeURIComponent(params.days) : "";
-    return await fetchRailwayApi("/api/apps-script?action="+encodeURIComponent(params.action)+days);
+    const search=new URLSearchParams({action:params.action});
+    if(params.days) search.set("days", params.days);
+    if(params.allowSheetFallback) search.set("allowSheetFallback", params.allowSheetFallback);
+    return await fetchRailwayApi("/api/apps-script?"+search.toString());
   }
 
   if(["getPlayerWorldbuffs","claimPlayerWorldbuff","movePlayerWorldbuff","guildDeleteWorldbuffTerm","guildRestoreDeletedWorldbuffTerms"].includes(params.action)){
