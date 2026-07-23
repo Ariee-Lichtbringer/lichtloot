@@ -4730,6 +4730,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
                       <th>Post-ID</th>
                       <th>Raid</th>
                       <th>Channel</th>
+                      <th>Pins</th>
                       <th>Einträge</th>
                       <th>Aktion</th>
                     </tr>
@@ -5696,14 +5697,24 @@ function renderSummary(){
 }
 
 function getRaidKey(raid){
+  const directKey = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if(directKey === "aq20") return "aq20";
+  if(directKey === "zg") return "zg";
+  if(directKey === "aq40") return "aq40";
+  if(directKey === "mc") return "mc";
+  if(directKey === "bwl") return "bwl";
+  if(directKey === "naxx") return "naxx";
+  if(directKey === "ony") return "ony";
+
   const text = normalize([
     raid.raid,
+    raid.raidType,
     raid.raidName,
     raid.raidId
   ].join(" "));
 
-  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
-  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq20") || text.includes("aq 20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq40") || text.includes("aq 40") || text.includes("qiraj 40")) return "aq40";
   if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
   if(text.includes("mc") || text.includes("molten")) return "mc";
   if(text.includes("naxx")) return "naxx";
@@ -6080,7 +6091,11 @@ function renderRaids(){
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     return filterMatches && dateMatches && (!search || haystack.includes(search));
-  });
+  }).sort((a,b) => {
+    const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
+    const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
+    return right.localeCompare(left);
+  }).slice(0, 10);
 
   if(!raids.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
@@ -6112,6 +6127,7 @@ function renderRaids(){
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+            <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
         </td>
       </tr>
@@ -8710,16 +8726,19 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
   }
 
-  poSignupGeneratedLichtlootRaid = { fingerprint, raidId, playerPin, leadPin, createdBy };
+  const resultRaidId = result.raidId || result.RaidID || raidId;
+  const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
+  const resultLeadPin = result.leadPin || leadPin;
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
   updatePoSignupPreview();
   if(status && !options.silent){
-    status.innerHTML = `<span class="good">LichtLoot-Prio-ID erstellt. Prio-PIN: <strong>${escapeHtml(playerPin)}</strong></span>`;
+    status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
-    lichtlootRaidId:raidId,
-    lichtlootPlayerPin:playerPin,
-    lichtlootLeadPin:leadPin
+    lichtlootRaidId:resultRaidId,
+    lichtlootPlayerPin:resultPlayerPin,
+    lichtlootLeadPin:resultLeadPin
   });
 }
 
@@ -9029,7 +9048,7 @@ function renderPoSignupConfigRows(){
     .filter(isPoSignupConfigGroup)
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     updatePoSignupTransferState();
     return;
   }
@@ -9043,6 +9062,10 @@ function renderPoSignupConfigRows(){
         <div class="po-signup-channel-stack">
           <div class="po-signup-channel-line"><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</strong></div>
         </div>
+      </td>
+      <td>
+        <div><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</div>
+        <div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div>
       </td>
       <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
       <td>
@@ -10530,6 +10553,55 @@ async function deleteRaidFromDashboard(raidId){
     await loadOverview({ preserveStatus:true });
   }catch(error){
     setStatus(error.message || "Raid konnte nicht archiviert werden.", "bad");
+  }
+}
+
+async function hardDeleteRaidFromPage(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry =>
+    String(entry.raidId || "") === String(raidId) ||
+    String(entry.id || "") === String(raidId)
+  );
+  const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim() : "diesen Raid";
+  if(!confirm(`${label} wirklich endgültig löschen? Prios, Anmeldungen und verknüpfte Einträge dieses Raids werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      raidId:raid?.raidId || raidId,
+      id:raid?.id || ""
+    });
+    if(!result.success || Number(result.deleted || 0) < 1){
+      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    guildData.raids = (guildData.raids || []).filter(entry =>
+      String(entry.raidId || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raid?.id || "")
+    );
+    renderSummary();
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    renderRaidHelperCurrentEvents();
+    renderRaidHelperPastEvents();
+    setStatus("Raid wurde endgültig gelöscht.", "good");
+    await loadOverview({ preserveStatus:true });
+  }catch(error){
+    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
   }
 }
 
