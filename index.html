@@ -1531,7 +1531,8 @@ body.show-mylichtloot .mylichtloot-card{display:block}
       <div class="player-login-card" id="loginCard">
         <div id="loggedOutPanel">
           <h2>SpielerLogin</h2>
-          <p>Gib deinen SpielerLogin (4 stelliger Pin) ein. Danach bleiben deine Charaktere für alle Raidseiten gespeichert.</p>
+          <p>Gib deine Gilde und deinen SpielerLogin ein. Danach bleiben deine Charaktere für diese Gilde gespeichert.</p>
+          <input id="homeGuildPin" class="login-input" type="text" placeholder="Gilde eingeben, z. B. Lichtbringer" onkeydown="homePlayerLoginEnter(event)">
           <input id="homePlayerPin" class="login-input" type="password" placeholder="SpielerLogin eingeben" onkeydown="homePlayerLoginEnter(event)">
           <div class="login-actions">
             <button class="big-btn primary-action" onclick="homePlayerLogin()">Einloggen</button>
@@ -1584,6 +1585,10 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div id="lichtlootPriosSection" class="lichtloot-section">
     <div class="myprios-form">
       <div style="grid-column:1 / span 2">
+        <label>Gilde</label>
+        <input id="myPriosGuildName" type="text" placeholder="z. B. Lichtbringer oder Panem" onkeydown="myPriosEnter(event)">
+      </div>
+      <div style="grid-column:1 / span 2">
         <label>SpielerLogin</label>
         <input id="myPriosPin" type="password" placeholder="SpielerLogin eingeben" onkeydown="myPriosEnter(event)">
       </div>
@@ -1612,6 +1617,11 @@ body.show-mylichtloot .mylichtloot-card{display:block}
     <p class="hint">Lege hier deinen SpielerLogin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen SpielerLogin später zurücksetzen.</p>
 
     <div class="clean-form">
+      <div class="full">
+        <label>Gilde</label>
+        <input id="pinGuildName" type="text" placeholder="z. B. Lichtbringer oder Panem" onkeydown="createPlayerPinEnter(event)">
+      </div>
+
       <div>
         <label>Charaktername</label>
         <input id="pinCharName" type="text" placeholder="z. B. Ariee" oninput="loadFixedPlayerPinForChar()">
@@ -1917,7 +1927,6 @@ function isGuildConfigMode(){
 
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = CURRENT_GUILD_SLUG ? "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) : "";
-const PLAYER_LOGIN_STORAGE_KEY = CURRENT_GUILD_SLUG ? "lichtlootPlayerPin_" + CURRENT_GUILD_SLUG : "lichtlootPlayerPin";
 let activeGuildSlug = CURRENT_GUILD_SLUG;
 
 function withGuildSlugUrl(url, slug){
@@ -1935,9 +1944,50 @@ function currentActiveGuildSlug(){
   return String(activeGuildSlug || CURRENT_GUILD_SLUG || "lichtloot").trim().toLowerCase();
 }
 
+function playerLoginStorageKey(slug){
+  return "lichtlootPlayerPin_" + String(slug || currentActiveGuildSlug() || "lichtloot").trim().toLowerCase();
+}
+
+function activeGuildDisplayName(){
+  if(currentGuildInfo?.name) return currentGuildInfo.name;
+  if(currentActiveGuildSlug() === "lichtloot") return "Lichtbringer";
+  return titleFromSlug(currentActiveGuildSlug());
+}
+
+function syncGuildInputs(value){
+  const display=String(value || activeGuildDisplayName() || "").trim();
+  ["homeGuildPin","pinGuildName","myPriosGuildName"].forEach(id=>{
+    const input=document.getElementById(id);
+    if(input && !input.value.trim()) input.value=display;
+  });
+}
+
+async function resolveGuildInputValue(value){
+  const raw=String(value || "").trim();
+  if(!raw) return { slug: currentActiveGuildSlug(), name: activeGuildDisplayName() };
+  const response=await fetch(LICHTLOOT_API_URL+"?action=resolveGuildByPin&guildPin="+encodeURIComponent(raw)+"&t="+Date.now(), {cache:"no-store"});
+  const result=await response.json().catch(() => ({}));
+  if(!response.ok || !result.success || !result.guild?.slug){
+    throw new Error(result.error || "Gilde wurde nicht gefunden.");
+  }
+  return result.guild;
+}
+
+async function activateGuildFromInput(inputId){
+  const input=document.getElementById(inputId);
+  const guild=await resolveGuildInputValue(input ? input.value : "");
+  activeGuildSlug=String(guild.slug || activeGuildSlug || "lichtloot").trim().toLowerCase();
+  currentGuildInfo=Object.assign({}, currentGuildInfo || {}, guild);
+  syncGuildInputs(guild.name || guild.guildPin || titleFromSlug(activeGuildSlug));
+  const raidLink=document.getElementById("dashboardRaidLink");
+  if(raidLink) raidLink.href=withCurrentGuildUrl("start.html");
+  return guild;
+}
+
 function appendCurrentGuild(query){
-  if(CURRENT_GUILD_SLUG){
-    query.set("guild", CURRENT_GUILD_SLUG);
+  const slug=currentActiveGuildSlug();
+  if(slug){
+    query.set("guild", slug);
   }
   return query;
 }
@@ -2605,12 +2655,20 @@ async function loadFixedPlayerPinForChar(){
     return;
   }
 
+  try{
+    await activateGuildFromInput("pinGuildName");
+  }catch(error){
+    hidePlayerPinValue("----");
+    status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+    return;
+  }
+
   status.innerHTML='<span class="warn">SpielerLogin wird geprüft …</span>';
 
   const url =
     LICHTLOOT_API_URL +
     "?action=getPlayerPin" +
-    "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
     "&char=" + encodeURIComponent(input.charName) +
     "&server=" + encodeURIComponent(input.server) +
     "&t=" + Date.now();
@@ -2676,12 +2734,19 @@ async function createPlayerPinFromSheet(){
     return;
   }
 
+  try{
+    await activateGuildFromInput("pinGuildName");
+  }catch(error){
+    status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+    return;
+  }
+
   status.innerHTML='<span class="warn">SpielerLogin wird erstellt …</span>';
 
   const url =
     LICHTLOOT_API_URL +
     "?action=createPlayerPin" +
-    "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
     "&char=" + encodeURIComponent(input.charName) +
     "&server=" + encodeURIComponent(input.server) +
     "&className=" + encodeURIComponent(input.className) +
@@ -2714,6 +2779,10 @@ async function createPlayerPinFromSheet(){
   }
 }
 
+function createPlayerPinEnter(event){
+  if(event.key === "Enter") createPlayerPinFromSheet();
+}
+
 async function resetPlayerPinFromSheet(){
   const input=getPlayerPinInput();
   const oldPin=document.getElementById("oldPlayerPin").value.trim();
@@ -2739,7 +2808,7 @@ async function resetPlayerPinFromSheet(){
   const url =
     LICHTLOOT_API_URL +
     "?action=resetPlayerPin" +
-    "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
     "&char=" + encodeURIComponent(input.charName) +
     "&server=" + encodeURIComponent(input.server) +
     "&oldPin=" + encodeURIComponent(oldPin) +
@@ -2787,11 +2856,17 @@ async function resetPlayerLoginWithSecurity(){
   }
 
   status.innerHTML='<span class="warn">Sicherheitsfrage wird geprüft …</span>';
+  try{
+    await activateGuildFromInput("myPriosGuildName");
+  }catch(error){
+    status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+    return;
+  }
 
   const url =
     LICHTLOOT_API_URL +
     "?action=resetPlayerPinBySecurity" +
-    "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
     "&char=" + encodeURIComponent(charName) +
     "&server=" + encodeURIComponent(server) +
     "&securityQuestion=" + encodeURIComponent(securityQuestion) +
@@ -2808,8 +2883,8 @@ async function resetPlayerLoginWithSecurity(){
       return;
     }
 
-    localStorage.setItem(PLAYER_LOGIN_STORAGE_KEY, result.pin || newPin);
-    sessionStorage.setItem(PLAYER_LOGIN_STORAGE_KEY, result.pin || newPin);
+    localStorage.setItem(playerLoginStorageKey(), result.pin || newPin);
+    sessionStorage.setItem(playerLoginStorageKey(), result.pin || newPin);
 
     status.innerHTML='<span class="ok">✓ SpielerLogin wurde zurückgesetzt.</span><br><strong>Neuer SpielerLogin:</strong> ' + safeHtml(result.pin || newPin) + '<br>Der neue Pin wurde im Browser gespeichert.';
 
@@ -2846,11 +2921,17 @@ async function addTwinkToPlayerPin(){
   }
 
   status.innerHTML='<span class="warn">Charakter wird gespeichert …</span>';
+  try{
+    await activateGuildFromInput("myPriosGuildName");
+  }catch(error){
+    status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+    return;
+  }
 
   const url =
     LICHTLOOT_API_URL +
     "?action=addTwink" +
-    "&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) +
+    "&guild=" + encodeURIComponent(currentActiveGuildSlug()) +
     "&pin=" + encodeURIComponent(pin) +
     "&char=" + encodeURIComponent(charName) +
     "&server=" + encodeURIComponent(server) +
@@ -2941,7 +3022,7 @@ function openLootWithPin(raid){
     return;
   }
 
-  window.location.href=raids[raid].lootPage+"?pin="+encodeURIComponent(pin)+"&guild="+encodeURIComponent(CURRENT_GUILD_SLUG);
+  window.location.href=raids[raid].lootPage+"?pin="+encodeURIComponent(pin)+"&guild="+encodeURIComponent(currentActiveGuildSlug());
 }
 
 function handlePinEnter(event,raid){
@@ -2963,7 +3044,7 @@ function loadP0PlusOverview(){
   const content = document.getElementById("p0plusContent");
   content.innerHTML = "Lade P0+ Punkte …";
 
-  fetch(LICHTLOOT_API_URL+"?action=getP0Plus&guild="+encodeURIComponent(CURRENT_GUILD_SLUG)+"&t="+Date.now(),{cache:"no-store"})
+  fetch(LICHTLOOT_API_URL+"?action=getP0Plus&guild="+encodeURIComponent(currentActiveGuildSlug())+"&t="+Date.now(),{cache:"no-store"})
     .then(response => response.json())
     .then(result => {
     if(!result || !result.success){
@@ -3328,7 +3409,7 @@ async function loadLootDataForRaid(raid){
   if(lootDataByRaid[raid]) return lootDataByRaid[raid];
 
   try{
-    const response = await fetch(LICHTLOOT_API_URL + "?action=getLootItems&guild=" + encodeURIComponent(CURRENT_GUILD_SLUG || "lichtloot") + "&raid=" + encodeURIComponent(raid) + "&t=" + Date.now(), {cache:"no-store"});
+    const response = await fetch(LICHTLOOT_API_URL + "?action=getLootItems&guild=" + encodeURIComponent(currentActiveGuildSlug() || "lichtloot") + "&raid=" + encodeURIComponent(raid) + "&t=" + Date.now(), {cache:"no-store"});
     const payload = await response.json().catch(()=>null);
     const rows = payload && Array.isArray(payload.items) ? payload.items : [];
 
@@ -3575,6 +3656,12 @@ async function loadLichtLootCharacters(){
     status.innerHTML='<span class="bad">Bitte zuerst deinen SpielerLogin eingeben.</span>';
     return;
   }
+  try{
+    await activateGuildFromInput("myPriosGuildName");
+  }catch(error){
+    status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+    return;
+  }
 
   status.innerHTML='<span class="warn">Lade alle Charaktere zu diesem SpielerLogin …</span>';
   results.innerHTML='';
@@ -3587,7 +3674,7 @@ async function loadLichtLootCharacters(){
   try{
     const url=LICHTLOOT_API_URL+
       '?action=getCharactersByPin'+
-      '&guild='+encodeURIComponent(CURRENT_GUILD_SLUG)+
+      '&guild='+encodeURIComponent(currentActiveGuildSlug())+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
 
@@ -3721,7 +3808,7 @@ async function loadMyPrios(){
   try{
     const url=RAID_API_URL+
       '?action=getPlayerPrioHistory'+
-      '&guild='+encodeURIComponent(CURRENT_GUILD_SLUG)+
+      '&guild='+encodeURIComponent(currentActiveGuildSlug())+
       '&char='+encodeURIComponent(charName)+
       '&pin='+encodeURIComponent(pin)+
       '&t='+Date.now();
@@ -3926,7 +4013,7 @@ async function deleteOwnPrio(payload){
   const playerName=payload.player || document.getElementById("myPriosChar").value || '';
 
   const baseParams=
-    '&guild='+encodeURIComponent(CURRENT_GUILD_SLUG)+
+    '&guild='+encodeURIComponent(currentActiveGuildSlug())+
     '&pin='+encodeURIComponent(pin)+
     '&player='+encodeURIComponent(playerName)+
     '&char='+encodeURIComponent(playerName)+
@@ -4204,7 +4291,7 @@ function loadP0PlusOverview(){
   const content = document.getElementById("p0plusContent");
   if(content) content.innerHTML = "Lade P0+ Punkte …";
 
-  fetch(LICHTLOOT_API_URL+"?action=getP0Plus&guild="+encodeURIComponent(CURRENT_GUILD_SLUG)+"&t="+Date.now(),{cache:"no-store"})
+  fetch(LICHTLOOT_API_URL+"?action=getP0Plus&guild="+encodeURIComponent(currentActiveGuildSlug())+"&t="+Date.now(),{cache:"no-store"})
     .then(response => response.json())
     .then(result => {
     if(!result || !result.success){
@@ -4429,7 +4516,8 @@ function renderP0PlusOverview(entries){
 </script>
 <script>
 function getSavedPlayerLogin(){
-  return localStorage.getItem(PLAYER_LOGIN_STORAGE_KEY) || sessionStorage.getItem(PLAYER_LOGIN_STORAGE_KEY) || '';
+  const key=playerLoginStorageKey();
+  return localStorage.getItem(key) || sessionStorage.getItem(key) || '';
 }
 function setActionPanel(title,hint,tab){
   document.body.classList.add('show-mylichtloot');
@@ -4442,6 +4530,7 @@ function setActionPanel(title,hint,tab){
   if(panel) panel.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function showCreateLogin(){
+  syncGuildInputs();
   setActionPanel('SpielerLogin erstellen','Lege deinen SpielerLogin einmal an. Danach gilt er für alle Raids.','pin');
 }
 function showResetLogin(){
@@ -4454,6 +4543,7 @@ function showAddCharacter(){
   setActionPanel('Charakter hinzufügen','Füge einen Twink zu deinem bestehenden SpielerLogin hinzu.','twinks');
 }
 function showMyPriosFromDashboard(){
+  syncGuildInputs();
   const pin=getSavedPlayerLogin();
   const field=document.getElementById('myPriosPin');
   if(field && pin) field.value=pin;
@@ -4461,8 +4551,9 @@ function showMyPriosFromDashboard(){
   if(pin && typeof loadLichtLootCharacters === 'function') loadLichtLootCharacters();
 }
 function logoutPlayerLogin(){
-  localStorage.removeItem(PLAYER_LOGIN_STORAGE_KEY);
-  sessionStorage.removeItem(PLAYER_LOGIN_STORAGE_KEY);
+  const key=playerLoginStorageKey();
+  localStorage.removeItem(key);
+  sessionStorage.removeItem(key);
   const login=document.getElementById('loggedOutPanel');
   const dash=document.getElementById('loggedInPanel');
   if(login) login.classList.remove('hidden');
@@ -4487,21 +4578,22 @@ async function loadDashboardForPin(pin){
   if(twinkPin) twinkPin.value=pin;
   if(charsBox) charsBox.innerHTML='Charaktere werden geladen …';
 
-  const url=LICHTLOOT_API_URL+'?action=getCharactersByPin&guild='+encodeURIComponent(CURRENT_GUILD_SLUG)+'&pin='+encodeURIComponent(pin)+'&t='+Date.now();
+  const url=LICHTLOOT_API_URL+'?action=getCharactersByPin&guild='+encodeURIComponent(currentActiveGuildSlug())+'&pin='+encodeURIComponent(pin)+'&t='+Date.now();
   const response=await fetch(url);
   const data=await response.json();
   const rawChars=data.characters || data.entries || data.chars || [];
 
   if(!data.success || !rawChars.length){
-    localStorage.removeItem(PLAYER_LOGIN_STORAGE_KEY);
-    sessionStorage.removeItem(PLAYER_LOGIN_STORAGE_KEY);
+    const key=playerLoginStorageKey();
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
     if(status) status.innerHTML='<span class="bad">Dieser SpielerLogin wurde nicht gefunden.</span>';
     if(charsBox) charsBox.innerHTML='<span class="bad">Keine Charaktere gefunden.</span>';
     return false;
   }
 
-  localStorage.setItem(PLAYER_LOGIN_STORAGE_KEY,pin);
-  sessionStorage.setItem(PLAYER_LOGIN_STORAGE_KEY,pin);
+  localStorage.setItem(playerLoginStorageKey(),pin);
+  sessionStorage.setItem(playerLoginStorageKey(),pin);
 
   if(login) login.classList.add('hidden');
   if(dash) dash.classList.remove('hidden');
@@ -4536,6 +4628,7 @@ async function homePlayerLogin(){
   if(status) status.innerHTML='<span class="warn">SpielerLogin wird geprüft …</span>';
 
   try{
+    await activateGuildFromInput("homeGuildPin");
     const ok=await loadDashboardForPin(pin);
     if(ok && status) status.innerHTML='<span class="ok">✓ SpielerLogin aktiv.</span>';
   }catch(error){
@@ -4560,6 +4653,7 @@ document.addEventListener('DOMContentLoaded',async function(){
   hideGuildGate();
   hideGuildConfig();
   applyGuildBrand(guild || {slug:CURRENT_GUILD_SLUG});
+  syncGuildInputs(guild?.name || activeGuildDisplayName());
   const saved=getSavedPlayerLogin();
   if(saved){
     const field=document.getElementById('homePlayerPin');
