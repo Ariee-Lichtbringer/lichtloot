@@ -722,6 +722,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .raid-helper-panel,
 .raid-panel,
 .player-panel,
+.layout-panel,
 .p0-panel,
 .issue-panel{background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56))}
 
@@ -730,6 +731,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .raid-helper-panel{border-color:rgba(var(--blue-rgb),.24)}
 .raid-panel{border-color:rgba(var(--gold-rgb),.22)}
 .player-panel{border-color:rgba(var(--gold-rgb),.16)}
+.layout-panel{border-color:rgba(var(--blue-rgb),.30)}
 .p0-panel{border-color:rgba(var(--gold-rgb),.20)}
 .issue-panel{border-color:rgba(var(--gold-rgb),.20)}
 
@@ -888,11 +890,13 @@ body.guild-locked .auth-panel .btn{
 
 .auth-panel .field label,
 .create-panel .field label,
-.raid-helper-panel .field label{color:var(--gold)}
+.raid-helper-panel .field label,
+.layout-panel .field label{color:var(--gold)}
 .create-panel summary,
 .raid-helper-panel summary,
 .p0-panel summary,
 .issue-panel summary,
+.layout-panel summary,
 .raid-panel summary,
 .player-panel summary{color:var(--gold)}
 
@@ -990,6 +994,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .raid-helper-panel summary,
 .p0-panel summary,
 .issue-panel summary,
+.layout-panel summary,
 .worldbuff-panel summary,
 .raid-panel summary,
 .player-panel summary{
@@ -1003,6 +1008,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .raid-helper-panel summary::-webkit-details-marker,
 .p0-panel summary::-webkit-details-marker,
 .issue-panel summary::-webkit-details-marker,
+.layout-panel summary::-webkit-details-marker,
 .worldbuff-panel summary::-webkit-details-marker,
 .raid-panel summary::-webkit-details-marker,
 .player-panel summary::-webkit-details-marker,
@@ -1012,6 +1018,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .raid-helper-panel summary::after,
 .p0-panel summary::after,
 .issue-panel summary::after,
+.layout-panel summary::after,
 .worldbuff-panel summary::after,
 .raid-panel summary::after,
 .player-panel summary::after,
@@ -1026,6 +1033,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .raid-helper-panel[open] summary::after,
 .p0-panel[open] summary::after,
 .issue-panel[open] summary::after,
+.layout-panel[open] summary::after,
 .worldbuff-panel[open] summary::after,
 .raid-panel[open] summary::after,
 .player-panel[open] summary::after,
@@ -1035,6 +1043,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .raid-helper-body,
 .p0-panel-body,
 .issue-panel-body,
+.layout-panel-body,
 .worldbuff-panel-body,
 .raid-panel-body,
 .player-panel-body,
@@ -4126,6 +4135,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
+      <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
       <div class="side-group collapsed lichtloot-admin-only" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
@@ -4798,6 +4808,20 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     </div>
   </details>
 
+  <details id="lootLayoutPanel" class="panel layout-panel" ontoggle="if(this.open) renderLootLayoutPanel()">
+    <summary>Layout bearbeiten</summary>
+    <div class="layout-panel-body">
+      <div class="section-head compact">
+        <div>
+          <h3>Gildenoptik</h3>
+          <p>Logo, Farben, Hintergrund und Raid-Kacheln für diese Gilde ändern.</p>
+        </div>
+        <button class="small-btn good" type="button" onclick="saveLootLayoutPanel()">Speichern</button>
+      </div>
+      <div id="lootLayoutPanelContent" class="create-result">Layout laden.</div>
+    </div>
+  </details>
+
   <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
     <summary>Loganalysen</summary>
     <div class="log-analysis-body">
@@ -5118,6 +5142,15 @@ function applyGuildThemeColor(cssName, rgbName, value){
   if(rgb) document.documentElement.style.setProperty(rgbName, rgb);
 }
 
+function applyRaidLayoutImages(layout){
+  const images = layout && typeof layout === "object" ? layout.raidImages : null;
+  if(!images || typeof images !== "object") return;
+  Object.keys(images).forEach(key => {
+    const value = String(images[key] || "").trim();
+    if(value && RAID_IMAGES[key]) RAID_IMAGES[key] = value;
+  });
+}
+
 function getCurrentGuildBrand(){
   const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
   return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
@@ -5168,6 +5201,7 @@ function applyGuildBrand(){
   document.title = brand.lootName + " - Gildenleitung";
   applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
   applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
+  applyRaidLayoutImages(guild?.layout);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
@@ -5680,6 +5714,11 @@ function openGuildApplicationsPanel(){
   loadGuildApplicationsPanel();
 }
 
+function openLootLayoutPanel(){
+  openDetailsPanel("lootLayoutPanel");
+  renderLootLayoutPanel();
+}
+
 function openLogAnalysisPanel(){
   openDetailsPanel("logAnalysisPanel");
 }
@@ -5701,6 +5740,97 @@ function filterOpenRaids(){
   if(filter) filter.value = "geöffnet";
   openRaidPanel();
   renderRaids();
+}
+
+function layoutFieldValue(id){
+  return String(document.getElementById(id)?.value || "").trim();
+}
+
+function renderLootLayoutPanel(){
+  const box = document.getElementById("lootLayoutPanelContent");
+  if(!box) return;
+  const guild = currentGuildInfo || {};
+  const layout = guild.layout || {};
+  const raidImages = layout.raidImages || {};
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  box.innerHTML = `
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px">
+      <div class="card">
+        <h3>Logo & Hintergrund</h3>
+        <div class="field">
+          <label>Logo-URL</label>
+          <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
+        </div>
+        <div class="field">
+          <label>Hintergrund-URL</label>
+          <input id="layoutBackgroundUrl" value="${escapeAttr(guild.backgroundUrl || "")}" placeholder="images/back.jpeg">
+        </div>
+      </div>
+      <div class="card">
+        <h3>Farben</h3>
+        <div class="field">
+          <label>Hauptfarbe</label>
+          <input id="layoutPrimaryColor" type="color" value="${escapeAttr(guild.primaryColor || "#facc15")}">
+        </div>
+        <div class="field">
+          <label>Akzentfarbe</label>
+          <input id="layoutAccentColor" type="color" value="${escapeAttr(guild.accentColor || "#60a5fa")}">
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Bilder für Raid-Kacheln</h3>
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
+        ${raidKeys.map(key => {
+          const option = RAID_OPTIONS[key] || {};
+          const value = raidImages[key] || RAID_IMAGES[key] || "";
+          return `
+            <div class="field">
+              <label>${escapeHtml(option.name || key.toUpperCase())}</label>
+              <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="images/raid-templates/${escapeAttr(key)}.jpg">
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+    <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
+  `;
+}
+
+async function saveLootLayoutPanel(){
+  const status = document.getElementById("lootLayoutStatus");
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  const raidImages = {};
+  raidKeys.forEach(key => {
+    raidImages[key] = layoutFieldValue("layoutRaidImage_" + key);
+  });
+  const payload = {
+    action:"updateGuildConfig",
+    guild:CURRENT_GUILD_SLUG,
+    logoUrl:layoutFieldValue("layoutLogoUrl"),
+    backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
+    primaryColor:layoutFieldValue("layoutPrimaryColor"),
+    accentColor:layoutFieldValue("layoutAccentColor"),
+    layout:JSON.stringify({ raidImages })
+  };
+  if(status) status.textContent = "Layout wird gespeichert ...";
+  try{
+    const result = await railwayWrite(payload);
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Layout konnte nicht gespeichert werden.")}</span>`;
+      return;
+    }
+    currentGuildInfo = result.guild || currentGuildInfo || {};
+    applyGuildBrand();
+    renderAll();
+    renderLootLayoutPanel();
+    const savedStatus = document.getElementById("lootLayoutStatus");
+    if(savedStatus) savedStatus.innerHTML = '<span class="ok">✓ Layout gespeichert.</span>';
+    setStatus("Layout gespeichert.", "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Layout konnte nicht gespeichert werden.")}</span>`;
+    setStatus(error.message || "Layout konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function clearRaidFilters(shouldRender = true){
