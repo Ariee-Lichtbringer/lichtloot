@@ -1353,8 +1353,13 @@ body.random-raidlead .internal-nav-link{
 
 <body>
 <script>
-if(new URLSearchParams(window.location.search).get("leadPin") || new URLSearchParams(window.location.search).get("raidleadPin")){
+{
+  const raidleadBootParams = new URLSearchParams(window.location.search);
+  const raidleadBootMode = String(raidleadBootParams.get("mode") || raidleadBootParams.get("view") || "").toLowerCase();
+  const raidleadBootRandom = raidleadBootParams.get("random") === "1" || raidleadBootMode === "random";
+  if(raidleadBootRandom){
   document.body.classList.add("random-raidlead");
+  }
 }
 </script>
 <div class="app-frame">
@@ -1584,8 +1589,10 @@ function raidPinEnter(event){
 function checkLogin(){
   const params = new URLSearchParams(window.location.search);
   const urlLeadPin = (params.get("leadPin") || params.get("raidleadPin") || "").trim();
+  const urlMode = String(params.get("mode") || params.get("view") || "").toLowerCase();
+  const isRandomRaidleadLink = params.get("random") === "1" || urlMode === "random";
   if(urlLeadPin){
-    document.body.classList.add("random-raidlead");
+    document.body.classList.toggle("random-raidlead", isRandomRaidleadLink);
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadPrioPin",urlLeadPin);
