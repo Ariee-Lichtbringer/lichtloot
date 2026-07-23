@@ -912,7 +912,7 @@ function buildLootSlug(guildName, lootName) {
 async function listGuilds() {
   const result = await query(
     `select g.slug, g.name, g.server,
-            coalesce(nullif(g.name, ''), g.slug) as guild_pin,
+            case when g.slug = 'lichtloot' then 'Lichtbringer' else coalesce(nullif(g.name, ''), g.slug) end as guild_pin,
             g.logo_url, g.background_url, g.created_at,
             coalesce(gs.points_label, 'P0/P0+') as points_label,
             coalesce(gs.primary_color, '#facc15') as primary_color,
@@ -1659,6 +1659,7 @@ async function findCharacter(guildId, charName, server) {
 
 async function getCharactersByPin(guildId, pin) {
   const normalizedPin = normalizePin(pin);
+  await ensureCrossGuildPlayerLogin(guildId, normalizedPin);
   const playerResult = await query(
     "select id, is_blocked, blocked_reason, approval_status from players where guild_id = $1 and player_pin = $2 limit 1",
     [guildId, normalizedPin]
@@ -1698,6 +1699,69 @@ async function getCharactersByPin(guildId, pin) {
     [guildId, normalizedPin]
   );
   return result.rows.map(normalizeCharacter);
+}
+
+async function ensureCrossGuildPlayerLogin(guildId, pin) {
+  const normalizedPin = normalizePin(pin);
+  if (!normalizedPin) return null;
+
+  const local = await query(
+    "select id from players where guild_id = $1 and player_pin = $2 limit 1",
+    [guildId, normalizedPin]
+  );
+  if (local.rows.length) return local.rows[0];
+
+  const source = await query(
+    `select p.id, p.player_pin, p.security_question, p.security_answer
+     from players p
+     where p.guild_id <> $1
+       and p.player_pin = $2
+       and coalesce(p.is_blocked, false) = false
+       and coalesce(p.approval_status, 'approved') = 'approved'
+     order by p.created_at asc
+     limit 1`,
+    [guildId, normalizedPin]
+  );
+  const sourcePlayer = source.rows[0];
+  if (!sourcePlayer) return null;
+
+  const sourceCharacters = await query(
+    `select name, server, class_name, is_main
+     from characters
+     where player_id = $1
+     order by is_main desc, created_at asc, name asc`,
+    [sourcePlayer.id]
+  );
+  if (!sourceCharacters.rows.length) return null;
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const playerResult = await client.query(
+      `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
+       values ($1, $2, $3, $4, 'approved')
+       on conflict (guild_id, player_pin) do update
+         set updated_at = now()
+       returning id, player_pin`,
+      [guildId, normalizedPin, sourcePlayer.security_question || null, sourcePlayer.security_answer || null]
+    );
+    const player = playerResult.rows[0];
+    for (const character of sourceCharacters.rows) {
+      await client.query(
+        `insert into characters (player_id, name, server, class_name, is_main)
+         values ($1, $2, $3, $4, $5)
+         on conflict do nothing`,
+        [player.id, character.name, character.server, character.class_name, Boolean(character.is_main)]
+      );
+    }
+    await client.query("commit");
+    return player;
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function getPlayerCharacters(guildId, pin) {
@@ -14547,6 +14611,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      from prios pr
      join raids r on r.id = pr.raid_id
      join characters c on c.id = pr.character_id
+     join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
      where ${raidClause}`,
     values
