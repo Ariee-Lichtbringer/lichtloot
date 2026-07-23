@@ -2242,6 +2242,11 @@ body.raid-create-open:before{
 
   <div id="lichtlootPriosSection" class="lichtloot-section">
     <div class="myprios-form">
+      <div>
+        <label>GildenPIN</label>
+        <input id="myGuildPin" type="text" placeholder="GildenPIN" onkeydown="myPriosEnter(event)">
+      </div>
+      <button class="tool-btn" onclick="openGuildByPin()">Gilde öffnen</button>
       <div style="grid-column:1 / span 2">
         <label>SpielerPin</label>
         <input id="myPriosPin" type="password" placeholder="SpielerPin eingeben" onkeydown="myPriosEnter(event)">
@@ -4687,6 +4692,71 @@ function getStoredLichtLootPlayerPin(){
   return "";
 }
 
+function getStoredGuildPin(){
+  try{
+    return localStorage.getItem("lichtlootGuildPin") || sessionStorage.getItem("lichtlootGuildPin") || "";
+  }catch(error){
+    return "";
+  }
+}
+
+function rememberGuildPin(pin){
+  const cleanPin=String(pin || "").trim().toUpperCase();
+  if(!cleanPin) return;
+  try{ localStorage.setItem("lichtlootGuildPin", cleanPin); }catch(error){}
+  try{ sessionStorage.setItem("lichtlootGuildPin", cleanPin); }catch(error){}
+}
+
+function hydrateGuildPin(){
+  const field=document.getElementById("myGuildPin");
+  if(!field) return "";
+  const saved=getStoredGuildPin();
+  if(saved && !field.value.trim()) field.value=saved;
+  return field.value.trim();
+}
+
+async function resolveGuildPin(pin){
+  const cleanPin=String(pin || "").trim().toUpperCase();
+  if(!cleanPin) return null;
+  const response=await fetch(LICHTLOOT_API_URL + "?action=resolveGuildByPin&guildPin=" + encodeURIComponent(cleanPin) + "&t=" + Date.now(), {cache:"no-store"});
+  const result=await response.json();
+  if(!result.success) throw new Error(result.error || "GildenPIN wurde nicht gefunden.");
+  return result.guild || null;
+}
+
+async function openGuildByPin(){
+  const field=document.getElementById("myGuildPin");
+  const status=document.getElementById("myPriosStatus") || document.getElementById("dashboardMyStatus");
+  const pin=String(field && field.value || "").trim().toUpperCase();
+  if(!pin){
+    if(status) status.innerHTML='<span class="bad">Bitte GildenPIN eingeben.</span>';
+    return false;
+  }
+  if(status) status.innerHTML='<span class="warn">Gilde wird gesucht …</span>';
+  try{
+    const guild=await resolveGuildPin(pin);
+    if(!guild || !guild.slug) throw new Error("GildenPIN wurde nicht gefunden.");
+    rememberGuildPin(pin);
+    const playerPinField=document.getElementById("myPriosPin") || document.getElementById("dashboardPlayerPin");
+    const playerPin=String(playerPinField && playerPinField.value || "").trim().toUpperCase();
+    if(playerPin){
+      try{
+        localStorage.setItem("lichtlootPlayerPin_" + guild.slug, playerPin);
+        sessionStorage.setItem("lichtlootPlayerPin_" + guild.slug, playerPin);
+      }catch(error){}
+    }
+    if(guild.slug !== CURRENT_GUILD_SLUG){
+      window.location.href = "start.html?guild=" + encodeURIComponent(guild.slug);
+      return "redirected";
+    }
+    if(status) status.innerHTML='<span class="ok">✓ Gilde geladen: '+safeHtml(guild.name || guild.slug)+'</span>';
+    return true;
+  }catch(error){
+    if(status) status.innerHTML='<span class="bad">'+safeHtml(error.message || "GildenPIN wurde nicht gefunden.")+'</span>';
+    return false;
+  }
+}
+
 function lichtLootPlayerPinStorageKeys(){
   const keys=[];
   if(typeof CURRENT_GUILD_SLUG!=="undefined" && CURRENT_GUILD_SLUG) keys.push("lichtlootPlayerPin_" + CURRENT_GUILD_SLUG);
@@ -4735,6 +4805,7 @@ async function copyStartPoLogin(){
 
 function hydrateDashboardPlayerPin(){
   const saved=getStoredLichtLootPlayerPin();
+  hydrateGuildPin();
   const dashboard=document.getElementById("dashboardPlayerPin");
   const my=document.getElementById("myPriosPin");
   const twink=document.getElementById("twinkPlayerPin");
@@ -5824,6 +5895,11 @@ function showLichtLootTab(tab){
 
 function myPriosEnter(event){
   if(event.key === "Enter"){
+    const guildPin=document.getElementById("myGuildPin");
+    if(guildPin && guildPin.value.trim()){
+      openGuildByPin();
+      return;
+    }
     const select=document.getElementById("myLichtlootCharSelect");
     if(select && select.value){
       loadMyPrios();
@@ -5909,10 +5985,16 @@ function sortRaidPriosWithOwnMainFirst(prios, entry){
 
 async function loadLichtLootCharacters(){
   const pin=document.getElementById("myPriosPin").value.trim();
+  const guildPin=document.getElementById("myGuildPin");
   const status=document.getElementById("myPriosStatus");
   const select=document.getElementById("myLichtlootCharSelect");
   const charField=document.getElementById("myPriosChar");
   const results=document.getElementById("myPriosResults");
+
+  if(guildPin && guildPin.value.trim()){
+    const guildResult=await openGuildByPin();
+    if(guildResult === "redirected") return;
+  }
 
   if(!pin){
     status.innerHTML='<span class="bad">Bitte zuerst deinen SpielerPin eingeben.</span>';
