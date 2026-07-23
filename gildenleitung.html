@@ -5746,11 +5746,13 @@ function layoutFieldValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
-const LICHTLOOT_BOT_CLIENT_ID = "1510677346787659777";
+const LICHTBUFF_BOT_CLIENT_ID = "1510677346787659777";
+const PO_ANMELDER_BOT_CLIENT_ID = "";
 
-function lichtlootBotInviteUrl(){
+function discordBotInviteUrl(clientId){
+  if(!String(clientId || "").trim()) return "";
   const params = new URLSearchParams({
-    client_id: LICHTLOOT_BOT_CLIENT_ID,
+    client_id: String(clientId || "").trim(),
     permissions: "388160",
     scope: "bot applications.commands"
   });
@@ -5762,14 +5764,36 @@ function lichtlootBotInviteUrl(){
   return "https://discord.com/oauth2/authorize?" + params.toString();
 }
 
-async function copyLichtlootBotInvite(){
+function lichtbuffBotInviteUrl(){
+  return discordBotInviteUrl(LICHTBUFF_BOT_CLIENT_ID);
+}
+
+function poAnmelderBotInviteUrl(){
+  return discordBotInviteUrl(PO_ANMELDER_BOT_CLIENT_ID);
+}
+
+async function copyBotInviteLink(kind){
   const status = document.getElementById("lootLayoutStatus");
+  const url = kind === "po" ? poAnmelderBotInviteUrl() : lichtbuffBotInviteUrl();
+  if(!url){
+    if(status) status.innerHTML = '<span class="bad">PO-Anmelder-Bot Client-ID fehlt noch.</span>';
+    setStatus("PO-Anmelder-Bot Client-ID fehlt noch.", "bad");
+    return;
+  }
   try{
-    await navigator.clipboard.writeText(lichtlootBotInviteUrl());
+    await navigator.clipboard.writeText(url);
     if(status) status.innerHTML = '<span class="ok">✓ Bot-Einladungslink kopiert.</span>';
   }catch(error){
     if(status) status.innerHTML = '<span class="bad">Link konnte nicht kopiert werden.</span>';
   }
+}
+
+function renderBotInviteButton(kind, label){
+  const url = kind === "po" ? poAnmelderBotInviteUrl() : lichtbuffBotInviteUrl();
+  if(!url){
+    return `<button class="small-btn ghost" type="button" onclick="copyBotInviteLink('${escapeAttr(kind)}')">${escapeHtml(label)}</button>`;
+  }
+  return `<a class="small-btn good" href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
 }
 
 function renderLootLayoutPanel(){
@@ -5805,13 +5829,29 @@ function renderLootLayoutPanel(){
       </div>
     </div>
     <div class="card" style="margin-top:12px">
-      <h3>LichtLoot-Bot in Discord einladen</h3>
-      <p class="muted">Lade den Bot in euren Discord ein. Danach muss der Bot in alle Channel, in denen PO-Anmelder, Worldbuffs, Hordenbuffs, Raidposts oder Sicherungen laufen sollen.</p>
-      <div class="button-row">
-        <a class="small-btn good" href="${escapeAttr(lichtlootBotInviteUrl())}" target="_blank" rel="noopener">Bot einladen</a>
-        <button class="small-btn ghost" type="button" onclick="copyLichtlootBotInvite()">Invite-Link kopieren</button>
+      <h3>Discord-Bots einladen</h3>
+      <p class="muted">Für neue Gilden müssen beide Bots in den Discord eingeladen werden. Danach die Bots bitte in die gewünschten privaten Channel aufnehmen und dort freigeben.</p>
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
+        <div class="card">
+          <h3>Lichtbuff-Bot</h3>
+          <p class="muted">Postet und aktualisiert Worldbuffs, Hordenbuffs, Raidposts, Loganalysen und Sicherungen. Dieser Bot liest die Bot-Warteschlange und schreibt nur in die Channel der jeweiligen Gilde.</p>
+          <div class="button-row">
+            ${renderBotInviteButton("lichtbuff", "Lichtbuff-Bot einladen")}
+            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('lichtbuff')">Link kopieren</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>PO-Anmelder-Bot</h3>
+          <p class="muted">Erstellt die PO-Anmelder im Discord, zeigt Item-Auswahl und speichert die freigegebenen Spieler-Einträge passend zur Gilde. Dieser Bot ist nur für PO-Anmeldungen zuständig.</p>
+          <div class="button-row">
+            ${renderBotInviteButton("po", "PO-Anmelder-Bot einladen")}
+            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('po')">Link kopieren</button>
+          </div>
+          ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom PO-Anmelder-Bot eingetragen werden.</p>'}
+        </div>
       </div>
-      <p class="muted">Wichtig bei privaten Channeln: dem Bot bitte „Channel ansehen“, „Nachrichten senden“, „Nachrichtenverlauf lesen“, „Links einbetten“, „Dateien anhängen“, „Reaktionen nutzen“ und für Aufräumen/Updates „Nachrichten verwalten“ erlauben.</p>
+      <p class="muted">Benötigte Channel-Rechte: „Channel ansehen“, „Nachrichten senden“, „Nachrichtenverlauf lesen“, „Links einbetten“, „Dateien anhängen“, „Reaktionen nutzen“ und für Aufräumen/Updates „Nachrichten verwalten“.</p>
+      <p class="muted">Falls Discord „Integration requires code grant“ zeigt: In der jeweiligen Discord Developer App unter OAuth2 die Option „Requires OAuth2 Code Grant“ ausschalten.</p>
     </div>
     <div class="card" style="margin-top:12px">
       <h3>Bilder für Raid-Kacheln</h3>
