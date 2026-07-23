@@ -448,6 +448,16 @@ function resolveGuildSlug(value) {
   return slug;
 }
 
+function requireExplicitGuildSlug(value) {
+  const raw = clean(value);
+  if (!raw) {
+    const error = new Error("Gilde fehlt. Bitte Seite mit korrektem Gildenlink öffnen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return resolveGuildSlug(raw);
+}
+
 function slugify(value) {
   return clean(value)
     .toLowerCase()
@@ -11927,7 +11937,7 @@ async function createRaidForBot({ guildId, query: params }) {
       p0PlusFreigabe: params.p0PlusFreigabe || "geöffnet",
       raidHelperEnabled: clean(params.raidHelperEnabled || params.raidhelperEnabled || "false"),
       createdBy: clean(params.createdBy || params.erstelltVon) || "Gildenleitung",
-      guildName: clean(params.guildName || params.gilde || params.guild) || "Lichtbringer"
+      guildName: clean(params.guildName || params.gilde || params.displayGuild || params.guild)
     }
   });
 }
@@ -16970,18 +16980,21 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "createRaid") {
-      const created = await createRaid({ guildId: guild.id, query: req.query });
-      return res.json({ ...created, guild: guild.slug });
+      const writeGuild = await requireGuild(requireExplicitGuildSlug(req.query.guild));
+      const created = await createRaid({ guildId: writeGuild.id, query: req.query });
+      return res.json({ ...created, guild: writeGuild.slug });
     }
 
     if (action === "lichtbotCreateRaid") {
-      const created = await createRaidForBot({ guildId: guild.id, query: req.query });
-      return res.json({ ...created, guild: guild.slug });
+      const writeGuild = await requireGuild(requireExplicitGuildSlug(req.query.guild));
+      const created = await createRaidForBot({ guildId: writeGuild.id, query: req.query });
+      return res.json({ ...created, guild: writeGuild.slug });
     }
 
     if (action === "createRandomRaid") {
-      const created = await createRandomRaid({ guildId: guild.id, query: req.query });
-      return res.json({ ...created, guild: guild.slug });
+      const writeGuild = await requireGuild(requireExplicitGuildSlug(req.query.guild));
+      const created = await createRandomRaid({ guildId: writeGuild.id, query: req.query });
+      return res.json({ ...created, guild: writeGuild.slug });
     }
 
     if (action === "saveRaidSignup") {
@@ -17386,7 +17399,7 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
-    const guild = await requireGuild(resolveGuildSlug(postParams.guild));
+    const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
 
     if (action === "lichtbotSaveDiscordChannels") {
       const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
