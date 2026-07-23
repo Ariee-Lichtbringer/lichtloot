@@ -11720,6 +11720,7 @@ async function createRaidRecord({ guildId, query: params }) {
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
+  const raidTime = clean(params.raidTime || params.uhrzeit) || null;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
   const status = normalizeStatus(params.status || "geschlossen");
@@ -11728,6 +11729,27 @@ async function createRaidRecord({ guildId, query: params }) {
   const createdBy =
     clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) ||
     (creatorLogin ? `SpielerLogin ${creatorLogin}` : "");
+
+  if (raidType && raidDate && raidTime) {
+    const existing = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and lower(raid_type) = any($2)
+         and raid_date = $3
+         and coalesce(raid_time, '') = $4
+         and coalesce(status, '') <> 'archiviert'
+       order by
+         case when external_raid_id = $5 then 0 else 1 end,
+         case when raidhelper_enabled = true then 0 else 1 end,
+         created_at asc
+       limit 1`,
+      [guildId, raidTypeSearchValues(raidType), raidDate, raidTime, externalRaidId]
+    );
+    if (existing.rows[0] && existing.rows[0].external_raid_id !== externalRaidId) {
+      return { success: true, reused: true, ...normalizeRaidRow(existing.rows[0]) };
+    }
+  }
 
   const result = await query(
     `insert into raids (
@@ -11787,7 +11809,7 @@ async function createRaidRecord({ guildId, query: params }) {
       externalRaidId,
       prioPin || null,
       leadPin || null,
-      clean(params.raidTime || params.uhrzeit) || null,
+      raidTime,
       clean(params.guildName || params.displayGuild || params.gilde || params.guild) || null,
       clean(params.playerLink) || null,
       status,
