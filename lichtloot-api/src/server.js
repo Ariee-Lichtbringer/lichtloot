@@ -15100,6 +15100,227 @@ async function restoreLootItemsFromStaticDataOnce() {
   return { success: true, skipped: true, source: "railway-only" };
 }
 
+const ONY_LOOT_METADATA_BACKFILL = [
+  {
+    itemId: "18205",
+    name: "Eskhandars Halsband",
+    quality: "Episch",
+    iconName: "inv_belt_12",
+    slot: "Hals",
+    type: "Verschiedenes",
+    boss: "Onyxia",
+    statsText: "Hals | +17 Ausdauer | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Seele des Eskhandar (0/4) | Eskhandars rechte Klaue | Eskhandars linke Klaue | Eskhandars Pelz | (4) Set : 1% Chance bei einem kritischen Nahkampftreffer den Geist von Eskhandar herbeizurufen, um euch für 2 Min. im Kampf zu unterstützen. (Procchance: 1%, 2Min. Abklingzeit)",
+    tooltip: "Eskhandars Halsband | Gegenstandsstufe 71 | Wird beim Aufheben gebunden | Einzigartig | Hals | +17 Ausdauer | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einem Angriff auszuweichen, um 1%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Seele des Eskhandar (0/4) | Eskhandars rechte Klaue | Eskhandars linke Klaue | Eskhandars Pelz | Eskhandars Halsband | (4) Set : 1% Chance bei einem kritischen Nahkampftreffer den Geist von Eskhandar herbeizurufen, um euch für 2 Min. im Kampf zu unterstützen. (Procchance: 1%, 2Min. Abklingzeit) | Verkaufspreis: 3 32 87"
+  },
+  {
+    itemId: "18813",
+    name: "Ring der Bindung",
+    quality: "Episch",
+    iconName: "inv_jewelry_ring_13",
+    slot: "Finger",
+    type: "Verschiedenes",
+    boss: "Onyxia",
+    statsText: "Finger | +10 Arkanwiderstand | +10 Feuerwiderstand | +10 Naturwiderstand | +10 Frostwiderstand | +10 Schattenwiderstand | Anlegen: Verteidigung +4.",
+    tooltip: "Ring der Bindung | Gegenstandsstufe 73 | Wird beim Aufheben gebunden | Einzigartig | Finger | 60 Rüstung | +10 Arkanwiderstand | +10 Feuerwiderstand | +10 Naturwiderstand | +10 Frostwiderstand | +10 Schattenwiderstand | Benötigt Stufe 60 | Anlegen: Verteidigung +4. | Verkaufspreis: 8 91 3"
+  },
+  {
+    itemId: "17078",
+    name: "Saphirontuch",
+    quality: "Episch",
+    iconName: "inv_misc_cape_16",
+    slot: "Rücken",
+    type: "Stoff",
+    boss: "Onyxia",
+    statsText: "Rücken | +10 Ausdauer | +17 Intelligenz | +6 Arkanwiderstand | +6 Frostwiderstand | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 14.",
+    tooltip: "Saphirontuch | Gegenstandsstufe 72 | Wird beim Aufheben gebunden | Rücken | 55 Rüstung | +10 Ausdauer | +17 Intelligenz | +6 Arkanwiderstand | +6 Frostwiderstand | Benötigt Stufe 60 | Anlegen: Erhöht durch Zauber und magische Effekte zugefügten Schaden und Heilung um bis zu 14. | Verkaufspreis: 3 72 3"
+  },
+  {
+    itemId: "17064",
+    name: "Splitter der Schuppe",
+    quality: "Episch",
+    iconName: "inv_misc_monsterscales_15",
+    slot: "Schmuck",
+    type: "Verschiedenes",
+    boss: "Onyxia",
+    statsText: "Schmuck | Anlegen: Stellt alle 5 Sek. 16 Punkt(e) Mana wieder her. | Scherbe der Götter (0/2) | Splitter der Flamme | (2) Set : +10 zu allen Widerstandsarten.",
+    tooltip: "Splitter der Schuppe | Gegenstandsstufe 71 | Wird beim Aufheben gebunden | Einzigartig | Schmuck | Benötigt Stufe 60 | Anlegen: Stellt alle 5 Sek. 16 Punkt(e) Mana wieder her. | Scherbe der Götter (0/2) | Splitter der Flamme | Splitter der Schuppe | (2) Set : +10 zu allen Widerstandsarten. | Verkaufspreis: 4 59 14"
+  },
+  {
+    itemId: "17068",
+    name: "Todesbringer",
+    quality: "Episch",
+    iconName: "inv_axe_09",
+    slot: "Einhändig",
+    type: "Axt",
+    boss: "Onyxia",
+    statsText: "Einhändig Axt | 114 - 213 Schaden Tempo 2.90 | (56.38 Schaden pro Sekunde) | Trefferchance: Schleudert einen Schattenblitz auf den Feind und verursacht 110 bis 140 Punkt(e) Schattenschaden.",
+    tooltip: "Todesbringer | Gegenstandsstufe 75 | Wird beim Aufheben gebunden | Einhändig Axt | 114 - 213 Schaden Tempo 2.90 | (56.38 Schaden pro Sekunde) | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Trefferchance: Schleudert einen Schattenblitz auf den Feind und verursacht 110 bis 140 Punkt(e) Schattenschaden. | Verkaufspreis: 13 48 32"
+  },
+  {
+    itemId: "17075",
+    name: "Vis'kag der Blutvergießer",
+    quality: "Episch",
+    iconName: "inv_sword_18",
+    slot: "Einhändig",
+    type: "Schwert",
+    boss: "Onyxia",
+    statsText: "Einhändig Schwert | 100 - 187 Schaden Tempo 2.60 | (55.19 Schaden pro Sekunde) | Trefferchance: Fügt eine tödliche Wunde und 240 Punkt(e) Schaden zu.",
+    tooltip: "Vis'kag der Blutvergießer | Gegenstandsstufe 74 | Wird beim Aufheben gebunden | Einzigartig | Einhändig Schwert | 100 - 187 Schaden Tempo 2.60 | (55.19 Schaden pro Sekunde) | Haltbarkeit 105 / 105 | Benötigt Stufe 60 | Trefferchance: Fügt eine tödliche Wunde und 240 Punkt(e) Schaden zu. | Verkaufspreis: 13 52 66"
+  },
+  {
+    itemId: "17067",
+    name: "Zauberfoliant des uralten Grundsteins",
+    quality: "Episch",
+    iconName: "inv_misc_book_07",
+    slot: "Schildhand",
+    type: "Verschiedenes",
+    boss: "Onyxia",
+    statsText: "In Schildhand geführt | +10 Ausdauer | +15 Intelligenz | +11 Willenskraft | Benutzen: Beschwört ein Skelett, das Euch 1 Min. lang beschützt. (15 Min Abklingzeit)",
+    tooltip: "Zauberfoliant des uralten Grundsteins | Gegenstandsstufe 76 | Wird beim Aufheben gebunden | In Schildhand geführt | +10 Ausdauer | +15 Intelligenz | +11 Willenskraft | Benötigt Stufe 60 | Benutzen: Beschwört ein Skelett, das Euch 1 Min. lang beschützt. (15 Min Abklingzeit) | Verkaufspreis: 7 54 52"
+  },
+  {
+    itemId: "18713",
+    name: "Rhok'delar, Langbogen der uralten Bewahrer",
+    quality: "Episch",
+    iconName: "inv_weapon_bow_01",
+    slot: "Distanz",
+    type: "Bogen",
+    boss: "Onyxia",
+    statsText: "Distanz Bogen | 89 - 166 Schaden Tempo 2.90 | (43.97 Schaden pro Sekunde) | Klassen: Jäger | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +17 Distanzangriffskraft.",
+    tooltip: "Rhok'delar, Langbogen der uralten Bewahrer | Gegenstandsstufe 75 | Wird beim Aufheben gebunden | Einzigartig | Distanz Bogen | 89 - 166 Schaden Tempo 2.90 | (43.97 Schaden pro Sekunde) | Haltbarkeit 90 / 90 | Klassen: Jäger | Benötigt Stufe 60 | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%. | Anlegen: +17 Distanzangriffskraft."
+  },
+  {
+    itemId: "18423",
+    name: "Onyxias Kopf",
+    quality: "Episch",
+    iconName: "inv_misc_head_dragon_01",
+    slot: "",
+    type: "Quest",
+    boss: "Onyxia",
+    statsText: "Dieser Gegenstand startet eine Quest. | \"Der Kopf der Brutmutter des schwarzen Drachenschwarms\"",
+    tooltip: "Onyxias Kopf | Gegenstandsstufe 60 | Wird beim Aufheben gebunden | Einzigartig | Dieser Gegenstand startet eine Quest. | Benötigt Stufe 60 | \"Der Kopf der Brutmutter des schwarzen Drachenschwarms\""
+  },
+  {
+    itemId: "22388",
+    name: "Pläne: Gamaschen der Titanen",
+    quality: "Episch",
+    iconName: "inv_scroll_05",
+    slot: "",
+    type: "Rezept",
+    boss: "Onyxia",
+    statsText: "Benötigt Schmiedekunst (300) | Benötigt Rüstungsschmied | Benutzen: Lehrt Euch die Herstellung von Gamaschen der Titanen. | Gamaschen der Titanen | Beine Platte | +30 Stärke | Anlegen: Verbessert Eure Trefferchance um 2%. | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 1%.",
+    tooltip: "Pläne: Gamaschen der Titanen | Gegenstandsstufe 61 | Benötigt Schmiedekunst (300) | Benötigt Rüstungsschmied | Benutzen: Lehrt Euch die Herstellung von Gamaschen der Titanen."
+  },
+  {
+    itemId: "12717",
+    name: "Pläne: Löwenherzhelm",
+    quality: "Episch",
+    iconName: "inv_scroll_05",
+    slot: "",
+    type: "Rezept",
+    boss: "Onyxia",
+    statsText: "Benötigt Schmiedekunst (300) | Benötigt Rüstungsschmied | Benutzen: Lehrt Euch die Herstellung eines Löwenherzhelms. | Löwenherzhelm | Kopf Platte | +18 Stärke | Anlegen: Erhöht Eure Chance, einen kritischen Treffer zu erzielen, um 2%. | Anlegen: Verbessert Eure Trefferchance um 2%.",
+    tooltip: "Pläne: Löwenherzhelm | Gegenstandsstufe 61 | Benötigt Schmiedekunst (300) | Benötigt Rüstungsschmied | Benutzen: Lehrt Euch die Herstellung eines Löwenherzhelms."
+  },
+  {
+    itemId: "13493",
+    name: "Rezept: Großes Arkanelixier",
+    quality: "Ungewöhnlich",
+    iconName: "inv_scroll_06",
+    slot: "",
+    type: "Rezept",
+    boss: "Onyxia",
+    statsText: "Benötigt Alchimie (285) | Benutzen: Lehrt Euch die Herstellung eines großen Arkanelixiers. | Großes Arkanelixier | Benutzen: Erhöht die Schadenswirkung von Zaubern 1 Stunde lang um 35. (3 Sek. Abklingzeit)",
+    tooltip: "Rezept: Großes Arkanelixier | Gegenstandsstufe 57 | Benötigt Alchimie (285) | Benutzen: Lehrt Euch die Herstellung eines großen Arkanelixiers."
+  },
+  {
+    itemId: "13486",
+    name: "Rezept: Untod zu Wasser transmutieren",
+    quality: "Selten",
+    iconName: "inv_scroll_06",
+    slot: "",
+    type: "Rezept",
+    boss: "Onyxia",
+    statsText: "Benötigt Alchimie (275) | Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers.",
+    tooltip: "Rezept: Untod zu Wasser transmutieren | Gegenstandsstufe 55 | Benötigt Alchimie (275) | Benutzen: Lehrt Euch die Transmutation von Essenz des Untodes in Essenz des Wassers."
+  },
+  {
+    itemId: "16253",
+    name: "Formel: Brust - Große Werte",
+    quality: "Ungewöhnlich",
+    iconName: "inv_misc_note_01",
+    slot: "",
+    type: "Rezept",
+    boss: "Onyxia",
+    statsText: "Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man ein Teil der Brustrüstung dauerhaft so verzaubert, dass jedes der fünf Attribute um +4 erhöht wird.",
+    tooltip: "Formel: Brust - Große Werte | Gegenstandsstufe 62 | Benötigt Verzauberkunst (300) | Benutzen: Lehrt Euch, wie man ein Teil der Brustrüstung dauerhaft so verzaubert, dass jedes der fünf Attribute um +4 erhöht wird."
+  },
+  {
+    itemId: "4500",
+    name: "Reiserucksack",
+    quality: "Ungewöhnlich",
+    iconName: "inv_misc_bag_08",
+    slot: "Tasche",
+    type: "Behälter",
+    boss: "Onyxia",
+    statsText: "16 Platz Behälter",
+    tooltip: "Reiserucksack | Gegenstandsstufe 55 | 16 Platz Behälter | Verkaufspreis: 87 50"
+  }
+];
+
+async function applyOnyLootMetadataBackfillOnce() {
+  await ensureLootItemMetadataColumns();
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    let updated = 0;
+    for (const item of ONY_LOOT_METADATA_BACKFILL) {
+      const result = await client.query(
+        `update items
+         set quality = coalesce(nullif(quality, ''), $3),
+             icon_url = coalesce(nullif(icon_url, ''), $4),
+             slot = coalesce(nullif(slot, ''), $5),
+             type = coalesce(nullif(type, ''), $6),
+             boss = coalesce(nullif(boss, ''), $7),
+             stats_text = case
+               when coalesce(stats_text, '') = '' then $8
+               else stats_text
+             end,
+             tooltip = case
+               when coalesce(tooltip, '') = ''
+                 or lower(tooltip) = lower(name)
+                 or coalesce(stats_text, '') = ''
+               then $9
+               else tooltip
+             end
+         where lower(raid_type) = 'ony'
+           and item_id = $1
+           and lower(name) = lower($2)
+         returning id`,
+        [
+          item.itemId,
+          item.name,
+          item.quality,
+          item.iconName,
+          item.slot,
+          item.type,
+          item.boss,
+          item.statsText,
+          item.tooltip
+        ]
+      );
+      updated += result.rowCount || 0;
+    }
+    await client.query("commit");
+    return { success: true, source: "ony-metadata-backfill", checked: ONY_LOOT_METADATA_BACKFILL.length, updated };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function applyZgHakkariOffhandCorrectionOnce() {
   const markerKey = "zg-hakkari-same-name-distinct-ids-v2";
   const client = await pool.connect();
@@ -16220,7 +16441,8 @@ app.get("/api/apps-script", async (req, res, next) => {
       requireMasterCode(req.query.masterCode);
       await ensureLootItemMetadataColumns();
       const metadata = await importLootItemMetadata();
-      return res.json({ ...metadata, guild: guild.slug });
+      const onyBackfill = await applyOnyLootMetadataBackfillOnce();
+      return res.json({ ...metadata, onyBackfill, guild: guild.slug });
     }
 
     if (action === "getLootItems" || action === "guildGetLootItems") {
@@ -17198,4 +17420,7 @@ app.use((error, req, res, next) => {
 
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
+  applyOnyLootMetadataBackfillOnce()
+    .then(result => console.log(`Ony-Lootmetadaten geprüft: ${result.updated || 0}/${result.checked || 0} aktualisiert`))
+    .catch(error => console.warn("Ony-Lootmetadaten konnten nicht korrigiert werden:", error.message || error));
 });
