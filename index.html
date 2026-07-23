@@ -1979,6 +1979,9 @@ function syncGuildInputs(value){
 async function resolveGuildInputValue(value){
   const raw=String(value || "").trim();
   if(!raw) return { slug: currentActiveGuildSlug(), name: activeGuildDisplayName() };
+  if(raw.toLowerCase() === "lichtbringer"){
+    return { slug: "lichtloot", name: "Lichtbringer" };
+  }
   const response=await fetch(LICHTLOOT_API_URL+"?action=resolveGuildByPin&guildPin="+encodeURIComponent(raw)+"&t="+Date.now(), {cache:"no-store"});
   const result=await response.json().catch(() => ({}));
   if(!response.ok || !result.success || !result.guild?.slug){
