@@ -3519,9 +3519,68 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   return { success: true, synced, skippedOccupied };
 }
 
+async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "", kind = "backup" }) {
+  await ensureGuildDiscordConfigSchema();
+  await ensureDiscordChannelSchema();
+
+  const guildResult = await query(
+    `select slug, guild_name, loot_name
+     from guilds
+     where id = $1`,
+    [guildId]
+  );
+  const guild = guildResult.rows[0] || {};
+  const slug = clean(guild.slug).toLowerCase();
+  const defaultSlug = clean(defaultGuildSlug).toLowerCase() || "lichtloot";
+  const isDefaultGuild = !slug || slug === defaultSlug || slug === "lichtloot";
+  const terms = kind === "worldbuff"
+    ? ["worldbuff", "worldbuffs", "buff-backup", "buff-sicherung", "backup", "sicherung"]
+    : ["po-backup", "p0-backup", "po-sicherung", "p0-sicherung", "po+", "p0+", "backup", "sicherung"];
+
+  const channelResult = await query(
+    `select channel_id, channel_name, category_name
+     from (
+       select channel_id, channel_name, category_name, position,
+         case
+           when lower(coalesce(channel_name, '')) = any($2::text[]) then 0
+           when lower(coalesce(category_name, '')) = any($2::text[]) then 1
+           when lower(coalesce(channel_name, '')) like '%po%' and lower(coalesce(channel_name, '')) like '%backup%' then 2
+           when lower(coalesce(channel_name, '')) like '%p0%' and lower(coalesce(channel_name, '')) like '%backup%' then 2
+           when lower(coalesce(channel_name, '')) like '%sicherung%' then 3
+           when lower(coalesce(channel_name, '')) like '%backup%' then 4
+           when lower(coalesce(category_name, '')) like '%sicherung%' then 5
+           when lower(coalesce(category_name, '')) like '%backup%' then 6
+           else 99
+         end as backup_rank
+       from discord_bot_channels
+       where guild_id = $1
+         and can_send = true
+     ) ranked_channels
+     where backup_rank < 99
+     order by
+       backup_rank,
+       coalesce(position, 999999),
+       lower(channel_name)
+     limit 1`,
+    [guildId, terms]
+  );
+  const channelId = clean(channelResult.rows[0]?.channel_id);
+  if (channelId) return channelId;
+  return isDefaultGuild ? clean(envFallbackChannelId) : "";
+}
+
 async function queueWorldbuffBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  if (!worldbuffBackupChannelId) return { success: true, skipped: true, reason: "no_export_channel" };
+  const backupChannelId = await resolveGuildBackupChannelId({
+    guildId,
+    envFallbackChannelId: worldbuffBackupChannelId,
+    kind: "worldbuff"
+  });
+  if (!backupChannelId) {
+    const error = new Error("Kein Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den Backup-/Sicherungs-Channel einladen oder einen Channel mit 'backup' oder 'sicherung' im Namen anlegen.");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const days = clean(params.days || "all");
   const result = await getWorldbuffs({ guildId, query: { source: "railway", days } });
@@ -3553,7 +3612,7 @@ async function queueWorldbuffBackup({ guildId, query: params }) {
     guildId,
     type: "p0plus_transfer_export",
     payload: {
-      channelId: worldbuffBackupChannelId,
+      channelId: backupChannelId,
       backupKind: "worldbuff",
       days,
       createdDate: today,
@@ -14123,7 +14182,16 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
 }
 
 async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows }) {
-  if (!p0PlusTransferExportChannelId) return { success: true, skipped: true, reason: "no_export_channel" };
+  const backupChannelId = await resolveGuildBackupChannelId({
+    guildId,
+    envFallbackChannelId: p0PlusTransferExportChannelId,
+    kind: "p0plus"
+  });
+  if (!backupChannelId) {
+    const error = new Error("Kein PO+-Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den PO-Backup-/Sicherungs-Channel einladen oder einen Channel mit 'po-backup', 'p0-backup', 'backup' oder 'sicherung' im Namen anlegen.");
+    error.statusCode = 400;
+    throw error;
+  }
   const raidType = normalizeRaidType(raid?.raid_type || raid?.raid || "");
   const raidDate = raid?.raid_date ? formatCsvDateTime(raid.raid_date).slice(0, 10) : "";
   const fileSafeRaid = clean(raidType || "raid").toLowerCase().replace(/[^a-z0-9]+/g, "-") || "raid";
@@ -14133,7 +14201,7 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
     guildId,
     type: "p0plus_transfer_export",
     payload: {
-      channelId: p0PlusTransferExportChannelId,
+      channelId: backupChannelId,
       raid: raidType,
       raidName: raid?.name || raidType,
       raidDate,
