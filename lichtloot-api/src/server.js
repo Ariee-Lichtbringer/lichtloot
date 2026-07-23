@@ -910,13 +910,15 @@ function buildLootSlug(guildName, lootName) {
 }
 
 async function listGuilds() {
+  await ensureGuildLayoutSchema();
   const result = await query(
     `select g.slug, g.name, g.server,
             case when g.slug = 'lichtloot' then 'Lichtbringer' else coalesce(nullif(g.name, ''), g.slug) end as guild_pin,
             g.logo_url, g.background_url, g.created_at,
             coalesce(gs.points_label, 'P0/P0+') as points_label,
             coalesce(gs.primary_color, '#facc15') as primary_color,
-            coalesce(gs.accent_color, '#1d4ed8') as accent_color
+            coalesce(gs.accent_color, '#1d4ed8') as accent_color,
+            coalesce(gs.layout_json, '{}'::jsonb) as layout_json
      from guilds g
      left join guild_settings gs on gs.guild_id = g.id
      order by g.created_at asc, g.name asc`
@@ -933,9 +935,17 @@ async function listGuilds() {
       pointsLabel: row.points_label || "P0/P0+",
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
+      layout: row.layout_json || {},
       createdAt: row.created_at
     }))
   };
+}
+
+async function ensureGuildLayoutSchema() {
+  await query(
+    `alter table guild_settings
+       add column if not exists layout_json jsonb not null default '{}'::jsonb`
+  );
 }
 
 async function createGuild({ query: params }) {
@@ -1014,6 +1024,7 @@ async function createGuild({ query: params }) {
 }
 
 async function updateGuildConfig({ query: params, body = {} }) {
+  await ensureGuildLayoutSchema();
   const values = { ...params, ...body };
   const slug = clean(values.guild || values.slug);
   if (!slug) {
@@ -1030,6 +1041,17 @@ async function updateGuildConfig({ query: params, body = {} }) {
   const pointsLabel = clean(values.pointsLabel || values.points_label);
   const primaryColor = clean(values.primaryColor || values.primary_color);
   const accentColor = clean(values.accentColor || values.accent_color);
+  let layoutJson = values.layout || values.layoutJson || values.layout_json || null;
+  if (typeof layoutJson === "string") {
+    try {
+      layoutJson = JSON.parse(layoutJson);
+    } catch (error) {
+      layoutJson = null;
+    }
+  }
+  if (!layoutJson || typeof layoutJson !== "object" || Array.isArray(layoutJson)) {
+    layoutJson = {};
+  }
 
   const client = await pool.connect();
   try {
@@ -1047,18 +1069,19 @@ async function updateGuildConfig({ query: params, body = {} }) {
     );
 
     await client.query(
-      `insert into guild_settings (guild_id, points_label, primary_color, accent_color)
-       values ($1, coalesce(nullif($2, ''), 'P0/P0+'), coalesce(nullif($3, ''), '#facc15'), coalesce(nullif($4, ''), '#1d4ed8'))
+      `insert into guild_settings (guild_id, points_label, primary_color, accent_color, layout_json)
+       values ($1, coalesce(nullif($2, ''), 'P0/P0+'), coalesce(nullif($3, ''), '#facc15'), coalesce(nullif($4, ''), '#1d4ed8'), $5::jsonb)
        on conflict (guild_id) do update
          set points_label = coalesce(nullif(excluded.points_label, ''), guild_settings.points_label),
              primary_color = coalesce(nullif(excluded.primary_color, ''), guild_settings.primary_color),
              accent_color = coalesce(nullif(excluded.accent_color, ''), guild_settings.accent_color),
+             layout_json = case when excluded.layout_json = '{}'::jsonb then guild_settings.layout_json else excluded.layout_json end,
              updated_at = now()`,
-      [guild.id, pointsLabel, primaryColor, accentColor]
+      [guild.id, pointsLabel, primaryColor, accentColor, JSON.stringify(layoutJson)]
     );
 
     const settingsResult = await client.query(
-      `select points_label, primary_color, accent_color from guild_settings where guild_id = $1`,
+      `select points_label, primary_color, accent_color, layout_json from guild_settings where guild_id = $1`,
       [guild.id]
     );
 
@@ -1075,6 +1098,7 @@ async function updateGuildConfig({ query: params, body = {} }) {
         pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
         primaryColor: settingsResult.rows[0]?.primary_color || "#facc15",
         accentColor: settingsResult.rows[0]?.accent_color || "#1d4ed8",
+        layout: settingsResult.rows[0]?.layout_json || {},
         createdAt: row.created_at
       }
     };
