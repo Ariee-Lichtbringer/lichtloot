@@ -12719,11 +12719,12 @@ async function loadWorldbuffPanel(){
 }
 
 function renderWorldbuffPanel(days){
+  const defaultGuildName = getCurrentGuildBrand().guildName;
   document.getElementById("worldbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
       <div class="worldbuff-filter-card">
         <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
-          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle kommenden</option>
           ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
         </select>
         <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
@@ -12746,7 +12747,7 @@ function renderWorldbuffPanel(days){
     <div class="worldbuff-create-card">
       <h3 class="worldbuff-create-title">Neuen Worldbuff-Termin hier eintragen</h3>
       <div class="buff-create-grid">
-        <input id="newWorldbuffDate" type="date" aria-label="Datum">
+        <input id="newWorldbuffDate" type="date" value="${escapeAttr(todayIsoDate())}" aria-label="Datum">
         <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
         <select id="newWorldbuffBuff" aria-label="Buff">
           <option value="Hakkar">Hakkar</option>
@@ -12754,7 +12755,7 @@ function renderWorldbuffPanel(days){
           <option value="Nef">Nef</option>
           <option value="Rend">Rend</option>
         </select>
-        <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
+        <input id="newWorldbuffGuild" type="text" value="${escapeAttr(defaultGuildName)}" placeholder="Gilde / Fraktion">
         <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
         <input id="newWorldbuffNote" type="text" placeholder="Notiz">
         <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
@@ -13099,10 +13100,10 @@ async function createWorldbuffTerm(){
     return;
   }
 
-  const datum = document.getElementById("newWorldbuffDate").value;
-  const uhrzeit = document.getElementById("newWorldbuffTime").value;
-  const buff = document.getElementById("newWorldbuffBuff").value;
-  const gilde = document.getElementById("newWorldbuffGuild").value.trim();
+  const datum = document.getElementById("newWorldbuffDate").value || todayIsoDate();
+  const uhrzeit = document.getElementById("newWorldbuffTime").value || "19:35";
+  const buff = document.getElementById("newWorldbuffBuff").value || "Hakkar";
+  const gilde = document.getElementById("newWorldbuffGuild").value.trim() || getCurrentGuildBrand().guildName;
   const charakter = document.getElementById("newWorldbuffCaster").value.trim();
   const note = document.getElementById("newWorldbuffNote").value.trim();
 
@@ -13125,6 +13126,25 @@ async function createWorldbuffTerm(){
       return;
     }
 
+    const createdEntry = {
+      rowNumber: result.eventId || result.rowNumber || "",
+      eventId: result.eventId || "",
+      buff,
+      datum: formatRaidDate(datum),
+      date: datum,
+      uhrzeit,
+      time: uhrzeit,
+      gilde,
+      charakter,
+      status: charakter ? "🟢 bestätigt" : "🟡 offen",
+      note,
+      notiz: note,
+      tag: formatWorldbuffDay("", datum),
+      source: "railway"
+    };
+    worldbuffEntries = collapseWorldbuffDailySlots([createdEntry, ...worldbuffEntries]);
+    renderWorldbuffMiniList();
+    renderWorldbuffPanel(document.getElementById("worldbuffDays")?.value || "all");
     await loadWorldbuffPanel();
     setStatus("Worldbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
