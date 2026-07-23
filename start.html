@@ -2481,7 +2481,7 @@ body.raid-create-open:before{
     </section>
     <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startGuildPinCallout" class="start-po-login-callout start-guild-pin-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PIN</div><div class="start-po-login-copy"><span>GildenPIN</span><strong id="startGuildPinValue">----</strong><small>Diesen PIN nutzen Spieler zum Öffnen dieser Gilde.</small></div><button type="button" onclick="copyStartGuildPin()">kopieren</button></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
-      <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
+      <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/raid-templates/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
         <div class="section-head buff-overview-head">
           <div>
@@ -2770,7 +2770,7 @@ function applyGuildBrand(){
   document.querySelectorAll("[data-guild-onclick]").forEach(el => {
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
-  const brandLogoUrl = guild?.logoUrl || "images/content.png";
+  const brandLogoUrl = guildLogoUrl(guild);
   if(brandLogoUrl){
     document.querySelectorAll(".start-sidebar-logo,.start-profile-btn img,.logs-dashboard-title img,.app-download-card img").forEach(el => { el.src = brandLogoUrl; });
   }
@@ -2781,14 +2781,21 @@ function applyGuildBrand(){
   updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
 }
 
+function guildLogoUrl(guild){
+  const logo=String(guild?.logoUrl || "").trim();
+  if(CURRENT_GUILD_SLUG === "lichtloot") return logo || "images/content.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  return logo;
+}
+
 const DEFAULT_RAID_IMAGES = {
-  mc:"images/mc.jpg",
-  bwl:"images/bwl.jpg",
-  aq40:"images/aq40.jpg",
-  naxx:"images/naxx.jpg",
-  zg:"images/zg.jpg",
-  aq20:"images/aq20.jpg",
-  ony:"images/ony.jpg"
+  mc:"images/raid-templates/mc.jpg",
+  bwl:"images/raid-templates/bwl.jpg",
+  aq40:"images/raid-templates/aq40.jpg",
+  naxx:"images/raid-templates/naxx.jpg",
+  zg:"images/raid-templates/zg.jpg",
+  aq20:"images/raid-templates/aq20.jpg",
+  ony:"images/raid-templates/ony.jpg"
 };
 const RAID_IMAGE_OVERRIDES = Object.assign({}, DEFAULT_RAID_IMAGES);
 

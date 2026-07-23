@@ -4099,6 +4099,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
   <details id="lootLayoutPanel" class="panel loot-layout-panel" ontoggle="if(this.open) initLootLayoutPanel()">
     <summary>Lootlayout</summary>
     <div class="loot-layout-body">
+      <div class="loot-layout-actions">
+        <button class="btn good" type="button" onclick="saveLootLayout()">Lootlayout speichern</button>
+        <button class="btn ghost" type="button" onclick="resetLootLayoutForm()">Aus gespeicherten Daten neu laden</button>
+      </div>
+      <div id="lootLayoutStatusTop" class="status">Bereit.</div>
       <div class="loot-layout-grid">
         <section class="loot-layout-card">
           <h3>Gildenoptik</h3>
@@ -4128,7 +4133,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
             </label>
           </div>
           <div id="lootLayoutPreview" class="loot-layout-preview" style="margin-top:12px">
-            <img id="lootLayoutPreviewLogo" src="images/content.png" alt="">
+            <img id="lootLayoutPreviewLogo" src="images/guild-defaults/default-logo.png" alt="">
             <div>
               <strong id="lootLayoutPreviewTitle">LichtLoot</strong>
               <span>Vorschau für Startseite und Gildenleitung</span>
@@ -4405,7 +4410,7 @@ function applyGuildBrand(){
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
   document.querySelectorAll(".side-logo,.brand-logo,.top-profile img").forEach(el => {
-    if(guild?.logoUrl) el.src = guild.logoUrl;
+    el.src = guildLogoUrl(guild);
   });
   if(guild?.backgroundUrl){
     document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
@@ -4417,15 +4422,22 @@ function applyGuildBrand(){
   });
 }
 const RAID_IMAGES = {
-  mc:"images/mc.jpg",
-  bwl:"images/bwl.jpg",
-  aq40:"images/aq40.jpg",
-  naxx:"images/naxx.jpg",
-  zg:"images/zg.jpg",
-  aq20:"images/aq20.jpg",
-  ony:"images/ony.jpg"
+  mc:"images/raid-templates/mc.jpg",
+  bwl:"images/raid-templates/bwl.jpg",
+  aq40:"images/raid-templates/aq40.jpg",
+  naxx:"images/raid-templates/naxx.jpg",
+  zg:"images/raid-templates/zg.jpg",
+  aq20:"images/raid-templates/aq20.jpg",
+  ony:"images/raid-templates/ony.jpg"
 };
 const DEFAULT_RAID_IMAGES = Object.assign({}, RAID_IMAGES);
+
+function guildLogoUrl(guild){
+  const logo=String(guild?.logoUrl || "").trim();
+  if(CURRENT_GUILD_SLUG === "lichtloot") return logo || "images/content.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  return logo;
+}
 
 function applyRaidLayoutImages(raidImages){
   Object.keys(DEFAULT_RAID_IMAGES).forEach(key => {
@@ -4474,7 +4486,7 @@ function renderLootLayoutRaidFields(){
 function resetLootLayoutForm(){
   const guild = currentGuildInfo || {};
   const layout = guild.layout || {};
-  setInputValue("lootLayoutLogoUrl", guild.logoUrl || "");
+  setInputValue("lootLayoutLogoUrl", guildLogoUrl(guild));
   setInputValue("lootLayoutBackgroundUrl", guild.backgroundUrl || "");
   setInputValue("lootLayoutPrimaryColor", guild.primaryColor || "#facc15");
   setInputValue("lootLayoutAccentColor", guild.accentColor || "#1d4ed8");
@@ -4494,7 +4506,7 @@ function getInputValue(id){
 }
 
 function updateLootLayoutPreview(){
-  const logo = getInputValue("lootLayoutLogoUrl") || "images/content.png";
+  const logo = getInputValue("lootLayoutLogoUrl") || guildLogoUrl(currentGuildInfo);
   const background = getInputValue("lootLayoutBackgroundUrl");
   const primary = getInputValue("lootLayoutPrimaryColor") || "#facc15";
   const accent = getInputValue("lootLayoutAccentColor") || "#1d4ed8";
@@ -4545,12 +4557,15 @@ function collectLootLayout(){
 
 async function saveLootLayout(){
   const status = document.getElementById("lootLayoutStatus");
+  const topStatus = document.getElementById("lootLayoutStatusTop");
   const masterCode = document.getElementById("masterCode")?.value.trim() || "";
   if(!masterCode){
     if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    if(topStatus) topStatus.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
     return;
   }
   if(status) status.innerHTML = '<span class="warn">Lootlayout wird gespeichert ...</span>';
+  if(topStatus) topStatus.innerHTML = '<span class="warn">Lootlayout wird gespeichert ...</span>';
   try{
     const payload = {
       action:"updateGuildConfig",
@@ -4575,8 +4590,10 @@ async function saveLootLayout(){
     applyGuildBrand();
     renderDashboardCards();
     if(status) status.innerHTML = '<span class="ok">Lootlayout gespeichert.</span>';
+    if(topStatus) topStatus.innerHTML = '<span class="ok">Lootlayout gespeichert.</span>';
   }catch(error){
     if(status) status.innerHTML = '<span class="bad">' + escapeHtml(error.message || "Lootlayout konnte nicht gespeichert werden.") + '</span>';
+    if(topStatus) topStatus.innerHTML = '<span class="bad">' + escapeHtml(error.message || "Lootlayout konnte nicht gespeichert werden.") + '</span>';
   }
 }
 

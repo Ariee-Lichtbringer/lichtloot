@@ -2210,7 +2210,7 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo=guild?.logoUrl || "images/content.png";
+  const logo=guildLogoUrl(guild);
   const background=guild?.backgroundUrl || "";
   if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
   if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
@@ -2238,6 +2238,13 @@ function applyGuildBrand(guild){
   if(loginStatus) loginStatus.innerHTML='Noch keinen SpielerLogin? Nutze unten „Ich bin neu bei '+safeHtml(brand)+'“.';
 
   return {brand,guildName};
+}
+
+function guildLogoUrl(guild){
+  const logo=String(guild?.logoUrl || "").trim();
+  if(currentActiveGuildSlug() === "lichtloot") return logo || "images/content.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png") return "images/guild-defaults/default-logo.png";
+  return logo;
 }
 
 function showGuildConfig(){
