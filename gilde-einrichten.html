@@ -83,6 +83,57 @@ const statusBox = document.getElementById("status");
 const resultLinks = document.getElementById("resultLinks");
 function setStatus(text, type){ statusBox.textContent = text; statusBox.className = "status " + (type || ""); }
 function setValue(name, value){ const input = form.elements[name]; if(input && value) input.value = value; }
+function normalizeGuildSlug(value){
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/ä/g,"ae")
+    .replace(/ö/g,"oe")
+    .replace(/ü/g,"ue")
+    .replace(/ß/g,"ss")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"");
+}
+function slugFromUrl(value){
+  try{
+    const url = new URL(value, location.href);
+    return normalizeGuildSlug(url.searchParams.get("guild") || url.searchParams.get("gilde"));
+  }catch(error){
+    return "";
+  }
+}
+function buildGuildUrl(page, slug){
+  const url = new URL(page, location.origin + location.pathname.replace(/[^/]*$/, ""));
+  if(slug) url.searchParams.set("guild", slug);
+  return url.toString();
+}
+function safeHtml(value){
+  return String(value == null ? "" : value).replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  }[char]));
+}
+function renderResultLinks(result){
+  const guild = result.guild || {};
+  const app = result.application || {};
+  const slug = normalizeGuildSlug(result.guildSlug || guild.slug || app.guildSlug) || slugFromUrl(result.startUrl) || slugFromUrl(result.leadershipUrl);
+  const startUrl = result.startUrl || buildGuildUrl("start.html", slug);
+  const leadershipUrl = result.leadershipUrl || buildGuildUrl("gildenleitung.html", slug);
+  const guildName = guild.name || app.guildName || form.elements.guildName?.value || "Neue Gilde";
+  const guildPin = result.guildPin || guild.guildPin || app.guildPin || app.desiredGuildPin || form.elements.guildPin?.value || "";
+  resultLinks.innerHTML = `
+    <strong>${safeHtml(guildName)}</strong>
+    ${slug ? `<span>Bereich: ${safeHtml(slug)}</span>` : ""}
+    ${guildPin ? `<span>GildenPIN: ${safeHtml(guildPin)}</span>` : ""}
+    <a class="linkbtn" href="${safeHtml(startUrl)}">Startseite öffnen</a>
+    <a class="linkbtn" href="${safeHtml(leadershipUrl)}">Gildenleitung öffnen</a>
+  `;
+}
 async function loadSetup(){
   if(!token){ setStatus("Freischaltlink fehlt.", "bad"); return; }
   try{
@@ -117,11 +168,7 @@ form.addEventListener("submit", async event => {
     if(!result.success) throw new Error(result.error || "Gilde konnte nicht eingerichtet werden.");
     setStatus("Gilde ist eingerichtet.", "good");
     resultLinks.hidden = false;
-    resultLinks.innerHTML = `
-      <strong>${result.guild?.name || "Neue Gilde"}</strong>
-      <a class="linkbtn" href="${result.startUrl}">Startseite öffnen</a>
-      <a class="linkbtn" href="${result.leadershipUrl}">Gildenleitung öffnen</a>
-    `;
+    renderResultLinks(result);
   }catch(error){
     setStatus(error.message || "Gilde konnte nicht eingerichtet werden.", "bad");
   }
