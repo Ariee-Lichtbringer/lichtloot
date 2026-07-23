@@ -1484,6 +1484,20 @@ function normalizePlayerRole(value) {
   return "member";
 }
 
+function normalizePlayerApprovalStatus(value) {
+  const raw = clean(value).toLowerCase();
+  if (["pending", "wartet", "wartend", "neu", "new"].includes(raw)) return "pending";
+  if (["rejected", "abgelehnt", "reject"].includes(raw)) return "rejected";
+  return "approved";
+}
+
+function playerApprovalLabel(value) {
+  const status = normalizePlayerApprovalStatus(value);
+  if (status === "pending") return "wartet auf Freigabe";
+  if (status === "rejected") return "abgelehnt";
+  return "freigegeben";
+}
+
 function playerRoleLabel(value) {
   return playerRoleLabels[normalizePlayerRole(value)] || playerRoleLabels.member;
 }
@@ -1495,6 +1509,7 @@ function canPlayerRoleCreateRaid(value) {
 function normalizeCharacter(row) {
   const playerRole = normalizePlayerRole(row.player_role || row.role);
   const isBlocked = Boolean(row.is_blocked);
+  const approvalStatus = normalizePlayerApprovalStatus(row.approval_status);
   return {
     id: row.id,
     char: row.name,
@@ -1509,6 +1524,10 @@ function normalizeCharacter(row) {
     playerRole,
     playerRoleLabel: playerRoleLabel(playerRole),
     canCreateRaid: canPlayerRoleCreateRaid(playerRole),
+    approvalStatus,
+    playerApprovalStatus: approvalStatus,
+    approvalLabel: playerApprovalLabel(approvalStatus),
+    isApproved: approvalStatus === "approved",
     isBlocked,
     blocked: isBlocked,
     blockedAt: row.blocked_at || null,
@@ -1519,7 +1538,12 @@ function normalizeCharacter(row) {
 
 async function findPlayerByPin(guildId, pin) {
   const result = await query(
-    "select id, player_pin, role, is_blocked, blocked_at, blocked_reason from players where guild_id = $1 and player_pin = $2 and coalesce(is_blocked, false) = false",
+    `select id, player_pin, role, is_blocked, blocked_at, blocked_reason, approval_status
+     from players
+     where guild_id = $1
+       and player_pin = $2
+       and coalesce(is_blocked, false) = false
+       and coalesce(approval_status, 'approved') = 'approved'`,
     [guildId, normalizePin(pin)]
   );
   return result.rows[0] || null;
@@ -1558,6 +1582,7 @@ async function getVerifiedSenderCharacterName(guildId, pin, charName, server) {
      join characters c on c.player_id = p.id
      where p.guild_id = $1
        and p.player_pin = $2
+       and coalesce(p.approval_status, 'approved') = 'approved'
        and lower(c.name) = lower($3)
        ${serverClause}
      order by c.created_at asc
@@ -1587,6 +1612,7 @@ async function findPlayerByRecipient(guildId, recipient, server) {
      join players p on p.id = c.player_id
      where p.guild_id = $1
        and coalesce(p.is_blocked, false) = false
+       and coalesce(p.approval_status, 'approved') = 'approved'
        and lower(c.name) = lower($2)
        ${serverClause}
      order by c.created_at asc
@@ -1611,11 +1637,16 @@ async function findCharacter(guildId, charName, server) {
 async function getCharactersByPin(guildId, pin) {
   const normalizedPin = normalizePin(pin);
   const playerResult = await query(
-    "select id, is_blocked, blocked_reason from players where guild_id = $1 and player_pin = $2 limit 1",
+    "select id, is_blocked, blocked_reason, approval_status from players where guild_id = $1 and player_pin = $2 limit 1",
     [guildId, normalizedPin]
   );
   if (playerResult.rows[0]?.is_blocked) {
     const error = new Error(playerResult.rows[0]?.blocked_reason || "Dieser SpielerLogin ist gesperrt.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (playerResult.rows[0] && normalizePlayerApprovalStatus(playerResult.rows[0]?.approval_status) !== "approved") {
+    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
     error.statusCode = 403;
     throw error;
   }
@@ -1629,6 +1660,7 @@ async function getCharactersByPin(guildId, pin) {
        c.is_main,
        c.created_at,
        p.role as player_role,
+       p.approval_status,
        p.is_blocked,
        p.blocked_at,
        p.blocked_reason,
@@ -1638,7 +1670,7 @@ async function getCharactersByPin(guildId, pin) {
        ) as main_char
      from players p
      join characters c on c.player_id = p.id
-     where p.guild_id = $1 and p.player_pin = $2 and coalesce(p.is_blocked, false) = false
+     where p.guild_id = $1 and p.player_pin = $2 and coalesce(p.is_blocked, false) = false and coalesce(p.approval_status, 'approved') = 'approved'
      order by c.is_main desc, c.created_at asc, c.name asc`,
     [guildId, normalizedPin]
   );
@@ -2033,6 +2065,9 @@ async function ensurePlayerRoleSchema() {
   await query(
     `alter table players
        add column if not exists role text not null default 'member',
+       add column if not exists approval_status text not null default 'approved',
+       add column if not exists approved_at timestamptz,
+       add column if not exists approved_by text not null default '',
        add column if not exists is_blocked boolean not null default false,
        add column if not exists blocked_at timestamptz,
        add column if not exists blocked_reason text not null default ''`
@@ -6826,6 +6861,7 @@ async function deletePrio({ guildId, query: params }) {
 
 async function getGuildLeadershipOverview(guildId, params) {
   requireMasterCode(params.masterCode);
+  await ensurePlayerRoleSchema();
   await processRaidHelperSchedules({ guildId }).catch(error => {
     console.warn("RaidHelper-Schedules konnten nicht verarbeitet werden:", error.message || error);
   });
@@ -6859,6 +6895,9 @@ async function getGuildLeadershipOverview(guildId, params) {
        c.created_at,
        p.id as player_id,
        p.role as player_role,
+       p.approval_status,
+       p.approved_at,
+       p.approved_by,
        p.is_blocked,
        p.blocked_at,
        p.blocked_reason,
@@ -6891,6 +6930,12 @@ async function getGuildLeadershipOverview(guildId, params) {
       playerRole: normalizePlayerRole(row.player_role),
       playerRoleLabel: playerRoleLabel(row.player_role),
       canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
+      approvalStatus: normalizePlayerApprovalStatus(row.approval_status),
+      playerApprovalStatus: normalizePlayerApprovalStatus(row.approval_status),
+      approvalLabel: playerApprovalLabel(row.approval_status),
+      isApproved: normalizePlayerApprovalStatus(row.approval_status) === "approved",
+      approvedAt: row.approved_at || null,
+      approvedBy: row.approved_by || "",
       isBlocked: Boolean(row.is_blocked),
       blocked: Boolean(row.is_blocked),
       blockedAt: row.blocked_at || null,
@@ -14066,6 +14111,12 @@ async function exportGuildBackup({ guildId, query: params }) {
          p.player_pin,
          p.security_question,
          p.security_answer,
+         p.approval_status,
+         p.approved_at,
+         p.approved_by,
+         p.is_blocked,
+         p.blocked_at,
+         p.blocked_reason,
          p.created_at as player_created_at,
          p.updated_at as player_updated_at,
          c.id as character_id,
@@ -14585,6 +14636,7 @@ async function createPlayerWithCharacter({
 
   try {
     await client.query("begin");
+    await ensurePlayerRoleSchema();
 
     const existingPlayer = await client.query(
       "select id from players where guild_id = $1 and player_pin = $2",
@@ -14611,9 +14663,9 @@ async function createPlayerWithCharacter({
     }
 
     const playerResult = await client.query(
-      `insert into players (guild_id, player_pin, security_question, security_answer)
-       values ($1, $2, $3, $4)
-       returning id, player_pin, created_at`,
+      `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
+       values ($1, $2, $3, $4, 'pending')
+       returning id, player_pin, approval_status, created_at`,
       [guildId, pin, clean(securityQuestion) || null, clean(securityAnswer) || null]
     );
 
@@ -14625,7 +14677,7 @@ async function createPlayerWithCharacter({
     );
 
     await client.query("commit");
-    return { player: playerResult.rows[0], character: normalizeCharacter(characterResult.rows[0]) };
+    return { player: playerResult.rows[0], character: normalizeCharacter({ ...characterResult.rows[0], approval_status: "pending" }) };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -14950,6 +15002,66 @@ async function setPlayerLoginBlocked({ guildId, query: params }) {
     playerPin: result.rows[0].player_pin,
     role: normalizePlayerRole(result.rows[0].role),
     roleLabel: playerRoleLabel(result.rows[0].role),
+    isBlocked: Boolean(result.rows[0].is_blocked),
+    blockedAt: result.rows[0].blocked_at || null,
+    blockedReason: result.rows[0].blocked_reason || ""
+  };
+}
+
+async function setPlayerLoginApproved({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePlayerRoleSchema();
+  const playerId = clean(params.playerId || params.player_id || params.id);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const approvedBy = clean(params.approvedBy || params.by) || "Gildenleitung";
+  const values = [guildId, approvedBy];
+  const clauses = [];
+
+  if (playerId) {
+    values.push(playerId);
+    clauses.push(`id::text = $${values.length}`);
+  }
+
+  if (playerPin) {
+    values.push(playerPin);
+    clauses.push(`player_pin = $${values.length}`);
+  }
+
+  if (!clauses.length) {
+    const error = new Error("SpielerLogin fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `update players
+     set approval_status = 'approved',
+         approved_at = now(),
+         approved_by = $2,
+         updated_at = now()
+     where guild_id = $1
+       and (${clauses.join(" or ")})
+     returning id, player_pin, role, approval_status, approved_at, approved_by, is_blocked, blocked_at, blocked_reason`,
+    values
+  );
+
+  if (!result.rows.length) {
+    const error = new Error("SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    playerId: result.rows[0].id,
+    playerPin: result.rows[0].player_pin,
+    role: normalizePlayerRole(result.rows[0].role),
+    roleLabel: playerRoleLabel(result.rows[0].role),
+    approvalStatus: normalizePlayerApprovalStatus(result.rows[0].approval_status),
+    approvalLabel: playerApprovalLabel(result.rows[0].approval_status),
+    isApproved: true,
+    approvedAt: result.rows[0].approved_at || null,
+    approvedBy: result.rows[0].approved_by || "",
     isBlocked: Boolean(result.rows[0].is_blocked),
     blockedAt: result.rows[0].blocked_at || null,
     blockedReason: result.rows[0].blocked_reason || ""
@@ -16513,6 +16625,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildApprovePlayerLogin" || action === "guildSetPlayerLoginApproved") {
+      const saved = await setPlayerLoginApproved({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildSetMasterCode") {
       const saved = await setGuildMasterCode({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -16934,7 +17051,14 @@ app.get("/api/apps-script", async (req, res, next) => {
         server: req.query.server,
         className: req.query.className
       });
-      return res.json({ success: true, guild: guild.slug, pin: result.player.player_pin, character: result.character });
+      return res.json({
+        success: true,
+        guild: guild.slug,
+        pin: result.player.player_pin,
+        character: result.character,
+        approvalStatus: normalizePlayerApprovalStatus(result.player.approval_status),
+        needsApproval: normalizePlayerApprovalStatus(result.player.approval_status) !== "approved"
+      });
     }
 
     if (action === "addTwink") {
@@ -17089,6 +17213,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetPlayerLoginBlocked") {
       const saved = await setPlayerLoginBlocked({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildApprovePlayerLogin" || action === "guildSetPlayerLoginApproved") {
+      const saved = await setPlayerLoginApproved({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -17436,11 +17565,15 @@ app.get("/api/guilds/:guildSlug/characters", async (req, res, next) => {
 app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res, next) => {
   try {
     const guild = await requireGuild(resolveGuildSlug(req.params.guildSlug));
+    await ensurePlayerRoleSchema();
     const result = await query(
       `select c.id, c.name, c.server, c.class_name, c.created_at
        from players p
        join characters c on c.player_id = p.id
-       where p.guild_id = $1 and p.player_pin = $2
+       where p.guild_id = $1
+         and p.player_pin = $2
+         and coalesce(p.is_blocked, false) = false
+         and coalesce(p.approval_status, 'approved') = 'approved'
        order by c.name asc`,
       [guild.id, req.params.pin]
     );
@@ -17464,10 +17597,11 @@ app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
     }
 
     await client.query("begin");
+    await ensurePlayerRoleSchema();
     const playerResult = await client.query(
-      `insert into players (guild_id, player_pin, security_question, security_answer)
-       values ($1, $2, $3, $4)
-       returning id, player_pin, created_at`,
+      `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
+       values ($1, $2, $3, $4, 'pending')
+       returning id, player_pin, approval_status, created_at`,
       [guild.id, playerPin, securityQuestion || null, securityAnswer || null]
     );
     const player = playerResult.rows[0];
@@ -17483,7 +17617,9 @@ app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
       success: true,
       guild: guild.slug,
       player,
-      character: characterResult.rows[0]
+      character: characterResult.rows[0],
+      approvalStatus: normalizePlayerApprovalStatus(player.approval_status),
+      needsApproval: normalizePlayerApprovalStatus(player.approval_status) !== "approved"
     });
   } catch (error) {
     await client.query("rollback").catch(() => {});
