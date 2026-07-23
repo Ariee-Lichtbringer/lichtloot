@@ -546,6 +546,11 @@ button,input,select{font:inherit}
   font-weight:900;
   font-size:13px;
 }
+.active-raid-meta[role="button"]{cursor:pointer}
+.active-raid-meta[role="button"]:focus-visible{
+  outline:2px solid rgba(250,204,21,.72);
+  outline-offset:3px;
+}
 
 .active-raid-weekday{
   color:#facc15;
@@ -5855,7 +5860,7 @@ function renderDashboardCards(){
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
             <div class="active-raid-topline">
-              <div class="active-raid-meta">
+              <div class="active-raid-meta" role="button" tabindex="0" title="Datum/Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
                 <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
                 <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
                 <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
@@ -6778,6 +6783,159 @@ async function saveRaidHelperEventEdit(){
     setRaidHelperEditStatus("Raid gespeichert und Discord-Aktualisierung vorgemerkt.", "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Raid konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+function raidHelperCardFieldValue(kind, raidId){
+  const attr = kind === "date" ? "raidDate" : "raidTime";
+  const selector = kind === "date" ? "[data-raid-date]" : "[data-raid-time]";
+  const field = Array.from(document.querySelectorAll(selector))
+    .find(input => String(input.dataset[attr] || "") === String(raidId));
+  return field ? field.value : "";
+}
+
+async function quickUpdateRaidHelperDateTime(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+  const raidDate = raidHelperCardFieldValue("date", raidId);
+  const raidTime = raidHelperCardFieldValue("time", raidId);
+  if(!raidDate || !raidTime){
+    setStatus("Bitte Datum und Uhrzeit eintragen.", "bad");
+    return;
+  }
+  const key = getRaidKey(raid);
+  try{
+    const result = await railwayWrite({
+      action:"createRaid",
+      masterCode,
+      raidId:raid.raidId || raid.id || raidId,
+      raid:key,
+      raidName:raid.raidName || RAID_OPTIONS[key]?.name || "Raid",
+      raidDate,
+      raidTime,
+      datum:raidDate,
+      uhrzeit:raidTime,
+      guild:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      gilde:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      guildName:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      displayGuild:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      playerPin:raid.playerPin || raid.prioPin || "",
+      leadPin:raid.leadPin || "",
+      status:raid.status || "geschlossen",
+      p0PlusFreigabe:raid.p0PlusFreigabe || "geöffnet",
+      createdBy:getRaidCreatorName(raid),
+      erstelltVon:getRaidCreatorName(raid),
+      raidHelperEnabled:raid.raidHelperEnabled === false ? "false" : "true",
+      maxPlayers:raid.maxPlayers || "",
+      tankSlots:raid.tankSlots || "",
+      healSlots:raid.healSlots || "",
+      ddSlots:raid.ddSlots || "",
+      discordChannelId:raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
+      discordMessageId:raid.discordMessageId || "",
+      signupDeadline:raid.signupDeadline || "",
+      description:raid.description || raid.beschreibung || "",
+      raidImageUrl:raid.raidImageUrl || defaultRaidHelperImageUrl(key)
+    });
+    if(!result.success){
+      setStatus(result.error || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    await loadOverview({ preserveStatus:true });
+    renderRaidHelperCurrentEvents();
+    renderDashboardCards();
+    renderRaids();
+    renderPoSignupConfigRows();
+    setStatus("Datum/Uhrzeit wurde gespeichert und im PO-Anmelder übernommen.", "good");
+  }catch(error){
+    setStatus(error.message || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function editRaidDateTimePopup(raidId){
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+  const raidDate = prompt("Neues Datum im Format JJJJ-MM-TT:", raid.raidDate || "");
+  if(raidDate === null) return;
+  const raidTime = prompt("Neue Uhrzeit im Format HH:MM:", raid.raidTime || "");
+  if(raidTime === null) return;
+  const dateValue = String(raidDate || "").trim();
+  const timeValue = String(raidTime || "").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || !/^\d{2}:\d{2}$/.test(timeValue)){
+    setStatus("Bitte Datum als JJJJ-MM-TT und Uhrzeit als HH:MM eingeben.", "bad");
+    return;
+  }
+  const dateField = Array.from(document.querySelectorAll("[data-raid-date]"))
+    .find(input => String(input.dataset.raidDate || "") === String(raidId));
+  const timeField = Array.from(document.querySelectorAll("[data-raid-time]"))
+    .find(input => String(input.dataset.raidTime || "") === String(raidId));
+  if(dateField) dateField.value = dateValue;
+  if(timeField) timeField.value = timeValue;
+  if(dateField && timeField){
+    await quickUpdateRaidHelperDateTime(raidId);
+    return;
+  }
+
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const key = getRaidKey(raid);
+  try{
+    const result = await railwayWrite({
+      action:"createRaid",
+      masterCode,
+      raidId:raid.raidId || raid.id || raidId,
+      raid:key,
+      raidName:raid.raidName || RAID_OPTIONS[key]?.name || "Raid",
+      raidDate:dateValue,
+      raidTime:timeValue,
+      datum:dateValue,
+      uhrzeit:timeValue,
+      guild:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      gilde:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      guildName:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      displayGuild:raid.guild || raid.gilde || getCurrentGuildBrand().guildName,
+      playerPin:raid.playerPin || raid.prioPin || "",
+      leadPin:raid.leadPin || "",
+      status:raid.status || "geschlossen",
+      p0PlusFreigabe:raid.p0PlusFreigabe || "geöffnet",
+      createdBy:getRaidCreatorName(raid),
+      erstelltVon:getRaidCreatorName(raid),
+      raidHelperEnabled:raid.raidHelperEnabled === false ? "false" : "true",
+      maxPlayers:raid.maxPlayers || "",
+      tankSlots:raid.tankSlots || "",
+      healSlots:raid.healSlots || "",
+      ddSlots:raid.ddSlots || "",
+      discordChannelId:raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
+      discordMessageId:raid.discordMessageId || "",
+      signupDeadline:raid.signupDeadline || "",
+      description:raid.description || raid.beschreibung || "",
+      raidImageUrl:raid.raidImageUrl || defaultRaidHelperImageUrl(key)
+    });
+    if(!result.success){
+      setStatus(result.error || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    await loadOverview({ preserveStatus:true });
+    renderRaidHelperCurrentEvents();
+    renderDashboardCards();
+    renderRaids();
+    renderPoSignupConfigRows();
+    setStatus("Datum/Uhrzeit wurde gespeichert und im PO-Anmelder übernommen.", "good");
+  }catch(error){
+    setStatus(error.message || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
   }
 }
 
