@@ -99,6 +99,10 @@ await ensureGuildApplicationSchema().catch(error => {
   console.warn("Gilden-Anfragen-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureGuildPinSchema().catch(error => {
+  console.warn("GildenPIN-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -935,6 +939,7 @@ async function createGuild({ query: params }) {
   const guildName = clean(params.guildName || params.name);
   const lootName = clean(params.lootName || params.slugName);
   const server = clean(params.server);
+  const guildPin = normalizePin(params.guildPin || params.guild_pin);
   const slug = buildLootSlug(guildName, lootName);
 
   if (!guildName || !slug) {
@@ -946,15 +951,28 @@ async function createGuild({ query: params }) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    if (guildPin) {
+      const duplicate = await client.query(
+        "select slug from guilds where lower(guild_pin) = lower($1) and slug <> $2 limit 1",
+        [guildPin, slug]
+      );
+      if (duplicate.rows.length) {
+        const error = new Error("Dieser GildenPIN ist bereits vergeben.");
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+
     const guildResult = await client.query(
-      `insert into guilds (name, slug, server)
-       values ($1, $2, $3)
+      `insert into guilds (name, slug, server, guild_pin)
+       values ($1, $2, $3, nullif($4, ''))
        on conflict (slug) do update
          set name = excluded.name,
              server = coalesce(nullif(excluded.server, ''), guilds.server),
+             guild_pin = coalesce(excluded.guild_pin, guilds.guild_pin),
              updated_at = now()
        returning id, name, slug, server, created_at`,
-      [guildName, slug, server || null]
+      [guildName, slug, server || null, guildPin]
     );
 
     await client.query(
@@ -1056,6 +1074,54 @@ async function updateGuildConfig({ query: params, body = {} }) {
   } finally {
     client.release();
   }
+}
+
+async function ensureGuildPinSchema() {
+  await query(
+    `alter table guilds
+       add column if not exists guild_pin text`
+  );
+  await query(
+    `create unique index if not exists idx_guilds_guild_pin_lower
+       on guilds (lower(guild_pin))
+       where guild_pin is not null and guild_pin <> ''`
+  );
+}
+
+async function resolveGuildByPin({ query: params, body = {} }) {
+  await ensureGuildPinSchema();
+  const values = { ...params, ...body };
+  const pin = normalizePin(values.guildPin || values.gildenPin || values.pin);
+  if (!pin) {
+    const error = new Error("Bitte GildenPIN eingeben.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select slug, name, server, logo_url, background_url
+     from guilds
+     where lower(guild_pin) = lower($1)
+     limit 1`,
+    [pin]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    const error = new Error("GildenPIN wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    guild: {
+      slug: row.slug,
+      name: row.name || "",
+      server: row.server || "",
+      logoUrl: row.logo_url || "",
+      backgroundUrl: row.background_url || ""
+    },
+    startUrl: `start.html?guild=${encodeURIComponent(row.slug)}`,
+    leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(row.slug)}`
+  };
 }
 
 async function ensureGuildApplicationSchema() {
@@ -1315,7 +1381,7 @@ async function completeGuildSetup({ query: params, body = {} }) {
   const primaryColor = clean(values.primaryColor) || "#facc15";
   const accentColor = clean(values.accentColor) || "#1d4ed8";
 
-  const created = await createGuild({ query: { guildName, lootName, server } });
+  const created = await createGuild({ query: { guildName, lootName, server, guildPin } });
   const saved = await updateGuildConfig({
     query: { guild: created.guild.slug },
     body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor }
@@ -15915,6 +15981,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(guilds);
     }
 
+    if (action === "resolveGuildByPin") {
+      const resolved = await resolveGuildByPin({ query: req.query });
+      return res.json(resolved);
+    }
+
     if (action === "createGuild") {
       const created = await createGuild({ query: req.query });
       return res.json(created);
@@ -16639,6 +16710,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "updateGuildConfig") {
       const saved = await updateGuildConfig({ query: req.query, body: req.body });
       return res.json(saved);
+    }
+
+    if (action === "resolveGuildByPin") {
+      const resolved = await resolveGuildByPin({ query: req.query, body: req.body });
+      return res.json(resolved);
     }
 
     if (action === "submitGuildApplication") {
