@@ -91,16 +91,16 @@ app.use(express.static("public", {
   }
 }));
 
-await loadMasterCodeOverrides().catch(error => {
-  console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
-});
-
 await ensureGuildApplicationSchema().catch(error => {
   console.warn("Gilden-Anfragen-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
 await ensureGuildPinSchema().catch(error => {
   console.warn("GildenPIN-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
+await loadMasterCodeOverrides().catch(error => {
+  console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
 });
 
 await ensureRaidSchema().catch(error => {
@@ -982,6 +982,10 @@ async function createGuild({ query: params }) {
       [guildResult.rows[0].id]
     );
 
+    if (guildPin) {
+      await saveGuildMasterCodeValue(client, guildResult.rows[0].id, guildPin);
+    }
+
     await client.query("commit");
     const guild = guildResult.rows[0];
     return {
@@ -1797,8 +1801,29 @@ async function loadMasterCodeOverrides() {
        updated_at timestamptz not null default now()
      )`
   );
-  const result = await query("select guild_id, master_code from guild_master_codes");
+  const result = await query(
+    `select g.id as guild_id,
+            coalesce(nullif(gmc.master_code, ''), nullif(g.guild_pin, '')) as master_code
+     from guilds g
+     left join guild_master_codes gmc on gmc.guild_id = g.id
+     where coalesce(nullif(gmc.master_code, ''), nullif(g.guild_pin, '')) is not null`
+  );
+  masterCodeOverrides.clear();
   result.rows.forEach(row => masterCodeOverrides.set(String(row.guild_id), row.master_code));
+}
+
+async function saveGuildMasterCodeValue(client, guildId, code) {
+  const value = clean(code);
+  if (!value) return;
+  await client.query(
+    `insert into guild_master_codes (guild_id, master_code, updated_at)
+     values ($1, $2, now())
+     on conflict (guild_id) do update
+       set master_code = excluded.master_code,
+           updated_at = now()`,
+    [guildId, value]
+  );
+  masterCodeOverrides.set(String(guildId), value);
 }
 
 function requireMasterCode(value) {
@@ -2711,6 +2736,7 @@ async function getWorldbuffs({ guildId, query: params }) {
   await ensureBuffTables();
   const days = clean(params.days || "14");
   const source = clean(params.source).toLowerCase();
+  const allowSheetFallback = clean(params.allowSheetFallback || params.sheetFallback).toLowerCase() === "true";
   const dayCount = days === "all" ? 3650 : Math.max(Number(days) || 14, 1);
   const values = [guildId];
   let windowClause = "";
@@ -2749,6 +2775,10 @@ async function getWorldbuffs({ guildId, query: params }) {
 
   if (railwayRows.length) {
     return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+  }
+
+  if (!allowSheetFallback) {
+    return { success: true, source: "railway-empty", buffs: [], entries: [] };
   }
 
   const sheetRows = await getWorldbuffsFromSheets(params);
