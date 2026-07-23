@@ -1386,9 +1386,8 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-item-choice.selected{
-  background:rgba(34,197,94,.14);
-  box-shadow:inset 0 0 0 1px rgba(34,197,94,.34);
-  color:#dcfce7;
+  background:rgba(250,204,21,.16);
+  box-shadow:inset 0 0 0 1px rgba(250,204,21,.45);
 }
 
 .po-entry-loot-picker{
@@ -4341,6 +4340,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
                       <th>Post-ID</th>
                       <th>Raid</th>
                       <th>Channel</th>
+                      <th>Pins</th>
                       <th>Einträge</th>
                       <th>Aktion</th>
                     </tr>
@@ -5289,14 +5289,24 @@ function renderSummary(){
 }
 
 function getRaidKey(raid){
+  const directKey = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  if(directKey === "aq20") return "aq20";
+  if(directKey === "zg") return "zg";
+  if(directKey === "aq40") return "aq40";
+  if(directKey === "mc") return "mc";
+  if(directKey === "bwl") return "bwl";
+  if(directKey === "naxx") return "naxx";
+  if(directKey === "ony") return "ony";
+
   const text = normalize([
     raid.raid,
+    raid.raidType,
     raid.raidName,
     raid.raidId
   ].join(" "));
 
-  if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
-  if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq20") || text.includes("aq 20") || text.includes("qiraj 20")) return "aq20";
+  if(text.includes("aq40") || text.includes("aq 40") || text.includes("qiraj 40")) return "aq40";
   if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
   if(text.includes("mc") || text.includes("molten")) return "mc";
   if(text.includes("naxx")) return "naxx";
@@ -5653,7 +5663,11 @@ function renderRaids(){
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     return filterMatches && dateMatches && (!search || haystack.includes(search));
-  });
+  }).sort((a,b) => {
+    const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
+    const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
+    return right.localeCompare(left);
+  }).slice(0, 10);
 
   if(!raids.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
@@ -5685,6 +5699,7 @@ function renderRaids(){
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+            <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
         </td>
       </tr>
@@ -7799,16 +7814,8 @@ function poSignupCorrectionCharacterValue(index){
 function samePoPostEntryIdentity(left, right){
   if(!left || !right) return false;
   if(left.id && right.id && String(left.id) === String(right.id)) return true;
-  const samePost = ["postKey", "sourceChannelId", "targetChannelId"].every(key =>
-    String(left[key] || "") && String(left[key] || "") === String(right[key] || "")
-  );
-  if(!samePost) return false;
-  if(left.messageId && right.messageId && String(left.messageId) === String(right.messageId)) return true;
-  const leftPlayer = normalize(left.player || left.playerName || "");
-  const rightPlayer = normalize(right.player || right.playerName || "");
-  const leftItem = normalize(left.item || left.itemName || "");
-  const rightItem = normalize(right.item || right.itemName || "");
-  return !!leftPlayer && !!leftItem && leftPlayer === rightPlayer && leftItem === rightItem;
+  const keys = ["postKey", "sourceChannelId", "targetChannelId", "messageId", "discordMessageId"];
+  return keys.every(key => String(left[key] || "") === String(right[key] || ""));
 }
 
 function updatePoPostEntryCaches(originalEntry, updatedEntry){
@@ -8255,19 +8262,22 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
   }
 
-  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, playerPin, createdBy);
-  poSignupGeneratedLichtlootRaid = { fingerprint, raidId, playerPin, leadPin, createdBy };
+  const resultRaidId = result.raidId || result.RaidID || raidId;
+  const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
+  const resultLeadPin = result.leadPin || leadPin;
+  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, resultPlayerPin, createdBy);
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
   setValue("poSignupNote", note);
   updatePoSignupPreview();
   if(status && !options.silent){
-    status.innerHTML = `<span class="good">LichtLoot-Prio-ID erstellt. Prio-PIN: <strong>${escapeHtml(playerPin)}</strong></span>`;
+    status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
     note,
-    lichtlootRaidId:raidId,
-    lichtlootPlayerPin:playerPin,
-    lichtlootLeadPin:leadPin
+    lichtlootRaidId:resultRaidId,
+    lichtlootPlayerPin:resultPlayerPin,
+    lichtlootLeadPin:resultLeadPin
   });
 }
 
@@ -8456,11 +8466,6 @@ function poPostConfigGroups(){
         itemOptions: "",
         reviewRecipient: "",
         note: "",
-        raidPin: "",
-        prioPin: "",
-        lichtlootRaidId: "",
-        lichtlootPlayerPin: "",
-        lichtlootLeadPin: "",
         approvedCount: 0,
         pendingCount: 0,
         rejectedCount: 0,
@@ -8484,11 +8489,6 @@ function poPostConfigGroups(){
     group.itemOptions = group.itemOptions || config.itemOptions || "";
     group.reviewRecipient = group.reviewRecipient || config.reviewRecipient || "";
     group.note = group.note || config.note || "";
-    group.raidPin = group.raidPin || config.raidPin || config.prioPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
-    group.prioPin = group.prioPin || config.prioPin || config.raidPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
-    group.lichtlootRaidId = group.lichtlootRaidId || config.lichtlootRaidId || config.raidPin || config.prioPin || config.lichtlootPlayerPin || "";
-    group.lichtlootPlayerPin = group.lichtlootPlayerPin || config.lichtlootPlayerPin || config.raidPin || config.prioPin || config.lichtlootRaidId || "";
-    group.lichtlootLeadPin = group.lichtlootLeadPin || config.lichtlootLeadPin || config.leadPin || "";
   });
   (poPostStoredEntries || []).forEach(entry => {
     const group = ensure(entry.postKey);
@@ -8507,11 +8507,6 @@ function poPostConfigGroups(){
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
     group.mode = group.mode || entry.mode || "";
-    group.raidPin = group.raidPin || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
-    group.prioPin = group.prioPin || entry.prioPin || entry.raidPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
-    group.lichtlootRaidId = group.lichtlootRaidId || entry.lichtlootRaidId || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || "";
-    group.lichtlootPlayerPin = group.lichtlootPlayerPin || entry.lichtlootPlayerPin || entry.raidPin || entry.prioPin || entry.lichtlootRaidId || "";
-    group.lichtlootLeadPin = group.lichtlootLeadPin || entry.lichtlootLeadPin || entry.leadPin || "";
     if(entry.updatedAt && (!group.updatedAt || String(entry.updatedAt) > String(group.updatedAt))){
       group.updatedAt = entry.updatedAt;
     }
@@ -8590,7 +8585,7 @@ function renderPoSignupConfigRows(){
     .filter(isPoSignupConfigGroup)
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     updatePoSignupTransferState();
     return;
   }
@@ -8604,6 +8599,10 @@ function renderPoSignupConfigRows(){
         <div class="po-signup-channel-stack">
           <div class="po-signup-channel-line"><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</strong></div>
         </div>
+      </td>
+      <td>
+        <div><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</div>
+        <div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div>
       </td>
       <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
       <td>
@@ -8642,9 +8641,7 @@ async function runPoSignupRowAction(select, postKey){
 
 function poSignupConfigForKey(postKey){
   const key = String(postKey || "").trim();
-  return readPoPostConfigs().find(item => item.postKey === key)
-    || poPostConfigGroups().find(item => item.postKey === key)
-    || null;
+  return readPoPostConfigs().find(item => item.postKey === key) || null;
 }
 
 function poSignupLichtlootPinForConfig(config){
@@ -10098,6 +10095,55 @@ async function deleteRaidFromDashboard(raidId){
   }
 }
 
+async function hardDeleteRaidFromPage(raidId){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = (guildData.raids || []).find(entry =>
+    String(entry.raidId || "") === String(raidId) ||
+    String(entry.id || "") === String(raidId)
+  );
+  const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)} ${raid.raidTime || ""}`.trim() : "diesen Raid";
+  if(!confirm(`${label} wirklich endgültig löschen? Prios, Anmeldungen und verknüpfte Einträge dieses Raids werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+
+  try{
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      raidId:raid?.raidId || raidId,
+      id:raid?.id || ""
+    });
+    if(!result.success || Number(result.deleted || 0) < 1){
+      setStatus(result.error || "Raid konnte nicht gelöscht werden.", "bad");
+      return;
+    }
+
+    guildData.raids = (guildData.raids || []).filter(entry =>
+      String(entry.raidId || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raidId) &&
+      String(entry.id || "") !== String(raid?.id || "")
+    );
+    renderSummary();
+    renderDashboardCards();
+    loadDashboardRaidStats();
+    renderRaids();
+    renderRaidHelperCurrentEvents();
+    renderRaidHelperPastEvents();
+    setStatus("Raid wurde endgültig gelöscht.", "good");
+    await loadOverview({ preserveStatus:true });
+  }catch(error){
+    setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
+  }
+}
+
 async function setRaidStatusFromPage(raidId, status){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -10364,8 +10410,7 @@ async function transferP0PlusFromGuild(raidId){
     renderDashboardCards();
     renderRaids();
     await loadOverview({ preserveStatus:true });
-    const skipped = Number(result.skipped || 0);
-    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.${skipped ? " " + skipped + " doppelte übersprungen." : ""}`, "good");
+    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
 
     const modal = document.getElementById("prioModal");
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
@@ -10808,14 +10853,10 @@ async function reviewPoPostEntryFromGuild(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
-      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
-      discordMessageId:entry.discordMessageId || "",
-      player:entry.player || "",
-      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
@@ -10852,14 +10893,10 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
-      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
-      discordMessageId:entry.discordMessageId || "",
-      player:entry.player || "",
-      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
