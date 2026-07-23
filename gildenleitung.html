@@ -7,6 +7,7 @@
 <style>
 :root{
   --gold:#facc15;
+  --gold-rgb:250,204,21;
   --bg:#08111f;
   --panel:rgba(12,18,32,.78);
   --panel2:rgba(2,6,23,.58);
@@ -15,6 +16,7 @@
   --text:#f8fafc;
   --muted:#cbd5e1;
   --blue:#60a5fa;
+  --blue-rgb:96,165,250;
   --green:#22c55e;
   --red:#ef4444;
   --violet:#a78bfa;
@@ -57,7 +59,7 @@ button,input,select{font:inherit}
   top:0;
   min-height:100vh;
   padding:24px 12px;
-  border-right:1px solid rgba(250,204,21,.16);
+  border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
 }
@@ -85,27 +87,27 @@ button,input,select{font:inherit}
 .side-group-toggle{
   width:100%;
   min-height:38px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   border-radius:8px;
   padding:7px 10px;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  color:#fde68a;
-  background:rgba(250,204,21,.08);
+  color:var(--gold);
+  background:rgba(var(--gold-rgb),.08);
   font-weight:900;
   cursor:pointer;
 }
 
 .side-group-toggle:hover{
-  border-color:rgba(250,204,21,.36);
-  background:rgba(250,204,21,.14);
+  border-color:rgba(var(--gold-rgb),.36);
+  background:rgba(var(--gold-rgb),.14);
 }
 
 .side-group-toggle::after{
   content:"▾";
-  color:#fbbf24;
+  color:var(--gold);
   font-size:13px;
 }
 
@@ -150,15 +152,15 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .side-link:hover,
 .side-link.active{
-  border-color:rgba(250,204,21,.32);
-  background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(15,23,42,.28));
-  color:#fde68a;
+  border-color:rgba(var(--gold-rgb),.32);
+  background:linear-gradient(90deg,rgba(var(--gold-rgb),.22),rgba(15,23,42,.28));
+  color:var(--gold);
 }
 
 .side-icon{
   width:22px;
   text-align:center;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:18px;
 }
 
@@ -238,7 +240,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .brand h1{
   margin:0;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:34px;
   line-height:1;
   letter-spacing:0;
@@ -258,7 +260,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   min-height:54px;
   padding:8px 12px;
   border-radius:10px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   background:rgba(2,6,23,.46);
 }
 
@@ -292,7 +294,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .btn:hover,
 .icon-btn:hover{
-  border-color:rgba(250,204,21,.48);
+  border-color:rgba(var(--gold-rgb),.48);
   background:linear-gradient(135deg,rgba(30,41,59,.82),rgba(15,23,42,.72));
 }
 
@@ -335,7 +337,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .quick-actions{
   margin-top:18px;
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(2,6,23,.62),rgba(12,18,32,.46));
   display:grid;
@@ -359,9 +361,9 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .quick-action:last-child{border-right:0}
-.quick-action:hover{background:rgba(250,204,21,.08)}
-.quick-action .qa-icon{font-size:26px;color:#fbbf24}
-.quick-action strong{display:block;color:#fde68a;font-size:13px}
+.quick-action:hover{background:rgba(var(--gold-rgb),.08)}
+.quick-action .qa-icon{font-size:26px;color:var(--gold)}
+.quick-action strong{display:block;color:var(--gold);font-size:13px}
 .quick-action span{display:block;color:#cbd5e1;font-size:12px;margin-top:3px}
 
 .dashboard-grid{
@@ -400,7 +402,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   justify-content:space-between;
 }
 
-.stat-card .stat-icon{font-size:28px;color:#fbbf24}
+.stat-card .stat-icon{font-size:28px;color:var(--gold)}
 .stat-card span{color:#dbeafe;font-weight:800;font-size:13px}
 .stat-card strong{display:block;margin-top:5px;font-size:30px;color:#f8fafc}
 .stat-card .stat-subline{
@@ -409,7 +411,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   font-size:12px;
   font-weight:900;
 }
-.stat-card.blue strong{color:#60a5fa}
+.stat-card.blue strong{color:var(--blue)}
 .stat-card.violet strong{color:#c084fc}
 .stat-card.red strong{color:#f87171}
 .stat-card.green strong{color:#86efac}
@@ -418,14 +420,14 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   align-self:flex-start;
   border:0;
   background:transparent;
-  color:#fbbf24;
+  color:var(--gold);
   font-weight:900;
   padding:0;
   cursor:pointer;
 }
 
 .dashboard-card{
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(12,18,32,.82),rgba(2,6,23,.54));
   padding:16px;
@@ -450,7 +452,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .dashboard-card-head button{
   border:0;
   background:transparent;
-  color:#fbbf24;
+  color:var(--gold);
   font-weight:900;
   cursor:pointer;
 }
@@ -471,7 +473,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .active-raid-group-title{
   margin:0;
-  color:#fde68a;
+  color:var(--gold);
   font-size:15px;
   font-weight:950;
   letter-spacing:0;
@@ -493,22 +495,22 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   position:relative;
   overflow:hidden;
   padding:10px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   border-radius:8px;
   background:
-    linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
+    linear-gradient(135deg,rgba(var(--gold-rgb),.08),rgba(var(--blue-rgb),.045)),
     rgba(2,6,23,.34);
   box-shadow:0 14px 28px rgba(0,0,0,.18);
 }
 
-.active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
+.active-raid-card:last-child{border-bottom:1px solid rgba(var(--gold-rgb),.18)}
 
 .active-raid-image{
   width:70px;
   height:108px;
   border-radius:5px;
   background-image:
-    linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
+    linear-gradient(135deg,rgba(2,6,23,.28),rgba(var(--gold-rgb),.10)),
     var(--raid-image);
   background-size:cover;
   background-position:center;
@@ -543,16 +545,16 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   width:max-content;
   gap:2px;
   padding:6px 8px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   border-radius:7px;
-  background:rgba(250,204,21,.08);
+  background:rgba(var(--gold-rgb),.08);
   color:#f8fafc;
   font-weight:900;
   font-size:13px;
 }
 
 .active-raid-weekday{
-  color:#facc15;
+  color:var(--gold);
   font-size:11px;
   font-weight:950;
   text-transform:uppercase;
@@ -610,7 +612,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .active-raid-stat strong{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .active-raid-actions{
@@ -630,9 +632,9 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 
 .active-raid-lead-card{
   grid-column:1 / -1;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   border-radius:6px;
-  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(15,23,42,.62));
   padding:8px;
   min-width:0;
 }
@@ -648,7 +650,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .active-raid-lead-pin{
   display:block;
   margin-top:4px;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:20px;
   font-weight:900;
   line-height:1;
@@ -704,7 +706,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .mini-action:hover span:first-child{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .mini-row span:last-child{color:#86efac}
@@ -723,13 +725,13 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .p0-panel,
 .issue-panel{background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56))}
 
-.auth-panel{border-color:rgba(250,204,21,.18)}
-.create-panel{border-color:rgba(250,204,21,.22)}
-.raid-helper-panel{border-color:rgba(96,165,250,.24)}
-.raid-panel{border-color:rgba(250,204,21,.22)}
-.player-panel{border-color:rgba(250,204,21,.16)}
-.p0-panel{border-color:rgba(250,204,21,.20)}
-.issue-panel{border-color:rgba(250,204,21,.20)}
+.auth-panel{border-color:rgba(var(--gold-rgb),.18)}
+.create-panel{border-color:rgba(var(--gold-rgb),.22)}
+.raid-helper-panel{border-color:rgba(var(--blue-rgb),.24)}
+.raid-panel{border-color:rgba(var(--gold-rgb),.22)}
+.player-panel{border-color:rgba(var(--gold-rgb),.16)}
+.p0-panel{border-color:rgba(var(--gold-rgb),.20)}
+.issue-panel{border-color:rgba(var(--gold-rgb),.20)}
 
 .compact-auth{
   width:100%;
@@ -760,7 +762,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .login-summary-card .stat-icon{
-  color:#fbbf24;
+  color:var(--gold);
   font-size:22px;
 }
 
@@ -773,7 +775,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .login-summary-card strong{
   display:block;
   margin-top:2px;
-  color:#60a5fa;
+  color:var(--blue);
   font-size:24px;
   line-height:1;
 }
@@ -788,7 +790,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .login-summary-card button{
   border:0;
   background:transparent;
-  color:#fbbf24;
+  color:var(--gold);
   font-weight:950;
   white-space:nowrap;
   cursor:pointer;
@@ -828,7 +830,7 @@ body.guild-locked .auth-panel{
   width:100%;
   max-width:720px;
   padding:30px;
-  border-color:rgba(250,204,21,.42);
+  border-color:rgba(var(--gold-rgb),.42);
   box-shadow:0 28px 90px rgba(0,0,0,.45);
 }
 
@@ -836,7 +838,7 @@ body.guild-locked .auth-panel::before{
   content:"Gildenleitung freischalten";
   display:block;
   margin:0 0 8px;
-  color:#facc15;
+  color:var(--gold);
   font-size:30px;
   font-weight:900;
   line-height:1.1;
@@ -886,13 +888,13 @@ body.guild-locked .auth-panel .btn{
 
 .auth-panel .field label,
 .create-panel .field label,
-.raid-helper-panel .field label{color:#facc15}
+.raid-helper-panel .field label{color:var(--gold)}
 .create-panel summary,
 .raid-helper-panel summary,
 .p0-panel summary,
 .issue-panel summary,
 .raid-panel summary,
-.player-panel summary{color:#fde68a}
+.player-panel summary{color:var(--gold)}
 
 input,
 select{
@@ -909,7 +911,7 @@ select{
 }
 
 input:focus,
-select:focus{border-color:rgba(96,165,250,.75)}
+select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .status{
   min-height:34px;
@@ -961,7 +963,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .metric:nth-child(1) strong,
 .metric:nth-child(2) strong,
 .metric:nth-child(3) strong,
-.metric:nth-child(4) strong{color:#fde68a}
+.metric:nth-child(4) strong{color:var(--gold)}
 
 .grid{
   display:grid;
@@ -1161,7 +1163,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-post-list-summary span{
   flex:0 0 auto;
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   font-weight:950;
 }
@@ -1215,14 +1217,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
   gap:12px;
   margin:10px 0 10px;
   padding:10px 12px;
-  border:1px solid rgba(250,204,21,.42);
+  border:1px solid rgba(var(--gold-rgb),.42);
   border-radius:8px;
   background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.78));
   box-shadow:0 12px 28px rgba(0,0,0,.18);
 }
 
 .po-signup-current span:first-child{
-  color:#facc15;
+  color:var(--gold);
   font-size:11px;
   font-weight:950;
   text-transform:uppercase;
@@ -1283,9 +1285,9 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-step.is-active{
-  border-color:rgba(250,204,21,.48);
+  border-color:rgba(var(--gold-rgb),.48);
   background:rgba(113,63,18,.32);
-  box-shadow:0 0 0 2px rgba(250,204,21,.24),0 12px 24px rgba(0,0,0,.18);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.24),0 12px 24px rgba(0,0,0,.18);
   position:relative;
 }
 
@@ -1294,14 +1296,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
   position:absolute;
   right:8px;
   top:6px;
-  color:#facc15;
+  color:var(--gold);
   font-size:9px;
   font-weight:950;
   text-transform:uppercase;
 }
 
 .po-signup-step.is-active .po-signup-step-num{
-  background:#facc15;
+  background:var(--gold);
   color:#111827;
 }
 
@@ -1331,7 +1333,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-post-id-button:hover{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .po-post-entry-panel{
@@ -1358,7 +1360,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-signup-prio-option input{
   width:18px;
   height:18px;
-  accent-color:#facc15;
+  accent-color:var(--gold);
 }
 
 .po-signup-prio-hint{
@@ -1392,7 +1394,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
   position:absolute;
   left:10px;
   top:-19px;
-  color:var(--po-action-color,#facc15);
+  color:var(--po-action-color,var(--gold));
   font-size:34px;
   font-weight:950;
   transform:rotate(16deg);
@@ -1400,8 +1402,8 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
-.po-signup-action-transfer{--po-action-color:#facc15;border-color:rgba(250,204,21,.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
-.po-signup-action-helper{--po-action-color:#60a5fa;border-color:rgba(96,165,250,.34)}
+.po-signup-action-transfer{--po-action-color:var(--gold);border-color:rgba(var(--gold-rgb),.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
+.po-signup-action-helper{--po-action-color:var(--blue);border-color:rgba(var(--blue-rgb),.34)}
 
 .po-signup-action-card strong{
   display:block;
@@ -1437,7 +1439,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-transfer-button{
   background:linear-gradient(135deg,rgba(161,98,7,.92),rgba(15,23,42,.78));
-  border-color:rgba(250,204,21,.58);
+  border-color:rgba(var(--gold-rgb),.58);
   color:#fef3c7;
 }
 
@@ -1481,11 +1483,11 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-item-result:hover{
-  border-color:rgba(250,204,21,.55);
+  border-color:rgba(var(--gold-rgb),.55);
 }
 
 .po-signup-item-result strong{
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   white-space:nowrap;
 }
@@ -1497,7 +1499,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-preview-details{
-  border-left-color:#facc15;
+  border-left-color:var(--gold);
   min-height:0;
 }
 
@@ -1626,7 +1628,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-correction-label{
-  color:#facc15;
+  color:var(--gold);
   font-size:10px;
   font-weight:950;
   text-transform:uppercase;
@@ -1645,8 +1647,8 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-correction-input:focus{
-  outline:2px solid rgba(250,204,21,.28);
-  border-color:rgba(250,204,21,.7);
+  outline:2px solid rgba(var(--gold-rgb),.28);
+  border-color:rgba(var(--gold-rgb),.7);
 }
 
 .po-entry-item-results{
@@ -1678,7 +1680,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-entry-item-choice:hover,
 .po-entry-item-choice:focus{
   outline:none;
-  background:rgba(96,165,250,.14);
+  background:rgba(var(--blue-rgb),.14);
 }
 
 .po-entry-item-choice.selected{
@@ -1705,7 +1707,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
   display:grid;
   grid-template-rows:auto auto minmax(0,1fr);
   gap:12px;
-  border:1px solid rgba(250,204,21,.42);
+  border:1px solid rgba(var(--gold-rgb),.42);
   border-radius:10px;
   background:linear-gradient(145deg,rgba(8,13,26,.98),rgba(3,7,18,.96));
   box-shadow:0 22px 60px rgba(0,0,0,.56);
@@ -1720,7 +1722,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-loot-picker-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:18px;
   font-weight:950;
   text-transform:uppercase;
@@ -1766,7 +1768,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-entry-loot-picker-item:hover,
 .po-entry-loot-picker-item:focus{
   outline:none;
-  border-color:rgba(250,204,21,.60);
+  border-color:rgba(var(--gold-rgb),.60);
   background:rgba(30,41,59,.82);
 }
 
@@ -1836,7 +1838,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-channel-line span:first-child{
   min-width:32px;
-  color:#facc15;
+  color:var(--gold);
   font-size:10px;
   font-weight:950;
   text-transform:uppercase;
@@ -1865,7 +1867,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 tr.selected-row td{
-  background:rgba(96,165,250,.10);
+  background:rgba(var(--blue-rgb),.10);
 }
 
 .raid-helper-channel{
@@ -1885,7 +1887,7 @@ tr.selected-row td{
   position:absolute;
   inset:0 0 auto;
   height:3px;
-  background:linear-gradient(90deg,#7c3aed,#60a5fa,#facc15);
+  background:linear-gradient(90deg,#7c3aed,var(--blue),var(--gold));
   opacity:.85;
 }
 
@@ -1909,8 +1911,8 @@ tr.selected-row td{
   border-radius:8px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(96,165,250,.32);
-  background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(124,58,237,.22));
+  border:1px solid rgba(var(--blue-rgb),.32);
+  background:linear-gradient(135deg,rgba(var(--blue-rgb),.22),rgba(124,58,237,.22));
   color:#dbeafe;
   font-size:18px;
 }
@@ -2130,8 +2132,8 @@ tr.selected-row td{
   place-items:center;
   margin:0 auto 12px;
   border-radius:10px;
-  border:1px solid rgba(96,165,250,.32);
-  background:rgba(96,165,250,.12);
+  border:1px solid rgba(var(--blue-rgb),.32);
+  background:rgba(var(--blue-rgb),.12);
   color:#bfdbfe;
   font-size:26px;
 }
@@ -2269,9 +2271,9 @@ tr.selected-row td{
   border-radius:8px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(250,204,21,.25);
+  border:1px solid rgba(var(--gold-rgb),.25);
   background:rgba(15,23,42,.72);
-  color:#facc15;
+  color:var(--gold);
   font-weight:950;
 }
 
@@ -2307,7 +2309,7 @@ tr.selected-row td{
 }
 
 .raid-helper-template-card{
-  border:1px solid rgba(96,165,250,.18);
+  border:1px solid rgba(var(--blue-rgb),.18);
   border-radius:10px;
   background:
     linear-gradient(135deg,rgba(var(--template-accent,56,189,248),.13),rgba(2,6,23,.66) 48%,rgba(15,23,42,.82)),
@@ -2416,7 +2418,7 @@ tr.selected-row td{
 
 .raid-helper-notify-modal{
   width:min(540px,100%);
-  border:1px solid rgba(96,165,250,.3);
+  border:1px solid rgba(var(--blue-rgb),.3);
   border-radius:12px;
   background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96));
   box-shadow:0 24px 70px rgba(0,0,0,.42);
@@ -2502,7 +2504,7 @@ tr.selected-row td{
   gap:12px;
   margin-bottom:12px;
   padding:14px;
-  border:1px solid rgba(96,165,250,.24);
+  border:1px solid rgba(var(--blue-rgb),.24);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(15,23,42,.92),rgba(2,6,23,.76));
   box-shadow:0 16px 42px rgba(0,0,0,.22);
@@ -2611,7 +2613,7 @@ tr.selected-row td{
 }
 
 .raid-helper-wcl-card{
-  border:1px solid rgba(96,165,250,.16);
+  border:1px solid rgba(var(--blue-rgb),.16);
   border-radius:8px;
   background:rgba(2,6,23,.44);
   padding:12px;
@@ -2625,7 +2627,7 @@ tr.selected-row td{
 .raid-helper-wcl-card a{
   display:inline-block;
   margin-top:8px;
-  color:#60a5fa;
+  color:var(--blue);
   font-weight:950;
   text-decoration:none;
 }
@@ -2714,7 +2716,7 @@ tr.selected-row td{
 }
 
 .raid-helper-attendance-table thead th.attendance-warning{
-  box-shadow:inset 0 0 0 2px rgba(250,204,21,.48);
+  box-shadow:inset 0 0 0 2px rgba(var(--gold-rgb),.48);
 }
 
 .attendance-warning-mark{
@@ -2725,20 +2727,20 @@ tr.selected-row td{
   height:15px;
   margin-left:4px;
   border-radius:50%;
-  background:#facc15;
+  background:var(--gold);
   color:#422006;
   font-size:11px;
   font-weight:950;
 }
 
 .raid-helper-attendance-cell.signed{background:rgba(34,197,94,.64);color:#052e16}
-.raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
+.raid-helper-attendance-cell.bench{background:rgba(var(--gold-rgb),.45);color:#422006}
 .raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
-.raid-helper-attendance-cell.tentative{background:rgba(96,165,250,.46);color:#082f49}
+.raid-helper-attendance-cell.tentative{background:rgba(var(--blue-rgb),.46);color:#082f49}
 .p0-release-star{
-  color:#facc15;
+  color:var(--gold);
   margin-left:4px;
-  text-shadow:0 0 10px rgba(250,204,21,.42);
+  text-shadow:0 0 10px rgba(var(--gold-rgb),.42);
 }
 
 .raid-helper-loading{
@@ -2854,7 +2856,7 @@ tr.selected-row td{
 
 .discord-preview-links{
   margin-top:16px;
-  color:#60a5fa;
+  color:var(--blue);
   font-weight:950;
   font-size:13px;
 }
@@ -2891,7 +2893,7 @@ tr.selected-row td{
   align-items:center;
   gap:18px;
   padding:14px 18px;
-  border:1px solid rgba(96,165,250,.18);
+  border:1px solid rgba(var(--blue-rgb),.18);
   border-radius:12px;
   background:
     radial-gradient(circle at 6% 0%,rgba(37,99,235,.18),transparent 30%),
@@ -2909,7 +2911,7 @@ tr.selected-row td{
   width:46px;
   height:46px;
   object-fit:contain;
-  filter:drop-shadow(0 8px 14px rgba(250,204,21,.22));
+  filter:drop-shadow(0 8px 14px rgba(var(--gold-rgb),.22));
 }
 
 .log-analysis-hero h3{
@@ -2920,7 +2922,7 @@ tr.selected-row td{
   text-transform:uppercase;
 }
 
-.log-analysis-hero h3 span{color:#fbbf24}
+.log-analysis-hero h3 span{color:var(--gold)}
 
 .log-analysis-hero p{
   margin:4px 0 0;
@@ -2939,7 +2941,7 @@ tr.selected-row td{
 .log-analysis-count{
   min-width:86px;
   padding:8px 12px;
-  border:1px solid rgba(96,165,250,.28);
+  border:1px solid rgba(var(--blue-rgb),.28);
   border-radius:10px;
   background:rgba(15,23,42,.74);
   text-align:center;
@@ -2966,7 +2968,7 @@ tr.selected-row td{
   gap:10px;
   align-items:center;
   padding:12px;
-  border:1px solid rgba(96,165,250,.12);
+  border:1px solid rgba(var(--blue-rgb),.12);
   border-radius:12px;
   background:rgba(8,18,36,.70);
 }
@@ -3058,7 +3060,7 @@ tr.selected-row td{
   height:48px;
   border-radius:8px;
   object-fit:cover;
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   box-shadow:0 10px 22px rgba(0,0,0,.24);
 }
 
@@ -3125,10 +3127,10 @@ tr.selected-row td{
   justify-content:center;
   min-height:28px;
   padding:5px 8px;
-  border:1px solid rgba(251,191,36,.34);
+  border:1px solid rgba(var(--gold-rgb),.34);
   border-radius:7px;
   background:rgba(120,53,15,.18);
-  color:#fde68a;
+  color:var(--gold);
   font-size:12px;
   font-weight:800;
   white-space:nowrap;
@@ -3136,7 +3138,7 @@ tr.selected-row td{
 }
 
 button.log-export-note:hover{
-  border-color:rgba(250,204,21,.62);
+  border-color:rgba(var(--gold-rgb),.62);
   background:rgba(146,64,14,.28);
 }
 
@@ -3147,7 +3149,7 @@ button.log-export-note:hover{
   gap:14px;
   flex-wrap:wrap;
   padding:12px 16px;
-  border:1px solid rgba(96,165,250,.14);
+  border:1px solid rgba(var(--blue-rgb),.14);
   border-radius:12px;
   background:rgba(8,18,36,.70);
   color:#cbd5e1;
@@ -3173,8 +3175,8 @@ button.log-export-note:hover{
 }
 
 .log-page-btn.active{
-  border-color:rgba(96,165,250,.62);
-  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+  border-color:rgba(var(--blue-rgb),.62);
+  background:linear-gradient(135deg,var(--blue),#2563eb);
 }
 
 .log-page-btn:disabled{
@@ -3207,7 +3209,7 @@ button.log-export-note:hover{
 }
 
 .created-pin{
-  border:1px solid rgba(96,165,250,.32);
+  border:1px solid rgba(var(--blue-rgb),.32);
   border-radius:8px;
   padding:8px;
   background:rgba(15,23,42,.65);
@@ -3238,7 +3240,7 @@ button.log-export-note:hover{
   margin-top:6px;
   padding:9px;
   border-radius:8px;
-  border:1px solid rgba(250,204,21,.26);
+  border:1px solid rgba(var(--gold-rgb),.26);
   background:rgba(2,6,23,.72);
   color:#f8fafc;
   font:600 12px/1.4 Arial, Helvetica, sans-serif;
@@ -3276,16 +3278,16 @@ th{
   position:sticky;
   top:0;
   background:rgba(2,6,23,.62);
-  color:#fde68a;
+  color:var(--gold);
   text-transform:uppercase;
   font-size:11px;
   z-index:1;
 }
 
 .raid-panel th,
-.player-panel th{color:#fde68a;background:rgba(2,6,23,.62)}
+.player-panel th{color:var(--gold);background:rgba(2,6,23,.62)}
 
-tr:hover td{background:rgba(250,204,21,.035)}
+tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .raid-title{
   display:flex;
@@ -3324,7 +3326,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .muted{color:var(--muted)}
 .ok{color:#bbf7d0}
-.warn{color:#fde68a}
+.warn{color:var(--gold)}
 .bad{color:#fecaca}
 
 .badge{
@@ -3342,7 +3344,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
 .badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
-.badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+.badge.warn{border-color:rgba(var(--gold-rgb),.35);color:var(--gold)}
 .badge.danger{border-color:rgba(248,113,113,.45);color:#fecaca;background:rgba(127,29,29,.16)}
 
 .analysis-progress{
@@ -3396,12 +3398,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .analysis-progress-fill.is-failed{
   min-width:100%;
-  background:linear-gradient(90deg,#92400e,#facc15);
-  box-shadow:0 0 12px rgba(250,204,21,.26);
+  background:linear-gradient(90deg,#92400e,var(--gold));
+  box-shadow:0 0 12px rgba(var(--gold-rgb),.26);
 }
 
 .analysis-progress.is-running .analysis-progress-fill{
-  background:linear-gradient(90deg,#1d4ed8,#22c55e,#facc15);
+  background:linear-gradient(90deg,var(--blue),#22c55e,var(--gold));
   background-size:220% 100%;
   animation:analysisProgressPulse 1.8s linear infinite;
 }
@@ -3415,7 +3417,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .analysis-warning{
   margin-top:6px;
-  color:#fde68a;
+  color:var(--gold);
   font-size:10px;
   font-weight:800;
   max-width:260px;
@@ -3458,7 +3460,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-btn.primary{
-  border-color:rgba(96,165,250,.38);
+  border-color:rgba(var(--blue-rgb),.38);
   background:rgba(30,64,175,.22);
   color:#bfdbfe;
 }
@@ -3482,7 +3484,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-btn:hover{
-  border-color:rgba(250,204,21,.46);
+  border-color:rgba(var(--gold-rgb),.46);
   background:rgba(30,41,59,.72);
 }
 
@@ -3500,8 +3502,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-select:focus{
-  border-color:rgba(250,204,21,.46);
-  box-shadow:0 0 0 2px rgba(250,204,21,.10);
+  border-color:rgba(var(--gold-rgb),.46);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.10);
 }
 
 .role-control{
@@ -3517,7 +3519,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .reset-card{
-  border:1px solid rgba(96,165,250,.28);
+  border:1px solid rgba(var(--blue-rgb),.28);
   background:rgba(15,23,42,.62);
   border-radius:8px;
   padding:8px;
@@ -3534,7 +3536,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-top:6px;
   padding:6px 9px;
   border-radius:8px;
-  border:1px solid rgba(96,165,250,.45);
+  border:1px solid rgba(var(--blue-rgb),.45);
   color:#bfdbfe;
   font-size:18px;
   font-weight:900;
@@ -3676,7 +3678,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .epic{color:#c084fc}
-.rare{color:#60a5fa}
+.rare{color:var(--blue)}
 .uncommon{color:#4ade80}
 .legendary{color:#fb923c}
 .class-warrior{color:#c69b6d}
@@ -3734,7 +3736,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .tooltip-stat{color:white;margin-top:3px}
 .tooltip-equip{color:#1eff00;margin-top:6px}
 .tooltip-extra{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
-.tooltip-extra strong{color:#facc15}
+.tooltip-extra strong{color:var(--gold)}
 
 .character-stack{
   display:flex;
@@ -3800,7 +3802,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:920px;
 }
 
-.p0-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .issue-toolbar{
   display:grid;
@@ -3814,7 +3816,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:1040px;
 }
 
-.issue-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.issue-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .issue-note{
   max-width:320px;
@@ -3862,8 +3864,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .worldbuff-create-card{
   position:relative;
   margin:12px 0;
-  border-color:rgba(250,204,21,.34);
-  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.56));
+  border-color:rgba(var(--gold-rgb),.34);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(15,23,42,.56));
 }
 
 .worldbuff-create-card::before{
@@ -3871,7 +3873,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   position:absolute;
   left:14px;
   top:-18px;
-  color:#facc15;
+  color:var(--gold);
   font-size:34px;
   font-weight:950;
   transform:rotate(18deg);
@@ -3880,7 +3882,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .worldbuff-create-title{
   margin:0 0 8px 34px;
-  color:#fde68a;
+  color:var(--gold);
   font-size:15px;
   font-weight:950;
 }
@@ -3889,15 +3891,15 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:1060px;
 }
 
-.worldbuff-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.worldbuff-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .worldbuff-table tr.buff-day-row td{
   background:rgba(15,23,42,.34);
-  border-top:2px solid rgba(250,204,21,.32);
+  border-top:2px solid rgba(var(--gold-rgb),.32);
 }
 
 .worldbuff-table tr.buff-day-row td:first-child{
-  box-shadow:inset 4px 0 0 rgba(250,204,21,.72);
+  box-shadow:inset 4px 0 0 rgba(var(--gold-rgb),.72);
 }
 
 .worldbuff-table tr.buff-day-row:hover td{
@@ -3913,9 +3915,9 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:88px;
   padding:4px 8px;
   border-radius:999px;
-  border:1px solid rgba(250,204,21,.32);
-  background:rgba(250,204,21,.10);
-  color:#fde68a;
+  border:1px solid rgba(var(--gold-rgb),.32);
+  background:rgba(var(--gold-rgb),.10);
+  color:var(--gold);
   font-weight:950;
 }
 
@@ -3968,14 +3970,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
   font-weight:900;
 }
 
-#prioModal .modal-box{border-color:rgba(96,165,250,.38)}
-#prioModal .modal-title h2{color:#fde68a}
+#prioModal .modal-box{border-color:rgba(var(--blue-rgb),.38)}
+#prioModal .modal-title h2{color:var(--gold)}
 #messageModal .modal-box{
   width:min(560px, calc(100vw - 24px));
   min-width:min(420px, calc(100vw - 24px));
   min-height:0;
   resize:none;
-  border-color:rgba(250,204,21,.38);
+  border-color:rgba(var(--gold-rgb),.38);
 }
 #messageModal .modal-content{
   display:grid;
@@ -3993,10 +3995,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
   font-weight:600;
 }
 #messageModal .message-raid-preview{
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   border-radius:8px;
   padding:10px;
-  background:rgba(250,204,21,.08);
+  background:rgba(var(--gold-rgb),.08);
   color:#e5edf8;
   font-weight:800;
 }
@@ -4005,8 +4007,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-top:8px;
   padding:6px 10px;
   border-radius:7px;
-  border:1px solid rgba(250,204,21,.38);
-  color:#fbbf24;
+  border:1px solid rgba(var(--gold-rgb),.38);
+  color:var(--gold);
   font-size:22px;
   font-weight:950;
   letter-spacing:1px;
@@ -4018,7 +4020,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   width:100%;
   min-height:260px;
   border-radius:8px;
-  border:1px solid rgba(250,204,21,.38);
+  border:1px solid rgba(var(--gold-rgb),.38);
   background:rgba(2,6,23,.78);
   color:#e5edf8;
   padding:12px;
@@ -4035,7 +4037,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 @media (max-width:1000px){
   .app-frame{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(250,204,21,.16)}
+  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
   .sidebar-foot{position:static;margin-top:14px}
   .side-logo{width:140px;height:80px;margin-bottom:10px}
   .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -5096,6 +5098,26 @@ function titleFromSlug(slug){
     .join(" ");
 }
 
+function colorToRgbList(value){
+  const color = String(value || "").trim();
+  const match = color.match(/^#?([0-9a-f]{6})$/i);
+  if(!match) return "";
+  const hex = match[1];
+  return [
+    parseInt(hex.slice(0,2),16),
+    parseInt(hex.slice(2,4),16),
+    parseInt(hex.slice(4,6),16)
+  ].join(",");
+}
+
+function applyGuildThemeColor(cssName, rgbName, value){
+  const color = String(value || "").trim();
+  if(!color) return;
+  document.documentElement.style.setProperty(cssName, color);
+  const rgb = colorToRgbList(color);
+  if(rgb) document.documentElement.style.setProperty(rgbName, rgb);
+}
+
 function getCurrentGuildBrand(){
   const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
   return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
@@ -5144,6 +5166,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Gildenleitung";
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
@@ -5885,7 +5909,7 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
+              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
             </div>
           </div>
@@ -6130,7 +6154,7 @@ function renderRaids(){
             <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
-            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
+            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
@@ -6160,7 +6184,11 @@ function renderPlayers(){
     return;
   }
 
-  tbody.innerHTML = groups.map(group => `
+  tbody.innerHTML = groups.map(group => {
+    const approvalStatus = String(group.approvalStatus || group.main.approvalStatus || "approved").toLowerCase();
+    const approvalLabel = approvalStatus === "approved" ? "freigegeben" : approvalStatus === "rejected" ? "abgelehnt" : "wartet auf Freigabe";
+    const approvalClass = approvalStatus === "approved" ? "open" : approvalStatus === "rejected" ? "danger" : "warn";
+    return `
     <tr>
       <td>
         <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
@@ -6169,9 +6197,12 @@ function renderPlayers(){
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
       <td>${renderPlayerRoleControl(group)}</td>
       <td>
-        ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : '<span class="badge closed">verborgen</span>'}
+        <span class="badge ${approvalClass}">${escapeHtml(approvalLabel)}</span>
+        ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : ""}
+        ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
       </td>
       <td>
+        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
@@ -6179,7 +6210,8 @@ function renderPlayers(){
         <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
       </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
 const PLAYER_LOGIN_ROLES=[
@@ -6267,6 +6299,33 @@ async function setPlayerLoginBlocked(playerId, blocked){
   }
 }
 
+async function approvePlayerLogin(playerId){
+  if(!playerId) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
+  setStatus("SpielerLogin wird freigegeben ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildApprovePlayerLogin",
+      masterCode,
+      playerId,
+      approvedBy:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+      return;
+    }
+    setStatus("SpielerLogin wurde freigegeben.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+  }
+}
+
 function groupPlayersByMain(players){
   const groups = new Map();
   (players || []).forEach(player => {
@@ -6288,6 +6347,9 @@ function groupPlayersByMain(players){
     group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
     group.isBlocked = group.characters.some(player => player.isBlocked || player.blocked);
     group.blockedReason = (group.characters.find(player => player.blockedReason)?.blockedReason) || "";
+    group.approvalStatus = group.characters.some(player => String(player.approvalStatus || "approved").toLowerCase() !== "approved")
+      ? (group.characters.find(player => String(player.approvalStatus || "approved").toLowerCase() !== "approved")?.approvalStatus || "pending")
+      : "approved";
     return group;
   }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
 }
@@ -6519,7 +6581,7 @@ function raidHelperRaidColor(raidKey){
     aq40:"#c084fc",
     bwl:"#ef4444",
     mc:"#f97316",
-    naxx:"#60a5fa",
+    naxx:"var(--blue)",
     ony:"#fb923c"
   }[raidKey] || "#a78bfa";
 }
@@ -10973,14 +11035,14 @@ async function transferP0PlusFromGuild(raidId){
   }
 }
 
-async function queueP0PlusBackup(){
+async function queueP0PlusBackup(raidOverride){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
 
-  const raid = document.getElementById("p0BackupRaid")?.value || "all40";
+  const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
   const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
   const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
   if(!ok) return;
