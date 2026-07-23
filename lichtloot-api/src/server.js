@@ -925,6 +925,16 @@ function defaultGuildLayoutForSlug(slug) {
   return { raidImages: defaultNewGuildRaidImages };
 }
 
+function guildLogoUrlForSlug(slug, logoUrl) {
+  const cleanLogo = clean(logoUrl);
+  const cleanSlug = String(slug || "").trim().toLowerCase();
+  if (cleanSlug === "lichtloot") return cleanLogo || "images/content.png";
+  if (!cleanLogo || cleanLogo === "images/content.png" || cleanLogo === "./images/content.png") {
+    return defaultNewGuildLogoUrl;
+  }
+  return cleanLogo;
+}
+
 function mergeGuildLayoutDefaults(slug, layout) {
   const existing = layout && typeof layout === "object" && !Array.isArray(layout) ? layout : {};
   const defaults = defaultGuildLayoutForSlug(slug);
@@ -959,7 +969,7 @@ async function listGuilds() {
       name: row.name,
       server: row.server || "",
       guildPin: row.guild_pin || "",
-      logoUrl: row.logo_url || "",
+      logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
       backgroundUrl: row.background_url || "",
       pointsLabel: row.points_label || "P0/P0+",
       primaryColor: row.primary_color || "#facc15",
@@ -1124,7 +1134,7 @@ async function updateGuildConfig({ query: params, body = {} }) {
         slug: row.slug,
         name: row.name,
         server: row.server || "",
-        logoUrl: row.logo_url || "",
+        logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
         backgroundUrl: row.background_url || "",
         pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
         primaryColor: settingsResult.rows[0]?.primary_color || "#facc15",
@@ -1181,7 +1191,7 @@ async function resolveGuildByPin({ query: params, body = {} }) {
         slug: row.slug,
         name: "Lichtbringer",
         server: row.server || "",
-        logoUrl: row.logo_url || "",
+        logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
         backgroundUrl: row.background_url || ""
       },
       guildSlug: row.slug,
@@ -1219,7 +1229,7 @@ async function resolveGuildByPin({ query: params, body = {} }) {
       slug: row.slug,
       name: row.name || "",
       server: row.server || "",
-      logoUrl: row.logo_url || "",
+      logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
       backgroundUrl: row.background_url || ""
     },
     guildSlug: row.slug,
@@ -1311,7 +1321,7 @@ function normalizeGuildApplicationRow(row, params = {}) {
     setupCompletedAt: row.setup_completed_at || null,
     guildSlug: row.guild_slug || "",
     guildPin: row.guild_pin || "",
-    logoUrl: row.logo_url || "",
+    logoUrl: guildLogoUrlForSlug(row.guild_slug, row.logo_url),
     backgroundUrl: row.background_url || "",
     primaryColor: row.primary_color || "#facc15",
     accentColor: row.accent_color || "#1d4ed8",
