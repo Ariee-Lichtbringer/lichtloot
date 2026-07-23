@@ -3339,6 +3339,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
 .badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
 .badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+.badge.danger{border-color:rgba(248,113,113,.45);color:#fecaca;background:rgba(127,29,29,.16)}
 
 .analysis-progress{
   width:min(180px,100%);
@@ -6145,8 +6146,13 @@ function renderPlayers(){
       </td>
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
       <td>${renderPlayerRoleControl(group)}</td>
-      <td><span class="badge closed">verborgen</span></td>
       <td>
+        ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : '<span class="badge closed">verborgen</span>'}
+      </td>
+      <td>
+        ${group.isBlocked
+          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
+          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
         <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
         <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
       </td>
@@ -6206,6 +6212,39 @@ async function setPlayerLoginRole(playerId, selectId){
   }
 }
 
+async function setPlayerLoginBlocked(playerId, blocked){
+  if(!playerId) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const message = blocked
+    ? "Diesen SpielerLogin wirklich sperren? Der Spieler kann danach mit diesem PIN nichts mehr laden."
+    : "Sperre für diesen SpielerLogin wirklich aufheben?";
+  if(!confirm(message)) return;
+
+  const reason = blocked ? (prompt("Grund für die Sperre:", "Aus der Gilde entfernt") || "Durch Gildenleitung gesperrt") : "";
+  setStatus(blocked ? "SpielerLogin wird gesperrt ..." : "Sperre wird aufgehoben ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildSetPlayerLoginBlocked",
+      masterCode,
+      playerId,
+      blocked: blocked ? "true" : "false",
+      reason
+    });
+    if(!result.success){
+      setStatus(result.error || "Sperre konnte nicht geändert werden.", "bad");
+      return;
+    }
+    setStatus(blocked ? "SpielerLogin wurde gesperrt." : "Sperre wurde aufgehoben.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "Sperre konnte nicht geändert werden.", "bad");
+  }
+}
+
 function groupPlayersByMain(players){
   const groups = new Map();
   (players || []).forEach(player => {
@@ -6225,6 +6264,8 @@ function groupPlayersByMain(players){
     group.main = group.main || group.characters[0] || {};
     group.twinks = group.characters.filter(player => player !== group.main);
     group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
+    group.isBlocked = group.characters.some(player => player.isBlocked || player.blocked);
+    group.blockedReason = (group.characters.find(player => player.blockedReason)?.blockedReason) || "";
     return group;
   }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
 }
