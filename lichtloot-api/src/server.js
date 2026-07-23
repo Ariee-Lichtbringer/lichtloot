@@ -6161,7 +6161,10 @@ async function savePoPostEntry({ guildId, query: params }) {
         itemBoss: row.item_boss || "",
         discordUserId: row.discord_user_id || "",
         discordName: row.discord_name || "",
-        approvalStatus: row.approval_status || "pending"
+        approvalStatus: row.approval_status || "pending",
+        createdAt: row.po_created_at || row.updated_at || "",
+        poCreatedAt: row.po_created_at || "",
+        updatedAt: row.updated_at || ""
       }
     };
   } catch (error) {
