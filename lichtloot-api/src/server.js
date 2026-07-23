@@ -1117,6 +1117,15 @@ async function resolveGuildByPin({ query: params, body = {} }) {
     [pin]
   );
   let row = result.rows[0];
+  if (!row && pin === "LICHTBRINGER") {
+    const fallback = await query(
+      `select slug, name, server, logo_url, background_url
+       from guilds
+       where slug = 'lichtloot'
+       limit 1`
+    );
+    row = fallback.rows[0];
+  }
   if (!row) {
     const error = new Error("GildenPIN wurde nicht gefunden.");
     error.statusCode = 404;
