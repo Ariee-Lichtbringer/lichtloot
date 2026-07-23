@@ -1415,25 +1415,25 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div class="header">
     <img src="images/content.png" alt="LichtLoot" class="logo-banner">
   </div>
-  <div class="guild-soon-note"><strong>Hinweis:</strong> Die Registrierung für weitere Gilden kommt bald.</div>
+  <div class="guild-soon-note"><strong>Hinweis:</strong> Weitere Gilden können sich jetzt für LichtLoot anmelden.</div>
 
   <section id="guildGate" class="guild-gate hidden">
     <div class="guild-gate-head">
       <div>
-        <h1>Gildenregistrierung kommt bald</h1>
-        <p>Bald können sich weitere Gilden ein eigenes Lootsystem anlegen. Bis dahin bleibt dieser Bereich geschlossen.</p>
+        <h1>LichtLoot Gilde werden</h1>
+        <p>Weitere Gilden können sich jetzt für ein eigenes LichtLoot-System anmelden.</p>
       </div>
     </div>
 
     <div class="guild-gate-grid">
       <div class="guild-register">
-        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Weitere Gilden bald verfügbar</span></div>
-        <p>Die Registrierung für andere Gilden wird gerade vorbereitet. Sobald alles fertig ist, erscheint hier wieder ein eigenes Anmeldefenster.</p>
+        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>LichtLoot Gilde werden</span></div>
+        <p>Registriere deine Gilde und richte danach eigene SpielerLogins, Raids und Gildenleitung ein.</p>
         <div class="guild-config-actions">
+          <a class="guild-config-link" href="gilde-anmelden.html">Gilde anmelden <span>›</span></a>
           <a class="guild-config-link" href="index.html?guild=lichtloot">LichtLoot Login öffnen <span>›</span></a>
-          <a class="guild-config-link" href="index.html?guild=lichtloot&open=createLogin">SpielerLogin erstellen <span>›</span></a>
         </div>
-        <div id="guildGateStatus" class="guild-status">Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.</div>
+        <div id="guildGateStatus" class="guild-status">Gildenregistrierung ist geöffnet.</div>
       </div>
     </div>
   </section>
@@ -1806,6 +1806,18 @@ body.show-mylichtloot .mylichtloot-card{display:block}
         </div>
       </div>
     </section>
+
+    <section class="random-raid-panel" id="guildSignupPanel">
+      <div class="random-panel-head">
+        <div>
+          <h2>LichtLoot Gilde werden</h2>
+          <p>Für Gilden, die LichtLoot mit eigener Startseite, SpielerLogins und Raidverwaltung nutzen möchten.</p>
+        </div>
+        <div class="random-panel-actions">
+          <button class="big-btn subtle" type="button" onclick="window.location.href='gilde-anmelden.html'">Gilde anmelden</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <div id="raidCreateBox" class="hidden"></div>
@@ -2079,12 +2091,11 @@ function renderGuildGateList(){
 async function reloadGuildGate(){
   const status=document.getElementById("guildGateStatus");
   guildGateGuilds=[];
-  if(status) status.innerHTML='Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.';
+  if(status) status.innerHTML='Gildenregistrierung ist geöffnet.';
 }
 
 async function registerGuildFromGate(){
-  const status=document.getElementById("guildGateStatus");
-  if(status) status.innerHTML='<span class="warn">Die Registrierung für weitere Gilden kommt bald.</span>';
+  window.location.href='gilde-anmelden.html';
 }
 
 let currentGuildInfo = null;
