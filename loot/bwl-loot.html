@@ -7,14 +7,14 @@
 <title>Lichtloot - Blackwing Lair</title>
 
 <style>
-:root{--gold:#facc15;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
+:root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .back{color:white;text-decoration:none;font-weight:800;border:1px solid var(--line);padding:12px 16px;border-radius:14px;background:rgba(12,18,32,.72);cursor:pointer}
-.header{margin-bottom:28px;padding:30px;border-radius:24px;background:var(--panel);border:1px solid rgba(250,204,21,.22)}
+.header{margin-bottom:28px;padding:30px;border-radius:24px;background:var(--panel);border:1px solid rgba(var(--gold-rgb),.22)}
 h1{color:var(--gold);font-size:clamp(34px,5vw,58px);margin-bottom:8px}
 .subtitle{color:#dbeafe;line-height:1.7;font-size:15px}
 .header-tools{
@@ -41,13 +41,13 @@ h2{color:var(--gold);margin-bottom:16px;font-size:22px}
 h3{color:var(--gold);margin:22px 0 10px;font-size:18px}
 label{display:block;color:var(--muted);font-size:12px;font-weight:800;margin:14px 0 7px;text-transform:uppercase;letter-spacing:.08em}
 input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(2,6,23,.82);color:white;font-size:14px}
-.btn{width:100%;margin-top:14px;padding:13px 16px;border-radius:14px;border:1px solid rgba(250,204,21,.25);background:linear-gradient(135deg,rgba(250,204,21,.28),rgba(96,165,250,.18));color:white;font-weight:900;cursor:pointer}
+.btn{width:100%;margin-top:14px;padding:13px 16px;border-radius:14px;border:1px solid rgba(var(--gold-rgb),.25);background:linear-gradient(135deg,rgba(var(--gold-rgb),.28),rgba(var(--blue-rgb),.18));color:white;font-weight:900;cursor:pointer}
 .status{margin-top:14px;padding:13px;border-radius:14px;border:1px solid var(--line);background:rgba(2,6,23,.55);color:#dbeafe;line-height:1.6;font-size:13px}
 .ok{color:var(--green);font-weight:900}.bad{color:var(--danger);font-weight:900}.warn{color:var(--gold);font-weight:900}
 
 .search-box{margin-bottom:14px;position:relative}
 .search-box input{padding-left:38px}
-.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gold)}
 
 .loot-list{display:flex;flex-direction:column;gap:8px;max-height:700px;overflow:auto;padding-right:4px}
 .loot-item-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.10)}
@@ -57,7 +57,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
   width:24px;
   height:24px;
   border-radius:4px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   object-fit:cover;
   flex-shrink:0;
 }
@@ -69,19 +69,19 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 }
 
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(250,204,21,.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
-.mini-btn.plus{color:#facc15}
-.mini-btn.active{background:linear-gradient(135deg,rgba(250,204,21,.65),rgba(180,83,9,.75));color:#111827;border-color:#facc15}
-.mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(250,204,21,.55));color:white;border-color:#facc15}
+.mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(var(--gold-rgb),.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
+.mini-btn.plus{color:var(--gold)}
+.mini-btn.active{background:linear-gradient(135deg,rgba(var(--gold-rgb),.65),rgba(180,83,9,.75));color:#111827;border-color:var(--gold)}
+.mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(var(--gold-rgb),.55));color:white;border-color:var(--gold)}
 
-.raidtime-box{margin-top:16px;padding:14px 16px;border-radius:16px;border:1px solid rgba(250,204,21,.25);background:rgba(2,6,23,.55);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;color:#dbeafe;font-size:14px;line-height:1.45}
-.raidtime-box strong{color:#facc15}
+.raidtime-box{margin-top:16px;padding:14px 16px;border-radius:16px;border:1px solid rgba(var(--gold-rgb),.25);background:rgba(2,6,23,.55);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;color:#dbeafe;font-size:14px;line-height:1.45}
+.raidtime-box strong{color:var(--gold)}
 .raidtime-status{grid-column:1 / -1;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)}
 .raidtime-open{color:#22c55e;font-weight:900}
 .raidtime-closed{color:#ef4444;font-weight:900}
 @media(max-width:800px){.raidtime-box{grid-template-columns:1fr}}
 
-.epic{color:#c084fc}.rare{color:#60a5fa}.uncommon{color:#4ade80}.legendary{color:#fb923c}
+.epic{color:#c084fc}.rare{color:var(--blue)}.uncommon{color:#4ade80}.legendary{color:#fb923c}
 
 .tooltip{position:fixed;z-index:2147483647!important;width:330px;padding:12px;border-radius:8px;background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));border:1px solid rgba(148,163,184,.75);box-shadow:0 0 28px rgba(0,0,0,.85);pointer-events:none;font-size:11px;line-height:1.3}
 .tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
@@ -90,10 +90,10 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .tooltip-bind,.tooltip-row,.tooltip-stat{color:white;font-size:11px;font-weight:400;margin-top:3px}
 .tooltip-row{display:flex;justify-content:space-between;gap:14px}
 .tooltip-equip{color:#1eff00;font-size:11px;font-weight:400;margin-top:6px}
-.tooltip-enchant{color:#60a5fa;font-size:11px;font-weight:400;margin-top:4px}
+.tooltip-enchant{color:var(--blue);font-size:11px;font-weight:400;margin-top:4px}
 .tooltip-price{color:white;font-size:11px;font-weight:800;margin-top:6px}
 .tooltip-p0{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
-.tooltip-p0 strong{color:#facc15;font-size:11px}
+.tooltip-p0 strong{color:var(--gold);font-size:11px}
 .tooltip ul{margin-top:5px;padding-left:18px;line-height:1.45;font-size:11px}
 
 .table-scroll{max-height:620px;overflow:auto;padding-right:4px}
@@ -101,7 +101,7 @@ table{width:100%;border-collapse:collapse;margin-top:12px;font-size:12px}
 .grid.published-mode table{font-size:15px}
 .grid.published-mode th,.grid.published-mode td{padding:12px 10px}
 th,td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;vertical-align:top}
-th{color:#facc15;text-transform:uppercase;font-size:10px}
+th{color:var(--gold);text-transform:uppercase;font-size:10px}
 .check{color:#22c55e;font-weight:900;font-size:16px}.cross{color:#ef4444;font-weight:900;font-size:16px}
 
 .class-druide{color:#ff7c0a;font-weight:900}.class-hexenmeister{color:#8788ee;font-weight:900}.class-jaeger,.class-jäger{color:#aad372;font-weight:900}.class-krieger{color:#c69b6d;font-weight:900}.class-magier{color:#3fc7eb;font-weight:900}.class-paladin{color:#f48cba;font-weight:900}.class-priester{color:#fff;font-weight:900}.class-schurke{color:#fff468;font-weight:900}.class-schamane{color:#0070dd;font-weight:900}
@@ -134,7 +134,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   padding:12px;
   border-radius:18px;
   background:rgba(12,18,32,.96);
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   box-shadow:0 20px 45px rgba(0,0,0,.55);
   z-index:10000;
 }
@@ -145,11 +145,11 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 .myprios-form label{margin:0 0 6px}
 .myprios-results{margin-top:14px;display:flex;flex-direction:column;gap:12px}
 .myprio-card{border:1px solid rgba(255,255,255,.12);background:rgba(2,6,23,.55);border-radius:16px;padding:14px}
-.myprio-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#facc15;font-weight:900;margin-bottom:8px}
+.myprio-title{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;color:var(--gold);font-weight:900;margin-bottom:8px}
 .myprio-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:13px;line-height:1.45}
 .myprio-label{color:#cbd5e1;font-weight:900}.myprio-value{color:#f8fafc}
 .myprio-p0-list{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.12);font-size:13px;line-height:1.55}
-.myprio-p0-list strong{color:#facc15}
+.myprio-p0-list strong{color:var(--gold)}
 @media(max-width:900px){.myprios-box{position:fixed;top:12px;left:12px;right:12px;width:auto}.myprios-form{grid-template-columns:1fr}}
 
 
@@ -172,7 +172,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   gap:10px;
   flex-wrap:wrap;
   border-radius:22px;
-  border:1px solid rgba(250,204,21,.34);
+  border:1px solid rgba(var(--gold-rgb),.34);
   background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56));
   box-shadow:0 18px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
   backdrop-filter:blur(10px);
@@ -182,7 +182,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   min-height:42px;
   padding:10px 16px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   background:rgba(2,6,23,.58);
   color:#f8fafc;
   font-weight:900;
@@ -194,14 +194,14 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 
 .nav-btn:hover{
   transform:translateY(-2px);
-  border-color:rgba(250,204,21,.70);
-  background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(96,165,250,.20));
-  box-shadow:0 0 0 2px rgba(250,204,21,.12);
+  border-color:rgba(var(--gold-rgb),.70);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.34),rgba(var(--blue-rgb),.20));
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.12);
 }
 
 .nav-primary{
-  background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22));
-  border-color:rgba(250,204,21,.62);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.42),rgba(var(--blue-rgb),.22));
+  border-color:rgba(var(--gold-rgb),.62);
   color:white;
 }
 
@@ -212,7 +212,7 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
   min-height:42px;
   padding:10px 12px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   background:rgba(2,6,23,.78);
   color:white;
   font-weight:800;
@@ -220,8 +220,8 @@ th{color:#facc15;text-transform:uppercase;font-size:10px}
 }
 
 .nav-login input:focus{
-  border-color:rgba(250,204,21,.75);
-  box-shadow:0 0 0 2px rgba(250,204,21,.16);
+  border-color:rgba(var(--gold-rgb),.75);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.16);
 }
 
 body.random-prio .main-nav > .nav-btn{
@@ -253,7 +253,7 @@ body.random-prio .tooltip-p0{
   padding:12px;
   border-radius:18px;
   background:rgba(12,18,32,.96);
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   box-shadow:0 20px 45px rgba(0,0,0,.55);
   z-index:16000;
 }
@@ -279,8 +279,8 @@ body.random-prio .tooltip-p0{
 }
 
 .result-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:10px}
-.pin-output{padding:11px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.12);font-weight:900;color:#facc15;letter-spacing:.12em}
-.copy-btn,.tool-btn{padding:10px 16px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(96,165,250,.20));color:white;font-weight:800;cursor:pointer}
+.pin-output{padding:11px 12px;border-radius:12px;background:rgba(2,6,23,.72);border:1px solid rgba(255,255,255,.12);font-weight:900;color:var(--gold);letter-spacing:.12em}
+.copy-btn,.tool-btn{padding:10px 16px;border-radius:12px;border:1px solid rgba(var(--gold-rgb),.35);background:linear-gradient(135deg,rgba(var(--gold-rgb),.30),rgba(var(--blue-rgb),.20));color:white;font-weight:800;cursor:pointer}
 
 .p0plus-overlay{
   position:fixed;
@@ -294,7 +294,7 @@ body.random-prio .tooltip-p0{
 
 .p0plus-box{
   background:rgba(12,18,32,.96);
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   border-radius:18px;
   box-shadow:0 20px 45px rgba(0,0,0,.55);
   padding:12px;
@@ -305,18 +305,18 @@ body.random-prio .tooltip-p0{
 }
 
 .p0plus-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
-.p0plus-head h2{color:#facc15;margin:0}
+.p0plus-head h2{color:var(--gold);margin:0}
 .p0plus-head button{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 .p0plus-search-box{margin-bottom:14px;position:relative}
 .p0plus-search-box input{width:100%;padding:12px 13px 12px 38px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(2,6,23,.82);color:white;font-size:14px;font-weight:700}
-.p0plus-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#facc15;z-index:2}
+.p0plus-search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--gold);z-index:2}
 .p0plus-content{max-height:380px;overflow:auto;font-size:13px}
-.p0plus-raid{margin-top:14px;color:#facc15;font-size:18px;font-weight:900}
+.p0plus-raid{margin-top:14px;color:var(--gold);font-size:18px;font-weight:900}
 .p0plus-table{width:100%;border-collapse:collapse;margin-top:8px}
 .p0plus-table th,.p0plus-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
-.p0plus-table th{color:#facc15;font-size:12px;text-transform:uppercase}
+.p0plus-table th{color:var(--gold);font-size:12px;text-transform:uppercase}
 .p0plus-item{font-weight:400;cursor:pointer}
-.p0plus-item.epic{color:#c084fc}.p0plus-item.rare{color:#60a5fa}.p0plus-item.uncommon{color:#4ade80}.p0plus-item.legendary{color:#fb923c}
+.p0plus-item.epic{color:#c084fc}.p0plus-item.rare{color:var(--blue)}.p0plus-item.uncommon{color:#4ade80}.p0plus-item.legendary{color:#fb923c}
 
 .tooltip{z-index:60000!important}
 
@@ -330,7 +330,7 @@ body.random-prio .tooltip-p0{
   padding:12px;
   border-radius:18px;
   background:rgba(12,18,32,.96);
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   box-shadow:0 20px 45px rgba(0,0,0,.55);
   z-index:15500;
 }
@@ -339,26 +339,26 @@ body.random-prio .tooltip-p0{
 .myprios-close{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 .myprios-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
 .myprios-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
-.myprios-form input,.myprios-form select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:700}
+.myprios-form input,.myprios-form select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(2,6,23,.85);color:white;font-weight:700}
 .myprios-results{margin-top:14px;display:flex;flex-direction:column;gap:12px}
 .lichtloot-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
-.lichtloot-tab{padding:9px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.28);background:rgba(2,6,23,.55);color:#f8fafc;font-weight:900;cursor:pointer}
-.lichtloot-tab.active{background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22));border-color:rgba(250,204,21,.65)}
+.lichtloot-tab{padding:9px 12px;border-radius:12px;border:1px solid rgba(var(--gold-rgb),.28);background:rgba(2,6,23,.55);color:#f8fafc;font-weight:900;cursor:pointer}
+.lichtloot-tab.active{background:linear-gradient(135deg,rgba(var(--gold-rgb),.42),rgba(var(--blue-rgb),.22));border-color:rgba(var(--gold-rgb),.65)}
 .lichtloot-section{margin-top:12px}
 .twink-form{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;align-items:end}
 .twink-form label{display:block;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
-.twink-form input,.twink-form select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(250,204,21,.35);background:rgba(2,6,23,.85);color:white;font-weight:700}
+.twink-form input,.twink-form select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid rgba(var(--gold-rgb),.35);background:rgba(2,6,23,.85);color:white;font-weight:700}
 .twink-form .full{grid-column:1 / -1}
 .playerpin-actions{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;margin-top:10px}
 .myprio-table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(2,6,23,.45)}
 .myprio-table{width:100%;border-collapse:collapse;font-size:13px;min-width:920px}
 .myprio-table th,.myprio-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.10);text-align:left;vertical-align:middle}
-.myprio-table th{color:#facc15;font-size:12px;text-transform:uppercase;letter-spacing:.06em;background:rgba(2,6,23,.50);position:sticky;top:0;z-index:1}
-.myprio-table tr:hover{background:rgba(250,204,21,.06)}
+.myprio-table th{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:.06em;background:rgba(2,6,23,.50);position:sticky;top:0;z-index:1}
+.myprio-table tr:hover{background:rgba(var(--gold-rgb),.06)}
 .myprio-table .prio-col{min-width:170px}
 .myprio-table .date-col{white-space:nowrap;color:#cbd5e1}
 .myprio-table .status-col{white-space:nowrap}
-.my-own-p0-block{border:1px solid rgba(250,204,21,.28);border-radius:16px;background:rgba(2,6,23,.45);margin-top:12px;padding:0;overflow:hidden}
+.my-own-p0-block{border:1px solid rgba(var(--gold-rgb),.28);border-radius:16px;background:rgba(2,6,23,.45);margin-top:12px;padding:0;overflow:hidden}
 .my-own-p0-block .p0plus-raid{margin:0;padding:12px 12px 4px}
 .my-own-p0-block .p0plus-table{table-layout:fixed;margin:0 0 10px}
 .my-own-p0-block .p0plus-table th,.my-own-p0-block .p0plus-table td{padding:8px 12px;vertical-align:top}
@@ -376,13 +376,13 @@ body.random-prio .tooltip-p0{
   justify-content:center;
   padding:0;
   border-radius:10px;
-  border:1px solid rgba(250,204,21,.35);
-  background:rgba(250,204,21,.13);
-  color:#facc15;
+  border:1px solid rgba(var(--gold-rgb),.35);
+  background:rgba(var(--gold-rgb),.13);
+  color:var(--gold);
   font-weight:900;
   cursor:pointer;
 }
-.report-btn:hover{border-color:rgba(250,204,21,.75);background:rgba(250,204,21,.24)}
+.report-btn:hover{border-color:rgba(var(--gold-rgb),.75);background:rgba(var(--gold-rgb),.24)}
 .report-btn img{width:22px;height:22px;object-fit:contain;display:block}
 .report-icon-fallback{font-size:19px;line-height:1}
 .report-icon-fallback.hidden{display:none}
@@ -412,19 +412,19 @@ body.random-prio .tooltip-p0{
   width:min(430px,100%);
   padding:18px;
   border-radius:18px;
-  border:1px solid rgba(250,204,21,.52);
+  border:1px solid rgba(var(--gold-rgb),.52);
   background:linear-gradient(180deg,rgba(12,18,32,.97),rgba(2,6,23,.95));
   box-shadow:0 25px 60px rgba(0,0,0,.68), inset 0 1px 0 rgba(255,255,255,.08);
 }
 .report-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
-.report-head h2{color:#facc15;font-size:20px;margin:0}
+.report-head h2{color:var(--gold);font-size:20px;margin:0}
 .report-close{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.25);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 .report-box label{display:block;color:#cbd5e1;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin:12px 0 6px}
 .report-box select,.report-box textarea{
   width:100%;
   padding:10px 12px;
   border-radius:12px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   background:rgba(2,6,23,.85);
   color:white;
   font-weight:700;
@@ -444,7 +444,7 @@ body.random-prio .tooltip-p0{
   .raid-create-box{left:24px;right:24px;margin-left:0;width:auto}
 }
 
-.item-p0plus-line{margin-top:6px;font-size:11px;color:#facc15;font-weight:900;line-height:1.35}
+.item-p0plus-line{margin-top:6px;font-size:11px;color:var(--gold);font-weight:900;line-height:1.35}
 
 /* === Raidlead-Öffnung: kompakte veröffentlichte Prioliste === */
 .grid.published-mode #prioCard{
@@ -478,13 +478,13 @@ body.random-prio .tooltip-p0{
 .p0plus-stat{
   padding:10px 12px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   background:rgba(2,6,23,.55);
   color:#dbeafe;
   font-size:12px;
   line-height:1.35;
 }
-.p0plus-stat strong{display:block;color:#facc15;font-size:18px;margin-top:2px}
+.p0plus-stat strong{display:block;color:var(--gold);font-size:18px;margin-top:2px}
 .p0plus-accordion{display:flex;flex-direction:column;gap:10px}
 .p0plus-raid-details,.p0plus-item-details{
   border:1px solid rgba(255,255,255,.12);
@@ -503,9 +503,9 @@ body.random-prio .tooltip-p0{
   font-weight:900;
 }
 .p0plus-raid-summary::-webkit-details-marker,.p0plus-item-summary::-webkit-details-marker{display:none}
-.p0plus-raid-summary{color:#facc15;font-size:14px;background:rgba(250,204,21,.06)}
+.p0plus-raid-summary{color:var(--gold);font-size:14px;background:rgba(var(--gold-rgb),.06)}
 .p0plus-item-summary{color:#f8fafc;font-size:12px;border-top:1px solid rgba(255,255,255,.08)}
-.p0plus-raid-summary:before,.p0plus-item-summary:before{content:'▶';color:#facc15;margin-right:4px;font-size:12px}
+.p0plus-raid-summary:before,.p0plus-item-summary:before{content:'▶';color:var(--gold);margin-right:4px;font-size:12px}
 .p0plus-raid-details[open] > .p0plus-raid-summary:before,
 .p0plus-item-details[open] > .p0plus-item-summary:before{content:'▼'}
 .p0plus-summary-left{display:flex;align-items:center;gap:9px;min-width:0}
@@ -515,9 +515,9 @@ body.random-prio .tooltip-p0{
   flex-shrink:0;
   padding:4px 9px;
   border-radius:999px;
-  border:1px solid rgba(250,204,21,.32);
-  background:rgba(250,204,21,.12);
-  color:#facc15;
+  border:1px solid rgba(var(--gold-rgb),.32);
+  background:rgba(var(--gold-rgb),.12);
+  color:var(--gold);
   font-size:12px;
   font-weight:900;
 }
@@ -525,7 +525,7 @@ body.random-prio .tooltip-p0{
 .p0plus-player-list{padding:0 10px 8px 20px;display:flex;flex-direction:column;gap:4px}
 .p0plus-player-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;color:#dbeafe;font-size:13px}
 .p0plus-player-name{font-weight:900;color:#f8fafc}
-.p0plus-player-points{font-weight:900;color:#facc15}
+.p0plus-player-points{font-weight:900;color:var(--gold)}
 .p0plus-empty{padding:14px;border-radius:14px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.12);color:#dbeafe}
 @media(max-width:700px){.p0plus-summary-bar{grid-template-columns:1fr}.p0plus-player-list{padding-left:18px}.p0plus-raid-summary,.p0plus-item-summary{align-items:flex-start}.p0plus-badge{white-space:nowrap}}
 
@@ -619,7 +619,7 @@ body.random-prio .tooltip-p0{
 }
 .prio-p0-points strong{
   display:block;
-  color:#facc15;
+  color:var(--gold);
   margin-bottom:4px;
 }
 .prio-p0-points .empty{
@@ -640,7 +640,7 @@ body.random-prio .tooltip-p0{
 }
 .prio-p0-choice strong{
   display:block;
-  color:#facc15;
+  color:var(--gold);
   margin-bottom:4px;
 }
 .prio-p0-choice .empty{
@@ -735,9 +735,9 @@ body.random-prio .tooltip-p0{
 .participant-pin-card{
   width:min(560px,100%);
   border-radius:26px;
-  border:2px solid rgba(250,204,21,.70);
+  border:2px solid rgba(var(--gold-rgb),.70);
   background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(2,6,23,.98));
-  box-shadow:0 30px 90px rgba(0,0,0,.75),0 0 35px rgba(250,204,21,.20);
+  box-shadow:0 30px 90px rgba(0,0,0,.75),0 0 35px rgba(var(--gold-rgb),.20);
   padding:28px;
   text-align:center;
 }
@@ -747,7 +747,7 @@ body.random-prio .tooltip-p0{
   font-size:30px;
 }
 .participant-pin-warning{
-  color:#facc15;
+  color:var(--gold);
   font-weight:900;
   font-size:18px;
   line-height:1.45;
@@ -756,9 +756,9 @@ body.random-prio .tooltip-p0{
   margin:22px auto;
   padding:18px 16px;
   border-radius:18px;
-  border:2px solid rgba(250,204,21,.65);
-  background:rgba(250,204,21,.12);
-  color:#facc15;
+  border:2px solid rgba(var(--gold-rgb),.65);
+  background:rgba(var(--gold-rgb),.12);
+  color:var(--gold);
   font-size:56px;
   font-weight:900;
   letter-spacing:10px;
@@ -794,7 +794,7 @@ body.random-prio .tooltip-p0{
   margin:18px 0 0;
   padding:22px;
   border-radius:24px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   background:rgba(12,18,32,.90);
   box-shadow:0 18px 40px rgba(0,0,0,.36);
 }
@@ -844,7 +844,7 @@ body.random-prio .tooltip-p0{
   min-height:49px;
   padding:13px 15px;
   border-radius:14px;
-  border:1px dashed rgba(250,204,21,.55);
+  border:1px dashed rgba(var(--gold-rgb),.55);
   background:rgba(2,6,23,.70);
   color:#dbeafe;
   font-weight:900;
@@ -857,8 +857,8 @@ body.random-prio .tooltip-p0{
 .character-dropzone.active,
 .character-dropzone.filled{
   border-style:solid;
-  background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(96,165,250,.14));
-  color:#facc15;
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
+  color:var(--gold);
 }
 
 .own-selection-card{
@@ -866,12 +866,12 @@ body.random-prio .tooltip-p0{
   align-self:end;
   padding:10px 12px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   background:rgba(2,6,23,.58);
 }
 
 .own-selection-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   font-weight:900;
   text-transform:uppercase;
@@ -916,10 +916,10 @@ body.random-prio .tooltip-p0{
   overflow:auto;
   padding:14px;
   border-radius:18px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   background:
     linear-gradient(rgba(2,6,23,.78),rgba(2,6,23,.88)),
-    radial-gradient(circle at 40% 30%,rgba(250,204,21,.12),transparent 30%),
+    radial-gradient(circle at 40% 30%,rgba(var(--gold-rgb),.12),transparent 30%),
     rgba(2,6,23,.50);
 }
 
@@ -932,7 +932,7 @@ body.random-prio .tooltip-p0{
 }
 
 .gear-planner-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:13px;
   font-weight:900;
   text-transform:uppercase;
@@ -990,8 +990,8 @@ body.random-prio .tooltip-p0{
 
 .gear-tab.active{
   color:white;
-  border-bottom-color:#facc15;
-  background:rgba(250,204,21,.16);
+  border-bottom-color:var(--gold);
+  background:rgba(var(--gold-rgb),.16);
 }
 
 .gear-planner-body{
@@ -1049,9 +1049,9 @@ body.random-prio .tooltip-p0{
 }
 
 .gear-swap-btn{
-  border:1px solid rgba(250,204,21,.38);
-  background:rgba(250,204,21,.10);
-  color:#fde68a;
+  border:1px solid rgba(var(--gold-rgb),.38);
+  background:rgba(var(--gold-rgb),.10);
+  color:var(--gold);
   border-radius:6px;
   padding:3px 7px;
   font-size:10px;
@@ -1063,7 +1063,7 @@ body.random-prio .tooltip-p0{
   grid-column:1 / -1;
   padding:10px;
   border-radius:10px;
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   background:rgba(2,6,23,.92);
 }
 
@@ -1115,8 +1115,8 @@ body.random-prio .tooltip-p0{
 }
 
 .gear-replacement-item:hover{
-  border-color:rgba(250,204,21,.45);
-  background:rgba(250,204,21,.10);
+  border-color:rgba(var(--gold-rgb),.45);
+  background:rgba(var(--gold-rgb),.10);
 }
 
 .gear-replacement-icon{
@@ -1189,7 +1189,7 @@ body.random-prio .tooltip-p0{
 }
 
 .gear-talent-tree-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   font-weight:900;
   margin-bottom:6px;
@@ -1213,12 +1213,12 @@ body.random-prio .tooltip-p0{
 .gear-talent-bar span{
   display:block;
   height:100%;
-  background:linear-gradient(90deg,#facc15,#a855f7);
+  background:linear-gradient(90deg,var(--gold),#a855f7);
 }
 
 .gear-item-extra{
   margin-top:4px;
-  color:#60a5fa;
+  color:var(--blue);
   font-size:10px;
   line-height:1.35;
 }
@@ -1236,7 +1236,7 @@ body.random-prio .tooltip-p0{
 }
 
 .character-panel-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   font-weight:900;
   text-transform:uppercase;
@@ -1270,8 +1270,8 @@ body.random-prio .tooltip-p0{
 }
 
 .character-chip.selected{
-  border-color:rgba(250,204,21,.80);
-  box-shadow:0 0 0 2px rgba(250,204,21,.14);
+  border-color:rgba(var(--gold-rgb),.80);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.14);
 }
 
 .character-chip small{
@@ -1489,11 +1489,11 @@ body.random-prio .tooltip-p0{
   font-size:11px!important;
 }
 .own-prio-row{
-  background:rgba(250,204,21,.08);
-  box-shadow:inset 3px 0 0 rgba(250,204,21,.75);
+  background:rgba(var(--gold-rgb),.08);
+  box-shadow:inset 3px 0 0 rgba(var(--gold-rgb),.75);
 }
 .own-prio-row td:nth-child(2){
-  color:#facc15;
+  color:var(--gold);
   font-weight:900;
 }
 .own-prio-hint{
@@ -1563,14 +1563,14 @@ body.random-prio .tooltip-p0{
   margin:0 0 14px;
   padding:11px 13px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.24);
-  background:rgba(250,204,21,.08);
+  border:1px solid rgba(var(--gold-rgb),.24);
+  background:rgba(var(--gold-rgb),.08);
   color:#dbeafe;
   font-size:13px;
   line-height:1.45;
 }
 .loot-hint a{
-  color:#facc15;
+  color:var(--gold);
   font-weight:900;
   text-decoration:none;
 }
@@ -2054,9 +2054,8 @@ function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase
 async function fetchCurrentGuildInfo(){
   const slug=currentGuildSlug();
   if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
-  const api=typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : RAID_API_URL;
   try{
-    const response=await fetch(api + "?action=getGuilds&t=" + Date.now(), {cache:"no-store"});
+    const response=await fetch(RAID_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
     const data=await response.json();
     currentGuildInfo=(data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === slug) || {slug,name:titleFromSlug(slug)};
   }catch(error){
@@ -2078,14 +2077,28 @@ function replaceBrandText(lootName,guildName){
       .replace(/Lichtbringer/g,guildName);
   });
 }
+function colorToRgbList(value){
+  const color=String(value || "").trim();
+  const match=color.match(/^#?([0-9a-f]{6})$/i);
+  if(!match) return "";
+  const hex=match[1];
+  return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)].join(",");
+}
+function applyGuildThemeColor(cssName,rgbName,value){
+  const color=String(value || "").trim();
+  if(!color) return;
+  document.documentElement.style.setProperty(cssName,color);
+  const rgb=colorToRgbList(color);
+  if(rgb) document.documentElement.style.setProperty(rgbName,rgb);
+}
 async function applyGuildBranding(){
   const guild=await fetchCurrentGuildInfo();
   const lootName=lootTitleFromGuild(guild);
   const guildName=displayGuildName(guild);
   document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);
   if(currentGuildSlug() !== "lichtloot") replaceBrandText(lootName,guildName);
-  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
-  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
   const logo=guildLogoUrl(guild);
   document.querySelectorAll(".logo-banner-mini,.side-logo,.brand-logo,.top-profile img").forEach(el => {
     if(logo) el.src=logo;
@@ -4532,7 +4545,7 @@ function fillItems(){
       option.textContent=item.name;
       option.className=item.quality || "";
       if(item.quality === "epic") option.style.color="#c084fc";
-      if(item.quality === "rare") option.style.color="#60a5fa";
+      if(item.quality === "rare") option.style.color="var(--blue)";
       if(item.quality === "uncommon") option.style.color="#4ade80";
       if(item.quality === "legendary") option.style.color="#fb923c";
       select.appendChild(option);
@@ -5960,7 +5973,7 @@ function renderMyPrios(data){
   let html='';
 
   if(entries.length){
-    html+='<h3 style="color:#facc15;margin-top:4px">Aktuelle Prios und letzte 5 Raids</h3>';
+    html+='<h3 style="color:var(--gold);margin-top:4px">Aktuelle Prios und letzte 5 Raids</h3>';
     entries.forEach(entry=>{
       const p0List=(entry.ownP0PlusPoints || []).length
         ? (entry.ownP0PlusPoints || []).map(point=>'<div>• '+safe(point.item)+' <strong>'+safe(point.count)+'</strong>'+(point.slot ? ' <span class="myprio-label">('+safe(point.slot)+')</span>' : '')+'</div>').join('')
@@ -5984,7 +5997,7 @@ function renderMyPrios(data){
   }
 
   if(ownP0.length){
-    html+='<h3 style="color:#facc15;margin-top:10px">Alle eigenen P0+ Punkte</h3>';
+    html+='<h3 style="color:var(--gold);margin-top:10px">Alle eigenen P0+ Punkte</h3>';
     const byRaid={};
     ownP0.forEach(point=>{
       const raid=point.raid || 'Raid';
@@ -6457,7 +6470,7 @@ function renderP0PlusBelowItem(itemName){
   entries.sort((a,b) => Number(b.points || b.count || b.Punkte || 0) - Number(a.points || a.count || a.Punkte || 0));
 
   return `
-    <div style="margin-top:6px;font-size:11px;color:#facc15;font-weight:900;line-height:1.35">
+    <div style="margin-top:6px;font-size:11px;color:var(--gold);font-weight:900;line-height:1.35">
       P0+: ${entries.map(e => `${safe(e.player || e.Spieler || "?")} (${safe(e.points || e.count || e.Punkte || 0)})`).join(", ")}
     </div>
   `;
@@ -7004,12 +7017,12 @@ function renderMyPrios(data){
   let html='';
 
   if(ownP0.length){
-    html+='<h3 style="color:#facc15;margin:4px 0 10px">Eigene P0/P0+ Punkte</h3>';
+    html+='<h3 style="color:var(--gold);margin:4px 0 10px">Eigene P0/P0+ Punkte</h3>';
     html+=renderOwnP0PlusOverviewTable(ownP0);
   }
 
   if(entries.length){
-    html+='<h3 style="color:#facc15;margin:4px 0 10px">Aktuelle Prios und letzte 5 Raids</h3>';
+    html+='<h3 style="color:var(--gold);margin:4px 0 10px">Aktuelle Prios und letzte 5 Raids</h3>';
     html+='<div class="myprio-table-wrap"><table class="myprio-table"><thead><tr>'+
       '<th>Raid</th>'+
       '<th>Status</th>'+
@@ -7045,7 +7058,7 @@ function renderMyPrios(data){
       }));
 
       html+=`<tr id="${rowId}">
-        <td><strong style="color:#facc15">${safeHtml(entry.raidName || entry.raid || 'Raid')}</strong></td>
+        <td><strong style="color:var(--gold)">${safeHtml(entry.raidName || entry.raid || 'Raid')}</strong></td>
         <td class="status-col">${entry.current ? '<span class="ok">Aktuell</span>' : '<span class="myprio-label">Vergangen</span>'}${entry.pinType ? '<br><span class="myprio-label">'+safeHtml(entry.pinType)+'</span>' : ''}</td>
         <td class="date-col">${safeHtml(formatMyPrioDate(entry.createdAt))}</td>
         <td>${myPrioItemHtml(entry, entry.p1)}</td>
