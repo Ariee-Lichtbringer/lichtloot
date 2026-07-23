@@ -8596,18 +8596,8 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
 
   const fingerprint = poSignupLichtlootFingerprint(config);
   if(poSignupGeneratedLichtlootRaid?.fingerprint === fingerprint && poSignupGeneratedLichtlootRaid.playerPin){
-    const reusedText = buildRaidDiscordPostText(
-      RAID_OPTIONS[config.raid]?.name || config.title || config.raid,
-      config.raidDate,
-      config.raidTime,
-      getCurrentGuildBrand().guildName,
-      poSignupGeneratedLichtlootRaid.playerPin,
-      poSignupGeneratedLichtlootRaid.createdBy
-    );
-    setValue("poSignupNote", reusedText);
     updatePoSignupPreview();
     return Object.assign({}, config, {
-      note:reusedText,
       lichtlootRaidId:poSignupGeneratedLichtlootRaid.raidId,
       lichtlootPlayerPin:poSignupGeneratedLichtlootRaid.playerPin,
       lichtlootLeadPin:poSignupGeneratedLichtlootRaid.leadPin || ""
@@ -8654,16 +8644,13 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
   }
 
-  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, playerPin, createdBy);
   poSignupGeneratedLichtlootRaid = { fingerprint, raidId, playerPin, leadPin, createdBy };
-  setValue("poSignupNote", note);
   updatePoSignupPreview();
   if(status && !options.silent){
     status.innerHTML = `<span class="good">LichtLoot-Prio-ID erstellt. Prio-PIN: <strong>${escapeHtml(playerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
-    note,
     lichtlootRaidId:raidId,
     lichtlootPlayerPin:playerPin,
     lichtlootLeadPin:leadPin
