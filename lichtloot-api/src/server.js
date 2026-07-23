@@ -1428,6 +1428,7 @@ function canPlayerRoleCreateRaid(value) {
 
 function normalizeCharacter(row) {
   const playerRole = normalizePlayerRole(row.player_role || row.role);
+  const isBlocked = Boolean(row.is_blocked);
   return {
     id: row.id,
     char: row.name,
@@ -1442,13 +1443,17 @@ function normalizeCharacter(row) {
     playerRole,
     playerRoleLabel: playerRoleLabel(playerRole),
     canCreateRaid: canPlayerRoleCreateRaid(playerRole),
+    isBlocked,
+    blocked: isBlocked,
+    blockedAt: row.blocked_at || null,
+    blockedReason: row.blocked_reason || "",
     created_at: row.created_at
   };
 }
 
 async function findPlayerByPin(guildId, pin) {
   const result = await query(
-    "select id, player_pin, role from players where guild_id = $1 and player_pin = $2",
+    "select id, player_pin, role, is_blocked, blocked_at, blocked_reason from players where guild_id = $1 and player_pin = $2 and coalesce(is_blocked, false) = false",
     [guildId, normalizePin(pin)]
   );
   return result.rows[0] || null;
@@ -1515,6 +1520,7 @@ async function findPlayerByRecipient(guildId, recipient, server) {
      from characters c
      join players p on p.id = c.player_id
      where p.guild_id = $1
+       and coalesce(p.is_blocked, false) = false
        and lower(c.name) = lower($2)
        ${serverClause}
      order by c.created_at asc
@@ -1537,6 +1543,17 @@ async function findCharacter(guildId, charName, server) {
 }
 
 async function getCharactersByPin(guildId, pin) {
+  const normalizedPin = normalizePin(pin);
+  const playerResult = await query(
+    "select id, is_blocked, blocked_reason from players where guild_id = $1 and player_pin = $2 limit 1",
+    [guildId, normalizedPin]
+  );
+  if (playerResult.rows[0]?.is_blocked) {
+    const error = new Error(playerResult.rows[0]?.blocked_reason || "Dieser SpielerLogin ist gesperrt.");
+    error.statusCode = 403;
+    throw error;
+  }
+
   const result = await query(
     `select
        c.id,
@@ -1546,15 +1563,18 @@ async function getCharactersByPin(guildId, pin) {
        c.is_main,
        c.created_at,
        p.role as player_role,
+       p.is_blocked,
+       p.blocked_at,
+       p.blocked_reason,
        first_value(c.name) over (
          partition by p.id
          order by c.is_main desc, c.created_at asc
        ) as main_char
      from players p
      join characters c on c.player_id = p.id
-     where p.guild_id = $1 and p.player_pin = $2
+     where p.guild_id = $1 and p.player_pin = $2 and coalesce(p.is_blocked, false) = false
      order by c.is_main desc, c.created_at asc, c.name asc`,
-    [guildId, normalizePin(pin)]
+    [guildId, normalizedPin]
   );
   return result.rows.map(normalizeCharacter);
 }
@@ -1946,7 +1966,10 @@ async function ensureRaidHelperScheduleSchema() {
 async function ensurePlayerRoleSchema() {
   await query(
     `alter table players
-       add column if not exists role text not null default 'member'`
+       add column if not exists role text not null default 'member',
+       add column if not exists is_blocked boolean not null default false,
+       add column if not exists blocked_at timestamptz,
+       add column if not exists blocked_reason text not null default ''`
   );
 }
 
@@ -6770,6 +6793,9 @@ async function getGuildLeadershipOverview(guildId, params) {
        c.created_at,
        p.id as player_id,
        p.role as player_role,
+       p.is_blocked,
+       p.blocked_at,
+       p.blocked_reason,
        count(*) over (partition by p.id) as linked_characters,
        first_value(c.name) over (
          partition by p.id
@@ -6799,6 +6825,10 @@ async function getGuildLeadershipOverview(guildId, params) {
       playerRole: normalizePlayerRole(row.player_role),
       playerRoleLabel: playerRoleLabel(row.player_role),
       canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
+      isBlocked: Boolean(row.is_blocked),
+      blocked: Boolean(row.is_blocked),
+      blockedAt: row.blocked_at || null,
+      blockedReason: row.blocked_reason || "",
       linkedCharacters: Number(row.linked_characters || 1),
       createdAt: row.created_at
     }))
@@ -14741,6 +14771,63 @@ async function setPlayerLoginRole({ guildId, query: params }) {
   };
 }
 
+async function setPlayerLoginBlocked({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePlayerRoleSchema();
+  const playerId = clean(params.playerId || params.player_id || params.id);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const blockedValue = clean(params.blocked || params.isBlocked || params.mode).toLowerCase();
+  const isBlocked = ["1", "true", "yes", "ja", "sperren", "block", "blocked"].includes(blockedValue);
+  const reason = clean(params.reason || params.blockedReason);
+  const values = [guildId, isBlocked, reason];
+  const clauses = [];
+
+  if (playerId) {
+    values.push(playerId);
+    clauses.push(`id::text = $${values.length}`);
+  }
+
+  if (playerPin) {
+    values.push(playerPin);
+    clauses.push(`player_pin = $${values.length}`);
+  }
+
+  if (!clauses.length) {
+    const error = new Error("SpielerLogin fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `update players
+     set is_blocked = $2,
+         blocked_at = case when $2 then coalesce(blocked_at, now()) else null end,
+         blocked_reason = case when $2 then coalesce(nullif($3, ''), 'Durch Gildenleitung gesperrt') else '' end,
+         updated_at = now()
+     where guild_id = $1
+       and (${clauses.join(" or ")})
+     returning id, player_pin, role, is_blocked, blocked_at, blocked_reason`,
+    values
+  );
+
+  if (!result.rows.length) {
+    const error = new Error("SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return {
+    success: true,
+    playerId: result.rows[0].id,
+    playerPin: result.rows[0].player_pin,
+    role: normalizePlayerRole(result.rows[0].role),
+    roleLabel: playerRoleLabel(result.rows[0].role),
+    isBlocked: Boolean(result.rows[0].is_blocked),
+    blockedAt: result.rows[0].blocked_at || null,
+    blockedReason: result.rows[0].blocked_reason || ""
+  };
+}
+
 async function setGuildMasterCode({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const newCode = clean(params.newMasterCode || params.newCode || params.password);
@@ -16043,6 +16130,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildSetPlayerLoginBlocked") {
+      const saved = await setPlayerLoginBlocked({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildSetMasterCode") {
       const saved = await setGuildMasterCode({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -16607,6 +16699,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetPlayerLoginRole") {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSetPlayerLoginBlocked") {
+      const saved = await setPlayerLoginBlocked({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
