@@ -909,6 +909,35 @@ function buildLootSlug(guildName, lootName) {
   return base ? `${base}-loot` : "";
 }
 
+const defaultNewGuildRaidImages = {
+  mc: "images/raid-templates/mc.jpg",
+  bwl: "images/raid-templates/bwl.jpg",
+  ony: "images/raid-templates/ony.jpg",
+  aq40: "images/raid-templates/aq40.jpg",
+  aq20: "images/raid-templates/aq20.jpg",
+  naxx: "images/raid-templates/naxx.jpg",
+  zg: "images/raid-templates/zg.jpg"
+};
+const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
+
+function defaultGuildLayoutForSlug(slug) {
+  if (String(slug || "").trim().toLowerCase() === "lichtloot") return {};
+  return { raidImages: defaultNewGuildRaidImages };
+}
+
+function mergeGuildLayoutDefaults(slug, layout) {
+  const existing = layout && typeof layout === "object" && !Array.isArray(layout) ? layout : {};
+  const defaults = defaultGuildLayoutForSlug(slug);
+  return {
+    ...defaults,
+    ...existing,
+    raidImages: {
+      ...(defaults.raidImages || {}),
+      ...(existing.raidImages || {})
+    }
+  };
+}
+
 async function listGuilds() {
   await ensureGuildLayoutSchema();
   const result = await query(
@@ -935,7 +964,7 @@ async function listGuilds() {
       pointsLabel: row.points_label || "P0/P0+",
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
-      layout: row.layout_json || {},
+      layout: mergeGuildLayoutDefaults(row.slug, row.layout_json || {}),
       createdAt: row.created_at
     }))
   };
@@ -976,23 +1005,25 @@ async function createGuild({ query: params }) {
       }
     }
 
+    const defaultLogoUrl = slug === "lichtloot" ? "" : defaultNewGuildLogoUrl;
     const guildResult = await client.query(
-      `insert into guilds (name, slug, server, guild_pin)
-       values ($1, $2, $3, nullif($4, ''))
+      `insert into guilds (name, slug, server, guild_pin, logo_url)
+       values ($1, $2, $3, nullif($4, ''), $5)
        on conflict (slug) do update
          set name = excluded.name,
              server = coalesce(nullif(excluded.server, ''), guilds.server),
              guild_pin = coalesce(excluded.guild_pin, guilds.guild_pin),
+             logo_url = coalesce(nullif(guilds.logo_url, ''), excluded.logo_url),
              updated_at = now()
        returning id, name, slug, server, created_at`,
-      [guildName, slug, server || null, guildPin]
+      [guildName, slug, server || null, guildPin, defaultLogoUrl]
     );
 
     await client.query(
-      `insert into guild_settings (guild_id)
-       values ($1)
+      `insert into guild_settings (guild_id, layout_json)
+       values ($1, $2::jsonb)
        on conflict (guild_id) do nothing`,
-      [guildResult.rows[0].id]
+      [guildResult.rows[0].id, JSON.stringify(defaultGuildLayoutForSlug(guildResult.rows[0].slug))]
     );
 
     if (guildPin) {
@@ -1098,7 +1129,7 @@ async function updateGuildConfig({ query: params, body = {} }) {
         pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
         primaryColor: settingsResult.rows[0]?.primary_color || "#facc15",
         accentColor: settingsResult.rows[0]?.accent_color || "#1d4ed8",
-        layout: settingsResult.rows[0]?.layout_json || {},
+        layout: mergeGuildLayoutDefaults(row.slug, settingsResult.rows[0]?.layout_json || {}),
         createdAt: row.created_at
       }
     };
