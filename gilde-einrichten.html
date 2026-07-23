@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LichtLoot - Gilde einrichten</title>
+  <style>
+    :root{--gold:#facc15;--blue:#60a5fa;--panel:rgba(15,23,42,.88);--line:rgba(250,204,21,.24);--text:#e5edf8;--muted:#aebbd0}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#020617 url("images/bg-paladin.jpg") center/cover fixed;color:var(--text)}
+    body:before{content:"";position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(2px)}
+    main{position:relative;z-index:1;width:min(980px,calc(100vw - 32px));margin:0 auto;padding:42px 0}
+    .brand{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+    .brand img{width:92px;height:auto}
+    h1{margin:0;color:var(--gold);font-size:clamp(34px,5vw,58px);line-height:.95}
+    p{color:var(--muted);font-weight:800}
+    .panel{border:1px solid var(--line);border-radius:10px;background:var(--panel);box-shadow:0 24px 80px rgba(0,0,0,.35);padding:24px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    label{display:grid;gap:7px;color:var(--gold);font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.02em}
+    input{width:100%;border:1px solid rgba(148,163,184,.28);border-radius:8px;background:rgba(2,6,23,.78);color:var(--text);padding:14px 15px;font:inherit;font-weight:850;outline:none}
+    input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(96,165,250,.18)}
+    .full{grid-column:1/-1}
+    .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+    button,.linkbtn{border:1px solid rgba(250,204,21,.32);border-radius:8px;background:linear-gradient(135deg,rgba(250,204,21,.30),rgba(29,78,216,.20));color:#f8fafc;padding:13px 18px;font-weight:950;text-decoration:none;cursor:pointer}
+    button:hover,.linkbtn:hover{border-color:rgba(96,165,250,.65)}
+    .status{margin-top:16px;border:1px solid rgba(148,163,184,.25);border-radius:8px;padding:13px 14px;font-weight:850;color:var(--muted)}
+    .status.good{border-color:rgba(34,197,94,.45);color:#86efac;background:rgba(22,101,52,.16)}
+    .status.bad{border-color:rgba(248,113,113,.45);color:#fecaca;background:rgba(127,29,29,.18)}
+    .preview{display:grid;gap:10px;margin-top:18px;padding:16px;border:1px solid rgba(96,165,250,.24);border-radius:10px;background:rgba(2,6,23,.42)}
+    @media(max-width:720px){.grid{grid-template-columns:1fr}.brand{align-items:flex-start;flex-direction:column}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="brand">
+    <img src="images/content.png" alt="LichtLoot">
+    <div>
+      <h1>Gilde einrichten</h1>
+      <p>Logo, Farben und GildenPIN festlegen. Danach ist die Gilde als eigener Bereich erreichbar.</p>
+    </div>
+  </div>
+
+  <form class="panel" id="guildSetupForm">
+    <div class="grid">
+      <label>Gildenname
+        <input name="guildName" required>
+      </label>
+      <label>Lootsystem-Name
+        <input name="lootName" required>
+      </label>
+      <label>Server
+        <input name="server">
+      </label>
+      <label>GildenPIN
+        <input name="guildPin" maxlength="12" placeholder="z.B. LBR">
+      </label>
+      <label>Logo-URL
+        <input name="logoUrl" placeholder="https://...">
+      </label>
+      <label>Hintergrund-URL
+        <input name="backgroundUrl" placeholder="https://...">
+      </label>
+      <label>Hauptfarbe
+        <input name="primaryColor" type="color" value="#facc15">
+      </label>
+      <label>Akzentfarbe
+        <input name="accentColor" type="color" value="#1d4ed8">
+      </label>
+    </div>
+    <div class="actions">
+      <button type="submit">Gilde einrichten</button>
+      <a class="linkbtn" href="gilde-anmelden.html">Zur Anmeldung</a>
+    </div>
+    <div id="status" class="status">Freischaltlink wird geprüft ...</div>
+    <div id="resultLinks" class="preview" hidden></div>
+  </form>
+</main>
+<script>
+const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+const token = new URLSearchParams(location.search).get("token") || "";
+const form = document.getElementById("guildSetupForm");
+const statusBox = document.getElementById("status");
+const resultLinks = document.getElementById("resultLinks");
+function setStatus(text, type){ statusBox.textContent = text; statusBox.className = "status " + (type || ""); }
+function setValue(name, value){ const input = form.elements[name]; if(input && value) input.value = value; }
+async function loadSetup(){
+  if(!token){ setStatus("Freischaltlink fehlt.", "bad"); return; }
+  try{
+    const response = await fetch(API_URL + "?action=getGuildSetup&token=" + encodeURIComponent(token) + "&t=" + Date.now(), { cache:"no-store" });
+    const result = await response.json();
+    if(!result.success) throw new Error(result.error || "Freischaltlink konnte nicht geladen werden.");
+    const app = result.application || {};
+    setValue("guildName", app.guildName);
+    setValue("lootName", app.lootName || app.guildName);
+    setValue("server", app.server);
+    setValue("guildPin", app.guildPin || app.desiredGuildPin);
+    setValue("logoUrl", app.logoUrl);
+    setValue("backgroundUrl", app.backgroundUrl);
+    setValue("primaryColor", app.primaryColor);
+    setValue("accentColor", app.accentColor);
+    setStatus(app.status === "completed" ? "Diese Gilde wurde bereits eingerichtet." : "Freischaltlink gültig. Einrichtung kann abgeschlossen werden.", "good");
+  }catch(error){
+    setStatus(error.message || "Freischaltlink konnte nicht geladen werden.", "bad");
+  }
+}
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  const payload = Object.fromEntries(new FormData(form).entries());
+  setStatus("Gilde wird eingerichtet ...", "");
+  try{
+    const response = await fetch(API_URL, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body:JSON.stringify({ action:"completeGuildSetup", token, ...payload })
+    });
+    const result = await response.json();
+    if(!result.success) throw new Error(result.error || "Gilde konnte nicht eingerichtet werden.");
+    setStatus("Gilde ist eingerichtet.", "good");
+    resultLinks.hidden = false;
+    resultLinks.innerHTML = `
+      <strong>${result.guild?.name || "Neue Gilde"}</strong>
+      <a class="linkbtn" href="${result.startUrl}">Startseite öffnen</a>
+      <a class="linkbtn" href="${result.leadershipUrl}">Gildenleitung öffnen</a>
+    `;
+  }catch(error){
+    setStatus(error.message || "Gilde konnte nicht eingerichtet werden.", "bad");
+  }
+});
+loadSetup();
+</script>
+</body>
+</html>

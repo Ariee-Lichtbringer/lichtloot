@@ -4119,7 +4119,13 @@ tr:hover td{background:rgba(250,204,21,.035)}
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
-      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin" title="Admin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin</span></button>
+      <div class="side-group collapsed" id="sideGroupAdmin">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
+          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
+        </div>
+      </div>
     </nav>
   </aside>
 
@@ -4772,6 +4778,17 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
   </details>
 
+  <details id="guildApplicationsPanel" class="panel issue-panel" ontoggle="if(this.open) loadGuildApplicationsPanel()">
+    <summary>Gilden freischalten</summary>
+    <div class="issue-panel-body">
+      <div class="issue-toolbar">
+        <a class="small-btn primary" href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldemaske öffnen</a>
+        <button class="small-btn ghost" type="button" onclick="loadGuildApplicationsPanel()">Neu laden</button>
+      </div>
+      <div id="guildApplicationsPanelContent" class="create-result">Gilden-Anfragen laden.</div>
+    </div>
+  </details>
+
   <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
     <summary>Loganalysen</summary>
     <div class="log-analysis-body">
@@ -5152,6 +5169,7 @@ let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let issueReports = [];
+let guildApplications = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
 let logAnalysisPage = 1;
@@ -5536,6 +5554,7 @@ async function loadOverview(options){
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
+    loadGuildApplicationsPanel({ silent:true }).catch(() => {});
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
     setGuildLocked(true);
@@ -5622,6 +5641,11 @@ function openP0PlusPanel(){
 
 function openIssueInboxPanel(){
   openDetailsPanel("issueInboxPanel");
+}
+
+function openGuildApplicationsPanel(){
+  openDetailsPanel("guildApplicationsPanel");
+  loadGuildApplicationsPanel();
 }
 
 function openLogAnalysisPanel(){
@@ -11601,6 +11625,138 @@ function formatPoints(value){
 
 function toggleIssueInboxPanel(){
   openIssueInboxPanel();
+}
+
+async function loadGuildApplicationsPanel(options){
+  options = options || {};
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const content = document.getElementById("guildApplicationsPanelContent");
+  if(!masterCode){
+    if(content && !options.silent) content.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    renderGuildApplicationsBadge();
+    return;
+  }
+
+  if(content && !options.silent) content.innerHTML = '<div class="status">Gilden-Anfragen werden geladen ...</div>';
+
+  try{
+    const result = await railwayApi({ action:"guildGetApplications", masterCode, baseUrl:location.origin });
+    if(!result.success) throw new Error(result.error || "Gilden-Anfragen konnten nicht geladen werden.");
+    guildApplications = Array.isArray(result.applications) ? result.applications : [];
+    renderGuildApplicationsBadge();
+    if(content) renderGuildApplicationsPanel();
+  }catch(error){
+    if(content && !options.silent) content.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Gilden-Anfragen konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderGuildApplicationsBadge(){
+  const badge = document.getElementById("guildApplicationCount");
+  if(!badge) return;
+  const pending = guildApplications.filter(entry => entry.status === "pending").length;
+  badge.textContent = String(pending);
+}
+
+function guildApplicationStatusLabel(status){
+  if(status === "approved") return "freigegeben";
+  if(status === "completed") return "eingerichtet";
+  if(status === "rejected") return "abgelehnt";
+  return "offen";
+}
+
+function renderGuildApplicationsPanel(){
+  const content = document.getElementById("guildApplicationsPanelContent");
+  if(!content) return;
+  if(!guildApplications.length){
+    content.innerHTML = '<div class="status">Noch keine Gilden-Anfragen vorhanden.</div>';
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="table-wrap">
+      <table class="issue-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Gilde</th>
+            <th>Kontakt</th>
+            <th>Freischaltlink</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${guildApplications.map(entry => `
+            <tr>
+              <td><span class="status ${entry.status === "pending" ? "" : entry.status === "rejected" ? "bad" : "good"}">${escapeHtml(guildApplicationStatusLabel(entry.status))}</span></td>
+              <td>
+                <strong>${escapeHtml(entry.guildName || "-")}</strong>
+                <div class="muted">${escapeHtml(entry.lootName || "-")} · ${escapeHtml(entry.server || "-")} · PIN ${escapeHtml(entry.desiredGuildPin || entry.guildPin || "-")}</div>
+                ${entry.notes ? `<div class="muted">${escapeHtml(entry.notes)}</div>` : ""}
+              </td>
+              <td>
+                <strong>${escapeHtml(entry.contactName || "-")}</strong>
+                <div class="muted">${escapeHtml(entry.contactDiscord || "-")}</div>
+                <div class="muted">${escapeHtml(entry.contactEmail || "-")}</div>
+              </td>
+              <td>
+                ${entry.setupUrl ? `<code>${escapeHtml(entry.setupUrl)}</code>` : '<span class="muted">Noch nicht freigegeben</span>'}
+                ${entry.guildSlug ? `<div class="muted">Gilde: ${escapeHtml(entry.guildSlug)}</div>` : ""}
+              </td>
+              <td>
+                <div class="issue-actions">
+                  ${entry.status === "pending" ? `<button class="small-btn primary" type="button" onclick="approveGuildApplication('${escapeHtml(entry.id)}')">Freigeben</button>` : ""}
+                  ${entry.setupUrl ? `<button class="small-btn ghost" type="button" onclick="copyGuildSetupLink('${escapeHtml(entry.setupUrl)}')">Link kopieren</button>` : ""}
+                  ${entry.status !== "rejected" && entry.status !== "completed" ? `<button class="small-btn danger" type="button" onclick="rejectGuildApplication('${escapeHtml(entry.id)}')">Ablehnen</button>` : ""}
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function approveGuildApplication(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    const result = await railwayWrite({ action:"guildApproveApplication", masterCode, id, baseUrl:location.origin });
+    if(!result.success) throw new Error(result.error || "Gilde konnte nicht freigegeben werden.");
+    setStatus("Gilde freigegeben. Freischaltlink kann kopiert werden.", "good");
+    await loadGuildApplicationsPanel();
+  }catch(error){
+    setStatus(error.message || "Gilde konnte nicht freigegeben werden.", "bad");
+  }
+}
+
+async function rejectGuildApplication(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Diese Gilden-Anfrage ablehnen?")) return;
+  try{
+    const result = await railwayWrite({ action:"guildRejectApplication", masterCode, id });
+    if(!result.success) throw new Error(result.error || "Gilde konnte nicht abgelehnt werden.");
+    setStatus("Gilden-Anfrage abgelehnt.", "good");
+    await loadGuildApplicationsPanel();
+  }catch(error){
+    setStatus(error.message || "Gilden-Anfrage konnte nicht abgelehnt werden.", "bad");
+  }
+}
+
+async function copyGuildSetupLink(url){
+  try{
+    await navigator.clipboard.writeText(String(url || ""));
+    setStatus("Freischaltlink kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
 }
 
 async function loadIssueInboxPanel(){
