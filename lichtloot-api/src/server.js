@@ -15321,6 +15321,30 @@ async function applyOnyLootMetadataBackfillOnce() {
   }
 }
 
+async function applyMcCoreFelclothBagPatternCorrectionOnce() {
+  await ensureLootItemMetadataColumns();
+  const result = await query(
+    `update items
+     set item_id = '21371',
+         name = 'Muster: Kernteufelsstofftasche',
+         quality = 'Selten',
+         icon_url = 'inv_scroll_05',
+         slot = '',
+         type = 'Schneiderei',
+         boss = coalesce(nullif(boss, ''), 'All bosses'),
+         stats_text = 'Benutzen: Lehrt Euch wie man eine Teufelsstofftasche näht. | Klassen: Hexenmeister',
+         tooltip = 'Muster: Kernteufelsstofftasche | Benötigt Schneiderei (300) | Benutzen: Lehrt Euch wie man eine Teufelsstofftasche näht. |  | Kernteufelsstofftasche | Wird beim Anlegen gebunden | 28 Platz Seelentasche | Klassen: Hexenmeister |  | Benötigt Teufelsstoff (20), Kernleder (16), Blutrebe (8), Essenz des Feuers (4), Eisenweberseide (4)'
+     where lower(raid_type) = 'mc'
+       and (
+         item_id = '21371'
+         or regexp_replace(lower(name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower('Kernteufelsstofftasche'), '[^a-z0-9]+', '', 'g')
+       )
+     returning id`,
+    []
+  );
+  return { success: true, source: "mc-core-felcloth-bag-pattern-correction", updated: result.rowCount || 0 };
+}
+
 async function applyZgHakkariOffhandCorrectionOnce() {
   const markerKey = "zg-hakkari-same-name-distinct-ids-v2";
   const client = await pool.connect();
@@ -16442,7 +16466,8 @@ app.get("/api/apps-script", async (req, res, next) => {
       await ensureLootItemMetadataColumns();
       const metadata = await importLootItemMetadata();
       const onyBackfill = await applyOnyLootMetadataBackfillOnce();
-      return res.json({ ...metadata, onyBackfill, guild: guild.slug });
+      const mcCoreFelclothPattern = await applyMcCoreFelclothBagPatternCorrectionOnce();
+      return res.json({ ...metadata, onyBackfill, mcCoreFelclothPattern, guild: guild.slug });
     }
 
     if (action === "getLootItems" || action === "guildGetLootItems") {
@@ -17423,4 +17448,7 @@ app.listen(port, () => {
   applyOnyLootMetadataBackfillOnce()
     .then(result => console.log(`Ony-Lootmetadaten geprüft: ${result.updated || 0}/${result.checked || 0} aktualisiert`))
     .catch(error => console.warn("Ony-Lootmetadaten konnten nicht korrigiert werden:", error.message || error));
+  applyMcCoreFelclothBagPatternCorrectionOnce()
+    .then(result => console.log(`MC-Kernteufelsstofftasche geprüft: ${result.updated || 0} aktualisiert`))
+    .catch(error => console.warn("MC-Kernteufelsstofftasche konnte nicht korrigiert werden:", error.message || error));
 });
