@@ -2692,7 +2692,11 @@ async function createPlayerPinFromSheet(){
     }
 
     showPlayerPinValue(result.pin);
-    status.innerHTML='<span class="ok">✓ SpielerLogin wurde gespeichert.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    if(result.needsApproval || result.approvalStatus === "pending"){
+      status.innerHTML='<span class="warn">✓ SpielerLogin wurde erstellt und wartet auf Freigabe durch die Gildenleitung.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Du kannst ihn nutzen, sobald die Leitung ihn freigegeben hat.';
+    }else{
+      status.innerHTML='<span class="ok">✓ SpielerLogin wurde gespeichert.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    }
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
 

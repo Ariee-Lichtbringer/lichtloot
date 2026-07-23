@@ -6168,10 +6168,9 @@ function renderPlayers(){
       </td>
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
       <td>${renderPlayerRoleControl(group)}</td>
+      <td>${renderPlayerLoginStatus(group)}</td>
       <td>
-        ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : '<span class="badge closed">verborgen</span>'}
-      </td>
-      <td>
+        ${group.needsApproval ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
@@ -6208,6 +6207,16 @@ function renderPlayerRoleControl(group){
       <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}')">Speichern</button>
     </div>
   `;
+}
+
+function renderPlayerLoginStatus(group){
+  if(group.isBlocked){
+    return `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>`;
+  }
+  if(group.needsApproval){
+    return '<span class="badge warn">wartet auf Freigabe</span><div class="muted">Login ist noch nicht nutzbar.</div>';
+  }
+  return '<span class="badge good">freigegeben</span><div class="muted">Login aktiv.</div>';
 }
 
 async function setPlayerLoginRole(playerId, selectId){
@@ -6267,6 +6276,32 @@ async function setPlayerLoginBlocked(playerId, blocked){
   }
 }
 
+async function approvePlayerLogin(playerId){
+  if(!playerId) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Diesen SpielerLogin freigeben? Danach kann der Spieler sich einloggen und Charaktere/Prios nutzen.")) return;
+  setStatus("SpielerLogin wird freigegeben ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildApprovePlayerLogin",
+      masterCode,
+      playerId
+    });
+    if(!result.success){
+      setStatus(result.error || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+      return;
+    }
+    setStatus("SpielerLogin wurde freigegeben.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+  }
+}
+
 function groupPlayersByMain(players){
   const groups = new Map();
   (players || []).forEach(player => {
@@ -6288,6 +6323,8 @@ function groupPlayersByMain(players){
     group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
     group.isBlocked = group.characters.some(player => player.isBlocked || player.blocked);
     group.blockedReason = (group.characters.find(player => player.blockedReason)?.blockedReason) || "";
+    group.approvalStatus = normalize((group.characters.find(player => player.approvalStatus || player.playerApprovalStatus)?.approvalStatus) || group.main.approvalStatus || group.main.playerApprovalStatus || "approved");
+    group.needsApproval = group.approvalStatus && group.approvalStatus !== "approved";
     return group;
   }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
 }
