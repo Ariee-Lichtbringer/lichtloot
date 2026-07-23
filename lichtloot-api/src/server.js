@@ -960,10 +960,11 @@ function mergeGuildLayoutDefaults(slug, layout) {
 
 async function listGuilds() {
   await ensureGuildLayoutSchema();
+  await ensureGuildDiscordConfigSchema();
   const result = await query(
     `select g.slug, g.name, g.server,
             case when g.slug = 'lichtloot' then 'Lichtbringer' else coalesce(nullif(g.name, ''), g.slug) end as guild_pin,
-            g.logo_url, g.background_url, g.created_at,
+            g.logo_url, g.background_url, g.discord_guild_id, g.created_at,
             coalesce(gs.points_label, 'P0/P0+') as points_label,
             coalesce(gs.primary_color, '#facc15') as primary_color,
             coalesce(gs.accent_color, '#1d4ed8') as accent_color,
@@ -981,11 +982,47 @@ async function listGuilds() {
       guildPin: row.guild_pin || "",
       logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
       backgroundUrl: row.background_url || "",
+      discordGuildId: row.discord_guild_id || "",
       pointsLabel: row.points_label || "P0/P0+",
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
       layout: mergeGuildLayoutDefaults(row.slug, row.layout_json || {}),
       createdAt: row.created_at
+    }))
+  };
+}
+
+async function ensureGuildDiscordConfigSchema() {
+  await query(`alter table guilds add column if not exists discord_guild_id text not null default ''`);
+}
+
+async function listGuildsForBot({ query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureGuildDiscordConfigSchema();
+  const result = await query(
+    `select g.slug,
+            g.name,
+            g.server,
+            g.discord_guild_id,
+            coalesce(nullif(g.discord_guild_id, ''), (
+              select nullif(ga.discord_guild_id, '')
+              from guild_applications ga
+              where ga.guild_slug = g.slug
+                 or lower(ga.guild_name) = lower(g.name)
+                 or lower(ga.loot_name) = lower(g.name)
+              order by ga.setup_completed_at desc nulls last, ga.updated_at desc
+              limit 1
+            ), '') as resolved_discord_guild_id
+     from guilds g
+     order by g.created_at asc, g.name asc`
+  );
+  return {
+    success: true,
+    guilds: result.rows.map(row => ({
+      slug: row.slug,
+      name: row.name,
+      server: row.server || "",
+      discordGuildId: row.resolved_discord_guild_id || row.discord_guild_id || ""
     }))
   };
 }
@@ -1480,6 +1517,7 @@ async function getGuildSetup({ query: params }) {
 
 async function completeGuildSetup({ query: params, body = {} }) {
   await ensureGuildApplicationSchema();
+  await ensureGuildDiscordConfigSchema();
   const values = { ...params, ...body };
   const token = clean(values.token);
   if (!token) {
@@ -1508,6 +1546,7 @@ async function completeGuildSetup({ query: params, body = {} }) {
   const lootName = clean(values.lootName) || application.loot_name || guildName;
   const server = clean(values.server) || application.server;
   const guildPin = normalizePin(values.guildPin) || application.desired_guild_pin;
+  const discordGuildId = clean(values.discordGuildId || values.discord_guild_id || application.discord_guild_id);
   const logoUrl = clean(values.logoUrl);
   const backgroundUrl = clean(values.backgroundUrl);
   const primaryColor = clean(values.primaryColor) || "#facc15";
@@ -1518,6 +1557,16 @@ async function completeGuildSetup({ query: params, body = {} }) {
     query: { guild: created.guild.slug },
     body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor }
   });
+
+  if (discordGuildId) {
+    await query(
+      `update guilds
+       set discord_guild_id = $2,
+           updated_at = now()
+       where slug = $1`,
+      [created.guild.slug, discordGuildId]
+    );
+  }
 
   const rowResult = await query(
     `update guild_applications
@@ -3952,6 +4001,31 @@ async function getBotQueue({ guildId, query: params }) {
     items: result.rows.map(row => ({
       rowNumber: row.id,
       type: row.type,
+      payload: row.payload || {},
+      createdAt: row.created_at
+    }))
+  };
+}
+
+async function getBotQueueAllGuilds({ query: params }) {
+  requireMasterOrQueueToken(params);
+  await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  const result = await query(
+    `select q.id, q.type, q.payload, q.created_at, g.slug as guild_slug, g.name as guild_name
+     from bot_update_queue q
+     join guilds g on g.id = q.guild_id
+     where q.status = 'open'
+     order by q.created_at asc
+     limit 50`
+  );
+  return {
+    success: true,
+    items: result.rows.map(row => ({
+      rowNumber: row.id,
+      type: row.type,
+      guild: row.guild_slug,
+      guildSlug: row.guild_slug,
+      guildName: row.guild_name || row.guild_slug,
       payload: row.payload || {},
       createdAt: row.created_at
     }))
@@ -16625,6 +16699,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(guilds);
     }
 
+    if (action === "lichtbotListGuilds") {
+      const guilds = await listGuildsForBot({ query: req.query });
+      return res.json(guilds);
+    }
+
+    if (action === "lichtbotGetQueueAllGuilds") {
+      const queue = await getBotQueueAllGuilds({ query: req.query });
+      return res.json(queue);
+    }
+
     if (action === "resolveGuildByPin") {
       const resolved = await resolveGuildByPin({ query: req.query });
       return res.json(resolved);
@@ -17399,6 +17483,17 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
+
+    if (action === "lichtbotListGuilds") {
+      const guilds = await listGuildsForBot({ query: postParams });
+      return res.json(guilds);
+    }
+
+    if (action === "lichtbotGetQueueAllGuilds") {
+      const queue = await getBotQueueAllGuilds({ query: postParams });
+      return res.json(queue);
+    }
+
     const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
 
     if (action === "lichtbotSaveDiscordChannels") {
