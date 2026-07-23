@@ -1107,6 +1107,33 @@ async function resolveGuildByPin({ query: params, body = {} }) {
     error.statusCode = 400;
     throw error;
   }
+  if (pin === "LICHTBRINGER") {
+    const fallback = await query(
+      `select slug, name, server, logo_url, background_url
+       from guilds
+       where slug = 'lichtloot'
+       limit 1`
+    );
+    const row = fallback.rows[0];
+    if (!row) {
+      const error = new Error("GildenPIN wurde nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    return {
+      success: true,
+      guild: {
+        slug: row.slug,
+        name: "Lichtbringer",
+        server: row.server || "",
+        logoUrl: row.logo_url || "",
+        backgroundUrl: row.background_url || ""
+      },
+      guildSlug: row.slug,
+      startUrl: makeGuildPageUrl("start.html", row.slug, values),
+      leadershipUrl: makeGuildPageUrl("gildenleitung.html", row.slug, values)
+    };
+  }
   const result = await query(
     `select slug, name, server, logo_url, background_url
      from guilds
