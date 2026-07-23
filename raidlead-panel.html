@@ -9,6 +9,9 @@
 <style>
 :root{
   --gold:#facc15;
+  --gold-rgb:250,204,21;
+  --blue:#60a5fa;
+  --blue-rgb:96,165,250;
   --panel:rgba(12,18,32,.90);
   --text:#f8fafc;
   --muted:#cbd5e1;
@@ -1451,9 +1454,16 @@ function guildAssetPrefix(){ return location.pathname.includes("/loot/") ? "../"
 function guildLogoUrl(guild){
   const prefix=guildAssetPrefix();
   const logo=String(guild?.logoUrl || "").trim();
-  if(currentGuildSlug() === "lichtloot") return logo || prefix + "images/content.png";
+  const withPrefix=value => {
+    const clean=String(value || "").trim();
+    const cleanLower=clean.toLowerCase();
+    const external=cleanLower.startsWith("http://") || cleanLower.startsWith("https://") || cleanLower.startsWith("//") || cleanLower.startsWith("data:");
+    if(!clean || external || clean.startsWith("../") || clean.startsWith("/") || clean.startsWith("./")) return clean;
+    return prefix + clean;
+  };
+  if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
   if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
-  return logo;
+  return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
 async function fetchCurrentGuildInfo(){
@@ -1543,6 +1553,27 @@ const RAID_BACKGROUNDS = {
 };
 
 const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",zg:"",aq20:"",ony:""};
+
+async function fetchRailwayLootRows(raidKey){
+  const raid = raids[raidKey]?.short || raidKey || "";
+  if(!raid) return [];
+
+  const url =
+    RAID_API_URL +
+    "?action=getLootItems" +
+    currentGuildQueryPart() +
+    "&raid=" + encodeURIComponent(raid) +
+    "&t=" + Date.now();
+
+  const response = await fetch(url, {cache:"no-store"});
+  const payload = await response.json().catch(() => null);
+
+  if(!response.ok || !payload || payload.success === false){
+    throw new Error((payload && (payload.error || payload.message)) || "Lootdaten konnten nicht geladen werden.");
+  }
+
+  return Array.isArray(payload.items) ? payload.items : [];
+}
 
 let currentRaidKey = null;
 let currentRaidData = null;
