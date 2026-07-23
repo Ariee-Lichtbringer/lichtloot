@@ -911,7 +911,9 @@ function buildLootSlug(guildName, lootName) {
 
 async function listGuilds() {
   const result = await query(
-    `select g.slug, g.name, g.server, g.logo_url, g.background_url, g.created_at,
+    `select g.slug, g.name, g.server,
+            coalesce(nullif(g.name, ''), g.slug) as guild_pin,
+            g.logo_url, g.background_url, g.created_at,
             coalesce(gs.points_label, 'P0/P0+') as points_label,
             coalesce(gs.primary_color, '#facc15') as primary_color,
             coalesce(gs.accent_color, '#1d4ed8') as accent_color
@@ -925,6 +927,7 @@ async function listGuilds() {
       slug: row.slug,
       name: row.name,
       server: row.server || "",
+      guildPin: row.guild_pin || "",
       logoUrl: row.logo_url || "",
       backgroundUrl: row.background_url || "",
       pointsLabel: row.points_label || "P0/P0+",
@@ -1108,10 +1111,12 @@ async function resolveGuildByPin({ query: params, body = {} }) {
     `select slug, name, server, logo_url, background_url
      from guilds
      where lower(guild_pin) = lower($1)
+        or lower(name) = lower($1)
+        or lower(slug) = lower($1)
      limit 1`,
     [pin]
   );
-  const row = result.rows[0];
+  let row = result.rows[0];
   if (!row) {
     const error = new Error("GildenPIN wurde nicht gefunden.");
     error.statusCode = 404;
