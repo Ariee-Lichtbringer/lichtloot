@@ -2046,9 +2046,16 @@ function guildAssetPrefix(){ return location.pathname.includes("/loot/") ? "../"
 function guildLogoUrl(guild){
   const prefix=guildAssetPrefix();
   const logo=String(guild?.logoUrl || "").trim();
-  if(currentGuildSlug() === "lichtloot") return logo || prefix + "images/content.png";
+  const withPrefix=value => {
+    const clean=String(value || "").trim();
+    const cleanLower=clean.toLowerCase();
+    const external=cleanLower.startsWith("http://") || cleanLower.startsWith("https://") || cleanLower.startsWith("//") || cleanLower.startsWith("data:");
+    if(!clean || external || clean.startsWith("../") || clean.startsWith("/") || clean.startsWith("./")) return clean;
+    return prefix + clean;
+  };
+  if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
   if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
-  return logo;
+  return withPrefix(logo);
 }
 function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
 async function fetchCurrentGuildInfo(){
