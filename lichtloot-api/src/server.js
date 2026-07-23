@@ -17577,9 +17577,9 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
-    if (action === "guildCreateBuffTerm") {
+    if (action === "guildCreateBuffTerm" || action === "guildCreateWorldbuffTerm" || action === "lichtbotCreateWorldbuffTerm") {
       const target = clean(postParams.target).toLowerCase();
-      const created = target === "worldbuff"
+      const created = target === "worldbuff" || action === "guildCreateWorldbuffTerm" || action === "lichtbotCreateWorldbuffTerm"
         ? await createWorldbuffTerm({ guildId: guild.id, query: postParams })
         : await createHordenbuffTerm({ guildId: guild.id, query: postParams });
       return res.json({ ...created, guild: guild.slug });
