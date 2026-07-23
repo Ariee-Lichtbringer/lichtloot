@@ -9125,7 +9125,7 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td>
-          <strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong>
+          ${poSignupPlayerWithSubmittedAt(entry, { icon: raidHelperClassIconMarkup(entry.className || "", "◆") })}
           <div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div>
           <div class="po-entry-correction-control">
             <span class="po-entry-correction-label">Spielerlogin zuordnen</span>
@@ -9230,6 +9230,49 @@ function poSignupRowTitle(row){
   const title = String(row.title || "").trim();
   if(title && title.toLowerCase() !== "po liste") return title;
   return `${raid} PO-Anmeldung`;
+}
+
+function poSignupEntryCreatedAt(entry){
+  return entry?.poCreatedAt || entry?.createdAt || entry?.created_at || entry?.updatedAt || entry?.updated_at || "";
+}
+
+function poSignupEntrySubmittedLabel(entry){
+  const value = poSignupEntryCreatedAt(entry);
+  return value ? formatDateTime(value) : "";
+}
+
+function parseLocalRaidDateTime(dateValue, timeValue){
+  const dateText = String(dateValue || "").trim();
+  const timeText = String(timeValue || "").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateText) || !/^\d{2}:\d{2}/.test(timeText)) return null;
+  const date = new Date(`${dateText}T${timeText.slice(0,5)}:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function poSignupEntryRaidStart(entry){
+  const config = poSignupConfigForKey(entry?.postKey || "") || {};
+  return parseLocalRaidDateTime(
+    config.raidDate || entry?.raidDate || entry?.date || "",
+    config.raidTime || entry?.raidTime || entry?.time || ""
+  );
+}
+
+function isLatePoSignupEntry(entry){
+  const createdRaw = poSignupEntryCreatedAt(entry);
+  const created = createdRaw ? new Date(createdRaw) : null;
+  const raidStart = poSignupEntryRaidStart(entry);
+  if(!created || Number.isNaN(created.getTime()) || !raidStart) return false;
+  return created.getTime() >= raidStart.getTime() - 30 * 60 * 1000;
+}
+
+function poSignupPlayerWithSubmittedAt(entry, options={}){
+  const icon = options.icon || "";
+  const player = escapeHtml(entry?.player || "-");
+  const submitted = poSignupEntrySubmittedLabel(entry);
+  const late = isLatePoSignupEntry(entry);
+  const lateIcon = late ? ' <span title="Später als 30 Minuten vor Raidbeginn gemeldet">🕒</span>' : "";
+  const submittedText = submitted ? ` <span class="muted">· ${escapeHtml(submitted)}</span>` : "";
+  return `<strong>${icon ? icon + " " : ""}${player}</strong>${submittedText}${lateIcon}`;
 }
 
 function poPostConfigGroups(){
@@ -11686,7 +11729,7 @@ function renderPoPostEntryRows(){
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
         <td>${escapeHtml(entry.raid || "-")}</td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong>${releaseStar}</td>
+        <td>${poSignupPlayerWithSubmittedAt(entry)}${releaseStar}</td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>
           <div class="actions">
