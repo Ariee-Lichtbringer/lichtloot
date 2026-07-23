@@ -990,10 +990,13 @@ async function createGuild({ query: params }) {
         slug: guild.slug,
         name: guild.name,
         server: guild.server || "",
+        guildPin,
         createdAt: guild.created_at
       },
-      startUrl: `start.html?guild=${encodeURIComponent(guild.slug)}`,
-      leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(guild.slug)}`
+      guildSlug: guild.slug,
+      guildPin,
+      startUrl: makeGuildPageUrl("start.html", guild.slug, params),
+      leadershipUrl: makeGuildPageUrl("gildenleitung.html", guild.slug, params)
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -1119,8 +1122,9 @@ async function resolveGuildByPin({ query: params, body = {} }) {
       logoUrl: row.logo_url || "",
       backgroundUrl: row.background_url || ""
     },
-    startUrl: `start.html?guild=${encodeURIComponent(row.slug)}`,
-    leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(row.slug)}`
+    guildSlug: row.slug,
+    startUrl: makeGuildPageUrl("start.html", row.slug, values),
+    leadershipUrl: makeGuildPageUrl("gildenleitung.html", row.slug, values)
   };
 }
 
@@ -1170,6 +1174,14 @@ async function ensureGuildApplicationSchema() {
 
 function getPublicBaseUrl(params = {}) {
   return clean(params.baseUrl || params.origin || process.env.PUBLIC_BASE_URL || "https://lichtloot.de").replace(/\/+$/, "");
+}
+
+function makeGuildPageUrl(page, slug, params = {}) {
+  const baseUrl = getPublicBaseUrl(params);
+  const safePage = clean(page).replace(/^\/+/, "") || "start.html";
+  const url = new URL(`${baseUrl}/${safePage}`);
+  url.searchParams.set("guild", resolveGuildSlug(slug));
+  return url.toString();
 }
 
 function makeGuildSetupUrl(token, params = {}) {
@@ -1406,9 +1418,11 @@ async function completeGuildSetup({ query: params, body = {} }) {
   return {
     success: true,
     application: normalizeGuildApplicationRow(rowResult.rows[0], values),
-    guild: saved.guild,
-    startUrl: `start.html?guild=${encodeURIComponent(created.guild.slug)}`,
-    leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(created.guild.slug)}`
+    guild: { ...saved.guild, guildPin },
+    guildSlug: created.guild.slug,
+    guildPin,
+    startUrl: makeGuildPageUrl("start.html", created.guild.slug, values),
+    leadershipUrl: makeGuildPageUrl("gildenleitung.html", created.guild.slug, values)
   };
 }
 
