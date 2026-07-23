@@ -2760,6 +2760,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
+  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
+  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand='footerName']").forEach(el => el.textContent = "© 2026 " + brand.footerName);
@@ -2768,14 +2770,33 @@ function applyGuildBrand(){
   document.querySelectorAll("[data-guild-onclick]").forEach(el => {
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
-  const brandLogoUrl = CURRENT_GUILD_SLUG === "lichtloot" ? "images/content.png" : (guild?.logoUrl || "");
+  const brandLogoUrl = guild?.logoUrl || "images/content.png";
   if(brandLogoUrl){
     document.querySelectorAll(".start-sidebar-logo,.start-profile-btn img,.logs-dashboard-title img,.app-download-card img").forEach(el => { el.src = brandLogoUrl; });
   }
   if(guild?.backgroundUrl){
     document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
   }
+  applyRaidLayoutImages(guild?.layout?.raidImages);
   updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
+}
+
+const DEFAULT_RAID_IMAGES = {
+  mc:"images/mc.jpg",
+  bwl:"images/bwl.jpg",
+  aq40:"images/aq40.jpg",
+  naxx:"images/naxx.jpg",
+  zg:"images/zg.jpg",
+  aq20:"images/aq20.jpg",
+  ony:"images/ony.jpg"
+};
+const RAID_IMAGE_OVERRIDES = Object.assign({}, DEFAULT_RAID_IMAGES);
+
+function applyRaidLayoutImages(raidImages){
+  Object.keys(DEFAULT_RAID_IMAGES).forEach(key => {
+    const custom = raidImages && typeof raidImages === "object" ? String(raidImages[key] || "").trim() : "";
+    RAID_IMAGE_OVERRIDES[key] = custom || DEFAULT_RAID_IMAGES[key];
+  });
 }
 
 const raidleadAccounts = {
@@ -3316,7 +3337,8 @@ function renderActiveRaidCards(entries){
 
 
 function raidImagePath(raidKey){
-  return "images/" + raidKey + ".jpg";
+  const key=String(raidKey || "").trim().toLowerCase();
+  return RAID_IMAGE_OVERRIDES[key] || DEFAULT_RAID_IMAGES[key] || ("images/" + key + ".jpg");
 }
 
 function prioIsOpen(raid){

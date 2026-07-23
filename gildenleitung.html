@@ -76,57 +76,6 @@ button,input,select{font:inherit}
   gap:7px;
 }
 
-.side-group{
-  display:grid;
-  gap:6px;
-  margin-top:8px;
-}
-
-.side-group-toggle{
-  width:100%;
-  min-height:38px;
-  border:1px solid rgba(250,204,21,.18);
-  border-radius:8px;
-  padding:7px 10px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  color:#fde68a;
-  background:rgba(250,204,21,.08);
-  font-weight:900;
-  cursor:pointer;
-}
-
-.side-group-toggle:hover{
-  border-color:rgba(250,204,21,.36);
-  background:rgba(250,204,21,.14);
-}
-
-.side-group-toggle::after{
-  content:"▾";
-  color:#fbbf24;
-  font-size:13px;
-}
-
-.side-group.collapsed .side-group-toggle::after{
-  content:"▸";
-}
-
-.side-group-items{
-  display:grid;
-  gap:6px;
-  margin-left:8px;
-  padding:8px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:8px;
-  background:rgba(2,6,23,.34);
-}
-
-.side-group.collapsed .side-group-items{
-  display:none;
-}
-
 .side-link{
   width:100%;
   min-height:44px;
@@ -171,19 +120,6 @@ button,input,select{font:inherit}
 .side-label{
   min-width:0;
   line-height:1.1;
-}
-
-.side-count{
-  margin-left:auto;
-  min-width:22px;
-  height:22px;
-  border-radius:999px;
-  display:inline-grid;
-  place-items:center;
-  background:rgba(248,113,113,.18);
-  color:#fca5a5;
-  font-size:12px;
-  font-weight:950;
 }
 
 .side-spacer{height:18px}
@@ -292,21 +228,6 @@ button,input,select{font:inherit}
   background:linear-gradient(135deg,rgba(30,41,59,.82),rgba(15,23,42,.72));
 }
 
-.btn:disabled,
-.small-btn:disabled{
-  opacity:.48;
-  cursor:not-allowed;
-  border-color:rgba(148,163,184,.16);
-  background:rgba(15,23,42,.38);
-  color:#94a3b8;
-}
-
-.btn:disabled:hover,
-.small-btn:disabled:hover{
-  border-color:rgba(148,163,184,.16);
-  background:rgba(15,23,42,.38);
-}
-
 .btn.danger{
   border-color:rgba(248,113,113,.42);
   background:rgba(127,29,29,.24);
@@ -362,7 +283,7 @@ button,input,select{font:inherit}
 
 .dashboard-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr);
+  grid-template-columns:minmax(0,1fr) 310px;
   gap:18px;
   align-items:start;
   margin-top:18px;
@@ -381,7 +302,7 @@ button,input,select{font:inherit}
 .stat-grid{
   margin-top:18px;
   display:grid;
-  grid-template-columns:minmax(220px,360px);
+  grid-template-columns:repeat(3,minmax(145px,1fr));
   gap:12px;
 }
 
@@ -453,42 +374,19 @@ button,input,select{font:inherit}
 
 .active-raid-list{
   display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:14px;
-}
-
-.active-raid-group{
-  display:grid;
-  gap:10px;
-}
-
-.active-raid-group + .active-raid-group{
-  margin-top:16px;
-}
-
-.active-raid-group-title{
-  margin:0;
-  color:#fde68a;
-  font-size:15px;
-  font-weight:950;
-  letter-spacing:0;
-}
-
-.active-raid-group-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(330px,380px));
-  gap:14px;
-  align-items:start;
 }
 
 .active-raid-card{
-  min-height:0;
+  min-height:210px;
   display:grid;
-  grid-template-columns:70px 1fr;
-  gap:9px;
+  grid-template-columns:78px 1fr;
+  gap:10px;
   align-items:start;
   position:relative;
   overflow:hidden;
-  padding:10px;
+  padding:12px;
   border:1px solid rgba(250,204,21,.18);
   border-radius:8px;
   background:
@@ -500,8 +398,8 @@ button,input,select{font:inherit}
 .active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
 
 .active-raid-image{
-  width:70px;
-  height:108px;
+  width:78px;
+  height:122px;
   border-radius:5px;
   background-image:
     linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
@@ -526,48 +424,16 @@ button,input,select{font:inherit}
   line-height:1.2;
 }
 
-.active-raid-topline{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:8px;
-  align-items:start;
-  margin-top:6px;
-}
-
 .active-raid-meta{
-  display:grid;
-  width:max-content;
-  gap:2px;
-  padding:6px 8px;
-  border:1px solid rgba(250,204,21,.28);
-  border-radius:7px;
-  background:rgba(250,204,21,.08);
-  color:#f8fafc;
-  font-weight:900;
-  font-size:13px;
+  margin-top:4px;
+  color:#cbd5e1;
+  font-weight:700;
+  font-size:12px;
 }
 .active-raid-meta[role="button"]{cursor:pointer}
 .active-raid-meta[role="button"]:focus-visible{
   outline:2px solid rgba(250,204,21,.72);
   outline-offset:3px;
-}
-
-.active-raid-weekday{
-  color:#facc15;
-  font-size:11px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.active-raid-time{
-  color:#cbd5e1;
-  font-size:12px;
-}
-
-.active-raid-info{
-  display:grid;
-  gap:6px;
-  min-width:0;
 }
 
 .active-raid-side{
@@ -594,8 +460,8 @@ button,input,select{font:inherit}
 .active-raid-stats{
   display:flex;
   flex-direction:column;
-  gap:4px;
-  margin-top:6px;
+  gap:6px;
+  margin-top:8px;
 }
 
 .active-raid-stat{
@@ -629,12 +495,30 @@ button,input,select{font:inherit}
   min-width:105px;
 }
 
+.active-raid-discord-tools{
+  grid-column:1 / -1;
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:8px;
+  align-items:center;
+}
+
+.active-raid-discord-tools select{
+  min-height:32px;
+  font-size:12px;
+}
+
+.active-raid-discord-tools .small-btn{
+  min-width:96px;
+}
+
 .active-raid-lead-card{
   grid-column:1 / -1;
   border:1px solid rgba(250,204,21,.28);
   border-radius:6px;
   background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
-  padding:8px;
+  padding:8px 10px;
   min-width:0;
 }
 
@@ -733,66 +617,15 @@ button,input,select{font:inherit}
 .issue-panel{border-color:rgba(250,204,21,.20)}
 
 .compact-auth{
-  width:100%;
+  width:max-content;
   max-width:100%;
 }
 
 .unlock{
   display:grid;
-  grid-template-columns:minmax(180px,250px) minmax(180px,250px) minmax(220px,360px);
-  gap:10px;
+  grid-template-columns:190px auto;
+  gap:8px;
   align-items:end;
-}
-
-.unlock > .btn{
-  width:100%;
-}
-
-.login-summary-card{
-  min-height:68px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:8px;
-  background:linear-gradient(135deg,rgba(12,18,32,.84),rgba(2,6,23,.48));
-  padding:10px 12px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-
-.login-summary-card .stat-icon{
-  color:#fbbf24;
-  font-size:22px;
-}
-
-.login-summary-card span{
-  color:#dbeafe;
-  font-size:12px;
-  font-weight:900;
-}
-
-.login-summary-card strong{
-  display:block;
-  margin-top:2px;
-  color:#60a5fa;
-  font-size:24px;
-  line-height:1;
-}
-
-.login-summary-card .stat-subline{
-  margin-top:3px;
-  color:#c4b5fd;
-  font-size:11px;
-  font-weight:900;
-}
-
-.login-summary-card button{
-  border:0;
-  background:transparent;
-  color:#fbbf24;
-  font-weight:950;
-  white-space:nowrap;
-  cursor:pointer;
 }
 
 .compact-auth .status{
@@ -859,10 +692,6 @@ body.guild-locked .compact-auth{
 body.guild-locked .unlock{
   grid-template-columns:1fr;
   gap:14px;
-}
-
-body.guild-locked .login-summary-card{
-  display:none;
 }
 
 body.guild-locked .auth-panel input{
@@ -1122,70 +951,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-post-layout{
-  grid-template-columns:minmax(520px,1fr) minmax(360px,.62fr);
-}
-
-.po-post-list-block{
-  margin-top:12px;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;
-  background:rgba(2,6,23,.34);
-  overflow:hidden;
-}
-
-.po-post-list-summary{
-  list-style:none;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:12px;
-  cursor:pointer;
-}
-
-.po-post-list-summary::-webkit-details-marker{
-  display:none;
-}
-
-.po-post-list-summary h3{
-  margin:0;
-  color:#f8fafc;
-  font-size:15px;
-}
-
-.po-post-list-summary p{
-  margin:3px 0 0;
-  color:#cbd5e1;
-  font-size:12px;
-  line-height:1.3;
-}
-
-.po-post-list-summary span{
-  flex:0 0 auto;
-  color:#facc15;
-  font-size:12px;
-  font-weight:950;
-}
-
-.po-post-list-block[open] .po-post-list-summary span{
-  color:#cbd5e1;
-}
-
-.po-post-list-block[open] .po-post-list-summary span::before{
-  content:"schließen";
-}
-
-.po-post-list-block[open] .po-post-list-summary span{
-  font-size:0;
-}
-
-.po-post-list-block[open] .po-post-list-summary span::before{
-  font-size:12px;
-}
-
-.po-post-list-block .section-head,
-.po-post-list-block .table-wrap{
-  margin:0 12px 12px;
+  grid-template-columns:minmax(0,.9fr) minmax(460px,1.1fr);
 }
 
 .po-post-tabs{
@@ -1200,119 +966,6 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-post-tab-panel.hidden{
   display:none!important;
-}
-
-.po-signup-steps{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
-  margin-bottom:12px;
-}
-
-.po-signup-current{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin:10px 0 10px;
-  padding:10px 12px;
-  border:1px solid rgba(250,204,21,.42);
-  border-radius:8px;
-  background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.78));
-  box-shadow:0 12px 28px rgba(0,0,0,.18);
-}
-
-.po-signup-current span:first-child{
-  color:#facc15;
-  font-size:11px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.po-signup-current strong{
-  display:block;
-  margin-top:2px;
-  color:#f8fafc;
-  font-size:14px;
-  line-height:1.15;
-}
-
-.po-signup-current small{
-  color:#cbd5e1;
-  font-size:12px;
-  font-weight:850;
-  text-align:right;
-}
-
-.po-signup-step{
-  min-height:46px;
-  display:grid;
-  grid-template-columns:28px 1fr;
-  align-items:center;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:8px;
-  border:1px solid rgba(148,163,184,.22);
-  background:rgba(15,23,42,.46);
-}
-
-.po-signup-step-num{
-  width:26px;
-  height:26px;
-  display:grid;
-  place-items:center;
-  border-radius:999px;
-  background:rgba(30,41,59,.82);
-  color:#cbd5e1;
-  font-weight:950;
-  font-size:12px;
-}
-
-.po-signup-step strong{
-  display:block;
-  color:#e5edf8;
-  font-size:12px;
-  line-height:1.15;
-}
-
-.po-signup-step span:last-child{
-  display:block;
-  margin-top:2px;
-  color:#94a3b8;
-  font-size:11px;
-  line-height:1.2;
-}
-
-.po-signup-step.is-active{
-  border-color:rgba(250,204,21,.48);
-  background:rgba(113,63,18,.32);
-  box-shadow:0 0 0 2px rgba(250,204,21,.24),0 12px 24px rgba(0,0,0,.18);
-  position:relative;
-}
-
-.po-signup-step.is-active::after{
-  content:"Aktuell";
-  position:absolute;
-  right:8px;
-  top:6px;
-  color:#facc15;
-  font-size:9px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.po-signup-step.is-active .po-signup-step-num{
-  background:#facc15;
-  color:#111827;
-}
-
-.po-signup-step.is-done{
-  border-color:rgba(34,197,94,.36);
-}
-
-.po-signup-step.is-done .po-signup-step-num{
-  background:#22c55e;
-  color:#052e16;
 }
 
 .po-post-config-table,
@@ -1369,499 +1022,52 @@ select:focus{border-color:rgba(96,165,250,.75)}
   line-height:1.35;
 }
 
-.po-signup-action-guide{
-  display:grid;
-  grid-template-columns:1.2fr 1fr 1fr;
-  gap:10px;
-  margin:12px 0 10px;
-}
-
-.po-signup-action-card{
-  position:relative;
-  display:grid;
-  grid-template-columns:1fr;
-  gap:8px;
-  min-height:112px;
-  padding:12px;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;
-  background:rgba(15,23,42,.52);
-}
-
-.po-signup-action-card::before{
-  content:"➜";
-  position:absolute;
-  left:10px;
-  top:-19px;
-  color:var(--po-action-color,#facc15);
-  font-size:34px;
-  font-weight:950;
-  transform:rotate(16deg);
-  text-shadow:0 2px 0 rgba(0,0,0,.55);
-}
-
-.po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
-.po-signup-action-transfer{--po-action-color:#facc15;border-color:rgba(250,204,21,.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
-.po-signup-action-helper{--po-action-color:#60a5fa;border-color:rgba(96,165,250,.34)}
-
-.po-signup-action-card strong{
-  display:block;
-  margin-left:24px;
-  color:#f8fafc;
-  font-size:14px;
-  line-height:1.15;
-}
-
-.po-signup-action-card small{
-  display:block;
-  margin:4px 0 0 24px;
-  color:#cbd5e1;
-  font-size:12px;
-  line-height:1.35;
-}
-
-.po-signup-action-buttons{
-  display:grid;
-  gap:8px;
-  align-self:end;
-}
-
-.po-signup-action-card .btn{
-  width:100%;
-}
-
-.po-signup-discord-button{
-  background:linear-gradient(135deg,rgba(21,128,61,.95),rgba(22,101,52,.82));
-  border-color:rgba(74,222,128,.58);
-  color:#ecfdf5;
-}
-
-.po-signup-transfer-button{
-  background:linear-gradient(135deg,rgba(161,98,7,.92),rgba(15,23,42,.78));
-  border-color:rgba(250,204,21,.58);
-  color:#fef3c7;
-}
-
-.po-signup-item-tools{
-  display:grid;
-  gap:10px;
-  margin:12px 0;
-}
-
-.po-signup-item-tool-row{
-  display:grid;
-  grid-template-columns:minmax(150px,.8fr) minmax(0,1.4fr) auto;
-  gap:8px;
-  align-items:end;
-}
-
-.po-signup-item-results{
-  display:grid;
-  gap:6px;
-  max-height:220px;
-  overflow:auto;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;
-  background:rgba(2,6,23,.48);
-  padding:8px;
-}
-
-.po-signup-item-result{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  min-height:34px;
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:7px;
-  background:rgba(15,23,42,.6);
-  color:#e5edf8;
-  padding:7px 8px;
-  text-align:left;
-  cursor:pointer;
-}
-
-.po-signup-item-result:hover{
-  border-color:rgba(250,204,21,.55);
-}
-
-.po-signup-item-result strong{
-  color:#facc15;
-  font-size:12px;
-  white-space:nowrap;
-}
-
 .po-signup-preview-list{
   display:grid;
-  gap:9px;
-  margin:16px 0 12px;
-}
-
-.po-signup-preview-details{
-  border-left-color:#facc15;
-  min-height:0;
-}
-
-.po-signup-preview-details summary{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  cursor:pointer;
-  color:#dbeafe;
-  font-weight:950;
-}
-
-.po-signup-preview-details summary::-webkit-details-marker{
-  display:none;
-}
-
-.po-signup-preview-details summary::after{
-  content:"⌄";
-  color:#93c5fd;
-}
-
-.po-signup-preview-details[open] summary::after{
-  content:"⌃";
-}
-
-.po-signup-discord-embed{
-  display:grid;
-  gap:10px;
-  margin-top:12px;
-}
-
-.po-signup-discord-title{
-  color:#fff;
-  font-size:15px;
-  font-weight:950;
-  line-height:1.2;
-}
-
-.po-signup-discord-text{
-  color:#f4f4f5;
-  font-size:13px;
-  line-height:1.4;
-  white-space:pre-line;
-}
-
-.po-signup-discord-section{
-  margin-top:6px;
-  color:#f4f4f5;
-  font-size:13px;
-  font-weight:950;
+  gap:7px;
+  margin:14px 0;
 }
 
 .po-signup-preview-item{
-  display:grid;
-  gap:3px;
-  color:#f4f4f5;
-  font-size:13px;
-  line-height:1.3;
-}
-
-.po-signup-preview-item strong{
-  color:#fff;
-  font-weight:950;
-}
-
-.po-signup-preview-player-line{
-  color:#e5e7eb;
-  font-size:13px;
-}
-
-.po-signup-preview-player-line .approved{
-  color:#22c55e;
-  font-weight:950;
-}
-
-.po-signup-preview-empty{
-  color:#cbd5e1;
-  font-size:13px;
-  font-weight:800;
-}
-
-.po-signup-discord-footer{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px 14px;
-  margin-top:8px;
-  padding-top:10px;
-  border-top:1px solid rgba(255,255,255,.08);
-  color:#f4f4f5;
-  font-size:12px;
-}
-
-.po-signup-discord-footer span{
-  display:block;
-  color:#fff;
-  font-weight:950;
-}
-
-.po-signup-discord-footer code{
-  display:inline-block;
-  max-width:100%;
-  margin-top:3px;
-  padding:2px 5px;
-  border-radius:4px;
-  background:rgba(88,101,242,.18);
-  color:#dbeafe;
-  white-space:normal;
-  word-break:break-all;
-}
-
-.po-signup-direct-actions{
   display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-}
-
-.po-signup-direct-actions .small-btn{
-  min-width:88px;
-}
-
-.po-entry-correction-control{
-  display:grid;
-  gap:5px;
-  margin-top:7px;
-}
-
-.po-entry-correction-label{
-  color:#facc15;
-  font-size:10px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.po-entry-correction-input{
-  width:100%;
-  min-height:30px;
-  border:1px solid rgba(148,163,184,.32);
-  border-radius:7px;
-  background:rgba(2,6,23,.72);
-  color:#e5edf8;
-  font-size:12px;
-  font-weight:800;
-  padding:6px 8px;
-}
-
-.po-entry-correction-input:focus{
-  outline:2px solid rgba(250,204,21,.28);
-  border-color:rgba(250,204,21,.7);
-}
-
-.po-entry-item-results{
-  display:grid;
-  gap:4px;
-  max-height:170px;
-  overflow:auto;
-  margin-top:6px;
-  padding:5px;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 10px;
   border:1px solid rgba(148,163,184,.18);
   border-radius:7px;
-  background:rgba(2,6,23,.46);
+  background:rgba(15,23,42,.48);
+  color:#e5edf8;
+  font-weight:850;
 }
 
-.po-entry-item-choice{
-  width:100%;
+.po-signup-preview-menu{
+  min-height:42px;
   display:flex;
   align-items:center;
-  gap:6px;
-  border:0;
-  border-radius:6px;
-  background:transparent;
-  color:#dbeafe;
-  padding:4px 6px;
-  text-align:left;
-  cursor:pointer;
-}
-
-.po-entry-item-choice:hover,
-.po-entry-item-choice:focus{
-  outline:none;
-  background:rgba(96,165,250,.14);
-}
-
-.po-entry-item-choice.selected{
-  background:rgba(34,197,94,.14);
-  box-shadow:inset 0 0 0 1px rgba(34,197,94,.34);
-  color:#dcfce7;
-}
-
-.po-entry-loot-picker{
-  position:fixed;
-  inset:0;
-  z-index:64000;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:22px;
-  background:rgba(2,6,23,.72);
-  backdrop-filter:blur(8px);
-}
-
-.po-entry-loot-picker-box{
-  width:min(980px,calc(100vw - 32px));
-  max-height:min(760px,calc(100vh - 32px));
-  display:grid;
-  grid-template-rows:auto auto minmax(0,1fr);
-  gap:12px;
-  border:1px solid rgba(250,204,21,.42);
-  border-radius:10px;
-  background:linear-gradient(145deg,rgba(8,13,26,.98),rgba(3,7,18,.96));
-  box-shadow:0 22px 60px rgba(0,0,0,.56);
-  padding:16px;
-}
-
-.po-entry-loot-picker-head{
-  display:flex;
-  align-items:flex-start;
   justify-content:space-between;
   gap:12px;
-}
-
-.po-entry-loot-picker-title{
-  color:#facc15;
-  font-size:18px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.po-entry-loot-picker-sub{
-  color:#cbd5e1;
-  font-size:12px;
-  font-weight:800;
-  margin-top:3px;
-}
-
-.po-entry-loot-picker-search{
-  min-height:38px;
-  width:100%;
-  border:1px solid rgba(148,163,184,.28);
+  margin-top:12px;
+  padding:10px 12px;
+  border:1px solid rgba(96,165,250,.38);
   border-radius:8px;
-  background:rgba(2,6,23,.72);
-  color:#f8fafc;
-  font-weight:850;
-  padding:9px 11px;
+  background:rgba(30,41,59,.70);
+  color:#dbeafe;
+  font-weight:900;
 }
 
-.po-entry-loot-picker-list{
-  overflow:auto;
+.po-signup-preview-actions{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  grid-template-columns:1fr 1fr;
   gap:8px;
-  padding-right:4px;
+  margin-top:10px;
 }
 
-.po-entry-loot-picker-item{
-  min-height:44px;
-  border:1px solid rgba(148,163,184,.20);
-  border-radius:8px;
-  background:rgba(15,23,42,.70);
+.po-signup-preview-actions button{
+  min-height:36px;
+  border:1px solid rgba(148,163,184,.24);
+  border-radius:7px;
+  background:rgba(15,23,42,.76);
   color:#e5edf8;
-  text-align:left;
-  padding:8px 9px;
-  cursor:pointer;
-}
-
-.po-entry-loot-picker-item:hover,
-.po-entry-loot-picker-item:focus{
-  outline:none;
-  border-color:rgba(250,204,21,.60);
-  background:rgba(30,41,59,.82);
-}
-
-.po-entry-loot-picker-meta{
-  display:block;
-  margin-top:3px;
-  color:#94a3b8;
-  font-size:11px;
-  font-weight:800;
-}
-
-.po-entry-correction-note{
-  color:#93c5fd;
-  font-size:11px;
-  line-height:1.25;
-}
-
-.po-signup-action-stack{
-  display:grid;
-  gap:6px;
-  min-width:105px;
-}
-
-.po-signup-action-stack .small-btn{
-  width:100%;
-}
-
-.po-signup-config-title{
-  display:block;
-  color:#f8fafc;
-  font-size:13px;
-  font-weight:950;
-  line-height:1.15;
-}
-
-.po-signup-config-key{
-  display:block;
-  margin-top:4px;
-  color:#94a3b8;
-  font-size:10px;
-  font-weight:800;
-  line-height:1.25;
-  word-break:break-all;
-}
-
-.po-post-id-button.po-signup-config-key{
-  margin-top:0;
-  color:#dbeafe;
-  font-size:11px;
-}
-
-.po-signup-channel-stack{
-  display:grid;
-  gap:5px;
-  min-width:118px;
-}
-
-.po-signup-channel-line{
-  display:flex;
-  gap:5px;
-  align-items:flex-start;
-  color:#dbeafe;
-  font-size:11px;
-  font-weight:850;
-  line-height:1.2;
-}
-
-.po-signup-channel-line span:first-child{
-  min-width:32px;
-  color:#facc15;
-  font-size:10px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-
-.po-signup-count-box{
-  display:inline-grid;
-  gap:2px;
-  min-width:76px;
-  padding:6px 8px;
-  border:1px solid rgba(148,163,184,.22);
-  border-radius:8px;
-  background:rgba(15,23,42,.66);
-}
-
-.po-signup-count-box strong{
-  color:#f8fafc;
-  font-size:17px;
-  line-height:1;
-}
-
-.po-signup-count-box small{
-  color:#86efac;
-  font-size:10px;
   font-weight:900;
 }
 
@@ -3344,7 +2550,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
 .badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
 .badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
-.badge.danger{border-color:rgba(248,113,113,.45);color:#fecaca;background:rgba(127,29,29,.16)}
 
 .analysis-progress{
   width:min(180px,100%);
@@ -3825,65 +3030,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .worldbuff-toolbar{
   display:grid;
-  grid-template-columns:1fr auto;
+  grid-template-columns:140px 140px 1fr auto auto auto;
   gap:8px;
   align-items:center;
   margin-bottom:8px;
-}
-
-.worldbuff-control-grid{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:10px;
-  align-items:start;
-}
-
-.worldbuff-filter-card,
-.worldbuff-action-card,
-.worldbuff-create-card{
-  border:1px solid rgba(148,163,184,.18);
-  border-radius:8px;
-  background:rgba(2,6,23,.36);
-  padding:10px;
-}
-
-.worldbuff-filter-card{
-  display:grid;
-  grid-template-columns:140px 140px minmax(220px,1fr);
-  gap:8px;
-}
-
-.worldbuff-action-card{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-
-.worldbuff-create-card{
-  position:relative;
-  margin:12px 0;
-  border-color:rgba(250,204,21,.34);
-  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.56));
-}
-
-.worldbuff-create-card::before{
-  content:"➜";
-  position:absolute;
-  left:14px;
-  top:-18px;
-  color:#facc15;
-  font-size:34px;
-  font-weight:950;
-  transform:rotate(18deg);
-  text-shadow:0 2px 0 rgba(0,0,0,.45);
-}
-
-.worldbuff-create-title{
-  margin:0 0 8px 34px;
-  color:#fde68a;
-  font-size:15px;
-  font-weight:950;
 }
 
 .worldbuff-table{
@@ -3893,31 +3043,22 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .worldbuff-table th{color:#fde68a;background:rgba(2,6,23,.62)}
 
 .worldbuff-table tr.buff-day-row td{
-  background:rgba(15,23,42,.34);
-  border-top:2px solid rgba(250,204,21,.32);
+  background:var(--day-bg);
 }
 
 .worldbuff-table tr.buff-day-row td:first-child{
-  box-shadow:inset 4px 0 0 rgba(250,204,21,.72);
+  box-shadow:inset 4px 0 0 var(--day-accent);
 }
 
 .worldbuff-table tr.buff-day-row:hover td{
-  background:rgba(30,41,59,.42);
+  background:var(--day-bg-hover);
 }
+
+.worldbuff-table tr.day-color-0{--day-bg:rgba(59,130,246,.18);--day-bg-hover:rgba(59,130,246,.27);--day-accent:#60a5fa}
+.worldbuff-table tr.day-color-1{--day-bg:rgba(250,204,21,.15);--day-bg-hover:rgba(250,204,21,.24);--day-accent:#facc15}
 
 .worldbuff-table td.buff-group-empty{
   color:transparent;
-}
-
-.buff-day-label{
-  display:inline-flex;
-  min-width:88px;
-  padding:4px 8px;
-  border-radius:999px;
-  border:1px solid rgba(250,204,21,.32);
-  background:rgba(250,204,21,.10);
-  color:#fde68a;
-  font-weight:950;
 }
 
 .buff-pill{
@@ -3932,6 +3073,126 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .buff-ony{color:#fca5a5}
 .buff-nef{color:#f87171}
 .buff-rend{color:#fdba74}
+
+.loot-layout-panel{
+  border-color:rgba(34,197,94,.28);
+  background:linear-gradient(135deg,rgba(6,78,59,.28),rgba(2,6,23,.58));
+}
+.loot-layout-body{
+  display:grid;
+  gap:14px;
+}
+.loot-layout-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.loot-layout-card{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.42);
+  padding:12px;
+}
+.loot-layout-card h3{
+  margin:0 0 10px;
+  color:#f8fafc;
+  font-size:16px;
+}
+.loot-layout-fields{
+  display:grid;
+  gap:10px;
+}
+.loot-layout-fields label{
+  display:grid;
+  gap:5px;
+  color:#fde68a;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.loot-layout-fields input{
+  width:100%;
+  min-height:36px;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:8px;
+  background:rgba(2,6,23,.72);
+  color:#f8fafc;
+  padding:8px 9px;
+  outline:none;
+  font-weight:800;
+}
+.loot-layout-fields input[type="color"]{
+  padding:3px;
+  cursor:pointer;
+}
+.loot-layout-preview{
+  display:grid;
+  grid-template-columns:84px 1fr;
+  gap:12px;
+  align-items:center;
+  min-height:110px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  padding:12px;
+  background:
+    linear-gradient(135deg,rgba(2,6,23,.78),rgba(15,23,42,.62)),
+    var(--layout-preview-bg,none);
+  background-size:cover;
+  background-position:center;
+}
+.loot-layout-preview img{
+  width:76px;
+  height:76px;
+  object-fit:contain;
+  border-radius:8px;
+  background:rgba(2,6,23,.65);
+  border:1px solid rgba(255,255,255,.12);
+}
+.loot-layout-preview strong{
+  display:block;
+  color:var(--gold);
+  font-size:20px;
+}
+.loot-layout-preview span{
+  display:block;
+  color:#dbeafe;
+  margin-top:4px;
+  font-weight:800;
+}
+.loot-layout-raid-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.loot-layout-raid-card{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.38);
+  padding:10px;
+}
+.loot-layout-raid-head{
+  display:grid;
+  grid-template-columns:52px 1fr;
+  gap:9px;
+  align-items:center;
+  margin-bottom:8px;
+}
+.loot-layout-raid-head img{
+  width:52px;
+  height:52px;
+  object-fit:cover;
+  border-radius:7px;
+  border:1px solid rgba(250,204,21,.22);
+}
+.loot-layout-raid-head strong{
+  color:#f8fafc;
+}
+.loot-layout-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
 
 .worldbuff-caster{
   min-width:150px;
@@ -3956,7 +3217,11 @@ tr:hover td{background:rgba(250,204,21,.035)}
   grid-template-columns:120px 100px 120px 1fr 1fr 1.4fr auto;
   gap:8px;
   align-items:end;
-  margin:0;
+  margin:8px 0;
+  padding:8px;
+  border:1px solid rgba(148,163,184,.16);
+  border-radius:8px;
+  background:rgba(15,23,42,.42);
 }
 
 .prio-p0{
@@ -4046,8 +3311,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .stat-grid{grid-template-columns:1fr}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
-  .active-raid-group-grid{grid-template-columns:1fr}
-  .active-raid-topline{grid-template-columns:1fr}
+  .active-raid-discord-tools{grid-template-columns:1fr}
   .raid-helper-calendar{grid-template-columns:1fr}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
@@ -4072,7 +3336,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .discord-preview-meta,
   .discord-preview-roster,
   .tools,
-  .po-signup-action-guide,
   .summary,
   .prio-actions{grid-template-columns:1fr}
   .raid-helper-preview{position:relative;top:auto}
@@ -4082,10 +3345,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .p0-toolbar,
   .p0-post-filter{grid-template-columns:1fr}
   .p0-raid-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .worldbuff-toolbar,
-  .worldbuff-filter-card{grid-template-columns:1fr}
-  .worldbuff-action-card{justify-content:stretch}
-  .worldbuff-action-card .small-btn{flex:1 1 100%}
+  .worldbuff-toolbar{grid-template-columns:1fr}
+  .loot-layout-grid,
+  .loot-layout-raid-grid{grid-template-columns:1fr}
+  .loot-layout-preview{grid-template-columns:1fr}
   .buff-create-grid{grid-template-columns:1fr}
   .actions,
   .action-row{grid-template-columns:1fr}
@@ -4099,40 +3362,15 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <div class="side-group collapsed" id="sideGroupBuffs">
-        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBuffs')"><span>Buffs</span></button>
-        <div class="side-group-items">
-          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
-        </div>
-      </div>
-      <div class="side-group collapsed" id="sideGroupRaidorga">
-        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
-        <div class="side-group-items">
-          <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
-          <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
-          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
-          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
-          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
-        </div>
-      </div>
-      <div class="side-group collapsed" id="sideGroupBackup">
-        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBackup')"><span>Sicherung</span></button>
-        <div class="side-group-items">
-          <button class="side-link" type="button" onclick="queueP0PlusBackup()" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
-          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-        </div>
-      </div>
-      <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
-      <div class="side-group collapsed" id="sideGroupAdmin">
-        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
-        <div class="side-group-items">
-          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
-          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
-          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
-        </div>
-      </div>
+      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
+      <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
+      <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
+      <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+      <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin" title="Admin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin</span></button>
+      <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Lootlayout" title="Lootlayout"><span class="side-icon">▧</span><span class="side-label">Lootlayout</span></button>
+      <button class="side-link" type="button" onclick="downloadGuildLootCsv()" aria-label="Sicherung" title="Sicherung"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">Sicherung</span></button>
+      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'" aria-label="Raidlead" title="Raidlead"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidlead</span></button>
     </nav>
   </aside>
 
@@ -4147,6 +3385,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
     <div class="nav" aria-label="Navigation">
       <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
+      <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
         <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
@@ -4161,24 +3400,21 @@ tr:hover td{background:rgba(250,204,21,.035)}
         <input id="masterCode" type="text" placeholder="Master-Code" autocomplete="off" onkeydown="enterLoads(event)">
       </div>
       <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
-      <div class="login-summary-card">
-        <div>
-          <div class="stat-icon">☷</div>
-          <span>Spielerlogins</span>
-          <strong id="playerCount">0</strong>
-          <div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div>
-        </div>
-        <button type="button" onclick="openPlayerPanel()">Anzeigen →</button>
-      </div>
     </div>
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
+  </section>
+
+  <section class="stat-grid">
+    <div class="stat-card"><div><div class="stat-icon">⚔</div><span>Raids</span><strong id="raidCount">0</strong></div><button type="button" onclick="openRaidPanel()">Alle anzeigen →</button></div>
+    <div class="stat-card blue"><div><div class="stat-icon">☷</div><span>Spielerlogins</span><strong id="playerCount">0</strong><div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div></div><button type="button" onclick="openPlayerPanel()">Alle anzeigen →</button></div>
+    <div class="stat-card red"><div><div class="stat-icon">✉</div><span>Postfach</span><strong id="issueCount">0</strong></div><button type="button" onclick="openIssueInboxPanel()">Öffnen →</button></div>
   </section>
 
   <div class="dashboard-grid">
     <div class="dashboard-column">
       <section class="dashboard-card">
         <div class="dashboard-card-head">
-          <h2>⚔ Raids der kommenden 2 Wochen</h2>
+          <h2>⚔ Aktive Raids</h2>
           <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
         </div>
         <div id="activeRaidCards" class="active-raid-list">
@@ -4601,8 +3837,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">☰</span>
         <span class="raid-helper-summary-copy">
-          <strong>PO-Anmeldungen</strong>
-          <span>Discord-POs erstellen, prüfen und nach LichtLoot übertragen.</span>
+          <strong>PO-Anmelder</strong>
+          <span>PO-Anmelder mit Item-Auswahl erstellen und verwalten.</span>
         </span>
       </span>
     </summary>
@@ -4613,14 +3849,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▣</span>
               <div>
-                <h3>PO-Anmeldung erstellen</h3>
-                <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
+                <h3>PO-Anmelder erstellen</h3>
+                <p>Ein eigener Discord-Post mit Item-Auswahl unten und Anmeldung per Maske.</p>
               </div>
             </div>
             <div class="raid-helper-row">
               <div class="field">
                 <label for="poSignupRaid">Raid</label>
-                <select id="poSignupRaid" onchange="updatePoSignupDefaults(true,true)">
+                <select id="poSignupRaid" onchange="updatePoSignupDefaults()">
                   <option value="aq40">AQ40</option>
                   <option value="bwl">BWL</option>
                   <option value="mc">MC</option>
@@ -4651,81 +3887,47 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <input id="poSignupTime" type="time" oninput="updatePoSignupPreview()" onchange="updatePoSignupPreview()">
               </div>
               <div class="field">
-                <label for="poSignupSourceChannel">Discord-Channel</label>
-                <select id="poSignupSourceChannel" onchange="syncPoSignupChannelSelection();updatePoSignupPreview()"></select>
+                <label for="poSignupReviewRecipient">Freigabe per DM an</label>
+                <input id="poSignupReviewRecipient" type="text" placeholder="Discord-ID oder Anzeigename" oninput="updatePoSignupPreview()">
               </div>
-              <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
-              <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
-            <div class="po-signup-item-tools">
-              <div class="po-signup-item-tool-row">
-                <div class="field">
-                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
-                  <select id="poSignupTemplateRaid">
-                    <option value="mc">MC</option>
-                    <option value="bwl">BWL</option>
-                    <option value="aq40">AQ40</option>
-                    <option value="naxx">Naxxramas</option>
-                    <option value="zg">ZG</option>
-                    <option value="aq20">AQ20</option>
-                    <option value="ony">Onyxia</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
-                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
-                </div>
-                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
+            <div class="raid-helper-row">
+              <div class="field">
+                <label for="poSignupSourceChannel">PO-Quelle</label>
+                <select id="poSignupSourceChannel" onchange="updatePoSignupPreview()"></select>
               </div>
-              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
+              <div class="field">
+                <label for="poSignupTargetChannel">Posten nach</label>
+                <select id="poSignupTargetChannel" onchange="updatePoSignupPreview()"></select>
+              </div>
             </div>
-            <textarea id="poSignupItems" class="hidden" aria-hidden="true"></textarea>
+            <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
+              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
+              <span>
+                <strong>LichtLoot-ID erstellen</strong>
+                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
+              </span>
+            </label>
+            <div class="field">
+              <label for="poSignupItems">Items für das Auswahlmenü</label>
+              <textarea id="poSignupItems" placeholder="Ein Item pro Zeile, z. B.&#10;Nerubian Slavemaker&#10;The Phylactery of Kel'Thuzad&#10;Gressil, Dawn of Ruin" oninput="updatePoSignupPreview()"></textarea>
+            </div>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
             </div>
-            <div class="po-signup-action-guide">
-              <div class="po-signup-action-card po-signup-action-main">
-                <div>
-                  <strong>1. Discord-Post senden</strong>
-                  <small>Hier starten. Der Bot erstellt den Anmelder im ausgewählten Discord-Channel.</small>
-                </div>
-                <div class="po-signup-action-buttons">
-                  <button class="btn po-signup-discord-button" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
-                </div>
-              </div>
-              <div class="po-signup-action-card po-signup-action-transfer">
-                <div>
-                  <strong>2. Grüne Haken übertragen</strong>
-                  <small>Nur freigegebene Einträge werden danach in LichtLoot geschrieben.</small>
-                </div>
-                <div class="po-signup-action-buttons">
-                  <button id="poSignupSyncPriosBtn" class="btn po-signup-transfer-button" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
-                </div>
-              </div>
-              <div class="po-signup-action-card po-signup-action-helper">
-                <div>
-                  <strong>Hilfen</strong>
-                  <small>Itemliste aus bestehenden P0+-Einträgen laden oder den Entwurf zurücksetzen.</small>
-                </div>
-                <div class="po-signup-action-buttons">
-                  <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">Itemliste laden</button>
-                  <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
-                </div>
-              </div>
+            <div class="tools">
+              <button class="btn" type="button" onclick="createPoSignupPost()">PO-Anmelder posten</button>
+              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Neu</button>
+              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items laden</button>
             </div>
-            <div id="poSignupTransferHint" class="muted">Erst PO-Anmelder posten und Einträge freigeben. Danach können grüne Haken in die LichtLoot-Prioliste übertragen werden.</div>
             <div id="poSignupStatus" class="status">Bereit.</div>
-            <details class="po-post-list-block">
-              <summary class="po-post-list-summary">
-                <div>
-                  <h3>Gespeicherte PO-Anmeldungen</h3>
-                  <p>Bestehende Anmeldung öffnen, freigegebene Einträge übertragen oder alte Anmeldung archivieren.</p>
-                </div>
-                <span>öffnen</span>
-              </summary>
+            <div class="po-post-list-block">
               <div class="section-head compact">
-                <div></div>
+                <div>
+                  <h3>Gespeicherte PO-Anmelder</h3>
+                  <p>Bestehende Anmelder öffnen und alte Anmelder archivieren. Archivierte Einträge bleiben als Backup gespeichert.</p>
+                </div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
               <div class="table-wrap">
@@ -4734,19 +3936,37 @@ tr:hover td{background:rgba(250,204,21,.035)}
                     <tr>
                       <th>Post-ID</th>
                       <th>Raid</th>
-                      <th>Channel</th>
+                      <th>Quelle</th>
+                      <th>Ziel</th>
                       <th>Pins</th>
                       <th>Einträge</th>
+                      <th>Zuletzt</th>
                       <th>Aktion</th>
                     </tr>
                   </thead>
                   <tbody id="poSignupConfigRows"></tbody>
                 </table>
               </div>
-            </details>
+            </div>
           </section>
         </div>
         <div class="raid-helper-preview">
+          <div class="discord-preview-card">
+            <div class="discord-preview-label">Vorschau</div>
+            <h3 id="poSignupPreviewTitle" class="discord-preview-title">PO-ANMELDER</h3>
+            <div id="poSignupPreviewDescription" class="discord-preview-description"></div>
+            <div class="discord-preview-meta">
+              <span id="poSignupPreviewRaid">AQ40</span>
+              <span id="poSignupPreviewDate">Termin fehlt</span>
+              <span id="poSignupPreviewTarget"># channel</span>
+            </div>
+            <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
+            <div class="po-signup-preview-menu"><span>Item auswählen und PO eintragen</span><span>⌄</span></div>
+            <div class="po-signup-preview-actions">
+              <button type="button">PO eintragen</button>
+              <button type="button">PO-Eintrag löschen</button>
+            </div>
+          </div>
           <div class="section-head compact">
             <div>
               <h3>PO-Anmeldungen</h3>
@@ -4783,17 +4003,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <summary>Postfach</summary>
     <div class="issue-panel-body">
       <div id="issueInboxPanelContent" class="create-result">Meldungen aus dem Briefumschlag laden.</div>
-    </div>
-  </details>
-
-  <details id="guildApplicationsPanel" class="panel issue-panel" ontoggle="if(this.open) loadGuildApplicationsPanel()">
-    <summary>Gilden freischalten</summary>
-    <div class="issue-panel-body">
-      <div class="issue-toolbar">
-        <a class="small-btn primary" href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldemaske öffnen</a>
-        <button class="small-btn ghost" type="button" onclick="loadGuildApplicationsPanel()">Neu laden</button>
-      </div>
-      <div id="guildApplicationsPanelContent" class="create-result">Gilden-Anfragen laden.</div>
     </div>
   </details>
 
@@ -4887,6 +4096,58 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
   </details>
 
+  <details id="lootLayoutPanel" class="panel loot-layout-panel" ontoggle="if(this.open) initLootLayoutPanel()">
+    <summary>Lootlayout</summary>
+    <div class="loot-layout-body">
+      <div class="loot-layout-grid">
+        <section class="loot-layout-card">
+          <h3>Gildenoptik</h3>
+          <div class="loot-layout-fields">
+            <label>Logo hochladen
+              <input id="lootLayoutLogoFile" type="file" accept="image/*" onchange="loadLootLayoutImageFile('logo')">
+            </label>
+            <label>Logo-URL
+              <input id="lootLayoutLogoUrl" type="url" placeholder="https://..." oninput="updateLootLayoutPreview()">
+            </label>
+            <label>Hintergrund hochladen
+              <input id="lootLayoutBackgroundFile" type="file" accept="image/*" onchange="loadLootLayoutImageFile('background')">
+            </label>
+            <label>Hintergrund-URL
+              <input id="lootLayoutBackgroundUrl" type="url" placeholder="https://..." oninput="updateLootLayoutPreview()">
+            </label>
+          </div>
+        </section>
+        <section class="loot-layout-card">
+          <h3>Farben</h3>
+          <div class="loot-layout-fields">
+            <label>Hauptfarbe
+              <input id="lootLayoutPrimaryColor" type="color" value="#facc15" oninput="updateLootLayoutPreview()">
+            </label>
+            <label>Akzentfarbe
+              <input id="lootLayoutAccentColor" type="color" value="#1d4ed8" oninput="updateLootLayoutPreview()">
+            </label>
+          </div>
+          <div id="lootLayoutPreview" class="loot-layout-preview" style="margin-top:12px">
+            <img id="lootLayoutPreviewLogo" src="images/content.png" alt="">
+            <div>
+              <strong id="lootLayoutPreviewTitle">LichtLoot</strong>
+              <span>Vorschau für Startseite und Gildenleitung</span>
+            </div>
+          </div>
+        </section>
+      </div>
+      <section class="loot-layout-card">
+        <h3>Bilder für Raid-Kacheln</h3>
+        <div id="lootLayoutRaidGrid" class="loot-layout-raid-grid"></div>
+      </section>
+      <div class="loot-layout-actions">
+        <button class="btn good" type="button" onclick="saveLootLayout()">Lootlayout speichern</button>
+        <button class="btn ghost" type="button" onclick="resetLootLayoutForm()">Aus gespeicherten Daten neu laden</button>
+      </div>
+      <div id="lootLayoutStatus" class="status">Bereit.</div>
+    </div>
+  </details>
+
   <div class="grid">
     <details id="raidLeadPanel" class="panel raid-panel">
       <summary>Raidlead-PINs</summary>
@@ -4957,6 +4218,21 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </details>
   </div>
 </div>
+
+    <aside class="dashboard-column">
+      <section class="side-card">
+        <h3>◎ Nächste Worldbuffs</h3>
+        <div id="worldbuffMiniList" class="mini-list">
+          <div class="mini-row"><span>Worldbuffs laden</span><span>→</span></div>
+        </div>
+      </section>
+      <section class="side-card">
+        <h3>☷ Letzte Spielerlogins</h3>
+        <div id="playerMiniList" class="mini-list">
+          <div class="mini-row"><span>Noch keine Daten</span><span>-</span></div>
+        </div>
+      </section>
+    </aside>
   </div>
 </main>
 </div>
@@ -5022,20 +4298,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
   </div>
 </div>
 
-<div id="poEntryLootPicker" class="po-entry-loot-picker hidden" role="dialog" aria-modal="true" aria-labelledby="poEntryLootPickerTitle" onclick="closePoSignupCorrectionLootPickerOnBackdrop(event)">
-  <div class="po-entry-loot-picker-box">
-    <div class="po-entry-loot-picker-head">
-      <div>
-        <div id="poEntryLootPickerTitle" class="po-entry-loot-picker-title">Raid-Lootliste</div>
-        <div id="poEntryLootPickerSub" class="po-entry-loot-picker-sub">Item aus der Lootliste auswählen.</div>
-      </div>
-      <button class="small-btn danger" type="button" onclick="closePoSignupCorrectionLootPicker()">Schließen</button>
-    </div>
-    <input id="poEntryLootPickerSearch" class="po-entry-loot-picker-search" type="search" placeholder="Item, Boss, Slot oder ItemID suchen..." oninput="renderPoSignupCorrectionLootPickerItems()">
-    <div id="poEntryLootPickerList" class="po-entry-loot-picker-list"></div>
-  </div>
-</div>
-
 <div id="tooltip" class="tooltip hidden"></div>
 
 <script>
@@ -5046,13 +4308,6 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
-const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
-const poSignupLootSearchCache = {};
-const poSignupLootItemDataCache = {};
-const poSignupLootSearchLoading = {};
-let poSignupCorrectionCharacters = [];
-let poSignupCorrectionCharactersLoaded = false;
-let poSignupActiveLootPickerIndex = null;
 const RAID_OPTIONS = {
   mc:{ name:"Molten Core", short:"MC" },
   bwl:{ name:"Blackwing Lair", short:"BWL" },
@@ -5144,6 +4399,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Gildenleitung";
+  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
+  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
@@ -5153,6 +4410,7 @@ function applyGuildBrand(){
   if(guild?.backgroundUrl){
     document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
   }
+  applyRaidLayoutImages(guild?.layout?.raidImages);
   document.querySelectorAll("[data-guild-link]").forEach(el => el.setAttribute("href", withGuildUrl(el.getAttribute("data-guild-link"))));
   document.querySelectorAll("[data-guild-onclick]").forEach(el => {
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
@@ -5167,6 +4425,160 @@ const RAID_IMAGES = {
   aq20:"images/aq20.jpg",
   ony:"images/ony.jpg"
 };
+const DEFAULT_RAID_IMAGES = Object.assign({}, RAID_IMAGES);
+
+function applyRaidLayoutImages(raidImages){
+  Object.keys(DEFAULT_RAID_IMAGES).forEach(key => {
+    const custom = raidImages && typeof raidImages === "object" ? String(raidImages[key] || "").trim() : "";
+    RAID_IMAGES[key] = custom || DEFAULT_RAID_IMAGES[key];
+  });
+}
+
+function openLootLayoutPanel(){
+  const panel = document.getElementById("lootLayoutPanel");
+  if(panel){
+    panel.hidden = false;
+    panel.open = true;
+    panel.scrollIntoView({behavior:"smooth", block:"start"});
+    initLootLayoutPanel();
+  }
+}
+
+function initLootLayoutPanel(){
+  renderLootLayoutRaidFields();
+  resetLootLayoutForm();
+}
+
+function renderLootLayoutRaidFields(){
+  const grid = document.getElementById("lootLayoutRaidGrid");
+  if(!grid || grid.dataset.rendered === "1") return;
+  grid.dataset.rendered = "1";
+  grid.innerHTML = Object.keys(RAID_OPTIONS).map(key => `
+    <div class="loot-layout-raid-card">
+      <div class="loot-layout-raid-head">
+        <img id="lootLayoutRaidPreview-${key}" src="${escapeAttr(RAID_IMAGES[key] || DEFAULT_RAID_IMAGES[key])}" alt="">
+        <strong>${escapeHtml(RAID_OPTIONS[key].name)}</strong>
+      </div>
+      <div class="loot-layout-fields">
+        <label>Bild hochladen
+          <input id="lootLayoutRaidFile-${key}" type="file" accept="image/*" onchange="loadLootLayoutImageFile('raid','${key}')">
+        </label>
+        <label>Bild-URL
+          <input id="lootLayoutRaidImage-${key}" type="url" placeholder="https://..." oninput="updateLootLayoutPreview()">
+        </label>
+      </div>
+    </div>
+  `).join("");
+}
+
+function resetLootLayoutForm(){
+  const guild = currentGuildInfo || {};
+  const layout = guild.layout || {};
+  setInputValue("lootLayoutLogoUrl", guild.logoUrl || "");
+  setInputValue("lootLayoutBackgroundUrl", guild.backgroundUrl || "");
+  setInputValue("lootLayoutPrimaryColor", guild.primaryColor || "#facc15");
+  setInputValue("lootLayoutAccentColor", guild.accentColor || "#1d4ed8");
+  Object.keys(RAID_OPTIONS).forEach(key => {
+    setInputValue("lootLayoutRaidImage-" + key, layout.raidImages?.[key] || "");
+  });
+  updateLootLayoutPreview();
+}
+
+function setInputValue(id, value){
+  const input = document.getElementById(id);
+  if(input) input.value = value || "";
+}
+
+function getInputValue(id){
+  return document.getElementById(id)?.value.trim() || "";
+}
+
+function updateLootLayoutPreview(){
+  const logo = getInputValue("lootLayoutLogoUrl") || "images/content.png";
+  const background = getInputValue("lootLayoutBackgroundUrl");
+  const primary = getInputValue("lootLayoutPrimaryColor") || "#facc15";
+  const accent = getInputValue("lootLayoutAccentColor") || "#1d4ed8";
+  document.documentElement.style.setProperty("--gold", primary);
+  document.documentElement.style.setProperty("--blue", accent);
+  const preview = document.getElementById("lootLayoutPreview");
+  if(preview) preview.style.setProperty("--layout-preview-bg", background ? "url('" + background.replace(/'/g, "%27") + "')" : "none");
+  const previewLogo = document.getElementById("lootLayoutPreviewLogo");
+  if(previewLogo) previewLogo.src = logo;
+  const previewTitle = document.getElementById("lootLayoutPreviewTitle");
+  if(previewTitle) previewTitle.textContent = currentGuildInfo?.name || CURRENT_GUILD_BRAND.guildName;
+  Object.keys(RAID_OPTIONS).forEach(key => {
+    const image = getInputValue("lootLayoutRaidImage-" + key) || DEFAULT_RAID_IMAGES[key];
+    const img = document.getElementById("lootLayoutRaidPreview-" + key);
+    if(img) img.src = image;
+  });
+}
+
+function loadLootLayoutImageFile(kind, raidKey){
+  const inputId = kind === "logo"
+    ? "lootLayoutLogoFile"
+    : kind === "background"
+      ? "lootLayoutBackgroundFile"
+      : "lootLayoutRaidFile-" + raidKey;
+  const targetId = kind === "logo"
+    ? "lootLayoutLogoUrl"
+    : kind === "background"
+      ? "lootLayoutBackgroundUrl"
+      : "lootLayoutRaidImage-" + raidKey;
+  const file = document.getElementById(inputId)?.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    setInputValue(targetId, String(reader.result || ""));
+    updateLootLayoutPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function collectLootLayout(){
+  const raidImages = {};
+  Object.keys(RAID_OPTIONS).forEach(key => {
+    const value = getInputValue("lootLayoutRaidImage-" + key);
+    if(value) raidImages[key] = value;
+  });
+  return { raidImages };
+}
+
+async function saveLootLayout(){
+  const status = document.getElementById("lootLayoutStatus");
+  const masterCode = document.getElementById("masterCode")?.value.trim() || "";
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
+    return;
+  }
+  if(status) status.innerHTML = '<span class="warn">Lootlayout wird gespeichert ...</span>';
+  try{
+    const payload = {
+      action:"updateGuildConfig",
+      guild:CURRENT_GUILD_SLUG,
+      masterCode,
+      logoUrl:getInputValue("lootLayoutLogoUrl"),
+      backgroundUrl:getInputValue("lootLayoutBackgroundUrl"),
+      primaryColor:getInputValue("lootLayoutPrimaryColor"),
+      accentColor:getInputValue("lootLayoutAccentColor"),
+      layout:collectLootLayout()
+    };
+    const response = await fetch(LICHTLOOT_API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    const result = await response.json().catch(() => ({}));
+    if(!response.ok || !result.success){
+      throw new Error(result.error || "Lootlayout konnte nicht gespeichert werden.");
+    }
+    currentGuildInfo = result.guild || currentGuildInfo;
+    applyGuildBrand();
+    renderDashboardCards();
+    if(status) status.innerHTML = '<span class="ok">Lootlayout gespeichert.</span>';
+  }catch(error){
+    if(status) status.innerHTML = '<span class="bad">' + escapeHtml(error.message || "Lootlayout konnte nicht gespeichert werden.") + '</span>';
+  }
+}
 
 let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
@@ -5177,7 +4589,6 @@ let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let issueReports = [];
-let guildApplications = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
 let logAnalysisPage = 1;
@@ -5562,7 +4973,6 @@ async function loadOverview(options){
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
-    loadGuildApplicationsPanel({ silent:true }).catch(() => {});
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
     setGuildLocked(true);
@@ -5589,11 +4999,6 @@ function scrollToDashboard(){
   document.getElementById("dashboardTop")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
-function toggleSideGroup(id){
-  const group = document.getElementById(id);
-  if(group) group.classList.toggle("collapsed");
-}
-
 function openDetailsPanel(id){
   const panel = document.getElementById(id);
   if(!panel) return;
@@ -5613,28 +5018,6 @@ function openRaidHelperPanel(){
   openDetailsPanel("raidHelperPanel");
 }
 
-function openRaidleadPanelDirect(raidId){
-  const raid = raidId
-    ? (guildData.raids || []).find(entry =>
-        String(entry.raidId || "") === String(raidId) ||
-        String(entry.id || "") === String(raidId)
-      )
-    : null;
-
-  const params = new URLSearchParams({ guild: CURRENT_GUILD_SLUG });
-  if(raid?.leadPin) params.set("leadPin", raid.leadPin);
-  if(raid?.raidId || raid?.id) params.set("raidId", raid.raidId || raid.id);
-  if(raid?.playerPin) params.set("playerPin", raid.playerPin);
-
-  try{
-    sessionStorage.setItem("raidlead", "true");
-    sessionStorage.setItem("raidleadRole", "master");
-    if(raid?.leadPin) sessionStorage.setItem("raidleadPrioPin", raid.leadPin);
-  }catch(error){}
-
-  window.location.href = "raidlead-panel.html?" + params.toString();
-}
-
 function openPoPostPanel(){
   openDetailsPanel("poPostPanel");
 }
@@ -5649,11 +5032,6 @@ function openP0PlusPanel(){
 
 function openIssueInboxPanel(){
   openDetailsPanel("issueInboxPanel");
-}
-
-function openGuildApplicationsPanel(){
-  openDetailsPanel("guildApplicationsPanel");
-  loadGuildApplicationsPanel();
 }
 
 function openLogAnalysisPanel(){
@@ -5691,12 +5069,9 @@ function renderSummary(){
   const players = guildData.players || [];
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
 
-  const raidCounter = document.getElementById("raidCount");
-  if(raidCounter) raidCounter.textContent = raids.length;
-  const playerCounter = document.getElementById("playerCount");
-  if(playerCounter) playerCounter.textContent = players.length;
-  const linkedCounter = document.getElementById("linkedCount");
-  if(linkedCounter) linkedCounter.textContent = linked;
+  document.getElementById("raidCount").textContent = raids.length;
+  document.getElementById("playerCount").textContent = players.length;
+  document.getElementById("linkedCount").textContent = linked;
   const issueCounter = document.getElementById("issueCount");
   if(issueCounter) issueCounter.textContent = issueReports.length;
 }
@@ -5790,26 +5165,10 @@ function twoWeeksAgoIsoDate(){
   ].join("-");
 }
 
-function twoWeeksAheadIsoDate(){
-  const date = new Date();
-  date.setDate(date.getDate() + 14);
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0")
-  ].join("-");
-}
-
 function isRaidTodayOrFuture(raid){
   const date = String(raid && raid.raidDate || "").trim();
   if(!date) return false;
   return date >= todayIsoDate();
-}
-
-function isRaidInNextTwoWeeks(raid){
-  const date = String(raid && raid.raidDate || "").trim();
-  if(!date) return false;
-  return date >= todayIsoDate() && date <= twoWeeksAheadIsoDate();
 }
 
 function isRaidInLastTwoWeeks(raid){
@@ -5846,11 +5205,11 @@ function renderDashboardCards(){
   const raids = getDashboardActiveRaids();
 
   if(!raids.length){
-    box.innerHTML = '<div class="muted">Keine Raids in den kommenden 2 Wochen gefunden.</div>';
+    box.innerHTML = '<div class="muted">Keine aktiven Raids gefunden.</div>';
     return;
   }
 
-  const renderRaidCard = raid => {
+  box.innerHTML = raids.map(raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
     return `
@@ -5859,20 +5218,12 @@ function renderDashboardCards(){
         <div class="active-raid-body">
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-            <div class="active-raid-topline">
-              <div class="active-raid-meta" role="button" tabindex="0" title="Datum/Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
-                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
-                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
-                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
-              </div>
-              <div class="active-raid-info">
-                ${statusBadge(raid.status || "geschlossen")}
-                <div class="active-raid-stats">
-                  <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
-                  <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
-                  <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
-                </div>
-              </div>
+            <div class="active-raid-meta" role="button" tabindex="0" title="Datum/Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
+            <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
+            <div class="active-raid-stats">
+              <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
+              <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
+              <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
             </div>
           </div>
           <div class="active-raid-side">
@@ -5883,8 +5234,16 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
+              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
+              <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
+              <div class="active-raid-discord-tools">
+                <select id="raidDiscordChannel-${escapeAttr(raid.raidId || raid.id)}" aria-label="Discord-Channel für ${escapeAttr(raid.raidName || raid.raid || "Raid")}">
+                  ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
+                </select>
+                <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')">DC Text kopieren</button>
+                <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
+              </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
-              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
             </div>
@@ -5892,36 +5251,17 @@ function renderDashboardCards(){
         </div>
       </article>
     `;
-  };
-
-  const raidGroups = [
-    {
-      title:"40er Raids",
-      raids:raids.filter(raid => !["zg","aq20"].includes(getRaidKey(raid)))
-    },
-    {
-      title:"20er Raids",
-      raids:raids.filter(raid => ["zg","aq20"].includes(getRaidKey(raid)))
-    }
-  ].filter(group => group.raids.length);
-
-  box.innerHTML = raidGroups.map(group => `
-    <section class="active-raid-group">
-      <h3 class="active-raid-group-title">${escapeHtml(group.title)}</h3>
-      <div class="active-raid-group-grid">
-        ${group.raids.map(renderRaidCard).join("")}
-      </div>
-    </section>
-  `).join("");
+  }).join("");
 }
 
 function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive" && isRaidInNextTwoWeeks(raid);
+      return status !== "archiviert" && status !== "archive" && isRaidTodayOrFuture(raid);
     })
-    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")))
+    .slice(0, 6);
 }
 
 async function loadDashboardRaidStats(){
@@ -6171,9 +5511,6 @@ function renderPlayers(){
       <td>${renderPlayerLoginStatus(group)}</td>
       <td>
         ${group.needsApproval ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
-        ${group.isBlocked
-          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
-          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
         <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
         <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
       </td>
@@ -6210,9 +5547,6 @@ function renderPlayerRoleControl(group){
 }
 
 function renderPlayerLoginStatus(group){
-  if(group.isBlocked){
-    return `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>`;
-  }
   if(group.needsApproval){
     return '<span class="badge warn">wartet auf Freigabe</span><div class="muted">Login ist noch nicht nutzbar.</div>';
   }
@@ -6240,39 +5574,6 @@ async function setPlayerLoginRole(playerId, selectId){
     await loadOverview({preserveStatus:true});
   }catch(error){
     setStatus(error.message || "Rolle konnte nicht gespeichert werden.", "bad");
-  }
-}
-
-async function setPlayerLoginBlocked(playerId, blocked){
-  if(!playerId) return;
-  const masterCode=document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  const message = blocked
-    ? "Diesen SpielerLogin wirklich sperren? Der Spieler kann danach mit diesem PIN nichts mehr laden."
-    : "Sperre für diesen SpielerLogin wirklich aufheben?";
-  if(!confirm(message)) return;
-
-  const reason = blocked ? (prompt("Grund für die Sperre:", "Aus der Gilde entfernt") || "Durch Gildenleitung gesperrt") : "";
-  setStatus(blocked ? "SpielerLogin wird gesperrt ..." : "Sperre wird aufgehoben ...", "");
-  try{
-    const result=await railwayWrite({
-      action:"guildSetPlayerLoginBlocked",
-      masterCode,
-      playerId,
-      blocked: blocked ? "true" : "false",
-      reason
-    });
-    if(!result.success){
-      setStatus(result.error || "Sperre konnte nicht geändert werden.", "bad");
-      return;
-    }
-    setStatus(blocked ? "SpielerLogin wurde gesperrt." : "Sperre wurde aufgehoben.", "good");
-    await loadOverview({preserveStatus:true});
-  }catch(error){
-    setStatus(error.message || "Sperre konnte nicht geändert werden.", "bad");
   }
 }
 
@@ -6321,8 +5622,6 @@ function groupPlayersByMain(players){
     group.main = group.main || group.characters[0] || {};
     group.twinks = group.characters.filter(player => player !== group.main);
     group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
-    group.isBlocked = group.characters.some(player => player.isBlocked || player.blocked);
-    group.blockedReason = (group.characters.find(player => player.blockedReason)?.blockedReason) || "";
     group.approvalStatus = normalize((group.characters.find(player => player.approvalStatus || player.playerApprovalStatus)?.approvalStatus) || group.main.approvalStatus || group.main.playerApprovalStatus || "approved");
     group.needsApproval = group.approvalStatus && group.approvalStatus !== "approved";
     return group;
@@ -6912,17 +6211,6 @@ async function editRaidDateTimePopup(raidId){
     setStatus("Bitte Datum als JJJJ-MM-TT und Uhrzeit als HH:MM eingeben.", "bad");
     return;
   }
-  const dateField = Array.from(document.querySelectorAll("[data-raid-date]"))
-    .find(input => String(input.dataset.raidDate || "") === String(raidId));
-  const timeField = Array.from(document.querySelectorAll("[data-raid-time]"))
-    .find(input => String(input.dataset.raidTime || "") === String(raidId));
-  if(dateField) dateField.value = dateValue;
-  if(timeField) timeField.value = timeValue;
-  if(dateField && timeField){
-    await quickUpdateRaidHelperDateTime(raidId);
-    return;
-  }
-
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -8056,12 +7344,6 @@ function selectedPoPostChannelLabel(id){
   return select?.selectedOptions?.[0]?.textContent?.trim() || "Channel wählen";
 }
 
-function syncPoSignupChannelSelection(){
-  const source = document.getElementById("poSignupSourceChannel");
-  const target = document.getElementById("poSignupTargetChannel");
-  if(source && target) target.value = source.value || "";
-}
-
 function updatePoPostPreview(){
   const source = document.getElementById("poPostPreviewSource");
   const target = document.getElementById("poPostPreviewTarget");
@@ -8100,470 +7382,6 @@ function poSignupItemLines(){
     .slice(0,25);
 }
 
-function poSignupAllItemLines(){
-  const text = document.getElementById("poSignupItems")?.value || "";
-  const seen = new Set();
-  const items = [];
-  text.split(/\r?\n|;/).forEach(line => {
-    const item = line.trim();
-    const key = normalize(item);
-    if(!item || !key || seen.has(key)) return;
-    seen.add(key);
-    items.push(item);
-  });
-  return items;
-}
-
-function poSignupTemplateRaidKey(){
-  return poSignupNormalizeRaid(document.getElementById("poSignupTemplateRaid")?.value || poSignupSelectedRaidKey() || "aq40");
-}
-
-function syncPoSignupTemplateRaid(loadItems=false){
-  const raid = poSignupSelectedRaidKey() || "aq40";
-  const template = document.getElementById("poSignupTemplateRaid");
-  const search = document.getElementById("poSignupLootSearch");
-  const results = document.getElementById("poSignupLootSearchResults");
-  if(template) template.value = raid;
-  if(search) search.value = "";
-  if(results){
-    results.classList.add("hidden");
-    results.innerHTML = "";
-  }
-  if(loadItems) void loadPoSignupTemplateItems();
-}
-
-function setPoSignupItems(values, options={}){
-  const field = document.getElementById("poSignupItems");
-  if(!field) return [];
-  const items = poSignupCleanItemLines(values);
-  field.value = items.join("\n");
-  updatePoSignupPreview();
-  if(options.status){
-    const status = document.getElementById("poSignupStatus");
-    if(status) status.innerHTML = options.status(items);
-  }
-  return items;
-}
-
-function addPoSignupItem(value){
-  const status = document.getElementById("poSignupStatus");
-  const item = String(value || "").trim();
-  if(!item) return;
-  const current = poSignupAllItemLines();
-  const key = normalize(item);
-  if(current.some(existing => normalize(existing) === key)){
-    if(status) status.innerHTML = `<span class="warn">${escapeHtml(item)} ist schon in der Auswahl.</span>`;
-    return;
-  }
-  if(current.length >= 25){
-    if(status) status.innerHTML = '<span class="warn">Discord erlaubt maximal 25 Items im Dropdown. Bitte erst ein Item entfernen.</span>';
-    return;
-  }
-  setPoSignupItems([...current, item]);
-  if(status) status.innerHTML = `<span class="good">${escapeHtml(item)} wurde hinzugefügt.</span>`;
-}
-
-async function loadPoSignupLootItems(raid){
-  const raidKey = poSignupNormalizeRaid(raid || "");
-  if(!raidKey) return [];
-  if(poSignupLootSearchCache[raidKey]) return poSignupLootSearchCache[raidKey];
-  const result = await railwayApi({ action:"getLootItems", raid:raidKey, t:Date.now() });
-  if(!result.success) throw new Error(result.error || "Lootliste konnte nicht geladen werden.");
-  const items = [];
-  const itemObjects = [];
-  (Array.isArray(result.items) ? result.items : []).forEach(row => {
-    const name = row?.name || row?.item || row?.Item || row?.Itemname_DE || row?.itemName;
-    if(!name) return;
-    const normalized = normalizeLootItem(row);
-    lootItemIndex[itemKey(name)] = normalized;
-    items.push(name);
-    itemObjects.push(normalized);
-  });
-  poSignupLootSearchCache[raidKey] = poSignupCleanItemLines(items, { limit:null });
-  poSignupLootItemDataCache[raidKey] = itemObjects;
-  return poSignupLootSearchCache[raidKey];
-}
-
-function normalizePoSignupCorrectionCharacters(backup){
-  const rows = Array.isArray(backup?.playersAndCharacters) ? backup.playersAndCharacters : [];
-  const byId = new Map();
-  rows.forEach(row => {
-    const id = String(row?.character_id || row?.characterId || "").trim();
-    const name = String(row?.character_name || row?.characterName || row?.name || "").trim();
-    if(!id || !name) return;
-    byId.set(id, {
-      id,
-      name,
-      server:String(row?.server || "").trim(),
-      className:String(row?.class_name || row?.className || "").trim(),
-      playerPin:String(row?.player_pin || row?.playerPin || "").trim()
-    });
-  });
-  return Array.from(byId.values()).sort((a,b) => {
-    const nameCompare = a.name.localeCompare(b.name, "de", {sensitivity:"base"});
-    if(nameCompare) return nameCompare;
-    return a.server.localeCompare(b.server, "de", {sensitivity:"base"});
-  });
-}
-
-async function ensurePoSignupCorrectionCharacters(){
-  if(poSignupCorrectionCharactersLoaded) return poSignupCorrectionCharacters;
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  if(!masterCode) return [];
-  const result = await railwayApi({ action:"guildExportBackup", masterCode, t:Date.now() });
-  if(!result.success) throw new Error(result.error || "Spielerlogins konnten nicht geladen werden.");
-  poSignupCorrectionCharacters = normalizePoSignupCorrectionCharacters(result);
-  poSignupCorrectionCharactersLoaded = true;
-  return poSignupCorrectionCharacters;
-}
-
-function poSignupEntryRaidKey(entry){
-  const config = poSignupConfigForEntry(entry);
-  const candidates = [
-    entry?.raid,
-    entry?.raidType,
-    config?.raid,
-    entry?.title,
-    entry?.postKey,
-    config?.title,
-    config?.postKey
-  ];
-  for(const value of candidates){
-    const raid = poSignupNormalizeRaid(value || "");
-    if(PO_SIGNUP_TEMPLATE_RAIDS.includes(raid)) return raid;
-  }
-  const itemText = normalize([entry?.item, entry?.itemName, entry?.note].filter(Boolean).join(" "));
-  if(itemText.includes("hakkar") || itemText.includes("jindos") || itemText.includes("razzashi") || itemText.includes("gurubashi")) return "zg";
-  if(itemText.includes("qiraji") || itemText.includes("huhuran") || itemText.includes("cthun") || itemText.includes("vek")) return "aq40";
-  if(itemText.includes("saphiron") || itemText.includes("kelthuzad") || itemText.includes("naxx")) return "naxx";
-  if(itemText.includes("ragnaros") || itemText.includes("sulfuron") || itemText.includes("molten")) return "mc";
-  if(itemText.includes("chromaggus") || itemText.includes("nefarian") || itemText.includes("blackwing")) return "bwl";
-  return poSignupSelectedRaidKey() || "";
-}
-
-function poSignupConfigForEntry(entry){
-  const key = String(entry?.postKey || "").trim();
-  if(!key) return null;
-  return readPoPostConfigs().find(config => String(config.postKey || "").trim() === key)
-    || poPostConfigGroups().find(config => String(config.postKey || "").trim() === key)
-    || null;
-}
-
-async function ensurePoSignupCorrectionDataForEntries(){
-  await ensurePoSignupCorrectionCharacters().catch(error => {
-    console.warn("PO-Spielerlogins konnten nicht geladen werden.", error);
-    return [];
-  });
-  const raids = new Set();
-  (poPostStoredEntries || []).forEach(entry => {
-    const raid = poSignupEntryRaidKey(entry);
-    if(raid) raids.add(raid);
-  });
-  const currentRaid = poSignupSelectedRaidKey();
-  if(currentRaid) raids.add(currentRaid);
-  await Promise.all(Array.from(raids).map(raid => loadPoSignupLootItems(raid).catch(error => {
-    console.warn("PO-Items konnten nicht geladen werden.", raid, error);
-    poSignupLootSearchCache[raid] = [];
-    return [];
-  })));
-}
-
-function ensurePoSignupReviewItemsLoaded(rows, rerender){
-  const raids = new Set();
-  (Array.isArray(rows) ? rows : []).forEach(entry => {
-    const raid = poSignupEntryRaidKey(entry);
-    if(raid && !poSignupLootSearchCache[raid] && !poSignupLootSearchLoading[raid]){
-      raids.add(raid);
-    }
-  });
-  if(!raids.size) return;
-  raids.forEach(raid => {
-    poSignupLootSearchLoading[raid] = loadPoSignupLootItems(raid)
-      .catch(error => {
-        console.warn("PO-Itemliste konnte nicht geladen werden.", raid, error);
-        poSignupLootSearchCache[raid] = [];
-        return [];
-      })
-      .finally(() => {
-        delete poSignupLootSearchLoading[raid];
-        if(typeof rerender === "function") rerender();
-      });
-  });
-}
-
-function poSignupFindCorrectionCharacter(entry){
-  const playerKey = normalize(entry?.player || "");
-  const classKey = normalize(entry?.className || entry?.Klasse || "");
-  return poSignupCorrectionCharacters.find(char => normalize(char.name) === playerKey && (!classKey || normalize(char.className) === classKey))
-    || poSignupCorrectionCharacters.find(char => normalize(char.name) === playerKey)
-    || null;
-}
-
-function poSignupCorrectionCharacterOptions(entry){
-  const matched = poSignupFindCorrectionCharacter(entry);
-  const selectedId = matched?.id || "";
-  const options = ['<option value="">Spielerlogin auswählen...</option>'];
-  poSignupCorrectionCharacters.forEach(char => {
-    const meta = [char.className, char.server, char.playerPin].filter(Boolean).join(" · ");
-    const label = meta ? `${char.name} · ${meta}` : char.name;
-    options.push(`<option value="${escapeAttr(char.id)}" ${char.id === selectedId ? "selected" : ""}>${escapeHtml(label)}</option>`);
-  });
-  return options.join("");
-}
-
-function poSignupCorrectionItemOptions(entry, index){
-  return poSignupCorrectionItemList(entry).map(item => `<option value="${escapeAttr(item)}"></option>`).join("");
-}
-
-function poSignupCorrectionItemList(entry){
-  const raidKey = poSignupEntryRaidKey(entry);
-  const items = poSignupLootSearchCache[raidKey] || [];
-  if(items.length) return items;
-  const fallback = poSignupCleanItemLines([entry?.item, entry?.itemName]);
-  return fallback;
-}
-
-function poSignupCorrectionItemObjects(entry){
-  const raidKey = poSignupEntryRaidKey(entry);
-  const objects = poSignupLootItemDataCache[raidKey] || [];
-  if(objects.length) return objects;
-  return poSignupCorrectionItemList(entry).map(name => lootItemIndex[itemKey(name)] || { name });
-}
-
-function poSignupCorrectionItemSearchText(item){
-  return [
-    item?.name,
-    item?.boss,
-    item?.slot,
-    item?.type,
-    item?.quality,
-    item?.source,
-    item?.itemId,
-    item?.tooltip
-  ].filter(Boolean).join(" ");
-}
-
-function poSignupCorrectionItemSelectOptions(entry){
-  const raidKey = poSignupEntryRaidKey(entry);
-  const items = poSignupCorrectionItemList(entry);
-  const loading = raidKey && poSignupLootSearchLoading[raidKey];
-  const options = [
-    `<option value="">${loading ? "Itemliste lädt..." : "Item auswählen..."}</option>`
-  ];
-  items.forEach(item => {
-    options.push(`<option value="${escapeAttr(item)}">${escapeHtml(item)}</option>`);
-  });
-  return options.join("");
-}
-
-function applyPoSignupCorrectionItem(index, value){
-  const field = document.getElementById(`poEntryItemCorrection-${index}`);
-  if(field && value){
-    field.value = value;
-    field.dataset.selectedItem = value;
-    filterPoSignupCorrectionItems(index);
-  }
-}
-
-function filterPoSignupCorrectionItems(index){
-  const field = document.getElementById(`poEntryItemCorrection-${index}`);
-  const list = document.getElementById(`poEntryItemResults-${index}`);
-  if(!field || !list) return;
-  const search = normalize(field.value || "");
-  if(field.dataset.selectedItem && normalize(field.dataset.selectedItem) !== search){
-    field.dataset.selectedItem = "";
-  }
-  list.querySelectorAll("[data-po-item-name]").forEach(button => {
-    const name = normalize(button.dataset.poSearch || button.dataset.poItemName || "");
-    const selected = normalize(button.dataset.poItemName || "") === normalize(field.dataset.selectedItem || "");
-    button.hidden = Boolean(search) && !name.includes(search);
-    button.classList.toggle("selected", selected);
-  });
-}
-
-function renderPoSignupCorrectionItemResults(entry, index){
-  const items = poSignupCorrectionItemObjects(entry);
-  if(!items.length) return '<div class="muted">Keine Itemliste geladen.</div>';
-  return items.map(item => {
-    const name = item?.name || "";
-    if(!name) return "";
-    const searchText = [name, item?.boss, item?.slot, item?.quality, item?.source].filter(Boolean).join(" ");
-    return `
-      <button class="po-entry-item-choice" type="button" data-po-item-name="${escapeAttr(name)}" data-po-search="${escapeAttr(searchText)}" onclick="applyPoSignupCorrectionItem(${index}, '${escapeAttr(escapeQuotes(name))}')">
-        ${renderLootItem(name)}
-      </button>
-    `;
-  }).join("");
-}
-
-async function openPoSignupCorrectionLootPicker(index){
-  poSignupActiveLootPickerIndex = index;
-  const entry = poPostStoredEntries[index];
-  const picker = document.getElementById("poEntryLootPicker");
-  const title = document.getElementById("poEntryLootPickerTitle");
-  const sub = document.getElementById("poEntryLootPickerSub");
-  const search = document.getElementById("poEntryLootPickerSearch");
-  const list = document.getElementById("poEntryLootPickerList");
-  if(!entry || !picker || !search || !list) return;
-  const raidKey = poSignupEntryRaidKey(entry);
-  if(title) title.textContent = `Raid-Lootliste ${raidKey ? raidKey.toUpperCase() : ""}`;
-  if(sub) sub.textContent = "Item aus der Lootliste des PO-Raids auswählen. Tooltip wie in der normalen Lootliste.";
-  picker.classList.remove("hidden");
-  const current = document.getElementById(`poEntryItemCorrection-${index}`)?.value.trim() || "";
-  search.value = current && current.length > 2 ? current : "";
-  list.innerHTML = '<div class="muted">Lootliste wird geladen ...</div>';
-  try{
-    if(raidKey) await loadPoSignupLootItems(raidKey);
-    renderPoSignupCorrectionLootPickerItems();
-    window.setTimeout(() => search.focus(), 50);
-  }catch(error){
-    list.innerHTML = `<div class="muted">${escapeHtml(error.message || "Lootliste konnte nicht geladen werden.")}</div>`;
-  }
-}
-
-function closePoSignupCorrectionLootPicker(){
-  const picker = document.getElementById("poEntryLootPicker");
-  if(picker) picker.classList.add("hidden");
-  hideTooltip();
-  poSignupActiveLootPickerIndex = null;
-}
-
-function closePoSignupCorrectionLootPickerOnBackdrop(event){
-  if(event.target && event.target.id === "poEntryLootPicker") closePoSignupCorrectionLootPicker();
-}
-
-function renderPoSignupCorrectionLootPickerItems(){
-  const list = document.getElementById("poEntryLootPickerList");
-  const search = document.getElementById("poEntryLootPickerSearch");
-  const index = poSignupActiveLootPickerIndex;
-  const entry = Number.isInteger(index) ? poPostStoredEntries[index] : null;
-  if(!list || !entry) return;
-  const words = normalize(search?.value || "").split(/\s+/).filter(Boolean);
-  const items = poSignupCorrectionItemObjects(entry);
-  const matches = items.filter(item => {
-    const text = normalize(poSignupCorrectionItemSearchText(item));
-    return !words.length || words.every(word => text.includes(word));
-  }).slice(0,120);
-  if(!matches.length){
-    list.innerHTML = '<div class="muted">Keine Items gefunden.</div>';
-    return;
-  }
-  list.innerHTML = matches.map(item => {
-    const name = item?.name || "";
-    if(!name) return "";
-    const meta = [item?.slot, item?.type, item?.boss, item?.itemId ? "ID " + item.itemId : ""].filter(Boolean).join(" · ");
-    return `
-      <button class="po-entry-loot-picker-item" type="button" onclick="selectPoSignupCorrectionLootItem(${index}, '${escapeJsString(name)}')">
-        ${renderLootItem(name)}
-        ${meta ? `<span class="po-entry-loot-picker-meta">${escapeHtml(meta)}</span>` : ""}
-      </button>
-    `;
-  }).join("");
-}
-
-function selectPoSignupCorrectionLootItem(index, itemName){
-  applyPoSignupCorrectionItem(index, itemName);
-  closePoSignupCorrectionLootPicker();
-}
-
-function poSignupCorrectionItemValue(index){
-  return document.getElementById(`poEntryItemCorrection-${index}`)?.value.trim() || "";
-}
-
-function poSignupCorrectionCharacterValue(index){
-  return document.getElementById(`poEntryCharacterCorrection-${index}`)?.value.trim() || "";
-}
-
-function samePoPostEntryIdentity(left, right){
-  if(!left || !right) return false;
-  if(left.id && right.id && String(left.id) === String(right.id)) return true;
-  const samePost = ["postKey", "sourceChannelId", "targetChannelId"].every(key =>
-    String(left[key] || "") && String(left[key] || "") === String(right[key] || "")
-  );
-  if(!samePost) return false;
-  if(left.messageId && right.messageId && String(left.messageId) === String(right.messageId)) return true;
-  const leftPlayer = normalize(left.player || left.playerName || "");
-  const rightPlayer = normalize(right.player || right.playerName || "");
-  const leftItem = normalize(left.item || left.itemName || "");
-  const rightItem = normalize(right.item || right.itemName || "");
-  return !!leftPlayer && !!leftItem && leftPlayer === rightPlayer && leftItem === rightItem;
-}
-
-function updatePoPostEntryCaches(originalEntry, updatedEntry){
-  const merged = Object.assign({}, originalEntry || {}, updatedEntry || {});
-  poPostStoredEntries = (poPostStoredEntries || []).map(entry =>
-    samePoPostEntryIdentity(entry, originalEntry) || samePoPostEntryIdentity(entry, merged)
-      ? Object.assign({}, entry, merged)
-      : entry
-  );
-  poPostEntries = (poPostEntries || []).map(entry =>
-    samePoPostEntryIdentity(entry, originalEntry) || samePoPostEntryIdentity(entry, merged)
-      ? Object.assign({}, entry, merged)
-      : entry
-  );
-}
-
-async function loadPoSignupTemplateItems(){
-  const status = document.getElementById("poSignupStatus");
-  const raidKey = poSignupTemplateRaidKey();
-  if(status) status.textContent = "Vorlage wird geladen ...";
-  try{
-    const values = [];
-    const [p0Result, lootItems] = await Promise.all([
-      railwayApi({ action:"getP0Plus", raid:raidKey, t:Date.now() }).catch(() => null),
-      loadPoSignupLootItems(raidKey).catch(() => [])
-    ]);
-    (Array.isArray(p0Result?.entries) ? p0Result.entries : []).forEach(entry => {
-      const entryRaid = poSignupNormalizeRaid(entry.raid || entry.raidType || raidKey);
-      if(entryRaid !== raidKey) return;
-      values.push(entry.item || entry.itemName);
-    });
-    if(!values.length) values.push(...lootItems);
-    const items = setPoSignupItems(values, {
-      status: loaded => `<span class="good">${escapeHtml(String(loaded.length))} Item(s) für ${escapeHtml(raidKey.toUpperCase())} geladen.</span>`
-    });
-    if(!items.length && status) status.innerHTML = `<span class="warn">Für ${escapeHtml(raidKey.toUpperCase())} wurden keine Items gefunden.</span>`;
-  }catch(error){
-    if(status) status.textContent = error.message || "Vorlage konnte nicht geladen werden.";
-  }
-}
-
-async function renderPoSignupLootSearchResults(){
-  const box = document.getElementById("poSignupLootSearchResults");
-  const input = document.getElementById("poSignupLootSearch");
-  const query = input?.value.trim() || "";
-  if(!box) return;
-  if(query.length < 2){
-    box.classList.add("hidden");
-    box.innerHTML = "";
-    return;
-  }
-  box.classList.remove("hidden");
-  box.innerHTML = '<div class="muted">Suche läuft ...</div>';
-  try{
-    const raidKey = poSignupTemplateRaidKey();
-    const words = normalize(query).split(/\s+/).filter(Boolean);
-    const items = await loadPoSignupLootItems(raidKey);
-    const current = new Set(poSignupAllItemLines().map(item => normalize(item)));
-    const matches = items
-      .filter(item => {
-        const key = normalize(item);
-        return words.every(word => key.includes(word));
-      })
-      .slice(0,25);
-    if(!matches.length){
-      box.innerHTML = `<div class="muted">Keine Treffer für ${escapeHtml(query)}.</div>`;
-      return;
-    }
-    box.innerHTML = matches.map(item => {
-      const exists = current.has(normalize(item));
-      return `<button class="po-signup-item-result" type="button" onclick="addPoSignupItem('${escapeJsString(item)}')" ${exists ? "disabled" : ""}><strong>${escapeHtml(item)}</strong><span>${exists ? "schon in Auswahl" : "hinzufügen"}</span></button>`;
-    }).join("");
-  }catch(error){
-    box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Suche konnte nicht geladen werden.")}</div>`;
-  }
-}
-
 function makePoSignupKey(raid, raidDate, raidTime){
   const raidPart = poSignupNormalizeRaid(raid || "raid") || "raid";
   const datePart = String(raidDate || "").replace(/[^0-9]+/g,"") || todayIsoDate().replace(/[^0-9]+/g,"");
@@ -8572,7 +7390,7 @@ function makePoSignupKey(raid, raidDate, raidTime){
   return `${raidPart}-po-anmelder-${datePart}-${timePart}-${suffix}`;
 }
 
-function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
+function updatePoSignupDefaults(overwriteTitle=true){
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
@@ -8580,59 +7398,34 @@ function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
   const title = document.getElementById("poSignupTitle");
   const key = document.getElementById("poSignupPostKey");
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
-  if(key && (forceNewKey || !key.value.trim())) key.value = makePoSignupKey(raid, raidDate, raidTime);
-  if(forceNewKey) syncPoSignupTemplateRaid(true);
+  if(key && !key.value.trim()) key.value = makePoSignupKey(raid, raidDate, raidTime);
   updatePoSignupPreview();
 }
 
 function updatePoSignupPreview(){
   resetPoSignupLichtlootRaidIfStale();
   const title = document.getElementById("poSignupTitle")?.value.trim() || "PO-Anmelder";
-  const postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
   const raid = document.getElementById("poSignupRaid")?.value || "";
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const note = document.getElementById("poSignupNote")?.value.trim() || "";
   const titleEl = document.getElementById("poSignupPreviewTitle");
   const descEl = document.getElementById("poSignupPreviewDescription");
-  const signupTitleEl = document.getElementById("poSignupPreviewSignupTitle");
-  const postIdEl = document.getElementById("poSignupPreviewPostId");
   const raidEl = document.getElementById("poSignupPreviewRaid");
   const dateEl = document.getElementById("poSignupPreviewDate");
   const targetEl = document.getElementById("poSignupPreviewTarget");
   const itemsEl = document.getElementById("poSignupPreviewItems");
   if(titleEl) titleEl.textContent = title.toUpperCase();
   if(descEl) descEl.textContent = note;
-  if(postIdEl) postIdEl.textContent = postKey || "-";
   if(raidEl) raidEl.textContent = raid ? raid.toUpperCase() : "Raid";
   if(dateEl) dateEl.textContent = raidDate || raidTime ? `${formatRaidDate(raidDate) || raidDate || "Datum fehlt"} · ${raidTime || "Uhrzeit fehlt"} Uhr` : "Termin fehlt";
-  syncPoSignupChannelSelection();
   if(targetEl) targetEl.textContent = selectedPoPostChannelLabel("poSignupTargetChannel");
   const items = poSignupItemLines();
   if(itemsEl){
-    const rows = poPostEntryRowsForKey(postKey);
-    const grouped = new Map();
-    rows.forEach(entry => {
-      const item = String(entry.item || entry.itemName || "-").trim() || "-";
-      if(!grouped.has(item)) grouped.set(item, []);
-      grouped.get(item).push(entry);
-    });
-    if(signupTitleEl) signupTitleEl.textContent = `Anmeldungen (${rows.length})`;
-    if(grouped.size){
-      itemsEl.innerHTML = Array.from(grouped.entries()).map(([item, entries]) => {
-        const players = entries.map(entry => {
-          const status = String(entry.approvalStatus || "pending").toLowerCase();
-          const approved = status === "approved" ? ' <span class="approved">✓</span>' : "";
-          return `${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}${approved}`;
-        }).join(", ");
-        return `<div class="po-signup-preview-item"><strong>${renderLootItem(item)} (${entries.length})</strong><div class="po-signup-preview-player-line">${players}</div></div>`;
-      }).join("");
-    }else{
-      const previewItems = items.slice(0,6);
-      itemsEl.innerHTML = previewItems.length
-        ? previewItems.map((item, index) => `<div class="po-signup-preview-item"><strong>${renderLootItem(item)}</strong><div class="po-signup-preview-player-line">Noch keine Anmeldung</div></div>`).join("") + (items.length > previewItems.length ? `<div class="po-signup-preview-empty">+ ${escapeHtml(String(items.length - previewItems.length))} weitere Items</div>` : "")
-        : '<div class="po-signup-preview-empty">Noch keine Anmeldungen. Sobald Spieler im Discord eintragen, erscheinen sie hier wie im Post.</div>';
-    }
+    const previewItems = items.slice(0,8);
+    itemsEl.innerHTML = previewItems.length
+      ? previewItems.map((item, index) => `<div class="po-signup-preview-item"><span>${escapeHtml(item)}</span><span>${index + 1}</span></div>`).join("") + (items.length > previewItems.length ? `<div class="muted">+ ${escapeHtml(String(items.length - previewItems.length))} weitere Items</div>` : "")
+      : '<div class="muted">Noch keine Items eingetragen.</div>';
   }
   renderPoSignupReviewRows();
 }
@@ -8663,10 +7456,8 @@ function poSignupNormalizeRaid(value){
     "temple-of-ahn-qiraj":"aq40",
     "naxxramas":"naxx",
     "zul-gurub":"zg",
-    "zulgurub":"zg",
     "zg-20":"zg",
     "zul-gurub-20":"zg",
-    "zulgurub-20":"zg",
     "aq-20":"aq20",
     "ahn-qiraj-20":"aq20",
     "ruins-of-ahn-qiraj":"aq20",
@@ -8759,8 +7550,7 @@ async function fillPoSignupItemsFromCurrentP0PlusOnly(){
   }
 }
 
-function poSignupCleanItemLines(values, options={}){
-  const limit = Object.prototype.hasOwnProperty.call(options, "limit") ? options.limit : 25;
+function poSignupCleanItemLines(values){
   const blocked = new Set([
     "worldbuff übersicht",
     "worldbuff uebersicht",
@@ -8783,7 +7573,7 @@ function poSignupCleanItemLines(values, options={}){
     seen.add(key);
     items.push(item);
   });
-  return limit ? items.slice(0, limit) : items;
+  return items.slice(0,25);
 }
 
 async function poSignupLoadFallbackItems(raid){
@@ -8813,7 +7603,6 @@ async function ensurePoSignupItemOptions(config){
 }
 
 function getPoSignupConfig(){
-  syncPoSignupChannelSelection();
   const raid = document.getElementById("poSignupRaid")?.value || "aq40";
   const title = document.getElementById("poSignupTitle")?.value.trim() || `${RAID_OPTIONS[raid]?.short || raid.toUpperCase()} PO-Anmelder`;
   let postKey = document.getElementById("poSignupPostKey")?.value.trim() || "";
@@ -8826,7 +7615,7 @@ function getPoSignupConfig(){
   return {
     postKey,
     sourceChannelId,
-    targetChannelId: sourceChannelId,
+    targetChannelId: document.getElementById("poSignupTargetChannel")?.value || sourceChannelId,
     reviewRecipient: document.getElementById("poSignupReviewRecipient")?.value.trim() || "",
     title,
     raid,
@@ -8836,7 +7625,7 @@ function getPoSignupConfig(){
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
     itemOptions:poSignupItemLines().join("\n"),
-    createLichtlootRaid: true,
+    createLichtlootRaid: Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked),
     lichtlootRaidId: prio?.raidId || "",
     lichtlootPlayerPin: prio?.playerPin || "",
     lichtlootLeadPin: prio?.leadPin || ""
@@ -8868,13 +7657,25 @@ function resetPoSignupLichtlootRaidIfStale(){
 async function ensurePoSignupLichtlootRaid(config, options={}){
   const status = document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
+  const checked = Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked);
+  if(!checked) return config;
   if(!masterCode) throw new Error("Bitte erst Master-Code eingeben.");
   if(!config.raidDate || !config.raidTime) throw new Error("Bitte Raid-Datum und Raid-Uhrzeit eintragen.");
 
   const fingerprint = poSignupLichtlootFingerprint(config);
   if(poSignupGeneratedLichtlootRaid?.fingerprint === fingerprint && poSignupGeneratedLichtlootRaid.playerPin){
+    const reusedText = buildRaidDiscordPostText(
+      RAID_OPTIONS[config.raid]?.name || config.title || config.raid,
+      config.raidDate,
+      config.raidTime,
+      getCurrentGuildBrand().guildName,
+      poSignupGeneratedLichtlootRaid.playerPin,
+      poSignupGeneratedLichtlootRaid.createdBy
+    );
+    setValue("poSignupNote", reusedText);
     updatePoSignupPreview();
     return Object.assign({}, config, {
+      note:reusedText,
       lichtlootRaidId:poSignupGeneratedLichtlootRaid.raidId,
       lichtlootPlayerPin:poSignupGeneratedLichtlootRaid.playerPin,
       lichtlootLeadPin:poSignupGeneratedLichtlootRaid.leadPin || ""
@@ -8924,26 +7725,45 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const resultRaidId = result.raidId || result.RaidID || raidId;
   const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
   const resultLeadPin = result.leadPin || leadPin;
+  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, resultPlayerPin, createdBy);
   poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
+  setValue("poSignupNote", note);
   updatePoSignupPreview();
   if(status && !options.silent){
     status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
+    note,
     lichtlootRaidId:resultRaidId,
     lichtlootPlayerPin:resultPlayerPin,
     lichtlootLeadPin:resultLeadPin
   });
 }
 
+async function handlePoSignupPrioOptionChange(){
+  const checkbox = document.getElementById("poSignupCreateLichtlootRaid");
+  const status = document.getElementById("poSignupStatus");
+  if(!checkbox?.checked){
+    poSignupGeneratedLichtlootRaid = null;
+    updatePoSignupPreview();
+    return;
+  }
+  try{
+    let config = getPoSignupConfig();
+    config = await ensurePoSignupLichtlootRaid(config);
+  }catch(error){
+    if(status){
+      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+      status.className = "status bad";
+    }
+    if(checkbox) checkbox.checked = false;
+  }
+}
+
 function poPostEntryRowsForKey(postKey){
   const key = String(postKey || "").trim();
-  return (poPostStoredEntries || []).filter(entry => {
-    if(entry.postKey !== key) return false;
-    if(entry.configOnly) return false;
-    return String(entry.player || "").trim() || String(entry.item || entry.itemName || "").trim();
-  });
+  return (poPostStoredEntries || []).filter(entry => entry.postKey === key);
 }
 
 function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
@@ -8955,20 +7775,11 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     return;
   }
   const rows = poPostEntryRowsForKey(key);
-  if(hint){
-    const approved = rows.filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "approved").length;
-    const rejected = rows.filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "rejected").length;
-    const open = Math.max(0, rows.length - approved - rejected);
-    hint.textContent = `${key} · ${rows.length} Einträge · ${approved} freigegeben · ${open} offen`;
-  }
+  if(hint) hint.textContent = `${key} · ${rows.length} Eintrag/Einträge`;
   if(!rows.length){
     tbody.innerHTML = `<tr><td colspan="4" class="muted">Keine aktiven Einträge für ${escapeHtml(key)} gefunden.</td></tr>`;
     return;
   }
-  ensurePoSignupReviewItemsLoaded(rows, () => {
-    renderPoPostDetailRows();
-    renderPoSignupReviewRows();
-  });
   tbody.innerHTML = rows.map(entry => {
     const index = poPostStoredEntries.indexOf(entry);
     const status = String(entry.approvalStatus || "pending").toLowerCase();
@@ -8977,34 +7788,15 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
     return `
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
+        <td><strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong><div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div></td>
+        <td>${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}</td>
         <td>
-          <strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong>
-          <div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div>
-          <div class="po-entry-correction-control">
-            <span class="po-entry-correction-label">Spielerlogin zuordnen</span>
-            <select id="poEntryCharacterCorrection-${index}" class="po-entry-correction-input">
-              ${poSignupCorrectionCharacterOptions(entry)}
-            </select>
-          </div>
-        </td>
-        <td>
-          ${renderLootItem(entry.item || "-")}${entry.luckBy ? ' <span title="Glück gewünscht">🍀</span>' : ''}
-          <div class="po-entry-correction-control">
-            <span class="po-entry-correction-label">Item aus Datenbank</span>
-            <div class="po-signup-item-tool-row" style="grid-template-columns:minmax(0,1fr) auto">
-              <input id="poEntryItemCorrection-${index}" class="po-entry-correction-input" value="${escapeAttr(entry.item || "")}" placeholder="Lootliste öffnen..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" readonly name="po-db-item-${index}-${escapeAttr(entry.id || entry.messageId || entry.postKey || "entry")}" onclick="openPoSignupCorrectionLootPicker(${index})" onfocus="openPoSignupCorrectionLootPicker(${index})">
-              <button class="small-btn ghost" type="button" onclick="openPoSignupCorrectionLootPicker(${index})">Lootliste</button>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="po-signup-direct-actions">
-            <button class="small-btn ghost" type="button" onclick="savePoPostEntryCorrection(${index})">Korrigieren</button>
-            <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'approved')">Freigeben</button>
-            <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewPoPostEntryFromPostPanel(${index},'rejected')">Ablehnen</button>
-            <button class="small-btn ghost" type="button" onclick="deletePoPostEntryFromPostPanel(${index})">Löschen</button>
-          </div>
-          <div class="po-entry-correction-note">Erst korrigieren, dann freigeben/übertragen.</div>
+          <select class="small-select" onchange="runPoPostEntryAction(this,${index})">
+            <option value="">Aktion wählen</option>
+            ${status === "approved" ? "" : '<option value="approved">Freigeben</option>'}
+            ${status === "rejected" ? "" : '<option value="rejected">Ablehnen</option>'}
+            <option value="delete">Löschen</option>
+          </select>
         </td>
       </tr>
     `;
@@ -9029,14 +7821,13 @@ function renderPoSignupReviewRows(){
   const hint = document.getElementById("poSignupEntryPanelHint");
   const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
   renderPoPostEntryReviewRows(tbody, hint, key, "Post-ID wählen oder PO-Anmelder posten.");
-  updatePoSignupTransferState();
 }
 
 function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote","poSignupCreateLichtlootRaid"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -9069,22 +7860,6 @@ function poPostChannelLabelById(channelId){
   return (category ? category + " / " : "") + "# " + name;
 }
 
-function poSignupChannelShortLabel(channelId){
-  const id = String(channelId || "").trim();
-  if(!id) return "-";
-  const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id || "") === id);
-  if(!channel) return "#" + id;
-  const name = String(channel.channelName || channel.name || id).replace(/^#+\s*/,"").trim();
-  return "#" + (name || id);
-}
-
-function poSignupRowTitle(row){
-  const raid = row.raid ? String(row.raid).toUpperCase() : "PO";
-  const title = String(row.title || "").trim();
-  if(title && title.toLowerCase() !== "po liste") return title;
-  return `${raid} PO-Anmeldung`;
-}
-
 function poPostConfigGroups(){
   const groups = new Map();
   function ensure(key){
@@ -9111,9 +7886,6 @@ function poPostConfigGroups(){
         lichtlootRaidId: "",
         lichtlootPlayerPin: "",
         lichtlootLeadPin: "",
-        approvedCount: 0,
-        pendingCount: 0,
-        rejectedCount: 0,
         local: false,
         railway: false
       });
@@ -9144,22 +7916,13 @@ function poPostConfigGroups(){
     const group = ensure(entry.postKey);
     if(!group) return;
     group.railway = true;
-    const configOnly = Boolean(entry.configOnly) || (!String(entry.player || "").trim() && !String(entry.item || entry.itemName || "").trim());
     if(entry.archivedAt) group.archivedCount += 1;
-    else if(!configOnly){
-      group.count += 1;
-      const status = String(entry.approvalStatus || "pending").toLowerCase();
-      if(status === "approved") group.approvedCount += 1;
-      else if(status === "rejected") group.rejectedCount += 1;
-      else group.pendingCount += 1;
-    }
+    else group.count += 1;
     group.raid = group.raid || entry.raid || "";
     group.title = group.title || entry.title || "PO Liste";
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
     group.mode = group.mode || entry.mode || "";
-    group.raidDate = group.raidDate || entry.raidDate || "";
-    group.raidTime = group.raidTime || entry.raidTime || "";
     group.raidPin = group.raidPin || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
     group.prioPin = group.prioPin || entry.prioPin || entry.raidPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
     group.lichtlootRaidId = group.lichtlootRaidId || entry.lichtlootRaidId || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || "";
@@ -9200,7 +7963,7 @@ function renderPoPostConfigRows(){
       <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
       <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
-      <td>${escapeHtml(String(row.count || 0))}<div class="muted">${escapeHtml(String(row.approvedCount || 0))} freigegeben</div></td>
+      <td>${escapeHtml(String(row.count || 0))}</td>
       <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
         <select class="small-select" onchange="runPoPostRowAction(this,'${escapeAttr(row.postKey)}')">
@@ -9243,36 +8006,27 @@ function renderPoSignupConfigRows(){
     .filter(isPoSignupConfigGroup)
     .filter(row => row.count || !row.archivedCount);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
-    updatePoSignupTransferState();
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(row => `
     <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
+      <td><button class="po-post-id-button" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button><div class="muted">${escapeHtml(row.title || "PO-Anmelder")}${row.local && row.railway ? " · lokal + Railway" : row.railway ? " · Railway" : " · lokal"}${row.archivedCount && !row.count ? " · archiviert" : ""}</div></td>
+      <td>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.sourceChannelId))}</td>
+      <td>${escapeHtml(poPostChannelLabelById(row.targetChannelId))}</td>
+      <td><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}<div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div></td>
+      <td>${escapeHtml(String(row.count || 0))}</td>
+      <td>${escapeHtml(row.updatedAt ? formatDateTime(row.updatedAt) : "-")}</td>
       <td>
-        <button class="po-post-id-button po-signup-config-key" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button>
-      </td>
-      <td><strong>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</strong><div class="muted">${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</div></td>
-      <td>
-        <div class="po-signup-channel-stack">
-          <div class="po-signup-channel-line"><strong>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</strong></div>
-        </div>
-      </td>
-      <td>
-        <div><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</div>
-        <div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div>
-      </td>
-      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
-      <td>
-        <div class="po-signup-action-stack">
-          <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
-          <button class="small-btn good" type="button" ${row.approvedCount ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
-          <button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>
-        </div>
+        <select class="small-select" onchange="runPoSignupRowAction(this,'${escapeAttr(row.postKey)}')">
+          <option value="">Aktion wählen</option>
+          <option value="open">Öffnen</option>
+          <option value="archive">Archivieren</option>
+        </select>
       </td>
     </tr>
   `).join("");
-  updatePoSignupTransferState();
 }
 
 async function runPoSignupRowAction(select, postKey){
@@ -9288,159 +8042,8 @@ async function runPoSignupRowAction(select, postKey){
     await archivePoSignupEverywhere(key);
     return;
   }
-  if(action === "sync-prios"){
-    await syncPoSignupPriosForPost(key);
-    return;
-  }
   if(action === "delete"){
     await deletePoPostEverywhere(key);
-  }
-}
-
-function poSignupConfigForKey(postKey){
-  const key = String(postKey || "").trim();
-  return readPoPostConfigs().find(item => item.postKey === key)
-    || poPostConfigGroups().find(item => item.postKey === key)
-    || null;
-}
-
-function poSignupLichtlootPinForConfig(config){
-  return String(
-    config?.lichtlootPlayerPin ||
-    config?.playerPin ||
-    config?.prioPin ||
-    config?.lichtlootRaidId ||
-    ""
-  ).trim();
-}
-
-function poSignupApprovedCountForKey(postKey){
-  return poPostEntryRowsForKey(postKey)
-    .filter(entry => String(entry.approvalStatus || "pending").toLowerCase() === "approved")
-    .length;
-}
-
-function poSignupTransferState(postKey, providedConfig){
-  const key = String(postKey || "").trim();
-  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
-  const approved = poSignupApprovedCountForKey(key);
-  const total = poPostEntryRowsForKey(key).length;
-  const raidPin = poSignupLichtlootPinForConfig(config);
-  if(!key) return { can:false, approved, total, raidPin, reason:"Erst einen PO-Anmelder öffnen." };
-  if(!total) return { can:false, approved, total, raidPin, reason:"Noch keine PO-Anmeldungen vorhanden." };
-  if(!approved) return { can:false, approved, total, raidPin, reason:"Erst mindestens einen Eintrag freigeben." };
-  if(!raidPin) return { can:true, approved, total, raidPin, reason:"Beim Übertragen wird nach der LichtLoot Prio-ID gefragt." };
-  return { can:true, approved, total, raidPin, reason:`${approved} freigegebene Einträge können übertragen werden.` };
-}
-
-function updatePoSignupTransferState(){
-  const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
-  const state = poSignupTransferState(key);
-  const btn = document.getElementById("poSignupSyncPriosBtn");
-  const hint = document.getElementById("poSignupTransferHint");
-  if(btn){
-    btn.disabled = !state.can;
-    btn.title = state.reason;
-    btn.textContent = state.can
-      ? `Freigegebene Einträge übertragen (${state.approved})`
-      : "Freigegebene Einträge übertragen";
-  }
-  if(hint){
-    hint.textContent = state.can
-      ? `${state.reason} Es werden nur grüne Haken übertragen.`
-      : state.reason;
-  }
-  updatePoSignupSteps(state);
-}
-
-function updatePoSignupSteps(currentState){
-  const key = document.getElementById("poSignupPostKey")?.value.trim() || "";
-  const state = currentState || poSignupTransferState(key);
-  const hasPost = Boolean(key);
-  const hasEntries = Number(state.total || 0) > 0;
-  const canSync = Boolean(state.can);
-  const active = !hasPost ? "setup" : !canSync ? "review" : "sync";
-  const current = document.getElementById("poSignupCurrentStep");
-  const labels = {
-    setup:["1. Post vorbereiten","Raid, Channel und Items wählen"],
-    review:["2. Einträge prüfen", hasEntries ? `${state.approved || 0} von ${state.total || 0} Einträgen freigegeben` : "Discord-Post senden und Anmeldungen sammeln"],
-    sync:["3. In LichtLoot übertragen", `${state.approved || 0} freigegebene Einträge bereit`]
-  };
-  if(current){
-    const [title, text] = labels[active] || labels.setup;
-    current.innerHTML = `<span>Aktueller Schritt<strong>${escapeHtml(title)}</strong></span><small>${escapeHtml(text)}</small>`;
-  }
-  document.querySelectorAll("[data-po-signup-step]").forEach(step => {
-    const name = step.dataset.poSignupStep || "";
-    step.classList.toggle("is-done", (name === "setup" && hasPost) || (name === "review" && hasEntries) || (name === "sync" && canSync));
-    step.classList.toggle("is-active", name === active);
-  });
-}
-
-async function syncCurrentPoSignupPrios(){
-  const config = getPoSignupConfig();
-  await syncPoSignupPriosForPost(config.postKey, config);
-}
-
-async function syncPoSignupPriosForPost(postKey, providedConfig){
-  const key = String(postKey || "").trim();
-  const status = document.getElementById("poSignupStatus");
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  if(!masterCode){
-    if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>';
-    return;
-  }
-  if(!key){
-    if(status) status.innerHTML = '<span class="bad">Bitte erst einen PO-Anmelder auswählen.</span>';
-    return;
-  }
-
-  const config = providedConfig || poSignupConfigForKey(key) || ((document.getElementById("poSignupPostKey")?.value.trim() || "") === key ? getPoSignupConfig() : {});
-  const transferState = poSignupTransferState(key, config);
-  if(!transferState.can){
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(transferState.reason)}</span>`;
-    return;
-  }
-  let raidPin = poSignupLichtlootPinForConfig(config);
-  if(!raidPin){
-    raidPin = prompt("Welche LichtLoot Prio-ID/PIN soll für diesen PO-Anmelder benutzt werden?", "") || "";
-  }
-  raidPin = raidPin.trim();
-  if(!raidPin){
-    if(status) status.innerHTML = '<span class="bad">Keine LichtLoot-ID eingetragen. Es wurde nichts übertragen.</span>';
-    return;
-  }
-
-  try{
-    if(status) status.textContent = "POs werden in die LichtLoot-Prioliste übertragen ...";
-    const result = await railwayWrite({
-      action:"guildSyncPoSignupPrios",
-      masterCode,
-      postKey:key,
-      raidPin,
-      raid: config.raid || "",
-      raidName: config.raid || ""
-    });
-    if(!result.success) throw new Error(result.error || "POs konnten nicht übertragen werden.");
-    const failedText = result.failed ? `, ${result.failed} Fehler` : "";
-    if(status){
-      const synced = Number(result.synced || 0);
-      const total = Number(result.total || 0);
-      const msg = synced
-        ? `${synced} von ${total || synced} freigegebenen PO-Einträgen in die Prioliste übertragen${failedText}.`
-        : `Keine freigegebenen PO-Einträge übertragen${failedText}.`;
-      status.innerHTML = `<span class="${result.failed || !synced ? "warn" : "good"}">${escapeHtml(msg)}</span>`;
-    }
-    if(result.errors?.length){
-      const preview = result.errors.slice(0, 4).map(error => `${error.player || "-"} / ${error.item || "-"}: ${error.error || "Fehler"}`).join("\n");
-      alert(`Einige Einträge konnten nicht übertragen werden:\n${preview}`);
-    }
-  }catch(error){
-    const raw = error.message || "POs konnten nicht übertragen werden.";
-    const friendly = raw.includes("Unbekannte POST-Aktion")
-      ? "Die Übertragung ist auf Railway noch nicht aktiv. Bitte Seite neu laden und erneut versuchen."
-      : raw;
-    if(status) status.innerHTML = `<span class="bad">${escapeHtml(friendly)}</span>`;
   }
 }
 
@@ -9455,12 +8058,10 @@ async function loadPoPostStoredEntries(){
     await ensureLootDataLoaded();
     const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
-    await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
     poPostStoredEntries = [];
   }
   renderPoPostConfigRows();
-  updatePoSignupPreview();
 }
 
 function selectPoPostForReview(postKey){
@@ -9481,6 +8082,8 @@ function setPoSignupFormConfig(config){
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
+  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
   poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
     fingerprint:poSignupLichtlootFingerprint(config),
     raidId:config.lichtlootRaidId || "",
@@ -9490,9 +8093,8 @@ function setPoSignupFormConfig(config){
   } : null;
   const source = document.getElementById("poSignupSourceChannel");
   const target = document.getElementById("poSignupTargetChannel");
-  const channelId = config.sourceChannelId || config.targetChannelId || "";
-  if(source) source.value = channelId;
-  if(target) target.value = channelId;
+  if(source) source.value = config.sourceChannelId || "";
+  if(target) target.value = config.targetChannelId || config.sourceChannelId || "";
   updatePoSignupPreview();
 }
 
@@ -9870,10 +8472,12 @@ function newPoSignupConfig(){
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
+  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
   setValue("poSignupTitle", `${label} PO-Anmelder`);
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
   setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
+  if(prioCheckbox) prioCheckbox.checked = false;
   poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
@@ -10983,30 +9587,13 @@ function isBenchPrio(prio){
   return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
 }
 
-function prioClassSortIndex(className){
-  const key = normalize(className);
-  const order = {
-    warrior: 1, krieger: 1,
-    druid: 2, druide: 2, druiden: 2,
-    paladin: 3,
-    rogue: 4, schurke: 4, schurken: 4,
-    hunter: 5, jaeger: 5, jager: 5, jäger: 5,
-    priest: 6, priester: 6,
-    mage: 7, magier: 7,
-    warlock: 8, hexenmeister: 8,
-    shaman: 9, schamane: 9, schamanen: 9
-  };
-  return order[key] || 99;
-}
-
 function sortPriosWithMainFirst(prios){
   return prios
     .map((prio,index)=>({prio,index}))
     .sort((a,b)=>{
-      const classCompare = prioClassSortIndex(a.prio && (a.prio.Klasse || a.prio.className)) - prioClassSortIndex(b.prio && (b.prio.Klasse || b.prio.className));
-      if(classCompare) return classCompare;
-      const nameCompare = String(a.prio && (a.prio.Spieler || a.prio.player) || "").localeCompare(String(b.prio && (b.prio.Spieler || b.prio.player) || ""), "de", {sensitivity:"base"});
-      if(nameCompare) return nameCompare;
+      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
+      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
+      if(aMain !== bMain) return aMain ? -1 : 1;
       return a.index-b.index;
     })
     .map(item=>item.prio);
@@ -11090,38 +9677,6 @@ async function transferP0PlusFromGuild(raidId){
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
   }catch(error){
     setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
-  }
-}
-
-async function queueP0PlusBackup(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  const raid = document.getElementById("p0BackupRaid")?.value || "all40";
-  const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
-  const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
-  if(!ok) return;
-
-  try{
-    setStatus("PO+ Sicherung wird für den Bot vorbereitet ...", "");
-    const result = await railwayApi({
-      action:"guildQueueP0PlusBackup",
-      masterCode,
-      raid
-    });
-
-    if(!result.success){
-      setStatus(result.error || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
-      return;
-    }
-
-    const count = Array.isArray(result.queued) ? result.queued.length : 0;
-    setStatus(`PO+ Sicherung vorbereitet: ${count || 1} Datei(en) werden vom Lichtbuff-Bot gepostet.`, "good");
-  }catch(error){
-    setStatus(error.message || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
   }
 }
 
@@ -11455,14 +10010,6 @@ function renderP0PlusModalContent(){
         ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
       </select>
       <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
-      <select id="p0BackupRaid">
-        <option value="all40">Alle 40er</option>
-        <option value="naxx">NAXX</option>
-        <option value="aq40">AQ40</option>
-        <option value="bwl">BWL</option>
-        <option value="mc">MC</option>
-      </select>
-      <button class="small-btn good" type="button" onclick="queueP0PlusBackup()">PO+ Sicherung posten</button>
       <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
     </div>
     <div class="table-wrap">
@@ -11562,23 +10109,13 @@ async function reviewPoPostEntryFromGuild(index, status){
   }
   try{
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
-    const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
-    const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
-      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
-      discordMessageId:entry.discordMessageId || "",
-      player:entry.player || "",
-      item:entry.item || "",
-      raidPin,
-      prioPin:raidPin,
-      lichtlootRaidId:raidPin,
-      lichtlootPlayerPin:raidPin,
       status,
       reviewer:"Gildenleitung"
     });
@@ -11606,23 +10143,13 @@ async function reviewPoPostEntryFromPostPanel(index, status){
   }
   try{
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
-    const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
-    const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
-      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
-      discordMessageId:entry.discordMessageId || "",
-      player:entry.player || "",
-      item:entry.item || "",
-      raidPin,
-      prioPin:raidPin,
-      lichtlootRaidId:raidPin,
-      lichtlootPlayerPin:raidPin,
       status,
       reviewer:"Gildenleitung"
     });
@@ -11635,76 +10162,9 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     });
     renderPoPostConfigRows();
     renderPoPostDetailRows();
-    renderPoSignupReviewRows();
-    updatePoSignupPreview();
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
-  }
-}
-
-async function savePoPostEntryCorrection(index){
-  const entry = poPostStoredEntries[index];
-  if(!entry) return;
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  const characterId = poSignupCorrectionCharacterValue(index);
-  const itemName = poSignupCorrectionItemValue(index);
-  const correctionConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
-  const raidPin = poSignupLichtlootPinForConfig(correctionConfig);
-  if(!characterId || !itemName){
-    setStatus("Bitte Spielerlogin und Item auswählen.", "bad");
-    return;
-  }
-  try{
-    setStatus("PO-Eintrag wird korrigiert ...", "");
-    const result = await railwayWrite({
-      action:"guildUpdatePoPostEntry",
-      masterCode,
-      id:entry.id || "",
-      postKey:entry.postKey || "",
-      sourceChannelId:entry.sourceChannelId || "",
-      targetChannelId:entry.targetChannelId || "",
-      messageId:entry.messageId || "",
-      discordMessageId:entry.discordMessageId || "",
-      raid:poSignupEntryRaidKey(entry) || entry.raid || "",
-      raidName:poSignupEntryRaidKey(entry) || entry.raid || "",
-      raidPin,
-      prioPin:raidPin,
-      lichtlootRaidId:raidPin,
-      lichtlootPlayerPin:raidPin,
-      player:entry.player || "",
-      item:entry.item || "",
-      characterId,
-      correctedItem:itemName
-    });
-    if(!result.success){
-      setStatus(result.error || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
-      return;
-    }
-    const updatedEntry = Object.assign({}, entry, result.entry || {}, {
-      item:(result.entry && result.entry.item) || itemName,
-      player:(result.entry && result.entry.player) || entry.player,
-      className:(result.entry && result.entry.className) || entry.className
-    });
-    updatePoPostEntryCaches(entry, updatedEntry);
-    renderPoPostConfigRows();
-    renderPoPostDetailRows();
-    renderPoSignupReviewRows();
-    renderPoPostEntryRows();
-    updatePoSignupPreview();
-    if(result.prioSync && result.prioSync.success === false){
-      setStatus("PO-Eintrag korrigiert, aber LichtLoot-Prio konnte nicht aktualisiert werden: " + (result.prioSync.error || "unbekannter Fehler"), "bad");
-    }else if(result.prioSync && result.prioSync.success){
-      setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und LichtLoot-Prio sind aktualisiert.", "good");
-    }else{
-      setStatus("PO-Eintrag korrigiert. Spielerlogin, Item und Discord-Zuordnung sind gespeichert.", "good");
-    }
-  }catch(error){
-    setStatus(error.message || "PO-Eintrag konnte nicht korrigiert werden.", "bad");
   }
 }
 
@@ -11737,9 +10197,6 @@ async function deletePoPostEntryFromPostPanel(index){
       return;
     }
     await loadPoPostStoredEntries();
-    renderPoPostDetailRows();
-    renderPoSignupReviewRows();
-    updatePoSignupPreview();
     setStatus("PO-Eintrag gelöscht. Der DC-Post wird aktualisiert.", "good");
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gelöscht werden.", "bad");
@@ -11934,138 +10391,6 @@ function formatPoints(value){
 
 function toggleIssueInboxPanel(){
   openIssueInboxPanel();
-}
-
-async function loadGuildApplicationsPanel(options){
-  options = options || {};
-  const masterCode = document.getElementById("masterCode").value.trim();
-  const content = document.getElementById("guildApplicationsPanelContent");
-  if(!masterCode){
-    if(content && !options.silent) content.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
-    renderGuildApplicationsBadge();
-    return;
-  }
-
-  if(content && !options.silent) content.innerHTML = '<div class="status">Gilden-Anfragen werden geladen ...</div>';
-
-  try{
-    const result = await railwayApi({ action:"guildGetApplications", masterCode, baseUrl:location.origin });
-    if(!result.success) throw new Error(result.error || "Gilden-Anfragen konnten nicht geladen werden.");
-    guildApplications = Array.isArray(result.applications) ? result.applications : [];
-    renderGuildApplicationsBadge();
-    if(content) renderGuildApplicationsPanel();
-  }catch(error){
-    if(content && !options.silent) content.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Gilden-Anfragen konnten nicht geladen werden.")}</div>`;
-  }
-}
-
-function renderGuildApplicationsBadge(){
-  const badge = document.getElementById("guildApplicationCount");
-  if(!badge) return;
-  const pending = guildApplications.filter(entry => entry.status === "pending").length;
-  badge.textContent = String(pending);
-}
-
-function guildApplicationStatusLabel(status){
-  if(status === "approved") return "freigegeben";
-  if(status === "completed") return "eingerichtet";
-  if(status === "rejected") return "abgelehnt";
-  return "offen";
-}
-
-function renderGuildApplicationsPanel(){
-  const content = document.getElementById("guildApplicationsPanelContent");
-  if(!content) return;
-  if(!guildApplications.length){
-    content.innerHTML = '<div class="status">Noch keine Gilden-Anfragen vorhanden.</div>';
-    return;
-  }
-
-  content.innerHTML = `
-    <div class="table-wrap">
-      <table class="issue-table">
-        <thead>
-          <tr>
-            <th>Status</th>
-            <th>Gilde</th>
-            <th>Kontakt</th>
-            <th>Freischaltlink</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${guildApplications.map(entry => `
-            <tr>
-              <td><span class="status ${entry.status === "pending" ? "" : entry.status === "rejected" ? "bad" : "good"}">${escapeHtml(guildApplicationStatusLabel(entry.status))}</span></td>
-              <td>
-                <strong>${escapeHtml(entry.guildName || "-")}</strong>
-                <div class="muted">${escapeHtml(entry.lootName || "-")} · ${escapeHtml(entry.server || "-")} · PIN ${escapeHtml(entry.desiredGuildPin || entry.guildPin || "-")}</div>
-                ${entry.notes ? `<div class="muted">${escapeHtml(entry.notes)}</div>` : ""}
-              </td>
-              <td>
-                <strong>${escapeHtml(entry.contactName || "-")}</strong>
-                <div class="muted">${escapeHtml(entry.contactDiscord || "-")}</div>
-                <div class="muted">${escapeHtml(entry.contactEmail || "-")}</div>
-              </td>
-              <td>
-                ${entry.setupUrl ? `<code>${escapeHtml(entry.setupUrl)}</code>` : '<span class="muted">Noch nicht freigegeben</span>'}
-                ${entry.guildSlug ? `<div class="muted">Gilde: ${escapeHtml(entry.guildSlug)}</div>` : ""}
-              </td>
-              <td>
-                <div class="issue-actions">
-                  ${entry.status === "pending" ? `<button class="small-btn primary" type="button" onclick="approveGuildApplication('${escapeHtml(entry.id)}')">Freigeben</button>` : ""}
-                  ${entry.setupUrl ? `<button class="small-btn ghost" type="button" onclick="copyGuildSetupLink('${escapeHtml(entry.setupUrl)}')">Link kopieren</button>` : ""}
-                  ${entry.status !== "rejected" && entry.status !== "completed" ? `<button class="small-btn danger" type="button" onclick="rejectGuildApplication('${escapeHtml(entry.id)}')">Ablehnen</button>` : ""}
-                </div>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-async function approveGuildApplication(id){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  try{
-    const result = await railwayWrite({ action:"guildApproveApplication", masterCode, id, baseUrl:location.origin });
-    if(!result.success) throw new Error(result.error || "Gilde konnte nicht freigegeben werden.");
-    setStatus("Gilde freigegeben. Freischaltlink kann kopiert werden.", "good");
-    await loadGuildApplicationsPanel();
-  }catch(error){
-    setStatus(error.message || "Gilde konnte nicht freigegeben werden.", "bad");
-  }
-}
-
-async function rejectGuildApplication(id){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-  if(!confirm("Diese Gilden-Anfrage ablehnen?")) return;
-  try{
-    const result = await railwayWrite({ action:"guildRejectApplication", masterCode, id });
-    if(!result.success) throw new Error(result.error || "Gilde konnte nicht abgelehnt werden.");
-    setStatus("Gilden-Anfrage abgelehnt.", "good");
-    await loadGuildApplicationsPanel();
-  }catch(error){
-    setStatus(error.message || "Gilden-Anfrage konnte nicht abgelehnt werden.", "bad");
-  }
-}
-
-async function copyGuildSetupLink(url){
-  try{
-    await navigator.clipboard.writeText(String(url || ""));
-    setStatus("Freischaltlink kopiert.", "good");
-  }catch(error){
-    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
-  }
 }
 
 async function loadIssueInboxPanel(){
@@ -12324,44 +10649,36 @@ async function loadWorldbuffPanel(){
 function renderWorldbuffPanel(days){
   document.getElementById("worldbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
-      <div class="worldbuff-filter-card">
-        <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
-          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
-          ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
-        </select>
-        <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
-          <option value="">Alle Buffs</option>
-          <option value="Hakkar">Hakkar</option>
-          <option value="Ony">Ony</option>
-          <option value="Nef">Nef</option>
-          <option value="Rend">Rend</option>
-        </select>
-        <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
-      </div>
-      <div class="worldbuff-action-card">
-        <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
-        <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
-        <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
-        <button class="small-btn good" type="button" onclick="queueWorldbuffBackup()">Worldbuff-Sicherung posten</button>
-        <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
-      </div>
+      <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
+        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+        ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+      </select>
+      <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
+        <option value="">Alle Buffs</option>
+        <option value="Hakkar">Hakkar</option>
+        <option value="Ony">Ony</option>
+        <option value="Nef">Nef</option>
+        <option value="Rend">Rend</option>
+      </select>
+      <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
+      <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
+      <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
+      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
     </div>
-    <div class="worldbuff-create-card">
-      <h3 class="worldbuff-create-title">Neuen Worldbuff-Termin hier eintragen</h3>
-      <div class="buff-create-grid">
-        <input id="newWorldbuffDate" type="date" aria-label="Datum">
-        <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
-        <select id="newWorldbuffBuff" aria-label="Buff">
-          <option value="Hakkar">Hakkar</option>
-          <option value="Ony">Ony</option>
-          <option value="Nef">Nef</option>
-          <option value="Rend">Rend</option>
-        </select>
-        <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
-        <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
-        <input id="newWorldbuffNote" type="text" placeholder="Notiz">
-        <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
-      </div>
+    <div class="buff-create-grid">
+      <input id="newWorldbuffDate" type="date" aria-label="Datum">
+      <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+      <select id="newWorldbuffBuff" aria-label="Buff">
+        <option value="Hakkar">Hakkar</option>
+        <option value="Ony">Ony</option>
+        <option value="Nef">Nef</option>
+        <option value="Rend">Rend</option>
+      </select>
+      <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
+      <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
+      <input id="newWorldbuffNote" type="text" placeholder="Notiz">
+      <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
     </div>
     <div class="table-wrap">
       <table class="worldbuff-table">
@@ -12409,12 +10726,13 @@ function renderWorldbuffRows(){
     return;
   }
 
+  const dateColorMap = buildBuffDateColorMap(rows);
   tbody.innerHTML = rows.map((entry,rowIndex) => {
     const index = worldbuffEntries.indexOf(entry);
     const statusOptions = ["", "🟡 offen", "🟢 bestätigt", "erledigt"];
     const statusValue = normalizeBuffStatus(entry.status || "");
     if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
-    const dateClass = shouldHideBuffDateCells(rows, rowIndex) ? "" : "buff-day-row";
+    const dateClass = getBuffDateClass(entry, dateColorMap);
     const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
     const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
 
@@ -12532,12 +10850,29 @@ function renderWorldbuffBadge(buff){
   return `<span class="buff-pill ${escapeAttr(cls)}">${icon} ${escapeHtml(value || "-")}</span>`;
 }
 
+function buildBuffDateColorMap(rows){
+  const dates = [];
+  (rows || []).forEach(entry => {
+    const key = getBuffDateKey(entry);
+    if(key && !dates.includes(key)) dates.push(key);
+  });
+  return dates.reduce((map,key,index) => {
+    map[key] = "buff-day-row day-color-" + (index % 2);
+    return map;
+  }, {});
+}
+
+function getBuffDateClass(entry, dateColorMap){
+  const key = getBuffDateKey(entry);
+  return key && dateColorMap && dateColorMap[key] ? dateColorMap[key] : "";
+}
+
 function getBuffDateKey(entry){
   return String((entry && entry.datum) || "").trim();
 }
 
 function renderBuffGroupCell(value, hidden){
-  return `<td class="${hidden ? "buff-group-empty" : ""}">${hidden ? "" : `<span class="buff-day-label">${escapeHtml(value || "-")}</span>`}</td>`;
+  return `<td class="${hidden ? "buff-group-empty" : ""}">${hidden ? "" : escapeHtml(value || "-")}</td>`;
 }
 
 function shouldHideBuffDateCells(rows, rowIndex){
@@ -12754,32 +11089,6 @@ async function queueWorldbuffBotUpdate(updateType){
   }
 }
 
-async function queueWorldbuffBackup(){
-  const masterCode = document.getElementById("masterCode").value.trim();
-  if(!masterCode){
-    setStatus("Bitte Master-Code eingeben.", "bad");
-    return;
-  }
-
-  const days = document.getElementById("worldbuffDays")?.value || "all";
-  const label = days === "all" ? "alle offenen Worldbuffs" : `Worldbuffs der nächsten ${days} Tage`;
-  if(!confirm(`${label} als Excel-Sicherung in den Backup-Channel posten?`)){
-    return;
-  }
-
-  try{
-    setStatus("Worldbuff-Sicherung wird für den Bot vorbereitet ...", "");
-    const result = await railwayApi({ action:"guildQueueWorldbuffBackup", masterCode, days });
-    if(!result.success){
-      setStatus(result.error || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
-      return;
-    }
-    setStatus(`Worldbuff-Sicherung vorbereitet: ${Number(result.count || 0)} Termin(e) werden gepostet.`, "good");
-  }catch(error){
-    setStatus(error.message || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
-  }
-}
-
 async function restoreDeletedWorldbuffTerms(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -12860,36 +11169,29 @@ async function loadHordenbuffPanel(){
 function renderHordenbuffPanel(days){
   document.getElementById("hordenbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
-      <div class="worldbuff-filter-card">
-        <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
-          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
-          ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
-        </select>
-        <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
-          <option value="">Alle Status</option>
-          <option value="offen">offen</option>
-          <option value="zugeteilt">zugeteilt</option>
-          <option value="erledigt">erledigt</option>
-        </select>
-        <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
-      </div>
-      <div class="worldbuff-action-card">
-        <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
-        <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
-        <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
-      </div>
+      <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
+        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+        ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+      </select>
+      <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
+        <option value="">Alle Status</option>
+        <option value="offen">offen</option>
+        <option value="zugeteilt">zugeteilt</option>
+        <option value="erledigt">erledigt</option>
+      </select>
+      <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
+      <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
+      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
     </div>
-    <div class="worldbuff-create-card">
-      <h3 class="worldbuff-create-title">Neuen Hordenbuff-Termin hier eintragen</h3>
-      <div class="buff-create-grid">
-        <input id="newHordenbuffDate" type="date" aria-label="Datum">
-        <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
-        <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
-        <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
-        <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
-        <input id="newHordenbuffNote" type="text" placeholder="Notiz">
-        <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
-      </div>
+    <div class="buff-create-grid">
+      <input id="newHordenbuffDate" type="date" aria-label="Datum">
+      <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+      <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
+      <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
+      <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
+      <input id="newHordenbuffNote" type="text" placeholder="Notiz">
+      <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
     </div>
     <div class="table-wrap">
       <table class="worldbuff-table">
@@ -12940,12 +11242,13 @@ function renderHordenbuffRows(){
     return;
   }
 
+  const dateColorMap = buildBuffDateColorMap(rows);
   tbody.innerHTML = rows.map((entry,rowIndex) => {
     const index = hordenbuffEntries.indexOf(entry);
     const statusOptions = ["", "🟡 offen", "zugeteilt", "erledigt"];
     const statusValue = normalizeBuffStatus(entry.status || "");
     if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
-    const dateClass = shouldHideBuffDateCells(rows, rowIndex) ? "" : "buff-day-row";
+    const dateClass = getBuffDateClass(entry, dateColorMap);
     const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
     const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
 
@@ -13829,15 +12132,6 @@ function formatRaidDate(value){
   return String(value);
 }
 
-function formatRaidWeekday(value){
-  if(!value) return "-";
-  const parts = String(value).split("-").map(Number);
-  if(parts.length !== 3 || parts.some(part => !Number.isFinite(part))) return "-";
-  const date = new Date(parts[0], parts[1] - 1, parts[2]);
-  if(Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleDateString("de-DE", { weekday:"long" });
-}
-
 function formatDateTime(value){
   if(!value) return "-";
   const date = new Date(value);
@@ -13867,16 +12161,6 @@ function escapeHtml(value){
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-}
-
-function escapeJsString(value){
-  return String(value == null ? "" : value)
-    .replace(/\\/g,"\\\\")
-    .replace(/'/g,"\\'")
-    .replace(/\r/g,"\\r")
-    .replace(/\n/g,"\\n")
-    .replace(/\u2028/g,"\\u2028")
-    .replace(/\u2029/g,"\\u2029");
 }
 
 function escapeAttr(value){

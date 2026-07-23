@@ -2210,8 +2210,10 @@ async function fetchCurrentGuildInfo(){
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
   const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
-  const logo=guild?.logoUrl || "";
+  const logo=guild?.logoUrl || "images/content.png";
   const background=guild?.backgroundUrl || "";
+  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
+  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
 
   const welcome=document.getElementById("brandWelcomeTitle");
   const text=document.getElementById("brandWelcomeText");
