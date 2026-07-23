@@ -1549,6 +1549,14 @@ body.show-mylichtloot .mylichtloot-card{display:block}
               <span>Mit Sicherheitsfrage zurücksetzen</span>
             </button>
           </div>
+
+          <div class="dashboard-box" style="margin-top:14px">
+            <div class="dashboard-title">GildenleiterLogin</div>
+            <input id="leaderGuildName" class="login-input" type="text" placeholder="Gilde eingeben, z. B. Lichtbringer" autocomplete="off" onkeydown="leaderLoginEnter(event)">
+            <input id="leaderMasterCode" class="login-input" type="password" placeholder="MasterCode der Gilde" autocomplete="off" onkeydown="leaderLoginEnter(event)">
+            <button class="big-btn subtle" type="button" onclick="openGuildLeadershipFromLogin()">Gildenleitung öffnen</button>
+            <div id="leaderLoginStatus" class="status">Für Gildenleitung, Freigaben und neue SpielerLogins.</div>
+          </div>
         </div>
 
         <div id="loggedInPanel" class="hidden">
@@ -1948,17 +1956,23 @@ function playerLoginStorageKey(slug){
   return "lichtlootPlayerPin_" + String(slug || currentActiveGuildSlug() || "lichtloot").trim().toLowerCase();
 }
 
+function displayGuildName(guild){
+  const slug=String(guild?.slug || currentActiveGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return "Lichtbringer";
+  return guild?.name || titleFromSlug(slug);
+}
+
 function activeGuildDisplayName(){
-  if(currentGuildInfo?.name) return currentGuildInfo.name;
-  if(currentActiveGuildSlug() === "lichtloot") return "Lichtbringer";
-  return titleFromSlug(currentActiveGuildSlug());
+  return displayGuildName(currentGuildInfo || {slug:currentActiveGuildSlug()});
 }
 
 function syncGuildInputs(value){
   const display=String(value || activeGuildDisplayName() || "").trim();
-  ["homeGuildPin","pinGuildName","myPriosGuildName"].forEach(id=>{
+  ["homeGuildPin","pinGuildName","myPriosGuildName","leaderGuildName"].forEach(id=>{
     const input=document.getElementById(id);
-    if(input && !input.value.trim()) input.value=display;
+    if(!input) return;
+    const current=String(input.value || "").trim().toLowerCase();
+    if(!current || (display === "Lichtbringer" && current === "lichtloot")) input.value=display;
   });
 }
 
@@ -1978,10 +1992,34 @@ async function activateGuildFromInput(inputId){
   const guild=await resolveGuildInputValue(input ? input.value : "");
   activeGuildSlug=String(guild.slug || activeGuildSlug || "lichtloot").trim().toLowerCase();
   currentGuildInfo=Object.assign({}, currentGuildInfo || {}, guild);
-  syncGuildInputs(guild.name || guild.guildPin || titleFromSlug(activeGuildSlug));
+  syncGuildInputs(displayGuildName(guild));
   const raidLink=document.getElementById("dashboardRaidLink");
   if(raidLink) raidLink.href=withCurrentGuildUrl("start.html");
   return guild;
+}
+
+async function openGuildLeadershipFromLogin(){
+  const status=document.getElementById("leaderLoginStatus");
+  const master=document.getElementById("leaderMasterCode")?.value.trim() || "";
+  if(!master){
+    if(status) status.innerHTML='<span class="bad">Bitte MasterCode eingeben.</span>';
+    return;
+  }
+  if(status) status.innerHTML='<span class="warn">Gildenleitung wird geöffnet …</span>';
+  try{
+    const guild=await activateGuildFromInput("leaderGuildName");
+    const slug=String(guild.slug || currentActiveGuildSlug() || "lichtloot").trim().toLowerCase();
+    sessionStorage.setItem("lichtlootGuildMasterCode_" + slug, master);
+    const target=new URL("gildenleitung.html", window.location.href);
+    target.searchParams.set("guild", slug);
+    window.location.href=target.href;
+  }catch(error){
+    if(status) status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
+  }
+}
+
+function leaderLoginEnter(event){
+  if(event.key === "Enter") openGuildLeadershipFromLogin();
 }
 
 function appendCurrentGuild(query){
@@ -2168,7 +2206,7 @@ async function fetchCurrentGuildInfo(){
 
 function applyGuildBrand(guild){
   const brand=lootTitleFromGuild(guild || {slug:CURRENT_GUILD_SLUG});
-  const guildName=guild?.name || titleFromSlug(CURRENT_GUILD_SLUG);
+  const guildName=displayGuildName(guild || {slug:CURRENT_GUILD_SLUG});
   const logo=guild?.logoUrl || "";
   const background=guild?.backgroundUrl || "";
 
@@ -4653,7 +4691,7 @@ document.addEventListener('DOMContentLoaded',async function(){
   hideGuildGate();
   hideGuildConfig();
   applyGuildBrand(guild || {slug:CURRENT_GUILD_SLUG});
-  syncGuildInputs(guild?.name || activeGuildDisplayName());
+  syncGuildInputs(displayGuildName(guild || {slug:CURRENT_GUILD_SLUG}));
   const saved=getSavedPlayerLogin();
   if(saved){
     const field=document.getElementById('homePlayerPin');
