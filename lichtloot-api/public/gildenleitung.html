@@ -7,6 +7,7 @@
 <style>
 :root{
   --gold:#facc15;
+  --gold-rgb:250,204,21;
   --bg:#08111f;
   --panel:rgba(12,18,32,.78);
   --panel2:rgba(2,6,23,.58);
@@ -15,6 +16,7 @@
   --text:#f8fafc;
   --muted:#cbd5e1;
   --blue:#60a5fa;
+  --blue-rgb:96,165,250;
   --green:#22c55e;
   --red:#ef4444;
   --violet:#a78bfa;
@@ -57,7 +59,7 @@ button,input,select{font:inherit}
   top:0;
   min-height:100vh;
   padding:24px 12px;
-  border-right:1px solid rgba(250,204,21,.16);
+  border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
 }
@@ -74,6 +76,61 @@ button,input,select{font:inherit}
 .side-nav{
   display:grid;
   gap:7px;
+}
+
+.side-group{
+  display:grid;
+  gap:6px;
+  margin-top:8px;
+}
+
+.side-group-toggle{
+  width:100%;
+  min-height:38px;
+  border:1px solid rgba(var(--gold-rgb),.18);
+  border-radius:8px;
+  padding:7px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:var(--gold);
+  background:rgba(var(--gold-rgb),.08);
+  font-weight:900;
+  cursor:pointer;
+}
+
+.side-group-toggle:hover{
+  border-color:rgba(var(--gold-rgb),.36);
+  background:rgba(var(--gold-rgb),.14);
+}
+
+.side-group-toggle::after{
+  content:"▾";
+  color:var(--gold);
+  font-size:13px;
+}
+
+.side-group.collapsed .side-group-toggle::after{
+  content:"▸";
+}
+
+.side-group-items{
+  display:grid;
+  gap:6px;
+  margin-left:8px;
+  padding:8px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
+}
+
+.side-group.collapsed .side-group-items{
+  display:none;
+}
+
+body:not(.guild-lichtloot) .lichtloot-admin-only{
+  display:none !important;
 }
 
 .side-link{
@@ -95,15 +152,15 @@ button,input,select{font:inherit}
 
 .side-link:hover,
 .side-link.active{
-  border-color:rgba(250,204,21,.32);
-  background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(15,23,42,.28));
-  color:#fde68a;
+  border-color:rgba(var(--gold-rgb),.32);
+  background:linear-gradient(90deg,rgba(var(--gold-rgb),.22),rgba(15,23,42,.28));
+  color:var(--gold);
 }
 
 .side-icon{
   width:22px;
   text-align:center;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:18px;
 }
 
@@ -120,6 +177,19 @@ button,input,select{font:inherit}
 .side-label{
   min-width:0;
   line-height:1.1;
+}
+
+.side-count{
+  margin-left:auto;
+  min-width:22px;
+  height:22px;
+  border-radius:999px;
+  display:inline-grid;
+  place-items:center;
+  background:rgba(248,113,113,.18);
+  color:#fca5a5;
+  font-size:12px;
+  font-weight:950;
 }
 
 .side-spacer{height:18px}
@@ -170,7 +240,7 @@ button,input,select{font:inherit}
 
 .brand h1{
   margin:0;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:34px;
   line-height:1;
   letter-spacing:0;
@@ -190,7 +260,7 @@ button,input,select{font:inherit}
   min-height:54px;
   padding:8px 12px;
   border-radius:10px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   background:rgba(2,6,23,.46);
 }
 
@@ -224,7 +294,7 @@ button,input,select{font:inherit}
 
 .btn:hover,
 .icon-btn:hover{
-  border-color:rgba(250,204,21,.48);
+  border-color:rgba(var(--gold-rgb),.48);
   background:linear-gradient(135deg,rgba(30,41,59,.82),rgba(15,23,42,.72));
 }
 
@@ -267,7 +337,7 @@ button,input,select{font:inherit}
 
 .quick-actions{
   margin-top:18px;
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(2,6,23,.62),rgba(12,18,32,.46));
   display:grid;
@@ -291,14 +361,14 @@ button,input,select{font:inherit}
 }
 
 .quick-action:last-child{border-right:0}
-.quick-action:hover{background:rgba(250,204,21,.08)}
-.quick-action .qa-icon{font-size:26px;color:#fbbf24}
-.quick-action strong{display:block;color:#fde68a;font-size:13px}
+.quick-action:hover{background:rgba(var(--gold-rgb),.08)}
+.quick-action .qa-icon{font-size:26px;color:var(--gold)}
+.quick-action strong{display:block;color:var(--gold);font-size:13px}
 .quick-action span{display:block;color:#cbd5e1;font-size:12px;margin-top:3px}
 
 .dashboard-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) 310px;
+  grid-template-columns:minmax(0,1fr);
   gap:18px;
   align-items:start;
   margin-top:18px;
@@ -317,7 +387,7 @@ button,input,select{font:inherit}
 .stat-grid{
   margin-top:18px;
   display:grid;
-  grid-template-columns:repeat(3,minmax(145px,1fr));
+  grid-template-columns:minmax(220px,360px);
   gap:12px;
 }
 
@@ -332,7 +402,7 @@ button,input,select{font:inherit}
   justify-content:space-between;
 }
 
-.stat-card .stat-icon{font-size:28px;color:#fbbf24}
+.stat-card .stat-icon{font-size:28px;color:var(--gold)}
 .stat-card span{color:#dbeafe;font-weight:800;font-size:13px}
 .stat-card strong{display:block;margin-top:5px;font-size:30px;color:#f8fafc}
 .stat-card .stat-subline{
@@ -341,7 +411,7 @@ button,input,select{font:inherit}
   font-size:12px;
   font-weight:900;
 }
-.stat-card.blue strong{color:#60a5fa}
+.stat-card.blue strong{color:var(--blue)}
 .stat-card.violet strong{color:#c084fc}
 .stat-card.red strong{color:#f87171}
 .stat-card.green strong{color:#86efac}
@@ -350,14 +420,14 @@ button,input,select{font:inherit}
   align-self:flex-start;
   border:0;
   background:transparent;
-  color:#fbbf24;
+  color:var(--gold);
   font-weight:900;
   padding:0;
   cursor:pointer;
 }
 
 .dashboard-card{
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(12,18,32,.82),rgba(2,6,23,.54));
   padding:16px;
@@ -382,42 +452,65 @@ button,input,select{font:inherit}
 .dashboard-card-head button{
   border:0;
   background:transparent;
-  color:#fbbf24;
+  color:var(--gold);
   font-weight:900;
   cursor:pointer;
 }
 
 .active-raid-list{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
   gap:14px;
 }
 
-.active-raid-card{
-  min-height:210px;
+.active-raid-group{
   display:grid;
-  grid-template-columns:78px 1fr;
   gap:10px;
+}
+
+.active-raid-group + .active-raid-group{
+  margin-top:16px;
+}
+
+.active-raid-group-title{
+  margin:0;
+  color:var(--gold);
+  font-size:15px;
+  font-weight:950;
+  letter-spacing:0;
+}
+
+.active-raid-group-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(330px,380px));
+  gap:14px;
+  align-items:start;
+}
+
+.active-raid-card{
+  min-height:0;
+  display:grid;
+  grid-template-columns:70px 1fr;
+  gap:9px;
   align-items:start;
   position:relative;
   overflow:hidden;
-  padding:12px;
-  border:1px solid rgba(250,204,21,.18);
+  padding:10px;
+  border:1px solid rgba(var(--gold-rgb),.18);
   border-radius:8px;
   background:
-    linear-gradient(135deg,rgba(250,204,21,.08),rgba(96,165,250,.045)),
+    linear-gradient(135deg,rgba(var(--gold-rgb),.08),rgba(var(--blue-rgb),.045)),
     rgba(2,6,23,.34);
   box-shadow:0 14px 28px rgba(0,0,0,.18);
 }
 
-.active-raid-card:last-child{border-bottom:1px solid rgba(250,204,21,.18)}
+.active-raid-card:last-child{border-bottom:1px solid rgba(var(--gold-rgb),.18)}
 
 .active-raid-image{
-  width:78px;
-  height:122px;
+  width:70px;
+  height:108px;
   border-radius:5px;
   background-image:
-    linear-gradient(135deg,rgba(2,6,23,.28),rgba(251,191,36,.10)),
+    linear-gradient(135deg,rgba(2,6,23,.28),rgba(var(--gold-rgb),.10)),
     var(--raid-image);
   background-size:cover;
   background-position:center;
@@ -439,11 +532,43 @@ button,input,select{font:inherit}
   line-height:1.2;
 }
 
+.active-raid-topline{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  align-items:start;
+  margin-top:6px;
+}
+
 .active-raid-meta{
-  margin-top:4px;
+  display:grid;
+  width:max-content;
+  gap:2px;
+  padding:6px 8px;
+  border:1px solid rgba(var(--gold-rgb),.28);
+  border-radius:7px;
+  background:rgba(var(--gold-rgb),.08);
+  color:#f8fafc;
+  font-weight:900;
+  font-size:13px;
+}
+
+.active-raid-weekday{
+  color:var(--gold);
+  font-size:11px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.active-raid-time{
   color:#cbd5e1;
-  font-weight:700;
   font-size:12px;
+}
+
+.active-raid-info{
+  display:grid;
+  gap:6px;
+  min-width:0;
 }
 
 .active-raid-side{
@@ -470,8 +595,8 @@ button,input,select{font:inherit}
 .active-raid-stats{
   display:flex;
   flex-direction:column;
-  gap:6px;
-  margin-top:8px;
+  gap:4px;
+  margin-top:6px;
 }
 
 .active-raid-stat{
@@ -487,7 +612,7 @@ button,input,select{font:inherit}
 }
 
 .active-raid-stat strong{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .active-raid-actions{
@@ -505,30 +630,12 @@ button,input,select{font:inherit}
   min-width:105px;
 }
 
-.active-raid-discord-tools{
-  grid-column:1 / -1;
-  width:100%;
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto auto;
-  gap:8px;
-  align-items:center;
-}
-
-.active-raid-discord-tools select{
-  min-height:32px;
-  font-size:12px;
-}
-
-.active-raid-discord-tools .small-btn{
-  min-width:96px;
-}
-
 .active-raid-lead-card{
   grid-column:1 / -1;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   border-radius:6px;
-  background:linear-gradient(135deg,rgba(250,204,21,.12),rgba(15,23,42,.62));
-  padding:8px 10px;
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(15,23,42,.62));
+  padding:8px;
   min-width:0;
 }
 
@@ -543,7 +650,7 @@ button,input,select{font:inherit}
 .active-raid-lead-pin{
   display:block;
   margin-top:4px;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:20px;
   font-weight:900;
   line-height:1;
@@ -599,7 +706,7 @@ button,input,select{font:inherit}
 }
 
 .mini-action:hover span:first-child{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .mini-row span:last-child{color:#86efac}
@@ -615,27 +722,80 @@ button,input,select{font:inherit}
 .raid-helper-panel,
 .raid-panel,
 .player-panel,
+.layout-panel,
 .p0-panel,
 .issue-panel{background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56))}
 
-.auth-panel{border-color:rgba(250,204,21,.18)}
-.create-panel{border-color:rgba(250,204,21,.22)}
-.raid-helper-panel{border-color:rgba(96,165,250,.24)}
-.raid-panel{border-color:rgba(250,204,21,.22)}
-.player-panel{border-color:rgba(250,204,21,.16)}
-.p0-panel{border-color:rgba(250,204,21,.20)}
-.issue-panel{border-color:rgba(250,204,21,.20)}
+.auth-panel{border-color:rgba(var(--gold-rgb),.18)}
+.create-panel{border-color:rgba(var(--gold-rgb),.22)}
+.raid-helper-panel{border-color:rgba(var(--blue-rgb),.24)}
+.raid-panel{border-color:rgba(var(--gold-rgb),.22)}
+.player-panel{border-color:rgba(var(--gold-rgb),.16)}
+.layout-panel{border-color:rgba(var(--blue-rgb),.30)}
+.p0-panel{border-color:rgba(var(--gold-rgb),.20)}
+.issue-panel{border-color:rgba(var(--gold-rgb),.20)}
 
 .compact-auth{
-  width:max-content;
+  width:100%;
   max-width:100%;
 }
 
 .unlock{
   display:grid;
-  grid-template-columns:190px auto;
-  gap:8px;
+  grid-template-columns:minmax(180px,250px) minmax(180px,250px) minmax(220px,360px);
+  gap:10px;
   align-items:end;
+}
+
+.unlock > .btn{
+  width:100%;
+}
+
+.login-summary-card{
+  min-height:68px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(12,18,32,.84),rgba(2,6,23,.48));
+  padding:10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.login-summary-card .stat-icon{
+  color:var(--gold);
+  font-size:22px;
+}
+
+.login-summary-card span{
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:900;
+}
+
+.login-summary-card strong{
+  display:block;
+  margin-top:2px;
+  color:var(--blue);
+  font-size:24px;
+  line-height:1;
+}
+
+.login-summary-card .stat-subline{
+  margin-top:3px;
+  color:#c4b5fd;
+  font-size:11px;
+  font-weight:900;
+}
+
+.login-summary-card button{
+  border:0;
+  background:transparent;
+  color:var(--gold);
+  font-weight:950;
+  white-space:nowrap;
+  cursor:pointer;
 }
 
 .compact-auth .status{
@@ -672,7 +832,7 @@ body.guild-locked .auth-panel{
   width:100%;
   max-width:720px;
   padding:30px;
-  border-color:rgba(250,204,21,.42);
+  border-color:rgba(var(--gold-rgb),.42);
   box-shadow:0 28px 90px rgba(0,0,0,.45);
 }
 
@@ -680,7 +840,7 @@ body.guild-locked .auth-panel::before{
   content:"Gildenleitung freischalten";
   display:block;
   margin:0 0 8px;
-  color:#facc15;
+  color:var(--gold);
   font-size:30px;
   font-weight:900;
   line-height:1.1;
@@ -702,6 +862,10 @@ body.guild-locked .compact-auth{
 body.guild-locked .unlock{
   grid-template-columns:1fr;
   gap:14px;
+}
+
+body.guild-locked .login-summary-card{
+  display:none;
 }
 
 body.guild-locked .auth-panel input{
@@ -726,13 +890,15 @@ body.guild-locked .auth-panel .btn{
 
 .auth-panel .field label,
 .create-panel .field label,
-.raid-helper-panel .field label{color:#facc15}
+.raid-helper-panel .field label,
+.layout-panel .field label{color:var(--gold)}
 .create-panel summary,
 .raid-helper-panel summary,
 .p0-panel summary,
 .issue-panel summary,
+.layout-panel summary,
 .raid-panel summary,
-.player-panel summary{color:#fde68a}
+.player-panel summary{color:var(--gold)}
 
 input,
 select{
@@ -749,7 +915,7 @@ select{
 }
 
 input:focus,
-select:focus{border-color:rgba(96,165,250,.75)}
+select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .status{
   min-height:34px;
@@ -801,7 +967,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .metric:nth-child(1) strong,
 .metric:nth-child(2) strong,
 .metric:nth-child(3) strong,
-.metric:nth-child(4) strong{color:#fde68a}
+.metric:nth-child(4) strong{color:var(--gold)}
 
 .grid{
   display:grid;
@@ -828,6 +994,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-panel summary,
 .p0-panel summary,
 .issue-panel summary,
+.layout-panel summary,
 .worldbuff-panel summary,
 .raid-panel summary,
 .player-panel summary{
@@ -841,6 +1008,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-panel summary::-webkit-details-marker,
 .p0-panel summary::-webkit-details-marker,
 .issue-panel summary::-webkit-details-marker,
+.layout-panel summary::-webkit-details-marker,
 .worldbuff-panel summary::-webkit-details-marker,
 .raid-panel summary::-webkit-details-marker,
 .player-panel summary::-webkit-details-marker,
@@ -850,6 +1018,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-panel summary::after,
 .p0-panel summary::after,
 .issue-panel summary::after,
+.layout-panel summary::after,
 .worldbuff-panel summary::after,
 .raid-panel summary::after,
 .player-panel summary::after,
@@ -864,6 +1033,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-panel[open] summary::after,
 .p0-panel[open] summary::after,
 .issue-panel[open] summary::after,
+.layout-panel[open] summary::after,
 .worldbuff-panel[open] summary::after,
 .raid-panel[open] summary::after,
 .player-panel[open] summary::after,
@@ -873,6 +1043,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .raid-helper-body,
 .p0-panel-body,
 .issue-panel-body,
+.layout-panel-body,
 .worldbuff-panel-body,
 .raid-panel-body,
 .player-panel-body,
@@ -961,7 +1132,70 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-post-layout{
-  grid-template-columns:minmax(0,.9fr) minmax(460px,1.1fr);
+  grid-template-columns:minmax(520px,1fr) minmax(360px,.62fr);
+}
+
+.po-post-list-block{
+  margin-top:12px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
+  overflow:hidden;
+}
+
+.po-post-list-summary{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px;
+  cursor:pointer;
+}
+
+.po-post-list-summary::-webkit-details-marker{
+  display:none;
+}
+
+.po-post-list-summary h3{
+  margin:0;
+  color:#f8fafc;
+  font-size:15px;
+}
+
+.po-post-list-summary p{
+  margin:3px 0 0;
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.3;
+}
+
+.po-post-list-summary span{
+  flex:0 0 auto;
+  color:var(--gold);
+  font-size:12px;
+  font-weight:950;
+}
+
+.po-post-list-block[open] .po-post-list-summary span{
+  color:#cbd5e1;
+}
+
+.po-post-list-block[open] .po-post-list-summary span::before{
+  content:"schließen";
+}
+
+.po-post-list-block[open] .po-post-list-summary span{
+  font-size:0;
+}
+
+.po-post-list-block[open] .po-post-list-summary span::before{
+  font-size:12px;
+}
+
+.po-post-list-block .section-head,
+.po-post-list-block .table-wrap{
+  margin:0 12px 12px;
 }
 
 .po-post-tabs{
@@ -992,14 +1226,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
   gap:12px;
   margin:10px 0 10px;
   padding:10px 12px;
-  border:1px solid rgba(250,204,21,.42);
+  border:1px solid rgba(var(--gold-rgb),.42);
   border-radius:8px;
   background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.78));
   box-shadow:0 12px 28px rgba(0,0,0,.18);
 }
 
 .po-signup-current span:first-child{
-  color:#facc15;
+  color:var(--gold);
   font-size:11px;
   font-weight:950;
   text-transform:uppercase;
@@ -1060,9 +1294,9 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-step.is-active{
-  border-color:rgba(250,204,21,.48);
+  border-color:rgba(var(--gold-rgb),.48);
   background:rgba(113,63,18,.32);
-  box-shadow:0 0 0 2px rgba(250,204,21,.24),0 12px 24px rgba(0,0,0,.18);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.24),0 12px 24px rgba(0,0,0,.18);
   position:relative;
 }
 
@@ -1071,14 +1305,14 @@ select:focus{border-color:rgba(96,165,250,.75)}
   position:absolute;
   right:8px;
   top:6px;
-  color:#facc15;
+  color:var(--gold);
   font-size:9px;
   font-weight:950;
   text-transform:uppercase;
 }
 
 .po-signup-step.is-active .po-signup-step-num{
-  background:#facc15;
+  background:var(--gold);
   color:#111827;
 }
 
@@ -1108,7 +1342,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-post-id-button:hover{
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .po-post-entry-panel{
@@ -1135,7 +1369,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-signup-prio-option input{
   width:18px;
   height:18px;
-  accent-color:#facc15;
+  accent-color:var(--gold);
 }
 
 .po-signup-prio-hint{
@@ -1143,6 +1377,79 @@ select:focus{border-color:rgba(96,165,250,.75)}
   color:#9ca3af;
   font-size:12px;
   line-height:1.35;
+}
+
+.po-signup-action-guide{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr;
+  gap:10px;
+  margin:12px 0 10px;
+}
+
+.po-signup-action-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  min-height:112px;
+  padding:12px;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:8px;
+  background:rgba(15,23,42,.52);
+}
+
+.po-signup-action-card::before{
+  content:"➜";
+  position:absolute;
+  left:10px;
+  top:-19px;
+  color:var(--po-action-color,var(--gold));
+  font-size:34px;
+  font-weight:950;
+  transform:rotate(16deg);
+  text-shadow:0 2px 0 rgba(0,0,0,.55);
+}
+
+.po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
+.po-signup-action-transfer{--po-action-color:var(--gold);border-color:rgba(var(--gold-rgb),.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
+.po-signup-action-helper{--po-action-color:var(--blue);border-color:rgba(var(--blue-rgb),.34)}
+
+.po-signup-action-card strong{
+  display:block;
+  margin-left:24px;
+  color:#f8fafc;
+  font-size:14px;
+  line-height:1.15;
+}
+
+.po-signup-action-card small{
+  display:block;
+  margin:4px 0 0 24px;
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.35;
+}
+
+.po-signup-action-buttons{
+  display:grid;
+  gap:8px;
+  align-self:end;
+}
+
+.po-signup-action-card .btn{
+  width:100%;
+}
+
+.po-signup-discord-button{
+  background:linear-gradient(135deg,rgba(21,128,61,.95),rgba(22,101,52,.82));
+  border-color:rgba(74,222,128,.58);
+  color:#ecfdf5;
+}
+
+.po-signup-transfer-button{
+  background:linear-gradient(135deg,rgba(161,98,7,.92),rgba(15,23,42,.78));
+  border-color:rgba(var(--gold-rgb),.58);
+  color:#fef3c7;
 }
 
 .po-signup-item-tools{
@@ -1185,11 +1492,11 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-item-result:hover{
-  border-color:rgba(250,204,21,.55);
+  border-color:rgba(var(--gold-rgb),.55);
 }
 
 .po-signup-item-result strong{
-  color:#facc15;
+  color:var(--gold);
   font-size:12px;
   white-space:nowrap;
 }
@@ -1201,7 +1508,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-signup-preview-details{
-  border-left-color:#facc15;
+  border-left-color:var(--gold);
   min-height:0;
 }
 
@@ -1330,7 +1637,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-correction-label{
-  color:#facc15;
+  color:var(--gold);
   font-size:10px;
   font-weight:950;
   text-transform:uppercase;
@@ -1349,8 +1656,8 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-correction-input:focus{
-  outline:2px solid rgba(250,204,21,.28);
-  border-color:rgba(250,204,21,.7);
+  outline:2px solid rgba(var(--gold-rgb),.28);
+  border-color:rgba(var(--gold-rgb),.7);
 }
 
 .po-entry-item-results{
@@ -1382,12 +1689,13 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-entry-item-choice:hover,
 .po-entry-item-choice:focus{
   outline:none;
-  background:rgba(96,165,250,.14);
+  background:rgba(var(--blue-rgb),.14);
 }
 
 .po-entry-item-choice.selected{
-  background:rgba(250,204,21,.16);
-  box-shadow:inset 0 0 0 1px rgba(250,204,21,.45);
+  background:rgba(34,197,94,.14);
+  box-shadow:inset 0 0 0 1px rgba(34,197,94,.34);
+  color:#dcfce7;
 }
 
 .po-entry-loot-picker{
@@ -1408,7 +1716,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
   display:grid;
   grid-template-rows:auto auto minmax(0,1fr);
   gap:12px;
-  border:1px solid rgba(250,204,21,.42);
+  border:1px solid rgba(var(--gold-rgb),.42);
   border-radius:10px;
   background:linear-gradient(145deg,rgba(8,13,26,.98),rgba(3,7,18,.96));
   box-shadow:0 22px 60px rgba(0,0,0,.56);
@@ -1423,7 +1731,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 .po-entry-loot-picker-title{
-  color:#facc15;
+  color:var(--gold);
   font-size:18px;
   font-weight:950;
   text-transform:uppercase;
@@ -1469,7 +1777,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 .po-entry-loot-picker-item:hover,
 .po-entry-loot-picker-item:focus{
   outline:none;
-  border-color:rgba(250,204,21,.60);
+  border-color:rgba(var(--gold-rgb),.60);
   background:rgba(30,41,59,.82);
 }
 
@@ -1539,7 +1847,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 
 .po-signup-channel-line span:first-child{
   min-width:32px;
-  color:#facc15;
+  color:var(--gold);
   font-size:10px;
   font-weight:950;
   text-transform:uppercase;
@@ -1568,7 +1876,7 @@ select:focus{border-color:rgba(96,165,250,.75)}
 }
 
 tr.selected-row td{
-  background:rgba(96,165,250,.10);
+  background:rgba(var(--blue-rgb),.10);
 }
 
 .raid-helper-channel{
@@ -1588,7 +1896,7 @@ tr.selected-row td{
   position:absolute;
   inset:0 0 auto;
   height:3px;
-  background:linear-gradient(90deg,#7c3aed,#60a5fa,#facc15);
+  background:linear-gradient(90deg,#7c3aed,var(--blue),var(--gold));
   opacity:.85;
 }
 
@@ -1612,8 +1920,8 @@ tr.selected-row td{
   border-radius:8px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(96,165,250,.32);
-  background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(124,58,237,.22));
+  border:1px solid rgba(var(--blue-rgb),.32);
+  background:linear-gradient(135deg,rgba(var(--blue-rgb),.22),rgba(124,58,237,.22));
   color:#dbeafe;
   font-size:18px;
 }
@@ -1833,8 +2141,8 @@ tr.selected-row td{
   place-items:center;
   margin:0 auto 12px;
   border-radius:10px;
-  border:1px solid rgba(96,165,250,.32);
-  background:rgba(96,165,250,.12);
+  border:1px solid rgba(var(--blue-rgb),.32);
+  background:rgba(var(--blue-rgb),.12);
   color:#bfdbfe;
   font-size:26px;
 }
@@ -1972,9 +2280,9 @@ tr.selected-row td{
   border-radius:8px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(250,204,21,.25);
+  border:1px solid rgba(var(--gold-rgb),.25);
   background:rgba(15,23,42,.72);
-  color:#facc15;
+  color:var(--gold);
   font-weight:950;
 }
 
@@ -2010,7 +2318,7 @@ tr.selected-row td{
 }
 
 .raid-helper-template-card{
-  border:1px solid rgba(96,165,250,.18);
+  border:1px solid rgba(var(--blue-rgb),.18);
   border-radius:10px;
   background:
     linear-gradient(135deg,rgba(var(--template-accent,56,189,248),.13),rgba(2,6,23,.66) 48%,rgba(15,23,42,.82)),
@@ -2119,7 +2427,7 @@ tr.selected-row td{
 
 .raid-helper-notify-modal{
   width:min(540px,100%);
-  border:1px solid rgba(96,165,250,.3);
+  border:1px solid rgba(var(--blue-rgb),.3);
   border-radius:12px;
   background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(2,6,23,.96));
   box-shadow:0 24px 70px rgba(0,0,0,.42);
@@ -2205,7 +2513,7 @@ tr.selected-row td{
   gap:12px;
   margin-bottom:12px;
   padding:14px;
-  border:1px solid rgba(96,165,250,.24);
+  border:1px solid rgba(var(--blue-rgb),.24);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(15,23,42,.92),rgba(2,6,23,.76));
   box-shadow:0 16px 42px rgba(0,0,0,.22);
@@ -2314,7 +2622,7 @@ tr.selected-row td{
 }
 
 .raid-helper-wcl-card{
-  border:1px solid rgba(96,165,250,.16);
+  border:1px solid rgba(var(--blue-rgb),.16);
   border-radius:8px;
   background:rgba(2,6,23,.44);
   padding:12px;
@@ -2328,7 +2636,7 @@ tr.selected-row td{
 .raid-helper-wcl-card a{
   display:inline-block;
   margin-top:8px;
-  color:#60a5fa;
+  color:var(--blue);
   font-weight:950;
   text-decoration:none;
 }
@@ -2417,7 +2725,7 @@ tr.selected-row td{
 }
 
 .raid-helper-attendance-table thead th.attendance-warning{
-  box-shadow:inset 0 0 0 2px rgba(250,204,21,.48);
+  box-shadow:inset 0 0 0 2px rgba(var(--gold-rgb),.48);
 }
 
 .attendance-warning-mark{
@@ -2428,20 +2736,20 @@ tr.selected-row td{
   height:15px;
   margin-left:4px;
   border-radius:50%;
-  background:#facc15;
+  background:var(--gold);
   color:#422006;
   font-size:11px;
   font-weight:950;
 }
 
 .raid-helper-attendance-cell.signed{background:rgba(34,197,94,.64);color:#052e16}
-.raid-helper-attendance-cell.bench{background:rgba(250,204,21,.45);color:#422006}
+.raid-helper-attendance-cell.bench{background:rgba(var(--gold-rgb),.45);color:#422006}
 .raid-helper-attendance-cell.absent{background:rgba(248,113,113,.42);color:#450a0a}
-.raid-helper-attendance-cell.tentative{background:rgba(96,165,250,.46);color:#082f49}
+.raid-helper-attendance-cell.tentative{background:rgba(var(--blue-rgb),.46);color:#082f49}
 .p0-release-star{
-  color:#facc15;
+  color:var(--gold);
   margin-left:4px;
-  text-shadow:0 0 10px rgba(250,204,21,.42);
+  text-shadow:0 0 10px rgba(var(--gold-rgb),.42);
 }
 
 .raid-helper-loading{
@@ -2557,7 +2865,7 @@ tr.selected-row td{
 
 .discord-preview-links{
   margin-top:16px;
-  color:#60a5fa;
+  color:var(--blue);
   font-weight:950;
   font-size:13px;
 }
@@ -2594,7 +2902,7 @@ tr.selected-row td{
   align-items:center;
   gap:18px;
   padding:14px 18px;
-  border:1px solid rgba(96,165,250,.18);
+  border:1px solid rgba(var(--blue-rgb),.18);
   border-radius:12px;
   background:
     radial-gradient(circle at 6% 0%,rgba(37,99,235,.18),transparent 30%),
@@ -2612,7 +2920,7 @@ tr.selected-row td{
   width:46px;
   height:46px;
   object-fit:contain;
-  filter:drop-shadow(0 8px 14px rgba(250,204,21,.22));
+  filter:drop-shadow(0 8px 14px rgba(var(--gold-rgb),.22));
 }
 
 .log-analysis-hero h3{
@@ -2623,7 +2931,7 @@ tr.selected-row td{
   text-transform:uppercase;
 }
 
-.log-analysis-hero h3 span{color:#fbbf24}
+.log-analysis-hero h3 span{color:var(--gold)}
 
 .log-analysis-hero p{
   margin:4px 0 0;
@@ -2642,7 +2950,7 @@ tr.selected-row td{
 .log-analysis-count{
   min-width:86px;
   padding:8px 12px;
-  border:1px solid rgba(96,165,250,.28);
+  border:1px solid rgba(var(--blue-rgb),.28);
   border-radius:10px;
   background:rgba(15,23,42,.74);
   text-align:center;
@@ -2669,7 +2977,7 @@ tr.selected-row td{
   gap:10px;
   align-items:center;
   padding:12px;
-  border:1px solid rgba(96,165,250,.12);
+  border:1px solid rgba(var(--blue-rgb),.12);
   border-radius:12px;
   background:rgba(8,18,36,.70);
 }
@@ -2761,7 +3069,7 @@ tr.selected-row td{
   height:48px;
   border-radius:8px;
   object-fit:cover;
-  border:1px solid rgba(250,204,21,.16);
+  border:1px solid rgba(var(--gold-rgb),.16);
   box-shadow:0 10px 22px rgba(0,0,0,.24);
 }
 
@@ -2828,10 +3136,10 @@ tr.selected-row td{
   justify-content:center;
   min-height:28px;
   padding:5px 8px;
-  border:1px solid rgba(251,191,36,.34);
+  border:1px solid rgba(var(--gold-rgb),.34);
   border-radius:7px;
   background:rgba(120,53,15,.18);
-  color:#fde68a;
+  color:var(--gold);
   font-size:12px;
   font-weight:800;
   white-space:nowrap;
@@ -2839,7 +3147,7 @@ tr.selected-row td{
 }
 
 button.log-export-note:hover{
-  border-color:rgba(250,204,21,.62);
+  border-color:rgba(var(--gold-rgb),.62);
   background:rgba(146,64,14,.28);
 }
 
@@ -2850,7 +3158,7 @@ button.log-export-note:hover{
   gap:14px;
   flex-wrap:wrap;
   padding:12px 16px;
-  border:1px solid rgba(96,165,250,.14);
+  border:1px solid rgba(var(--blue-rgb),.14);
   border-radius:12px;
   background:rgba(8,18,36,.70);
   color:#cbd5e1;
@@ -2876,8 +3184,8 @@ button.log-export-note:hover{
 }
 
 .log-page-btn.active{
-  border-color:rgba(96,165,250,.62);
-  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+  border-color:rgba(var(--blue-rgb),.62);
+  background:linear-gradient(135deg,var(--blue),#2563eb);
 }
 
 .log-page-btn:disabled{
@@ -2910,7 +3218,7 @@ button.log-export-note:hover{
 }
 
 .created-pin{
-  border:1px solid rgba(96,165,250,.32);
+  border:1px solid rgba(var(--blue-rgb),.32);
   border-radius:8px;
   padding:8px;
   background:rgba(15,23,42,.65);
@@ -2941,7 +3249,7 @@ button.log-export-note:hover{
   margin-top:6px;
   padding:9px;
   border-radius:8px;
-  border:1px solid rgba(250,204,21,.26);
+  border:1px solid rgba(var(--gold-rgb),.26);
   background:rgba(2,6,23,.72);
   color:#f8fafc;
   font:600 12px/1.4 Arial, Helvetica, sans-serif;
@@ -2979,16 +3287,16 @@ th{
   position:sticky;
   top:0;
   background:rgba(2,6,23,.62);
-  color:#fde68a;
+  color:var(--gold);
   text-transform:uppercase;
   font-size:11px;
   z-index:1;
 }
 
 .raid-panel th,
-.player-panel th{color:#fde68a;background:rgba(2,6,23,.62)}
+.player-panel th{color:var(--gold);background:rgba(2,6,23,.62)}
 
-tr:hover td{background:rgba(250,204,21,.035)}
+tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .raid-title{
   display:flex;
@@ -3027,7 +3335,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .muted{color:var(--muted)}
 .ok{color:#bbf7d0}
-.warn{color:#fde68a}
+.warn{color:var(--gold)}
 .bad{color:#fecaca}
 
 .badge{
@@ -3045,7 +3353,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .badge.open{border-color:rgba(34,197,94,.38);color:#bbf7d0}
 .badge.closed{border-color:rgba(148,163,184,.35);color:#cbd5e1}
-.badge.warn{border-color:rgba(250,204,21,.35);color:#fde68a}
+.badge.warn{border-color:rgba(var(--gold-rgb),.35);color:var(--gold)}
+.badge.danger{border-color:rgba(248,113,113,.45);color:#fecaca;background:rgba(127,29,29,.16)}
 
 .analysis-progress{
   width:min(180px,100%);
@@ -3098,12 +3407,12 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .analysis-progress-fill.is-failed{
   min-width:100%;
-  background:linear-gradient(90deg,#92400e,#facc15);
-  box-shadow:0 0 12px rgba(250,204,21,.26);
+  background:linear-gradient(90deg,#92400e,var(--gold));
+  box-shadow:0 0 12px rgba(var(--gold-rgb),.26);
 }
 
 .analysis-progress.is-running .analysis-progress-fill{
-  background:linear-gradient(90deg,#1d4ed8,#22c55e,#facc15);
+  background:linear-gradient(90deg,var(--blue),#22c55e,var(--gold));
   background-size:220% 100%;
   animation:analysisProgressPulse 1.8s linear infinite;
 }
@@ -3117,7 +3426,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .analysis-warning{
   margin-top:6px;
-  color:#fde68a;
+  color:var(--gold);
   font-size:10px;
   font-weight:800;
   max-width:260px;
@@ -3160,7 +3469,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-btn.primary{
-  border-color:rgba(96,165,250,.38);
+  border-color:rgba(var(--blue-rgb),.38);
   background:rgba(30,64,175,.22);
   color:#bfdbfe;
 }
@@ -3184,7 +3493,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-btn:hover{
-  border-color:rgba(250,204,21,.46);
+  border-color:rgba(var(--gold-rgb),.46);
   background:rgba(30,41,59,.72);
 }
 
@@ -3202,8 +3511,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .small-select:focus{
-  border-color:rgba(250,204,21,.46);
-  box-shadow:0 0 0 2px rgba(250,204,21,.10);
+  border-color:rgba(var(--gold-rgb),.46);
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.10);
 }
 
 .role-control{
@@ -3219,7 +3528,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .reset-card{
-  border:1px solid rgba(96,165,250,.28);
+  border:1px solid rgba(var(--blue-rgb),.28);
   background:rgba(15,23,42,.62);
   border-radius:8px;
   padding:8px;
@@ -3236,7 +3545,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-top:6px;
   padding:6px 9px;
   border-radius:8px;
-  border:1px solid rgba(96,165,250,.45);
+  border:1px solid rgba(var(--blue-rgb),.45);
   color:#bfdbfe;
   font-size:18px;
   font-weight:900;
@@ -3378,7 +3687,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 }
 
 .epic{color:#c084fc}
-.rare{color:#60a5fa}
+.rare{color:var(--blue)}
 .uncommon{color:#4ade80}
 .legendary{color:#fb923c}
 .class-warrior{color:#c69b6d}
@@ -3436,7 +3745,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 .tooltip-stat{color:white;margin-top:3px}
 .tooltip-equip{color:#1eff00;margin-top:6px}
 .tooltip-extra{margin-top:9px;padding-top:8px;border-top:1px solid rgba(255,255,255,.18);color:#dbeafe}
-.tooltip-extra strong{color:#facc15}
+.tooltip-extra strong{color:var(--gold)}
 
 .character-stack{
   display:flex;
@@ -3502,7 +3811,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:920px;
 }
 
-.p0-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .issue-toolbar{
   display:grid;
@@ -3516,7 +3825,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   min-width:1040px;
 }
 
-.issue-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.issue-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .issue-note{
   max-width:320px;
@@ -3526,35 +3835,99 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 .worldbuff-toolbar{
   display:grid;
-  grid-template-columns:140px 140px 1fr auto auto auto;
+  grid-template-columns:1fr auto;
   gap:8px;
   align-items:center;
   margin-bottom:8px;
+}
+
+.worldbuff-control-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:start;
+}
+
+.worldbuff-filter-card,
+.worldbuff-action-card,
+.worldbuff-create-card{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.36);
+  padding:10px;
+}
+
+.worldbuff-filter-card{
+  display:grid;
+  grid-template-columns:140px 140px minmax(220px,1fr);
+  gap:8px;
+}
+
+.worldbuff-action-card{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.worldbuff-create-card{
+  position:relative;
+  margin:12px 0;
+  border-color:rgba(var(--gold-rgb),.34);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(15,23,42,.56));
+}
+
+.worldbuff-create-card::before{
+  content:"➜";
+  position:absolute;
+  left:14px;
+  top:-18px;
+  color:var(--gold);
+  font-size:34px;
+  font-weight:950;
+  transform:rotate(18deg);
+  text-shadow:0 2px 0 rgba(0,0,0,.45);
+}
+
+.worldbuff-create-title{
+  margin:0 0 8px 34px;
+  color:var(--gold);
+  font-size:15px;
+  font-weight:950;
 }
 
 .worldbuff-table{
   min-width:1060px;
 }
 
-.worldbuff-table th{color:#fde68a;background:rgba(2,6,23,.62)}
+.worldbuff-table th{color:var(--gold);background:rgba(2,6,23,.62)}
 
 .worldbuff-table tr.buff-day-row td{
-  background:var(--day-bg);
+  background:rgba(15,23,42,.34);
+  border-top:2px solid rgba(var(--gold-rgb),.32);
 }
 
 .worldbuff-table tr.buff-day-row td:first-child{
-  box-shadow:inset 4px 0 0 var(--day-accent);
+  box-shadow:inset 4px 0 0 rgba(var(--gold-rgb),.72);
 }
 
 .worldbuff-table tr.buff-day-row:hover td{
-  background:var(--day-bg-hover);
+  background:rgba(30,41,59,.42);
 }
-
-.worldbuff-table tr.day-color-0{--day-bg:rgba(59,130,246,.18);--day-bg-hover:rgba(59,130,246,.27);--day-accent:#60a5fa}
-.worldbuff-table tr.day-color-1{--day-bg:rgba(250,204,21,.15);--day-bg-hover:rgba(250,204,21,.24);--day-accent:#facc15}
 
 .worldbuff-table td.buff-group-empty{
   color:transparent;
+}
+
+.buff-day-label{
+  display:inline-flex;
+  min-width:88px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(var(--gold-rgb),.32);
+  background:rgba(var(--gold-rgb),.10);
+  color:var(--gold);
+  font-weight:950;
 }
 
 .buff-pill{
@@ -3593,11 +3966,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   grid-template-columns:120px 100px 120px 1fr 1fr 1.4fr auto;
   gap:8px;
   align-items:end;
-  margin:8px 0;
-  padding:8px;
-  border:1px solid rgba(148,163,184,.16);
-  border-radius:8px;
-  background:rgba(15,23,42,.42);
+  margin:0;
 }
 
 .prio-p0{
@@ -3610,14 +3979,14 @@ tr:hover td{background:rgba(250,204,21,.035)}
   font-weight:900;
 }
 
-#prioModal .modal-box{border-color:rgba(96,165,250,.38)}
-#prioModal .modal-title h2{color:#fde68a}
+#prioModal .modal-box{border-color:rgba(var(--blue-rgb),.38)}
+#prioModal .modal-title h2{color:var(--gold)}
 #messageModal .modal-box{
   width:min(560px, calc(100vw - 24px));
   min-width:min(420px, calc(100vw - 24px));
   min-height:0;
   resize:none;
-  border-color:rgba(250,204,21,.38);
+  border-color:rgba(var(--gold-rgb),.38);
 }
 #messageModal .modal-content{
   display:grid;
@@ -3635,10 +4004,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
   font-weight:600;
 }
 #messageModal .message-raid-preview{
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   border-radius:8px;
   padding:10px;
-  background:rgba(250,204,21,.08);
+  background:rgba(var(--gold-rgb),.08);
   color:#e5edf8;
   font-weight:800;
 }
@@ -3647,8 +4016,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
   margin-top:8px;
   padding:6px 10px;
   border-radius:7px;
-  border:1px solid rgba(250,204,21,.38);
-  color:#fbbf24;
+  border:1px solid rgba(var(--gold-rgb),.38);
+  color:var(--gold);
   font-size:22px;
   font-weight:950;
   letter-spacing:1px;
@@ -3660,7 +4029,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   width:100%;
   min-height:260px;
   border-radius:8px;
-  border:1px solid rgba(250,204,21,.38);
+  border:1px solid rgba(var(--gold-rgb),.38);
   background:rgba(2,6,23,.78);
   color:#e5edf8;
   padding:12px;
@@ -3677,7 +4046,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
 
 @media (max-width:1000px){
   .app-frame{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(250,204,21,.16)}
+  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
   .sidebar-foot{position:static;margin-top:14px}
   .side-logo{width:140px;height:80px;margin-bottom:10px}
   .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -3687,7 +4056,8 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .stat-grid{grid-template-columns:1fr}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
-  .active-raid-discord-tools{grid-template-columns:1fr}
+  .active-raid-group-grid{grid-template-columns:1fr}
+  .active-raid-topline{grid-template-columns:1fr}
   .raid-helper-calendar{grid-template-columns:1fr}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
@@ -3712,6 +4082,7 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .discord-preview-meta,
   .discord-preview-roster,
   .tools,
+  .po-signup-action-guide,
   .summary,
   .prio-actions{grid-template-columns:1fr}
   .raid-helper-preview{position:relative;top:auto}
@@ -3721,7 +4092,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
   .p0-toolbar,
   .p0-post-filter{grid-template-columns:1fr}
   .p0-raid-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .worldbuff-toolbar{grid-template-columns:1fr}
+  .worldbuff-toolbar,
+  .worldbuff-filter-card{grid-template-columns:1fr}
+  .worldbuff-action-card{justify-content:stretch}
+  .worldbuff-action-card .small-btn{flex:1 1 100%}
   .buff-create-grid{grid-template-columns:1fr}
   .actions,
   .action-row{grid-template-columns:1fr}
@@ -3735,14 +4109,41 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <img src="images/content.png" alt="LichtLoot" class="side-logo" data-guild-brand-alt>
     <nav class="side-nav" aria-label="Gildenleitung Navigation">
       <button class="side-link active" type="button" onclick="scrollToDashboard()" aria-label="Dashboard" title="Dashboard"><img class="side-icon-img" src="images/dashboard-icons/dashboard.jpg" alt=""><span class="side-label">Dashboard</span></button>
-      <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
-      <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
-      <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-      <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
-      <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
-      <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin" title="Admin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin</span></button>
-      <button class="side-link" type="button" onclick="downloadGuildLootCsv()" aria-label="Sicherung" title="Sicherung"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">Sicherung</span></button>
-      <button class="side-link" type="button" data-guild-onclick="raidlead-panel.html" onclick="location.href='raidlead-panel.html'" aria-label="Raidlead" title="Raidlead"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidlead</span></button>
+      <div class="side-group collapsed" id="sideGroupBuffs">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBuffs')"><span>Buffs</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+          <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+        </div>
+      </div>
+      <div class="side-group collapsed" id="sideGroupRaidorga">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
+          <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
+          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
+          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
+          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
+        </div>
+      </div>
+      <div class="side-group collapsed" id="sideGroupBackup">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBackup')"><span>Sicherung</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="queueP0PlusBackup()" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
+          <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
+        </div>
+      </div>
+      <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
+      <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
+      <div class="side-group collapsed lichtloot-admin-only" id="sideGroupAdmin">
+        <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
+        <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
+          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
+          <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
+        </div>
+      </div>
     </nav>
   </aside>
 
@@ -3757,7 +4158,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </div>
     <div class="nav" aria-label="Navigation">
       <button class="btn ghost" type="button" data-guild-onclick="start.html" onclick="location.href='start.html'">Startseite</button>
-      <button class="btn" type="button" onclick="loadOverview()">↻ Aktualisieren</button>
       <div class="top-profile">
         <img src="images/content.png" alt="">
         <div><strong data-guild-brand="guildName">Lichtbringer</strong><span>Gildenleitung</span></div>
@@ -3772,14 +4172,17 @@ tr:hover td{background:rgba(250,204,21,.035)}
         <input id="masterCode" type="text" placeholder="Master-Code" autocomplete="off" onkeydown="enterLoads(event)">
       </div>
       <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
+      <div class="login-summary-card">
+        <div>
+          <div class="stat-icon">☷</div>
+          <span>Spielerlogins</span>
+          <strong id="playerCount">0</strong>
+          <div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div>
+        </div>
+        <button type="button" onclick="openPlayerPanel()">Anzeigen →</button>
+      </div>
     </div>
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
-  </section>
-
-  <section class="stat-grid">
-    <div class="stat-card"><div><div class="stat-icon">⚔</div><span>Raids</span><strong id="raidCount">0</strong></div><button type="button" onclick="openRaidPanel()">Alle anzeigen →</button></div>
-    <div class="stat-card blue"><div><div class="stat-icon">☷</div><span>Spielerlogins</span><strong id="playerCount">0</strong><div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div></div><button type="button" onclick="openPlayerPanel()">Alle anzeigen →</button></div>
-    <div class="stat-card red"><div><div class="stat-icon">✉</div><span>Postfach</span><strong id="issueCount">0</strong></div><button type="button" onclick="openIssueInboxPanel()">Öffnen →</button></div>
   </section>
 
   <div class="dashboard-grid">
@@ -4225,24 +4628,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
                 <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
               </div>
             </div>
-            <div class="po-signup-current" id="poSignupCurrentStep">
-              <span>Aktueller Schritt<strong>1. Post vorbereiten</strong></span>
-              <small>Raid, Channel und Items wählen</small>
-            </div>
-            <div class="po-signup-steps" id="poSignupSteps">
-              <div class="po-signup-step is-active" data-po-signup-step="setup">
-                <span class="po-signup-step-num">1</span>
-                <span><strong>Post vorbereiten</strong><span>Raid, Channel und Items wählen</span></span>
-              </div>
-              <div class="po-signup-step" data-po-signup-step="review">
-                <span class="po-signup-step-num">2</span>
-                <span><strong>Einträge prüfen</strong><span>Spieler freigeben oder ablehnen</span></span>
-              </div>
-              <div class="po-signup-step" data-po-signup-step="sync">
-                <span class="po-signup-step-num">3</span>
-                <span><strong>Übertragen</strong><span>Grüne Haken in LichtLoot schreiben</span></span>
-              </div>
-            </div>
             <div class="raid-helper-row">
               <div class="field">
                 <label for="poSignupRaid">Raid</label>
@@ -4283,13 +4668,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
               <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
-            <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
-              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
-              <span>
-                <strong>LichtLoot-ID erstellen</strong>
-                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
-              </span>
-            </label>
             <div class="po-signup-item-tools">
               <div class="po-signup-item-tool-row">
                 <div class="field">
@@ -4317,20 +4695,48 @@ tr:hover td{background:rgba(250,204,21,.035)}
               <label for="poSignupNote">Beschreibung / Regeln</label>
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
             </div>
-            <div class="tools">
-              <button class="btn" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
-              <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
-              <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">P0+-Items übernehmen</button>
-              <button id="poSignupSyncPriosBtn" class="btn ghost" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
+            <div class="po-signup-action-guide">
+              <div class="po-signup-action-card po-signup-action-main">
+                <div>
+                  <strong>1. Discord-Post senden</strong>
+                  <small>Hier starten. Der Bot erstellt den Anmelder im ausgewählten Discord-Channel.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button class="btn po-signup-discord-button" type="button" onclick="createPoSignupPost()">Discord-Post senden</button>
+                </div>
+              </div>
+              <div class="po-signup-action-card po-signup-action-transfer">
+                <div>
+                  <strong>2. Grüne Haken übertragen</strong>
+                  <small>Nur freigegebene Einträge werden danach in LichtLoot geschrieben.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button id="poSignupSyncPriosBtn" class="btn po-signup-transfer-button" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
+                </div>
+              </div>
+              <div class="po-signup-action-card po-signup-action-helper">
+                <div>
+                  <strong>Hilfen</strong>
+                  <small>Itemliste aus bestehenden P0+-Einträgen laden oder den Entwurf zurücksetzen.</small>
+                </div>
+                <div class="po-signup-action-buttons">
+                  <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">Itemliste laden</button>
+                  <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
+                </div>
+              </div>
             </div>
             <div id="poSignupTransferHint" class="muted">Erst PO-Anmelder posten und Einträge freigeben. Danach können grüne Haken in die LichtLoot-Prioliste übertragen werden.</div>
             <div id="poSignupStatus" class="status">Bereit.</div>
-            <div class="po-post-list-block">
-              <div class="section-head compact">
+            <details class="po-post-list-block">
+              <summary class="po-post-list-summary">
                 <div>
                   <h3>Gespeicherte PO-Anmeldungen</h3>
                   <p>Bestehende Anmeldung öffnen, freigegebene Einträge übertragen oder alte Anmeldung archivieren.</p>
                 </div>
+                <span>öffnen</span>
+              </summary>
+              <div class="section-head compact">
+                <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
               <div class="table-wrap">
@@ -4348,25 +4754,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
                   <tbody id="poSignupConfigRows"></tbody>
                 </table>
               </div>
-            </div>
+            </details>
           </section>
         </div>
         <div class="raid-helper-preview">
-          <details class="discord-preview-card po-signup-preview-details" open>
-            <summary>Discord-Vorschau</summary>
-            <div class="po-signup-discord-embed">
-              <div id="poSignupPreviewTitle" class="po-signup-discord-title">PO-ANMELDER</div>
-              <div id="poSignupPreviewDescription" class="po-signup-discord-text"></div>
-              <div class="po-signup-discord-section" id="poSignupPreviewSignupTitle">Anmeldungen (0)</div>
-              <div class="po-signup-preview-list" id="poSignupPreviewItems"></div>
-              <div class="po-signup-discord-footer">
-                <div><span>Post-ID</span><code id="poSignupPreviewPostId">-</code></div>
-                <div><span>Raid</span><div id="poSignupPreviewRaid">AQ40</div></div>
-                <div><span>Termin</span><div id="poSignupPreviewDate">Termin fehlt</div></div>
-                <div><span>Channel</span><div id="poSignupPreviewTarget"># channel</div></div>
-              </div>
-            </div>
-          </details>
           <div class="section-head compact">
             <div>
               <h3>PO-Anmeldungen</h3>
@@ -4403,6 +4794,31 @@ tr:hover td{background:rgba(250,204,21,.035)}
     <summary>Postfach</summary>
     <div class="issue-panel-body">
       <div id="issueInboxPanelContent" class="create-result">Meldungen aus dem Briefumschlag laden.</div>
+    </div>
+  </details>
+
+  <details id="guildApplicationsPanel" class="panel issue-panel" ontoggle="if(this.open) loadGuildApplicationsPanel()">
+    <summary>Gilden freischalten</summary>
+    <div class="issue-panel-body">
+      <div class="issue-toolbar">
+        <a class="small-btn primary" href="gilde-anmelden.html" target="_blank" rel="noopener">Anmeldemaske öffnen</a>
+        <button class="small-btn ghost" type="button" onclick="loadGuildApplicationsPanel()">Neu laden</button>
+      </div>
+      <div id="guildApplicationsPanelContent" class="create-result">Gilden-Anfragen laden.</div>
+    </div>
+  </details>
+
+  <details id="lootLayoutPanel" class="panel layout-panel" ontoggle="if(this.open) renderLootLayoutPanel()">
+    <summary>Layout bearbeiten</summary>
+    <div class="layout-panel-body">
+      <div class="section-head compact">
+        <div>
+          <h3>Gildenoptik</h3>
+          <p>Logo, Farben, Hintergrund und Raid-Kacheln für diese Gilde ändern.</p>
+        </div>
+        <button class="small-btn good" type="button" onclick="saveLootLayoutPanel()">Speichern</button>
+      </div>
+      <div id="lootLayoutPanelContent" class="create-result">Layout laden.</div>
     </div>
   </details>
 
@@ -4566,21 +4982,6 @@ tr:hover td{background:rgba(250,204,21,.035)}
     </details>
   </div>
 </div>
-
-    <aside class="dashboard-column">
-      <section class="side-card">
-        <h3>◎ Nächste Worldbuffs</h3>
-        <div id="worldbuffMiniList" class="mini-list">
-          <div class="mini-row"><span>Worldbuffs laden</span><span>→</span></div>
-        </div>
-      </section>
-      <section class="side-card">
-        <h3>☷ Letzte Spielerlogins</h3>
-        <div id="playerMiniList" class="mini-list">
-          <div class="mini-row"><span>Noch keine Daten</span><span>-</span></div>
-        </div>
-      </section>
-    </aside>
   </div>
 </main>
 </div>
@@ -4721,6 +5122,35 @@ function titleFromSlug(slug){
     .join(" ");
 }
 
+function colorToRgbList(value){
+  const color = String(value || "").trim();
+  const match = color.match(/^#?([0-9a-f]{6})$/i);
+  if(!match) return "";
+  const hex = match[1];
+  return [
+    parseInt(hex.slice(0,2),16),
+    parseInt(hex.slice(2,4),16),
+    parseInt(hex.slice(4,6),16)
+  ].join(",");
+}
+
+function applyGuildThemeColor(cssName, rgbName, value){
+  const color = String(value || "").trim();
+  if(!color) return;
+  document.documentElement.style.setProperty(cssName, color);
+  const rgb = colorToRgbList(color);
+  if(rgb) document.documentElement.style.setProperty(rgbName, rgb);
+}
+
+function applyRaidLayoutImages(layout){
+  const images = layout && typeof layout === "object" ? layout.raidImages : null;
+  if(!images || typeof images !== "object") return;
+  Object.keys(images).forEach(key => {
+    const value = String(images[key] || "").trim();
+    if(value && RAID_IMAGES[key]) RAID_IMAGES[key] = value;
+  });
+}
+
 function getCurrentGuildBrand(){
   const fallback = titleFromSlug(CURRENT_GUILD_SLUG);
   return GUILD_BRANDS[CURRENT_GUILD_SLUG] || {
@@ -4761,6 +5191,7 @@ function lootTitleFromGuild(guild){
 }
 
 function applyGuildBrand(){
+  document.body.classList.toggle("guild-lichtloot", CURRENT_GUILD_SLUG === "lichtloot");
   const guild = currentGuildInfo;
   const brand = guild ? {
     guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
@@ -4768,6 +5199,9 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Gildenleitung";
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
+  applyRaidLayoutImages(guild?.layout);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand-alt]").forEach(el => el.setAttribute("alt", brand.footerName));
@@ -4801,6 +5235,7 @@ let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let issueReports = [];
+let guildApplications = [];
 let logAnalyses = [];
 let logAnalysisRefreshTimer = null;
 let logAnalysisPage = 1;
@@ -5185,6 +5620,7 @@ async function loadOverview(options){
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
+    loadGuildApplicationsPanel({ silent:true }).catch(() => {});
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
   }catch(error){
     setGuildLocked(true);
@@ -5211,6 +5647,11 @@ function scrollToDashboard(){
   document.getElementById("dashboardTop")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
+function toggleSideGroup(id){
+  const group = document.getElementById(id);
+  if(group) group.classList.toggle("collapsed");
+}
+
 function openDetailsPanel(id){
   const panel = document.getElementById(id);
   if(!panel) return;
@@ -5230,6 +5671,28 @@ function openRaidHelperPanel(){
   openDetailsPanel("raidHelperPanel");
 }
 
+function openRaidleadPanelDirect(raidId){
+  const raid = raidId
+    ? (guildData.raids || []).find(entry =>
+        String(entry.raidId || "") === String(raidId) ||
+        String(entry.id || "") === String(raidId)
+      )
+    : null;
+
+  const params = new URLSearchParams({ guild: CURRENT_GUILD_SLUG });
+  if(raid?.leadPin) params.set("leadPin", raid.leadPin);
+  if(raid?.raidId || raid?.id) params.set("raidId", raid.raidId || raid.id);
+  if(raid?.playerPin) params.set("playerPin", raid.playerPin);
+
+  try{
+    sessionStorage.setItem("raidlead", "true");
+    sessionStorage.setItem("raidleadRole", "master");
+    if(raid?.leadPin) sessionStorage.setItem("raidleadPrioPin", raid.leadPin);
+  }catch(error){}
+
+  window.location.href = "raidlead-panel.html?" + params.toString();
+}
+
 function openPoPostPanel(){
   openDetailsPanel("poPostPanel");
 }
@@ -5244,6 +5707,16 @@ function openP0PlusPanel(){
 
 function openIssueInboxPanel(){
   openDetailsPanel("issueInboxPanel");
+}
+
+function openGuildApplicationsPanel(){
+  openDetailsPanel("guildApplicationsPanel");
+  loadGuildApplicationsPanel();
+}
+
+function openLootLayoutPanel(){
+  openDetailsPanel("lootLayoutPanel");
+  renderLootLayoutPanel();
 }
 
 function openLogAnalysisPanel(){
@@ -5269,6 +5742,172 @@ function filterOpenRaids(){
   renderRaids();
 }
 
+function layoutFieldValue(id){
+  return String(document.getElementById(id)?.value || "").trim();
+}
+
+const LICHTBUFF_BOT_CLIENT_ID = "1510677346787659777";
+const PO_ANMELDER_BOT_CLIENT_ID = "";
+
+function discordBotInviteUrl(clientId){
+  if(!String(clientId || "").trim()) return "";
+  const params = new URLSearchParams({
+    client_id: String(clientId || "").trim(),
+    permissions: "388160",
+    scope: "bot applications.commands"
+  });
+  const discordGuildId = String(currentGuildInfo?.discordGuildId || "").trim();
+  if(discordGuildId){
+    params.set("guild_id", discordGuildId);
+    params.set("disable_guild_select", "true");
+  }
+  return "https://discord.com/oauth2/authorize?" + params.toString();
+}
+
+function lichtbuffBotInviteUrl(){
+  return discordBotInviteUrl(LICHTBUFF_BOT_CLIENT_ID);
+}
+
+function poAnmelderBotInviteUrl(){
+  return discordBotInviteUrl(PO_ANMELDER_BOT_CLIENT_ID);
+}
+
+async function copyBotInviteLink(kind){
+  const status = document.getElementById("lootLayoutStatus");
+  const url = kind === "po" ? poAnmelderBotInviteUrl() : lichtbuffBotInviteUrl();
+  if(!url){
+    if(status) status.innerHTML = '<span class="bad">PO-Anmelder-Bot Client-ID fehlt noch.</span>';
+    setStatus("PO-Anmelder-Bot Client-ID fehlt noch.", "bad");
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    if(status) status.innerHTML = '<span class="ok">✓ Bot-Einladungslink kopiert.</span>';
+  }catch(error){
+    if(status) status.innerHTML = '<span class="bad">Link konnte nicht kopiert werden.</span>';
+  }
+}
+
+function renderBotInviteButton(kind, label){
+  const url = kind === "po" ? poAnmelderBotInviteUrl() : lichtbuffBotInviteUrl();
+  if(!url){
+    return `<button class="small-btn ghost" type="button" onclick="copyBotInviteLink('${escapeAttr(kind)}')">${escapeHtml(label)}</button>`;
+  }
+  return `<a class="small-btn good" href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
+}
+
+function renderLootLayoutPanel(){
+  const box = document.getElementById("lootLayoutPanelContent");
+  if(!box) return;
+  const guild = currentGuildInfo || {};
+  const layout = guild.layout || {};
+  const raidImages = layout.raidImages || {};
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  box.innerHTML = `
+    <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px">
+      <div class="card">
+        <h3>Logo & Hintergrund</h3>
+        <div class="field">
+          <label>Logo-URL</label>
+          <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
+        </div>
+        <div class="field">
+          <label>Hintergrund-URL</label>
+          <input id="layoutBackgroundUrl" value="${escapeAttr(guild.backgroundUrl || "")}" placeholder="images/back.jpeg">
+        </div>
+      </div>
+      <div class="card">
+        <h3>Farben</h3>
+        <div class="field">
+          <label>Hauptfarbe</label>
+          <input id="layoutPrimaryColor" type="color" value="${escapeAttr(guild.primaryColor || "#facc15")}">
+        </div>
+        <div class="field">
+          <label>Akzentfarbe</label>
+          <input id="layoutAccentColor" type="color" value="${escapeAttr(guild.accentColor || "#60a5fa")}">
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Discord-Bots einladen</h3>
+      <p class="muted">Für neue Gilden müssen beide Bots in den Discord eingeladen werden. Danach die Bots bitte in die gewünschten privaten Channel aufnehmen und dort freigeben.</p>
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
+        <div class="card">
+          <h3>Lichtbuff-Bot</h3>
+          <p class="muted">Postet und aktualisiert Worldbuffs, Hordenbuffs, Raidposts, Loganalysen und Sicherungen. Dieser Bot liest die Bot-Warteschlange und schreibt nur in die Channel der jeweiligen Gilde.</p>
+          <div class="button-row">
+            ${renderBotInviteButton("lichtbuff", "Lichtbuff-Bot einladen")}
+            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('lichtbuff')">Link kopieren</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>PO-Anmelder-Bot</h3>
+          <p class="muted">Erstellt die PO-Anmelder im Discord, zeigt Item-Auswahl und speichert die freigegebenen Spieler-Einträge passend zur Gilde. Dieser Bot ist nur für PO-Anmeldungen zuständig.</p>
+          <div class="button-row">
+            ${renderBotInviteButton("po", "PO-Anmelder-Bot einladen")}
+            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('po')">Link kopieren</button>
+          </div>
+          ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom PO-Anmelder-Bot eingetragen werden.</p>'}
+        </div>
+      </div>
+      <p class="muted">Benötigte Channel-Rechte: „Channel ansehen“, „Nachrichten senden“, „Nachrichtenverlauf lesen“, „Links einbetten“, „Dateien anhängen“, „Reaktionen nutzen“ und für Aufräumen/Updates „Nachrichten verwalten“.</p>
+      <p class="muted">Falls Discord „Integration requires code grant“ zeigt: In der jeweiligen Discord Developer App unter OAuth2 die Option „Requires OAuth2 Code Grant“ ausschalten.</p>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Bilder für Raid-Kacheln</h3>
+      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
+        ${raidKeys.map(key => {
+          const option = RAID_OPTIONS[key] || {};
+          const value = raidImages[key] || RAID_IMAGES[key] || "";
+          return `
+            <div class="field">
+              <label>${escapeHtml(option.name || key.toUpperCase())}</label>
+              <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="images/raid-templates/${escapeAttr(key)}.jpg">
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+    <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
+  `;
+}
+
+async function saveLootLayoutPanel(){
+  const status = document.getElementById("lootLayoutStatus");
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  const raidImages = {};
+  raidKeys.forEach(key => {
+    raidImages[key] = layoutFieldValue("layoutRaidImage_" + key);
+  });
+  const payload = {
+    action:"updateGuildConfig",
+    guild:CURRENT_GUILD_SLUG,
+    logoUrl:layoutFieldValue("layoutLogoUrl"),
+    backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
+    primaryColor:layoutFieldValue("layoutPrimaryColor"),
+    accentColor:layoutFieldValue("layoutAccentColor"),
+    layout:JSON.stringify({ raidImages })
+  };
+  if(status) status.textContent = "Layout wird gespeichert ...";
+  try{
+    const result = await railwayWrite(payload);
+    if(!result.success){
+      if(status) status.innerHTML = `<span class="bad">${escapeHtml(result.error || "Layout konnte nicht gespeichert werden.")}</span>`;
+      return;
+    }
+    currentGuildInfo = result.guild || currentGuildInfo || {};
+    applyGuildBrand();
+    renderAll();
+    renderLootLayoutPanel();
+    const savedStatus = document.getElementById("lootLayoutStatus");
+    if(savedStatus) savedStatus.innerHTML = '<span class="ok">✓ Layout gespeichert.</span>';
+    setStatus("Layout gespeichert.", "good");
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Layout konnte nicht gespeichert werden.")}</span>`;
+    setStatus(error.message || "Layout konnte nicht gespeichert werden.", "bad");
+  }
+}
+
 function clearRaidFilters(shouldRender = true){
   document.getElementById("raidSearch").value = "";
   document.getElementById("raidDateSearch").value = "";
@@ -5281,9 +5920,12 @@ function renderSummary(){
   const players = guildData.players || [];
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
 
-  document.getElementById("raidCount").textContent = raids.length;
-  document.getElementById("playerCount").textContent = players.length;
-  document.getElementById("linkedCount").textContent = linked;
+  const raidCounter = document.getElementById("raidCount");
+  if(raidCounter) raidCounter.textContent = raids.length;
+  const playerCounter = document.getElementById("playerCount");
+  if(playerCounter) playerCounter.textContent = players.length;
+  const linkedCounter = document.getElementById("linkedCount");
+  if(linkedCounter) linkedCounter.textContent = linked;
   const issueCounter = document.getElementById("issueCount");
   if(issueCounter) issueCounter.textContent = issueReports.length;
 }
@@ -5437,7 +6079,7 @@ function renderDashboardCards(){
     return;
   }
 
-  box.innerHTML = raids.map(raid => {
+  const renderRaidCard = raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
     return `
@@ -5446,12 +6088,20 @@ function renderDashboardCards(){
         <div class="active-raid-body">
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
-            <div class="active-raid-meta">${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "")} Uhr</div>
-            <div style="margin-top:8px">${statusBadge(raid.status || "geschlossen")}</div>
-            <div class="active-raid-stats">
-              <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
-              <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
-              <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
+            <div class="active-raid-topline">
+              <div class="active-raid-meta" role="button" tabindex="0" title="Datum/Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
+                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
+                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
+              </div>
+              <div class="active-raid-info">
+                ${statusBadge(raid.status || "geschlossen")}
+                <div class="active-raid-stats">
+                  <span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
+                  <span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span>
+                  <span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span>
+                </div>
+              </div>
             </div>
           </div>
           <div class="active-raid-side">
@@ -5462,24 +6112,36 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
-              <button class="small-btn good" type="button" onclick="copyPlainText('${escapeAttr(raid.leadPin || "")}')">LeadPIN kopieren</button>
-              <button class="small-btn ghost" type="button" onclick="sendLeadPinToPlayer('${escapeAttr(raid.raidId)}')">LeadPIN senden</button>
-              <div class="active-raid-discord-tools">
-                <select id="raidDiscordChannel-${escapeAttr(raid.raidId || raid.id)}" aria-label="Discord-Channel für ${escapeAttr(raid.raidName || raid.raid || "Raid")}">
-                  ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
-                </select>
-                <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')">DC Text kopieren</button>
-                <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">In DC posten</button>
-              </div>
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
-              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
+              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
               <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
             </div>
           </div>
         </div>
       </article>
     `;
-  }).join("");
+  };
+
+  const raidGroups = [
+    {
+      title:"40er Raids",
+      raids:raids.filter(raid => !["zg","aq20"].includes(getRaidKey(raid)))
+    },
+    {
+      title:"20er Raids",
+      raids:raids.filter(raid => ["zg","aq20"].includes(getRaidKey(raid)))
+    }
+  ].filter(group => group.raids.length);
+
+  box.innerHTML = raidGroups.map(group => `
+    <section class="active-raid-group">
+      <h3 class="active-raid-group-title">${escapeHtml(group.title)}</h3>
+      <div class="active-raid-group-grid">
+        ${group.raids.map(renderRaidCard).join("")}
+      </div>
+    </section>
+  `).join("");
 }
 
 function getDashboardActiveRaids(){
@@ -5697,7 +6359,7 @@ function renderRaids(){
             <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
-            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button>` : ""}
+            ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
@@ -5727,7 +6389,11 @@ function renderPlayers(){
     return;
   }
 
-  tbody.innerHTML = groups.map(group => `
+  tbody.innerHTML = groups.map(group => {
+    const approvalStatus = String(group.approvalStatus || group.main.approvalStatus || "approved").toLowerCase();
+    const approvalLabel = approvalStatus === "approved" ? "freigegeben" : approvalStatus === "rejected" ? "abgelehnt" : "wartet auf Freigabe";
+    const approvalClass = approvalStatus === "approved" ? "open" : approvalStatus === "rejected" ? "danger" : "warn";
+    return `
     <tr>
       <td>
         <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
@@ -5735,13 +6401,22 @@ function renderPlayers(){
       </td>
       <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
       <td>${renderPlayerRoleControl(group)}</td>
-      <td><span class="badge closed">verborgen</span></td>
       <td>
+        <span class="badge ${approvalClass}">${escapeHtml(approvalLabel)}</span>
+        ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : ""}
+        ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
+      </td>
+      <td>
+        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
+        ${group.isBlocked
+          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
+          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
         <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
         <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
       </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
 const PLAYER_LOGIN_ROLES=[
@@ -5796,6 +6471,66 @@ async function setPlayerLoginRole(playerId, selectId){
   }
 }
 
+async function setPlayerLoginBlocked(playerId, blocked){
+  if(!playerId) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const message = blocked
+    ? "Diesen SpielerLogin wirklich sperren? Der Spieler kann danach mit diesem PIN nichts mehr laden."
+    : "Sperre für diesen SpielerLogin wirklich aufheben?";
+  if(!confirm(message)) return;
+
+  const reason = blocked ? (prompt("Grund für die Sperre:", "Aus der Gilde entfernt") || "Durch Gildenleitung gesperrt") : "";
+  setStatus(blocked ? "SpielerLogin wird gesperrt ..." : "Sperre wird aufgehoben ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildSetPlayerLoginBlocked",
+      masterCode,
+      playerId,
+      blocked: blocked ? "true" : "false",
+      reason
+    });
+    if(!result.success){
+      setStatus(result.error || "Sperre konnte nicht geändert werden.", "bad");
+      return;
+    }
+    setStatus(blocked ? "SpielerLogin wurde gesperrt." : "Sperre wurde aufgehoben.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "Sperre konnte nicht geändert werden.", "bad");
+  }
+}
+
+async function approvePlayerLogin(playerId){
+  if(!playerId) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
+  setStatus("SpielerLogin wird freigegeben ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildApprovePlayerLogin",
+      masterCode,
+      playerId,
+      approvedBy:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+      return;
+    }
+    setStatus("SpielerLogin wurde freigegeben.", "good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){
+    setStatus(error.message || "SpielerLogin konnte nicht freigegeben werden.", "bad");
+  }
+}
+
 function groupPlayersByMain(players){
   const groups = new Map();
   (players || []).forEach(player => {
@@ -5815,6 +6550,11 @@ function groupPlayersByMain(players){
     group.main = group.main || group.characters[0] || {};
     group.twinks = group.characters.filter(player => player !== group.main);
     group.classes = Array.from(new Set(group.characters.map(player => player.className).filter(Boolean))).sort();
+    group.isBlocked = group.characters.some(player => player.isBlocked || player.blocked);
+    group.blockedReason = (group.characters.find(player => player.blockedReason)?.blockedReason) || "";
+    group.approvalStatus = group.characters.some(player => String(player.approvalStatus || "approved").toLowerCase() !== "approved")
+      ? (group.characters.find(player => String(player.approvalStatus || "approved").toLowerCase() !== "approved")?.approvalStatus || "pending")
+      : "approved";
     return group;
   }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
 }
@@ -6046,7 +6786,7 @@ function raidHelperRaidColor(raidKey){
     aq40:"#c084fc",
     bwl:"#ef4444",
     mc:"#f97316",
-    naxx:"#60a5fa",
+    naxx:"var(--blue)",
     ony:"#fb923c"
   }[raidKey] || "#a78bfa";
 }
@@ -6310,6 +7050,76 @@ async function saveRaidHelperEventEdit(){
     setRaidHelperEditStatus("Raid gespeichert und Discord-Aktualisierung vorgemerkt.", "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Raid konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function editRaidDateTimePopup(raidId){
+  const raid = findRaidByAnyId(raidId);
+  if(!raid){
+    setStatus("Raid wurde nicht gefunden.", "bad");
+    return;
+  }
+  const raidDate = prompt("Neues Datum im Format JJJJ-MM-TT:", raid.raidDate || "");
+  if(raidDate === null) return;
+  const raidTime = prompt("Neue Uhrzeit im Format HH:MM:", raid.raidTime || "");
+  if(raidTime === null) return;
+  const dateValue = String(raidDate || "").trim();
+  const timeValue = String(raidTime || "").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || !/^\d{2}:\d{2}$/.test(timeValue)){
+    setStatus("Bitte Datum als JJJJ-MM-TT und Uhrzeit als HH:MM eingeben.", "bad");
+    return;
+  }
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const key = getRaidKey(raid);
+  const guildName = raid.guild || raid.gilde || getCurrentGuildBrand().guildName;
+  try{
+    const result = await railwayWrite({
+      action:"createRaid",
+      masterCode,
+      raidId:raid.raidId || raid.id || raidId,
+      raid:key,
+      raidName:raid.raidName || RAID_OPTIONS[key]?.name || "Raid",
+      raidDate:dateValue,
+      raidTime:timeValue,
+      datum:dateValue,
+      uhrzeit:timeValue,
+      guild:guildName,
+      gilde:guildName,
+      guildName:guildName,
+      displayGuild:guildName,
+      playerPin:raid.playerPin || raid.prioPin || "",
+      leadPin:raid.leadPin || "",
+      status:raid.status || "geschlossen",
+      p0PlusFreigabe:raid.p0PlusFreigabe || "geöffnet",
+      createdBy:getRaidCreatorName(raid),
+      erstelltVon:getRaidCreatorName(raid),
+      raidHelperEnabled:raid.raidHelperEnabled === false ? "false" : "true",
+      maxPlayers:raid.maxPlayers || "",
+      tankSlots:raid.tankSlots || "",
+      healSlots:raid.healSlots || "",
+      ddSlots:raid.ddSlots || "",
+      discordChannelId:raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
+      discordMessageId:raid.discordMessageId || "",
+      signupDeadline:raid.signupDeadline || "",
+      description:raid.description || raid.beschreibung || "",
+      raidImageUrl:raid.raidImageUrl || defaultRaidHelperImageUrl(key)
+    });
+    if(!result.success){
+      setStatus(result.error || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    await loadOverview({ preserveStatus:true });
+    renderRaidHelperCurrentEvents();
+    renderDashboardCards();
+    renderRaids();
+    renderPoSignupConfigRows();
+    setStatus("Datum/Uhrzeit wurde gespeichert und im PO-Anmelder übernommen.", "good");
+  }catch(error){
+    setStatus(error.message || "Datum/Uhrzeit konnte nicht gespeichert werden.", "bad");
   }
 }
 
@@ -7814,8 +8624,16 @@ function poSignupCorrectionCharacterValue(index){
 function samePoPostEntryIdentity(left, right){
   if(!left || !right) return false;
   if(left.id && right.id && String(left.id) === String(right.id)) return true;
-  const keys = ["postKey", "sourceChannelId", "targetChannelId", "messageId", "discordMessageId"];
-  return keys.every(key => String(left[key] || "") === String(right[key] || ""));
+  const samePost = ["postKey", "sourceChannelId", "targetChannelId"].every(key =>
+    String(left[key] || "") && String(left[key] || "") === String(right[key] || "")
+  );
+  if(!samePost) return false;
+  if(left.messageId && right.messageId && String(left.messageId) === String(right.messageId)) return true;
+  const leftPlayer = normalize(left.player || left.playerName || "");
+  const rightPlayer = normalize(right.player || right.playerName || "");
+  const leftItem = normalize(left.item || left.itemName || "");
+  const rightItem = normalize(right.item || right.itemName || "");
+  return !!leftPlayer && !!leftItem && leftPlayer === rightPlayer && leftItem === rightItem;
 }
 
 function updatePoPostEntryCaches(originalEntry, updatedEntry){
@@ -8165,7 +8983,7 @@ function getPoSignupConfig(){
     mode:"signup",
     note:document.getElementById("poSignupNote")?.value.trim() || "",
     itemOptions:poSignupItemLines().join("\n"),
-    createLichtlootRaid: Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked),
+    createLichtlootRaid: true,
     lichtlootRaidId: prio?.raidId || "",
     lichtlootPlayerPin: prio?.playerPin || "",
     lichtlootLeadPin: prio?.leadPin || ""
@@ -8197,25 +9015,13 @@ function resetPoSignupLichtlootRaidIfStale(){
 async function ensurePoSignupLichtlootRaid(config, options={}){
   const status = document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
-  const checked = Boolean(document.getElementById("poSignupCreateLichtlootRaid")?.checked);
-  if(!checked) return config;
   if(!masterCode) throw new Error("Bitte erst Master-Code eingeben.");
   if(!config.raidDate || !config.raidTime) throw new Error("Bitte Raid-Datum und Raid-Uhrzeit eintragen.");
 
   const fingerprint = poSignupLichtlootFingerprint(config);
   if(poSignupGeneratedLichtlootRaid?.fingerprint === fingerprint && poSignupGeneratedLichtlootRaid.playerPin){
-    const reusedText = buildRaidDiscordPostText(
-      RAID_OPTIONS[config.raid]?.name || config.title || config.raid,
-      config.raidDate,
-      config.raidTime,
-      getCurrentGuildBrand().guildName,
-      poSignupGeneratedLichtlootRaid.playerPin,
-      poSignupGeneratedLichtlootRaid.createdBy
-    );
-    setValue("poSignupNote", reusedText);
     updatePoSignupPreview();
     return Object.assign({}, config, {
-      note:reusedText,
       lichtlootRaidId:poSignupGeneratedLichtlootRaid.raidId,
       lichtlootPlayerPin:poSignupGeneratedLichtlootRaid.playerPin,
       lichtlootLeadPin:poSignupGeneratedLichtlootRaid.leadPin || ""
@@ -8265,45 +9071,26 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const resultRaidId = result.raidId || result.RaidID || raidId;
   const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
   const resultLeadPin = result.leadPin || leadPin;
-  const note = buildRaidDiscordPostText(raidName, config.raidDate, config.raidTime, getCurrentGuildBrand().guildName, resultPlayerPin, createdBy);
   poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
-  setValue("poSignupNote", note);
   updatePoSignupPreview();
   if(status && !options.silent){
     status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
-    note,
     lichtlootRaidId:resultRaidId,
     lichtlootPlayerPin:resultPlayerPin,
     lichtlootLeadPin:resultLeadPin
   });
 }
 
-async function handlePoSignupPrioOptionChange(){
-  const checkbox = document.getElementById("poSignupCreateLichtlootRaid");
-  const status = document.getElementById("poSignupStatus");
-  if(!checkbox?.checked){
-    poSignupGeneratedLichtlootRaid = null;
-    updatePoSignupPreview();
-    return;
-  }
-  try{
-    let config = getPoSignupConfig();
-    config = await ensurePoSignupLichtlootRaid(config);
-  }catch(error){
-    if(status){
-      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
-      status.className = "status bad";
-    }
-    if(checkbox) checkbox.checked = false;
-  }
-}
-
 function poPostEntryRowsForKey(postKey){
   const key = String(postKey || "").trim();
-  return (poPostStoredEntries || []).filter(entry => entry.postKey === key);
+  return (poPostStoredEntries || []).filter(entry => {
+    if(entry.postKey !== key) return false;
+    if(entry.configOnly) return false;
+    return String(entry.player || "").trim() || String(entry.item || entry.itemName || "").trim();
+  });
 }
 
 function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
@@ -8396,7 +9183,7 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
-  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote","poSignupCreateLichtlootRaid"].forEach(id => {
+  ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
       field.addEventListener("change", updatePoSignupPreview);
@@ -8466,6 +9253,11 @@ function poPostConfigGroups(){
         itemOptions: "",
         reviewRecipient: "",
         note: "",
+        raidPin: "",
+        prioPin: "",
+        lichtlootRaidId: "",
+        lichtlootPlayerPin: "",
+        lichtlootLeadPin: "",
         approvedCount: 0,
         pendingCount: 0,
         rejectedCount: 0,
@@ -8489,13 +9281,19 @@ function poPostConfigGroups(){
     group.itemOptions = group.itemOptions || config.itemOptions || "";
     group.reviewRecipient = group.reviewRecipient || config.reviewRecipient || "";
     group.note = group.note || config.note || "";
+    group.raidPin = group.raidPin || config.raidPin || config.prioPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
+    group.prioPin = group.prioPin || config.prioPin || config.raidPin || config.lichtlootPlayerPin || config.lichtlootRaidId || "";
+    group.lichtlootRaidId = group.lichtlootRaidId || config.lichtlootRaidId || config.raidPin || config.prioPin || config.lichtlootPlayerPin || "";
+    group.lichtlootPlayerPin = group.lichtlootPlayerPin || config.lichtlootPlayerPin || config.raidPin || config.prioPin || config.lichtlootRaidId || "";
+    group.lichtlootLeadPin = group.lichtlootLeadPin || config.lichtlootLeadPin || config.leadPin || "";
   });
   (poPostStoredEntries || []).forEach(entry => {
     const group = ensure(entry.postKey);
     if(!group) return;
     group.railway = true;
+    const configOnly = Boolean(entry.configOnly) || (!String(entry.player || "").trim() && !String(entry.item || entry.itemName || "").trim());
     if(entry.archivedAt) group.archivedCount += 1;
-    else{
+    else if(!configOnly){
       group.count += 1;
       const status = String(entry.approvalStatus || "pending").toLowerCase();
       if(status === "approved") group.approvedCount += 1;
@@ -8507,6 +9305,13 @@ function poPostConfigGroups(){
     group.sourceChannelId = group.sourceChannelId || entry.sourceChannelId || "";
     group.targetChannelId = group.targetChannelId || entry.targetChannelId || entry.sourceChannelId || "";
     group.mode = group.mode || entry.mode || "";
+    group.raidDate = group.raidDate || entry.raidDate || "";
+    group.raidTime = group.raidTime || entry.raidTime || "";
+    group.raidPin = group.raidPin || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
+    group.prioPin = group.prioPin || entry.prioPin || entry.raidPin || entry.lichtlootPlayerPin || entry.lichtlootRaidId || "";
+    group.lichtlootRaidId = group.lichtlootRaidId || entry.lichtlootRaidId || entry.raidPin || entry.prioPin || entry.lichtlootPlayerPin || "";
+    group.lichtlootPlayerPin = group.lichtlootPlayerPin || entry.lichtlootPlayerPin || entry.raidPin || entry.prioPin || entry.lichtlootRaidId || "";
+    group.lichtlootLeadPin = group.lichtlootLeadPin || entry.lichtlootLeadPin || entry.leadPin || "";
     if(entry.updatedAt && (!group.updatedAt || String(entry.updatedAt) > String(group.updatedAt))){
       group.updatedAt = entry.updatedAt;
     }
@@ -8641,7 +9446,9 @@ async function runPoSignupRowAction(select, postKey){
 
 function poSignupConfigForKey(postKey){
   const key = String(postKey || "").trim();
-  return readPoPostConfigs().find(item => item.postKey === key) || null;
+  return readPoPostConfigs().find(item => item.postKey === key)
+    || poPostConfigGroups().find(item => item.postKey === key)
+    || null;
 }
 
 function poSignupLichtlootPinForConfig(config){
@@ -8821,8 +9628,6 @@ function setPoSignupFormConfig(config){
   setValue("poSignupTime", config.raidTime || "");
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
-  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
-  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
   poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
     fingerprint:poSignupLichtlootFingerprint(config),
     raidId:config.lichtlootRaidId || "",
@@ -9212,12 +10017,10 @@ function newPoSignupConfig(){
   const raidDate = document.getElementById("poSignupDate")?.value || "";
   const raidTime = document.getElementById("poSignupTime")?.value || "";
   const label = RAID_OPTIONS[raid]?.short || raid.toUpperCase();
-  const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
   setValue("poSignupTitle", `${label} PO-Anmelder`);
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
   setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
-  if(prioCheckbox) prioCheckbox.checked = false;
   poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
@@ -10327,13 +11130,30 @@ function isBenchPrio(prio){
   return value === "ja" || value === "true" || value === "1" || value === "bench" || value === "gebencht" || value === "benched";
 }
 
+function prioClassSortIndex(className){
+  const key = normalize(className);
+  const order = {
+    warrior: 1, krieger: 1,
+    druid: 2, druide: 2, druiden: 2,
+    paladin: 3,
+    rogue: 4, schurke: 4, schurken: 4,
+    hunter: 5, jaeger: 5, jager: 5, jäger: 5,
+    priest: 6, priester: 6,
+    mage: 7, magier: 7,
+    warlock: 8, hexenmeister: 8,
+    shaman: 9, schamane: 9, schamanen: 9
+  };
+  return order[key] || 99;
+}
+
 function sortPriosWithMainFirst(prios){
   return prios
     .map((prio,index)=>({prio,index}))
     .sort((a,b)=>{
-      const aMain=Boolean(a.prio && (a.prio.isMain || a.prio.main));
-      const bMain=Boolean(b.prio && (b.prio.isMain || b.prio.main));
-      if(aMain !== bMain) return aMain ? -1 : 1;
+      const classCompare = prioClassSortIndex(a.prio && (a.prio.Klasse || a.prio.className)) - prioClassSortIndex(b.prio && (b.prio.Klasse || b.prio.className));
+      if(classCompare) return classCompare;
+      const nameCompare = String(a.prio && (a.prio.Spieler || a.prio.player) || "").localeCompare(String(b.prio && (b.prio.Spieler || b.prio.player) || ""), "de", {sensitivity:"base"});
+      if(nameCompare) return nameCompare;
       return a.index-b.index;
     })
     .map(item=>item.prio);
@@ -10410,12 +11230,45 @@ async function transferP0PlusFromGuild(raidId){
     renderDashboardCards();
     renderRaids();
     await loadOverview({ preserveStatus:true });
-    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.`, "good");
+    const skipped = Number(result.skipped || 0);
+    setStatus(`P0+ übertragen: ${Number(result.awarded || 0)} Einträge.${skipped ? " " + skipped + " doppelte übersprungen." : ""}`, "good");
 
     const modal = document.getElementById("prioModal");
     if(modal && !modal.classList.contains("hidden")) openPrioModal(raidId);
   }catch(error){
     setStatus(error.message || "P0+ Punkte konnten nicht übertragen werden.", "bad");
+  }
+}
+
+async function queueP0PlusBackup(raidOverride){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
+  const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
+  const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
+  if(!ok) return;
+
+  try{
+    setStatus("PO+ Sicherung wird für den Bot vorbereitet ...", "");
+    const result = await railwayApi({
+      action:"guildQueueP0PlusBackup",
+      masterCode,
+      raid
+    });
+
+    if(!result.success){
+      setStatus(result.error || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
+      return;
+    }
+
+    const count = Array.isArray(result.queued) ? result.queued.length : 0;
+    setStatus(`PO+ Sicherung vorbereitet: ${count || 1} Datei(en) werden vom Lichtbuff-Bot gepostet.`, "good");
+  }catch(error){
+    setStatus(error.message || "PO+ Sicherung konnte nicht vorbereitet werden.", "bad");
   }
 }
 
@@ -10749,6 +11602,14 @@ function renderP0PlusModalContent(){
         ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
       </select>
       <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+      <select id="p0BackupRaid">
+        <option value="all40">Alle 40er</option>
+        <option value="naxx">NAXX</option>
+        <option value="aq40">AQ40</option>
+        <option value="bwl">BWL</option>
+        <option value="mc">MC</option>
+      </select>
+      <button class="small-btn good" type="button" onclick="queueP0PlusBackup()">PO+ Sicherung posten</button>
       <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
     </div>
     <div class="table-wrap">
@@ -10853,10 +11714,14 @@ async function reviewPoPostEntryFromGuild(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
@@ -10893,10 +11758,14 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     const result = await railwayWrite({
       action:"guildReviewPoPostEntry",
       masterCode,
+      id:entry.id || "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
       messageId:entry.messageId || "",
+      discordMessageId:entry.discordMessageId || "",
+      player:entry.player || "",
+      item:entry.item || "",
       raidPin,
       prioPin:raidPin,
       lichtlootRaidId:raidPin,
@@ -11214,6 +12083,138 @@ function toggleIssueInboxPanel(){
   openIssueInboxPanel();
 }
 
+async function loadGuildApplicationsPanel(options){
+  options = options || {};
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const content = document.getElementById("guildApplicationsPanelContent");
+  if(!masterCode){
+    if(content && !options.silent) content.innerHTML = '<div class="status bad">Bitte Master-Code eingeben.</div>';
+    renderGuildApplicationsBadge();
+    return;
+  }
+
+  if(content && !options.silent) content.innerHTML = '<div class="status">Gilden-Anfragen werden geladen ...</div>';
+
+  try{
+    const result = await railwayApi({ action:"guildGetApplications", masterCode, baseUrl:location.origin });
+    if(!result.success) throw new Error(result.error || "Gilden-Anfragen konnten nicht geladen werden.");
+    guildApplications = Array.isArray(result.applications) ? result.applications : [];
+    renderGuildApplicationsBadge();
+    if(content) renderGuildApplicationsPanel();
+  }catch(error){
+    if(content && !options.silent) content.innerHTML = `<div class="status bad">${escapeHtml(error.message || "Gilden-Anfragen konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderGuildApplicationsBadge(){
+  const badge = document.getElementById("guildApplicationCount");
+  if(!badge) return;
+  const pending = guildApplications.filter(entry => entry.status === "pending").length;
+  badge.textContent = String(pending);
+}
+
+function guildApplicationStatusLabel(status){
+  if(status === "approved") return "freigegeben";
+  if(status === "completed") return "eingerichtet";
+  if(status === "rejected") return "abgelehnt";
+  return "offen";
+}
+
+function renderGuildApplicationsPanel(){
+  const content = document.getElementById("guildApplicationsPanelContent");
+  if(!content) return;
+  if(!guildApplications.length){
+    content.innerHTML = '<div class="status">Noch keine Gilden-Anfragen vorhanden.</div>';
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="table-wrap">
+      <table class="issue-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Gilde</th>
+            <th>Kontakt</th>
+            <th>Freischaltlink</th>
+            <th>Aktion</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${guildApplications.map(entry => `
+            <tr>
+              <td><span class="status ${entry.status === "pending" ? "" : entry.status === "rejected" ? "bad" : "good"}">${escapeHtml(guildApplicationStatusLabel(entry.status))}</span></td>
+              <td>
+                <strong>${escapeHtml(entry.guildName || "-")}</strong>
+                <div class="muted">${escapeHtml(entry.lootName || "-")} · ${escapeHtml(entry.server || "-")} · PIN ${escapeHtml(entry.desiredGuildPin || entry.guildPin || "-")}</div>
+                ${entry.notes ? `<div class="muted">${escapeHtml(entry.notes)}</div>` : ""}
+              </td>
+              <td>
+                <strong>${escapeHtml(entry.contactName || "-")}</strong>
+                <div class="muted">${escapeHtml(entry.contactDiscord || "-")}</div>
+                <div class="muted">${escapeHtml(entry.contactEmail || "-")}</div>
+              </td>
+              <td>
+                ${entry.setupUrl ? `<code>${escapeHtml(entry.setupUrl)}</code>` : '<span class="muted">Noch nicht freigegeben</span>'}
+                ${entry.guildSlug ? `<div class="muted">Gilde: ${escapeHtml(entry.guildSlug)}</div>` : ""}
+              </td>
+              <td>
+                <div class="issue-actions">
+                  ${entry.status === "pending" ? `<button class="small-btn primary" type="button" onclick="approveGuildApplication('${escapeHtml(entry.id)}')">Freigeben</button>` : ""}
+                  ${entry.setupUrl ? `<button class="small-btn ghost" type="button" onclick="copyGuildSetupLink('${escapeHtml(entry.setupUrl)}')">Link kopieren</button>` : ""}
+                  ${entry.status !== "rejected" && entry.status !== "completed" ? `<button class="small-btn danger" type="button" onclick="rejectGuildApplication('${escapeHtml(entry.id)}')">Ablehnen</button>` : ""}
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function approveGuildApplication(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  try{
+    const result = await railwayWrite({ action:"guildApproveApplication", masterCode, id, baseUrl:location.origin });
+    if(!result.success) throw new Error(result.error || "Gilde konnte nicht freigegeben werden.");
+    setStatus("Gilde freigegeben. Freischaltlink kann kopiert werden.", "good");
+    await loadGuildApplicationsPanel();
+  }catch(error){
+    setStatus(error.message || "Gilde konnte nicht freigegeben werden.", "bad");
+  }
+}
+
+async function rejectGuildApplication(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm("Diese Gilden-Anfrage ablehnen?")) return;
+  try{
+    const result = await railwayWrite({ action:"guildRejectApplication", masterCode, id });
+    if(!result.success) throw new Error(result.error || "Gilde konnte nicht abgelehnt werden.");
+    setStatus("Gilden-Anfrage abgelehnt.", "good");
+    await loadGuildApplicationsPanel();
+  }catch(error){
+    setStatus(error.message || "Gilden-Anfrage konnte nicht abgelehnt werden.", "bad");
+  }
+}
+
+async function copyGuildSetupLink(url){
+  try{
+    await navigator.clipboard.writeText(String(url || ""));
+    setStatus("Freischaltlink kopiert.", "good");
+  }catch(error){
+    setStatus("Kopieren ist im Browser gerade nicht erlaubt.", "bad");
+  }
+}
+
 async function loadIssueInboxPanel(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -11470,36 +12471,44 @@ async function loadWorldbuffPanel(){
 function renderWorldbuffPanel(days){
   document.getElementById("worldbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
-      <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
-        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
-        ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
-      </select>
-      <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
-        <option value="">Alle Buffs</option>
-        <option value="Hakkar">Hakkar</option>
-        <option value="Ony">Ony</option>
-        <option value="Nef">Nef</option>
-        <option value="Rend">Rend</option>
-      </select>
-      <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
-      <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
-      <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
-      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
-      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
+      <div class="worldbuff-filter-card">
+        <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
+          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+          ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+        </select>
+        <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
+          <option value="">Alle Buffs</option>
+          <option value="Hakkar">Hakkar</option>
+          <option value="Ony">Ony</option>
+          <option value="Nef">Nef</option>
+          <option value="Rend">Rend</option>
+        </select>
+        <input id="worldbuffSearch" type="search" placeholder="Datum, Gilde, Werfer oder Status suchen..." oninput="renderWorldbuffRows()">
+      </div>
+      <div class="worldbuff-action-card">
+        <button class="small-btn ghost" type="button" onclick="loadWorldbuffPanel()">Neu laden</button>
+        <button class="small-btn good" type="button" onclick="restoreDeletedWorldbuffTerms()">Gelöschte wiederherstellen</button>
+        <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+        <button class="small-btn good" type="button" onclick="queueWorldbuffBackup()">Worldbuff-Sicherung posten</button>
+        <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('worldbuff_update')">Bot-Update</button>
+      </div>
     </div>
-    <div class="buff-create-grid">
-      <input id="newWorldbuffDate" type="date" aria-label="Datum">
-      <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
-      <select id="newWorldbuffBuff" aria-label="Buff">
-        <option value="Hakkar">Hakkar</option>
-        <option value="Ony">Ony</option>
-        <option value="Nef">Nef</option>
-        <option value="Rend">Rend</option>
-      </select>
-      <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
-      <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
-      <input id="newWorldbuffNote" type="text" placeholder="Notiz">
-      <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
+    <div class="worldbuff-create-card">
+      <h3 class="worldbuff-create-title">Neuen Worldbuff-Termin hier eintragen</h3>
+      <div class="buff-create-grid">
+        <input id="newWorldbuffDate" type="date" aria-label="Datum">
+        <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+        <select id="newWorldbuffBuff" aria-label="Buff">
+          <option value="Hakkar">Hakkar</option>
+          <option value="Ony">Ony</option>
+          <option value="Nef">Nef</option>
+          <option value="Rend">Rend</option>
+        </select>
+        <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
+        <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
+        <input id="newWorldbuffNote" type="text" placeholder="Notiz">
+        <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table class="worldbuff-table">
@@ -11547,13 +12556,12 @@ function renderWorldbuffRows(){
     return;
   }
 
-  const dateColorMap = buildBuffDateColorMap(rows);
   tbody.innerHTML = rows.map((entry,rowIndex) => {
     const index = worldbuffEntries.indexOf(entry);
     const statusOptions = ["", "🟡 offen", "🟢 bestätigt", "erledigt"];
     const statusValue = normalizeBuffStatus(entry.status || "");
     if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
-    const dateClass = getBuffDateClass(entry, dateColorMap);
+    const dateClass = shouldHideBuffDateCells(rows, rowIndex) ? "" : "buff-day-row";
     const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
     const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
 
@@ -11671,29 +12679,12 @@ function renderWorldbuffBadge(buff){
   return `<span class="buff-pill ${escapeAttr(cls)}">${icon} ${escapeHtml(value || "-")}</span>`;
 }
 
-function buildBuffDateColorMap(rows){
-  const dates = [];
-  (rows || []).forEach(entry => {
-    const key = getBuffDateKey(entry);
-    if(key && !dates.includes(key)) dates.push(key);
-  });
-  return dates.reduce((map,key,index) => {
-    map[key] = "buff-day-row day-color-" + (index % 2);
-    return map;
-  }, {});
-}
-
-function getBuffDateClass(entry, dateColorMap){
-  const key = getBuffDateKey(entry);
-  return key && dateColorMap && dateColorMap[key] ? dateColorMap[key] : "";
-}
-
 function getBuffDateKey(entry){
   return String((entry && entry.datum) || "").trim();
 }
 
 function renderBuffGroupCell(value, hidden){
-  return `<td class="${hidden ? "buff-group-empty" : ""}">${hidden ? "" : escapeHtml(value || "-")}</td>`;
+  return `<td class="${hidden ? "buff-group-empty" : ""}">${hidden ? "" : `<span class="buff-day-label">${escapeHtml(value || "-")}</span>`}</td>`;
 }
 
 function shouldHideBuffDateCells(rows, rowIndex){
@@ -11910,6 +12901,32 @@ async function queueWorldbuffBotUpdate(updateType){
   }
 }
 
+async function queueWorldbuffBackup(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const days = document.getElementById("worldbuffDays")?.value || "all";
+  const label = days === "all" ? "alle offenen Worldbuffs" : `Worldbuffs der nächsten ${days} Tage`;
+  if(!confirm(`${label} als Excel-Sicherung in den Backup-Channel posten?`)){
+    return;
+  }
+
+  try{
+    setStatus("Worldbuff-Sicherung wird für den Bot vorbereitet ...", "");
+    const result = await railwayApi({ action:"guildQueueWorldbuffBackup", masterCode, days });
+    if(!result.success){
+      setStatus(result.error || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
+      return;
+    }
+    setStatus(`Worldbuff-Sicherung vorbereitet: ${Number(result.count || 0)} Termin(e) werden gepostet.`, "good");
+  }catch(error){
+    setStatus(error.message || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
+  }
+}
+
 async function restoreDeletedWorldbuffTerms(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -11990,29 +13007,36 @@ async function loadHordenbuffPanel(){
 function renderHordenbuffPanel(days){
   document.getElementById("hordenbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
-      <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
-        <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
-        ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
-      </select>
-      <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
-        <option value="">Alle Status</option>
-        <option value="offen">offen</option>
-        <option value="zugeteilt">zugeteilt</option>
-        <option value="erledigt">erledigt</option>
-      </select>
-      <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
-      <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
-      <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
-      <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+      <div class="worldbuff-filter-card">
+        <select id="hordenbuffDays" onchange="loadHordenbuffPanel()">
+          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+          ${[7,14,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+        </select>
+        <select id="hordenbuffStatusFilter" onchange="renderHordenbuffRows()">
+          <option value="">Alle Status</option>
+          <option value="offen">offen</option>
+          <option value="zugeteilt">zugeteilt</option>
+          <option value="erledigt">erledigt</option>
+        </select>
+        <input id="hordenbuffSearch" type="search" placeholder="Spieler, Termin, Status oder Notiz suchen..." oninput="renderHordenbuffRows()">
+      </div>
+      <div class="worldbuff-action-card">
+        <button class="small-btn ghost" type="button" onclick="loadHordenbuffPanel()">Neu laden</button>
+        <button class="small-btn ghost" type="button" onclick="syncPublicBuffTerms()">Sync Worldbuffticker</button>
+        <button class="small-btn primary" type="button" onclick="queueWorldbuffBotUpdate('hordenbuff_update')">Bot-Update</button>
+      </div>
     </div>
-    <div class="buff-create-grid">
-      <input id="newHordenbuffDate" type="date" aria-label="Datum">
-      <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
-      <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
-      <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
-      <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
-      <input id="newHordenbuffNote" type="text" placeholder="Notiz">
-      <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
+    <div class="worldbuff-create-card">
+      <h3 class="worldbuff-create-title">Neuen Hordenbuff-Termin hier eintragen</h3>
+      <div class="buff-create-grid">
+        <input id="newHordenbuffDate" type="date" aria-label="Datum">
+        <input id="newHordenbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
+        <input id="newHordenbuffChar" type="text" placeholder="Ally-Charakter">
+        <input id="newHordenbuffHelper" type="text" placeholder="Übernehmer">
+        <input id="newHordenbuffStatus" type="text" value="🟡 offen" placeholder="Status">
+        <input id="newHordenbuffNote" type="text" placeholder="Notiz">
+        <button class="small-btn good" type="button" onclick="createHordenbuffTerm()">Termin erstellen</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table class="worldbuff-table">
@@ -12063,13 +13087,12 @@ function renderHordenbuffRows(){
     return;
   }
 
-  const dateColorMap = buildBuffDateColorMap(rows);
   tbody.innerHTML = rows.map((entry,rowIndex) => {
     const index = hordenbuffEntries.indexOf(entry);
     const statusOptions = ["", "🟡 offen", "zugeteilt", "erledigt"];
     const statusValue = normalizeBuffStatus(entry.status || "");
     if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
-    const dateClass = getBuffDateClass(entry, dateColorMap);
+    const dateClass = shouldHideBuffDateCells(rows, rowIndex) ? "" : "buff-day-row";
     const hideDateCells = shouldHideBuffDateCells(rows, rowIndex);
     const hideTimeCell = shouldHideBuffTimeCell(rows, rowIndex);
 
@@ -12951,6 +13974,15 @@ function formatRaidDate(value){
   const parts = String(value).split("-");
   if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
   return String(value);
+}
+
+function formatRaidWeekday(value){
+  if(!value) return "-";
+  const parts = String(value).split("-").map(Number);
+  if(parts.length !== 3 || parts.some(part => !Number.isFinite(part))) return "-";
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  if(Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("de-DE", { weekday:"long" });
 }
 
 function formatDateTime(value){
