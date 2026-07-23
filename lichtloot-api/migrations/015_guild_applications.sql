@@ -1,0 +1,38 @@
+create table if not exists guild_applications (
+  id uuid primary key default gen_random_uuid(),
+  guild_name text not null,
+  loot_name text not null default '',
+  server text not null default '',
+  contact_name text not null default '',
+  contact_discord text not null default '',
+  contact_email text not null default '',
+  discord_guild_id text not null default '',
+  desired_guild_pin text not null default '',
+  notes text not null default '',
+  status text not null default 'pending',
+  setup_token text unique,
+  setup_token_expires_at timestamptz,
+  approved_by text,
+  approved_at timestamptz,
+  rejected_at timestamptz,
+  setup_completed_at timestamptz,
+  guild_slug text,
+  guild_pin text,
+  logo_url text not null default '',
+  background_url text not null default '',
+  primary_color text not null default '#facc15',
+  accent_color text not null default '#1d4ed8',
+  database_status text not null default 'pending',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table guild_applications
+  add column if not exists setup_completed_at timestamptz,
+  add column if not exists guild_slug text,
+  add column if not exists guild_pin text,
+  add column if not exists logo_url text not null default '',
+  add column if not exists background_url text not null default '',
+  add column if not exists primary_color text not null default '#facc15',
+  add column if not exists accent_color text not null default '#1d4ed8',
+  add column if not exists database_status text not null default 'pending';
