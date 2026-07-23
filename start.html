@@ -16,6 +16,9 @@
 <style>
 :root{
   --gold:#facc15;
+  --gold-rgb:250,204,21;
+  --blue:#1d4ed8;
+  --blue-rgb:29,78,216;
   --panel:rgba(12,18,32,.82);
   --text:#f8fafc;
   --muted:#cbd5e1;
@@ -75,10 +78,12 @@ body{
 .raid-create-box select{
   padding:10px 12px;
   border-radius:12px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.44);
   background:rgba(2,6,23,.85);
-  color:white;
+  color:#f8fafc;
   font-weight:700;
+  color-scheme:dark;
+  caret-color:#f8fafc;
 }
 
 .top-tools input{width:180px}
@@ -1734,6 +1739,53 @@ body.raid-create-open:before{
   }
   .raid-create-box:not(.hidden){padding:12px!important}
 }
+
+body.start-dashboard-body .dash-panel,
+body.start-dashboard-body .right-card,
+body.start-dashboard-body .start-sidebar,
+body.start-dashboard-body .start-side-link.active,
+body.start-dashboard-body .start-side-link:hover,
+body.start-dashboard-body .raid-create-box:not(.hidden){
+  border-color:rgba(var(--gold-rgb),.34)!important;
+}
+body.start-dashboard-body .section-title,
+body.start-dashboard-body .right-card h2,
+body.start-dashboard-body .start-kicker,
+body.start-dashboard-body .start-side-icon,
+body.start-dashboard-body .text-link-btn,
+body.start-dashboard-body .raid-create-head h2{
+  color:var(--gold)!important;
+}
+body.start-dashboard-body .start-gold-action,
+body.start-dashboard-body .tool-btn,
+body.start-dashboard-body .quick-actions button:first-child{
+  background:linear-gradient(90deg,var(--gold),var(--blue))!important;
+  color:#f8fafc!important;
+}
+body.start-dashboard-body .next-raid-image{
+  background-size:contain!important;
+  background-repeat:no-repeat!important;
+  background-position:center!important;
+  background-color:#020617!important;
+}
+body.start-dashboard-body .instance-card img,
+body.start-dashboard-body .upcoming-row img,
+body.start-dashboard-body .log-dashboard-raid img{
+  object-fit:contain!important;
+  background:#020617!important;
+}
+body.start-dashboard-body .raid-create-box input,
+body.start-dashboard-body .raid-create-box select{
+  border-color:rgba(var(--gold-rgb),.55)!important;
+  background:#020617!important;
+  color:#f8fafc!important;
+  -webkit-text-fill-color:#f8fafc!important;
+  opacity:1!important;
+}
+body.start-dashboard-body .raid-create-box input[readonly]{
+  border-color:rgba(var(--blue-rgb),.45)!important;
+  background:rgba(var(--blue-rgb),.12)!important;
+}
 .start-sidebar .prio-pages-drawer{
   margin:4px 0 6px 36px;
   padding:8px;
@@ -2407,7 +2459,7 @@ body.raid-create-open:before{
   <input id="createRaidTime" type="time" value="20:00">
 
   <label>Gilde</label>
-  <input id="createRaidGuild" type="text" placeholder="Gilde eintragen">
+  <input id="createRaidGuild" type="text" placeholder="Gilde wird automatisch gesetzt" readonly>
 
   <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Raid jetzt erstellen</button>
 
@@ -2752,6 +2804,26 @@ function lootTitleFromGuild(guild){
   return titleFromSlug(slug || guild?.name || "Lootsystem");
 }
 
+function colorToRgbList(value){
+  const color = String(value || "").trim();
+  const match = color.match(/^#?([0-9a-f]{6})$/i);
+  if(!match) return "";
+  const hex = match[1];
+  return [
+    parseInt(hex.slice(0,2),16),
+    parseInt(hex.slice(2,4),16),
+    parseInt(hex.slice(4,6),16)
+  ].join(",");
+}
+
+function applyGuildThemeColor(cssName, rgbName, value){
+  const color = String(value || "").trim();
+  if(!color) return;
+  document.documentElement.style.setProperty(cssName, color);
+  const rgb = colorToRgbList(color);
+  if(rgb) document.documentElement.style.setProperty(rgbName, rgb);
+}
+
 function applyGuildBrand(){
   const guild = currentGuildInfo;
   const brand = guild ? {
@@ -2760,8 +2832,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
-  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
-  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand='footerName']").forEach(el => el.textContent = "© 2026 " + brand.footerName);
@@ -2779,6 +2851,8 @@ function applyGuildBrand(){
   }
   applyRaidLayoutImages(guild?.layout?.raidImages);
   updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
+  const createRaidGuild = document.getElementById("createRaidGuild");
+  if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
 }
 
 function guildLogoUrl(guild){
@@ -2954,6 +3028,8 @@ function toggleRaidCreate(){
   if(oldPinBox) oldPinBox.classList.add("hidden");
   if(raidleadLoginBox) raidleadLoginBox.classList.add("hidden");
   if(raidCreateBox) raidCreateBox.classList.toggle("hidden");
+  const createRaidGuild=document.getElementById("createRaidGuild");
+  if(createRaidGuild) createRaidGuild.value = currentGuildInfo?.name || CURRENT_GUILD_BRAND.guildName;
   syncRaidCreateBackdrop();
   setDefaultRaidDate();
   refreshRaidCreateAccess();
@@ -3030,7 +3106,7 @@ async function createRaidFromStart(){
   const r=raids[raid];
   const raidDate=document.getElementById("createRaidDate").value;
   const raidTime=document.getElementById("createRaidTime").value;
-  const guild=document.getElementById("createRaidGuild").value.trim();
+  const guild=(currentGuildInfo?.name || document.getElementById("createRaidGuild").value || CURRENT_GUILD_BRAND.guildName).trim();
 
   const resultBox=document.getElementById("createRaidResult");
 
@@ -3078,6 +3154,8 @@ async function createRaidFromStart(){
     raidTime:raidTime,
     guild:guild,
     gilde:guild,
+    guildName:guild,
+    displayGuild:guild,
     playerPin:playerPin,
     leadPin:leadPin,
     playerLink:"",
@@ -3095,6 +3173,9 @@ async function createRaidFromStart(){
   try{
     const query = new URLSearchParams(Object.assign({}, raidData, {
       guild:CURRENT_GUILD_SLUG,
+      gilde:guild,
+      guildName:guild,
+      displayGuild:guild,
       t:Date.now()
     }));
     const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });

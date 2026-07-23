@@ -3902,10 +3902,10 @@ tr:hover td{background:rgba(250,204,21,.035)}
               </div>
             </div>
             <label class="po-signup-prio-option" for="poSignupCreateLichtlootRaid">
-              <input id="poSignupCreateLichtlootRaid" type="checkbox" onchange="handlePoSignupPrioOptionChange()">
+              <input id="poSignupCreateLichtlootRaid" type="checkbox" checked onchange="handlePoSignupPrioOptionChange()">
               <span>
-                <strong>LichtLoot-ID erstellen</strong>
-                <small class="po-signup-prio-hint">Erstellt eine Prio-ID und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
+                <strong>Prio-Raid erstellen</strong>
+                <small class="po-signup-prio-hint">Erstellt den Raid in dieser Gilde und fügt den Discord-Text automatisch in die Beschreibung ein.</small>
               </span>
             </label>
             <div class="field">
@@ -7708,7 +7708,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const createdBy = poSignupLichtlootCreatorName();
 
   if(status && !options.silent){
-    status.textContent = "LichtLoot-Prio-ID wird erstellt ...";
+    status.textContent = "Prio-Raid wird erstellt ...";
     status.className = "status";
   }
 
@@ -7736,7 +7736,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     description:config.note || ""
   });
   if(!result.success){
-    throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
+    throw new Error(result.error || "Prio-Raid konnte nicht erstellt werden.");
   }
 
   const resultRaidId = result.raidId || result.RaidID || raidId;
@@ -7747,7 +7747,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   setValue("poSignupNote", note);
   updatePoSignupPreview();
   if(status && !options.silent){
-    status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
+    status.innerHTML = `<span class="good">Prio-Raid ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
@@ -7771,7 +7771,7 @@ async function handlePoSignupPrioOptionChange(){
     config = await ensurePoSignupLichtlootRaid(config);
   }catch(error){
     if(status){
-      status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+      status.textContent = error.message || "Prio-Raid konnte nicht erstellt werden.";
       status.className = "status bad";
     }
     if(checkbox) checkbox.checked = false;
@@ -8100,7 +8100,7 @@ function setPoSignupFormConfig(config){
   setValue("poSignupItems", config.itemOptions || "");
   setValue("poSignupNote", config.note || config.message || "Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.");
   const prioCheckbox = document.getElementById("poSignupCreateLichtlootRaid");
-  if(prioCheckbox) prioCheckbox.checked = Boolean(config.createLichtlootRaid || config.lichtlootRaidId || config.lichtlootPlayerPin);
+  if(prioCheckbox) prioCheckbox.checked = config.createLichtlootRaid === false ? false : true;
   poSignupGeneratedLichtlootRaid = config.lichtlootPlayerPin ? {
     fingerprint:poSignupLichtlootFingerprint(config),
     raidId:config.lichtlootRaidId || "",
@@ -8422,7 +8422,7 @@ async function createPoSignupPost(){
       config = await ensurePoSignupLichtlootRaid(config);
     }catch(error){
       if(status){
-        status.textContent = error.message || "LichtLoot-Prio-ID konnte nicht erstellt werden.";
+        status.textContent = error.message || "Prio-Raid konnte nicht erstellt werden.";
         status.className = "status bad";
       }
       return;
@@ -8494,7 +8494,7 @@ function newPoSignupConfig(){
   setValue("poSignupPostKey", makePoSignupKey(raid, raidDate, raidTime));
   setValue("poSignupItems", "");
   setValue("poSignupNote", "Wähle unten dein Item aus und trage danach deinen Charakter ein.");
-  if(prioCheckbox) prioCheckbox.checked = false;
+  if(prioCheckbox) prioCheckbox.checked = true;
   poSignupGeneratedLichtlootRaid = null;
   selectedPoPostKey = "";
   updatePoSignupPreview();
