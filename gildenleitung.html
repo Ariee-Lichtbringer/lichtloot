@@ -5746,6 +5746,32 @@ function layoutFieldValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
+const LICHTLOOT_BOT_CLIENT_ID = "1510677346787659777";
+
+function lichtlootBotInviteUrl(){
+  const params = new URLSearchParams({
+    client_id: LICHTLOOT_BOT_CLIENT_ID,
+    permissions: "388160",
+    scope: "bot applications.commands"
+  });
+  const discordGuildId = String(currentGuildInfo?.discordGuildId || "").trim();
+  if(discordGuildId){
+    params.set("guild_id", discordGuildId);
+    params.set("disable_guild_select", "true");
+  }
+  return "https://discord.com/oauth2/authorize?" + params.toString();
+}
+
+async function copyLichtlootBotInvite(){
+  const status = document.getElementById("lootLayoutStatus");
+  try{
+    await navigator.clipboard.writeText(lichtlootBotInviteUrl());
+    if(status) status.innerHTML = '<span class="ok">✓ Bot-Einladungslink kopiert.</span>';
+  }catch(error){
+    if(status) status.innerHTML = '<span class="bad">Link konnte nicht kopiert werden.</span>';
+  }
+}
+
 function renderLootLayoutPanel(){
   const box = document.getElementById("lootLayoutPanelContent");
   if(!box) return;
@@ -5777,6 +5803,15 @@ function renderLootLayoutPanel(){
           <input id="layoutAccentColor" type="color" value="${escapeAttr(guild.accentColor || "#60a5fa")}">
         </div>
       </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>LichtLoot-Bot in Discord einladen</h3>
+      <p class="muted">Lade den Bot in euren Discord ein. Danach muss der Bot in alle Channel, in denen PO-Anmelder, Worldbuffs, Hordenbuffs, Raidposts oder Sicherungen laufen sollen.</p>
+      <div class="button-row">
+        <a class="small-btn good" href="${escapeAttr(lichtlootBotInviteUrl())}" target="_blank" rel="noopener">Bot einladen</a>
+        <button class="small-btn ghost" type="button" onclick="copyLichtlootBotInvite()">Invite-Link kopieren</button>
+      </div>
+      <p class="muted">Wichtig bei privaten Channeln: dem Bot bitte „Channel ansehen“, „Nachrichten senden“, „Nachrichtenverlauf lesen“, „Links einbetten“, „Dateien anhängen“, „Reaktionen nutzen“ und für Aufräumen/Updates „Nachrichten verwalten“ erlauben.</p>
     </div>
     <div class="card" style="margin-top:12px">
       <h3>Bilder für Raid-Kacheln</h3>
