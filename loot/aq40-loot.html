@@ -2082,8 +2082,73 @@ body.random-prio .tooltip-p0{
 const RAID_NAME = "aq40";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
-function currentGuildName(){ return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot"; }
+let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
+function titleFromSlug(slug){
+  return String(slug || "Lootsystem").split(/[-_\s]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Lootsystem";
+}
+function lootTitleFromGuild(guild){
+  const slug=String(guild?.slug || currentGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return "LichtLoot";
+  return titleFromSlug(slug || guild?.name || "Lootsystem");
+}
+function displayGuildName(guild){
+  const slug=String(guild?.slug || currentGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return "Lichtbringer";
+  return guild?.name || titleFromSlug(slug);
+}
+function currentGuildName(){ return lootTitleFromGuild(currentGuildInfo || {slug:currentGuildSlug()}); }
+function guildAssetPrefix(){ return location.pathname.includes("/loot/") ? "../" : ""; }
+function guildLogoUrl(guild){
+  const prefix=guildAssetPrefix();
+  const logo=String(guild?.logoUrl || "").trim();
+  if(currentGuildSlug() === "lichtloot") return logo || prefix + "images/content.png";
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  return logo;
+}
+function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
+async function fetchCurrentGuildInfo(){
+  const slug=currentGuildSlug();
+  if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
+  const api=typeof APPS_SCRIPT_URL !== "undefined" ? APPS_SCRIPT_URL : RAID_API_URL;
+  try{
+    const response=await fetch(api + "?action=getGuilds&t=" + Date.now(), {cache:"no-store"});
+    const data=await response.json();
+    currentGuildInfo=(data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === slug) || {slug,name:titleFromSlug(slug)};
+  }catch(error){
+    console.warn("Gildenbranding konnte nicht geladen werden:", error);
+    currentGuildInfo={slug,name:titleFromSlug(slug)};
+  }
+  return currentGuildInfo;
+}
+function replaceBrandText(lootName,guildName){
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    node.nodeValue = node.nodeValue
+      .replace(/Mein LichtLoot/g,"Mein " + lootName)
+      .replace(/Mein-LichtLoot/g,"Mein-" + lootName)
+      .replace(/LichtLoot/g,lootName)
+      .replace(/Lichtloot/g,lootName)
+      .replace(/Lichtbringer/g,guildName);
+  });
+}
+async function applyGuildBranding(){
+  const guild=await fetchCurrentGuildInfo();
+  const lootName=lootTitleFromGuild(guild);
+  const guildName=displayGuildName(guild);
+  document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);
+  if(currentGuildSlug() !== "lichtloot") replaceBrandText(lootName,guildName);
+  if(guild?.primaryColor) document.documentElement.style.setProperty("--gold", guild.primaryColor);
+  if(guild?.accentColor) document.documentElement.style.setProperty("--blue", guild.accentColor);
+  const logo=guildLogoUrl(guild);
+  document.querySelectorAll(".logo-banner-mini,.side-logo,.brand-logo,.top-profile img").forEach(el => {
+    if(logo) el.src=logo;
+    el.alt=lootName + " - " + guildName;
+  });
+}
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
   const slug=currentGuildSlug();
   if(slug === "lichtloot") return path;
@@ -2092,22 +2157,6 @@ function guildUrl(path){
   const base=hashIndex >= 0 ? path.slice(0,hashIndex) : path;
   return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
-function applyGuildBranding(){
-  if(currentGuildSlug() !== "panemloot") return;
-  document.title = document.title.replace(/Lichtloot|LichtLoot/g,"PanemLoot");
-  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
-  const nodes=[];
-  while(walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(node => {
-    node.nodeValue = node.nodeValue
-      .replace(/Mein LichtLoot/g,"Mein PanemLoot")
-      .replace(/Mein-LichtLoot/g,"Mein-PanemLoot")
-      .replace(/LichtLoot/g,"PanemLoot")
-      .replace(/Lichtloot/g,"PanemLoot")
-      .replace(/Lichtbringer/g,"Panem");
-  });
-}
-if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 const LOOT_JSON_URL = "";
 const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ40";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
@@ -2146,7 +2195,6 @@ let prioCheckTimer = null;
 let p0DeadlineTimer = null;
 
 window.p0PlusWasClicked = false;
-window.p0PlusSelectedItem = "";
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 
@@ -2725,7 +2773,7 @@ async function loadLootFromSheet(){
 async function loadAq40LootWithFallback(){
   try{
     const apiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL) +
-      "?action=getLootItems&guild=lichtloot&raid=" + encodeURIComponent(RAID_NAME) + "&t=" + Date.now();
+      "?action=getLootItems&guild=" + encodeURIComponent(currentGuildSlug()) + "&raid=" + encodeURIComponent(RAID_NAME) + "&t=" + Date.now();
     const response=await fetch(apiUrl, {cache:"no-store"});
     const payload=await response.json().catch(()=>null);
     const rows=payload && Array.isArray(payload.items) ? payload.items : [];
@@ -3057,7 +3105,6 @@ function renderLootList(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
-  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
 
   document.getElementById(slot).value=itemName;
@@ -3072,7 +3119,6 @@ function setP0Plus(itemName){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
-    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML=
       `<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
     updateActiveButtons();
@@ -3080,7 +3126,6 @@ function setP0Plus(itemName){
   }
 
   window.p0PlusWasClicked = true;
-  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
 
   document.getElementById("p1").value=itemName;
@@ -3096,7 +3141,6 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
-  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   autoSaveDraft();
   updateActiveButtons();
@@ -3168,7 +3212,6 @@ function autoSaveDraft(){
     p3:document.getElementById("p3").value,
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
-    p0PlusSelectedItem:window.p0PlusSelectedItem || "",
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -3195,7 +3238,6 @@ function loadPlayerData(){
   document.getElementById("p3").value=data.p3||"";
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
-  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
@@ -3604,42 +3646,14 @@ function isPinConflictError(result){
 
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
-  let player=document.getElementById("playerName").value.trim();
-  let server=document.getElementById("playerServer").value;
-  let playerClass=document.getElementById("playerClass").value;
-  let p1=document.getElementById("p1").value;
-  let p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
-  let p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const player=document.getElementById("playerName").value.trim();
+  const server=document.getElementById("playerServer").value;
+  const playerClass=document.getElementById("playerClass").value;
+  const p1=document.getElementById("p1").value;
+  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
+  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
   const status=document.getElementById("playerStatus");
   const saveButton=document.querySelector('button[onclick="savePrio()"]');
-  const selectedCharacter = typeof lichtlootSelectedCharacter !== "undefined" ? lichtlootSelectedCharacter : null;
-
-  if(selectedCharacter){
-    if(!player && selectedCharacter.name){
-      player=selectedCharacter.name;
-      document.getElementById("playerName").value=player;
-    }
-    if(!server && selectedCharacter.server){
-      server=selectedCharacter.server;
-      document.getElementById("playerServer").value=server;
-    }
-    if(!playerClass && selectedCharacter.className){
-      playerClass=selectedCharacter.className;
-      document.getElementById("playerClass").value=playerClass;
-    }
-  }
-
-  if(SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked)){
-    const p0Item=window.p0PlusSelectedItem || p1 || p2 || p3;
-    if(p0Item){
-      p1=p0Item;
-      if(PRIO_COUNT >= 2) p2=p0Item;
-      if(PRIO_COUNT >= 3) p3=p0Item;
-      document.getElementById("p1").value=p0Item;
-      if(PRIO_COUNT >= 2) document.getElementById("p2").value=p0Item;
-      if(PRIO_COUNT >= 3) document.getElementById("p3").value=p0Item;
-    }
-  }
 
   const isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
@@ -4296,7 +4310,7 @@ function loadP0PlusFromSheet(){
 
     script.src =
       P0PLUS_API_URL +
-      "?action=getP0Plus" +
+      "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
       "&raid=aq40" +
       "&callback=" + callbackName +
       "&t=" + Date.now();
@@ -6059,7 +6073,6 @@ async function loadGearPlanner(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
-  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML =
@@ -6073,7 +6086,6 @@ function setP0Plus(itemName){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
-    window.p0PlusSelectedItem = "";
     document.getElementById("playerStatus").innerHTML =
       '<span class="bad">'+safe(getP0DeadlineClosedMessage())+'</span>';
     updateActiveButtons();
@@ -6081,7 +6093,6 @@ function setP0Plus(itemName){
   }
 
   window.p0PlusWasClicked = true;
-  window.p0PlusSelectedItem = itemName;
   window.lastSavedPrioSignature = "";
   document.getElementById("p1").value=itemName;
   document.getElementById("p2").value=itemName;
@@ -6095,7 +6106,6 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
-  window.p0PlusSelectedItem = "";
   window.lastSavedPrioSignature = "";
   renderSelectedPrioPreviews();
   autoSaveDraft();
@@ -6122,7 +6132,6 @@ function loadPlayerData(){
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
-  window.p0PlusSelectedItem = data.p0PlusSelectedItem || (window.p0PlusWasClicked ? (data.p1 || data.p2 || data.p3 || "") : "");
 
   document.getElementById("playerStatus").innerHTML =
     '<span class="warn">Gespeicherte Auswahl für '+safe(data.player || "")+' wurde geladen.</span>';
@@ -6747,7 +6756,7 @@ function loadP0PlusOverview(){
 
   script.src =
     P0PLUS_API_URL +
-    "?action=getP0Plus" +
+    "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
     "&callback=" + callbackName +
     "&t=" + Date.now();
 
@@ -7028,7 +7037,7 @@ async function loadLootDataForRaid(raid){
 
   try{
     const apiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL) +
-      "?action=getLootItems&guild=lichtloot&raid=" + encodeURIComponent(raid) + "&t=" + Date.now();
+      "?action=getLootItems&guild=" + encodeURIComponent(currentGuildSlug()) + "&raid=" + encodeURIComponent(raid) + "&t=" + Date.now();
     const response=await fetch(apiUrl, {cache:"no-store"});
     const payload=await response.json().catch(()=>null);
     const rows=payload && Array.isArray(payload.items) ? payload.items : [];
@@ -7822,7 +7831,7 @@ function finalFetchP0FromApi(){
       finish(entries);
     };
     script.onerror = () => finish([]);
-    script.src = P0PLUS_API_URL + "?action=getP0Plus&raid=" + encodeURIComponent(RAID_NAME) + "&callback=" + callbackName + "&t=" + Date.now();
+    script.src = P0PLUS_API_URL + "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) + "&raid=" + encodeURIComponent(RAID_NAME) + "&callback=" + callbackName + "&t=" + Date.now();
     document.body.appendChild(script);
     setTimeout(() => finish([]), 10000);
   });
@@ -8072,7 +8081,7 @@ function finalFetchP0FromApi(){
 
     script.onerror = () => finish([]);
     /* Wichtig: kein raid=aq40 mitsenden. Die API liefert zuverlässig alle Einträge; die Seite filtert/ordnet danach selbst. */
-    script.src = P0PLUS_API_URL + "?action=getP0Plus&callback=" + callbackName + "&t=" + Date.now();
+    script.src = P0PLUS_API_URL + "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) + "&callback=" + callbackName + "&t=" + Date.now();
     document.body.appendChild(script);
     setTimeout(() => finish([]), 10000);
   });
@@ -8194,7 +8203,7 @@ setTimeout(() => {
    Der CSV-Tab dient nur noch als Notfall-Fallback. Dadurch werden Änderungen im Sheet schneller sichtbar. */
 function finalFetchP0FromLiveApi(){
   const freshUrl = P0PLUS_API_URL +
-    "?action=getP0Plus" +
+    "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
     "&nocache=1" +
     "&refresh=1" +
     "&ts=" + Date.now() + "_" + Math.random().toString(36).slice(2);
@@ -8707,7 +8716,7 @@ function p0V5FetchJsonp(baseUrl,label){
 
     script.onerror = () => finish([]);
     script.src = baseUrl +
-      "?action=getP0Plus" +
+      "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
       "&raid=" + encodeURIComponent(RAID_NAME) +
       "&callback=" + encodeURIComponent(callbackName) +
       "&t=" + Date.now();
@@ -8931,7 +8940,7 @@ function p0V6FetchJsonpAll(baseUrl,label){
 
     script.onerror = () => finish([]);
     script.src = baseUrl +
-      "?action=getP0Plus" +
+      "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
       "&all=1" +
       "&nocache=1" +
       "&refresh=1" +
@@ -8945,7 +8954,7 @@ function p0V6FetchJsonpAll(baseUrl,label){
 
 async function p0V6FetchFetchAll(baseUrl,label){
   const url = baseUrl +
-    "?action=getP0Plus" +
+    "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
     "&all=1" +
     "&nocache=1" +
     "&refresh=1" +
@@ -9226,7 +9235,7 @@ function p0V9Store(entries){
 
 async function p0V9FetchJson(url,label){
   const fullUrl = url +
-    "?action=getP0Plus" +
+    "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
     "&all=1" +
     "&nocache=1" +
     "&refresh=1" +
@@ -9236,7 +9245,7 @@ async function p0V9FetchJson(url,label){
   if(!response.ok) throw new Error(label + " HTTP " + response.status);
   const result = await response.json();
   const raw = Array.isArray(result?.entries) ? result.entries : [];
-  return raw.map(p0V9Normalize).filter(Boolean);
+  return raw.map(p0V9Normalize).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry));
 }
 
 function p0V9FetchJsonp(url,label){
@@ -9250,7 +9259,7 @@ function p0V9FetchJsonp(url,label){
       done = true;
       try{ delete window[callbackName]; }catch(e){}
       if(script && script.parentNode) script.parentNode.removeChild(script);
-      resolve((entries || []).map(p0V9Normalize).filter(Boolean));
+      resolve((entries || []).map(p0V9Normalize).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry)));
     }
 
     window[callbackName] = result => {
@@ -9260,7 +9269,7 @@ function p0V9FetchJsonp(url,label){
 
     script.onerror = () => finish([]);
     script.src = url +
-      "?action=getP0Plus" +
+      "?action=getP0Plus&guild=" + encodeURIComponent(currentGuildSlug()) +
       "&all=1" +
       "&nocache=1" +
       "&refresh=1" +
@@ -9272,6 +9281,7 @@ function p0V9FetchJsonp(url,label){
 }
 
 async function p0V9FetchCsv(){
+  if(currentGuildSlug() !== "lichtloot") return [];// Google-Sheet-Fallback ist nur fuer LichtLoot, neue Gilden nutzen die gildengetrennte API.
   const candidates = [
     "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&gid=182554939",
     "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=P0Plus"
@@ -10765,7 +10775,39 @@ function renderPublishedItems(prios){
   });
 }
 
-</script>
 
+/* === Gilden-Schutz: PO+/P0+ Punkte nie aus einer anderen Gilde anzeigen === */
+function lichtlootP0GuildMatchesCurrent(entry){
+  const slug=normalizeGuildKey(currentGuildSlug());
+  if(slug === "lichtloot") return true;
+  const guildName=normalizeGuildKey(displayGuildName(currentGuildInfo || {slug:currentGuildSlug()}));
+  const lootName=normalizeGuildKey(lootTitleFromGuild(currentGuildInfo || {slug:currentGuildSlug()}));
+  const raw=[entry?.guild,entry?.gilde,entry?.guildSlug,entry?.guild_slug,entry?.Gilde,entry?.Lootsystem,entry?.lootName,entry?.sourceGuild].map(normalizeGuildKey).filter(Boolean);
+  if(!raw.length) return entry?.__currentGuildApi === true;
+  return raw.some(value => value === slug || value === guildName || value === lootName);
+}
+function lichtlootFilterCurrentGuildP0Stores(){
+  const filter=list => (Array.isArray(list) ? list.filter(lichtlootP0GuildMatchesCurrent) : []);
+  if(window.p0PlusEntries) window.p0PlusEntries=filter(window.p0PlusEntries);
+  if(window.p0plusEntries) window.p0plusEntries=filter(window.p0plusEntries);
+  ["p0PlusData","p0plusData"].forEach(key => {
+    if(!window[key] || typeof window[key] !== "object") return;
+    Object.keys(window[key]).forEach(itemKey => { window[key][itemKey]=filter(window[key][itemKey]); });
+  });
+}
+(function(){
+  const oldRefresh=typeof refreshP0PlusEverywhere === "function" ? refreshP0PlusEverywhere : null;
+  if(oldRefresh){
+    refreshP0PlusEverywhere=function(){
+      return Promise.resolve(oldRefresh.apply(this,arguments)).then(result => {
+        lichtlootFilterCurrentGuildP0Stores();
+        return result;
+      });
+    };
+    refreshP0PlusEverywhere().catch(error => console.warn("PO+/P0+ Gildenabgleich fehlgeschlagen:", error));
+  }
+  setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
+})();
+</script>
 </body>
 </html>
