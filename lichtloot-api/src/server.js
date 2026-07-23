@@ -95,6 +95,10 @@ await loadMasterCodeOverrides().catch(error => {
   console.warn("Master-Code Overrides konnten nicht geladen werden:", error.message || error);
 });
 
+await ensureGuildApplicationSchema().catch(error => {
+  console.warn("Gilden-Anfragen-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -1052,6 +1056,294 @@ async function updateGuildConfig({ query: params, body = {} }) {
   } finally {
     client.release();
   }
+}
+
+async function ensureGuildApplicationSchema() {
+  await query(
+    `create table if not exists guild_applications (
+       id uuid primary key default gen_random_uuid(),
+       guild_name text not null,
+       loot_name text not null default '',
+       server text not null default '',
+       contact_name text not null default '',
+       contact_discord text not null default '',
+       contact_email text not null default '',
+       discord_guild_id text not null default '',
+       desired_guild_pin text not null default '',
+       notes text not null default '',
+       status text not null default 'pending',
+       setup_token text unique,
+       setup_token_expires_at timestamptz,
+       approved_by text,
+       approved_at timestamptz,
+       rejected_at timestamptz,
+       setup_completed_at timestamptz,
+       guild_slug text,
+       guild_pin text,
+       logo_url text not null default '',
+       background_url text not null default '',
+       primary_color text not null default '#facc15',
+       accent_color text not null default '#1d4ed8',
+       database_status text not null default 'pending',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(
+    `alter table guild_applications
+       add column if not exists setup_completed_at timestamptz,
+       add column if not exists guild_slug text,
+       add column if not exists guild_pin text,
+       add column if not exists logo_url text not null default '',
+       add column if not exists background_url text not null default '',
+       add column if not exists primary_color text not null default '#facc15',
+       add column if not exists accent_color text not null default '#1d4ed8',
+       add column if not exists database_status text not null default 'pending'`
+  );
+}
+
+function getPublicBaseUrl(params = {}) {
+  return clean(params.baseUrl || params.origin || process.env.PUBLIC_BASE_URL || "https://lichtloot.de").replace(/\/+$/, "");
+}
+
+function makeGuildSetupUrl(token, params = {}) {
+  return `${getPublicBaseUrl(params)}/gilde-einrichten.html?token=${encodeURIComponent(token)}`;
+}
+
+function normalizeGuildApplicationRow(row, params = {}) {
+  const token = clean(row.setup_token);
+  return {
+    id: row.id,
+    guildName: row.guild_name || "",
+    lootName: row.loot_name || "",
+    server: row.server || "",
+    contactName: row.contact_name || "",
+    contactDiscord: row.contact_discord || "",
+    contactEmail: row.contact_email || "",
+    discordGuildId: row.discord_guild_id || "",
+    desiredGuildPin: row.desired_guild_pin || "",
+    notes: row.notes || "",
+    status: row.status || "pending",
+    setupToken: token,
+    setupUrl: token ? makeGuildSetupUrl(token, params) : "",
+    setupTokenExpiresAt: row.setup_token_expires_at || null,
+    approvedBy: row.approved_by || "",
+    approvedAt: row.approved_at || null,
+    rejectedAt: row.rejected_at || null,
+    setupCompletedAt: row.setup_completed_at || null,
+    guildSlug: row.guild_slug || "",
+    guildPin: row.guild_pin || "",
+    logoUrl: row.logo_url || "",
+    backgroundUrl: row.background_url || "",
+    primaryColor: row.primary_color || "#facc15",
+    accentColor: row.accent_color || "#1d4ed8",
+    databaseStatus: row.database_status || "pending",
+    createdAt: row.created_at || null,
+    updatedAt: row.updated_at || null
+  };
+}
+
+async function submitGuildApplication({ query: params, body = {} }) {
+  await ensureGuildApplicationSchema();
+  const values = { ...params, ...body };
+  const guildName = clean(values.guildName || values.guild_name);
+  const lootName = clean(values.lootName || values.loot_name);
+  const server = clean(values.server);
+  const contactName = clean(values.contactName || values.contact_name);
+  const contactDiscord = clean(values.contactDiscord || values.contact_discord);
+  const contactEmail = clean(values.contactEmail || values.contact_email);
+  const discordGuildId = clean(values.discordGuildId || values.discord_guild_id);
+  const desiredGuildPin = normalizePin(values.guildPin || values.desiredGuildPin || values.desired_guild_pin);
+  const notes = clean(values.notes);
+
+  if (!guildName || !contactName || (!contactDiscord && !contactEmail)) {
+    const error = new Error("Bitte Gildenname, Ansprechpartner und Discord oder E-Mail ausfüllen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await query(
+    `insert into guild_applications
+       (guild_name, loot_name, server, contact_name, contact_discord, contact_email, discord_guild_id, desired_guild_pin, notes)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+     returning *`,
+    [guildName, lootName, server, contactName, contactDiscord, contactEmail, discordGuildId, desiredGuildPin, notes]
+  );
+
+  return {
+    success: true,
+    application: normalizeGuildApplicationRow(result.rows[0], values),
+    message: "Gilden-Anfrage gespeichert. Die Freischaltung erfolgt im Admin-Bereich."
+  };
+}
+
+async function getGuildApplications({ query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureGuildApplicationSchema();
+  const result = await query(
+    `select *
+     from guild_applications
+     order by
+       case status when 'pending' then 0 when 'approved' then 1 when 'completed' then 2 else 3 end,
+       created_at desc`
+  );
+  return {
+    success: true,
+    applications: result.rows.map(row => normalizeGuildApplicationRow(row, params))
+  };
+}
+
+async function approveGuildApplication({ query: params, body = {} }) {
+  requireMasterCode(params.masterCode || body.masterCode);
+  await ensureGuildApplicationSchema();
+  const values = { ...params, ...body };
+  const id = clean(values.id);
+  if (!id) {
+    const error = new Error("Anfrage fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const token = clean(values.setupToken) || `${randomUUID().replace(/-/g, "")}${randomUUID().slice(0, 8)}`;
+  const result = await query(
+    `update guild_applications
+     set status = 'approved',
+         setup_token = $2,
+         setup_token_expires_at = now() + interval '14 days',
+         approved_by = $3,
+         approved_at = now(),
+         rejected_at = null,
+         updated_at = now()
+     where id = $1
+     returning *`,
+    [id, token, clean(values.approvedBy) || "Gildenleitung"]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Anfrage nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    application: normalizeGuildApplicationRow(result.rows[0], values)
+  };
+}
+
+async function rejectGuildApplication({ query: params, body = {} }) {
+  requireMasterCode(params.masterCode || body.masterCode);
+  await ensureGuildApplicationSchema();
+  const id = clean(params.id || body.id);
+  if (!id) {
+    const error = new Error("Anfrage fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `update guild_applications
+     set status = 'rejected',
+         rejected_at = now(),
+         updated_at = now()
+     where id = $1
+     returning *`,
+    [id]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Anfrage nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { success: true, application: normalizeGuildApplicationRow(result.rows[0], params) };
+}
+
+async function getGuildSetup({ query: params }) {
+  await ensureGuildApplicationSchema();
+  const token = clean(params.token);
+  if (!token) {
+    const error = new Error("Freischaltlink fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select *
+     from guild_applications
+     where setup_token = $1
+       and status in ('approved', 'completed')
+       and (setup_token_expires_at is null or setup_token_expires_at > now())
+     limit 1`,
+    [token]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Freischaltlink ist ungültig oder abgelaufen.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { success: true, application: normalizeGuildApplicationRow(result.rows[0], params) };
+}
+
+async function completeGuildSetup({ query: params, body = {} }) {
+  await ensureGuildApplicationSchema();
+  const values = { ...params, ...body };
+  const token = clean(values.token);
+  if (!token) {
+    const error = new Error("Freischaltlink fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const applicationResult = await query(
+    `select *
+     from guild_applications
+     where setup_token = $1
+       and status = 'approved'
+       and (setup_token_expires_at is null or setup_token_expires_at > now())
+     limit 1`,
+    [token]
+  );
+  const application = applicationResult.rows[0];
+  if (!application) {
+    const error = new Error("Freischaltlink ist ungültig, abgelaufen oder bereits abgeschlossen.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const guildName = clean(values.guildName) || application.guild_name;
+  const lootName = clean(values.lootName) || application.loot_name || guildName;
+  const server = clean(values.server) || application.server;
+  const guildPin = normalizePin(values.guildPin) || application.desired_guild_pin;
+  const logoUrl = clean(values.logoUrl);
+  const backgroundUrl = clean(values.backgroundUrl);
+  const primaryColor = clean(values.primaryColor) || "#facc15";
+  const accentColor = clean(values.accentColor) || "#1d4ed8";
+
+  const created = await createGuild({ query: { guildName, lootName, server } });
+  const saved = await updateGuildConfig({
+    query: { guild: created.guild.slug },
+    body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor }
+  });
+
+  const rowResult = await query(
+    `update guild_applications
+     set status = 'completed',
+         setup_completed_at = now(),
+         guild_slug = $2,
+         guild_pin = $3,
+         logo_url = $4,
+         background_url = $5,
+         primary_color = $6,
+         accent_color = $7,
+         updated_at = now()
+     where id = $1
+     returning *`,
+    [application.id, created.guild.slug, guildPin, logoUrl, backgroundUrl, primaryColor, accentColor]
+  );
+
+  return {
+    success: true,
+    application: normalizeGuildApplicationRow(rowResult.rows[0], values),
+    guild: saved.guild,
+    startUrl: `start.html?guild=${encodeURIComponent(created.guild.slug)}`,
+    leadershipUrl: `gildenleitung.html?guild=${encodeURIComponent(created.guild.slug)}`
+  };
 }
 
 function normalizePin(value) {
@@ -15546,6 +15838,36 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(saved);
     }
 
+    if (action === "submitGuildApplication") {
+      const saved = await submitGuildApplication({ query: req.query });
+      return res.json(saved);
+    }
+
+    if (action === "guildGetApplications") {
+      const applications = await getGuildApplications({ query: req.query });
+      return res.json(applications);
+    }
+
+    if (action === "guildApproveApplication") {
+      const approved = await approveGuildApplication({ query: req.query });
+      return res.json(approved);
+    }
+
+    if (action === "guildRejectApplication") {
+      const rejected = await rejectGuildApplication({ query: req.query });
+      return res.json(rejected);
+    }
+
+    if (action === "getGuildSetup") {
+      const setup = await getGuildSetup({ query: req.query });
+      return res.json(setup);
+    }
+
+    if (action === "completeGuildSetup") {
+      const completed = await completeGuildSetup({ query: req.query });
+      return res.json(completed);
+    }
+
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
 
     if (action === "getCharactersByPin") {
@@ -16225,6 +16547,26 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "updateGuildConfig") {
       const saved = await updateGuildConfig({ query: req.query, body: req.body });
       return res.json(saved);
+    }
+
+    if (action === "submitGuildApplication") {
+      const saved = await submitGuildApplication({ query: req.query, body: req.body });
+      return res.json(saved);
+    }
+
+    if (action === "guildApproveApplication") {
+      const approved = await approveGuildApplication({ query: req.query, body: req.body });
+      return res.json(approved);
+    }
+
+    if (action === "guildRejectApplication") {
+      const rejected = await rejectGuildApplication({ query: req.query, body: req.body });
+      return res.json(rejected);
+    }
+
+    if (action === "completeGuildSetup") {
+      const completed = await completeGuildSetup({ query: req.query, body: req.body });
+      return res.json(completed);
     }
 
     const postParams = { ...(req.query || {}), ...(req.body || {}) };
