@@ -3407,7 +3407,7 @@ function renderUpcomingRaidCards(list){
   const container=document.getElementById("upcomingRaidCards");
   if(!container) return;
 
-  const entries=(list || []).filter(entry=>entry && entry._raidKey).slice(0,8);
+  const entries=(list || []).filter(entry=>entry && entry._raidKey);
   window.dashboardUpcomingRaidCards=entries;
   if(!entries.length){
     container.innerHTML='<article class="dash-panel instance-card"><div><h3>Keine kommenden Raids</h3><p>Aktuell sind keine kommenden Raids geladen.</p></div><button class="raid-btn loot-btn" onclick="toggleRaidCreate()">Raid erstellen</button></article>';
