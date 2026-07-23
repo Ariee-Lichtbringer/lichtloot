@@ -81,9 +81,11 @@
 const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const statusBox = document.getElementById("status");
 function setStatus(text, type){ statusBox.textContent = text; statusBox.className = "status " + (type || ""); }
-document.getElementById("guildApplicationForm").addEventListener("submit", async event => {
+const guildApplicationForm = document.getElementById("guildApplicationForm");
+guildApplicationForm.addEventListener("submit", async event => {
   event.preventDefault();
-  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  const form = event.currentTarget || guildApplicationForm;
+  const payload = Object.fromEntries(new FormData(form).entries());
   setStatus("Anfrage wird gespeichert ...", "");
   try{
     const response = await fetch(API_URL, {
@@ -93,7 +95,7 @@ document.getElementById("guildApplicationForm").addEventListener("submit", async
     });
     const result = await response.json();
     if(!result.success) throw new Error(result.error || "Anfrage konnte nicht gespeichert werden.");
-    event.currentTarget.reset();
+    if(form && typeof form.reset === "function") form.reset();
     setStatus("Anfrage ist gespeichert. Du bekommst den Freischaltlink, sobald sie im Admin-Bereich freigegeben wurde.", "good");
   }catch(error){
     setStatus(error.message || "Anfrage konnte nicht gespeichert werden.", "bad");
