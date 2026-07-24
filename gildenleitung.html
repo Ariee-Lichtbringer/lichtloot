@@ -6655,8 +6655,8 @@ function renderPlayers(){
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
-        <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
-        <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
+        ${group.main.id ? `<button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>` : ""}
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Löschen</button>
       </td>
     </tr>
   `;
@@ -10782,11 +10782,11 @@ async function resetPlayerLogin(rowNumber){
   }
 }
 
-async function deletePlayerLogin(rowNumber){
-  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+async function deletePlayerLogin(playerId){
+  const player = (guildData.players || []).find(entry => String(entry.playerId || "") === String(playerId || ""));
   if(!player) return;
 
-  const group = groupPlayersByMain(guildData.players || []).find(item => Number(item.main.rowNumber || 0) === Number(rowNumber));
+  const group = groupPlayersByMain(guildData.players || []).find(item => String(item.main.playerId || "") === String(playerId || ""));
   const count = group ? group.characters.length : 1;
   const ok = confirm(`Spielerlogin für ${player.char} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
   if(!ok) return;
@@ -10804,6 +10804,7 @@ async function deletePlayerLogin(rowNumber){
     const result = await railwayApi({
       action:"guildDeletePlayerLogin",
       masterCode,
+      playerId,
       char:player.char,
       server:player.server
     });
