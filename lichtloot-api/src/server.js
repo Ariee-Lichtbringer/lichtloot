@@ -1034,6 +1034,38 @@ async function ensureGuildLayoutSchema() {
   );
 }
 
+async function ensureNewGuildAdminPlayerLogin(client, guildId, guildSlug, guildPin, server) {
+  const slug = clean(guildSlug).toLowerCase();
+  const pin = normalizePin(guildPin);
+  if (!pin || !slug || slug === "lichtloot") return null;
+  await ensurePlayerRoleSchema();
+
+  const playerResult = await client.query(
+    `insert into players (guild_id, player_pin, role, approval_status, approved_at, approved_by)
+     values ($1, $2, 'admin', 'approved', now(), 'Gildenanlage')
+     on conflict (guild_id, player_pin) do update
+       set role = case when players.role in ('', 'member', 'spieler') then 'admin' else players.role end,
+           approval_status = 'approved',
+           approved_at = coalesce(players.approved_at, now()),
+           approved_by = coalesce(nullif(players.approved_by, ''), 'Gildenanlage'),
+           updated_at = now()
+     returning id, player_pin`,
+    [guildId, pin]
+  );
+  const player = playerResult.rows[0];
+  await client.query(
+    `insert into characters (player_id, name, server, class_name, is_main)
+     select $1, 'Admin', coalesce(nullif($2, ''), 'Everlook'), 'Gildenleitung', true
+     where not exists (
+       select 1 from characters
+       where player_id = $1
+         and lower(name) = 'admin'
+     )`,
+    [player.id, clean(server)]
+  );
+  return player;
+}
+
 async function createGuild({ query: params }) {
   const guildName = clean(params.guildName || params.name);
   const lootName = clean(params.lootName || params.slugName);
@@ -1085,6 +1117,13 @@ async function createGuild({ query: params }) {
 
     if (guildPin) {
       await saveGuildMasterCodeValue(client, guildResult.rows[0].id, guildPin);
+      await ensureNewGuildAdminPlayerLogin(
+        client,
+        guildResult.rows[0].id,
+        guildResult.rows[0].slug,
+        guildPin,
+        guildResult.rows[0].server || server
+      );
     }
 
     await client.query("commit");
@@ -1899,7 +1938,7 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
     await client.query("begin");
     const playerResult = await client.query(
       `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
-       values ($1, $2, $3, $4, 'approved')
+       values ($1, $2, $3, $4, 'pending')
        on conflict (guild_id, player_pin) do update
          set updated_at = now()
        returning id, player_pin`,
@@ -3522,17 +3561,27 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
 async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "", kind = "backup" }) {
   await ensureGuildDiscordConfigSchema();
   await ensureDiscordChannelSchema();
+  await ensureGuildLayoutSchema();
 
   const guildResult = await query(
-    `select slug, guild_name, loot_name
-     from guilds
-     where id = $1`,
+    `select g.slug, g.guild_name, g.loot_name,
+            coalesce(gs.layout_json, '{}'::jsonb) as layout_json
+     from guilds g
+     left join guild_settings gs on gs.guild_id = g.id
+     where g.id = $1`,
     [guildId]
   );
   const guild = guildResult.rows[0] || {};
   const slug = clean(guild.slug).toLowerCase();
   const defaultSlug = clean(defaultGuildSlug).toLowerCase() || "lichtloot";
   const isDefaultGuild = !slug || slug === defaultSlug || slug === "lichtloot";
+  const layout = guild.layout_json && typeof guild.layout_json === "object" ? guild.layout_json : {};
+  const configuredChannelId = clean(
+    kind === "worldbuff"
+      ? (layout.worldbuffBackupChannelId || layout.worldbuffChannelId)
+      : layout.p0PlusBackupChannelId
+  );
+  if (configuredChannelId) return configuredChannelId;
   const terms = kind === "worldbuff"
     ? ["worldbuff", "worldbuffs", "buff-backup", "buff-sicherung", "backup", "sicherung"]
     : ["po-backup", "p0-backup", "po-sicherung", "p0-sicherung", "po+", "p0+", "backup", "sicherung"];
@@ -3567,6 +3616,19 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
   const channelId = clean(channelResult.rows[0]?.channel_id);
   if (channelId) return channelId;
   return isDefaultGuild ? clean(envFallbackChannelId) : "";
+}
+
+async function getGuildLayoutValue(guildId, key) {
+  await ensureGuildLayoutSchema();
+  const result = await query(
+    `select coalesce(layout_json, '{}'::jsonb) as layout_json
+     from guild_settings
+     where guild_id = $1`,
+    [guildId]
+  );
+  const layout = result.rows[0]?.layout_json || {};
+  if (!layout || typeof layout !== "object" || Array.isArray(layout)) return "";
+  return clean(layout[key]);
 }
 
 async function queueWorldbuffBackup({ guildId, query: params }) {
@@ -6017,9 +6079,15 @@ async function savePoPostEntry({ guildId, query: params }) {
     throw error;
   }
 
+  await ensureCrossGuildPlayerLogin(guildId, playerPin);
   const character = await findCharacterForPin(guildId, playerPin, player, server);
   if (!character) {
     const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (normalizePlayerApprovalStatus(character.approval_status) !== "approved") {
+    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
     error.statusCode = 403;
     throw error;
   }
@@ -6444,7 +6512,7 @@ async function findCharacterForPin(guildId, pin, charName, server) {
   const normalizedPin = normalizePin(pin);
   const characterName = clean(charName);
   const result = await query(
-    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin, p.approval_status
      from players p
      join characters c on c.player_id = p.id
      where p.guild_id = $1
@@ -6908,6 +6976,26 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     const error = new Error("Item fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  if (playerPin) {
+    await ensureCrossGuildPlayerLogin(guildId, playerPin);
+    const verifiedCharacter = await findCharacterForPin(
+      guildId,
+      playerPin,
+      params.player || params.char || params.spieler,
+      params.server
+    );
+    if (!verifiedCharacter) {
+      const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
+      error.statusCode = 403;
+      throw error;
+    }
+    if (normalizePlayerApprovalStatus(verifiedCharacter.approval_status) !== "approved") {
+      const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
+      error.statusCode = 403;
+      throw error;
+    }
   }
 
   const client = await pool.connect();
@@ -14211,8 +14299,8 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
   ];
 }
 
-async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows }) {
-  const backupChannelId = await resolveGuildBackupChannelId({
+async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "" }) {
+  const backupChannelId = clean(backupChannelIdOverride) || await resolveGuildBackupChannelId({
     guildId,
     envFallbackChannelId: p0PlusTransferExportChannelId,
     kind: "p0plus"
@@ -14249,6 +14337,7 @@ async function queueManualP0PlusBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
   const requestedRaid = clean(params.raid || params.raidType || "all40").toLowerCase();
+  const backupChannelIdOverride = clean(params.channelId || params.backupChannelId || params.targetChannelId);
   const raidTypes = requestedRaid === "all" || requestedRaid === "all40" || requestedRaid === "40"
     ? ["naxx", "aq40", "bwl", "mc"]
     : [normalizeRaidType(requestedRaid)];
@@ -14267,7 +14356,8 @@ async function queueManualP0PlusBackup({ guildId, query: params }) {
         external_raid_id: `MANUELL-${raidType.toUpperCase()}-${today}`
       },
       awardedRows: [],
-      skippedRows: []
+      skippedRows: [],
+      backupChannelIdOverride
     });
     queued.push({
       raid: raidType,
@@ -17833,10 +17923,19 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildRequestWorldbuffReplacement") {
+      const targetChannelId = clean(
+        postParams.targetChannelId
+        || postParams.channelId
+        || await getGuildLayoutValue(guild.id, "worldbuffReplacementChannelId")
+      );
       const queued = await enqueueBotUpdate({
         guildId: guild.id,
         type: "worldbuff_replacement",
         payload: {
+          guild: guild.slug,
+          guildSlug: guild.slug,
+          targetChannelId,
+          channelId: targetChannelId,
           target: clean(postParams.target || "both"),
           buff: clean(postParams.buff),
           datum: clean(postParams.datum),
