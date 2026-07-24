@@ -15395,9 +15395,36 @@ async function deletePlayerLogin({ guildId, query: params }) {
       "select count(*)::int as count from characters where player_id = $1",
       [player.id]
     );
+    const characterIdsResult = await client.query(
+      "select id from characters where player_id = $1",
+      [player.id]
+    );
+    const characterIds = characterIdsResult.rows.map(row => row.id);
+    if (characterIds.length) {
+      await client.query(
+        "delete from prios where character_id = any($1::uuid[])",
+        [characterIds]
+      );
+      await client.query(
+        "delete from p0plus_points where guild_id = $1 and character_id = any($2::uuid[])",
+        [guildId, characterIds]
+      );
+      await client.query(
+        "update p0plus_point_audit set character_id = null where guild_id = $1 and character_id = any($2::uuid[])",
+        [guildId, characterIds]
+      );
+      await client.query(
+        "update p0_discord_signups set character_id = null where guild_id = $1 and character_id = any($2::uuid[])",
+        [guildId, characterIds]
+      );
+    }
     await client.query(
       "delete from player_messages where guild_id = $1 and player_pin = $2",
       [guildId, player.player_pin]
+    );
+    await client.query(
+      "delete from characters where player_id = $1",
+      [player.id]
     );
     const deleteResult = await client.query(
       "delete from players where guild_id = $1 and id = $2 returning id",
