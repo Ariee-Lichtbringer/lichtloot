@@ -15368,6 +15368,7 @@ async function deletePlayerLogin({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
   const playerId = clean(params.playerId || params.player_id || params.id);
+  const playerPin = normalizePin(params.playerPin || params.pin);
   const charName = clean(params.char || params.player || params.spieler);
   const server = clean(params.server);
   let character = null;
@@ -15378,12 +15379,18 @@ async function deletePlayerLogin({ guildId, query: params }) {
       [guildId, playerId]
     );
     player = playerResult.rows[0] || null;
+  } else if (playerPin) {
+    const playerResult = await query(
+      "select id, player_pin from players where guild_id = $1 and player_pin = $2 limit 1",
+      [guildId, playerPin]
+    );
+    player = playerResult.rows[0] || null;
   } else {
     character = await findCharacter(guildId, charName, server);
     player = character ? { id: character.player_id, player_pin: character.player_pin } : null;
   }
   if (!player) {
-    const error = new Error("Dieser Charakter wurde nicht gefunden.");
+    const error = new Error("Dieser SpielerLogin wurde in dieser Gilde nicht gefunden.");
     error.statusCode = 404;
     throw error;
   }
@@ -15401,6 +15408,14 @@ async function deletePlayerLogin({ guildId, query: params }) {
     );
     const characterIds = characterIdsResult.rows.map(row => row.id);
     if (characterIds.length) {
+      await client.query(
+        "delete from raid_signups where character_id = any($1::uuid[])",
+        [characterIds]
+      );
+      await client.query(
+        "delete from discord_player_links where guild_id = $1 and character_id = any($2::uuid[])",
+        [guildId, characterIds]
+      );
       await client.query(
         "delete from prios where character_id = any($1::uuid[])",
         [characterIds]
@@ -17787,6 +17802,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildApprovePlayerLogin" || action === "guildSetPlayerLoginApproved") {
       const saved = await setPlayerLoginApproved({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildDeletePlayerLogin") {
+      const deleted = await deletePlayerLogin({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "createRaid") {
