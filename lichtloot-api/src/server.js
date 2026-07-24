@@ -4112,6 +4112,7 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
   await ensureDiscordChannelSchema();
   const channels = Array.isArray(params.channels) ? params.channels : [];
   const seen = new Set();
+  const replaceChannels = clean(params.replace || params.fullSync).toLowerCase() === "true";
   let saved = 0;
 
   for (const raw of channels) {
@@ -4150,7 +4151,7 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
     saved += 1;
   }
 
-  if (seen.size) {
+  if (replaceChannels && seen.size) {
     await query(
       `delete from discord_bot_channels
        where guild_id = $1
@@ -4163,7 +4164,7 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
 }
 
 async function getDiscordBotChannels({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensureDiscordChannelSchema();
   const result = await query(
     `select *
