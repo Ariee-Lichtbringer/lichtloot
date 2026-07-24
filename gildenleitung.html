@@ -5906,13 +5906,13 @@ function layoutFieldValue(id){
 }
 
 const LICHTBUFF_BOT_CLIENT_ID = "1510677346787659777";
-const PO_ANMELDER_BOT_CLIENT_ID = "";
+const PO_ANMELDER_BOT_CLIENT_ID = "1527793332346945537";
 
 function discordBotInviteUrl(clientId){
   if(!String(clientId || "").trim()) return "";
   const params = new URLSearchParams({
     client_id: String(clientId || "").trim(),
-    permissions: "388160",
+    permissions: clientId === PO_ANMELDER_BOT_CLIENT_ID ? "2147560448" : "388160",
     scope: "bot applications.commands"
   });
   const discordGuildId = String(currentGuildInfo?.discordGuildId || "").trim();
@@ -6045,10 +6045,6 @@ function renderLootLayoutPanel(){
         <div class="layout-note-box">
           <h4>Channel-Rechte</h4>
           <p>Channel ansehen, Nachrichten senden, Nachrichtenverlauf lesen, Links einbetten, Dateien anhängen, Reaktionen nutzen und für Updates Nachrichten verwalten.</p>
-        </div>
-        <div class="layout-note-box warn">
-          <h4>Falls Discord Code Grant zeigt</h4>
-          <p>In der jeweiligen Discord Developer App unter OAuth2 die Option „Requires OAuth2 Code Grant“ ausschalten.</p>
         </div>
       </div>
 
