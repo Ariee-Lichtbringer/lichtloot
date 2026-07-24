@@ -1924,15 +1924,6 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
   const sourcePlayer = source.rows[0];
   if (!sourcePlayer) return null;
 
-  const sourceCharacters = await query(
-    `select name, server, class_name, is_main
-     from characters
-     where player_id = $1
-     order by is_main desc, created_at asc, name asc`,
-    [sourcePlayer.id]
-  );
-  if (!sourceCharacters.rows.length) return null;
-
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -1945,14 +1936,6 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
       [guildId, normalizedPin, sourcePlayer.security_question || null, sourcePlayer.security_answer || null]
     );
     const player = playerResult.rows[0];
-    for (const character of sourceCharacters.rows) {
-      await client.query(
-        `insert into characters (player_id, name, server, class_name, is_main)
-         values ($1, $2, $3, $4, $5)
-         on conflict do nothing`,
-        [player.id, character.name, character.server, character.class_name, Boolean(character.is_main)]
-      );
-    }
     await client.query("commit");
     return player;
   } catch (error) {
@@ -3564,7 +3547,7 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
   await ensureGuildLayoutSchema();
 
   const guildResult = await query(
-    `select g.slug, g.guild_name, g.loot_name,
+    `select g.slug, g.name as guild_name, g.name as loot_name,
             coalesce(gs.layout_json, '{}'::jsonb) as layout_json
      from guilds g
      left join guild_settings gs on gs.guild_id = g.id
@@ -7369,6 +7352,7 @@ async function getGuildLeadershipOverview(guildId, params) {
        c.is_main,
        c.created_at,
        p.id as player_id,
+       p.player_pin,
        p.role as player_role,
        p.approval_status,
        p.approved_at,
@@ -7379,12 +7363,12 @@ async function getGuildLeadershipOverview(guildId, params) {
        count(*) over (partition by p.id) as linked_characters,
        first_value(c.name) over (
          partition by p.id
-         order by c.is_main desc, c.created_at asc
+         order by coalesce(c.is_main, false) desc, c.created_at asc nulls last
        ) as main_char
      from players p
-     join characters c on c.player_id = p.id
+     left join characters c on c.player_id = p.id
      where p.guild_id = $1
-     order by c.name asc`,
+     order by coalesce(c.name, p.player_pin) asc`,
     [guildId]
   );
 
@@ -7395,12 +7379,13 @@ async function getGuildLeadershipOverview(guildId, params) {
       id: row.id,
       playerId: row.player_id,
       rowNumber: index + 1,
-      char: row.name,
-      name: row.name,
-      server: row.server,
+      char: row.name || `SpielerLogin ${row.player_pin || ""}`.trim(),
+      name: row.name || `SpielerLogin ${row.player_pin || ""}`.trim(),
+      server: row.server || "",
       className: row.class_name,
       Klasse: row.class_name,
-      mainChar: row.main_char || row.name,
+      mainChar: row.main_char || row.name || `SpielerLogin ${row.player_pin || ""}`.trim(),
+      playerPin: row.player_pin || "",
       role: normalizePlayerRole(row.player_role),
       playerRole: normalizePlayerRole(row.player_role),
       playerRoleLabel: playerRoleLabel(row.player_role),
@@ -15130,9 +15115,42 @@ async function createPlayerWithCharacter({
       [guildId, pin]
     );
     if (existingPlayer.rows.length) {
-      const error = new Error("Dieser SpielerLogin ist bereits vergeben.");
-      error.statusCode = 409;
-      throw error;
+      const existingCharacter = await client.query(
+        `select c.id
+         from characters c
+         join players p on p.id = c.player_id
+         where p.guild_id = $1 and lower(c.name) = lower($2) and lower(c.server) = lower($3)
+         limit 1`,
+        [guildId, clean(charName), clean(server)]
+      );
+      if (existingCharacter.rows.length) {
+        const error = new Error("Für diesen Charakter existiert bereits ein SpielerLogin.");
+        error.statusCode = 409;
+        throw error;
+      }
+      const linkedCharacters = await client.query(
+        "select count(*)::int as count from characters where player_id = $1",
+        [existingPlayer.rows[0].id]
+      );
+      if (Number(linkedCharacters.rows[0]?.count || 0) > 0) {
+        const error = new Error("Dieser SpielerLogin ist bereits vergeben.");
+        error.statusCode = 409;
+        throw error;
+      }
+      const characterResult = await client.query(
+        `insert into characters (player_id, name, server, class_name, is_main)
+         values ($1, $2, $3, $4, true)
+         returning id, name, server, class_name, created_at`,
+        [existingPlayer.rows[0].id, clean(charName), clean(server), clean(className)]
+      );
+      const playerResult = await client.query(
+        `select id, player_pin, approval_status, created_at
+         from players
+         where id = $1`,
+        [existingPlayer.rows[0].id]
+      );
+      await client.query("commit");
+      return { player: playerResult.rows[0], character: normalizeCharacter({ ...characterResult.rows[0], approval_status: playerResult.rows[0]?.approval_status || "pending" }) };
     }
 
     const existingCharacter = await client.query(
@@ -15349,10 +15367,22 @@ async function resetPlayerPin({ guildId, charName, server, oldPin, newPin, class
 async function deletePlayerLogin({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
+  const playerId = clean(params.playerId || params.player_id || params.id);
   const charName = clean(params.char || params.player || params.spieler);
   const server = clean(params.server);
-  const character = await findCharacter(guildId, charName, server);
-  if (!character) {
+  let character = null;
+  let player = null;
+  if (playerId) {
+    const playerResult = await query(
+      "select id, player_pin from players where guild_id = $1 and id::text = $2 limit 1",
+      [guildId, playerId]
+    );
+    player = playerResult.rows[0] || null;
+  } else {
+    character = await findCharacter(guildId, charName, server);
+    player = character ? { id: character.player_id, player_pin: character.player_pin } : null;
+  }
+  if (!player) {
     const error = new Error("Dieser Charakter wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
@@ -15363,23 +15393,23 @@ async function deletePlayerLogin({ guildId, query: params }) {
     await client.query("begin");
     const countResult = await client.query(
       "select count(*)::int as count from characters where player_id = $1",
-      [character.player_id]
+      [player.id]
     );
     await client.query(
       "delete from player_messages where guild_id = $1 and player_pin = $2",
-      [guildId, character.player_pin]
+      [guildId, player.player_pin]
     );
     const deleteResult = await client.query(
       "delete from players where guild_id = $1 and id = $2 returning id",
-      [guildId, character.player_id]
+      [guildId, player.id]
     );
     await client.query("commit");
     return {
       success: true,
       deleted: deleteResult.rowCount,
       deletedCharacters: Number(countResult.rows[0]?.count || 0),
-      player: character.name,
-      server: character.server
+      player: character?.name || "",
+      server: character?.server || ""
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
