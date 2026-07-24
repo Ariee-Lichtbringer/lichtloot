@@ -1053,6 +1053,165 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   margin-top:8px;
 }
 
+.layout-guide{
+  display:grid;
+  gap:14px;
+}
+
+.layout-steps{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+
+.layout-step-card{
+  position:relative;
+  min-height:112px;
+  border:1px solid rgba(var(--gold-rgb),.24);
+  border-radius:8px;
+  background:linear-gradient(135deg,rgba(2,6,23,.82),rgba(15,23,42,.48));
+  padding:14px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.035);
+}
+
+.layout-step-card::after{
+  content:"➜";
+  position:absolute;
+  right:-22px;
+  top:34px;
+  z-index:2;
+  color:var(--gold);
+  font-size:34px;
+  font-weight:1000;
+  line-height:1;
+  transform:rotate(-8deg);
+  text-shadow:0 2px 0 rgba(2,6,23,.9),0 0 16px rgba(var(--gold-rgb),.45);
+}
+
+.layout-step-card:last-child::after{display:none}
+
+.layout-step-num{
+  display:inline-flex;
+  width:30px;
+  height:30px;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  color:#020617;
+  background:var(--gold);
+  font-weight:1000;
+  margin-bottom:8px;
+  box-shadow:0 3px 0 rgba(0,0,0,.35);
+}
+
+.layout-step-card h4,
+.layout-info-box h4,
+.layout-bot-card h4{
+  margin:0 0 6px;
+  color:var(--gold);
+  font-size:15px;
+  font-weight:1000;
+}
+
+.layout-step-card p,
+.layout-info-box p,
+.layout-bot-card p,
+.layout-note-box p{
+  margin:0;
+  color:#cbd5e1;
+  font-size:12px;
+  line-height:1.45;
+}
+
+.layout-info-grid{
+  display:grid;
+  grid-template-columns:minmax(280px,.95fr) minmax(360px,1.05fr);
+  gap:12px;
+  align-items:start;
+}
+
+.layout-info-box,
+.layout-bot-card,
+.layout-note-box,
+.layout-raid-field{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(2,6,23,.58);
+  padding:14px;
+}
+
+.layout-info-box{
+  display:grid;
+  gap:12px;
+}
+
+.layout-info-box.good{border-color:rgba(34,197,94,.34);background:linear-gradient(135deg,rgba(22,101,52,.22),rgba(2,6,23,.58))}
+.layout-info-box.blue{border-color:rgba(var(--blue-rgb),.28);background:linear-gradient(135deg,rgba(var(--blue-rgb),.14),rgba(2,6,23,.58))}
+.layout-info-box.gold{border-color:rgba(var(--gold-rgb),.28);background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(2,6,23,.58))}
+
+.layout-box-head{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+
+.layout-comic-arrow{
+  flex:0 0 auto;
+  width:38px;
+  height:32px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:#020617;
+  background:var(--gold);
+  border-radius:999px;
+  font-size:22px;
+  font-weight:1000;
+  transform:rotate(-10deg);
+  box-shadow:0 3px 0 rgba(0,0,0,.36);
+}
+
+.layout-form-grid,
+.layout-bot-grid,
+.layout-note-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.layout-raid-image-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(220px,1fr));
+  gap:10px;
+}
+
+.layout-raid-field label{
+  color:var(--gold);
+}
+
+.layout-note-box{
+  border-left:4px solid var(--gold);
+}
+
+.layout-note-box.warn{
+  border-left-color:#f97316;
+  background:rgba(67,20,7,.26);
+}
+
+@media (max-width:1000px){
+  .layout-steps,
+  .layout-info-grid,
+  .layout-form-grid,
+  .layout-bot-grid,
+  .layout-note-row,
+  .layout-raid-image-grid{
+    grid-template-columns:1fr;
+  }
+  .layout-step-card::after{
+    display:none;
+  }
+}
+
 .raid-helper-body{
   --raid-helper-accent:96,165,250;
   border-radius:8px;
@@ -5747,13 +5906,13 @@ function layoutFieldValue(id){
 }
 
 const LICHTBUFF_BOT_CLIENT_ID = "1510677346787659777";
-const PO_ANMELDER_BOT_CLIENT_ID = "";
+const PO_ANMELDER_BOT_CLIENT_ID = "1527793332346945537";
 
 function discordBotInviteUrl(clientId){
   if(!String(clientId || "").trim()) return "";
   const params = new URLSearchParams({
     client_id: String(clientId || "").trim(),
-    permissions: "388160",
+    permissions: clientId === PO_ANMELDER_BOT_CLIENT_ID ? "2147560448" : "388160",
     scope: "bot applications.commands"
   });
   const discordGuildId = String(currentGuildInfo?.discordGuildId || "").trim();
@@ -5804,71 +5963,129 @@ function renderLootLayoutPanel(){
   const raidImages = layout.raidImages || {};
   const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
   box.innerHTML = `
-    <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:12px">
-      <div class="card">
-        <h3>Logo & Hintergrund</h3>
-        <div class="field">
-          <label>Logo-URL</label>
-          <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
+    <div class="layout-guide">
+      <div class="layout-steps">
+        <div class="layout-step-card">
+          <span class="layout-step-num">1</span>
+          <h4>Optik festlegen</h4>
+          <p>Logo, Hintergrund und Farben bestimmen das Grundlayout der Gilde.</p>
         </div>
-        <div class="field">
-          <label>Hintergrund-URL</label>
-          <input id="layoutBackgroundUrl" value="${escapeAttr(guild.backgroundUrl || "")}" placeholder="images/back.jpeg">
+        <div class="layout-step-card">
+          <span class="layout-step-num">2</span>
+          <h4>Bots verbinden</h4>
+          <p>Beide Discord-Bots einladen und in den gewünschten Channels freigeben.</p>
         </div>
-      </div>
-      <div class="card">
-        <h3>Farben</h3>
-        <div class="field">
-          <label>Hauptfarbe</label>
-          <input id="layoutPrimaryColor" type="color" value="${escapeAttr(guild.primaryColor || "#facc15")}">
-        </div>
-        <div class="field">
-          <label>Akzentfarbe</label>
-          <input id="layoutAccentColor" type="color" value="${escapeAttr(guild.accentColor || "#60a5fa")}">
+        <div class="layout-step-card">
+          <span class="layout-step-num">3</span>
+          <h4>Raid-Kacheln prüfen</h4>
+          <p>Für jede Raidart das passende Bild setzen und danach oben speichern.</p>
         </div>
       </div>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <h3>Discord-Bots einladen</h3>
-      <p class="muted">Für neue Gilden müssen beide Bots in den Discord eingeladen werden. Danach die Bots bitte in die gewünschten privaten Channel aufnehmen und dort freigeben.</p>
-      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
-        <div class="card">
-          <h3>Lichtbuff-Bot</h3>
-          <p class="muted">Postet und aktualisiert Worldbuffs, Hordenbuffs, Raidposts, Loganalysen und Sicherungen. Dieser Bot liest die Bot-Warteschlange und schreibt nur in die Channel der jeweiligen Gilde.</p>
-          <div class="button-row">
-            ${renderBotInviteButton("lichtbuff", "Lichtbuff-Bot einladen")}
-            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('lichtbuff')">Link kopieren</button>
-          </div>
-        </div>
-        <div class="card">
-          <h3>PO-Anmelder-Bot</h3>
-          <p class="muted">Erstellt die PO-Anmelder im Discord, zeigt Item-Auswahl und speichert die freigegebenen Spieler-Einträge passend zur Gilde. Dieser Bot ist nur für PO-Anmeldungen zuständig.</p>
-          <div class="button-row">
-            ${renderBotInviteButton("po", "PO-Anmelder-Bot einladen")}
-            <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('po')">Link kopieren</button>
-          </div>
-          ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom PO-Anmelder-Bot eingetragen werden.</p>'}
-        </div>
-      </div>
-      <p class="muted">Benötigte Channel-Rechte: „Channel ansehen“, „Nachrichten senden“, „Nachrichtenverlauf lesen“, „Links einbetten“, „Dateien anhängen“, „Reaktionen nutzen“ und für Aufräumen/Updates „Nachrichten verwalten“.</p>
-      <p class="muted">Falls Discord „Integration requires code grant“ zeigt: In der jeweiligen Discord Developer App unter OAuth2 die Option „Requires OAuth2 Code Grant“ ausschalten.</p>
-    </div>
-    <div class="card" style="margin-top:12px">
-      <h3>Bilder für Raid-Kacheln</h3>
-      <div class="grid" style="grid-template-columns:repeat(2,minmax(260px,1fr));gap:10px">
-        ${raidKeys.map(key => {
-          const option = RAID_OPTIONS[key] || {};
-          const value = raidImages[key] || RAID_IMAGES[key] || "";
-          return `
-            <div class="field">
-              <label>${escapeHtml(option.name || key.toUpperCase())}</label>
-              <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="images/raid-templates/${escapeAttr(key)}.jpg">
+
+      <div class="layout-info-grid">
+        <section class="layout-info-box good">
+          <div class="layout-box-head">
+            <span class="layout-comic-arrow">↘</span>
+            <div>
+              <h4>Logo, Hintergrund & Farben</h4>
+              <p>Diese Werte gelten für Startseite, Gildenleitung, Lootseiten und Raidlead-Ansichten dieser Gilde.</p>
             </div>
-          `;
-        }).join("")}
+          </div>
+          <div class="layout-form-grid">
+            <div class="field">
+              <label>Logo-URL</label>
+              <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
+            </div>
+            <div class="field">
+              <label>Hintergrund-URL</label>
+              <input id="layoutBackgroundUrl" value="${escapeAttr(guild.backgroundUrl || "")}" placeholder="images/back.jpeg">
+            </div>
+            <div class="field">
+              <label>Hauptfarbe</label>
+              <input id="layoutPrimaryColor" type="color" value="${escapeAttr(guild.primaryColor || "#facc15")}">
+            </div>
+            <div class="field">
+              <label>Akzentfarbe</label>
+              <input id="layoutAccentColor" type="color" value="${escapeAttr(guild.accentColor || "#60a5fa")}">
+            </div>
+          </div>
+        </section>
+
+        <section class="layout-info-box blue">
+          <div class="layout-box-head">
+            <span class="layout-comic-arrow">↘</span>
+            <div>
+              <h4>Discord-Bots einladen</h4>
+              <p>Für neue Gilden müssen beide Bots in den Discord. Danach die Bots in die passenden privaten Channels aufnehmen.</p>
+            </div>
+          </div>
+          <div class="layout-bot-grid">
+            <div class="layout-bot-card">
+              <h4>Lichtbuff-Bot</h4>
+              <p>Postet Worldbuffs, Hordenbuffs, Raidposts, Loganalysen und Sicherungen für die jeweilige Gilde.</p>
+              <div class="button-row">
+                ${renderBotInviteButton("lichtbuff", "Lichtbuff-Bot einladen")}
+                <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('lichtbuff')">Link kopieren</button>
+              </div>
+            </div>
+            <div class="layout-bot-card">
+              <h4>PO-Anmelder-Bot</h4>
+              <p>Erstellt PO-Anmelder im Discord, zeigt die Item-Auswahl und speichert freigegebene Spieler-Einträge passend zur Gilde.</p>
+              <div class="button-row">
+                ${renderBotInviteButton("po", "PO-Anmelder-Bot einladen")}
+                <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('po')">Link kopieren</button>
+              </div>
+              ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom PO-Anmelder-Bot eingetragen werden.</p>'}
+            </div>
+          </div>
+        </section>
       </div>
+
+      <div class="layout-note-row">
+        <div class="layout-note-box">
+          <h4>Channel-Rechte</h4>
+          <p>Channel ansehen, Nachrichten senden, Nachrichtenverlauf lesen, Links einbetten, Dateien anhängen, Reaktionen nutzen und für Updates Nachrichten verwalten.</p>
+        </div>
+        <div class="layout-note-box">
+          <h4>Feste Bot-Channels</h4>
+          <p>Lege hier fest, wohin Ersatzsuche und PO+-Sicherungen für diese Gilde gepostet werden.</p>
+          <div class="layout-form-grid">
+            <div class="field">
+              <label>Worldbuff-Ersatz-Channel</label>
+              <select id="layoutWorldbuffReplacementChannelId">${layoutChannelSelectOptions(layout.worldbuffReplacementChannelId || "")}</select>
+            </div>
+            <div class="field">
+              <label>PO+-Backup-Channel</label>
+              <select id="layoutP0PlusBackupChannelId">${layoutChannelSelectOptions(layout.p0PlusBackupChannelId || "")}</select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section class="layout-info-box gold">
+        <div class="layout-box-head">
+          <span class="layout-comic-arrow">↘</span>
+          <div>
+            <h4>Bilder für Raid-Kacheln</h4>
+            <p>Diese Bilder werden auf der Startseite, in der Gildenleitung und bei Raidkarten verwendet.</p>
+          </div>
+        </div>
+        <div class="layout-raid-image-grid">
+          ${raidKeys.map(key => {
+            const option = RAID_OPTIONS[key] || {};
+            const value = raidImages[key] || RAID_IMAGES[key] || "";
+            return `
+              <div class="layout-raid-field field">
+                <label>${escapeHtml(option.name || key.toUpperCase())}</label>
+                <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="images/raid-templates/${escapeAttr(key)}.jpg">
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </section>
+
+      <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
-    <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
   `;
 }
 
@@ -5879,6 +6096,15 @@ async function saveLootLayoutPanel(){
   raidKeys.forEach(key => {
     raidImages[key] = layoutFieldValue("layoutRaidImage_" + key);
   });
+  const existingLayout = currentGuildInfo && currentGuildInfo.layout && typeof currentGuildInfo.layout === "object"
+    ? currentGuildInfo.layout
+    : {};
+  const nextLayout = {
+    ...existingLayout,
+    raidImages,
+    worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
+    p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId")
+  };
   const payload = {
     action:"updateGuildConfig",
     guild:CURRENT_GUILD_SLUG,
@@ -5886,7 +6112,7 @@ async function saveLootLayoutPanel(){
     backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
     primaryColor:layoutFieldValue("layoutPrimaryColor"),
     accentColor:layoutFieldValue("layoutAccentColor"),
-    layout:JSON.stringify({ raidImages })
+    layout:JSON.stringify(nextLayout)
   };
   if(status) status.textContent = "Layout wird gespeichert ...";
   try{
@@ -5994,6 +6220,24 @@ function discordChannelSelectOptions(selectedChannelId){
     options.push(`<option value="${escapeAttr(id)}"${id === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
   });
   return options.join("") || `<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># raid-anmelder</option>`;
+}
+
+function layoutChannelSelectOptions(selectedChannelId){
+  const selected = String(selectedChannelId || "").trim();
+  const channels = raidHelperDiscordChannels.slice();
+  const hasSelected = channels.some(channel => String(channel.channelId || channel.id) === selected);
+  const options = [`<option value="">Automatisch suchen</option>`];
+  if(selected && !hasSelected){
+    options.push(`<option value="${escapeAttr(selected)}" selected># ${escapeHtml(selected)} · manuell</option>`);
+  }
+  channels.forEach(channel => {
+    const id = String(channel.channelId || channel.id || "").trim();
+    const name = String(channel.channelName || channel.name || id).trim();
+    const category = String(channel.categoryName || channel.category || "").trim();
+    const label = (category ? category + " / " : "") + "# " + name;
+    options.push(`<option value="${escapeAttr(id)}"${id === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
+  });
+  return options.join("");
 }
 
 function isP0PlusPrio(prio){
@@ -6407,12 +6651,12 @@ function renderPlayers(){
         ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
       </td>
       <td>
-        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
+        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
-          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
-          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
-        <button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>
-        <button class="small-btn danger" type="button" onclick="deletePlayerLogin(${Number(group.main.rowNumber || 0)})">Löschen</button>
+          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false, '${escapeAttr(group.main.playerPin || "")}')">Sperre aufheben</button>`
+          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true, '${escapeAttr(group.main.playerPin || "")}')">Sperren</button>`}
+        ${group.main.id ? `<button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>` : ""}
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button>
       </td>
     </tr>
   `;
@@ -6442,22 +6686,23 @@ function renderPlayerRoleControl(group){
       <select id="${escapeAttr(selectId)}">
         ${PLAYER_LOGIN_ROLES.map(role => `<option value="${role.value}"${role.value === selected ? " selected" : ""}>${escapeHtml(role.label)}</option>`).join("")}
       </select>
-      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}')">Speichern</button>
+      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}','${escapeAttr(main.playerPin || "")}')">Speichern</button>
     </div>
   `;
 }
 
-async function setPlayerLoginRole(playerId, selectId){
+async function setPlayerLoginRole(playerId, selectId, playerPin=""){
   const select=document.getElementById(selectId);
-  if(!playerId || !select) return;
+  if((!playerId && !playerPin) || !select) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   const role=select.value;
   setStatus("Rolle wird gespeichert ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildSetPlayerLoginRole",
       masterCode,
       playerId,
+      playerPin,
       role
     });
     if(!result.success){
@@ -6471,8 +6716,8 @@ async function setPlayerLoginRole(playerId, selectId){
   }
 }
 
-async function setPlayerLoginBlocked(playerId, blocked){
-  if(!playerId) return;
+async function setPlayerLoginBlocked(playerId, blocked, playerPin=""){
+  if(!playerId && !playerPin) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -6486,10 +6731,11 @@ async function setPlayerLoginBlocked(playerId, blocked){
   const reason = blocked ? (prompt("Grund für die Sperre:", "Aus der Gilde entfernt") || "Durch Gildenleitung gesperrt") : "";
   setStatus(blocked ? "SpielerLogin wird gesperrt ..." : "Sperre wird aufgehoben ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildSetPlayerLoginBlocked",
       masterCode,
       playerId,
+      playerPin,
       blocked: blocked ? "true" : "false",
       reason
     });
@@ -6504,8 +6750,8 @@ async function setPlayerLoginBlocked(playerId, blocked){
   }
 }
 
-async function approvePlayerLogin(playerId){
-  if(!playerId) return;
+async function approvePlayerLogin(playerId, playerPin=""){
+  if(!playerId && !playerPin) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -6514,10 +6760,11 @@ async function approvePlayerLogin(playerId){
   if(!confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
   setStatus("SpielerLogin wird freigegeben ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildApprovePlayerLogin",
       masterCode,
       playerId,
+      playerPin,
       approvedBy:"Gildenleitung"
     });
     if(!result.success){
@@ -9125,7 +9372,7 @@ function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
       <tr>
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td>
-          <strong>${raidHelperClassIconMarkup(entry.className || "", "◆")} ${escapeHtml(entry.player || "-")}</strong>
+          ${poSignupPlayerWithSubmittedAt(entry, { icon: raidHelperClassIconMarkup(entry.className || "", "◆") })}
           <div class="muted">${escapeHtml(entry.className || "")}${entry.className && entry.discordName ? " · " : ""}${escapeHtml(entry.discordName || "")}</div>
           <div class="po-entry-correction-control">
             <span class="po-entry-correction-label">Spielerlogin zuordnen</span>
@@ -9230,6 +9477,49 @@ function poSignupRowTitle(row){
   const title = String(row.title || "").trim();
   if(title && title.toLowerCase() !== "po liste") return title;
   return `${raid} PO-Anmeldung`;
+}
+
+function poSignupEntryCreatedAt(entry){
+  return entry?.poCreatedAt || entry?.createdAt || entry?.created_at || entry?.updatedAt || entry?.updated_at || "";
+}
+
+function poSignupEntrySubmittedLabel(entry){
+  const value = poSignupEntryCreatedAt(entry);
+  return value ? formatDateTime(value) : "";
+}
+
+function parseLocalRaidDateTime(dateValue, timeValue){
+  const dateText = String(dateValue || "").trim();
+  const timeText = String(timeValue || "").trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateText) || !/^\d{2}:\d{2}/.test(timeText)) return null;
+  const date = new Date(`${dateText}T${timeText.slice(0,5)}:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function poSignupEntryRaidStart(entry){
+  const config = poSignupConfigForKey(entry?.postKey || "") || {};
+  return parseLocalRaidDateTime(
+    config.raidDate || entry?.raidDate || entry?.date || "",
+    config.raidTime || entry?.raidTime || entry?.time || ""
+  );
+}
+
+function isLatePoSignupEntry(entry){
+  const createdRaw = poSignupEntryCreatedAt(entry);
+  const created = createdRaw ? new Date(createdRaw) : null;
+  const raidStart = poSignupEntryRaidStart(entry);
+  if(!created || Number.isNaN(created.getTime()) || !raidStart) return false;
+  return created.getTime() >= raidStart.getTime() - 30 * 60 * 1000;
+}
+
+function poSignupPlayerWithSubmittedAt(entry, options={}){
+  const icon = options.icon || "";
+  const player = escapeHtml(entry?.player || "-");
+  const submitted = poSignupEntrySubmittedLabel(entry);
+  const late = isLatePoSignupEntry(entry);
+  const lateIcon = late ? ' <span title="Später als 30 Minuten vor Raidbeginn gemeldet">🕒</span>' : "";
+  const submittedText = submitted ? ` <span class="muted">· ${escapeHtml(submitted)}</span>` : "";
+  return `<strong>${icon ? icon + " " : ""}${player}</strong>${submittedText}${lateIcon}`;
 }
 
 function poPostConfigGroups(){
@@ -10495,19 +10785,29 @@ async function resetPlayerLogin(rowNumber){
   }
 }
 
-async function deletePlayerLogin(rowNumber){
-  const player = (guildData.players || []).find(entry => Number(entry.rowNumber || 0) === Number(rowNumber));
+async function deletePlayerLogin(playerId, playerPin=""){
+  const player = (guildData.players || []).find(entry => (
+    (playerId && String(entry.playerId || "") === String(playerId || "")) ||
+    (playerPin && String(entry.playerPin || "") === String(playerPin || ""))
+  ));
   if(!player) return;
 
-  const group = groupPlayersByMain(guildData.players || []).find(item => Number(item.main.rowNumber || 0) === Number(rowNumber));
+  const group = groupPlayersByMain(guildData.players || []).find(item => (
+    (playerId && String(item.main.playerId || "") === String(playerId || "")) ||
+    (playerPin && String(item.main.playerPin || "") === String(playerPin || ""))
+  ));
   const count = group ? group.characters.length : 1;
-  const ok = confirm(`Spielerlogin für ${player.char} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
+  const label = group?.main?.playerPin ? `SpielerLogin ${group.main.playerPin}` : (player.char || "diesen SpielerLogin");
+  const hasRealCharacter = Boolean(player.id);
+  const ok = confirm(`Spielerlogin für ${label} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
   if(!ok) return;
 
-  const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
-  if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
-    setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
-    return;
+  if(hasRealCharacter){
+    const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
+    if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
+      setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
+      return;
+    }
   }
 
   const masterCode = document.getElementById("masterCode").value.trim();
@@ -10517,6 +10817,8 @@ async function deletePlayerLogin(rowNumber){
     const result = await railwayApi({
       action:"guildDeletePlayerLogin",
       masterCode,
+      playerId,
+      playerPin,
       char:player.char,
       server:player.server
     });
@@ -11248,8 +11550,9 @@ async function queueP0PlusBackup(raidOverride){
   }
 
   const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
+  const backupChannelId = String(currentGuildInfo?.layout?.p0PlusBackupChannelId || "").trim();
   const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
-  const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
+  const ok = confirm(`PO+ Sicherung für ${label} ${backupChannelId ? "in den festgelegten PO+-Backup-Channel" : "in den PO-Backup-Channel"} posten?`);
   if(!ok) return;
 
   try{
@@ -11257,7 +11560,8 @@ async function queueP0PlusBackup(raidOverride){
     const result = await railwayApi({
       action:"guildQueueP0PlusBackup",
       masterCode,
-      raid
+      raid,
+      channelId: backupChannelId
     });
 
     if(!result.success){
@@ -11686,7 +11990,7 @@ function renderPoPostEntryRows(){
         <td><span class="badge ${statusClass}">${escapeHtml(statusLabel)}</span></td>
         <td><strong>${escapeHtml(entry.title || "PO Liste")}</strong><br><span class="muted">${escapeHtml(entry.postKey || "")}</span></td>
         <td>${escapeHtml(entry.raid || "-")}</td>
-        <td><strong>${escapeHtml(entry.player || "-")}</strong>${releaseStar}</td>
+        <td>${poSignupPlayerWithSubmittedAt(entry)}${releaseStar}</td>
         <td>${renderLootItem(entry.item || "-")}</td>
         <td>
           <div class="actions">
@@ -12469,11 +12773,12 @@ async function loadWorldbuffPanel(){
 }
 
 function renderWorldbuffPanel(days){
+  const defaultGuildName = getCurrentGuildBrand().guildName;
   document.getElementById("worldbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
       <div class="worldbuff-filter-card">
         <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
-          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle offenen</option>
+          <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle kommenden</option>
           ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
         </select>
         <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
@@ -12496,7 +12801,7 @@ function renderWorldbuffPanel(days){
     <div class="worldbuff-create-card">
       <h3 class="worldbuff-create-title">Neuen Worldbuff-Termin hier eintragen</h3>
       <div class="buff-create-grid">
-        <input id="newWorldbuffDate" type="date" aria-label="Datum">
+        <input id="newWorldbuffDate" type="date" value="${escapeAttr(todayIsoDate())}" aria-label="Datum">
         <input id="newWorldbuffTime" type="time" value="19:35" aria-label="Uhrzeit">
         <select id="newWorldbuffBuff" aria-label="Buff">
           <option value="Hakkar">Hakkar</option>
@@ -12504,7 +12809,7 @@ function renderWorldbuffPanel(days){
           <option value="Nef">Nef</option>
           <option value="Rend">Rend</option>
         </select>
-        <input id="newWorldbuffGuild" type="text" placeholder="Gilde / Fraktion">
+        <input id="newWorldbuffGuild" type="text" value="${escapeAttr(defaultGuildName)}" placeholder="Gilde / Fraktion">
         <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
         <input id="newWorldbuffNote" type="text" placeholder="Notiz">
         <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
@@ -12775,12 +13080,15 @@ async function requestWorldbuffReplacement(index){
   const targetChoice = (prompt("Wohin posten? worldbuff, intern oder beide", "beide") || "beide").toLowerCase().trim();
   const target = targetChoice.includes("intern") ? "guild" : targetChoice.includes("world") ? "worldbuff" : "both";
   const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
+  const targetChannelId = String(currentGuildInfo?.layout?.worldbuffReplacementChannelId || "").trim();
 
   try{
     const result = await railwayWrite({
       action:"guildRequestWorldbuffReplacement",
       masterCode,
       target,
+      targetChannelId,
+      channelId: targetChannelId,
       rowNumber:entry.rowNumber || "",
       buff:entry.buff || "",
       datum:entry.datum || "",
@@ -12849,10 +13157,10 @@ async function createWorldbuffTerm(){
     return;
   }
 
-  const datum = document.getElementById("newWorldbuffDate").value;
-  const uhrzeit = document.getElementById("newWorldbuffTime").value;
-  const buff = document.getElementById("newWorldbuffBuff").value;
-  const gilde = document.getElementById("newWorldbuffGuild").value.trim();
+  const datum = document.getElementById("newWorldbuffDate").value || todayIsoDate();
+  const uhrzeit = document.getElementById("newWorldbuffTime").value || "19:35";
+  const buff = document.getElementById("newWorldbuffBuff").value || "Hakkar";
+  const gilde = document.getElementById("newWorldbuffGuild").value.trim() || getCurrentGuildBrand().guildName;
   const charakter = document.getElementById("newWorldbuffCaster").value.trim();
   const note = document.getElementById("newWorldbuffNote").value.trim();
 
@@ -12875,6 +13183,25 @@ async function createWorldbuffTerm(){
       return;
     }
 
+    const createdEntry = {
+      rowNumber: result.eventId || result.rowNumber || "",
+      eventId: result.eventId || "",
+      buff,
+      datum: formatRaidDate(datum),
+      date: datum,
+      uhrzeit,
+      time: uhrzeit,
+      gilde,
+      charakter,
+      status: charakter ? "🟢 bestätigt" : "🟡 offen",
+      note,
+      notiz: note,
+      tag: formatWorldbuffDay("", datum),
+      source: "railway"
+    };
+    worldbuffEntries = collapseWorldbuffDailySlots([createdEntry, ...worldbuffEntries]);
+    renderWorldbuffMiniList();
+    renderWorldbuffPanel(document.getElementById("worldbuffDays")?.value || "all");
     await loadWorldbuffPanel();
     setStatus("Worldbuff-Termin erstellt. Bot-Update wurde vorgemerkt.", "good");
   }catch(error){
