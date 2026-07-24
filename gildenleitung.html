@@ -10788,13 +10788,17 @@ async function deletePlayerLogin(playerId){
 
   const group = groupPlayersByMain(guildData.players || []).find(item => String(item.main.playerId || "") === String(playerId || ""));
   const count = group ? group.characters.length : 1;
-  const ok = confirm(`Spielerlogin für ${player.char} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
+  const label = group?.main?.playerPin ? `SpielerLogin ${group.main.playerPin}` : (player.char || "diesen SpielerLogin");
+  const hasRealCharacter = Boolean(player.id);
+  const ok = confirm(`Spielerlogin für ${label} wirklich löschen? Dadurch werden ${count} Charakter(e), gespeicherte Prios und P0+ Punkte dieses Kontos entfernt.`);
   if(!ok) return;
 
-  const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
-  if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
-    setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
-    return;
+  if(hasRealCharacter){
+    const confirmName = prompt(`Zum Löschen bitte den Charakternamen eingeben: ${player.char}`);
+    if(String(confirmName || "").trim().toLowerCase() !== String(player.char || "").trim().toLowerCase()){
+      setStatus("Löschen abgebrochen: Charaktername stimmt nicht überein.", "bad");
+      return;
+    }
   }
 
   const masterCode = document.getElementById("masterCode").value.trim();
