@@ -6651,12 +6651,12 @@ function renderPlayers(){
         ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
       </td>
       <td>
-        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Freigeben</button>` : ""}
+        ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
-          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false)">Sperre aufheben</button>`
-          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true)">Sperren</button>`}
+          ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false, '${escapeAttr(group.main.playerPin || "")}')">Sperre aufheben</button>`
+          : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true, '${escapeAttr(group.main.playerPin || "")}')">Sperren</button>`}
         ${group.main.id ? `<button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>` : ""}
-        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}')">Löschen</button>
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button>
       </td>
     </tr>
   `;
@@ -6686,22 +6686,23 @@ function renderPlayerRoleControl(group){
       <select id="${escapeAttr(selectId)}">
         ${PLAYER_LOGIN_ROLES.map(role => `<option value="${role.value}"${role.value === selected ? " selected" : ""}>${escapeHtml(role.label)}</option>`).join("")}
       </select>
-      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}')">Speichern</button>
+      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}','${escapeAttr(main.playerPin || "")}')">Speichern</button>
     </div>
   `;
 }
 
-async function setPlayerLoginRole(playerId, selectId){
+async function setPlayerLoginRole(playerId, selectId, playerPin=""){
   const select=document.getElementById(selectId);
-  if(!playerId || !select) return;
+  if((!playerId && !playerPin) || !select) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   const role=select.value;
   setStatus("Rolle wird gespeichert ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildSetPlayerLoginRole",
       masterCode,
       playerId,
+      playerPin,
       role
     });
     if(!result.success){
@@ -6715,8 +6716,8 @@ async function setPlayerLoginRole(playerId, selectId){
   }
 }
 
-async function setPlayerLoginBlocked(playerId, blocked){
-  if(!playerId) return;
+async function setPlayerLoginBlocked(playerId, blocked, playerPin=""){
+  if(!playerId && !playerPin) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -6730,10 +6731,11 @@ async function setPlayerLoginBlocked(playerId, blocked){
   const reason = blocked ? (prompt("Grund für die Sperre:", "Aus der Gilde entfernt") || "Durch Gildenleitung gesperrt") : "";
   setStatus(blocked ? "SpielerLogin wird gesperrt ..." : "Sperre wird aufgehoben ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildSetPlayerLoginBlocked",
       masterCode,
       playerId,
+      playerPin,
       blocked: blocked ? "true" : "false",
       reason
     });
@@ -6748,8 +6750,8 @@ async function setPlayerLoginBlocked(playerId, blocked){
   }
 }
 
-async function approvePlayerLogin(playerId){
-  if(!playerId) return;
+async function approvePlayerLogin(playerId, playerPin=""){
+  if(!playerId && !playerPin) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -6758,10 +6760,11 @@ async function approvePlayerLogin(playerId){
   if(!confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
   setStatus("SpielerLogin wird freigegeben ...", "");
   try{
-    const result=await railwayWrite({
+    const result=await railwayApi({
       action:"guildApprovePlayerLogin",
       masterCode,
       playerId,
+      playerPin,
       approvedBy:"Gildenleitung"
     });
     if(!result.success){
@@ -10782,11 +10785,17 @@ async function resetPlayerLogin(rowNumber){
   }
 }
 
-async function deletePlayerLogin(playerId){
-  const player = (guildData.players || []).find(entry => String(entry.playerId || "") === String(playerId || ""));
+async function deletePlayerLogin(playerId, playerPin=""){
+  const player = (guildData.players || []).find(entry => (
+    (playerId && String(entry.playerId || "") === String(playerId || "")) ||
+    (playerPin && String(entry.playerPin || "") === String(playerPin || ""))
+  ));
   if(!player) return;
 
-  const group = groupPlayersByMain(guildData.players || []).find(item => String(item.main.playerId || "") === String(playerId || ""));
+  const group = groupPlayersByMain(guildData.players || []).find(item => (
+    (playerId && String(item.main.playerId || "") === String(playerId || "")) ||
+    (playerPin && String(item.main.playerPin || "") === String(playerPin || ""))
+  ));
   const count = group ? group.characters.length : 1;
   const label = group?.main?.playerPin ? `SpielerLogin ${group.main.playerPin}` : (player.char || "diesen SpielerLogin");
   const hasRealCharacter = Boolean(player.id);
@@ -10809,6 +10818,7 @@ async function deletePlayerLogin(playerId){
       action:"guildDeletePlayerLogin",
       masterCode,
       playerId,
+      playerPin,
       char:player.char,
       server:player.server
     });
