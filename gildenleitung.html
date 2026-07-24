@@ -6046,6 +6046,20 @@ function renderLootLayoutPanel(){
           <h4>Channel-Rechte</h4>
           <p>Channel ansehen, Nachrichten senden, Nachrichtenverlauf lesen, Links einbetten, Dateien anhängen, Reaktionen nutzen und für Updates Nachrichten verwalten.</p>
         </div>
+        <div class="layout-note-box">
+          <h4>Feste Bot-Channels</h4>
+          <p>Lege hier fest, wohin Ersatzsuche und PO+-Sicherungen für diese Gilde gepostet werden.</p>
+          <div class="layout-form-grid">
+            <div class="field">
+              <label>Worldbuff-Ersatz-Channel</label>
+              <select id="layoutWorldbuffReplacementChannelId">${layoutChannelSelectOptions(layout.worldbuffReplacementChannelId || "")}</select>
+            </div>
+            <div class="field">
+              <label>PO+-Backup-Channel</label>
+              <select id="layoutP0PlusBackupChannelId">${layoutChannelSelectOptions(layout.p0PlusBackupChannelId || "")}</select>
+            </div>
+          </div>
+        </div>
       </div>
 
       <section class="layout-info-box gold">
@@ -6082,6 +6096,15 @@ async function saveLootLayoutPanel(){
   raidKeys.forEach(key => {
     raidImages[key] = layoutFieldValue("layoutRaidImage_" + key);
   });
+  const existingLayout = currentGuildInfo && currentGuildInfo.layout && typeof currentGuildInfo.layout === "object"
+    ? currentGuildInfo.layout
+    : {};
+  const nextLayout = {
+    ...existingLayout,
+    raidImages,
+    worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
+    p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId")
+  };
   const payload = {
     action:"updateGuildConfig",
     guild:CURRENT_GUILD_SLUG,
@@ -6089,7 +6112,7 @@ async function saveLootLayoutPanel(){
     backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
     primaryColor:layoutFieldValue("layoutPrimaryColor"),
     accentColor:layoutFieldValue("layoutAccentColor"),
-    layout:JSON.stringify({ raidImages })
+    layout:JSON.stringify(nextLayout)
   };
   if(status) status.textContent = "Layout wird gespeichert ...";
   try{
@@ -6197,6 +6220,24 @@ function discordChannelSelectOptions(selectedChannelId){
     options.push(`<option value="${escapeAttr(id)}"${id === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
   });
   return options.join("") || `<option value="${escapeAttr(RAID_HELPER_CHANNEL_ID)}"># raid-anmelder</option>`;
+}
+
+function layoutChannelSelectOptions(selectedChannelId){
+  const selected = String(selectedChannelId || "").trim();
+  const channels = raidHelperDiscordChannels.slice();
+  const hasSelected = channels.some(channel => String(channel.channelId || channel.id) === selected);
+  const options = [`<option value="">Automatisch suchen</option>`];
+  if(selected && !hasSelected){
+    options.push(`<option value="${escapeAttr(selected)}" selected># ${escapeHtml(selected)} · manuell</option>`);
+  }
+  channels.forEach(channel => {
+    const id = String(channel.channelId || channel.id || "").trim();
+    const name = String(channel.channelName || channel.name || id).trim();
+    const category = String(channel.categoryName || channel.category || "").trim();
+    const label = (category ? category + " / " : "") + "# " + name;
+    options.push(`<option value="${escapeAttr(id)}"${id === selected ? " selected" : ""}>${escapeHtml(label)}</option>`);
+  });
+  return options.join("");
 }
 
 function isP0PlusPrio(prio){
@@ -11494,8 +11535,9 @@ async function queueP0PlusBackup(raidOverride){
   }
 
   const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
+  const backupChannelId = String(currentGuildInfo?.layout?.p0PlusBackupChannelId || "").trim();
   const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
-  const ok = confirm(`PO+ Sicherung für ${label} in den PO-Backup-Channel posten?`);
+  const ok = confirm(`PO+ Sicherung für ${label} ${backupChannelId ? "in den festgelegten PO+-Backup-Channel" : "in den PO-Backup-Channel"} posten?`);
   if(!ok) return;
 
   try{
@@ -11503,7 +11545,8 @@ async function queueP0PlusBackup(raidOverride){
     const result = await railwayApi({
       action:"guildQueueP0PlusBackup",
       masterCode,
-      raid
+      raid,
+      channelId: backupChannelId
     });
 
     if(!result.success){
@@ -13022,12 +13065,15 @@ async function requestWorldbuffReplacement(index){
   const targetChoice = (prompt("Wohin posten? worldbuff, intern oder beide", "beide") || "beide").toLowerCase().trim();
   const target = targetChoice.includes("intern") ? "guild" : targetChoice.includes("world") ? "worldbuff" : "both";
   const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
+  const targetChannelId = String(currentGuildInfo?.layout?.worldbuffReplacementChannelId || "").trim();
 
   try{
     const result = await railwayWrite({
       action:"guildRequestWorldbuffReplacement",
       masterCode,
       target,
+      targetChannelId,
+      channelId: targetChannelId,
       rowNumber:entry.rowNumber || "",
       buff:entry.buff || "",
       datum:entry.datum || "",
