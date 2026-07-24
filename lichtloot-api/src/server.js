@@ -6865,11 +6865,37 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
-  const raid = await findRaid(guildId, {
+  const postKey = clean(params.postKey || params.poPostKey || params.postId);
+  let raid = await findRaid(guildId, {
     ...params,
+    raidId: params.raidId || postKey,
     prioPin: params.raidPin || params.prioPin || params.playerPin,
     playerPin: params.raidPin || params.prioPin || params.playerPin
   });
+
+  if (!raid && postKey) {
+    const postConfig = await query(
+      `select raid, title, raid_pin, raid_date, raid_time
+       from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and archived_at is null
+       order by config_only desc, updated_at desc, created_at desc
+       limit 1`,
+      [guildId, postKey]
+    );
+    const row = postConfig.rows[0] || {};
+    raid = await findRaid(guildId, {
+      ...params,
+      raidId: postKey,
+      raid: row.raid || params.raid || params.raidName,
+      raidDate: row.raid_date || params.raidDate || params.date || params.datum,
+      raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
+      prioPin: row.raid_pin || params.raidPin || params.prioPin,
+      playerPin: row.raid_pin || params.raidPin || params.prioPin
+    });
+  }
+
   if (!raid) {
     const error = new Error("Raid wurde für diese LichtLoot-ID nicht gefunden.");
     error.statusCode = 404;
