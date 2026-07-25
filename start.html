@@ -1682,6 +1682,114 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .account-management-panel #meinLichtLootCard .dashboard-fold-body{
   padding:0 14px 14px!important;
 }
+.mein-lichtloot-tiles{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin:14px 0 16px;
+}
+.mein-lichtloot-tile{
+  position:relative;
+  min-height:168px;
+  display:grid;
+  grid-template-rows:1fr auto;
+  gap:10px;
+  padding:10px;
+  overflow:hidden;
+  border:1px solid rgba(250,204,21,.28);
+  border-radius:8px;
+  background:linear-gradient(145deg,rgba(2,6,23,.82),rgba(15,23,42,.62));
+  color:#f8fafc;
+  text-align:left;
+  cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 14px 26px rgba(0,0,0,.25);
+}
+.mein-lichtloot-tile:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,transparent 34%,rgba(2,6,23,.88) 100%);
+  z-index:1;
+}
+.mein-lichtloot-tile img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:saturate(1.06) contrast(1.06);
+}
+.mein-lichtloot-tile span,
+.mein-lichtloot-tile small{
+  position:relative;
+  z-index:2;
+}
+.mein-lichtloot-tile span{
+  align-self:end;
+  color:#facc15;
+  font-size:18px;
+  font-weight:1000;
+  line-height:1.08;
+  text-transform:uppercase;
+  text-shadow:0 2px 12px rgba(0,0,0,.78);
+}
+.mein-lichtloot-tile small{
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.3;
+  text-shadow:0 2px 10px rgba(0,0,0,.76);
+}
+.mein-lichtloot-tile.is-active,
+.mein-lichtloot-tile:hover,
+.mein-lichtloot-tile:focus-visible{
+  border-color:rgba(250,204,21,.78);
+  outline:none;
+  transform:translateY(-1px);
+  box-shadow:0 0 0 2px rgba(250,204,21,.14),0 18px 34px rgba(0,0,0,.34);
+}
+.mein-lichtloot-tile.is-active:after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:0;
+  height:4px;
+  border-radius:999px 999px 0 0;
+  background:#facc15;
+  z-index:3;
+  box-shadow:0 0 16px rgba(250,204,21,.55);
+}
+.mein-lichtloot-section{
+  display:none;
+  border:1px solid rgba(250,204,21,.28);
+  border-radius:8px;
+  background:rgba(2,6,23,.38);
+  padding:14px;
+}
+.mein-lichtloot-section.is-active{
+  display:grid;
+  gap:10px;
+}
+.mein-lichtloot-section-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  color:#facc15;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.mein-lichtloot-section-head small{
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:850;
+  text-transform:none;
+}
+@media(max-width:900px){
+  .mein-lichtloot-tiles{grid-template-columns:1fr}
+  .mein-lichtloot-tile{min-height:132px}
+}
 .account-management-entry{
   position:relative;
   min-height:156px;
@@ -2648,7 +2756,76 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           </div>
           <button class="right-inline-btn" type="button" onclick="goHomeView()">Zurück zu den Raids</button>
         </div>
-        <section class="dash-panel right-card account-management-card" id="meinLichtLootCard"><h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2><p>Charaktere, Prios und Worldbuff-Termine an einem Ort.</p><input id="dashboardPlayerPin" type="hidden"><p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p><div class="quick-actions"><button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button><button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button></div><details class="dashboard-fold"><summary>Charaktere & Prios</summary><div class="dashboard-fold-body"><div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div><div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div><div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div></div></details><details class="dashboard-fold"><summary>Raidkalender</summary><div class="dashboard-fold-body raid-calendar-mini"><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div></details><details class="dashboard-fold"><summary>Worldbuffs</summary><div class="dashboard-fold-body"><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div></details></section>
+        <section class="dash-panel right-card account-management-card" id="meinLichtLootCard">
+          <h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2>
+          <p>Charaktere, Prios, Raidkalender und Worldbuff-Termine an einem Ort.</p>
+          <input id="dashboardPlayerPin" type="hidden">
+          <p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p>
+          <div class="quick-actions">
+            <button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button>
+            <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
+          </div>
+          <div class="mein-lichtloot-tiles" aria-label="Mein LichtLoot Bereiche">
+            <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')">
+              <img src="images/dashboard-icons/charakterverwaltung-icon-512.png" alt="">
+              <span>Charaktere & Prios</span>
+              <small>Charakter wählen, Prios ansehen und Twinks verwalten.</small>
+            </button>
+            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="showMeinLichtLootSection('raidcalendar')">
+              <img src="images/dashboard-icons/raidkalender-icon-512.png" alt="">
+              <span>Raidkalender</span>
+              <small>Deine Termine und externe Gilden-Raids im Kalender.</small>
+            </button>
+            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="worldbuffs" onclick="showMeinLichtLootSection('worldbuffs')">
+              <img src="images/dashboard-icons/worldbuffs.jpg" alt="">
+              <span>Worldbuffs</span>
+              <small>Eigene Buff-Termine prüfen, eintragen und verschieben.</small>
+            </button>
+          </div>
+          <div class="mein-lichtloot-section is-active" data-mein-lichtloot-section="chars">
+            <div class="mein-lichtloot-section-head">
+              <span>Charaktere & Prios</span>
+              <small>Auswahl und Verwaltung</small>
+            </div>
+            <div class="character-subsection is-active">
+              <div class="character-subtitle">Charakter wählen</div>
+              <div class="dashboard-select-row">
+                <select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select>
+                <button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button>
+              </div>
+              <button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button>
+              <div id="dashboardMyPriosResults" class="dashboard-inline-results"></div>
+            </div>
+            <div class="character-subsection is-add dashboard-twink-form">
+              <div class="character-subtitle">Charakter hinzufügen</div>
+              <input id="dashboardTwinkName" type="text" placeholder="Charaktername">
+              <select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select>
+              <select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select>
+              <button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button>
+            </div>
+            <div class="character-subsection is-delete dashboard-twink-form">
+              <div class="character-subtitle">Charakter löschen</div>
+              <select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select>
+              <button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button>
+              <div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div>
+            </div>
+          </div>
+          <div class="mein-lichtloot-section raid-calendar-mini" data-mein-lichtloot-section="raidcalendar">
+            <div class="mein-lichtloot-section-head">
+              <span>Raidkalender</span>
+              <small>Termine und Reset-Planung</small>
+            </div>
+            <button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button>
+            <div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div>
+          </div>
+          <div class="mein-lichtloot-section" data-mein-lichtloot-section="worldbuffs">
+            <div class="mein-lichtloot-section-head">
+              <span>Worldbuffs</span>
+              <small>Werfer-Termine</small>
+            </div>
+            <div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div>
+          </div>
+        </section>
       </section>
 
       <section class="dash-panel raid-instance-section" id="raidInstances"><div class="section-head"><div class="section-title">Kommende Raids</div><button class="text-link-btn" onclick="toggleRaidCreate()">Raid erstellen →</button></div><div class="instance-grid" id="upcomingRaidCards"><article class="dash-panel instance-card"><div><h3>Raids werden geladen …</h3><p>Bitte kurz warten.</p></div></article></div></section>
@@ -4553,6 +4730,20 @@ function copyHiddenLichtLootToDashboard(clearHidden){
   }
 
   refreshDashboardDeleteTwinkSelect();
+}
+
+function showMeinLichtLootSection(section){
+  const key=["chars","raidcalendar","worldbuffs"].includes(section) ? section : "chars";
+  document.querySelectorAll("[data-mein-lichtloot-tile]").forEach(tile=>{
+    tile.classList.toggle("is-active", tile.dataset.meinLichtlootTile === key);
+  });
+  document.querySelectorAll("[data-mein-lichtloot-section]").forEach(panel=>{
+    panel.classList.toggle("is-active", panel.dataset.meinLichtlootSection === key);
+  });
+  if(key === "raidcalendar") renderRaidCalendar();
+  if(key === "worldbuffs" && typeof loadMyWorldbuffs === "function" && myLichtlootCharacters?.length){
+    loadMyWorldbuffs();
+  }
 }
 
 function refreshDashboardDeleteTwinkSelect(){
