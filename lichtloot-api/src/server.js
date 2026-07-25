@@ -11,7 +11,7 @@ const defaultGuildSlug = process.env.DEFAULT_GUILD_SLUG || "lichtloot";
 const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
-const p0PlusTransferExportChannelId = process.env.P0PLUS_TRANSFER_EXPORT_CHANNEL_ID || "1529393614247952434";
+const p0PlusTransferExportChannelId = "1529393614247952434";
 const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
@@ -14388,11 +14388,7 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
 }
 
 async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "" }) {
-  const backupChannelId = clean(backupChannelIdOverride) || await resolveGuildBackupChannelId({
-    guildId,
-    envFallbackChannelId: p0PlusTransferExportChannelId,
-    kind: "p0plus"
-  });
+  const backupChannelId = p0PlusTransferExportChannelId;
   if (!backupChannelId) {
     const error = new Error("Kein PO+-Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den PO-Backup-/Sicherungs-Channel einladen oder einen Channel mit 'po-backup', 'p0-backup', 'backup' oder 'sicherung' im Namen anlegen.");
     error.statusCode = 400;
