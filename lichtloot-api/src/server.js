@@ -12,7 +12,7 @@ const masterCode = process.env.MASTER_CODE || "Lichtbringer-Master";
 const lichtbotQueueToken = process.env.LICHTBOT_QUEUE_TOKEN || "";
 const logAnalysisCallbackToken = process.env.LOG_ANALYSIS_CALLBACK_TOKEN || "";
 const p0PlusTransferExportChannelId = process.env.P0PLUS_TRANSFER_EXPORT_CHANNEL_ID || "1529393614247952434";
-const worldbuffBackupChannelId = process.env.WORLDBUFF_BACKUP_CHANNEL_ID || p0PlusTransferExportChannelId;
+const worldbuffBackupChannelId = process.env.WORLDBUFF_BACKUP_CHANNEL_ID || "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
@@ -3658,12 +3658,7 @@ async function resolveDefaultGuildId() {
 
 async function queueWorldbuffBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const backupGuildId = await resolveDefaultGuildId() || guildId;
-  const backupChannelId = await resolveGuildBackupChannelId({
-    guildId: backupGuildId,
-    envFallbackChannelId: worldbuffBackupChannelId,
-    kind: "worldbuff"
-  });
+  const backupChannelId = clean(worldbuffBackupChannelId);
   if (!backupChannelId) {
     const error = new Error("Kein Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den Backup-/Sicherungs-Channel einladen oder einen Channel mit 'backup' oder 'sicherung' im Namen anlegen.");
     error.statusCode = 400;
@@ -3698,7 +3693,7 @@ async function queueWorldbuffBackup({ guildId, query: params }) {
   const today = new Date().toISOString().slice(0, 10);
   const queued = await enqueueBotUpdate({
     guildId,
-    type: "p0plus_transfer_export",
+    type: "worldbuff_backup_export",
     payload: {
       channelId: backupChannelId,
       backupTargetGuild: defaultGuildSlug || "lichtloot",
