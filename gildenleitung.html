@@ -6048,11 +6048,15 @@ function renderLootLayoutPanel(){
         </div>
         <div class="layout-note-box">
           <h4>Feste Bot-Channels</h4>
-          <p>Lege hier fest, wohin Ersatzsuche und PO+-Sicherungen für diese Gilde gepostet werden.</p>
+          <p>Lege hier fest, wohin Ersatzsuche, Worldbuff-Sicherungen und PO+-Sicherungen für diese Gilde gepostet werden.</p>
           <div class="layout-form-grid">
             <div class="field">
               <label>Worldbuff-Ersatz-Channel</label>
               <select id="layoutWorldbuffReplacementChannelId">${layoutChannelSelectOptions(layout.worldbuffReplacementChannelId || "")}</select>
+            </div>
+            <div class="field">
+              <label>Worldbuff-Backup-Channel</label>
+              <select id="layoutWorldbuffBackupChannelId">${layoutChannelSelectOptions(layout.worldbuffBackupChannelId || layout.p0PlusBackupChannelId || "")}</select>
             </div>
             <div class="field">
               <label>PO+-Backup-Channel</label>
@@ -6103,6 +6107,7 @@ async function saveLootLayoutPanel(){
     ...existingLayout,
     raidImages,
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
+    worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId")
   };
   const payload = {
