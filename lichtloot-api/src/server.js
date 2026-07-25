@@ -14387,7 +14387,7 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
   ];
 }
 
-async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "" }) {
+async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "", queueType = "p0plus_transfer_export" }) {
   const backupChannelId = p0PlusTransferExportChannelId;
   if (!backupChannelId) {
     const error = new Error("Kein PO+-Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den PO-Backup-/Sicherungs-Channel einladen oder einen Channel mit 'po-backup', 'p0-backup', 'backup' oder 'sicherung' im Namen anlegen.");
@@ -14401,9 +14401,10 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
   const sheets = await buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skippedRows });
   return enqueueBotUpdate({
     guildId,
-    type: "p0plus_transfer_export",
+    type: queueType,
     payload: {
       channelId: backupChannelId,
+      backupKind: queueType === "p0plus_backup_export" ? "p0plus" : "",
       raid: raidType,
       raidName: raid?.name || raidType,
       raidDate,
@@ -14441,7 +14442,8 @@ async function queueManualP0PlusBackup({ guildId, query: params }) {
       },
       awardedRows: [],
       skippedRows: [],
-      backupChannelIdOverride
+      backupChannelIdOverride,
+      queueType: "p0plus_backup_export"
     });
     queued.push({
       raid: raidType,
