@@ -5225,6 +5225,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+const WORLDBUFF_BACKUP_CHANNEL_ID = "1529393614247952434";
+const P0PLUS_BACKUP_CHANNEL_ID = "1529393614247952434";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
@@ -11555,9 +11557,8 @@ async function queueP0PlusBackup(raidOverride){
   }
 
   const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
-  const backupChannelId = String(currentGuildInfo?.layout?.p0PlusBackupChannelId || "").trim();
   const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
-  const ok = confirm(`PO+ Sicherung für ${label} ${backupChannelId ? "in den festgelegten PO+-Backup-Channel" : "in den PO-Backup-Channel"} posten?`);
+  const ok = confirm(`PO+ Sicherung für ${label} in den Lichtbringer-Backup-Channel posten?`);
   if(!ok) return;
 
   try{
@@ -11566,7 +11567,8 @@ async function queueP0PlusBackup(raidOverride){
       action:"guildQueueP0PlusBackup",
       masterCode,
       raid,
-      channelId: backupChannelId
+      channelId:P0PLUS_BACKUP_CHANNEL_ID,
+      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID
     });
 
     if(!result.success){
@@ -13248,7 +13250,13 @@ async function queueWorldbuffBackup(){
 
   try{
     setStatus("Worldbuff-Sicherung wird für den Bot vorbereitet ...", "");
-    const result = await railwayApi({ action:"guildQueueWorldbuffBackup", masterCode, days });
+    const result = await railwayApi({
+      action:"guildQueueWorldbuffBackup",
+      masterCode,
+      days,
+      channelId:WORLDBUFF_BACKUP_CHANNEL_ID,
+      targetChannelId:WORLDBUFF_BACKUP_CHANNEL_ID
+    });
     if(!result.success){
       setStatus(result.error || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
       return;
