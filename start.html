@@ -1567,6 +1567,101 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   width:100%;
   justify-content:center;
 }
+.own-p0-summary-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  border:1px solid rgba(250,204,21,.36)!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(250,204,21,.15),transparent 36%),
+    linear-gradient(135deg,rgba(2,6,23,.62),rgba(10,18,32,.84))!important;
+}
+.own-p0-summary-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#facc15;
+  font-size:15px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.own-p0-summary-title:before{
+  content:"";
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  background:#facc15;
+  box-shadow:0 0 14px rgba(250,204,21,.55);
+  transform:rotate(45deg);
+  flex:0 0 auto;
+}
+.own-p0-summary-text{
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.35;
+}
+.own-p0-summary-stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(94px,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+.own-p0-summary-stat{
+  min-height:54px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:8px;
+  background:rgba(2,6,23,.46);
+}
+.own-p0-summary-stat strong{
+  display:block;
+  color:#f8fafc;
+  font-size:20px;
+  line-height:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.own-p0-summary-stat span{
+  display:block;
+  margin-top:4px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.own-p0-summary-items{
+  grid-column:1 / -1;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.own-p0-summary-chip{
+  max-width:100%;
+  padding:5px 8px;
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:999px;
+  background:rgba(250,204,21,.08);
+  color:#fef3c7;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.own-p0-summary-action{
+  min-width:190px;
+  min-height:46px!important;
+  align-self:stretch;
+}
+@media(max-width:780px){
+  .own-p0-summary-card{grid-template-columns:1fr}
+  .own-p0-summary-action{width:100%;min-width:0}
+}
 
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
 #meinLichtLootCard.right-card{padding:14px!important}
@@ -1698,7 +1793,9 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   overflow:hidden;
   border:1px solid rgba(250,204,21,.28);
   border-radius:8px;
-  background:linear-gradient(145deg,rgba(2,6,23,.82),rgba(15,23,42,.62));
+  background:
+    radial-gradient(circle at 50% 34%,rgba(250,204,21,.12),transparent 52%),
+    linear-gradient(145deg,rgba(2,6,23,.92),rgba(15,23,42,.76));
   color:#f8fafc;
   text-align:left;
   cursor:pointer;
@@ -1708,15 +1805,15 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   content:"";
   position:absolute;
   inset:0;
-  background:linear-gradient(180deg,transparent 34%,rgba(2,6,23,.88) 100%);
+  background:linear-gradient(180deg,rgba(2,6,23,.10) 0%,rgba(2,6,23,.18) 48%,rgba(2,6,23,.92) 100%);
   z-index:1;
 }
 .mein-lichtloot-tile img{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
+  inset:8px;
+  width:calc(100% - 16px);
+  height:calc(100% - 16px);
+  object-fit:contain;
   filter:saturate(1.06) contrast(1.06);
 }
 .mein-lichtloot-tile span,
@@ -7125,11 +7222,7 @@ function renderMyPrios(data){
   let html='';
 
   if(ownP0.length){
-    html+=`<div class="lichtloot-fold own-p0-popout-card">
-      <strong>Eigene P0/P0+ Punkte</strong>
-      <span>${safeHtml(ownP0.length)} gespeicherte Punkte gefunden. Die komplette Liste öffnet sich als eigenes Fenster.</span>
-      <button class="right-inline-btn" type="button" onclick="openOwnP0PlusModal()">P0/P0+ Punkte öffnen</button>
-    </div>`;
+    html+=renderOwnP0PlusSummaryCard(ownP0,data);
   }
 
   if(pastEntries.length){
@@ -7178,6 +7271,37 @@ function renderMyPrios(data){
   }
 
   results.innerHTML=html;
+}
+
+function renderOwnP0PlusSummaryCard(points,data){
+  const raidNames=[...new Set((points || []).map(point=>String(point.raid || "Raid").trim()).filter(Boolean))];
+  const totalPoints=(points || []).reduce((sum,point)=>sum+(Number(point.count || 0) || 0),0);
+  const topItems=(points || [])
+    .slice()
+    .sort((a,b)=>(Number(b.count || 0) || 0)-(Number(a.count || 0) || 0))
+    .slice(0,3)
+    .map(point=>{
+      const item=String(point.item || "Item").trim();
+      const count=Number(point.count || 0) || 0;
+      return `<span class="own-p0-summary-chip">${safeHtml(item)}${count ? " · "+safeHtml(count) : ""}</span>`;
+    })
+    .join("");
+  const charName=[data && data.player, data && data.server].filter(Boolean).join(" - ");
+
+  return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
+    <div>
+      <div class="own-p0-summary-title">Punkte zu ${safeHtml(charName || "diesem Charakter")}</div>
+      <div class="own-p0-summary-text">Alle P0/P0+ Punkte sind gesammelt. Die komplette Itemliste öffnet sich weiterhin als eigenes Fenster.</div>
+      <div class="own-p0-summary-stats">
+        <div class="own-p0-summary-stat"><strong>${safeHtml(points.length)}</strong><span>Einträge</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(totalPoints)}</strong><span>Punkte</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(raidNames.length)}</strong><span>Raids</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(raidNames.slice(0,2).join(", ") || "-")}</strong><span>Bereiche</span></div>
+      </div>
+      ${topItems ? `<div class="own-p0-summary-items">${topItems}</div>` : ""}
+    </div>
+    <button class="right-inline-btn own-p0-summary-action" type="button" onclick="openOwnP0PlusModal()">Punkte anzeigen</button>
+  </div>`;
 }
 
 function raidCalendarStorageKey(){
