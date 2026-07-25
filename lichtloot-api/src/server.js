@@ -3564,7 +3564,18 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
       ? (layout.worldbuffBackupChannelId || layout.worldbuffChannelId || layout.p0PlusBackupChannelId)
       : layout.p0PlusBackupChannelId
   );
-  if (configuredChannelId) return configuredChannelId;
+  if (configuredChannelId) {
+    const configuredResult = await query(
+      `select channel_id
+       from discord_bot_channels
+       where guild_id = $1
+         and channel_id = $2
+         and can_send = true
+       limit 1`,
+      [guildId, configuredChannelId]
+    );
+    if (configuredResult.rows[0]?.channel_id) return configuredChannelId;
+  }
   const terms = kind === "worldbuff"
     ? ["worldbuff", "worldbuffs", "wb", "wb-backup", "wb-sicherung", "buff-backup", "buff-sicherung", "backup", "sicherung"]
     : ["po-backup", "p0-backup", "po-sicherung", "p0-sicherung", "po+", "p0+", "backup", "sicherung"];
@@ -3631,10 +3642,25 @@ async function getGuildLayoutValue(guildId, key) {
   return clean(layout[key]);
 }
 
+async function resolveDefaultGuildId() {
+  const slug = clean(defaultGuildSlug).toLowerCase() || "lichtloot";
+  const result = await query(
+    `select id
+     from guilds
+     where lower(slug) = $1
+        or lower(slug) = 'lichtloot'
+     order by case when lower(slug) = $1 then 0 else 1 end
+     limit 1`,
+    [slug]
+  );
+  return result.rows[0]?.id || null;
+}
+
 async function queueWorldbuffBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  const backupGuildId = await resolveDefaultGuildId() || guildId;
   const backupChannelId = await resolveGuildBackupChannelId({
-    guildId,
+    guildId: backupGuildId,
     envFallbackChannelId: worldbuffBackupChannelId,
     kind: "worldbuff"
   });
@@ -3675,6 +3701,7 @@ async function queueWorldbuffBackup({ guildId, query: params }) {
     type: "p0plus_transfer_export",
     payload: {
       channelId: backupChannelId,
+      backupTargetGuild: defaultGuildSlug || "lichtloot",
       backupKind: "worldbuff",
       days,
       createdDate: today,
