@@ -3561,12 +3561,12 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
   const layout = guild.layout_json && typeof guild.layout_json === "object" ? guild.layout_json : {};
   const configuredChannelId = clean(
     kind === "worldbuff"
-      ? (layout.worldbuffBackupChannelId || layout.worldbuffChannelId)
+      ? (layout.worldbuffBackupChannelId || layout.worldbuffChannelId || layout.p0PlusBackupChannelId)
       : layout.p0PlusBackupChannelId
   );
   if (configuredChannelId) return configuredChannelId;
   const terms = kind === "worldbuff"
-    ? ["worldbuff", "worldbuffs", "buff-backup", "buff-sicherung", "backup", "sicherung"]
+    ? ["worldbuff", "worldbuffs", "wb", "wb-backup", "wb-sicherung", "buff-backup", "buff-sicherung", "backup", "sicherung"]
     : ["po-backup", "p0-backup", "po-sicherung", "p0-sicherung", "po+", "p0+", "backup", "sicherung"];
 
   const channelResult = await query(
@@ -3576,8 +3576,25 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
          case
            when lower(coalesce(channel_name, '')) = any($2::text[]) then 0
            when lower(coalesce(category_name, '')) = any($2::text[]) then 1
-           when lower(coalesce(channel_name, '')) like '%po%' and lower(coalesce(channel_name, '')) like '%backup%' then 2
-           when lower(coalesce(channel_name, '')) like '%p0%' and lower(coalesce(channel_name, '')) like '%backup%' then 2
+           when $3 = 'worldbuff'
+             and (
+               lower(coalesce(channel_name, '')) like '%worldbuff%'
+               or lower(coalesce(channel_name, '')) like '%wb%'
+               or lower(coalesce(category_name, '')) like '%worldbuff%'
+               or lower(coalesce(category_name, '')) like '%wb%'
+             )
+             and (
+               lower(coalesce(channel_name, '')) like '%backup%'
+               or lower(coalesce(channel_name, '')) like '%sicherung%'
+               or lower(coalesce(category_name, '')) like '%backup%'
+               or lower(coalesce(category_name, '')) like '%sicherung%'
+             ) then 2
+           when $3 <> 'worldbuff'
+             and lower(coalesce(channel_name, '')) like '%po%'
+             and lower(coalesce(channel_name, '')) like '%backup%' then 2
+           when $3 <> 'worldbuff'
+             and lower(coalesce(channel_name, '')) like '%p0%'
+             and lower(coalesce(channel_name, '')) like '%backup%' then 2
            when lower(coalesce(channel_name, '')) like '%sicherung%' then 3
            when lower(coalesce(channel_name, '')) like '%backup%' then 4
            when lower(coalesce(category_name, '')) like '%sicherung%' then 5
@@ -3594,7 +3611,7 @@ async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "",
        coalesce(position, 999999),
        lower(channel_name)
      limit 1`,
-    [guildId, terms]
+    [guildId, terms, kind]
   );
   const channelId = clean(channelResult.rows[0]?.channel_id);
   if (channelId) return channelId;
