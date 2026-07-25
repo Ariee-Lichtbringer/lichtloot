@@ -4928,10 +4928,74 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
   });
 }
 
+async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", raid = "" }) {
+  await ensureDiscordChannelSchema();
+  const requested = clean(requestedChannelId);
+  if (requested) {
+    const existing = await query(
+      `select channel_id
+       from discord_bot_channels
+       where guild_id = $1
+         and channel_id = $2
+         and can_send = true
+       limit 1`,
+      [guildId, requested]
+    );
+    if (existing.rows[0]?.channel_id) return requested;
+  }
+
+  const raidKey = clean(normalizeRaidType(raid)).toLowerCase();
+  const result = await query(
+    `select channel_id
+     from (
+       select channel_id, channel_name, category_name, position,
+         case
+           when $2 <> ''
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%' || $2 || '%'
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%po%'
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%anmeld%' then 0
+           when lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%po%'
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%anmeld%' then 1
+           when $2 <> ''
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%' || $2 || '%'
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%po%' then 2
+           when lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%po%' then 3
+           when $2 <> ''
+             and lower(coalesce(channel_name, '') || ' ' || coalesce(category_name, '')) like '%' || $2 || '%' then 4
+           else 99
+         end as po_rank
+       from discord_bot_channels
+       where guild_id = $1
+         and can_send = true
+     ) ranked_channels
+     where po_rank < 99
+     order by
+       po_rank,
+       coalesce(position, 999999),
+       lower(channel_name)
+     limit 1`,
+    [guildId, raidKey]
+  );
+  return clean(result.rows[0]?.channel_id) || requested;
+}
+
 async function queuePoPost({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
-  const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || sourceChannelId;
+  const requestedSourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
+  const requestedTargetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || requestedSourceChannelId;
+  const raid = clean(params.raid || params.raidName);
+  const targetChannelId = await resolveGuildPoPostChannelId({
+    guildId,
+    requestedChannelId: requestedTargetChannelId,
+    raid
+  });
+  const sourceChannelId = requestedSourceChannelId === requestedTargetChannelId
+    ? targetChannelId
+    : await resolveGuildPoPostChannelId({
+        guildId,
+        requestedChannelId: requestedSourceChannelId,
+        raid
+      });
   const reviewRecipient = clean(params.reviewRecipient || params.reviewUserId || params.approvalUserId || params.freigabeAn);
   const postKey = clean(params.postKey || params.poPostKey || params.postId || params.id);
   if (!sourceChannelId) {
@@ -4954,7 +5018,7 @@ async function queuePoPost({ guildId, query: params }) {
       reviewRecipient,
       postKey,
       title: clean(params.title) || "PO Liste",
-      raid: clean(params.raid || params.raidName),
+      raid,
       raidDate: clean(params.raidDate || params.date || params.datum),
       raidTime: clean(params.raidTime || params.time || params.uhrzeit),
       guildName: clean(params.guildName || params.displayGuild || params.guild || params.gilde),
