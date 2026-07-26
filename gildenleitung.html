@@ -9534,6 +9534,59 @@ function poPostEntryRowsForKey(postKey){
   });
 }
 
+function poSignupCorrectionCharacterForIndex(index){
+  const characterId = poSignupCorrectionCharacterValue(index);
+  if(!characterId) return null;
+  return (poSignupCorrectionCharacters || []).find(char => String(char.id || "") === String(characterId)) || null;
+}
+
+function poSignupCorrectionItemForIndex(entry, index){
+  const itemName = poSignupCorrectionItemValue(index) || entry?.item || entry?.itemName || "";
+  if(!itemName) return null;
+  const objects = poSignupCorrectionItemObjects(entry);
+  return objects.find(item => itemKey(item.name || item.item || "") === itemKey(itemName))
+    || lootItemIndex[itemKey(itemName)]
+    || { name:itemName };
+}
+
+function poSignupVisibleEntryForDiscord(entry){
+  const index = poPostStoredEntries.indexOf(entry);
+  const selectedChar = index >= 0 ? poSignupCorrectionCharacterForIndex(index) : null;
+  const selectedItem = index >= 0 ? poSignupCorrectionItemForIndex(entry, index) : null;
+  const itemName = selectedItem?.name || selectedItem?.item || entry.item || entry.itemName || "";
+  return {
+    id: entry.id || "",
+    postKey: entry.postKey || "",
+    player: selectedChar?.name || entry.player || "",
+    className: selectedChar?.className || entry.className || entry.Klasse || "",
+    server: selectedChar?.server || entry.server || "",
+    playerPin: selectedChar?.playerPin || entry.playerPin || "",
+    item: itemName,
+    itemName,
+    itemId: selectedItem?.itemId || selectedItem?.item_id || selectedItem?.id || entry.itemId || "",
+    itemSlot: selectedItem?.slot || selectedItem?.Slot || entry.itemSlot || "",
+    itemBoss: selectedItem?.boss || selectedItem?.Boss || entry.itemBoss || "",
+    discordUserId: entry.discordUserId || "",
+    discordName: entry.discordName || "",
+    discordMessageId: entry.discordMessageId || "",
+    messageId: entry.messageId || "",
+    approvalStatus: entry.approvalStatus || "pending",
+    approved: String(entry.approvalStatus || "").toLowerCase() === "approved" || Boolean(entry.approved),
+    approvedBy: entry.approvedBy || "",
+    approvedAt: entry.approvedAt || "",
+    rejectionReason: entry.rejectionReason || "",
+    luckBy: entry.luckBy || "",
+    luckByDiscordId: entry.luckByDiscordId || "",
+    luckAt: entry.luckAt || "",
+    createdAt: entry.createdAt || entry.poCreatedAt || "",
+    poCreatedAt: entry.poCreatedAt || entry.createdAt || ""
+  };
+}
+
+function poSignupEntriesForDiscordPost(postKey){
+  return poPostEntryRowsForKey(postKey).map(poSignupVisibleEntryForDiscord);
+}
+
 function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
   if(!tbody) return;
   const key = String(postKey || "").trim();
@@ -10567,6 +10620,7 @@ async function createPoSignupPost(){
       mode: config.mode,
       note: config.note,
       itemOptions: config.itemOptions,
+      postedEntries: JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
       restoreArchived: "true",
       createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
       lichtlootRaidId: config.lichtlootRaidId || "",
