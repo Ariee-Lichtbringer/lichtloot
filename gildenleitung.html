@@ -4351,7 +4351,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
           <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
-          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
           <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
@@ -5027,9 +5028,16 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   </details>
 
   <details id="p0PlusPanel" class="panel p0-panel" ontoggle="if(this.open) loadP0PlusPanel()">
-    <summary>P0+ Liste</summary>
+    <summary>PO+ Liste</summary>
     <div class="p0-panel-body">
-      <div id="p0PlusPanelContent" class="create-result">P0+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+      <div id="p0PlusPanelContent" class="create-result">PO+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+    </div>
+  </details>
+
+  <details id="p0ReleasePanel" class="panel p0-panel" ontoggle="if(this.open) loadP0ReleasePanel()">
+    <summary>P0+ Freigabe</summary>
+    <div class="p0-panel-body">
+      <div id="p0ReleasePanelContent" class="create-result">P0+ Freigaben der Charaktere laden.</div>
     </div>
   </details>
 
@@ -5952,6 +5960,10 @@ function openPlayerPanel(){
 
 function openP0PlusPanel(){
   openDetailsPanel("p0PlusPanel");
+}
+
+function openP0ReleasePanel(){
+  openDetailsPanel("p0ReleasePanel");
 }
 
 function openIssueInboxPanel(){
@@ -12211,51 +12223,20 @@ function toggleP0PlusPanel(){
 }
 
 async function loadP0PlusPanel(){
-  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
+  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">PO+ Liste wird geladen ...</div>';
 
   try{
-    const masterCode = document.getElementById("masterCode").value.trim();
-    const [result, reviewResult, initialPoResult, releaseResult] = await Promise.all([
-      railwayApi({ action:"getP0Plus" }),
-      masterCode
-        ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
-        : Promise.resolve({ success:true, entries:[], noMaster:true }),
-      masterCode
-        ? railwayApi({ action:"guildGetPoPostEntries", masterCode, postKey:poPostKeyFilter })
-        : Promise.resolve({ success:true, entries:[], noMaster:true }),
-      masterCode
-        ? railwayApi({ action:"guildGetCharacterPoReleases", masterCode })
-        : Promise.resolve({ success:true, entries:[], noMaster:true })
-    ]);
-    let poResult = initialPoResult;
-    if(masterCode && poPostKeyFilter && poResult && poResult.success && !(poResult.entries || []).length){
-      poResult = await railwayApi({ action:"guildGetPoPostEntries", masterCode });
-    }
+    const result = await railwayApi({ action:"getP0Plus" });
     if(!result.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
-      return;
-    }
-    if(reviewResult && !reviewResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "P0+-Freigaben konnten nicht geladen werden.")}</div>`;
-      return;
-    }
-    if(poResult && !poResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(poResult.error || "PO-Post-Einträge konnten nicht geladen werden.")}</div>`;
-      return;
-    }
-    if(releaseResult && !releaseResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "PO+ Liste konnte nicht geladen werden.")}</div>`;
       return;
     }
 
     p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
-    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
-    poPostEntries = Array.isArray(poResult.entries) ? poResult.entries : [];
-    poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
     await ensureLootDataLoaded();
     renderP0PlusModalContent();
   }catch(error){
-    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "PO+ Liste konnte nicht geladen werden.")}</div>`;
   }
 }
 
@@ -12265,10 +12246,87 @@ function renderP0PlusModalContent(){
     <div class="p0-review-block">
       <div class="section-head">
         <div>
+          <h3>PO+ Punkte</h3>
+          <p>Item-Punkte aus der PO+ Liste. Diese Liste ist getrennt von der P0+ Freigabe.</p>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+      </div>
+      <div class="p0-toolbar">
+        <select id="p0RaidFilter" onchange="renderP0PlusRows()">
+          <option value="">Alle Raids</option>
+          ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
+        </select>
+        <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+        <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
+          <option value="all40">Alle 40er</option>
+          <option value="naxx">NAXX</option>
+          <option value="aq40">AQ40</option>
+          <option value="bwl">BWL</option>
+          <option value="mc">MC</option>
+        </select>
+        <button class="small-btn good" type="button" onclick="queueP0PlusBackup(null,'p0BackupRaid')">PO+ Sicherung posten</button>
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Spieler</th>
+              <th>Item</th>
+              <th>Slot</th>
+              <th>Punkte</th>
+              <th>Datum</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="p0PlusRows"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderP0PlusRows();
+}
+
+async function loadP0ReleasePanel(){
+  const box = document.getElementById("p0ReleasePanelContent");
+  if(box) box.innerHTML = '<div class="status">P0+ Freigaben werden geladen ...</div>';
+  try{
+    const masterCode = document.getElementById("masterCode").value.trim();
+    if(!masterCode){
+      if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
+      return;
+    }
+    const [releaseResult, reviewResult] = await Promise.all([
+      railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
+      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
+    ]);
+    if(!releaseResult.success){
+      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    if(reviewResult && !reviewResult.success){
+      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "Discord P0+ Anmeldungen konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
+    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
+    renderP0ReleasePanelContent();
+  }catch(error){
+    if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderP0ReleasePanelContent(){
+  const box = document.getElementById("p0ReleasePanelContent");
+  if(!box) return;
+  box.innerHTML = `
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
           <h3>P0+ Freigabe</h3>
           <p>Alle Charaktere aus LichtLoot. Haken erlauben P0+ Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
         </div>
-        <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+        <button class="small-btn ghost" type="button" onclick="loadP0ReleasePanel()">Neu laden</button>
       </div>
       <div class="p0-toolbar">
         <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
@@ -12279,9 +12337,9 @@ function renderP0PlusModalContent(){
             <tr>
               <th>Charakter</th>
               <th>P0+ Freigabe MC</th>
-              <th>P0 Freigabe BWL</th>
-              <th>P0 Freigabe AQ40</th>
-              <th>P0 Freigabe NAXX</th>
+              <th>P0+ Freigabe BWL</th>
+              <th>P0+ Freigabe AQ40</th>
+              <th>P0+ Freigabe NAXX</th>
               <th>Aktion</th>
             </tr>
           </thead>
@@ -12313,48 +12371,9 @@ function renderP0PlusModalContent(){
         </table>
       </div>
     </div>
-    <div class="section-head">
-      <div>
-        <h3>PO+ Punkte</h3>
-        <p>Hier stehen die PO+ Punkte auf Items. Diese Liste ist getrennt von der P0+ Freigabe.</p>
-      </div>
-    </div>
-    <div class="p0-toolbar">
-      <select id="p0RaidFilter" onchange="renderP0PlusRows()">
-        <option value="">Alle Raids</option>
-        ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
-      </select>
-      <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
-      <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
-        <option value="all40">Alle 40er</option>
-        <option value="naxx">NAXX</option>
-        <option value="aq40">AQ40</option>
-        <option value="bwl">BWL</option>
-        <option value="mc">MC</option>
-      </select>
-      <button class="small-btn good" type="button" onclick="queueP0PlusBackup(null,'p0BackupRaid')">PO+ Sicherung posten</button>
-      <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
-    </div>
-    <div class="table-wrap">
-      <table class="p0-table">
-        <thead>
-          <tr>
-            <th>Raid</th>
-            <th>Spieler</th>
-            <th>Item</th>
-            <th>Slot</th>
-            <th>Punkte</th>
-            <th>Datum</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
-        <tbody id="p0PlusRows"></tbody>
-      </table>
-    </div>
   `;
   renderPoReleaseRows();
   renderP0ReviewRows();
-  renderP0PlusRows();
 }
 
 function poReleaseRaidLabel(raid){
