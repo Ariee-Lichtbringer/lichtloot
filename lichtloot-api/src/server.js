@@ -2905,7 +2905,7 @@ async function getP0ReleaseList(guildId = "") {
         }
       }
     } catch (error) {
-      console.warn("PO-Freigaben aus Datenbank konnten nicht geladen werden:", error.message || error);
+      console.warn("P0+ Freigaben aus Datenbank konnten nicht geladen werden:", error.message || error);
     }
   }
 
@@ -3008,7 +3008,7 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   const characterId = clean(params.characterId || params.charId);
   const enabled = !["false", "0", "no", "nein", "delete", "remove"].includes(clean(params.enabled || params.value || "true").toLowerCase());
   if (!raid) {
-    const error = new Error("Raid für PO-Freigabe fehlt.");
+    const error = new Error("Raid für P0+ Freigabe fehlt.");
     error.statusCode = 400;
     throw error;
   }
@@ -3148,7 +3148,7 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
     allowed,
     raid,
     character: normalizeCharacter(character),
-    message: allowed ? "" : "du hast keine PO Freigabe wende dich an den Raidlead"
+    message: allowed ? "" : "du hast keine P0+ Freigabe wende dich an den Raidlead"
   };
 }
 
@@ -14050,7 +14050,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         [guildId, character.id, releaseRaid]
       );
       if (!releaseResult.rows[0]) {
-        const error = new Error("du hast keine PO Freigabe wende dich an den Raidlead");
+        const error = new Error("du hast keine P0+ Freigabe wende dich an den Raidlead");
         error.statusCode = 403;
         throw error;
       }
