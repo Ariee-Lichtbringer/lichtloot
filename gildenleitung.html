@@ -4042,6 +4042,35 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 }
 
 .p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
+.po-release-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  min-height:28px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.02em;
+}
+.po-release-state.active{
+  color:#052e16;
+  background:linear-gradient(135deg,#86efac,#22c55e);
+  border:1px solid rgba(187,247,208,.85);
+  box-shadow:0 0 0 1px rgba(34,197,94,.25),0 0 16px rgba(34,197,94,.32);
+}
+.po-release-state.empty{
+  color:#94a3b8;
+  background:rgba(15,23,42,.52);
+  border:1px solid rgba(148,163,184,.22);
+}
+.po-release-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
 
 .issue-toolbar{
   display:grid;
@@ -12336,6 +12365,8 @@ function renderP0ReleasePanelContent(){
           <thead>
             <tr>
               <th>Charakter</th>
+              <th>Klasse</th>
+              <th>LichtLootAccount</th>
               <th>P0+ Freigabe MC</th>
               <th>P0+ Freigabe BWL</th>
               <th>P0+ Freigabe AQ40</th>
@@ -12389,24 +12420,36 @@ function setPoReleaseSearch(value){
 function poReleaseCheckHtml(entry, raid){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
   return checked
-    ? `<span class="ok" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓</span>`
-    : `<span class="muted">-</span>`;
+    ? `<span class="po-release-state active" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
+    : `<span class="po-release-state empty">offen</span>`;
 }
 
 function renderPoReleaseRows(){
   const tbody = document.getElementById("poReleaseRows");
   if(!tbody) return;
   const needle = normalize(poReleaseSearch);
-  const rows = (poReleaseCharacters || []).filter(entry => {
+  const preferredByName = new Map();
+  (poReleaseCharacters || []).forEach(entry => {
+    const key = normalize(entry.name || entry.char || "");
+    if(!key) return;
+    const current = preferredByName.get(key);
+    const server = normalize(entry.server || "");
+    const currentServer = normalize(current && current.server || "");
+    if(!current || server === "lichtbringer" || (currentServer !== "lichtbringer" && server === "everlook")){
+      preferredByName.set(key, entry);
+    }
+  });
+  const displayCharacters = Array.from(preferredByName.values());
+  const rows = displayCharacters.filter(entry => {
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
   if(!document.getElementById("masterCode").value.trim()){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
     return;
   }
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine Charaktere gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Charaktere gefunden.</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(entry => {
@@ -12415,17 +12458,32 @@ function renderPoReleaseRows(){
     return `
       <tr>
         <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
+        <td>${entry.className ? `<span class="${escapeAttr(classColor(entry.className))}">${escapeHtml(entry.className)}</span>` : '<span class="muted">-</span>'}</td>
+        <td><span class="pin">${escapeHtml(entry.playerPin || "-")}</span></td>
         <td>${poReleaseCheckHtml(entry,"mc")}</td>
         <td>${poReleaseCheckHtml(entry,"bwl")}</td>
         <td>${poReleaseCheckHtml(entry,"aq40")}</td>
         <td>${poReleaseCheckHtml(entry,"naxx")}</td>
-        <td><button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button></td>
+        <td>
+          <div class="po-release-actions">
+            <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
+            <button class="small-btn danger" type="button" onclick="openPoReleaseDeletePopup(${index})">P0+ löschen</button>
+          </div>
+        </td>
       </tr>
     `;
   }).join("");
 }
 
 async function openPoReleasePopup(index){
+  return setPoReleaseFromPopup(index, true);
+}
+
+async function openPoReleaseDeletePopup(index){
+  return setPoReleaseFromPopup(index, false);
+}
+
+async function setPoReleaseFromPopup(index, enabled){
   const entry = poReleaseCharacters[index];
   if(!entry) return;
   const masterCode = document.getElementById("masterCode").value.trim();
@@ -12434,12 +12492,11 @@ async function openPoReleasePopup(index){
     return;
   }
   const answer = prompt(
-    "Welche P0+ Freigabe soll fuer " + (entry.name || "den Charakter") + " gesetzt werden?\n\nMC, BWL, AQ40 oder NAXX eingeben.\nMit !MC kann ein Haken entfernt werden.",
+    (enabled ? "Welche P0+ Freigabe soll fuer " : "Welche P0+ Freigabe soll bei ") + (entry.name || "dem Charakter") + (enabled ? " gesetzt werden?" : " geloescht werden?") + "\n\nMC, BWL, AQ40 oder NAXX eingeben.",
     "MC"
   );
   if(answer === null) return;
   const raw = String(answer || "").trim();
-  const remove = raw.startsWith("!");
   const raid = normalize(raw.replace(/^!+/, "")).replace(/[^a-z0-9]+/g,"");
   const map = { moltencore:"mc", molten:"mc", mc:"mc", bwl:"bwl", blackwinglair:"bwl", aq40:"aq40", naxx:"naxx", naxxramas:"naxx" };
   const raidKey = map[raid] || raid;
@@ -12448,13 +12505,13 @@ async function openPoReleasePopup(index){
     return;
   }
   try{
-    setStatus((remove ? "P0+ Freigabe wird entfernt ..." : "P0+ Freigabe wird gespeichert ..."), "");
+    setStatus((enabled ? "P0+ Freigabe wird gespeichert ..." : "P0+ Freigabe wird entfernt ..."), "");
     const result = await railwayWrite({
       action:"guildSetCharacterPoRelease",
       masterCode,
       characterId:entry.characterId || entry.id,
       raid:raidKey,
-      enabled:remove ? "false" : "true",
+      enabled:enabled ? "true" : "false",
       approvedBy:"Gildenleitung"
     });
     if(!result.success){
@@ -12462,10 +12519,10 @@ async function openPoReleasePopup(index){
       return;
     }
     entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false }, entry.releases || {});
-    entry.releases[raidKey] = !remove;
+    entry.releases[raidKey] = Boolean(enabled);
     raidHelperP0ReleaseCache = null;
     renderPoReleaseRows();
-    setStatus(remove ? "P0+ Freigabe entfernt." : "P0+ Freigabe gespeichert.", "good");
+    setStatus(enabled ? "P0+ Freigabe gespeichert." : "P0+ Freigabe entfernt.", "good");
   }catch(error){
     setStatus(error.message || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
   }
