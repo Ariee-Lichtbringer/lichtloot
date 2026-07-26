@@ -7218,7 +7218,7 @@ function renderMyPrios(data){
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
   if(!pastEntries.length && !ownP0.length && !hasPoRelease){
-    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios, keine PO-Freigaben und keine P0/P0+ Punkte gefunden.</div>';
+    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios, keine P0+ Freigaben und keine P0/P0+ Punkte gefunden.</div>';
     return;
   }
 
@@ -7280,10 +7280,10 @@ function renderMyPrios(data){
 
 function renderMyPoReleasesCard(releases){
   const labels=[
-    ["mc","PO Freigabe MC"],
-    ["bwl","P0 Freigabe BWL"],
-    ["aq40","P0 Freigabe AQ40"],
-    ["naxx","P0 Freigabe NAXX"]
+    ["mc","P0+ Freigabe MC"],
+    ["bwl","P0+ Freigabe BWL"],
+    ["aq40","P0+ Freigabe AQ40"],
+    ["naxx","P0+ Freigabe NAXX"]
   ];
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
@@ -7291,8 +7291,8 @@ function renderMyPoReleasesCard(releases){
   }).join("");
   return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
     <div>
-      <div class="own-p0-summary-title">Meine PO Freigaben</div>
-      <div class="own-p0-summary-text">Diese Haken bestimmen, ob du im Discord-PO-Anmelder fuer den Raid eine PO setzen kannst.</div>
+      <div class="own-p0-summary-title">Meine P0+ Freigaben</div>
+      <div class="own-p0-summary-text">Diese Haken bestimmen, ob du im Discord-PO-Anmelder fuer den Raid eine P0+ Anmeldung setzen kannst.</div>
       <div class="own-p0-summary-items">${chips}</div>
     </div>
   </div>`;
@@ -7804,7 +7804,7 @@ function renderFullRaidPrioTable(prios, entry){
   sortedPrios.forEach((prio,index)=>{
     const rowEntry={raid:entry.raid,raidName:entry.raidName};
     const playerName=prio.Spieler || "";
-    const releaseStar=hasMyP0Release(playerName, entry.raid) ? ' <span class="p0-release-star" title="PO-Freigabe">★</span>' : "";
+    const releaseStar=hasMyP0Release(playerName, entry.raid) ? ' <span class="p0-release-star" title="P0+ Freigabe">★</span>' : "";
     html+=`<tr>
       <td data-label="#">${index+1}</td>
       <td data-label="Spieler">${safeHtml(playerName)}${releaseStar}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>

@@ -12244,7 +12244,7 @@ async function loadP0PlusPanel(){
       return;
     }
     if(releaseResult && !releaseResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "PO-Freigaben konnten nicht geladen werden.")}</div>`;
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
       return;
     }
 
@@ -12265,8 +12265,8 @@ function renderP0PlusModalContent(){
     <div class="p0-review-block">
       <div class="section-head">
         <div>
-          <h3>PO Freigaben</h3>
-          <p>Alle Charaktere aus LichtLoot. Haken erlauben PO-Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
+          <h3>P0+ Freigabe</h3>
+          <p>Alle Charaktere aus LichtLoot. Haken erlauben P0+ Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
       </div>
@@ -12278,7 +12278,7 @@ function renderP0PlusModalContent(){
           <thead>
             <tr>
               <th>Charakter</th>
-              <th>PO Freigabe MC</th>
+              <th>P0+ Freigabe MC</th>
               <th>P0 Freigabe BWL</th>
               <th>P0 Freigabe AQ40</th>
               <th>P0 Freigabe NAXX</th>
@@ -12292,7 +12292,7 @@ function renderP0PlusModalContent(){
     <div class="p0-review-block">
       <div class="section-head">
         <div>
-          <h3>P0+ Freigaben</h3>
+          <h3>Discord P0+ Anmeldungen prüfen</h3>
           <p>Offene Discord-Anmeldungen prüfen. Nach Freigabe aktualisiert der Bot den DC-Post mit grünem Haken.</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
@@ -12311,6 +12311,12 @@ function renderP0PlusModalContent(){
           </thead>
           <tbody id="p0ReviewRows"></tbody>
         </table>
+      </div>
+    </div>
+    <div class="section-head">
+      <div>
+        <h3>PO+ Punkte</h3>
+        <p>Hier stehen die PO+ Punkte auf Items. Diese Liste ist getrennt von der P0+ Freigabe.</p>
       </div>
     </div>
     <div class="p0-toolbar">
@@ -12352,7 +12358,7 @@ function renderP0PlusModalContent(){
 }
 
 function poReleaseRaidLabel(raid){
-  const labels = { mc:"PO Freigabe MC", bwl:"P0 Freigabe BWL", aq40:"P0 Freigabe AQ40", naxx:"P0 Freigabe NAXX" };
+  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX" };
   return labels[raid] || String(raid || "").toUpperCase();
 }
 
@@ -12377,7 +12383,7 @@ function renderPoReleaseRows(){
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
   if(!document.getElementById("masterCode").value.trim()){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um PO-Freigaben zu laden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
     return;
   }
   if(!rows.length){
@@ -12394,7 +12400,7 @@ function renderPoReleaseRows(){
         <td>${poReleaseCheckHtml(entry,"bwl")}</td>
         <td>${poReleaseCheckHtml(entry,"aq40")}</td>
         <td>${poReleaseCheckHtml(entry,"naxx")}</td>
-        <td><button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">PO freigeben</button></td>
+        <td><button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button></td>
       </tr>
     `;
   }).join("");
@@ -12409,7 +12415,7 @@ async function openPoReleasePopup(index){
     return;
   }
   const answer = prompt(
-    "Welche PO Freigabe soll fuer " + (entry.name || "den Charakter") + " gesetzt werden?\n\nMC, BWL, AQ40 oder NAXX eingeben.\nMit !MC kann ein Haken entfernt werden.",
+    "Welche P0+ Freigabe soll fuer " + (entry.name || "den Charakter") + " gesetzt werden?\n\nMC, BWL, AQ40 oder NAXX eingeben.\nMit !MC kann ein Haken entfernt werden.",
     "MC"
   );
   if(answer === null) return;
@@ -12423,7 +12429,7 @@ async function openPoReleasePopup(index){
     return;
   }
   try{
-    setStatus((remove ? "PO-Freigabe wird entfernt ..." : "PO-Freigabe wird gespeichert ..."), "");
+    setStatus((remove ? "P0+ Freigabe wird entfernt ..." : "P0+ Freigabe wird gespeichert ..."), "");
     const result = await railwayWrite({
       action:"guildSetCharacterPoRelease",
       masterCode,
@@ -12433,16 +12439,16 @@ async function openPoReleasePopup(index){
       approvedBy:"Gildenleitung"
     });
     if(!result.success){
-      setStatus(result.error || "PO-Freigabe konnte nicht gespeichert werden.", "bad");
+      setStatus(result.error || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
       return;
     }
     entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false }, entry.releases || {});
     entry.releases[raidKey] = !remove;
     raidHelperP0ReleaseCache = null;
     renderPoReleaseRows();
-    setStatus(remove ? "PO-Freigabe entfernt." : "PO-Freigabe gespeichert.", "good");
+    setStatus(remove ? "P0+ Freigabe entfernt." : "P0+ Freigabe gespeichert.", "good");
   }catch(error){
-    setStatus(error.message || "PO-Freigabe konnte nicht gespeichert werden.", "bad");
+    setStatus(error.message || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
   }
 }
 
