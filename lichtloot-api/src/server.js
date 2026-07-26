@@ -5150,6 +5150,7 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists approval_status text not null default 'pending'`);
   await query(`alter table po_post_entries add column if not exists approved_by text not null default ''`);
   await query(`alter table po_post_entries add column if not exists approved_at timestamptz`);
+  await query(`alter table po_post_entries add column if not exists rejection_reason text not null default ''`);
   await query(`alter table po_post_entries add column if not exists luck_by text not null default ''`);
   await query(`alter table po_post_entries add column if not exists luck_by_discord_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists luck_at timestamptz`);
@@ -5375,6 +5376,7 @@ async function getPoPostEntries({ guildId, query: params }) {
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
       approvedAt: row.approved_at || "",
+      rejectionReason: row.rejection_reason || "",
       luckBy: row.luck_by || "",
       luckByDiscordId: row.luck_by_discord_id || "",
       luckAt: row.luck_at || "",
@@ -5482,6 +5484,7 @@ async function getPoPostApprovals({ guildId, query: params }) {
       messageId: row.po_message_id || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
+      rejectionReason: row.rejection_reason || "",
       luckBy: row.luck_by || "",
       luckByDiscordId: row.luck_by_discord_id || "",
       luckAt: row.luck_at || ""
@@ -5566,6 +5569,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
   const rawStatus = clean(params.status || params.value || "approved").toLowerCase();
   const approvalStatus = ["rejected", "invalid", "ungueltig", "ungültig", "nein"].includes(rawStatus) ? "rejected" : "approved";
+  const rejectionReason = approvalStatus === "rejected" ? clean(params.reason || params.rejectionReason || params.message || params.note) : "";
   let result = { rows: [] };
   if (id && isUuid(id)) {
     result = await query(
@@ -5573,13 +5577,14 @@ async function reviewPoPostEntry({ guildId, query: params }) {
        set approval_status = $2,
            approved_by = $3,
            approved_at = case when $2 = 'approved' then now() else null end,
-           raid_pin = coalesce(nullif($4, ''), raid_pin),
+           rejection_reason = case when $2 = 'rejected' then $4 else '' end,
+           raid_pin = coalesce(nullif($5, ''), raid_pin),
            updated_at = now()
        where guild_id = $1
-         and id = $5
+         and id = $6
          and archived_at is null
        returning *`,
-      [guildId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), raidPin, id]
+      [guildId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), rejectionReason, raidPin, id]
     );
   }
   if (!result.rows[0] && messageId) {
@@ -5588,7 +5593,8 @@ async function reviewPoPostEntry({ guildId, query: params }) {
        set approval_status = $6,
            approved_by = $7,
            approved_at = case when $6 = 'approved' then now() else null end,
-           raid_pin = coalesce(nullif($8, ''), raid_pin),
+           rejection_reason = case when $6 = 'rejected' then $8 else '' end,
+           raid_pin = coalesce(nullif($9, ''), raid_pin),
            updated_at = now()
        where guild_id = $1
          and post_key = $2
@@ -5597,7 +5603,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
          and po_message_id = $5
          and archived_at is null
        returning *`,
-      [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), raidPin]
+      [guildId, postKey, sourceChannelId, targetChannelId, messageId, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), rejectionReason, raidPin]
     );
   }
   if (!result.rows[0] && playerName && itemName) {
@@ -5606,7 +5612,8 @@ async function reviewPoPostEntry({ guildId, query: params }) {
        set approval_status = $6,
            approved_by = $7,
            approved_at = case when $6 = 'approved' then now() else null end,
-           raid_pin = coalesce(nullif($9, ''), raid_pin),
+           rejection_reason = case when $6 = 'rejected' then $9 else '' end,
+           raid_pin = coalesce(nullif($10, ''), raid_pin),
            updated_at = now()
        where guild_id = $1
          and post_key = $2
@@ -5616,7 +5623,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
          and lower(item_name) = lower($8)
          and archived_at is null
        returning *`,
-      [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), itemName, raidPin]
+      [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), itemName, rejectionReason, raidPin]
     );
   }
   const row = result.rows[0];
@@ -5625,6 +5632,15 @@ async function reviewPoPostEntry({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  let prioDelete = null;
+  if (approvalStatus === "rejected") {
+    prioDelete = await deletePoSignupPrioForEntry(guildId, row, params).catch(error => ({
+      success: false,
+      deleted: 0,
+      error: error.message || String(error)
+    }));
+  }
+
   await enqueueBotUpdate({
     guildId,
     type: "po_post",
@@ -5646,6 +5662,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       source: "po_review",
       reviewMessageId: row.po_message_id,
       reviewStatus: approvalStatus,
+      rejectionReason,
       queuedAt: new Date().toISOString()
     }
   }).catch(error => console.warn("PO-Post konnte nach Freigabe nicht queued werden:", error.message || error));
@@ -5671,8 +5688,71 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
-      approvedAt: row.approved_at || ""
-    }
+      approvedAt: row.approved_at || "",
+      rejectionReason: row.rejection_reason || rejectionReason || ""
+    },
+    prioDelete
+  };
+}
+
+async function deletePoSignupPrioForEntry(guildId, entry, params = {}) {
+  await ensurePrioSchema();
+  const playerName = clean(entry.player_name || entry.player || params.player || params.char || params.spieler);
+  const itemName = normalizePoItemName(entry.item_name || entry.item || params.item || params.itemName);
+  if (!playerName || !itemName) return { success: true, deleted: 0, reason: "missing_player_or_item" };
+
+  const raid = await findRaid(guildId, {
+    ...params,
+    raidId: entry.post_key || params.raidId || params.postKey,
+    raid: entry.raid || params.raid || params.raidName,
+    raidDate: entry.raid_date || params.raidDate || params.date || params.datum,
+    raidTime: entry.raid_time || params.raidTime || params.time || params.uhrzeit,
+    prioPin: entry.raid_pin || params.raidPin || params.prioPin || params.playerPin,
+    raidPin: entry.raid_pin || params.raidPin || params.prioPin || params.playerPin,
+    playerPin: entry.raid_pin || params.raidPin || params.prioPin || params.playerPin
+  });
+  if (!raid) return { success: true, deleted: 0, reason: "raid_not_found" };
+
+  const values = [guildId, raid.id, playerName];
+  const itemClauses = [];
+  for (const variant of poItemAliasVariants(itemName)) {
+    values.push(variant);
+    itemClauses.push(`regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
+  }
+  const itemMatchClause = itemClauses.length ? itemClauses.join(" or ") : "false";
+
+  const result = await query(
+    `delete from prios pr
+     using characters c
+     where pr.character_id = c.id
+       and pr.raid_id = $2
+       and c.player_id in (select id from players where guild_id = $1)
+       and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
+       and (
+         coalesce(pr.comment, '') ilike '%"source":"po-bot"%'
+         or coalesce(pr.comment, '') ilike '%po-bot%'
+         or (
+           pr.p1_item_id is not null
+           and pr.p1_item_id = pr.p2_item_id
+           and pr.p2_item_id = pr.p3_item_id
+           and exists (
+             select 1
+             from items i
+             where i.id = pr.p1_item_id
+               and (${itemMatchClause})
+           )
+         )
+       )
+     returning pr.id`,
+    values
+  );
+
+  return {
+    success: true,
+    deleted: result.rowCount || 0,
+    raidId: raidPublicId(raid),
+    player: playerName,
+    item: itemName
   };
 }
 
@@ -5873,7 +5953,8 @@ async function updatePoPostEntry({ guildId, query: params }) {
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
-      approvedAt: row.approved_at || ""
+      approvedAt: row.approved_at || "",
+      rejectionReason: row.rejection_reason || ""
     }
   };
 }
@@ -5947,7 +6028,16 @@ async function deletePoPostEntry({ guildId, query: params }) {
   );
 
   const payloads = new Map();
+  let deletedPrios = 0;
+  const prioDeleteResults = [];
   for (const row of result.rows || []) {
+    const prioDelete = await deletePoSignupPrioForEntry(guildId, row, params).catch(error => ({
+      success: false,
+      deleted: 0,
+      error: error.message || String(error)
+    }));
+    deletedPrios += Number(prioDelete.deleted || 0);
+    prioDeleteResults.push(prioDelete);
     const key = [row.post_key, row.source_channel_id, row.target_channel_id].join("|");
     payloads.set(key, {
       postKey: row.post_key || postKey,
@@ -5956,6 +6046,8 @@ async function deletePoPostEntry({ guildId, query: params }) {
       messageId: row.discord_message_id || clean(params.discordMessageId || ""),
       discordMessageId: row.discord_message_id || clean(params.discordMessageId || ""),
       raid: row.raid || "",
+      raidPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
+      prioPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
       title: row.title || "PO Liste",
       source: "po_entry_delete",
       queuedAt: new Date().toISOString()
@@ -5969,6 +6061,8 @@ async function deletePoPostEntry({ guildId, query: params }) {
   return {
     success: true,
     deleted: result.rowCount || 0,
+    deletedPrios,
+    prioDeleteResults,
     queued: payloads.size,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",
@@ -13893,6 +13987,29 @@ async function setRaidStatus({ guildId, query: params }) {
   const p0plus = clean(params.p0PlusFreigabe || params.p0PlusOverride || params.value)
     ? normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || params.value)
     : raid.p0plus_freigabe;
+  const archiveRequested = ["archiviert", "archive"].includes(status);
+  const raidType = normalizeRaidType(raid.raid_type || raid.raid || params.raid);
+
+  if (archiveRequested && ["mc", "bwl", "aq40", "naxx"].includes(raidType)) {
+    const transferNotes = Array.from(new Set([
+      `RaidID: ${raidPublicId(raid)}`,
+      `RaidID: ${raid.id}`,
+      raid.raid_pin ? `RaidID: ${raid.raid_pin}` : ""
+    ].filter(Boolean)));
+    const transferResult = await query(
+      `select count(*)::int as count
+       from p0plus_points
+       where guild_id = $1
+         and source = 'Raidlead Transfer'
+         and note = any($2::text[])`,
+      [guildId, transferNotes]
+    );
+    if (Number(transferResult.rows[0]?.count || 0) < 1) {
+      const error = new Error("Raid kann erst archiviert werden, wenn PO+ übertragen wurde.");
+      error.statusCode = 409;
+      throw error;
+    }
+  }
 
   const result = await query(
     `update raids
