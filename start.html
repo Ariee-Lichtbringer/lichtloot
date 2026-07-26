@@ -1013,6 +1013,7 @@ body{
   overflow:hidden;
 }
 .myprio-detail-box #myPrioDetailContent{min-height:0;overflow:auto;padding-right:4px}
+.p0-release-star{color:#facc15;font-weight:900;text-shadow:0 0 8px rgba(250,204,21,.45)}
 .myprio-detail-title{
   color:#facc15;
   font-weight:900;
@@ -7207,6 +7208,8 @@ function renderMyPrios(data){
   const entries=data.entries || [];
   const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
+  const poReleases=data.poReleases || {};
+  const hasPoRelease=Object.values(poReleases).some(Boolean);
   window.myOwnP0PlusPoints=ownP0.slice();
 
   myRaidCalendarPrioEntries=entries.slice();
@@ -7214,12 +7217,14 @@ function renderMyPrios(data){
 
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
-  if(!pastEntries.length && !ownP0.length){
-    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios und keine P0/P0+ Punkte gefunden.</div>';
+  if(!pastEntries.length && !ownP0.length && !hasPoRelease){
+    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios, keine PO-Freigaben und keine P0/P0+ Punkte gefunden.</div>';
     return;
   }
 
   let html='';
+
+  html+=renderMyPoReleasesCard(poReleases);
 
   if(ownP0.length){
     html+=renderOwnP0PlusSummaryCard(ownP0,data);
@@ -7271,6 +7276,26 @@ function renderMyPrios(data){
   }
 
   results.innerHTML=html;
+}
+
+function renderMyPoReleasesCard(releases){
+  const labels=[
+    ["mc","PO Freigabe MC"],
+    ["bwl","P0 Freigabe BWL"],
+    ["aq40","P0 Freigabe AQ40"],
+    ["naxx","P0 Freigabe NAXX"]
+  ];
+  const chips=labels.map(([key,label])=>{
+    const active=Boolean(releases && releases[key]);
+    return `<span class="own-p0-summary-chip">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
+  }).join("");
+  return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
+    <div>
+      <div class="own-p0-summary-title">Meine PO Freigaben</div>
+      <div class="own-p0-summary-text">Diese Haken bestimmen, ob du im Discord-PO-Anmelder fuer den Raid eine PO setzen kannst.</div>
+      <div class="own-p0-summary-items">${chips}</div>
+    </div>
+  </div>`;
 }
 
 function renderOwnP0PlusSummaryCard(points,data){
@@ -7734,6 +7759,8 @@ async function loadRaidPrioListIntoDetail(entry){
     if(!raidId && pin) request.playerPin=pin;
 
     const result=await fetchRaidApiJsonp(request);
+    const releaseResult=await fetchRaidApiJsonp({ action:"getP0ReleaseList" }).catch(()=>null);
+    window.myP0ReleaseCache = releaseResult && releaseResult.success ? (releaseResult.releases || {}) : {};
 
     if(!result.success && result.error){
       block.innerHTML='<div class="status"><span class="bad">'+safeHtml(result.error)+'</span></div>';
@@ -7745,6 +7772,13 @@ async function loadRaidPrioListIntoDetail(entry){
     console.error(error);
     block.innerHTML='<div class="status"><span class="bad">Prioliste konnte nicht geladen werden.</span></div>';
   }
+}
+
+function hasMyP0Release(playerName, raidKey){
+  const raid=String(raidKey || "").toLowerCase();
+  const name=String(playerName || "").trim().toLowerCase();
+  const names=(window.myP0ReleaseCache && window.myP0ReleaseCache[raid]) || [];
+  return Boolean(name && names.some(entry => String(entry || "").trim().toLowerCase() === name));
 }
 
 function renderFullRaidPrioTable(prios, entry){
@@ -7769,9 +7803,11 @@ function renderFullRaidPrioTable(prios, entry){
 
   sortedPrios.forEach((prio,index)=>{
     const rowEntry={raid:entry.raid,raidName:entry.raidName};
+    const playerName=prio.Spieler || "";
+    const releaseStar=hasMyP0Release(playerName, entry.raid) ? ' <span class="p0-release-star" title="PO-Freigabe">★</span>' : "";
     html+=`<tr>
       <td data-label="#">${index+1}</td>
-      <td data-label="Spieler">${safeHtml(prio.Spieler || "")}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
+      <td data-label="Spieler">${safeHtml(playerName)}${releaseStar}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
       <td data-label="Klasse">${safeHtml(prio.Klasse || "")}</td>
       <td data-label="P1">${myPrioItemHtml(rowEntry, prio.P1)}</td>
       <td data-label="P2">${myPrioItemHtml(rowEntry, prio.P2)}</td>
