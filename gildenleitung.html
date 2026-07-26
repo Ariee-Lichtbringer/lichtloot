@@ -4426,7 +4426,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     <div class="dashboard-column">
       <section class="dashboard-card">
         <div class="dashboard-card-head">
-          <h2>⚔ Raids der kommenden 2 Wochen</h2>
+          <h2>⚔ Raids & offene PO+ Übertragungen</h2>
           <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
         </div>
         <div id="activeRaidCards" class="active-raid-list">
@@ -5169,7 +5169,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <option value="offen">Offen</option>
           <option value="geöffnet">Geöffnet</option>
           <option value="geschlossen">Geschlossen</option>
-          <option value="archiviert">Archiviert</option>
+          <option value="archiviert">Archiv / vergangene</option>
           <option value="alle">Alle anzeigen</option>
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
@@ -6287,6 +6287,15 @@ function hasP0PlusTransfer(raidOrResult){
   );
 }
 
+function needsP0PlusTransferBeforeArchive(raid){
+  return isAllowedP0RaidForRaid(raid) && !hasP0PlusTransfer(raid);
+}
+
+function p0PlusArchiveBlockMessage(raid){
+  const label = raid ? (raid.raidName || raid.raid || raid.raidId || "Raid") : "Raid";
+  return `${label} kann erst archiviert werden, wenn PO+ übertragen wurde.`;
+}
+
 function renderP0TransferState(raidOrResult, compact){
   if(!isAllowedP0RaidForRaid(raidOrResult || {})) return "";
   const done = hasP0PlusTransfer(raidOrResult);
@@ -6412,7 +6421,7 @@ function renderDashboardCards(){
   const raids = getDashboardActiveRaids();
 
   if(!raids.length){
-    box.innerHTML = '<div class="muted">Keine Raids in den kommenden 2 Wochen gefunden.</div>';
+    box.innerHTML = '<div class="muted">Keine kommenden Raids und keine offenen PO+ Übertragungen gefunden.</div>';
     return;
   }
 
@@ -6452,7 +6461,7 @@ function renderDashboardCards(){
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
+              ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
           </div>
         </div>
@@ -6485,7 +6494,10 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive" && isRaidInNextTwoWeeks(raid);
+      const isArchived = status === "archiviert" || status === "archive";
+      const hasOpenP0PlusTransfer = isAllowedP0RaidForRaid(raid) && !hasP0PlusTransfer(raid);
+      if(hasOpenP0PlusTransfer) return true;
+      return !isArchived && isRaidInNextTwoWeeks(raid);
     })
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
@@ -6656,8 +6668,10 @@ function renderRaids(){
       raid.guild
     ].join(" "));
     const isArchived = status === "archiviert" || status === "archive";
+    const isPast = String(raid.raidDate || "") < todayIsoDate();
     const filterMatches =
       filter === "alle" ? true :
+      filter === "archiviert" ? (isArchived || isPast) :
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
@@ -6666,7 +6680,7 @@ function renderRaids(){
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
     return right.localeCompare(left);
-  }).slice(0, 10);
+  }).slice(0, 50);
 
   if(!raids.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
@@ -6697,7 +6711,7 @@ function renderRaids(){
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
-            <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+            ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
         </td>
@@ -11434,6 +11448,10 @@ async function deleteRaidFromDashboard(raidId){
     String(entry.raidId || "") === String(raidId) ||
     String(entry.id || "") === String(raidId)
   );
+  if(needsP0PlusTransferBeforeArchive(raid)){
+    setStatus(p0PlusArchiveBlockMessage(raid), "bad");
+    return;
+  }
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
   if(!confirm(`${label} archivieren? Der Raid bleibt gespeichert und die Prios bleiben erhalten.`)) return;
 
@@ -11518,6 +11536,12 @@ async function setRaidStatusFromPage(raidId, status){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const willArchive = normalize(status) === "archiviert" || normalize(status) === "archive";
+  if(willArchive && needsP0PlusTransferBeforeArchive(raid)){
+    setStatus(p0PlusArchiveBlockMessage(raid), "bad");
+    return;
+  }
 
   try{
     const result = await railwayApi({ action:"guildSetRaidStatus", masterCode, raidId, status });
@@ -11526,7 +11550,6 @@ async function setRaidStatusFromPage(raidId, status){
       return;
     }
 
-    const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
     if(raid) raid.status = status;
     renderSummary();
     renderDashboardCards();
