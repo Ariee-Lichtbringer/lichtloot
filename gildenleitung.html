@@ -1603,6 +1603,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
 .po-signup-action-transfer{--po-action-color:var(--gold);border-color:rgba(var(--gold-rgb),.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
 .po-signup-action-helper{--po-action-color:var(--blue);border-color:rgba(var(--blue-rgb),.34)}
+.po-signup-action-schedule{--po-action-color:#f97316;border-color:rgba(249,115,22,.42);background:linear-gradient(135deg,rgba(124,45,18,.34),rgba(15,23,42,.62))}
 
 .po-signup-action-card strong{
   display:block;
@@ -1628,6 +1629,27 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .po-signup-action-card .btn{
   width:100%;
+}
+
+.po-signup-schedule-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+
+.po-signup-schedule-grid label{
+  display:grid;
+  gap:3px;
+  color:var(--gold);
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-signup-schedule-grid input,
+.po-signup-schedule-grid select{
+  min-height:30px;
+  padding:5px 7px;
 }
 
 .po-signup-discord-button{
@@ -4883,28 +4905,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
               <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
-            <div class="po-signup-item-tools">
-              <div class="po-signup-item-tool-row">
-                <div class="field">
-                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
-                  <select id="poSignupTemplateRaid">
-                    <option value="mc">MC</option>
-                    <option value="bwl">BWL</option>
-                    <option value="aq40">AQ40</option>
-                    <option value="naxx">Naxxramas</option>
-                    <option value="zg">ZG</option>
-                    <option value="aq20">AQ20</option>
-                    <option value="ony">Onyxia</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
-                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
-                </div>
-                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
-              </div>
-              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
-            </div>
+            <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
             <textarea id="poSignupItems" class="hidden" aria-hidden="true"></textarea>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
@@ -4929,14 +4930,41 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                   <button id="poSignupSyncPriosBtn" class="btn po-signup-transfer-button" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
                 </div>
               </div>
-              <div class="po-signup-action-card po-signup-action-helper">
+              <div class="po-signup-action-card po-signup-action-schedule">
                 <div>
-                  <strong>Hilfen</strong>
-                  <small>Itemliste aus bestehenden P0+-Einträgen laden oder den Entwurf zurücksetzen.</small>
+                  <strong>3. Automatischer Poster</strong>
+                  <small>Wiederkehrenden Raid aus den aktuellen Angaben speichern.</small>
+                </div>
+                <div class="po-signup-schedule-grid">
+                  <label>Wochentag
+                    <select id="poSignupScheduleWeekday" onchange="document.getElementById('poSignupScheduleNextDate').value = nextIsoDateForWeekday(this.value)">
+                      <option value="1">Mo</option>
+                      <option value="2">Di</option>
+                      <option value="3">Mi</option>
+                      <option value="4">Do</option>
+                      <option value="5">Fr</option>
+                      <option value="6">Sa</option>
+                      <option value="7">So</option>
+                    </select>
+                  </label>
+                  <label>Rhythmus
+                    <select id="poSignupScheduleInterval">
+                      <option value="1">jede Woche</option>
+                      <option value="2">alle 2 Wochen</option>
+                      <option value="3">alle 3 Wochen</option>
+                      <option value="4">alle 4 Wochen</option>
+                    </select>
+                  </label>
+                  <label>Nächster Termin
+                    <input id="poSignupScheduleNextDate" type="date">
+                  </label>
+                  <label>Anmeldeschluss
+                    <input id="poSignupScheduleDeadline" type="time">
+                  </label>
                 </div>
                 <div class="po-signup-action-buttons">
-                  <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">Itemliste laden</button>
-                  <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
+                  <button class="btn ghost" type="button" onclick="savePoSignupAutoPoster()">Automatik speichern</button>
+                  <button class="btn ghost" type="button" onclick="processPoSignupAutoPosters()">Jetzt aktualisieren</button>
                 </div>
               </div>
             </div>
@@ -5149,7 +5177,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <option value="offen">Offen</option>
           <option value="geöffnet">Geöffnet</option>
           <option value="geschlossen">Geschlossen</option>
-          <option value="archiviert">Archiv / vergangene</option>
+          <option value="archiviert">Archiviert</option>
           <option value="alle">Alle anzeigen</option>
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
@@ -6636,10 +6664,8 @@ function renderRaids(){
       raid.guild
     ].join(" "));
     const isArchived = status === "archiviert" || status === "archive";
-    const isPast = String(raid.raidDate || "") < todayIsoDate();
     const filterMatches =
       filter === "alle" ? true :
-      filter === "archiviert" ? (isArchived || isPast) :
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
@@ -6648,7 +6674,7 @@ function renderRaids(){
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
     return right.localeCompare(left);
-  }).slice(0, 50);
+  }).slice(0, 10);
 
   if(!raids.length){
     tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
@@ -8029,6 +8055,86 @@ async function saveRaidHelperSchedule(){
   }
 }
 
+function syncPoSignupScheduleDefaults(force=false){
+  const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const weekday = document.getElementById("poSignupScheduleWeekday");
+  const nextDate = document.getElementById("poSignupScheduleNextDate");
+  const deadline = document.getElementById("poSignupScheduleDeadline");
+  const raidDate = document.getElementById("poSignupDate")?.value || "";
+  if(weekday && (force || !weekday.value)) weekday.value = "3";
+  if(nextDate && (force || !nextDate.value)) nextDate.value = raidDate || nextIsoDateForWeekday(weekday?.value || 3);
+  if(deadline && (force || !deadline.value)) deadline.value = defaults.signupDeadline || "";
+}
+
+async function savePoSignupAutoPoster(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("poSignupStatus");
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const title = document.getElementById("poSignupTitle")?.value.trim() || defaults.title || `${RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase()} PO-Anmelder`;
+  const weekday = document.getElementById("poSignupScheduleWeekday")?.value || "3";
+  const raidTime = document.getElementById("poSignupTime")?.value || "19:45";
+  const intervalWeeks = document.getElementById("poSignupScheduleInterval")?.value || "1";
+  const nextRaidDate = document.getElementById("poSignupScheduleNextDate")?.value || nextIsoDateForWeekday(weekday);
+  const signupDeadline = document.getElementById("poSignupScheduleDeadline")?.value || defaults.signupDeadline || "";
+  const discordChannelId = document.getElementById("poSignupSourceChannel")?.value || RAID_HELPER_CHANNEL_ID;
+  if(!nextRaidDate){
+    if(status) status.textContent = "Bitte nächsten Termin wählen.";
+    return;
+  }
+  if(status) status.textContent = "Automatischer Raid-Poster wird gespeichert ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperSchedule",
+      masterCode,
+      scheduleKey:`po-auto-${raidKey}-${weekday}-${raidTime}`.replace(/[^a-zA-Z0-9-]+/g, "-").toLowerCase(),
+      raid:raidKey,
+      title,
+      createdBy:"Gildenleitung",
+      weekday,
+      raidTime,
+      intervalWeeks,
+      nextRaidDate,
+      signupDeadline,
+      discordChannelId,
+      maxPlayers:defaults.maxPlayers,
+      tankSlots:defaults.tankSlots,
+      healSlots:defaults.healSlots,
+      ddSlots:defaults.ddSlots,
+      description:document.getElementById("poSignupNote")?.value.trim() || defaults.description || "",
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+    });
+    if(!result.success) throw new Error(result.error || "Automatischer Poster konnte nicht gespeichert werden.");
+    await loadRaidHelperSchedules();
+    if(status) status.innerHTML = '<span class="good">Automatischer Raid-Poster gespeichert.</span>';
+  }catch(error){
+    if(status) status.textContent = error.message || "Automatischer Poster konnte nicht gespeichert werden.";
+  }
+}
+
+async function processPoSignupAutoPosters(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("poSignupStatus");
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  if(status) status.textContent = "Automatische Raid-Poster werden aktualisiert ...";
+  try{
+    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode });
+    if(!result.success) throw new Error(result.error || "Automatische Poster konnten nicht aktualisiert werden.");
+    await loadRaidHelperSchedules();
+    if(status) status.innerHTML = '<span class="good">Automatische Raid-Poster aktualisiert.</span>';
+  }catch(error){
+    if(status) status.textContent = error.message || "Automatische Poster konnten nicht aktualisiert werden.";
+  }
+}
+
 async function deleteRaidHelperSchedule(scheduleId){
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!masterCode){
@@ -9051,6 +9157,7 @@ function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
   if(key && (forceNewKey || !key.value.trim())) key.value = makePoSignupKey(raid, raidDate, raidTime);
   if(forceNewKey) syncPoSignupTemplateRaid(true);
+  syncPoSignupScheduleDefaults(forceNewKey);
   updatePoSignupPreview();
 }
 
@@ -9505,6 +9612,7 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
+  syncPoSignupScheduleDefaults();
   ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
