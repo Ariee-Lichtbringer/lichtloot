@@ -10567,6 +10567,7 @@ async function createPoSignupPost(){
       mode: config.mode,
       note: config.note,
       itemOptions: config.itemOptions,
+      restoreArchived: "true",
       createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
       lichtlootRaidId: config.lichtlootRaidId || "",
       lichtlootPlayerPin: config.lichtlootPlayerPin || "",
@@ -10574,9 +10575,10 @@ async function createPoSignupPost(){
     });
     if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht queued werden.");
     if(status){
+      const restoredText = result.restoredEntries ? ` ${escapeHtml(String(result.restoredEntries))} alte Einträge wurden wieder aktiviert.` : "";
       status.innerHTML = result.skipped
         ? '<span class="warn">PO-Anmelder war gerade schon in der Warteschlange.</span>'
-        : '<span class="good">PO-Anmelder ist in der Bot-Warteschlange.</span>';
+        : `<span class="good">PO-Anmelder ist in der Bot-Warteschlange.${restoredText}</span>`;
     }
     await loadPoPostStoredEntries();
   }catch(error){
