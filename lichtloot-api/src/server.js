@@ -2921,6 +2921,15 @@ function normalizePoReleaseRaid(value) {
   return ["mc", "bwl", "aq40", "naxx"].includes(raid) ? raid : "";
 }
 
+function normalizePoReleaseCharacterName(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ß/g, "ss")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
 async function ensureCharacterPoReleaseSchema() {
   await ensureRaidSchema();
 }
@@ -3059,6 +3068,21 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
     try { entries = JSON.parse(entries || "[]"); } catch { entries = []; }
   }
   if (!Array.isArray(entries)) entries = [];
+  const characterResult = await query(
+    `select c.id, c.name, c.server, c.created_at
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+     order by lower(c.name) asc, lower(coalesce(c.server, '')) asc, c.created_at asc`,
+    [guildId]
+  );
+  const charactersByNormalizedName = new Map();
+  for (const character of characterResult.rows) {
+    const key = normalizePoReleaseCharacterName(character.name);
+    if (!key) continue;
+    if (!charactersByNormalizedName.has(key)) charactersByNormalizedName.set(key, []);
+    charactersByNormalizedName.get(key).push(character);
+  }
   let updated = 0;
   let skipped = 0;
   const client = await pool.connect();
@@ -3071,46 +3095,37 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
         skipped += 1;
         continue;
       }
-      const values = [guildId, name];
-      let serverOrder = "";
+      let matchingCharacters = charactersByNormalizedName.get(normalizePoReleaseCharacterName(name)) || [];
       if (server) {
-        values.push(server);
-        serverOrder = `case when lower(c.server) = lower($${values.length}) then 0 else 1 end,`;
+        matchingCharacters = matchingCharacters.filter(character => clean(character.server).toLowerCase() === server.toLowerCase());
       }
-      const character = await client.query(
-        `select c.id
-         from characters c
-         join players p on p.id = c.player_id
-         where p.guild_id = $1 and lower(c.name) = lower($2)
-         order by ${serverOrder} c.created_at asc
-         limit 1`,
-        values
-      );
-      const characterId = character.rows[0]?.id;
-      if (!characterId) {
+      if (!matchingCharacters.length) {
         skipped += 1;
         continue;
       }
-      await client.query(
-        `delete from character_po_releases
-         where guild_id = $1 and character_id = $2 and raid_type = any($3)`,
-        [guildId, characterId, ["mc", "bwl", "aq40", "naxx"]]
-      );
-      for (const raid of ["mc", "bwl", "aq40", "naxx"]) {
-        const value = rawEntry[raid] ?? rawEntry[raid.toUpperCase()] ?? rawEntry[`po_${raid}`] ?? rawEntry[`p0_${raid}`];
-        const enabled = ["true", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
-        if (enabled) {
-          await client.query(
-            `insert into character_po_releases (guild_id, character_id, raid_type, source, approved_by, approved_at)
-             values ($1, $2, $3, 'sheet', $4, now())
-             on conflict (guild_id, character_id, raid_type) do update
-               set source = 'sheet',
-                   approved_by = excluded.approved_by,
-                   approved_at = now(),
-                   updated_at = now()`,
-            [guildId, characterId, raid, clean(params.approvedBy || "Google Sheet")]
-          );
-          updated += 1;
+      for (const character of matchingCharacters) {
+        const characterId = character.id;
+        await client.query(
+          `delete from character_po_releases
+           where guild_id = $1 and character_id = $2 and raid_type = any($3)`,
+          [guildId, characterId, ["mc", "bwl", "aq40", "naxx"]]
+        );
+        for (const raid of ["mc", "bwl", "aq40", "naxx"]) {
+          const value = rawEntry[raid] ?? rawEntry[raid.toUpperCase()] ?? rawEntry[`po_${raid}`] ?? rawEntry[`p0_${raid}`];
+          const enabled = ["true", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
+          if (enabled) {
+            await client.query(
+              `insert into character_po_releases (guild_id, character_id, raid_type, source, approved_by, approved_at)
+               values ($1, $2, $3, 'sheet', $4, now())
+               on conflict (guild_id, character_id, raid_type) do update
+                 set source = 'sheet',
+                     approved_by = excluded.approved_by,
+                     approved_at = now(),
+                     updated_at = now()`,
+              [guildId, characterId, raid, clean(params.approvedBy || "Google Sheet")]
+            );
+            updated += 1;
+          }
         }
       }
     }
