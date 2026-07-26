@@ -4933,19 +4933,11 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <div class="po-signup-action-card po-signup-action-schedule">
                 <div>
                   <strong>3. Automatischer Poster</strong>
-                  <small>Wiederkehrenden Raid aus den aktuellen Angaben speichern.</small>
+                  <small>Raid-Start und Zeitpunkt für den neuen Anmelder speichern.</small>
                 </div>
                 <div class="po-signup-schedule-grid">
-                  <label>Wochentag
-                    <select id="poSignupScheduleWeekday" onchange="document.getElementById('poSignupScheduleNextDate').value = nextIsoDateForWeekday(this.value)">
-                      <option value="1">Mo</option>
-                      <option value="2">Di</option>
-                      <option value="3">Mi</option>
-                      <option value="4">Do</option>
-                      <option value="5">Fr</option>
-                      <option value="6">Sa</option>
-                      <option value="7">So</option>
-                    </select>
+                  <label>Raid-Start
+                    <input id="poSignupScheduleRaidTime" type="time">
                   </label>
                   <label>Rhythmus
                     <select id="poSignupScheduleInterval">
@@ -4955,11 +4947,11 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                       <option value="4">alle 4 Wochen</option>
                     </select>
                   </label>
-                  <label>Nächster Termin
-                    <input id="poSignupScheduleNextDate" type="date">
+                  <label>Post-Datum
+                    <input id="poSignupSchedulePostDate" type="date">
                   </label>
-                  <label>Anmeldeschluss
-                    <input id="poSignupScheduleDeadline" type="time">
+                  <label>Post-Uhrzeit
+                    <input id="poSignupSchedulePostTime" type="time">
                   </label>
                 </div>
                 <div class="po-signup-action-buttons">
@@ -8057,14 +8049,20 @@ async function saveRaidHelperSchedule(){
 
 function syncPoSignupScheduleDefaults(force=false){
   const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
-  const defaults = raidHelperTemplateDefaults(raidKey);
-  const weekday = document.getElementById("poSignupScheduleWeekday");
-  const nextDate = document.getElementById("poSignupScheduleNextDate");
-  const deadline = document.getElementById("poSignupScheduleDeadline");
   const raidDate = document.getElementById("poSignupDate")?.value || "";
-  if(weekday && (force || !weekday.value)) weekday.value = "3";
-  if(nextDate && (force || !nextDate.value)) nextDate.value = raidDate || nextIsoDateForWeekday(weekday?.value || 3);
-  if(deadline && (force || !deadline.value)) deadline.value = defaults.signupDeadline || "";
+  const raidTime = document.getElementById("poSignupTime")?.value || "19:45";
+  const raidStart = document.getElementById("poSignupScheduleRaidTime");
+  const postDate = document.getElementById("poSignupSchedulePostDate");
+  const postTime = document.getElementById("poSignupSchedulePostTime");
+  if(raidStart && (force || !raidStart.value)) raidStart.value = raidTime;
+  if(postDate && (force || !postDate.value)) postDate.value = raidDate || todayIsoDate();
+  if(postTime && (force || !postTime.value)) postTime.value = "09:00";
+}
+
+function isoWeekdayFromDate(value){
+  const date = value ? new Date(value + "T00:00:00") : new Date();
+  if(Number.isNaN(date.getTime())) return "3";
+  return String(date.getDay() === 0 ? 7 : date.getDay());
 }
 
 async function savePoSignupAutoPoster(){
@@ -8077,14 +8075,15 @@ async function savePoSignupAutoPoster(){
   const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
   const defaults = raidHelperTemplateDefaults(raidKey);
   const title = document.getElementById("poSignupTitle")?.value.trim() || defaults.title || `${RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase()} PO-Anmelder`;
-  const weekday = document.getElementById("poSignupScheduleWeekday")?.value || "3";
-  const raidTime = document.getElementById("poSignupTime")?.value || "19:45";
+  const nextRaidDate = document.getElementById("poSignupDate")?.value || todayIsoDate();
+  const weekday = isoWeekdayFromDate(nextRaidDate);
+  const raidTime = document.getElementById("poSignupScheduleRaidTime")?.value || document.getElementById("poSignupTime")?.value || "19:45";
   const intervalWeeks = document.getElementById("poSignupScheduleInterval")?.value || "1";
-  const nextRaidDate = document.getElementById("poSignupScheduleNextDate")?.value || nextIsoDateForWeekday(weekday);
-  const signupDeadline = document.getElementById("poSignupScheduleDeadline")?.value || defaults.signupDeadline || "";
+  const nextPostDate = document.getElementById("poSignupSchedulePostDate")?.value || nextRaidDate;
+  const postTime = document.getElementById("poSignupSchedulePostTime")?.value || "09:00";
   const discordChannelId = document.getElementById("poSignupSourceChannel")?.value || RAID_HELPER_CHANNEL_ID;
   if(!nextRaidDate){
-    if(status) status.textContent = "Bitte nächsten Termin wählen.";
+    if(status) status.textContent = "Bitte Raid-Datum wählen.";
     return;
   }
   if(status) status.textContent = "Automatischer Raid-Poster wird gespeichert ...";
@@ -8100,7 +8099,8 @@ async function savePoSignupAutoPoster(){
       raidTime,
       intervalWeeks,
       nextRaidDate,
-      signupDeadline,
+      nextPostDate,
+      postTime,
       discordChannelId,
       maxPlayers:defaults.maxPlayers,
       tankSlots:defaults.tankSlots,
@@ -8126,7 +8126,7 @@ async function processPoSignupAutoPosters(){
   }
   if(status) status.textContent = "Automatische Raid-Poster werden aktualisiert ...";
   try{
-    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode });
+    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode, force:"true" });
     if(!result.success) throw new Error(result.error || "Automatische Poster konnten nicht aktualisiert werden.");
     await loadRaidHelperSchedules();
     if(status) status.innerHTML = '<span class="good">Automatische Raid-Poster aktualisiert.</span>';
@@ -9613,6 +9613,14 @@ function initPoPostPanel(){
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
   syncPoSignupScheduleDefaults();
+  ["poSignupDate","poSignupTime"].forEach(id => {
+    const field = document.getElementById(id);
+    if(field && !field.dataset.poSignupScheduleBound){
+      field.addEventListener("change", () => syncPoSignupScheduleDefaults(true));
+      field.addEventListener("input", () => syncPoSignupScheduleDefaults(true));
+      field.dataset.poSignupScheduleBound = "1";
+    }
+  });
   ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
