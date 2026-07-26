@@ -2192,6 +2192,21 @@ async function ensureRaidSchema() {
   );
   await query(`create index if not exists idx_p0_discord_signups_raid on p0_discord_signups(guild_id, raid_id)`);
   await query(
+    `create table if not exists character_po_releases (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       character_id uuid not null references characters(id) on delete cascade,
+       raid_type text not null,
+       source text not null default 'manual',
+       approved_by text,
+       approved_at timestamptz not null default now(),
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique(guild_id, character_id, raid_type)
+     )`
+  );
+  await query(`create index if not exists idx_character_po_releases_guild_raid on character_po_releases(guild_id, raid_type)`);
+  await query(
     `create table if not exists discord_player_links (
        id uuid primary key default gen_random_uuid(),
        guild_id uuid not null references guilds(id) on delete cascade,
@@ -2847,9 +2862,10 @@ function raidKeyFromP0ReleaseHeader(value) {
   return "";
 }
 
-async function getP0ReleaseList() {
+async function getP0ReleaseList(guildId = "") {
   const now = Date.now();
-  if (p0ReleaseCache && now < p0ReleaseCacheUntil) {
+  const cacheKey = clean(guildId) || "global";
+  if (p0ReleaseCache && p0ReleaseCache.key === cacheKey && now < p0ReleaseCacheUntil) {
     return { success: true, releases: p0ReleaseCache };
   }
 
@@ -2870,10 +2886,270 @@ async function getP0ReleaseList() {
     });
   });
 
+  if (guildId) {
+    try {
+      await ensureCharacterPoReleaseSchema();
+      const dbResult = await query(
+        `select c.name, cpr.raid_type
+         from character_po_releases cpr
+         join characters c on c.id = cpr.character_id
+         join players p on p.id = c.player_id
+         where cpr.guild_id = $1 and p.guild_id = $1`,
+        [guildId]
+      );
+      for (const row of dbResult.rows) {
+        const raidKey = normalizePoReleaseRaid(row.raid_type);
+        const player = clean(row.name);
+        if (raidKey && player && !releases[raidKey].some(existing => existing.toLowerCase() === player.toLowerCase())) {
+          releases[raidKey].push(player);
+        }
+      }
+    } catch (error) {
+      console.warn("PO-Freigaben aus Datenbank konnten nicht geladen werden:", error.message || error);
+    }
+  }
+
   Object.keys(releases).forEach(key => releases[key].sort((a, b) => a.localeCompare(b, "de")));
+  Object.defineProperty(releases, "key", { value: cacheKey, enumerable: false });
   p0ReleaseCache = releases;
   p0ReleaseCacheUntil = now + 5 * 60 * 1000;
   return { success: true, releases };
+}
+
+function normalizePoReleaseRaid(value) {
+  const raid = normalizeRaidType(value);
+  return ["mc", "bwl", "aq40", "naxx"].includes(raid) ? raid : "";
+}
+
+async function ensureCharacterPoReleaseSchema() {
+  await ensureRaidSchema();
+}
+
+function poReleaseFlagsFromRows(rows) {
+  const flags = { mc: false, bwl: false, aq40: false, naxx: false };
+  for (const row of rows || []) {
+    const raid = normalizePoReleaseRaid(row.raid_type || row.raid);
+    if (raid) flags[raid] = true;
+  }
+  return flags;
+}
+
+async function getCharacterPoReleaseRows(guildId) {
+  await ensureCharacterPoReleaseSchema();
+  const result = await query(
+    `select
+       c.id as character_id,
+       c.name,
+       c.server,
+       c.class_name,
+       c.is_main,
+       p.player_pin,
+       p.id as player_id,
+       cpr.raid_type,
+       cpr.source,
+       cpr.approved_by,
+       cpr.approved_at
+     from players p
+     join characters c on c.player_id = p.id
+     left join character_po_releases cpr
+       on cpr.guild_id = p.guild_id
+      and cpr.character_id = c.id
+     where p.guild_id = $1
+     order by lower(c.name) asc, lower(coalesce(c.server, '')) asc`,
+    [guildId]
+  );
+  const byCharacter = new Map();
+  for (const row of result.rows) {
+    const id = row.character_id;
+    if (!byCharacter.has(id)) {
+      byCharacter.set(id, {
+        id,
+        characterId: id,
+        name: row.name || "",
+        char: row.name || "",
+        player: row.name || "",
+        server: row.server || "",
+        className: row.class_name || "",
+        isMain: Boolean(row.is_main),
+        playerId: row.player_id,
+        playerPin: row.player_pin || "",
+        releases: { mc: false, bwl: false, aq40: false, naxx: false },
+        approvedBy: {},
+        approvedAt: {}
+      });
+    }
+    const entry = byCharacter.get(id);
+    const raid = normalizePoReleaseRaid(row.raid_type);
+    if (raid) {
+      entry.releases[raid] = true;
+      entry.approvedBy[raid] = row.approved_by || "";
+      entry.approvedAt[raid] = row.approved_at || "";
+    }
+  }
+  return [...byCharacter.values()];
+}
+
+async function getCharacterPoReleases({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  const search = clean(params.search || params.q).toLowerCase();
+  let characters = await getCharacterPoReleaseRows(guildId);
+  if (search) {
+    characters = characters.filter(entry =>
+      [entry.name, entry.server, entry.className, entry.playerPin].some(value => clean(value).toLowerCase().includes(search))
+    );
+  }
+  return { success: true, characters, entries: characters, count: characters.length };
+}
+
+async function setCharacterPoRelease({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  await ensureCharacterPoReleaseSchema();
+  const raid = normalizePoReleaseRaid(params.raid || params.raidType);
+  const characterId = clean(params.characterId || params.charId);
+  const enabled = !["false", "0", "no", "nein", "delete", "remove"].includes(clean(params.enabled || params.value || "true").toLowerCase());
+  if (!raid) {
+    const error = new Error("Raid für PO-Freigabe fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!isUuid(characterId)) {
+    const error = new Error("Charakter fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const character = await query(
+    `select c.id, c.name, c.server, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1 and c.id = $2
+     limit 1`,
+    [guildId, characterId]
+  );
+  if (!character.rows[0]) {
+    const error = new Error("Charakter wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  if (enabled) {
+    await query(
+      `insert into character_po_releases (guild_id, character_id, raid_type, source, approved_by, approved_at)
+       values ($1, $2, $3, $4, $5, now())
+       on conflict (guild_id, character_id, raid_type) do update
+         set source = excluded.source,
+             approved_by = excluded.approved_by,
+             approved_at = now(),
+             updated_at = now()`,
+      [guildId, characterId, raid, clean(params.source || "manual"), clean(params.approvedBy || params.reviewer || "Gildenleitung")]
+    );
+  } else {
+    await query(
+      `delete from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3`,
+      [guildId, characterId, raid]
+    );
+  }
+  p0ReleaseCache = null;
+  return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
+}
+
+async function importCharacterPoReleases({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  await ensureCharacterPoReleaseSchema();
+  let entries = params.entries || params.rows || [];
+  if (typeof entries === "string") {
+    try { entries = JSON.parse(entries || "[]"); } catch { entries = []; }
+  }
+  if (!Array.isArray(entries)) entries = [];
+  let updated = 0;
+  let skipped = 0;
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    for (const rawEntry of entries) {
+      const name = clean(rawEntry.character || rawEntry.char || rawEntry.name || rawEntry.Charakter);
+      const server = clean(rawEntry.server || rawEntry.Server);
+      if (!name) {
+        skipped += 1;
+        continue;
+      }
+      const values = [guildId, name];
+      let serverOrder = "";
+      if (server) {
+        values.push(server);
+        serverOrder = `case when lower(c.server) = lower($${values.length}) then 0 else 1 end,`;
+      }
+      const character = await client.query(
+        `select c.id
+         from characters c
+         join players p on p.id = c.player_id
+         where p.guild_id = $1 and lower(c.name) = lower($2)
+         order by ${serverOrder} c.created_at asc
+         limit 1`,
+        values
+      );
+      const characterId = character.rows[0]?.id;
+      if (!characterId) {
+        skipped += 1;
+        continue;
+      }
+      await client.query(
+        `delete from character_po_releases
+         where guild_id = $1 and character_id = $2 and raid_type = any($3)`,
+        [guildId, characterId, ["mc", "bwl", "aq40", "naxx"]]
+      );
+      for (const raid of ["mc", "bwl", "aq40", "naxx"]) {
+        const value = rawEntry[raid] ?? rawEntry[raid.toUpperCase()] ?? rawEntry[`po_${raid}`] ?? rawEntry[`p0_${raid}`];
+        const enabled = ["true", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
+        if (enabled) {
+          await client.query(
+            `insert into character_po_releases (guild_id, character_id, raid_type, source, approved_by, approved_at)
+             values ($1, $2, $3, 'sheet', $4, now())
+             on conflict (guild_id, character_id, raid_type) do update
+               set source = 'sheet',
+                   approved_by = excluded.approved_by,
+                   approved_at = now(),
+                   updated_at = now()`,
+            [guildId, characterId, raid, clean(params.approvedBy || "Google Sheet")]
+          );
+          updated += 1;
+        }
+      }
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+  p0ReleaseCache = null;
+  return { success: true, updated, skipped };
+}
+
+async function checkCharacterPoRelease({ guildId, query: params = {} }) {
+  requireMasterOrQueueToken(params);
+  const raid = normalizePoReleaseRaid(params.raid || params.raidType || params.raidName);
+  if (!raid) return { success: true, allowed: true, raid: "" };
+  const pin = params.playerPin || params.pin || params.spielerLogin;
+  const charName = params.player || params.char || params.character || params.spieler;
+  const character = await findCharacterForPin(guildId, pin, charName, params.server);
+  if (!character) {
+    const error = new Error("Dieser Charakter gehört nicht zu diesem SpielerPin.");
+    error.statusCode = 403;
+    throw error;
+  }
+  await ensureCharacterPoReleaseSchema();
+  const result = await query(
+    `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
+    [guildId, character.id, raid]
+  );
+  const allowed = Boolean(result.rows[0]);
+  return {
+    success: true,
+    allowed,
+    raid,
+    character: normalizeCharacter(character),
+    message: allowed ? "" : "du hast keine PO Freigabe wende dich an den Raidlead"
+  };
 }
 
 function worldbuffMergeLookupKey(entry) {
@@ -5234,7 +5510,7 @@ async function savePoPostEntries({ guildId, query: params }) {
   const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
   let releaseNames = new Set();
   try {
-    const releaseResult = await getP0ReleaseList();
+    const releaseResult = await getP0ReleaseList(guildId);
     releaseNames = new Set((releaseResult.releases?.[raidKey] || []).map(name => clean(name).toLowerCase()).filter(Boolean));
   } catch (error) {
     console.warn("P0-Freigabeliste konnte fuer PO-Post nicht geladen werden:", error.message || error);
@@ -7494,6 +7770,15 @@ async function getPlayerPrioHistory(guildId, params) {
     [guildId, character.id]
   );
 
+  await ensureCharacterPoReleaseSchema();
+  const releaseResult = await query(
+    `select raid_type, approved_by, approved_at
+     from character_po_releases
+     where guild_id = $1 and character_id = $2`,
+    [guildId, character.id]
+  );
+  const poReleases = poReleaseFlagsFromRows(releaseResult.rows);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -7533,6 +7818,12 @@ async function getPlayerPrioHistory(guildId, params) {
     server: character.server,
     className: character.class_name,
     entries,
+    poReleases,
+    poReleaseDetails: releaseResult.rows.map(row => ({
+      raid: normalizePoReleaseRaid(row.raid_type),
+      approvedBy: row.approved_by || "",
+      approvedAt: row.approved_at || ""
+    })),
     ownP0PlusPoints: pointsResult.rows.map(row => ({
       raid: row.raid,
       item: row.item,
@@ -13752,6 +14043,18 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     }
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
+    const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
+    if (releaseRaid) {
+      const releaseResult = await client.query(
+        `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
+        [guildId, character.id, releaseRaid]
+      );
+      if (!releaseResult.rows[0]) {
+        const error = new Error("du hast keine PO Freigabe wende dich an den Raidlead");
+        error.statusCode = 403;
+        throw error;
+      }
+    }
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     const comment = JSON.stringify({
       p0Plus: "ja",
@@ -17740,6 +18043,26 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
+      const list = await getCharacterPoReleases({ guildId: guild.id, query: req.query });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
+      const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildImportCharacterPoReleases" || action === "importCharacterPoReleases") {
+      const imported = await importCharacterPoReleases({ guildId: guild.id, query: req.query });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
+    if (action === "lichtbotCheckPoRelease" || action === "checkCharacterPoRelease") {
+      const checked = await checkCharacterPoRelease({ guildId: guild.id, query: req.query });
+      return res.json({ ...checked, guild: guild.slug });
+    }
+
     if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
       const list = await getPoPostApprovals({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
@@ -17886,7 +18209,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "getP0ReleaseList") {
-      const releases = await getP0ReleaseList();
+      const releases = await getP0ReleaseList(guild.id);
       return res.json({ ...releases, guild: guild.slug });
     }
 
@@ -18160,6 +18483,26 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "getPoPostEntries" || action === "guildGetPoPostEntries" || action === "lichtbotGetPoPostEntries") {
       const list = await getPoPostEntries({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
+      const list = await getCharacterPoReleases({ guildId: guild.id, query: postParams });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
+      const saved = await setCharacterPoRelease({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildImportCharacterPoReleases" || action === "importCharacterPoReleases") {
+      const imported = await importCharacterPoReleases({ guildId: guild.id, query: postParams });
+      return res.json({ ...imported, guild: guild.slug });
+    }
+
+    if (action === "lichtbotCheckPoRelease" || action === "checkCharacterPoRelease") {
+      const checked = await checkCharacterPoRelease({ guildId: guild.id, query: postParams });
+      return res.json({ ...checked, guild: guild.slug });
     }
 
     if (action === "lichtbotGetPoPostApprovals" || action === "getPoPostApprovals") {
