@@ -5063,6 +5063,7 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 
 async function queuePoPost({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  await ensurePoPostEntriesSchema();
   const requestedSourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const requestedTargetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || requestedSourceChannelId;
   const raid = clean(params.raid || params.raidName);
@@ -5091,7 +5092,35 @@ async function queuePoPost({ guildId, query: params }) {
     throw error;
   }
   const limit = Math.max(50, Math.min(2000, Number(params.limit || 800) || 800));
-  return enqueueBotUpdate({
+  let restoredEntries = 0;
+  if (["1", "true", "yes", "ja"].includes(clean(params.restoreArchived || params.restore || params.repost || "").toLowerCase())) {
+    const restoreResult = await query(
+      `update po_post_entries
+       set archived_at = null,
+           source_channel_id = coalesce(nullif($3, ''), source_channel_id),
+           target_channel_id = coalesce(nullif($4, ''), target_channel_id),
+           raid = coalesce(nullif($5, ''), raid),
+           raid_date = coalesce(nullif($6, ''), raid_date),
+           raid_time = coalesce(nullif($7, ''), raid_time),
+           mode = coalesce(nullif($8, ''), mode),
+           updated_at = now()
+       where guild_id = $1
+         and post_key = $2
+         and archived_at is not null`,
+      [
+        guildId,
+        postKey,
+        sourceChannelId,
+        targetChannelId,
+        raid,
+        clean(params.raidDate || params.date || params.datum),
+        clean(params.raidTime || params.time || params.uhrzeit),
+        clean(params.mode || params.poMode) || "signup"
+      ]
+    );
+    restoredEntries = restoreResult.rowCount || 0;
+  }
+  const queued = await enqueueBotUpdate({
     guildId,
     type: "po_post",
     payload: {
@@ -5109,6 +5138,7 @@ async function queuePoPost({ guildId, query: params }) {
       mode: clean(params.mode || params.poMode) || "signup",
       groupBy: clean(params.groupBy || params.poGroupBy || params.sortBy),
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
+      restoreArchived: ["1", "true", "yes", "ja"].includes(clean(params.restoreArchived || params.restore || params.repost || "").toLowerCase()) ? "true" : "",
       createLichtlootRaid: clean(params.createLichtlootRaid || params.createRaid || ""),
       lichtlootRaidId: clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId || ""),
       lichtlootPlayerPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || ""),
@@ -5117,6 +5147,7 @@ async function queuePoPost({ guildId, query: params }) {
       source: "gildenleitung"
     }
   });
+  return { ...queued, restoredEntries };
 }
 
 async function ensurePoPostEntriesSchema() {
@@ -6179,7 +6210,7 @@ async function deletePoPost({ guildId, query: params }) {
     `update po_post_entries
      set archived_at = now(), updated_at = now()
      where ${clauses.join(" and ")}
-     returning post_key, source_channel_id, target_channel_id, discord_message_id, title, raid`,
+     returning post_key, source_channel_id, target_channel_id, discord_message_id, title, raid, raid_pin, raid_date, raid_time, mode, item_game_id`,
     values
   );
 
@@ -6270,8 +6301,16 @@ async function restorePoPost({ guildId, query: params }) {
       sourceChannelId: row.source_channel_id || sourceChannelId,
       targetChannelId: row.target_channel_id || targetChannelId || row.source_channel_id || sourceChannelId,
       messageId: row.discord_message_id || "",
+      discordMessageId: row.discord_message_id || "",
       title: row.title || "PO Liste",
       raid: row.raid || "",
+      raidPin: row.raid_pin || "",
+      prioPin: row.raid_pin || "",
+      lichtlootRaidId: row.raid_pin || "",
+      lichtlootPlayerPin: row.raid_pin || "",
+      raidDate: row.raid_date || "",
+      raidTime: row.raid_time || "",
+      mode: row.mode || "signup",
       source: "gildenleitung_restore"
     });
   }
