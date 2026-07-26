@@ -3971,6 +3971,24 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   font-weight:800;
 }
 
+.po-signup-list-toolbar{
+  display:grid;
+  gap:8px;
+  margin:8px 0 10px;
+}
+
+.po-signup-tier-tabs,
+.po-signup-raid-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.po-signup-tier-tabs .small-btn,
+.po-signup-raid-tabs .small-btn{
+  min-height:34px;
+}
+
 .p0-points-input{
   width:76px;
   min-height:28px;
@@ -4916,6 +4934,14 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
+              <div class="po-signup-list-toolbar">
+                <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
+                  <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
+                  <button class="small-btn" type="button" data-po-signup-tier="20" onclick="setPoSignupListTierFilter('20')">20er</button>
+                  <button class="small-btn" type="button" data-po-signup-tier="40" onclick="setPoSignupListTierFilter('40')">40er</button>
+                </div>
+                <div id="poSignupRaidTabs" class="po-signup-raid-tabs" aria-label="PO-Anmelder Raid-Auswahl"></div>
+              </div>
               <div class="table-wrap">
                 <table class="po-post-config-table">
                   <thead>
@@ -5413,6 +5439,8 @@ let poPostRaidFilter = "";
 let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
+let poSignupListTierFilter = "all";
+let poSignupListRaidFilter = "";
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
@@ -9703,11 +9731,20 @@ async function runPoPostRowAction(select, postKey){
 function renderPoSignupConfigRows(){
   const tbody = document.getElementById("poSignupConfigRows");
   if(!tbody) return;
+  renderPoSignupListFilters();
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
-    .filter(row => row.count || !row.archivedCount);
+    .filter(row => row.count || !row.archivedCount)
+    .filter(row => poSignupConfigMatchesListFilter(row));
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    const emptyText = poSignupListRaidFilter
+      ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
+      : poSignupListTierFilter === "20"
+        ? "Keine 20er-PO-Anmelder gespeichert."
+        : poSignupListTierFilter === "40"
+          ? "Keine 40er-PO-Anmelder gespeichert."
+          : "Noch keine PO-Anmelder gespeichert.";
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
     updatePoSignupTransferState();
     return;
   }
@@ -9737,6 +9774,69 @@ function renderPoSignupConfigRows(){
     </tr>
   `).join("");
   updatePoSignupTransferState();
+}
+
+const PO_SIGNUP_LIST_RAID_GROUPS = {
+  "20":["aq20","zg"],
+  "40":["naxx","aq40","bwl","mc","ony"]
+};
+
+function normalizePoSignupRaidKey(value){
+  const raid = String(value || "").trim().toLowerCase();
+  if(raid === "zul gurub" || raid === "zulgurub") return "zg";
+  if(raid === "naxxramas") return "naxx";
+  if(raid === "molten core") return "mc";
+  if(raid === "blackwing lair") return "bwl";
+  if(raid === "ahnqiraj 20" || raid === "aq20") return "aq20";
+  if(raid === "ahnqiraj 40" || raid === "aq40") return "aq40";
+  if(raid === "onyxia") return "ony";
+  return raid;
+}
+
+function poSignupRaidLabel(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  return RAID_OPTIONS[key]?.short || String(raid || "").toUpperCase();
+}
+
+function poSignupListRaidKeys(){
+  if(poSignupListTierFilter === "20" || poSignupListTierFilter === "40"){
+    return PO_SIGNUP_LIST_RAID_GROUPS[poSignupListTierFilter];
+  }
+  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
+}
+
+function poSignupConfigMatchesListFilter(row){
+  const raid = normalizePoSignupRaidKey(row.raid);
+  const allowed = poSignupListRaidKeys();
+  if(poSignupListRaidFilter) return raid === poSignupListRaidFilter;
+  return poSignupListTierFilter === "all" || allowed.includes(raid);
+}
+
+function setPoSignupListTierFilter(tier){
+  poSignupListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
+  poSignupListRaidFilter = "";
+  renderPoSignupConfigRows();
+}
+
+function setPoSignupListRaidFilter(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  poSignupListRaidFilter = poSignupListRaidFilter === key ? "" : key;
+  renderPoSignupConfigRows();
+}
+
+function renderPoSignupListFilters(){
+  document.querySelectorAll("[data-po-signup-tier]").forEach(button => {
+    button.classList.toggle("primary", button.dataset.poSignupTier === poSignupListTierFilter);
+    button.classList.toggle("ghost", button.dataset.poSignupTier !== poSignupListTierFilter);
+  });
+  const box = document.getElementById("poSignupRaidTabs");
+  if(!box) return;
+  const raidKeys = poSignupListRaidKeys();
+  const allLabel = poSignupListTierFilter === "20" ? "Alle 20er" : poSignupListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
+  box.innerHTML = [
+    `<button class="small-btn ${poSignupListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setPoSignupListRaidFilter('')">${allLabel}</button>`,
+    ...raidKeys.map(raid => `<button class="small-btn ${poSignupListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoSignupListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
+  ].join("");
 }
 
 async function runPoSignupRowAction(select, postKey){
