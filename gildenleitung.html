@@ -9882,7 +9882,6 @@ function renderPoSignupConfigRows(){
   renderPoSignupListFilters();
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
-    .filter(row => row.count || !row.archivedCount)
     .filter(row => poSignupConfigMatchesListFilter(row));
   if(!rows.length){
     const emptyText = poSignupListRaidFilter
@@ -9896,10 +9895,15 @@ function renderPoSignupConfigRows(){
     updatePoSignupTransferState();
     return;
   }
-  tbody.innerHTML = rows.map(row => `
+  tbody.innerHTML = rows.map(row => {
+    const isArchivedOnly = Boolean(row.archivedCount && !row.count);
+    const visibleCount = Number(row.count || 0);
+    const archivedCount = Number(row.archivedCount || 0);
+    return `
     <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
       <td>
         <button class="po-post-id-button po-signup-config-key" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button>
+        ${isArchivedOnly ? '<div class="muted">archiviert</div>' : ""}
       </td>
       <td><strong>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</strong><div class="muted">${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</div></td>
       <td>
@@ -9911,16 +9915,19 @@ function renderPoSignupConfigRows(){
         <div><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</div>
         <div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div>
       </td>
-      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
+      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(visibleCount || archivedCount || 0))}</strong><small>${isArchivedOnly ? `${escapeHtml(String(archivedCount))} archiviert` : `${escapeHtml(String(row.approvedCount || 0))} grün`}</small></span></td>
       <td>
         <div class="po-signup-action-stack">
           <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
-          <button class="small-btn good" type="button" ${row.approvedCount ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
-          <button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>
+          <button class="small-btn good" type="button" ${row.approvedCount && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+          ${isArchivedOnly
+            ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+            : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
         </div>
       </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
   updatePoSignupTransferState();
 }
 
@@ -10443,7 +10450,7 @@ async function archivePoSignupEverywhere(postKey){
 
 async function restorePoPostEverywhere(postKey){
   const key = String(postKey || "").trim();
-  const status = document.getElementById("poPostStatus");
+  const status = document.getElementById("poPostStatus") || document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!key){
     if(status) status.textContent = "Post-ID fehlt.";
