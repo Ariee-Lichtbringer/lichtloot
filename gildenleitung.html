@@ -5475,6 +5475,8 @@ let guildData = { raids: [], players: [] };
 let p0PlusEntries = [];
 let p0ReviewEntries = [];
 let poPostEntries = [];
+let poReleaseCharacters = [];
+let poReleaseSearch = "";
 let poPostRaidFilter = "";
 let poPostKeyFilter = "";
 let poPostStoredEntries = [];
@@ -12213,13 +12215,16 @@ async function loadP0PlusPanel(){
 
   try{
     const masterCode = document.getElementById("masterCode").value.trim();
-    const [result, reviewResult, initialPoResult] = await Promise.all([
+    const [result, reviewResult, initialPoResult, releaseResult] = await Promise.all([
       railwayApi({ action:"getP0Plus" }),
       masterCode
         ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
         : Promise.resolve({ success:true, entries:[], noMaster:true }),
       masterCode
         ? railwayApi({ action:"guildGetPoPostEntries", masterCode, postKey:poPostKeyFilter })
+        : Promise.resolve({ success:true, entries:[], noMaster:true }),
+      masterCode
+        ? railwayApi({ action:"guildGetCharacterPoReleases", masterCode })
         : Promise.resolve({ success:true, entries:[], noMaster:true })
     ]);
     let poResult = initialPoResult;
@@ -12238,10 +12243,15 @@ async function loadP0PlusPanel(){
       document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(poResult.error || "PO-Post-Einträge konnten nicht geladen werden.")}</div>`;
       return;
     }
+    if(releaseResult && !releaseResult.success){
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "PO-Freigaben konnten nicht geladen werden.")}</div>`;
+      return;
+    }
 
     p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
     p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
     poPostEntries = Array.isArray(poResult.entries) ? poResult.entries : [];
+    poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
     await ensureLootDataLoaded();
     renderP0PlusModalContent();
   }catch(error){
@@ -12252,6 +12262,33 @@ async function loadP0PlusPanel(){
 function renderP0PlusModalContent(){
   const raids = Array.from(new Set(p0PlusEntries.map(entry => entry.raid).filter(Boolean))).sort();
   document.getElementById("p0PlusPanelContent").innerHTML = `
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>PO Freigaben</h3>
+          <p>Alle Charaktere aus LichtLoot. Haken erlauben PO-Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+      </div>
+      <div class="p0-toolbar">
+        <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Charakter</th>
+              <th>PO Freigabe MC</th>
+              <th>P0 Freigabe BWL</th>
+              <th>P0 Freigabe AQ40</th>
+              <th>P0 Freigabe NAXX</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="poReleaseRows"></tbody>
+        </table>
+      </div>
+    </div>
     <div class="p0-review-block">
       <div class="section-head">
         <div>
@@ -12309,8 +12346,104 @@ function renderP0PlusModalContent(){
       </table>
     </div>
   `;
+  renderPoReleaseRows();
   renderP0ReviewRows();
   renderP0PlusRows();
+}
+
+function poReleaseRaidLabel(raid){
+  const labels = { mc:"PO Freigabe MC", bwl:"P0 Freigabe BWL", aq40:"P0 Freigabe AQ40", naxx:"P0 Freigabe NAXX" };
+  return labels[raid] || String(raid || "").toUpperCase();
+}
+
+function setPoReleaseSearch(value){
+  poReleaseSearch = String(value || "");
+  renderPoReleaseRows();
+}
+
+function poReleaseCheckHtml(entry, raid){
+  const checked = Boolean(entry && entry.releases && entry.releases[raid]);
+  return checked
+    ? `<span class="ok" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓</span>`
+    : `<span class="muted">-</span>`;
+}
+
+function renderPoReleaseRows(){
+  const tbody = document.getElementById("poReleaseRows");
+  if(!tbody) return;
+  const needle = normalize(poReleaseSearch);
+  const rows = (poReleaseCharacters || []).filter(entry => {
+    if(!needle) return true;
+    return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
+  });
+  if(!document.getElementById("masterCode").value.trim()){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Master-Code eingeben, um PO-Freigaben zu laden.</td></tr>';
+    return;
+  }
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="6" class="muted">Keine Charaktere gefunden.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(entry => {
+    const index = poReleaseCharacters.indexOf(entry);
+    const server = entry.server ? `<br><span class="muted">${escapeHtml(entry.server)}</span>` : "";
+    return `
+      <tr>
+        <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
+        <td>${poReleaseCheckHtml(entry,"mc")}</td>
+        <td>${poReleaseCheckHtml(entry,"bwl")}</td>
+        <td>${poReleaseCheckHtml(entry,"aq40")}</td>
+        <td>${poReleaseCheckHtml(entry,"naxx")}</td>
+        <td><button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">PO freigeben</button></td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function openPoReleasePopup(index){
+  const entry = poReleaseCharacters[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const answer = prompt(
+    "Welche PO Freigabe soll fuer " + (entry.name || "den Charakter") + " gesetzt werden?\n\nMC, BWL, AQ40 oder NAXX eingeben.\nMit !MC kann ein Haken entfernt werden.",
+    "MC"
+  );
+  if(answer === null) return;
+  const raw = String(answer || "").trim();
+  const remove = raw.startsWith("!");
+  const raid = normalize(raw.replace(/^!+/, "")).replace(/[^a-z0-9]+/g,"");
+  const map = { moltencore:"mc", molten:"mc", mc:"mc", bwl:"bwl", blackwinglair:"bwl", aq40:"aq40", naxx:"naxx", naxxramas:"naxx" };
+  const raidKey = map[raid] || raid;
+  if(!["mc","bwl","aq40","naxx"].includes(raidKey)){
+    setStatus("Bitte MC, BWL, AQ40 oder NAXX eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus((remove ? "PO-Freigabe wird entfernt ..." : "PO-Freigabe wird gespeichert ..."), "");
+    const result = await railwayWrite({
+      action:"guildSetCharacterPoRelease",
+      masterCode,
+      characterId:entry.characterId || entry.id,
+      raid:raidKey,
+      enabled:remove ? "false" : "true",
+      approvedBy:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "PO-Freigabe konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false }, entry.releases || {});
+    entry.releases[raidKey] = !remove;
+    raidHelperP0ReleaseCache = null;
+    renderPoReleaseRows();
+    setStatus(remove ? "PO-Freigabe entfernt." : "PO-Freigabe gespeichert.", "good");
+  }catch(error){
+    setStatus(error.message || "PO-Freigabe konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function setPoPostRaidFilter(raid){
