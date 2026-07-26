@@ -2337,7 +2337,9 @@ async function ensureRaidHelperScheduleSchema() {
        interval_weeks integer not null default 1,
        weekday integer not null default 3,
        raid_time text not null default '20:00',
+       post_time text not null default '09:00',
        next_raid_date date,
+       next_post_date date,
        last_raid_date date,
        last_raid_id uuid references raids(id) on delete set null,
        created_at timestamptz not null default now(),
@@ -2345,6 +2347,8 @@ async function ensureRaidHelperScheduleSchema() {
        unique (guild_id, schedule_key)
      )`
   );
+  await query(`alter table raid_helper_schedules add column if not exists post_time text not null default '09:00'`);
+  await query(`alter table raid_helper_schedules add column if not exists next_post_date date`);
   await query(
     `create index if not exists idx_raid_helper_schedules_guild
        on raid_helper_schedules(guild_id, enabled, next_raid_date, raid_time)`
@@ -4322,7 +4326,9 @@ function normalizeRaidHelperScheduleRow(row) {
     intervalWeeks: row.interval_weeks ?? 1,
     weekday: row.weekday ?? 3,
     raidTime: row.raid_time || "20:00",
+    postTime: row.post_time || "09:00",
     nextRaidDate: scheduleDateIso(row.next_raid_date),
+    nextPostDate: scheduleDateIso(row.next_post_date),
     lastRaidDate: scheduleDateIso(row.last_raid_date),
     lastRaidId: row.last_raid_id || "",
     currentRaidId: id ? `schedule-${id}` : "",
@@ -4383,7 +4389,18 @@ function resolveNextScheduleDate({ weekday, nextRaidDate, intervalWeeks }) {
   return next;
 }
 
-async function processRaidHelperSchedules({ guildId }) {
+function schedulePostIsDue({ postDate, postTime, force = false }) {
+  if (force) return true;
+  const dateIso = scheduleDateIso(postDate);
+  if (!dateIso) return true;
+  const timeText = clean(postTime || "00:00") || "00:00";
+  const normalizedTime = /^\d{2}:\d{2}$/.test(timeText) ? timeText : "00:00";
+  const scheduled = new Date(`${dateIso}T${normalizedTime}:00`);
+  if (Number.isNaN(scheduled.getTime())) return true;
+  return scheduled <= new Date();
+}
+
+async function processRaidHelperSchedules({ guildId, force = false }) {
   await ensureRaidHelperScheduleSchema();
   const schedules = await query(
     `select *
@@ -4403,7 +4420,7 @@ async function processRaidHelperSchedules({ guildId }) {
     const nextDateIso = formatDateIso(nextDate);
     const externalRaidId = `schedule-${schedule.id}`;
     const existing = await query(
-      `select id, raid_date, raid_pin, lead_pin
+      `select id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
        from raids
        where guild_id = $1 and external_raid_id = $2
        limit 1`,
@@ -4412,6 +4429,24 @@ async function processRaidHelperSchedules({ guildId }) {
     const existingRaid = existing.rows[0] || null;
     const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
+    const nextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
+    const postDue = schedulePostIsDue({
+      postDate: nextPostDateIso,
+      postTime: schedule.post_time,
+      force
+    });
+    if (!postDue) {
+      processed.push({
+        scheduleId: schedule.id,
+        raidId: externalRaidId,
+        skipped: true,
+        reason: "not_due",
+        nextRaidDate: nextDateIso,
+        nextPostDate: nextPostDateIso,
+        postTime: schedule.post_time || ""
+      });
+      continue;
+    }
 
     if (dateChanged) {
       await query(
@@ -4460,6 +4495,7 @@ async function processRaidHelperSchedules({ guildId }) {
     await query(
       `update raid_helper_schedules
        set next_raid_date = $2,
+           next_post_date = coalesce(next_post_date, $2),
            last_raid_date = case when $3::boolean then $4::date else last_raid_date end,
            last_raid_id = $5,
            updated_at = now()
@@ -4467,11 +4503,28 @@ async function processRaidHelperSchedules({ guildId }) {
       [guildId, nextDateIso, dateChanged, existingDateIso || null, created.id || created.raidId || null, schedule.id]
     );
 
+    const shouldQueuePost = clean(schedule.discord_channel_id) && (force || dateChanged || !existingRaid?.discord_message_id);
+    if (shouldQueuePost) {
+      await enqueueBotUpdate({
+        guildId,
+        type: "raid_announcement",
+        payload: {
+          raidId: externalRaidId,
+          channelId: schedule.discord_channel_id,
+          discordChannelId: schedule.discord_channel_id,
+          source: "raid_helper_schedule"
+        }
+      }).catch(error => console.warn("Geplanter Raid-Anmelder konnte nicht queued werden:", error.message || error));
+    }
+
     processed.push({
       scheduleId: schedule.id,
       raidId: externalRaidId,
       raidUuid: created.id || "",
       nextRaidDate: nextDateIso,
+      nextPostDate: nextPostDateIso,
+      postTime: schedule.post_time || "",
+      queued: Boolean(shouldQueuePost),
       advanced: dateChanged
     });
   }
@@ -4501,6 +4554,7 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
   const weekday = Math.min(7, Math.max(1, Number(params.weekday || 3) || 3));
   const intervalWeeks = Math.min(12, Math.max(1, Number(params.intervalWeeks || 1) || 1));
   const raidTime = clean(params.raidTime || params.time || "20:00") || "20:00";
+  const postTime = clean(params.postTime || params.posterTime || params.autoPostTime || "09:00") || "09:00";
 
   if (!raidType || !title) {
     const error = new Error("Raid und Titel sind für den Rhythmus erforderlich.");
@@ -4531,7 +4585,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     intervalWeeks,
     weekday,
     raidTime,
-    parseDateValue(params.nextRaidDate || params.raidDate || params.date)
+    postTime,
+    parseDateValue(params.nextRaidDate || params.raidDate || params.date),
+    parseDateValue(params.nextPostDate || params.postDate || params.posterDate || params.autoPostDate || params.nextRaidDate || params.raidDate || params.date)
   ];
 
   let result;
@@ -4555,9 +4611,11 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
            interval_weeks = $16,
            weekday = $17,
            raid_time = $18,
-           next_raid_date = coalesce($19, next_raid_date),
+           post_time = $19,
+           next_raid_date = coalesce($20, next_raid_date),
+           next_post_date = coalesce($21, next_post_date),
            updated_at = now()
-       where guild_id = $1 and id = $20
+       where guild_id = $1 and id = $22
        returning *`,
       [...values, scheduleId]
     );
@@ -4567,9 +4625,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          guild_id, schedule_key, enabled, raid_type, title, description,
          max_players, tank_slots, heal_slots, dd_slots, signup_deadline,
          discord_channel_id, raid_image_url, created_by, recurrence,
-         interval_weeks, weekday, raid_time, next_raid_date
+         interval_weeks, weekday, raid_time, post_time, next_raid_date, next_post_date
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
        on conflict (guild_id, schedule_key)
        do update set
          enabled = excluded.enabled,
@@ -4588,7 +4646,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          interval_weeks = excluded.interval_weeks,
          weekday = excluded.weekday,
          raid_time = excluded.raid_time,
+         post_time = excluded.post_time,
          next_raid_date = coalesce(excluded.next_raid_date, raid_helper_schedules.next_raid_date),
+         next_post_date = coalesce(excluded.next_post_date, raid_helper_schedules.next_post_date),
          updated_at = now()
        returning *`,
       values
@@ -17484,7 +17544,7 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildProcessRaidHelperSchedules") {
       requireMasterCode(req.query.masterCode);
-      const processed = await processRaidHelperSchedules({ guildId: guild.id });
+      const processed = await processRaidHelperSchedules({ guildId: guild.id, force: clean(req.query.force).toLowerCase() === "true" });
       return res.json({ success: true, processed, guild: guild.slug });
     }
 
@@ -18067,7 +18127,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildProcessRaidHelperSchedules") {
       requireMasterCode(postParams.masterCode);
-      const processed = await processRaidHelperSchedules({ guildId: guild.id });
+      const processed = await processRaidHelperSchedules({ guildId: guild.id, force: clean(postParams.force).toLowerCase() === "true" });
       return res.json({ success: true, processed, guild: guild.slug });
     }
 
