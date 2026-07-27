@@ -5542,7 +5542,7 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
-const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
+const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","zg-mittwoch","zg-prime","zg-late","aq20","ony"];
 const poSignupLootSearchCache = {};
 const poSignupLootItemDataCache = {};
 const poSignupLootSearchLoading = {};
@@ -5555,6 +5555,9 @@ const RAID_OPTIONS = {
   aq40:{ name:"Ahn'Qiraj 40", short:"AQ40" },
   naxx:{ name:"Naxxramas", short:"NAXX" },
   zg:{ name:"Zul Gurub", short:"ZG" },
+  "zg-mittwoch":{ name:"ZG Mittwoch", short:"ZG MI" },
+  "zg-prime":{ name:"ZG PRIME", short:"ZG PRIME" },
+  "zg-late":{ name:"ZG LATE", short:"ZG LATE" },
   aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
   ony:{ name:"Onyxia", short:"ONY" }
 };
@@ -6514,7 +6517,9 @@ function renderSummary(){
 }
 
 function getRaidKey(raid){
-  const directKey = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const directRaw = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g,"");
+  if(["zg-mittwoch","zg-prime","zg-late"].includes(directRaw)) return directRaw;
+  const directKey = directRaw.replace(/-/g, "");
   if(directKey === "aq20") return "aq20";
   if(directKey === "zg") return "zg";
   if(directKey === "aq40") return "aq40";
@@ -6541,7 +6546,7 @@ function getRaidKey(raid){
 }
 
 function isAllowedP0RaidForRaid(raid){
-  return ["mc","bwl","aq40","naxx"].includes(getRaidKey(raid));
+  return ["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid));
 }
 
 function hasP0PlusTransfer(raidOrResult){
@@ -12215,13 +12220,16 @@ function matchingPoPostConfigForRaid(raid){
   if(!raid) return null;
   const raidId = String(raid.raidId || raid.id || "").trim();
   const raidKey = getRaidKey(raid);
-  return readPoPostConfigs().find(item =>
+  const configs = readPoPostConfigs();
+  return configs.find(item =>
     (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
     (
       String(item.raid || "").trim().toLowerCase() === raidKey &&
       String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
       String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
     )
+  ) || configs.find(item =>
+    String(item.raid || "").trim().toLowerCase() === raidKey
   ) || null;
 }
 
@@ -12237,6 +12245,8 @@ async function queueMatchingPoPostForRaid(raid, masterCode){
       String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
       String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
     )
+  ) || configs.find(item =>
+    String(item.raid || "").trim().toLowerCase() === raidKey
   );
   if(!config) return { success:false, error:"Kein passender PO+-Anmelder gespeichert." };
   return railwayWrite({
@@ -12712,7 +12722,7 @@ async function transferP0PlusFromGuild(raidId){
     return;
   }
   if(!isAllowedP0RaidForRaid(raid)){
-    setStatus("P0+ Übertragung gibt es nur für MC, BWL, AQ40 und Naxxramas.", "bad");
+    setStatus("P0+ Übertragung ist für diesen Raid nicht aktiviert.", "bad");
     return;
   }
 
@@ -13170,7 +13180,7 @@ function renderP0ReleasePanelContent(){
       <div class="section-head">
         <div>
           <h3>P0+ Freigabe</h3>
-          <p>Alle Charaktere aus LichtLoot. Haken erlauben P0+ Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
+          <p>Die Freigaben gelten getrennt für MC, BWL, AQ40, NAXX, ZG Mittwoch, ZG PRIME und ZG LATE.</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0ReleasePanel()">Neu laden</button>
       </div>
@@ -13188,6 +13198,9 @@ function renderP0ReleasePanelContent(){
               <th>P0+ Freigabe BWL</th>
               <th>P0+ Freigabe AQ40</th>
               <th>P0+ Freigabe NAXX</th>
+              <th>P0+ ZG Mittwoch</th>
+              <th>P0+ ZG PRIME</th>
+              <th>P0+ ZG LATE</th>
               <th>Aktion</th>
             </tr>
           </thead>
@@ -13225,7 +13238,7 @@ function renderP0ReleasePanelContent(){
 }
 
 function poReleaseRaidLabel(raid){
-  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX" };
+  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
   return labels[raid] || String(raid || "").toUpperCase();
 }
 
@@ -13262,11 +13275,11 @@ function renderPoReleaseRows(){
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
   if(!document.getElementById("masterCode").value.trim()){
-    tbody.innerHTML = '<tr><td colspan="8" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
     return;
   }
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Charaktere gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="muted">Keine Charaktere gefunden.</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(entry => {
@@ -13281,6 +13294,9 @@ function renderPoReleaseRows(){
         <td>${poReleaseCheckHtml(entry,"bwl")}</td>
         <td>${poReleaseCheckHtml(entry,"aq40")}</td>
         <td>${poReleaseCheckHtml(entry,"naxx")}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-mittwoch")}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-prime")}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-late")}</td>
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
@@ -13309,16 +13325,16 @@ async function setPoReleaseFromPopup(index, enabled){
     return;
   }
   const answer = prompt(
-    (enabled ? "Welche P0+ Freigabe soll fuer " : "Welche P0+ Freigabe soll bei ") + (entry.name || "dem Charakter") + (enabled ? " gesetzt werden?" : " geloescht werden?") + "\n\nMC, BWL, AQ40 oder NAXX eingeben.",
+    (enabled ? "Welche P0+ Freigabe soll fuer " : "Welche P0+ Freigabe soll bei ") + (entry.name || "dem Charakter") + (enabled ? " gesetzt werden?" : " geloescht werden?") + "\n\nMC, BWL, AQ40, NAXX, ZG Mittwoch, ZG PRIME oder ZG LATE eingeben.",
     "MC"
   );
   if(answer === null) return;
   const raw = String(answer || "").trim();
   const raid = normalize(raw.replace(/^!+/, "")).replace(/[^a-z0-9]+/g,"");
-  const map = { moltencore:"mc", molten:"mc", mc:"mc", bwl:"bwl", blackwinglair:"bwl", aq40:"aq40", naxx:"naxx", naxxramas:"naxx" };
+  const map = { moltencore:"mc", molten:"mc", mc:"mc", bwl:"bwl", blackwinglair:"bwl", aq40:"aq40", naxx:"naxx", naxxramas:"naxx", zgmittwoch:"zg-mittwoch", zulgrubmittwoch:"zg-mittwoch", zgprime:"zg-prime", zulgrubprime:"zg-prime", zglate:"zg-late", zulgrublate:"zg-late" };
   const raidKey = map[raid] || raid;
-  if(!["mc","bwl","aq40","naxx"].includes(raidKey)){
-    setStatus("Bitte MC, BWL, AQ40 oder NAXX eingeben.", "bad");
+  if(!["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(raidKey)){
+    setStatus("Bitte einen gültigen PO+ Raid eingeben.", "bad");
     return;
   }
   try{
