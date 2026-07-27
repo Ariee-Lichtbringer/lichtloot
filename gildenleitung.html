@@ -4630,16 +4630,16 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     </summary>
     <div class="raid-helper-body">
       <div class="raid-helper-tabs" role="tablist" aria-label="Raidanmelder Funktionen">
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="dashboard" onclick="setRaidHelperTab('dashboard')"><span class="raid-helper-tab-icon">⌂</span><span class="raid-helper-tab-copy"><strong>Dashboard</strong><span>Übersicht</span></span></button>
-        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>Create Event</strong><span>Raid erstellen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">{}</span><span class="raid-helper-tab-copy"><strong>Create Embed</strong><span>Embed bauen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Calendar</strong><span>Kalender</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Current Events</strong><span>Aktuelle Raids</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Past Events</strong><span>Vergangene</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="scheduledEvents" onclick="setRaidHelperTab('scheduledEvents')"><span class="raid-helper-tab-icon">⏱</span><span class="raid-helper-tab-copy"><strong>Scheduled Events</strong><span>Geplant</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Attendance</strong><span>Teilnahme</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Templates</strong><span>Vorlagen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="settings" onclick="setRaidHelperTab('settings')"><span class="raid-helper-tab-icon">⚙</span><span class="raid-helper-tab-copy"><strong>Settings</strong><span>Server</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="dashboard" onclick="setRaidHelperTab('dashboard')"><span class="raid-helper-tab-icon">⌂</span><span class="raid-helper-tab-copy"><strong>Übersicht</strong><span>Dashboard</span></span></button>
+        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>Raid erstellen</strong><span>Anmelder bauen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">{}</span><span class="raid-helper-tab-copy"><strong>Embed bauen</strong><span>Discord-Vorschau</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Kalender</strong><span>Termine</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Aktuelle Raids</strong><span>Anmeldungen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Vergangene</strong><span>Archiv</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="scheduledEvents" onclick="setRaidHelperTab('scheduledEvents')"><span class="raid-helper-tab-icon">⏱</span><span class="raid-helper-tab-copy"><strong>Geplant</strong><span>Automatik</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Prüfen</span></span></button>
       </div>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
@@ -5033,8 +5033,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </div>
         <div id="raidHelperTemplateGrid" class="raid-helper-template-grid"></div>
       </div>
-      <div id="raidHelperTab-settings" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">⚙</div><h3>Server Settings</h3><p>Hier kommen Standard-Channel, Rollen und weitere Discord-Einstellungen hin.</p></div>
+      <div id="raidHelperTab-poSignup" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>PO-Anmelder</h3><span>Automatisch erstellte PO-Anmelder öffnen, prüfen und übertragen</span></div>
+          <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Neu laden</button>
+        </div>
+        <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
     </div>
   </details>
@@ -5723,6 +5727,7 @@ let lootDataLoaded = false;
 let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
 let pendingMessageContext = null;
+let raidHelperDeepLinkHandled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await fetchCurrentGuildInfo();
@@ -6091,6 +6096,7 @@ async function loadOverview(options){
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
     renderAll();
+    handleRaidHelperDeepLink();
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
@@ -6111,6 +6117,7 @@ function renderAll(){
   renderRaidHelperScheduleRules();
   renderRaidHelperScheduledEvents();
   renderRaidHelperTemplates();
+  renderRaidHelperPoSignupTab();
   renderRaidHelperWarcraftLogsSources();
   renderPlayerMiniList();
   renderRaids();
@@ -6143,6 +6150,19 @@ function openRaidPanel(){
 
 function openRaidHelperPanel(){
   openDetailsPanel("raidHelperPanel");
+}
+
+function handleRaidHelperDeepLink(){
+  if(raidHelperDeepLinkHandled) return;
+  const params = new URLSearchParams(window.location.search);
+  const raidId = params.get("raidHelper") || params.get("raidHelperId") || params.get("editRaidHelper");
+  if(!raidId) return;
+  const raid = findRaidByAnyId(raidId);
+  if(!raid) return;
+  raidHelperDeepLinkHandled = true;
+  openRaidHelperPanel();
+  setRaidHelperTab("currentEvents");
+  window.setTimeout(() => editRaidHelperEvent(raidId), 80);
 }
 
 function openRaidleadPanelDirect(raidId){
@@ -7455,6 +7475,7 @@ function setRaidHelperTab(tabName){
     scheduledEvents:"249,115,22",
     attendance:"20,184,166",
     templates:"236,72,153",
+    poSignup:"250,204,21",
     settings:"100,116,139"
   };
   document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
@@ -7468,6 +7489,7 @@ function setRaidHelperTab(tabName){
   if(target === "calendar") renderRaidHelperCalendar();
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
+  if(target === "poSignup") refreshRaidHelperPoSignupTab();
   if(target === "scheduledEvents"){
     renderRaidHelperScheduleRules();
     renderRaidHelperScheduledEvents();
@@ -10544,6 +10566,70 @@ function renderPoSignupConfigRows(){
   }).join("");
   updatePoSignupBulkActions(rows);
   updatePoSignupTransferState();
+}
+
+function raidHelperPoSignupRows(){
+  return poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+async function refreshRaidHelperPoSignupTab(){
+  const box = document.getElementById("raidHelperPoSignupBox");
+  if(!box) return;
+  box.innerHTML = '<div class="muted">PO-Anmelder werden geladen ...</div>';
+  try{
+    await loadPoPostStoredEntries();
+  }catch(error){
+    console.warn("PO-Anmelder konnten im Raidanmelder-Tab nicht neu geladen werden:", error);
+  }
+  renderRaidHelperPoSignupTab();
+}
+
+function renderRaidHelperPoSignupTab(){
+  const box = document.getElementById("raidHelperPoSignupBox");
+  if(!box) return;
+  const rows = raidHelperPoSignupRows();
+  if(!rows.length){
+    box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
+    return;
+  }
+  box.innerHTML = rows.map(row => {
+    const isArchivedOnly = Boolean(row.archivedCount && !row.count);
+    const count = Number(row.count || row.archivedCount || 0);
+    const approved = Number(row.approvedCount || 0);
+    return `
+      <div class="raid-helper-event-card">
+        <div class="raid-helper-event-card-main">
+          <div class="raid-helper-event-title">${escapeHtml(row.title || `${poSignupRaidLabel(row.raid)} PO-Anmelder`)}</div>
+          <div class="raid-helper-event-meta">
+            <span>${escapeHtml(String(row.raid || "-").toUpperCase())}</span>
+            <span>${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</span>
+            <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</span>
+          </div>
+          <div class="raid-helper-event-meta">
+            <span>Post-ID: ${escapeHtml(row.postKey || "-")}</span>
+            <span>Prio: ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</span>
+            <span>Lead: ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</span>
+            <span>${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} grün${isArchivedOnly ? " · archiviert" : ""}</span>
+          </div>
+        </div>
+        <div class="raid-helper-card-actions">
+          <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
+          <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+          ${isArchivedOnly
+            ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+            : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openRaidHelperPoSignup(postKey){
+  selectPoSignupForReview(postKey);
+  openDetailsPanel("poPostPanel");
+  document.getElementById("poPostPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 function togglePoSignupSelection(postKey, checked){
