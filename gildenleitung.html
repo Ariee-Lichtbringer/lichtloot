@@ -4379,6 +4379,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
+          <button class="side-link" type="button" onclick="openRaidHelperPanel()" aria-label="Raidanmelder" title="Raidanmelder"><span class="side-icon">▣</span><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
@@ -4464,7 +4465,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </div>
       </section>
 
-  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()" hidden>
+  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()">
     <summary>
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">▣</span>
