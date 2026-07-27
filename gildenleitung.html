@@ -5550,8 +5550,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
-const WORLDBUFF_BACKUP_CHANNEL_ID = "1529393614247952434";
-const P0PLUS_BACKUP_CHANNEL_ID = "1529393614247952434";
+const WORLDBUFF_BACKUP_CHANNEL_ID = CURRENT_GUILD_SLUG === "nachtloot"
+  ? "1531288515994718318"
+  : "1529393614247952434";
+const P0PLUS_BACKUP_CHANNEL_ID = CURRENT_GUILD_SLUG === "nachtloot"
+  ? "1531288738326642828"
+  : "1529393614247952434";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
@@ -12820,7 +12824,7 @@ async function queueP0PlusBackup(raidOverride, sourceId){
 
   const raid = selectedP0PlusBackupRaid(raidOverride, sourceId);
   const label = P0PLUS_BACKUP_RAID_LABELS[raid] || raid.toUpperCase();
-  const ok = confirm(`PO+ Sicherung für ${label} in den Lichtbringer-Backup-Channel posten?`);
+  const ok = confirm(`PO+ Sicherung für ${label} in den Backup-Channel dieser Gilde posten?`);
   if(!ok) return;
 
   try{
