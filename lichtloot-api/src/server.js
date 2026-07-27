@@ -2130,6 +2130,20 @@ function lootSourceRaidType(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
 }
 
+function isNachtlootSpecialRaid(value) {
+  return ["zg-mittwoch", "zg-prime", "zg-late"].includes(normalizeRaidType(value));
+}
+
+async function requireNachtlootSpecialRaidGuild(guildId, raidType) {
+  if (!isNachtlootSpecialRaid(raidType)) return;
+  const result = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
+  if (clean(result.rows[0]?.slug).toLowerCase() !== "nachtloot") {
+    const error = new Error("Dieser Raidtyp ist ausschließlich für NachtLoot verfügbar.");
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
 function readSlotFromNote(note) {
   const text = clean(note);
   const match = text.match(/Slot:\s*(.*)$/i);
@@ -13051,6 +13065,7 @@ async function createRandomRaid({ guildId, query: params }) {
 
 async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
+  await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
@@ -15329,6 +15344,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
   const raidType = normalizeRaidType(params.raid);
+  await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
   const itemName = clean(params.item);
@@ -15813,6 +15829,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
 
   const raidType = normalizeRaidType(params.raid);
+  await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const raidId = clean(params.raidId);
   const values = [guildId, raidType];
   let raidClause = "r.guild_id = $1 and r.raid_type = $2";
@@ -18513,6 +18530,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "clearP0PlusForPlayer") {
+      requireMasterCodeForGuild(guild, req.query.masterCode);
       const cleared = await clearP0PlusForPlayer({ guildId: guild.id, query: req.query });
       return res.json({ ...cleared, guild: guild.slug });
     }
@@ -18523,6 +18541,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "transferP0PlusPoints") {
+      requireMasterCodeForGuild(guild, req.query.masterCode);
       const transferred = await transferP0PlusPoints({ guildId: guild.id, query: req.query });
       return res.json({ ...transferred, guild: guild.slug });
     }
