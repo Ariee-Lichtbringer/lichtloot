@@ -2574,7 +2574,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span>Logs & Analysen</span></button>
-          <button class="start-side-link" onclick="window.location.href='raidregeln.html'"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span></button>
+          <button class="start-side-link" data-guild-onclick="raidregeln.html" onclick="window.location.href=withGuildUrl('raidregeln.html')"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span></button>
           <button class="start-side-link" data-start-nav="p0plus" onclick="toggleP0PlusOverview()"><img class="start-side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span>P0+ Liste</span></button>
           <button class="start-side-link" data-start-nav="prioPages" onclick="togglePrioPagesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/prioseiten.svg" alt=""><span>Prioseiten</span><span id="prioPagesArrow">›</span></button>
           <div id="prioPagesDrawer" class="prio-pages-drawer hidden">

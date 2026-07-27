@@ -687,7 +687,7 @@ th{
   <img id="guildLogo" src="images/content.png" alt="LichtLoot" class="logo-banner" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{className:'brand-fallback',textContent:'Lootsystem'}))">
 
   <nav class="main-nav" aria-label="Navigation">
-    <a class="nav-btn" href="start.html">Dashboard</a>
+    <a class="nav-btn" href="start.html" onclick="this.href='start.html?guild='+encodeURIComponent(CURRENT_GUILD_SLUG)">Dashboard</a>
     <a class="nav-btn nav-primary" href="raidregeln.html">Raidregeln</a>
     <a class="nav-btn" href="loot/mc-loot.html">MC</a>
     <a class="nav-btn" href="loot/bwl-loot.html">BWL</a>
