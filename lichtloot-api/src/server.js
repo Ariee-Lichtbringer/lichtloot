@@ -5267,6 +5267,12 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   const channelId = clean(params.channelId || params.discordChannelId);
+  let snapshot = null;
+  try {
+    snapshot = await getRaidHelper({ guildId, query: { ...params, raidId, playerPin: params.playerPin || params.prioPin || params.raidPin || "" } });
+  } catch {
+    snapshot = null;
+  }
   return queueBotUpdate({
     guildId,
     query: {
@@ -5274,8 +5280,16 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
       type: "raid_announcement",
       payload: {
         raidId,
+        playerPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
+        prioPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
+        raid: clean(params.raid || snapshot?.raid?.raid || ""),
+        raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
+        raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
         channelId,
         discordChannelId: channelId,
+        raidSnapshot: snapshot?.raid || null,
+        signups: snapshot?.signups || [],
+        externalSignups: snapshot?.externalSignups || [],
         source: "gildenleitung"
       }
     }
