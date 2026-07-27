@@ -2472,6 +2472,103 @@ tr.selected-row td{
   gap:8px;
 }
 
+.raid-helper-current-layout{
+  display:grid;
+  grid-template-columns:minmax(280px,380px) minmax(0,1fr);
+  gap:12px;
+  align-items:start;
+}
+
+.raid-helper-current-rail,
+.raid-helper-current-detail{
+  display:grid;
+  gap:8px;
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:10px;
+  background:rgba(2,6,23,.34);
+  padding:10px;
+}
+
+.raid-helper-current-raid{
+  display:grid;
+  grid-template-columns:42px 1fr auto auto;
+  gap:10px;
+  align-items:center;
+  width:100%;
+  border:1px solid rgba(148,163,184,.16);
+  border-left:4px solid var(--raid-color,#a78bfa);
+  border-radius:8px;
+  background:rgba(15,23,42,.66);
+  color:#f8fafc;
+  padding:9px;
+  text-align:left;
+  cursor:pointer;
+}
+
+.raid-helper-current-raid .raid-select-checkbox{
+  justify-self:end;
+}
+
+.raid-helper-current-raid.active{
+  border-color:rgba(var(--blue-rgb),.65);
+  box-shadow:0 0 0 1px rgba(var(--blue-rgb),.24), 0 14px 34px rgba(0,0,0,.22);
+  background:linear-gradient(135deg,rgba(var(--blue-rgb),.22),rgba(15,23,42,.76));
+}
+
+.raid-helper-current-raid strong{
+  display:block;
+  font-size:14px;
+}
+
+.raid-helper-current-raid span{
+  display:block;
+  color:#93c5fd;
+  font-size:11px;
+  font-weight:900;
+  margin-top:2px;
+}
+
+.raid-helper-current-count{
+  min-width:32px;
+  border-radius:999px;
+  padding:4px 8px;
+  background:rgba(15,23,42,.86);
+  color:var(--gold);
+  font-size:12px;
+  font-weight:950;
+  text-align:center;
+}
+
+.raid-helper-current-detail-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  border-bottom:1px solid rgba(148,163,184,.14);
+  padding-bottom:10px;
+}
+
+.raid-helper-current-detail-head h4{
+  margin:0;
+  color:#f8fafc;
+  font-size:18px;
+}
+
+.raid-helper-current-detail-head span{
+  display:block;
+  color:#93c5fd;
+  font-size:12px;
+  font-weight:900;
+  margin-top:3px;
+}
+
+.raid-helper-current-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
 .raid-helper-list-item{
   display:grid;
   grid-template-columns:48px 1fr auto;
@@ -3481,6 +3578,59 @@ button.log-export-note:hover{
   background:rgba(2,6,23,.24);
 }
 
+.raid-bulk-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 8px;
+  padding:8px 10px;
+  border:1px solid rgba(248,113,113,.28);
+  border-radius:8px;
+  background:rgba(127,29,29,.12);
+}
+
+.raid-bulk-actions[hidden]{display:none}
+
+.raid-bulk-actions strong{
+  color:#fecaca;
+  font-size:12px;
+}
+
+.raid-bulk-action-buttons{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.raid-select-cell{
+  width:42px;
+  min-width:42px;
+  text-align:center;
+  vertical-align:middle;
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:rgba(2,6,23,.94);
+}
+
+.raid-select-checkbox{
+  width:20px;
+  height:20px;
+  margin:0;
+  cursor:pointer;
+  accent-color:#ef4444;
+}
+
+tr.raid-row-selected td{
+  background:rgba(127,29,29,.18);
+}
+
+tr.raid-row-selected td:first-child{
+  box-shadow:inset 3px 0 0 #ef4444;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -4042,6 +4192,35 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 }
 
 .p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
+.po-release-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:92px;
+  min-height:28px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.02em;
+}
+.po-release-state.active{
+  color:#052e16;
+  background:linear-gradient(135deg,#86efac,#22c55e);
+  border:1px solid rgba(187,247,208,.85);
+  box-shadow:0 0 0 1px rgba(34,197,94,.25),0 0 16px rgba(34,197,94,.32);
+}
+.po-release-state.empty{
+  color:#94a3b8;
+  background:rgba(15,23,42,.52);
+  border:1px solid rgba(148,163,184,.22);
+}
+.po-release-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
 
 .issue-toolbar{
   display:grid;
@@ -4291,6 +4470,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   .raid-helper-calendar{grid-template-columns:1fr}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
+  .raid-helper-current-layout{grid-template-columns:1fr}
+  .raid-helper-current-detail-head{flex-direction:column}
+  .raid-helper-current-actions{justify-content:flex-start}
   .raid-helper-template-grid{grid-template-columns:1fr}
   .raid-helper-template-editor,
   .raid-helper-template-fields,
@@ -4350,8 +4532,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
+          <button class="side-link" type="button" onclick="openRaidHelperPanel()" aria-label="Raidanmelder" title="Raidanmelder"><span class="side-icon">▣</span><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openPoPostPanel()" aria-label="PO-Anmelder" title="PO-Anmelder"><img class="side-icon-img" src="images/dashboard-icons/post.jpg" alt=""><span class="side-label">PO-Anmelder</span></button>
-          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="P0+ Liste" title="P0+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
+          <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
           <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
@@ -4434,7 +4618,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </div>
       </section>
 
-  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()" hidden>
+  <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()">
     <summary>
       <span class="raid-helper-summary">
         <span class="raid-helper-summary-icon">▣</span>
@@ -4446,16 +4630,16 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     </summary>
     <div class="raid-helper-body">
       <div class="raid-helper-tabs" role="tablist" aria-label="Raidanmelder Funktionen">
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="dashboard" onclick="setRaidHelperTab('dashboard')"><span class="raid-helper-tab-icon">⌂</span><span class="raid-helper-tab-copy"><strong>Dashboard</strong><span>Übersicht</span></span></button>
-        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>Create Event</strong><span>Raid erstellen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">{}</span><span class="raid-helper-tab-copy"><strong>Create Embed</strong><span>Embed bauen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Calendar</strong><span>Kalender</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Current Events</strong><span>Aktuelle Raids</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Past Events</strong><span>Vergangene</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="scheduledEvents" onclick="setRaidHelperTab('scheduledEvents')"><span class="raid-helper-tab-icon">⏱</span><span class="raid-helper-tab-copy"><strong>Scheduled Events</strong><span>Geplant</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Attendance</strong><span>Teilnahme</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Templates</strong><span>Vorlagen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="settings" onclick="setRaidHelperTab('settings')"><span class="raid-helper-tab-icon">⚙</span><span class="raid-helper-tab-copy"><strong>Settings</strong><span>Server</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="dashboard" onclick="setRaidHelperTab('dashboard')"><span class="raid-helper-tab-icon">⌂</span><span class="raid-helper-tab-copy"><strong>Übersicht</strong><span>Dashboard</span></span></button>
+        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">▣</span><span class="raid-helper-tab-copy"><strong>Raid erstellen</strong><span>Anmelder bauen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">{}</span><span class="raid-helper-tab-copy"><strong>Embed bauen</strong><span>Discord-Vorschau</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Kalender</strong><span>Termine</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Aktuelle Raids</strong><span>Anmeldungen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Vergangene</strong><span>Archiv</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="scheduledEvents" onclick="setRaidHelperTab('scheduledEvents')"><span class="raid-helper-tab-icon">⏱</span><span class="raid-helper-tab-copy"><strong>Geplant</strong><span>Automatik</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Prüfen</span></span></button>
       </div>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
@@ -4523,6 +4707,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
+            <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
+              <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
+              <span>PO-Anmelder automatisch mit erstellen</span>
+            </label>
           </section>
 
           <section class="raid-helper-card">
@@ -4616,6 +4804,13 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         <div class="raid-helper-view-head">
           <div><h3>Current Events</h3><span>Laufende und offene Raidanmelder</span></div>
           <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentEvents()">Aktualisieren</button>
+        </div>
+        <div id="raidHelperBulkActions" class="raid-bulk-actions" hidden>
+          <strong id="raidHelperBulkSelectionText">0 Raidanmelder ausgewählt</strong>
+          <div class="raid-bulk-action-buttons">
+            <button class="small-btn ghost" type="button" onclick="clearRaidHelperSelection()">Auswahl aufheben</button>
+            <button id="raidHelperBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaidHelpers()">Ausgewählte löschen</button>
+          </div>
         </div>
         <div id="raidHelperEventEditor" class="raid-helper-event-editor hidden">
           <div class="raid-helper-event-editor-head">
@@ -4838,8 +5033,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </div>
         <div id="raidHelperTemplateGrid" class="raid-helper-template-grid"></div>
       </div>
-      <div id="raidHelperTab-settings" class="raid-helper-tab-panel raid-helper-placeholder hidden">
-        <div><div class="raid-helper-placeholder-icon">⚙</div><h3>Server Settings</h3><p>Hier kommen Standard-Channel, Rollen und weitere Discord-Einstellungen hin.</p></div>
+      <div id="raidHelperTab-poSignup" class="raid-helper-tab-panel raid-helper-view hidden">
+        <div class="raid-helper-view-head">
+          <div><h3>PO-Anmelder</h3><span>Automatisch erstellte PO-Anmelder öffnen, prüfen und übertragen</span></div>
+          <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Neu laden</button>
+        </div>
+        <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
     </div>
   </details>
@@ -4974,6 +5173,13 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
+              <div id="poSignupBulkActions" class="raid-bulk-actions" hidden>
+                <strong id="poSignupBulkSelectionText">0 PO-Anmelder ausgewählt</strong>
+                <div class="raid-bulk-action-buttons">
+                  <button class="small-btn ghost" type="button" onclick="clearPoSignupSelection()">Auswahl aufheben</button>
+                  <button id="poSignupBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedPoSignups()">Ausgewählte löschen</button>
+                </div>
+              </div>
               <div class="po-signup-list-toolbar">
                 <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
                   <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
@@ -4992,6 +5198,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                       <th>Pins</th>
                       <th>Einträge</th>
                       <th>Aktion</th>
+                      <th class="raid-select-cell">
+                        <input id="selectAllVisiblePoSignups" class="raid-select-checkbox" type="checkbox" aria-label="Alle sichtbaren PO-Anmelder auswählen" onchange="toggleAllVisiblePoSignups(this.checked)">
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="poSignupConfigRows"></tbody>
@@ -5027,9 +5236,16 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   </details>
 
   <details id="p0PlusPanel" class="panel p0-panel" ontoggle="if(this.open) loadP0PlusPanel()">
-    <summary>P0+ Liste</summary>
+    <summary>PO+ Liste</summary>
     <div class="p0-panel-body">
-      <div id="p0PlusPanelContent" class="create-result">P0+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+      <div id="p0PlusPanelContent" class="create-result">PO+ Liste laden, Punkte korrigieren und Bench mit 0.5 setzen.</div>
+    </div>
+  </details>
+
+  <details id="p0ReleasePanel" class="panel p0-panel" ontoggle="if(this.open) loadP0ReleasePanel()">
+    <summary>P0+ Freigabe</summary>
+    <div class="p0-panel-body">
+      <div id="p0ReleasePanelContent" class="create-result">P0+ Freigaben der Charaktere laden.</div>
     </div>
   </details>
 
@@ -5169,15 +5385,25 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <option value="offen">Offen</option>
           <option value="geöffnet">Geöffnet</option>
           <option value="geschlossen">Geschlossen</option>
-          <option value="archiviert">Archiviert</option>
+          <option value="archiviert">Archiv / vergangene</option>
           <option value="alle">Alle anzeigen</option>
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
+      </div>
+      <div id="raidBulkActions" class="raid-bulk-actions" hidden>
+        <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
+        <div class="raid-bulk-action-buttons">
+          <button class="small-btn ghost" type="button" onclick="clearRaidSelection()">Auswahl aufheben</button>
+          <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th class="raid-select-cell">
+                <input id="selectAllVisibleRaids" class="raid-select-checkbox" type="checkbox" aria-label="Alle sichtbaren Raids auswählen" onchange="toggleAllVisibleRaids(this.checked)">
+              </th>
               <th>Raid</th>
               <th>Datum</th>
               <th>Prio-PIN</th>
@@ -5188,7 +5414,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
             </tr>
           </thead>
           <tbody id="raidRows">
-            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
+            <tr><td colspan="8" class="muted">Noch keine Daten geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -5472,15 +5698,20 @@ const RAID_IMAGES = {
 };
 
 let guildData = { raids: [], players: [] };
+const selectedRaidIds = new Set();
+let visibleRaidIds = [];
 let p0PlusEntries = [];
 let p0ReviewEntries = [];
 let poPostEntries = [];
+let poReleaseCharacters = [];
+let poReleaseSearch = "";
 let poPostRaidFilter = "";
 let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
+const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
@@ -5496,6 +5727,7 @@ let lootDataLoaded = false;
 let lastOverviewLoadedAt = null;
 let dashboardRaidStats = {};
 let pendingMessageContext = null;
+let raidHelperDeepLinkHandled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await fetchCurrentGuildInfo();
@@ -5864,6 +6096,7 @@ async function loadOverview(options){
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
     renderAll();
+    handleRaidHelperDeepLink();
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
@@ -5884,6 +6117,7 @@ function renderAll(){
   renderRaidHelperScheduleRules();
   renderRaidHelperScheduledEvents();
   renderRaidHelperTemplates();
+  renderRaidHelperPoSignupTab();
   renderRaidHelperWarcraftLogsSources();
   renderPlayerMiniList();
   renderRaids();
@@ -5918,6 +6152,19 @@ function openRaidHelperPanel(){
   openDetailsPanel("raidHelperPanel");
 }
 
+function handleRaidHelperDeepLink(){
+  if(raidHelperDeepLinkHandled) return;
+  const params = new URLSearchParams(window.location.search);
+  const raidId = params.get("raidHelper") || params.get("raidHelperId") || params.get("editRaidHelper");
+  if(!raidId) return;
+  const raid = findRaidByAnyId(raidId);
+  if(!raid) return;
+  raidHelperDeepLinkHandled = true;
+  openRaidHelperPanel();
+  setRaidHelperTab("currentEvents");
+  window.setTimeout(() => editRaidHelperEvent(raidId), 80);
+}
+
 function openRaidleadPanelDirect(raidId){
   const raid = raidId
     ? (guildData.raids || []).find(entry =>
@@ -5950,6 +6197,10 @@ function openPlayerPanel(){
 
 function openP0PlusPanel(){
   openDetailsPanel("p0PlusPanel");
+}
+
+function openP0ReleasePanel(){
+  openDetailsPanel("p0ReleasePanel");
 }
 
 function openIssueInboxPanel(){
@@ -6678,8 +6929,10 @@ function renderRaids(){
       raid.guild
     ].join(" "));
     const isArchived = status === "archiviert" || status === "archive";
+    const isPast = String(raid.raidDate || "") < todayIsoDate();
     const filterMatches =
       filter === "alle" ? true :
+      filter === "archiviert" ? (isArchived || isPast) :
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
@@ -6688,17 +6941,29 @@ function renderRaids(){
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
     return right.localeCompare(left);
-  }).slice(0, 10);
+  }).slice(0, 50);
+
+  const existingRaidIds = new Set((guildData.raids || []).map(raid => String(raid.raidId || raid.id || "")));
+  Array.from(selectedRaidIds).forEach(raidId => {
+    if(!existingRaidIds.has(raidId)) selectedRaidIds.delete(raidId);
+  });
+  visibleRaidIds = raids.map(raid => String(raid.raidId || raid.id || "")).filter(Boolean);
 
   if(!raids.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    updateRaidBulkActions();
     return;
   }
 
   tbody.innerHTML = raids.map(raid => {
     const status = raid.status || "geschlossen";
+    const selectionId = String(raid.raidId || raid.id || "");
+    const isSelected = selectedRaidIds.has(selectionId);
     return `
-      <tr>
+      <tr class="${isSelected ? "raid-row-selected" : ""}">
+        <td class="raid-select-cell">
+          <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raid")} auswählen" ${isSelected ? "checked" : ""} onchange="toggleRaidSelection('${escapeAttr(selectionId)}', this.checked)">
+        </td>
         <td>
           <div class="raid-title">
             <strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong>
@@ -6718,6 +6983,7 @@ function renderRaids(){
             <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
+            <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
@@ -6726,6 +6992,116 @@ function renderRaids(){
       </tr>
     `;
   }).join("");
+  updateRaidBulkActions();
+}
+
+function toggleRaidSelection(raidId, checked){
+  const id = String(raidId || "");
+  if(!id) return;
+  if(checked) selectedRaidIds.add(id);
+  else selectedRaidIds.delete(id);
+  renderRaids();
+}
+
+function toggleAllVisibleRaids(checked){
+  visibleRaidIds.forEach(raidId => {
+    if(checked) selectedRaidIds.add(raidId);
+    else selectedRaidIds.delete(raidId);
+  });
+  renderRaids();
+}
+
+function clearRaidSelection(){
+  selectedRaidIds.clear();
+  renderRaids();
+}
+
+function updateRaidBulkActions(){
+  const bar = document.getElementById("raidBulkActions");
+  const text = document.getElementById("raidBulkSelectionText");
+  const selectAll = document.getElementById("selectAllVisibleRaids");
+  const count = selectedRaidIds.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "Raid" : "Raids"} ausgewählt`;
+  if(selectAll){
+    const visibleSelected = visibleRaidIds.filter(raidId => selectedRaidIds.has(raidId)).length;
+    selectAll.checked = visibleRaidIds.length > 0 && visibleSelected === visibleRaidIds.length;
+    selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visibleRaidIds.length;
+  }
+}
+
+async function deleteSelectedRaids(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raids = (guildData.raids || []).filter(raid =>
+    selectedRaidIds.has(String(raid.raidId || raid.id || ""))
+  );
+  if(!raids.length){
+    selectedRaidIds.clear();
+    renderRaids();
+    setStatus("Bitte zuerst mindestens einen Raid auswählen.", "bad");
+    return;
+  }
+
+  const count = raids.length;
+  if(!confirm(`${count} ${count === 1 ? "ausgewählten Raid" : "ausgewählte Raids"} wirklich endgültig löschen? Prios, Anmeldungen und verknüpfte Einträge werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+
+  const button = document.getElementById("raidBulkDeleteButton");
+  if(button){
+    button.disabled = true;
+    button.textContent = "Lösche ...";
+  }
+  setStatus(`${count} ${count === 1 ? "Raid wird" : "Raids werden"} gelöscht ...`, "");
+
+  let deleted = 0;
+  const failed = [];
+  for(const raid of raids){
+    try{
+      const result = await railwayApi({
+        action:"guildDeleteRaid",
+        masterCode,
+        raidId:raid.raidId || raid.id || "",
+        id:raid.id || ""
+      });
+      if(!result.success || Number(result.deleted || 0) < 1){
+        failed.push(raid.raidName || raid.raid || raid.raidId || raid.id);
+        continue;
+      }
+      deleted += 1;
+      selectedRaidIds.delete(String(raid.raidId || raid.id || ""));
+      guildData.raids = (guildData.raids || []).filter(entry =>
+        String(entry.raidId || entry.id || "") !== String(raid.raidId || raid.id || "")
+      );
+    }catch(error){
+      failed.push(raid.raidName || raid.raid || raid.raidId || raid.id);
+    }
+  }
+
+  if(button){
+    button.disabled = false;
+    button.textContent = "Ausgewählte löschen";
+  }
+  renderSummary();
+  renderDashboardCards();
+  loadDashboardRaidStats();
+  renderRaids();
+  renderRaidHelperCurrentEvents();
+  renderRaidHelperPastEvents();
+  if(failed.length){
+    setStatus(`${deleted} gelöscht. ${failed.length} konnten nicht gelöscht werden: ${failed.join(", ")}.`, "bad");
+  }else{
+    setStatus(`${deleted} ${deleted === 1 ? "Raid wurde" : "Raids wurden"} endgültig gelöscht.`, "good");
+  }
+  await loadOverview({ preserveStatus:true });
 }
 
 function renderPlayers(){
@@ -6997,6 +7373,8 @@ let raidHelperAttendanceCache = null;
 let raidHelperAttendanceRaidKey = "bwl";
 let raidHelperP0ReleaseCache = null;
 let raidHelperEditingData = null;
+let raidHelperCurrentSelectedRaidId = "";
+const selectedRaidHelperIds = new Set();
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
   { key:"mc", label:"MC Teilnahmen", zone:"2000", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2000" },
@@ -7110,6 +7488,7 @@ function setRaidHelperTab(tabName){
     scheduledEvents:"249,115,22",
     attendance:"20,184,166",
     templates:"236,72,153",
+    poSignup:"250,204,21",
     settings:"100,116,139"
   };
   document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
@@ -7123,6 +7502,7 @@ function setRaidHelperTab(tabName){
   if(target === "calendar") renderRaidHelperCalendar();
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
+  if(target === "poSignup") refreshRaidHelperPoSignupTab();
   if(target === "scheduledEvents"){
     renderRaidHelperScheduleRules();
     renderRaidHelperScheduledEvents();
@@ -7293,9 +7673,197 @@ function renderRaidHelperCurrentEvents(){
   const box = document.getElementById("raidHelperCurrentEventsList");
   if(!box) return;
   const raids = raidHelperCurrentRaids();
-  box.innerHTML = raids.length
-    ? raids.slice(0,16).map(raid => renderRaidHelperEventCard(raid, "current")).join("")
-    : '<div class="muted">Keine aktuellen Raidanmelder gefunden.</div>';
+  if(!raids.length){
+    raidHelperCurrentSelectedRaidId = "";
+    selectedRaidHelperIds.clear();
+    updateRaidHelperBulkActions();
+    box.innerHTML = '<div class="muted">Keine aktuellen Raidanmelder gefunden.</div>';
+    return;
+  }
+  const visibleRaids = raids.slice(0,24);
+  const stillVisible = visibleRaids.some(raid => String(raid.raidId || raid.id || "") === String(raidHelperCurrentSelectedRaidId || ""));
+  if(!raidHelperCurrentSelectedRaidId || !stillVisible){
+    raidHelperCurrentSelectedRaidId = String(visibleRaids[0].raidId || visibleRaids[0].id || "");
+  }
+  box.innerHTML = `
+    <div class="raid-helper-current-layout">
+      <div class="raid-helper-current-rail">
+        ${visibleRaids.map(raid => renderRaidHelperCurrentRaidButton(raid)).join("")}
+      </div>
+      <div id="raidHelperCurrentDetail" class="raid-helper-current-detail">
+        <div class="muted">Raid wird geladen ...</div>
+      </div>
+    </div>
+  `;
+  updateRaidHelperBulkActions();
+  renderRaidHelperCurrentDetail(raidHelperCurrentSelectedRaidId);
+}
+
+function renderRaidHelperCurrentRaidButton(raid){
+  const key = getRaidKey(raid);
+  const raidId = String(raid.raidId || raid.id || "");
+  const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
+  const selected = selectedRaidHelperIds.has(raidId);
+  const count = Number(raid.signupCount || raid.signups || 0);
+  return `
+    <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
+      <span class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[key]?.short || "R")}</span>
+      <span>
+        <strong>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</strong>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · PIN ${escapeHtml(raid.playerPin || "-")}</span>
+      </span>
+      <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
+      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raidanmelder")} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="toggleRaidHelperSelection('${escapeAttr(raidId)}', this.checked)">
+    </button>
+  `;
+}
+
+function toggleRaidHelperSelection(raidId, checked){
+  const id = String(raidId || "");
+  if(!id) return;
+  if(checked) selectedRaidHelperIds.add(id);
+  else selectedRaidHelperIds.delete(id);
+  renderRaidHelperCurrentEvents();
+}
+
+function clearRaidHelperSelection(){
+  selectedRaidHelperIds.clear();
+  renderRaidHelperCurrentEvents();
+}
+
+function updateRaidHelperBulkActions(){
+  const bar = document.getElementById("raidHelperBulkActions");
+  const text = document.getElementById("raidHelperBulkSelectionText");
+  const count = selectedRaidHelperIds.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "Raidanmelder" : "Raidanmelder"} ausgewählt`;
+}
+
+async function deleteSelectedRaidHelpers(){
+  const ids = Array.from(selectedRaidHelperIds);
+  if(!ids.length) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm(`${ids.length} ausgewählte Raidanmelder wirklich löschen? Die Raids, Anmeldungen und verknüpften Einträge werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+  setStatus(`${ids.length} Raidanmelder werden gelöscht ...`, "");
+  for(const id of ids){
+    const raid = findRaidByAnyId(id) || {};
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      raidId:raid.raidId || id,
+      id:raid.id || ""
+    });
+    if(result.success && Number(result.deleted || 0) >= 1){
+      guildData.raids = (guildData.raids || []).filter(entry =>
+        String(entry.raidId || "") !== String(id) &&
+        String(entry.id || "") !== String(id) &&
+        String(entry.id || "") !== String(raid.id || "")
+      );
+    }
+    selectedRaidHelperIds.delete(id);
+  }
+  await loadOverview({ preserveStatus:true });
+  renderRaidHelperCurrentEvents();
+  setStatus("Ausgewählte Raidanmelder wurden gelöscht.", "good");
+}
+
+function selectRaidHelperCurrentEvent(raidId){
+  raidHelperCurrentSelectedRaidId = String(raidId || "");
+  renderRaidHelperCurrentEvents();
+}
+
+function primeRaidHelperCurrentEditState(raid){
+  if(!raid) return;
+  raidHelperEditingData = { raid };
+  setRaidHelperEditValue("raidHelperEditRaidId", raid.raidId || raid.id || "");
+  setRaidHelperEditValue("raidHelperEditChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
+}
+
+async function renderRaidHelperCurrentDetail(raidId){
+  const box = document.getElementById("raidHelperCurrentDetail");
+  const raid = findRaidByAnyId(raidId);
+  if(!box || !raid) return;
+  primeRaidHelperCurrentEditState(raid);
+  const key = getRaidKey(raid);
+  const slots = [
+    raid.maxPlayers ? "Gesamt " + raid.maxPlayers : "",
+    raid.tankSlots ? "Tanks " + raid.tankSlots : "",
+    raid.healSlots ? "Heals " + raid.healSlots : "",
+    raid.ddSlots ? "DD " + raid.ddSlots : ""
+  ].filter(Boolean).join(" · ");
+  box.innerHTML = `
+    <div class="raid-helper-current-detail-head">
+      <div>
+        <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${escapeHtml(slots || "Slots offen")}</span>
+      </div>
+      <div class="raid-helper-current-actions">
+        <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
+        <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>
+        <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
+          <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
+          PO+-Anmelder ebenfalls posten
+        </label>
+        <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
+      </div>
+    </div>
+    <div id="raidHelperCurrentSignupStatus" class="status"></div>
+    <div>
+      <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
+        <div><h3 style="font-size:16px">Anmeldungen</h3><span>Diese Liste nutzt der Bot beim Aktualisieren des Discord-Posts.</span></div>
+      </div>
+      <div id="raidHelperCurrentSignups" class="raid-helper-signup-list"><div class="muted">Anmeldungen werden geladen ...</div></div>
+    </div>
+  `;
+  await loadRaidHelperCurrentEventSignups(raidId);
+}
+
+function setRaidHelperCurrentStatus(message, type){
+  const status = document.getElementById("raidHelperCurrentSignupStatus");
+  if(status){
+    status.textContent = message || "";
+    status.className = "status" + (type ? " " + type : "");
+  }
+}
+
+async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelectedRaidId){
+  const box = document.getElementById("raidHelperCurrentSignups");
+  const raid = findRaidByAnyId(raidId);
+  if(!box || !raidId) return;
+  primeRaidHelperCurrentEditState(raid);
+  box.innerHTML = '<div class="muted">Anmeldungen werden geladen ...</div>';
+  try{
+    const helper = await railwayApi({ action:"getRaidHelper", raidId, playerPin:raidId, t:Date.now() });
+    raidHelperEditingData = { raid:helper.raid || raid || findRaidByAnyId(raidId), helper };
+    const rows = [...(helper.signups || []), ...(helper.externalSignups || [])];
+    const count = rows.length;
+    if(!rows.length){
+      box.innerHTML = '<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
+      setRaidHelperCurrentStatus("Keine Anmeldungen gespeichert.", "");
+      return;
+    }
+    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
+    setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
+  }catch(error){
+    box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
+    setRaidHelperCurrentStatus(error.message || "Anmeldungen konnten nicht geladen werden.", "bad");
+  }
+}
+
+async function refreshRaidHelperCurrentDiscord(raidId = raidHelperCurrentSelectedRaidId){
+  setRaidHelperCurrentStatus("Discord-Aktualisierung wird vorgemerkt ...", "");
+  const result = await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+  if(result?.success) setRaidHelperCurrentStatus("Discord-Aktualisierung vorgemerkt. Der PO-Bot zieht die Anmeldungen aus dieser Liste.", "good");
+  else setRaidHelperCurrentStatus(result?.error || "Discord-Aktualisierung konnte nicht vorgemerkt werden.", "bad");
 }
 
 function setRaidHelperEditStatus(message, type){
@@ -7580,10 +8148,13 @@ async function updateRaidHelperSignupStatus(signupId, status, player = ""){
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
+    await loadRaidHelperCurrentEventSignups(raidId);
     await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
     setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung geändert."), result.noticeSkipped ? "bad" : "good");
+    setRaidHelperCurrentStatus(raidHelperSignupNoticeStatus(result, "Anmeldung geändert. Discord-Aktualisierung ist vorgemerkt."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Anmeldung konnte nicht geändert werden.", "bad");
+    setRaidHelperCurrentStatus(error.message || "Anmeldung konnte nicht geändert werden.", "bad");
   }
 }
 
@@ -7603,10 +8174,13 @@ async function deleteRaidHelperSignup(signupId, player = ""){
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht verworfen werden.");
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
+    await loadRaidHelperCurrentEventSignups(raidId);
     await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
     setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung verworfen."), result.noticeSkipped ? "bad" : "good");
+    setRaidHelperCurrentStatus(raidHelperSignupNoticeStatus(result, "Anmeldung verworfen. Discord-Aktualisierung ist vorgemerkt."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
     setRaidHelperEditStatus(error.message || "Anmeldung konnte nicht verworfen werden.", "bad");
+    setRaidHelperCurrentStatus(error.message || "Anmeldung konnte nicht verworfen werden.", "bad");
   }
 }
 
@@ -7618,6 +8192,11 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
     action:"guildQueueRaidAnnouncementRefresh",
     masterCode,
     raidId,
+    playerPin:raid.playerPin || raid.prioPin || "",
+    prioPin:raid.playerPin || raid.prioPin || "",
+    raid:getRaidKey(raid),
+    raidDate:raid.raidDate || "",
+    raidTime:raid.raidTime || "",
     channelId:raidHelperValue("raidHelperEditChannel") || raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
     messageId:raid.discordMessageId || ""
   }).then(result => {
@@ -9485,6 +10064,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const playerPin = randomCode(3);
   const leadPin = randomCode(4);
   const raidId = createRaidIdForGuildPage(raidKey);
+  const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
   const createdBy = poSignupLichtlootCreatorName();
 
   if(status && !options.silent){
@@ -9542,6 +10122,59 @@ function poPostEntryRowsForKey(postKey){
     if(entry.configOnly) return false;
     return String(entry.player || "").trim() || String(entry.item || entry.itemName || "").trim();
   });
+}
+
+function poSignupCorrectionCharacterForIndex(index){
+  const characterId = poSignupCorrectionCharacterValue(index);
+  if(!characterId) return null;
+  return (poSignupCorrectionCharacters || []).find(char => String(char.id || "") === String(characterId)) || null;
+}
+
+function poSignupCorrectionItemForIndex(entry, index){
+  const itemName = poSignupCorrectionItemValue(index) || entry?.item || entry?.itemName || "";
+  if(!itemName) return null;
+  const objects = poSignupCorrectionItemObjects(entry);
+  return objects.find(item => itemKey(item.name || item.item || "") === itemKey(itemName))
+    || lootItemIndex[itemKey(itemName)]
+    || { name:itemName };
+}
+
+function poSignupVisibleEntryForDiscord(entry){
+  const index = poPostStoredEntries.indexOf(entry);
+  const selectedChar = index >= 0 ? poSignupCorrectionCharacterForIndex(index) : null;
+  const selectedItem = index >= 0 ? poSignupCorrectionItemForIndex(entry, index) : null;
+  const itemName = selectedItem?.name || selectedItem?.item || entry.item || entry.itemName || "";
+  return {
+    id: entry.id || "",
+    postKey: entry.postKey || "",
+    player: selectedChar?.name || entry.player || "",
+    className: selectedChar?.className || entry.className || entry.Klasse || "",
+    server: selectedChar?.server || entry.server || "",
+    playerPin: selectedChar?.playerPin || entry.playerPin || "",
+    item: itemName,
+    itemName,
+    itemId: selectedItem?.itemId || selectedItem?.item_id || selectedItem?.id || entry.itemId || "",
+    itemSlot: selectedItem?.slot || selectedItem?.Slot || entry.itemSlot || "",
+    itemBoss: selectedItem?.boss || selectedItem?.Boss || entry.itemBoss || "",
+    discordUserId: entry.discordUserId || "",
+    discordName: entry.discordName || "",
+    discordMessageId: entry.discordMessageId || "",
+    messageId: entry.messageId || "",
+    approvalStatus: entry.approvalStatus || "pending",
+    approved: String(entry.approvalStatus || "").toLowerCase() === "approved" || Boolean(entry.approved),
+    approvedBy: entry.approvedBy || "",
+    approvedAt: entry.approvedAt || "",
+    rejectionReason: entry.rejectionReason || "",
+    luckBy: entry.luckBy || "",
+    luckByDiscordId: entry.luckByDiscordId || "",
+    luckAt: entry.luckAt || "",
+    createdAt: entry.createdAt || entry.poCreatedAt || "",
+    poCreatedAt: entry.poCreatedAt || entry.createdAt || ""
+  };
+}
+
+function poSignupEntriesForDiscordPost(postKey){
+  return poPostEntryRowsForKey(postKey).map(poSignupVisibleEntryForDiscord);
 }
 
 function renderPoPostEntryReviewRows(tbody, hint, postKey, emptyText){
@@ -9892,8 +10525,12 @@ function renderPoSignupConfigRows(){
   renderPoSignupListFilters();
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
-    .filter(row => row.count || !row.archivedCount)
+    .filter(row => !(row.archivedCount && !row.count))
     .filter(row => poSignupConfigMatchesListFilter(row));
+  const visibleKeys = new Set(rows.map(row => String(row.postKey || "").trim()).filter(Boolean));
+  Array.from(selectedPoSignupPostKeys).forEach(key => {
+    if(!visibleKeys.has(key)) selectedPoSignupPostKeys.delete(key);
+  });
   if(!rows.length){
     const emptyText = poSignupListRaidFilter
       ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
@@ -9902,14 +10539,21 @@ function renderPoSignupConfigRows(){
         : poSignupListTierFilter === "40"
           ? "Keine 40er-PO-Anmelder gespeichert."
           : "Noch keine PO-Anmelder gespeichert.";
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">${escapeHtml(emptyText)}</td></tr>`;
+    updatePoSignupBulkActions(rows);
     updatePoSignupTransferState();
     return;
   }
-  tbody.innerHTML = rows.map(row => `
+  tbody.innerHTML = rows.map(row => {
+    const isArchivedOnly = Boolean(row.archivedCount && !row.count);
+    const visibleCount = Number(row.count || 0);
+    const archivedCount = Number(row.archivedCount || 0);
+    const selected = selectedPoSignupPostKeys.has(row.postKey);
+    return `
     <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
       <td>
         <button class="po-post-id-button po-signup-config-key" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">${escapeHtml(row.postKey)}</button>
+        ${isArchivedOnly ? '<div class="muted">archiviert</div>' : ""}
       </td>
       <td><strong>${escapeHtml(row.raid ? String(row.raid).toUpperCase() : "-")}</strong><div class="muted">${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</div></td>
       <td>
@@ -9921,17 +10565,152 @@ function renderPoSignupConfigRows(){
         <div><strong>Prio:</strong> ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</div>
         <div class="muted"><strong>Lead:</strong> ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</div>
       </td>
-      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(row.count || 0))}</strong><small>${escapeHtml(String(row.approvedCount || 0))} grün</small></span></td>
+      <td><span class="po-signup-count-box"><strong>${escapeHtml(String(visibleCount || archivedCount || 0))}</strong><small>${isArchivedOnly ? `${escapeHtml(String(archivedCount))} archiviert` : `${escapeHtml(String(row.approvedCount || 0))} grün`}</small></span></td>
       <td>
         <div class="po-signup-action-stack">
           <button class="small-btn primary" type="button" onclick="selectPoSignupForReview('${escapeAttr(row.postKey)}')">Öffnen</button>
-          <button class="small-btn good" type="button" ${row.approvedCount ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
-          <button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>
+          <button class="small-btn good" type="button" ${row.approvedCount && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+          ${isArchivedOnly
+            ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+            : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
         </div>
       </td>
+      <td class="raid-select-cell">
+        <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onchange="togglePoSignupSelection('${escapeAttr(row.postKey)}', this.checked)">
+      </td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
+  updatePoSignupBulkActions(rows);
   updatePoSignupTransferState();
+}
+
+function raidHelperPoSignupRows(){
+  return poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .filter(row => !(row.archivedCount && !row.count))
+    .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+async function refreshRaidHelperPoSignupTab(){
+  const box = document.getElementById("raidHelperPoSignupBox");
+  if(!box) return;
+  box.innerHTML = '<div class="muted">PO-Anmelder werden geladen ...</div>';
+  try{
+    await loadPoPostStoredEntries();
+  }catch(error){
+    console.warn("PO-Anmelder konnten im Raidanmelder-Tab nicht neu geladen werden:", error);
+  }
+  renderRaidHelperPoSignupTab();
+}
+
+function renderRaidHelperPoSignupTab(){
+  const box = document.getElementById("raidHelperPoSignupBox");
+  if(!box) return;
+  const rows = raidHelperPoSignupRows();
+  if(!rows.length){
+    box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
+    return;
+  }
+  box.innerHTML = rows.map(row => {
+    const isArchivedOnly = Boolean(row.archivedCount && !row.count);
+    const count = Number(row.count || row.archivedCount || 0);
+    const approved = Number(row.approvedCount || 0);
+    return `
+      <div class="raid-helper-event-card">
+        <div class="raid-helper-event-card-main">
+          <div class="raid-helper-event-title">${escapeHtml(row.title || `${poSignupRaidLabel(row.raid)} PO-Anmelder`)}</div>
+          <div class="raid-helper-event-meta">
+            <span>${escapeHtml(String(row.raid || "-").toUpperCase())}</span>
+            <span>${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</span>
+            <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</span>
+          </div>
+          <div class="raid-helper-event-meta">
+            <span>Post-ID: ${escapeHtml(row.postKey || "-")}</span>
+            <span>Prio: ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</span>
+            <span>Lead: ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</span>
+            <span>${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} grün${isArchivedOnly ? " · archiviert" : ""}</span>
+          </div>
+        </div>
+        <div class="raid-helper-card-actions">
+          <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
+          <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+          ${isArchivedOnly
+            ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+            : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openRaidHelperPoSignup(postKey){
+  selectPoSignupForReview(postKey);
+  openDetailsPanel("poPostPanel");
+  document.getElementById("poPostPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function togglePoSignupSelection(postKey, checked){
+  const key = String(postKey || "").trim();
+  if(!key) return;
+  if(checked) selectedPoSignupPostKeys.add(key);
+  else selectedPoSignupPostKeys.delete(key);
+  renderPoSignupConfigRows();
+}
+
+function toggleAllVisiblePoSignups(checked){
+  poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .filter(row => poSignupConfigMatchesListFilter(row))
+    .forEach(row => {
+      const key = String(row.postKey || "").trim();
+      if(!key) return;
+      if(checked) selectedPoSignupPostKeys.add(key);
+      else selectedPoSignupPostKeys.delete(key);
+    });
+  renderPoSignupConfigRows();
+}
+
+function clearPoSignupSelection(){
+  selectedPoSignupPostKeys.clear();
+  renderPoSignupConfigRows();
+}
+
+function updatePoSignupBulkActions(rows = []){
+  const bar = document.getElementById("poSignupBulkActions");
+  const text = document.getElementById("poSignupBulkSelectionText");
+  const selectAll = document.getElementById("selectAllVisiblePoSignups");
+  const count = selectedPoSignupPostKeys.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
+  if(selectAll){
+    const keys = rows.map(row => String(row.postKey || "").trim()).filter(Boolean);
+    const selected = keys.filter(key => selectedPoSignupPostKeys.has(key)).length;
+    selectAll.checked = keys.length > 0 && selected === keys.length;
+    selectAll.indeterminate = selected > 0 && selected < keys.length;
+  }
+}
+
+async function deleteSelectedPoSignups(){
+  const keys = Array.from(selectedPoSignupPostKeys);
+  if(!keys.length) return;
+  const status = document.getElementById("poSignupStatus");
+  if(!confirm(`${keys.length} ausgewählte PO-Anmelder wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    if(status) status.textContent = "Löschen abgebrochen.";
+    return;
+  }
+  if(status) status.textContent = `${keys.length} PO-Anmelder werden gelöscht ...`;
+  for(const key of keys){
+    await deletePoPostEverywhere(key, { skipConfirm:true, quiet:true });
+    selectedPoSignupPostKeys.delete(key);
+  }
+  await loadPoPostStoredEntries();
+  if(status){
+    status.innerHTML = `<span class="good">Ausgewählte PO-Anmelder gelöscht.</span>`;
+    status.className = "status good";
+  }
 }
 
 const PO_SIGNUP_LIST_RAID_GROUPS = {
@@ -10175,7 +10954,7 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() });
+    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
     await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
@@ -10377,19 +11156,19 @@ function deletePoPostConfig(){
   if(status) status.innerHTML = '<span class="good">Gespeicherter PO-Post entfernt.</span>';
 }
 
-async function deletePoPostEverywhere(postKey){
+async function deletePoPostEverywhere(postKey, options = {}){
   const key = String(postKey || "").trim();
   const status = document.getElementById("poPostStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!key){
-    if(status) status.textContent = "Post-ID fehlt.";
+    if(status && !options.quiet) status.textContent = "Post-ID fehlt.";
     return;
   }
-  if(!confirm(`PO-Post "${key}" wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)){
+  if(!options.skipConfirm && !confirm(`PO-Post "${key}" wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)){
     return;
   }
   writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
-  if(status) status.textContent = `PO-Post ${key} wird gelöscht ...`;
+  if(status && !options.quiet) status.textContent = `PO-Post ${key} wird gelöscht ...`;
   try{
     if(masterCode){
       const group = poPostConfigGroups().find(item => item.postKey === key) || {};
@@ -10403,15 +11182,15 @@ async function deletePoPostEverywhere(postKey){
         raid:group.raid || ""
       });
       if(!result.success) throw new Error(result.error || "PO-Post konnte nicht gelöscht werden.");
-      if(status) status.innerHTML = `<span class="good">PO-Post gelöscht. Railway-Einträge: ${escapeHtml(String(result.deleted || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
-    }else if(status){
+      if(status && !options.quiet) status.innerHTML = `<span class="good">PO-Post gelöscht. Railway-Einträge: ${escapeHtml(String(result.deleted || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
+    }else if(status && !options.quiet){
       status.innerHTML = '<span class="warn">Lokal entfernt. Für Railway/Discord bitte Master-Code eingeben und erneut löschen.</span>';
     }
   }catch(error){
-    if(status) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
+    if(status && !options.quiet) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
   }
   renderPoPostConfigSelect();
-  await loadPoPostStoredEntries();
+  if(!options.quiet) await loadPoPostStoredEntries();
 }
 
 async function archivePoSignupEverywhere(postKey){
@@ -10453,7 +11232,7 @@ async function archivePoSignupEverywhere(postKey){
 
 async function restorePoPostEverywhere(postKey){
   const key = String(postKey || "").trim();
-  const status = document.getElementById("poPostStatus");
+  const status = document.getElementById("poPostStatus") || document.getElementById("poSignupStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!key){
     if(status) status.textContent = "Post-ID fehlt.";
@@ -10570,6 +11349,8 @@ async function createPoSignupPost(){
       mode: config.mode,
       note: config.note,
       itemOptions: config.itemOptions,
+      postedEntries: JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
+      restoreArchived: "true",
       createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
       lichtlootRaidId: config.lichtlootRaidId || "",
       lichtlootPlayerPin: config.lichtlootPlayerPin || "",
@@ -10577,9 +11358,10 @@ async function createPoSignupPost(){
     });
     if(!result.success) throw new Error(result.error || "PO-Anmelder konnte nicht queued werden.");
     if(status){
+      const restoredText = result.restoredEntries ? ` ${escapeHtml(String(result.restoredEntries))} alte Einträge wurden wieder aktiviert.` : "";
       status.innerHTML = result.skipped
         ? '<span class="warn">PO-Anmelder war gerade schon in der Warteschlange.</span>'
-        : '<span class="good">PO-Anmelder ist in der Bot-Warteschlange.</span>';
+        : `<span class="good">PO-Anmelder ist in der Bot-Warteschlange.${restoredText}</span>`;
     }
     await loadPoPostStoredEntries();
   }catch(error){
@@ -10839,6 +11621,8 @@ async function createRaidHelperSignup(){
   const title = raidHelperValue("raidHelperTitle") || raid.name;
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
+  const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
+  const shouldCreatePoSignup = true;
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
@@ -10883,7 +11667,7 @@ async function createRaidHelperSignup(){
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
-      discordChannelId:raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID,
+      discordChannelId,
       signupDeadline:raidHelperValue("raidHelperDeadline"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:defaultRaidHelperImageUrl(raidKey)
@@ -10893,12 +11677,72 @@ async function createRaidHelperSignup(){
       throw new Error(created.error || "Raidanmelder konnte nicht erstellt werden.");
     }
 
+    const queued = await railwayWrite({
+      action:"guildQueueRaidAnnouncement",
+      masterCode,
+      raidId,
+      playerPin,
+      prioPin:playerPin,
+      raid:raidKey,
+      raidName:title,
+      raidDate,
+      raidTime,
+      createdBy:lead,
+      guild:CURRENT_GUILD_SLUG,
+      guildName:guild,
+      maxPlayers:raidHelperValue("raidHelperMax"),
+      tankSlots:raidHelperValue("raidHelperTanks"),
+      healSlots:raidHelperValue("raidHelperHeals"),
+      ddSlots:raidHelperValue("raidHelperDds"),
+      signupDeadline:raidHelperValue("raidHelperDeadline"),
+      description:raidHelperValue("raidHelperDescription"),
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey),
+      channelId:discordChannelId,
+      discordChannelId
+    });
+
+    let poQueued = { success:true, skipped:true };
+    if(shouldCreatePoSignup){
+      poQueued = await railwayWrite({
+        action:"guildQueuePoPost",
+        masterCode,
+        postKey:makePoSignupKey(raidKey, raidDate, raidTime),
+        title:(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase()) + " PO-Anmelder",
+        sourceChannelId:discordChannelId,
+        targetChannelId:discordChannelId,
+        discordChannelId,
+        raid:raidKey,
+        raidDate,
+        raidTime,
+        mode:"signup",
+        note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",
+        restoreArchived:"true",
+        createLichtlootRaid:"",
+        lichtlootRaidId:raidId,
+        lichtlootPlayerPin:playerPin,
+        lichtlootLeadPin:leadPin
+      });
+    }
+
     if(status){
-      status.innerHTML =
-        '<span class="good">Raidanmelder erstellt.</span><br>' +
-        'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
-        'Zum Posten in Discord bitte in der Raid-Liste auf <strong>In DC posten</strong> klicken.';
-      status.className = "status good";
+      if(queued.success && poQueued.success){
+        const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
+        const botText = shouldCreatePoSignup ? "PO-Bot und Anmelde-Bot sollten die Posts" : "Der Anmelde-Bot sollte den Post";
+        status.innerHTML =
+          '<span class="good">Raidanmelder' + poText + ' erstellt und für Discord vorgemerkt.</span><br>' +
+          'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
+          botText + ' innerhalb von ca. 30 Sekunden posten.';
+        status.className = "status good";
+      }else{
+        const errors = [];
+        if(!queued.success) errors.push("Raidanmelder: " + (queued.error || "unbekannter Fehler"));
+        if(!poQueued.success) errors.push("PO-Anmelder: " + (poQueued.error || "unbekannter Fehler"));
+        status.innerHTML =
+          '<span class="good">Raidanmelder erstellt.</span><br>' +
+          'Mindestens ein Discord-Post konnte nicht vorgemerkt werden: <span class="bad">' + escapeHtml(errors.join(" · ")) + '</span><br>' +
+          'Du kannst Raidanmelder und PO-Anmelder unten in den jeweiligen Listen erneut anstoßen.';
+        status.className = "status bad";
+      }
     }
     await loadOverview({ preserveStatus:true });
   }catch(error){
@@ -11324,8 +12168,9 @@ async function queueRaidToDiscord(raidId){
 
   const raid = findRaidByAnyId(raidId);
   const channelId = getSelectedRaidDiscordChannel(raidId);
+  const repostPo = Boolean(document.getElementById("repostPoWithRaid-" + raidId)?.checked);
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?`)) return;
+  if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?${repostPo ? "\nDer passende PO+-Anmelder wird ebenfalls neu gepostet." : ""}`)) return;
 
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -11347,15 +12192,61 @@ async function queueRaidToDiscord(raidId){
       return;
     }
 
+    let poMessage = "";
+    if(repostPo){
+      const poResult = await queueMatchingPoPostForRaid(raid, masterCode);
+      poMessage = poResult.success
+        ? " Der passende PO+-Anmelder wurde ebenfalls vorgemerkt."
+        : ` PO+-Anmelder nicht gepostet: ${poResult.error || "keine passende Konfiguration gefunden."}`;
+    }
+
     setStatus(
       "Discord-Post wurde vorgemerkt" +
       (result.rowNumber ? " (Queue " + result.rowNumber + ")" : "") +
-      ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten.",
-      "good"
+      ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten." + poMessage,
+      repostPo && poMessage.includes("nicht gepostet") ? "bad" : "good"
     );
   }catch(error){
     setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
   }
+}
+
+async function queueMatchingPoPostForRaid(raid, masterCode){
+  if(!raid) return { success:false, error:"Raid wurde nicht gefunden." };
+  const raidId = String(raid.raidId || raid.id || "").trim();
+  const raidKey = getRaidKey(raid);
+  const configs = readPoPostConfigs();
+  const config = configs.find(item =>
+    (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
+    (
+      String(item.raid || "").trim().toLowerCase() === raidKey &&
+      String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
+      String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
+    )
+  );
+  if(!config) return { success:false, error:"Kein passender PO+-Anmelder gespeichert." };
+  return railwayWrite({
+    action:"guildQueuePoPost",
+    masterCode,
+    postKey:config.postKey,
+    sourceChannelId:config.sourceChannelId,
+    targetChannelId:config.targetChannelId,
+    reviewRecipient:config.reviewRecipient,
+    title:config.title,
+    raid:config.raid,
+    raidDate:config.raidDate,
+    raidTime:config.raidTime,
+    limit:config.limit,
+    mode:config.mode,
+    note:config.note,
+    itemOptions:config.itemOptions,
+    postedEntries:JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
+    restoreArchived:"true",
+    createLichtlootRaid:config.createLichtlootRaid ? "true" : "",
+    lichtlootRaidId:config.lichtlootRaidId || raidId,
+    lichtlootPlayerPin:config.lichtlootPlayerPin || raid.playerPin || raid.prioPin || "",
+    lichtlootLeadPin:config.lichtlootLeadPin || raid.leadPin || ""
+  });
 }
 
 function openMessageModal(context){
@@ -12164,43 +13055,20 @@ function toggleP0PlusPanel(){
 }
 
 async function loadP0PlusPanel(){
-  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">P0+ Liste wird geladen ...</div>';
+  document.getElementById("p0PlusPanelContent").innerHTML = '<div class="status">PO+ Liste wird geladen ...</div>';
 
   try{
-    const masterCode = document.getElementById("masterCode").value.trim();
-    const [result, reviewResult, initialPoResult] = await Promise.all([
-      railwayApi({ action:"getP0Plus" }),
-      masterCode
-        ? railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
-        : Promise.resolve({ success:true, entries:[], noMaster:true }),
-      masterCode
-        ? railwayApi({ action:"guildGetPoPostEntries", masterCode, postKey:poPostKeyFilter })
-        : Promise.resolve({ success:true, entries:[], noMaster:true })
-    ]);
-    let poResult = initialPoResult;
-    if(masterCode && poPostKeyFilter && poResult && poResult.success && !(poResult.entries || []).length){
-      poResult = await railwayApi({ action:"guildGetPoPostEntries", masterCode });
-    }
+    const result = await railwayApi({ action:"getP0Plus" });
     if(!result.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "P0+ Liste konnte nicht geladen werden.")}</div>`;
-      return;
-    }
-    if(reviewResult && !reviewResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "P0+-Freigaben konnten nicht geladen werden.")}</div>`;
-      return;
-    }
-    if(poResult && !poResult.success){
-      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(poResult.error || "PO-Post-Einträge konnten nicht geladen werden.")}</div>`;
+      document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(result.error || "PO+ Liste konnte nicht geladen werden.")}</div>`;
       return;
     }
 
     p0PlusEntries = Array.isArray(result.entries) ? result.entries : [];
-    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
-    poPostEntries = Array.isArray(poResult.entries) ? poResult.entries : [];
     await ensureLootDataLoaded();
     renderP0PlusModalContent();
   }catch(error){
-    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Liste konnte nicht geladen werden.")}</div>`;
+    document.getElementById("p0PlusPanelContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "PO+ Liste konnte nicht geladen werden.")}</div>`;
   }
 }
 
@@ -12210,7 +13078,113 @@ function renderP0PlusModalContent(){
     <div class="p0-review-block">
       <div class="section-head">
         <div>
-          <h3>P0+ Freigaben</h3>
+          <h3>PO+ Punkte</h3>
+          <p>Item-Punkte aus der PO+ Liste. Diese Liste ist getrennt von der P0+ Freigabe.</p>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
+      </div>
+      <div class="p0-toolbar">
+        <select id="p0RaidFilter" onchange="renderP0PlusRows()">
+          <option value="">Alle Raids</option>
+          ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
+        </select>
+        <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
+        <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
+          <option value="all40">Alle 40er</option>
+          <option value="naxx">NAXX</option>
+          <option value="aq40">AQ40</option>
+          <option value="bwl">BWL</option>
+          <option value="mc">MC</option>
+        </select>
+        <button class="small-btn good" type="button" onclick="queueP0PlusBackup(null,'p0BackupRaid')">PO+ Sicherung posten</button>
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Raid</th>
+              <th>Spieler</th>
+              <th>Item</th>
+              <th>Slot</th>
+              <th>Punkte</th>
+              <th>Datum</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="p0PlusRows"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderP0PlusRows();
+}
+
+async function loadP0ReleasePanel(){
+  const box = document.getElementById("p0ReleasePanelContent");
+  if(box) box.innerHTML = '<div class="status">P0+ Freigaben werden geladen ...</div>';
+  try{
+    const masterCode = document.getElementById("masterCode").value.trim();
+    if(!masterCode){
+      if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
+      return;
+    }
+    const [releaseResult, reviewResult] = await Promise.all([
+      railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
+      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" })
+    ]);
+    if(!releaseResult.success){
+      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    if(reviewResult && !reviewResult.success){
+      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "Discord P0+ Anmeldungen konnten nicht geladen werden.")}</div>`;
+      return;
+    }
+    poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
+    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
+    renderP0ReleasePanelContent();
+  }catch(error){
+    if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
+  }
+}
+
+function renderP0ReleasePanelContent(){
+  const box = document.getElementById("p0ReleasePanelContent");
+  if(!box) return;
+  box.innerHTML = `
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>P0+ Freigabe</h3>
+          <p>Alle Charaktere aus LichtLoot. Haken erlauben P0+ Anmeldungen fuer MC, BWL, AQ40 und NAXX im Discord.</p>
+        </div>
+        <button class="small-btn ghost" type="button" onclick="loadP0ReleasePanel()">Neu laden</button>
+      </div>
+      <div class="p0-toolbar">
+        <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
+      </div>
+      <div class="table-wrap">
+        <table class="p0-table">
+          <thead>
+            <tr>
+              <th>Charakter</th>
+              <th>Klasse</th>
+              <th>LichtLootAccount</th>
+              <th>P0+ Freigabe MC</th>
+              <th>P0+ Freigabe BWL</th>
+              <th>P0+ Freigabe AQ40</th>
+              <th>P0+ Freigabe NAXX</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="poReleaseRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="p0-review-block">
+      <div class="section-head">
+        <div>
+          <h3>Discord P0+ Anmeldungen prüfen</h3>
           <p>Offene Discord-Anmeldungen prüfen. Nach Freigabe aktualisiert der Bot den DC-Post mit grünem Haken.</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
@@ -12231,41 +13205,130 @@ function renderP0PlusModalContent(){
         </table>
       </div>
     </div>
-    <div class="p0-toolbar">
-      <select id="p0RaidFilter" onchange="renderP0PlusRows()">
-        <option value="">Alle Raids</option>
-        ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
-      </select>
-      <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
-      <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
-        <option value="all40">Alle 40er</option>
-        <option value="naxx">NAXX</option>
-        <option value="aq40">AQ40</option>
-        <option value="bwl">BWL</option>
-        <option value="mc">MC</option>
-      </select>
-      <button class="small-btn good" type="button" onclick="queueP0PlusBackup(null,'p0BackupRaid')">PO+ Sicherung posten</button>
-      <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
-    </div>
-    <div class="table-wrap">
-      <table class="p0-table">
-        <thead>
-          <tr>
-            <th>Raid</th>
-            <th>Spieler</th>
-            <th>Item</th>
-            <th>Slot</th>
-            <th>Punkte</th>
-            <th>Datum</th>
-            <th>Aktion</th>
-          </tr>
-        </thead>
-        <tbody id="p0PlusRows"></tbody>
-      </table>
-    </div>
   `;
+  renderPoReleaseRows();
   renderP0ReviewRows();
-  renderP0PlusRows();
+}
+
+function poReleaseRaidLabel(raid){
+  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX" };
+  return labels[raid] || String(raid || "").toUpperCase();
+}
+
+function setPoReleaseSearch(value){
+  poReleaseSearch = String(value || "");
+  renderPoReleaseRows();
+}
+
+function poReleaseCheckHtml(entry, raid){
+  const checked = Boolean(entry && entry.releases && entry.releases[raid]);
+  return checked
+    ? `<span class="po-release-state active" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
+    : `<span class="po-release-state empty">offen</span>`;
+}
+
+function renderPoReleaseRows(){
+  const tbody = document.getElementById("poReleaseRows");
+  if(!tbody) return;
+  const needle = normalize(poReleaseSearch);
+  const preferredByName = new Map();
+  (poReleaseCharacters || []).forEach(entry => {
+    const key = normalize(entry.name || entry.char || "");
+    if(!key) return;
+    const current = preferredByName.get(key);
+    const server = normalize(entry.server || "");
+    const currentServer = normalize(current && current.server || "");
+    if(!current || server === "lichtbringer" || (currentServer !== "lichtbringer" && server === "everlook")){
+      preferredByName.set(key, entry);
+    }
+  });
+  const displayCharacters = Array.from(preferredByName.values());
+  const rows = displayCharacters.filter(entry => {
+    if(!needle) return true;
+    return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
+  });
+  if(!document.getElementById("masterCode").value.trim()){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>';
+    return;
+  }
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine Charaktere gefunden.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(entry => {
+    const index = poReleaseCharacters.indexOf(entry);
+    const server = entry.server ? `<br><span class="muted">${escapeHtml(entry.server)}</span>` : "";
+    return `
+      <tr>
+        <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
+        <td>${entry.className ? `<span class="${escapeAttr(classColor(entry.className))}">${escapeHtml(entry.className)}</span>` : '<span class="muted">-</span>'}</td>
+        <td><span class="pin">xxx</span></td>
+        <td>${poReleaseCheckHtml(entry,"mc")}</td>
+        <td>${poReleaseCheckHtml(entry,"bwl")}</td>
+        <td>${poReleaseCheckHtml(entry,"aq40")}</td>
+        <td>${poReleaseCheckHtml(entry,"naxx")}</td>
+        <td>
+          <div class="po-release-actions">
+            <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
+            <button class="small-btn danger" type="button" onclick="openPoReleaseDeletePopup(${index})">P0+ löschen</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function openPoReleasePopup(index){
+  return setPoReleaseFromPopup(index, true);
+}
+
+async function openPoReleaseDeletePopup(index){
+  return setPoReleaseFromPopup(index, false);
+}
+
+async function setPoReleaseFromPopup(index, enabled){
+  const entry = poReleaseCharacters[index];
+  if(!entry) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const answer = prompt(
+    (enabled ? "Welche P0+ Freigabe soll fuer " : "Welche P0+ Freigabe soll bei ") + (entry.name || "dem Charakter") + (enabled ? " gesetzt werden?" : " geloescht werden?") + "\n\nMC, BWL, AQ40 oder NAXX eingeben.",
+    "MC"
+  );
+  if(answer === null) return;
+  const raw = String(answer || "").trim();
+  const raid = normalize(raw.replace(/^!+/, "")).replace(/[^a-z0-9]+/g,"");
+  const map = { moltencore:"mc", molten:"mc", mc:"mc", bwl:"bwl", blackwinglair:"bwl", aq40:"aq40", naxx:"naxx", naxxramas:"naxx" };
+  const raidKey = map[raid] || raid;
+  if(!["mc","bwl","aq40","naxx"].includes(raidKey)){
+    setStatus("Bitte MC, BWL, AQ40 oder NAXX eingeben.", "bad");
+    return;
+  }
+  try{
+    setStatus((enabled ? "P0+ Freigabe wird gespeichert ..." : "P0+ Freigabe wird entfernt ..."), "");
+    const result = await railwayWrite({
+      action:"guildSetCharacterPoRelease",
+      masterCode,
+      characterId:entry.characterId || entry.id,
+      raid:raidKey,
+      enabled:enabled ? "true" : "false",
+      approvedBy:"Gildenleitung"
+    });
+    if(!result.success){
+      setStatus(result.error || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
+      return;
+    }
+    entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false }, entry.releases || {});
+    entry.releases[raidKey] = Boolean(enabled);
+    raidHelperP0ReleaseCache = null;
+    renderPoReleaseRows();
+    setStatus(enabled ? "P0+ Freigabe gespeichert." : "P0+ Freigabe entfernt.", "good");
+  }catch(error){
+    setStatus(error.message || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function setPoPostRaidFilter(raid){
