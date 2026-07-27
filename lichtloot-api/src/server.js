@@ -1929,10 +1929,9 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
   if (!normalizedPin) return null;
 
   const local = await query(
-    "select id from players where guild_id = $1 and player_pin = $2 limit 1",
+    "select id, approval_status from players where guild_id = $1 and player_pin = $2 limit 1",
     [guildId, normalizedPin]
   );
-  if (local.rows.length) return local.rows[0];
 
   const source = await query(
     `select p.id, p.player_pin, p.security_question, p.security_answer
@@ -1946,20 +1945,45 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
     [guildId, normalizedPin]
   );
   const sourcePlayer = source.rows[0];
-  if (!sourcePlayer) return null;
+  if (!sourcePlayer) return local.rows[0] || null;
 
   const client = await pool.connect();
   try {
     await client.query("begin");
     const playerResult = await client.query(
       `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
-       values ($1, $2, $3, $4, 'pending')
+       values ($1, $2, $3, $4, 'approved')
        on conflict (guild_id, player_pin) do update
-         set updated_at = now()
+         set security_question = coalesce(players.security_question, excluded.security_question),
+             security_answer = coalesce(players.security_answer, excluded.security_answer),
+             approval_status = 'approved',
+             approved_at = coalesce(players.approved_at, now()),
+             approved_by = coalesce(players.approved_by, 'Gildenübergreifender SpielerLogin'),
+             updated_at = now()
        returning id, player_pin`,
       [guildId, normalizedPin, sourcePlayer.security_question || null, sourcePlayer.security_answer || null]
     );
     const player = playerResult.rows[0];
+
+    // Identitaet und Charaktere werden geteilt, alle Gildendaten bleiben
+    // dennoch getrennt: Die neuen Charakterzeilen besitzen eigene IDs in
+    // der Zielgilde. Prios, Punkte, Rollen und PO-Freigaben werden nicht
+    // kopiert.
+    await client.query(
+      `insert into characters (player_id, name, server, class_name, is_main)
+       select $1, source_char.name, source_char.server, source_char.class_name, source_char.is_main
+       from characters source_char
+       where source_char.player_id = $2
+         and not exists (
+           select 1
+           from characters target_char
+           where target_char.player_id = $1
+             and lower(target_char.name) = lower(source_char.name)
+             and lower(target_char.server) = lower(source_char.server)
+         )`,
+      [player.id, sourcePlayer.id]
+    );
+
     await client.query("commit");
     return player;
   } catch (error) {
@@ -1968,6 +1992,33 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
   } finally {
     client.release();
   }
+}
+
+async function repairEmptyCrossGuildPlayerLogins(guildId) {
+  const result = await query(
+    `select target.player_pin
+     from players target
+     where target.guild_id = $1
+       and not exists (
+         select 1 from characters target_char where target_char.player_id = target.id
+       )
+       and exists (
+         select 1
+         from players source
+         join characters source_char on source_char.player_id = source.id
+         where source.guild_id <> target.guild_id
+           and source.player_pin = target.player_pin
+           and coalesce(source.is_blocked, false) = false
+           and coalesce(source.approval_status, 'approved') = 'approved'
+       )`,
+    [guildId]
+  );
+
+  for (const row of result.rows) {
+    await ensureCrossGuildPlayerLogin(guildId, row.player_pin);
+  }
+
+  return result.rowCount;
 }
 
 async function getPlayerCharacters(guildId, pin) {
@@ -8034,6 +8085,10 @@ async function deletePrio({ guildId, query: params }) {
 async function getGuildLeadershipOverview(guildId, params) {
   requireMasterCode(params.masterCode);
   await ensurePlayerRoleSchema();
+  const repairedLogins = await repairEmptyCrossGuildPlayerLogins(guildId);
+  if (repairedLogins) {
+    console.log(`${repairedLogins} leer(e) gildenuebergreifende SpielerLogin(s) repariert.`);
+  }
   await processRaidHelperSchedules({ guildId }).catch(error => {
     console.warn("RaidHelper-Schedules konnten nicht verarbeitet werden:", error.message || error);
   });
