@@ -8039,20 +8039,36 @@ async function getPlayerPrioHistory(guildId, params) {
     historyParams
   );
 
+  const pointsParams = [guildId, character.name];
+  let pointsServerClause = "";
+  if (clean(character.server)) {
+    pointsParams.push(character.server);
+    pointsServerClause = `and lower(c.server) = lower($${pointsParams.length})`;
+  }
   const pointsResult = await query(
     `select
        coalesce(i.raid_type, 'Raid') as raid,
        coalesce(i.name, pp.note, 'P0/P0+') as item,
        coalesce(i.quality, '') as quality,
-       pp.points,
+       sum(pp.points)::numeric as points,
        pp.source,
        pp.note,
-       pp.created_at
+       max(pp.created_at) as created_at
      from p0plus_points pp
+     join characters c on c.id = pp.character_id
+     join players p on p.id = c.player_id and p.guild_id = $1
      left join items i on i.id = pp.item_id
-     where pp.guild_id = $1 and pp.character_id = $2
+     where pp.guild_id = $1
+       and lower(c.name) = lower($2)
+       ${pointsServerClause}
+     group by
+       coalesce(i.raid_type, 'Raid'),
+       coalesce(i.name, pp.note, 'P0/P0+'),
+       coalesce(i.quality, ''),
+       pp.source,
+       pp.note
      order by raid asc, item asc`,
-    [guildId, character.id]
+    pointsParams
   );
 
   await ensureCharacterPoReleaseSchema();
