@@ -2068,6 +2068,12 @@ function normalizeRaidType(value) {
     "zul-gurub": "zg",
     "zg-20": "zg",
     "zul-gurub-20": "zg",
+    "zg-mittwoch": "zg-mittwoch",
+    "zul-gurub-mittwoch": "zg-mittwoch",
+    "zg-prime": "zg-prime",
+    "zul-gurub-prime": "zg-prime",
+    "zg-late": "zg-late",
+    "zul-gurub-late": "zg-late",
     "aq-20": "aq20",
     "ahn-qiraj-20": "aq20",
     "ruins-of-ahn-qiraj": "aq20",
@@ -2093,6 +2099,9 @@ function raidTypeSearchValues(value) {
     aq40: ["aq40", "aq-40", "ahn-qiraj-40", "ahn-qiraj"],
     naxx: ["naxx", "naxxramas"],
     zg: ["zg", "zg20", "zg 20", "zg-20", "zul-gurub", "zul gurub", "zul'gurub", "zul-gurub-20", "zul gurub 20"],
+    "zg-mittwoch": ["zg-mittwoch", "zg mittwoch", "zul-gurub-mittwoch", "zul gurub mittwoch"],
+    "zg-prime": ["zg-prime", "zg prime", "zul-gurub-prime", "zul gurub prime"],
+    "zg-late": ["zg-late", "zg late", "zul-gurub-late", "zul gurub late"],
     aq20: ["aq20", "aq 20", "aq-20", "ahn-qiraj-20", "ahn qiraj 20", "ahn'qiraj 20", "ruins-of-ahn-qiraj", "ruins of ahn qiraj"],
     ony: ["ony", "onyxia", "onyxia-s-lair"]
   };
@@ -2107,10 +2116,18 @@ function displayRaidName(value) {
     aq40: "Ahn'Qiraj 40",
     naxx: "Naxxramas",
     zg: "Zul'Gurub",
+    "zg-mittwoch": "ZG Mittwoch",
+    "zg-prime": "ZG PRIME",
+    "zg-late": "ZG LATE",
     aq20: "AQ 20",
     ony: "Onyxia"
   };
   return names[key] || clean(value) || "Raid";
+}
+
+function lootSourceRaidType(value) {
+  const raid = normalizeRaidType(value);
+  return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
 }
 
 function readSlotFromNote(note) {
@@ -2965,7 +2982,10 @@ async function getP0ReleaseList(guildId = "") {
     return { success: true, releases: p0ReleaseCache };
   }
 
-  const releases = { mc: [], bwl: [], aq40: [], naxx: [] };
+  const releases = {
+    mc: [], bwl: [], aq40: [], naxx: [],
+    "zg-mittwoch": [], "zg-prime": [], "zg-late": []
+  };
   let includeLegacyCsv = !guildId;
   if (guildId) {
     const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
@@ -3020,7 +3040,7 @@ async function getP0ReleaseList(guildId = "") {
 
 function normalizePoReleaseRaid(value) {
   const raid = normalizeRaidType(value);
-  return ["mc", "bwl", "aq40", "naxx"].includes(raid) ? raid : "";
+  return ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
 }
 
 function normalizePoReleaseCharacterName(value) {
@@ -3037,7 +3057,7 @@ async function ensureCharacterPoReleaseSchema() {
 }
 
 function poReleaseFlagsFromRows(rows) {
-  const flags = { mc: false, bwl: false, aq40: false, naxx: false };
+  const flags = { mc: false, bwl: false, aq40: false, naxx: false, "zg-mittwoch": false, "zg-prime": false, "zg-late": false };
   for (const row of rows || []) {
     const raid = normalizePoReleaseRaid(row.raid_type || row.raid);
     if (raid) flags[raid] = true;
@@ -3084,7 +3104,10 @@ async function getCharacterPoReleaseRows(guildId) {
         isMain: Boolean(row.is_main),
         playerId: row.player_id,
         playerPin: row.player_pin || "",
-        releases: { mc: false, bwl: false, aq40: false, naxx: false },
+        releases: {
+          mc: false, bwl: false, aq40: false, naxx: false,
+          "zg-mittwoch": false, "zg-prime": false, "zg-late": false
+        },
         approvedBy: {},
         approvedAt: {}
       });
@@ -3210,9 +3233,9 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
         await client.query(
           `delete from character_po_releases
            where guild_id = $1 and character_id = $2 and raid_type = any($3)`,
-          [guildId, characterId, ["mc", "bwl", "aq40", "naxx"]]
+          [guildId, characterId, ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]]
         );
-        for (const raid of ["mc", "bwl", "aq40", "naxx"]) {
+        for (const raid of ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]) {
           const value = rawEntry[raid] ?? rawEntry[raid.toUpperCase()] ?? rawEntry[`po_${raid}`] ?? rawEntry[`p0_${raid}`];
           const enabled = ["true", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
           if (enabled) {
@@ -3255,11 +3278,31 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
     throw error;
   }
   await ensureCharacterPoReleaseSchema();
-  const result = await query(
+  let result = await query(
     `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
     [guildId, character.id, raid]
   );
-  const allowed = Boolean(result.rows[0]);
+  let allowed = Boolean(result.rows[0]);
+  if (!allowed) {
+    const releasedCharacters = await query(
+      `select c.name, c.server
+       from character_po_releases cpr
+       join characters c on c.id = cpr.character_id
+       where cpr.guild_id = $1
+         and cpr.raid_type = $2`,
+      [guildId, raid]
+    );
+    const wantedName = normalizePoReleaseCharacterName(character.name);
+    const wantedServer = clean(character.server).toLowerCase();
+    allowed = releasedCharacters.rows.some(row =>
+      normalizePoReleaseCharacterName(row.name) === wantedName
+      && (
+        !wantedServer
+        || !clean(row.server)
+        || clean(row.server).toLowerCase() === wantedServer
+      )
+    );
+  }
   return {
     success: true,
     allowed,
@@ -7279,6 +7322,7 @@ async function findCharacterForPin(guildId, pin, charName, server) {
 async function upsertItem(client, raidType, itemName, itemGameId = "") {
   const name = clean(itemName);
   const itemId = clean(itemGameId);
+  const itemRaidType = lootSourceRaidType(raidType);
   if (!name || name === "-") return null;
 
   if (itemId) {
@@ -7289,10 +7333,10 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
          and item_id = $2
        order by created_at asc
        limit 1`,
-      [raidTypeSearchValues(raidType), itemId]
+      [raidTypeSearchValues(itemRaidType), itemId]
     );
     if (existingById.rows.length) return existingById.rows[0];
-    return upsertLootItemRecord(client, { raid: raidType, name, itemId });
+    return upsertLootItemRecord(client, { raid: itemRaidType, name, itemId });
   }
 
   const existing = await client.query(
@@ -7304,11 +7348,11 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
        case when item_id is null then 1 else 0 end,
        created_at asc
      limit 1`,
-    [raidTypeSearchValues(raidType), name]
+    [raidTypeSearchValues(itemRaidType), name]
   );
   if (existing.rows.length) return existing.rows[0];
 
-  const matchingItem = await findExistingItemByLookupName(client, raidType, name);
+  const matchingItem = await findExistingItemByLookupName(client, itemRaidType, name);
   if (matchingItem) return matchingItem;
 
   const error = new Error(`Item "${name}" wurde nicht in der ${displayRaidName(raidType)}-Datenbank gefunden.`);
@@ -12965,7 +13009,7 @@ async function createRaidForBot({ guildId, query: params }) {
 
 async function createRandomRaid({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
-  const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"]);
+  const allowedRaids = new Set(["mc", "bwl", "aq40", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late", "aq20", "ony"]);
   if (!allowedRaids.has(raidType)) {
     const error = new Error("Dieser Raidtyp kann nicht erstellt werden.");
     error.statusCode = 400;
@@ -13913,7 +13957,7 @@ async function findP0DiscordRaid(guildId, params) {
       raidPin: prioPin
     });
     if (raid) {
-      const allowed = new Set(["mc", "bwl", "aq40", "naxx"]);
+      const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
       return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
     }
   }
@@ -13944,7 +13988,7 @@ async function findP0DiscordRaid(guildId, params) {
 
   const raid = await findRaid(guildId, params);
   if (!raid) return null;
-  const allowed = new Set(["mc", "bwl", "aq40", "naxx"]);
+  const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
   return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
 }
 
@@ -13981,7 +14025,7 @@ function normalizeP0SignupRow(row) {
 }
 
 function isP0PostRefreshRaid(raidType) {
-  return new Set(["mc", "bwl", "aq40", "naxx"]).has(normalizeRaidType(raidType));
+  return new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]).has(normalizeRaidType(raidType));
 }
 
 async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
@@ -14076,7 +14120,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
-    const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
+    const error = new Error("Kein passender PO+-Raid gefunden.");
     error.statusCode = 404;
     throw error;
   }
@@ -14094,7 +14138,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
         or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
      group by i.id
      order by i.name asc`,
-    [raidTypeSearchValues(raid.raid_type), guildId]
+    [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId]
   );
 
   const signupResult = await query(
@@ -14244,7 +14288,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
   await ensureRaidSchema();
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
-    const error = new Error("Kein passender MC/BWL/AQ40/Naxx-Raid gefunden.");
+    const error = new Error("Kein passender PO+-Raid gefunden.");
     error.statusCode = 404;
     throw error;
   }
@@ -14570,7 +14614,7 @@ async function setRaidStatus({ guildId, query: params }) {
   const archiveRequested = ["archiviert", "archive"].includes(status);
   const raidType = normalizeRaidType(raid.raid_type || raid.raid || params.raid);
 
-  if (archiveRequested && ["mc", "bwl", "aq40", "naxx"].includes(raidType)) {
+  if (archiveRequested && ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
     const transferNotes = Array.from(new Set([
       `RaidID: ${raidPublicId(raid)}`,
       `RaidID: ${raid.id}`,
@@ -16523,7 +16567,7 @@ async function applyKaeseItemIdCorrection() {
   try {
     await client.query("begin");
     const aliases = ["Kaese", "Käse", "Cheese"];
-    const raidTypes = ["mc", "bwl", "aq40", "naxx", "zg", "aq20", "ony"];
+    const raidTypes = ["mc", "bwl", "aq40", "naxx", "zg", "zg-mittwoch", "zg-prime", "zg-late", "aq20", "ony"];
     for (const raidType of raidTypes) {
       await upsertLootItemRecord(client, {
         raid: raidType,
