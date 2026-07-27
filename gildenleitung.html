@@ -4554,6 +4554,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
+            <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
+              <input id="raidHelperCreatePoSignup" type="checkbox" checked>
+              <span>PO-Anmelder erstellen</span>
+            </label>
           </section>
 
           <section class="raid-helper-card">
@@ -9519,6 +9523,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const playerPin = randomCode(3);
   const leadPin = randomCode(4);
   const raidId = createRaidIdForGuildPage(raidKey);
+  const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
   const createdBy = poSignupLichtlootCreatorName();
 
   if(status && !options.silent){
@@ -10928,6 +10933,8 @@ async function createRaidHelperSignup(){
   const title = raidHelperValue("raidHelperTitle") || raid.name;
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
+  const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
+  const shouldCreatePoSignup = !!document.getElementById("raidHelperCreatePoSignup")?.checked;
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
@@ -10972,7 +10979,7 @@ async function createRaidHelperSignup(){
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
-      discordChannelId:raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID,
+      discordChannelId,
       signupDeadline:raidHelperValue("raidHelperDeadline"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:defaultRaidHelperImageUrl(raidKey)
@@ -10982,12 +10989,53 @@ async function createRaidHelperSignup(){
       throw new Error(created.error || "Raidanmelder konnte nicht erstellt werden.");
     }
 
+    const queued = await railwayWrite({
+      action:"guildQueueRaidAnnouncement",
+      masterCode,
+      raidId,
+      channelId:discordChannelId,
+      discordChannelId
+    });
+
+    let poQueued = { success:true, skipped:true };
+    if(shouldCreatePoSignup){
+      poQueued = await railwayWrite({
+        action:"guildQueuePoPost",
+        masterCode,
+        postKey:makePoSignupKey(raidKey, raidDate, raidTime),
+        title:(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase()) + " PO-Anmelder",
+        raid:raidKey,
+        raidDate,
+        raidTime,
+        mode:"signup",
+        note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",
+        restoreArchived:"true",
+        createLichtlootRaid:"",
+        lichtlootRaidId:raidId,
+        lichtlootPlayerPin:playerPin,
+        lichtlootLeadPin:leadPin
+      });
+    }
+
     if(status){
-      status.innerHTML =
-        '<span class="good">Raidanmelder erstellt.</span><br>' +
-        'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
-        'Zum Posten in Discord bitte in der Raid-Liste auf <strong>In DC posten</strong> klicken.';
-      status.className = "status good";
+      if(queued.success && poQueued.success){
+        const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
+        const botText = shouldCreatePoSignup ? "PO-Bot und Anmelde-Bot sollten die Posts" : "Der Anmelde-Bot sollte den Post";
+        status.innerHTML =
+          '<span class="good">Raidanmelder' + poText + ' erstellt und für Discord vorgemerkt.</span><br>' +
+          'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
+          botText + ' innerhalb von ca. 30 Sekunden posten.';
+        status.className = "status good";
+      }else{
+        const errors = [];
+        if(!queued.success) errors.push("Raidanmelder: " + (queued.error || "unbekannter Fehler"));
+        if(!poQueued.success) errors.push("PO-Anmelder: " + (poQueued.error || "unbekannter Fehler"));
+        status.innerHTML =
+          '<span class="good">Raidanmelder erstellt.</span><br>' +
+          'Mindestens ein Discord-Post konnte nicht vorgemerkt werden: <span class="bad">' + escapeHtml(errors.join(" · ")) + '</span><br>' +
+          'Du kannst Raidanmelder und PO-Anmelder unten in den jeweiligen Listen erneut anstoßen.';
+        status.className = "status bad";
+      }
     }
     await loadOverview({ preserveStatus:true });
   }catch(error){
