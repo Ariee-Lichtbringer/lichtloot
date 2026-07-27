@@ -81,7 +81,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 .raidtime-closed{color:#ef4444;font-weight:900}
 @media(max-width:800px){.raidtime-box{grid-template-columns:1fr}}
 
-.epic{color:#c084fc}.rare{color:var(--blue)}.uncommon{color:#4ade80}.legendary{color:#fb923c}
+.epic{color:#c084fc}.rare{color:#60a5fa}.uncommon{color:#4ade80}.legendary{color:#fb923c}
 
 .tooltip{position:fixed;z-index:2147483647!important;width:330px;padding:12px;border-radius:8px;background:linear-gradient(rgba(7,12,31,.96),rgba(2,6,23,.98));border:1px solid rgba(148,163,184,.75);box-shadow:0 0 28px rgba(0,0,0,.85);pointer-events:none;font-size:11px;line-height:1.3}
 .tooltip-title{font-size:16px;font-weight:900;margin-bottom:3px}
@@ -316,7 +316,7 @@ body.random-prio .tooltip-p0{
 .p0plus-table th,.p0plus-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.12);text-align:left}
 .p0plus-table th{color:var(--gold);font-size:12px;text-transform:uppercase}
 .p0plus-item{font-weight:400;cursor:pointer}
-.p0plus-item.epic{color:#c084fc}.p0plus-item.rare{color:var(--blue)}.p0plus-item.uncommon{color:#4ade80}.p0plus-item.legendary{color:#fb923c}
+.p0plus-item.epic{color:#c084fc}.p0plus-item.rare{color:#60a5fa}.p0plus-item.uncommon{color:#4ade80}.p0plus-item.legendary{color:#fb923c}
 
 .tooltip{z-index:60000!important}
 
@@ -1795,7 +1795,7 @@ body.random-prio .tooltip-p0{
       <div class="player-input-grid">
         <div>
           <label>Prio-PIN</label>
-          <input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="loadPublishedPrios(); autoSaveDraft()">
+          <input id="raidPin" type="text" placeholder="Prio-PIN eingeben" oninput="schedulePublishedPriosLoad(); autoSaveDraft()">
         </div>
 
         <div>
@@ -3782,7 +3782,6 @@ function raidleadEnter(event){
 
 async function refreshPrios(){
   await loadPublishedPrios();
-  await refreshDcCheckNow();
 
   const status=document.getElementById("publishedStatus");
   status.innerHTML += `<br><span class="ok">✓ Aktualisiert. Deine Eingaben bleiben erhalten.</span>`;
@@ -3794,49 +3793,29 @@ async function apiJsonp(params){
     .map(([key,value]) => encodeURIComponent(key) + "=" + encodeURIComponent(value == null ? "" : value))
     .join("&");
 
-  const jsonUrl = APPS_SCRIPT_URL + "?" + query + "&t=" + Date.now() + "&_=" + Date.now();
-
+  const jsonUrl = APPS_SCRIPT_URL + "?" + query + "&t=" + Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
   try{
-    const response = await fetch(jsonUrl, {cache:"no-store"});
-    if(response.ok){
-      const contentType = response.headers.get("content-type") || "";
-      const text = await response.text();
-      if(text && !/^\s*</.test(text)){
-        try{
-          return JSON.parse(text);
-        }catch(error){
-          if(contentType.includes("json")) throw error;
-        }
-      }
+    const response = await fetch(jsonUrl, {
+      cache:"no-store",
+      signal:controller.signal,
+      headers:{ "Accept":"application/json" }
+    });
+    const result = await response.json().catch(() => null);
+    if(!response.ok || !result){
+      throw new Error(result?.error || "API konnte nicht geladen werden.");
     }
-  }catch(error){
-    console.warn("JSON-API nicht direkt ladbar, nutze JSONP-Fallback:", error);
+    return result;
+  }finally{
+    clearTimeout(timeout);
   }
+}
 
-  return new Promise((resolve,reject)=>{
-    const callbackName = "lichtlootCb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
-    const script = document.createElement("script");
-
-    window[callbackName] = function(result){
-      delete window[callbackName];
-      if(script && script.parentNode){
-        script.parentNode.removeChild(script);
-      }
-      resolve(result || {});
-    };
-
-    script.src = APPS_SCRIPT_URL + "?" + query + "&callback=" + callbackName + "&t=" + Date.now() + "&_=" + Date.now();
-
-    script.onerror = function(){
-      delete window[callbackName];
-      if(script && script.parentNode){
-        script.parentNode.removeChild(script);
-      }
-      reject(new Error("API konnte nicht geladen werden."));
-    };
-
-    document.body.appendChild(script);
-  });
+let publishedPriosInputTimer = null;
+function schedulePublishedPriosLoad(){
+  clearTimeout(publishedPriosInputTimer);
+  publishedPriosInputTimer = setTimeout(loadPublishedPrios, 350);
 }
 
 async function loadPublishedPrios(){
@@ -4630,7 +4609,7 @@ function fillItems(){
       option.textContent=item.name;
       option.className=item.quality || "";
       if(item.quality === "epic") option.style.color="#c084fc";
-      if(item.quality === "rare") option.style.color="var(--blue)";
+      if(item.quality === "rare") option.style.color="#60a5fa";
       if(item.quality === "uncommon") option.style.color="#4ade80";
       if(item.quality === "legendary") option.style.color="#fb923c";
       select.appendChild(option);
@@ -6005,7 +5984,7 @@ autoRefreshTimer=setInterval(()=>{
   if(pin){
     loadPublishedPrios();
   }
-},5000);
+},30000);
 
 function toggleMyPrios(){
   const box=document.getElementById("myPriosBox");
