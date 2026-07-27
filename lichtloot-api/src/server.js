@@ -5286,6 +5286,12 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
+  let snapshot = null;
+  try {
+    snapshot = await getRaidHelper({ guildId, query: { ...params, raidId, playerPin: params.playerPin || params.prioPin || params.raidPin || "" } });
+  } catch {
+    snapshot = null;
+  }
   return queueBotUpdate({
     guildId,
     query: {
@@ -5293,8 +5299,16 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
       type: "raid_announcement_refresh",
       payload: {
         raidId,
+        playerPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
+        prioPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
+        raid: clean(params.raid || snapshot?.raid?.raid || ""),
+        raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
+        raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
         channelId: clean(params.channelId || params.discordChannelId),
         messageId: clean(params.messageId || params.discordMessageId || params.raidHelperMessageId),
+        raidSnapshot: snapshot?.raid || null,
+        signups: snapshot?.signups || [],
+        externalSignups: snapshot?.externalSignups || [],
         source: "gildenleitung"
       }
     }
@@ -13304,15 +13318,29 @@ async function saveRaidSignup({ guildId, query: params }) {
 
   let refreshQueued = false;
   if (raid.discord_channel_id && raid.discord_message_id) {
+    let snapshot = null;
+    try {
+      snapshot = await getRaidHelper({ guildId, query: { raidId: raid.external_raid_id || raid.id, playerPin: raid.raid_pin || "" } });
+    } catch {
+      snapshot = null;
+    }
     const refresh = await enqueueBotUpdate({
       guildId,
       type: "raid_announcement_refresh",
       payload: {
         raidId: raid.external_raid_id || raid.id,
+        playerPin: raid.raid_pin || "",
+        prioPin: raid.raid_pin || "",
+        raid: raid.raid_type || "",
+        raidDate: raid.raid_date ? raid.raid_date.toISOString().slice(0, 10) : "",
+        raidTime: raid.raid_time || "",
         channelId: raid.discord_channel_id,
         discordChannelId: raid.discord_channel_id,
         messageId: raid.discord_message_id,
         discordMessageId: raid.discord_message_id,
+        raidSnapshot: snapshot?.raid || normalizeRaidRow(raid),
+        signups: snapshot?.signups || [],
+        externalSignups: snapshot?.externalSignups || [],
         source: "raid_signup_saved"
       }
     }).catch(() => null);
