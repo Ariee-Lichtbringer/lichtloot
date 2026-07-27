@@ -80,6 +80,30 @@ app.options("*", cors(corsOptions));
 app.use("/api/combat-log/import", express.text({ type: "*/*", limit: "120mb" }));
 app.use(express.json({ limit: "80mb" }));
 app.use(express.urlencoded({ extended: true, limit: "80mb" }));
+
+// Alte Lootseiten laden einzelne P0+-Bausteine noch per JSONP. Railway
+// liefert normalerweise JSON; mit einem gueltigen Callback-Namen wird die
+// Antwort deshalb gezielt als ausfuehrbares JSONP zurueckgegeben. Der enge
+// Namensfilter verhindert, dass beliebiger JavaScript-Code eingeschleust
+// werden kann.
+app.use("/api/apps-script", (req, res, next) => {
+  const callback = clean(req.query?.callback);
+  if (req.method !== "GET" || !callback) {
+    next();
+    return;
+  }
+  if (!/^[A-Za-z_$][0-9A-Za-z_$]*$/.test(callback)) {
+    res.status(400).json({ success: false, error: "Ungueltiger JSONP-Callback." });
+    return;
+  }
+
+  res.json = body => {
+    res.type("application/javascript");
+    return res.send(`${callback}(${JSON.stringify(body)});`);
+  };
+  next();
+});
+
 app.use("/downloads", express.static("public/downloads"));
 app.use(express.static("public", {
   setHeaders(res, filePath) {
