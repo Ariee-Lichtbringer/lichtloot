@@ -5302,7 +5302,7 @@ async function openGuildByPin(){
 
 function lichtLootPlayerPinStorageKeys(){
   const slug=typeof CURRENT_GUILD_SLUG!=="undefined" && CURRENT_GUILD_SLUG ? CURRENT_GUILD_SLUG : "lichtloot";
-  const keys=["lichtlootPlayerPin_" + slug];
+  const keys=["lichtlootPlayerPin_" + slug, "lichtlootSharedPlayerPin"];
   if(slug === "lichtloot"){
     keys.push("lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin");
   }
@@ -5315,6 +5315,13 @@ async function switchMeinLichtLootGuild(value){
   try{
     const guild=selection === "Lichtbringer" ? {slug:"lichtloot"} : await resolveGuildPin(selection);
     if(!guild?.slug) throw new Error("Gilde wurde nicht gefunden.");
+    const sharedPin=getStoredLichtLootPlayerPin();
+    if(sharedPin){
+      localStorage.setItem("lichtlootSharedPlayerPin", sharedPin);
+      localStorage.setItem("lichtlootPlayerPin_" + guild.slug, sharedPin);
+      sessionStorage.setItem("lichtlootSharedPlayerPin", sharedPin);
+      sessionStorage.setItem("lichtlootPlayerPin_" + guild.slug, sharedPin);
+    }
     const target=new URL(window.location.href);
     target.searchParams.set("guild", guild.slug);
     window.location.href=target.href;
