@@ -2491,7 +2491,7 @@ tr.selected-row td{
 
 .raid-helper-current-raid{
   display:grid;
-  grid-template-columns:42px 1fr auto;
+  grid-template-columns:42px 1fr auto auto;
   gap:10px;
   align-items:center;
   width:100%;
@@ -2503,6 +2503,10 @@ tr.selected-row td{
   padding:9px;
   text-align:left;
   cursor:pointer;
+}
+
+.raid-helper-current-raid .raid-select-checkbox{
+  justify-self:end;
 }
 
 .raid-helper-current-raid.active{
@@ -4801,6 +4805,13 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <div><h3>Current Events</h3><span>Laufende und offene Raidanmelder</span></div>
           <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentEvents()">Aktualisieren</button>
         </div>
+        <div id="raidHelperBulkActions" class="raid-bulk-actions" hidden>
+          <strong id="raidHelperBulkSelectionText">0 Raidanmelder ausgewählt</strong>
+          <div class="raid-bulk-action-buttons">
+            <button class="small-btn ghost" type="button" onclick="clearRaidHelperSelection()">Auswahl aufheben</button>
+            <button id="raidHelperBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaidHelpers()">Ausgewählte löschen</button>
+          </div>
+        </div>
         <div id="raidHelperEventEditor" class="raid-helper-event-editor hidden">
           <div class="raid-helper-event-editor-head">
             <div>
@@ -5158,6 +5169,13 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
               </div>
+              <div id="poSignupBulkActions" class="raid-bulk-actions" hidden>
+                <strong id="poSignupBulkSelectionText">0 PO-Anmelder ausgewählt</strong>
+                <div class="raid-bulk-action-buttons">
+                  <button class="small-btn ghost" type="button" onclick="clearPoSignupSelection()">Auswahl aufheben</button>
+                  <button id="poSignupBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedPoSignups()">Ausgewählte löschen</button>
+                </div>
+              </div>
               <div class="po-signup-list-toolbar">
                 <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
                   <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
@@ -5176,6 +5194,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                       <th>Pins</th>
                       <th>Einträge</th>
                       <th>Aktion</th>
+                      <th class="raid-select-cell">
+                        <input id="selectAllVisiblePoSignups" class="raid-select-checkbox" type="checkbox" aria-label="Alle sichtbaren PO-Anmelder auswählen" onchange="toggleAllVisiblePoSignups(this.checked)">
+                      </th>
                     </tr>
                   </thead>
                   <tbody id="poSignupConfigRows"></tbody>
@@ -5686,6 +5707,7 @@ let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
+const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
@@ -7319,6 +7341,7 @@ let raidHelperAttendanceRaidKey = "bwl";
 let raidHelperP0ReleaseCache = null;
 let raidHelperEditingData = null;
 let raidHelperCurrentSelectedRaidId = "";
+const selectedRaidHelperIds = new Set();
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
   { key:"mc", label:"MC Teilnahmen", zone:"2000", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2000" },
@@ -7617,6 +7640,8 @@ function renderRaidHelperCurrentEvents(){
   const raids = raidHelperCurrentRaids();
   if(!raids.length){
     raidHelperCurrentSelectedRaidId = "";
+    selectedRaidHelperIds.clear();
+    updateRaidHelperBulkActions();
     box.innerHTML = '<div class="muted">Keine aktuellen Raidanmelder gefunden.</div>';
     return;
   }
@@ -7635,6 +7660,7 @@ function renderRaidHelperCurrentEvents(){
       </div>
     </div>
   `;
+  updateRaidHelperBulkActions();
   renderRaidHelperCurrentDetail(raidHelperCurrentSelectedRaidId);
 }
 
@@ -7642,6 +7668,7 @@ function renderRaidHelperCurrentRaidButton(raid){
   const key = getRaidKey(raid);
   const raidId = String(raid.raidId || raid.id || "");
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
+  const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.signups || 0);
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
@@ -7651,8 +7678,67 @@ function renderRaidHelperCurrentRaidButton(raid){
         <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · PIN ${escapeHtml(raid.playerPin || "-")}</span>
       </span>
       <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
+      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raidanmelder")} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="toggleRaidHelperSelection('${escapeAttr(raidId)}', this.checked)">
     </button>
   `;
+}
+
+function toggleRaidHelperSelection(raidId, checked){
+  const id = String(raidId || "");
+  if(!id) return;
+  if(checked) selectedRaidHelperIds.add(id);
+  else selectedRaidHelperIds.delete(id);
+  renderRaidHelperCurrentEvents();
+}
+
+function clearRaidHelperSelection(){
+  selectedRaidHelperIds.clear();
+  renderRaidHelperCurrentEvents();
+}
+
+function updateRaidHelperBulkActions(){
+  const bar = document.getElementById("raidHelperBulkActions");
+  const text = document.getElementById("raidHelperBulkSelectionText");
+  const count = selectedRaidHelperIds.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "Raidanmelder" : "Raidanmelder"} ausgewählt`;
+}
+
+async function deleteSelectedRaidHelpers(){
+  const ids = Array.from(selectedRaidHelperIds);
+  if(!ids.length) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm(`${ids.length} ausgewählte Raidanmelder wirklich löschen? Die Raids, Anmeldungen und verknüpften Einträge werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+  setStatus(`${ids.length} Raidanmelder werden gelöscht ...`, "");
+  for(const id of ids){
+    const raid = findRaidByAnyId(id) || {};
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      raidId:raid.raidId || id,
+      id:raid.id || ""
+    });
+    if(result.success && Number(result.deleted || 0) >= 1){
+      guildData.raids = (guildData.raids || []).filter(entry =>
+        String(entry.raidId || "") !== String(id) &&
+        String(entry.id || "") !== String(id) &&
+        String(entry.id || "") !== String(raid.id || "")
+      );
+    }
+    selectedRaidHelperIds.delete(id);
+  }
+  await loadOverview({ preserveStatus:true });
+  renderRaidHelperCurrentEvents();
+  setStatus("Ausgewählte Raidanmelder wurden gelöscht.", "good");
 }
 
 function selectRaidHelperCurrentEvent(raidId){
@@ -10402,6 +10488,10 @@ function renderPoSignupConfigRows(){
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
     .filter(row => poSignupConfigMatchesListFilter(row));
+  const visibleKeys = new Set(rows.map(row => String(row.postKey || "").trim()).filter(Boolean));
+  Array.from(selectedPoSignupPostKeys).forEach(key => {
+    if(!visibleKeys.has(key)) selectedPoSignupPostKeys.delete(key);
+  });
   if(!rows.length){
     const emptyText = poSignupListRaidFilter
       ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
@@ -10410,7 +10500,8 @@ function renderPoSignupConfigRows(){
         : poSignupListTierFilter === "40"
           ? "Keine 40er-PO-Anmelder gespeichert."
           : "Noch keine PO-Anmelder gespeichert.";
-    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">${escapeHtml(emptyText)}</td></tr>`;
+    updatePoSignupBulkActions(rows);
     updatePoSignupTransferState();
     return;
   }
@@ -10418,6 +10509,7 @@ function renderPoSignupConfigRows(){
     const isArchivedOnly = Boolean(row.archivedCount && !row.count);
     const visibleCount = Number(row.count || 0);
     const archivedCount = Number(row.archivedCount || 0);
+    const selected = selectedPoSignupPostKeys.has(row.postKey);
     return `
     <tr class="${(document.getElementById("poSignupPostKey")?.value.trim() || "") === row.postKey ? "selected-row" : ""}">
       <td>
@@ -10444,10 +10536,77 @@ function renderPoSignupConfigRows(){
             : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
         </div>
       </td>
+      <td class="raid-select-cell">
+        <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onchange="togglePoSignupSelection('${escapeAttr(row.postKey)}', this.checked)">
+      </td>
     </tr>
   `;
   }).join("");
+  updatePoSignupBulkActions(rows);
   updatePoSignupTransferState();
+}
+
+function togglePoSignupSelection(postKey, checked){
+  const key = String(postKey || "").trim();
+  if(!key) return;
+  if(checked) selectedPoSignupPostKeys.add(key);
+  else selectedPoSignupPostKeys.delete(key);
+  renderPoSignupConfigRows();
+}
+
+function toggleAllVisiblePoSignups(checked){
+  poPostConfigGroups()
+    .filter(isPoSignupConfigGroup)
+    .filter(row => poSignupConfigMatchesListFilter(row))
+    .forEach(row => {
+      const key = String(row.postKey || "").trim();
+      if(!key) return;
+      if(checked) selectedPoSignupPostKeys.add(key);
+      else selectedPoSignupPostKeys.delete(key);
+    });
+  renderPoSignupConfigRows();
+}
+
+function clearPoSignupSelection(){
+  selectedPoSignupPostKeys.clear();
+  renderPoSignupConfigRows();
+}
+
+function updatePoSignupBulkActions(rows = []){
+  const bar = document.getElementById("poSignupBulkActions");
+  const text = document.getElementById("poSignupBulkSelectionText");
+  const selectAll = document.getElementById("selectAllVisiblePoSignups");
+  const count = selectedPoSignupPostKeys.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
+  if(selectAll){
+    const keys = rows.map(row => String(row.postKey || "").trim()).filter(Boolean);
+    const selected = keys.filter(key => selectedPoSignupPostKeys.has(key)).length;
+    selectAll.checked = keys.length > 0 && selected === keys.length;
+    selectAll.indeterminate = selected > 0 && selected < keys.length;
+  }
+}
+
+async function deleteSelectedPoSignups(){
+  const keys = Array.from(selectedPoSignupPostKeys);
+  if(!keys.length) return;
+  const status = document.getElementById("poSignupStatus");
+  if(!confirm(`${keys.length} ausgewählte PO-Anmelder wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    if(status) status.textContent = "Löschen abgebrochen.";
+    return;
+  }
+  if(status) status.textContent = `${keys.length} PO-Anmelder werden gelöscht ...`;
+  for(const key of keys){
+    await deletePoPostEverywhere(key, { skipConfirm:true, quiet:true });
+    selectedPoSignupPostKeys.delete(key);
+  }
+  await loadPoPostStoredEntries();
+  if(status){
+    status.innerHTML = `<span class="good">Ausgewählte PO-Anmelder gelöscht.</span>`;
+    status.className = "status good";
+  }
 }
 
 const PO_SIGNUP_LIST_RAID_GROUPS = {
@@ -10893,19 +11052,19 @@ function deletePoPostConfig(){
   if(status) status.innerHTML = '<span class="good">Gespeicherter PO-Post entfernt.</span>';
 }
 
-async function deletePoPostEverywhere(postKey){
+async function deletePoPostEverywhere(postKey, options = {}){
   const key = String(postKey || "").trim();
   const status = document.getElementById("poPostStatus");
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!key){
-    if(status) status.textContent = "Post-ID fehlt.";
+    if(status && !options.quiet) status.textContent = "Post-ID fehlt.";
     return;
   }
-  if(!confirm(`PO-Post "${key}" wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)){
+  if(!options.skipConfirm && !confirm(`PO-Post "${key}" wirklich löschen? Die gespeicherten Railway-Einträge werden archiviert und der Bot räumt passende Discord-Sammelposts auf.`)){
     return;
   }
   writePoPostConfigs(readPoPostConfigs().filter(item => item.postKey !== key));
-  if(status) status.textContent = `PO-Post ${key} wird gelöscht ...`;
+  if(status && !options.quiet) status.textContent = `PO-Post ${key} wird gelöscht ...`;
   try{
     if(masterCode){
       const group = poPostConfigGroups().find(item => item.postKey === key) || {};
@@ -10919,15 +11078,15 @@ async function deletePoPostEverywhere(postKey){
         raid:group.raid || ""
       });
       if(!result.success) throw new Error(result.error || "PO-Post konnte nicht gelöscht werden.");
-      if(status) status.innerHTML = `<span class="good">PO-Post gelöscht. Railway-Einträge: ${escapeHtml(String(result.deleted || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
-    }else if(status){
+      if(status && !options.quiet) status.innerHTML = `<span class="good">PO-Post gelöscht. Railway-Einträge: ${escapeHtml(String(result.deleted || 0))}, Bot-Aufträge: ${escapeHtml(String(result.queued || 0))}.</span>`;
+    }else if(status && !options.quiet){
       status.innerHTML = '<span class="warn">Lokal entfernt. Für Railway/Discord bitte Master-Code eingeben und erneut löschen.</span>';
     }
   }catch(error){
-    if(status) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
+    if(status && !options.quiet) status.textContent = error.message || "PO-Post konnte nicht gelöscht werden.";
   }
   renderPoPostConfigSelect();
-  await loadPoPostStoredEntries();
+  if(!options.quiet) await loadPoPostStoredEntries();
 }
 
 async function archivePoSignupEverywhere(postKey){
