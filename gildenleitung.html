@@ -6180,28 +6180,12 @@ function renderLootLayoutPanel(){
         <div class="layout-box-head">
           <span class="layout-comic-arrow">↘</span>
           <div>
-            <h4>Inhalt der Raidregeln-Seite</h4>
-            <p>Eine Regel pro Zeile. Leere Felder bleiben auf der Raidregeln-Seite als leerer Bereich erhalten.</p>
+            <h4>Raidregeln bearbeiten</h4>
+            <p>Öffnet die echte Raidregeln-Seite im Bearbeitungsmodus – mit Regelkarten, Consumables und Verzauberungen.</p>
           </div>
         </div>
-        <div class="layout-form-grid">
-          ${Object.entries({
-            prio:"Allgemein: Prio & Loot", invite:"Allgemein: Invite & Anmeldung",
-            ersatzbank:"Allgemein: Ersatzbank", consumables:"Allgemein: Verbrauchsmaterial",
-            verzauberungen:"Allgemein: Ausrüstung & Verzauberungen", leistung:"Allgemein: Leistung & Klassen",
-            charakterwechsel:"Allgemein: Charakterwechsel", sonstiges:"Allgemein: Sonstiges"
-          }).map(([key,label]) => `
-            <div class="field">
-              <label>${escapeHtml(label)}</label>
-              <textarea id="layoutRaidRulesGeneral_${key}" rows="5">${escapeHtml(((layout.raidRules?.general || {})[key] || []).join("\n"))}</textarea>
-            </div>
-          `).join("")}
-          ${raidKeys.map(key => `
-            <div class="field">
-              <label>${escapeHtml(RAID_OPTIONS[key]?.name || key.toUpperCase())}: Raidregeln</label>
-              <textarea id="layoutRaidRulesRaid_${key}" rows="7">${escapeHtml(((layout.raidRules?.raids || []).find(raid => raid.id === key)?.rules || []).join("\n"))}</textarea>
-            </div>
-          `).join("")}
+        <div class="button-row">
+          <a class="small-btn primary" href="${escapeAttr(withGuildUrl("raidregeln.html") + "&edit=1")}">Raidregeln-Seite öffnen und bearbeiten</a>
         </div>
       </section>
 
@@ -6223,20 +6207,6 @@ async function saveLootLayoutPanel(){
   const nextLayout = {
     ...existingLayout,
     raidImages,
-    ...(CURRENT_GUILD_SLUG !== "lichtloot" || existingLayout.raidRules ? {raidRules:{
-      updatedAt:new Date().toISOString(),
-      source:"Gildenleitung",
-      general:Object.fromEntries(["prio","invite","ersatzbank","consumables","verzauberungen","leistung","charakterwechsel","sonstiges"].map(key => [
-        key, layoutFieldValue("layoutRaidRulesGeneral_" + key).split(/\r?\n/).map(value => value.trim()).filter(Boolean)
-      ])),
-      raids:raidKeys.map(key => ({
-        id:key,
-        name:RAID_OPTIONS[key]?.name || key.toUpperCase(),
-        rules:layoutFieldValue("layoutRaidRulesRaid_" + key).split(/\r?\n/).map(value => value.trim()).filter(Boolean)
-      })),
-      consumables:[],
-      enchantments:{classes:[],rows:[]}
-    }} : {}),
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId")
