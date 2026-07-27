@@ -13316,14 +13316,15 @@ async function saveRaidSignup({ guildId, query: params }) {
     ]
   );
 
+  let snapshot = null;
+  try {
+    snapshot = await getRaidHelper({ guildId, query: { raidId: raid.external_raid_id || raid.id, playerPin: raid.raid_pin || "" } });
+  } catch {
+    snapshot = null;
+  }
+
   let refreshQueued = false;
   if (raid.discord_channel_id && raid.discord_message_id) {
-    let snapshot = null;
-    try {
-      snapshot = await getRaidHelper({ guildId, query: { raidId: raid.external_raid_id || raid.id, playerPin: raid.raid_pin || "" } });
-    } catch {
-      snapshot = null;
-    }
     const refresh = await enqueueBotUpdate({
       guildId,
       type: "raid_announcement_refresh",
@@ -13349,13 +13350,16 @@ async function saveRaidSignup({ guildId, query: params }) {
 
   return {
     success: true,
-    raid: normalizeRaidRow(raid),
+    raid: snapshot?.raid || normalizeRaidRow(raid),
     signup: normalizeRaidSignupRow({
       ...result.rows[0],
       player_name: character.name,
       server: character.server,
       class_name: character.class_name
     }),
+    helper: snapshot || null,
+    signups: snapshot?.signups || [],
+    externalSignups: snapshot?.externalSignups || [],
     refreshQueued
   };
 }
