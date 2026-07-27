@@ -671,7 +671,7 @@ th{
 </head>
 <body>
 <div class="overlay">
-  <img src="images/content.png" alt="LichtLoot" class="logo-banner" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{className:'brand-fallback',textContent:'LichtLoot'}))">
+  <img id="guildLogo" src="images/content.png" alt="LichtLoot" class="logo-banner" onerror="this.replaceWith(Object.assign(document.createElement('strong'),{className:'brand-fallback',textContent:'Lootsystem'}))">
 
   <nav class="main-nav" aria-label="Navigation">
     <a class="nav-btn" href="start.html">Dashboard</a>
@@ -685,7 +685,7 @@ th{
   <main class="rules-shell">
     <section class="rules-head">
       <div>
-        <div class="rules-kicker">Lichtbringer Raids</div>
+        <div id="rulesKicker" class="rules-kicker">Gilden-Raids</div>
         <h1>Raidregeln</h1>
         <p>Regeln, Raid-Sonderfälle, Consumables und Verzauberungen kompakt an einem Ort.</p>
       </div>
@@ -712,6 +712,8 @@ th{
 </div>
 
 <script>
+const LICHTLOOT_API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
+const CURRENT_GUILD_SLUG=(new URLSearchParams(location.search).get("guild") || "lichtloot").trim().toLowerCase();
 let rulesData=null;
 let activeTab="raids";
 let activeRaid="bwl";
@@ -818,7 +820,7 @@ function groupRaidRules(raid){
 
 function getRaidSummary(raid){
   const groups=groupRaidRules(raid);
-  if(raid.id === "naxx"){
+  if(raid.id === "naxx" && CURRENT_GUILD_SLUG === "lichtloot"){
     groups.requirements=groups.requirements.filter(rule => !isNaxxRequirementLine(rule));
   }
   const pick = rules => rules.find(Boolean) || "Keine Angabe in den importierten Regeln.";
@@ -1031,14 +1033,14 @@ function renderRaids(){
     </button>
   `).join("");
   const groups=groupRaidRules(raid);
-  if(raid.id === "naxx"){
+  if(raid.id === "naxx" && CURRENT_GUILD_SLUG === "lichtloot"){
     groups.requirements=groups.requirements.filter(rule => !isNaxxRequirementLine(rule));
   }
   const summary=getRaidSummary(raid);
   const sections=[
     renderRaidSection(raidCategoryLabels.prio, groups.prio),
     renderRaidSection(raidCategoryLabels.loot, groups.loot),
-    raid.id === "naxx" ? renderNaxxRequirements() : "",
+    raid.id === "naxx" && CURRENT_GUILD_SLUG === "lichtloot" ? renderNaxxRequirements() : "",
     renderRaidSection(raidCategoryLabels.requirements, groups.requirements),
     renderRaidSection(raidCategoryLabels.flow, groups.flow),
     renderRaidSection(raidCategoryLabels.worldbuff, groups.worldbuff),
@@ -1180,9 +1182,53 @@ function renderActivePanel(){
 
 async function loadRules(){
   try{
-    const response=await fetch("data/raidregeln.json?v=20260625");
-    if(!response.ok) throw new Error("Regeln konnten nicht geladen werden.");
-    rulesData=await response.json();
+    document.querySelectorAll("a[href]").forEach(link => {
+      const url=new URL(link.getAttribute("href"),location.href);
+      if(url.origin === location.origin){
+        url.searchParams.set("guild",CURRENT_GUILD_SLUG);
+        link.href=url.href;
+      }
+    });
+    const guildResponse=await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(),{cache:"no-store"});
+    const guildData=await guildResponse.json();
+    const guild=(guildData.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    if(guild){
+      document.title=`Raidregeln - ${guild.name || CURRENT_GUILD_SLUG}`;
+      const logo=document.getElementById("guildLogo");
+      if(logo && guild.logoUrl) logo.src=new URL(guild.logoUrl,location.href).href;
+      if(guild.backgroundUrl) document.body.style.backgroundImage=`linear-gradient(rgba(8,17,31,.78),rgba(8,17,31,.94)),url('${String(guild.backgroundUrl).replace(/'/g,"%27")}')`;
+      if(guild.primaryColor) document.documentElement.style.setProperty("--gold",guild.primaryColor);
+      if(guild.accentColor) document.documentElement.style.setProperty("--blue",guild.accentColor);
+      document.getElementById("rulesKicker").textContent=`${guild.name || CURRENT_GUILD_SLUG} Raids`;
+      document.querySelectorAll("a[href]").forEach(link => {
+        const url=new URL(link.getAttribute("href"),location.href);
+        if(url.origin === location.origin){
+          url.searchParams.set("guild",CURRENT_GUILD_SLUG);
+          link.href=url.href;
+        }
+      });
+    }
+    const storedRules=guild?.layout?.raidRules;
+    if(storedRules && typeof storedRules === "object"){
+      rulesData=storedRules;
+    }else if(CURRENT_GUILD_SLUG !== "lichtloot"){
+      rulesData={
+        updatedAt:"",
+        source:"Gildenleitung",
+        general:{prio:[],invite:[],ersatzbank:[],consumables:[],verzauberungen:[],leistung:[],charakterwechsel:[],sonstiges:[]},
+        raids:[
+          {id:"mc",name:"Molten Core",rules:[]},{id:"bwl",name:"Blackwing Lair",rules:[]},
+          {id:"aq40",name:"AQ40",rules:[]},{id:"naxx",name:"Naxxramas",rules:[]},
+          {id:"zg",name:"Zul Gurub",rules:[]},{id:"aq20",name:"AQ20",rules:[]},{id:"ony",name:"Onyxia",rules:[]}
+        ],
+        consumables:[],
+        enchantments:{classes:[],rows:[]}
+      };
+    }else{
+      const response=await fetch("data/raidregeln.json?v=20260625");
+      if(!response.ok) throw new Error("Regeln konnten nicht geladen werden.");
+      rulesData=await response.json();
+    }
     renderRaids();
     const updated=rulesData.updatedAt ? new Date(rulesData.updatedAt).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}) : "unbekannt";
     document.getElementById("rulesFooter").textContent=`Quelle: ${rulesData.source || "CSV Export"} · Stand: ${updated}`;

@@ -129,6 +129,17 @@ button,input,select{font:inherit}
   display:none;
 }
 
+.side-select{
+  width:100%;
+  min-height:38px;
+  border:1px solid rgba(148,163,184,.28);
+  border-radius:8px;
+  padding:7px 10px;
+  color:#dbeafe;
+  background:rgba(15,23,42,.74);
+  font-weight:800;
+}
+
 body:not(.guild-lichtloot) .lichtloot-admin-only{
   display:none !important;
 }
@@ -1291,7 +1302,27 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 }
 
 .po-post-layout{
-  grid-template-columns:minmax(520px,1fr) minmax(360px,.62fr);
+  grid-template-columns:minmax(420px,.72fr) minmax(560px,1.28fr);
+}
+
+.po-post-layout .raid-helper-form{
+  gap:8px;
+}
+
+.po-post-layout .raid-helper-card{
+  padding:12px;
+}
+
+.po-post-layout .raid-helper-row{
+  gap:8px;
+}
+
+.po-post-layout #poSignupNote{
+  min-height:96px;
+}
+
+.po-post-layout .po-signup-action-guide{
+  gap:8px;
 }
 
 .po-post-list-block{
@@ -1572,6 +1603,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 .po-signup-action-main{--po-action-color:#22c55e;border-color:rgba(34,197,94,.42);background:linear-gradient(135deg,rgba(20,83,45,.34),rgba(15,23,42,.62))}
 .po-signup-action-transfer{--po-action-color:var(--gold);border-color:rgba(var(--gold-rgb),.42);background:linear-gradient(135deg,rgba(113,63,18,.34),rgba(15,23,42,.62))}
 .po-signup-action-helper{--po-action-color:var(--blue);border-color:rgba(var(--blue-rgb),.34)}
+.po-signup-action-schedule{--po-action-color:#f97316;border-color:rgba(249,115,22,.42);background:linear-gradient(135deg,rgba(124,45,18,.34),rgba(15,23,42,.62))}
 
 .po-signup-action-card strong{
   display:block;
@@ -1597,6 +1629,27 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .po-signup-action-card .btn{
   width:100%;
+}
+
+.po-signup-schedule-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+}
+
+.po-signup-schedule-grid label{
+  display:grid;
+  gap:3px;
+  color:var(--gold);
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+
+.po-signup-schedule-grid input,
+.po-signup-schedule-grid select{
+  min-height:30px;
+  padding:5px 7px;
 }
 
 .po-signup-discord-button{
@@ -3960,6 +4013,24 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   font-weight:800;
 }
 
+.po-signup-list-toolbar{
+  display:grid;
+  gap:8px;
+  margin:8px 0 10px;
+}
+
+.po-signup-tier-tabs,
+.po-signup-raid-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.po-signup-tier-tabs .small-btn,
+.po-signup-raid-tabs .small-btn{
+  min-height:34px;
+}
+
 .p0-points-input{
   width:76px;
   min-height:28px;
@@ -4289,7 +4360,14 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
       <div class="side-group collapsed" id="sideGroupBackup">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupBackup')"><span>Sicherung</span></button>
         <div class="side-group-items">
-          <button class="side-link" type="button" onclick="queueP0PlusBackup()" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
+          <select class="side-select" id="sideP0BackupRaid" onchange="syncP0PlusBackupRaid('sideP0BackupRaid')" aria-label="PO+ Raid auswählen">
+            <option value="all40">Alle 40er</option>
+            <option value="naxx">NAXX</option>
+            <option value="aq40">AQ40</option>
+            <option value="bwl">BWL</option>
+            <option value="mc">MC</option>
+          </select>
+          <button class="side-link" type="button" onclick="queueP0PlusBackup(null,'sideP0BackupRaid')" aria-label="PO+ Punkte sichern" title="PO+ Punkte sichern"><img class="side-icon-img" src="images/dashboard-icons/sicherung.jpg" alt=""><span class="side-label">PO+ Punkte</span></button>
           <button class="side-link" type="button" onclick="queueWorldbuffBackup()" aria-label="Worldbuffs sichern" title="Worldbuffs sichern"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
         </div>
       </div>
@@ -4827,28 +4905,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <input id="poSignupReviewRecipient" class="hidden" type="text" aria-hidden="true">
               <select id="poSignupTargetChannel" class="hidden" aria-hidden="true"></select>
             </div>
-            <div class="po-signup-item-tools">
-              <div class="po-signup-item-tool-row">
-                <div class="field">
-                  <label for="poSignupTemplateRaid">Raid-Vorlage</label>
-                  <select id="poSignupTemplateRaid">
-                    <option value="mc">MC</option>
-                    <option value="bwl">BWL</option>
-                    <option value="aq40">AQ40</option>
-                    <option value="naxx">Naxxramas</option>
-                    <option value="zg">ZG</option>
-                    <option value="aq20">AQ20</option>
-                    <option value="ony">Onyxia</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="poSignupLootSearch">Lootsuche aus LichtLoot</label>
-                  <input id="poSignupLootSearch" type="search" placeholder="Item suchen und hinzufügen..." oninput="renderPoSignupLootSearchResults()">
-                </div>
-                <button class="btn ghost" type="button" onclick="loadPoSignupTemplateItems()">Vorlage laden</button>
-              </div>
-              <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
-            </div>
+            <div id="poSignupLootSearchResults" class="po-signup-item-results hidden"></div>
             <textarea id="poSignupItems" class="hidden" aria-hidden="true"></textarea>
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
@@ -4873,14 +4930,33 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                   <button id="poSignupSyncPriosBtn" class="btn po-signup-transfer-button" type="button" onclick="syncCurrentPoSignupPrios()" disabled>Freigegebene Einträge übertragen</button>
                 </div>
               </div>
-              <div class="po-signup-action-card po-signup-action-helper">
+              <div class="po-signup-action-card po-signup-action-schedule">
                 <div>
-                  <strong>Hilfen</strong>
-                  <small>Itemliste aus bestehenden P0+-Einträgen laden oder den Entwurf zurücksetzen.</small>
+                  <strong>3. Automatischer Poster</strong>
+                  <small>Raid-Start und Zeitpunkt für den neuen Anmelder speichern.</small>
+                </div>
+                <div class="po-signup-schedule-grid">
+                  <label>Raid-Start
+                    <input id="poSignupScheduleRaidTime" type="time">
+                  </label>
+                  <label>Rhythmus
+                    <select id="poSignupScheduleInterval">
+                      <option value="1">jede Woche</option>
+                      <option value="2">alle 2 Wochen</option>
+                      <option value="3">alle 3 Wochen</option>
+                      <option value="4">alle 4 Wochen</option>
+                    </select>
+                  </label>
+                  <label>Post-Datum
+                    <input id="poSignupSchedulePostDate" type="date">
+                  </label>
+                  <label>Post-Uhrzeit
+                    <input id="poSignupSchedulePostTime" type="time">
+                  </label>
                 </div>
                 <div class="po-signup-action-buttons">
-                  <button class="btn ghost" type="button" onclick="fillPoSignupItemsFromP0Plus()">Itemliste laden</button>
-                  <button class="btn ghost" type="button" onclick="newPoSignupConfig()">Formular leeren</button>
+                  <button class="btn ghost" type="button" onclick="savePoSignupAutoPoster()">Automatik speichern</button>
+                  <button class="btn ghost" type="button" onclick="processPoSignupAutoPosters()">Jetzt aktualisieren</button>
                 </div>
               </div>
             </div>
@@ -4897,6 +4973,14 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <div class="section-head compact">
                 <div></div>
                 <button class="small-btn ghost" type="button" onclick="loadPoPostStoredEntries()">Neu laden</button>
+              </div>
+              <div class="po-signup-list-toolbar">
+                <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
+                  <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
+                  <button class="small-btn" type="button" data-po-signup-tier="20" onclick="setPoSignupListTierFilter('20')">20er</button>
+                  <button class="small-btn" type="button" data-po-signup-tier="40" onclick="setPoSignupListTierFilter('40')">40er</button>
+                </div>
+                <div id="poSignupRaidTabs" class="po-signup-raid-tabs" aria-label="PO-Anmelder Raid-Auswahl"></div>
               </div>
               <div class="table-wrap">
                 <table class="po-post-config-table">
@@ -5395,6 +5479,8 @@ let poPostRaidFilter = "";
 let poPostKeyFilter = "";
 let poPostStoredEntries = [];
 let selectedPoPostKey = "";
+let poSignupListTierFilter = "all";
+let poSignupListRaidFilter = "";
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
@@ -6090,6 +6176,35 @@ function renderLootLayoutPanel(){
         </div>
       </section>
 
+      <section class="layout-info-box blue">
+        <div class="layout-box-head">
+          <span class="layout-comic-arrow">↘</span>
+          <div>
+            <h4>Inhalt der Raidregeln-Seite</h4>
+            <p>Eine Regel pro Zeile. Leere Felder bleiben auf der Raidregeln-Seite als leerer Bereich erhalten.</p>
+          </div>
+        </div>
+        <div class="layout-form-grid">
+          ${Object.entries({
+            prio:"Allgemein: Prio & Loot", invite:"Allgemein: Invite & Anmeldung",
+            ersatzbank:"Allgemein: Ersatzbank", consumables:"Allgemein: Verbrauchsmaterial",
+            verzauberungen:"Allgemein: Ausrüstung & Verzauberungen", leistung:"Allgemein: Leistung & Klassen",
+            charakterwechsel:"Allgemein: Charakterwechsel", sonstiges:"Allgemein: Sonstiges"
+          }).map(([key,label]) => `
+            <div class="field">
+              <label>${escapeHtml(label)}</label>
+              <textarea id="layoutRaidRulesGeneral_${key}" rows="5">${escapeHtml(((layout.raidRules?.general || {})[key] || []).join("\n"))}</textarea>
+            </div>
+          `).join("")}
+          ${raidKeys.map(key => `
+            <div class="field">
+              <label>${escapeHtml(RAID_OPTIONS[key]?.name || key.toUpperCase())}: Raidregeln</label>
+              <textarea id="layoutRaidRulesRaid_${key}" rows="7">${escapeHtml(((layout.raidRules?.raids || []).find(raid => raid.id === key)?.rules || []).join("\n"))}</textarea>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+
       <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
   `;
@@ -6108,6 +6223,20 @@ async function saveLootLayoutPanel(){
   const nextLayout = {
     ...existingLayout,
     raidImages,
+    ...(CURRENT_GUILD_SLUG !== "lichtloot" || existingLayout.raidRules ? {raidRules:{
+      updatedAt:new Date().toISOString(),
+      source:"Gildenleitung",
+      general:Object.fromEntries(["prio","invite","ersatzbank","consumables","verzauberungen","leistung","charakterwechsel","sonstiges"].map(key => [
+        key, layoutFieldValue("layoutRaidRulesGeneral_" + key).split(/\r?\n/).map(value => value.trim()).filter(Boolean)
+      ])),
+      raids:raidKeys.map(key => ({
+        id:key,
+        name:RAID_OPTIONS[key]?.name || key.toUpperCase(),
+        rules:layoutFieldValue("layoutRaidRulesRaid_" + key).split(/\r?\n/).map(value => value.trim()).filter(Boolean)
+      })),
+      consumables:[],
+      enchantments:{classes:[],rows:[]}
+    }} : {}),
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId")
@@ -6199,6 +6328,15 @@ function hasP0PlusTransfer(raidOrResult){
     raidOrResult &&
     (raidOrResult.p0PlusTransferred || Number(raidOrResult.p0PlusTransferCount || 0) > 0)
   );
+}
+
+function needsP0PlusTransferBeforeArchive(raid){
+  return isAllowedP0RaidForRaid(raid) && !hasP0PlusTransfer(raid);
+}
+
+function p0PlusArchiveBlockMessage(raid){
+  const label = raid ? (raid.raidName || raid.raid || raid.raidId || "Raid") : "Raid";
+  return `${label} kann erst archiviert werden, wenn PO+ übertragen wurde.`;
 }
 
 function renderP0TransferState(raidOrResult, compact){
@@ -6366,7 +6504,7 @@ function renderDashboardCards(){
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
-              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
+              ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
           </div>
         </div>
@@ -6611,7 +6749,7 @@ function renderRaids(){
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
-            <button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>
+            ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
         </td>
@@ -7961,6 +8099,94 @@ async function saveRaidHelperSchedule(){
   }
 }
 
+function syncPoSignupScheduleDefaults(force=false){
+  const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
+  const raidDate = document.getElementById("poSignupDate")?.value || "";
+  const raidTime = document.getElementById("poSignupTime")?.value || "19:45";
+  const raidStart = document.getElementById("poSignupScheduleRaidTime");
+  const postDate = document.getElementById("poSignupSchedulePostDate");
+  const postTime = document.getElementById("poSignupSchedulePostTime");
+  if(raidStart && (force || !raidStart.value)) raidStart.value = raidTime;
+  if(postDate && (force || !postDate.value)) postDate.value = raidDate || todayIsoDate();
+  if(postTime && (force || !postTime.value)) postTime.value = "09:00";
+}
+
+function isoWeekdayFromDate(value){
+  const date = value ? new Date(value + "T00:00:00") : new Date();
+  if(Number.isNaN(date.getTime())) return "3";
+  return String(date.getDay() === 0 ? 7 : date.getDay());
+}
+
+async function savePoSignupAutoPoster(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("poSignupStatus");
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  const raidKey = document.getElementById("poSignupRaid")?.value || "aq40";
+  const defaults = raidHelperTemplateDefaults(raidKey);
+  const title = document.getElementById("poSignupTitle")?.value.trim() || defaults.title || `${RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase()} PO-Anmelder`;
+  const nextRaidDate = document.getElementById("poSignupDate")?.value || todayIsoDate();
+  const weekday = isoWeekdayFromDate(nextRaidDate);
+  const raidTime = document.getElementById("poSignupScheduleRaidTime")?.value || document.getElementById("poSignupTime")?.value || "19:45";
+  const intervalWeeks = document.getElementById("poSignupScheduleInterval")?.value || "1";
+  const nextPostDate = document.getElementById("poSignupSchedulePostDate")?.value || nextRaidDate;
+  const postTime = document.getElementById("poSignupSchedulePostTime")?.value || "09:00";
+  const discordChannelId = document.getElementById("poSignupSourceChannel")?.value || RAID_HELPER_CHANNEL_ID;
+  if(!nextRaidDate){
+    if(status) status.textContent = "Bitte Raid-Datum wählen.";
+    return;
+  }
+  if(status) status.textContent = "Automatischer Raid-Poster wird gespeichert ...";
+  try{
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperSchedule",
+      masterCode,
+      scheduleKey:`po-auto-${raidKey}-${weekday}-${raidTime}`.replace(/[^a-zA-Z0-9-]+/g, "-").toLowerCase(),
+      raid:raidKey,
+      title,
+      createdBy:"Gildenleitung",
+      weekday,
+      raidTime,
+      intervalWeeks,
+      nextRaidDate,
+      nextPostDate,
+      postTime,
+      discordChannelId,
+      maxPlayers:defaults.maxPlayers,
+      tankSlots:defaults.tankSlots,
+      healSlots:defaults.healSlots,
+      ddSlots:defaults.ddSlots,
+      description:document.getElementById("poSignupNote")?.value.trim() || defaults.description || "",
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+    });
+    if(!result.success) throw new Error(result.error || "Automatischer Poster konnte nicht gespeichert werden.");
+    await loadRaidHelperSchedules();
+    if(status) status.innerHTML = '<span class="good">Automatischer Raid-Poster gespeichert.</span>';
+  }catch(error){
+    if(status) status.textContent = error.message || "Automatischer Poster konnte nicht gespeichert werden.";
+  }
+}
+
+async function processPoSignupAutoPosters(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("poSignupStatus");
+  if(!masterCode){
+    if(status) status.textContent = "Bitte erst Master-Code eingeben.";
+    return;
+  }
+  if(status) status.textContent = "Automatische Raid-Poster werden aktualisiert ...";
+  try{
+    const result = await railwayWrite({ action:"guildProcessRaidHelperSchedules", masterCode, force:"true" });
+    if(!result.success) throw new Error(result.error || "Automatische Poster konnten nicht aktualisiert werden.");
+    await loadRaidHelperSchedules();
+    if(status) status.innerHTML = '<span class="good">Automatische Raid-Poster aktualisiert.</span>';
+  }catch(error){
+    if(status) status.textContent = error.message || "Automatische Poster konnten nicht aktualisiert werden.";
+  }
+}
+
 async function deleteRaidHelperSchedule(scheduleId){
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!masterCode){
@@ -8983,6 +9209,7 @@ function updatePoSignupDefaults(overwriteTitle=true, forceNewKey=false){
   if(title && (overwriteTitle || !title.value.trim())) title.value = `${label} PO-Anmelder`;
   if(key && (forceNewKey || !key.value.trim())) key.value = makePoSignupKey(raid, raidDate, raidTime);
   if(forceNewKey) syncPoSignupTemplateRaid(true);
+  syncPoSignupScheduleDefaults(forceNewKey);
   updatePoSignupPreview();
 }
 
@@ -9437,6 +9664,15 @@ function initPoPostPanel(){
   renderPoPostChannelSelects();
   loadPoPostStoredEntries();
   updatePoSignupDefaults(false);
+  syncPoSignupScheduleDefaults();
+  ["poSignupDate","poSignupTime"].forEach(id => {
+    const field = document.getElementById(id);
+    if(field && !field.dataset.poSignupScheduleBound){
+      field.addEventListener("change", () => syncPoSignupScheduleDefaults(true));
+      field.addEventListener("input", () => syncPoSignupScheduleDefaults(true));
+      field.dataset.poSignupScheduleBound = "1";
+    }
+  });
   ["poSignupSourceChannel","poSignupTargetChannel","poSignupRaid","poSignupTitle","poSignupPostKey","poSignupDate","poSignupTime","poSignupReviewRecipient","poSignupItems","poSignupNote"].forEach(id => {
     const field = document.getElementById(id);
     if(field && !field.dataset.poSignupBound){
@@ -9683,11 +9919,20 @@ async function runPoPostRowAction(select, postKey){
 function renderPoSignupConfigRows(){
   const tbody = document.getElementById("poSignupConfigRows");
   if(!tbody) return;
+  renderPoSignupListFilters();
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
-    .filter(row => row.count || !row.archivedCount);
+    .filter(row => row.count || !row.archivedCount)
+    .filter(row => poSignupConfigMatchesListFilter(row));
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="6" class="muted">Noch keine PO-Anmelder gespeichert.</td></tr>';
+    const emptyText = poSignupListRaidFilter
+      ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
+      : poSignupListTierFilter === "20"
+        ? "Keine 20er-PO-Anmelder gespeichert."
+        : poSignupListTierFilter === "40"
+          ? "Keine 40er-PO-Anmelder gespeichert."
+          : "Noch keine PO-Anmelder gespeichert.";
+    tbody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(emptyText)}</td></tr>`;
     updatePoSignupTransferState();
     return;
   }
@@ -9717,6 +9962,69 @@ function renderPoSignupConfigRows(){
     </tr>
   `).join("");
   updatePoSignupTransferState();
+}
+
+const PO_SIGNUP_LIST_RAID_GROUPS = {
+  "20":["aq20","zg"],
+  "40":["naxx","aq40","bwl","mc","ony"]
+};
+
+function normalizePoSignupRaidKey(value){
+  const raid = String(value || "").trim().toLowerCase();
+  if(raid === "zul gurub" || raid === "zulgurub") return "zg";
+  if(raid === "naxxramas") return "naxx";
+  if(raid === "molten core") return "mc";
+  if(raid === "blackwing lair") return "bwl";
+  if(raid === "ahnqiraj 20" || raid === "aq20") return "aq20";
+  if(raid === "ahnqiraj 40" || raid === "aq40") return "aq40";
+  if(raid === "onyxia") return "ony";
+  return raid;
+}
+
+function poSignupRaidLabel(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  return RAID_OPTIONS[key]?.short || String(raid || "").toUpperCase();
+}
+
+function poSignupListRaidKeys(){
+  if(poSignupListTierFilter === "20" || poSignupListTierFilter === "40"){
+    return PO_SIGNUP_LIST_RAID_GROUPS[poSignupListTierFilter];
+  }
+  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
+}
+
+function poSignupConfigMatchesListFilter(row){
+  const raid = normalizePoSignupRaidKey(row.raid);
+  const allowed = poSignupListRaidKeys();
+  if(poSignupListRaidFilter) return raid === poSignupListRaidFilter;
+  return poSignupListTierFilter === "all" || allowed.includes(raid);
+}
+
+function setPoSignupListTierFilter(tier){
+  poSignupListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
+  poSignupListRaidFilter = "";
+  renderPoSignupConfigRows();
+}
+
+function setPoSignupListRaidFilter(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  poSignupListRaidFilter = poSignupListRaidFilter === key ? "" : key;
+  renderPoSignupConfigRows();
+}
+
+function renderPoSignupListFilters(){
+  document.querySelectorAll("[data-po-signup-tier]").forEach(button => {
+    button.classList.toggle("primary", button.dataset.poSignupTier === poSignupListTierFilter);
+    button.classList.toggle("ghost", button.dataset.poSignupTier !== poSignupListTierFilter);
+  });
+  const box = document.getElementById("poSignupRaidTabs");
+  if(!box) return;
+  const raidKeys = poSignupListRaidKeys();
+  const allLabel = poSignupListTierFilter === "20" ? "Alle 20er" : poSignupListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
+  box.innerHTML = [
+    `<button class="small-btn ${poSignupListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setPoSignupListRaidFilter('')">${allLabel}</button>`,
+    ...raidKeys.map(raid => `<button class="small-btn ${poSignupListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoSignupListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
+  ].join("");
 }
 
 async function runPoSignupRowAction(select, postKey){
@@ -10419,6 +10727,14 @@ function raidHelperValue(id){
 
 function defaultRaidHelperImageUrl(raidKey){
   const key = RAID_OPTIONS[String(raidKey || "").trim().toLowerCase()] ? String(raidKey || "").trim().toLowerCase() : "zg";
+  const guildImage = String(RAID_IMAGES[key] || "").trim();
+  if(guildImage){
+    try{
+      return new URL(guildImage, location.href).href;
+    }catch(_error){
+      return guildImage;
+    }
+  }
   return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
@@ -11178,6 +11494,10 @@ async function deleteRaidFromDashboard(raidId){
     String(entry.raidId || "") === String(raidId) ||
     String(entry.id || "") === String(raidId)
   );
+  if(needsP0PlusTransferBeforeArchive(raid)){
+    setStatus(p0PlusArchiveBlockMessage(raid), "bad");
+    return;
+  }
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
   if(!confirm(`${label} archivieren? Der Raid bleibt gespeichert und die Prios bleiben erhalten.`)) return;
 
@@ -11262,6 +11582,12 @@ async function setRaidStatusFromPage(raidId, status){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
+  const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
+  const willArchive = normalize(status) === "archiviert" || normalize(status) === "archive";
+  if(willArchive && needsP0PlusTransferBeforeArchive(raid)){
+    setStatus(p0PlusArchiveBlockMessage(raid), "bad");
+    return;
+  }
 
   try{
     const result = await railwayApi({ action:"guildSetRaidStatus", masterCode, raidId, status });
@@ -11270,7 +11596,6 @@ async function setRaidStatusFromPage(raidId, status){
       return;
     }
 
-    const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
     if(raid) raid.status = status;
     renderSummary();
     renderDashboardCards();
@@ -11549,15 +11874,44 @@ async function transferP0PlusFromGuild(raidId){
   }
 }
 
-async function queueP0PlusBackup(raidOverride){
+const P0PLUS_BACKUP_RAID_LABELS = {
+  all40:"alle 40er-Raids",
+  naxx:"NAXX",
+  aq40:"AQ40",
+  bwl:"BWL",
+  mc:"MC"
+};
+
+function normalizeP0PlusBackupRaid(value){
+  const raid = String(value || "all40").trim().toLowerCase();
+  if(raid === "all" || raid === "40") return "all40";
+  return P0PLUS_BACKUP_RAID_LABELS[raid] ? raid : "all40";
+}
+
+function syncP0PlusBackupRaid(sourceId){
+  const source = document.getElementById(sourceId);
+  const raid = normalizeP0PlusBackupRaid(source?.value || "all40");
+  ["sideP0BackupRaid","p0BackupRaid"].forEach(id => {
+    const select = document.getElementById(id);
+    if(select && select.value !== raid) select.value = raid;
+  });
+  return raid;
+}
+
+function selectedP0PlusBackupRaid(raidOverride, sourceId){
+  if(raidOverride) return normalizeP0PlusBackupRaid(raidOverride);
+  return syncP0PlusBackupRaid(sourceId || (document.getElementById("p0BackupRaid") ? "p0BackupRaid" : "sideP0BackupRaid"));
+}
+
+async function queueP0PlusBackup(raidOverride, sourceId){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
 
-  const raid = raidOverride || document.getElementById("p0BackupRaid")?.value || "all40";
-  const label = raid === "all40" ? "alle 40er-Raids" : raid.toUpperCase();
+  const raid = selectedP0PlusBackupRaid(raidOverride, sourceId);
+  const label = P0PLUS_BACKUP_RAID_LABELS[raid] || raid.toUpperCase();
   const ok = confirm(`PO+ Sicherung für ${label} in den Lichtbringer-Backup-Channel posten?`);
   if(!ok) return;
 
@@ -11913,14 +12267,14 @@ function renderP0PlusModalContent(){
         ${raids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(raid)}</option>`).join("")}
       </select>
       <input id="p0Search" type="search" placeholder="Spieler oder Item suchen..." oninput="renderP0PlusRows()">
-      <select id="p0BackupRaid">
+      <select id="p0BackupRaid" onchange="syncP0PlusBackupRaid('p0BackupRaid')">
         <option value="all40">Alle 40er</option>
         <option value="naxx">NAXX</option>
         <option value="aq40">AQ40</option>
         <option value="bwl">BWL</option>
         <option value="mc">MC</option>
       </select>
-      <button class="small-btn good" type="button" onclick="queueP0PlusBackup()">PO+ Sicherung posten</button>
+      <button class="small-btn good" type="button" onclick="queueP0PlusBackup(null,'p0BackupRaid')">PO+ Sicherung posten</button>
       <button class="small-btn ghost" type="button" onclick="loadP0PlusPanel()">Neu laden</button>
     </div>
     <div class="table-wrap">
