@@ -13055,6 +13055,7 @@ async function createRaidRecord({ guildId, query: params }) {
              excluded.name
            ),
            external_raid_id = coalesce(excluded.external_raid_id, raids.external_raid_id),
+           raid_date = coalesce(excluded.raid_date, raids.raid_date),
            raid_pin = coalesce(excluded.raid_pin, raids.raid_pin),
            lead_pin = coalesce(excluded.lead_pin, raids.lead_pin),
            raid_time = coalesce(excluded.raid_time, raids.raid_time),
