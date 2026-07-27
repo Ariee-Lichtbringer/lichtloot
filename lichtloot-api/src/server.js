@@ -2131,6 +2131,7 @@ async function ensureRaidSchema() {
        raid_date date,
        raid_time text,
        player_name text not null,
+       player_pin text,
        class_name text,
        role text not null default 'flex',
        status text not null default 'signed',
@@ -2159,6 +2160,7 @@ async function ensureRaidSchema() {
     `create index if not exists idx_raid_external_signups_guild_raid
        on raid_external_signups(guild_id, raid_id, raid_date)`
   );
+  await query(`alter table raid_external_signups add column if not exists player_pin text`);
   await query(
     `create table if not exists p0_discord_signups (
        id uuid primary key default gen_random_uuid(),
@@ -13640,6 +13642,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
            discord_channel_id = coalesce(nullif($12, ''), discord_channel_id),
            discord_message_id = coalesce(nullif($13, ''), discord_message_id),
            note = $14,
+           player_pin = coalesce(nullif($15, ''), player_pin),
            updated_at = now()
        where guild_id = $1
          and raid_id = $2
@@ -13659,7 +13662,8 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
         clean(row.discordName || row.discord),
         clean(params.discordChannelId || row.discordChannelId),
         clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
-        clean(row.note || row.comment)
+        clean(row.note || row.comment),
+        clean(row.playerPin || row.pin || row.spielerLogin)
       ]
     );
 
@@ -13668,9 +13672,9 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
         `insert into raid_external_signups (
          raid_id, guild_id, raid_type, raid_date, raid_time, player_name, class_name,
          role, status, source, discord_user_id, discord_name, discord_channel_id,
-         discord_message_id, note
+         discord_message_id, note, player_pin
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
         [
           raid.id,
           guildId,
@@ -13686,7 +13690,8 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           clean(row.discordName || row.discord),
           clean(params.discordChannelId || row.discordChannelId),
           clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
-          clean(row.note || row.comment)
+          clean(row.note || row.comment),
+          clean(row.playerPin || row.pin || row.spielerLogin)
         ]
       );
     }
