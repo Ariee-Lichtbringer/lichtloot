@@ -3500,23 +3500,38 @@ button.log-export-note:hover{
   font-size:12px;
 }
 
+.raid-bulk-action-buttons{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
 .raid-select-cell{
   width:42px;
   min-width:42px;
   text-align:center;
   vertical-align:middle;
+  position:sticky;
+  left:0;
+  z-index:2;
+  background:rgba(2,6,23,.94);
 }
 
 .raid-select-checkbox{
-  width:17px;
-  height:17px;
+  width:20px;
+  height:20px;
   margin:0;
   cursor:pointer;
   accent-color:#ef4444;
 }
 
 tr.raid-row-selected td{
-  background:rgba(127,29,29,.12);
+  background:rgba(127,29,29,.18);
+}
+
+tr.raid-row-selected td:first-child{
+  box-shadow:inset 3px 0 0 #ef4444;
 }
 
 table{
@@ -5256,7 +5271,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
       </div>
       <div id="raidBulkActions" class="raid-bulk-actions" hidden>
         <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
-        <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
+        <div class="raid-bulk-action-buttons">
+          <button class="small-btn ghost" type="button" onclick="clearRaidSelection()">Auswahl aufheben</button>
+          <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
@@ -6839,6 +6857,11 @@ function toggleAllVisibleRaids(checked){
     if(checked) selectedRaidIds.add(raidId);
     else selectedRaidIds.delete(raidId);
   });
+  renderRaids();
+}
+
+function clearRaidSelection(){
+  selectedRaidIds.clear();
   renderRaids();
 }
 
