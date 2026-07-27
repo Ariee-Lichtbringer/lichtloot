@@ -10509,6 +10509,7 @@ function renderPoSignupConfigRows(){
   renderPoSignupListFilters();
   const rows = poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
+    .filter(row => !(row.archivedCount && !row.count))
     .filter(row => poSignupConfigMatchesListFilter(row));
   const visibleKeys = new Set(rows.map(row => String(row.postKey || "").trim()).filter(Boolean));
   Array.from(selectedPoSignupPostKeys).forEach(key => {
@@ -10571,6 +10572,7 @@ function renderPoSignupConfigRows(){
 function raidHelperPoSignupRows(){
   return poPostConfigGroups()
     .filter(isPoSignupConfigGroup)
+    .filter(row => !(row.archivedCount && !row.count))
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
