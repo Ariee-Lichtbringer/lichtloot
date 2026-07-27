@@ -5557,7 +5557,10 @@ const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
 let poSignupGeneratedLichtlootRaid = null;
-const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","zg-mittwoch","zg-prime","zg-late","aq20","ony"];
+const NACHTLOOT_SPECIAL_RAIDS = ["zg-mittwoch","zg-prime","zg-late"];
+const PO_SIGNUP_TEMPLATE_RAIDS = ["mc","bwl","aq40","naxx","zg","aq20","ony"].concat(
+  CURRENT_GUILD_SLUG === "nachtloot" ? NACHTLOOT_SPECIAL_RAIDS : []
+);
 const poSignupLootSearchCache = {};
 const poSignupLootItemDataCache = {};
 const poSignupLootSearchLoading = {};
@@ -5750,6 +5753,9 @@ let raidHelperDeepLinkHandled = false;
 document.addEventListener("DOMContentLoaded", async () => {
   await fetchCurrentGuildInfo();
   applyGuildBrand();
+  if(CURRENT_GUILD_SLUG !== "nachtloot"){
+    document.querySelectorAll('option[value="zg-mittwoch"],option[value="zg-prime"],option[value="zg-late"]').forEach(option => option.remove());
+  }
   const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
   if (saved) document.getElementById("masterCode").value = saved;
   const raidDateSearch = document.getElementById("raidDateSearch");

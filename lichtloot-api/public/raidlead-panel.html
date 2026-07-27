@@ -1530,8 +1530,6 @@ function guildUrl(path){
   return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
 
-const MASTER_CODE = "Lichtbringer-Master";
-
 const raids = {
   mc:{name:"Molten Core",short:"MC",role:"mc-bwl",lootPage:"loot/mc-loot.html",overviewPage:"molten-core.html"},
   bwl:{name:"Blackwing Lair",short:"BWL",role:"mc-bwl",lootPage:"loot/bwl-loot.html",overviewPage:"bwl.html"},
@@ -3174,10 +3172,7 @@ async function transferP0PlusPoints(){
 
   const masterCode = prompt("Master-Code eingeben:");
 
-  if(masterCode !== MASTER_CODE){
-    alert("Falscher Master-Code.");
-    return;
-  }
+  if(!masterCode) return;
 
   const p0Count = currentPrios.filter(entry =>
     isActiveP0Entry(entry) &&
@@ -3244,10 +3239,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
 
   const masterCode = prompt("Master-Code eingeben:");
 
-  if(masterCode !== MASTER_CODE){
-    alert("Falscher Master-Code.");
-    return;
-  }
+  if(!masterCode) return;
 
   const confirmed = confirm(
     "P0+ Punkte löschen?\n\n" +
