@@ -2086,6 +2086,25 @@ function requireMasterCode(value) {
   }
 }
 
+function requireMasterCodeForGuild(guild, value) {
+  const code = clean(value);
+  const guildId = String(guild?.id || "");
+  const guildSlug = clean(guild?.slug).toLowerCase();
+  const guildCode = clean(masterCodeOverrides.get(guildId));
+  const isDefaultGuild =
+    guildSlug === clean(defaultGuildSlug).toLowerCase()
+    || guildSlug === "lichtloot";
+  const allowedCodes = new Set(
+    [guildCode, isDefaultGuild ? clean(masterCode) : ""].filter(Boolean)
+  );
+
+  if (!code || !allowedCodes.has(code)) {
+    const error = new Error("Dieser Master-Code gehört nicht zu dieser Gilde.");
+    error.statusCode = 403;
+    throw error;
+  }
+}
+
 function requireMasterOrQueueToken(params = {}) {
   const code = clean(params.masterCode);
   if (code === masterCode || Array.from(masterCodeOverrides.values()).includes(code)) return;
@@ -17758,6 +17777,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+    if (clean(req.query.masterCode)) {
+      requireMasterCodeForGuild(guild, req.query.masterCode);
+    }
 
     if (action === "getCharactersByPin") {
       const characters = await getCharactersByPin(guild.id, req.query.pin);
@@ -18518,6 +18540,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
+    if (clean(postParams.masterCode)) {
+      requireMasterCodeForGuild(guild, postParams.masterCode);
+    }
 
     if (action === "lichtbotSaveDiscordChannels") {
       const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
