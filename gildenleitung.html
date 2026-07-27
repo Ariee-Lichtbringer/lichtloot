@@ -3481,6 +3481,44 @@ button.log-export-note:hover{
   background:rgba(2,6,23,.24);
 }
 
+.raid-bulk-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 8px;
+  padding:8px 10px;
+  border:1px solid rgba(248,113,113,.28);
+  border-radius:8px;
+  background:rgba(127,29,29,.12);
+}
+
+.raid-bulk-actions[hidden]{display:none}
+
+.raid-bulk-actions strong{
+  color:#fecaca;
+  font-size:12px;
+}
+
+.raid-select-cell{
+  width:42px;
+  min-width:42px;
+  text-align:center;
+  vertical-align:middle;
+}
+
+.raid-select-checkbox{
+  width:17px;
+  height:17px;
+  margin:0;
+  cursor:pointer;
+  accent-color:#ef4444;
+}
+
+tr.raid-row-selected td{
+  background:rgba(127,29,29,.12);
+}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -5216,10 +5254,17 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
       </div>
+      <div id="raidBulkActions" class="raid-bulk-actions" hidden>
+        <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
+        <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
+              <th class="raid-select-cell">
+                <input id="selectAllVisibleRaids" class="raid-select-checkbox" type="checkbox" aria-label="Alle sichtbaren Raids auswählen" onchange="toggleAllVisibleRaids(this.checked)">
+              </th>
               <th>Raid</th>
               <th>Datum</th>
               <th>Prio-PIN</th>
@@ -5230,7 +5275,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
             </tr>
           </thead>
           <tbody id="raidRows">
-            <tr><td colspan="6" class="muted">Noch keine Daten geladen.</td></tr>
+            <tr><td colspan="8" class="muted">Noch keine Daten geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -5514,6 +5559,8 @@ const RAID_IMAGES = {
 };
 
 let guildData = { raids: [], players: [] };
+const selectedRaidIds = new Set();
+let visibleRaidIds = [];
 let p0PlusEntries = [];
 let p0ReviewEntries = [];
 let poPostEntries = [];
@@ -6727,15 +6774,27 @@ function renderRaids(){
     return right.localeCompare(left);
   }).slice(0, 50);
 
+  const existingRaidIds = new Set((guildData.raids || []).map(raid => String(raid.raidId || raid.id || "")));
+  Array.from(selectedRaidIds).forEach(raidId => {
+    if(!existingRaidIds.has(raidId)) selectedRaidIds.delete(raidId);
+  });
+  visibleRaidIds = raids.map(raid => String(raid.raidId || raid.id || "")).filter(Boolean);
+
   if(!raids.length){
-    tbody.innerHTML = '<tr><td colspan="7" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="muted">Keine passenden Raids gefunden.</td></tr>';
+    updateRaidBulkActions();
     return;
   }
 
   tbody.innerHTML = raids.map(raid => {
     const status = raid.status || "geschlossen";
+    const selectionId = String(raid.raidId || raid.id || "");
+    const isSelected = selectedRaidIds.has(selectionId);
     return `
-      <tr>
+      <tr class="${isSelected ? "raid-row-selected" : ""}">
+        <td class="raid-select-cell">
+          <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raid")} auswählen" ${isSelected ? "checked" : ""} onchange="toggleRaidSelection('${escapeAttr(selectionId)}', this.checked)">
+        </td>
         <td>
           <div class="raid-title">
             <strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong>
@@ -6764,6 +6823,111 @@ function renderRaids(){
       </tr>
     `;
   }).join("");
+  updateRaidBulkActions();
+}
+
+function toggleRaidSelection(raidId, checked){
+  const id = String(raidId || "");
+  if(!id) return;
+  if(checked) selectedRaidIds.add(id);
+  else selectedRaidIds.delete(id);
+  renderRaids();
+}
+
+function toggleAllVisibleRaids(checked){
+  visibleRaidIds.forEach(raidId => {
+    if(checked) selectedRaidIds.add(raidId);
+    else selectedRaidIds.delete(raidId);
+  });
+  renderRaids();
+}
+
+function updateRaidBulkActions(){
+  const bar = document.getElementById("raidBulkActions");
+  const text = document.getElementById("raidBulkSelectionText");
+  const selectAll = document.getElementById("selectAllVisibleRaids");
+  const count = selectedRaidIds.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} ${count === 1 ? "Raid" : "Raids"} ausgewählt`;
+  if(selectAll){
+    const visibleSelected = visibleRaidIds.filter(raidId => selectedRaidIds.has(raidId)).length;
+    selectAll.checked = visibleRaidIds.length > 0 && visibleSelected === visibleRaidIds.length;
+    selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visibleRaidIds.length;
+  }
+}
+
+async function deleteSelectedRaids(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+
+  const raids = (guildData.raids || []).filter(raid =>
+    selectedRaidIds.has(String(raid.raidId || raid.id || ""))
+  );
+  if(!raids.length){
+    selectedRaidIds.clear();
+    renderRaids();
+    setStatus("Bitte zuerst mindestens einen Raid auswählen.", "bad");
+    return;
+  }
+
+  const count = raids.length;
+  if(!confirm(`${count} ${count === 1 ? "ausgewählten Raid" : "ausgewählte Raids"} wirklich endgültig löschen? Prios, Anmeldungen und verknüpfte Einträge werden entfernt.`)) return;
+  const confirmation = prompt('Zum endgültigen Löschen bitte "LÖSCHEN" eingeben.', "");
+  if(confirmation !== "LÖSCHEN"){
+    setStatus("Löschen abgebrochen.", "bad");
+    return;
+  }
+
+  const button = document.getElementById("raidBulkDeleteButton");
+  if(button){
+    button.disabled = true;
+    button.textContent = "Lösche ...";
+  }
+  setStatus(`${count} ${count === 1 ? "Raid wird" : "Raids werden"} gelöscht ...`, "");
+
+  let deleted = 0;
+  const failed = [];
+  for(const raid of raids){
+    try{
+      const result = await railwayApi({
+        action:"guildDeleteRaid",
+        masterCode,
+        raidId:raid.raidId || raid.id || "",
+        id:raid.id || ""
+      });
+      if(!result.success || Number(result.deleted || 0) < 1){
+        failed.push(raid.raidName || raid.raid || raid.raidId || raid.id);
+        continue;
+      }
+      deleted += 1;
+      selectedRaidIds.delete(String(raid.raidId || raid.id || ""));
+      guildData.raids = (guildData.raids || []).filter(entry =>
+        String(entry.raidId || entry.id || "") !== String(raid.raidId || raid.id || "")
+      );
+    }catch(error){
+      failed.push(raid.raidName || raid.raid || raid.raidId || raid.id);
+    }
+  }
+
+  if(button){
+    button.disabled = false;
+    button.textContent = "Ausgewählte löschen";
+  }
+  renderSummary();
+  renderDashboardCards();
+  loadDashboardRaidStats();
+  renderRaids();
+  renderRaidHelperCurrentEvents();
+  renderRaidHelperPastEvents();
+  if(failed.length){
+    setStatus(`${deleted} gelöscht. ${failed.length} konnten nicht gelöscht werden: ${failed.join(", ")}.`, "bad");
+  }else{
+    setStatus(`${deleted} ${deleted === 1 ? "Raid wurde" : "Raids wurden"} endgültig gelöscht.`, "good");
+  }
+  await loadOverview({ preserveStatus:true });
 }
 
 function renderPlayers(){
