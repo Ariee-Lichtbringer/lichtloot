@@ -5369,6 +5369,14 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   const channelId = clean(params.channelId || params.discordChannelId);
+  let followupPoPost = params.followupPoPost || null;
+  if (typeof followupPoPost === "string") {
+    try {
+      followupPoPost = JSON.parse(followupPoPost);
+    } catch {
+      followupPoPost = null;
+    }
+  }
   let snapshot = null;
   try {
     snapshot = await getRaidHelper({ guildId, query: { ...params, raidId, playerPin: params.playerPin || params.prioPin || params.raidPin || "" } });
@@ -5404,6 +5412,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
+        followupPoPost: followupPoPost && typeof followupPoPost === "object" ? followupPoPost : null,
         source: "gildenleitung"
       }
     }
@@ -5495,7 +5504,7 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 }
 
 async function queuePoPost({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   const requestedSourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const requestedTargetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || requestedSourceChannelId;
