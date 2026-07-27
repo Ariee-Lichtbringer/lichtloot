@@ -7336,12 +7336,13 @@ async function findCharacterForPin(guildId, pin, charName, server) {
 async function upsertItem(client, raidType, itemName, itemGameId = "") {
   const name = clean(itemName);
   const itemId = clean(itemGameId);
-  const itemRaidType = lootSourceRaidType(raidType);
+  const itemRaidType = normalizeRaidType(raidType);
+  const sourceRaidType = lootSourceRaidType(itemRaidType);
   if (!name || name === "-") return null;
 
   if (itemId) {
     const existingById = await client.query(
-      `select id, raid_type, item_id, name, slot, boss
+      `select *
        from items
        where lower(raid_type) = any($1)
          and item_id = $2
@@ -7350,11 +7351,26 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
       [raidTypeSearchValues(itemRaidType), itemId]
     );
     if (existingById.rows.length) return existingById.rows[0];
-    return upsertLootItemRecord(client, { raid: itemRaidType, name, itemId });
+    const sourceById = await client.query(
+      `select *
+       from items
+       where lower(raid_type) = any($1)
+         and item_id = $2
+       order by created_at asc
+       limit 1`,
+      [raidTypeSearchValues(sourceRaidType), itemId]
+    );
+    return upsertLootItemRecord(client, {
+      ...(sourceById.rows[0] || {}),
+      raid: itemRaidType,
+      raid_type: itemRaidType,
+      name,
+      itemId
+    });
   }
 
   const existing = await client.query(
-    `select id, raid_type, item_id, name, slot, boss
+    `select *
      from items
      where lower(raid_type) = any($1)
        and lower(name) = lower($2)
@@ -7366,8 +7382,16 @@ async function upsertItem(client, raidType, itemName, itemGameId = "") {
   );
   if (existing.rows.length) return existing.rows[0];
 
-  const matchingItem = await findExistingItemByLookupName(client, itemRaidType, name);
-  if (matchingItem) return matchingItem;
+  const sourceItem = await findExistingItemByLookupName(client, sourceRaidType, name);
+  if (sourceItem) {
+    const sourceDetails = await client.query(`select * from items where id = $1 limit 1`, [sourceItem.id]);
+    return upsertLootItemRecord(client, {
+      ...(sourceDetails.rows[0] || sourceItem),
+      raid: itemRaidType,
+      raid_type: itemRaidType,
+      name
+    });
+  }
 
   const error = new Error(`Item "${name}" wurde nicht in der ${displayRaidName(raidType)}-Datenbank gefunden.`);
   error.statusCode = 400;
@@ -15883,6 +15907,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
        c.name as player,
        c.server,
        i.id as item_id,
+       i.item_id as item_game_id,
        i.name as item_name,
        pr.comment
      from prios pr
@@ -15922,9 +15947,16 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     await client.query("begin");
     const oldPointTotals = new Map();
     for (const row of dedupedCandidates) {
+      const targetItem = await upsertItem(
+        client,
+        raid.raid_type,
+        row.item_name,
+        row.item_game_id
+      );
+      row.target_item_id = targetItem?.id || row.item_id;
       oldPointTotals.set(
-        `${row.character_id}:${row.item_id}`,
-        await getP0PlusPointTotal(client, guildId, row.character_id, row.item_id)
+        `${row.character_id}:${row.target_item_id}`,
+        await getP0PlusPointTotal(client, guildId, row.character_id, row.target_item_id)
       );
     }
     if (dedupedCandidates.length) {
@@ -15954,19 +15986,19 @@ async function transferP0PlusPoints({ guildId, query: params }) {
       await client.query(
         `insert into p0plus_points (guild_id, character_id, item_id, points, source, note)
          values ($1, $2, $3, 1, $4, $5)`,
-        [guildId, row.character_id, row.item_id, "Raidlead Transfer", transferNote]
+        [guildId, row.character_id, row.target_item_id, "Raidlead Transfer", transferNote]
       );
-      const newPoints = await getP0PlusPointTotal(client, guildId, row.character_id, row.item_id);
+      const newPoints = await getP0PlusPointTotal(client, guildId, row.character_id, row.target_item_id);
       await insertP0PlusAudit(client, {
         guildId,
         characterId: row.character_id,
-        itemId: row.item_id,
+        itemId: row.target_item_id,
         raidId: raid.id,
         raidType: raid.raid_type,
         playerName: row.player || "",
         server: row.server || "",
         itemName: row.item_name || "",
-        oldPoints: oldPointTotals.get(`${row.character_id}:${row.item_id}`) || 0,
+        oldPoints: oldPointTotals.get(`${row.character_id}:${row.target_item_id}`) || 0,
         newPoints,
         action: "raid_transfer",
         source: "PO übertragen",
