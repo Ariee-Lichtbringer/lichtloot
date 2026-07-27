@@ -1538,6 +1538,9 @@ const raids = {
   aq40:{name:"Ahn'Qiraj 40",short:"AQ40",role:"aq40",lootPage:"loot/aq40-loot.html",overviewPage:"aq.html"},
   naxx:{name:"Naxxramas",short:"NAXX",role:"naxx",lootPage:"loot/naxx-loot.html",overviewPage:"naxxramas.html"},
   zg:{name:"ZG 20",short:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-mittwoch":{name:"ZG Mittwoch",short:"ZG-MITTWOCH",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-prime":{name:"ZG PRIME",short:"ZG-PRIME",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-late":{name:"ZG LATE",short:"ZG-LATE",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
   aq20:{name:"AQ 20",short:"AQ20",role:"zg-aq20",lootPage:"loot/aq20-loot.html",overviewPage:"aq20.html"},
   ony:{name:"Onyxia",short:"ONY",role:"ony",lootPage:"loot/ony-loot.html",overviewPage:"ony.html"}
 };
@@ -1548,6 +1551,9 @@ const RAID_BACKGROUNDS = {
   aq40:"./images/aq40.jpg",
   naxx:"./images/naxx.jpg",
   zg:"./images/zg.jpg",
+  "zg-mittwoch":"./images/zg.jpg",
+  "zg-prime":"./images/zg.jpg",
+  "zg-late":"./images/zg.jpg",
   aq20:"./images/aq20.jpg",
   ony:"./images/ony.jpg"
 };
@@ -1555,7 +1561,7 @@ const RAID_BACKGROUNDS = {
 const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",zg:"",aq20:"",ony:""};
 
 async function fetchRailwayLootRows(raidKey){
-  const raid = raids[raidKey]?.short || raidKey || "";
+  const raid = raids[raidKey]?.lootShort || raids[raidKey]?.short || raidKey || "";
   if(!raid) return [];
 
   const url =
@@ -1595,6 +1601,9 @@ const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane"
 function raidKeyFromRaidId(raidId){
   const id = String(raidId || "").toUpperCase();
 
+  if(id.startsWith("ZG MI-") || id.startsWith("ZG-MI-") || id.startsWith("ZG MITTWOCH-")) return "zg-mittwoch";
+  if(id.startsWith("ZG PRIME-") || id.startsWith("ZG-PRIME-")) return "zg-prime";
+  if(id.startsWith("ZG LATE-") || id.startsWith("ZG-LATE-")) return "zg-late";
   if(id.startsWith("ZG-")) return "zg";
   if(id.startsWith("AQ20-")) return "aq20";
   if(id.startsWith("AQ40-")) return "aq40";
@@ -1687,7 +1696,7 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
-  return ["mc","bwl","aq40","naxx"].includes(currentRaidKey);
+  return ["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
 }
 
 function isPlainP0Raid(){
