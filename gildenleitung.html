@@ -12169,6 +12169,11 @@ async function queueRaidToDiscord(raidId){
   const raid = findRaidByAnyId(raidId);
   const channelId = getSelectedRaidDiscordChannel(raidId);
   const repostPo = Boolean(document.getElementById("repostPoWithRaid-" + raidId)?.checked);
+  const followupPoPost = repostPo ? matchingPoPostConfigForRaid(raid) : null;
+  if(repostPo && !followupPoPost){
+    setStatus("Kein passender PO+-Anmelder für diesen Raid gespeichert.", "bad");
+    return;
+  }
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
   if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?${repostPo ? "\nDer passende PO+-Anmelder wird ebenfalls neu gepostet." : ""}`)) return;
 
@@ -12184,7 +12189,8 @@ async function queueRaidToDiscord(raidId){
       action:"guildQueueRaidAnnouncement",
       masterCode,
       raidId,
-      channelId
+      channelId,
+      followupPoPost:followupPoPost ? JSON.stringify(followupPoPost) : ""
     });
 
     if(!result.success){
@@ -12192,23 +12198,31 @@ async function queueRaidToDiscord(raidId){
       return;
     }
 
-    let poMessage = "";
-    if(repostPo){
-      const poResult = await queueMatchingPoPostForRaid(raid, masterCode);
-      poMessage = poResult.success
-        ? " Der passende PO+-Anmelder wurde ebenfalls vorgemerkt."
-        : ` PO+-Anmelder nicht gepostet: ${poResult.error || "keine passende Konfiguration gefunden."}`;
-    }
+    const poMessage = repostPo ? " Der PO+-Anmelder wird direkt nach dem Raidanmelder gepostet." : "";
 
     setStatus(
       "Discord-Post wurde vorgemerkt" +
       (result.rowNumber ? " (Queue " + result.rowNumber + ")" : "") +
       ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten." + poMessage,
-      repostPo && poMessage.includes("nicht gepostet") ? "bad" : "good"
+      "good"
     );
   }catch(error){
     setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
   }
+}
+
+function matchingPoPostConfigForRaid(raid){
+  if(!raid) return null;
+  const raidId = String(raid.raidId || raid.id || "").trim();
+  const raidKey = getRaidKey(raid);
+  return readPoPostConfigs().find(item =>
+    (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
+    (
+      String(item.raid || "").trim().toLowerCase() === raidKey &&
+      String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
+      String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
+    )
+  ) || null;
 }
 
 async function queueMatchingPoPostForRaid(raid, masterCode){
