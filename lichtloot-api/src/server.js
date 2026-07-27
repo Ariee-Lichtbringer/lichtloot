@@ -5283,7 +5283,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
 }
 
 async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   return queueBotUpdate({
@@ -13302,6 +13302,23 @@ async function saveRaidSignup({ guildId, query: params }) {
     ]
   );
 
+  let refreshQueued = false;
+  if (raid.discord_channel_id && raid.discord_message_id) {
+    const refresh = await enqueueBotUpdate({
+      guildId,
+      type: "raid_announcement_refresh",
+      payload: {
+        raidId: raid.external_raid_id || raid.id,
+        channelId: raid.discord_channel_id,
+        discordChannelId: raid.discord_channel_id,
+        messageId: raid.discord_message_id,
+        discordMessageId: raid.discord_message_id,
+        source: "raid_signup_saved"
+      }
+    }).catch(() => null);
+    refreshQueued = Boolean(refresh?.success);
+  }
+
   return {
     success: true,
     raid: normalizeRaidRow(raid),
@@ -13310,7 +13327,8 @@ async function saveRaidSignup({ guildId, query: params }) {
       player_name: character.name,
       server: character.server,
       class_name: character.class_name
-    })
+    }),
+    refreshQueued
   };
 }
 
