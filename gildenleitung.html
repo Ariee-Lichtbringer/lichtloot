@@ -7809,7 +7809,10 @@ async function renderRaidHelperCurrentDetail(raidId){
       <div class="raid-helper-current-actions">
         <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
         <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>
-        <button class="small-btn good" type="button" onclick="refreshRaidHelperCurrentDiscord('${escapeAttr(raidId)}')">Discord aktualisieren</button>
+        <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
+          <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
+          PO+-Anmelder ebenfalls posten
+        </label>
         <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
       </div>
     </div>
@@ -12165,8 +12168,9 @@ async function queueRaidToDiscord(raidId){
 
   const raid = findRaidByAnyId(raidId);
   const channelId = getSelectedRaidDiscordChannel(raidId);
+  const repostPo = Boolean(document.getElementById("repostPoWithRaid-" + raidId)?.checked);
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?`)) return;
+  if(!confirm(`${label} jetzt im Discord-Channel ${channelId} posten?${repostPo ? "\nDer passende PO+-Anmelder wird ebenfalls neu gepostet." : ""}`)) return;
 
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -12188,15 +12192,61 @@ async function queueRaidToDiscord(raidId){
       return;
     }
 
+    let poMessage = "";
+    if(repostPo){
+      const poResult = await queueMatchingPoPostForRaid(raid, masterCode);
+      poMessage = poResult.success
+        ? " Der passende PO+-Anmelder wurde ebenfalls vorgemerkt."
+        : ` PO+-Anmelder nicht gepostet: ${poResult.error || "keine passende Konfiguration gefunden."}`;
+    }
+
     setStatus(
       "Discord-Post wurde vorgemerkt" +
       (result.rowNumber ? " (Queue " + result.rowNumber + ")" : "") +
-      ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten.",
-      "good"
+      ". Der Bot sollte ihn innerhalb von ca. 30 Sekunden posten." + poMessage,
+      repostPo && poMessage.includes("nicht gepostet") ? "bad" : "good"
     );
   }catch(error){
     setStatus(error.message || "Discord-Post konnte nicht vorgemerkt werden.", "bad");
   }
+}
+
+async function queueMatchingPoPostForRaid(raid, masterCode){
+  if(!raid) return { success:false, error:"Raid wurde nicht gefunden." };
+  const raidId = String(raid.raidId || raid.id || "").trim();
+  const raidKey = getRaidKey(raid);
+  const configs = readPoPostConfigs();
+  const config = configs.find(item =>
+    (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
+    (
+      String(item.raid || "").trim().toLowerCase() === raidKey &&
+      String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
+      String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
+    )
+  );
+  if(!config) return { success:false, error:"Kein passender PO+-Anmelder gespeichert." };
+  return railwayWrite({
+    action:"guildQueuePoPost",
+    masterCode,
+    postKey:config.postKey,
+    sourceChannelId:config.sourceChannelId,
+    targetChannelId:config.targetChannelId,
+    reviewRecipient:config.reviewRecipient,
+    title:config.title,
+    raid:config.raid,
+    raidDate:config.raidDate,
+    raidTime:config.raidTime,
+    limit:config.limit,
+    mode:config.mode,
+    note:config.note,
+    itemOptions:config.itemOptions,
+    postedEntries:JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
+    restoreArchived:"true",
+    createLichtlootRaid:config.createLichtlootRaid ? "true" : "",
+    lichtlootRaidId:config.lichtlootRaidId || raidId,
+    lichtlootPlayerPin:config.lichtlootPlayerPin || raid.playerPin || raid.prioPin || "",
+    lichtlootLeadPin:config.lichtlootLeadPin || raid.leadPin || ""
+  });
 }
 
 function openMessageModal(context){
