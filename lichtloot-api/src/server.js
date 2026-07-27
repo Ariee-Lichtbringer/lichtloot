@@ -4112,7 +4112,16 @@ async function resolveDefaultGuildId() {
 
 async function queueWorldbuffBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const backupChannelId = "1529393614247952434";
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
+  const fixedNachtlootChannel = guildSlug === "nachtloot" ? "1531288515994718318" : "";
+  const backupChannelId = clean(params.channelId || params.targetChannelId || params.backupChannelId)
+    || fixedNachtlootChannel
+    || await resolveGuildBackupChannelId({
+      guildId,
+      envFallbackChannelId: "1529393614247952434",
+      kind: "worldbuff"
+    });
   if (!backupChannelId) {
     const error = new Error("Kein Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den Backup-/Sicherungs-Channel einladen oder einen Channel mit 'backup' oder 'sicherung' im Namen anlegen.");
     error.statusCode = 400;
@@ -4150,7 +4159,7 @@ async function queueWorldbuffBackup({ guildId, query: params }) {
     type: "worldbuff_backup_export",
     payload: {
       channelId: backupChannelId,
-      backupTargetGuild: defaultGuildSlug || "lichtloot",
+      backupTargetGuild: guildSlug,
       backupKind: "worldbuff",
       days,
       createdDate: today,
@@ -15311,7 +15320,16 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
 }
 
 async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "", queueType = "p0plus_transfer_export" }) {
-  const backupChannelId = p0PlusTransferExportChannelId;
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
+  const fixedNachtlootChannel = guildSlug === "nachtloot" ? "1531288738326642828" : "";
+  const backupChannelId = clean(backupChannelIdOverride)
+    || fixedNachtlootChannel
+    || await resolveGuildBackupChannelId({
+      guildId,
+      envFallbackChannelId: p0PlusTransferExportChannelId,
+      kind: "p0plus"
+    });
   if (!backupChannelId) {
     const error = new Error("Kein PO+-Backup-Channel fuer diese Gilde gefunden. Bitte Bot in den PO-Backup-/Sicherungs-Channel einladen oder einen Channel mit 'po-backup', 'p0-backup', 'backup' oder 'sicherung' im Namen anlegen.");
     error.statusCode = 400;
