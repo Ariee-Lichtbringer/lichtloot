@@ -9,6 +9,9 @@
 <style>
 :root{
   --gold:#facc15;
+  --gold-rgb:250,204,21;
+  --blue:#60a5fa;
+  --blue-rgb:96,165,250;
   --panel:rgba(12,18,32,.90);
   --text:#f8fafc;
   --muted:#cbd5e1;
@@ -69,7 +72,7 @@ body{
 
 .btn:hover,
 .btn-link:hover{
-  border-color:rgba(250,204,21,.55);
+  border-color:rgba(var(--gold-rgb),.55);
 }
 
 .header{
@@ -77,7 +80,7 @@ body{
   padding:30px;
   border-radius:24px;
   background:var(--panel);
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   box-shadow:0 20px 45px rgba(0,0,0,.45);
 }
 
@@ -127,7 +130,8 @@ label{
   letter-spacing:.08em;
 }
 
-input{
+input,
+select{
   width:100%;
   padding:12px 13px;
   border-radius:12px;
@@ -155,6 +159,175 @@ input{
   font-size:14px;
 }
 
+.raidlead-prio-form{
+  margin:0 0 16px;
+  border:1px solid rgba(var(--gold-rgb),.22);
+  border-radius:16px;
+  background:rgba(2,6,23,.42);
+  overflow:visible;
+}
+
+.raidlead-prio-form summary{
+  list-style:none;
+  cursor:pointer;
+  padding:16px;
+  color:#dbeafe;
+  font-size:14px;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.raidlead-prio-form summary::-webkit-details-marker{display:none}
+
+.raidlead-prio-form summary::after{
+  content:"Aufklappen";
+  color:var(--gold);
+  font-size:11px;
+  letter-spacing:.08em;
+}
+
+.raidlead-prio-form[open] summary{
+  border-bottom:1px solid rgba(var(--gold-rgb),.16);
+}
+
+.raidlead-prio-form[open] summary::after{
+  content:"Einklappen";
+}
+
+.raidlead-prio-body{
+  padding:16px;
+}
+
+.raidlead-prio-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px 12px;
+}
+
+.raidlead-prio-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.raidlead-prio-actions .status{
+  flex:1 1 260px;
+  margin:0;
+  padding:10px 12px;
+}
+
+.raidlead-p0-toggle{
+  min-height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(var(--gold-rgb),.24);
+  background:rgba(15,23,42,.62);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  color:#dbeafe;
+  font-weight:900;
+  text-transform:none;
+  letter-spacing:0;
+  margin:0;
+}
+
+.raidlead-p0-toggle input{
+  width:18px;
+  height:18px;
+  accent-color:var(--gold);
+}
+
+.raidlead-p0-toggle span{
+  color:var(--gold);
+}
+
+.raidlead-item-picker{
+  position:relative;
+}
+
+.raidlead-item-trigger{
+  width:100%;
+  min-height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(2,6,23,.82);
+  color:#cbd5e1;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+}
+
+.raidlead-item-trigger .placeholder{
+  color:#94a3b8;
+  font-weight:800;
+}
+
+.raidlead-item-menu{
+  position:absolute;
+  z-index:1000;
+  left:0;
+  right:0;
+  top:calc(100% + 6px);
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(148,163,184,.35);
+  background:rgba(2,6,23,.98);
+  box-shadow:0 18px 34px rgba(0,0,0,.55);
+}
+
+.raidlead-item-menu input{
+  margin-bottom:8px;
+  padding:9px 10px;
+}
+
+.raidlead-item-list{
+  max-height:260px;
+  overflow:auto;
+  display:grid;
+  gap:4px;
+}
+
+.raidlead-item-option{
+  width:100%;
+  padding:7px 8px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  cursor:pointer;
+  text-align:left;
+}
+
+.raidlead-item-option:hover{
+  background:rgba(var(--gold-rgb),.10);
+}
+
+.item-picker-meta{
+  display:block;
+  margin-top:2px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:800;
+}
+
+.raidlead-item-empty{
+  color:#94a3b8;
+  font-weight:800;
+  padding:8px;
+}
+
 .ok{color:var(--green);font-weight:900}
 .warn{color:var(--gold);font-weight:900}
 .bad{color:var(--danger);font-weight:900}
@@ -167,8 +340,8 @@ input{
 }
 
 .btn.neutral{
-  background:linear-gradient(135deg,rgba(96,165,250,.22),rgba(15,23,42,.65));
-  border-color:rgba(96,165,250,.25);
+  background:linear-gradient(135deg,rgba(var(--blue-rgb),.22),rgba(15,23,42,.65));
+  border-color:rgba(var(--blue-rgb),.25);
 }
 
 .btn.success{
@@ -177,8 +350,8 @@ input{
 }
 
 .btn.warning{
-  background:linear-gradient(135deg,rgba(250,204,21,.24),rgba(15,23,42,.65));
-  border-color:rgba(250,204,21,.35);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.24),rgba(15,23,42,.65));
+  border-color:rgba(var(--gold-rgb),.35);
 }
 
 .btn.danger{
@@ -295,7 +468,7 @@ th{
   width:22px;
   height:22px;
   border-radius:4px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   object-fit:cover;
   flex-shrink:0;
 }
@@ -349,7 +522,7 @@ th{
   gap:10px;
   flex-wrap:wrap;
   border-radius:22px;
-  border:1px solid rgba(250,204,21,.34);
+  border:1px solid rgba(var(--gold-rgb),.34);
   background:linear-gradient(135deg,rgba(12,18,32,.78),rgba(2,6,23,.56));
   box-shadow:0 18px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08);
   backdrop-filter:blur(10px);
@@ -358,7 +531,7 @@ th{
   min-height:42px;
   padding:10px 16px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.28);
+  border:1px solid rgba(var(--gold-rgb),.28);
   background:rgba(2,6,23,.58);
   color:#f8fafc;
   font-weight:900;
@@ -369,13 +542,13 @@ th{
 }
 .nav-btn:hover{
   transform:translateY(-2px);
-  border-color:rgba(250,204,21,.70);
-  background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(96,165,250,.20));
-  box-shadow:0 0 0 2px rgba(250,204,21,.12);
+  border-color:rgba(var(--gold-rgb),.70);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.34),rgba(var(--blue-rgb),.20));
+  box-shadow:0 0 0 2px rgba(var(--gold-rgb),.12);
 }
 .nav-primary{
-  background:linear-gradient(135deg,rgba(250,204,21,.42),rgba(96,165,250,.22));
-  border-color:rgba(250,204,21,.62);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.42),rgba(var(--blue-rgb),.22));
+  border-color:rgba(var(--gold-rgb),.62);
 }
 .nav-login{display:flex;align-items:center;gap:8px}
 .nav-login input{
@@ -383,7 +556,7 @@ th{
   min-height:42px;
   padding:10px 12px;
   border-radius:14px;
-  border:1px solid rgba(250,204,21,.35);
+  border:1px solid rgba(var(--gold-rgb),.35);
   background:rgba(2,6,23,.78);
   color:white;
   font-weight:800;
@@ -431,7 +604,7 @@ th{
 }
 .btn.action-p0open{
   background:rgba(30,64,175,.22);
-  border-color:rgba(96,165,250,.36);
+  border-color:rgba(var(--blue-rgb),.36);
   color:#bfdbfe;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 8px 20px rgba(0,0,0,.18);
   text-shadow:0 2px 8px rgba(0,0,0,.72);
@@ -444,8 +617,8 @@ th{
   text-shadow:0 2px 8px rgba(0,0,0,.70);
 }
 .btn.action-transfer{
-  background:linear-gradient(135deg,rgba(250,204,21,.78),rgba(180,83,9,.68));
-  border-color:rgba(253,230,138,.72);
+  background:linear-gradient(135deg,rgba(var(--gold-rgb),.78),rgba(180,83,9,.68));
+  border-color:rgba(var(--gold-rgb),.72);
   color:#111827;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 8px 18px rgba(0,0,0,.22);
   text-shadow:0 2px 8px rgba(0,0,0,.72);
@@ -535,7 +708,7 @@ th{
   margin-top:14px;
   padding:14px;
   border-radius:16px;
-  border:1px solid rgba(250,204,21,.22);
+  border:1px solid rgba(var(--gold-rgb),.22);
   background:rgba(2,6,23,.46);
 }
 .missing-prio-head{
@@ -573,6 +746,7 @@ th{
 @media(max-width:1000px){
   .pin-grid{grid-template-columns:1fr}
   .button-grid{grid-template-columns:1fr}
+  .raidlead-prio-grid{grid-template-columns:1fr}
 }
 
 /* Dashboard-Anpassung im Stil der Gildenleitung */
@@ -610,14 +784,14 @@ th{
 
 .header h1{
   font-size:34px;
-  color:#fbbf24;
+  color:var(--gold);
 }
 
 .raid-card{
   width:min(1460px,100%);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(12,18,32,.82),rgba(2,6,23,.54));
-  border-color:rgba(250,204,21,.18);
+  border-color:rgba(var(--gold-rgb),.18);
 }
 
 .raid-hero{
@@ -632,7 +806,7 @@ th{
   font-size:28px;
   line-height:1.05;
   margin:0 0 5px;
-  color:#fbbf24;
+  color:var(--gold);
   letter-spacing:0;
 }
 
@@ -657,7 +831,7 @@ th{
 }
 
 .raid-chip.ok{border-color:rgba(34,197,94,.32)}
-.raid-chip.warn{border-color:rgba(250,204,21,.32)}
+.raid-chip.warn{border-color:rgba(var(--gold-rgb),.32)}
 
 .raid-stat-grid{
   display:grid;
@@ -668,7 +842,7 @@ th{
 
 .raid-stat-card{
   min-height:96px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(12,18,32,.88),rgba(2,6,23,.55));
   padding:12px;
@@ -686,7 +860,7 @@ th{
 .raid-stat-card strong{
   display:block;
   margin-top:4px;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:24px;
 }
 
@@ -709,13 +883,13 @@ th{
   border-radius:8px;
   display:grid;
   place-items:center;
-  color:#fbbf24;
-  background:rgba(250,204,21,.10);
-  border:1px solid rgba(250,204,21,.16);
+  color:var(--gold);
+  background:rgba(var(--gold-rgb),.10);
+  border:1px solid rgba(var(--gold-rgb),.16);
 }
 
 .raid-stat-card.green strong{color:#4ade80}
-.raid-stat-card.blue strong{color:#60a5fa}
+.raid-stat-card.blue strong{color:var(--blue)}
 .raid-stat-card.violet strong{color:#c084fc}
 .raid-stat-card.red strong{color:#fb7185}
 
@@ -735,7 +909,7 @@ th{
 }
 
 .entries-panel{
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   border-radius:10px;
   background:rgba(2,6,23,.30);
   padding:16px;
@@ -784,7 +958,7 @@ th{
   top:0;
   min-height:100vh;
   padding:24px 12px;
-  border-right:1px solid rgba(250,204,21,.16);
+  border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
 }
@@ -829,15 +1003,15 @@ th{
 
 .side-link:hover,
 .side-link.active{
-  border-color:rgba(250,204,21,.32);
-  background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(15,23,42,.28));
-  color:#fde68a;
+  border-color:rgba(var(--gold-rgb),.32);
+  background:linear-gradient(90deg,rgba(var(--gold-rgb),.22),rgba(15,23,42,.28));
+  color:var(--gold);
 }
 
 .side-icon{
   width:22px;
   text-align:center;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:16px;
 }
 
@@ -902,7 +1076,7 @@ body.random-raidlead .internal-nav-link{
 
 .brand h1{
   margin:0;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:34px;
   line-height:1;
   letter-spacing:0;
@@ -929,7 +1103,7 @@ body.random-raidlead .internal-nav-link{
   min-height:54px;
   padding:8px 12px;
   border-radius:10px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   background:rgba(2,6,23,.46);
 }
 
@@ -954,7 +1128,7 @@ body.random-raidlead .internal-nav-link{
 
 .auth-panel{
   width:min(540px,100%);
-  border-color:rgba(250,204,21,.18);
+  border-color:rgba(var(--gold-rgb),.18);
 }
 
 .unlock{
@@ -1010,7 +1184,7 @@ body.random-raidlead .internal-nav-link{
   min-height:44px;
   padding:7px 10px;
   border-radius:8px;
-  border:1px solid rgba(250,204,21,.18);
+  border:1px solid rgba(var(--gold-rgb),.18);
   background:rgba(2,6,23,.42);
   display:flex;
   align-items:center;
@@ -1103,7 +1277,7 @@ body.random-raidlead .internal-nav-link{
   width:min(860px,calc(100vw - 32px));
   max-height:min(720px,calc(100vh - 32px));
   overflow:auto;
-  border:1px solid rgba(250,204,21,.24);
+  border:1px solid rgba(var(--gold-rgb),.24);
   border-radius:10px;
   background:linear-gradient(135deg,rgba(12,18,32,.96),rgba(2,6,23,.94));
   box-shadow:0 24px 60px rgba(0,0,0,.55);
@@ -1120,7 +1294,7 @@ body.random-raidlead .internal-nav-link{
 
 .p0-modal-head h2{
   margin:0;
-  color:#fbbf24;
+  color:var(--gold);
   font-size:22px;
 }
 
@@ -1138,7 +1312,7 @@ body.random-raidlead .internal-nav-link{
 
 .p0-overview-raid h3{
   margin:0 0 8px;
-  color:#fde68a;
+  color:var(--gold);
 }
 
 .p0-overview-row{
@@ -1153,11 +1327,11 @@ body.random-raidlead .internal-nav-link{
 }
 
 .p0-overview-row strong{color:#f8fafc}
-.p0-overview-row span:last-child{color:#facc15;text-align:right}
+.p0-overview-row span:last-child{color:var(--gold);text-align:right}
 
 @media(max-width:980px){
   .app-frame{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(250,204,21,.16)}
+  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
   .sidebar-foot{position:static;margin-top:14px}
   .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
   .raidlead-title-row{align-items:flex-start;flex-direction:column}
@@ -1182,8 +1356,13 @@ body.random-raidlead .internal-nav-link{
 
 <body>
 <script>
-if(new URLSearchParams(window.location.search).get("leadPin") || new URLSearchParams(window.location.search).get("raidleadPin")){
+{
+  const raidleadBootParams = new URLSearchParams(window.location.search);
+  const raidleadBootMode = String(raidleadBootParams.get("mode") || raidleadBootParams.get("view") || "").toLowerCase();
+  const raidleadBootRandom = raidleadBootParams.get("random") === "1" || raidleadBootMode === "random";
+  if(raidleadBootRandom){
   document.body.classList.add("random-raidlead");
+  }
 }
 </script>
 <div class="app-frame">
@@ -1255,19 +1434,93 @@ const RAID_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
-function currentGuildName(){ return currentGuildSlug() === "panemloot" ? "PanemLoot" : "LichtLoot"; }
+let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
-function railwayLootItemsUrl(raid){
-  return RAID_API_URL + "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=getLootItems&raid=" + encodeURIComponent(raid || currentRaidKey || "") + "&t=" + Date.now();
+function titleFromSlug(slug){
+  return String(slug || "Lootsystem").split(/[-_\s]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Lootsystem";
 }
-
-async function fetchRailwayLootRows(raid){
-  const response = await fetch(railwayLootItemsUrl(raid), {cache:"no-store"});
-  const payload = await response.json().catch(()=>null);
-  if(!response.ok || !payload || !payload.success) throw new Error((payload && payload.error) || "Lootdaten konnten nicht geladen werden.");
-  return Array.isArray(payload.items) ? payload.items : [];
+function lootTitleFromGuild(guild){
+  const slug=String(guild?.slug || currentGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return "LichtLoot";
+  return titleFromSlug(slug || guild?.name || "Lootsystem");
 }
-
+function displayGuildName(guild){
+  const slug=String(guild?.slug || currentGuildSlug() || "").trim().toLowerCase();
+  if(slug === "lichtloot") return "Lichtbringer";
+  return guild?.name || titleFromSlug(slug);
+}
+function currentGuildName(){ return lootTitleFromGuild(currentGuildInfo || {slug:currentGuildSlug()}); }
+function guildAssetPrefix(){ return location.pathname.includes("/loot/") ? "../" : ""; }
+function guildLogoUrl(guild){
+  const prefix=guildAssetPrefix();
+  const logo=String(guild?.logoUrl || "").trim();
+  const withPrefix=value => {
+    const clean=String(value || "").trim();
+    const cleanLower=clean.toLowerCase();
+    const external=cleanLower.startsWith("http://") || cleanLower.startsWith("https://") || cleanLower.startsWith("//") || cleanLower.startsWith("data:");
+    if(!clean || external || clean.startsWith("../") || clean.startsWith("/") || clean.startsWith("./")) return clean;
+    return prefix + clean;
+  };
+  if(currentGuildSlug() === "lichtloot") return withPrefix(logo || "images/content.png");
+  if(!logo || logo === "images/content.png" || logo === "./images/content.png" || logo === "../images/content.png") return prefix + "images/guild-defaults/default-logo.png";
+  return withPrefix(logo);
+}
+function normalizeGuildKey(value){ return String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,""); }
+async function fetchCurrentGuildInfo(){
+  const slug=currentGuildSlug();
+  if(slug === "lichtloot") return {slug:"lichtloot",name:"Lichtbringer"};
+  try{
+    const response=await fetch(RAID_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
+    const data=await response.json();
+    currentGuildInfo=(data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === slug) || {slug,name:titleFromSlug(slug)};
+  }catch(error){
+    console.warn("Gildenbranding konnte nicht geladen werden:", error);
+    currentGuildInfo={slug,name:titleFromSlug(slug)};
+  }
+  return currentGuildInfo;
+}
+function replaceBrandText(lootName,guildName){
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    node.nodeValue = node.nodeValue
+      .replace(/Mein LichtLoot/g,"Mein " + lootName)
+      .replace(/Mein-LichtLoot/g,"Mein-" + lootName)
+      .replace(/LichtLoot/g,lootName)
+      .replace(/Lichtloot/g,lootName)
+      .replace(/Lichtbringer/g,guildName);
+  });
+}
+function colorToRgbList(value){
+  const color=String(value || "").trim();
+  const match=color.match(/^#?([0-9a-f]{6})$/i);
+  if(!match) return "";
+  const hex=match[1];
+  return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)].join(",");
+}
+function applyGuildThemeColor(cssName,rgbName,value){
+  const color=String(value || "").trim();
+  if(!color) return;
+  document.documentElement.style.setProperty(cssName,color);
+  const rgb=colorToRgbList(color);
+  if(rgb) document.documentElement.style.setProperty(rgbName,rgb);
+}
+async function applyGuildBranding(){
+  const guild=await fetchCurrentGuildInfo();
+  const lootName=lootTitleFromGuild(guild);
+  const guildName=displayGuildName(guild);
+  document.title = document.title.replace(/Lichtloot|LichtLoot|PanemLoot/g, lootName);
+  if(currentGuildSlug() !== "lichtloot") replaceBrandText(lootName,guildName);
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
+  const logo=guildLogoUrl(guild);
+  document.querySelectorAll(".logo-banner-mini,.side-logo,.brand-logo,.top-profile img").forEach(el => {
+    if(logo) el.src=logo;
+    el.alt=lootName + " - " + guildName;
+  });
+}
+if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 function guildUrl(path){
   const slug=currentGuildSlug();
   if(slug === "lichtloot") return path;
@@ -1276,21 +1529,6 @@ function guildUrl(path){
   const base=hashIndex >= 0 ? path.slice(0,hashIndex) : path;
   return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
-function applyGuildBranding(){
-  if(currentGuildSlug() !== "panemloot") return;
-  document.title = document.title.replace(/Lichtloot|LichtLoot/g,"PanemLoot");
-  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
-  const nodes=[];
-  while(walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(node => {
-    node.nodeValue = node.nodeValue
-      .replace(/Mein LichtLoot/g,"Mein PanemLoot")
-      .replace(/LichtLoot/g,"PanemLoot")
-      .replace(/Lichtloot/g,"PanemLoot")
-      .replace(/Lichtbringer/g,"Panem");
-  });
-}
-if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", applyGuildBranding); } else { applyGuildBranding(); }
 
 const MASTER_CODE = "Lichtbringer-Master";
 
@@ -1300,6 +1538,9 @@ const raids = {
   aq40:{name:"Ahn'Qiraj 40",short:"AQ40",role:"aq40",lootPage:"loot/aq40-loot.html",overviewPage:"aq.html"},
   naxx:{name:"Naxxramas",short:"NAXX",role:"naxx",lootPage:"loot/naxx-loot.html",overviewPage:"naxxramas.html"},
   zg:{name:"ZG 20",short:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-mittwoch":{name:"ZG Mittwoch",short:"ZG-MITTWOCH",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-prime":{name:"ZG PRIME",short:"ZG-PRIME",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
+  "zg-late":{name:"ZG LATE",short:"ZG-LATE",lootShort:"ZG",role:"zg-aq20",lootPage:"loot/zg-loot.html",overviewPage:"zg.html"},
   aq20:{name:"AQ 20",short:"AQ20",role:"zg-aq20",lootPage:"loot/aq20-loot.html",overviewPage:"aq20.html"},
   ony:{name:"Onyxia",short:"ONY",role:"ony",lootPage:"loot/ony-loot.html",overviewPage:"ony.html"}
 };
@@ -1310,11 +1551,35 @@ const RAID_BACKGROUNDS = {
   aq40:"./images/aq40.jpg",
   naxx:"./images/naxx.jpg",
   zg:"./images/zg.jpg",
+  "zg-mittwoch":"./images/zg.jpg",
+  "zg-prime":"./images/zg.jpg",
+  "zg-late":"./images/zg.jpg",
   aq20:"./images/aq20.jpg",
   ony:"./images/ony.jpg"
 };
 
 const LOOT_JSON_URLS = {mc:"",bwl:"",aq40:"",naxx:"",zg:"",aq20:"",ony:""};
+
+async function fetchRailwayLootRows(raidKey){
+  const raid = raids[raidKey]?.lootShort || raids[raidKey]?.short || raidKey || "";
+  if(!raid) return [];
+
+  const url =
+    RAID_API_URL +
+    "?action=getLootItems" +
+    currentGuildQueryPart() +
+    "&raid=" + encodeURIComponent(raid) +
+    "&t=" + Date.now();
+
+  const response = await fetch(url, {cache:"no-store"});
+  const payload = await response.json().catch(() => null);
+
+  if(!response.ok || !payload || payload.success === false){
+    throw new Error((payload && (payload.error || payload.message)) || "Lootdaten konnten nicht geladen werden.");
+  }
+
+  return Array.isArray(payload.items) ? payload.items : [];
+}
 
 let currentRaidKey = null;
 let currentRaidData = null;
@@ -1322,6 +1587,11 @@ let currentPrios = [];
 let currentReleased = false;
 let itemIdMap = {};
 let itemVisualMap = {};
+let itemVisualList = [];
+let itemVisualByIdMap = {};
+let raidleadItemOptions = [];
+let raidleadItemOptionMap = {};
+let raidleadItemOptionsRaidKey = "";
 let currentP0PlusEntries = [];
 let currentPrioCheck = null;
 let prioCheckTimer = null;
@@ -1331,6 +1601,9 @@ const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane"
 function raidKeyFromRaidId(raidId){
   const id = String(raidId || "").toUpperCase();
 
+  if(id.startsWith("ZG MI-") || id.startsWith("ZG-MI-") || id.startsWith("ZG MITTWOCH-")) return "zg-mittwoch";
+  if(id.startsWith("ZG PRIME-") || id.startsWith("ZG-PRIME-")) return "zg-prime";
+  if(id.startsWith("ZG LATE-") || id.startsWith("ZG-LATE-")) return "zg-late";
   if(id.startsWith("ZG-")) return "zg";
   if(id.startsWith("AQ20-")) return "aq20";
   if(id.startsWith("AQ40-")) return "aq40";
@@ -1356,8 +1629,10 @@ function raidPinEnter(event){
 function checkLogin(){
   const params = new URLSearchParams(window.location.search);
   const urlLeadPin = (params.get("leadPin") || params.get("raidleadPin") || "").trim();
+  const urlMode = String(params.get("mode") || params.get("view") || "").toLowerCase();
+  const isRandomRaidleadLink = params.get("random") === "1" || urlMode === "random";
   if(urlLeadPin){
-    document.body.classList.add("random-raidlead");
+    document.body.classList.toggle("random-raidlead", isRandomRaidleadLink);
     sessionStorage.setItem("raidlead","true");
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadPrioPin",urlLeadPin);
@@ -1421,7 +1696,7 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
-  return ["mc","bwl","aq40","naxx"].includes(currentRaidKey);
+  return ["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
 }
 
 function isPlainP0Raid(){
@@ -1434,6 +1709,15 @@ function isP1OnlyRaid(){
 
 function hasP0Control(){
   return isAllowedP0Raid() || isPlainP0Raid();
+}
+
+function isActiveP0Value(value){
+  const normalized = String(value || "").trim().toLowerCase();
+  return ["ja","true","1","p0","p0+","preraid","pre-raid"].includes(normalized);
+}
+
+function isActiveP0Entry(entry){
+  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
 }
 
 function p0Label(){
@@ -1617,9 +1901,12 @@ async function loadPriosFromSheet(leadPin){
       server: p.Server || "",
       class: p.Klasse || "",
       p1: p.P1 || "",
+      p1ItemId: p.P1ItemId || p.p1ItemId || p.p1_item_id || "",
       p2: p.P2 || "",
+      p2ItemId: p.P2ItemId || p.p2ItemId || p.p2_item_id || "",
       p3: p.P3 || "",
-      p0Plus: p.P0Plus || "",
+      p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
+      p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
 
@@ -1772,7 +2059,7 @@ function getTransferableP0Count(){
 
   return (currentPrios || []).filter(entry =>
     !isBenchPrio(entry) &&
-    String(entry.p0Plus || "").trim().toLowerCase() === "ja"
+    isActiveP0Entry(entry)
   ).length;
 }
 
@@ -1861,6 +2148,8 @@ function renderRaidView(){
     </div>
 
     <section class="entries-panel" id="entriesPanel">
+      ${renderRaidleadPrioForm()}
+
       <div class="entry-status-line">
         <div class="entry-status-content">
           <h3>Aktuelle Einträge</h3>
@@ -1887,6 +2176,237 @@ function renderRaidView(){
       </table>
     </section>
   `;
+
+  loadRaidleadItemOptions();
+}
+
+function renderRaidleadPrioForm(){
+  const p2p3Fields = isP1OnlyRaid() ? "" : `
+        ${renderRaidleadItemPicker("P2","P2")}
+        ${renderRaidleadItemPicker("P3","P3")}
+  `;
+  const p0Field = hasP0Control() ? `
+        <div>
+          <label>${safe(p0Label())}</label>
+          <label class="raidlead-p0-toggle" for="raidleadPrioP0Plus">
+            <input id="raidleadPrioP0Plus" type="checkbox">
+            <span>${safe(p0Label())}</span> für P1 setzen
+          </label>
+        </div>
+  ` : "";
+
+  return `
+    <details class="raidlead-prio-form">
+      <summary>Prio für Spieler eintragen</summary>
+      <div class="raidlead-prio-body">
+        <div class="raidlead-prio-grid">
+          <div>
+            <label for="raidleadPrioPlayer">Spieler</label>
+            <input id="raidleadPrioPlayer" type="text" placeholder="Charaktername">
+          </div>
+          <div>
+            <label for="raidleadPrioServer">Server</label>
+            <select id="raidleadPrioServer">
+              <option value="">Server wählen</option>
+              <option>Everlook</option>
+              <option>Lakeshire</option>
+            </select>
+          </div>
+          <div>
+            <label for="raidleadPrioClass">Klasse</label>
+            <select id="raidleadPrioClass">
+              <option value="">Klasse wählen</option>
+              <option>Krieger</option>
+              <option>Paladin</option>
+              <option>Jäger</option>
+              <option>Schurke</option>
+              <option>Priester</option>
+              <option>Schamane</option>
+              <option>Magier</option>
+              <option>Hexenmeister</option>
+              <option>Druide</option>
+            </select>
+          </div>
+          ${renderRaidleadItemPicker("P1","P1")}
+          ${p2p3Fields}
+          ${p0Field}
+        </div>
+        <div class="raidlead-prio-actions">
+          <button class="btn action-soft" type="button" onclick="saveRaidleadPrioForPlayer()">Prio speichern</button>
+          <div class="status" id="raidleadPrioStatus">Für Spieler, die ihre Prio nicht selbst eintragen können.</div>
+        </div>
+      </div>
+    </details>
+  `;
+}
+
+function renderRaidleadItemPicker(slot,label){
+  const inputId = "raidleadPrio" + slot;
+  return `
+    <div class="raidlead-item-picker" data-slot="${safe(slot)}">
+      <label>${safe(label)}</label>
+      <input id="${safe(inputId)}" type="hidden">
+      <button class="raidlead-item-trigger" id="${safe(inputId)}Trigger" type="button" onclick="toggleRaidleadItemPicker('${safe(slot)}')">
+        <span class="placeholder">Item wählen</span>
+        <span>⌄</span>
+      </button>
+      <div class="raidlead-item-menu hidden" id="${safe(inputId)}Menu">
+        <input id="${safe(inputId)}Search" type="text" placeholder="Item suchen..." oninput="filterRaidleadItemPicker('${safe(slot)}')">
+        <div class="raidlead-item-list" id="${safe(inputId)}List">
+          ${renderRaidleadItemOptionsForSlot(slot)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function raidleadItemOptionKey(info,index){
+  const itemId = String(info?.itemId || "").trim();
+  if(itemId) return "id:" + itemId;
+  return "name:" + itemKey(info?.name || "") + ":" + index;
+}
+
+function raidleadItemOptionSearchText(info){
+  return [
+    info?.name,
+    info?.slot,
+    info?.type,
+    info?.boss,
+    info?.itemId
+  ].filter(Boolean).join(" ");
+}
+
+function raidleadItemInfoByKey(optionKey){
+  return raidleadItemOptionMap[String(optionKey || "")] || itemVisualMap[itemKey(optionKey)] || null;
+}
+
+function renderRaidleadItemOptions(){
+  return (raidleadItemOptions || [])
+    .map(info => `<option value="${safe(raidleadItemOptionSearchText(info))}"></option>`)
+    .join("");
+}
+
+function renderRaidleadPickerItem(option){
+  const info = typeof option === "object" ? option : (raidleadItemInfoByKey(option) || itemVisualMap[itemKey(option)] || {name:option});
+  const name = info.name || String(option || "");
+  const quality = info.quality || "epic";
+  const iconName = info.iconName || "";
+  const meta = [info.slot, info.boss, info.itemId ? "ID " + info.itemId : ""].filter(Boolean).join(" · ");
+  const tooltipAttrs = `
+    onmouseenter="showTooltip(event,'${escapeQuotes(name)}','${escapeQuotes(info.itemId || "")}')"
+    onmousemove="moveTooltip(event)"
+    onmouseleave="hideTooltip()"
+  `;
+
+  return `
+    <span class="item-name item-${safe(quality)} item-with-icon" ${tooltipAttrs}>
+      <img class="item-icon" src="${getIconUrl(iconName)}" alt="" loading="lazy" onerror="iconFallback(this)">
+      <span>${safe(name)}${meta ? `<small class="item-picker-meta">${safe(meta)}</small>` : ""}</span>
+    </span>
+  `;
+}
+
+function renderRaidleadItemOptionsForSlot(slot,filter){
+  const needle = itemKey(filter || "");
+  const items = (raidleadItemOptions || [])
+    .filter(info => !needle || itemKey(raidleadItemOptionSearchText(info)).includes(needle))
+    .slice(0,80);
+
+  if(!items.length){
+    return `<div class="raidlead-item-empty">Kein Item gefunden.</div>`;
+  }
+
+  return items.map((info,index) => {
+    const optionKey = raidleadItemOptionKey(info,index);
+    raidleadItemOptionMap[optionKey] = info;
+    return `
+    <button class="raidlead-item-option" type="button" data-item-key="${safe(optionKey)}" onclick="selectRaidleadPrioItemFromButton('${safe(slot)}',this)">
+      ${renderRaidleadPickerItem(info)}
+    </button>
+  `}).join("");
+}
+
+async function loadRaidleadItemOptions(){
+  if(raidleadItemOptionsRaidKey === currentRaidKey && raidleadItemOptions.length){
+    refreshRaidleadItemPickerLists();
+    return;
+  }
+
+  try{
+    raidleadItemOptionMap = {};
+    const visualItems = (itemVisualList || []).filter(info => info && info.name);
+    if(visualItems.length){
+      raidleadItemOptions = visualItems.sort((a,b) => raidleadItemOptionSearchText(a).localeCompare(raidleadItemOptionSearchText(b),"de"));
+    }else{
+      const rows = await fetchRailwayLootRows(currentRaidKey);
+      raidleadItemOptions = rows
+        .map(obj => normalizeJsonLootItem(obj))
+        .filter(info => info.name)
+        .sort((a,b) => raidleadItemOptionSearchText(a).localeCompare(raidleadItemOptionSearchText(b),"de"));
+    }
+    raidleadItemOptions.forEach((info,index) => {
+      raidleadItemOptionMap[raidleadItemOptionKey(info,index)] = info;
+    });
+    raidleadItemOptionsRaidKey = currentRaidKey;
+    refreshRaidleadItemPickerLists();
+  }catch(error){
+    console.warn("Loot-Vorschläge konnten nicht geladen werden:", error);
+  }
+}
+
+function refreshRaidleadItemPickerLists(){
+  ["P1","P2","P3"].forEach(slot => {
+    const search = document.getElementById("raidleadPrio" + slot + "Search");
+    const list = document.getElementById("raidleadPrio" + slot + "List");
+    if(list) list.innerHTML = renderRaidleadItemOptionsForSlot(slot, search?.value || "");
+  });
+}
+
+function toggleRaidleadItemPicker(slot){
+  const menu = document.getElementById("raidleadPrio" + slot + "Menu");
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+  if(!menu) return;
+
+  document.querySelectorAll(".raidlead-item-menu").forEach(el => {
+    if(el !== menu) el.classList.add("hidden");
+  });
+
+  menu.classList.toggle("hidden");
+  if(!menu.classList.contains("hidden")){
+    filterRaidleadItemPicker(slot);
+    setTimeout(() => search?.focus(), 0);
+  }
+}
+
+function filterRaidleadItemPicker(slot){
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+  const list = document.getElementById("raidleadPrio" + slot + "List");
+  if(list) list.innerHTML = renderRaidleadItemOptionsForSlot(slot, search?.value || "");
+}
+
+function selectRaidleadPrioItem(slot,optionKey){
+  const info = raidleadItemInfoByKey(optionKey) || {name:optionKey};
+  const name = info.name || "";
+  const input = document.getElementById("raidleadPrio" + slot);
+  const trigger = document.getElementById("raidleadPrio" + slot + "Trigger");
+  const menu = document.getElementById("raidleadPrio" + slot + "Menu");
+  const search = document.getElementById("raidleadPrio" + slot + "Search");
+
+  if(input) input.value = name;
+  if(input) input.dataset.itemId = info.itemId || "";
+  if(trigger){
+    trigger.innerHTML = `
+      <span>${renderRaidleadPickerItem(info)}</span>
+      <span>⌄</span>
+    `;
+  }
+  if(search) search.value = "";
+  if(menu) menu.classList.add("hidden");
+  hideTooltip();
+}
+
+function selectRaidleadPrioItemFromButton(slot,button){
+  selectRaidleadPrioItem(slot, button?.dataset?.itemKey || "");
 }
 
 function renderRaidRowsOnly(){
@@ -1943,7 +2463,7 @@ function getFilteredAndSortedPrios(){
         entry.p1,
         entry.p2,
         entry.p3,
-        String(entry.p0Plus).toLowerCase() === "ja" ? entry.p1 : "",
+        isActiveP0Entry(entry) ? entry.p1 : "",
         renderP0PlusPointsText(entry.p1)
       ].join(" ").toLowerCase().includes(search);
     });
@@ -2041,7 +2561,7 @@ async function loadP0PlusPoints(){
     const response = await fetch(url,{cache:"no-store"});
     const result = await response.json();
     const raw = Array.isArray(result.entries) ? result.entries : [];
-    currentP0PlusEntries = raw.map(normalizeP0Entry).filter(Boolean);
+    currentP0PlusEntries = raw.map(normalizeP0Entry).filter(Boolean).map(entry => Object.assign({__currentGuildApi:true}, entry));
     return currentP0PlusEntries;
   }catch(error){
     console.warn("P0+ Punkte konnten nicht geladen werden:", error);
@@ -2150,7 +2670,7 @@ function renderP0PlusPoints(itemName,isActiveP0Plus){
   const entries = getP0PlusEntriesForItem(itemName);
 
   if(!entries.length){
-    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong></strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
+    return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>Preraid</strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
   }
 
   return `
@@ -2164,6 +2684,30 @@ function renderP0PlusPoints(itemName,isActiveP0Plus){
 function renderPlainP0Cell(entry,currentReleased,isP0Plus){
   if(!isP0Plus) return currentReleased ? '<span class="empty">-</span>' : '<span class="cross">✗</span>';
   return currentReleased ? renderItem(entry.p1) : '<span class="check">✓</span>';
+}
+
+function bossTokenNoticeConfig(){
+  if(currentRaidKey === "bwl"){
+    return { label:"Kopf posten", text:"Kopf von Nefarian" };
+  }
+  if(currentRaidKey === "ony"){
+    return { label:"Kopf posten", text:"Kopf von Onyxia" };
+  }
+  if(currentRaidKey === "zg"){
+    return { label:"Herz posten", text:"Herz von Hakkar" };
+  }
+  return null;
+}
+
+function renderBossTokenNoticeButton(entry){
+  const config = bossTokenNoticeConfig();
+  if(!config) return "";
+  return `
+    <button class="btn neutral small-btn"
+      onclick="postBossTokenNotice('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
+      ${safe(config.label)}
+    </button>
+  `;
 }
 
 function renderTooltipP0Plus(itemName){
@@ -2190,8 +2734,7 @@ function renderRows(){
   }
 
   return rows.map((entry,index)=>{
-    const isP0Plus =
-      String(entry.p0Plus || "").toLowerCase() === "ja";
+    const isP0Plus = isActiveP0Entry(entry);
 
     const clearButton =
       currentReleased && isP0Plus && isAllowedP0Raid()
@@ -2208,6 +2751,7 @@ function renderRows(){
         Löschen
       </button>
       ${clearButton}
+      ${renderBossTokenNoticeButton(entry)}
     `;
 
     if(!currentReleased){
@@ -2287,6 +2831,51 @@ async function reloadCurrentRaid(){
 
   document.getElementById("controlStatus").innerHTML = `<span class="ok">Raid aktualisiert.</span>`;
   renderRaidView();
+}
+
+async function postBossTokenNotice(player,server){
+  if(!currentRaidData || !currentRaidData.raidId || !currentRaidKey){
+    alert("Kein aktiver Raid geladen.");
+    return;
+  }
+
+  const config = bossTokenNoticeConfig();
+  if(!config){
+    alert("Diese Meldung gibt es nur für BWL, Ony und ZG.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Discord-Post im Worldbuff-Channel erstellen?\n\n" +
+    "Spieler: " + player + "\n" +
+    "Meldung: " + player + " hat den " + config.text + " erhalten."
+  );
+  if(!confirmed) return;
+
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=queueRaidleadBossTokenNotice" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&raid=" + encodeURIComponent(currentRaidKey) +
+    "&player=" + encodeURIComponent(player || "") +
+    "&server=" + encodeURIComponent(server || "") +
+    "&raidDate=" + encodeURIComponent(getRaidDateLabel()) +
+    "&raidTime=" + encodeURIComponent(getRaidTimeLabel()) +
+    "&t=" + Date.now();
+
+  try{
+    const response = await fetch(url, {method:"GET",cache:"no-store"});
+    const result = await response.json();
+    if(!result || result.success === false){
+      alert((result && result.error) || "Worldbuff-Hinweis konnte nicht vorgemerkt werden.");
+      return;
+    }
+    alert("Worldbuff-Hinweis wurde für den Bot vorgemerkt.");
+  }catch(error){
+    console.error(error);
+    alert("Worldbuff-Hinweis konnte nicht vorgemerkt werden.");
+  }
 }
 
 function openPrio(){
@@ -2406,6 +2995,96 @@ async function closeList(){
   localStorage.removeItem("raidOpen_" + currentRaidData.raidId);
   renderRaidView();
 }
+
+function raidleadPrioValue(id){
+  return String(document.getElementById(id)?.value || "").trim();
+}
+
+function raidleadPrioItemId(id){
+  return String(document.getElementById(id)?.dataset?.itemId || "").trim();
+}
+
+async function saveRaidleadPrioForPlayer(){
+  const status = document.getElementById("raidleadPrioStatus");
+  const saveButton = document.querySelector('button[onclick="saveRaidleadPrioForPlayer()"]');
+
+  if(!currentRaidData || !currentRaidData.raidId){
+    if(status) status.innerHTML = '<span class="bad">Kein aktiver Raid geladen.</span>';
+    return;
+  }
+
+  const player = raidleadPrioValue("raidleadPrioPlayer");
+  const server = raidleadPrioValue("raidleadPrioServer");
+  const playerClass = raidleadPrioValue("raidleadPrioClass");
+  const p1 = raidleadPrioValue("raidleadPrioP1");
+  const p1ItemId = raidleadPrioItemId("raidleadPrioP1");
+  const isP0Plus = hasP0Control() && Boolean(document.getElementById("raidleadPrioP0Plus")?.checked);
+  let p2 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP2");
+  let p3 = isP1OnlyRaid() ? "" : raidleadPrioValue("raidleadPrioP3");
+  let p2ItemId = isP1OnlyRaid() ? "" : raidleadPrioItemId("raidleadPrioP2");
+  let p3ItemId = isP1OnlyRaid() ? "" : raidleadPrioItemId("raidleadPrioP3");
+
+  if(isP0Plus && !isP1OnlyRaid()){
+    p2 = p2 || p1;
+    p3 = p3 || p1;
+    p2ItemId = p2ItemId || p1ItemId;
+    p3ItemId = p3ItemId || p1ItemId;
+  }
+
+  if(!player || !server || !playerClass || !p1 || (!isP1OnlyRaid() && !isP0Plus && (!p2 || !p3))){
+    if(status) status.innerHTML = '<span class="bad">Bitte Spieler, Server, Klasse und benötigte Prios ausfüllen.</span>';
+    return;
+  }
+
+  const confirmed = confirm(
+    "Prio für Spieler speichern?\n\n" +
+    "Spieler: " + player + "\n" +
+    "Raid: " + (raids[currentRaidKey]?.name || currentRaidKey || "-") +
+    (isP0Plus ? "\n" + p0Label() + ": ja" : "")
+  );
+  if(!confirmed) return;
+
+  const url =
+    RAID_API_URL +
+    "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=guildSavePrio" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
+    "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&raid=" + encodeURIComponent(raids[currentRaidKey]?.short || currentRaidKey || "") +
+    "&raidDate=" + encodeURIComponent(currentRaidData.date || "") +
+    "&raidTime=" + encodeURIComponent(currentRaidData.time || "") +
+    "&player=" + encodeURIComponent(player) +
+    "&server=" + encodeURIComponent(server) +
+    "&className=" + encodeURIComponent(playerClass) +
+    "&p1=" + encodeURIComponent(p1) +
+    "&p2=" + encodeURIComponent(p2) +
+    "&p3=" + encodeURIComponent(p3) +
+    "&p1ItemId=" + encodeURIComponent(p1ItemId) +
+    "&p2ItemId=" + encodeURIComponent(p2ItemId) +
+    "&p3ItemId=" + encodeURIComponent(p3ItemId) +
+    "&p0Plus=" + encodeURIComponent(isP0Plus ? "ja" : "nein") +
+    "&t=" + Date.now();
+
+  try{
+    if(saveButton) saveButton.disabled = true;
+    if(status) status.innerHTML = '<span class="warn">Speichere Prio ...</span>';
+
+    const response = await fetch(url, {cache:"no-store"});
+    const result = await response.json();
+
+    if(!result || result.success === false || result.error){
+      if(status) status.innerHTML = '<span class="bad">' + safe(result?.error || "Prio konnte nicht gespeichert werden.") + '</span>';
+      return;
+    }
+
+    if(status) status.innerHTML = '<span class="ok">Prio gespeichert.</span>';
+    await reloadCurrentRaid();
+  }catch(error){
+    console.error(error);
+    if(status) status.innerHTML = '<span class="bad">Prio konnte nicht gespeichert werden.</span>';
+  }finally{
+    if(saveButton) saveButton.disabled = false;
+  }
+}
 async function deleteSinglePrio(player,server){
   if(!currentRaidData || !currentRaidData.raidId){
     alert("Kein aktiver Raid gefunden.");
@@ -2501,7 +3180,7 @@ async function transferP0PlusPoints(){
   }
 
   const p0Count = currentPrios.filter(entry =>
-    String(entry.p0Plus || "").toLowerCase() === "ja" &&
+    isActiveP0Entry(entry) &&
     !isBenchPrio(entry)
   ).length;
 
@@ -2705,6 +3384,8 @@ function normalizeJsonLootItem(obj){
 }
 async function loadItemVisualData(){
   itemVisualMap = {};
+  itemVisualList = [];
+  itemVisualByIdMap = {};
   itemIdMap = {};
 
   try{
@@ -2715,9 +3396,11 @@ async function loadItemVisualData(){
       if(!info.name) return;
 
       const key = itemKey(info.name);
-      itemVisualMap[key] = info;
+      itemVisualList.push(info);
+      if(!itemVisualMap[key]) itemVisualMap[key] = info;
 
       if(info.itemId){
+        itemVisualByIdMap[info.itemId] = info;
         itemIdMap[key] = info.itemId;
       }
     });
@@ -2770,7 +3453,9 @@ function iconFallback(img){
   img.src = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
 }
 
-function findItemInfo(itemName){
+function findItemInfo(itemName,itemId){
+  const id = String(itemId || "").trim();
+  if(id && itemVisualByIdMap[id]) return itemVisualByIdMap[id];
   return itemVisualMap[itemKey(itemName)] || null;
 }
 
@@ -2792,9 +3477,9 @@ function renderTooltipLines(text){
     }).join("");
 }
 
-function showTooltip(event,itemName){
+function showTooltip(event,itemName,itemId){
   const tooltip = document.getElementById("tooltip");
-  const item = findItemInfo(itemName);
+  const item = findItemInfo(itemName,itemId);
   if(!tooltip || !item) return;
 
   const stats = (item.stats || [])
@@ -2879,6 +3564,7 @@ function renderItem(itemName){
 
 async function loadItemIdsForExport(){
   itemIdMap = {};
+  const itemIdsByName = {};
 
   try{
     const rows = await fetchRailwayLootRows(currentRaidKey);
@@ -2886,18 +3572,26 @@ async function loadItemIdsForExport(){
     rows.forEach(obj => {
       const info = normalizeJsonLootItem(obj);
       if(!info.name || !info.itemId) return;
-      itemIdMap[itemKey(info.name)] = info.itemId;
+      const key = itemKey(info.name);
+      itemIdsByName[key] = itemIdsByName[key] || new Set();
+      itemIdsByName[key].add(String(info.itemId));
+    });
+
+    Object.entries(itemIdsByName).forEach(([key, ids]) => {
+      const values = Array.from(ids);
+      itemIdMap[key] = values.length === 1 ? values[0] : "";
     });
   }catch(error){
     console.error("ItemIDs für Export konnten nicht geladen werden:", currentRaidKey, error);
   }
 }
 
-function formatItemForPrio3(itemName){
+function formatItemForPrio3(itemName, itemIdOverride){
   const name = String(itemName || "").trim();
+  const overrideId = String(itemIdOverride || "").trim();
 
   if(!name || name === "-"){
-    return "";
+    return "-0";
   }
 
   const existing = name.match(/^(.*)-(\d+)$/);
@@ -2907,7 +3601,7 @@ function formatItemForPrio3(itemName){
     return /\d/.test(itemText) ? itemId + "-" + itemText : name;
   }
 
-  const id = itemIdMap[itemKey(name)];
+  const id = overrideId || itemIdMap[itemKey(name)];
 
   if(!id){
     return name;
@@ -2937,9 +3631,9 @@ async function downloadPrio3ReforgedExport(){
     const player = entry.player || "";
     const playerClass = entry.class || "";
 
-    const p1 = formatItemForPrio3(entry.p1);
-    const p2 = formatItemForPrio3(entry.p2);
-    const p3 = formatItemForPrio3(entry.p3);
+    const p1 = formatItemForPrio3(entry.p1, entry.p1ItemId);
+    const p2 = formatItemForPrio3(entry.p2, entry.p2ItemId);
+    const p3 = formatItemForPrio3(entry.p3, entry.p3ItemId);
 
     content +=
       player + "\t\t" +
@@ -3011,7 +3705,7 @@ async function downloadAddonExport(){
     const player = entry.player || "";
 
     if(
-      String(entry.p0Plus || "").toLowerCase() === "ja"
+      isActiveP0Entry(entry)
       && entry.p1
     ){
       const info = addonItemInfoMap[itemKey(entry.p1)] || {};
@@ -3078,6 +3772,39 @@ function escapeQuotes(value){
 }
 
 checkLogin();
+
+/* === Gilden-Schutz: PO+/P0+ Punkte nie aus einer anderen Gilde anzeigen === */
+function lichtlootP0GuildMatchesCurrent(entry){
+  const slug=normalizeGuildKey(currentGuildSlug());
+  if(slug === "lichtloot") return true;
+  const guildName=normalizeGuildKey(displayGuildName(currentGuildInfo || {slug:currentGuildSlug()}));
+  const lootName=normalizeGuildKey(lootTitleFromGuild(currentGuildInfo || {slug:currentGuildSlug()}));
+  const raw=[entry?.guild,entry?.gilde,entry?.guildSlug,entry?.guild_slug,entry?.Gilde,entry?.Lootsystem,entry?.lootName,entry?.sourceGuild].map(normalizeGuildKey).filter(Boolean);
+  if(!raw.length) return entry?.__currentGuildApi === true;
+  return raw.some(value => value === slug || value === guildName || value === lootName);
+}
+function lichtlootFilterCurrentGuildP0Stores(){
+  const filter=list => (Array.isArray(list) ? list.filter(lichtlootP0GuildMatchesCurrent) : []);
+  if(window.p0PlusEntries) window.p0PlusEntries=filter(window.p0PlusEntries);
+  if(window.p0plusEntries) window.p0plusEntries=filter(window.p0plusEntries);
+  ["p0PlusData","p0plusData"].forEach(key => {
+    if(!window[key] || typeof window[key] !== "object") return;
+    Object.keys(window[key]).forEach(itemKey => { window[key][itemKey]=filter(window[key][itemKey]); });
+  });
+}
+(function(){
+  const oldRefresh=typeof refreshP0PlusEverywhere === "function" ? refreshP0PlusEverywhere : null;
+  if(oldRefresh){
+    refreshP0PlusEverywhere=function(){
+      return Promise.resolve(oldRefresh.apply(this,arguments)).then(result => {
+        lichtlootFilterCurrentGuildP0Stores();
+        return result;
+      });
+    };
+    refreshP0PlusEverywhere().catch(error => console.warn("PO+/P0+ Gildenabgleich fehlgeschlagen:", error));
+  }
+  setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
+})();
 </script>
 </body>
 </html>
