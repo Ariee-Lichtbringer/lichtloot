@@ -654,6 +654,16 @@ th{
   font-size:12px;
   font-weight:800;
 }
+.rules-editor{display:none;margin-bottom:18px;padding:14px;border:1px solid var(--gold);border-radius:14px;background:rgba(2,6,23,.86)}
+.rules-editor.active{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.rules-editor label{display:grid;gap:5px;color:var(--gold);font-size:12px;font-weight:900}
+.rules-editor input,.edit-rule-card textarea,.edit-table input,.edit-table select{padding:10px;border:1px solid var(--line);border-radius:9px;background:#0b1222;color:var(--text)}
+.rules-editor button,.edit-add{padding:10px 14px;border:1px solid var(--gold);border-radius:9px;background:rgba(250,204,21,.14);color:var(--text);font-weight:900;cursor:pointer}
+.edit-rule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.edit-rule-card{border:1px solid rgba(250,204,21,.3);border-radius:12px;overflow:hidden;background:rgba(2,6,23,.55)}
+.edit-rule-card h3{padding:12px;color:var(--gold);border-bottom:1px solid var(--line)}
+.edit-rule-card textarea{width:calc(100% - 24px);min-height:150px;margin:12px;resize:vertical}
+.edit-table{width:100%;border-collapse:collapse}.edit-table td,.edit-table th{padding:8px;vertical-align:top}.edit-table select[multiple]{min-height:115px}
 
 @media(max-width:860px){
   .overlay{padding:18px 12px 32px}
@@ -683,6 +693,12 @@ th{
   </nav>
 
   <main class="rules-shell">
+    <div id="rulesEditor" class="rules-editor">
+      <label>Master-Code<input id="rulesMasterCode" type="password" autocomplete="off"></label>
+      <button type="button" onclick="saveRulesEditor()">Änderungen speichern</button>
+      <button type="button" onclick="location.href='raidregeln.html?guild='+encodeURIComponent(CURRENT_GUILD_SLUG)">Bearbeitung beenden</button>
+      <span id="rulesEditorStatus"></span>
+    </div>
     <section class="rules-head">
       <div>
         <div id="rulesKicker" class="rules-kicker">Gilden-Raids</div>
@@ -714,7 +730,10 @@ th{
 <script>
 const LICHTLOOT_API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
 const CURRENT_GUILD_SLUG=(new URLSearchParams(location.search).get("guild") || "lichtloot").trim().toLowerCase();
+const RULES_EDIT_MODE=new URLSearchParams(location.search).get("edit")==="1";
 let rulesData=null;
+let rulesCatalog=null;
+let currentGuildInfo=null;
 let activeTab="raids";
 let activeRaid="bwl";
 let activeClass="all";
@@ -757,6 +776,7 @@ function filteredRules(rules){
 }
 
 function switchRulesTab(tab){
+  if(RULES_EDIT_MODE && rulesData) collectCurrentEditor();
   activeTab=tab;
   document.querySelectorAll(".rules-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === tab));
   document.querySelectorAll(".rules-panel").forEach(panel => panel.classList.remove("active"));
@@ -786,6 +806,7 @@ function renderGeneral(){
 }
 
 function setRaidFilter(raidId){
+  if(RULES_EDIT_MODE && rulesData) collectCurrentEditor();
   activeRaid=raidId;
   renderRaids();
 }
@@ -1124,7 +1145,7 @@ function renderConsumables(){
           ${rows.map(item => `
             <tr>
               <td>${escapeHtml(item.name)}</td>
-              <td><span class="pill ${item.required ? "required" : "optional"}">${item.required ? "wichtig" : "optional"}</span></td>
+              <td><span class="pill ${item.required || item.status === "important" ? "required" : "optional"}">${item.required ? "verpflichtend" : item.status === "important" ? "wichtig" : "optional"}</span></td>
               <td><div class="pill-row">${item.classes.map(cls => renderClassPill(cls)).join("")}</div></td>
             </tr>
           `).join("") || `<tr><td colspan="3">Keine Consumables gefunden.</td></tr>`}
@@ -1174,10 +1195,77 @@ function renderEnchants(){
 
 function renderActivePanel(){
   if(!rulesData) return;
+  if(RULES_EDIT_MODE){renderRulesEditorPanel();return;}
   if(activeTab === "general") renderGeneral();
   if(activeTab === "raids") renderRaids();
   if(activeTab === "consumables") renderConsumables();
   if(activeTab === "enchants") renderEnchants();
+}
+
+function linesFromEditor(id){
+  return String(document.getElementById(id)?.value || "").split(/\r?\n/).map(value=>value.trim()).filter(Boolean);
+}
+function editorClasses(){
+  return rulesCatalog?.enchantments?.classes || ["Krieger","Schurke","Jäger","Magier","Hexer","Priester","Paladin","Druide","Tank","Heiler"];
+}
+function renderRulesEditorPanel(){
+  document.getElementById("rulesEditor").classList.add("active");
+  document.querySelectorAll(".rules-panel").forEach(panel=>panel.classList.remove("active"));
+  const panel=document.getElementById("panel"+activeTab.charAt(0).toUpperCase()+activeTab.slice(1));
+  panel.classList.add("active");
+  if(activeTab==="general"){
+    panel.innerHTML=`<div class="edit-rule-grid">${Object.entries(generalLabels).map(([key,label])=>`<article class="edit-rule-card"><h3>${escapeHtml(label)}</h3><textarea id="editGeneral_${key}">${escapeHtml((rulesData.general?.[key]||[]).join("\n"))}</textarea></article>`).join("")}</div>`;
+    return;
+  }
+  if(activeTab==="raids"){
+    const raid=rulesData.raids.find(entry=>entry.id===activeRaid) || rulesData.raids[0];
+    activeRaid=raid?.id || "";
+    const menu=rulesData.raids.map(entry=>`<button class="${activeRaid===entry.id?"active":""}" onclick="setRaidFilter('${entry.id}')"><span>${escapeHtml(entry.name)}</span><small>${entry.id.toUpperCase()}</small></button>`).join("");
+    const groups=groupRaidRules(raid);
+    panel.innerHTML=`<div class="raid-layout"><aside class="raid-menu">${menu}</aside><div class="edit-rule-grid">${Object.entries(raidCategoryLabels).map(([key,label])=>`<article class="edit-rule-card"><h3>${escapeHtml(label)}</h3><textarea id="editRaid_${key}">${escapeHtml((groups[key]||[]).join("\n"))}</textarea></article>`).join("")}</div></div>`;
+    return;
+  }
+  if(activeTab==="consumables"){
+    const saved=new Map((rulesData.consumables||[]).map(item=>[item.name,item]));
+    const rows=(rulesCatalog?.consumables||[]).map(item=>saved.get(item.name)||{...item,classes:[],required:false,optional:true,status:"optional"});
+    rulesData.consumables=rows;
+    panel.innerHTML=`<div class="table-wrap"><table class="edit-table"><thead><tr><th>Consumable</th><th>Status</th><th>Klassen/Rollen</th></tr></thead><tbody>${rows.map((item,index)=>`<tr><td>${escapeHtml(item.name)}</td><td><select id="editConsumableStatus_${index}"><option value="required" ${item.required?"selected":""}>Verpflichtend</option><option value="important" ${item.status==="important"?"selected":""}>Wichtig</option><option value="optional" ${!item.required&&item.status!=="important"?"selected":""}>Optional</option></select></td><td><select multiple id="editConsumableClasses_${index}">${editorClasses().map(cls=>`<option ${item.classes?.includes(cls)?"selected":""}>${escapeHtml(cls)}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>`;
+    return;
+  }
+  const enchantOptions=[...new Set((rulesCatalog?.enchantments?.rows||[]).flat().map(entry=>entry.text))];
+  const saved=(rulesData.enchantments?.rows||[]).flat();
+  const rows=saved.length?saved:[{className:editorClasses()[0],text:enchantOptions[0]||""}];
+  rulesData.enchantments={classes:editorClasses(),rows:rows.map(row=>[row])};
+  panel.innerHTML=`<div class="table-wrap"><table class="edit-table"><thead><tr><th>Klasse/Rolle</th><th>Slot & Verzauberung</th></tr></thead><tbody>${rows.map((row,index)=>`<tr><td><select id="editEnchantClass_${index}">${editorClasses().map(cls=>`<option ${row.className===cls?"selected":""}>${escapeHtml(cls)}</option>`).join("")}</select></td><td><select id="editEnchantValue_${index}">${enchantOptions.map(value=>`<option ${row.text===value?"selected":""}>${escapeHtml(value)}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div><button class="edit-add" type="button" onclick="addEnchantRule()">+ Verzauberung hinzufügen</button>`;
+}
+function addEnchantRule(){collectCurrentEditor();const options=(rulesCatalog?.enchantments?.rows||[]).flat();rulesData.enchantments.rows.push([{className:editorClasses()[0],text:options[0]?.text||""}]);renderRulesEditorPanel()}
+function collectCurrentEditor(){
+  if(activeTab==="general") Object.keys(generalLabels).forEach(key=>rulesData.general[key]=linesFromEditor("editGeneral_"+key));
+  if(activeTab==="raids"){
+    const raid=rulesData.raids.find(entry=>entry.id===activeRaid);
+    if(raid) raid.rules=Object.keys(raidCategoryLabels).flatMap(key=>linesFromEditor("editRaid_"+key));
+  }
+  if(activeTab==="consumables") rulesData.consumables=(rulesData.consumables||[]).map((item,index)=>{
+    const status=document.getElementById("editConsumableStatus_"+index)?.value||"optional";
+    const classes=[...(document.getElementById("editConsumableClasses_"+index)?.selectedOptions||[])].map(option=>option.value);
+    return {...item,classes,status,required:status==="required",optional:status==="optional"};
+  });
+  if(activeTab==="enchants"){
+    const rows=[];let index=0;
+    while(document.getElementById("editEnchantClass_"+index)){
+      rows.push([{className:document.getElementById("editEnchantClass_"+index).value,text:document.getElementById("editEnchantValue_"+index).value}]);index++;
+    }
+    rulesData.enchantments={classes:editorClasses(),rows};
+  }
+}
+async function saveRulesEditor(){
+  collectCurrentEditor();
+  rulesData.updatedAt=new Date().toISOString();rulesData.source="Gildenleitung";
+  const status=document.getElementById("rulesEditorStatus");status.textContent="Speichert …";
+  const layout={...(currentGuildInfo?.layout||{}),raidRules:rulesData};
+  const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateGuildConfig",guild:CURRENT_GUILD_SLUG,masterCode:document.getElementById("rulesMasterCode").value,layout:JSON.stringify(layout)})});
+  const result=await response.json();
+  status.textContent=result.success?"✓ Gespeichert":(result.error||"Speichern fehlgeschlagen");
 }
 
 async function loadRules(){
@@ -1192,6 +1280,9 @@ async function loadRules(){
     const guildResponse=await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(),{cache:"no-store"});
     const guildData=await guildResponse.json();
     const guild=(guildData.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    currentGuildInfo=guild;
+    const catalogResponse=await fetch("data/raidregeln.json?v=20260625");
+    rulesCatalog=await catalogResponse.json();
     if(guild){
       document.title=`Raidregeln - ${guild.name || CURRENT_GUILD_SLUG}`;
       const logo=document.getElementById("guildLogo");
