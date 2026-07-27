@@ -8068,6 +8068,11 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
     action:"guildQueueRaidAnnouncementRefresh",
     masterCode,
     raidId,
+    playerPin:raid.playerPin || raid.prioPin || "",
+    prioPin:raid.playerPin || raid.prioPin || "",
+    raid:getRaidKey(raid),
+    raidDate:raid.raidDate || "",
+    raidTime:raid.raidTime || "",
     channelId:raidHelperValue("raidHelperEditChannel") || raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
     messageId:raid.discordMessageId || ""
   }).then(result => {
