@@ -664,6 +664,9 @@ th{
 .edit-rule-card h3{padding:12px;color:var(--gold);border-bottom:1px solid var(--line)}
 .edit-rule-card textarea{width:calc(100% - 24px);min-height:150px;margin:12px;resize:vertical}
 .edit-table{width:100%;border-collapse:collapse}.edit-table td,.edit-table th{padding:8px;vertical-align:top}.edit-table select[multiple]{min-height:115px}
+.edit-raid-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(2,6,23,.5)}
+.edit-raid-tabs button{padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:#0b1222;color:var(--text);font-weight:900;cursor:pointer}
+.edit-raid-tabs button.active{border-color:var(--gold);color:var(--gold);background:rgba(250,204,21,.13)}
 
 @media(max-width:860px){
   .overlay{padding:18px 12px 32px}
@@ -735,7 +738,7 @@ let rulesData=null;
 let rulesCatalog=null;
 let currentGuildInfo=null;
 let activeTab="raids";
-let activeRaid="bwl";
+let activeRaid=(new URLSearchParams(location.search).get("raid") || "bwl").trim().toLowerCase();
 let activeClass="all";
 
 const generalLabels={
@@ -808,7 +811,7 @@ function renderGeneral(){
 function setRaidFilter(raidId){
   if(RULES_EDIT_MODE && rulesData) collectCurrentEditor();
   activeRaid=raidId;
-  renderRaids();
+  if(RULES_EDIT_MODE) renderRulesEditorPanel(); else renderRaids();
 }
 
 const raidCategoryLabels={
@@ -1214,7 +1217,10 @@ function renderRulesEditorPanel(){
   const panel=document.getElementById("panel"+activeTab.charAt(0).toUpperCase()+activeTab.slice(1));
   panel.classList.add("active");
   if(activeTab==="general"){
-    panel.innerHTML=`<div class="edit-rule-grid">${Object.entries(generalLabels).map(([key,label])=>`<article class="edit-rule-card"><h3>${escapeHtml(label)}</h3><textarea id="editGeneral_${key}">${escapeHtml((rulesData.general?.[key]||[]).join("\n"))}</textarea></article>`).join("")}</div>`;
+    const raid=rulesData.raids.find(entry=>entry.id===activeRaid)||rulesData.raids[0];
+    activeRaid=raid?.id||"";
+    const groups=groupRaidRules(raid);
+    panel.innerHTML=`<div class="edit-raid-tabs">${rulesData.raids.map(entry=>`<button class="${activeRaid===entry.id?"active":""}" type="button" onclick="setRaidFilter('${entry.id}')">${escapeHtml(entry.name)}</button>`).join("")}</div><div class="edit-rule-grid">${Object.entries(raidCategoryLabels).map(([key,label])=>`<article class="edit-rule-card"><h3>${escapeHtml(label)}</h3><textarea id="editRaid_${key}">${escapeHtml((groups[key]||[]).join("\n"))}</textarea></article>`).join("")}</div>`;
     return;
   }
   if(activeTab==="raids"){
@@ -1240,7 +1246,10 @@ function renderRulesEditorPanel(){
 }
 function addEnchantRule(){collectCurrentEditor();const options=(rulesCatalog?.enchantments?.rows||[]).flat();rulesData.enchantments.rows.push([{className:editorClasses()[0],text:options[0]?.text||""}]);renderRulesEditorPanel()}
 function collectCurrentEditor(){
-  if(activeTab==="general") Object.keys(generalLabels).forEach(key=>rulesData.general[key]=linesFromEditor("editGeneral_"+key));
+  if(activeTab==="general"){
+    const raid=rulesData.raids.find(entry=>entry.id===activeRaid);
+    if(raid) raid.rules=Object.keys(raidCategoryLabels).flatMap(key=>linesFromEditor("editRaid_"+key));
+  }
   if(activeTab==="raids"){
     const raid=rulesData.raids.find(entry=>entry.id===activeRaid);
     if(raid) raid.rules=Object.keys(raidCategoryLabels).flatMap(key=>linesFromEditor("editRaid_"+key));
@@ -1265,7 +1274,12 @@ async function saveRulesEditor(){
   const layout={...(currentGuildInfo?.layout||{}),raidRules:rulesData};
   const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateGuildConfig",guild:CURRENT_GUILD_SLUG,masterCode:document.getElementById("rulesMasterCode").value,layout:JSON.stringify(layout)})});
   const result=await response.json();
-  status.textContent=result.success?"✓ Gespeichert":(result.error||"Speichern fehlgeschlagen");
+  if(result.success){
+    status.textContent="✓ Gespeichert";
+    location.href=`raidregeln.html?guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}&raid=${encodeURIComponent(activeRaid)}`;
+    return;
+  }
+  status.textContent=result.error||"Speichern fehlgeschlagen";
 }
 
 async function loadRules(){
@@ -1320,7 +1334,7 @@ async function loadRules(){
       if(!response.ok) throw new Error("Regeln konnten nicht geladen werden.");
       rulesData=await response.json();
     }
-    renderRaids();
+    renderActivePanel();
     const updated=rulesData.updatedAt ? new Date(rulesData.updatedAt).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}) : "unbekannt";
     document.getElementById("rulesFooter").textContent=`Quelle: ${rulesData.source || "CSV Export"} · Stand: ${updated}`;
   }catch(error){
