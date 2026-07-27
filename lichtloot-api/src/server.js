@@ -5411,6 +5411,32 @@ async function queuePoPost({ guildId, query: params }) {
     );
     restoredEntries = restoreResult.rowCount || 0;
   }
+  await query(
+    `insert into po_post_entries (
+       guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+       raid, title, raid_pin, raid_date, raid_time, mode, config_only
+     )
+     select $1,$2,$3,$4,'',$5,$6,$7,$8,$9,$10,true
+     where not exists (
+       select 1
+       from po_post_entries
+       where guild_id = $1
+         and post_key = $2
+         and archived_at is null
+     )`,
+    [
+      guildId,
+      postKey,
+      sourceChannelId,
+      targetChannelId,
+      normalizeRaidType(raid).toUpperCase(),
+      clean(params.title) || "PO Liste",
+      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid),
+      clean(params.raidDate || params.date || params.datum),
+      clean(params.raidTime || params.time || params.uhrzeit),
+      clean(params.mode || params.poMode) || "signup"
+    ]
+  );
   const queued = await enqueueBotUpdate({
     guildId,
     type: "po_post",
