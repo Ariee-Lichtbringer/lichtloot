@@ -7318,7 +7318,8 @@ async function findCharacterForPin(guildId, pin, charName, server) {
   const normalizedPin = normalizePin(pin);
   const characterName = clean(charName);
   const result = await query(
-    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin, p.approval_status
+    `select c.id, c.name, c.server, c.class_name, c.created_at,
+            p.id as player_id, p.player_pin, p.approval_status
      from players p
      join characters c on c.player_id = p.id
      where p.guild_id = $1
@@ -13514,6 +13515,34 @@ async function saveRaidSignup({ guildId, query: params }) {
   const role = normalizeSignupRole(params.signupRole || params.role);
   const note = clean(params.note || params.comment);
   const source = clean(params.source || "lichtloot");
+  const discordUserId = clean(params.discordUserId);
+  const discordName = clean(params.discordName);
+
+  // Pro Raid darf ein SpielerLogin nur genau einen Charakter anmelden.
+  // Ein Wechsel des Charakters ersetzt deshalb die bisherige Anmeldung.
+  await query(
+    `delete from raid_signups rs
+     using characters c
+     where rs.character_id = c.id
+       and rs.raid_id = $1
+       and c.player_id = $2
+       and rs.character_id <> $3`,
+    [raid.id, character.player_id, character.id]
+  );
+
+  // Ältere Discord-Importe desselben Spielers dürfen nicht parallel zur
+  // verifizierten SpielerLogin-Anmeldung im Embed stehen bleiben.
+  await query(
+    `delete from raid_external_signups
+     where guild_id = $1
+       and raid_id = $2
+       and (
+         lower(player_name) = lower($3)
+         or ($4 <> '' and player_pin = $4)
+         or ($5 <> '' and discord_user_id = $5)
+       )`,
+    [guildId, raid.id, charName, playerPin, discordUserId]
+  );
 
   const result = await query(
     `insert into raid_signups (
@@ -13537,8 +13566,8 @@ async function saveRaidSignup({ guildId, query: params }) {
       note,
       role,
       source,
-      clean(params.discordUserId),
-      clean(params.discordName)
+      discordUserId,
+      discordName
     ]
   );
 
@@ -13828,6 +13857,60 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     const playerName = clean(row.char || row.spieler || row.player || row.name);
     if (!playerName) continue;
     const source = clean(row.quelle || row.source || `Discord:${clean(params.discordChannelId)}:${clean(params.raidHelperMessageId || params.discordMessageId)}`);
+    const discordUserId = clean(row.discordUserId);
+    const normalizedStatus = normalizeSignupStatus(row.status);
+    const normalizedRole = normalizeSignupRole(row.role || row.rolle);
+    const rowNote = clean(row.note || row.comment);
+
+    // Status-Schaltflächen bearbeiten die vorhandene, per SpielerLogin
+    // angelegte Anmeldung. Ohne diese Prüfung entstand zusätzlich ein
+    // externer Datensatz und derselbe Charakter erschien zweimal.
+    const localUpdate = await query(
+      `update raid_signups rs
+       set status = $4,
+           role = $5,
+           note = $6,
+           source = coalesce(nullif($7, ''), rs.source),
+           discord_user_id = coalesce(nullif($8, ''), rs.discord_user_id),
+           discord_name = coalesce(nullif($9, ''), rs.discord_name),
+           updated_at = now()
+       from characters c
+       where rs.character_id = c.id
+         and rs.raid_id = $1
+         and lower(c.name) = lower($2)
+         and (
+           ($3 <> '' and rs.discord_user_id = $3)
+           or rs.source = $7
+         )
+       returning rs.id`,
+      [
+        raid.id,
+        playerName,
+        discordUserId,
+        normalizedStatus,
+        normalizedRole,
+        rowNote,
+        source,
+        discordUserId,
+        clean(row.discordName || row.discord)
+      ]
+    );
+
+    if (localUpdate.rowCount) {
+      await query(
+        `delete from raid_external_signups
+         where guild_id = $1
+           and raid_id = $2
+           and (
+             lower(player_name) = lower($3)
+             or ($4 <> '' and discord_user_id = $4)
+           )`,
+        [guildId, raid.id, playerName, discordUserId]
+      );
+      written += 1;
+      continue;
+    }
+
     const updateResult = await query(
       `update raid_external_signups
        set raid_date = $5,
@@ -13854,13 +13937,13 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
         parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
         clean(params.raidTime || row.raidTime || raid.raid_time),
         clean(row.klasse || row.className),
-        normalizeSignupRole(row.role || row.rolle),
-        normalizeSignupStatus(row.status),
-        clean(row.discordUserId),
+        normalizedRole,
+        normalizedStatus,
+        discordUserId,
         clean(row.discordName || row.discord),
         clean(params.discordChannelId || row.discordChannelId),
         clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
-        clean(row.note || row.comment),
+        rowNote,
         clean(row.playerPin || row.pin || row.spielerLogin)
       ]
     );
@@ -13881,14 +13964,14 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           clean(params.raidTime || row.raidTime || raid.raid_time),
           playerName,
           clean(row.klasse || row.className),
-          normalizeSignupRole(row.role || row.rolle),
-          normalizeSignupStatus(row.status),
+          normalizedRole,
+          normalizedStatus,
           source,
-          clean(row.discordUserId),
+          discordUserId,
           clean(row.discordName || row.discord),
           clean(params.discordChannelId || row.discordChannelId),
           clean(params.raidHelperMessageId || params.discordMessageId || row.raidHelperMessageId || row.discordMessageId),
-          clean(row.note || row.comment),
+          rowNote,
           clean(row.playerPin || row.pin || row.spielerLogin)
         ]
       );
