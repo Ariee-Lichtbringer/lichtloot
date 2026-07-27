@@ -8175,7 +8175,9 @@ function formatMyPrioDateOnly(value){
 
 
 /* === FINAL FIX: P0+ Übersicht exakt wie AQ40 – Icons, Farben, offene Bereiche === */
-const P0PLUS_OVERVIEW_RAIDS_V5_FINAL = ["MC","BWL","AQ40","NAXX","ZG-MITTWOCH","ZG-PRIME","ZG-LATE"];
+const P0PLUS_OVERVIEW_RAIDS_V5_FINAL = ["MC","BWL","AQ40","NAXX"].concat(
+  CURRENT_GUILD_SLUG === "nachtloot" ? ["ZG-MITTWOCH","ZG-PRIME","ZG-LATE"] : []
+);
 window.p0PlusOpenRaids = window.p0PlusOpenRaids || new Set();
 window.p0PlusOpenItems = window.p0PlusOpenItems || new Set();
 
@@ -8418,7 +8420,9 @@ function loadP0PlusOverview(){
 
 
 /* === FINAL 1:1 AQ40 P0+ Übersicht – Farben, Icons, Tooltip über Fenster === */
-const P0PLUS_OVERVIEW_RAIDS_AQ40_1ZU1 = ["MC","BWL","AQ40","NAXX","ZG-MITTWOCH","ZG-PRIME","ZG-LATE"];
+const P0PLUS_OVERVIEW_RAIDS_AQ40_1ZU1 = ["MC","BWL","AQ40","NAXX"].concat(
+  CURRENT_GUILD_SLUG === "nachtloot" ? ["ZG-MITTWOCH","ZG-PRIME","ZG-LATE"] : []
+);
 window.p0PlusOpenRaids = window.p0PlusOpenRaids || new Set();
 window.p0PlusOpenItems = window.p0PlusOpenItems || new Set();
 
