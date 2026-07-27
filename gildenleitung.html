@@ -10938,7 +10938,7 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() });
+    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
     await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
