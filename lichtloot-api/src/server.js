@@ -1732,9 +1732,9 @@ function normalizePlayerRole(value) {
 
 function normalizePlayerApprovalStatus(value) {
   const raw = clean(value).toLowerCase();
-  if (["pending", "wartet", "wartend", "neu", "new"].includes(raw)) return "pending";
+  if (["approved", "freigegeben", "approve"].includes(raw)) return "approved";
   if (["rejected", "abgelehnt", "reject"].includes(raw)) return "rejected";
-  return "approved";
+  return "pending";
 }
 
 function playerApprovalLabel(value) {
@@ -1789,7 +1789,7 @@ async function findPlayerByPin(guildId, pin) {
      where guild_id = $1
        and player_pin = $2
        and coalesce(is_blocked, false) = false
-       and coalesce(approval_status, 'approved') = 'approved'`,
+       and approval_status = 'approved'`,
     [guildId, normalizePin(pin)]
   );
   return result.rows[0] || null;
@@ -1828,7 +1828,7 @@ async function getVerifiedSenderCharacterName(guildId, pin, charName, server) {
      join characters c on c.player_id = p.id
      where p.guild_id = $1
        and p.player_pin = $2
-       and coalesce(p.approval_status, 'approved') = 'approved'
+       and p.approval_status = 'approved'
        and lower(c.name) = lower($3)
        ${serverClause}
      order by c.created_at asc
@@ -1858,7 +1858,7 @@ async function findPlayerByRecipient(guildId, recipient, server) {
      join players p on p.id = c.player_id
      where p.guild_id = $1
        and coalesce(p.is_blocked, false) = false
-       and coalesce(p.approval_status, 'approved') = 'approved'
+       and p.approval_status = 'approved'
        and lower(c.name) = lower($2)
        ${serverClause}
      order by c.created_at asc
@@ -1917,7 +1917,7 @@ async function getCharactersByPin(guildId, pin) {
        ) as main_char
      from players p
      join characters c on c.player_id = p.id
-     where p.guild_id = $1 and p.player_pin = $2 and coalesce(p.is_blocked, false) = false and coalesce(p.approval_status, 'approved') = 'approved'
+     where p.guild_id = $1 and p.player_pin = $2 and coalesce(p.is_blocked, false) = false and p.approval_status = 'approved'
      order by c.is_main desc, c.created_at asc, c.name asc`,
     [guildId, normalizedPin]
   );
@@ -1939,7 +1939,7 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
      where p.guild_id <> $1
        and p.player_pin = $2
        and coalesce(p.is_blocked, false) = false
-       and coalesce(p.approval_status, 'approved') = 'approved'
+       and p.approval_status = 'approved'
      order by p.created_at asc
      limit 1`,
     [guildId, normalizedPin]
@@ -1952,13 +1952,10 @@ async function ensureCrossGuildPlayerLogin(guildId, pin) {
     await client.query("begin");
     const playerResult = await client.query(
       `insert into players (guild_id, player_pin, security_question, security_answer, approval_status)
-       values ($1, $2, $3, $4, 'approved')
+       values ($1, $2, $3, $4, 'pending')
        on conflict (guild_id, player_pin) do update
          set security_question = coalesce(players.security_question, excluded.security_question),
              security_answer = coalesce(players.security_answer, excluded.security_answer),
-             approval_status = 'approved',
-             approved_at = coalesce(players.approved_at, now()),
-             approved_by = coalesce(players.approved_by, 'Gildenübergreifender SpielerLogin'),
              updated_at = now()
        returning id, player_pin`,
       [guildId, normalizedPin, sourcePlayer.security_question || null, sourcePlayer.security_answer || null]
@@ -2009,7 +2006,7 @@ async function repairEmptyCrossGuildPlayerLogins(guildId) {
          where source.guild_id <> target.guild_id
            and source.player_pin = target.player_pin
            and coalesce(source.is_blocked, false) = false
-           and coalesce(source.approval_status, 'approved') = 'approved'
+           and source.approval_status = 'approved'
        )`,
     [guildId]
   );
@@ -2501,13 +2498,14 @@ async function ensurePlayerRoleSchema() {
   await query(
     `alter table players
        add column if not exists role text not null default 'member',
-       add column if not exists approval_status text not null default 'approved',
+       add column if not exists approval_status text not null default 'pending',
        add column if not exists approved_at timestamptz,
        add column if not exists approved_by text not null default '',
        add column if not exists is_blocked boolean not null default false,
        add column if not exists blocked_at timestamptz,
        add column if not exists blocked_reason text not null default ''`
   );
+  await query(`alter table players alter column approval_status set default 'pending'`);
 }
 
 async function ensureBuffTables() {
@@ -6349,10 +6347,13 @@ async function updatePoPostEntry({ guildId, query: params }) {
   }
 
   const characterResult = await query(
-    `select c.id, c.name, c.server, c.class_name, p.player_pin
+    `select c.id, c.name, c.server, c.class_name, p.player_pin, p.approval_status, p.is_blocked
      from characters c
      join players p on p.id = c.player_id
-     where p.guild_id = $1 and c.id = $2
+     where p.guild_id = $1
+       and c.id = $2
+       and p.approval_status = 'approved'
+       and coalesce(p.is_blocked, false) = false
      limit 1`,
     [guildId, characterId]
   );
@@ -6459,6 +6460,8 @@ async function updatePoPostEntry({ guildId, query: params }) {
           ...params,
           raidPin: rowRaidPin,
           prioPin: rowRaidPin,
+          playerPin: character.player_pin,
+          spielerLogin: character.player_pin,
           player: row.player_name,
           char: row.player_name,
           item: row.item_name,
@@ -6907,6 +6910,27 @@ async function savePoPostEntry({ guildId, query: params }) {
     throw error;
   }
 
+  const releaseRaid = normalizePoReleaseRaid(raidKey);
+  if (releaseRaid) {
+    const release = await checkCharacterPoRelease({
+      guildId,
+      query: {
+        ...params,
+        raid: releaseRaid,
+        playerPin,
+        player: character.name,
+        server: character.server
+      }
+    });
+    if (!release.allowed) {
+      const error = new Error(
+        `Dieser Charakter hat für ${releaseRaid.toUpperCase()} keine PO-Freigabe bei dieser Gilde.`
+      );
+      error.statusCode = 403;
+      throw error;
+    }
+  }
+
   const client = await pool.connect();
   try {
     await client.query("begin");
@@ -7328,11 +7352,12 @@ async function findCharacterForPin(guildId, pin, charName, server) {
   const characterName = clean(charName);
   const result = await query(
     `select c.id, c.name, c.server, c.class_name, c.created_at,
-            p.id as player_id, p.player_pin, p.approval_status
+            p.id as player_id, p.player_pin, p.approval_status, p.is_blocked
      from players p
      join characters c on c.player_id = p.id
      where p.guild_id = $1
        and p.player_pin = $2
+       and coalesce(p.is_blocked, false) = false
        and lower(c.name) = lower($3)
      order by
        case when lower(c.server) = lower($4) then 0 else 1 end,
@@ -7819,21 +7844,46 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     throw error;
   }
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
-  if (playerPin) {
-    await ensureCrossGuildPlayerLogin(guildId, playerPin);
-    const verifiedCharacter = await findCharacterForPin(
+  if (!playerPin) {
+    const error = new Error("SpielerLogin fehlt. Eine PO kann nur mit freigegebenem SpielerLogin eingetragen werden.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await ensureCrossGuildPlayerLogin(guildId, playerPin);
+  const verifiedCharacter = await findCharacterForPin(
+    guildId,
+    playerPin,
+    params.player || params.char || params.spieler,
+    params.server
+  );
+  if (!verifiedCharacter) {
+    const error = new Error("SpielerLogin passt nicht zu diesem Charakter oder ist gesperrt.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (normalizePlayerApprovalStatus(verifiedCharacter.approval_status) !== "approved") {
+    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const releaseRaid = normalizePoReleaseRaid(raidType);
+  if (releaseRaid) {
+    const release = await checkCharacterPoRelease({
       guildId,
-      playerPin,
-      params.player || params.char || params.spieler,
-      params.server
-    );
-    if (!verifiedCharacter) {
-      const error = new Error("SpielerLogin passt nicht zu diesem Charakter.");
-      error.statusCode = 403;
-      throw error;
-    }
-    if (normalizePlayerApprovalStatus(verifiedCharacter.approval_status) !== "approved") {
-      const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
+      query: {
+        ...params,
+        raid: releaseRaid,
+        playerPin,
+        player: verifiedCharacter.name,
+        server: verifiedCharacter.server
+      }
+    });
+    if (!release.allowed) {
+      const error = new Error(
+        `Dieser Charakter hat für ${releaseRaid.toUpperCase()} keine PO-Freigabe bei dieser Gilde.`
+      );
       error.statusCode = 403;
       throw error;
     }
@@ -7926,13 +7976,24 @@ async function syncPoSignupPrios({ guildId, query: params }) {
   }
 
   const entriesResult = await query(
-    `select *
-     from po_post_entries
-     where guild_id = $1
-       and post_key = $2
-       and approval_status = 'approved'
-       and archived_at is null
-     order by updated_at asc, lower(player_name) asc, lower(item_name) asc`,
+    `select ppe.*, approved_player.player_pin
+     from po_post_entries ppe
+     left join lateral (
+       select p.player_pin
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = ppe.guild_id
+         and lower(c.name) = lower(ppe.player_name)
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false
+       order by c.is_main desc, c.created_at asc
+       limit 1
+     ) approved_player on true
+     where ppe.guild_id = $1
+       and ppe.post_key = $2
+       and ppe.approval_status = 'approved'
+       and ppe.archived_at is null
+     order by ppe.updated_at asc, lower(ppe.player_name) asc, lower(ppe.item_name) asc`,
     [guildId, postKey]
   );
 
@@ -7946,6 +8007,8 @@ async function syncPoSignupPrios({ guildId, query: params }) {
           ...params,
           raidPin,
           prioPin: raidPin,
+          playerPin: entry.player_pin,
+          spielerLogin: entry.player_pin,
           player: entry.player_name,
           char: entry.player_name,
           item: entry.item_name,
@@ -19286,7 +19349,7 @@ app.get("/api/guilds/:guildSlug/players/by-pin/:pin/characters", async (req, res
        where p.guild_id = $1
          and p.player_pin = $2
          and coalesce(p.is_blocked, false) = false
-         and coalesce(p.approval_status, 'approved') = 'approved'
+         and p.approval_status = 'approved'
        order by c.name asc`,
       [guild.id, req.params.pin]
     );
