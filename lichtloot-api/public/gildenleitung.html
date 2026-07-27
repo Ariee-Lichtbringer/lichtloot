@@ -6762,11 +6762,11 @@ function renderDashboardCards(){
   const raidGroups = [
     {
       title:"40er Raids",
-      raids:raids.filter(raid => !["zg","aq20"].includes(getRaidKey(raid)))
+      raids:raids.filter(raid => !["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
     },
     {
       title:"20er Raids",
-      raids:raids.filter(raid => ["zg","aq20"].includes(getRaidKey(raid)))
+      raids:raids.filter(raid => ["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
     }
   ].filter(group => group.raids.length);
 
@@ -10740,7 +10740,7 @@ async function deleteSelectedPoSignups(){
 }
 
 const PO_SIGNUP_LIST_RAID_GROUPS = {
-  "20":["aq20","zg"],
+  "20":["aq20","zg","zg-mittwoch","zg-prime","zg-late"],
   "40":["naxx","aq40","bwl","mc","ony"]
 };
 
@@ -10765,7 +10765,9 @@ function poSignupListRaidKeys(){
   if(poSignupListTierFilter === "20" || poSignupListTierFilter === "40"){
     return PO_SIGNUP_LIST_RAID_GROUPS[poSignupListTierFilter];
   }
-  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
+  return ["naxx","aq40","bwl","mc","ony","aq20","zg"].concat(
+    CURRENT_GUILD_SLUG === "nachtloot" ? ["zg-mittwoch","zg-prime","zg-late"] : []
+  );
 }
 
 function poSignupConfigMatchesListFilter(row){
