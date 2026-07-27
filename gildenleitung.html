@@ -4708,8 +4708,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               </div>
             </div>
             <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
-              <input id="raidHelperCreatePoSignup" type="checkbox" checked>
-              <span>PO-Anmelder erstellen</span>
+              <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
+              <span>PO-Anmelder automatisch mit erstellen</span>
             </label>
           </section>
 
@@ -11510,7 +11510,7 @@ async function createRaidHelperSignup(){
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
-  const shouldCreatePoSignup = !!document.getElementById("raidHelperCreatePoSignup")?.checked;
+  const shouldCreatePoSignup = true;
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
