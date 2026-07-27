@@ -2965,22 +2965,28 @@ async function getP0ReleaseList(guildId = "") {
     return { success: true, releases: p0ReleaseCache };
   }
 
-  const rows = parseCsvRows(await fetchText(p0ReleaseCsvUrl));
   const releases = { mc: [], bwl: [], aq40: [], naxx: [] };
-  const raidColumns = new Map();
-  (rows[0] || []).forEach((cell, index) => {
-    const raidKey = raidKeyFromP0ReleaseHeader(cell);
-    if (raidKey) raidColumns.set(index, raidKey);
-  });
-
-  rows.slice(1).forEach(row => {
-    raidColumns.forEach((raidKey, index) => {
-      const player = clean(row[index]);
-      if (player && !releases[raidKey].some(existing => existing.toLowerCase() === player.toLowerCase())) {
-        releases[raidKey].push(player);
-      }
+  let includeLegacyCsv = !guildId;
+  if (guildId) {
+    const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
+    includeLegacyCsv = clean(guildResult.rows[0]?.slug).toLowerCase() === "lichtloot";
+  }
+  if (includeLegacyCsv) {
+    const rows = parseCsvRows(await fetchText(p0ReleaseCsvUrl));
+    const raidColumns = new Map();
+    (rows[0] || []).forEach((cell, index) => {
+      const raidKey = raidKeyFromP0ReleaseHeader(cell);
+      if (raidKey) raidColumns.set(index, raidKey);
     });
-  });
+    rows.slice(1).forEach(row => {
+      raidColumns.forEach((raidKey, index) => {
+        const player = clean(row[index]);
+        if (player && !releases[raidKey].some(existing => existing.toLowerCase() === player.toLowerCase())) {
+          releases[raidKey].push(player);
+        }
+      });
+    });
+  }
 
   if (guildId) {
     try {
