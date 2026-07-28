@@ -11,8 +11,11 @@ main{width:min(1100px,94%);margin:auto;padding:32px 0 70px}.brand{text-align:cen
 .card{background:rgba(8,17,33,.94);border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 15px 45px #0007}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:grid;gap:6px}.wide{grid-column:1/-1}label{font-size:12px;font-weight:800;color:var(--gold);text-transform:uppercase}
 input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1c;color:var(--text);padding:11px;font:inherit}button{cursor:pointer;font-weight:800}.primary{background:linear-gradient(90deg,#d7ad22,#2458d8);border:0}.danger{background:#35131a}.items{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.loot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.loot-head h2{margin:0;color:var(--gold)}.search{width:min(420px,100%)}
+.loot-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:10px;margin-top:14px;max-height:610px;overflow:auto;padding-right:4px}.loot-item{position:relative;display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;text-align:left;background:linear-gradient(135deg,#0d1830,#070e1e);border:1px solid #334155;padding:9px;border-radius:11px;min-height:68px}.loot-item:hover{border-color:var(--gold);transform:translateY(-1px)}.loot-item img{width:48px;height:48px;border-radius:8px;border:1px solid #735d16}.loot-name{font-weight:800;color:#c084fc;line-height:1.15}.loot-id{display:block;font-size:11px;color:var(--muted);margin-top:4px}.prio-badge{position:absolute;right:7px;top:7px;background:var(--gold);color:#111827;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:950}
+.selection{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.pick{position:relative;border:1px solid #465670;border-radius:10px;padding:10px;background:#071022;min-height:60px}.pick strong{display:block;color:var(--gold);font-size:12px}.pick span{display:block;margin-top:5px;font-weight:800;padding-right:24px}.pick button{position:absolute;right:6px;top:6px;padding:2px 7px}
 .status{padding:12px;border-radius:9px;background:#071022;margin-top:12px}.ok{color:#4ade80}.bad{color:#fb7185}.entry{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #263349;padding:10px 0}.entry:last-child{border:0}
-@media(max-width:760px){.grid,.items{grid-template-columns:1fr}.wide{grid-column:auto}}
+@media(max-width:760px){.grid,.items,.selection{grid-template-columns:1fr}.wide{grid-column:auto}.loot-list{grid-template-columns:1fr}}
 </style>
 </head>
 <body><main id="app" hidden>
@@ -28,12 +31,15 @@ input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1
     </div>
   </section>
   <section class="card">
-    <div class="items">
-      <div class="field"><label>Prio 1</label><select id="p1"></select></div>
-      <div class="field"><label>Prio 2</label><select id="p2"></select></div>
-      <div class="field"><label>Prio 3</label><select id="p3"></select></div>
+    <div class="loot-head"><h2>Möglicher Loot</h2><input id="itemSearch" class="search" placeholder="🔎 Item suchen …" oninput="renderLootList()"></div>
+    <div class="selection">
+      <div class="pick"><strong>PRIO 1</strong><span id="p1Label">Noch nicht gewählt</span><button onclick="clearPick(1)">×</button></div>
+      <div class="pick"><strong>PRIO 2</strong><span id="p2Label">Noch nicht gewählt</span><button onclick="clearPick(2)">×</button></div>
+      <div class="pick"><strong>PRIO 3</strong><span id="p3Label">Noch nicht gewählt</span><button onclick="clearPick(3)">×</button></div>
     </div>
+    <select id="p1" hidden></select><select id="p2" hidden></select><select id="p3" hidden></select>
     <div class="field" style="margin-top:14px"><label><input id="p0Plus" type="checkbox"> P0+ – Prio 1 für alle drei Plätze übernehmen</label></div>
+    <div id="lootList" class="loot-list"></div>
     <button class="primary wide" style="width:100%;margin-top:14px" onclick="saveEntry()">Prio zur Notfallliste hinzufügen</button>
     <div id="status" class="status">Lootdaten werden aus GitHub geladen …</div>
   </section>
@@ -57,8 +63,20 @@ function renderItems(){
   const items=allItems.filter(item=>String(item.raid_type||"").toLowerCase()===raidKey()).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de"));
   const options='<option value="">Bitte wählen</option>'+items.map(item=>`<option value="${esc(item.name)}">${esc(item.name)}</option>`).join("");
   ["p1","p2","p3"].forEach(id=>$(id).innerHTML=options);
+  renderLootList();renderPicks();
   $("status").innerHTML=`<span class="ok">✓ ${items.length} ${$("raid").value}-Items direkt aus GitHub geladen.</span>`;
 }
+function currentItems(){return allItems.filter(item=>String(item.raid_type||"").toLowerCase()===raidKey()).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de"))}
+function iconUrl(item){return `https://wow.zamimg.com/images/wow/icons/large/${String(item.icon_url||"inv_misc_questionmark").toLowerCase()}.jpg`}
+function renderLootList(){
+  const box=$("lootList");if(!box)return;
+  const query=($("itemSearch")?.value||"").trim().toLowerCase(),selected=[$("p1").value,$("p2").value,$("p3").value];
+  const visible=currentItems().filter(item=>!query||[item.name,item.item_id,item.boss,item.slot,item.type].join(" ").toLowerCase().includes(query));
+  box.innerHTML=visible.map(item=>{const pos=selected.indexOf(item.name)+1,name=String(item.name).replace(/\\/g,"\\\\").replace(/'/g,"\\'");return `<button class="loot-item" type="button" onclick="pickItem('${name}')"><img loading="lazy" src="${iconUrl(item)}" alt=""><span><span class="loot-name">${esc(item.name)}</span><span class="loot-id">Item ${esc(item.item_id||"")}</span></span>${pos?`<span class="prio-badge">P${pos}</span>`:""}</button>`}).join("")||'<div class="hint">Keine passenden Items gefunden.</div>';
+}
+function pickItem(name){if($("p0Plus").checked){$("p1").value=name;$("p2").value=name;$("p3").value=name}else{const target=!$("p1").value?"p1":!$("p2").value?"p2":!$("p3").value?"p3":"p3";$(target).value=name}renderPicks();renderLootList()}
+function clearPick(number){$("p"+number).value="";renderPicks();renderLootList()}
+function renderPicks(){[1,2,3].forEach(number=>{$("p"+number+"Label").textContent=$("p"+number).value||"Noch nicht gewählt"})}
 async function loadItems(){
   try{const response=await fetch(GITHUB_LOOT_URL+"?t="+Date.now(),{cache:"no-store"});if(!response.ok)throw new Error("HTTP "+response.status);allItems=await response.json();renderItems();}
   catch(error){$("status").innerHTML='<span class="bad">Lootdaten konnten nicht aus GitHub geladen werden.</span>';}
@@ -98,6 +116,6 @@ function removeEntry(i){entries.splice(i,1);localStorage.setItem(STORAGE_KEY,JSO
 function clearEntries(){if(confirm("Notfallliste wirklich leeren?")){entries=[];localStorage.removeItem(STORAGE_KEY);renderEntries()}}
 function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
 function downloadCsv(){if(!entries.length)return alert("Die Notfallliste ist leer.");const headers=["Typ","Raid","Raid-ID","Raiddatum","Charakter","Server","Klasse","Prio 1","Prio 2","Prio 3","PO+","Erstellt am"];const rows=[headers,...entries.map(e=>["PRIO",e.Raid,e.RaidID,e.Raiddatum,e.Charakter,e.Server,e.Klasse,e.P1,e.P2,e.P3,e.P0Plus,e.ErstelltAm])];const blob=new Blob(["\uFEFF"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lichtloot-notfall-${$("raid").value}-${$("raidDate").value||"raid"}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
-$("raid").addEventListener("change",renderItems);$("p0Plus").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}});$("p1").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}});
+$("raid").addEventListener("change",renderItems);$("p0Plus").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks();renderLootList()});$("p1").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks()});
 $("raidDate").value=new Date().toISOString().slice(0,10);renderEntries();unlockRaid();
 </script></body></html>
