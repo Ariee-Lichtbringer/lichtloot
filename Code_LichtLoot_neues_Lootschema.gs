@@ -5,15 +5,17 @@ const PLAYERPIN_SHEET = "PLAYERPINS";
 const TEMP_PLAYERPIN_SHEET = "TEMP_PLAYERPINS";
 const ISSUE_REPORT_SHEET = "Fehlermeldungen";
 const PLAYER_MESSAGE_SHEET = "SpielerNachrichten";
+const EMERGENCY_PRIO_SHEET = "NotfallPrios";
+const EMERGENCY_RAID_SHEET = "NotfallRaids";
 const LOOT_SPREADSHEET_ID = "10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ";
 const WORLDBUFF_SPREADSHEET_ID = "1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4";
 const WORLDBUFF_SHEET_GID = 1498762908;
 const HORDENBUFF_SHEET_GID = 1246908857;
 const WORLDBUFF_BOT_QUEUE_SHEET = "BotQueue";
 const WORLDBUFF_TICKER_CACHE_SHEET = "WorldbuffTickerCache";
+const DELETED_WORLDBUFF_TERMS_SHEET = "DeletedWorldbuffTerms";
 const PUBLIC_BUFF_TERMS_SPREADSHEET_ID = "1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q";
 const PUBLIC_BUFF_TERMS_SHEET_GID = 0;
-
 const MASTER_CODE = "Lichtbringer-Master";
 
 const LOOT_SHEETS = {
@@ -63,6 +65,10 @@ function doPost(e) {
 
     if (data.action === "createRaid") return createRaid(data);
     if (data.action === "savePrio") return savePrio(data);
+    if (data.action === "saveEmergencyPrio") return jsonOutput(saveEmergencyPrioData_(data));
+    if (data.action === "emergencyCreateRaid") return jsonOutput(emergencyCreateRaidData_(data));
+    if (data.action === "emergencySetRaidStatus") return jsonOutput(emergencySetRaidStatusData_(data));
+    if (data.action === "lichtbotSavePoSignupPrio") return jsonOutput(lichtbotSavePoSignupPrioData({ parameter: data }));
     if (data.action === "createPlayerPin") return createPlayerPin({ parameter: data });
     if (data.action === "resetPlayerPin") return resetPlayerPin({ parameter: data });
     if (data.action === "resetPlayerPinBySecurity") return resetPlayerPinBySecurity({ parameter: data });
@@ -85,6 +91,8 @@ function doPost(e) {
     if (data.action === "guildGetHordenbuffs") return jsonOutput(guildGetHordenbuffsData({ parameter: data }));
     if (data.action === "guildSetHordenbuffEntry") return jsonOutput(guildSetHordenbuffEntryData({ parameter: data }));
     if (data.action === "guildCreateBuffTerm") return jsonOutput(guildCreateBuffTermData({ parameter: data }));
+    if (data.action === "guildDeleteWorldbuffTerm") return jsonOutput(guildDeleteWorldbuffTermData({ parameter: data }));
+    if (data.action === "guildRestoreDeletedWorldbuffTerms") return jsonOutput(guildRestoreDeletedWorldbuffTermsData({ parameter: data }));
     if (data.action === "guildSyncPublicBuffTerms") return jsonOutput(guildSyncPublicBuffTermsData({ parameter: data }));
     if (data.action === "guildQueueWorldbuffBotUpdate") return jsonOutput(guildQueueWorldbuffBotUpdateData({ parameter: data }));
     if (data.action === "lichtbotGetQueue") return jsonOutput(lichtbotGetQueueData({ parameter: data }));
@@ -120,6 +128,11 @@ function doGet(e) {
           "createRaid",
           "testCreateRaid",
           "savePrio",
+          "saveEmergencyPrio",
+          "getEmergencyPrios",
+          "getEmergencyRaid",
+          "emergencyCreateRaid",
+          "emergencySetRaidStatus",
           "getPlayerPin",
           "createPlayerPin",
           "resetPlayerPin",
@@ -151,6 +164,8 @@ function doGet(e) {
           "guildGetHordenbuffs",
           "guildSetHordenbuffEntry",
           "guildCreateBuffTerm",
+          "guildDeleteWorldbuffTerm",
+          "guildRestoreDeletedWorldbuffTerms",
           "guildSyncPublicBuffTerms",
           "guildQueueWorldbuffBotUpdate",
           "lichtbotGetQueue",
@@ -159,7 +174,8 @@ function doGet(e) {
           "lichtbotSetWorldbuffCaster",
           "lichtbotClaimWorldbuffSlot",
           "lichtbotSetHordenbuffEntry",
-          "lichtbotDeleteHordenbuffEntry"
+          "lichtbotDeleteHordenbuffEntry",
+          "lichtbotSavePoSignupPrio"
         ]
       }, callback);
     }
@@ -198,6 +214,18 @@ function doGet(e) {
       });
     }
 
+    if (action === "saveEmergencyPrio") {
+      return jsonOrJsonp(saveEmergencyPrioData_(e.parameter), callback);
+    }
+
+    if (action === "getEmergencyPrios") {
+      return jsonOrJsonp(getEmergencyPriosData_(e.parameter), callback);
+    }
+
+    if (action === "getEmergencyRaid") return jsonOrJsonp(getEmergencyRaidData_(e.parameter), callback);
+    if (action === "emergencyCreateRaid") return jsonOrJsonp(emergencyCreateRaidData_(e.parameter), callback);
+    if (action === "emergencySetRaidStatus") return jsonOrJsonp(emergencySetRaidStatusData_(e.parameter), callback);
+
     if (action === "getPlayerPin") return getPlayerPin(e);
     if (action === "createPlayerPin") return createPlayerPin(e);
     if (action === "addTwink") return addTwink(e);
@@ -231,6 +259,8 @@ function doGet(e) {
     if (action === "guildGetHordenbuffs") return jsonOrJsonp(guildGetHordenbuffsData(e), callback);
     if (action === "guildSetHordenbuffEntry") return jsonOrJsonp(guildSetHordenbuffEntryData(e), callback);
     if (action === "guildCreateBuffTerm") return jsonOrJsonp(guildCreateBuffTermData(e), callback);
+    if (action === "guildDeleteWorldbuffTerm") return jsonOrJsonp(guildDeleteWorldbuffTermData(e), callback);
+    if (action === "guildRestoreDeletedWorldbuffTerms") return jsonOrJsonp(guildRestoreDeletedWorldbuffTermsData(e), callback);
     if (action === "guildSyncPublicBuffTerms") return jsonOrJsonp(guildSyncPublicBuffTermsData(e), callback);
     if (action === "guildQueueWorldbuffBotUpdate") return jsonOrJsonp(guildQueueWorldbuffBotUpdateData(e), callback);
     if (action === "lichtbotGetQueue") return jsonOrJsonp(lichtbotGetQueueData(e), callback);
@@ -239,6 +269,7 @@ function doGet(e) {
     if (action === "lichtbotClaimWorldbuffSlot") return jsonOrJsonp(lichtbotClaimWorldbuffSlotData(e), callback);
     if (action === "lichtbotSetHordenbuffEntry") return jsonOrJsonp(lichtbotSetHordenbuffEntryData(e), callback);
     if (action === "lichtbotDeleteHordenbuffEntry") return jsonOrJsonp(lichtbotDeleteHordenbuffEntryData(e), callback);
+    if (action === "lichtbotSavePoSignupPrio") return jsonOrJsonp(lichtbotSavePoSignupPrioData(e), callback);
     if (action === "validateLeadPin") return validateLeadPin(e);
     if (action === "setRaidStatus") return setRaidStatus(e);
     if (action === "setP0PlusOverride") return setP0PlusOverride(e);
@@ -263,6 +294,179 @@ function doGet(e) {
 /* =========================================================
    RAIDS / PRIORITÄTEN
    ========================================================= */
+
+function getEmergencyPrioSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(LOOT_SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(EMERGENCY_PRIO_SHEET);
+  const headers = [
+    "EntryKey", "Guild", "Raid", "RaidID", "RaidPIN", "RaidDatum", "RaidZeit",
+    "SpielerPIN", "Spieler", "Server", "Klasse", "P1", "P2", "P3", "P0Plus",
+    "ErstelltAm", "AktualisiertAm", "Status", "SynchronisiertAm", "Fehler"
+  ];
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(EMERGENCY_PRIO_SHEET);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  } else if (sheet.getLastColumn() < headers.length || sheet.getLastRow() === 0) {
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function emergencyHash_(value) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value || "").trim().toLowerCase());
+  return bytes.map(function(byte) {
+    const normalized = byte < 0 ? byte + 256 : byte;
+    return ("0" + normalized.toString(16)).slice(-2);
+  }).join("");
+}
+
+function getEmergencyRaidSheet_() {
+  const spreadsheet = SpreadsheetApp.openById(LOOT_SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(EMERGENCY_RAID_SHEET);
+  const headers = ["RaidID", "Raid", "RaidDatum", "PrioPINHash", "LeadPINHash", "PrioStatus", "P0PlusStatus", "AktualisiertAm"];
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(EMERGENCY_RAID_SHEET);
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function findEmergencyRaid_(data, useLeadPin) {
+  const sheet = getEmergencyRaidSheet_();
+  if (sheet.getLastRow() < 2) return null;
+  const wanted = emergencyHash_(useLeadPin ? data.leadPin : data.prioPin);
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getDisplayValues();
+  for (let index = rows.length - 1; index >= 0; index--) {
+    const hash = useLeadPin ? rows[index][4] : rows[index][3];
+    if (hash === wanted) return { sheet: sheet, row: index + 2, values: rows[index] };
+  }
+  return null;
+}
+
+function emergencyCreateRaidData_(data) {
+  if (String(data.masterCode || "") !== MASTER_CODE) return { success: false, error: "MasterCode ist ungültig." };
+  if (!data.prioPin || !data.leadPin || !data.raid) return { success: false, error: "Raid, Prio-PIN und Lead-PIN werden benötigt." };
+  const sheet = getEmergencyRaidSheet_();
+  const raidId = String(data.raidId || (data.raid + "-" + data.raidDate) || Utilities.getUuid()).trim();
+  sheet.appendRow([
+    raidId, String(data.raid).toUpperCase(), data.raidDate || "",
+    emergencyHash_(data.prioPin), emergencyHash_(data.leadPin),
+    "offen", data.p0PlusStatus || "offen", new Date().toISOString()
+  ]);
+  return { success: true, raidId: raidId };
+}
+
+function getEmergencyRaidData_(data) {
+  const found = findEmergencyRaid_(data, Boolean(data.leadPin));
+  if (!found) return { success: false, error: "PIN wurde nicht gefunden." };
+  const row = found.values;
+  return {
+    success: true,
+    raid: { raidId: row[0], raid: row[1], raidDate: row[2], prioStatus: row[5], p0PlusStatus: row[6] },
+    leadAccess: Boolean(data.leadPin)
+  };
+}
+
+function emergencySetRaidStatusData_(data) {
+  const found = findEmergencyRaid_(data, true);
+  if (!found) return { success: false, error: "Lead-PIN wurde nicht gefunden." };
+  const prioStatus = ["offen", "geschlossen"].indexOf(String(data.prioStatus || "").toLowerCase()) >= 0
+    ? String(data.prioStatus).toLowerCase() : found.values[5];
+  const p0Status = ["offen", "geschlossen"].indexOf(String(data.p0PlusStatus || "").toLowerCase()) >= 0
+    ? String(data.p0PlusStatus).toLowerCase() : found.values[6];
+  found.sheet.getRange(found.row, 6, 1, 3).setValues([[prioStatus, p0Status, new Date().toISOString()]]);
+  return { success: true, raidId: found.values[0], prioStatus: prioStatus, p0PlusStatus: p0Status };
+}
+
+function emergencyPrioKey_(data) {
+  const parts = [
+    data.guild, data.raidId || data.raidPin || (String(data.raidDate || "") + "|" + String(data.raidTime || "")),
+    data.raid, data.player, data.server
+  ];
+  return parts.map(function(value) {
+    return String(value || "").trim().toLowerCase();
+  }).join("|");
+}
+
+function saveEmergencyPrioData_(data) {
+  const player = String(data.player || "").trim();
+  const p1 = String(data.p1 || "").trim();
+  if (!player || !p1) {
+    return { success: false, error: "Spieler und Prio 1 fehlen." };
+  }
+  const emergencyRaid = findEmergencyRaid_({ prioPin: data.raidPin || data.prioPin }, false);
+  if (!emergencyRaid) return { success: false, error: "Notfall-Raid wurde nicht gefunden." };
+  if (String(emergencyRaid.values[5]).toLowerCase() !== "offen") return { success: false, error: "Die Prioliste ist geschlossen." };
+  if (String(data.p0Plus || "").toLowerCase() === "ja" && String(emergencyRaid.values[6]).toLowerCase() !== "offen") {
+    return { success: false, error: "P0+ ist geschlossen." };
+  }
+  data.raidId = emergencyRaid.values[0];
+  data.raid = emergencyRaid.values[1];
+  data.raidDate = emergencyRaid.values[2];
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = getEmergencyPrioSheet_();
+    const now = new Date().toISOString();
+    const key = emergencyPrioKey_(data);
+    const values = sheet.getLastRow() > 1
+      ? sheet.getRange(2, 1, sheet.getLastRow() - 1, 20).getValues()
+      : [];
+    let targetRow = 0;
+    for (let index = 0; index < values.length; index++) {
+      if (String(values[index][0] || "") === key) {
+        targetRow = index + 2;
+        break;
+      }
+    }
+    const createdAt = targetRow ? String(sheet.getRange(targetRow, 16).getValue() || now) : now;
+    const row = [
+      key, data.guild || "", data.raid || "", data.raidId || "", data.raidPin || "",
+      data.raidDate || "", data.raidTime || "", data.playerPin || data.characterPin || "",
+      player, data.server || "", data.className || "", p1, data.p2 || "", data.p3 || "",
+      data.p0Plus || "nein", createdAt, now, "offen", "", ""
+    ];
+    if (targetRow) {
+      sheet.getRange(targetRow, 1, 1, row.length).setValues([row]);
+    } else {
+      sheet.appendRow(row);
+    }
+    return { success: true, emergency: true, entryKey: key, updated: Boolean(targetRow) };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getEmergencyPriosData_(data) {
+  let raidId = String(data.raidId || "");
+  if (data.leadPin) {
+    const found = findEmergencyRaid_(data, true);
+    if (!found) return { success: false, error: "Lead-PIN wurde nicht gefunden." };
+    raidId = found.values[0];
+  } else if (data.prioPin || data.raidPin) {
+    const found = findEmergencyRaid_({ prioPin: data.prioPin || data.raidPin }, false);
+    if (!found) return { success: false, error: "Prio-PIN wurde nicht gefunden." };
+    raidId = found.values[0];
+  } else if (String(data.masterCode || "") !== MASTER_CODE) return { success: false, error: "Berechtigung fehlt." };
+  const sheet = getEmergencyPrioSheet_();
+  if (sheet.getLastRow() < 2) return { success: true, entries: [] };
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 20).getDisplayValues();
+  const entries = rows.map(function(row) {
+    return {
+      entryKey: row[0], guild: row[1], raid: row[2], raidId: row[3], raidPin: row[4],
+      raidDate: row[5], raidTime: row[6], playerPin: row[7], player: row[8],
+      server: row[9], className: row[10], p1: row[11], p2: row[12], p3: row[13],
+      p0Plus: row[14], createdAt: row[15], updatedAt: row[16], status: row[17],
+      syncedAt: row[18], error: row[19]
+    };
+  }).filter(function(entry) { return !raidId || entry.raidId === raidId; });
+  return { success: true, entries: entries };
+}
 
 function createRaid(data) {
   return jsonOutput(createRaidData_(data));
@@ -406,24 +610,6 @@ function savePrio(data) {
     throw new Error("Prio-PIN keinem Raid zugeordnet.");
   }
 
-  const raidDate = String(raidInfo.raidDate || "").trim();
-  const raidTime = String(raidInfo.raidTime || "").trim();
-  const p0PlusFreigegeben = isP0PlusFreigabeActive_(raidInfo.p0PlusFreigabe);
-
-  if (raidDate && raidTime) {
-    const raidStart = new Date(raidDate + "T" + raidTime + ":00");
-    const deadline = new Date(raidStart.getTime() - (30 * 60 * 1000));
-    const now = new Date();
-
-    const p0Requested =
-      String(data.p0 || data.p0Item || data.p0PlusItem || "").trim() !== "" ||
-      String(data.p0Plus || "").toLowerCase() === "ja";
-
-    if (p0Requested && now > deadline && !p0PlusFreigegeben) {
-      throw new Error("P0/P0+ Anmeldungen sind 30 Minuten vor Raidstart geschlossen.");
-    }
-  }
-
   const raidId = raidInfo.raidId;
   const raidName = raidInfo.raidName;
   const raidShort = raidInfo.raidShort;
@@ -552,6 +738,79 @@ function savePrio(data) {
     characterPin: characterPin,
     tempPin: isTemporaryPin ? characterPin : tempPin
   });
+}
+
+function lichtbotSavePoSignupPrioData(e) {
+  if (!hasValidLichtbotQueueToken_(e)) {
+    return { success: false, error: "Bot-Token ungültig." };
+  }
+
+  const data = (e && e.parameter) || {};
+  const raidPin = String(data.raidPin || data.playerPin || data.lichtlootPlayerPin || data.lichtlootRaidId || "").trim();
+  const player = String(data.player || data.character || data.charName || "").trim();
+  const server = String(data.server || "Lichtbringer").trim();
+  const className = String(data.className || data.class || "").trim();
+  const item = String(data.item || data.p1 || "").trim();
+
+  if (!raidPin) return { success: false, error: "LichtLoot-Raid-PIN fehlt." };
+  if (!player || !item) return { success: false, error: "Charakter oder Item fehlt." };
+
+  const raidInfo = findRaidByPin(raidPin);
+  if (!raidInfo || !raidInfo.raidId) {
+    return { success: false, error: "LichtLoot-Raid nicht gefunden." };
+  }
+
+  const prioSheet = getRequiredSheet(PRIO_SHEET);
+  const benchCol = ensurePrioBenchColumn_(prioSheet);
+  const existing = prioSheet.getDataRange().getValues();
+  let existingP2 = "";
+  let existingP3 = "";
+  let existingPin = "";
+  let existingBench = "";
+
+  for (let i = existing.length - 1; i >= 1; i--) {
+    const rowRaidId = String(existing[i][0] || "");
+    const rowPlayer = String(existing[i][3] || "").trim().toLowerCase();
+    const rowServer = String(existing[i][4] || "").trim().toLowerCase();
+
+    if (
+      rowRaidId === String(raidInfo.raidId) &&
+      rowPlayer === normalizeName(player) &&
+      rowServer === normalizeName(server)
+    ) {
+      if (!existingP2) existingP2 = String(existing[i][7] || "");
+      if (!existingP3) existingP3 = String(existing[i][8] || "");
+      if (!existingPin) existingPin = normalizePlayerPin(existing[i][10] || "");
+      existingBench = String(existing[i][benchCol - 1] || "").trim();
+      prioSheet.deleteRow(i + 1);
+    }
+  }
+
+  const prioRow = [
+    raidInfo.raidId,
+    raidInfo.raidName,
+    raidInfo.raidShort,
+    player,
+    server,
+    className,
+    item,
+    existingP2,
+    existingP3,
+    "ja",
+    existingPin || "PO-BOT",
+    data.createdAt || new Date().toISOString()
+  ];
+  prioRow[benchCol - 1] = existingBench;
+
+  prioSheet.appendRow(prioRow);
+
+  return {
+    success: true,
+    raidId: raidInfo.raidId,
+    player: player,
+    item: item,
+    p0Plus: "ja"
+  };
 }
 
 function getPublishedPrios(e) {
@@ -3874,6 +4133,207 @@ function guildCreateBuffTermData(e) {
   };
 }
 
+function worldbuffTermsMatchForDelete_(candidate, requested) {
+  if (!candidate || !requested) return false;
+  if (requested.datum && candidate.datum !== requested.datum) return false;
+  if (requested.uhrzeit && candidate.uhrzeit !== requested.uhrzeit) return false;
+  if (requested.buff && normalizeWorldbuffName_(candidate.buff) !== normalizeWorldbuffName_(requested.buff)) return false;
+  if (requested.gilde && normalizeWorldbuffComparable_(candidate.gilde) !== normalizeWorldbuffComparable_(requested.gilde)) return false;
+  return true;
+}
+
+function guildDeleteWorldbuffTermData(e) {
+  if (!hasValidGuildMasterCode_(e)) {
+    return { success: false, error: "Master-Code ungültig." };
+  }
+
+  let rowNumber = Number(e.parameter.rowNumber || 0);
+  const datum = formatWorldbuffDateValue_(e.parameter.datum || e.parameter.date || "");
+  const uhrzeit = formatWorldbuffTimeValue_(e.parameter.uhrzeit || e.parameter.time || "");
+  const buff = normalizeWorldbuffName_(e.parameter.buff || "");
+  const gilde = String(e.parameter.gilde || e.parameter.guild || "").trim();
+  const source = String(e.parameter.source || "").toLowerCase();
+  const isTickerOnly = source.indexOf("worldbuffticker") !== -1 && source.indexOf("worldbuff-sheet") === -1;
+  const requestedTerm = {
+    datum: datum,
+    uhrzeit: uhrzeit,
+    buff: buff,
+    gilde: gilde
+  };
+
+  const sheetInfo = getWorldbuffSheetInfo_(WORLDBUFF_SHEET_GID);
+  const sheet = sheetInfo.sheet;
+  let internalDeleted = false;
+  let term = requestedTerm;
+
+  if (!isTickerOnly && rowNumber >= 2 && rowNumber <= sheet.getLastRow()) {
+    const candidateRow = sheet.getRange(rowNumber, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+    const candidateTerm = {
+      rowNumber: rowNumber,
+      tag: getWorldbuffCell_(candidateRow, sheetInfo.columns.tag),
+      datum: formatWorldbuffDateValue_(getWorldbuffCell_(candidateRow, sheetInfo.columns.datum)),
+      uhrzeit: formatWorldbuffTimeValue_(getWorldbuffCell_(candidateRow, sheetInfo.columns.uhrzeit)),
+      buff: normalizeWorldbuffName_(getWorldbuffCell_(candidateRow, sheetInfo.columns.buff)),
+      gilde: cleanWorldbuffCell_(getWorldbuffCell_(candidateRow, sheetInfo.columns.gilde))
+    };
+
+    if (worldbuffTermsMatchForDelete_(candidateTerm, requestedTerm)) {
+      term = {
+        rowNumber: rowNumber,
+        tag: candidateTerm.tag,
+        datum: candidateTerm.datum || datum,
+        uhrzeit: candidateTerm.uhrzeit || uhrzeit,
+        buff: candidateTerm.buff || buff,
+        gilde: candidateTerm.gilde || gilde
+      };
+    } else {
+      rowNumber = 0;
+    }
+  }
+
+  if (!isTickerOnly && rowNumber < 2) {
+    const match = getWorldbuffRows_(WORLDBUFF_SHEET_GID).find(function(row) {
+      if (datum && row.datum !== datum) return false;
+      if (uhrzeit && row.uhrzeit !== uhrzeit) return false;
+      if (buff && normalizeWorldbuffName_(row.buff) !== buff) return false;
+      if (gilde && normalizeWorldbuffComparable_(row.gilde) !== normalizeWorldbuffComparable_(gilde)) return false;
+      return true;
+    });
+    if (match) {
+      rowNumber = Number(match.rowNumber || 0);
+      term = match;
+    }
+  }
+
+  if (!term.datum || !term.uhrzeit || !term.buff) {
+    return { success: false, error: "Worldbuff-Termin wurde nicht gefunden." };
+  }
+
+  if (!isTickerOnly && rowNumber >= 2 && rowNumber <= sheet.getLastRow()) {
+    sheet.deleteRow(rowNumber);
+    internalDeleted = true;
+  }
+  const publicDelete = deletePublicBuffTerm_(term);
+  const tickerDelete = deleteWorldbuffTickerCacheTerm_(term);
+  recordDeletedWorldbuffTerm_(term);
+
+  queueWorldbuffBotUpdate_("worldbuff_update", {
+    source: "gildenleitung",
+    deleted: true,
+    rowNumber: rowNumber,
+    datum: term.datum,
+    uhrzeit: term.uhrzeit,
+    buff: term.buff,
+    gilde: term.gilde
+  });
+
+  return {
+    success: true,
+    deleted: true,
+    internalDeleted: internalDeleted,
+    rowNumber: rowNumber,
+    term: term,
+    publicDelete: publicDelete,
+    tickerDelete: tickerDelete,
+    queued: true
+  };
+}
+
+function guildRestoreDeletedWorldbuffTermsData(e) {
+  if (!hasValidGuildMasterCode_(e)) {
+    return { success: false, error: "Master-Code ungültig." };
+  }
+
+  const deletedSheet = getDeletedWorldbuffTermsSheet_(false);
+  if (!deletedSheet) {
+    return { success: true, restored: 0, skipped: 0, message: "Keine gelöschten Termine gefunden." };
+  }
+
+  const values = deletedSheet.getDataRange().getDisplayValues();
+  const sheetInfo = getWorldbuffSheetInfo_(WORLDBUFF_SHEET_GID);
+  const existingRows = getWorldbuffRows_(WORLDBUFF_SHEET_GID);
+  const today = new Date();
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  let restored = 0;
+  let skipped = 0;
+  const restoredRows = [];
+  const rowsToDelete = [];
+
+  for (let i = 1; i < values.length; i++) {
+    const term = {
+      datum: formatWorldbuffDateValue_(values[i][1]),
+      buff: normalizeWorldbuffName_(values[i][2]),
+      uhrzeit: formatWorldbuffTimeValue_(values[i][3]),
+      gilde: cleanWorldbuffCell_(values[i][4])
+    };
+
+    if (!term.datum || !term.uhrzeit || !term.buff || !term.gilde) {
+      skipped++;
+      continue;
+    }
+
+    const dateValue = parseWorldbuffDate_(term.datum);
+    if (dateValue && dateValue < todayOnly) {
+      skipped++;
+      continue;
+    }
+
+    const exists = existingRows.some(function(row) {
+      return row.datum === term.datum &&
+        row.uhrzeit === term.uhrzeit &&
+        normalizeWorldbuffName_(row.buff) === term.buff &&
+        normalizeWorldbuffComparable_(row.gilde) === normalizeWorldbuffComparable_(term.gilde);
+    });
+
+    if (exists) {
+      rowsToDelete.push(i + 1);
+      skipped++;
+      continue;
+    }
+
+    const rowNumber = insertBuffTermRow_(sheetInfo, {
+      tag: makeWorldbuffTagFromDate_(term.datum),
+      datum: term.datum,
+      uhrzeit: term.uhrzeit,
+      buff: term.buff,
+      gilde: term.gilde,
+      charakter: "",
+      status: normalizeBuffStatusForSheet_("offen"),
+      note: "",
+      uebernehmer: ""
+    });
+
+    const restoredTerm = Object.assign({ rowNumber: rowNumber, tag: makeWorldbuffTagFromDate_(term.datum) }, term);
+    existingRows.push(restoredTerm);
+    restoredRows.push(restoredTerm);
+    rowsToDelete.push(i + 1);
+    restored++;
+    syncPublicBuffTerm_("worldbuff", rowNumber, restoredTerm);
+  }
+
+  rowsToDelete.sort(function(a, b) { return b - a; }).forEach(function(rowNumber) {
+    if (rowNumber >= 2 && rowNumber <= deletedSheet.getLastRow()) {
+      deletedSheet.deleteRow(rowNumber);
+    }
+  });
+
+  if (restored > 0) {
+    queueWorldbuffBotUpdate_("worldbuff_update", {
+      source: "gildenleitung",
+      restored: restored,
+      recovered: true
+    });
+  }
+
+  return {
+    success: true,
+    restored: restored,
+    skipped: skipped,
+    terms: restoredRows.slice(0, 25),
+    queued: restored > 0
+  };
+}
+
 function guildSyncPublicBuffTermsData(e) {
   if (!hasValidGuildMasterCode_(e)) {
     return { success: false, error: "Master-Code ungültig." };
@@ -4215,6 +4675,7 @@ function lichtbotSyncWorldbuffTickerData(e) {
   const rows = [["Datum", "Buff", "Uhrzeit", "Gilde"]];
   const sheetInfo = getWorldbuffSheetInfo_(WORLDBUFF_SHEET_GID);
   const seenTerms = {};
+  const deletedKeys = getDeletedWorldbuffTermKeys_();
   let synced = 0;
   let skipped = 0;
   const errors = [];
@@ -4225,6 +4686,11 @@ function lichtbotSyncWorldbuffTickerData(e) {
     const uhrzeit = formatWorldbuffTimeValue_(buff && buff.uhrzeit);
     const gilde = cleanWorldbuffCell_(buff && buff.gilde);
     if (!datum || !name || !uhrzeit || !gilde) {
+      skipped++;
+      return;
+    }
+
+    if (isDeletedWorldbuffTerm_({ datum: datum, uhrzeit: uhrzeit, buff: name, gilde: gilde }, deletedKeys)) {
       skipped++;
       return;
     }
@@ -4540,12 +5006,14 @@ function getCombinedWorldbuffRows_() {
   const combined = [];
   const byTerm = {};
   const realSlotKeys = {};
+  const deletedKeys = getDeletedWorldbuffTermKeys_();
 
   getWorldbuffRows_(WORLDBUFF_SHEET_GID).forEach(function(row) {
     all.push(normalizeWorldbuffRowForDisplay_(row, "Worldbuff-Sheet"));
   });
 
   getPublicWorldbuffTickerRows_().forEach(function(row) {
+    if (isDeletedWorldbuffTerm_(row, deletedKeys)) return;
     all.push(normalizeWorldbuffRowForDisplay_(row, "Worldbuffticker"));
   });
 
@@ -4675,6 +5143,106 @@ function getWorldbuffTickerCacheSheet_(createIfMissing) {
     sheet.getRange(1, 1, 1, 4).setValues([["Datum", "Buff", "Uhrzeit", "Gilde"]]);
   }
   return sheet;
+}
+
+function getDeletedWorldbuffTermsSheet_(createIfMissing) {
+  const spreadsheet = getLootSpreadsheet_();
+  let sheet = spreadsheet.getSheetByName(DELETED_WORLDBUFF_TERMS_SHEET);
+  if (!sheet && createIfMissing !== false) {
+    sheet = spreadsheet.insertSheet(DELETED_WORLDBUFF_TERMS_SHEET);
+    sheet.appendRow(["Zeit", "Datum", "Buff", "Uhrzeit", "Gilde", "Key", "SlotKey"]);
+    try {
+      sheet.hideSheet();
+    } catch (error) {}
+  }
+  return sheet;
+}
+
+function getDeletedWorldbuffTermKeys_() {
+  const sheet = getDeletedWorldbuffTermsSheet_(false);
+  const keys = {};
+  if (!sheet) return keys;
+
+  const values = sheet.getDataRange().getDisplayValues();
+  for (let i = 1; i < values.length; i++) {
+    const key = cleanWorldbuffCell_(values[i][5]);
+    const slotKey = cleanWorldbuffCell_(values[i][6]);
+    if (key) keys[key] = true;
+    if (slotKey) keys[slotKey] = true;
+  }
+  return keys;
+}
+
+function makeDeletedWorldbuffKey_(term) {
+  const datum = formatWorldbuffDateValue_(term && term.datum);
+  const uhrzeit = formatWorldbuffTimeValue_(term && term.uhrzeit);
+  const buff = normalizeWorldbuffName_(term && term.buff);
+  const gilde = normalizeWorldbuffGuildForOverview_(term && term.gilde);
+  if (!datum || !uhrzeit || !buff) return "";
+  return [datum, uhrzeit, buff, gilde || ""].join("|");
+}
+
+function makeDeletedWorldbuffSlotKey_(term) {
+  const datum = formatWorldbuffDateValue_(term && term.datum);
+  const uhrzeit = formatWorldbuffTimeValue_(term && term.uhrzeit);
+  const buff = normalizeWorldbuffName_(term && term.buff);
+  if (!datum || !uhrzeit || !buff || buff !== "Rend") return "";
+  return [datum, uhrzeit, buff].join("|");
+}
+
+function isDeletedWorldbuffTerm_(term, keys) {
+  const deletedKeys = keys || getDeletedWorldbuffTermKeys_();
+  const key = makeDeletedWorldbuffKey_(term);
+  const slotKey = makeDeletedWorldbuffSlotKey_(term);
+  return Boolean((key && deletedKeys[key]) || (slotKey && deletedKeys[slotKey]));
+}
+
+function recordDeletedWorldbuffTerm_(term) {
+  const key = makeDeletedWorldbuffKey_(term);
+  const slotKey = makeDeletedWorldbuffSlotKey_(term);
+  if (!key && !slotKey) return { success: false, error: "Gelöschter Termin ist unvollständig." };
+
+  const existing = getDeletedWorldbuffTermKeys_();
+  if ((key && existing[key]) || (slotKey && existing[slotKey])) {
+    return { success: true, alreadyRecorded: true };
+  }
+
+  const sheet = getDeletedWorldbuffTermsSheet_(true);
+  sheet.appendRow([
+    new Date(),
+    formatWorldbuffDateValue_(term && term.datum),
+    normalizeWorldbuffName_(term && term.buff),
+    formatWorldbuffTimeValue_(term && term.uhrzeit),
+    cleanWorldbuffCell_(term && term.gilde),
+    key,
+    slotKey
+  ]);
+  return { success: true, recorded: true, key: key, slotKey: slotKey };
+}
+
+function deleteWorldbuffTickerCacheTerm_(term) {
+  const sheet = getWorldbuffTickerCacheSheet_(false);
+  if (!sheet) return { success: true, deleted: 0 };
+
+  const values = sheet.getDataRange().getDisplayValues();
+  const deletedKeys = {};
+  deletedKeys[makeDeletedWorldbuffKey_(term)] = true;
+  deletedKeys[makeDeletedWorldbuffSlotKey_(term)] = true;
+  let deleted = 0;
+
+  for (let i = values.length - 1; i >= 1; i--) {
+    const rowTerm = {
+      datum: getWorldbuffCell_(values[i], 0),
+      buff: getWorldbuffCell_(values[i], 1),
+      uhrzeit: getWorldbuffCell_(values[i], 2),
+      gilde: getWorldbuffCell_(values[i], 3)
+    };
+    if (!isDeletedWorldbuffTerm_(rowTerm, deletedKeys)) continue;
+    sheet.deleteRow(i + 1);
+    deleted++;
+  }
+
+  return { success: true, deleted: deleted };
 }
 
 function getWorldbuffSheetInfo_(sheetGid) {
@@ -4930,7 +5498,7 @@ function normalizeBuffDays_(value, fallback) {
 function makeWorldbuffTagFromDate_(datum) {
   const date = parseWorldbuffDate_(datum);
   if (!date) return "";
-  return ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"][date.getDay()];
+  return ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"][date.getDay()];
 }
 
 function queueWorldbuffBotUpdate_(type, payload) {
@@ -5877,6 +6445,28 @@ function findPublicBuffTermRow_(sheetInfo, term) {
   return 0;
 }
 
+function deletePublicBuffTerm_(term) {
+  try {
+    const sheetInfo = getPublicBuffTermSheetInfo_();
+    const rowNumber = findPublicBuffTermRow_(sheetInfo, term);
+    if (!rowNumber) {
+      return { success: true, deleted: false, message: "Termin war im öffentlichen Ticker-Sheet nicht vorhanden." };
+    }
+
+    sheetInfo.sheet.getRange(rowNumber, sheetInfo.columns.datum + 1, 1, 3).clearContent();
+    return { success: true, deleted: true, rowNumber: rowNumber };
+  } catch (error) {
+    try {
+      Logger.log("Public buff term delete failed: " + error.message);
+    } catch (logError) {}
+    return {
+      success: false,
+      deleted: false,
+      error: error.message
+    };
+  }
+}
+
 function getNextPublicBuffTermRow_(sheetInfo) {
   const values = sheetInfo.values;
   const columns = sheetInfo.columns;
@@ -6039,11 +6629,10 @@ function jsonOutput(obj) {
 }
 
 function jsonOrJsonp(obj, callback) {
-  if (callback) {
-    return ContentService
-      .createTextOutput(callback + "(" + JSON.stringify(obj) + ");")
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
+  if (!callback) return jsonOutput(obj);
 
-  return jsonOutput(obj);
+  var safeCallback = String(callback || "").replace(/[^a-zA-Z0-9_.$]/g, "");
+  var output = ContentService.createTextOutput(safeCallback + "(" + JSON.stringify(obj) + ");");
+  output.setMimeType(ContentService.MimeType.TEXT);
+  return output;
 }
