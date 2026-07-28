@@ -7965,6 +7965,61 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
   }
 }
 
+async function importEmergencyPrios({ guild, query: params }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  let entries = params.entries;
+  if (typeof entries === "string") {
+    try { entries = JSON.parse(entries); } catch { entries = []; }
+  }
+  if (!Array.isArray(entries) || !entries.length) {
+    const error = new Error("Die Notfall-CSV enthält keine Prio-Einträge.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const raidId = clean(params.raidId);
+  const raidResult = await query(
+    `select id, external_raid_id, raid_pin, lead_pin, raid_type, raid_time
+     from raids
+     where guild_id = $1 and (id::text = $2 or external_raid_id = $2)
+     limit 1`,
+    [guild.id, raidId]
+  );
+  const raid = raidResult.rows[0];
+  if (!raid) {
+    const error = new Error("Der ausgewählte Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const imported = [];
+  const failed = [];
+  for (const entry of entries) {
+    try {
+      const result = await savePrioAsRaidlead({
+        guildId: guild.id,
+        query: {
+          raidId: raid.external_raid_id || raid.id,
+          raid: raid.raid_type,
+          leadPin: raid.lead_pin,
+          player: entry.player || entry.Charakter,
+          server: entry.server || entry.Server || "Everlook",
+          className: entry.className || entry.Klasse,
+          p1: entry.p1 || entry["Prio 1"],
+          p2: entry.p2 || entry["Prio 2"],
+          p3: entry.p3 || entry["Prio 3"],
+          p0Plus: entry.p0Plus || entry["PO+"] || "nein",
+          raidTime: raid.raid_time
+        }
+      });
+      imported.push({ player: entry.player || entry.Charakter, prioId: result.prioId });
+    } catch (error) {
+      failed.push({ player: entry.player || entry.Charakter || "", error: error.message || String(error) });
+    }
+  }
+  return { success: failed.length === 0, imported, failed, importedCount: imported.length, failedCount: failed.length };
+}
+
 async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -19131,6 +19186,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSaveDiscordChannels") {
       const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildImportEmergencyPrios") {
+      const imported = await importEmergencyPrios({ guild, query: postParams });
+      return res.json({ ...imported, guild: guild.slug });
     }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
