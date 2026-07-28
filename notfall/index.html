@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LichtLoot Notfall-Prioliste</title>
+<style>
+:root{--gold:#facc15;--blue:#2563eb;--bg:#050b18;--panel:#0c1527;--line:#66551b;--text:#eef4ff;--muted:#9eabc0}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;color:var(--text);background:radial-gradient(circle at top,#152341,var(--bg) 55%);min-height:100vh}
+main{width:min(1100px,94%);margin:auto;padding:32px 0 70px}.brand{text-align:center;margin-bottom:24px}.brand img{width:230px;max-width:70%}h1{color:var(--gold);margin:10px 0 5px}.hint{color:var(--muted)}
+.card{background:rgba(8,17,33,.94);border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 15px 45px #0007}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:grid;gap:6px}.wide{grid-column:1/-1}label{font-size:12px;font-weight:800;color:var(--gold);text-transform:uppercase}
+input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1c;color:var(--text);padding:11px;font:inherit}button{cursor:pointer;font-weight:800}.primary{background:linear-gradient(90deg,#d7ad22,#2458d8);border:0}.danger{background:#35131a}.items{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.status{padding:12px;border-radius:9px;background:#071022;margin-top:12px}.ok{color:#4ade80}.bad{color:#fb7185}.entry{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #263349;padding:10px 0}.entry:last-child{border:0}
+@media(max-width:760px){.grid,.items{grid-template-columns:1fr}.wide{grid-column:auto}}
+</style>
+</head>
+<body><main id="app" hidden>
+  <div class="brand"><img src="../images/content.png" alt="LichtLoot"><h1>Notfall-Prioliste</h1><div class="hint">Unabhängig von Railway · Lootdaten direkt aus GitHub · CSV für die Gildenleitung</div></div>
+  <section class="card">
+    <div class="grid">
+      <div class="field"><label>Raid</label><select id="raid"><option>AQ40</option><option>NAXX</option><option>BWL</option><option>MC</option><option>AQ20</option><option>ZG</option><option>ONY</option></select></div>
+      <div class="field"><label>Raid-Datum</label><input id="raidDate" type="date"></div>
+      <div class="field"><label>Raid-ID / Bezeichnung</label><input id="raidId" placeholder="z. B. AQ40-2026-07-28"></div>
+      <div class="field"><label>Charakter</label><input id="player" autocomplete="off"></div>
+      <div class="field"><label>Server</label><input id="server" value="Everlook"></div>
+      <div class="field"><label>Klasse</label><select id="className"><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="items">
+      <div class="field"><label>Prio 1</label><select id="p1"></select></div>
+      <div class="field"><label>Prio 2</label><select id="p2"></select></div>
+      <div class="field"><label>Prio 3</label><select id="p3"></select></div>
+    </div>
+    <div class="field" style="margin-top:14px"><label><input id="p0Plus" type="checkbox"> P0+ – Prio 1 für alle drei Plätze übernehmen</label></div>
+    <button class="primary wide" style="width:100%;margin-top:14px" onclick="saveEntry()">Prio zur Notfallliste hinzufügen</button>
+    <div id="status" class="status">Lootdaten werden aus GitHub geladen …</div>
+  </section>
+  <section class="card">
+    <h2>Gespeicherte Prios (<span id="count">0</span>)</h2>
+    <div id="entries" class="hint">Noch keine Einträge.</div>
+    <button class="primary" onclick="downloadCsv()">CSV herunterladen</button>
+    <button class="danger" onclick="clearEntries()">Liste leeren</button>
+  </section>
+</main>
+<script>
+const GITHUB_BASE="https://raw.githubusercontent.com/Ariee-Lichtbringer/lichtloot/main/lichtloot-api/public/notfall/";
+const GITHUB_LOOT_URL=GITHUB_BASE+"loot.json";
+const EMERGENCY_API_URL="https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+const STORAGE_KEY="lichtloot_notfall_csv_v1";
+let allItems=[],entries=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]"),currentPrioPin="";
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function raidKey(){return $("raid").value.toLowerCase()}
+function renderItems(){
+  const items=allItems.filter(item=>String(item.raid_type||"").toLowerCase()===raidKey()).sort((a,b)=>String(a.name).localeCompare(String(b.name),"de"));
+  const options='<option value="">Bitte wählen</option>'+items.map(item=>`<option value="${esc(item.name)}">${esc(item.name)}</option>`).join("");
+  ["p1","p2","p3"].forEach(id=>$(id).innerHTML=options);
+  $("status").innerHTML=`<span class="ok">✓ ${items.length} ${$("raid").value}-Items direkt aus GitHub geladen.</span>`;
+}
+async function loadItems(){
+  try{const response=await fetch(GITHUB_LOOT_URL+"?t="+Date.now(),{cache:"no-store"});if(!response.ok)throw new Error("HTTP "+response.status);allItems=await response.json();renderItems();}
+  catch(error){$("status").innerHTML='<span class="bad">Lootdaten konnten nicht aus GitHub geladen werden.</span>';}
+}
+function apiJsonp(params){
+  return new Promise((resolve,reject)=>{
+    const callback="llEmergency_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+    const script=document.createElement("script");
+    const timer=setTimeout(()=>{cleanup();reject(new Error("Notfall-API antwortet nicht."))},8000);
+    function cleanup(){clearTimeout(timer);delete window[callback];script.remove()}
+    window[callback]=data=>{cleanup();resolve(data||{})};
+    script.onerror=()=>{cleanup();reject(new Error("Notfall-API konnte nicht geladen werden."))};
+    script.src=EMERGENCY_API_URL+"?"+new URLSearchParams({...params,callback,t:Date.now()}).toString();
+    document.head.appendChild(script);
+  });
+}
+async function unlockRaid(){
+  const pin=new URLSearchParams(location.search).get("pin")||window.prompt("Bitte Prio-PIN eingeben:");
+  if(!pin){document.body.innerHTML='<main><section class="card"><h1>Prio-PIN fehlt</h1><a href="../">Zurück</a></section></main>';return}
+  try{
+    const data=await apiJsonp({action:"getEmergencyRaid",prioPin:pin});
+    if(!data.success)throw new Error(data.error||"Prio-PIN nicht gefunden.");
+    const raid=data.raid;currentPrioPin=pin.trim();
+    if(raid.prioStatus!=="offen")throw new Error("Diese Prioliste ist geschlossen.");
+    $("raid").value=String(raid.raid||"AQ40").toUpperCase();$("raidId").value=raid.raidId||"";$("raidDate").value=raid.raidDate||new Date().toISOString().slice(0,10);
+    if(raid.p0PlusStatus!=="offen"){$("p0Plus").checked=false;$("p0Plus").disabled=true;$("p0Plus").closest(".field").title="P0+ ist geschlossen."}
+    $("raid").disabled=true;$("raidId").readOnly=true;$("raidDate").readOnly=true;$("app").hidden=false;
+    await loadItems();
+  }catch(error){document.body.innerHTML=`<main><section class="card"><h1>Notfall-Prio nicht geöffnet</h1><p class="bad">${esc(error.message)}</p><a href="../">Zurück zur Startseite</a></section></main>`}
+}
+async function saveEntry(){
+  const p0=$("p0Plus").checked,p1=$("p1").value;
+  if(!$("player").value.trim()||!p1||(!p0&&(!$("p2").value||!$("p3").value))){$("status").innerHTML='<span class="bad">Bitte Charakter und alle Prios ausfüllen.</span>';return}
+  const entry={Typ:"PRIO",Raid:$("raid").value,RaidID:$("raidId").value.trim(),Raiddatum:$("raidDate").value,Charakter:$("player").value.trim(),Server:$("server").value.trim(),Klasse:$("className").value,P1:p1,P2:p0?p1:$("p2").value,P3:p0?p1:$("p3").value,P0Plus:p0?"ja":"nein",ErstelltAm:new Date().toISOString()};
+  const key=[entry.Raid,entry.RaidID||entry.Raiddatum,entry.Charakter,entry.Server].map(v=>v.toLowerCase()).join("|");
+  const index=entries.findIndex(row=>row._key===key);entry._key=key;if(index>=0)entries[index]=entry;else entries.push(entry);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));renderEntries();
+  const params={action:"saveEmergencyPrio",raidPin:currentPrioPin,player:entry.Charakter,server:entry.Server,className:entry.Klasse,p1:entry.P1,p2:entry.P2,p3:entry.P3,p0Plus:entry.P0Plus};
+  try{const result=await apiJsonp(params);if(!result.success)throw new Error(result.error||"Speichern abgelehnt.");$("status").innerHTML='<span class="ok">✓ Prio wurde zentral im Notfallsystem gespeichert.</span>'}
+  catch(error){$("status").innerHTML=`<span class="bad">${esc(error.message)}</span><br>Eine lokale Sicherung bleibt auf diesem Gerät erhalten.`}
+}
+function renderEntries(){$("count").textContent=entries.length;$("entries").innerHTML=entries.length?entries.map((e,i)=>`<div class="entry"><div><strong>${esc(e.Charakter)}</strong> · ${esc(e.Raid)} · ${esc(e.P1)}${e.P0Plus==="ja"?" · P0+":""}</div><button onclick="removeEntry(${i})">Entfernen</button></div>`).join(""):"Noch keine Einträge."}
+function removeEntry(i){entries.splice(i,1);localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));renderEntries()}
+function clearEntries(){if(confirm("Notfallliste wirklich leeren?")){entries=[];localStorage.removeItem(STORAGE_KEY);renderEntries()}}
+function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
+function downloadCsv(){if(!entries.length)return alert("Die Notfallliste ist leer.");const headers=["Typ","Raid","Raid-ID","Raiddatum","Charakter","Server","Klasse","Prio 1","Prio 2","Prio 3","PO+","Erstellt am"];const rows=[headers,...entries.map(e=>["PRIO",e.Raid,e.RaidID,e.Raiddatum,e.Charakter,e.Server,e.Klasse,e.P1,e.P2,e.P3,e.P0Plus,e.ErstelltAm])];const blob=new Blob(["\uFEFF"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lichtloot-notfall-${$("raid").value}-${$("raidDate").value||"raid"}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
+$("raid").addEventListener("change",renderItems);$("p0Plus").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}});$("p1").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}});
+$("raidDate").value=new Date().toISOString().slice(0,10);renderEntries();unlockRaid();
+</script></body></html>
