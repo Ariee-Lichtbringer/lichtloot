@@ -3214,6 +3214,162 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
 }
 
+async function mergeLegacyLichtbringerCharacters({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  await ensureCharacterPoReleaseSchema();
+  await ensurePrioSchema();
+  await ensureP0PlusAuditSchema();
+
+  const apply = ["true", "1", "yes", "ja", "apply"].includes(
+    clean(params.apply || params.confirm).toLowerCase()
+  );
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const legacyResult = await client.query(
+      `select c.id, c.name, c.server, c.player_id
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1
+         and lower(trim(c.server)) = 'lichtbringer'
+       order by lower(trim(c.name)), c.created_at`,
+      [guildId]
+    );
+
+    const plan = [];
+    for (const source of legacyResult.rows) {
+      const targetResult = await client.query(
+        `select c.id, c.name, c.server, c.player_id, p.player_pin
+         from characters c
+         join players p on p.id = c.player_id
+         where p.guild_id = $1
+           and lower(trim(c.name)) = lower(trim($2))
+           and lower(trim(c.server)) = 'everlook'
+         order by
+           case when coalesce(p.approval_status, 'approved') = 'approved' then 0 else 1 end,
+           c.updated_at desc nulls last,
+           c.created_at desc
+         limit 2`,
+        [guildId, source.name]
+      );
+      if (targetResult.rows.length !== 1) {
+        plan.push({
+          name: source.name,
+          sourceCharacterId: source.id,
+          status: targetResult.rows.length ? "ambiguous" : "no-everlook-target",
+          targetCount: targetResult.rows.length
+        });
+        continue;
+      }
+      const target = targetResult.rows[0];
+      plan.push({
+        name: source.name,
+        sourceCharacterId: source.id,
+        sourcePlayerId: source.player_id,
+        targetCharacterId: target.id,
+        targetPlayerId: target.player_id,
+        status: "ready"
+      });
+    }
+
+    if (!apply) {
+      await client.query("rollback");
+      return {
+        success: true,
+        dryRun: true,
+        ready: plan.filter(entry => entry.status === "ready").length,
+        skipped: plan.filter(entry => entry.status !== "ready").length,
+        plan
+      };
+    }
+
+    const merged = [];
+    const skipped = plan.filter(entry => entry.status !== "ready");
+    for (const entry of plan.filter(entry => entry.status === "ready")) {
+      const sourceId = entry.sourceCharacterId;
+      const targetId = entry.targetCharacterId;
+
+      await client.query(
+        `insert into character_po_releases
+           (guild_id, character_id, raid_type, source, approved_by, approved_at, created_at, updated_at)
+         select guild_id, $2, raid_type, source, approved_by, approved_at, created_at, now()
+         from character_po_releases
+         where guild_id = $1 and character_id = $3
+         on conflict (guild_id, character_id, raid_type) do update
+           set approved_at = greatest(character_po_releases.approved_at, excluded.approved_at),
+               approved_by = coalesce(nullif(character_po_releases.approved_by, ''), excluded.approved_by),
+               updated_at = now()`,
+        [guildId, targetId, sourceId]
+      );
+      await client.query(
+        `insert into discord_player_links
+           (guild_id, discord_user_id, character_id, discord_name, source, created_at, updated_at)
+         select guild_id, discord_user_id, $2, discord_name, source, created_at, now()
+         from discord_player_links
+         where guild_id = $1 and character_id = $3
+         on conflict (guild_id, discord_user_id, character_id) do update
+           set discord_name = coalesce(nullif(discord_player_links.discord_name, ''), excluded.discord_name),
+               updated_at = now()`,
+        [guildId, targetId, sourceId]
+      );
+      await client.query(
+        `insert into raid_signups
+           (raid_id, character_id, status, note, role, source, discord_user_id, discord_name, created_at, updated_at)
+         select raid_id, $1, status, note, role, source, discord_user_id, discord_name, created_at, now()
+         from raid_signups
+         where character_id = $2
+         on conflict (raid_id, character_id) do update
+           set note = coalesce(nullif(raid_signups.note, ''), excluded.note),
+               discord_user_id = coalesce(nullif(raid_signups.discord_user_id, ''), excluded.discord_user_id),
+               discord_name = coalesce(nullif(raid_signups.discord_name, ''), excluded.discord_name),
+               updated_at = now()`,
+        [targetId, sourceId]
+      );
+      await client.query(
+        `insert into prios
+           (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment, bench, created_at, updated_at)
+         select raid_id, $1, p1_item_id, p2_item_id, p3_item_id, comment, bench, created_at, now()
+         from prios
+         where character_id = $2
+         on conflict (raid_id, character_id) do update
+           set p1_item_id = coalesce(prios.p1_item_id, excluded.p1_item_id),
+               p2_item_id = coalesce(prios.p2_item_id, excluded.p2_item_id),
+               p3_item_id = coalesce(prios.p3_item_id, excluded.p3_item_id),
+               comment = coalesce(nullif(prios.comment, ''), excluded.comment),
+               bench = coalesce(nullif(prios.bench, ''), excluded.bench),
+               updated_at = now()`,
+        [targetId, sourceId]
+      );
+
+      await client.query("update p0plus_points set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
+      await client.query("update p0plus_point_audit set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
+      await client.query("update p0_discord_signups set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
+      await client.query("delete from raid_signups where character_id = $1", [sourceId]);
+      await client.query("delete from prios where character_id = $1", [sourceId]);
+      await client.query("delete from discord_player_links where guild_id = $1 and character_id = $2", [guildId, sourceId]);
+      await client.query("delete from character_po_releases where guild_id = $1 and character_id = $2", [guildId, sourceId]);
+      await client.query("delete from characters where id = $1", [sourceId]);
+      await client.query(
+        `delete from players p
+         where p.id = $1
+           and p.guild_id = $2
+           and not exists (select 1 from characters c where c.player_id = p.id)`,
+        [entry.sourcePlayerId || null, guildId]
+      );
+      merged.push(entry);
+    }
+
+    await client.query("commit");
+    p0ReleaseCache = null;
+    return { success: true, dryRun: false, merged: merged.length, skipped: skipped.length, mergedEntries: merged, skippedEntries: skipped };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
@@ -18824,6 +18980,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
     }
+    if (action === "guildMergeLegacyLichtbringerCharacters") {
+      const merged = await mergeLegacyLichtbringerCharacters({ guildId: guild.id, query: req.query });
+      return res.json({ ...merged, guild: guild.slug });
+    }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
@@ -19280,6 +19440,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
+    }
+    if (action === "guildMergeLegacyLichtbringerCharacters") {
+      const merged = await mergeLegacyLichtbringerCharacters({ guildId: guild.id, query: postParams });
+      return res.json({ ...merged, guild: guild.slug });
     }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
