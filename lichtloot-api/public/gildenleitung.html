@@ -2920,6 +2920,20 @@ tr.selected-row td{
   margin-top:2px;
 }
 
+.raid-helper-signup-status{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:5px;
+  padding:3px 8px;
+  border:1px solid rgba(56,189,248,.3);
+  border-radius:999px;
+  color:#e2e8f0;
+  background:rgba(15,23,42,.9);
+  font-size:12px;
+  font-weight:950;
+}
+
 .raid-helper-signup-actions{
   display:flex;
   gap:6px;
@@ -8183,16 +8197,20 @@ function renderRaidHelperSignupAdminRow(row){
   const id = row.id || "";
   const player = row.player || row.char || "-";
   const status = normalize(row.status || "signed") || "signed";
-  const statusLabel = status === "bench" ? "Bank" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Angemeldet";
+  const statusLabel = status === "bench" ? "Bank" : status === "late" || status === "spät" || status === "spaet" ? "Verspätet" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Aktiv";
+  const statusIcon = status === "bench" ? "🪑" : status === "late" || status === "spät" || status === "spaet" ? "🕒" : status === "absent" ? "🚫" : status === "tentative" ? "⚖️" : "✅";
   return `
     <div class="raid-helper-signup-row">
       <div>
         <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
-        <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(statusLabel)} · ${escapeHtml(row.source || "")}</div>
+        <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
+        <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
       <div class="raid-helper-signup-actions">
-        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Angemeldet</button>
+        <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Aktiv</button>
         <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','bench','${escapeAttr(player)}')">Bank</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','late','${escapeAttr(player)}')">Verspätet</button>
+        <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','tentative','${escapeAttr(player)}')">Vorläufig</button>
         <button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','absent','${escapeAttr(player)}')">Abwesend</button>
         <button class="small-btn danger" type="button" onclick="deleteRaidHelperSignup('${escapeAttr(id)}','${escapeAttr(player)}')">Verwerfen</button>
       </div>
@@ -8201,7 +8219,7 @@ function renderRaidHelperSignupAdminRow(row){
 }
 
 function raidHelperSignupNotifyPrompt(action, player){
-  const label = action === "bench" ? "auf die Bank setzen" : action === "absent" ? "auf Abwesend setzen" : action === "delete" ? "aus dem Raid entfernen" : "";
+  const label = action === "bench" ? "auf die Bank setzen" : action === "late" ? "als verspätet markieren" : action === "tentative" ? "auf Vorläufig setzen" : action === "absent" ? "auf Abwesend setzen" : action === "delete" ? "aus dem Raid entfernen" : "";
   if(!label) return Promise.resolve("");
   return new Promise(resolve => {
     const backdrop = document.createElement("div");
@@ -8256,7 +8274,8 @@ async function updateRaidHelperSignupStatus(signupId, status, player = ""){
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
     await loadRaidHelperCurrentEventSignups(raidId);
-    await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    const refreshResult = await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    if(!result.refreshQueued && !refreshResult?.success) throw new Error("Status wurde gespeichert, aber der Discord-Anmelder konnte nicht zur Aktualisierung vorgemerkt werden.");
     setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung geändert."), result.noticeSkipped ? "bad" : "good");
     setRaidHelperCurrentStatus(raidHelperSignupNoticeStatus(result, "Anmeldung geändert. Discord-Aktualisierung ist vorgemerkt."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
@@ -8282,7 +8301,8 @@ async function deleteRaidHelperSignup(signupId, player = ""){
     raidHelperAttendanceCache = null;
     await loadRaidHelperEventSignups();
     await loadRaidHelperCurrentEventSignups(raidId);
-    await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    const refreshResult = await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    if(!result.refreshQueued && !refreshResult?.success) throw new Error("Anmeldung wurde entfernt, aber der Discord-Anmelder konnte nicht zur Aktualisierung vorgemerkt werden.");
     setRaidHelperEditStatus(raidHelperSignupNoticeStatus(result, "Anmeldung verworfen."), result.noticeSkipped ? "bad" : "good");
     setRaidHelperCurrentStatus(raidHelperSignupNoticeStatus(result, "Anmeldung verworfen. Discord-Aktualisierung ist vorgemerkt."), result.noticeSkipped ? "bad" : "good");
   }catch(error){
