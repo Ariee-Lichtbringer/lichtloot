@@ -4656,6 +4656,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
+          <button class="side-link" type="button" onclick="openUpdateNoticePanel()" aria-label="Update-Hinweis" title="Update-Hinweis"><span class="side-icon">⚙</span><span class="side-label">Update-Hinweis</span></button>
         </div>
       </div>
     </nav>
@@ -4710,6 +4711,24 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <div class="muted">Noch keine Daten geladen.</div>
         </div>
       </section>
+
+  <details id="updateNoticePanel" class="panel lichtloot-admin-only" ontoggle="if(this.open) loadUpdateNoticeChannels()">
+    <summary>⚙ Update-Hinweis an Discord senden</summary>
+    <div class="section-body">
+      <p class="muted">Der Bot sendet: „Bitte um Geduld, aktuell wird ein Update durchgeführt.“</p>
+      <div class="field">
+        <label for="updateNoticeChannel">Discord-Channel</label>
+        <select id="updateNoticeChannel">
+          <option value="">Channel auswählen …</option>
+        </select>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button id="updateNoticeSendButton" class="btn" type="button" onclick="sendUpdateNotice()">Update-Hinweis senden</button>
+        <button class="btn ghost" type="button" onclick="loadUpdateNoticeChannels(true)">Channels neu laden</button>
+      </div>
+      <div id="updateNoticeStatus" class="status" style="margin-top:12px">Bereit.</div>
+    </div>
+  </details>
 
   <details id="raidHelperPanel" class="panel raid-helper-panel" ontoggle="if(this.open) initRaidHelperPanel()">
     <summary>
@@ -6359,6 +6378,11 @@ function openIssueInboxPanel(){
 function openGuildApplicationsPanel(){
   openDetailsPanel("guildApplicationsPanel");
   loadGuildApplicationsPanel();
+}
+
+function openUpdateNoticePanel(){
+  openDetailsPanel("updateNoticePanel");
+  loadUpdateNoticeChannels();
 }
 
 function openLootLayoutPanel(){
@@ -11758,6 +11782,75 @@ async function loadRaidHelperDiscordChannels(){
     if(hint) hint.textContent = result?.error || "Bot-Channel konnten nicht geladen werden.";
   }catch(error){
     if(hint) hint.textContent = error.message || "Bot-Channel konnten nicht geladen werden.";
+  }
+}
+
+function renderUpdateNoticeChannels(){
+  const select = document.getElementById("updateNoticeChannel");
+  if(!select) return;
+  const previous = select.value;
+  const options = ['<option value="">Channel auswählen …</option>'];
+  raidHelperDiscordChannels.slice().sort((a, b) => {
+    const categoryCompare = String(a.categoryName || a.category || "").localeCompare(String(b.categoryName || b.category || ""), "de");
+    return categoryCompare || String(a.channelName || a.name || "").localeCompare(String(b.channelName || b.name || ""), "de");
+  }).forEach(channel => {
+    const id = String(channel.channelId || channel.id || "");
+    const name = String(channel.channelName || channel.name || id);
+    const category = String(channel.categoryName || channel.category || "");
+    options.push(`<option value="${escapeHtml(id)}">${escapeHtml(category ? category + " · #" + name : "#" + name)}</option>`);
+  });
+  select.innerHTML = options.join("");
+  if(previous && raidHelperDiscordChannels.some(channel => String(channel.channelId || channel.id || "") === previous)){
+    select.value = previous;
+  }
+}
+
+async function loadUpdateNoticeChannels(force){
+  const status = document.getElementById("updateNoticeStatus");
+  if(raidHelperDiscordChannels.length && !force){
+    renderUpdateNoticeChannels();
+    return;
+  }
+  if(status) status.textContent = "Discord-Channels werden geladen …";
+  await loadRaidHelperDiscordChannels();
+  renderUpdateNoticeChannels();
+  if(status){
+    status.textContent = raidHelperDiscordChannels.length
+      ? "Channel auswählen und Hinweis senden."
+      : "Keine beschreibbaren Discord-Channels gefunden.";
+  }
+}
+
+async function sendUpdateNotice(){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const channelId = document.getElementById("updateNoticeChannel")?.value || "";
+  const status = document.getElementById("updateNoticeStatus");
+  const button = document.getElementById("updateNoticeSendButton");
+  if(!masterCode){
+    if(status) status.innerHTML = '<span class="bad">Bitte zuerst mit dem Master-Code freischalten.</span>';
+    return;
+  }
+  if(!channelId){
+    if(status) status.innerHTML = '<span class="bad">Bitte einen Discord-Channel auswählen.</span>';
+    return;
+  }
+  const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id || "") === channelId);
+  const channelName = channel ? "#" + String(channel.channelName || channel.name || channelId) : channelId;
+  if(!confirm(`Update-Hinweis wirklich in ${channelName} senden?`)) return;
+  if(button) button.disabled = true;
+  if(status) status.textContent = "Update-Hinweis wird an den Bot übergeben …";
+  try{
+    const result = await railwayWrite({
+      action:"guildQueueUpdateNotice",
+      masterCode,
+      channelId
+    });
+    if(!result.success) throw new Error(result.error || "Update-Hinweis konnte nicht erstellt werden.");
+    if(status) status.innerHTML = `<span class="good">Update-Hinweis für ${escapeHtml(channelName)} wurde an den Bot übergeben.</span>`;
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Update-Hinweis konnte nicht gesendet werden.")}</span>`;
+  }finally{
+    if(button) button.disabled = false;
   }
 }
 
