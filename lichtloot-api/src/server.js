@@ -2605,6 +2605,7 @@ function normalizeStatus(value) {
 function normalizeSignupStatus(value) {
   const raw = clean(value).toLowerCase();
   if (["bench", "ersatzbank", "reserve"].includes(raw)) return "bench";
+  if (["late", "spät", "spaet", "verspätet", "verspaetet"].includes(raw)) return "late";
   if (["tentative", "maybe", "vielleicht", "unsicher"].includes(raw)) return "tentative";
   if (["absent", "abgemeldet", "abwesend", "nein"].includes(raw)) return "absent";
   return "signed";
