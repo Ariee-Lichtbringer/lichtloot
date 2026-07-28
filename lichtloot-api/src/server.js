@@ -26,7 +26,9 @@ const p0ReleaseCsvUrl =
   "https://docs.google.com/spreadsheets/d/1ejape-5N42TDUIsglYZV1uPupQxYMiUK6JE1QiPJKbE/export?format=csv&gid=0";
 const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
+const missingRaidHelperCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
+const MISSING_RAID_HELPER_CACHE_TTL_MS = 5 * 60 * 1000;
 let p0ReleaseCache = null;
 let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
@@ -13691,12 +13693,41 @@ async function findRaidForDiscordImport(guildId, params) {
 }
 
 async function getRaidHelper({ guildId, query: params }) {
+  const lookupValue = clean(
+    params.raidId
+    || params.id
+    || params.playerPin
+    || params.raidPin
+    || [params.raid, params.raidDate, params.raidTime].filter(Boolean).join("|")
+  );
+  const missingCacheKey = `${guildId}:${lookupValue}`;
+  const missingUntil = missingRaidHelperCache.get(missingCacheKey) || 0;
+  if (lookupValue && missingUntil > Date.now()) {
+    return {
+      success: false,
+      missing: true,
+      stale: true,
+      error: "Raid wurde nicht gefunden."
+    };
+  }
+  if (missingUntil) missingRaidHelperCache.delete(missingCacheKey);
+
   const raid = await findRaid(guildId, params);
   if (!raid) {
-    const error = new Error("Raid wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
+    if (lookupValue) {
+      missingRaidHelperCache.set(
+        missingCacheKey,
+        Date.now() + MISSING_RAID_HELPER_CACHE_TTL_MS
+      );
+    }
+    return {
+      success: false,
+      missing: true,
+      stale: true,
+      error: "Raid wurde nicht gefunden."
+    };
   }
+  if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
   const signupResult = await query(
     `select
