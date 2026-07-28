@@ -7994,6 +7994,7 @@ async function importEmergencyPrios({ guild, query: params }) {
 
   const imported = [];
   const failed = [];
+  const emergencyItemName = value => clean(value).replace(/-\d+\s*$/, "").trim();
   for (const entry of entries) {
     try {
       const result = await savePrioAsRaidlead({
@@ -8005,9 +8006,9 @@ async function importEmergencyPrios({ guild, query: params }) {
           player: entry.player || entry.Charakter,
           server: entry.server || entry.Server || "Everlook",
           className: entry.className || entry.Klasse,
-          p1: entry.p1 || entry["Prio 1"],
-          p2: entry.p2 || entry["Prio 2"],
-          p3: entry.p3 || entry["Prio 3"],
+          p1: emergencyItemName(entry.p1 || entry["Prio 1"]),
+          p2: emergencyItemName(entry.p2 || entry["Prio 2"]),
+          p3: emergencyItemName(entry.p3 || entry["Prio 3"]),
           p0Plus: entry.p0Plus || entry["PO+"] || "nein",
           raidTime: raid.raid_time
         }
