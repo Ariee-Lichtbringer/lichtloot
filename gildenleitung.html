@@ -8316,7 +8316,7 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
   const raid = findRaidByAnyId(raidId) || raidHelperEditingData?.raid || {};
   if(!masterCode || !raidId) return null;
   return railwayWrite({
-    action:"guildQueueRaidAnnouncementRefresh",
+    action:"guildQueueRaidAnnouncement",
     masterCode,
     raidId,
     playerPin:raid.playerPin || raid.prioPin || "",
