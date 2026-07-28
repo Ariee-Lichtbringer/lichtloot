@@ -2807,7 +2807,13 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   </div>
 </div>
 
-<script>\nfunction openEmergencyPrio(){\n  const pin=window.prompt(\"Bitte Prio-PIN des Raids eingeben:\");\n  if(!pin) return;\n  window.location.href=\"notfall/?pin=\"+encodeURIComponent(pin.trim());\n}\n
+<script>
+function openEmergencyPrio(){
+  const pin=window.prompt("Bitte Prio-PIN des Raids eingeben:");
+  if(!pin) return;
+  window.location.href="notfall/?pin="+encodeURIComponent(pin.trim());
+}
+
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL =
