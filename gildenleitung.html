@@ -4719,6 +4719,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
               <span>PO-Anmelder automatisch mit erstellen</span>
             </label>
+            <input id="raidHelperImageUrl" type="hidden">
           </section>
 
           <section class="raid-helper-card">
@@ -4907,6 +4908,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               </div>
             </div>
             <input id="raidHelperScheduleId" type="hidden">
+            <input id="raidHelperScheduleImageUrl" type="hidden">
             <div class="raid-helper-template-fields">
               <label>Raid <select id="raidHelperScheduleRaid" onchange="updateRaidHelperScheduleDefaults(false)">
                 <option value="naxx">Naxxramas</option>
@@ -5037,6 +5039,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               <div class="field">
                 <label for="raidHelperTemplateChannel">Discord-Channel</label>
                 <select id="raidHelperTemplateChannel"></select>
+              </div>
+              <div class="field raid-helper-editor-wide">
+                <label for="raidHelperTemplateImageUrl">Bild-URL (Bild unten im Discord-Anmelder)</label>
+                <input id="raidHelperTemplateImageUrl" type="url" placeholder="https://…/bild.jpg">
               </div>
             </div>
           </section>
@@ -8623,6 +8629,7 @@ function resetRaidHelperScheduleForm(){
   setValue("raidHelperScheduleTime", "19:45");
   setValue("raidHelperScheduleInterval", "1");
   setValue("raidHelperScheduleNextDate", nextIsoDateForWeekday(3));
+  setValue("raidHelperScheduleImageUrl", defaultRaidHelperImageUrl(currentRaid));
   updateRaidHelperScheduleDefaults(true);
   setRaidHelperScheduleStatus("Neue Rhythmus-Regel bereit.", "");
 }
@@ -8648,6 +8655,7 @@ function fillRaidHelperScheduleEditor(schedule){
   setValue("raidHelperScheduleHeals", item.healSlots ?? "");
   setValue("raidHelperScheduleDds", item.ddSlots ?? "");
   setValue("raidHelperScheduleDescription", item.description || "");
+  setValue("raidHelperScheduleImageUrl", item.raidImageUrl || item.imageUrl || defaultRaidHelperImageUrl(raidKey));
   renderRaidHelperScheduleChannelSelect(item.discordChannelId || RAID_HELPER_CHANNEL_ID);
   updateRaidHelperScheduleDefaults(false);
   setRaidHelperScheduleStatus(item.id ? "Rhythmus geladen." : "Neue Rhythmus-Regel bereit.", item.id ? "good" : "");
@@ -8678,7 +8686,7 @@ function raidHelperScheduleFromEditor(){
     healSlots:raidHelperValue("raidHelperScheduleHeals"),
     ddSlots:raidHelperValue("raidHelperScheduleDds"),
     description:raidHelperValue("raidHelperScheduleDescription"),
-    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+    raidImageUrl:raidHelperValue("raidHelperScheduleImageUrl") || defaultRaidHelperImageUrl(raidKey)
   };
 }
 
@@ -8739,7 +8747,7 @@ async function saveRaidHelperSchedule(){
       healSlots:schedule.healSlots,
       ddSlots:schedule.ddSlots,
       description:schedule.description,
-      raidImageUrl:defaultRaidHelperImageUrl(schedule.raid)
+      raidImageUrl:schedule.raidImageUrl || defaultRaidHelperImageUrl(schedule.raid)
     });
     if(!result.success) throw new Error(result.error || "Rhythmus konnte nicht gespeichert werden.");
     await loadRaidHelperSchedules();
@@ -8809,7 +8817,7 @@ async function savePoSignupAutoPoster(){
       healSlots:defaults.healSlots,
       ddSlots:defaults.ddSlots,
       description:document.getElementById("poSignupNote")?.value.trim() || defaults.description || "",
-      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+      raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
     if(!result.success) throw new Error(result.error || "Automatischer Poster konnte nicht gespeichert werden.");
     await loadRaidHelperSchedules();
@@ -8982,7 +8990,8 @@ function updateRaidHelperTemplateDefaults(force){
     ["raidHelperTemplateHeals", defaults.healSlots],
     ["raidHelperTemplateDds", defaults.ddSlots],
     ["raidHelperTemplateDeadline", defaults.signupDeadline],
-    ["raidHelperTemplateDescription", defaults.description]
+    ["raidHelperTemplateDescription", defaults.description],
+    ["raidHelperTemplateImageUrl", defaults.raidImageUrl]
   ];
   mappings.forEach(([id, value]) => {
     const element = document.getElementById(id);
@@ -9007,6 +9016,7 @@ function fillRaidHelperTemplateEditor(template){
   setValue("raidHelperTemplateDds", item.ddSlots ?? "");
   setValue("raidHelperTemplateDeadline", item.signupDeadline || "");
   setValue("raidHelperTemplateDescription", item.description || item.text || "");
+  setValue("raidHelperTemplateImageUrl", item.raidImageUrl || item.imageUrl || defaultRaidHelperImageUrl(raidKey));
   renderRaidHelperTemplateChannelSelect(item.discordChannelId || RAID_HELPER_CHANNEL_ID);
   setRaidHelperTemplateStatus(item.builtin ? "Standard-Vorlage geladen. Speichern legt eine eigene Vorlage an." : "Vorlage geladen.", "good");
 }
@@ -9033,7 +9043,7 @@ function raidHelperTemplateFromEditor(){
     ddSlots:raidHelperValue("raidHelperTemplateDds"),
     signupDeadline:raidHelperValue("raidHelperTemplateDeadline"),
     discordChannelId:raidHelperValue("raidHelperTemplateChannel") || RAID_HELPER_CHANNEL_ID,
-    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+    raidImageUrl:raidHelperValue("raidHelperTemplateImageUrl") || defaultRaidHelperImageUrl(raidKey)
   };
 }
 
@@ -9158,6 +9168,7 @@ function planRaidHelperTemplateRepostObject(template){
   setValue("raidHelperScheduleHeals", template.healSlots ?? "");
   setValue("raidHelperScheduleDds", template.ddSlots ?? "");
   setValue("raidHelperScheduleDescription", template.description || RAID_HELPER_DEFAULT_TEXT[raidKey] || RAID_HELPER_DEFAULT_TEXT.default);
+  setValue("raidHelperScheduleImageUrl", template.raidImageUrl || template.imageUrl || defaultRaidHelperImageUrl(raidKey));
   renderRaidHelperScheduleChannelSelect(template.discordChannelId || RAID_HELPER_CHANNEL_ID);
   setRaidHelperTab("scheduledEvents");
   setRaidHelperScheduleStatus("Repost aus Vorlage vorbereitet. Wochentag und Uhrzeit prüfen, dann Rhythmus speichern.", "good");
@@ -9186,6 +9197,8 @@ function applyRaidHelperTemplateObject(template){
   if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
   setRaidHelperTab("createEvent");
   updateRaidHelperDefaults();
+  const imageUrl = document.getElementById("raidHelperImageUrl");
+  if(imageUrl) imageUrl.value = template.raidImageUrl || template.imageUrl || defaultRaidHelperImageUrl(raidKey);
   renderRaidHelperDiscordChannels();
   updateRaidHelperPreview();
 }
@@ -9217,7 +9230,7 @@ async function saveRaidHelperTemplate(){
       ddSlots:template.ddSlots,
       signupDeadline:template.signupDeadline,
       discordChannelId:template.discordChannelId,
-      raidImageUrl:defaultRaidHelperImageUrl(template.raid)
+      raidImageUrl:template.raidImageUrl || defaultRaidHelperImageUrl(template.raid)
     });
     if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
     const saved = result.template;
@@ -11773,7 +11786,7 @@ async function createRaidHelperSignup(){
       discordChannelId,
       signupDeadline:raidHelperValue("raidHelperDeadline"),
       description:raidHelperValue("raidHelperDescription"),
-      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+      raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
 
     if(!created.success){
@@ -11799,7 +11812,7 @@ async function createRaidHelperSignup(){
       ddSlots:raidHelperValue("raidHelperDds"),
       signupDeadline:raidHelperValue("raidHelperDeadline"),
       description:raidHelperValue("raidHelperDescription"),
-      raidImageUrl:defaultRaidHelperImageUrl(raidKey),
+      raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
       discordChannelId
     });
