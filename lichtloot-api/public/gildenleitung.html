@@ -1069,6 +1069,60 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   gap:14px;
 }
 
+.layout-panel .section-head.compact{
+  position:sticky;
+  top:8px;
+  z-index:20;
+  padding:10px 12px;
+  border:1px solid rgba(var(--gold-rgb),.24);
+  border-radius:8px;
+  background:rgba(2,6,23,.96);
+  backdrop-filter:blur(12px);
+}
+
+.layout-save-dirty{
+  color:#111827 !important;
+  border-color:#f59e0b !important;
+  background:#fbbf24 !important;
+  box-shadow:0 0 16px rgba(251,191,36,.35);
+}
+
+.layout-accordion{
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:10px;
+  background:rgba(2,6,23,.42);
+  overflow:hidden;
+}
+
+.layout-accordion > summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:13px 15px;
+  cursor:pointer;
+  list-style:none;
+  color:#f8fafc;
+  font-size:15px;
+  font-weight:1000;
+  background:rgba(15,23,42,.74);
+}
+
+.layout-accordion > summary::-webkit-details-marker{display:none}
+.layout-accordion > summary::before{content:"▸";color:var(--gold);font-size:18px}
+.layout-accordion[open] > summary::before{content:"▾"}
+.layout-accordion-content{display:grid;gap:12px;padding:12px}
+
+.layout-raid-group{
+  display:grid;
+  gap:8px;
+}
+
+.layout-raid-group h5{
+  margin:4px 0 0;
+  color:#e2e8f0;
+  font-size:14px;
+}
+
 .layout-steps{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1198,6 +1252,23 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .layout-raid-field label{
   color:var(--gold);
+}
+
+.layout-raid-preview{
+  width:100%;
+  height:105px;
+  display:block;
+  object-fit:cover;
+  margin-bottom:8px;
+  border:1px solid rgba(148,163,184,.2);
+  border-radius:7px;
+  background:#020617;
+}
+
+.layout-raid-image-actions{
+  display:flex;
+  gap:6px;
+  margin-top:7px;
 }
 
 .layout-note-box{
@@ -5322,7 +5393,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <h3>Gildenoptik</h3>
           <p>Logo, Farben, Hintergrund und Raid-Kacheln für diese Gilde ändern.</p>
         </div>
-        <button class="small-btn good" type="button" onclick="saveLootLayoutPanel()">Speichern</button>
+        <button id="lootLayoutSaveButton" class="small-btn good" type="button" onclick="saveLootLayoutPanel()">Speichern</button>
       </div>
       <div id="lootLayoutPanelContent" class="create-result">Layout laden.</div>
     </div>
@@ -5755,6 +5826,18 @@ const RAID_IMAGES = {
   "zg-late":"images/zg.jpg",
   aq20:"images/aq20.jpg",
   ony:"images/ony.jpg"
+};
+const LAYOUT_DEFAULT_RAID_IMAGES = {
+  mc:"images/raid-templates/mc.jpg",
+  bwl:"images/raid-templates/bwl.jpg",
+  aq40:"images/raid-templates/aq40.jpg",
+  naxx:"images/raid-templates/naxx.jpg",
+  zg:"images/raid-templates/zg.jpg",
+  aq20:"images/raid-templates/aq20.jpg",
+  ony:"images/raid-templates/ony.jpg",
+  "zg-mittwoch":"images/raid-templates/zg.jpg",
+  "zg-prime":"images/raid-templates/zg.jpg",
+  "zg-late":"images/raid-templates/zg.jpg"
 };
 
 let guildData = { raids: [], players: [] };
@@ -6357,6 +6440,68 @@ function renderBotInviteButton(kind, label){
   return `<a class="small-btn good" href="${escapeAttr(url)}" target="_blank" rel="noopener">${escapeHtml(label)}</a>`;
 }
 
+function layoutRaidImageField(key, raidImages){
+  const option = RAID_OPTIONS[key] || {};
+  const value = raidImages[key] || RAID_IMAGES[key] || LAYOUT_DEFAULT_RAID_IMAGES[key] || "";
+  return `
+    <div class="layout-raid-field field">
+      <label>${escapeHtml(option.name || key.toUpperCase())}</label>
+      <img id="layoutRaidPreview_${escapeAttr(key)}" class="layout-raid-preview" src="${escapeAttr(value)}" alt="${escapeAttr(option.name || key)} Vorschau" onerror="this.style.opacity='.2'">
+      <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="${escapeAttr(LAYOUT_DEFAULT_RAID_IMAGES[key] || "")}" oninput="updateLayoutRaidImagePreview('${escapeAttr(key)}')">
+      <div class="layout-raid-image-actions">
+        <button class="small-btn ghost" type="button" onclick="resetLayoutRaidImage('${escapeAttr(key)}')">Standardbild verwenden</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderLayoutRaidImageGroups(raidKeys, raidImages){
+  const available = new Set(raidKeys);
+  const groups = [
+    ["40er-Raids", ["mc","bwl","aq40","naxx"]],
+    ["20er-Raids", ["zg","aq20","ony"]],
+    ["Nachtloot-ZG", ["zg-mittwoch","zg-prime","zg-late"]]
+  ];
+  return groups.map(([label, keys]) => {
+    const visibleKeys = keys.filter(key => available.has(key));
+    if(!visibleKeys.length) return "";
+    return `
+      <div class="layout-raid-group">
+        <h5>${escapeHtml(label)}</h5>
+        <div class="layout-raid-image-grid">
+          ${visibleKeys.map(key => layoutRaidImageField(key, raidImages)).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function updateLayoutRaidImagePreview(key){
+  const input = document.getElementById("layoutRaidImage_" + key);
+  const preview = document.getElementById("layoutRaidPreview_" + key);
+  if(!input || !preview) return;
+  preview.style.opacity = "1";
+  preview.src = String(input.value || "").trim() || LAYOUT_DEFAULT_RAID_IMAGES[key] || "";
+}
+
+function resetLayoutRaidImage(key){
+  const input = document.getElementById("layoutRaidImage_" + key);
+  if(!input) return;
+  input.value = LAYOUT_DEFAULT_RAID_IMAGES[key] || "";
+  updateLayoutRaidImagePreview(key);
+  markLootLayoutDirty();
+}
+
+function markLootLayoutDirty(){
+  const status = document.getElementById("lootLayoutStatus");
+  const button = document.getElementById("lootLayoutSaveButton");
+  if(status) status.innerHTML = '<span style="color:#fbbf24;font-weight:950">● Änderungen noch nicht gespeichert.</span>';
+  if(button){
+    button.textContent = "Änderungen speichern";
+    button.classList.add("layout-save-dirty");
+  }
+}
+
 function renderLootLayoutPanel(){
   const box = document.getElementById("lootLayoutPanelContent");
   if(!box) return;
@@ -6386,7 +6531,9 @@ function renderLootLayoutPanel(){
         </div>
       </div>
 
-      <div class="layout-info-grid">
+      <details class="layout-accordion" open>
+        <summary>1. Grunddesign</summary>
+        <div class="layout-accordion-content">
         <section class="layout-info-box good">
           <div class="layout-box-head">
             <span class="layout-comic-arrow">↘</span>
@@ -6414,7 +6561,12 @@ function renderLootLayoutPanel(){
             </div>
           </div>
         </section>
+        </div>
+      </details>
 
+      <details class="layout-accordion">
+        <summary>2. Discord-Bots und Channels</summary>
+        <div class="layout-accordion-content">
         <section class="layout-info-box blue">
           <div class="layout-box-head">
             <span class="layout-comic-arrow">↘</span>
@@ -6443,9 +6595,8 @@ function renderLootLayoutPanel(){
             </div>
           </div>
         </section>
-      </div>
 
-      <div class="layout-note-row">
+        <div class="layout-note-row">
         <div class="layout-note-box">
           <h4>Channel-Rechte</h4>
           <p>Channel ansehen, Nachrichten senden, Nachrichtenverlauf lesen, Links einbetten, Dateien anhängen, Reaktionen nutzen und für Updates Nachrichten verwalten.</p>
@@ -6467,10 +6618,15 @@ function renderLootLayoutPanel(){
               <select id="layoutP0PlusBackupChannelId">${layoutChannelSelectOptions(layout.p0PlusBackupChannelId || "")}</select>
             </div>
           </div>
+          </div>
         </div>
-      </div>
+        </div>
+      </details>
 
-      <section class="layout-info-box gold">
+      <details class="layout-accordion">
+        <summary>3. Raidbilder</summary>
+        <div class="layout-accordion-content">
+        <section class="layout-info-box gold">
         <div class="layout-box-head">
           <span class="layout-comic-arrow">↘</span>
           <div>
@@ -6478,21 +6634,15 @@ function renderLootLayoutPanel(){
             <p>Diese Bilder werden auf der Startseite, in der Gildenleitung und bei Raidkarten verwendet.</p>
           </div>
         </div>
-        <div class="layout-raid-image-grid">
-          ${raidKeys.map(key => {
-            const option = RAID_OPTIONS[key] || {};
-            const value = raidImages[key] || RAID_IMAGES[key] || "";
-            return `
-              <div class="layout-raid-field field">
-                <label>${escapeHtml(option.name || key.toUpperCase())}</label>
-                <input id="layoutRaidImage_${escapeAttr(key)}" value="${escapeAttr(value)}" placeholder="images/raid-templates/${escapeAttr(key)}.jpg">
-              </div>
-            `;
-          }).join("")}
-        </div>
+        ${renderLayoutRaidImageGroups(raidKeys, raidImages)}
       </section>
+        </div>
+      </details>
 
-      <section class="layout-info-box blue">
+      <details class="layout-accordion">
+        <summary>4. Raidregeln</summary>
+        <div class="layout-accordion-content">
+        <section class="layout-info-box blue">
         <div class="layout-box-head">
           <span class="layout-comic-arrow">↘</span>
           <div>
@@ -6504,10 +6654,16 @@ function renderLootLayoutPanel(){
           <a class="small-btn primary" href="${escapeAttr(withGuildUrl("raidregeln.html") + "&edit=1")}">Raidregeln-Seite öffnen und bearbeiten</a>
         </div>
       </section>
+        </div>
+      </details>
 
       <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
   `;
+  box.querySelectorAll("input,select").forEach(element => {
+    element.addEventListener("input", markLootLayoutDirty);
+    element.addEventListener("change", markLootLayoutDirty);
+  });
 }
 
 async function saveLootLayoutPanel(){
