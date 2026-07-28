@@ -63,23 +63,16 @@ async function loadItems(){
   try{const response=await fetch(GITHUB_LOOT_URL+"?t="+Date.now(),{cache:"no-store"});if(!response.ok)throw new Error("HTTP "+response.status);allItems=await response.json();renderItems();}
   catch(error){$("status").innerHTML='<span class="bad">Lootdaten konnten nicht aus GitHub geladen werden.</span>';}
 }
-function apiJsonp(params){
-  return new Promise((resolve,reject)=>{
-    const callback="llEmergency_"+Date.now()+"_"+Math.random().toString(36).slice(2);
-    const script=document.createElement("script");
-    const timer=setTimeout(()=>{cleanup();reject(new Error("Notfall-API antwortet nicht."))},8000);
-    function cleanup(){clearTimeout(timer);delete window[callback];script.remove()}
-    window[callback]=data=>{cleanup();resolve(data||{})};
-    script.onerror=()=>{cleanup();reject(new Error("Notfall-API konnte nicht geladen werden."))};
-    script.src=EMERGENCY_API_URL+"?"+new URLSearchParams({...params,callback,t:Date.now()}).toString();
-    document.head.appendChild(script);
-  });
+async function apiRequest(params){
+  const response=await fetch(EMERGENCY_API_URL+"?"+new URLSearchParams({...params,t:Date.now()}).toString(),{cache:"no-store"});
+  if(!response.ok)throw new Error("Notfall-API HTTP "+response.status);
+  return await response.json();
 }
 async function unlockRaid(){
   const pin=new URLSearchParams(location.search).get("pin")||window.prompt("Bitte Prio-PIN eingeben:");
   if(!pin){document.body.innerHTML='<main><section class="card"><h1>Prio-PIN fehlt</h1><a href="../">Zurück</a></section></main>';return}
   try{
-    const data=await apiJsonp({action:"getEmergencyRaid",prioPin:pin});
+    const data=await apiRequest({action:"getEmergencyRaid",prioPin:pin});
     if(!data.success)throw new Error(data.error||"Prio-PIN nicht gefunden.");
     const raid=data.raid;currentPrioPin=pin.trim();
     if(raid.prioStatus!=="offen")throw new Error("Diese Prioliste ist geschlossen.");
@@ -97,7 +90,7 @@ async function saveEntry(){
   const index=entries.findIndex(row=>row._key===key);entry._key=key;if(index>=0)entries[index]=entry;else entries.push(entry);
   localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));renderEntries();
   const params={action:"saveEmergencyPrio",raidPin:currentPrioPin,player:entry.Charakter,server:entry.Server,className:entry.Klasse,p1:entry.P1,p2:entry.P2,p3:entry.P3,p0Plus:entry.P0Plus};
-  try{const result=await apiJsonp(params);if(!result.success)throw new Error(result.error||"Speichern abgelehnt.");$("status").innerHTML='<span class="ok">✓ Prio wurde zentral im Notfallsystem gespeichert.</span>'}
+  try{const result=await apiRequest(params);if(!result.success)throw new Error(result.error||"Speichern abgelehnt.");$("status").innerHTML='<span class="ok">✓ Prio wurde zentral im Notfallsystem gespeichert.</span>'}
   catch(error){$("status").innerHTML=`<span class="bad">${esc(error.message)}</span><br>Eine lokale Sicherung bleibt auf diesem Gerät erhalten.`}
 }
 function renderEntries(){$("count").textContent=entries.length;$("entries").innerHTML=entries.length?entries.map((e,i)=>`<div class="entry"><div><strong>${esc(e.Charakter)}</strong> · ${esc(e.Raid)} · ${esc(e.P1)}${e.P0Plus==="ja"?" · P0+":""}</div><button onclick="removeEntry(${i})">Entfernen</button></div>`).join(""):"Noch keine Einträge."}
