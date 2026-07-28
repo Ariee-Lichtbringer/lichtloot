@@ -940,10 +940,24 @@ body{
 .my-po-raid{background:rgba(2,6,23,.58);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px}
 .my-po-raid strong{display:block;color:#facc15;font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
 .my-po-raid span{font-size:22px;font-weight:900;color:#fff}
+.my-prio-overview{display:grid;gap:8px;margin-bottom:12px}
+.my-prio-overview-title{color:#facc15;font-size:14px;font-weight:950}
+.my-prio-overview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.my-prio-overview-card{padding:9px;border:1px solid rgba(250,204,21,.25);border-radius:10px;background:rgba(2,6,23,.58)}
+.my-prio-overview-card strong{display:block;color:#f8fafc;font-size:13px;margin-bottom:5px}
+.my-prio-overview-card small{display:block;color:#94a3b8;margin-bottom:6px}
+.my-prio-items{display:flex;gap:5px;flex-wrap:wrap}
+.my-prio-item{padding:3px 6px;border-radius:6px;background:rgba(30,41,59,.86);color:#e2e8f0;font-size:11px;font-weight:850}
+.my-release-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.my-release-pill{padding:7px;border:1px solid rgba(148,163,184,.22);border-radius:8px;background:rgba(15,23,42,.7);color:#94a3b8;font-size:11px;font-weight:900;text-align:center}
+.my-release-pill.active{border-color:rgba(34,197,94,.44);background:rgba(22,101,52,.2);color:#86efac}
+.my-recruit-status{margin-bottom:10px;padding:9px;border:1px solid rgba(96,165,250,.3);border-radius:9px;background:rgba(30,64,175,.14);font-weight:900;color:#dbeafe}
 .myprio-actions{display:flex;justify-content:flex-end;margin-top:10px}
 .delete-prio-btn{border:1px solid rgba(239,68,68,.55);background:rgba(239,68,68,.22);color:white;border-radius:10px;padding:8px 12px;font-weight:900;cursor:pointer}
 .delete-prio-btn:hover{background:rgba(239,68,68,.35)}
-@media(max-width:800px){.my-po-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:800px){
+  .my-po-grid,.my-prio-overview-grid,.my-release-grid{grid-template-columns:repeat(2,1fr)}
+}
 
 .myprio-table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.12);border-radius:16px;background:rgba(2,6,23,.45)}
 .myprio-table{width:100%;border-collapse:collapse;font-size:13px;min-width:920px}
@@ -6948,12 +6962,58 @@ function renderEmptyMyPriosForRailwayCharacter(char){
   }
 }
 
+function renderMyPrioOverview(entries){
+  const rows=(entries || []).filter(Boolean);
+  if(!rows.length){
+    return '<div class="status">Noch keine eigenen Prios gespeichert.</div>';
+  }
+  return `<div class="my-prio-overview">
+    <div class="my-prio-overview-title">⚔ Meine Prios auf einen Blick</div>
+    <div class="my-prio-overview-grid">
+      ${rows.map(entry=>{
+        const items=[
+          entry.p1 ? "P1: "+entry.p1 : "",
+          entry.p2 ? "P2: "+entry.p2 : "",
+          entry.p3 ? "P3: "+entry.p3 : "",
+          entry.p0Plus && String(entry.p0Plus).trim().toLowerCase() !== "nein" ? "P0+: "+entry.p0Plus : ""
+        ].filter(Boolean);
+        return `<div class="my-prio-overview-card">
+          <strong>${safeHtml(entry.raidName || entry.raid || "Raid")}</strong>
+          <small>${safeHtml(formatMyPrioDateOnly(entry.raidDate || entry.createdAt))}${entry.current === false ? " · vergangen" : " · aktuell"}</small>
+          <div class="my-prio-items">${items.length ? items.map(item=>`<span class="my-prio-item">${safeHtml(item)}</span>`).join("") : '<span class="muted">Keine Items eingetragen</span>'}</div>
+        </div>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
+function renderMyPoReleaseOverview(releases){
+  const values=releases || {};
+  const raids=[
+    ["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],
+    ["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]
+  ];
+  return `<div class="my-po-summary">
+    <div class="my-po-summary-title">✅ Meine P0+ Freigaben</div>
+    <div class="my-release-grid">
+      ${raids.map(([key,label])=>`<div class="my-release-pill${values[key] ? " active" : ""}">${values[key] ? "✓ " : "○ "}${safeHtml(label)}</div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function renderMyRecruitStatus(data){
+  if(CURRENT_GUILD_SLUG !== "nachtloot") return "";
+  const lifted=Boolean(data?.recruitStatusLifted);
+  return `<div class="my-recruit-status">Nachtwächter-Rekrutenstatus: ${lifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>'}</div>`;
+}
+
 function renderMyPrios(data){
   const status=document.getElementById("myPriosStatus");
   const results=document.getElementById("myPriosResults");
   const entries=data.entries || [];
   const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
+  const poReleases=data.poReleases || {};
   window.myOwnP0PlusPoints=ownP0.slice();
 
   myRaidCalendarPrioEntries=entries.slice();
@@ -6961,17 +7021,15 @@ function renderMyPrios(data){
 
   status.innerHTML='<span class="ok">✓ Prios für '+safeHtml(data.player || '')+' – '+safeHtml(data.server || '')+' geladen.</span>';
 
-  if(!pastEntries.length && !ownP0.length){
-    results.innerHTML='<div class="status">Für diesen Charakter wurden keine vergangenen Raid-Prios und keine P0/P0+ Punkte gefunden.</div>';
-    return;
-  }
-
-  let html='';
+  let html=renderMyRecruitStatus(data);
+  html+=renderMyPrioOverview(entries);
+  html+=renderMyPoReleaseOverview(poReleases);
 
   if(ownP0.length){
+    html+=renderMyP0Summary(ownP0);
     html+=`<div class="lichtloot-fold own-p0-popout-card">
-      <strong>Eigene P0/P0+ Punkte</strong>
-      <span>${safeHtml(ownP0.length)} gespeicherte Punkte gefunden. Die komplette Liste öffnet sich als eigenes Fenster.</span>
+      <strong>Eigene P0/P0+ Punkte im Detail</strong>
+      <span>${safeHtml(ownP0.length)} gespeicherte Einträge gefunden.</span>
       <button class="right-inline-btn" type="button" onclick="openOwnP0PlusModal()">P0/P0+ Punkte öffnen</button>
     </div>`;
   }
