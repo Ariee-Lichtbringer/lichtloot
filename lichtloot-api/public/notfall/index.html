@@ -46,7 +46,7 @@ input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1
   <section class="card">
     <h2>Gespeicherte Prios (<span id="count">0</span>)</h2>
     <div id="entries" class="hint">Noch keine Einträge.</div>
-    <button class="primary" onclick="downloadCsv()">CSV herunterladen</button>
+    <button class="primary" onclick="downloadCsv()">Prio3 Reforged herunterladen</button>
     <button class="danger" onclick="clearEntries()">Liste leeren</button>
   </section>
 </main>
@@ -115,7 +115,8 @@ function renderEntries(){$("count").textContent=entries.length;$("entries").inne
 function removeEntry(i){entries.splice(i,1);localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));renderEntries()}
 function clearEntries(){if(confirm("Notfallliste wirklich leeren?")){entries=[];localStorage.removeItem(STORAGE_KEY);renderEntries()}}
 function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
-function downloadCsv(){if(!entries.length)return alert("Die Notfallliste ist leer.");const headers=["Typ","Raid","Raid-ID","Raiddatum","Charakter","Server","Klasse","Prio 1","Prio 2","Prio 3","PO+","Erstellt am"];const rows=[headers,...entries.map(e=>["PRIO",e.Raid,e.RaidID,e.Raiddatum,e.Charakter,e.Server,e.Klasse,e.P1,e.P2,e.P3,e.P0Plus,e.ErstelltAm])];const blob=new Blob(["\uFEFF"+rows.map(r=>r.map(csvCell).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`lichtloot-notfall-${$("raid").value}-${$("raidDate").value||"raid"}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
+function prio3ItemId(itemName){const name=String(itemName||"").trim(),item=allItems.find(entry=>String(entry.name||"").trim().toLowerCase()===name.toLowerCase());return item&&item.item_id?String(item.item_id):name.replace(/.*-(\d+)$/,"$1")}
+function downloadCsv(){if(!entries.length)return alert("Die Notfallliste ist leer.");const rows=entries.map(e=>[e.Charakter,e.Klasse,prio3ItemId(e.P1),prio3ItemId(e.P2),prio3ItemId(e.P3)].map(value=>String(value||"").replace(/;/g,",")).join(";"));const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${$("raid").value}-Prio3-${$("raidDate").value||new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
 $("raid").addEventListener("change",renderItems);$("p0Plus").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks();renderLootList()});$("p1").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks()});
 $("raidDate").value=new Date().toISOString().slice(0,10);renderEntries();unlockRaid();
 </script></body></html>
