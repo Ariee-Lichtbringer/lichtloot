@@ -3070,6 +3070,9 @@ function normalizePoReleaseCharacterName(value) {
 
 async function ensureCharacterPoReleaseSchema() {
   await ensureRaidSchema();
+  await query(`alter table characters add column if not exists recruit_status_lifted boolean not null default false`);
+  await query(`alter table characters add column if not exists recruit_status_lifted_at timestamptz`);
+  await query(`alter table characters add column if not exists recruit_status_lifted_by text`);
 }
 
 function poReleaseFlagsFromRows(rows) {
@@ -3090,6 +3093,9 @@ async function getCharacterPoReleaseRows(guildId) {
        c.server,
        c.class_name,
        c.is_main,
+       c.recruit_status_lifted,
+       c.recruit_status_lifted_at,
+       c.recruit_status_lifted_by,
        p.player_pin,
        p.id as player_id,
        cpr.raid_type,
@@ -3118,6 +3124,9 @@ async function getCharacterPoReleaseRows(guildId) {
         server: row.server || "",
         className: row.class_name || "",
         isMain: Boolean(row.is_main),
+        recruitStatusLifted: Boolean(row.recruit_status_lifted),
+        recruitStatusLiftedAt: row.recruit_status_lifted_at || "",
+        recruitStatusLiftedBy: row.recruit_status_lifted_by || "",
         playerId: row.player_id,
         playerPin: row.player_pin || "",
         releases: {
@@ -3199,6 +3208,48 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   }
   p0ReleaseCache = null;
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
+}
+
+async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  await ensureCharacterPoReleaseSchema();
+  const characterId = clean(params.characterId || params.charId);
+  const lifted = !["false", "0", "no", "nein", "reset"].includes(clean(params.lifted || params.enabled || params.value || "true").toLowerCase());
+  if (!isUuid(characterId)) {
+    const error = new Error("Charakter fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
+  if (clean(guildResult.rows[0]?.slug).toLowerCase() !== "nachtloot") {
+    const error = new Error("Der Rekrutenstatus wird nur für Nachtwächter verwaltet.");
+    error.statusCode = 403;
+    throw error;
+  }
+  const result = await query(
+    `update characters c
+     set recruit_status_lifted = $3,
+         recruit_status_lifted_at = case when $3 then now() else null end,
+         recruit_status_lifted_by = case when $3 then $4 else null end
+     from players p
+     where c.player_id = p.id
+       and p.guild_id = $1
+       and c.id = $2
+     returning c.id, c.name, c.recruit_status_lifted, c.recruit_status_lifted_at, c.recruit_status_lifted_by`,
+    [guildId, characterId, lifted, clean(params.approvedBy || params.reviewer || "Gildenleitung")]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Charakter wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return {
+    success: true,
+    characterId,
+    lifted: Boolean(result.rows[0].recruit_status_lifted),
+    liftedAt: result.rows[0].recruit_status_lifted_at || "",
+    liftedBy: result.rows[0].recruit_status_lifted_by || ""
+  };
 }
 
 async function importCharacterPoReleases({ guildId, query: params = {} }) {
@@ -18637,6 +18688,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildSetCharacterRecruitStatusLift") {
+      const saved = await setCharacterRecruitStatusLift({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "guildImportCharacterPoReleases" || action === "importCharacterPoReleases") {
       const imported = await importCharacterPoReleases({ guildId: guild.id, query: req.query });
       return res.json({ ...imported, guild: guild.slug });
@@ -19081,6 +19137,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildSetCharacterRecruitStatusLift") {
+      const saved = await setCharacterRecruitStatusLift({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
