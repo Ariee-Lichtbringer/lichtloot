@@ -7,8 +7,8 @@
 <style>
 :root{--gold:#facc15;--blue:#2563eb;--bg:#050b18;--panel:#0c1527;--line:#66551b;--text:#eef4ff;--muted:#9eabc0}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;color:var(--text);background:radial-gradient(circle at top,#152341,var(--bg) 55%);min-height:100vh}
-main{width:min(1100px,94%);margin:auto;padding:32px 0 70px}.brand{text-align:center;margin-bottom:24px}.brand img{width:230px;max-width:70%}h1{color:var(--gold);margin:10px 0 5px}.hint{color:var(--muted)}
-.main-columns{display:grid;grid-template-columns:minmax(380px,.9fr) minmax(540px,1.35fr);gap:16px;align-items:start}.main-columns>.card{margin-top:0}.shared-table{overflow:auto;max-height:720px}.shared-table table{width:100%;border-collapse:collapse;min-width:760px}.shared-table th,.shared-table td{padding:9px;border-bottom:1px solid #263349;text-align:left}.shared-table th{color:var(--gold);font-size:12px}.section-tools{display:flex;gap:8px;flex-wrap:wrap}.section-tools input{flex:1;min-width:220px}.section-tools button{width:auto}
+main{width:min(1580px,96%);margin:auto;padding:32px 0 70px}.brand{text-align:center;margin-bottom:24px}.brand img{width:230px;max-width:70%}h1{color:var(--gold);margin:10px 0 5px}.hint{color:var(--muted)}
+.main-columns{display:grid;grid-template-columns:minmax(440px,.9fr) minmax(650px,1.35fr);gap:18px;align-items:start;margin-top:18px}.main-columns>.card{margin:0;min-width:0}.shared-table{overflow:auto;max-height:720px}.shared-table table{width:100%;border-collapse:collapse;min-width:760px}.shared-table th,.shared-table td{padding:9px;border-bottom:1px solid #263349;text-align:left}.shared-table th{color:var(--gold);font-size:12px}.section-tools{display:flex;gap:8px;flex-wrap:wrap}.section-tools input{flex:1;min-width:220px}.section-tools button{width:auto}
 .card{background:rgba(8,17,33,.94);border:1px solid var(--line);border-radius:16px;padding:20px;margin:14px 0;box-shadow:0 15px 45px #0007}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field{display:grid;gap:6px}.wide{grid-column:1/-1}label{font-size:12px;font-weight:800;color:var(--gold);text-transform:uppercase}
 input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1c;color:var(--text);padding:11px;font:inherit}button{cursor:pointer;font-weight:800}.primary{background:linear-gradient(90deg,#d7ad22,#2458d8);border:0}.danger{background:#35131a}.items{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -21,7 +21,7 @@ input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1
 </head>
 <body><main id="app" hidden>
   <div class="brand"><img src="../images/content.png" alt="LichtLoot"><h1>Notfall-Prioliste</h1><div class="hint">Unabhängig von Railway · Lootdaten direkt aus GitHub · CSV für die Gildenleitung</div></div>
-  <div class="main-columns"><section class="card">
+  <section class="card">
     <div class="grid">
       <div class="field"><label>Raid</label><select id="raid"><option>AQ40</option><option>NAXX</option><option>BWL</option><option>MC</option><option>AQ20</option><option>ZG</option><option>ONY</option></select></div>
       <div class="field"><label>Raid-Datum</label><input id="raidDate" type="date"></div>
@@ -31,6 +31,7 @@ input,select,button{border:1px solid #34425a;border-radius:9px;background:#060d1
       <div class="field"><label>Klasse</label><select id="className"><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select></div>
     </div>
   </section>
+  <div class="main-columns">
   <section class="card">
     <div class="loot-head"><h2>Möglicher Loot</h2><input id="itemSearch" class="search" placeholder="🔎 Item suchen …" oninput="renderLootList()"></div>
     <div class="selection">
