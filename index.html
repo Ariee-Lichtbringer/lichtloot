@@ -4855,5 +4855,6 @@ document.addEventListener('DOMContentLoaded',async function(){
   if(openMode === 'createLogin' && typeof showCreateLogin === 'function') showCreateLogin();
 });
 </script>
+<button id="indexEmergencyPrioButton" type="button" onclick="(function(){var p=window.prompt('Bitte Prio-PIN des Raids eingeben:');if(p)window.location.href='notfall/?pin='+encodeURIComponent(p.trim());})()" style="position:fixed;right:18px;bottom:18px;z-index:99999;background:#b91c1c;color:#fff;border:2px solid #f87171;border-radius:14px;padding:14px 20px;font-weight:900;box-shadow:0 10px 30px #0009;cursor:pointer">🚨 Notfall-Prio</button>
 </body>
 </html>
