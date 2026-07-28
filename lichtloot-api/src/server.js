@@ -6273,6 +6273,23 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       }
     }).catch(error => console.warn("PO-Ablehnungsnachricht konnte nicht queued werden:", error.message || error));
   }
+  const approvalNoticeHandled = ["1", "true", "yes", "ja"].includes(
+    clean(params.approvalNoticeHandled || params.notificationHandled).toLowerCase()
+  );
+  if (approvalStatus === "approved" && clean(row.discord_user_id) && !approvalNoticeHandled) {
+    await enqueueBotUpdate({
+      guildId,
+      type: "po_approval_notice",
+      payload: {
+        discordUserId: row.discord_user_id,
+        player: row.player_name || "",
+        item: normalizePoItemName(row.item_name || ""),
+        raid: row.raid || "",
+        reviewer: clean(params.reviewer || params.discordName || "Gildenleitung"),
+        source: "po_review"
+      }
+    }).catch(error => console.warn("PO-Freigabenachricht konnte nicht queued werden:", error.message || error));
+  }
   return {
     success: true,
     entry: {
