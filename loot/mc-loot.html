@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="loot-side-navigation.css">
 <script src="loot-side-navigation.js" defer></script>
 <script src="nachtloot-recruit-prio.js" defer></script>
+<script src="p0-release-guard.js" defer></script>
 <title>Lichtloot - Molten Core</title>
 
 <style>
@@ -4436,6 +4437,7 @@ function selectLoggedInCharacter(index){
 async function loadSelectedCharacterPoReleases(char){
   const box=document.getElementById("selectedCharacterPoReleases");
   const pin=getStoredLichtLootPlayerPin();
+  if(typeof resetCurrentRaidPoReleaseGuard==="function") resetCurrentRaidPoReleaseGuard();
   if(!box || !char || !pin) return;
   box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
   try{
@@ -4443,6 +4445,7 @@ async function loadSelectedCharacterPoReleases(char){
     const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
     const data=await response.json();
     if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
+    if(typeof applyCurrentRaidPoReleaseGuard==="function") applyCurrentRaidPoReleaseGuard(Boolean(data.poReleases?.[RAID_NAME]));
     if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
     const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
     box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
