@@ -4589,7 +4589,7 @@ async function loadSelectedCharacterPoReleases(char){
     if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
     if(typeof applyCurrentRaidPoReleaseGuard==="function") applyCurrentRaidPoReleaseGuard(Boolean(data.poReleases?.[RAID_NAME]));
     if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
+    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
     box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
   }catch(error){
     box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
