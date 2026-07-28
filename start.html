@@ -2699,7 +2699,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="LichtLoot Account Verwaltung öffnen"></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><section class="dash-panel right-card" id="dashboardMyPoReleases"><div class="status">P0+-Freigaben werden nach der Charakterauswahl angezeigt.</div></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="LichtLoot Account Verwaltung öffnen"></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -6977,6 +6977,19 @@ function renderMyRecruitStatus(data){
   return `<div class="my-recruit-status">Nachtwächter-Rekrutenstatus: ${lifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>'}</div>`;
 }
 
+function ensureDashboardPoReleaseCard(){
+  let card=document.getElementById("dashboardMyPoReleases");
+  if(card) return card;
+  const worldbuffCard=document.getElementById("dashboardWorldbuffs")?.closest("section");
+  if(!worldbuffCard || !worldbuffCard.parentNode) return null;
+  card=document.createElement("section");
+  card.id="dashboardMyPoReleases";
+  card.className="dash-panel right-card";
+  card.innerHTML='<div class="status">P0+-Freigaben werden nach der Charakterauswahl angezeigt.</div>';
+  worldbuffCard.insertAdjacentElement("afterend",card);
+  return card;
+}
+
 function renderMyPrios(data){
   const status=document.getElementById("myPriosStatus");
   const results=document.getElementById("myPriosResults");
@@ -6993,7 +7006,7 @@ function renderMyPrios(data){
 
   let html=renderMyRecruitStatus(data);
   html+=renderMyPoReleaseOverview(poReleases);
-  const poReleaseTarget=document.getElementById("dashboardMyPoReleases");
+  const poReleaseTarget=ensureDashboardPoReleaseCard();
   if(poReleaseTarget){
     poReleaseTarget.innerHTML=renderMyPoReleaseOverview(poReleases);
   }
