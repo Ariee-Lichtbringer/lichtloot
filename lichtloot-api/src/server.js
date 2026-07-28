@@ -950,7 +950,10 @@ const defaultNewGuildRaidImages = {
   aq40: "images/raid-templates/aq40.jpg",
   aq20: "images/raid-templates/aq20.jpg",
   naxx: "images/raid-templates/naxx.jpg",
-  zg: "images/raid-templates/zg.jpg"
+  zg: "images/raid-templates/zg.jpg",
+  "zg-mittwoch": "images/raid-templates/zg.jpg",
+  "zg-prime": "images/raid-templates/zg.jpg",
+  "zg-late": "images/raid-templates/zg.jpg"
 };
 const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
 
