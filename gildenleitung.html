@@ -5750,6 +5750,9 @@ const RAID_IMAGES = {
   aq40:"images/aq40.jpg",
   naxx:"images/naxx.jpg",
   zg:"images/zg.jpg",
+  "zg-mittwoch":"images/zg.jpg",
+  "zg-prime":"images/zg.jpg",
+  "zg-late":"images/zg.jpg",
   aq20:"images/aq20.jpg",
   ony:"images/ony.jpg"
 };
@@ -6360,7 +6363,9 @@ function renderLootLayoutPanel(){
   const guild = currentGuildInfo || {};
   const layout = guild.layout || {};
   const raidImages = layout.raidImages || {};
-  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"].concat(
+    CURRENT_GUILD_SLUG === "nachtloot" ? NACHTLOOT_SPECIAL_RAIDS : []
+  );
   box.innerHTML = `
     <div class="layout-guide">
       <div class="layout-steps">
@@ -6507,7 +6512,9 @@ function renderLootLayoutPanel(){
 
 async function saveLootLayoutPanel(){
   const status = document.getElementById("lootLayoutStatus");
-  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"];
+  const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"].concat(
+    CURRENT_GUILD_SLUG === "nachtloot" ? NACHTLOOT_SPECIAL_RAIDS : []
+  );
   const raidImages = {};
   raidKeys.forEach(key => {
     raidImages[key] = layoutFieldValue("layoutRaidImage_" + key);
