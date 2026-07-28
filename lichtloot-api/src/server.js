@@ -58,7 +58,9 @@ function isAllowedCorsOrigin(origin) {
   if (!normalized || allowedOrigins.has("*") || allowedOrigins.has(normalized)) return true;
   try {
     const { protocol, hostname } = new URL(normalized);
-    return protocol === "https:" && (hostname === "lichtloot.de" || hostname.endsWith(".lichtloot.de"));
+    return protocol === "https:" || protocol === "http:"
+      ? Boolean(hostname)
+      : false;
   } catch {
     return false;
   }
@@ -4781,6 +4783,41 @@ async function getDiscordBotChannels({ guildId, query: params }) {
     success: true,
     channels: result.rows.map(normalizeDiscordChannelRow)
   };
+}
+
+async function queueGuildUpdateNotice({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureDiscordChannelSchema();
+  const channelId = clean(params.channelId || params.discordChannelId);
+  if (!channelId) {
+    const error = new Error("Bitte einen Discord-Channel auswählen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const channel = await query(
+    `select channel_id, channel_name
+     from discord_bot_channels
+     where guild_id = $1
+       and channel_id = $2
+       and can_send = true
+     limit 1`,
+    [guildId, channelId]
+  );
+  if (!channel.rows[0]) {
+    const error = new Error("Der gewählte Discord-Channel ist nicht verfügbar oder der Bot darf dort nicht schreiben.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const queued = await enqueueBotUpdate({
+    guildId,
+    type: "update_notice",
+    payload: {
+      channelId,
+      channelName: channel.rows[0].channel_name || "",
+      message: "Bitte um Geduld, aktuell wird ein Update durchgeführt."
+    }
+  });
+  return { ...queued, channel: normalizeDiscordChannelRow(channel.rows[0]) };
 }
 
 function normalizeRaidHelperTemplateRow(row) {
@@ -19098,6 +19135,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotSaveDiscordChannels") {
       const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildQueueUpdateNotice") {
+      const queued = await queueGuildUpdateNotice({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
     }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
