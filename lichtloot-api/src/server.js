@@ -7698,9 +7698,57 @@ async function savePrio({ guildId, query: params }) {
     }
 
     const p0Selected = p0Plus === "ja" || p0Plus === "true";
+    const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
+    let nachtlootRecruitRestricted = false;
+    if (releaseRaid) {
+      await ensureCharacterPoReleaseSchema();
+      const recruitResult = await client.query(
+        `select lower(g.slug) as guild_slug,
+                coalesce(c.recruit_status_lifted, false) as recruit_status_lifted
+         from guilds g
+         join characters c on c.id = $2
+         where g.id = $1
+         limit 1`,
+        [guildId, character.id]
+      );
+      nachtlootRecruitRestricted = recruitResult.rows[0]?.guild_slug === "nachtloot"
+        && !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
+    }
+    if (nachtlootRecruitRestricted && p0Selected) {
+      const error = new Error("Als Nachtwächter-Rekrut kannst du kein P0+ und keine P1 setzen. P1 wird automatisch mit Kaese belegt.");
+      error.statusCode = 403;
+      throw error;
+    }
+    if (p0Selected && releaseRaid) {
+      await ensureCharacterPoReleaseSchema();
+      const releaseResult = await client.query(
+        `select 1
+         from character_po_releases
+         where guild_id = $1
+           and character_id = $2
+           and raid_type = $3
+         limit 1`,
+        [guildId, character.id, releaseRaid]
+      );
+      if (!releaseResult.rows[0]) {
+        const error = new Error("Du hast keine P0+-Berechtigung für diesen Raid.");
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+    if (nachtlootRecruitRestricted && (!clean(params.p2) || !clean(params.p3))) {
+      const error = new Error("Als Nachtwächter-Rekrut musst du P2 und P3 auswählen. P1 wird automatisch mit Kaese belegt.");
+      error.statusCode = 400;
+      throw error;
+    }
     const p0ItemName = clean(params.p0Item || params.P0Item || params.p1 || params.p2 || params.p3);
     const p0ItemId = clean(params.p0ItemId || params.P0ItemId || params.p1ItemId || params.p1_item_id || params.p1ItemID);
-    const p1 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p1, p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID));
+    const p1 = await upsertItem(
+      client,
+      raidType,
+      nachtlootRecruitRestricted ? "Kaese" : (p0Selected ? p0ItemName : params.p1),
+      nachtlootRecruitRestricted ? "133993" : (p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID))
+    );
     const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
     const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
