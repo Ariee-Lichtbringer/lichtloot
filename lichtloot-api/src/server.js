@@ -5492,6 +5492,8 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         raidImageUrl: clean(params.raidImageUrl || snapshot?.raid?.raidImageUrl || snapshot?.raid?.imageUrl || ""),
         channelId,
         discordChannelId: channelId,
+        messageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
+        discordMessageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
