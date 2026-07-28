@@ -127,7 +127,23 @@ function removeEntry(i){entries.splice(i,1);localStorage.setItem(STORAGE_KEY,JSO
 function clearEntries(){if(confirm("Notfallliste wirklich leeren?")){entries=[];localStorage.removeItem(STORAGE_KEY);renderEntries()}}
 function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"'}
 function prio3ItemId(itemName){const name=String(itemName||"").trim(),item=allItems.find(entry=>String(entry.name||"").trim().toLowerCase()===name.toLowerCase());return item&&item.item_id?String(item.item_id):name.replace(/.*-(\d+)$/,"$1")}
-function downloadCsv(){if(!entries.length)return alert("Die Notfallliste ist leer.");const rows=entries.map(e=>[e.Charakter,e.Klasse,prio3ItemId(e.P1),prio3ItemId(e.P2),prio3ItemId(e.P3)].map(value=>String(value||"").replace(/;/g,",")).join(";"));const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`${$("raid").value}-Prio3-${$("raidDate").value||new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000)}
+async function downloadCsv(){
+  await loadSharedPrios();
+  if(!sharedEntries.length)return alert("Die gemeinsame Notfall-Prioliste ist leer.");
+  const rows=sharedEntries.map(entry=>[
+    entry.player,
+    entry.className,
+    prio3ItemId(entry.p1),
+    prio3ItemId(entry.p2),
+    prio3ItemId(entry.p3)
+  ].map(value=>String(value||"").replace(/;/g,",")).join(";"));
+  const blob=new Blob(["\uFEFF"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`${$("raid").value}-Prio3-${$("raidDate").value||new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+}
 $("raid").addEventListener("change",renderItems);$("p0Plus").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks();renderLootList()});$("p1").addEventListener("change",()=>{if($("p0Plus").checked){$("p2").value=$("p1").value;$("p3").value=$("p1").value}renderPicks()});
 $("raidDate").value=new Date().toISOString().slice(0,10);renderEntries();unlockRaid();
 </script></body></html>
