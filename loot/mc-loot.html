@@ -860,6 +860,10 @@ body.random-prio .tooltip-p0{
   background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
   color:var(--gold);
 }
+.selected-po-releases{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;min-height:22px}
+.selected-po-release{padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.72);color:#94a3b8;font-size:10px;font-weight:900}
+.selected-po-release.active{border-color:rgba(34,197,94,.45);background:rgba(22,101,52,.22);color:#86efac}
+.selected-recruit-status{width:100%;color:#bfdbfe;font-size:11px;font-weight:900}
 
 .own-selection-card{
   grid-area:selection;
@@ -1803,6 +1807,7 @@ body.random-prio .tooltip-p0{
           <div id="selectedCharacterDrop" class="character-dropzone" ondragover="allowCharacterDrop(event)" ondrop="dropCharacterOnZone(event)">
             Charakter aus „Mein LichtLoot“ hierher ziehen oder unten anklicken.
           </div>
+          <div id="selectedCharacterPoReleases" class="selected-po-releases"></div>
         </div>
       </div>
     </div>
@@ -4410,6 +4415,7 @@ function selectLoggedInCharacter(index){
   }
 
   renderCharacterButtons();
+  loadSelectedCharacterPoReleases(char);
   loadPlayerData();
   autoSaveDraft();
   if(typeof renderCurrentPrios === "function"){
@@ -4419,6 +4425,23 @@ function selectLoggedInCharacter(index){
   const status=document.getElementById("playerStatus");
   if(status){
     status.innerHTML='<span class="ok">✓ Charakter ausgewählt: '+safe(char.name)+'</span><br>Gib jetzt nur noch den Prio-PIN ein und wähle deine Items.';
+  }
+}
+
+async function loadSelectedCharacterPoReleases(char){
+  const box=document.getElementById("selectedCharacterPoReleases");
+  const pin=getStoredLichtLootPlayerPin();
+  if(!box || !char || !pin) return;
+  box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
+  try{
+    const query=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),pin,char:char.name || "",server:char.server || "",t:Date.now()});
+    const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
+    const data=await response.json();
+    if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
+    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
+    box.innerHTML=raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
+  }catch(error){
+    box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
   }
 }
 
