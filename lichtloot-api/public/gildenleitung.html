@@ -11840,11 +11840,27 @@ async function sendUpdateNotice(){
   if(button) button.disabled = true;
   if(status) status.textContent = "Update-Hinweis wird an den Bot übergeben …";
   try{
-    const result = await railwayWrite({
-      action:"guildQueueUpdateNotice",
-      masterCode,
-      channelId
-    });
+    let result;
+    try{
+      result = await railwayWrite({
+        action:"guildQueueUpdateNotice",
+        masterCode,
+        channelId
+      });
+    }catch(error){
+      const message = String(error?.message || "");
+      if(!/Unbekannte POST-Aktion|Unsupported action|guildQueueUpdateNotice/i.test(message)) throw error;
+      result = await railwayWrite({
+        action:"guildQueueWorldbuffBotUpdate",
+        masterCode,
+        type:"update_notice",
+        payload:{
+          channelId,
+          channelName:channel?.channelName || channel?.name || "",
+          message:"Bitte um Geduld, aktuell wird ein Update durchgeführt."
+        }
+      });
+    }
     if(!result.success) throw new Error(result.error || "Update-Hinweis konnte nicht erstellt werden.");
     if(status) status.innerHTML = `<span class="good">Update-Hinweis für ${escapeHtml(channelName)} wurde an den Bot übergeben.</span>`;
   }catch(error){
