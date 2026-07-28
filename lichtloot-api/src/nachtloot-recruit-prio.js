@@ -25,10 +25,17 @@
       p1.title=restricted ? "Als Rekrut ist P1 automatisch Kaese." : "";
     }
     document.querySelectorAll('[data-prio="p1"],[data-prio="p0plus"]').forEach(button=>{
-      button.disabled=restricted;
-      button.style.opacity=restricted ? ".38" : "";
-      button.style.cursor=restricted ? "not-allowed" : "";
-      button.title=restricted ? "Als Nachtwächter-Rekrut kannst du nur P2 und P3 setzen." : "";
+      const isP0=button.dataset.prio==="p0plus";
+      const releaseBlocked=isP0
+        && Object.prototype.hasOwnProperty.call(window,"currentRaidP0ReleaseChecked")
+        && (!window.currentRaidP0ReleaseChecked || !window.currentRaidP0Allowed);
+      const blocked=restricted || releaseBlocked;
+      button.disabled=blocked;
+      button.style.opacity=blocked ? ".38" : "";
+      button.style.cursor=blocked ? "not-allowed" : "";
+      button.title=restricted
+        ? "Als Nachtwächter-Rekrut kannst du nur P2 und P3 setzen."
+        : (releaseBlocked ? "Du hast keine P0+-Berechtigung für diesen Raid." : "");
     });
   }
 
@@ -40,8 +47,8 @@
       if(p1) p1.value=KAESE_NAME;
       statusMessage();
     }
-    refreshControls();
     if(typeof updateActiveButtons==="function") updateActiveButtons();
+    refreshControls();
   };
 
   document.addEventListener("DOMContentLoaded",function(){
