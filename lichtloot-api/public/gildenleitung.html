@@ -4699,6 +4699,18 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
   </section>
 
+  <details class="panel">
+    <summary>🚨 Notfall-Prio CSV importieren</summary>
+    <div style="display:grid;gap:12px;padding-top:14px">
+      <p class="muted">CSV von lichtloot.de/notfall auswählen, Zielraid festlegen und Prios einschließlich P0+ übernehmen.</p>
+      <button class="btn danger" type="button" onclick="window.open('notfall/meister.html','_blank')">Notfall-Plündermeister öffnen</button>
+      <select id="emergencyImportRaid"><option value="">Erst Gildenleitung freischalten</option></select>
+      <input id="emergencyImportFile" type="file" accept=".csv,text/csv">
+      <button class="btn" type="button" onclick="importEmergencyPrioCsv()">CSV prüfen und in Raid übertragen</button>
+      <div id="emergencyImportStatus" class="status">Noch keine CSV ausgewählt.</div>
+    </div>
+  </details>
+
   <div class="dashboard-grid">
     <div class="dashboard-column">
       <section class="dashboard-card">
@@ -6173,6 +6185,29 @@ function buildLootCsvRows(result){
   return rows;
 }
 
+function parseEmergencyCsv(text){
+  const rows=[];let row=[],value="",quoted=false;
+  for(let i=0;i<text.length;i++){const char=text[i],next=text[i+1];
+    if(char==='"'&&quoted&&next==='"'){value+='"';i++}else if(char==='"'){quoted=!quoted}
+    else if(char===';'&&!quoted){row.push(value);value=""}
+    else if((char==='\n'||char==='\r')&&!quoted){if(value||row.length){row.push(value);rows.push(row);row=[];value=""}if(char==='\r'&&next==='\n')i++}
+    else value+=char;
+  }
+  if(value||row.length){row.push(value);rows.push(row)}if(!rows.length)return [];
+  const headers=rows.shift().map(value=>String(value||"").replace(/^\uFEFF/,"").trim());
+  return rows.filter(row=>row.some(Boolean)).map(row=>Object.fromEntries(headers.map((header,index)=>[header,row[index]||""])));
+}
+function refreshEmergencyImportRaids(){
+  const select=document.getElementById("emergencyImportRaid");if(!select)return;
+  const raids=Array.isArray(guildData?.raids)?guildData.raids:[];
+  select.innerHTML='<option value="">Zielraid auswählen</option>'+raids.filter(raid=>!["archiviert","gelöscht"].includes(normalize(raid.status))).map(raid=>`<option value="${escapeAttr(raid.raidId||raid.externalRaidId||raid.id)}">${escapeHtml(raid.raidName||raid.name||raid.raid||"Raid")} · ${escapeHtml(raid.raidDate||raid.date||"")}</option>`).join("");
+}
+async function importEmergencyPrioCsv(){
+  const file=document.getElementById("emergencyImportFile")?.files?.[0],raidId=document.getElementById("emergencyImportRaid")?.value||"",masterCode=document.getElementById("masterCode").value.trim(),status=document.getElementById("emergencyImportStatus");
+  if(!file||!raidId){status.innerHTML='<span class="bad">Bitte CSV und Zielraid auswählen.</span>';return}
+  try{const entries=parseEmergencyCsv(await file.text()).filter(row=>normalize(row.Typ||"PRIO")==="prio");if(!entries.length)throw new Error("Keine PRIO-Zeilen in der CSV gefunden.");status.textContent=`${entries.length} Prios werden übertragen …`;const result=await railwayWrite({action:"guildImportEmergencyPrios",masterCode,raidId,entries});status.innerHTML=`<span class="${result.failedCount?"warn":"ok"}">${result.importedCount} Prios übernommen, ${result.failedCount} fehlgeschlagen.</span>`+(result.failedCount?`<br>${result.failed.map(item=>escapeHtml(item.player+": "+item.error)).join("<br>")}`:"");await loadOverview({preserveStatus:true})}catch(error){status.innerHTML=`<span class="bad">${escapeHtml(error.message||"Import fehlgeschlagen.")}</span>`}
+}
+
 async function downloadGuildLootCsv(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
@@ -6241,6 +6276,7 @@ async function loadOverview(options){
       raids: Array.isArray(result.raids) ? result.raids : [],
       players: Array.isArray(result.players) ? result.players : []
     };
+    refreshEmergencyImportRaids();
     raidHelperAttendanceCache = null;
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
