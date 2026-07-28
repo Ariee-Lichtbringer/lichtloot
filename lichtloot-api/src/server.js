@@ -7469,6 +7469,7 @@ async function findCharacterForPin(guildId, pin, charName, server) {
   const characterName = clean(charName);
   const result = await query(
     `select c.id, c.name, c.server, c.class_name, c.created_at,
+            c.recruit_status_lifted, c.recruit_status_lifted_at, c.recruit_status_lifted_by,
             p.id as player_id, p.player_pin, p.approval_status, p.is_blocked
      from players p
      join characters c on c.player_id = p.id
@@ -8170,6 +8171,7 @@ function commentMeta(comment) {
 }
 
 async function getPlayerPrioHistory(guildId, params) {
+  await ensureCharacterPoReleaseSchema();
   const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
   const charName = params.char || params.player || params.spieler;
   const character = await findCharacterForPin(guildId, pin, charName, params.server);
@@ -8305,6 +8307,9 @@ async function getPlayerPrioHistory(guildId, params) {
       approvedBy: row.approved_by || "",
       approvedAt: row.approved_at || ""
     })),
+    recruitStatusLifted: Boolean(character.recruit_status_lifted),
+    recruitStatusLiftedAt: character.recruit_status_lifted_at || "",
+    recruitStatusLiftedBy: character.recruit_status_lifted_by || "",
     ownP0PlusPoints: pointsResult.rows.map(row => ({
       raid: row.raid,
       item: row.item,
