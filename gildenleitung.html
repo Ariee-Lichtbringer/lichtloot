@@ -13529,12 +13529,13 @@ async function loadP0ReleasePanel(){
 function renderP0ReleasePanelContent(){
   const box = document.getElementById("p0ReleasePanelContent");
   if(!box) return;
+  const releaseRaids = poReleaseRaidKeys();
   box.innerHTML = `
     <div class="p0-review-block">
       <div class="section-head">
         <div>
           <h3>P0+ Freigabe</h3>
-          <p>Die Freigaben gelten getrennt für MC, BWL, AQ40, NAXX, ZG Mittwoch, ZG PRIME und ZG LATE.</p>
+          <p>Die Freigaben gelten getrennt für ${releaseRaids.map(poReleaseRaidShortLabel).join(", ")}.</p>
         </div>
         <button class="small-btn ghost" type="button" onclick="loadP0ReleasePanel()">Neu laden</button>
       </div>
@@ -13549,13 +13550,7 @@ function renderP0ReleasePanelContent(){
               <th>Klasse</th>
               <th>LichtLootAccount</th>
               ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Aufhebung Rekrutenstatus</th>" : ""}
-              <th>P0+ Freigabe MC</th>
-              <th>P0+ Freigabe BWL</th>
-              <th>P0+ Freigabe AQ40</th>
-              <th>P0+ Freigabe NAXX</th>
-              <th>P0+ ZG Mittwoch</th>
-              <th>P0+ ZG PRIME</th>
-              <th>P0+ ZG LATE</th>
+              ${releaseRaids.map(raid => `<th>${escapeHtml(poReleaseRaidLabel(raid))}</th>`).join("")}
               <th>Aktion</th>
             </tr>
           </thead>
@@ -13592,6 +13587,17 @@ function renderP0ReleasePanelContent(){
   renderP0ReviewRows();
 }
 
+function poReleaseRaidKeys(){
+  return ["mc","bwl","aq40","naxx"].concat(
+    CURRENT_GUILD_SLUG === "nachtloot" ? NACHTLOOT_SPECIAL_RAIDS : []
+  );
+}
+
+function poReleaseRaidShortLabel(raid){
+  const labels = { mc:"MC", bwl:"BWL", aq40:"AQ40", naxx:"NAXX", "zg-mittwoch":"ZG Mittwoch", "zg-prime":"ZG PRIME", "zg-late":"ZG LATE" };
+  return labels[raid] || String(raid || "").toUpperCase();
+}
+
 function poReleaseRaidLabel(raid){
   const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
   return labels[raid] || String(raid || "").toUpperCase();
@@ -13618,6 +13624,7 @@ function recruitStatusLiftHtml(entry){
 function renderPoReleaseRows(){
   const tbody = document.getElementById("poReleaseRows");
   if(!tbody) return;
+  const releaseRaids = poReleaseRaidKeys();
   const needle = normalize(poReleaseSearch);
   const preferredByName = new Map();
   (poReleaseCharacters || []).forEach(entry => {
@@ -13635,7 +13642,7 @@ function renderPoReleaseRows(){
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
-  const columnCount = CURRENT_GUILD_SLUG === "nachtloot" ? 12 : 11;
+  const columnCount = releaseRaids.length + (CURRENT_GUILD_SLUG === "nachtloot" ? 5 : 4);
   if(!document.getElementById("masterCode").value.trim()){
     tbody.innerHTML = `<tr><td colspan="${columnCount}" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>`;
     return;
@@ -13660,13 +13667,7 @@ function renderPoReleaseRows(){
             </button>
           </td>
         ` : ""}
-        <td>${poReleaseCheckHtml(entry,"mc")}</td>
-        <td>${poReleaseCheckHtml(entry,"bwl")}</td>
-        <td>${poReleaseCheckHtml(entry,"aq40")}</td>
-        <td>${poReleaseCheckHtml(entry,"naxx")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-mittwoch")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-prime")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-late")}</td>
+        ${releaseRaids.map(raid => `<td>${poReleaseCheckHtml(entry,raid)}</td>`).join("")}
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
@@ -13688,6 +13689,7 @@ async function openPoReleaseDeletePopup(index){
 
 function choosePoReleaseRaid(entry, enabled){
   return new Promise(resolve => {
+    const releaseRaids = poReleaseRaidKeys();
     const backdrop = document.createElement("div");
     backdrop.className = "raid-helper-notify-backdrop";
     backdrop.innerHTML = `
@@ -13695,13 +13697,7 @@ function choosePoReleaseRaid(entry, enabled){
         <h3 id="poReleaseRaidTitle">${enabled ? "P0+ freigeben" : "P0+ Freigabe löschen"}</h3>
         <p>Raid für ${escapeHtml(entry?.name || entry?.char || "den Charakter")} auswählen:</p>
         <select id="poReleaseRaidSelect">
-          <option value="mc">Molten Core</option>
-          <option value="bwl">Blackwing Lair</option>
-          <option value="aq40">Ahn'Qiraj 40</option>
-          <option value="naxx">Naxxramas</option>
-          <option value="zg-mittwoch">ZG Mittwoch</option>
-          <option value="zg-prime">ZG PRIME</option>
-          <option value="zg-late">ZG LATE</option>
+          ${releaseRaids.map(raid => `<option value="${escapeAttr(raid)}">${escapeHtml(poReleaseRaidShortLabel(raid))}</option>`).join("")}
         </select>
         <div class="raid-helper-notify-actions">
           <button class="small-btn ghost" type="button" data-po-release-cancel>Abbrechen</button>
@@ -13733,6 +13729,10 @@ async function setPoReleaseFromPopup(index, enabled){
   }
   const raidKey = await choosePoReleaseRaid(entry, enabled);
   if(!raidKey) return;
+  if(!poReleaseRaidKeys().includes(raidKey)){
+    setStatus("Diese P0+ Freigabe gehört nicht zu dieser Gilde.", "bad");
+    return;
+  }
   try{
     setStatus((enabled ? "P0+ Freigabe wird gespeichert ..." : "P0+ Freigabe wird entfernt ..."), "");
     const result = await railwayWrite({
