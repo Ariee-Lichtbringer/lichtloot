@@ -500,7 +500,7 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .active-raid-card{
   min-height:0;
   display:grid;
-  grid-template-columns:70px 1fr;
+  grid-template-columns:120px 1fr;
   gap:9px;
   align-items:start;
   position:relative;
@@ -517,14 +517,16 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .active-raid-card:last-child{border-bottom:1px solid rgba(var(--gold-rgb),.18)}
 
 .active-raid-image{
-  width:70px;
-  height:108px;
+  width:120px;
+  height:82px;
   border-radius:5px;
   background-image:
     linear-gradient(135deg,rgba(2,6,23,.28),rgba(var(--gold-rgb),.10)),
     var(--raid-image);
-  background-size:cover;
+  background-size:contain;
+  background-repeat:no-repeat;
   background-position:center;
+  background-color:#020617;
   border:1px solid rgba(148,163,184,.16);
   box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
 }
@@ -1256,9 +1258,10 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
 
 .layout-raid-preview{
   width:100%;
-  height:105px;
+  height:170px;
   display:block;
-  object-fit:cover;
+  object-fit:contain;
+  object-position:center;
   margin-bottom:8px;
   border:1px solid rgba(148,163,184,.2);
   border-radius:7px;
@@ -5816,16 +5819,16 @@ function applyGuildBrand(){
   });
 }
 const RAID_IMAGES = {
-  mc:"images/mc.jpg",
-  bwl:"images/bwl.jpg",
-  aq40:"images/aq40.jpg",
-  naxx:"images/naxx.jpg",
-  zg:"images/zg.jpg",
-  "zg-mittwoch":"images/zg.jpg",
-  "zg-prime":"images/zg.jpg",
-  "zg-late":"images/zg.jpg",
-  aq20:"images/aq20.jpg",
-  ony:"images/ony.jpg"
+  mc:"images/raid-templates/mc.jpg",
+  bwl:"images/raid-templates/bwl.jpg",
+  aq40:"images/raid-templates/aq40.jpg",
+  naxx:"images/raid-templates/naxx.jpg",
+  zg:"images/raid-templates/zg.jpg",
+  "zg-mittwoch":"images/raid-templates/zg.jpg",
+  "zg-prime":"images/raid-templates/zg.jpg",
+  "zg-late":"images/raid-templates/zg.jpg",
+  aq20:"images/raid-templates/aq20.jpg",
+  ony:"images/raid-templates/ony.jpg"
 };
 const LAYOUT_DEFAULT_RAID_IMAGES = {
   mc:"images/raid-templates/mc.jpg",
