@@ -4857,14 +4857,22 @@ function schedulePostIsDue({ postDate, postTime, force = false }) {
   return scheduled <= new Date();
 }
 
-async function processRaidHelperSchedules({ guildId, force = false }) {
+async function processRaidHelperSchedules({ guildId, force = false, scheduleId = "" }) {
   await ensureRaidHelperScheduleSchema();
+  const scopedScheduleId = clean(scheduleId);
+  const scheduleValues = [guildId];
+  let scheduleClause = "";
+  if (scopedScheduleId && isUuid(scopedScheduleId)) {
+    scheduleValues.push(scopedScheduleId);
+    scheduleClause = "and id = $2";
+  }
   const schedules = await query(
     `select *
      from raid_helper_schedules
      where guild_id = $1 and enabled = true
+       ${scheduleClause}
      order by next_raid_date nulls first, raid_time, lower(title)`,
-    [guildId]
+    scheduleValues
   );
 
   const processed = [];
@@ -5112,8 +5120,19 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     );
   }
 
-  await processRaidHelperSchedules({ guildId });
-  return { success: true, schedule: normalizeRaidHelperScheduleRow(result.rows[0]) };
+  const savedSchedule = normalizeRaidHelperScheduleRow(result.rows[0]);
+  const firstRun = !result.rows[0].last_raid_id;
+  const processed = await processRaidHelperSchedules({
+    guildId,
+    force: firstRun,
+    scheduleId: result.rows[0].id
+  });
+  return {
+    success: true,
+    schedule: savedSchedule,
+    firstRaidCreated: firstRun,
+    processed
+  };
 }
 
 async function deleteRaidHelperSchedule({ guildId, query: params }) {
@@ -13595,6 +13614,11 @@ async function saveRaidSignup({ guildId, query: params }) {
   const character = await findCharacterForPin(guildId, playerPin, charName, params.server);
   if (!character) {
     const error = new Error("Dieser Charakter gehört nicht zu deinem SpielerLogin.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (normalizePlayerApprovalStatus(character.approval_status) !== "approved") {
+    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
     error.statusCode = 403;
     throw error;
   }
