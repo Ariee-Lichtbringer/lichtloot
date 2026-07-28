@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="loot-side-navigation.css">
 <script src="loot-side-navigation.js" defer></script>
+<script src="nachtloot-recruit-prio.js" defer></script>
 <title>Lichtloot - Molten Core</title>
 
 <style>
@@ -4442,7 +4443,8 @@ async function loadSelectedCharacterPoReleases(char){
     const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
     const data=await response.json();
     if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
+    if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
+    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
     box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
   }catch(error){
     box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
