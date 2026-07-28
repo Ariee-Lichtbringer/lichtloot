@@ -203,10 +203,6 @@ await applyEterniumLockboxRaidItemsOnce().catch(error => {
   console.warn("Eterniumschließkassette konnte nicht für alle Raids ergänzt werden:", error.message || error);
 });
 
-await applyNaxxPoItemAliasCleanupOnce().catch(error => {
-  console.warn("Naxx-PO-Item-Dubletten konnten nicht zusammengeführt werden:", error.message || error);
-});
-
 app.get("/health", (req, res) => {
   res.json({ success: true, service: "lichtloot-api", build: "item-create-v2" });
 });
@@ -378,6 +374,10 @@ const ITEM_LOOKUP_STOP_WORDS = new Set([
   "of",
   "the"
 ]);
+
+await applyNaxxPoItemAliasCleanupOnce().catch(error => {
+  console.warn("Naxx-PO-Item-Dubletten konnten nicht zusammengeführt werden:", error.message || error);
+});
 
 function normalizeItemLookupText(value) {
   return clean(value)
