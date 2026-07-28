@@ -6154,6 +6154,11 @@ async function reviewPoPostEntry({ guildId, query: params }) {
   const rawStatus = clean(params.status || params.value || "approved").toLowerCase();
   const approvalStatus = ["rejected", "invalid", "ungueltig", "ungültig", "nein"].includes(rawStatus) ? "rejected" : "approved";
   const rejectionReason = approvalStatus === "rejected" ? clean(params.reason || params.rejectionReason || params.message || params.note) : "";
+  if (approvalStatus === "rejected" && !rejectionReason) {
+    const error = new Error("Bitte einen Grund für die Ablehnung eingeben.");
+    error.statusCode = 400;
+    throw error;
+  }
   let result = { rows: [] };
   if (id && isUuid(id)) {
     result = await query(
@@ -6250,6 +6255,24 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       queuedAt: new Date().toISOString()
     }
   }).catch(error => console.warn("PO-Post konnte nach Freigabe nicht queued werden:", error.message || error));
+  const rejectionNoticeHandled = ["1", "true", "yes", "ja"].includes(
+    clean(params.rejectionNoticeHandled || params.notificationHandled).toLowerCase()
+  );
+  if (approvalStatus === "rejected" && clean(row.discord_user_id) && !rejectionNoticeHandled) {
+    await enqueueBotUpdate({
+      guildId,
+      type: "po_rejection_notice",
+      payload: {
+        discordUserId: row.discord_user_id,
+        player: row.player_name || "",
+        item: normalizePoItemName(row.item_name || ""),
+        raid: row.raid || "",
+        reason: rejectionReason,
+        reviewer: clean(params.reviewer || params.discordName || "Gildenleitung"),
+        source: "po_review"
+      }
+    }).catch(error => console.warn("PO-Ablehnungsnachricht konnte nicht queued werden:", error.message || error));
+  }
   return {
     success: true,
     entry: {
@@ -6269,6 +6292,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       item: normalizePoItemName(row.item_name || ""),
       messageId: row.po_message_id || "",
       discordMessageId: row.discord_message_id || "",
+      discordUserId: row.discord_user_id || "",
       approvalStatus: row.approval_status || "pending",
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
