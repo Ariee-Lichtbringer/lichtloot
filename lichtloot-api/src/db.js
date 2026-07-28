@@ -4,7 +4,17 @@ const { Pool } = pg;
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+  max: Number(process.env.PG_POOL_MAX || 10),
+  connectionTimeoutMillis: Number(process.env.PG_CONNECT_TIMEOUT_MS || 5000),
+  idleTimeoutMillis: Number(process.env.PG_IDLE_TIMEOUT_MS || 30000),
+  query_timeout: Number(process.env.PG_QUERY_TIMEOUT_MS || 15000),
+  statement_timeout: Number(process.env.PG_STATEMENT_TIMEOUT_MS || 12000),
+  application_name: "lichtloot-api"
+});
+
+pool.on("error", error => {
+  console.error("Unerwarteter PostgreSQL-Poolfehler:", error.message || error);
 });
 
 export async function query(text, params = []) {
