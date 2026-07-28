@@ -2583,6 +2583,10 @@ tr.selected-row td{
   padding:10px 12px;
 }
 
+.raid-helper-list-item.has-selection{
+  grid-template-columns:22px 48px 1fr auto;
+}
+
 .raid-helper-list-icon{
   width:38px;
   height:38px;
@@ -4470,6 +4474,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   .raid-helper-calendar{grid-template-columns:1fr}
   .raid-helper-calendar-head{display:none}
   .raid-helper-list-item{grid-template-columns:1fr}
+  .raid-helper-list-item.has-selection{grid-template-columns:22px 1fr}
   .raid-helper-current-layout{grid-template-columns:1fr}
   .raid-helper-current-detail-head{flex-direction:column}
   .raid-helper-current-actions{justify-content:flex-start}
@@ -4956,6 +4961,13 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
         <div id="raidHelperScheduleRules" class="raid-helper-list"></div>
         <div class="raid-helper-view-head" style="padding:0;border:0">
           <div><h3>Kommende Anmelder</h3><span>Aktuell angelegte Raidanmelder aus den Regeln und manuell erstellte Raids.</span></div>
+        </div>
+        <div id="raidHelperScheduledBulkActions" class="raid-bulk-actions" hidden>
+          <strong id="raidHelperScheduledBulkSelectionText">0 Raidanmelder ausgewählt</strong>
+          <div class="raid-bulk-action-buttons">
+            <button class="small-btn ghost" type="button" onclick="clearScheduledRaidHelperSelection()">Auswahl aufheben</button>
+            <button class="small-btn danger" type="button" onclick="deleteSelectedScheduledRaidHelpers()">Ausgewählte löschen</button>
+          </div>
         </div>
         <div id="raidHelperScheduledList" class="raid-helper-list"></div>
       </div>
@@ -7405,6 +7417,7 @@ let raidHelperP0ReleaseCache = null;
 let raidHelperEditingData = null;
 let raidHelperCurrentSelectedRaidId = "";
 const selectedRaidHelperIds = new Set();
+const selectedScheduledRaidHelperIds = new Set();
 const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
   { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2002" },
   { key:"mc", label:"MC Teilnahmen", zone:"2000", url:"https://vanilla.warcraftlogs.com/guild/attendance/755306?zone=2000" },
@@ -7623,15 +7636,24 @@ function renderRaidHelperScheduledEvents(){
   const box = document.getElementById("raidHelperScheduledList");
   if(!box) return;
   const raids = raidHelperUpcomingRaids();
+  const existingIds = new Set(raids.map(raid => String(raid.raidId || raid.id || "")));
+  Array.from(selectedScheduledRaidHelperIds).forEach(id => {
+    if(!existingIds.has(id)) selectedScheduledRaidHelperIds.delete(id);
+  });
   if(!raids.length){
+    selectedScheduledRaidHelperIds.clear();
+    updateScheduledRaidHelperBulkActions();
     box.innerHTML = '<div class="muted">Keine geplanten Raids gefunden.</div>';
     return;
   }
   box.innerHTML = raids.slice(0,12).map(raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
+    const raidId = String(raid.raidId || raid.id || "");
+    const selected = selectedScheduledRaidHelperIds.has(raidId);
     return `
-      <article class="raid-helper-list-item" style="--raid-color:${raidHelperRaidColor(key)}">
+      <article class="raid-helper-list-item has-selection" style="--raid-color:${raidHelperRaidColor(key)}">
+        <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raidanmelder")} zum Löschen auswählen" ${selected ? "checked" : ""} onchange="toggleScheduledRaidHelperSelection('${escapeAttr(raidId)}', this.checked)">
         <div class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[key]?.short || "R")}</div>
         <div>
           <div class="raid-helper-list-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</div>
@@ -7642,10 +7664,59 @@ function renderRaidHelperScheduledEvents(){
             <span class="raid-helper-meta-pill"># ${escapeHtml(raid.discordChannelId || "Channel offen")}</span>
           </div>
         </div>
-        <button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raid.raidId || raid.id)}')">Posten</button>
+        <button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">Posten</button>
       </article>
     `;
   }).join("");
+  updateScheduledRaidHelperBulkActions();
+}
+
+function toggleScheduledRaidHelperSelection(raidId, checked){
+  const id = String(raidId || "");
+  if(!id) return;
+  if(checked) selectedScheduledRaidHelperIds.add(id);
+  else selectedScheduledRaidHelperIds.delete(id);
+  updateScheduledRaidHelperBulkActions();
+}
+
+function clearScheduledRaidHelperSelection(){
+  selectedScheduledRaidHelperIds.clear();
+  renderRaidHelperScheduledEvents();
+}
+
+function updateScheduledRaidHelperBulkActions(){
+  const bar = document.getElementById("raidHelperScheduledBulkActions");
+  const text = document.getElementById("raidHelperScheduledBulkSelectionText");
+  const count = selectedScheduledRaidHelperIds.size;
+  if(bar) bar.hidden = count === 0;
+  if(text) text.textContent = `${count} Raidanmelder ausgewählt`;
+}
+
+async function deleteSelectedScheduledRaidHelpers(){
+  const ids = Array.from(selectedScheduledRaidHelperIds);
+  if(!ids.length) return;
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  if(!confirm(`${ids.length} ausgewählte kommende Raidanmelder wirklich löschen?`)) return;
+  setStatus(`${ids.length} Raidanmelder werden gelöscht ...`, "");
+  let deleted = 0;
+  for(const id of ids){
+    const raid = findRaidByAnyId(id) || {};
+    const result = await railwayApi({
+      action:"guildDeleteRaid",
+      masterCode,
+      raidId:raid.raidId || id,
+      id:raid.id || ""
+    });
+    if(result.success && Number(result.deleted || 0) >= 1) deleted += 1;
+    selectedScheduledRaidHelperIds.delete(id);
+  }
+  await loadOverview({ preserveStatus:true });
+  renderRaidHelperScheduledEvents();
+  setStatus(`${deleted} ${deleted === 1 ? "Raidanmelder wurde" : "Raidanmelder wurden"} gelöscht.`, "good");
 }
 
 function raidHelperPastRaids(){
@@ -13457,6 +13528,16 @@ function renderPoPostEntryRows(){
 async function reviewPoPostEntryFromGuild(index, status){
   const entry = poPostEntries[index];
   if(!entry) return;
+  let rejectionReason = "";
+  if(status === "rejected"){
+    const answer = prompt(`Warum wird die PO von ${entry.player || "diesem Spieler"} auf ${entry.item || "dieses Item"} abgelehnt?\n\nDiese Nachricht wird dem Spieler privat im Discord gesendet.`, entry.rejectionReason || "");
+    if(answer === null) return;
+    rejectionReason = String(answer || "").trim();
+    if(!rejectionReason){
+      setStatus("Bitte einen Grund für die Ablehnung eingeben.", "bad");
+      return;
+    }
+  }
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -13482,6 +13563,8 @@ async function reviewPoPostEntryFromGuild(index, status){
       lichtlootRaidId:raidPin,
       lichtlootPlayerPin:raidPin,
       status,
+      reason:rejectionReason,
+      rejectionReason,
       reviewer:"Gildenleitung"
     });
     if(!result.success){
@@ -13489,7 +13572,8 @@ async function reviewPoPostEntryFromGuild(index, status){
       return;
     }
     poPostEntries[index] = Object.assign({}, entry, result.entry || {}, {
-      approvalStatus: status === "approved" ? "approved" : "rejected"
+      approvalStatus: status === "approved" ? "approved" : "rejected",
+      rejectionReason
     });
     renderPoPostEntryRows();
     setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
@@ -13501,6 +13585,16 @@ async function reviewPoPostEntryFromGuild(index, status){
 async function reviewPoPostEntryFromPostPanel(index, status){
   const entry = poPostStoredEntries[index];
   if(!entry) return;
+  let rejectionReason = "";
+  if(status === "rejected"){
+    const answer = prompt(`Warum wird die PO von ${entry.player || "diesem Spieler"} auf ${entry.item || "dieses Item"} abgelehnt?\n\nDiese Nachricht wird dem Spieler privat im Discord gesendet.`, entry.rejectionReason || "");
+    if(answer === null) return;
+    rejectionReason = String(answer || "").trim();
+    if(!rejectionReason){
+      setStatus("Bitte einen Grund für die Ablehnung eingeben.", "bad");
+      return;
+    }
+  }
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -13526,6 +13620,8 @@ async function reviewPoPostEntryFromPostPanel(index, status){
       lichtlootRaidId:raidPin,
       lichtlootPlayerPin:raidPin,
       status,
+      reason:rejectionReason,
+      rejectionReason,
       reviewer:"Gildenleitung"
     });
     if(!result.success){
@@ -13533,7 +13629,8 @@ async function reviewPoPostEntryFromPostPanel(index, status){
       return;
     }
     poPostStoredEntries[index] = Object.assign({}, entry, result.entry || {}, {
-      approvalStatus: status === "approved" ? "approved" : "rejected"
+      approvalStatus: status === "approved" ? "approved" : "rejected",
+      rejectionReason
     });
     renderPoPostConfigRows();
     renderPoPostDetailRows();
