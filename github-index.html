@@ -1657,6 +1657,9 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div class="form-card">
     <h3>SpielerLogin erstellen</h3>
     <p class="hint">Lege hier deinen SpielerLogin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen SpielerLogin später zurücksetzen.</p>
+    <div class="status" style="margin-bottom:16px">
+      <span class="warn">Wichtig:</span> Nach der Erstellung muss dein SpielerLogin zuerst von der Gildenleitung freigegeben werden. Erst danach kannst du dich einloggen.
+    </div>
 
     <div class="clean-form">
       <div class="full">
@@ -2960,7 +2963,7 @@ async function createPlayerPinFromSheet(){
     }
 
     showPlayerPinValue(result.pin);
-    status.innerHTML='<span class="ok">✓ SpielerLogin wurde gespeichert.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    status.innerHTML='<span class="ok">✓ SpielerLogin wurde erstellt und wartet auf Freigabe.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<br>Einloggen kannst du dich, sobald die Gildenleitung deinen SpielerLogin freigegeben hat.';
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
 
