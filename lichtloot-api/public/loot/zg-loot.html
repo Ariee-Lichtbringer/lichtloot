@@ -3699,8 +3699,11 @@ async function savePrio(){
       Server:server,
       Klasse:playerClass,
       P1:p1,
+      P1ItemId:getSelectedPrioItemId("p1"),
       P2:p2,
+      P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
       P3:p3,
+      P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
       P0Plus:isP0Plus ? "ja" : "nein",
       P0Item:isP0Plus ? p1 : ""
     });
