@@ -1295,7 +1295,10 @@ async function loadRules(){
     const guildData=await guildResponse.json();
     const guild=(guildData.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
     currentGuildInfo=guild;
-    const catalogResponse=await fetch("data/raidregeln.json?v=20260625");
+    const rulesCatalogUrl=CURRENT_GUILD_SLUG==="nachtloot"
+      ?"data/nachtloot-raidregeln.json?v=20260729"
+      :"data/raidregeln.json?v=20260625";
+    const catalogResponse=await fetch(rulesCatalogUrl);
     rulesCatalog=await catalogResponse.json();
     if(guild){
       document.title=`Raidregeln - ${guild.name || CURRENT_GUILD_SLUG}`;
@@ -1314,8 +1317,13 @@ async function loadRules(){
       });
     }
     const storedRules=guild?.layout?.raidRules;
-    if(storedRules && typeof storedRules === "object"){
+    const storedRulesBelongToGuild=storedRules
+      && typeof storedRules==="object"
+      && !(CURRENT_GUILD_SLUG==="nachtloot" && /lichtbringer/i.test(String(storedRules.source||"")));
+    if(storedRulesBelongToGuild){
       rulesData=storedRules;
+    }else if(CURRENT_GUILD_SLUG === "nachtloot"){
+      rulesData=structuredClone(rulesCatalog);
     }else if(CURRENT_GUILD_SLUG !== "lichtloot"){
       rulesData={
         updatedAt:"",
