@@ -8439,6 +8439,245 @@ async function syncPoSignupPrios({ guildId, query: params }) {
   };
 }
 
+async function ensurePoRepairSnapshotsSchema() {
+  await query(`
+    create table if not exists po_repair_snapshots (
+      id uuid primary key default gen_random_uuid(),
+      guild_id uuid not null references guilds(id) on delete cascade,
+      raid_id uuid references raids(id) on delete set null,
+      mode text not null default 'audit',
+      created_by text not null default 'Gildenleitung',
+      snapshot jsonb not null default '{}'::jsonb,
+      result jsonb,
+      created_at timestamptz not null default now()
+    )
+  `);
+}
+
+function poRepairKey(player, item) {
+  return `${clean(player).toLowerCase().replace(/[^a-z0-9]/g, "")}|${normalizePoItemName(item).toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+}
+
+async function loadPoRepairAudit(guildId, params = {}) {
+  await ensurePoPostEntriesSchema();
+  await ensurePrioSchema();
+  const raid = await findRaid(guildId, params);
+  if (!raid) {
+    const error = new Error("Raid wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const raidPin = clean(raid.raid_pin || params.raidPin || params.prioPin);
+  const poResult = await query(
+    `select ppe.*,
+            approved_player.player_pin
+     from po_post_entries ppe
+     left join lateral (
+       select p.player_pin
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = ppe.guild_id
+         and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') =
+             regexp_replace(lower(ppe.player_name), '[^a-z0-9]+', '', 'g')
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false
+       order by c.is_main desc, c.created_at asc
+       limit 1
+     ) approved_player on true
+     where ppe.guild_id = $1
+       and ppe.archived_at is null
+       and coalesce(ppe.config_only, false) = false
+       and (
+         ($2 <> '' and ppe.raid_pin = $2)
+         or ppe.post_key = $3
+       )
+     order by lower(ppe.player_name), lower(ppe.item_name), ppe.updated_at desc`,
+    [guildId, raidPin, clean(raid.external_raid_id || raid.id)]
+  );
+  const prioResult = await query(
+    `select pr.id, c.id as character_id, c.name as player, c.server, c.class_name,
+            i.id as item_id, i.name as item, p.player_pin, pr.comment
+     from prios pr
+     join characters c on c.id = pr.character_id
+     join players p on p.id = c.player_id and p.guild_id = $1
+     left join items i on i.id = pr.p1_item_id
+     where pr.raid_id = $2
+       and pr.p1_item_id is not null
+       and (
+         coalesce(pr.comment, '') ilike '%po-bot%'
+         or (pr.p1_item_id = pr.p2_item_id and pr.p2_item_id = pr.p3_item_id)
+       )
+     order by lower(c.name), lower(i.name)`,
+    [guildId, raid.id]
+  );
+  const poEntries = poResult.rows.map(row => ({
+    id: row.id,
+    postKey: row.post_key || "",
+    sourceChannelId: row.source_channel_id || "",
+    targetChannelId: row.target_channel_id || "",
+    discordMessageId: row.discord_message_id || "",
+    player: row.player_name || "",
+    server: row.server || "",
+    className: row.class_name || "",
+    item: normalizePoItemName(row.item_name || ""),
+    approvalStatus: row.approval_status || "pending",
+    playerPin: row.player_pin || ""
+  }));
+  const lichtlootPrios = prioResult.rows.map(row => ({
+    id: row.id,
+    characterId: row.character_id,
+    itemId: row.item_id,
+    player: row.player || "",
+    server: row.server || "",
+    className: row.class_name || "",
+    item: normalizePoItemName(row.item || ""),
+    playerPin: row.player_pin || ""
+  }));
+  const approvedPo = poEntries.filter(entry => entry.approvalStatus === "approved");
+  const poKeys = new Set(approvedPo.map(entry => poRepairKey(entry.player, entry.item)));
+  const prioKeys = new Set(lichtlootPrios.map(entry => poRepairKey(entry.player, entry.item)));
+  return {
+    raid,
+    raidPin,
+    poEntries,
+    approvedPo,
+    lichtlootPrios,
+    matched: approvedPo.filter(entry => prioKeys.has(poRepairKey(entry.player, entry.item))),
+    discordOnly: approvedPo.filter(entry => !prioKeys.has(poRepairKey(entry.player, entry.item))),
+    lichtlootOnly: lichtlootPrios.filter(entry => !poKeys.has(poRepairKey(entry.player, entry.item))),
+    pending: poEntries.filter(entry => entry.approvalStatus !== "approved")
+  };
+}
+
+function publicPoRepairAudit(audit) {
+  return {
+    success: true,
+    raid: {
+      id: raidPublicId(audit.raid),
+      name: audit.raid.raid_name || audit.raid.raid_type || "Raid",
+      type: audit.raid.raid_type || "",
+      date: audit.raid.raid_date || "",
+      time: audit.raid.raid_time || "",
+      raidPin: audit.raidPin
+    },
+    counts: {
+      discord: audit.approvedPo.length,
+      lichtloot: audit.lichtlootPrios.length,
+      matched: audit.matched.length,
+      discordOnly: audit.discordOnly.length,
+      lichtlootOnly: audit.lichtlootOnly.length,
+      pending: audit.pending.length
+    },
+    discordOnly: audit.discordOnly,
+    lichtlootOnly: audit.lichtlootOnly,
+    pending: audit.pending
+  };
+}
+
+async function auditPoRaid({ guild, guildId, query: params }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  return publicPoRepairAudit(await loadPoRepairAudit(guildId, params));
+}
+
+async function repairPoRaid({ guild, guildId, query: params }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  const mode = clean(params.mode).toLowerCase();
+  if (!["discord", "lichtloot"].includes(mode)) {
+    const error = new Error("Reparaturquelle muss Discord oder LichtLoot sein.");
+    error.statusCode = 400;
+    throw error;
+  }
+  await ensurePoRepairSnapshotsSchema();
+  const before = await loadPoRepairAudit(guildId, params);
+  const snapshotResult = await query(
+    `insert into po_repair_snapshots (guild_id, raid_id, mode, created_by, snapshot)
+     values ($1, $2, $3, $4, $5::jsonb)
+     returning id, created_at`,
+    [
+      guildId,
+      before.raid.id,
+      mode,
+      clean(params.reviewer || params.createdBy || "Gildenleitung"),
+      JSON.stringify(publicPoRepairAudit(before))
+    ]
+  );
+  const repaired = [];
+  const failed = [];
+  const refreshPayloads = [];
+  if (mode === "discord") {
+    for (const entry of before.discordOnly) {
+      try {
+        if (!entry.playerPin) throw new Error("Kein freigegebener SpielerLogin gefunden.");
+        await savePoSignupPrioFromBot({
+          guildId,
+          query: {
+            ...params,
+            queueToken: "",
+            postKey: entry.postKey,
+            raidId: raidPublicId(before.raid),
+            raidPin: before.raidPin,
+            prioPin: before.raidPin,
+            playerPin: entry.playerPin,
+            player: entry.player,
+            server: entry.server,
+            className: entry.className,
+            item: entry.item,
+            source: "po-repair-discord"
+          }
+        });
+        repaired.push({ player: entry.player, item: entry.item });
+      } catch (error) {
+        failed.push({ player: entry.player, item: entry.item, error: error.message || String(error) });
+      }
+    }
+  } else {
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      for (const entry of before.lichtlootOnly) {
+        try {
+          const payloads = await syncPoPostEntryFromPrio(client, guildId, {
+            raid: before.raid,
+            character: {
+              id: entry.characterId,
+              name: entry.player,
+              server: entry.server,
+              class_name: entry.className
+            },
+            item: { id: entry.itemId, name: entry.item },
+            source: "po_repair_lichtloot"
+          });
+          refreshPayloads.push(...payloads);
+          repaired.push({ player: entry.player, item: entry.item });
+        } catch (error) {
+          failed.push({ player: entry.player, item: entry.item, error: error.message || String(error) });
+        }
+      }
+      await client.query("commit");
+    } catch (error) {
+      await client.query("rollback").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+    await enqueuePoPostRefreshPayloads(guildId, refreshPayloads, "po_repair_lichtloot");
+  }
+  const after = await loadPoRepairAudit(guildId, params);
+  const result = {
+    success: failed.length === 0,
+    mode,
+    snapshotId: snapshotResult.rows[0]?.id || "",
+    repaired,
+    failed,
+    audit: publicPoRepairAudit(after)
+  };
+  await query(
+    `update po_repair_snapshots set result = $2::jsonb where id = $1`,
+    [result.snapshotId, JSON.stringify(result)]
+  );
+  return result;
+}
+
 function commentMeta(comment) {
   try {
     return JSON.parse(comment || "{}") || {};
@@ -19095,6 +19334,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...synced, guild: guild.slug });
     }
 
+    if (action === "guildAuditPoRaid") {
+      const audited = await auditPoRaid({ guild, guildId: guild.id, query: req.query });
+      return res.json({ ...audited, guild: guild.slug });
+    }
+
+    if (action === "guildRepairPoRaid") {
+      const repaired = await repairPoRaid({ guild, guildId: guild.id, query: req.query });
+      return res.json({ ...repaired, guild: guild.slug });
+    }
+
     if (action === "deletePrio" || action === "deletePlayerPrio") {
       const deleted = await deletePrio({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
@@ -19574,6 +19823,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSyncPoSignupPrios") {
       const synced = await syncPoSignupPrios({ guildId: guild.id, query: postParams });
       return res.json({ ...synced, guild: guild.slug });
+    }
+
+    if (action === "guildAuditPoRaid") {
+      const audited = await auditPoRaid({ guild, guildId: guild.id, query: postParams });
+      return res.json({ ...audited, guild: guild.slug });
+    }
+
+    if (action === "guildRepairPoRaid") {
+      const repaired = await repairPoRaid({ guild, guildId: guild.id, query: postParams });
+      return res.json({ ...repaired, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
