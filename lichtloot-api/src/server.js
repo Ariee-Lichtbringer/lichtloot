@@ -6920,6 +6920,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
     deleted: result.rowCount || 0,
     deletedPrios,
     prioDeleteResults,
+    prioSyncSuccess: prioDeleteResults.every(item => item && item.success !== false),
     queued: payloads.size,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",

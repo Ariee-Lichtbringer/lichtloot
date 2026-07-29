@@ -1024,6 +1024,17 @@ async def delete_entry(payload, entry, user):
     })
     if not result.get("success"):
         raise RuntimeError(result.get("error") or "PO-Eintrag konnte nicht gelöscht werden.")
+    if not int(result.get("deleted") or 0):
+        raise RuntimeError("PO-Eintrag wurde in LichtLoot nicht gefunden oder bereits gelöscht.")
+    failed_prio_deletes = [
+        item for item in (result.get("prioDeleteResults") or [])
+        if isinstance(item, dict) and item.get("success") is False
+    ]
+    if failed_prio_deletes:
+        details = clean(failed_prio_deletes[0].get("error") or "unbekannter Fehler")
+        raise RuntimeError(
+            f"PO-Eintrag wurde gelöscht, aber die LichtLoot-Priolistensynchronisierung ist fehlgeschlagen: {details}"
+        )
     return result
 
 
@@ -1542,13 +1553,29 @@ class PoDeleteEntrySelect(discord.ui.Select):
         await interaction.response.defer(ephemeral=True)
         try:
             entry = self.entries[int(self.values[0])]
-            if str(entry.get("discordUserId") or entry.get("discord_user_id") or "").strip() != str(interaction.user.id):
+            is_own_entry = (
+                str(entry.get("discordUserId") or entry.get("discord_user_id") or "").strip()
+                == str(interaction.user.id)
+            )
+            if not is_own_entry and not await reviewer_allowed(interaction.user):
                 await interaction.followup.send("⚠️ Du kannst nur deinen eigenen PO-Eintrag löschen.", ephemeral=True)
                 return
-            await delete_entry(self.payload, entry, interaction.user)
-            await refresh_po_message(interaction.client, self.payload)
+            result = await delete_entry(self.payload, entry, interaction.user)
+            deleted_entries = result.get("entries") or [entry]
+            # Die API kann direkt nach dem Löschen noch einen älteren Lesestand
+            # liefern. Den bestätigten Eintrag deshalb beim ersten Discord-Refresh
+            # sicher ausblenden und kurz danach nochmals autoritativ abgleichen.
+            await refresh_po_message(
+                interaction.client,
+                self.payload,
+                excluded_entries=deleted_entries,
+            )
+            asyncio.create_task(refresh_po_message_after_delete(interaction.client, self.payload))
             await interaction.followup.send(
-                f"🗑️ Gelöscht: **{entry.get('player')}** → **{entry.get('item') or entry.get('itemName')}**.",
+                (
+                    f"🗑️ Gelöscht und mit LichtLoot abgeglichen: "
+                    f"**{entry.get('player')}** → **{entry.get('item') or entry.get('itemName')}**."
+                ),
                 ephemeral=True,
             )
         except Exception as error:
@@ -1573,12 +1600,16 @@ class PoDeleteButton(discord.ui.Button):
     async def callback(self, interaction):
         await interaction.response.defer(ephemeral=True)
         user_id = str(interaction.user.id)
-        entries = [
-            entry for entry in await fresh_entries_for_payload(self.payload)
-            if str(entry.get("discordUserId") or entry.get("discord_user_id") or "").strip() == user_id
-        ]
+        all_entries = await fresh_entries_for_payload(self.payload)
+        if await reviewer_allowed(interaction.user):
+            entries = all_entries
+        else:
+            entries = [
+                entry for entry in all_entries
+                if str(entry.get("discordUserId") or entry.get("discord_user_id") or "").strip() == user_id
+            ]
         if not po_entry_options(entries):
-            await interaction.followup.send("Es gibt gerade keinen eigenen PO-Eintrag zum Löschen.", ephemeral=True)
+            await interaction.followup.send("Es gibt gerade keinen PO-Eintrag zum Löschen.", ephemeral=True)
             return
         await interaction.followup.send(
             "Wähle deinen PO-Eintrag aus, den du löschen möchtest.",
@@ -1626,17 +1657,40 @@ class PoView(discord.ui.View):
         self.add_item(PoReviewSelect(payload, entries or []))
 
 
-async def refresh_po_message(client, payload):
+def po_entry_matches_deleted(entry, deleted_entry):
+    deleted_id = clean(deleted_entry.get("id") or deleted_entry.get("entryId"))
+    entry_id = clean(entry.get("id") or entry.get("entryId"))
+    if deleted_id and entry_id:
+        return deleted_id == entry_id
+    return (
+        slug(entry.get("player") or entry.get("playerName"))
+        == slug(deleted_entry.get("player") or deleted_entry.get("playerName"))
+        and slug(entry.get("item") or entry.get("itemName"))
+        == slug(deleted_entry.get("item") or deleted_entry.get("itemName"))
+    )
+
+
+async def refresh_po_message(client, payload, excluded_entries=None):
     payload = payload_with_saved_lichtloot_id(payload)
     target_channel_id = payload_target_channel_id(payload)
     channel = client.get_channel(int(target_channel_id)) or await client.fetch_channel(int(target_channel_id))
     message = await channel.fetch_message(int(payload["messageId"]))
     items = await items_for_payload(payload)
     entries = await load_entries(payload)
+    for deleted_entry in excluded_entries or []:
+        entries = [
+            entry for entry in entries
+            if not po_entry_matches_deleted(entry, deleted_entry)
+        ]
     p0plus_labels = await load_p0plus_labels(payload.get("raid") or "")
     view = PoView(payload, items, entries)
     await edit_po_message(message, make_embed(payload, entries, p0plus_labels), view)
     register_po_view(client, payload, items, entries)
+
+
+async def refresh_po_message_after_delete(client, payload):
+    await asyncio.sleep(1.25)
+    await refresh_po_message_safely(client, payload)
 
 
 async def refresh_po_message_safely(client, payload):
