@@ -143,6 +143,7 @@
 
       <label for="masterCode">Master-Code</label>
       <input id="masterCode" type="password" autocomplete="current-password" placeholder="Aktueller Master-Code">
+      <button class="safe" type="button" onclick="document.getElementById('repairCard').scrollIntoView({behavior:'smooth',block:'start'})">Reparatur &amp; Abgleich öffnen</button>
 
       <div class="admin-grid">
         <section class="tool-card">
@@ -288,7 +289,7 @@
         </div>
       </div>
 
-      <section class="tool-card repair-card">
+      <section class="tool-card repair-card" id="repairCard">
         <header>
           <div>
             <h2>Reparatur &amp; Abgleich</h2>

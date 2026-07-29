@@ -3255,6 +3255,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=clearP0PlusForPlayer" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
@@ -3275,7 +3276,8 @@ async function clearP0PlusForPlayer(player,server,itemName){
       "P0+ Punkte gelöscht.\n\n" +
       "Spieler: " + player + "\n" +
       "Item: " + itemName + "\n" +
-      "Gelöschte Zeilen: " + (result.deleted || 0)
+      "Gelöschte Zeilen: " + (result.deleted || 0) + "\n\n" +
+      "Der Spieler ist für die spätere PO+ Übertragung dieses Raids gesperrt."
     );
 
     await reloadCurrentRaid();

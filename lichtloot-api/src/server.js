@@ -16238,6 +16238,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
 
   const raidType = normalizeRaidType(params.raid);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  const raid = await findRaid(guildId, params);
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
   const itemName = clean(params.item);
@@ -16284,25 +16285,29 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, character.id, item.id]
       );
       deleted = result.rowCount;
-      if (deleted || oldPoints) {
-        await insertP0PlusAudit(client, {
-          guildId,
-          characterId: character.id,
-          itemId: item.id,
-          raidType,
-          playerName: character.name || player,
-          server: character.server || server,
-          itemName: item.name || itemName,
-          oldPoints,
-          newPoints: 0,
-          action: "item_received_clear",
-          source: "PO item erhalten",
-          note: "PO+ Eintrag entfernt, weil Item erhalten wurde."
-        });
-      }
+      await insertP0PlusAudit(client, {
+        guildId,
+        characterId: character.id,
+        itemId: item.id,
+        raidId: raid?.id || null,
+        raidType,
+        playerName: character.name || player,
+        server: character.server || server,
+        itemName: item.name || itemName,
+        oldPoints,
+        newPoints: 0,
+        action: "item_received_clear",
+        source: "PO item erhalten",
+        note: "PO+ Eintrag entfernt und für die Übertragung dieses Raids gesperrt, weil das Item erhalten wurde."
+      });
     }
     await client.query("commit");
-    return { success: true, deleted };
+    return {
+      success: true,
+      deleted,
+      transferBlocked: Boolean(item),
+      raidId: raidPublicId(raid)
+    };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -16784,7 +16789,27 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
-     where ${raidClause}`,
+     where ${raidClause}
+       and not exists (
+         select 1
+         from p0plus_point_audit received
+         where received.guild_id = $1
+           and received.action = 'item_received_clear'
+           and received.character_id = pr.character_id
+           and (
+             received.item_id = pr.p1_item_id
+             or regexp_replace(lower(received.item_name), '[^a-z0-9]+', '', 'g') =
+                regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
+           )
+           and (
+             received.raid_id = r.id
+             or (
+               received.raid_id is null
+               and lower(coalesce(received.raid_type, '')) = lower($2)
+               and received.created_at >= r.raid_date::timestamp
+             )
+           )
+       )`,
     values
   );
 
