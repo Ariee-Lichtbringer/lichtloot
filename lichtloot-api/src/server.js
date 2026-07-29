@@ -2215,6 +2215,14 @@ function requireMasterCodeForGuild(guild, value) {
   }
 }
 
+function requireRaidleadP0MasterCodeForGuild(guild, value) {
+  const code = clean(value);
+  const guildSlug = clean(guild?.slug).toLowerCase();
+  const isLichtbringer = guildSlug === "lichtloot" || guildSlug === "lichtbringer";
+  if (isLichtbringer && code === "1301") return;
+  requireMasterCodeForGuild(guild, code);
+}
+
 function requireMasterOrQueueToken(params = {}) {
   const code = clean(params.masterCode);
   if (code === masterCode || Array.from(masterCodeOverrides.values()).includes(code)) return;
@@ -15805,8 +15813,6 @@ async function setP0PlusPoints({ guildId, query: params }) {
 }
 
 async function clearP0PlusForPlayer({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
-
   const raidType = normalizeRaidType(params.raid);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const player = clean(params.player || params.char || params.spieler);
@@ -16290,8 +16296,6 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 }
 
 async function transferP0PlusPoints({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
-
   const raidType = normalizeRaidType(params.raid);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const raidId = clean(params.raidId);
@@ -18407,7 +18411,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
     if (clean(req.query.masterCode)) {
-      requireMasterCodeForGuild(guild, req.query.masterCode);
+      if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") {
+        requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
+      } else {
+        requireMasterCodeForGuild(guild, req.query.masterCode);
+      }
     }
 
     if (action === "getCharactersByPin") {
@@ -19007,7 +19015,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "clearP0PlusForPlayer") {
-      requireMasterCodeForGuild(guild, req.query.masterCode);
+      requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
       const cleared = await clearP0PlusForPlayer({ guildId: guild.id, query: req.query });
       return res.json({ ...cleared, guild: guild.slug });
     }
@@ -19018,7 +19026,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "transferP0PlusPoints") {
-      requireMasterCodeForGuild(guild, req.query.masterCode);
+      requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
       const transferred = await transferP0PlusPoints({ guildId: guild.id, query: req.query });
       return res.json({ ...transferred, guild: guild.slug });
     }
