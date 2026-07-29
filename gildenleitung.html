@@ -810,6 +810,37 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   white-space:nowrap;
   cursor:pointer;
 }
+.login-approval-alert{
+  display:none;
+  margin-top:7px;
+  padding:5px 8px;
+  border:1px solid rgba(248,113,113,.55);
+  border-radius:999px;
+  background:rgba(127,29,29,.36);
+  color:#fecaca!important;
+  font-size:11px!important;
+  font-weight:950!important;
+  box-shadow:0 0 14px rgba(239,68,68,.16);
+  cursor:pointer;
+}
+.login-approval-alert.visible{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+}
+.login-approval-list{display:grid;gap:10px}
+.login-approval-entry{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:12px;
+  border:1px solid rgba(250,204,21,.25);
+  border-radius:9px;
+  background:rgba(2,6,23,.55);
+}
+.login-approval-entry strong{color:#f8fafc}
+.login-approval-entry .muted{margin-top:3px}
 
 .compact-auth .status{
   display:inline-flex;
@@ -4692,6 +4723,9 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           <span>Spielerlogins</span>
           <strong id="playerCount">0</strong>
           <div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div>
+          <button id="playerApprovalAlert" class="login-approval-alert" type="button" onclick="openPlayerApprovalModal()">
+            <span aria-hidden="true">●</span> <span id="playerApprovalCount">0</span> neue Freigabe
+          </button>
         </div>
         <button type="button" onclick="openPlayerPanel()">Anzeigen →</button>
       </div>
@@ -5602,6 +5636,19 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
     <div id="prioModalContent" class="modal-content">
       <div class="status">Bereit.</div>
     </div>
+  </div>
+</div>
+
+<div id="playerApprovalModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="playerApprovalModalTitle" onclick="closePlayerApprovalModalOnBackdrop(event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">
+        <h2 id="playerApprovalModalTitle">Neue Spieleraccounts freigeben</h2>
+        <p>Offene SpielerLogins dieser Gilde direkt prüfen und freigeben.</p>
+      </div>
+      <button class="btn danger" type="button" onclick="closePlayerApprovalModal()">Schließen</button>
+    </div>
+    <div id="playerApprovalModalContent" class="modal-content"></div>
   </div>
 </div>
 
@@ -6791,6 +6838,9 @@ function renderSummary(){
   const raids = guildData.raids || [];
   const players = guildData.players || [];
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
+  const pendingGroups = groupPlayersByMain(players).filter(group =>
+    String(group.approvalStatus || group.main?.approvalStatus || "approved").toLowerCase() !== "approved"
+  );
 
   const raidCounter = document.getElementById("raidCount");
   if(raidCounter) raidCounter.textContent = raids.length;
@@ -6798,6 +6848,16 @@ function renderSummary(){
   if(playerCounter) playerCounter.textContent = players.length;
   const linkedCounter = document.getElementById("linkedCount");
   if(linkedCounter) linkedCounter.textContent = linked;
+  const approvalCounter = document.getElementById("playerApprovalCount");
+  if(approvalCounter) approvalCounter.textContent = pendingGroups.length;
+  const approvalAlert = document.getElementById("playerApprovalAlert");
+  if(approvalAlert){
+    approvalAlert.classList.toggle("visible", pendingGroups.length > 0);
+    approvalAlert.setAttribute("aria-label", `${pendingGroups.length} offene SpielerLogin-Freigaben`);
+  }
+  if(!document.getElementById("playerApprovalModal")?.classList.contains("hidden")){
+    renderPlayerApprovalModal();
+  }
   const issueCounter = document.getElementById("issueCount");
   if(issueCounter) issueCounter.textContent = issueReports.length;
 }
@@ -7532,14 +7592,14 @@ async function setPlayerLoginBlocked(playerId, blocked, playerPin=""){
   }
 }
 
-async function approvePlayerLogin(playerId, playerPin=""){
+async function approvePlayerLogin(playerId, playerPin="", skipConfirm=false){
   if(!playerId && !playerPin) return;
   const masterCode=document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
-  if(!confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
+  if(!skipConfirm && !confirm("Diesen SpielerLogin für diese Gilde freigeben?")) return;
   setStatus("SpielerLogin wird freigegeben ...", "");
   try{
     const result=await railwayApi({
@@ -7586,6 +7646,52 @@ function groupPlayersByMain(players){
       : "approved";
     return group;
   }).sort((a, b) => normalize(a.main.char).localeCompare(normalize(b.main.char)));
+}
+
+function pendingPlayerLoginGroups(){
+  return groupPlayersByMain(guildData.players || []).filter(group =>
+    String(group.approvalStatus || group.main?.approvalStatus || "approved").toLowerCase() !== "approved"
+  );
+}
+
+function openPlayerApprovalModal(){
+  const modal = document.getElementById("playerApprovalModal");
+  if(!modal) return;
+  renderPlayerApprovalModal();
+  modal.classList.remove("hidden");
+}
+
+function closePlayerApprovalModal(){
+  document.getElementById("playerApprovalModal")?.classList.add("hidden");
+}
+
+function closePlayerApprovalModalOnBackdrop(event){
+  if(event.target?.id === "playerApprovalModal") closePlayerApprovalModal();
+}
+
+function renderPlayerApprovalModal(){
+  const content = document.getElementById("playerApprovalModalContent");
+  if(!content) return;
+  const groups = pendingPlayerLoginGroups();
+  if(!groups.length){
+    content.innerHTML = '<div class="status good">Alle Spieleraccounts sind freigegeben.</div>';
+    return;
+  }
+  content.innerHTML = `
+    <div class="status">${groups.length} ${groups.length === 1 ? "Spieleraccount wartet" : "Spieleraccounts warten"} auf Freigabe.</div>
+    <div class="login-approval-list">
+      ${groups.map(group => `
+        <div class="login-approval-entry">
+          <div>
+            <strong>${escapeHtml(group.main.char || "Unbekannter Charakter")}</strong>
+            <div class="muted">${escapeHtml(group.main.server || "-")} · ${escapeHtml(group.main.className || "-")}</div>
+            <div class="muted">SpielerLogin: ${escapeHtml(group.main.playerPin || "-")}${group.twinks.length ? ` · ${group.twinks.length} Twink(s)` : ""}</div>
+          </div>
+          <button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}',true)">Direkt freigeben</button>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function setDefaultCreateRaidDate(){

@@ -1755,53 +1755,65 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 }
 .account-management-entry{
   position:relative;
-  min-height:156px;
+  min-height:164px;
   cursor:pointer;
-  overflow:hidden;
-  border-color:rgba(250,204,21,.56)!important;
+  overflow:visible;
+  border-color:rgba(var(--gold-rgb),.62)!important;
   background:
-    radial-gradient(circle at 0% 28%,rgba(250,204,21,.30),transparent 28%),
-    linear-gradient(135deg,rgba(40,30,7,.86),rgba(10,17,31,.92) 58%,rgba(12,25,48,.84))!important;
-  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(250,204,21,.10)!important;
-}
-.account-management-entry > *{
-  display:none!important;
-}
-.account-management-entry:before{
-  content:"➜";
-  position:absolute;
-  left:16px;
-  top:22px;
-  width:48px;
-  height:48px;
+    radial-gradient(circle at 15% 20%,rgba(var(--gold-rgb),.28),transparent 38%),
+    linear-gradient(135deg,rgba(5,12,25,.94),rgba(var(--blue-rgb),.18))!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(var(--gold-rgb),.14)!important;
   display:grid;
   place-items:center;
-  border-radius:999px;
-  background:#facc15;
-  color:#08111f;
-  font-size:30px;
-  font-weight:1000;
-  box-shadow:0 6px 0 rgba(146,64,14,.95),0 14px 28px rgba(0,0,0,.35);
-  transform:rotate(-8deg);
+  padding:24px 18px!important;
 }
-.account-management-entry:after{
-  content:"LichtLoot Account Verwaltung\\A Charaktere, Prios, Kalender und Worldbuffs öffnen";
-  white-space:pre-line;
-  position:absolute;
-  left:78px;
-  right:16px;
-  top:22px;
-  color:#facc15;
-  font-size:20px;
-  line-height:1.12;
+.account-management-entry .account-entry-button{
+  width:100%;
+  min-height:92px;
+  display:grid;
+  place-items:center;
+  border:2px solid rgba(var(--gold-rgb),.78);
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--gold),var(--blue));
+  color:#fff;
+  font-size:27px;
+  line-height:1.05;
   font-weight:1000;
+  text-align:center;
   text-transform:uppercase;
-  text-shadow:0 2px 14px rgba(0,0,0,.45);
+  text-shadow:0 2px 12px rgba(0,0,0,.55);
+  box-shadow:0 12px 28px rgba(0,0,0,.34),0 0 22px rgba(var(--gold-rgb),.22);
+}
+.account-management-entry .account-entry-nudge{
+  position:absolute;
+  left:50%;
+  top:-48px;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  color:var(--gold);
+  font-size:18px;
+  font-weight:1000;
+  white-space:nowrap;
+  filter:drop-shadow(0 0 10px rgba(var(--gold-rgb),.55));
+  animation:accountNudgeBlink .9s infinite;
+  z-index:3;
+}
+.account-management-entry .account-entry-nudge:after{
+  content:"↓";
+  font-size:34px;
+  line-height:.8;
+  color:var(--blue);
+}
+@keyframes accountNudgeBlink{
+  0%,100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+  50%{opacity:.58;transform:translateX(-50%) translateY(6px) scale(1.08)}
 }
 .account-management-entry:hover,
 .account-management-entry:focus-visible{
   transform:translateY(-1px);
-  border-color:rgba(250,204,21,.82)!important;
+  border-color:rgba(var(--gold-rgb),.9)!important;
   outline:none;
 }
 
@@ -2787,7 +2799,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="LichtLoot Account Verwaltung öffnen"></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3059,6 +3071,10 @@ function applyGuildBrand(){
   }
   applyRaidLayoutImages(guild?.layout?.raidImages);
   updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
+  const accountEntryText = document.getElementById("accountEntryButtonText");
+  if(accountEntryText) accountEntryText.textContent = CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot";
+  const accountEntry = document.getElementById("meinLichtLootRightEntry");
+  if(accountEntry) accountEntry.setAttribute("aria-label", (CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot") + " öffnen");
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
 }
