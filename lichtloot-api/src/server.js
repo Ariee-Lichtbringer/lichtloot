@@ -7753,6 +7753,10 @@ async function removeDuplicatePriosForCharacterName(client, raidId, character) {
 async function savePrio({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
+  // Schema work must finish before opening the save transaction. Running ALTER
+  // statements through the pool while this transaction already holds raid locks
+  // makes the request wait on itself until PostgreSQL cancels it.
+  await ensureCharacterPoReleaseSchema();
   const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
   const player = params.player || params.char || params.spieler;
   const server = params.server;
@@ -7861,7 +7865,6 @@ async function savePrio({ guildId, query: params }) {
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let nachtlootRecruitRestricted = false;
     if (releaseRaid) {
-      await ensureCharacterPoReleaseSchema();
       const recruitResult = await client.query(
         `select lower(g.slug) as guild_slug,
                 coalesce(c.recruit_status_lifted, false) as recruit_status_lifted
@@ -7880,7 +7883,6 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
     if (p0Selected && releaseRaid) {
-      await ensureCharacterPoReleaseSchema();
       const releaseResult = await client.query(
         `select 1
          from character_po_releases
