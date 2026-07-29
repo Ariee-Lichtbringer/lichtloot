@@ -1318,6 +1318,33 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-panel-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
 .random-panel-actions .big-btn{width:auto;min-width:170px}
 .random-panel-actions .big-btn.subtle{color:#f8fafc}
+.guild-tutorial{margin-top:18px;border-top:1px solid rgba(250,204,21,.18);padding-top:18px}
+.guild-tutorial-title{display:flex;align-items:center;gap:10px;color:#facc15;font-size:18px;font-weight:950;margin:0 0 12px}
+.guild-tutorial-title:before{content:"!";width:28px;height:28px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#ef4444;color:white;box-shadow:0 0 0 4px rgba(239,68,68,.18);font-weight:950}
+.guild-tutorial-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.guild-tutorial-card{position:relative;min-width:0;border-radius:14px;border:1px solid rgba(250,204,21,.24);background:rgba(2,6,23,.54);overflow:hidden}
+.guild-tutorial-shot{position:relative;aspect-ratio:16/10;background:#020617;border-bottom:1px solid rgba(255,255,255,.10);overflow:hidden}
+.guild-tutorial-shot img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.05) contrast(1.05)}
+.guild-tutorial-final{height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(34,197,94,.28),rgba(96,165,250,.18));color:#fff;font-size:34px;font-weight:950}
+.guild-tutorial-pointer{position:absolute;left:10px;top:10px;z-index:2;padding:5px 9px;border-radius:999px;background:#ef4444;color:#fff;font-size:11px;font-weight:950;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.guild-tutorial-pointer:after{content:"";position:absolute;right:-18px;top:50%;transform:translateY(-50%);border-left:20px solid #ef4444;border-top:8px solid transparent;border-bottom:8px solid transparent}
+.guild-tutorial-body{padding:12px}
+.guild-tutorial-body strong{display:block;color:#facc15;font-size:14px;margin-bottom:5px}
+.guild-tutorial-body span{display:block;color:#dbeafe;font-size:12px;line-height:1.4;font-weight:800}
+.guild-tutorial-card.done{border-color:rgba(34,197,94,.34)}
+.guild-tutorial-card.done .guild-tutorial-body strong{color:#22c55e}
+.guild-support-panel{margin-top:18px;border-radius:16px;border:1px solid rgba(96,165,250,.28);background:linear-gradient(135deg,rgba(14,165,233,.12),rgba(2,6,23,.66));padding:18px}
+.guild-support-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;margin-bottom:14px}
+.guild-support-head h2{color:#60a5fa;margin:0 0 6px;font-size:20px}
+.guild-support-head p{color:#dbeafe;margin:0;font-size:13px;line-height:1.5;font-weight:800}
+.guild-support-contact{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.guild-support-pill{border:1px solid rgba(96,165,250,.35);background:rgba(2,6,23,.58);color:#e0f2fe;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:950;text-decoration:none}
+.guild-support-form{display:grid;grid-template-columns:minmax(180px,.75fr) minmax(0,1.4fr) auto;gap:10px;align-items:end}
+.guild-support-form label{display:block;color:#93c5fd;font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px}
+.guild-support-form input,.guild-support-form textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(96,165,250,.35);background:rgba(2,6,23,.86);color:white;font-weight:800;outline:none}
+.guild-support-form textarea{min-height:46px;resize:vertical}
+.guild-support-form input:focus,.guild-support-form textarea:focus{border-color:rgba(96,165,250,.78);box-shadow:0 0 0 2px rgba(96,165,250,.14)}
+.guild-support-action .big-btn{min-width:155px}
 .random-raid-disabled{opacity:.45!important;filter:grayscale(1);cursor:not-allowed!important;box-shadow:none!important}
 .random-raid-disabled-note{color:#fca5a5!important;font-weight:900!important;margin-top:8px!important}
 .random-raid-modal{position:fixed;inset:0;z-index:70000;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(2,6,23,.74);backdrop-filter:blur(8px)}
@@ -1349,7 +1376,8 @@ body.show-mylichtloot .mylichtloot-card{display:block}
 .random-open-grid .big-btn{margin-top:10px}
 @media(max-width:1150px){.random-raid-form{grid-template-columns:1fr 1fr}.random-raid-form .random-create-action{grid-column:1 / -1}}
 @media(max-width:900px){.random-open-grid{grid-template-columns:1fr}.random-pin-grid{grid-template-columns:1fr}}
-@media(max-width:700px){.random-panel-head{grid-template-columns:1fr}.random-panel-actions{justify-content:stretch}.random-panel-actions .big-btn{width:100%}}
+@media(max-width:1100px){.guild-tutorial-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.random-panel-head,.guild-support-head,.guild-support-form{grid-template-columns:1fr}.random-panel-actions,.guild-support-contact{justify-content:stretch}.random-panel-actions .big-btn,.guild-support-action .big-btn{width:100%}.guild-tutorial-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.random-raid-form,.random-open-grid{grid-template-columns:1fr}.random-raid-modal{padding:12px}.random-raid-modal-box{width:calc(100vw - 24px);max-height:calc(100vh - 24px);padding:16px}}
 .form-card{margin-top:0!important}
 .myprios-form{grid-template-columns:1fr auto!important}
@@ -1629,6 +1657,9 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div class="form-card">
     <h3>SpielerLogin erstellen</h3>
     <p class="hint">Lege hier deinen SpielerLogin an. Wähle zusätzlich eine Sicherheitsfrage aus. Damit kannst du deinen SpielerLogin später zurücksetzen.</p>
+    <div class="status" style="margin-bottom:16px">
+      <span class="warn">Wichtig:</span> Nach der Erstellung muss dein SpielerLogin zuerst von der Gildenleitung freigegeben werden. Erst danach kannst du dich einloggen.
+    </div>
 
     <div class="clean-form">
       <div class="full">
@@ -1844,6 +1875,86 @@ body.show-mylichtloot .mylichtloot-card{display:block}
           <button class="big-btn subtle" type="button" onclick="window.location.href='gilde-anmelden.html'">Gilde anmelden</button>
         </div>
       </div>
+      <div class="guild-tutorial" aria-label="Tutorial für neue Gilden">
+        <div class="guild-tutorial-title">In 5 Schritten zur eigenen Lootseite</div>
+        <div class="guild-tutorial-grid">
+          <div class="guild-tutorial-card">
+            <div class="guild-tutorial-shot">
+              <span class="guild-tutorial-pointer">Pfeil</span>
+              <img src="images/tutorial/gilde-werden-01-start.png" alt="Startseite mit Button Gilde anmelden">
+            </div>
+            <div class="guild-tutorial-body">
+              <strong>1. Gilde anmelden</strong>
+              <span>Auf der Index-Seite unten auf „Gilde anmelden“ klicken.</span>
+            </div>
+          </div>
+          <div class="guild-tutorial-card">
+            <div class="guild-tutorial-shot">
+              <span class="guild-tutorial-pointer">Formular</span>
+              <img src="images/tutorial/gilde-werden-02-anmelden.png" alt="Formular zum Gilde anmelden ausfüllen">
+            </div>
+            <div class="guild-tutorial-body">
+              <strong>2. Formular ausfüllen</strong>
+              <span>Gildendaten eintragen und danach auf den Freigabe-Link warten.</span>
+            </div>
+          </div>
+          <div class="guild-tutorial-card">
+            <div class="guild-tutorial-shot">
+              <span class="guild-tutorial-pointer">Link</span>
+              <img src="images/tutorial/gilde-werden-03-einrichten.png" alt="Gilde einrichten nach Freigabelink">
+            </div>
+            <div class="guild-tutorial-body">
+              <strong>3. Freigabe-Link öffnen</strong>
+              <span>Link anklicken, Gilde einrichten und den Bereich öffnen.</span>
+            </div>
+          </div>
+          <div class="guild-tutorial-card">
+            <div class="guild-tutorial-shot">
+              <span class="guild-tutorial-pointer">Layout</span>
+              <img src="images/tutorial/gilde-werden-04-layout.png" alt="Layout bearbeiten in der Gildenleitung">
+            </div>
+            <div class="guild-tutorial-body">
+              <strong>4. Lootseite gestalten</strong>
+              <span>In der Gildenleitung „Layout bearbeiten“ öffnen und Farben, Logo und Raid-Kacheln setzen.</span>
+            </div>
+          </div>
+          <div class="guild-tutorial-card done">
+            <div class="guild-tutorial-shot">
+              <div class="guild-tutorial-final">Los gehts</div>
+            </div>
+            <div class="guild-tutorial-body">
+              <strong>5. Fertig</strong>
+              <span>Bots einladen, Spieler freigeben, Raids erstellen und LichtLoot nutzen.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="guild-support-panel" id="guildSupportPanel">
+      <div class="guild-support-head">
+        <div>
+          <h2>Support für neue Gilden</h2>
+          <p>Wenn beim Anmelden, Einrichten oder Verbinden der Bots etwas hakt, schreib kurz dein Anliegen auf. Ich melde mich dann bei dir.</p>
+        </div>
+        <div class="guild-support-contact">
+          <a class="guild-support-pill" href="mailto:arieeerverlook@gmail.de">arieeerverlook@gmail.de</a>
+          <span class="guild-support-pill">Discord: Ariee</span>
+        </div>
+      </div>
+      <div class="guild-support-form">
+        <div>
+          <label>Discord-Name</label>
+          <input id="guildSupportDiscord" type="text" placeholder="z. B. Ariee">
+        </div>
+        <div>
+          <label>Anliegen</label>
+          <textarea id="guildSupportMessage" placeholder="Beschreibe kurz dein Problem oder wobei du Hilfe brauchst."></textarea>
+        </div>
+        <div class="guild-support-action">
+          <button class="big-btn subtle" type="button" onclick="sendGuildSupportMail()">Support anfragen</button>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -1959,6 +2070,26 @@ function withCurrentGuildUrl(url){
 
 function currentActiveGuildSlug(){
   return String(activeGuildSlug || CURRENT_GUILD_SLUG || "lichtloot").trim().toLowerCase();
+}
+
+function sendGuildSupportMail(){
+  const discord=document.getElementById("guildSupportDiscord")?.value.trim() || "";
+  const message=document.getElementById("guildSupportMessage")?.value.trim() || "";
+  const subject="LichtLoot Support fuer neue Gilde";
+  const body=[
+    "Hallo Ariee,",
+    "",
+    "ich brauche Hilfe bei LichtLoot.",
+    "",
+    "Discord-Name: " + (discord || "-"),
+    "Gilde: " + (document.getElementById("loginGuildName")?.value.trim() || currentActiveGuildSlug() || "-"),
+    "",
+    "Anliegen:",
+    message || "-",
+    "",
+    "Viele Gruesse"
+  ].join("\n");
+  window.location.href="mailto:arieeerverlook@gmail.de?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);
 }
 
 function playerLoginStorageKey(slug){
@@ -2832,7 +2963,7 @@ async function createPlayerPinFromSheet(){
     }
 
     showPlayerPinValue(result.pin);
-    status.innerHTML='<span class="ok">✓ SpielerLogin wurde gespeichert.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    status.innerHTML='<span class="ok">✓ SpielerLogin wurde erstellt und wartet auf Freigabe.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<br>Einloggen kannst du dich, sobald die Gildenleitung deinen SpielerLogin freigegeben hat.';
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
 
