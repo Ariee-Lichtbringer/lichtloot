@@ -1131,12 +1131,22 @@ function renderClassPill(className){
   return `<span class="pill class-pill ${getClassColorClass(className)}">${escapeHtml(className)}</span>`;
 }
 
+function generalRequirementText(value){
+  const text=String(value || "").trim();
+  if(CURRENT_GUILD_SLUG!=="nachtloot") return text;
+  return text
+    .replace(/^(?:AQ20|ZG|MC|BWL|AQ40|Naxxramas|Naxx)(?:\s*\/\s*(?:AQ20|ZG|MC|BWL|AQ40|Naxxramas|Naxx))*\s*[·:]\s*/i,"")
+    .replace(/^(?:AQ20|ZG|MC|BWL|AQ40|Naxxramas|Naxx)\s+/i,"")
+    .trim();
+}
+
 function renderConsumables(){
   const panel=document.getElementById("panelConsumables");
   const classes=allConsumableClasses();
-  const rows=rulesData.consumables.filter(item => {
+  const visibleItems=rulesData.consumables.map(item => ({...item,displayName:generalRequirementText(item.name)}));
+  const rows=visibleItems.filter(item => {
     const classMatch=activeClass === "all" || item.classes.includes(activeClass);
-    const searchText=[item.name,item.required ? "wichtig" : "",item.optional ? "optional" : "",...item.classes].join(" ");
+    const searchText=[item.displayName,item.required ? "wichtig" : "",item.optional ? "optional" : "",...item.classes].join(" ");
     return classMatch && matchesSearch(searchText);
   });
   panel.innerHTML=`
@@ -1147,7 +1157,7 @@ function renderConsumables(){
         <tbody>
           ${rows.map(item => `
             <tr>
-              <td>${escapeHtml(item.name)}</td>
+              <td>${escapeHtml(item.displayName)}</td>
               <td><span class="pill ${item.required || item.status === "important" ? "required" : "optional"}">${item.required ? "verpflichtend" : item.status === "important" ? "wichtig" : "optional"}</span></td>
               <td><div class="pill-row">${item.classes.map(cls => renderClassPill(cls)).join("")}</div></td>
             </tr>
@@ -1171,7 +1181,7 @@ function renderEnchants(){
   rulesData.enchantments.rows.forEach(entryRow => {
     entryRow.forEach(entry => {
       if(activeClass !== "all" && entry.className !== activeClass) return;
-      const parsed=parseEnchantSlot(entry.text);
+      const parsed=parseEnchantSlot(generalRequirementText(entry.text));
       const searchText=[entry.className,parsed.slot,parsed.value].join(" ");
       if(!matchesSearch(searchText)) return;
       rows.push({className:entry.className,...parsed});
