@@ -1297,12 +1297,6 @@ async function loadRules(){
     currentGuildInfo=guild;
     const catalogResponse=await fetch("data/raidregeln.json?v=20260625");
     rulesCatalog=await catalogResponse.json();
-    let nachtlootDefaultRules=null;
-    if(CURRENT_GUILD_SLUG === "nachtloot"){
-      const nachtlootResponse=await fetch("data/nachtloot-raidregeln.json?v=20260729");
-      if(!nachtlootResponse.ok) throw new Error("Nachtloot-Regeln konnten nicht geladen werden.");
-      nachtlootDefaultRules=await nachtlootResponse.json();
-    }
     if(guild){
       document.title=`Raidregeln - ${guild.name || CURRENT_GUILD_SLUG}`;
       const logo=document.getElementById("guildLogo");
@@ -1320,16 +1314,8 @@ async function loadRules(){
       });
     }
     const storedRules=guild?.layout?.raidRules;
-    const storedRulesHaveContent=storedRules && typeof storedRules === "object" && (
-      Object.values(storedRules.general || {}).some(lines => Array.isArray(lines) && lines.length) ||
-      (storedRules.raids || []).some(raid => Array.isArray(raid.rules) && raid.rules.length) ||
-      (storedRules.consumables || []).length ||
-      (storedRules.enchantments?.rows || []).length
-    );
-    if(storedRulesHaveContent){
+    if(storedRules && typeof storedRules === "object"){
       rulesData=storedRules;
-    }else if(nachtlootDefaultRules){
-      rulesData=nachtlootDefaultRules;
     }else if(CURRENT_GUILD_SLUG !== "lichtloot"){
       rulesData={
         updatedAt:"",
