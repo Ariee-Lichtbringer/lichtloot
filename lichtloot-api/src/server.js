@@ -3214,162 +3214,6 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
 }
 
-async function mergeLegacyLichtbringerCharacters({ guildId, query: params = {} }) {
-  requireMasterCode(params.masterCode);
-  await ensureCharacterPoReleaseSchema();
-  await ensurePrioSchema();
-  await ensureP0PlusAuditSchema();
-
-  const apply = ["true", "1", "yes", "ja", "apply"].includes(
-    clean(params.apply || params.confirm).toLowerCase()
-  );
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    const legacyResult = await client.query(
-      `select c.id, c.name, c.server, c.player_id
-       from characters c
-       join players p on p.id = c.player_id
-       where p.guild_id = $1
-         and lower(trim(c.server)) = 'lichtbringer'
-       order by lower(trim(c.name)), c.created_at`,
-      [guildId]
-    );
-
-    const plan = [];
-    for (const source of legacyResult.rows) {
-      const targetResult = await client.query(
-        `select c.id, c.name, c.server, c.player_id, p.player_pin
-         from characters c
-         join players p on p.id = c.player_id
-         where p.guild_id = $1
-           and lower(trim(c.name)) = lower(trim($2))
-           and lower(trim(c.server)) = 'everlook'
-         order by
-           case when coalesce(p.approval_status, 'approved') = 'approved' then 0 else 1 end,
-           c.updated_at desc nulls last,
-           c.created_at desc
-         limit 2`,
-        [guildId, source.name]
-      );
-      if (targetResult.rows.length !== 1) {
-        plan.push({
-          name: source.name,
-          sourceCharacterId: source.id,
-          status: targetResult.rows.length ? "ambiguous" : "no-everlook-target",
-          targetCount: targetResult.rows.length
-        });
-        continue;
-      }
-      const target = targetResult.rows[0];
-      plan.push({
-        name: source.name,
-        sourceCharacterId: source.id,
-        sourcePlayerId: source.player_id,
-        targetCharacterId: target.id,
-        targetPlayerId: target.player_id,
-        status: "ready"
-      });
-    }
-
-    if (!apply) {
-      await client.query("rollback");
-      return {
-        success: true,
-        dryRun: true,
-        ready: plan.filter(entry => entry.status === "ready").length,
-        skipped: plan.filter(entry => entry.status !== "ready").length,
-        plan
-      };
-    }
-
-    const merged = [];
-    const skipped = plan.filter(entry => entry.status !== "ready");
-    for (const entry of plan.filter(entry => entry.status === "ready")) {
-      const sourceId = entry.sourceCharacterId;
-      const targetId = entry.targetCharacterId;
-
-      await client.query(
-        `insert into character_po_releases
-           (guild_id, character_id, raid_type, source, approved_by, approved_at, created_at, updated_at)
-         select guild_id, $2, raid_type, source, approved_by, approved_at, created_at, now()
-         from character_po_releases
-         where guild_id = $1 and character_id = $3
-         on conflict (guild_id, character_id, raid_type) do update
-           set approved_at = greatest(character_po_releases.approved_at, excluded.approved_at),
-               approved_by = coalesce(nullif(character_po_releases.approved_by, ''), excluded.approved_by),
-               updated_at = now()`,
-        [guildId, targetId, sourceId]
-      );
-      await client.query(
-        `insert into discord_player_links
-           (guild_id, discord_user_id, character_id, discord_name, source, created_at, updated_at)
-         select guild_id, discord_user_id, $2, discord_name, source, created_at, now()
-         from discord_player_links
-         where guild_id = $1 and character_id = $3
-         on conflict (guild_id, discord_user_id, character_id) do update
-           set discord_name = coalesce(nullif(discord_player_links.discord_name, ''), excluded.discord_name),
-               updated_at = now()`,
-        [guildId, targetId, sourceId]
-      );
-      await client.query(
-        `insert into raid_signups
-           (raid_id, character_id, status, note, role, source, discord_user_id, discord_name, created_at, updated_at)
-         select raid_id, $1, status, note, role, source, discord_user_id, discord_name, created_at, now()
-         from raid_signups
-         where character_id = $2
-         on conflict (raid_id, character_id) do update
-           set note = coalesce(nullif(raid_signups.note, ''), excluded.note),
-               discord_user_id = coalesce(nullif(raid_signups.discord_user_id, ''), excluded.discord_user_id),
-               discord_name = coalesce(nullif(raid_signups.discord_name, ''), excluded.discord_name),
-               updated_at = now()`,
-        [targetId, sourceId]
-      );
-      await client.query(
-        `insert into prios
-           (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment, bench, created_at, updated_at)
-         select raid_id, $1, p1_item_id, p2_item_id, p3_item_id, comment, bench, created_at, now()
-         from prios
-         where character_id = $2
-         on conflict (raid_id, character_id) do update
-           set p1_item_id = coalesce(prios.p1_item_id, excluded.p1_item_id),
-               p2_item_id = coalesce(prios.p2_item_id, excluded.p2_item_id),
-               p3_item_id = coalesce(prios.p3_item_id, excluded.p3_item_id),
-               comment = coalesce(nullif(prios.comment, ''), excluded.comment),
-               bench = coalesce(nullif(prios.bench, ''), excluded.bench),
-               updated_at = now()`,
-        [targetId, sourceId]
-      );
-
-      await client.query("update p0plus_points set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
-      await client.query("update p0plus_point_audit set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
-      await client.query("update p0_discord_signups set character_id = $1 where guild_id = $2 and character_id = $3", [targetId, guildId, sourceId]);
-      await client.query("delete from raid_signups where character_id = $1", [sourceId]);
-      await client.query("delete from prios where character_id = $1", [sourceId]);
-      await client.query("delete from discord_player_links where guild_id = $1 and character_id = $2", [guildId, sourceId]);
-      await client.query("delete from character_po_releases where guild_id = $1 and character_id = $2", [guildId, sourceId]);
-      await client.query("delete from characters where id = $1", [sourceId]);
-      await client.query(
-        `delete from players p
-         where p.id = $1
-           and p.guild_id = $2
-           and not exists (select 1 from characters c where c.player_id = p.id)`,
-        [entry.sourcePlayerId || null, guildId]
-      );
-      merged.push(entry);
-    }
-
-    await client.query("commit");
-    p0ReleaseCache = null;
-    return { success: true, dryRun: false, merged: merged.length, skipped: skipped.length, mergedEntries: merged, skippedEntries: skipped };
-  } catch (error) {
-    await client.query("rollback").catch(() => {});
-    throw error;
-  } finally {
-    client.release();
-  }
-}
-
 async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
@@ -3512,7 +3356,7 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
   let allowed = Boolean(result.rows[0]);
   if (!allowed) {
     const releasedCharacters = await query(
-      `select c.name, c.server
+      `select c.name
        from character_po_releases cpr
        join characters c on c.id = cpr.character_id
        where cpr.guild_id = $1
@@ -3520,14 +3364,8 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
       [guildId, raid]
     );
     const wantedName = normalizePoReleaseCharacterName(character.name);
-    const wantedServer = clean(character.server).toLowerCase();
     allowed = releasedCharacters.rows.some(row =>
       normalizePoReleaseCharacterName(row.name) === wantedName
-      && (
-        !wantedServer
-        || !clean(row.server)
-        || clean(row.server).toLowerCase() === wantedServer
-      )
     );
   }
   return {
@@ -5074,14 +4912,6 @@ function schedulePostIsDue({ postDate, postTime, force = false }) {
 
 async function processRaidHelperSchedules({ guildId, force = false, scheduleId = "" }) {
   await ensureRaidHelperScheduleSchema();
-  const guildIdentityResult = await query(
-    `select slug, name from guilds where id = $1 limit 1`,
-    [guildId]
-  );
-  const guildIdentity = guildIdentityResult.rows[0] || {};
-  const guildSlug = clean(guildIdentity.slug).toLowerCase();
-  const guildPrefix = guildSlug === "nachtloot" ? "NL" : "LL";
-  const guildDisplayName = clean(guildIdentity.name) || (guildSlug === "nachtloot" ? "Die Nachtwächter" : "Lichtbringer");
   const scopedScheduleId = clean(scheduleId);
   const scheduleValues = [guildId];
   let scheduleClause = "";
@@ -5106,17 +4936,15 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
       intervalWeeks: schedule.interval_weeks
     });
     const nextDateIso = formatDateIso(nextDate);
-    const prefixedScheduleRaidId = `${guildPrefix}-SCHEDULE-${schedule.id}`;
-    const legacyScheduleRaidId = `schedule-${schedule.id}`;
+    const externalRaidId = `schedule-${schedule.id}`;
     const existing = await query(
-      `select id, external_raid_id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
+      `select id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
        from raids
-       where guild_id = $1 and external_raid_id in ($2, $3)
+       where guild_id = $1 and external_raid_id = $2
        limit 1`,
-      [guildId, prefixedScheduleRaidId, legacyScheduleRaidId]
+      [guildId, externalRaidId]
     );
     const existingRaid = existing.rows[0] || null;
-    const externalRaidId = existingRaid ? (existingRaid.external_raid_id || legacyScheduleRaidId) : prefixedScheduleRaidId;
     const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
     const nextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
@@ -5164,7 +4992,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         raidName: schedule.title,
         raidDate: nextDateIso,
         raidTime: schedule.raid_time,
-        guild: guildDisplayName,
+        guild: "Lichtbringer",
         playerPin: dateChanged || !existingRaid?.raid_pin ? randomRaidCode(3) : existingRaid.raid_pin,
         leadPin: dateChanged || !existingRaid?.lead_pin ? randomRaidCode(4) : existingRaid.lead_pin,
         status: "geschlossen",
@@ -6920,7 +6748,6 @@ async function deletePoPostEntry({ guildId, query: params }) {
     deleted: result.rowCount || 0,
     deletedPrios,
     prioDeleteResults,
-    prioSyncSuccess: prioDeleteResults.every(item => item && item.success !== false),
     queued: payloads.size,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",
@@ -8437,245 +8264,6 @@ async function syncPoSignupPrios({ guildId, query: params }) {
     failed: errors.length,
     errors
   };
-}
-
-async function ensurePoRepairSnapshotsSchema() {
-  await query(`
-    create table if not exists po_repair_snapshots (
-      id uuid primary key default gen_random_uuid(),
-      guild_id uuid not null references guilds(id) on delete cascade,
-      raid_id uuid references raids(id) on delete set null,
-      mode text not null default 'audit',
-      created_by text not null default 'Gildenleitung',
-      snapshot jsonb not null default '{}'::jsonb,
-      result jsonb,
-      created_at timestamptz not null default now()
-    )
-  `);
-}
-
-function poRepairKey(player, item) {
-  return `${clean(player).toLowerCase().replace(/[^a-z0-9]/g, "")}|${normalizePoItemName(item).toLowerCase().replace(/[^a-z0-9]/g, "")}`;
-}
-
-async function loadPoRepairAudit(guildId, params = {}) {
-  await ensurePoPostEntriesSchema();
-  await ensurePrioSchema();
-  const raid = await findRaid(guildId, params);
-  if (!raid) {
-    const error = new Error("Raid wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
-  }
-  const raidPin = clean(raid.raid_pin || params.raidPin || params.prioPin);
-  const poResult = await query(
-    `select ppe.*,
-            approved_player.player_pin
-     from po_post_entries ppe
-     left join lateral (
-       select p.player_pin
-       from characters c
-       join players p on p.id = c.player_id
-       where p.guild_id = ppe.guild_id
-         and regexp_replace(lower(c.name), '[^a-z0-9]+', '', 'g') =
-             regexp_replace(lower(ppe.player_name), '[^a-z0-9]+', '', 'g')
-         and p.approval_status = 'approved'
-         and coalesce(p.is_blocked, false) = false
-       order by c.is_main desc, c.created_at asc
-       limit 1
-     ) approved_player on true
-     where ppe.guild_id = $1
-       and ppe.archived_at is null
-       and coalesce(ppe.config_only, false) = false
-       and (
-         ($2 <> '' and ppe.raid_pin = $2)
-         or ppe.post_key = $3
-       )
-     order by lower(ppe.player_name), lower(ppe.item_name), ppe.updated_at desc`,
-    [guildId, raidPin, clean(raid.external_raid_id || raid.id)]
-  );
-  const prioResult = await query(
-    `select pr.id, c.id as character_id, c.name as player, c.server, c.class_name,
-            i.id as item_id, i.name as item, p.player_pin, pr.comment
-     from prios pr
-     join characters c on c.id = pr.character_id
-     join players p on p.id = c.player_id and p.guild_id = $1
-     left join items i on i.id = pr.p1_item_id
-     where pr.raid_id = $2
-       and pr.p1_item_id is not null
-       and (
-         coalesce(pr.comment, '') ilike '%po-bot%'
-         or (pr.p1_item_id = pr.p2_item_id and pr.p2_item_id = pr.p3_item_id)
-       )
-     order by lower(c.name), lower(i.name)`,
-    [guildId, raid.id]
-  );
-  const poEntries = poResult.rows.map(row => ({
-    id: row.id,
-    postKey: row.post_key || "",
-    sourceChannelId: row.source_channel_id || "",
-    targetChannelId: row.target_channel_id || "",
-    discordMessageId: row.discord_message_id || "",
-    player: row.player_name || "",
-    server: row.server || "",
-    className: row.class_name || "",
-    item: normalizePoItemName(row.item_name || ""),
-    approvalStatus: row.approval_status || "pending",
-    playerPin: row.player_pin || ""
-  }));
-  const lichtlootPrios = prioResult.rows.map(row => ({
-    id: row.id,
-    characterId: row.character_id,
-    itemId: row.item_id,
-    player: row.player || "",
-    server: row.server || "",
-    className: row.class_name || "",
-    item: normalizePoItemName(row.item || ""),
-    playerPin: row.player_pin || ""
-  }));
-  const approvedPo = poEntries.filter(entry => entry.approvalStatus === "approved");
-  const poKeys = new Set(approvedPo.map(entry => poRepairKey(entry.player, entry.item)));
-  const prioKeys = new Set(lichtlootPrios.map(entry => poRepairKey(entry.player, entry.item)));
-  return {
-    raid,
-    raidPin,
-    poEntries,
-    approvedPo,
-    lichtlootPrios,
-    matched: approvedPo.filter(entry => prioKeys.has(poRepairKey(entry.player, entry.item))),
-    discordOnly: approvedPo.filter(entry => !prioKeys.has(poRepairKey(entry.player, entry.item))),
-    lichtlootOnly: lichtlootPrios.filter(entry => !poKeys.has(poRepairKey(entry.player, entry.item))),
-    pending: poEntries.filter(entry => entry.approvalStatus !== "approved")
-  };
-}
-
-function publicPoRepairAudit(audit) {
-  return {
-    success: true,
-    raid: {
-      id: raidPublicId(audit.raid),
-      name: audit.raid.raid_name || audit.raid.raid_type || "Raid",
-      type: audit.raid.raid_type || "",
-      date: audit.raid.raid_date || "",
-      time: audit.raid.raid_time || "",
-      raidPin: audit.raidPin
-    },
-    counts: {
-      discord: audit.approvedPo.length,
-      lichtloot: audit.lichtlootPrios.length,
-      matched: audit.matched.length,
-      discordOnly: audit.discordOnly.length,
-      lichtlootOnly: audit.lichtlootOnly.length,
-      pending: audit.pending.length
-    },
-    discordOnly: audit.discordOnly,
-    lichtlootOnly: audit.lichtlootOnly,
-    pending: audit.pending
-  };
-}
-
-async function auditPoRaid({ guild, guildId, query: params }) {
-  requireMasterCodeForGuild(guild, params.masterCode);
-  return publicPoRepairAudit(await loadPoRepairAudit(guildId, params));
-}
-
-async function repairPoRaid({ guild, guildId, query: params }) {
-  requireMasterCodeForGuild(guild, params.masterCode);
-  const mode = clean(params.mode).toLowerCase();
-  if (!["discord", "lichtloot"].includes(mode)) {
-    const error = new Error("Reparaturquelle muss Discord oder LichtLoot sein.");
-    error.statusCode = 400;
-    throw error;
-  }
-  await ensurePoRepairSnapshotsSchema();
-  const before = await loadPoRepairAudit(guildId, params);
-  const snapshotResult = await query(
-    `insert into po_repair_snapshots (guild_id, raid_id, mode, created_by, snapshot)
-     values ($1, $2, $3, $4, $5::jsonb)
-     returning id, created_at`,
-    [
-      guildId,
-      before.raid.id,
-      mode,
-      clean(params.reviewer || params.createdBy || "Gildenleitung"),
-      JSON.stringify(publicPoRepairAudit(before))
-    ]
-  );
-  const repaired = [];
-  const failed = [];
-  const refreshPayloads = [];
-  if (mode === "discord") {
-    for (const entry of before.discordOnly) {
-      try {
-        if (!entry.playerPin) throw new Error("Kein freigegebener SpielerLogin gefunden.");
-        await savePoSignupPrioFromBot({
-          guildId,
-          query: {
-            ...params,
-            queueToken: "",
-            postKey: entry.postKey,
-            raidId: raidPublicId(before.raid),
-            raidPin: before.raidPin,
-            prioPin: before.raidPin,
-            playerPin: entry.playerPin,
-            player: entry.player,
-            server: entry.server,
-            className: entry.className,
-            item: entry.item,
-            source: "po-repair-discord"
-          }
-        });
-        repaired.push({ player: entry.player, item: entry.item });
-      } catch (error) {
-        failed.push({ player: entry.player, item: entry.item, error: error.message || String(error) });
-      }
-    }
-  } else {
-    const client = await pool.connect();
-    try {
-      await client.query("begin");
-      for (const entry of before.lichtlootOnly) {
-        try {
-          const payloads = await syncPoPostEntryFromPrio(client, guildId, {
-            raid: before.raid,
-            character: {
-              id: entry.characterId,
-              name: entry.player,
-              server: entry.server,
-              class_name: entry.className
-            },
-            item: { id: entry.itemId, name: entry.item },
-            source: "po_repair_lichtloot"
-          });
-          refreshPayloads.push(...payloads);
-          repaired.push({ player: entry.player, item: entry.item });
-        } catch (error) {
-          failed.push({ player: entry.player, item: entry.item, error: error.message || String(error) });
-        }
-      }
-      await client.query("commit");
-    } catch (error) {
-      await client.query("rollback").catch(() => {});
-      throw error;
-    } finally {
-      client.release();
-    }
-    await enqueuePoPostRefreshPayloads(guildId, refreshPayloads, "po_repair_lichtloot");
-  }
-  const after = await loadPoRepairAudit(guildId, params);
-  const result = {
-    success: failed.length === 0,
-    mode,
-    snapshotId: snapshotResult.rows[0]?.id || "",
-    repaired,
-    failed,
-    audit: publicPoRepairAudit(after)
-  };
-  await query(
-    `update po_repair_snapshots set result = $2::jsonb where id = $1`,
-    [result.snapshotId, JSON.stringify(result)]
-  );
-  return result;
 }
 
 function commentMeta(comment) {
@@ -13731,15 +13319,6 @@ async function deleteRaid({ guildId, query: params }) {
     throw error;
   }
 
-  const scheduleMatch = raidId.match(/^(?:(?:NL|LL)-)?SCHEDULE-([0-9a-f-]{36})$/i);
-  if (scheduleMatch && isUuid(scheduleMatch[1])) {
-    await ensureRaidHelperScheduleSchema();
-    await query(
-      `delete from raid_helper_schedules where guild_id = $1 and id = $2`,
-      [guildId, scheduleMatch[1]]
-    );
-  }
-
   const result = await query(
     `delete from raids
      where guild_id = $1
@@ -13826,17 +13405,9 @@ async function createRandomRaid({ guildId, query: params }) {
 async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
-  const raidGuildResult = await query(
-    `select slug, name from guilds where id = $1 limit 1`,
-    [guildId]
-  );
-  const raidGuild = raidGuildResult.rows[0] || {};
-  const raidGuildSlug = clean(raidGuild.slug).toLowerCase();
-  const raidGuildPrefix = raidGuildSlug === "nachtloot" ? "NL" : "LL";
-  const raidGuildName = clean(raidGuild.name) || (raidGuildSlug === "nachtloot" ? "Die Nachtwächter" : "Lichtbringer");
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
-  const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidGuildPrefix}-${raidType.toUpperCase()}-${Date.now()}`;
+  const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
   const raidTime = clean(params.raidTime || params.uhrzeit) || null;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
@@ -13928,7 +13499,7 @@ async function createRaidRecord({ guildId, query: params }) {
       prioPin || null,
       leadPin || null,
       raidTime,
-      raidGuildName,
+      clean(params.guildName || params.displayGuild || params.gilde || params.guild) || null,
       clean(params.playerLink) || null,
       status,
       p0plusFreigabe,
@@ -16238,7 +15809,6 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
 
   const raidType = normalizeRaidType(params.raid);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
-  const raid = await findRaid(guildId, params);
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
   const itemName = clean(params.item);
@@ -16285,29 +15855,25 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, character.id, item.id]
       );
       deleted = result.rowCount;
-      await insertP0PlusAudit(client, {
-        guildId,
-        characterId: character.id,
-        itemId: item.id,
-        raidId: raid?.id || null,
-        raidType,
-        playerName: character.name || player,
-        server: character.server || server,
-        itemName: item.name || itemName,
-        oldPoints,
-        newPoints: 0,
-        action: "item_received_clear",
-        source: "PO item erhalten",
-        note: "PO+ Eintrag entfernt und für die Übertragung dieses Raids gesperrt, weil das Item erhalten wurde."
-      });
+      if (deleted || oldPoints) {
+        await insertP0PlusAudit(client, {
+          guildId,
+          characterId: character.id,
+          itemId: item.id,
+          raidType,
+          playerName: character.name || player,
+          server: character.server || server,
+          itemName: item.name || itemName,
+          oldPoints,
+          newPoints: 0,
+          action: "item_received_clear",
+          source: "PO item erhalten",
+          note: "PO+ Eintrag entfernt, weil Item erhalten wurde."
+        });
+      }
     }
     await client.query("commit");
-    return {
-      success: true,
-      deleted,
-      transferBlocked: Boolean(item),
-      raidId: raidPublicId(raid)
-    };
+    return { success: true, deleted };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -16789,27 +16355,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
-     where ${raidClause}
-       and not exists (
-         select 1
-         from p0plus_point_audit received
-         where received.guild_id = $1
-           and received.action = 'item_received_clear'
-           and received.character_id = pr.character_id
-           and (
-             received.item_id = pr.p1_item_id
-             or regexp_replace(lower(received.item_name), '[^a-z0-9]+', '', 'g') =
-                regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
-           )
-           and (
-             received.raid_id = r.id
-             or (
-               received.raid_id is null
-               and lower(coalesce(received.raid_type, '')) = lower($2)
-               and received.created_at >= r.raid_date::timestamp
-             )
-           )
-       )`,
+     where ${raidClause}`,
     values
   );
 
@@ -19274,10 +18820,6 @@ app.get("/api/apps-script", async (req, res, next) => {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
     }
-    if (action === "guildMergeLegacyLichtbringerCharacters") {
-      const merged = await mergeLegacyLichtbringerCharacters({ guildId: guild.id, query: req.query });
-      return res.json({ ...merged, guild: guild.slug });
-    }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
@@ -19357,16 +18899,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildSyncPoSignupPrios") {
       const synced = await syncPoSignupPrios({ guildId: guild.id, query: req.query });
       return res.json({ ...synced, guild: guild.slug });
-    }
-
-    if (action === "guildAuditPoRaid") {
-      const audited = await auditPoRaid({ guild, guildId: guild.id, query: req.query });
-      return res.json({ ...audited, guild: guild.slug });
-    }
-
-    if (action === "guildRepairPoRaid") {
-      const repaired = await repairPoRaid({ guild, guildId: guild.id, query: req.query });
-      return res.json({ ...repaired, guild: guild.slug });
     }
 
     if (action === "deletePrio" || action === "deletePlayerPrio") {
@@ -19512,6 +19044,23 @@ app.get("/api/apps-script", async (req, res, next) => {
         server: req.query.server,
         className: req.query.className
       });
+      if (normalizePlayerApprovalStatus(result.player.approval_status) !== "approved") {
+        await enqueueBotUpdate({
+          guildId: guild.id,
+          type: "player_login_approval_notice",
+          payload: {
+            guildSlug: guild.slug,
+            guildName: guild.name || guild.guild_name || guild.slug,
+            playerPin: result.player.player_pin,
+            character: result.character?.name || clean(req.query.char),
+            server: result.character?.server || clean(req.query.server),
+            className: result.character?.className || result.character?.class_name || clean(req.query.className),
+            createdAt: result.player.created_at || new Date().toISOString()
+          }
+        }).catch(error => {
+          console.warn("SpielerLogin-Freigabehinweis konnte nicht queued werden:", error.message || error);
+        });
+      }
       return res.json({
         success: true,
         guild: guild.slug,
@@ -19745,10 +19294,6 @@ app.post("/api/apps-script", async (req, res, next) => {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
     }
-    if (action === "guildMergeLegacyLichtbringerCharacters") {
-      const merged = await mergeLegacyLichtbringerCharacters({ guildId: guild.id, query: postParams });
-      return res.json({ ...merged, guild: guild.slug });
-    }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: postParams });
@@ -19848,16 +19393,6 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSyncPoSignupPrios") {
       const synced = await syncPoSignupPrios({ guildId: guild.id, query: postParams });
       return res.json({ ...synced, guild: guild.slug });
-    }
-
-    if (action === "guildAuditPoRaid") {
-      const audited = await auditPoRaid({ guild, guildId: guild.id, query: postParams });
-      return res.json({ ...audited, guild: guild.slug });
-    }
-
-    if (action === "guildRepairPoRaid") {
-      const repaired = await repairPoRaid({ guild, guildId: guild.id, query: postParams });
-      return res.json({ ...repaired, guild: guild.slug });
     }
 
     if (action === "saveRaidSignup") {
