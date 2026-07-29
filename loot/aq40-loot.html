@@ -4,16 +4,11 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="loot-side-navigation.css">
-<script src="loot-side-navigation.js" defer></script>
-<script src="nachtloot-recruit-prio.js" defer></script>
-<script src="p0-release-guard.js" defer></script>
 <title>Lichtloot - Ahn'Qiraj 40</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-.start-sidebar,.start-side-nav,.legacy-navigation{display:none!important}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq40.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
@@ -897,11 +892,6 @@ body.random-prio .tooltip-p0{
   background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
   color:var(--gold);
 }
-.selected-po-releases{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;min-height:22px}
-.selected-po-releases-title{width:100%;color:#4ade80;font-size:10px;font-weight:900}
-.selected-po-release{padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.72);color:#94a3b8;font-size:10px;font-weight:900}
-.selected-po-release.active{border-color:rgba(34,197,94,.45);background:rgba(22,101,52,.22);color:#86efac}
-.selected-recruit-status{width:100%;color:#bfdbfe;font-size:11px;font-weight:900}
 
 .own-selection-card{
   grid-area:selection;
@@ -1803,7 +1793,7 @@ body.random-prio .tooltip-p0{
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
+  <a class="nav-btn" href="../start.html">Startseite</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -1862,7 +1852,6 @@ body.random-prio .tooltip-p0{
           <div id="selectedCharacterDrop" class="character-dropzone" ondragover="allowCharacterDrop(event)" ondrop="dropCharacterOnZone(event)">
             Charakter aus „Mein LichtLoot“ hierher ziehen oder unten anklicken.
           </div>
-          <div id="selectedCharacterPoReleases" class="selected-po-releases"></div>
         </div>
       </div>
     </div>
@@ -2092,6 +2081,7 @@ body.random-prio .tooltip-p0{
 <script>
 const RAID_NAME = "aq40";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+const EMERGENCY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
@@ -3664,6 +3654,50 @@ async function submitPrioWithPin(savePin, oldPin){
   return data;
 }
 
+function emergencyPrioPayload(){
+  const p1=document.getElementById("p1").value;
+  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
+  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const isP0Plus=SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) && p1 && p1 === p2 && p2 === p3;
+  let playerPin=document.getElementById("playerPin").value.trim();
+  if(!playerPin){
+    playerPin="NF-"+Math.random().toString(36).slice(2,7).toUpperCase();
+    document.getElementById("playerPin").value=playerPin;
+  }
+  return {
+    action:"saveEmergencyPrio", guild:currentGuildSlug(), raid:RAID_NAME,
+    raidId:currentRaidId || "", raidPin:document.getElementById("raidPin").value.trim(),
+    raidDate:currentRaidDate || "", raidTime:currentRaidTime || "", playerPin,
+    player:document.getElementById("playerName").value.trim(),
+    server:document.getElementById("playerServer").value,
+    className:document.getElementById("playerClass").value,
+    p1, p2, p3, p0Plus:isP0Plus ? "ja" : "nein", submittedAt:new Date().toISOString()
+  };
+}
+
+async function saveEmergencyPrio(){
+  const entry=emergencyPrioPayload();
+  const storageKey="lichtloot_emergency_prios_v1";
+  let entries=[];
+  try{ entries=JSON.parse(localStorage.getItem(storageKey) || "[]"); }catch(error){}
+  const key=[entry.guild,entry.raidId || entry.raidPin || (entry.raidDate+"|"+entry.raidTime),entry.raid,entry.player,entry.server]
+    .map(value=>String(value || "").trim().toLowerCase()).join("|");
+  const existingIndex=entries.findIndex(item=>item.entryKey === key);
+  const stored={...entry,entryKey:key,status:"offen"};
+  if(existingIndex >= 0) entries[existingIndex]=stored; else entries.push(stored);
+  localStorage.setItem(storageKey,JSON.stringify(entries));
+
+  const url=EMERGENCY_APPS_SCRIPT_URL+"?"+new URLSearchParams(entry).toString()+"&t="+Date.now();
+  try{
+    await fetch(url,{mode:"no-cors",cache:"no-store"});
+  }catch(error){
+    console.warn("Google-Notfallspeicher nicht erreichbar; lokale Kopie bleibt erhalten.",error);
+  }
+  autoSaveDraft();
+  saveCharacterProfile();
+  return entry;
+}
+
 function isPinConflictError(result){
   const message=String((result && (result.error || result.message)) || "").toLowerCase();
 
@@ -3707,25 +3741,36 @@ async function savePrio(){
     return;
   }
 
-  await loadPublishedPrios();
+  try {
+    await Promise.race([
+      loadPublishedPrios(),
+      new Promise((resolve) => setTimeout(resolve, 2500))
+    ]);
+  } catch (error) {
+    console.warn("Prio-Liste ist im Notfallmodus nicht erreichbar.", error);
+  }
 
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await ensurePlayerPinForSave();
+    const pinInfo = await Promise.race([
+      ensurePlayerPinForSave(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
     if(!pinInfo.success){
-      status.innerHTML=`<span class="bad">${safe(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.")}</span>`;
-      return;
+      throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
 
     const playerPin = pinInfo.pin;
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
-    let result=await submitPrioWithPin(playerPin, "");
+    let result=await Promise.race([
+      submitPrioWithPin(playerPin, ""),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
 
     if(result.error){
-      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
-      return;
+      throw new Error(result.error);
     }
 
     autoSaveDraft();
@@ -3736,11 +3781,8 @@ async function savePrio(){
       Server:server,
       Klasse:playerClass,
       P1:p1,
-      P1ItemId:getSelectedPrioItemId("p1"),
       P2:p2,
-      P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
       P3:p3,
-      P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
       P0Plus:isP0Plus ? "ja" : "nein",
       P0Item:isP0Plus ? p1 : ""
     });
@@ -3762,8 +3804,17 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
-    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    try{
+      const emergency=await saveEmergencyPrio();
+      status.innerHTML=
+        `<span class="warn">⚠ Notfallmodus aktiv.</span><br>`+
+        `Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>`+
+        `Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;
+    }catch(emergencyError){
+      console.error(emergencyError);
+      const message=(emergencyError && emergencyError.message) ? emergencyError.message : "Notfallspeicherung fehlgeschlagen.";
+      status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    }
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -4437,16 +4488,15 @@ let lichtlootLoggedInCharacters = [];
 let lichtlootSelectedCharacter = null;
 
 function getStoredLichtLootPlayerPin(){
-  const guild=String(new URLSearchParams(location.search).get("guild") || "lichtloot")
-    .trim().toLowerCase().replace(/[^a-z0-9_-]/g,"") || "lichtloot";
-  const keys=["lichtlootPlayerPin_"+guild,"lichtlootSharedPlayerPin","lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
-  for(const storage of [localStorage,sessionStorage]){
-    for(const key of keys){
-      const value=String(storage.getItem(key) || "").trim();
-      if(value) return value.toUpperCase();
-    }
-  }
-  return "";
+  return String(
+    localStorage.getItem("lichtlootPlayerPin") ||
+    localStorage.getItem("lichtLootPlayerPin") ||
+    localStorage.getItem("spielerPin") ||
+    sessionStorage.getItem("lichtlootPlayerPin") ||
+    sessionStorage.getItem("lichtLootPlayerPin") ||
+    sessionStorage.getItem("spielerPin") ||
+    ""
+  ).trim().toUpperCase();
 }
 
 function getLastSelectedCharacterStorageKey(){
@@ -4567,7 +4617,6 @@ function selectLoggedInCharacter(index){
   }
 
   renderCharacterButtons();
-  loadSelectedCharacterPoReleases(char);
   loadPlayerData();
   autoSaveDraft();
   if(typeof renderCurrentPrios === "function"){
@@ -4577,26 +4626,6 @@ function selectLoggedInCharacter(index){
   const status=document.getElementById("playerStatus");
   if(status){
     status.innerHTML='<span class="ok">✓ Charakter ausgewählt: '+safe(char.name)+'</span><br>Gib jetzt nur noch den Prio-PIN ein und wähle deine Items.';
-  }
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(typeof resetCurrentRaidPoReleaseGuard==="function") resetCurrentRaidPoReleaseGuard();
-  if(!box || !char || !pin) return;
-  box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
-  try{
-    const query=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),pin,char:char.name || "",server:char.server || "",t:Date.now()});
-    const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
-    const data=await response.json();
-    if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
-    if(typeof applyCurrentRaidPoReleaseGuard==="function") applyCurrentRaidPoReleaseGuard(Boolean(data.poReleases?.[RAID_NAME]));
-    if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
-    box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
-  }catch(error){
-    box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
   }
 }
 
@@ -4802,6 +4831,31 @@ const GEAR_CLASS_INFO={
   druid:{label:"Druide",trees:["Gleichgewicht","Wilder Kampf","Wiederherstellung"],baseHealth:1334,baseMana:1000,resource:"Mana"}
 };
 
+// Level-60-Grundattribute (Human als Referenz) plus die in Classic konstanten
+// Volksunterschiede. So bleiben Itemboni und Grundwerte getrennt nachvollziehbar.
+const GEAR_CLASS_BASE_ATTRIBUTES={
+  warrior:{str:100,agi:60,sta:90,int:30,spi:50},
+  paladin:{str:85,agi:45,sta:80,int:70,spi:75},
+  hunter:{str:55,agi:100,sta:70,int:65,spi:70},
+  rogue:{str:65,agi:125,sta:65,int:30,spi:50},
+  priest:{str:35,agi:35,sta:45,int:110,spi:120},
+  shaman:{str:70,agi:55,sta:75,int:85,spi:95},
+  mage:{str:30,agi:35,sta:40,int:125,spi:110},
+  warlock:{str:35,agi:40,sta:65,int:110,spi:100},
+  druid:{str:60,agi:55,sta:70,int:100,spi:110}
+};
+
+const GEAR_RACE_INFO={
+  human:{label:"Mensch",mods:{str:0,agi:0,sta:0,int:0,spi:0}},
+  dwarf:{label:"Zwerg",mods:{str:2,agi:-4,sta:3,int:-1,spi:-1}},
+  nightelf:{label:"Nachtelf",mods:{str:-3,agi:5,sta:-1,int:0,spi:0}},
+  gnome:{label:"Gnom",mods:{str:-5,agi:3,sta:-5,int:5,spi:0}},
+  orc:{label:"Orc",mods:{str:3,agi:-3,sta:3,int:-3,spi:0}},
+  undead:{label:"Untoter",mods:{str:-1,agi:-2,sta:1,int:-2,spi:4}},
+  tauren:{label:"Taure",mods:{str:5,agi:-5,sta:2,int:-4,spi:2}},
+  troll:{label:"Troll",mods:{str:1,agi:2,sta:1,int:-4,spi:0}}
+};
+
 function normalizeGearClassKey(value){
   const key=String(value || "")
     .toLowerCase()
@@ -4825,6 +4879,38 @@ function normalizeGearClassKey(value){
 function gearClassInfo(meta){
   const key=normalizeGearClassKey((meta && (meta.className || meta.classSlug || meta.class)) || "");
   return GEAR_CLASS_INFO[key] || {label:key ? key : "Klasse",trees:["Baum 1","Baum 2","Baum 3"],baseHealth:1200,baseMana:0,resource:""};
+}
+
+function normalizeGearRaceKey(value){
+  const key=String(value || "").toLowerCase()
+    .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
+    .replace(/[^a-z]+/g,"");
+  if(key.includes("human") || key.includes("mensch")) return "human";
+  if(key.includes("dwarf") || key.includes("zwerg")) return "dwarf";
+  if(key.includes("nightelf") || key.includes("nachtelf")) return "nightelf";
+  if(key.includes("gnome") || key.includes("gnom")) return "gnome";
+  if(key.includes("orc")) return "orc";
+  if(key.includes("undead") || key.includes("untot")) return "undead";
+  if(key.includes("tauren") || key.includes("taure")) return "tauren";
+  if(key.includes("troll")) return "troll";
+  return "";
+}
+
+function gearRaceInfo(meta){
+  const key=normalizeGearRaceKey(meta && (meta.raceSlug || meta.raceName || meta.race));
+  return Object.assign({key:key}, GEAR_RACE_INFO[key] || {label:"Volk wählen",mods:{}});
+}
+
+function gearBaseAttributes(meta){
+  const classKey=normalizeGearClassKey(meta && (meta.className || meta.classSlug || meta.class));
+  const base=GEAR_CLASS_BASE_ATTRIBUTES[classKey] || {str:0,agi:0,sta:0,int:0,spi:0};
+  const race=gearRaceInfo(meta);
+  return Object.fromEntries(["str","agi","sta","int","spi"].map(key=>[key,gearStatNumber(base[key])+gearStatNumber(race.mods[key])]));
+}
+
+function setGearPlannerRace(value){
+  currentGearPlannerState.meta=Object.assign({},currentGearPlannerState.meta || {},{raceSlug:value});
+  renderGearPlannerEquipment();
 }
 
 let currentGearPlannerState={
@@ -5139,6 +5225,7 @@ async function importWowheadGearPlannerFromInput(){
       server:state.raceSlug || "",
       className:state.classSlug || "",
       classSlug:state.classSlug || "",
+      raceSlug:state.raceSlug || "",
       source:"Wowhead + LichtLoot",
       reportTitle:"Gear Planner",
       fightName:state.classSlug ? state.classSlug + (state.level ? " Level " + state.level : "") : "",
@@ -5443,7 +5530,7 @@ function gearStatLines(item){
   if(!item) return lines;
 
   if(Array.isArray(item.stats) && item.stats.length){
-    item.stats.forEach(line => lines.push(String(line || "")));
+    item.stats.forEach(line => String(line || "").split("|").forEach(part=>lines.push(part.trim())));
   }else{
     String(item.tooltipText || "")
       .split("|")
@@ -5452,7 +5539,7 @@ function gearStatLines(item){
       .forEach(line => lines.push(line));
   }
 
-  if(item.equip) lines.push(String(item.equip));
+  if(item.equip) String(item.equip).split("|").forEach(part=>lines.push(part.trim()));
   gearEnchantLines(item).forEach(line => lines.push(line));
 
   return lines;
@@ -5467,6 +5554,7 @@ function normalizeGearEnchantText(value){
   const id=value.id || value.enchantment_id || value.enchantmentId || value.spellID || value.spellId || "";
   const fallback=id ? WCL_ENCHANT_FALLBACKS[String(id)] : null;
   const name=value.name || value.Name || value.enchantmentName || value.spellName || "";
+  if(name && fallback && fallback.effect) return name+": "+fallback.effect;
   if(name) return name;
   if(fallback) return fallback.name+(fallback.effect ? ": "+fallback.effect : "");
   return id ? "Verzauberung #"+String(id) : "";
@@ -5476,7 +5564,10 @@ function gearEnchantLines(item){
   const lines=[];
   if(!item) return lines;
 
-  const permanent=normalizeGearEnchantText(item.permanentEnchantName || item.permanentEnchant || item.enchant || item.enchantName);
+  const permanent=normalizeGearEnchantText({
+    id:item.permanentEnchant || item.enchant || "",
+    name:item.permanentEnchantName || item.enchantName || ""
+  });
   if(permanent) lines.push("Verzauberung: " + permanent);
 
   (Array.isArray(item.enchantments) ? item.enchantments : []).forEach(enchant=>{
@@ -5592,8 +5683,8 @@ function applyGearStatLine(stats,rawLine,options){
 
   const line=gearCalculationLineText(originalLine);
 
-  const attrMatch=line.match(/\+?\s*(\d+)\s*(Ausdauer|Intelligenz|Willenskraft|Stärke|Staerke|Beweglichkeit)/i);
-  if(attrMatch){
+  const attrMatches=line.matchAll(/\+?\s*(\d+)\s*(Ausdauer|Intelligenz|Willenskraft|Stärke|Staerke|Beweglichkeit)/gi);
+  for(const attrMatch of attrMatches){
     const label=attrMatch[2].toLowerCase();
     if(label.includes("ausdauer")) addGearStat(stats,"sta",attrMatch[1]);
     else if(label.includes("intelligenz")) addGearStat(stats,"int",attrMatch[1]);
@@ -5617,7 +5708,7 @@ function applyGearStatLine(stats,rawLine,options){
   const attackPowerMatch=line.match(/Angriffskraft[^0-9+]*(?:\+|um)?\s*(\d+)/i);
   if(attackPowerMatch) addGearStat(stats,"attackPower",attackPowerMatch[1]);
 
-  const healMatch=line.match(/Heilung[^0-9]*(?:um bis zu|um)?\s*(\d+)/i);
+  const healMatch=!/Schaden und Heilung/i.test(line) && line.match(/Heilung[^0-9]*(?:um bis zu|um)?\s*(\d+)/i);
   if(healMatch) addGearStat(stats,"healing",healMatch[1]);
 
   const dmgHealMatch=line.match(/Schaden und Heilung[^0-9]*(?:um bis zu|um)?\s*(\d+)/i);
@@ -5632,11 +5723,12 @@ function applyGearStatLine(stats,rawLine,options){
   const mp5Match=line.match(/(?:Stellt.*?(\d+).*?Mana.*?5\s*Sek|(\d+).*?Mana.*?5\s*Sek)/i);
   if(mp5Match) addGearStat(stats,"mp5",mp5Match[1] || mp5Match[2]);
 
-  const critMatch=line.match(/Kritisch[^0-9]*(\d+(?:[,.]\d+)?)\s*%/i);
-  if(critMatch) addGearStat(stats,"spellCrit",critMatch[1]);
+  const isSpellLine=/Zauber|magisch/i.test(line);
+  const critMatch=line.match(/kritisch(?:en|e|er)?[^0-9]*(\d+(?:[,.]\d+)?)\s*%/i);
+  if(critMatch) addGearStat(stats,isSpellLine ? "spellCrit" : "meleeCrit",critMatch[1]);
 
-  const hitMatch=line.match(/Trefferchance[^0-9]*(\d+(?:[,.]\d+)?)\s*%/i);
-  if(hitMatch) addGearStat(stats,"spellHit",hitMatch[1]);
+  const hitMatch=line.match(/(?:Trefferchance|zu treffen)[^0-9]*(\d+(?:[,.]\d+)?)\s*%/i);
+  if(hitMatch) addGearStat(stats,isSpellLine ? "spellHit" : "meleeHit",hitMatch[1]);
 
   const meleeCritMatch=line.match(/(?:kritische Trefferchance.*?Nahkampf|Nahkampfkrit)[^0-9]*(\d+(?:[,.]\d+)?)\s*%/i);
   if(meleeCritMatch) addGearStat(stats,"meleeCrit",meleeCritMatch[1]);
@@ -5765,21 +5857,28 @@ function gearTalentSpecText(talents,meta){
 
 function deriveGearStats(stats,meta){
   const info=gearClassInfo(meta);
+  const raceInfo=gearRaceInfo(meta);
+  const base=gearBaseAttributes(meta);
+  const totalAttributes=Object.fromEntries(["str","agi","sta","int","spi"].map(key=>[key,gearStatNumber(base[key])+gearStatNumber(stats[key])]));
   const defenseTotal=300 + gearStatNumber(stats.defense);
   const defenseBonus=Math.max(0, defenseTotal - 300);
   const miss=5 + defenseBonus * 0.04;
-  const dodge=5 + defenseBonus * 0.04 + gearStatNumber(stats.agi) / 200;
+  const dodge=5 + defenseBonus * 0.04 + gearStatNumber(totalAttributes.agi) / 200;
   const avoidance=miss + dodge;
-  const meleeCrit=5 + gearStatNumber(stats.agi) / 80 + gearStatNumber(stats.meleeCrit);
-  const spellCrit=gearStatNumber(stats.spellCrit) || (gearStatNumber(stats.int) / 59.5);
-  const meleeHit=gearStatNumber(stats.meleeHit) || gearStatNumber(stats.spellHit);
+  const meleeCrit=5 + gearStatNumber(totalAttributes.agi) / 80 + gearStatNumber(stats.meleeCrit);
+  const spellCrit=gearStatNumber(stats.spellCrit) + gearStatNumber(totalAttributes.int) / 59.5;
+  const meleeHit=gearStatNumber(stats.meleeHit);
   const rangedCrit=gearStatNumber(stats.rangedCrit) || meleeCrit;
   const rangedHit=gearStatNumber(stats.rangedHit) || meleeHit;
 
   return Object.assign({}, stats, {
     classInfo:info,
-    healthTotal:info.baseHealth + gearStatNumber(stats.sta) * 10 + gearStatNumber(stats.health),
-    manaTotal:info.baseMana ? info.baseMana + gearStatNumber(stats.int) * 15 + gearStatNumber(stats.mana) : 0,
+    raceInfo:raceInfo,
+    baseAttributes:base,
+    itemAttributes:{str:stats.str,agi:stats.agi,sta:stats.sta,int:stats.int,spi:stats.spi},
+    str:totalAttributes.str,agi:totalAttributes.agi,sta:totalAttributes.sta,int:totalAttributes.int,spi:totalAttributes.spi,
+    healthTotal:info.baseHealth + (totalAttributes.sta <= 20 ? totalAttributes.sta : 20+(totalAttributes.sta-20)*10) + gearStatNumber(stats.health),
+    manaTotal:info.baseMana ? info.baseMana + (totalAttributes.int <= 20 ? totalAttributes.int : 20+(totalAttributes.int-20)*15) + gearStatNumber(stats.mana) : 0,
     defenseTotal:defenseTotal,
     miss:miss,
     dodge:dodge,
@@ -5789,7 +5888,7 @@ function deriveGearStats(stats,meta){
     avoidance:avoidance,
     attackRating:300,
     rangedRating:300,
-    attackPower:gearStatNumber(stats.attackPower) || Math.max(0, gearStatNumber(stats.str) - 10),
+    attackPower:gearStatNumber(stats.attackPower) + Math.max(0, gearStatNumber(totalAttributes.str) - 10) * 2,
     meleeDamage:0,
     meleeCrit:meleeCrit,
     meleeHit:meleeHit,
@@ -5805,6 +5904,7 @@ function renderGearStatsHtml(items,meta){
   const stats=deriveGearStats(calculateGearStats(items), meta || {});
   const report=(meta && meta.reportTitle) || "-";
   const fight=(meta && meta.fightName) || "";
+  const raceOptions=Object.entries(GEAR_RACE_INFO).map(([key,race])=>'<option value="'+key+'"'+(stats.raceInfo.key===key ? " selected" : "")+'>'+race.label+'</option>').join("");
 
   return ''+
     '<div class="gear-stats">'+
@@ -5812,6 +5912,9 @@ function renderGearStatsHtml(items,meta){
         '<div class="gear-stat-title">Warcraft Logs</div>'+
         '<div class="gear-stat-row"><span>Charakter</span><strong>'+safeHtml((meta && meta.character) || "-")+'</strong></div>'+
         '<div class="gear-stat-row"><span>Klasse</span><strong>'+safeHtml(stats.classInfo.label || "-")+'</strong></div>'+
+        '<div class="gear-stat-row"><span>Volk</span><strong><select aria-label="Volk" onchange="setGearPlannerRace(this.value)" style="max-width:110px">'+
+          '<option value="">wählen</option>'+raceOptions+
+        '</select></strong></div>'+
         '<div class="gear-stat-row"><span>Server</span><strong>'+safeHtml((meta && meta.server) || "-")+'</strong></div>'+
         '<div class="gear-stat-row"><span>Report</span><strong>'+safeHtml(report)+'</strong></div>'+
         (fight ? '<div class="gear-stat-row"><span>Fight</span><strong>'+safeHtml(fight)+'</strong></div>' : '')+
@@ -5821,7 +5924,7 @@ function renderGearStatsHtml(items,meta){
         '<div class="gear-stat-row"><span>Spec</span><strong>'+safeHtml(gearTalentSpecText(currentGearPlannerState.talents || [], meta || {}))+'</strong></div>'+
         '<div class="gear-stat-row"><span>Gesundheit</span><strong>'+gearPlainStatValue(stats.healthTotal)+'</strong></div>'+
         (stats.classInfo.baseMana ? '<div class="gear-stat-row"><span>Mana</span><strong>'+gearPlainStatValue(stats.manaTotal)+'</strong></div>' : '')+
-        '<div class="gear-stat-row"><span>HP</span><strong>'+gearPlainStatValue(stats.health)+'</strong></div>'+
+        '<div class="gear-stat-row"><span>Direkte HP</span><strong>'+gearPlainStatValue(stats.health)+'</strong></div>'+
       '</div>'+
       '<div class="gear-stat-box">'+
         '<div class="gear-stat-title">Verteidigung</div>'+
@@ -5844,11 +5947,11 @@ function renderGearStatsHtml(items,meta){
       '</div>'+
       '<div class="gear-stat-box">'+
         '<div class="gear-stat-title">Attribute</div>'+
-        '<div class="gear-stat-row"><span>Ausdauer</span><strong>'+gearStatValue(stats.sta)+'</strong></div>'+
-        '<div class="gear-stat-row"><span>Intelligenz</span><strong>'+gearStatValue(stats.int)+'</strong></div>'+
-        '<div class="gear-stat-row"><span>Willenskraft</span><strong>'+gearStatValue(stats.spi)+'</strong></div>'+
-        '<div class="gear-stat-row"><span>Beweglichkeit</span><strong>'+gearStatValue(stats.agi)+'</strong></div>'+
-        '<div class="gear-stat-row"><span>Stärke</span><strong>'+gearStatValue(stats.str)+'</strong></div>'+
+        '<div class="gear-stat-row"><span>Ausdauer</span><strong>'+gearPlainStatValue(stats.sta)+' <small>(+'+gearPlainStatValue(stats.itemAttributes.sta)+')</small></strong></div>'+
+        '<div class="gear-stat-row"><span>Intelligenz</span><strong>'+gearPlainStatValue(stats.int)+' <small>(+'+gearPlainStatValue(stats.itemAttributes.int)+')</small></strong></div>'+
+        '<div class="gear-stat-row"><span>Willenskraft</span><strong>'+gearPlainStatValue(stats.spi)+' <small>(+'+gearPlainStatValue(stats.itemAttributes.spi)+')</small></strong></div>'+
+        '<div class="gear-stat-row"><span>Beweglichkeit</span><strong>'+gearPlainStatValue(stats.agi)+' <small>(+'+gearPlainStatValue(stats.itemAttributes.agi)+')</small></strong></div>'+
+        '<div class="gear-stat-row"><span>Stärke</span><strong>'+gearPlainStatValue(stats.str)+' <small>(+'+gearPlainStatValue(stats.itemAttributes.str)+')</small></strong></div>'+
       '</div>'+
       '<div class="gear-stat-box">'+
         '<div class="gear-stat-title">Zauber & Heilung</div>'+
@@ -6094,6 +6197,7 @@ async function loadGearPlanner(){
       character:result.character || player,
       server:result.server || server,
       className:result.className || "",
+      raceSlug:result.raceSlug || result.raceName || result.race || "",
       source:"WCL + LichtLoot",
       reportTitle:result.report && result.report.title,
       fightName:result.fight && result.fight.name,
