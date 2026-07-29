@@ -3575,6 +3575,12 @@ function isPinConflictError(result){
   );
 }
 
+function getSelectedPrioItemId(slot){
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  return option ? String(option.dataset.itemId || "").trim() : "";
+}
+
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
   const player=document.getElementById("playerName").value.trim();

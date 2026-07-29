@@ -3540,6 +3540,12 @@ function isPinConflictError(result){
   );
 }
 
+function getSelectedPrioItemId(slot){
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  return option ? String(option.dataset.itemId || "").trim() : "";
+}
+
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
   const player=document.getElementById("playerName").value.trim();
@@ -4295,15 +4301,16 @@ let lichtlootLoggedInCharacters = [];
 let lichtlootSelectedCharacter = null;
 
 function getStoredLichtLootPlayerPin(){
-  return String(
-    localStorage.getItem("lichtlootPlayerPin") ||
-    localStorage.getItem("lichtLootPlayerPin") ||
-    localStorage.getItem("spielerPin") ||
-    sessionStorage.getItem("lichtlootPlayerPin") ||
-    sessionStorage.getItem("lichtLootPlayerPin") ||
-    sessionStorage.getItem("spielerPin") ||
-    ""
-  ).trim().toUpperCase();
+  const guild=String(new URLSearchParams(location.search).get("guild") || "lichtloot")
+    .trim().toLowerCase().replace(/[^a-z0-9_-]/g,"") || "lichtloot";
+  const keys=["lichtlootPlayerPin_"+guild,"lichtlootSharedPlayerPin","lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+  for(const storage of [localStorage,sessionStorage]){
+    for(const key of keys){
+      const value=String(storage.getItem(key) || "").trim();
+      if(value) return value.toUpperCase();
+    }
+  }
+  return "";
 }
 
 function getLastSelectedCharacterStorageKey(){

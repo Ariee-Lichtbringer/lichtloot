@@ -1921,29 +1921,47 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 }
 .account-management-entry .account-entry-nudge{
   position:absolute;
-  left:50%;
-  top:-48px;
-  transform:translateX(-50%);
+  left:calc(100% + 18px);
+  top:50%;
+  transform:translateY(-50%);
+  width:176px;
+  height:96px;
   display:flex;
   flex-direction:column;
   align-items:center;
+  justify-content:flex-start;
   color:var(--gold);
-  font-size:18px;
+  font-size:20px;
   font-weight:1000;
   white-space:nowrap;
   filter:drop-shadow(0 0 10px rgba(var(--gold-rgb),.55));
   animation:accountNudgeBlink .9s infinite;
   z-index:3;
 }
+.account-management-entry .account-entry-nudge{
+  padding:7px 14px;
+  border:3px solid var(--gold);
+  border-radius:12px;
+  background:rgba(2,6,23,.94);
+  box-shadow:0 0 18px rgba(var(--gold-rgb),.5),inset 0 0 14px rgba(var(--blue-rgb),.16);
+}
 .account-management-entry .account-entry-nudge:after{
-  content:"↓";
-  font-size:34px;
-  line-height:.8;
-  color:var(--blue);
+  content:"";
+  position:absolute;
+  right:18px;
+  bottom:-34px;
+  width:170px;
+  height:58px;
+  background:linear-gradient(90deg,var(--blue),var(--gold));
+  clip-path:polygon(0 50%,34% 8%,34% 30%,100% 30%,100% 70%,34% 70%,34% 92%);
+  filter:drop-shadow(0 0 12px rgba(var(--gold-rgb),.55));
 }
 @keyframes accountNudgeBlink{
-  0%,100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
-  50%{opacity:.58;transform:translateX(-50%) translateY(6px) scale(1.08)}
+  0%,100%{opacity:1;transform:translateY(-50%) translateX(0) scale(1)}
+  50%{opacity:.6;transform:translateY(-50%) translateX(-8px) scale(1.06)}
+}
+@media(max-width:1180px){
+  .account-management-entry .account-entry-nudge{display:none}
 }
 .account-management-entry:hover,
 .account-management-entry:focus-visible{
@@ -2871,10 +2889,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 
       <section class="dash-panel account-management-panel hidden" id="accountManagementPanel">
         <div class="section-head account-management-head">
-          <div>
-            <div class="section-title">LichtLoot Account Verwaltung</div>
-            <p>Charaktere, Prios, Raidkalender und Worldbuffs an einem Ort.</p>
-          </div>
+          <div></div>
           <button class="right-inline-btn" type="button" onclick="goHomeView()">Zurück zu den Raids</button>
         </div>
         <section class="dash-panel right-card account-management-card" id="meinLichtLootCard">
