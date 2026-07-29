@@ -1571,7 +1571,9 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .own-p0-release-text{color:#cbd5e1;font-size:11.5px;line-height:1.35}
 .own-p0-release-items{display:flex;flex-wrap:wrap;gap:6px}
 .own-p0-release-chip{padding:5px 8px;border:1px solid rgba(250,204,21,.28);border-radius:999px;background:rgba(15,23,42,.72);color:#cbd5e1;font-size:11px;font-weight:800}
+.own-p0-release-chip.is-active{border-color:rgba(34,197,94,.78);background:linear-gradient(135deg,rgba(22,163,74,.46),rgba(21,128,61,.30));color:#dcfce7;box-shadow:0 0 0 1px rgba(34,197,94,.12),0 0 14px rgba(34,197,94,.18)}
 .own-p0-release-chip .ok{color:#22c55e}
+.own-p0-release-chip.is-active .ok{color:#86efac}
 .own-p0-release-chip .muted{color:#94a3b8}
 
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
@@ -7195,7 +7197,7 @@ function renderMyPoReleasesCard(releases){
   ] : []);
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
-    return `<span class="own-p0-release-chip">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "–"}</strong></span>`;
+    return `<span class="own-p0-release-chip${active ? " is-active" : ""}">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "–"}</strong></span>`;
   }).join("");
   return `<div class="lichtloot-fold own-p0-popout-card">
     <div class="own-p0-release-title">Meine P0+ Freigaben</div>

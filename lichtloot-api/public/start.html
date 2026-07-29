@@ -1654,6 +1654,13 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   overflow:hidden;
   text-overflow:ellipsis;
 }
+.own-p0-summary-chip.is-active{
+  border-color:rgba(34,197,94,.78);
+  background:linear-gradient(135deg,rgba(22,163,74,.48),rgba(21,128,61,.30));
+  color:#dcfce7;
+  box-shadow:0 0 0 1px rgba(34,197,94,.12),0 0 14px rgba(34,197,94,.18);
+}
+.own-p0-summary-chip.is-active .ok{color:#86efac}
 .own-p0-summary-action{
   min-width:190px;
   min-height:46px!important;
@@ -7380,7 +7387,7 @@ function renderMyPoReleasesCard(releases){
   ];
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
-    return `<span class="own-p0-summary-chip">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
+    return `<span class="own-p0-summary-chip${active ? " is-active" : ""}">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
   }).join("");
   return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
     <div>

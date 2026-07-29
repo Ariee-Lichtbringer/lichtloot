@@ -4,11 +4,16 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="loot-side-navigation.css">
+<script src="loot-side-navigation.js" defer></script>
+<script src="nachtloot-recruit-prio.js" defer></script>
+<script src="p0-release-guard.js" defer></script>
 <title>Lichtloot - Ahn'Qiraj 40</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
+.start-sidebar,.start-side-nav,.legacy-navigation{display:none!important}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq40.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
@@ -1798,7 +1803,7 @@ body.random-prio .tooltip-p0{
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html">Startseite</a>
+  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -3747,36 +3752,25 @@ async function savePrio(){
     return;
   }
 
-  try {
-    await Promise.race([
-      loadPublishedPrios(),
-      new Promise((resolve) => setTimeout(resolve, 2500))
-    ]);
-  } catch (error) {
-    console.warn("Prio-Liste ist im Notfallmodus nicht erreichbar.", error);
-  }
+  await loadPublishedPrios();
 
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await Promise.race([
-      ensurePlayerPinForSave(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
-    ]);
+    const pinInfo = await ensurePlayerPinForSave();
     if(!pinInfo.success){
-      throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
+      status.innerHTML=`<span class="bad">${safe(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.")}</span>`;
+      return;
     }
 
     const playerPin = pinInfo.pin;
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
-    let result=await Promise.race([
-      submitPrioWithPin(playerPin, ""),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
-    ]);
+    let result=await submitPrioWithPin(playerPin, "");
 
     if(result.error){
-      throw new Error(result.error);
+      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
+      return;
     }
 
     autoSaveDraft();
@@ -3810,17 +3804,8 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    try{
-      const emergency=await saveEmergencyPrio();
-      status.innerHTML=
-        `<span class="warn">⚠ Notfallmodus aktiv.</span><br>`+
-        `Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>`+
-        `Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;
-    }catch(emergencyError){
-      console.error(emergencyError);
-      const message=(emergencyError && emergencyError.message) ? emergencyError.message : "Notfallspeicherung fehlgeschlagen.";
-      status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
-    }
+    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
+    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
