@@ -164,11 +164,58 @@ class_emoji_cache = {}
 item_emoji_cache = {}
 p0plus_cache = {}
 P0PLUS_CACHE_SECONDS = int(os.getenv("PO_BOT_P0PLUS_CACHE_SECONDS", "60") or "60")
+recent_po_entries = {}
+RECENT_PO_ENTRY_SECONDS = int(os.getenv("PO_BOT_RECENT_ENTRY_SECONDS", "20") or "20")
 empty_queue_log_at = 0
 
 
 def clean(value):
     return str(value or "").strip()
+
+
+def po_entry_scope(payload):
+    return (
+        clean(payload.get("postKey") or payload.get("poPostKey") or payload.get("postId")),
+        clean(payload_source_channel_id(payload)),
+        clean(payload_target_channel_id(payload)),
+    )
+
+
+def po_entry_identity(entry):
+    discord_user_id = clean(entry.get("discordUserId") or entry.get("discord_user_id"))
+    if discord_user_id:
+        return f"discord:{discord_user_id}"
+    return f"player:{slug(entry.get('player') or entry.get('playerName'))}"
+
+
+def remember_recent_po_entry(payload, entry):
+    identity = po_entry_identity(entry)
+    if identity.endswith(":"):
+        return
+    recent_po_entries[(po_entry_scope(payload), identity)] = {
+        "savedAt": time.monotonic(),
+        "entry": dict(entry),
+    }
+
+
+def forget_recent_po_entry(payload, entry):
+    recent_po_entries.pop((po_entry_scope(payload), po_entry_identity(entry)), None)
+
+
+def merge_recent_po_entries(payload, entries):
+    now = time.monotonic()
+    scope = po_entry_scope(payload)
+    merged = list(entries or [])
+    present = {po_entry_identity(entry) for entry in merged}
+    for cache_key, cached in list(recent_po_entries.items()):
+        if now - cached["savedAt"] > RECENT_PO_ENTRY_SECONDS:
+            recent_po_entries.pop(cache_key, None)
+            continue
+        cached_scope, identity = cache_key
+        if cached_scope == scope and identity not in present:
+            merged.append(dict(cached["entry"]))
+            present.add(identity)
+    return merged
 
 
 def normalize_raid(value):
@@ -746,7 +793,7 @@ async def load_entries(payload):
         "targetChannelId": payload_target_channel_id(payload),
         "includeArchived": "false",
     })
-    return result.get("entries") or []
+    return merge_recent_po_entries(payload, result.get("entries") or [])
 
 
 def message_matches_post_key(message, post_key):
@@ -1217,12 +1264,19 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
     saved_entry = result.get("entry") or {}
     saved_player = clean(saved_entry.get("player")) or char_name
     saved_item = clean(saved_entry.get("item")) or item_name
+    remember_recent_po_entry(payload, {
+        **saved_entry,
+        "player": saved_player,
+        "item": saved_item,
+        "className": clean(saved_entry.get("className")) or class_name,
+        "server": clean(saved_entry.get("server")) or server,
+        "discordUserId": clean(saved_entry.get("discordUserId")) or str(interaction.user.id),
+    })
     await interaction.followup.send(
         f"✅ Deine PO wurde im Discord gespeichert: **{saved_player}** → **{saved_item}**.\n"
         "Der PO-Post wird gleich aktualisiert.",
         ephemeral=True,
     )
-    asyncio.create_task(refresh_po_message_safely(interaction.client, payload))
     prio_result = None
     try:
         prio_result = await asyncio.to_thread(save_po_signup_prio, {**payload, "server": server}, saved_player, class_name, saved_item, player_login, item_id)
@@ -1234,6 +1288,7 @@ async def submit_po_entry(interaction, payload, item_name, class_name, char_name
             f"⚠️ Discord-Eintrag ist gespeichert, aber LichtLoot-PO+ konnte nicht gespeichert werden: {detail}",
             ephemeral=True,
         )
+    asyncio.create_task(refresh_po_message_safely(interaction.client, payload))
 
 
 class PoEntryModal(discord.ui.Modal):
@@ -1562,6 +1617,8 @@ class PoDeleteEntrySelect(discord.ui.Select):
                 return
             result = await delete_entry(self.payload, entry, interaction.user)
             deleted_entries = result.get("entries") or [entry]
+            for deleted_entry in deleted_entries:
+                forget_recent_po_entry(self.payload, deleted_entry)
             # Die API kann direkt nach dem Löschen noch einen älteren Lesestand
             # liefern. Den bestätigten Eintrag deshalb beim ersten Discord-Refresh
             # sicher ausblenden und kurz danach nochmals autoritativ abgleichen.
