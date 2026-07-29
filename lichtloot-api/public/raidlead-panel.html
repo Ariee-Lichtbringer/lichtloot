@@ -1597,7 +1597,7 @@ let prioCheckTimer = null;
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 function raidKeyFromRaidId(raidId){
-  const id = String(raidId || "").toUpperCase();
+  const id = String(raidId || "").toUpperCase().replace(/^(?:NL|LL)-/, "");
 
   if(id.startsWith("ZG MI-") || id.startsWith("ZG-MI-") || id.startsWith("ZG MITTWOCH-")) return "zg-mittwoch";
   if(id.startsWith("ZG PRIME-") || id.startsWith("ZG-PRIME-")) return "zg-prime";

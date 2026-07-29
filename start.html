@@ -3034,8 +3034,14 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
-  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
-  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
+  const primaryColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.primaryColor || String(guild.primaryColor).toLowerCase() === "#facc15")
+    ? "#22d3ee"
+    : guild?.primaryColor;
+  const accentColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
+    ? "#0891b2"
+    : guild?.accentColor;
+  applyGuildThemeColor("--gold", "--gold-rgb", primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand='footerName']").forEach(el => el.textContent = "© 2026 " + brand.footerName);
@@ -3126,7 +3132,8 @@ function createRaidId(raid){
     String(now.getSeconds()).padStart(2,"0")+"-"+
     randomCode(2);
 
-  return raids[raid].short+"-"+date;
+  const guildPrefix = CURRENT_GUILD_SLUG === "nachtloot" ? "NL" : "LL";
+  return guildPrefix+"-"+raids[raid].short+"-"+date;
 }
 
 function placeSidebarDrawers(){
@@ -3500,6 +3507,8 @@ function activeRaidPin(raid){
 }
 
 function activeRaidGuild(raid){
+  if(CURRENT_GUILD_SLUG === "nachtloot") return "Die Nachtwächter";
+  if(CURRENT_GUILD_SLUG === "lichtloot") return "Lichtbringer";
   return raid.guild || raid.gilde || raid.GildeName || raid.gildeName || raid.Gilde || raid.Guild || "";
 }
 

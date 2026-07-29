@@ -5780,6 +5780,8 @@ const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
 let currentGuildInfo = null;
 
 function displayGuildNameForRaid(value){
+  if(CURRENT_GUILD_SLUG === "nachtloot") return "Die Nachtwächter";
+  if(CURRENT_GUILD_SLUG === "lichtloot") return "Lichtbringer";
   const raw = String(value || "").trim();
   const normalized = normalize(raw);
   if(!raw || normalized === normalize(CURRENT_GUILD_SLUG) || normalized === "lichtloot"){
@@ -5815,8 +5817,14 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Gildenleitung";
-  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
-  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
+  const primaryColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.primaryColor || String(guild.primaryColor).toLowerCase() === "#facc15")
+    ? "#22d3ee"
+    : guild?.primaryColor;
+  const accentColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
+    ? "#0891b2"
+    : guild?.accentColor;
+  applyGuildThemeColor("--gold", "--gold-rgb", primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", accentColor);
   applyRaidLayoutImages(guild?.layout);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
@@ -7603,7 +7611,8 @@ function createRaidIdForGuildPage(raidKey){
   String(now.getMinutes()).padStart(2, "0") +
   String(now.getSeconds()).padStart(2, "0") + "-" +
   randomCode(2);
-  return raid.short + "-" + stamp;
+  const guildPrefix = CURRENT_GUILD_SLUG === "nachtloot" ? "NL" : "LL";
+  return guildPrefix + "-" + raid.short + "-" + stamp;
 }
 
 function randomCode(length){

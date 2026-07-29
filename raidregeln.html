@@ -1305,8 +1305,14 @@ async function loadRules(){
       const logo=document.getElementById("guildLogo");
       if(logo && guild.logoUrl) logo.src=new URL(guild.logoUrl,location.href).href;
       if(guild.backgroundUrl) document.body.style.backgroundImage=`linear-gradient(rgba(8,17,31,.78),rgba(8,17,31,.94)),url('${String(guild.backgroundUrl).replace(/'/g,"%27")}')`;
-      if(guild.primaryColor) document.documentElement.style.setProperty("--gold",guild.primaryColor);
-      if(guild.accentColor) document.documentElement.style.setProperty("--blue",guild.accentColor);
+      const primaryColor=CURRENT_GUILD_SLUG==="nachtloot" && (!guild.primaryColor || String(guild.primaryColor).toLowerCase()==="#facc15")
+        ?"#22d3ee"
+        :guild.primaryColor;
+      const accentColor=CURRENT_GUILD_SLUG==="nachtloot" && (!guild.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
+        ?"#0891b2"
+        :guild.accentColor;
+      if(primaryColor) document.documentElement.style.setProperty("--gold",primaryColor);
+      if(accentColor) document.documentElement.style.setProperty("--blue",accentColor);
       document.getElementById("rulesKicker").textContent=`${guild.name || CURRENT_GUILD_SLUG} Raids`;
       document.querySelectorAll("a[href]").forEach(link => {
         const url=new URL(link.getAttribute("href"),location.href);
@@ -1317,9 +1323,16 @@ async function loadRules(){
       });
     }
     const storedRules=guild?.layout?.raidRules;
+    const storedRaidRuleCount=(storedRules?.raids || []).reduce((sum,raid) => sum+(Array.isArray(raid?.rules)?raid.rules.length:0),0);
+    const storedGeneralRuleCount=Object.values(storedRules?.general || {}).reduce((sum,rules) => sum+(Array.isArray(rules)?rules.length:0),0);
+    const storedConsumableCount=(storedRules?.consumables || []).filter(entry => entry?.required || entry?.status==="important" || (entry?.classes || []).length).length;
+    const storedEnchantmentCount=(storedRules?.enchantments?.rows || []).reduce((sum,row) => sum+(Array.isArray(row)?row.length:0),0);
+    const storedNachtlootRulesComplete=CURRENT_GUILD_SLUG!=="nachtloot"
+      || (storedRaidRuleCount>=10 && storedGeneralRuleCount>=5 && storedConsumableCount>=5 && storedEnchantmentCount>=5);
     const storedRulesBelongToGuild=storedRules
       && typeof storedRules==="object"
-      && !(CURRENT_GUILD_SLUG==="nachtloot" && /lichtbringer/i.test(String(storedRules.source||"")));
+      && !(CURRENT_GUILD_SLUG==="nachtloot" && /lichtbringer/i.test(String(storedRules.source||"")))
+      && storedNachtlootRulesComplete;
     if(storedRulesBelongToGuild){
       rulesData=storedRules;
     }else if(CURRENT_GUILD_SLUG === "nachtloot"){

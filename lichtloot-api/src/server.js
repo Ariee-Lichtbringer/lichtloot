@@ -5074,6 +5074,14 @@ function schedulePostIsDue({ postDate, postTime, force = false }) {
 
 async function processRaidHelperSchedules({ guildId, force = false, scheduleId = "" }) {
   await ensureRaidHelperScheduleSchema();
+  const guildIdentityResult = await query(
+    `select slug, name from guilds where id = $1 limit 1`,
+    [guildId]
+  );
+  const guildIdentity = guildIdentityResult.rows[0] || {};
+  const guildSlug = clean(guildIdentity.slug).toLowerCase();
+  const guildPrefix = guildSlug === "nachtloot" ? "NL" : "LL";
+  const guildDisplayName = clean(guildIdentity.name) || (guildSlug === "nachtloot" ? "Die Nachtwächter" : "Lichtbringer");
   const scopedScheduleId = clean(scheduleId);
   const scheduleValues = [guildId];
   let scheduleClause = "";
@@ -5098,15 +5106,17 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
       intervalWeeks: schedule.interval_weeks
     });
     const nextDateIso = formatDateIso(nextDate);
-    const externalRaidId = `schedule-${schedule.id}`;
+    const prefixedScheduleRaidId = `${guildPrefix}-SCHEDULE-${schedule.id}`;
+    const legacyScheduleRaidId = `schedule-${schedule.id}`;
     const existing = await query(
-      `select id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
+      `select id, external_raid_id, raid_date, raid_pin, lead_pin, discord_message_id, discord_channel_id
        from raids
-       where guild_id = $1 and external_raid_id = $2
+       where guild_id = $1 and external_raid_id in ($2, $3)
        limit 1`,
-      [guildId, externalRaidId]
+      [guildId, prefixedScheduleRaidId, legacyScheduleRaidId]
     );
     const existingRaid = existing.rows[0] || null;
+    const externalRaidId = existingRaid ? (existingRaid.external_raid_id || legacyScheduleRaidId) : prefixedScheduleRaidId;
     const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
     const nextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
@@ -5154,7 +5164,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         raidName: schedule.title,
         raidDate: nextDateIso,
         raidTime: schedule.raid_time,
-        guild: "Lichtbringer",
+        guild: guildDisplayName,
         playerPin: dateChanged || !existingRaid?.raid_pin ? randomRaidCode(3) : existingRaid.raid_pin,
         leadPin: dateChanged || !existingRaid?.lead_pin ? randomRaidCode(4) : existingRaid.lead_pin,
         status: "geschlossen",
@@ -13481,6 +13491,15 @@ async function deleteRaid({ guildId, query: params }) {
     throw error;
   }
 
+  const scheduleMatch = raidId.match(/^(?:(?:NL|LL)-)?SCHEDULE-([0-9a-f-]{36})$/i);
+  if (scheduleMatch && isUuid(scheduleMatch[1])) {
+    await ensureRaidHelperScheduleSchema();
+    await query(
+      `delete from raid_helper_schedules where guild_id = $1 and id = $2`,
+      [guildId, scheduleMatch[1]]
+    );
+  }
+
   const result = await query(
     `delete from raids
      where guild_id = $1
@@ -13567,9 +13586,17 @@ async function createRandomRaid({ guildId, query: params }) {
 async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  const raidGuildResult = await query(
+    `select slug, name from guilds where id = $1 limit 1`,
+    [guildId]
+  );
+  const raidGuild = raidGuildResult.rows[0] || {};
+  const raidGuildSlug = clean(raidGuild.slug).toLowerCase();
+  const raidGuildPrefix = raidGuildSlug === "nachtloot" ? "NL" : "LL";
+  const raidGuildName = clean(raidGuild.name) || (raidGuildSlug === "nachtloot" ? "Die Nachtwächter" : "Lichtbringer");
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
-  const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
+  const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidGuildPrefix}-${raidType.toUpperCase()}-${Date.now()}`;
   const raidTime = clean(params.raidTime || params.uhrzeit) || null;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
@@ -13661,7 +13688,7 @@ async function createRaidRecord({ guildId, query: params }) {
       prioPin || null,
       leadPin || null,
       raidTime,
-      clean(params.guildName || params.displayGuild || params.gilde || params.guild) || null,
+      raidGuildName,
       clean(params.playerLink) || null,
       status,
       p0plusFreigabe,
