@@ -1,0 +1,159 @@
+{
+  "updatedAt": "2026-07-29T00:00:00.000Z",
+  "source": "Raidregeln Nachtwächter",
+  "general": {
+    "prio": [
+      "Prio 0 muss vor Raidbeginn im jeweiligen Raidchannel angekündigt werden. Die genaue Frist steht beim jeweiligen Raid.",
+      "Wer grob gegen Gear-, Consumable- oder Verzauberungspflichten verstößt, verliert seine Prio 1 beziehungsweise Prio 0.",
+      "Klassenleiter sind zusätzliche Ansprechpartner für Prio-0-Freigaben und die Aufhebung des Lehrlingsstatus."
+    ],
+    "invite": [
+      "Die Anmeldung erfolgt rechtzeitig über das Anmeldetool im Discord und kurz vor dem Raid in Nachtloot.",
+      "Wer sich anmeldet, verpflichtet sich, vorbereitet zu erscheinen.",
+      "Bei Überbuchung entscheidet die Raidleitung nach Raidsetup, Performance und Zuverlässigkeit.",
+      "Während der Invite-Phase bitte unnötige Whispers vermeiden und bei Bedarf den Klassenleiter ansprechen."
+    ],
+    "ersatzbank": [
+      "Spieler auf der Ersatzbank werden in der Attendance erfasst und halten sich bereit, bei Ausfällen einzuspringen.",
+      "Kriterien für die Ersatzbank sind Raidzusammenstellung, Freiwilligkeit, Anmeldereihenfolge, Vorbereitungszuverlässigkeit, Leistung, regelmäßige Anmeldungen und faire Rotation."
+    ],
+    "consumables": [
+      "Beachtet die Gear- und Consumable-Voraussetzungen des jeweiligen Raids.",
+      "Spieler mit deutlich höherem Ausrüstungsstand als der Raid können nach Absprache ihre Consumables reduzieren."
+    ],
+    "verzauberungen": [
+      "Die geforderten Verzauberungen richten sich nach Raid, Klasse und Raiderstatus.",
+      "Bei Fragen zu Verzauberungen oder Ausrüstung helfen die Klassenleiter und die zuständigen Klassenchannels."
+    ],
+    "leistung": [
+      "Jeder Spieler verhält sich diszipliniert, respektvoll und fair gegenüber Mitspielern und Raidleitung.",
+      "Spieler sollen dauerhaft aufmerksam und aktiv sein; längere Inaktivität ist unfair gegenüber der Gruppe.",
+      "Anweisungen der Raidleitung ist Folge zu leisten.",
+      "Kritik und Feedback werden konstruktiv, sachlich und respektvoll geäußert. Taktik- und Verbesserungsgespräche finden möglichst nach dem Raid statt.",
+      "Klassenleiter: Magier – Arie, Evociance.",
+      "Klassenleiter: Hexenmeister – Buffin, Twarves, Eotling.",
+      "Klassenleiter: Jäger – Yumpi.",
+      "Klassenleiter: Furykrieger – Bergomann, Ragnard.",
+      "Klassenleiter: Schurken – Desmond.",
+      "Klassenleiter: Tanks – Hauclir, Ambition.",
+      "Klassenleiter: Heiler – Brasok, Liaha, Vintersol.",
+      "Klassenleiter: Hybrid-Klassen – Schattenmal, Midania, Mordric."
+    ],
+    "charakterwechsel": [],
+    "sonstiges": [
+      "Jeder Spieler ist verpflichtet, die Raidregeln zu kennen und einzuhalten.",
+      "Ziel ist ein strukturierter, erfolgreicher und fairer Raidablauf auf Basis von Verlässlichkeit, Eigenverantwortung und Disziplin.",
+      "Anwesenheit im Discord während des Raids ist Pflicht. Begründete gildeninterne Aufgaben können davon ausgenommen werden.",
+      "Pflicht-Add-ons: Deadly Boss Mods, Weakauras, Threat Classic 2 oder Details mit Tiny Threat sowie Decursive oder ein vergleichbares Add-on für Klassen mit Dispel.",
+      "Herz von Hakkar, Onyxia- und Nefarian-Kopf müssen im Discord-Channel #worldbuffs gemeldet und zum eingeteilten Termin ausgelöst werden.",
+      "Worldbuff-Termine stehen in #worldbuffkalender. Rend-Buffs werden in #rend-buff angekündigt.",
+      "Änderungen können durch Raid- oder Gildenleitung vorgenommen werden. Alle Spieler informieren sich regelmäßig über Aktualisierungen."
+    ]
+  },
+  "raids": [
+    {
+      "id": "aq20",
+      "name": "Ahn'Qiraj 20",
+      "rules": [
+        "Raidleitung: Thorgrimmson. Raidunterstützung: Joi.",
+        "Jedes Item kann von jedem auf Prio 0 genommen werden.",
+        "Prio 0 muss 1 Stunde vor Raidbeginn im Raidchannel angekündigt werden.",
+        "Klassenbücher fremder Klassen dürfen nur auf Prio 2 oder 3 gesetzt werden.",
+        "Armbrust der bevorstehenden Verdammnis ist auf Prio 0 nur für Tanks.",
+        "Keine besonderen Gearvoraussetzungen.",
+        "Für Prio 0 bestehen keine zusätzlichen Gear- oder Verzauberungsvoraussetzungen."
+      ]
+    },
+    {
+      "id": "zg",
+      "name": "Zul Gurub",
+      "rules": [
+        "Raidleitung: Bergomann und Buffin. Raidunterstützung: Joi.",
+        "Jedes Item kann von jedem auf Prio 0 genommen werden.",
+        "Prio 0 muss 1 Stunde vor Raidbeginn im Raidchannel angekündigt werden.",
+        "Wer einen Boss beschwört, kann vor dem Kampf ein Item dieses Bosses locken.",
+        "Schmuckstücke werden zuerst an die Prios verteilt, maximal drei. Restliche Schmuckstücke werden gleichmäßig im Raid verteilt.",
+        "Keine besonderen Gearvoraussetzungen.",
+        "Für Prio 0 bestehen keine zusätzlichen Gear- oder Verzauberungsvoraussetzungen."
+      ]
+    },
+    {
+      "id": "mc",
+      "name": "Molten Core",
+      "rules": [
+        "Raidleitung: Postbotin. Raidunterstützung: Ambition.",
+        "Bestimmte Items können auf Prio 0 gesetzt werden, wenn die Gear- und Verzauberungsvoraussetzungen erfüllt sind.",
+        "Für Prio 0 ist eine Attendance von mindestens 30 % in Nachtwächter-MC-Raids erforderlich.",
+        "Prio 0 muss 1 Stunde vor Raidbeginn im Raidchannel angekündigt werden.",
+        "Bestimmte Items unterliegen Klassenbeschränkungen.",
+        "Fesseln des Windsuchers sind gelockt.",
+        "Prio 0 auf das Auge von Sulfuras ist nur für Raider mit Sulfuronhammer und passender MC-Attendance möglich.",
+        "Thunderfury-Reihenfolge: Ragnard, Desmond, Ambition, Thorgrimmson, Perlenpaula. Zukunftskandidat: Bjame.",
+        "Keine besonderen Gearvoraussetzungen; die MC-Prequest muss abgeschlossen sein.",
+        "Jede Prio 0 benötigt die bestmöglichen Verzauberungen auf jedem Itemslot, mindestens ZG-Schulterverzauberung und ZG-Götzen auf Kopf und Beine beziehungsweise bessere Bücher."
+      ]
+    },
+    {
+      "id": "bwl",
+      "name": "Blackwing Lair",
+      "rules": [
+        "Raidleitung: Postbotin und Ambition. Raidunterstützung: Ambition.",
+        "Bestimmte Items können auf Prio 0 gesetzt werden, wenn die Gear- und Verzauberungsvoraussetzungen erfüllt sind.",
+        "Für Prio 0 ist eine Attendance von mindestens 30 % in Nachtwächter-BWL-Raids erforderlich.",
+        "Prio 0 muss 2 Stunden und 15 Minuten vor Raidbeginn im Raidchannel angekündigt werden.",
+        "Bestimmte Items unterliegen Klassenbeschränkungen.",
+        "Elementiumerz kann nur auf Prio 1 genommen werden.",
+        "Das Gear muss mindestens aus einem guten Mix aus AQ20, ZG und MC bestehen und passend verzaubert sein.",
+        "Bei Freigabe durch die Raidleitung ist eine Teilnahme mit schwächerem Gear im Lehrlingsstatus möglich.",
+        "Die BWL-Prequest muss abgeschlossen sein.",
+        "Maintanks benötigen zusätzlich ein Set mit 220 Feuerresistenz.",
+        "Jeder Spieler benötigt einen Onyxiaschuppenumhang. Fehlende Umhänge bitte im BWL-Raidchannel anfordern.",
+        "Prio-0-Werte: Paladin 850 Heilkraft; Holy-Priester 870 Heilkraft; Diszi-Priester 850 Heilkraft; Druide 850 Heilkraft.",
+        "Prio-0-Werte: Schurke 9 % Trefferwertung, 20 % Krit und 950 AP; Furykrieger 9 % Trefferwertung, 20 % Krit und 1100 AP.",
+        "Prio-0-Werte: Jäger mindestens 8 Teile T2 oder höher; Kriegertank mindestens 8 Teile T2 oder höher.",
+        "Prio-0-Werte: Feraldruide 10.000 Rüstung, 22 % Krit und 700 AP.",
+        "Prio-0-Werte: Hexenmeister und Magier 10 % Trefferwertung und 500 Zauberschaden durch Items.",
+        "Sonder-Specs wie Eule, Vergelter, Tankpaladin oder Schattenpriester erhalten eine gesonderte Freigabe in Absprache mit der Gildenleitung.",
+        "Bei AP- und Krit-Werten kann 1 % Krit gegen 30 AP gegengerechnet werden."
+      ]
+    }
+  ],
+  "consumables": [
+    {"name":"AQ20/ZG/MC/BWL · 5× Begrenzter Unverwundbarkeitstrank","required":true,"optional":false,"classes":["Krieger","Schurke","Jäger","Magier","Hexer","Priester","Paladin","Druide","Tank","Heiler"]},
+    {"name":"AQ20/ZG/MC/BWL · 10× Grüner Gordokgrog","required":true,"optional":false,"classes":["Krieger","Schurke","Jäger","Magier","Hexer","Priester","Paladin","Druide","Tank","Heiler"]},
+    {"name":"AQ20/ZG · Robuste Wetzsteine, Elixier der Riesen und große Beweglichkeit","required":true,"optional":false,"classes":["Krieger","Tank"]},
+    {"name":"MC · zusätzlich 20× Gesegnete Sonnenfrucht","required":true,"optional":false,"classes":["Krieger","Schurke","Druide","Tank"]},
+    {"name":"BWL · Wetzsteine, Elixier der Riesen, Mungo und Freie Aktion","required":true,"optional":false,"classes":["Krieger","Schurke","Tank"]},
+    {"name":"BWL · Tanks zusätzlich überragende Verteidigung und Seelenstärke","required":true,"optional":false,"classes":["Krieger","Druide","Tank"]},
+    {"name":"Magierbluttrank und Arkanes Elixier","required":true,"optional":false,"classes":["Magier"]},
+    {"name":"Feuer- oder Frostmacht, Zauberöl und passendes Bufffood","required":true,"optional":false,"classes":["Magier"]},
+    {"name":"Zauberöl, Magierbluttrank und erhebliche Manatränke","required":true,"optional":false,"classes":["Hexer"]},
+    {"name":"BWL · Großes Arkanelixier, Schattenmacht und Feuermacht","required":true,"optional":false,"classes":["Hexer"]},
+    {"name":"Hervorragendes Manaöl, Nachtflossensuppe oder Weisenfisch Supreme und Magierbluttrank","required":true,"optional":false,"classes":["Priester","Paladin","Druide","Heiler"]},
+    {"name":"MC/BWL · zusätzliche überragende oder erhebliche Manatränke","required":true,"optional":false,"classes":["Priester","Heiler"]},
+    {"name":"Elixier der großen Beweglichkeit beziehungsweise Mungo und geringes Manaöl","required":true,"optional":false,"classes":["Jäger"]},
+    {"name":"MC/BWL · Weisenfisch Supreme oder Nachtflossensuppe","required":true,"optional":false,"classes":["Jäger"]},
+    {"name":"Elixier der Riesen, große Beweglichkeit beziehungsweise Mungo, Disteltee und Sofort wirkendes Gift Rang 6","required":true,"optional":false,"classes":["Schurke"]}
+  ],
+  "enchantments": {
+    "classes": ["Krieger","Schurke","Jäger","Magier","Hexer","Priester","Paladin","Druide","Tank","Heiler"],
+    "rows": [
+      [{"className":"Krieger","text":"BWL Rekrut: Umhang 3 Beweglichkeit/Feingefühl/1 % Ausweichen; Brust 3 Werte; Handgelenke 7 Stärke; Hände 7 Beweglichkeit; Füße Bewegungstempo; Waffen Kreuzfahrer oder 15 Beweglichkeit"}],
+      [{"className":"Krieger","text":"BWL Fullraider: Kopf/Beine 8 Stärke oder 1 % Angriffsgeschwindigkeit; Brust 3 Werte; Handgelenke 7 Stärke; Hände/Füße 7 Beweglichkeit; Waffen Kreuzfahrer oder 15 Beweglichkeit"}],
+      [{"className":"Tank","text":"BWL Rekrut: Umhang 3 Beweglichkeit; Brust 3 Werte; Handgelenke/Schild 7 Ausdauer; Hände 7 Beweglichkeit; Waffen Kreuzfahrer oder 15 Beweglichkeit"}],
+      [{"className":"Tank","text":"BWL Fullraider: Kopf/Beine 100 Leben; Brust 3 Werte; Handgelenke 9 Ausdauer; Schild 7 Ausdauer; Waffen Kreuzfahrer oder 15 Beweglichkeit"}],
+      [{"className":"Magier","text":"BWL Rekrut: großer Widerstand, Brust 3 Werte, Handgelenke 7 Intelligenz und Bewegungstempo"}],
+      [{"className":"Magier","text":"BWL Fullraider: Kopf/Beine 8 Zauberschaden; Hände 20 Frost- oder Feuerschaden; Waffe 30 Zauberschaden; übrige Slots bestmöglich laut Vorgabe"}],
+      [{"className":"Hexer","text":"BWL Rekrut: großer Widerstand, Brust 3 Werte, Handgelenke 7 Intelligenz und Bewegungstempo"}],
+      [{"className":"Hexer","text":"BWL Fullraider: Kopf/Beine 8 Zauberschaden; Hände 20 Schattenschaden; Waffe 30 Zauberschaden; übrige Slots bestmöglich laut Vorgabe"}],
+      [{"className":"Paladin","text":"BWL Rekrut: großer Widerstand; Brust 3 Werte oder 100 Mana; Handgelenke 7 Intelligenz; Bewegungstempo"}],
+      [{"className":"Paladin","text":"BWL Fullraider: Kopf/Beine 8 Heil- und Zauberschaden; Handgelenke 24 Heilkraft; Hände/Waffe 30 Heilkraft; übrige Slots bestmöglich laut Vorgabe"}],
+      [{"className":"Priester","text":"BWL Rekrut: großer Widerstand; Brust 3 Werte oder 100 Mana; Handgelenke 7 Intelligenz; Füße 5 Willenskraft oder Bewegungstempo"}],
+      [{"className":"Priester","text":"BWL Fullraider: Kopf/Beine 8 Heil- und Zauberschaden; Handgelenke 24 Heilkraft; Hände/Waffe 30 Heilkraft; übrige Slots bestmöglich laut Vorgabe"}],
+      [{"className":"Druide","text":"BWL Rekrut: Heiler wie Priester; Feraltank mit 3 Beweglichkeit, 3 Werte, 7 Ausdauer, 7 Beweglichkeit und 25 Beweglichkeit auf der Waffe"}],
+      [{"className":"Druide","text":"BWL Fullraider: Heiler mit 24/30 Heilkraft; Feraltank mit 100 Leben, 9 Ausdauer, 7 Beweglichkeit und 25 Beweglichkeit auf der Waffe"}],
+      [{"className":"Jäger","text":"BWL Rekrut: Umhang 3 Beweglichkeit; Brust 3 Werte; Handgelenke 7 Ausdauer; Hände 7 Beweglichkeit; Bewegungstempo; Waffen 25 oder 15 Beweglichkeit"}],
+      [{"className":"Jäger","text":"BWL Fullraider: Kopf/Beine 8 Beweglichkeit; Handgelenke 4 Mana je 5 Sek., 7 Intelligenz oder 9 Ausdauer; Waffen 25/15 Beweglichkeit; Fernwaffe 7 Schaden oder 3 % Trefferwertung"}]
+    ]
+  }
+}
