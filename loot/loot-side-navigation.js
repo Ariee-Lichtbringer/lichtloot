@@ -1,4 +1,21 @@
 (function(){
+  function currentGuildSlug(){
+    return String(new URLSearchParams(window.location.search).get("guild") || "lichtloot").trim().toLowerCase();
+  }
+  function isNachtloot(){
+    return currentGuildSlug()==="nachtloot";
+  }
+  function applyNachtlootFallback(){
+    if(!isNachtloot()) return;
+    document.documentElement.style.setProperty("--gold","#22d3ee");
+    document.documentElement.style.setProperty("--gold-rgb","34,211,238");
+    document.documentElement.style.setProperty("--blue","#0891b2");
+    document.documentElement.style.setProperty("--blue-rgb","8,145,178");
+    document.querySelectorAll(".loot-sidebar-logo").forEach(function(logo){
+      logo.src="../images/guild-defaults/default-logo.png";
+      logo.alt="NachtLoot – Die Nachtwächter";
+    });
+  }
   function go(path){
     window.location.href=typeof guildUrl==="function" ? guildUrl(path) : path;
   }
@@ -19,7 +36,7 @@
     const sidebar=document.createElement("aside");
     sidebar.className="loot-sidebar";
     sidebar.innerHTML=
-      '<img src="../images/content.png" alt="Lichtbringer Lootsystem" class="loot-sidebar-logo">'+
+      '<img src="'+(isNachtloot() ? '../images/guild-defaults/default-logo.png' : '../images/content.png')+'" alt="'+(isNachtloot() ? 'NachtLoot – Die Nachtwächter' : 'Lichtbringer Lootsystem')+'" class="loot-sidebar-logo">'+
       '<nav class="loot-side-nav" aria-label="Seitennavigation">'+
         link("Dashboard","dashboard.jpg","dashboard",true)+
         '<details class="loot-side-group"><summary class="loot-side-summary">'+icon("worldbuffs.jpg")+'<span>Buffs</span><span class="loot-side-arrow">›</span></summary><div class="loot-side-items">'+
@@ -36,6 +53,9 @@
         '</div></details>'+
       '</nav>';
     document.body.insertBefore(sidebar,document.body.firstChild);
+    applyNachtlootFallback();
+    window.setTimeout(applyNachtlootFallback,500);
+    window.setTimeout(applyNachtlootFallback,1500);
 
     sidebar.addEventListener("click",function(event){
       const button=event.target.closest("[data-loot-action]");
