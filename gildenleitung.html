@@ -2566,7 +2566,7 @@ tr.selected-row td{
 
 .raid-helper-current-raid{
   display:grid;
-  grid-template-columns:42px 1fr auto auto;
+  grid-template-columns:64px 1fr auto auto;
   gap:10px;
   align-items:center;
   width:100%;
@@ -2578,6 +2578,30 @@ tr.selected-row td{
   padding:9px;
   text-align:left;
   cursor:pointer;
+}
+
+.raid-helper-current-raid-image{
+  width:58px;
+  height:58px;
+  border-radius:10px;
+  object-fit:cover;
+  border:1px solid rgba(var(--gold-rgb),.34);
+  box-shadow:0 8px 18px rgba(0,0,0,.28);
+}
+
+.raid-helper-current-detail-banner{
+  width:92px;
+  height:92px;
+  flex:0 0 92px;
+  border-radius:12px;
+  object-fit:cover;
+  border:1px solid rgba(var(--gold-rgb),.34);
+  box-shadow:0 10px 24px rgba(0,0,0,.28);
+}
+
+.raid-helper-current-detail-copy{
+  min-width:0;
+  flex:1;
 }
 
 .raid-helper-current-raid .raid-select-checkbox{
@@ -4868,6 +4892,22 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
+          <div id="raidHelperRaidEditMode" class="raid-helper-edit-mode hidden">
+            <div>
+              <strong>Raid wird bearbeitet</strong>
+              <span id="raidHelperRaidEditModeTitle">Alle Einstellungen dieses Raidanmelders können hier geändert werden.</span>
+              <label for="raidHelperCreateEditStatus" style="margin-top:8px">Status
+                <select id="raidHelperCreateEditStatus">
+                  <option value="geöffnet">geöffnet</option>
+                  <option value="geschlossen">geschlossen</option>
+                  <option value="archiviert">archiviert</option>
+                </select>
+              </label>
+            </div>
+            <div class="raid-helper-edit-mode-actions">
+              <button class="small-btn ghost" type="button" onclick="cancelRaidHelperEventCreateEdit()">Abbrechen</button>
+            </div>
+          </div>
           <div id="raidHelperTemplateEditMode" class="raid-helper-edit-mode hidden">
             <div>
               <strong>Vorlage wird bearbeitet</strong>
@@ -5012,7 +5052,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
           </section>
 
           <div class="tools">
-            <button class="btn" type="button" onclick="createRaidHelperSignup()">Raidanmelder erstellen</button>
+            <button id="raidHelperCreateSubmitButton" class="btn" type="button" onclick="submitRaidHelperCreateOrEdit()">Raidanmelder erstellen</button>
             <button class="btn ghost" type="button" onclick="copyRaidHelperPreview()">Vorschau kopieren</button>
           </div>
           <div id="raidHelperStatus" class="status">Bereit.</div>
@@ -7773,6 +7813,7 @@ let raidHelperDiscordChannels = [];
 let raidHelperDiscordRoles = [];
 let raidHelperTemplates = [];
 let raidHelperEditingTemplateIdentifier = "";
+let raidHelperEditingRaidIdentifier = "";
 let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
 let raidHelperAttendanceRaidKey = "bwl";
@@ -8204,9 +8245,10 @@ function renderRaidHelperCurrentRaidButton(raid){
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
   const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.signups || 0);
+  const imageUrl = raid.raidImageUrl || defaultRaidHelperImageUrl(key);
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
-      <span class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[key]?.short || "R")}</span>
+      <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
       <span>
         <strong>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</strong>
         <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · PIN ${escapeHtml(raid.playerPin || "-")}</span>
@@ -8299,9 +8341,11 @@ async function renderRaidHelperCurrentDetail(raidId){
     raid.healSlots ? "Heals " + raid.healSlots : "",
     raid.ddSlots ? "DD " + raid.ddSlots : ""
   ].filter(Boolean).join(" · ");
+  const imageUrl = raid.raidImageUrl || defaultRaidHelperImageUrl(key);
   box.innerHTML = `
     <div class="raid-helper-current-detail-head">
-      <div>
+      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
+      <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
         <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
@@ -8387,32 +8431,120 @@ async function editRaidHelperEvent(raidId){
     setStatus("Raid wurde in der Liste nicht gefunden.", "bad");
     return;
   }
-  const editor = document.getElementById("raidHelperEventEditor");
-  if(editor) editor.classList.remove("hidden");
   const key = getRaidKey(raid);
-  const heading = document.getElementById("raidHelperEditHeading");
-  const subline = document.getElementById("raidHelperEditSubline");
-  if(heading) heading.textContent = raid.raidName || RAID_OPTIONS[key]?.name || "Raid bearbeiten";
-  if(subline) subline.textContent = `${formatRaidDate(raid.raidDate)} · ${raid.raidTime || "-"} · PIN ${raid.playerPin || "-"}`;
-  setRaidHelperEditValue("raidHelperEditRaidId", raid.raidId || raid.id || "");
-  setRaidHelperEditValue("raidHelperEditRaid", key);
-  setRaidHelperEditValue("raidHelperEditTitle", raid.raidName || RAID_OPTIONS[key]?.name || "");
-  setRaidHelperEditValue("raidHelperEditDate", raid.raidDate || "");
-  setRaidHelperEditValue("raidHelperEditTime", raid.raidTime || "");
-  setRaidHelperEditValue("raidHelperEditLead", getRaidCreatorName(raid));
-  setRaidHelperEditValue("raidHelperEditStatus", raid.status || "geschlossen");
-  setRaidHelperEditValue("raidHelperEditDeadline", raid.signupDeadline || raid.signup_deadline || "");
-  setRaidHelperEditValue("raidHelperEditMax", raid.maxPlayers || "");
-  setRaidHelperEditValue("raidHelperEditTanks", raid.tankSlots || "");
-  setRaidHelperEditValue("raidHelperEditHeals", raid.healSlots || "");
-  setRaidHelperEditValue("raidHelperEditDds", raid.ddSlots || "");
-  setRaidHelperEditValue("raidHelperEditDescription", raid.description || raid.beschreibung || "");
-  const channel = document.getElementById("raidHelperEditChannel");
-  if(channel) channel.innerHTML = discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  raidHelperEditingRaidIdentifier = String(raid.raidId || raid.id || "");
   raidHelperEditingData = { raid };
-  setRaidHelperEditStatus("Raid geladen.", "good");
-  await loadRaidHelperEventSignups();
-  editor?.scrollIntoView({ behavior:"smooth", block:"start" });
+  setRaidHelperEditValue("raidHelperRaid", key);
+  setRaidHelperEditValue("raidHelperTitle", raid.raidName || RAID_OPTIONS[key]?.name || "");
+  setRaidHelperEditValue("raidHelperDate", raid.raidDate || "");
+  setRaidHelperEditValue("raidHelperTime", raid.raidTime || "");
+  setRaidHelperEditValue("raidHelperLead", getRaidCreatorName(raid));
+  setRaidHelperEditValue("raidHelperGuild", raid.guildName || raid.displayGuild || raid.gilde || getCurrentGuildBrand().guildName);
+  setRaidHelperEditValue("raidHelperLootMaster", raid.lootMaster || raid.pluendermeister || "");
+  setRaidHelperEditValue("raidHelperMax", raid.maxPlayers || "");
+  setRaidHelperEditValue("raidHelperTanks", raid.tankSlots || "");
+  setRaidHelperEditValue("raidHelperHeals", raid.healSlots || "");
+  setRaidHelperEditValue("raidHelperDds", raid.ddSlots || "");
+  setRaidHelperEditValue("raidHelperDescription", raid.description || raid.beschreibung || "");
+  setRaidHelperEditValue("raidHelperChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
+  setRaidHelperEditValue("raidHelperCreateEditStatus", raid.status || "geschlossen");
+  let targets = raid.statusNotifyTargets || raid.status_notify_targets || [];
+  if(typeof targets === "string"){
+    try{ targets = JSON.parse(targets); }catch(error){ targets = []; }
+  }
+  if(!Array.isArray(targets)) targets = [];
+  setRaidHelperEditValue("raidHelperNotifyNames", targets.filter(item => item?.type === "name").map(item => item.value).join(", "));
+  setRaidHelperTab("createEvent");
+  await loadRaidHelperDiscordRoles();
+  const roleValues = new Set(targets.filter(item => item?.type === "role").map(item => String(item.value)));
+  Array.from(document.getElementById("raidHelperNotifyRoles")?.options || []).forEach(option => {
+    option.selected = roleValues.has(String(option.value));
+  });
+  renderRaidHelperDiscordChannels();
+  const banner = document.getElementById("raidHelperRaidEditMode");
+  banner?.classList.remove("hidden");
+  document.getElementById("raidHelperTemplateEditMode")?.classList.add("hidden");
+  const title = document.getElementById("raidHelperRaidEditModeTitle");
+  if(title) title.textContent = `${raid.raidName || RAID_OPTIONS[key]?.name || "Raid"} · ${formatRaidDate(raid.raidDate)} · ${raid.raidTime || "-"}`;
+  const submit = document.getElementById("raidHelperCreateSubmitButton");
+  if(submit) submit.textContent = "Änderungen speichern";
+  updateRaidHelperPreview();
+  banner?.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function cancelRaidHelperEventCreateEdit(){
+  raidHelperEditingRaidIdentifier = "";
+  raidHelperEditingData = null;
+  document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
+  const submit = document.getElementById("raidHelperCreateSubmitButton");
+  if(submit) submit.textContent = "Raidanmelder erstellen";
+  setRaidHelperTab("currentEvents");
+}
+
+function submitRaidHelperCreateOrEdit(){
+  return raidHelperEditingRaidIdentifier ? saveRaidHelperEventFromCreate() : createRaidHelperSignup();
+}
+
+async function saveRaidHelperEventFromCreate(){
+  const existing = raidHelperEditingData?.raid || findRaidByAnyId(raidHelperEditingRaidIdentifier) || {};
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const raidKey = raidHelperValue("raidHelperRaid") || getRaidKey(existing);
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
+  const payload = {
+    action:"createRaid",
+    masterCode,
+    raidId:raidHelperEditingRaidIdentifier,
+    raid:raidKey,
+    raidName:raidHelperValue("raidHelperTitle") || RAID_OPTIONS[raidKey]?.name || "Raid",
+    raidDate:raidHelperValue("raidHelperDate"),
+    raidTime:raidHelperValue("raidHelperTime"),
+    datum:raidHelperValue("raidHelperDate"),
+    uhrzeit:raidHelperValue("raidHelperTime"),
+    guild:existing.guild || CURRENT_GUILD_SLUG,
+    gilde:raidHelperValue("raidHelperGuild") || existing.gilde || getCurrentGuildBrand().guildName,
+    guildName:raidHelperValue("raidHelperGuild") || existing.guildName || getCurrentGuildBrand().guildName,
+    playerPin:existing.playerPin || existing.prioPin || "",
+    leadPin:existing.leadPin || "",
+    status:raidHelperValue("raidHelperCreateEditStatus") || existing.status || "geschlossen",
+    p0PlusFreigabe:existing.p0PlusFreigabe || "geöffnet",
+    createdBy:raidHelperValue("raidHelperLead") || getRaidCreatorName(existing),
+    erstelltVon:raidHelperValue("raidHelperLead") || getRaidCreatorName(existing),
+    raidHelperEnabled:"true",
+    maxPlayers:raidHelperValue("raidHelperMax"),
+    tankSlots:raidHelperValue("raidHelperTanks"),
+    healSlots:raidHelperValue("raidHelperHeals"),
+    ddSlots:raidHelperValue("raidHelperDds"),
+    discordChannelId:raidHelperValue("raidHelperChannel") || existing.discordChannelId || RAID_HELPER_CHANNEL_ID,
+    discordMessageId:existing.discordMessageId || "",
+    lootMaster:raidHelperValue("raidHelperLootMaster"),
+    pluendermeister:raidHelperValue("raidHelperLootMaster"),
+    statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
+    description:raidHelperValue("raidHelperDescription"),
+    raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+  };
+  if(!payload.raidId || !payload.raidDate || !payload.raidTime){
+    setStatus("Raid-ID, Datum und Uhrzeit müssen gefüllt sein.", "bad");
+    return;
+  }
+  setStatus("Raid wird gespeichert ...", "");
+  try{
+    const result = await railwayWrite(payload);
+    if(!result.success) throw new Error(result.error || "Raid konnte nicht gespeichert werden.");
+    await queueRaidHelperDiscordRefresh(payload.raidId, { quiet:true });
+    raidHelperEditingRaidIdentifier = "";
+    raidHelperEditingData = null;
+    document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
+    const submit = document.getElementById("raidHelperCreateSubmitButton");
+    if(submit) submit.textContent = "Raidanmelder erstellen";
+    await loadOverview({ preserveStatus:true });
+    setRaidHelperTab("currentEvents");
+    setRaidHelperCurrentStatus("Raid gespeichert und Discord-Aktualisierung vorgemerkt.", "good");
+  }catch(error){
+    setStatus(error.message || "Raid konnte nicht gespeichert werden.", "bad");
+  }
 }
 
 function closeRaidHelperEventEditor(){
