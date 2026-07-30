@@ -5026,6 +5026,28 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
             </div>
             <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
               <div class="raid-helper-card-head">
+                <span class="raid-helper-card-icon">📣</span>
+                <div><h3>Benachrichtigung bei Erstellung des Raidanmelders</h3><p>Diese Namen und Discord-Rollen erhalten beim Posten eine DM mit Raid, Termin, Channel und direktem Link zum Anmelder.</p></div>
+              </div>
+              <div class="raid-helper-row">
+                <div class="field">
+                  <label for="raidHelperAnnouncementNotifyNames">Weitere Namen</label>
+                  <input id="raidHelperAnnouncementNotifyNames" type="text" placeholder="z. B. Ariee, Offiziername">
+                </div>
+                <div class="field">
+                  <label for="raidHelperAnnouncementNotifyRoles">Discord-Rollen</label>
+                  <div class="raid-helper-role-picker">
+                    <select id="raidHelperAnnouncementNotifyRoles" onchange="addRaidHelperAnnouncementNotifyRole(this.value)">
+                      <option value="">Rolle auswählen und anklicken …</option>
+                    </select>
+                    <div id="raidHelperAnnouncementNotifyRoleTags" class="raid-helper-role-tags"><span class="muted">Noch keine Rolle ausgewählt.</span></div>
+                  </div>
+                  <button id="raidHelperSendAnnouncementNoticeButton" class="small-btn good hidden" type="button" style="margin-top:8px" onclick="sendRaidHelperAnnouncementNoticeNow()">Erstellungs-DM jetzt senden</button>
+                </div>
+              </div>
+            </div>
+            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
+              <div class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">🔔</span>
                 <div><h3>Interne Benachrichtigungen bei Statusänderungen</h3><p>Raidlead und Plündermeister werden automatisch informiert. Weitere Namen oder Discord-Rollen kannst du hier ergänzen. Diese Auswahl erscheint nicht im Anmeldertext.</p></div>
               </div>
@@ -7859,6 +7881,7 @@ const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app
 let raidHelperDiscordChannels = [];
 let raidHelperDiscordRoles = [];
 let raidHelperSelectedNotifyRoles = [];
+let raidHelperSelectedAnnouncementNotifyRoles = [];
 let raidHelperTemplates = [];
 let raidHelperEditingTemplateIdentifier = "";
 let raidHelperEditingRaidIdentifier = "";
@@ -7967,17 +7990,44 @@ function initRaidHelperPanel(){
 async function loadRaidHelperDiscordRoles(){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   const select=document.getElementById("raidHelperNotifyRoles");
-  if(!select || !masterCode) return;
+  const announcementSelect=document.getElementById("raidHelperAnnouncementNotifyRoles");
+  if(!select || !announcementSelect || !masterCode) return;
   try{
     const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
     raidHelperDiscordRoles=Array.isArray(result.roles) ? result.roles : [];
     select.innerHTML='<option value="">Rolle auswählen und anklicken …</option>'+(raidHelperDiscordRoles.length
       ? raidHelperDiscordRoles.map(role=>`<option value="${escapeAttr(role.id || role.roleId)}">${escapeHtml(role.name || role.roleName)}</option>`).join("")
       : '<option value="">Keine Rollen geladen – Bot neu starten</option>');
+    announcementSelect.innerHTML=select.innerHTML;
     renderRaidHelperNotifyRoleTags();
+    renderRaidHelperAnnouncementNotifyRoleTags();
   }catch(error){
     select.innerHTML='<option value="">Rollen konnten nicht geladen werden</option>';
   }
+}
+
+function addRaidHelperAnnouncementNotifyRole(roleId){
+  const value=String(roleId || "");
+  const role=raidHelperDiscordRoles.find(item=>String(item.id || item.roleId)===value);
+  if(value && role && !raidHelperSelectedAnnouncementNotifyRoles.some(item=>String(item.value)===value)){
+    raidHelperSelectedAnnouncementNotifyRoles.push({type:"role",value,label:role.name || role.roleName || value});
+  }
+  const select=document.getElementById("raidHelperAnnouncementNotifyRoles");
+  if(select) select.value="";
+  renderRaidHelperAnnouncementNotifyRoleTags();
+}
+
+function removeRaidHelperAnnouncementNotifyRole(roleId){
+  raidHelperSelectedAnnouncementNotifyRoles=raidHelperSelectedAnnouncementNotifyRoles.filter(item=>String(item.value)!==String(roleId));
+  renderRaidHelperAnnouncementNotifyRoleTags();
+}
+
+function renderRaidHelperAnnouncementNotifyRoleTags(){
+  const box=document.getElementById("raidHelperAnnouncementNotifyRoleTags");
+  if(!box) return;
+  box.innerHTML=raidHelperSelectedAnnouncementNotifyRoles.length
+    ? raidHelperSelectedAnnouncementNotifyRoles.map(role=>`<span class="raid-helper-role-tag">${escapeHtml(role.label || role.value)}<button type="button" title="Rolle entfernen" onclick="removeRaidHelperAnnouncementNotifyRole('${escapeAttr(role.value)}')">×</button></span>`).join("")
+    : '<span class="muted">Noch keine Rolle ausgewählt.</span>';
 }
 
 function addRaidHelperNotifyRole(roleId){
@@ -8007,6 +8057,11 @@ function renderRaidHelperNotifyRoleTags(){
 function raidHelperStatusNotifyTargets(){
   const names=raidHelperValue("raidHelperNotifyNames").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value}));
   return names.concat(raidHelperSelectedNotifyRoles);
+}
+
+function raidHelperAnnouncementNotifyTargets(){
+  const names=raidHelperValue("raidHelperAnnouncementNotifyNames").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value}));
+  return names.concat(raidHelperSelectedAnnouncementNotifyRoles);
 }
 
 function renderRaidHelperClassGrid(){
@@ -8528,10 +8583,18 @@ async function editRaidHelperEvent(raidId){
   }
   if(!Array.isArray(targets)) targets = [];
   setRaidHelperEditValue("raidHelperNotifyNames", targets.filter(item => item?.type === "name").map(item => item.value).join(", "));
+  let announcementTargets = raid.announcementNotifyTargets || raid.announcement_notify_targets || [];
+  if(typeof announcementTargets === "string"){
+    try{ announcementTargets = JSON.parse(announcementTargets); }catch(error){ announcementTargets = []; }
+  }
+  if(!Array.isArray(announcementTargets)) announcementTargets = [];
+  setRaidHelperEditValue("raidHelperAnnouncementNotifyNames", announcementTargets.filter(item => item?.type === "name").map(item => item.value).join(", "));
   setRaidHelperTab("createEvent");
   await loadRaidHelperDiscordRoles();
   raidHelperSelectedNotifyRoles = targets.filter(item => item?.type === "role").map(item => ({type:"role",value:String(item.value),label:item.label || raidHelperDiscordRoles.find(role => String(role.id || role.roleId) === String(item.value))?.name || String(item.value)}));
+  raidHelperSelectedAnnouncementNotifyRoles = announcementTargets.filter(item => item?.type === "role").map(item => ({type:"role",value:String(item.value),label:item.label || raidHelperDiscordRoles.find(role => String(role.id || role.roleId) === String(item.value))?.name || String(item.value)}));
   renderRaidHelperNotifyRoleTags();
+  renderRaidHelperAnnouncementNotifyRoleTags();
   renderRaidHelperDiscordChannels();
   const banner = document.getElementById("raidHelperRaidEditMode");
   banner?.classList.remove("hidden");
@@ -8540,6 +8603,7 @@ async function editRaidHelperEvent(raidId){
   if(title) title.textContent = `${raid.raidName || RAID_OPTIONS[key]?.name || "Raid"} · ${formatRaidDate(raid.raidDate)} · ${raid.raidTime || "-"}`;
   const submit = document.getElementById("raidHelperCreateSubmitButton");
   if(submit) submit.textContent = "Änderungen speichern";
+  document.getElementById("raidHelperSendAnnouncementNoticeButton")?.classList.remove("hidden");
   updateRaidHelperPreview();
   banner?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
@@ -8548,15 +8612,40 @@ function cancelRaidHelperEventCreateEdit(){
   raidHelperEditingRaidIdentifier = "";
   raidHelperEditingData = null;
   raidHelperSelectedNotifyRoles = [];
+  raidHelperSelectedAnnouncementNotifyRoles = [];
   renderRaidHelperNotifyRoleTags();
+  renderRaidHelperAnnouncementNotifyRoleTags();
   document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
   const submit = document.getElementById("raidHelperCreateSubmitButton");
   if(submit) submit.textContent = "Raidanmelder erstellen";
+  document.getElementById("raidHelperSendAnnouncementNoticeButton")?.classList.add("hidden");
   setRaidHelperTab("currentEvents");
 }
 
 function submitRaidHelperCreateOrEdit(){
   return raidHelperEditingRaidIdentifier ? saveRaidHelperEventFromCreate() : createRaidHelperSignup();
+}
+
+async function sendRaidHelperAnnouncementNoticeNow(){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(!masterCode || !raidHelperEditingRaidIdentifier){
+    setStatus(!masterCode ? "Bitte Master-Code eingeben." : "Bitte zuerst einen Raid zum Bearbeiten öffnen.", "bad");
+    return;
+  }
+  setStatus("Erstellungs-DM wird vorgemerkt ...", "");
+  try{
+    const result=await railwayWrite({
+      action:"guildQueueRaidAnnouncementNotice",
+      masterCode,
+      raidId:raidHelperEditingRaidIdentifier,
+      channelId:raidHelperValue("raidHelperChannel"),
+      announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets())
+    });
+    if(!result.success) throw new Error(result.error || "DM konnte nicht vorgemerkt werden.");
+    setStatus("Erstellungs-DM wurde vorgemerkt und wird gleich versendet.", "good");
+  }catch(error){
+    setStatus(error.message || "DM konnte nicht vorgemerkt werden.", "bad");
+  }
 }
 
 async function saveRaidHelperEventFromCreate(){
@@ -8596,6 +8685,7 @@ async function saveRaidHelperEventFromCreate(){
     lootMaster:raidHelperValue("raidHelperLootMaster"),
     pluendermeister:raidHelperValue("raidHelperLootMaster"),
     statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
+    announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
     description:raidHelperValue("raidHelperDescription"),
     raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
@@ -8611,10 +8701,13 @@ async function saveRaidHelperEventFromCreate(){
     raidHelperEditingRaidIdentifier = "";
     raidHelperEditingData = null;
     raidHelperSelectedNotifyRoles = [];
+    raidHelperSelectedAnnouncementNotifyRoles = [];
     renderRaidHelperNotifyRoleTags();
+    renderRaidHelperAnnouncementNotifyRoleTags();
     document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
     const submit = document.getElementById("raidHelperCreateSubmitButton");
     if(submit) submit.textContent = "Raidanmelder erstellen";
+    document.getElementById("raidHelperSendAnnouncementNoticeButton")?.classList.add("hidden");
     await loadOverview({ preserveStatus:true });
     setRaidHelperTab("currentEvents");
     setRaidHelperCurrentStatus("Raid gespeichert und Discord-Aktualisierung vorgemerkt.", "good");
@@ -12458,6 +12551,7 @@ async function createRaidHelperSignup(){
       lootMaster:raidHelperValue("raidHelperLootMaster"),
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
       statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
+      announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
@@ -12486,6 +12580,7 @@ async function createRaidHelperSignup(){
       lootMaster:raidHelperValue("raidHelperLootMaster"),
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
       statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
+      announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
@@ -12997,6 +13092,7 @@ async function queueRaidToDiscord(raidId){
       lootMaster:raid?.lootMaster || raid?.pluendermeister || "",
       pluendermeister:raid?.pluendermeister || raid?.lootMaster || "",
       statusNotifyTargets:JSON.stringify(raid?.statusNotifyTargets || raid?.status_notify_targets || []),
+      announcementNotifyTargets:JSON.stringify(raid?.announcementNotifyTargets || raid?.announcement_notify_targets || []),
       followupPoPost:followupPoPost ? JSON.stringify(followupPoPost) : ""
     });
 
