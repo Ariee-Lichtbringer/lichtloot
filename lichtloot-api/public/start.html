@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="images/content.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -1654,13 +1655,6 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.own-p0-summary-chip.is-active{
-  border-color:rgba(34,197,94,.78);
-  background:linear-gradient(135deg,rgba(22,163,74,.48),rgba(21,128,61,.30));
-  color:#dcfce7;
-  box-shadow:0 0 0 1px rgba(34,197,94,.12),0 0 14px rgba(34,197,94,.18);
-}
-.own-p0-summary-chip.is-active .ok{color:#86efac}
 .own-p0-summary-action{
   min-width:190px;
   min-height:46px!important;
@@ -1897,83 +1891,53 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 }
 .account-management-entry{
   position:relative;
-  min-height:164px;
+  min-height:156px;
   cursor:pointer;
-  overflow:visible;
-  border-color:rgba(var(--gold-rgb),.62)!important;
+  overflow:hidden;
+  border-color:rgba(250,204,21,.56)!important;
   background:
-    radial-gradient(circle at 15% 20%,rgba(var(--gold-rgb),.28),transparent 38%),
-    linear-gradient(135deg,rgba(5,12,25,.94),rgba(var(--blue-rgb),.18))!important;
-  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(var(--gold-rgb),.14)!important;
-  display:grid;
-  place-items:center;
-  padding:24px 18px!important;
+    radial-gradient(circle at 0% 28%,rgba(250,204,21,.30),transparent 28%),
+    linear-gradient(135deg,rgba(40,30,7,.86),rgba(10,17,31,.92) 58%,rgba(12,25,48,.84))!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(250,204,21,.10)!important;
 }
-.account-management-entry .account-entry-button{
-  width:100%;
-  min-height:92px;
-  display:grid;
-  place-items:center;
-  border:2px solid rgba(var(--gold-rgb),.78);
-  border-radius:14px;
-  background:linear-gradient(135deg,var(--gold),var(--blue));
-  color:#fff;
-  font-size:27px;
-  line-height:1.05;
-  font-weight:1000;
-  text-align:center;
-  text-transform:uppercase;
-  text-shadow:0 2px 12px rgba(0,0,0,.55);
-  box-shadow:0 12px 28px rgba(0,0,0,.34),0 0 22px rgba(var(--gold-rgb),.22);
+.account-management-entry > *{
+  display:none!important;
 }
-.account-management-entry .account-entry-nudge{
+.account-management-entry:before{
+  content:"➜";
   position:absolute;
-  left:calc(100% + 18px);
-  top:50%;
-  transform:translateY(-50%);
-  width:176px;
-  height:96px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  color:var(--gold);
+  left:16px;
+  top:22px;
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:#facc15;
+  color:#08111f;
+  font-size:30px;
+  font-weight:1000;
+  box-shadow:0 6px 0 rgba(146,64,14,.95),0 14px 28px rgba(0,0,0,.35);
+  transform:rotate(-8deg);
+}
+.account-management-entry:after{
+  content:"LichtLoot Account Verwaltung\\A Charaktere, Prios, Kalender und Worldbuffs öffnen";
+  white-space:pre-line;
+  position:absolute;
+  left:78px;
+  right:16px;
+  top:22px;
+  color:#facc15;
   font-size:20px;
+  line-height:1.12;
   font-weight:1000;
-  white-space:nowrap;
-  filter:drop-shadow(0 0 10px rgba(var(--gold-rgb),.55));
-  animation:accountNudgeBlink .9s infinite;
-  z-index:3;
-}
-.account-management-entry .account-entry-nudge{
-  padding:7px 14px;
-  border:3px solid var(--gold);
-  border-radius:12px;
-  background:rgba(2,6,23,.94);
-  box-shadow:0 0 18px rgba(var(--gold-rgb),.5),inset 0 0 14px rgba(var(--blue-rgb),.16);
-}
-.account-management-entry .account-entry-nudge:after{
-  content:"";
-  position:absolute;
-  right:18px;
-  bottom:-34px;
-  width:170px;
-  height:58px;
-  background:linear-gradient(90deg,var(--blue),var(--gold));
-  clip-path:polygon(0 50%,34% 8%,34% 30%,100% 30%,100% 70%,34% 70%,34% 92%);
-  filter:drop-shadow(0 0 12px rgba(var(--gold-rgb),.55));
-}
-@keyframes accountNudgeBlink{
-  0%,100%{opacity:1;transform:translateY(-50%) translateX(0) scale(1)}
-  50%{opacity:.6;transform:translateY(-50%) translateX(-8px) scale(1.06)}
-}
-@media(max-width:1180px){
-  .account-management-entry .account-entry-nudge{display:none}
+  text-transform:uppercase;
+  text-shadow:0 2px 14px rgba(0,0,0,.45);
 }
 .account-management-entry:hover,
 .account-management-entry:focus-visible{
   transform:translateY(-1px);
-  border-color:rgba(var(--gold-rgb),.9)!important;
+  border-color:rgba(250,204,21,.82)!important;
   outline:none;
 }
 
@@ -2329,7 +2293,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   gap:clamp(14px,1.25vw,24px)!important;
 }
 .instance-grid{
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;
   align-items:stretch!important;
 }
 .instance-card{
@@ -2385,7 +2349,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
     grid-column:1 / -1!important;
   }
   .instance-grid{
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important;
   }
 }
 
@@ -2497,14 +2461,56 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   font-size:11.5px!important;
 }
 #meinLichtLootCard .guild-switch-select{
-  min-height:30px;
-  padding:5px 30px 5px 9px;
-  border-radius:7px;
-  border:1px solid rgba(250,204,21,.42);
-  background:#0f172a;
+  min-width:190px;
+  min-height:40px;
+  padding:8px 38px 8px 13px;
+  border-radius:9px;
+  border:2px solid rgba(250,204,21,.72);
+  background:linear-gradient(135deg,#111827,#071426);
   color:#f8fafc;
-  font-size:11.5px;
+  font-size:13px;
   font-weight:900;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.25);
+  cursor:pointer;
+}
+#meinLichtLootCard .guild-switch-callout{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:6px 7px 6px 12px;
+  border:2px solid rgba(250,204,21,.72);
+  border-radius:11px;
+  background:linear-gradient(90deg,rgba(250,204,21,.22),rgba(37,99,235,.18));
+  box-shadow:0 0 0 3px rgba(250,204,21,.06),0 10px 24px rgba(0,0,0,.28);
+}
+#meinLichtLootCard .guild-switch-label{
+  color:#fde047;
+  font-size:13px;
+  font-weight:950;
+  white-space:nowrap;
+  text-transform:uppercase;
+  letter-spacing:.025em;
+}
+#meinLichtLootCard .guild-switch-arrow{
+  color:#facc15;
+  font-size:25px;
+  line-height:1;
+  filter:drop-shadow(0 0 7px rgba(250,204,21,.95));
+  animation:lootGuildArrowBlink 1s ease-in-out infinite;
+}
+@keyframes lootGuildArrowBlink{
+  0%,100%{opacity:1;transform:translateX(0) scale(1)}
+  50%{opacity:.28;transform:translateX(6px) scale(1.12)}
+}
+@media(max-width:700px){
+  #meinLichtLootCard .guild-switch-callout{
+    width:100%;
+    flex-wrap:wrap;
+  }
+  #meinLichtLootCard .guild-switch-select{
+    flex:1;
+    min-width:150px;
+  }
 }
 #meinLichtLootCard .dashboard-select-row select,
 #meinLichtLootCard .right-pin-row input{
@@ -2896,7 +2902,10 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 
       <section class="dash-panel account-management-panel hidden" id="accountManagementPanel">
         <div class="section-head account-management-head">
-          <div></div>
+          <div>
+            <div class="section-title">LichtLoot Account Verwaltung</div>
+            <p>Charaktere, Prios, Raidkalender und Worldbuffs an einem Ort.</p>
+          </div>
           <button class="right-inline-btn" type="button" onclick="goHomeView()">Zurück zu den Raids</button>
         </div>
         <section class="dash-panel right-card account-management-card" id="meinLichtLootCard">
@@ -2905,10 +2914,14 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <input id="dashboardPlayerPin" type="hidden">
           <p id="dashboardMyStatus" class="dashboard-inline-status">SpielerLogin wird von der Startseite übernommen.</p>
           <div class="quick-actions">
-            <select id="meinLichtLootGuildSwitch" class="guild-switch-select" onchange="switchMeinLichtLootGuild(this.value)">
-              <option value="Lichtbringer">Lichtbringer</option>
-              <option value="Die Nachtwächter">Die Nachtwächter</option>
-            </select>
+            <div class="guild-switch-callout">
+              <span class="guild-switch-label">LootGilde wechseln</span>
+              <span class="guild-switch-arrow" aria-hidden="true">➜</span>
+              <select id="meinLichtLootGuildSwitch" class="guild-switch-select" aria-label="LootGilde wechseln" onchange="switchMeinLichtLootGuild(this.value)">
+                <option value="Lichtbringer">Lichtbringer</option>
+                <option value="Die Nachtwächter">Die Nachtwächter</option>
+              </select>
+            </div>
             <button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button>
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
@@ -3015,7 +3028,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="LichtLoot Account Verwaltung öffnen"></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3261,14 +3274,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
-  const primaryColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.primaryColor || String(guild.primaryColor).toLowerCase() === "#facc15")
-    ? "#22d3ee"
-    : guild?.primaryColor;
-  const accentColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
-    ? "#0891b2"
-    : guild?.accentColor;
-  applyGuildThemeColor("--gold", "--gold-rgb", primaryColor);
-  applyGuildThemeColor("--blue", "--blue-rgb", accentColor);
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand='footerName']").forEach(el => el.textContent = "© 2026 " + brand.footerName);
@@ -3286,10 +3293,6 @@ function applyGuildBrand(){
   }
   applyRaidLayoutImages(guild?.layout?.raidImages);
   updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
-  const accountEntryText = document.getElementById("accountEntryButtonText");
-  if(accountEntryText) accountEntryText.textContent = CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot";
-  const accountEntry = document.getElementById("meinLichtLootRightEntry");
-  if(accountEntry) accountEntry.setAttribute("aria-label", (CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot") + " öffnen");
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
 }
@@ -3363,8 +3366,7 @@ function createRaidId(raid){
     String(now.getSeconds()).padStart(2,"0")+"-"+
     randomCode(2);
 
-  const guildPrefix = CURRENT_GUILD_SLUG === "nachtloot" ? "NL" : "LL";
-  return guildPrefix+"-"+raids[raid].short+"-"+date;
+  return raids[raid].short+"-"+date;
 }
 
 function placeSidebarDrawers(){
@@ -3738,8 +3740,6 @@ function activeRaidPin(raid){
 }
 
 function activeRaidGuild(raid){
-  if(CURRENT_GUILD_SLUG === "nachtloot") return "Die Nachtwächter";
-  if(CURRENT_GUILD_SLUG === "lichtloot") return "Lichtbringer";
   return raid.guild || raid.gilde || raid.GildeName || raid.gildeName || raid.Gilde || raid.Guild || "";
 }
 
@@ -7387,7 +7387,7 @@ function renderMyPoReleasesCard(releases){
   ];
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
-    return `<span class="own-p0-summary-chip${active ? " is-active" : ""}">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
+    return `<span class="own-p0-summary-chip">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
   }).join("");
   return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
     <div>
