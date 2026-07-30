@@ -6522,6 +6522,20 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       queuedAt: new Date().toISOString()
     }
   }).catch(error => console.warn("PO-Post konnte nach Freigabe nicht queued werden:", error.message || error));
+  const linkedRaid = await findRaid(guildId, {
+    raidId: row.post_key || postKey,
+    raid: row.raid || params.raid || params.raidName,
+    raidDate: row.raid_date || params.raidDate || params.date || params.datum,
+    raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
+    raidPin: row.raid_pin || raidPin,
+    prioPin: row.raid_pin || raidPin,
+    playerPin: row.raid_pin || raidPin
+  }).catch(() => null);
+  const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+    guildId,
+    linkedRaid,
+    approvalStatus === "approved" ? "po_approved" : "po_rejected"
+  );
   const rejectionNoticeHandled = ["1", "true", "yes", "ja"].includes(
     clean(params.rejectionNoticeHandled || params.notificationHandled).toLowerCase()
   );
@@ -6583,7 +6597,8 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       approvedAt: row.approved_at || "",
       rejectionReason: row.rejection_reason || rejectionReason || ""
     },
-    prioDelete
+    prioDelete,
+    raidAnnouncementRefresh
   };
 }
 
@@ -14089,6 +14104,28 @@ async function getRaidHelper({ guildId, query: params }) {
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
   const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  await ensurePoPostEntriesSchema();
+  const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
+  const poApprovalResult = poPins.length ? await query(
+    `select player_name, approval_status
+     from po_post_entries
+     where guild_id = $1
+       and archived_at is null
+       and raid_pin = any($2)
+       and coalesce(player_name, '') <> ''`,
+    [guildId, poPins]
+  ) : { rows: [] };
+  const poApprovalByPlayer = new Map();
+  for (const row of poApprovalResult.rows) {
+    const playerKey = clean(row.player_name).toLowerCase();
+    const status = clean(row.approval_status).toLowerCase();
+    const current = poApprovalByPlayer.get(playerKey) || "";
+    if (["approved", "freigegeben"].includes(status)) poApprovalByPlayer.set(playerKey, "approved");
+    else if (!current && ["pending", "offen", "wartet"].includes(status)) poApprovalByPlayer.set(playerKey, "pending");
+  }
+  for (const row of [...signups, ...externalSignups]) {
+    row.poApprovalStatus = poApprovalByPlayer.get(clean(row.player || row.char).toLowerCase()) || "";
+  }
   const prioCountResult = await query("select count(*)::int as count from prios where raid_id = $1", [raid.id]);
   const prioCount = Number(prioCountResult.rows[0]?.count || 0);
   const signupCount = signups.length + externalSignups.length;
