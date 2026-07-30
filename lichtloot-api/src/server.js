@@ -4714,6 +4714,39 @@ async function queueBotUpdate({ guildId, query: params }) {
 
 async function enqueueBotUpdate({ guildId, type, payload }) {
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  if (type === "raid_announcement_role_notice") {
+    const raidId = clean(payload?.raidId || "");
+    if (raidId) {
+      const existing = await query(
+        `select id
+         from bot_update_queue
+         where guild_id = $1
+           and type = $2
+           and status = 'open'
+           and payload->>'raidId' = $3
+         order by created_at desc
+         limit 1`,
+        [guildId, type, raidId]
+      );
+      if (existing.rows[0]) {
+        await query(
+          `update bot_update_queue
+           set payload = $2::jsonb,
+               created_at = now()
+           where id = $1`,
+          [existing.rows[0].id, JSON.stringify(payload || {})]
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "raid_announcement_notice_already_open",
+          rowNumber: existing.rows[0].id,
+          type,
+          payload: payload || {}
+        };
+      }
+    }
+  }
   if (type === "po_post") {
     const payloadJson = JSON.stringify(payload || {});
     const existing = await query(
