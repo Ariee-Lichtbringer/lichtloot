@@ -8317,7 +8317,8 @@ function renderRaidHelperCurrentRaidButton(raid){
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
   const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.signups || 0);
-  const imageUrl = defaultRaidHelperImageUrl(key);
+  const imageKey = key.startsWith("zg-") ? "zg" : key;
+  const imageUrl = `images/raid-templates/${imageKey}.jpg`;
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
       <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
@@ -8413,7 +8414,8 @@ async function renderRaidHelperCurrentDetail(raidId){
     raid.healSlots ? "Heals " + raid.healSlots : "",
     raid.ddSlots ? "DD " + raid.ddSlots : ""
   ].filter(Boolean).join(" · ");
-  const imageUrl = defaultRaidHelperImageUrl(key);
+  const imageKey = key.startsWith("zg-") ? "zg" : key;
+  const imageUrl = `images/raid-templates/${imageKey}.jpg`;
   box.innerHTML = `
     <div class="raid-helper-current-detail-head">
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
@@ -12979,6 +12981,22 @@ async function queueRaidToDiscord(raidId){
       masterCode,
       raidId,
       channelId,
+      raid:raid?.raid || "",
+      raidName:raid?.raidName || "",
+      raidDate:raid?.raidDate || "",
+      raidTime:raid?.raidTime || "",
+      createdBy:raid?.createdBy || raid?.erstelltVon || "",
+      guild:raid?.guild || CURRENT_GUILD_SLUG,
+      guildName:raid?.guildName || raid?.gilde || "",
+      maxPlayers:raid?.maxPlayers || "",
+      tankSlots:raid?.tankSlots || "",
+      healSlots:raid?.healSlots || "",
+      ddSlots:raid?.ddSlots || "",
+      description:raid?.description || raid?.beschreibung || "",
+      raidImageUrl:defaultRaidHelperImageUrl(getRaidKey(raid || {})),
+      lootMaster:raid?.lootMaster || raid?.pluendermeister || "",
+      pluendermeister:raid?.pluendermeister || raid?.lootMaster || "",
+      statusNotifyTargets:JSON.stringify(raid?.statusNotifyTargets || raid?.status_notify_targets || []),
       followupPoPost:followupPoPost ? JSON.stringify(followupPoPost) : ""
     });
 
