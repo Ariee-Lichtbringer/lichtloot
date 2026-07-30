@@ -4944,6 +4944,22 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
+            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
+              <div class="raid-helper-card-head">
+                <span class="raid-helper-card-icon">🔔</span>
+                <div><h3>Interne Benachrichtigungen bei Statusänderungen</h3><p>Raidlead und Plündermeister werden automatisch informiert. Weitere Namen oder Discord-Rollen kannst du hier ergänzen. Diese Auswahl erscheint nicht im Anmeldertext.</p></div>
+              </div>
+              <div class="raid-helper-row">
+                <div class="field">
+                  <label for="raidHelperNotifyNames">Weitere Namen</label>
+                  <input id="raidHelperNotifyNames" type="text" placeholder="z. B. Ariee, Offiziername">
+                </div>
+                <div class="field">
+                  <label for="raidHelperNotifyRoles">Discord-Rollen</label>
+                  <select id="raidHelperNotifyRoles" multiple size="5"><option value="">Rollen werden vom Bot geladen …</option></select>
+                </div>
+              </div>
+            </div>
             <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
               <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
               <span>PO-Anmelder automatisch mit erstellen</span>
@@ -7754,6 +7770,7 @@ const RAID_HELPER_CHANNEL_ID = "1508478036398571601";
 const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
+let raidHelperDiscordRoles = [];
 let raidHelperTemplates = [];
 let raidHelperEditingTemplateIdentifier = "";
 let raidHelperSchedules = [];
@@ -7854,7 +7871,29 @@ function initRaidHelperPanel(){
   if(channel && !channel.value.trim()) channel.value = RAID_HELPER_CHANNEL_ID;
   renderRaidHelperClassGrid();
   loadRaidHelperDiscordChannels();
+  loadRaidHelperDiscordRoles();
   updateRaidHelperDefaults();
+}
+
+async function loadRaidHelperDiscordRoles(){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  const select=document.getElementById("raidHelperNotifyRoles");
+  if(!select || !masterCode) return;
+  try{
+    const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
+    raidHelperDiscordRoles=Array.isArray(result.roles) ? result.roles : [];
+    select.innerHTML=raidHelperDiscordRoles.length
+      ? raidHelperDiscordRoles.map(role=>`<option value="${escapeAttr(role.id || role.roleId)}">${escapeHtml(role.name || role.roleName)}</option>`).join("")
+      : '<option value="">Keine Rollen geladen – Bot neu starten</option>';
+  }catch(error){
+    select.innerHTML='<option value="">Rollen konnten nicht geladen werden</option>';
+  }
+}
+
+function raidHelperStatusNotifyTargets(){
+  const names=raidHelperValue("raidHelperNotifyNames").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value}));
+  const roles=Array.from(document.getElementById("raidHelperNotifyRoles")?.selectedOptions || []).filter(option=>option.value).map(option=>({type:"role",value:option.value,label:option.textContent.trim()}));
+  return names.concat(roles);
 }
 
 function renderRaidHelperClassGrid(){
@@ -12209,6 +12248,7 @@ async function createRaidHelperSignup(){
       discordChannelId,
       lootMaster:raidHelperValue("raidHelperLootMaster"),
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
+      statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
@@ -12236,6 +12276,7 @@ async function createRaidHelperSignup(){
       ddSlots:raidHelperValue("raidHelperDds"),
       lootMaster:raidHelperValue("raidHelperLootMaster"),
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
+      statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
