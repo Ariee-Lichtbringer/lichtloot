@@ -2604,6 +2604,46 @@ tr.selected-row td{
   flex:1;
 }
 
+.raid-helper-role-picker{
+  display:grid;
+  gap:8px;
+}
+
+.raid-helper-role-tags{
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  align-content:flex-start;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:8px;
+  border:1px solid rgba(59,130,246,.42);
+  border-radius:9px;
+  background:rgba(2,6,23,.55);
+}
+
+.raid-helper-role-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  border:1px solid rgba(56,189,248,.38);
+  border-radius:999px;
+  background:rgba(14,165,233,.14);
+  color:#e0f2fe;
+  padding:6px 9px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.raid-helper-role-tag button{
+  border:0;
+  background:transparent;
+  color:#fda4af;
+  padding:0;
+  cursor:pointer;
+  font:900 15px/1 Arial, sans-serif;
+}
+
 .raid-helper-current-raid .raid-select-checkbox{
   justify-self:end;
 }
@@ -4996,7 +5036,14 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
                 </div>
                 <div class="field">
                   <label for="raidHelperNotifyRoles">Discord-Rollen</label>
-                  <select id="raidHelperNotifyRoles" multiple size="5"><option value="">Rollen werden vom Bot geladen …</option></select>
+                  <div class="raid-helper-role-picker">
+                    <select id="raidHelperNotifyRoles" onchange="addRaidHelperNotifyRole(this.value)">
+                      <option value="">Rolle auswählen und anklicken …</option>
+                    </select>
+                    <div id="raidHelperNotifyRoleTags" class="raid-helper-role-tags">
+                      <span class="muted">Noch keine zusätzliche Rolle ausgewählt.</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -7811,6 +7858,7 @@ const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
 let raidHelperDiscordRoles = [];
+let raidHelperSelectedNotifyRoles = [];
 let raidHelperTemplates = [];
 let raidHelperEditingTemplateIdentifier = "";
 let raidHelperEditingRaidIdentifier = "";
@@ -7923,18 +7971,42 @@ async function loadRaidHelperDiscordRoles(){
   try{
     const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
     raidHelperDiscordRoles=Array.isArray(result.roles) ? result.roles : [];
-    select.innerHTML=raidHelperDiscordRoles.length
+    select.innerHTML='<option value="">Rolle auswählen und anklicken …</option>'+(raidHelperDiscordRoles.length
       ? raidHelperDiscordRoles.map(role=>`<option value="${escapeAttr(role.id || role.roleId)}">${escapeHtml(role.name || role.roleName)}</option>`).join("")
-      : '<option value="">Keine Rollen geladen – Bot neu starten</option>';
+      : '<option value="">Keine Rollen geladen – Bot neu starten</option>');
+    renderRaidHelperNotifyRoleTags();
   }catch(error){
     select.innerHTML='<option value="">Rollen konnten nicht geladen werden</option>';
   }
 }
 
+function addRaidHelperNotifyRole(roleId){
+  const value=String(roleId || "");
+  const role=raidHelperDiscordRoles.find(item=>String(item.id || item.roleId)===value);
+  if(value && role && !raidHelperSelectedNotifyRoles.some(item=>String(item.value)===value)){
+    raidHelperSelectedNotifyRoles.push({type:"role",value,label:role.name || role.roleName || value});
+  }
+  const select=document.getElementById("raidHelperNotifyRoles");
+  if(select) select.value="";
+  renderRaidHelperNotifyRoleTags();
+}
+
+function removeRaidHelperNotifyRole(roleId){
+  raidHelperSelectedNotifyRoles=raidHelperSelectedNotifyRoles.filter(item=>String(item.value)!==String(roleId));
+  renderRaidHelperNotifyRoleTags();
+}
+
+function renderRaidHelperNotifyRoleTags(){
+  const box=document.getElementById("raidHelperNotifyRoleTags");
+  if(!box) return;
+  box.innerHTML=raidHelperSelectedNotifyRoles.length
+    ? raidHelperSelectedNotifyRoles.map(role=>`<span class="raid-helper-role-tag">${escapeHtml(role.label || role.value)}<button type="button" title="Rolle entfernen" onclick="removeRaidHelperNotifyRole('${escapeAttr(role.value)}')">×</button></span>`).join("")
+    : '<span class="muted">Noch keine zusätzliche Rolle ausgewählt.</span>';
+}
+
 function raidHelperStatusNotifyTargets(){
   const names=raidHelperValue("raidHelperNotifyNames").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value}));
-  const roles=Array.from(document.getElementById("raidHelperNotifyRoles")?.selectedOptions || []).filter(option=>option.value).map(option=>({type:"role",value:option.value,label:option.textContent.trim()}));
-  return names.concat(roles);
+  return names.concat(raidHelperSelectedNotifyRoles);
 }
 
 function renderRaidHelperClassGrid(){
@@ -8245,7 +8317,7 @@ function renderRaidHelperCurrentRaidButton(raid){
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
   const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.signups || 0);
-  const imageUrl = raid.raidImageUrl || defaultRaidHelperImageUrl(key);
+  const imageUrl = defaultRaidHelperImageUrl(key);
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
       <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
@@ -8341,7 +8413,7 @@ async function renderRaidHelperCurrentDetail(raidId){
     raid.healSlots ? "Heals " + raid.healSlots : "",
     raid.ddSlots ? "DD " + raid.ddSlots : ""
   ].filter(Boolean).join(" · ");
-  const imageUrl = raid.raidImageUrl || defaultRaidHelperImageUrl(key);
+  const imageUrl = defaultRaidHelperImageUrl(key);
   box.innerHTML = `
     <div class="raid-helper-current-detail-head">
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
@@ -8456,10 +8528,8 @@ async function editRaidHelperEvent(raidId){
   setRaidHelperEditValue("raidHelperNotifyNames", targets.filter(item => item?.type === "name").map(item => item.value).join(", "));
   setRaidHelperTab("createEvent");
   await loadRaidHelperDiscordRoles();
-  const roleValues = new Set(targets.filter(item => item?.type === "role").map(item => String(item.value)));
-  Array.from(document.getElementById("raidHelperNotifyRoles")?.options || []).forEach(option => {
-    option.selected = roleValues.has(String(option.value));
-  });
+  raidHelperSelectedNotifyRoles = targets.filter(item => item?.type === "role").map(item => ({type:"role",value:String(item.value),label:item.label || raidHelperDiscordRoles.find(role => String(role.id || role.roleId) === String(item.value))?.name || String(item.value)}));
+  renderRaidHelperNotifyRoleTags();
   renderRaidHelperDiscordChannels();
   const banner = document.getElementById("raidHelperRaidEditMode");
   banner?.classList.remove("hidden");
@@ -8475,6 +8545,8 @@ async function editRaidHelperEvent(raidId){
 function cancelRaidHelperEventCreateEdit(){
   raidHelperEditingRaidIdentifier = "";
   raidHelperEditingData = null;
+  raidHelperSelectedNotifyRoles = [];
+  renderRaidHelperNotifyRoleTags();
   document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
   const submit = document.getElementById("raidHelperCreateSubmitButton");
   if(submit) submit.textContent = "Raidanmelder erstellen";
@@ -8536,6 +8608,8 @@ async function saveRaidHelperEventFromCreate(){
     await queueRaidHelperDiscordRefresh(payload.raidId, { quiet:true });
     raidHelperEditingRaidIdentifier = "";
     raidHelperEditingData = null;
+    raidHelperSelectedNotifyRoles = [];
+    renderRaidHelperNotifyRoleTags();
     document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
     const submit = document.getElementById("raidHelperCreateSubmitButton");
     if(submit) submit.textContent = "Raidanmelder erstellen";
@@ -12195,8 +12269,9 @@ function raidHelperValue(id){
 }
 
 function defaultRaidHelperImageUrl(raidKey){
-  const key = RAID_OPTIONS[String(raidKey || "").trim().toLowerCase()] ? String(raidKey || "").trim().toLowerCase() : "zg";
-  return new URL("images/raid-banners/" + key + ".jpg", location.href).href;
+  const raw = String(raidKey || "").trim().toLowerCase();
+  const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
+  return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
 function buildRaidHelperPreviewText(){
