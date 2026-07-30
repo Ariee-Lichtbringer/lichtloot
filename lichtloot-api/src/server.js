@@ -2252,7 +2252,8 @@ async function ensureRaidSchema() {
        add column if not exists description text,
        add column if not exists raid_image_url text,
        add column if not exists loot_master text,
-       add column if not exists status_notify_targets jsonb not null default '[]'::jsonb`
+       add column if not exists status_notify_targets jsonb not null default '[]'::jsonb,
+       add column if not exists announcement_notify_targets jsonb not null default '[]'::jsonb`
   );
   await query(
     `alter table raid_signups
@@ -2708,6 +2709,7 @@ function normalizeRaidRow(row) {
     lootMaster: row.loot_master || "",
     pluendermeister: row.loot_master || "",
     statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
+    announcementNotifyTargets: Array.isArray(row.announcement_notify_targets) ? row.announcement_notify_targets : [],
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -5669,7 +5671,17 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   } catch {
     snapshot = null;
   }
-  return queueBotUpdate({
+  const statusNotifyTargets = (() => {
+    const raw = params.statusNotifyTargets ?? snapshot?.raid?.statusNotifyTargets ?? [];
+    if (Array.isArray(raw)) return raw;
+    try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
+  })();
+  const announcementNotifyTargets = (() => {
+    const raw = params.announcementNotifyTargets ?? snapshot?.raid?.announcementNotifyTargets ?? [];
+    if (Array.isArray(raw)) return raw;
+    try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
+  })();
+  const announcement = await queueBotUpdate({
     guildId,
     query: {
       ...params,
@@ -5693,11 +5705,8 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         signupDeadline: clean(params.signupDeadline || snapshot?.raid?.signupDeadline || snapshot?.raid?.signup_deadline || ""),
         lootMaster: clean(params.lootMaster || params.pluendermeister || snapshot?.raid?.lootMaster || snapshot?.raid?.pluendermeister || ""),
         pluendermeister: clean(params.pluendermeister || params.lootMaster || snapshot?.raid?.pluendermeister || snapshot?.raid?.lootMaster || ""),
-        statusNotifyTargets: (() => {
-          const raw = params.statusNotifyTargets ?? snapshot?.raid?.statusNotifyTargets ?? [];
-          if (Array.isArray(raw)) return raw;
-          try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
-        })(),
+        statusNotifyTargets,
+        announcementNotifyTargets,
         description: clean(params.description || snapshot?.raid?.description || ""),
         raidImageUrl: clean(params.raidImageUrl || snapshot?.raid?.raidImageUrl || snapshot?.raid?.imageUrl || ""),
         channelId,
@@ -5710,6 +5719,52 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         followupPoPost: followupPoPost && typeof followupPoPost === "object" ? followupPoPost : null,
         source: "gildenleitung"
       }
+    }
+  });
+  const announcementTargets = announcementNotifyTargets.filter(target => ["role", "name"].includes(clean(target?.type).toLowerCase()) && clean(target?.value));
+  let roleNoticeQueued = false;
+  if (announcement?.success && announcementTargets.length) {
+    const notice = await enqueueBotUpdate({
+      guildId,
+      type: "raid_announcement_role_notice",
+      payload: {
+        raidId,
+        raidName: clean(params.raidName || snapshot?.raid?.raidName || "Raid"),
+        raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
+        raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
+        channelId: channelId || clean(snapshot?.raid?.discordChannelId || ""),
+        targets: announcementTargets,
+        signupUrl: `https://lichtloot.de/?raidId=${encodeURIComponent(raidId)}`
+      }
+    }).catch(() => null);
+    roleNoticeQueued = Boolean(notice?.success);
+  }
+  return { ...announcement, roleNoticeQueued };
+}
+
+async function queueRaidAnnouncementNotice({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const raidId = clean(params.raidId || params.id || "");
+  if (!raidId) return { success: false, error: "Raid-ID fehlt." };
+  const snapshot = await getRaidHelper({ guildId, query: { ...params, raidId, playerPin: raidId } });
+  const raid = snapshot?.raid || {};
+  let targets = params.announcementNotifyTargets ?? raid.announcementNotifyTargets ?? [];
+  if (typeof targets === "string") {
+    try { targets = JSON.parse(targets); } catch { targets = []; }
+  }
+  targets = Array.isArray(targets) ? targets.filter(target => ["role", "name"].includes(clean(target?.type).toLowerCase()) && clean(target?.value)) : [];
+  if (!targets.length) return { success: false, error: "Keine Empfänger für die Erstellungs-DM ausgewählt." };
+  return enqueueBotUpdate({
+    guildId,
+    type: "raid_announcement_role_notice",
+    payload: {
+      raidId,
+      raidName: clean(raid.raidName || params.raidName || "Raid"),
+      raidDate: clean(raid.raidDate || params.raidDate || ""),
+      raidTime: clean(raid.raidTime || params.raidTime || ""),
+      channelId: clean(raid.discordChannelId || params.channelId || params.discordChannelId || ""),
+      targets,
+      signupUrl: `https://lichtloot.de/?raidId=${encodeURIComponent(raidId)}`
     }
   });
 }
@@ -13634,10 +13689,10 @@ async function createRaidRecord({ guildId, query: params }) {
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
-       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, status_notify_targets
+       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, status_notify_targets, announcement_notify_targets
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -13680,6 +13735,7 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            status_notify_targets = case when excluded.status_notify_targets = '[]'::jsonb then raids.status_notify_targets else excluded.status_notify_targets end,
+           announcement_notify_targets = case when excluded.announcement_notify_targets = '[]'::jsonb then raids.announcement_notify_targets else excluded.announcement_notify_targets end,
            updated_at = now()
      returning *`,
     [
@@ -13710,6 +13766,14 @@ async function createRaidRecord({ guildId, query: params }) {
       (() => {
         try {
           const value = typeof params.statusNotifyTargets === "string" ? JSON.parse(params.statusNotifyTargets) : params.statusNotifyTargets;
+          return JSON.stringify(Array.isArray(value) ? value : []);
+        } catch {
+          return "[]";
+        }
+      })(),
+      (() => {
+        try {
+          const value = typeof params.announcementNotifyTargets === "string" ? JSON.parse(params.announcementNotifyTargets) : params.announcementNotifyTargets;
           return JSON.stringify(Array.isArray(value) ? value : []);
         } catch {
           return "[]";
@@ -19770,6 +19834,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueRaidAnnouncement") {
       const queued = await queueRaidAnnouncement({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueRaidAnnouncementNotice") {
+      const queued = await queueRaidAnnouncementNotice({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
