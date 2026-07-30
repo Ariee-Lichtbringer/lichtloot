@@ -2834,6 +2834,52 @@ tr.selected-row td{
   margin-top:10px;
 }
 
+.raid-helper-edit-mode{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:14px;
+  padding:14px 16px;
+  border:2px solid rgba(250,204,21,.68);
+  border-radius:12px;
+  background:linear-gradient(135deg,rgba(250,204,21,.18),rgba(249,115,22,.10));
+  box-shadow:0 0 0 3px rgba(250,204,21,.06),0 14px 32px rgba(0,0,0,.24);
+}
+
+.raid-helper-edit-mode strong{
+  display:block;
+  color:#fef08a;
+  font-size:16px;
+}
+
+.raid-helper-edit-mode span{
+  display:block;
+  margin-top:3px;
+  color:#f8fafc;
+  font-size:13px;
+  font-weight:750;
+}
+
+.raid-helper-edit-mode-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+#raidHelperTab-templates .raid-helper-template-actions{
+  padding:8px;
+  border-radius:10px;
+  background:rgba(15,23,42,.62);
+}
+
+#raidHelperTab-templates .raid-helper-template-status{
+  padding:12px 14px;
+  border-width:2px;
+  font-size:14px;
+  box-shadow:0 8px 22px rgba(0,0,0,.20);
+}
+
 #raidHelperTab-templates .raid-helper-view-head span,
 #raidHelperTab-templates .raid-helper-card-head p{
   color:#e2e8f0;
@@ -3334,7 +3380,8 @@ tr.selected-row td{
 .discord-preview-image{
   margin-top:14px;
   width:100%;
-  aspect-ratio:16/7;
+  aspect-ratio:12/5;
+  max-height:300px;
   border-radius:8px;
   border:1px solid rgba(255,255,255,.10);
   background-image:linear-gradient(rgba(2,6,23,.10),rgba(2,6,23,.20)),var(--preview-image);
@@ -4821,6 +4868,16 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
+          <div id="raidHelperTemplateEditMode" class="raid-helper-edit-mode hidden">
+            <div>
+              <strong>Vorlage wird bearbeitet</strong>
+              <span id="raidHelperTemplateEditModeTitle">Änderungen werden in dieser Vorlage gespeichert.</span>
+            </div>
+            <div class="raid-helper-edit-mode-actions">
+              <button class="small-btn good" type="button" onclick="saveRaidHelperTemplateFromCreate()">Änderungen speichern</button>
+              <button class="small-btn ghost" type="button" onclick="cancelRaidHelperTemplateEdit()">Abbrechen</button>
+            </div>
+          </div>
           <section class="raid-helper-card">
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">⚔</span>
@@ -4872,8 +4929,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
             </div>
             <div class="raid-helper-row">
               <div class="field">
-                <label for="raidHelperDeadline">Anmeldeschluss</label>
-                <input id="raidHelperDeadline" type="time" value="20:30" onchange="updateRaidHelperPreview()">
+                <label for="raidHelperLootMaster">Plündermeister</label>
+                <input id="raidHelperLootMaster" type="text" placeholder="Name des Plündermeisters" oninput="updateRaidHelperPreview()">
               </div>
               <div class="field">
                 <label for="raidHelperChannel">Discord-Channel</label>
@@ -4935,7 +4992,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
               </div>
             </div>
             <div class="raid-helper-class-grid" id="raidHelperClassGrid"></div>
-            <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Warrior, Druid, Paladin, Rogue, Hunter, Priest, Mage, Warlock und Shaman. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
+            <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Krieger, Druide, Paladin, Schurke, Jäger, Priester, Magier, Hexenmeister und Schamane. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
           </section>
 
           <div class="tools">
@@ -7698,6 +7755,7 @@ const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
 let raidHelperTemplates = [];
+let raidHelperEditingTemplateIdentifier = "";
 let raidHelperSchedules = [];
 let raidHelperAttendanceCache = null;
 let raidHelperAttendanceRaidKey = "bwl";
@@ -7741,6 +7799,19 @@ const RAID_HELPER_CLASSES = [
   ["Shaman","⚡"],
   ["Abwesenheit","🚫"]
 ];
+const RAID_HELPER_CLASS_LABELS = {
+  Tank:"Tank",
+  Warrior:"Krieger",
+  Druid:"Druide",
+  Paladin:"Paladin",
+  Rogue:"Schurke",
+  Hunter:"Jäger",
+  Priest:"Priester",
+  Mage:"Magier",
+  Warlock:"Hexenmeister",
+  Shaman:"Schamane",
+  Abwesenheit:"Abwesenheit"
+};
 const RAID_HELPER_DEFAULT_TEXT = {
   zg:
 `ZG Raid Samstag Start ca. 21 Uhr // Invite im Anschluss an AQ20
@@ -7790,7 +7861,7 @@ function renderRaidHelperClassGrid(){
   const grid = document.getElementById("raidHelperClassGrid");
   if(!grid) return;
   grid.innerHTML = RAID_HELPER_CLASSES.map(([name, icon, image]) => `
-    <div class="raid-helper-class-chip">${raidHelperClassIconMarkup(name, icon, image)}${escapeHtml(name)}</div>
+    <div class="raid-helper-class-chip">${raidHelperClassIconMarkup(name, icon, image)}${escapeHtml(RAID_HELPER_CLASS_LABELS[name] || name)}</div>
   `).join("");
 }
 
@@ -9420,7 +9491,76 @@ function raidHelperRaidColorRgb(raidKey){
 
 function editRaidHelperTemplate(identifier){
   const template = findRaidHelperTemplate(identifier);
-  if(template) fillRaidHelperTemplateEditor(template);
+  if(!template) return;
+  fillRaidHelperTemplateEditor(template);
+  raidHelperEditingTemplateIdentifier = raidHelperTemplateKey(template);
+  applyRaidHelperTemplateObject(template);
+  const box = document.getElementById("raidHelperTemplateEditMode");
+  const title = document.getElementById("raidHelperTemplateEditModeTitle");
+  if(title) title.textContent = `„${template.title || RAID_OPTIONS[template.raid]?.name || "Vorlage"}“ bearbeiten und anschließend speichern.`;
+  if(box) box.classList.remove("hidden");
+}
+
+function cancelRaidHelperTemplateEdit(){
+  raidHelperEditingTemplateIdentifier = "";
+  document.getElementById("raidHelperTemplateEditMode")?.classList.add("hidden");
+  setRaidHelperTab("templates");
+}
+
+async function saveRaidHelperTemplateFromCreate(){
+  const original = findRaidHelperTemplate(raidHelperEditingTemplateIdentifier) || {};
+  const raidKey = raidHelperValue("raidHelperRaid") || "zg";
+  const title = raidHelperValue("raidHelperTitle");
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const status = document.getElementById("raidHelperStatus");
+  if(!masterCode || !title){
+    if(status){
+      status.textContent = !masterCode ? "Bitte Master-Code eingeben." : "Bitte einen Titel eintragen.";
+      status.className = "status bad";
+    }
+    return;
+  }
+  if(status){
+    status.textContent = "Vorlage wird gespeichert ...";
+    status.className = "status";
+  }
+  try{
+    const templateKey = `${raidKey}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const result = await railwayWrite({
+      action:"guildSaveRaidHelperTemplate",
+      masterCode,
+      templateId:original.builtin ? "" : (original.id || ""),
+      templateKey,
+      raid:raidKey,
+      title,
+      description:raidHelperValue("raidHelperDescription"),
+      maxPlayers:raidHelperValue("raidHelperMax"),
+      tankSlots:raidHelperValue("raidHelperTanks"),
+      healSlots:raidHelperValue("raidHelperHeals"),
+      ddSlots:raidHelperValue("raidHelperDds"),
+      signupDeadline:original.signupDeadline || "",
+      discordChannelId:raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID,
+      raidImageUrl:defaultRaidHelperImageUrl(raidKey)
+    });
+    if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gespeichert werden.");
+    const saved = result.template;
+    raidHelperTemplates = raidHelperTemplates.filter(item => String(item.id) !== String(saved.id));
+    raidHelperTemplates.push(saved);
+    raidHelperEditingTemplateIdentifier = raidHelperTemplateKey(saved);
+    fillRaidHelperTemplateEditor(saved);
+    renderRaidHelperTemplates();
+    const modeTitle = document.getElementById("raidHelperTemplateEditModeTitle");
+    if(modeTitle) modeTitle.textContent = `„${saved.title || title}“ wurde gespeichert. Du kannst sie weiter bearbeiten.`;
+    if(status){
+      status.textContent = "Vorlage gespeichert.";
+      status.className = "status good";
+    }
+  }catch(error){
+    if(status){
+      status.textContent = error.message || "Vorlage konnte nicht gespeichert werden.";
+      status.className = "status bad";
+    }
+  }
 }
 
 function applyRaidHelperTemplateFromEditor(){
@@ -9476,7 +9616,6 @@ function applyRaidHelperTemplateObject(template){
   const tanks = document.getElementById("raidHelperTanks");
   const heals = document.getElementById("raidHelperHeals");
   const dds = document.getElementById("raidHelperDds");
-  const deadline = document.getElementById("raidHelperDeadline");
   const channel = document.getElementById("raidHelperChannel");
   if(select) select.value = raidKey;
   if(title) title.value = template.title || (raidKey === "zg" ? "ZG Raid 21 Uhr" : raid.name + " Anmeldung");
@@ -9485,7 +9624,6 @@ function applyRaidHelperTemplateObject(template){
   if(tanks) tanks.value = template.tankSlots ?? tanks.value;
   if(heals) heals.value = template.healSlots ?? heals.value;
   if(dds) dds.value = template.ddSlots ?? dds.value;
-  if(deadline) deadline.value = template.signupDeadline || deadline.value;
   if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
   setRaidHelperTab("createEvent");
   updateRaidHelperDefaults();
@@ -11887,15 +12025,7 @@ function raidHelperValue(id){
 
 function defaultRaidHelperImageUrl(raidKey){
   const key = RAID_OPTIONS[String(raidKey || "").trim().toLowerCase()] ? String(raidKey || "").trim().toLowerCase() : "zg";
-  const guildImage = String(RAID_IMAGES[key] || "").trim();
-  if(guildImage){
-    try{
-      return new URL(guildImage, location.href).href;
-    }catch(_error){
-      return guildImage;
-    }
-  }
-  return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
+  return new URL("images/raid-banners/" + key + ".jpg", location.href).href;
 }
 
 function buildRaidHelperPreviewText(){
@@ -11909,7 +12039,7 @@ function buildRaidHelperPreviewText(){
   const tanks = raidHelperValue("raidHelperTanks");
   const heals = raidHelperValue("raidHelperHeals");
   const dds = raidHelperValue("raidHelperDds");
-  const deadline = raidHelperValue("raidHelperDeadline");
+  const lootMaster = raidHelperValue("raidHelperLootMaster");
   const parts = [];
   if(max) parts.push("Gesamt " + max);
   if(tanks) parts.push("Tanks " + tanks);
@@ -11924,11 +12054,11 @@ function buildRaidHelperPreviewText(){
     "🏳️ " + lead,
     "🗓️ " + formatRaidDate(date),
     "⏰ " + time + " Uhr",
-    deadline ? "⌛ Anmeldung bis " + deadline + " Uhr" : "",
+    lootMaster ? "🪙 Plündermeister: " + lootMaster : "",
     parts.length ? "👥 " + parts.join(" · ") : "",
     "",
     "Discord-Anmeldung: Klasse wählen, Charaktername und Skillung eintragen.",
-    "Gruppierung: Tank · Warrior · Druid · Paladin · Rogue · Hunter · Priest · Mage · Warlock · Shaman · Abwesenheit",
+    "Gruppierung: Tank · Krieger · Druide · Paladin · Schurke · Jäger · Priester · Magier · Hexenmeister · Schamane · Abwesenheit",
     "",
     "🌐 Webansicht: " + new URL(withGuildUrl("start.html"), window.location.href).href
   ].filter(line => line !== "").join("\n");
@@ -11947,7 +12077,7 @@ function updateRaidHelperPreview(){
   const tanks = raidHelperValue("raidHelperTanks");
   const heals = raidHelperValue("raidHelperHeals");
   const dds = raidHelperValue("raidHelperDds");
-  const deadline = raidHelperValue("raidHelperDeadline");
+  const lootMaster = raidHelperValue("raidHelperLootMaster");
   const titleEl = document.getElementById("raidHelperPreviewTitle");
   const descEl = document.getElementById("raidHelperPreviewDescription");
   const leadEl = document.getElementById("raidHelperPreviewLead");
@@ -11969,7 +12099,7 @@ function updateRaidHelperPreview(){
     if(tanks) pills.push(["🛡","Tanks " + tanks]);
     if(heals) pills.push(["➕","Heals " + heals]);
     if(dds) pills.push(["⚔","DD " + dds]);
-    if(deadline) pills.push(["⌛","bis " + deadline + " Uhr"]);
+    if(lootMaster) pills.push(["🪙","Plündermeister " + lootMaster]);
     slotsEl.innerHTML = pills.map(([icon, label]) => `<span class="discord-preview-pill">${escapeHtml(icon)} ${escapeHtml(label)}</span>`).join("");
   }
   if(rolesEl){
@@ -11977,22 +12107,23 @@ function updateRaidHelperPreview(){
       ["🛡","Tanks 0"],
       ["⚔","Melee 0"],
       ["🏹","Ranged 0"],
-      ["➕","Healers 0" + (heals ? "/" + heals : "")]
+      ["➕","Heiler 0" + (heals ? "/" + heals : "")]
     ].map(([icon, label]) => `<span class="discord-preview-pill">${escapeHtml(icon)} ${escapeHtml(label)}</span>`).join("");
   }
   if(rosterEl){
     const previewGroups = [
       ["Tank","🛡","Noch frei"],
-      ["Warrior","⚔","Char · Skillung", RAID_HELPER_CLASS_ICONS.Warrior],
-      ["Druid","🌿","Char · Skillung", RAID_HELPER_CLASS_ICONS.Druid],
-      ["Paladin","✨","Char · Skillung", RAID_HELPER_CLASS_ICONS.Paladin],
-      ["Priest","💠","Char · Skillung", RAID_HELPER_CLASS_ICONS.Priest],
-      ["Mage","🔥","Char · Skillung", RAID_HELPER_CLASS_ICONS.Mage],
-      ["Abwesenheit","🚫","Optional"]
+      ["Warrior","Krieger","⚔","Char · Skillung", RAID_HELPER_CLASS_ICONS.Warrior],
+      ["Druid","Druide","🌿","Char · Skillung", RAID_HELPER_CLASS_ICONS.Druid],
+      ["Paladin","Paladin","✨","Char · Skillung", RAID_HELPER_CLASS_ICONS.Paladin],
+      ["Priest","Priester","💠","Char · Skillung", RAID_HELPER_CLASS_ICONS.Priest],
+      ["Mage","Magier","🔥","Char · Skillung", RAID_HELPER_CLASS_ICONS.Mage],
+      ["Abwesenheit","Abwesenheit","🚫","Optional"]
     ];
-    rosterEl.innerHTML = previewGroups.map(([name, icon, empty, image]) => `
+    previewGroups[0] = ["Tank","Tank","🛡","Noch frei"];
+    rosterEl.innerHTML = previewGroups.map(([name, label, icon, empty, image]) => `
       <div class="discord-preview-group">
-        <h4>${raidHelperClassIconMarkup(name, icon, image)} ${escapeHtml(name)} (0)</h4>
+        <h4>${raidHelperClassIconMarkup(name, icon, image)} ${escapeHtml(label)} (0)</h4>
         <span class="discord-preview-empty">${escapeHtml(empty)}</span>
       </div>
     `).join("");
@@ -12076,7 +12207,8 @@ async function createRaidHelperSignup(){
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
       discordChannelId,
-      signupDeadline:raidHelperValue("raidHelperDeadline"),
+      lootMaster:raidHelperValue("raidHelperLootMaster"),
+      pluendermeister:raidHelperValue("raidHelperLootMaster"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
@@ -12102,7 +12234,8 @@ async function createRaidHelperSignup(){
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
       ddSlots:raidHelperValue("raidHelperDds"),
-      signupDeadline:raidHelperValue("raidHelperDeadline"),
+      lootMaster:raidHelperValue("raidHelperLootMaster"),
+      pluendermeister:raidHelperValue("raidHelperLootMaster"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
