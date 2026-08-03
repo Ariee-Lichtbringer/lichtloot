@@ -2609,12 +2609,27 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 .start-current-guild-callout .start-po-login-copy span{color:#bbf7d0}
 .start-current-guild-callout{
   min-width:430px;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  column-gap:12px;
+  row-gap:9px;
+}
+.start-current-guild-callout .start-po-login-copy{
+  min-width:0;
+}
+.start-current-guild-callout .start-po-login-copy span,
+.start-current-guild-callout .start-po-login-copy strong,
+.start-current-guild-callout .start-po-login-copy small{
+  white-space:nowrap;
 }
 .start-current-guild-switch{
   display:flex;
   align-items:center;
   gap:8px;
-  margin-left:auto;
+  grid-column:1 / -1;
+  width:100%;
+  margin-left:0;
   padding:5px 6px 5px 10px;
   border:2px solid rgba(250,204,21,.78);
   border-radius:10px;
@@ -2648,6 +2663,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 }
 @media(max-width:700px){
   .start-current-guild-callout{min-width:0;flex-wrap:wrap}
+  .start-current-guild-callout .start-po-login-copy small{white-space:normal}
   .start-current-guild-switch{width:100%;margin-left:0;flex-wrap:wrap}
   .start-current-guild-switch select{flex:1}
 }
