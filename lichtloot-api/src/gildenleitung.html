@@ -14542,7 +14542,7 @@ function isWorldbuffOpenSlot(entry){
 
 function getWorldbuffChoices(entry){
   const buff = String((entry && entry.buff) || "").trim();
-  if(isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff)) return ["Ony", "Nef"];
+  if(isOnyNefBuff(buff)) return ["Ony", "Nef"];
   const buffs = ["Hakkar", "Ony", "Nef", "Rend"];
   return buffs.includes(buff) ? [buff] : buffs;
 }
