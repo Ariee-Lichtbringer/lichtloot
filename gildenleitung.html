@@ -6691,7 +6691,7 @@ function renderPoItemSettingsPanel(){
     </div>
     <div class="p0-toolbar" style="display:grid;grid-template-columns:minmax(180px,260px) 1fr;gap:10px">
       <select onchange="poItemSettingsRaid=this.value;loadPoItemSettingsPanel()">${raidOptions}</select>
-      <input type="search" value="${escapeAttr(poItemSettingsSearch)}" placeholder="Item, Boss oder Slot suchen ..." oninput="poItemSettingsSearch=this.value;renderPoItemSettingsPanel()">
+      <input id="poItemSettingsSearchInput" type="search" value="${escapeAttr(poItemSettingsSearch)}" placeholder="Item, Boss oder Slot suchen ..." oninput="setPoItemSettingsSearch(this)">
     </div>
     <div class="table-wrap"><table class="p0-table"><thead><tr><th>PO Item</th><th>Item</th><th>Boss</th><th>Slot</th></tr></thead><tbody>
       ${rows.length ? rows.map((item,index) => `
@@ -6702,6 +6702,16 @@ function renderPoItemSettingsPanel(){
         </tr>`).join("") : '<tr><td colspan="4" class="muted">Keine Items gefunden.</td></tr>'}
     </tbody></table></div>
     <div class="status good">${poItemSettingsRows.filter(item => item.poEnabled).length} PO-Items in diesem Raid freigegeben.</div>`;
+}
+
+function setPoItemSettingsSearch(input){
+  poItemSettingsSearch = String(input?.value || "");
+  const cursor = Number.isFinite(input?.selectionStart) ? input.selectionStart : poItemSettingsSearch.length;
+  renderPoItemSettingsPanel();
+  const nextInput = document.getElementById("poItemSettingsSearchInput");
+  if(!nextInput) return;
+  nextInput.focus();
+  try{ nextInput.setSelectionRange(cursor, cursor); }catch(_error){}
 }
 
 async function setPoItemEnabled(itemId, enabled, checkbox){
