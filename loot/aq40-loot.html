@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="../guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="loot-side-navigation.css">
-<script src="loot-side-navigation.js" defer></script>
-<script src="nachtloot-recruit-prio.js" defer></script>
-<script src="p0-release-guard.js" defer></script>
 <title>Lichtloot - Ahn'Qiraj 40</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-.start-sidebar,.start-side-nav,.legacy-navigation{display:none!important}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq40.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
@@ -897,11 +893,6 @@ body.random-prio .tooltip-p0{
   background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
   color:var(--gold);
 }
-.selected-po-releases{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;min-height:22px}
-.selected-po-releases-title{width:100%;color:#4ade80;font-size:10px;font-weight:900}
-.selected-po-release{padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.72);color:#94a3b8;font-size:10px;font-weight:900}
-.selected-po-release.active{border-color:rgba(34,197,94,.45);background:rgba(22,101,52,.22);color:#86efac}
-.selected-recruit-status{width:100%;color:#bfdbfe;font-size:11px;font-weight:900}
 
 .own-selection-card{
   grid-area:selection;
@@ -1803,7 +1794,7 @@ body.random-prio .tooltip-p0{
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
+  <a class="nav-btn" href="../start.html">Startseite</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -1862,7 +1853,6 @@ body.random-prio .tooltip-p0{
           <div id="selectedCharacterDrop" class="character-dropzone" ondragover="allowCharacterDrop(event)" ondrop="dropCharacterOnZone(event)">
             Charakter aus „Mein LichtLoot“ hierher ziehen oder unten anklicken.
           </div>
-          <div id="selectedCharacterPoReleases" class="selected-po-releases"></div>
         </div>
       </div>
     </div>
@@ -2195,6 +2185,11 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
+let GUILD_PO_ITEM_KEYS = new Set();
+function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
+async function loadGuildPoItems(){
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+}
 const PRIO_COUNT = 3;
 
 
@@ -2787,7 +2782,7 @@ async function loadLootFromSheet(){
       throw new Error("Keine AQ40-Lootdaten gefunden.");
     }
 
-    await loadP0PlusFromSheet();
+    await Promise.all([loadP0PlusFromSheet(), loadGuildPoItems()]);
 
     fillItems();
     renderLootList();
@@ -3110,7 +3105,7 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS){
+    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -3752,25 +3747,36 @@ async function savePrio(){
     return;
   }
 
-  await loadPublishedPrios();
+  try {
+    await Promise.race([
+      loadPublishedPrios(),
+      new Promise((resolve) => setTimeout(resolve, 2500))
+    ]);
+  } catch (error) {
+    console.warn("Prio-Liste ist im Notfallmodus nicht erreichbar.", error);
+  }
 
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await ensurePlayerPinForSave();
+    const pinInfo = await Promise.race([
+      ensurePlayerPinForSave(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
     if(!pinInfo.success){
-      status.innerHTML=`<span class="bad">${safe(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.")}</span>`;
-      return;
+      throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
 
     const playerPin = pinInfo.pin;
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
-    let result=await submitPrioWithPin(playerPin, "");
+    let result=await Promise.race([
+      submitPrioWithPin(playerPin, ""),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
 
     if(result.error){
-      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
-      return;
+      throw new Error(result.error);
     }
 
     autoSaveDraft();
@@ -3804,8 +3810,17 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
-    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    try{
+      const emergency=await saveEmergencyPrio();
+      status.innerHTML=
+        `<span class="warn">⚠ Notfallmodus aktiv.</span><br>`+
+        `Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>`+
+        `Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;
+    }catch(emergencyError){
+      console.error(emergencyError);
+      const message=(emergencyError && emergencyError.message) ? emergencyError.message : "Notfallspeicherung fehlgeschlagen.";
+      status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    }
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -4608,7 +4623,6 @@ function selectLoggedInCharacter(index){
   }
 
   renderCharacterButtons();
-  loadSelectedCharacterPoReleases(char);
   loadPlayerData();
   autoSaveDraft();
   if(typeof renderCurrentPrios === "function"){
@@ -4618,26 +4632,6 @@ function selectLoggedInCharacter(index){
   const status=document.getElementById("playerStatus");
   if(status){
     status.innerHTML='<span class="ok">✓ Charakter ausgewählt: '+safe(char.name)+'</span><br>Gib jetzt nur noch den Prio-PIN ein und wähle deine Items.';
-  }
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(typeof resetCurrentRaidPoReleaseGuard==="function") resetCurrentRaidPoReleaseGuard();
-  if(!box || !char || !pin) return;
-  box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
-  try{
-    const query=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),pin,char:char.name || "",server:char.server || "",t:Date.now()});
-    const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
-    const data=await response.json();
-    if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
-    if(typeof applyCurrentRaidPoReleaseGuard==="function") applyCurrentRaidPoReleaseGuard(Boolean(data.poReleases?.[RAID_NAME]));
-    if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
-    box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
-  }catch(error){
-    box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
   }
 }
 

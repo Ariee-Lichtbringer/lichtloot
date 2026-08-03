@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="../guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="loot-side-navigation.css">
-<script src="loot-side-navigation.js" defer></script>
 <title>Lichtloot - Onyxia</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-.start-sidebar,.start-side-nav,.legacy-navigation{display:none!important}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/ony.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
@@ -863,10 +861,6 @@ body.random-prio .tooltip-p0{
   background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
   color:var(--gold);
 }
-.selected-po-releases{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;min-height:22px}
-.selected-po-release{padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.72);color:#94a3b8;font-size:10px;font-weight:900}
-.selected-po-release.active{border-color:rgba(34,197,94,.45);background:rgba(22,101,52,.22);color:#86efac}
-.selected-recruit-status{width:100%;color:#bfdbfe;font-size:11px;font-weight:900}
 
 .own-selection-card{
   grid-area:selection;
@@ -2032,6 +2026,7 @@ body.random-prio .tooltip-p0{
 <script>
 const RAID_NAME = "ony";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
+const EMERGENCY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
@@ -3525,6 +3520,9 @@ async function submitPrioWithPin(savePin, oldPin){
   return data;
 }
 
+function emergencyPrioPayload(){const p1=document.getElementById("p1").value,p2=PRIO_COUNT>=2?document.getElementById("p2").value:"",p3=PRIO_COUNT>=3?document.getElementById("p3").value:"";const isP0Plus=SUPPORTS_P0PLUS&&Boolean(window.p0PlusWasClicked)&&p1&&p1===p2&&p2===p3;let playerPin=document.getElementById("playerPin").value.trim();if(!playerPin){playerPin="NF-"+Math.random().toString(36).slice(2,7).toUpperCase();document.getElementById("playerPin").value=playerPin;}return {action:"saveEmergencyPrio",guild:currentGuildSlug(),raid:RAID_NAME,raidId:currentRaidId||"",raidPin:document.getElementById("raidPin").value.trim(),raidDate:currentRaidDate||"",raidTime:currentRaidTime||"",playerPin,player:document.getElementById("playerName").value.trim(),server:document.getElementById("playerServer").value,className:document.getElementById("playerClass").value,p1,p2,p3,p0Plus:isP0Plus?"ja":"nein",submittedAt:new Date().toISOString()};}
+async function saveEmergencyPrio(){const entry=emergencyPrioPayload(),storageKey="lichtloot_emergency_prios_v1";let entries=[];try{entries=JSON.parse(localStorage.getItem(storageKey)||"[]");}catch(error){}const key=[entry.guild,entry.raidId||entry.raidPin||(entry.raidDate+"|"+entry.raidTime),entry.raid,entry.player,entry.server].map(value=>String(value||"").trim().toLowerCase()).join("|"),index=entries.findIndex(item=>item.entryKey===key),stored={...entry,entryKey:key,status:"offen"};if(index>=0)entries[index]=stored;else entries.push(stored);localStorage.setItem(storageKey,JSON.stringify(entries));try{await fetch(EMERGENCY_APPS_SCRIPT_URL+"?"+new URLSearchParams(entry).toString()+"&t="+Date.now(),{mode:"no-cors",cache:"no-store"});}catch(error){console.warn("Google-Notfallspeicher nicht erreichbar; lokale Kopie bleibt erhalten.",error);}autoSaveDraft();saveCharacterProfile();return entry;}
+
 function isPinConflictError(result){
   const message=String((result && (result.error || result.message)) || "").toLowerCase();
 
@@ -3534,12 +3532,6 @@ function isPinConflictError(result){
     message.includes("anderer pin") ||
     message.includes("bereits") && message.includes("pin") && message.includes("gesch")
   );
-}
-
-function getSelectedPrioItemId(slot){
-  const select=document.getElementById(slot);
-  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
-  return option ? String(option.dataset.itemId || "").trim() : "";
 }
 
 async function savePrio(){
@@ -3583,20 +3575,24 @@ async function savePrio(){
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await ensurePlayerPinForSave();
+    const pinInfo = await Promise.race([
+      ensurePlayerPinForSave(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
     if(!pinInfo.success){
-      status.innerHTML=`<span class="bad">${safe(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.")}</span>`;
-      return;
+      throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
 
     const playerPin = pinInfo.pin;
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
-    let result=await submitPrioWithPin(playerPin, "");
+    let result=await Promise.race([
+      submitPrioWithPin(playerPin, ""),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
 
     if(result.error){
-      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
-      return;
+      throw new Error(result.error);
     }
 
     autoSaveDraft();
@@ -3607,11 +3603,8 @@ async function savePrio(){
       Server:server,
       Klasse:playerClass,
       P1:p1,
-      P1ItemId:getSelectedPrioItemId("p1"),
       P2:p2,
-      P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
       P3:p3,
-      P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
       P0Plus:isP0Plus ? "ja" : "nein",
       P0Item:isP0Plus ? p1 : ""
     });
@@ -3633,8 +3626,7 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
-    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    try{const emergency=await saveEmergencyPrio();status.innerHTML=`<span class="warn">⚠ Notfallmodus aktiv.</span><br>Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;}catch(emergencyError){console.error(emergencyError);status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(emergencyError.message||"Notfallspeicherung fehlgeschlagen.")}`;}
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -4297,16 +4289,15 @@ let lichtlootLoggedInCharacters = [];
 let lichtlootSelectedCharacter = null;
 
 function getStoredLichtLootPlayerPin(){
-  const guild=String(new URLSearchParams(location.search).get("guild") || "lichtloot")
-    .trim().toLowerCase().replace(/[^a-z0-9_-]/g,"") || "lichtloot";
-  const keys=["lichtlootPlayerPin_"+guild,"lichtlootSharedPlayerPin","lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
-  for(const storage of [localStorage,sessionStorage]){
-    for(const key of keys){
-      const value=String(storage.getItem(key) || "").trim();
-      if(value) return value.toUpperCase();
-    }
-  }
-  return "";
+  return String(
+    localStorage.getItem("lichtlootPlayerPin") ||
+    localStorage.getItem("lichtLootPlayerPin") ||
+    localStorage.getItem("spielerPin") ||
+    sessionStorage.getItem("lichtlootPlayerPin") ||
+    sessionStorage.getItem("lichtLootPlayerPin") ||
+    sessionStorage.getItem("spielerPin") ||
+    ""
+  ).trim().toUpperCase();
 }
 
 function getLastSelectedCharacterStorageKey(){
@@ -4436,23 +4427,6 @@ function selectLoggedInCharacter(index){
   const status=document.getElementById("playerStatus");
   if(status){
     status.innerHTML='<span class="ok">✓ Charakter ausgewählt: '+safe(char.name)+'</span><br>Gib jetzt nur noch den Prio-PIN ein und wähle deine Items.';
-  }
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(!box || !char || !pin) return;
-  box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
-  try{
-    const query=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),pin,char:char.name || "",server:char.server || "",t:Date.now()});
-    const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
-    const data=await response.json();
-    if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
-    box.innerHTML=raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
-  }catch(error){
-    box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
   }
 }
 
