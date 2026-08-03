@@ -15199,7 +15199,10 @@ function isWorldbuffOpenSlot(entry){
 
 function getWorldbuffChoices(entry){
   const buff = String((entry && entry.buff) || "").trim();
-  if(isWorldbuffOpenSlot(entry) && isOnyNefBuff(buff)) return ["Ony", "Nef"];
+  // Ony und Nef teilen sich denselben Termin-Slot. Deshalb kann die
+  // Gildenleitung den Buff auch bei bereits belegten Terminen wechseln,
+  // wenn sie den Werfer bearbeitet.
+  if(isOnyNefBuff(buff)) return ["Ony", "Nef"];
   const buffs = ["Hakkar", "Ony", "Nef", "Rend"];
   return buffs.includes(buff) ? [buff] : buffs;
 }
