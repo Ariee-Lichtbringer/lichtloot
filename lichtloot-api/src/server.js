@@ -4798,6 +4798,25 @@ function logAnalysisPostChannelId(raid) {
   }
 }
 
+async function resolveLogAnalysisPostChannelId(guildId, raid) {
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
+  const configuredChannelId = await getGuildLayoutValue(guildId, "logAnalysisChannelId");
+
+  // Nachtloot verwendet eigene Log-Analyse-Kanäle je Raid.
+  if (guildSlug === "nachtloot") {
+    const nachtlootChannels = {
+      MC: "1533915098857341068",
+      BWL: "1533915161524441168",
+      AQ40: "1533915232085475469",
+      NAXX: "1533915287081193654"
+    };
+    return nachtlootChannels[normalizeLogRaidType(raid)] || configuredChannelId || "1533914926190428393";
+  }
+
+  return logAnalysisPostChannelId(raid);
+}
+
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
@@ -7671,7 +7690,7 @@ async function queueLogAnalysisDiscordPost({ guildId, query: params }) {
 
   const analysis = normalizeLogAnalysis(result.rows[0]);
   const raid = normalizeLogRaidType(analysis.raid || analysis.summary?.raid || analysis.title || "");
-  const channelId = logAnalysisPostChannelId(raid);
+  const channelId = await resolveLogAnalysisPostChannelId(guildId, raid);
   if (!channelId) {
     const error = new Error("Für diesen Raid ist kein Log-Post-Channel hinterlegt.");
     error.statusCode = 400;
