@@ -2232,6 +2232,117 @@ function requireMasterOrQueueToken(params = {}) {
   throw error;
 }
 
+async function ensureLichtlootHelpKnowledgeSchema() {
+  await query(
+    `create table if not exists lichtloot_help_knowledge (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       question text not null default '',
+       answer text not null default '',
+       status text not null default 'pending',
+       submitted_by_discord_id text not null default '',
+       submitted_by_name text not null default '',
+       approved_by_discord_id text not null default '',
+       approved_by_name text not null default '',
+       approved_at timestamptz,
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       constraint lichtloot_help_knowledge_status_check
+         check (status in ('pending', 'approved', 'rejected'))
+     )`
+  );
+  await query(
+    `create index if not exists idx_lichtloot_help_knowledge_guild_status
+       on lichtloot_help_knowledge(guild_id, status, updated_at desc)`
+  );
+}
+
+async function getLichtlootHelpKnowledge({ guildId, params = {}, status = "approved" }) {
+  requireMasterOrQueueToken(params);
+  await ensureLichtlootHelpKnowledgeSchema();
+  const normalizedStatus = ["approved", "pending", "rejected"].includes(clean(status).toLowerCase())
+    ? clean(status).toLowerCase()
+    : "approved";
+  const result = await query(
+    `select id, question, answer, status,
+            submitted_by_discord_id as "submittedByDiscordId",
+            submitted_by_name as "submittedByName",
+            approved_by_discord_id as "approvedByDiscordId",
+            approved_by_name as "approvedByName",
+            approved_at as "approvedAt",
+            created_at as "createdAt",
+            updated_at as "updatedAt"
+       from lichtloot_help_knowledge
+      where guild_id = $1 and status = $2
+      order by updated_at desc
+      limit 250`,
+    [guildId, normalizedStatus]
+  );
+  return { success: true, entries: result.rows };
+}
+
+async function createLichtlootHelpQuestion({ guildId, params = {} }) {
+  requireMasterOrQueueToken(params);
+  await ensureLichtlootHelpKnowledgeSchema();
+  const question = clean(params.question).slice(0, 1000);
+  if (!question) {
+    const error = new Error("Die Hilfe-Frage fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `insert into lichtloot_help_knowledge
+       (guild_id, question, status, submitted_by_discord_id, submitted_by_name)
+     values ($1, $2, 'pending', $3, $4)
+     returning id, question, status, created_at as "createdAt"`,
+    [guildId, question, clean(params.discordUserId), clean(params.discordName).slice(0, 200)]
+  );
+  return { success: true, entry: result.rows[0] };
+}
+
+async function approveLichtlootHelpKnowledge({ guildId, params = {} }) {
+  requireMasterOrQueueToken(params);
+  await ensureLichtlootHelpKnowledgeSchema();
+  const id = clean(params.id || params.knowledgeId);
+  const question = clean(params.question).slice(0, 1000);
+  const answer = clean(params.answer).slice(0, 4000);
+  if (!answer || (!id && !question)) {
+    const error = new Error("Frage oder Antwort fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  let result;
+  if (id) {
+    result = await query(
+      `update lichtloot_help_knowledge
+          set question = case when $3 = '' then question else $3 end,
+              answer = $4,
+              status = 'approved',
+              approved_by_discord_id = $5,
+              approved_by_name = $6,
+              approved_at = now(),
+              updated_at = now()
+        where id = $2 and guild_id = $1
+        returning id, question, answer, status, approved_at as "approvedAt"`,
+      [guildId, id, question, answer, clean(params.approvedByDiscordId), clean(params.approvedByName).slice(0, 200)]
+    );
+  } else {
+    result = await query(
+      `insert into lichtloot_help_knowledge
+         (guild_id, question, answer, status, approved_by_discord_id, approved_by_name, approved_at)
+       values ($1, $2, $3, 'approved', $4, $5, now())
+       returning id, question, answer, status, approved_at as "approvedAt"`,
+      [guildId, question, answer, clean(params.approvedByDiscordId), clean(params.approvedByName).slice(0, 200)]
+    );
+  }
+  if (!result.rows[0]) {
+    const error = new Error("Die Hilfe-Frage wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { success: true, entry: result.rows[0] };
+}
+
 async function ensureRaidSchema() {
   await query(
     `alter table raids
@@ -18731,6 +18842,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(queue);
     }
 
+    if (action === "lichtbotGetHelpKnowledge") {
+      const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+      const knowledge = await getLichtlootHelpKnowledge({
+        guildId: guild.id,
+        params: req.query,
+        status: req.query.status || "approved"
+      });
+      return res.json({ ...knowledge, guild: guild.slug });
+    }
+
     if (action === "resolveGuildByPin") {
       const resolved = await resolveGuildByPin({ query: req.query });
       return res.json(resolved);
@@ -19578,6 +19699,15 @@ app.post("/api/apps-script", async (req, res, next) => {
     const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
     if (clean(postParams.masterCode)) {
       requireMasterCodeForGuild(guild, postParams.masterCode);
+    }
+
+    if (action === "lichtbotCreateHelpQuestion") {
+      const saved = await createLichtlootHelpQuestion({ guildId: guild.id, params: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "lichtbotApproveHelpKnowledge") {
+      const saved = await approveLichtlootHelpKnowledge({ guildId: guild.id, params: postParams });
+      return res.json({ ...saved, guild: guild.slug });
     }
 
     if (action === "lichtbotSaveDiscordChannels") {

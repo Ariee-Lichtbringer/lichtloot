@@ -13,3 +13,10 @@ For the LichtLoot RaidHelper MVP, run the latest signup migration as well:
 ```sh
 psql "$DATABASE_URL" -f migrations/012_raidhelper_signups.sql
 ```
+
+The API creates the Lichtloot help knowledge table on first use. It can also be
+created explicitly with:
+
+```sh
+psql "$DATABASE_URL" -f migrations/019_lichtloot_help_knowledge.sql
+```
