@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="images/content.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -900,44 +901,6 @@ body{
 .my-worldbuff-modal-grid label{display:grid;gap:5px;color:#cbd5e1;font-size:12px;font-weight:900}
 .my-worldbuff-modal-grid select{width:100%;padding:9px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.34);background:rgba(2,6,23,.88);color:white;font-weight:800}
 .my-worldbuff-modal-meta{border:1px solid rgba(96,165,250,.24);background:rgba(15,23,42,.62);border-radius:10px;padding:9px;color:#bfdbfe;font-size:12px;line-height:1.35}
-.my-worldbuff-section{
-  margin-bottom:12px;
-  padding:10px;
-  border:1px solid rgba(250,204,21,.30);
-  border-radius:11px;
-  background:rgba(2,6,23,.52);
-}
-.my-worldbuff-section.assignment{
-  border-color:rgba(34,197,94,.38);
-  background:rgba(20,83,45,.12);
-}
-.my-worldbuff-section-head{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:9px;
-}
-.my-worldbuff-section-head strong{color:#facc15;font-size:14px;text-transform:uppercase}
-.my-worldbuff-section-head span{color:#dbeafe;font-size:12px;font-weight:800}
-.my-worldbuff-actions .danger{
-  border-color:rgba(248,113,113,.55)!important;
-  background:rgba(127,29,29,.34)!important;
-  color:#fecaca!important;
-}
-.my-worldbuff-change-modal textarea{
-  width:100%;
-  min-height:110px;
-  resize:vertical;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid rgba(250,204,21,.40);
-  background:rgba(2,6,23,.90);
-  color:#fff;
-  font:700 13px/1.45 Arial,sans-serif;
-}
-.my-worldbuff-change-modal .change-actions{display:flex;gap:8px;margin-top:10px}
-.my-worldbuff-change-modal .change-actions button{flex:1}
 @media(max-width:620px){.my-worldbuff-claim{grid-template-columns:1fr}.my-worldbuff-claim button{width:100%}}
 .pill{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:900;border:1px solid rgba(148,163,184,.28);background:rgba(15,23,42,.75);color:#e2e8f0;white-space:nowrap}
 .pill.open{border-color:rgba(34,197,94,.48);color:#bbf7d0;background:rgba(22,101,52,.22)}
@@ -1051,6 +1014,7 @@ body{
   overflow:hidden;
 }
 .myprio-detail-box #myPrioDetailContent{min-height:0;overflow:auto;padding-right:4px}
+.p0-release-star{color:#facc15;font-weight:900;text-shadow:0 0 8px rgba(250,204,21,.45)}
 .myprio-detail-title{
   color:#facc15;
   font-weight:900;
@@ -1605,14 +1569,101 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   width:100%;
   justify-content:center;
 }
-.own-p0-release-title{color:#facc15;font-size:12px;font-weight:900;text-transform:uppercase}
-.own-p0-release-text{color:#cbd5e1;font-size:11.5px;line-height:1.35}
-.own-p0-release-items{display:flex;flex-wrap:wrap;gap:6px}
-.own-p0-release-chip{padding:5px 8px;border:1px solid rgba(250,204,21,.28);border-radius:999px;background:rgba(15,23,42,.72);color:#cbd5e1;font-size:11px;font-weight:800}
-.own-p0-release-chip.is-active{border-color:rgba(34,197,94,.78);background:linear-gradient(135deg,rgba(22,163,74,.46),rgba(21,128,61,.30));color:#dcfce7;box-shadow:0 0 0 1px rgba(34,197,94,.12),0 0 14px rgba(34,197,94,.18)}
-.own-p0-release-chip .ok{color:#22c55e}
-.own-p0-release-chip.is-active .ok{color:#86efac}
-.own-p0-release-chip .muted{color:#94a3b8}
+.own-p0-summary-card{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  border:1px solid rgba(250,204,21,.36)!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(250,204,21,.15),transparent 36%),
+    linear-gradient(135deg,rgba(2,6,23,.62),rgba(10,18,32,.84))!important;
+}
+.own-p0-summary-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#facc15;
+  font-size:15px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.own-p0-summary-title:before{
+  content:"";
+  width:12px;
+  height:12px;
+  border-radius:3px;
+  background:#facc15;
+  box-shadow:0 0 14px rgba(250,204,21,.55);
+  transform:rotate(45deg);
+  flex:0 0 auto;
+}
+.own-p0-summary-text{
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.35;
+}
+.own-p0-summary-stats{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(94px,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+.own-p0-summary-stat{
+  min-height:54px;
+  padding:8px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:8px;
+  background:rgba(2,6,23,.46);
+}
+.own-p0-summary-stat strong{
+  display:block;
+  color:#f8fafc;
+  font-size:20px;
+  line-height:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.own-p0-summary-stat span{
+  display:block;
+  margin-top:4px;
+  color:#cbd5e1;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.own-p0-summary-items{
+  grid-column:1 / -1;
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.own-p0-summary-chip{
+  max-width:100%;
+  padding:5px 8px;
+  border:1px solid rgba(250,204,21,.22);
+  border-radius:999px;
+  background:rgba(250,204,21,.08);
+  color:#fef3c7;
+  font-size:11px;
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.own-p0-summary-action{
+  min-width:190px;
+  min-height:46px!important;
+  align-self:stretch;
+}
+@media(max-width:780px){
+  .own-p0-summary-card{grid-template-columns:1fr}
+  .own-p0-summary-action{width:100%;min-width:0}
+}
 
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
 #meinLichtLootCard.right-card{padding:14px!important}
@@ -1728,150 +1779,165 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .account-management-panel #meinLichtLootCard .dashboard-fold-body{
   padding:0 14px 14px!important;
 }
-.account-management-panel{
-  width:100%;
-}
-.account-management-panel #meinLichtLootCard{
-  width:100%;
-  max-width:none!important;
-}
 .mein-lichtloot-tiles{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;
-  margin:16px 0 18px;
+  gap:14px;
+  margin:14px 0 16px;
 }
 .mein-lichtloot-tile{
   position:relative;
-  min-height:190px;
+  min-height:168px;
   display:grid;
   grid-template-rows:1fr auto;
   gap:10px;
-  padding:12px;
+  padding:10px;
   overflow:hidden;
   border:1px solid rgba(250,204,21,.28);
-  border-radius:10px;
-  background:linear-gradient(145deg,rgba(2,6,23,.92),rgba(15,23,42,.76));
+  border-radius:8px;
+  background:
+    radial-gradient(circle at 50% 34%,rgba(250,204,21,.12),transparent 52%),
+    linear-gradient(145deg,rgba(2,6,23,.92),rgba(15,23,42,.76));
   color:#f8fafc;
   text-align:left;
   cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 14px 26px rgba(0,0,0,.25);
 }
 .mein-lichtloot-tile:before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(2,6,23,.08),rgba(2,6,23,.18) 48%,rgba(2,6,23,.94));
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(2,6,23,.10) 0%,rgba(2,6,23,.18) 48%,rgba(2,6,23,.92) 100%);
   z-index:1;
 }
 .mein-lichtloot-tile img{
-  position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);
-  object-fit:contain;filter:saturate(1.06) contrast(1.06);
+  position:absolute;
+  inset:8px;
+  width:calc(100% - 16px);
+  height:calc(100% - 16px);
+  object-fit:contain;
+  filter:saturate(1.06) contrast(1.06);
 }
-.mein-lichtloot-tile span,.mein-lichtloot-tile small{position:relative;z-index:2}
+.mein-lichtloot-tile span,
+.mein-lichtloot-tile small{
+  position:relative;
+  z-index:2;
+}
 .mein-lichtloot-tile span{
-  align-self:end;color:#facc15;font-size:20px;font-weight:1000;line-height:1.08;
-  text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.78);
+  align-self:end;
+  color:#facc15;
+  font-size:18px;
+  font-weight:1000;
+  line-height:1.08;
+  text-transform:uppercase;
+  text-shadow:0 2px 12px rgba(0,0,0,.78);
 }
-.mein-lichtloot-tile small{color:#dbeafe;font-size:13px;font-weight:850;line-height:1.3}
-.mein-lichtloot-tile.is-active,.mein-lichtloot-tile:hover,.mein-lichtloot-tile:focus-visible{
-  border-color:rgba(250,204,21,.78);outline:none;transform:translateY(-1px);
+.mein-lichtloot-tile small{
+  color:#dbeafe;
+  font-size:12px;
+  font-weight:850;
+  line-height:1.3;
+  text-shadow:0 2px 10px rgba(0,0,0,.76);
+}
+.mein-lichtloot-tile.is-active,
+.mein-lichtloot-tile:hover,
+.mein-lichtloot-tile:focus-visible{
+  border-color:rgba(250,204,21,.78);
+  outline:none;
+  transform:translateY(-1px);
   box-shadow:0 0 0 2px rgba(250,204,21,.14),0 18px 34px rgba(0,0,0,.34);
 }
 .mein-lichtloot-tile.is-active:after{
-  content:"";position:absolute;left:18px;right:18px;bottom:0;height:4px;
-  border-radius:999px 999px 0 0;background:#facc15;z-index:3;
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:0;
+  height:4px;
+  border-radius:999px 999px 0 0;
+  background:#facc15;
+  z-index:3;
+  box-shadow:0 0 16px rgba(250,204,21,.55);
 }
 .mein-lichtloot-section{
-  display:none;width:100%;border:1px solid rgba(250,204,21,.28);border-radius:9px;
-  background:rgba(2,6,23,.38);padding:18px;
+  display:none;
+  border:1px solid rgba(250,204,21,.28);
+  border-radius:8px;
+  background:rgba(2,6,23,.38);
+  padding:14px;
 }
-.mein-lichtloot-section.is-active{display:grid;gap:12px}
+.mein-lichtloot-section.is-active{
+  display:grid;
+  gap:10px;
+}
 .mein-lichtloot-section-head{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  color:#facc15;font-weight:1000;text-transform:uppercase;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  color:#facc15;
+  font-weight:1000;
+  text-transform:uppercase;
 }
-.mein-lichtloot-section-head small{color:#cbd5e1;font-size:12px;font-weight:850;text-transform:none}
+.mein-lichtloot-section-head small{
+  color:#cbd5e1;
+  font-size:12px;
+  font-weight:850;
+  text-transform:none;
+}
 @media(max-width:900px){
   .mein-lichtloot-tiles{grid-template-columns:1fr}
-  .mein-lichtloot-tile{min-height:140px}
+  .mein-lichtloot-tile{min-height:132px}
 }
 .account-management-entry{
   position:relative;
-  min-height:164px;
+  min-height:156px;
   cursor:pointer;
-  overflow:visible;
-  border-color:rgba(var(--gold-rgb),.62)!important;
+  overflow:hidden;
+  border-color:rgba(250,204,21,.56)!important;
   background:
-    radial-gradient(circle at 15% 20%,rgba(var(--gold-rgb),.28),transparent 38%),
-    linear-gradient(135deg,rgba(5,12,25,.94),rgba(var(--blue-rgb),.18))!important;
-  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(var(--gold-rgb),.14)!important;
-  display:grid;
-  place-items:center;
-  padding:24px 18px!important;
+    radial-gradient(circle at 0% 28%,rgba(250,204,21,.30),transparent 28%),
+    linear-gradient(135deg,rgba(40,30,7,.86),rgba(10,17,31,.92) 58%,rgba(12,25,48,.84))!important;
+  box-shadow:0 18px 40px rgba(0,0,0,.36),0 0 0 1px rgba(250,204,21,.10)!important;
 }
-.account-management-entry .account-entry-button{
-  width:100%;
-  min-height:92px;
-  display:grid;
-  place-items:center;
-  border:2px solid rgba(var(--gold-rgb),.78);
-  border-radius:14px;
-  background:linear-gradient(135deg,var(--gold),var(--blue));
-  color:#fff;
-  font-size:27px;
-  line-height:1.05;
-  font-weight:1000;
-  text-align:center;
-  text-transform:uppercase;
-  text-shadow:0 2px 12px rgba(0,0,0,.55);
-  box-shadow:0 12px 28px rgba(0,0,0,.34),0 0 22px rgba(var(--gold-rgb),.22);
+.account-management-entry > *{
+  display:none!important;
 }
-.account-management-entry .account-entry-nudge{
+.account-management-entry:before{
+  content:"➜";
   position:absolute;
-  left:calc(100% + 18px);
-  top:50%;
-  transform:translateY(-50%);
-  width:176px;
-  height:96px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:flex-start;
-  color:var(--gold);
+  left:16px;
+  top:22px;
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:#facc15;
+  color:#08111f;
+  font-size:30px;
+  font-weight:1000;
+  box-shadow:0 6px 0 rgba(146,64,14,.95),0 14px 28px rgba(0,0,0,.35);
+  transform:rotate(-8deg);
+}
+.account-management-entry:after{
+  content:"LichtLoot Account Verwaltung\\A Charaktere, Prios, Kalender und Worldbuffs öffnen";
+  white-space:pre-line;
+  position:absolute;
+  left:78px;
+  right:16px;
+  top:22px;
+  color:#facc15;
   font-size:20px;
+  line-height:1.12;
   font-weight:1000;
-  white-space:nowrap;
-  filter:drop-shadow(0 0 10px rgba(var(--gold-rgb),.55));
-  animation:accountNudgeBlink .9s infinite;
-  z-index:3;
-}
-.account-management-entry .account-entry-nudge{
-  padding:7px 14px;
-  border:3px solid var(--gold);
-  border-radius:12px;
-  background:rgba(2,6,23,.94);
-  box-shadow:0 0 18px rgba(var(--gold-rgb),.5),inset 0 0 14px rgba(var(--blue-rgb),.16);
-}
-.account-management-entry .account-entry-nudge:after{
-  content:"";
-  position:absolute;
-  right:18px;
-  bottom:-34px;
-  width:170px;
-  height:58px;
-  background:linear-gradient(90deg,var(--blue),var(--gold));
-  clip-path:polygon(0 50%,34% 8%,34% 30%,100% 30%,100% 70%,34% 70%,34% 92%);
-  filter:drop-shadow(0 0 12px rgba(var(--gold-rgb),.55));
-}
-@keyframes accountNudgeBlink{
-  0%,100%{opacity:1;transform:translateY(-50%) translateX(0) scale(1)}
-  50%{opacity:.6;transform:translateY(-50%) translateX(-8px) scale(1.06)}
-}
-@media(max-width:1180px){
-  .account-management-entry .account-entry-nudge{display:none}
+  text-transform:uppercase;
+  text-shadow:0 2px 14px rgba(0,0,0,.45);
 }
 .account-management-entry:hover,
 .account-management-entry:focus-visible{
   transform:translateY(-1px);
-  border-color:rgba(var(--gold-rgb),.9)!important;
+  border-color:rgba(250,204,21,.82)!important;
   outline:none;
 }
 
@@ -2227,22 +2293,20 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   gap:clamp(14px,1.25vw,24px)!important;
 }
 .instance-grid{
-  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;
   align-items:stretch!important;
 }
 .instance-card{
   min-height:214px!important;
   height:100%!important;
-  grid-template-columns:140px minmax(0,1fr)!important;
+  grid-template-columns:78px minmax(0,1fr)!important;
   grid-template-rows:1fr auto!important;
   align-content:stretch!important;
 }
 .instance-card img{
-  width:140px!important;
-  height:90px!important;
-  object-fit:contain!important;
-  object-position:center!important;
-  background:#020617!important;
+  width:78px!important;
+  height:122px!important;
+  object-fit:cover!important;
 }
 .instance-card h3{
   min-height:38px!important;
@@ -2285,7 +2349,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
     grid-column:1 / -1!important;
   }
   .instance-grid{
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr))!important;
   }
 }
 
@@ -2335,11 +2399,11 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   }
   .instance-card{
     min-height:0!important;
-    grid-template-columns:112px minmax(0,1fr)!important;
+    grid-template-columns:72px minmax(0,1fr)!important;
   }
   .instance-card img{
-    width:112px!important;
-    height:72px!important;
+    width:72px!important;
+    height:96px!important;
   }
 }
 #meinLichtLootCard .dashboard-fold summary{
@@ -2439,8 +2503,14 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   50%{opacity:.28;transform:translateX(6px) scale(1.12)}
 }
 @media(max-width:700px){
-  #meinLichtLootCard .guild-switch-callout{width:100%;flex-wrap:wrap}
-  #meinLichtLootCard .guild-switch-select{flex:1;min-width:150px}
+  #meinLichtLootCard .guild-switch-callout{
+    width:100%;
+    flex-wrap:wrap;
+  }
+  #meinLichtLootCard .guild-switch-select{
+    flex:1;
+    min-width:150px;
+  }
 }
 #meinLichtLootCard .dashboard-select-row select,
 #meinLichtLootCard .right-pin-row input{
@@ -2521,21 +2591,66 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   font-weight:950;
   cursor:pointer;
 }
-.start-guild-pin-callout{
+.start-current-guild-callout{
   border-color:rgba(34,197,94,.78);
   background:linear-gradient(135deg,rgba(34,197,94,.20),rgba(15,23,42,.82));
   box-shadow:0 10px 24px rgba(0,0,0,.30),0 0 0 3px rgba(34,197,94,.09);
 }
-.start-guild-pin-callout:before{
+.start-current-guild-callout:before{
   background:#22c55e;
   box-shadow:-7px -7px 0 -2px #22c55e,-7px 7px 0 -2px #22c55e;
 }
-.start-guild-pin-callout .start-po-arrow{
+.start-current-guild-callout .start-po-arrow{
   background:#22c55e;
   color:#052e16;
   box-shadow:0 4px 0 rgba(21,128,61,.95);
+  font-size:11px;
 }
-.start-guild-pin-callout .start-po-login-copy span{color:#bbf7d0}
+.start-current-guild-callout .start-po-login-copy span{color:#bbf7d0}
+.start-current-guild-callout{
+  min-width:430px;
+}
+.start-current-guild-switch{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;
+  padding:5px 6px 5px 10px;
+  border:2px solid rgba(250,204,21,.78);
+  border-radius:10px;
+  background:linear-gradient(90deg,rgba(250,204,21,.20),rgba(37,99,235,.16));
+  box-shadow:0 0 0 3px rgba(250,204,21,.06),0 8px 20px rgba(0,0,0,.28);
+}
+.start-current-guild-switch label{
+  color:#fde047;
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.start-current-guild-switch .guild-switch-arrow{
+  color:#facc15;
+  font-size:22px;
+  line-height:1;
+  filter:drop-shadow(0 0 7px rgba(250,204,21,.95));
+  animation:lootGuildArrowBlink 1s ease-in-out infinite;
+}
+.start-current-guild-switch select{
+  min-width:150px;
+  min-height:34px;
+  padding:6px 32px 6px 10px;
+  border:1px solid rgba(250,204,21,.72);
+  border-radius:8px;
+  background:#071426;
+  color:#f8fafc;
+  font-weight:900;
+  cursor:pointer;
+}
+@media(max-width:700px){
+  .start-current-guild-callout{min-width:0;flex-wrap:wrap}
+  .start-current-guild-switch{width:100%;margin-left:0;flex-wrap:wrap}
+  .start-current-guild-switch select{flex:1}
+}
 @media(max-width:1180px){
   .start-po-login-callout{order:5;width:100%;max-width:none}
   .start-po-login-callout:before{display:none}
@@ -2697,28 +2812,6 @@ body.start-dashboard-body .raid-create-box input[readonly]{
     </div>
   </div>
 </div>
-<div id="myWorldbuffChangeModal" class="report-modal hidden">
-  <div class="report-card my-worldbuff-change-modal">
-    <div class="report-head">
-      <h2 id="myWorldbuffChangeTitle">Worldbuff-Termin ändern</h2>
-      <button class="report-close" type="button" onclick="closeMyWorldbuffChangeModal()">✕</button>
-    </div>
-    <div id="myWorldbuffChangeAppointment" class="my-worldbuff-modal-meta"></div>
-    <div id="myWorldbuffChangeTargetWrap" class="my-worldbuff-modal-grid" style="margin-top:10px">
-      <label>Neuer Termin
-        <select id="myWorldbuffChangeTarget"></select>
-      </label>
-    </div>
-    <label style="display:grid;gap:6px;margin-top:10px;color:#f8fafc;font-weight:900">Grund
-      <textarea id="myWorldbuffChangeReason" placeholder="Bitte den Grund für die Absage oder Verschiebung eintragen."></textarea>
-    </label>
-    <div class="change-actions">
-      <button class="tool-btn" type="button" onclick="submitMyWorldbuffChange()">Bestätigen</button>
-      <button class="right-inline-btn" type="button" onclick="closeMyWorldbuffChangeModal()">Abbrechen</button>
-    </div>
-    <div id="myWorldbuffChangeStatus" class="status" style="margin-top:10px">Der Grund ist ein Pflichtfeld.</div>
-  </div>
-</div>
 
 <div id="raidleadLoginBox" class="raidlead-login-box hidden">
   <div class="raidlead-login-head">
@@ -2832,7 +2925,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
         <button type="button" onclick="openPrioPage('ony')">ONY</button>
       </div>
     </section>
-    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startGuildPinCallout" class="start-po-login-callout start-guild-pin-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PIN</div><div class="start-po-login-copy"><span>GildenPIN</span><strong id="startGuildPinValue">----</strong><small>Diesen PIN nutzen Spieler zum Öffnen dieser Gilde.</small></div><button type="button" onclick="copyStartGuildPin()">kopieren</button></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/raid-templates/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -2854,7 +2947,10 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 
       <section class="dash-panel account-management-panel hidden" id="accountManagementPanel">
         <div class="section-head account-management-head">
-          <div></div>
+          <div>
+            <div class="section-title">LichtLoot Account Verwaltung</div>
+            <p>Charaktere, Prios, Raidkalender und Worldbuffs an einem Ort.</p>
+          </div>
           <button class="right-inline-btn" type="button" onclick="goHomeView()">Zurück zu den Raids</button>
         </div>
         <section class="dash-panel right-card account-management-card" id="meinLichtLootCard">
@@ -2866,24 +2962,74 @@ body.start-dashboard-body .raid-create-box input[readonly]{
             <div class="guild-switch-callout">
               <span class="guild-switch-label">LootGilde wechseln</span>
               <span class="guild-switch-arrow" aria-hidden="true">➜</span>
-              <select id="meinLichtLootGuildSwitch" class="guild-switch-select" aria-label="LootGilde wechseln" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select>
+              <select id="meinLichtLootGuildSwitch" class="guild-switch-select" aria-label="LootGilde wechseln" onchange="switchMeinLichtLootGuild(this.value)">
+                <option value="Lichtbringer">Lichtbringer</option>
+                <option value="Die Nachtwächter">Die Nachtwächter</option>
+              </select>
             </div>
             <button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button>
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
           </div>
-          <div class="mein-lichtloot-tiles" aria-label="Account-Bereiche">
-            <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')"><img src="images/dashboard-icons/charakterverwaltung-icon-512.png" alt=""><span>Charaktere & Prios</span><small>Charakter wählen, Prios ansehen und Twinks verwalten.</small></button>
-            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="showMeinLichtLootSection('raidcalendar')"><img src="images/dashboard-icons/raidkalender-icon-512.png" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
-            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="worldbuffs" onclick="showMeinLichtLootSection('worldbuffs')"><img src="images/dashboard-icons/worldbuffs.jpg" alt=""><span>Worldbuffs</span><small>Eigene Buff-Termine prüfen, eintragen und verschieben.</small></button>
+          <div class="mein-lichtloot-tiles" aria-label="Mein LichtLoot Bereiche">
+            <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')">
+              <img src="images/dashboard-icons/charakterverwaltung-icon-512.png" alt="">
+              <span>Charaktere & Prios</span>
+              <small>Charakter wählen, Prios ansehen und Twinks verwalten.</small>
+            </button>
+            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="showMeinLichtLootSection('raidcalendar')">
+              <img src="images/dashboard-icons/raidkalender-icon-512.png" alt="">
+              <span>Raidkalender</span>
+              <small>Deine Termine und externe Gilden-Raids im Kalender.</small>
+            </button>
+            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="worldbuffs" onclick="showMeinLichtLootSection('worldbuffs')">
+              <img src="images/dashboard-icons/worldbuffs.jpg" alt="">
+              <span>Worldbuffs</span>
+              <small>Eigene Buff-Termine prüfen, eintragen und verschieben.</small>
+            </button>
           </div>
           <div class="mein-lichtloot-section is-active" data-mein-lichtloot-section="chars">
-            <div class="mein-lichtloot-section-head"><span>Charaktere & Prios</span><small>Auswahl und Verwaltung</small></div>
-            <div class="character-subsection is-active"><div class="character-subtitle">Charakter wählen</div><div class="dashboard-select-row"><select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select><button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button></div><button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button><div id="dashboardMyPriosResults" class="dashboard-inline-results"></div></div>
-            <div class="character-subsection is-add dashboard-twink-form"><div class="character-subtitle">Charakter hinzufügen</div><input id="dashboardTwinkName" type="text" placeholder="Charaktername"><select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select><select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select><button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button></div>
-            <div class="character-subsection is-delete dashboard-twink-form"><div class="character-subtitle">Charakter löschen</div><select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select><button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button><div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div></div>
+            <div class="mein-lichtloot-section-head">
+              <span>Charaktere & Prios</span>
+              <small>Auswahl und Verwaltung</small>
+            </div>
+            <div class="character-subsection is-active">
+              <div class="character-subtitle">Charakter wählen</div>
+              <div class="dashboard-select-row">
+                <select id="dashboardCharSelect" onchange="dashboardSelectCharacter(true)"><option value="">Erst einloggen</option></select>
+                <button class="right-inline-btn" onclick="setSelectedMainCharacter()">Als Main</button>
+              </div>
+              <button class="right-inline-btn" onclick="dashboardLoadMyPrios()">Prios anzeigen</button>
+              <div id="dashboardMyPriosResults" class="dashboard-inline-results"></div>
+            </div>
+            <div class="character-subsection is-add dashboard-twink-form">
+              <div class="character-subtitle">Charakter hinzufügen</div>
+              <input id="dashboardTwinkName" type="text" placeholder="Charaktername">
+              <select id="dashboardTwinkServer"><option value="">Server wählen</option><option>Everlook</option><option>Lakeshire</option></select>
+              <select id="dashboardTwinkClass"><option value="">Klasse auswählen</option><option>Krieger</option><option>Paladin</option><option>Jäger</option><option>Schurke</option><option>Priester</option><option>Schamane</option><option>Magier</option><option>Hexenmeister</option><option>Druide</option></select>
+              <button class="right-inline-btn" onclick="dashboardAddTwink()">Charakter speichern</button>
+            </div>
+            <div class="character-subsection is-delete dashboard-twink-form">
+              <div class="character-subtitle">Charakter löschen</div>
+              <select id="dashboardDeleteTwinkSelect"><option value="">Charakter zum Löschen wählen</option></select>
+              <button class="right-inline-btn character-danger" onclick="dashboardDeleteTwink()">Charakter löschen</button>
+              <div id="dashboardTwinkStatus" class="dashboard-inline-status">Neue Charaktere nutzen denselben SpielerLogin.</div>
+            </div>
           </div>
-          <div class="mein-lichtloot-section raid-calendar-mini" data-mein-lichtloot-section="raidcalendar"><div class="mein-lichtloot-section-head"><span>Raidkalender</span><small>Termine und Reset-Planung</small></div><button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button><div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div></div>
-          <div class="mein-lichtloot-section" data-mein-lichtloot-section="worldbuffs"><div class="mein-lichtloot-section-head"><span>Worldbuffs</span><small>Werfer-Termine</small></div><div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div></div>
+          <div class="mein-lichtloot-section raid-calendar-mini" data-mein-lichtloot-section="raidcalendar">
+            <div class="mein-lichtloot-section-head">
+              <span>Raidkalender</span>
+              <small>Termine und Reset-Planung</small>
+            </div>
+            <button class="right-inline-btn raid-calendar-open-btn" onclick="openRaidCalendarModal()">Raidkalender öffnen</button>
+            <div id="dashboardRaidCalendarMini" class="dashboard-inline-status">Kalender zeigt deine gespeicherten Prios und externe Gilden-Raids.</div>
+          </div>
+          <div class="mein-lichtloot-section" data-mein-lichtloot-section="worldbuffs">
+            <div class="mein-lichtloot-section-head">
+              <span>Worldbuffs</span>
+              <small>Werfer-Termine</small>
+            </div>
+            <div id="dashboardMyWorldbuffContent" class="dashboard-inline-results"><div class="status">Worldbuff-Termine werden nach dem Login angezeigt.</div></div>
+          </div>
         </section>
       </section>
 
@@ -2927,7 +3073,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="LichtLoot Account Verwaltung öffnen"></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3047,7 +3193,6 @@ function openEmergencyPrio(){
   if(!pin) return;
   window.location.href="notfall/?pin="+encodeURIComponent(pin.trim());
 }
-
 const RAID_API_URL =
   "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL =
@@ -3174,14 +3319,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
-  const primaryColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.primaryColor || String(guild.primaryColor).toLowerCase() === "#facc15")
-    ? "#22d3ee"
-    : guild?.primaryColor;
-  const accentColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
-    ? "#0891b2"
-    : guild?.accentColor;
-  applyGuildThemeColor("--gold", "--gold-rgb", primaryColor);
-  applyGuildThemeColor("--blue", "--blue-rgb", accentColor);
+  applyGuildThemeColor("--gold", "--gold-rgb", guild?.primaryColor);
+  applyGuildThemeColor("--blue", "--blue-rgb", guild?.accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
   document.querySelectorAll("[data-guild-brand='guildName']").forEach(el => el.textContent = brand.guildName);
   document.querySelectorAll("[data-guild-brand='footerName']").forEach(el => el.textContent = "© 2026 " + brand.footerName);
@@ -3198,11 +3337,6 @@ function applyGuildBrand(){
     document.body.style.backgroundImage = "linear-gradient(rgba(4,10,20,.78),rgba(4,10,20,.88)), url('" + guild.backgroundUrl.replace(/'/g, "%27") + "')";
   }
   applyRaidLayoutImages(guild?.layout?.raidImages);
-  updateStartGuildPinCallout(guild?.guildPin || guild?.name || brand.guildName || "");
-  const accountEntryText = document.getElementById("accountEntryButtonText");
-  if(accountEntryText) accountEntryText.textContent = CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot";
-  const accountEntry = document.getElementById("meinLichtLootRightEntry");
-  if(accountEntry) accountEntry.setAttribute("aria-label", (CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot") + " öffnen");
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
 }
@@ -3276,8 +3410,7 @@ function createRaidId(raid){
     String(now.getSeconds()).padStart(2,"0")+"-"+
     randomCode(2);
 
-  const guildPrefix = CURRENT_GUILD_SLUG === "nachtloot" ? "NL" : "LL";
-  return guildPrefix+"-"+raids[raid].short+"-"+date;
+  return raids[raid].short+"-"+date;
 }
 
 function placeSidebarDrawers(){
@@ -3651,8 +3784,6 @@ function activeRaidPin(raid){
 }
 
 function activeRaidGuild(raid){
-  if(CURRENT_GUILD_SLUG === "nachtloot") return "Die Nachtwächter";
-  if(CURRENT_GUILD_SLUG === "lichtloot") return "Lichtbringer";
   return raid.guild || raid.gilde || raid.GildeName || raid.gildeName || raid.Gilde || raid.Guild || "";
 }
 
@@ -4813,13 +4944,13 @@ function copyHiddenLichtLootToDashboard(clearHidden){
 function showMeinLichtLootSection(section){
   const key=["chars","raidcalendar","worldbuffs"].includes(section) ? section : "chars";
   document.querySelectorAll("[data-mein-lichtloot-tile]").forEach(tile=>{
-    tile.classList.toggle("is-active",tile.dataset.meinLichtlootTile===key);
+    tile.classList.toggle("is-active", tile.dataset.meinLichtlootTile === key);
   });
   document.querySelectorAll("[data-mein-lichtloot-section]").forEach(panel=>{
-    panel.classList.toggle("is-active",panel.dataset.meinLichtlootSection===key);
+    panel.classList.toggle("is-active", panel.dataset.meinLichtlootSection === key);
   });
-  if(key==="raidcalendar" && typeof renderRaidCalendar==="function") renderRaidCalendar();
-  if(key==="worldbuffs" && typeof loadMyWorldbuffs==="function" && myLichtlootCharacters?.length){
+  if(key === "raidcalendar") renderRaidCalendar();
+  if(key === "worldbuffs" && typeof loadMyWorldbuffs === "function" && myLichtlootCharacters?.length){
     loadMyWorldbuffs();
   }
 }
@@ -5279,7 +5410,12 @@ async function switchMeinLichtLootGuild(value){
   const selection=String(value || "").trim();
   if(!selection) return;
   try{
-    const guild=selection === "Lichtbringer" ? {slug:"lichtloot"} : await resolveGuildPin(selection);
+    const normalizedSelection=selection.toLowerCase();
+    const guild=(normalizedSelection === "lichtbringer" || normalizedSelection === "lichtloot")
+      ? {slug:"lichtloot"}
+      : (normalizedSelection === "die nachtwächter" || normalizedSelection === "nachtwächter" || normalizedSelection === "nachtloot")
+        ? {slug:"nachtloot"}
+        : await resolveGuildPin(selection);
     if(!guild?.slug) throw new Error("Gilde wurde nicht gefunden.");
     const sharedPin=getStoredLichtLootPlayerPin();
     if(sharedPin){
@@ -5299,9 +5435,11 @@ async function switchMeinLichtLootGuild(value){
 }
 
 function syncMeinLichtLootGuildSwitch(){
-  const select=document.getElementById("meinLichtLootGuildSwitch");
-  if(!select) return;
-  select.value=CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : "Die Nachtwächter";
+  const value=CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : "Die Nachtwächter";
+  ["meinLichtLootGuildSwitch","startLootGuildSwitch"].forEach(id=>{
+    const select=document.getElementById(id);
+    if(select) select.value=value;
+  });
 }
 
 document.addEventListener("DOMContentLoaded", syncMeinLichtLootGuildSwitch);
@@ -5328,40 +5466,6 @@ function updateStartPoLoginCallout(pin){
   }
   value.textContent=cleanPin;
   box.classList.remove("hidden");
-}
-
-function currentDisplayGuildPin(pin){
-  const cleanPin=String(pin || "").trim();
-  if(cleanPin) return cleanPin;
-  return currentGuildInfo?.name || CURRENT_GUILD_BRAND.guildName || "";
-}
-
-function updateStartGuildPinCallout(pin){
-  const box=document.getElementById("startGuildPinCallout");
-  const value=document.getElementById("startGuildPinValue");
-  if(!box || !value) return;
-  const cleanPin=currentDisplayGuildPin(pin);
-  if(!cleanPin){
-    box.classList.add("hidden");
-    value.textContent="----";
-    return;
-  }
-  value.textContent=cleanPin;
-  box.classList.remove("hidden");
-}
-
-async function copyStartGuildPin(){
-  const cleanPin=currentDisplayGuildPin(currentGuildInfo?.guildPin || currentGuildInfo?.name || "");
-  if(!cleanPin) return;
-  try{
-    await navigator.clipboard.writeText(cleanPin);
-    const button=document.querySelector("#startGuildPinCallout button");
-    if(button){
-      const oldText=button.textContent;
-      button.textContent="kopiert";
-      window.setTimeout(()=>{ button.textContent=oldText; },1200);
-    }
-  }catch(error){}
 }
 
 async function copyStartPoLogin(){
@@ -5554,7 +5658,7 @@ async function fetchRailwayReadAction(params){
     return await fetchRailwayApi("/api/apps-script?"+search.toString());
   }
 
-  if(["getPlayerWorldbuffs","claimPlayerWorldbuff","movePlayerWorldbuff","cancelPlayerWorldbuff","guildDeleteWorldbuffTerm","guildRestoreDeletedWorldbuffTerms"].includes(params.action)){
+  if(["getPlayerWorldbuffs","claimPlayerWorldbuff","movePlayerWorldbuff","guildDeleteWorldbuffTerm","guildRestoreDeletedWorldbuffTerms"].includes(params.action)){
     const search=new URLSearchParams(params);
     return await fetchRailwayApi("/api/apps-script?"+search.toString());
   }
@@ -6771,8 +6875,6 @@ async function setSelectedMainCharacter(){
 
 let myWorldbuffEntries=[];
 let myWorldbuffOpenSlots=[];
-let myWorldbuffChangeIndex=-1;
-let myWorldbuffChangeAction="";
 let myLichtlootCharacters=[];
 let myWorldbuffDisplayCharacterName="";
 window.currentPlayerLoginRole="member";
@@ -6868,8 +6970,26 @@ function renderMyWorldbuffs(){
   if(!content) return;
 
   const claimHtml=renderMyWorldbuffClaim();
-  const appointmentsHtml=myWorldbuffEntries.length ? myWorldbuffEntries.map(entry=>{
+  const displayCharacter=String(myWorldbuffDisplayCharacterName || getSelectedMyLichtLootCharacterName() || "").trim();
+  const visibleEntries=displayCharacter
+    ? myWorldbuffEntries.filter(entry => dashboardWorldbuffTextKey(entry && entry.charakter) === dashboardWorldbuffTextKey(displayCharacter))
+    : myWorldbuffEntries;
+
+  if(!visibleEntries.length){
+    const nameText=displayCharacter ? safeHtml(displayCharacter)+" ist" : "Du bist";
+    content.innerHTML=claimHtml+'<div class="status">'+nameText+' aktuell für keinen Nicht-Horde-Worldbuff als Werfer eingetragen.</div>';
+    refreshMyWorldbuffClaimSlots();
+    return;
+  }
+
+  content.innerHTML=claimHtml+visibleEntries.map((entry,index)=>{
     const sourceIndex=myWorldbuffEntries.indexOf(entry);
+    const alternatives=Array.isArray(entry.alternatives) ? entry.alternatives : [];
+    const selectId="myWorldbuffMove_"+sourceIndex;
+    const optionHtml=alternatives.length
+      ? alternatives.map(slot => `<option value="${safeAttr(slot.rowNumber)}">${safeHtml([slot.tag, slot.datum, slot.uhrzeit, slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
+      : '<option value="">Keine freien Ersatztermine</option>';
+
     return `
       <div class="my-worldbuff-item">
         <div class="my-worldbuff-main">
@@ -6880,23 +7000,15 @@ function renderMyWorldbuffs(){
           <span class="pill ${isOpenStatusText(entry.status) ? "open" : "closed"}">${safeHtml(entry.status || "eingetragen")}</span>
         </div>
         <div class="my-worldbuff-actions">
-          <button type="button" onclick="openMyWorldbuffChangeModal(${sourceIndex},'move')">Verschieben</button>
-          <button class="danger" type="button" onclick="openMyWorldbuffChangeModal(${sourceIndex},'cancel')">Termin absagen</button>
+          <button type="button" onclick="toggleMyWorldbuffMove(${sourceIndex})">Verschieben</button>
+        </div>
+        <div id="${selectId}_box" class="my-worldbuff-move">
+          <select id="${selectId}" ${alternatives.length ? "" : "disabled"}>${optionHtml}</select>
+          <button type="button" onclick="moveMyWorldbuff(${sourceIndex})" ${alternatives.length ? "" : "disabled"}>Speichern</button>
         </div>
       </div>
     `;
-  }).join("") : '<div class="status">Für deine Charaktere sind aktuell keine Worldbuff-Termine eingetragen.</div>';
-
-  content.innerHTML=`
-    <section class="my-worldbuff-section">
-      <div class="my-worldbuff-section-head"><strong>Meine festen Termine</strong><span>Alle Charaktere deines SpielerLogins</span></div>
-      ${appointmentsHtml}
-    </section>
-    <section class="my-worldbuff-section assignment">
-      <div class="my-worldbuff-section-head"><strong>Neuen Termin übernehmen</strong><span>Buff, freien Termin und Charakter auswählen</span></div>
-      ${claimHtml}
-    </section>
-  `;
+  }).join("");
   refreshMyWorldbuffClaimSlots();
 }
 
@@ -7013,92 +7125,6 @@ function updateMyWorldbuffClaimMeta(){
 
 function isOpenStatusText(status){
   return String(status || "").toLowerCase().replace(/[🟡🟢✅]/g,"").trim()==="offen";
-}
-
-function openMyWorldbuffChangeModal(index,action){
-  const entry=myWorldbuffEntries[index];
-  const modal=document.getElementById("myWorldbuffChangeModal");
-  if(!entry || !modal) return;
-  myWorldbuffChangeIndex=index;
-  myWorldbuffChangeAction=action === "cancel" ? "cancel" : "move";
-  const isCancel=myWorldbuffChangeAction === "cancel";
-  const title=document.getElementById("myWorldbuffChangeTitle");
-  const appointment=document.getElementById("myWorldbuffChangeAppointment");
-  const targetWrap=document.getElementById("myWorldbuffChangeTargetWrap");
-  const target=document.getElementById("myWorldbuffChangeTarget");
-  const reason=document.getElementById("myWorldbuffChangeReason");
-  const status=document.getElementById("myWorldbuffChangeStatus");
-  if(title) title.textContent=isCancel ? "Worldbuff-Termin absagen" : "Worldbuff-Termin verschieben";
-  if(appointment) appointment.textContent=[entry.buff,entry.charakter,entry.tag,entry.datum,entry.uhrzeit,entry.gilde].filter(Boolean).join(" · ");
-  if(targetWrap) targetWrap.classList.toggle("hidden",isCancel);
-  if(target){
-    const alternatives=Array.isArray(entry.alternatives) ? entry.alternatives : [];
-    target.innerHTML=alternatives.length
-      ? alternatives.map(slot => `<option value="${safeAttr(slot.rowNumber)}">${safeHtml([slot.buff,slot.tag,slot.datum,slot.uhrzeit,slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
-      : '<option value="">Keine freien Ersatztermine</option>';
-    target.disabled=!alternatives.length;
-  }
-  if(reason) reason.value="";
-  if(status){
-    status.textContent="Der Grund ist ein Pflichtfeld. Ariee wird im Discord und im LichtLoot-Postfach informiert.";
-    status.className="status";
-  }
-  modal.classList.remove("hidden");
-}
-
-function closeMyWorldbuffChangeModal(){
-  document.getElementById("myWorldbuffChangeModal")?.classList.add("hidden");
-  myWorldbuffChangeIndex=-1;
-  myWorldbuffChangeAction="";
-}
-
-async function submitMyWorldbuffChange(){
-  const entry=myWorldbuffEntries[myWorldbuffChangeIndex];
-  const pin=document.getElementById("myPriosPin")?.value.trim() || "";
-  const reason=document.getElementById("myWorldbuffChangeReason")?.value.trim() || "";
-  const targetRow=document.getElementById("myWorldbuffChangeTarget")?.value || "";
-  const status=document.getElementById("myWorldbuffChangeStatus");
-  if(!entry || !pin) return;
-  if(!reason){
-    if(status){
-      status.textContent="Bitte zuerst einen Grund angeben.";
-      status.className="status bad";
-    }
-    return;
-  }
-  if(myWorldbuffChangeAction === "move" && !targetRow){
-    if(status){
-      status.textContent="Bitte einen freien Ersatztermin auswählen.";
-      status.className="status bad";
-    }
-    return;
-  }
-  if(status){
-    status.textContent=myWorldbuffChangeAction === "cancel" ? "Termin wird abgesagt …" : "Termin wird verschoben …";
-    status.className="status";
-  }
-  try{
-    const result=await fetchRaidApiJsonp(myWorldbuffChangeAction === "cancel" ? {
-      action:"cancelPlayerWorldbuff",
-      pin,
-      rowNumber:entry.rowNumber,
-      reason
-    } : {
-      action:"movePlayerWorldbuff",
-      pin,
-      fromRowNumber:entry.rowNumber,
-      toRowNumber:targetRow,
-      reason
-    });
-    if(!result.success) throw new Error(result.error || "Der Termin konnte nicht geändert werden.");
-    closeMyWorldbuffChangeModal();
-    await loadMyWorldbuffs();
-  }catch(error){
-    if(status){
-      status.textContent=error.message || "Der Termin konnte nicht geändert werden.";
-      status.className="status bad";
-    }
-  }
 }
 
 function toggleMyWorldbuffMove(index){
@@ -7317,11 +7343,7 @@ function renderMyPrios(data){
   }
 
   if(ownP0.length){
-    html+=`<div class="lichtloot-fold own-p0-popout-card">
-      <strong>Eigene P0/P0+ Punkte</strong>
-      <span>${safeHtml(ownP0.length)} gespeicherte Punkte gefunden. Die komplette Liste öffnet sich als eigenes Fenster.</span>
-      <button class="right-inline-btn" type="button" onclick="openOwnP0PlusModal()">P0/P0+ Punkte öffnen</button>
-    </div>`;
+    html+=renderOwnP0PlusSummaryCard(ownP0,data);
   }
 
   if(pastEntries.length){
@@ -7385,12 +7407,45 @@ function renderMyPoReleasesCard(releases){
   ] : []);
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
-    return `<span class="own-p0-release-chip${active ? " is-active" : ""}">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "–"}</strong></span>`;
+    return `<span class="own-p0-summary-chip">${safeHtml(label)}: <strong class="${active ? "ok" : "muted"}">${active ? "✓" : "-"}</strong></span>`;
   }).join("");
-  return `<div class="lichtloot-fold own-p0-popout-card">
-    <div class="own-p0-release-title">Meine P0+ Freigaben</div>
-    <div class="own-p0-release-text">Diese Haken gelten auch für die P0+-Anmeldung im Discord.</div>
-    <div class="own-p0-release-items">${chips}</div>
+  return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
+    <div>
+      <div class="own-p0-summary-title">Meine P0+ Freigaben</div>
+      <div class="own-p0-summary-text">Diese Haken bestimmen, ob du im Discord-PO-Anmelder fuer den Raid eine P0+ Anmeldung setzen kannst.</div>
+      <div class="own-p0-summary-items">${chips}</div>
+    </div>
+  </div>`;
+}
+
+function renderOwnP0PlusSummaryCard(points,data){
+  const raidNames=[...new Set((points || []).map(point=>String(point.raid || "Raid").trim()).filter(Boolean))];
+  const totalPoints=(points || []).reduce((sum,point)=>sum+(Number(point.count || 0) || 0),0);
+  const topItems=(points || [])
+    .slice()
+    .sort((a,b)=>(Number(b.count || 0) || 0)-(Number(a.count || 0) || 0))
+    .slice(0,3)
+    .map(point=>{
+      const item=String(point.item || "Item").trim();
+      const count=Number(point.count || 0) || 0;
+      return `<span class="own-p0-summary-chip">${safeHtml(item)}${count ? " · "+safeHtml(count) : ""}</span>`;
+    })
+    .join("");
+  const charName=[data && data.player, data && data.server].filter(Boolean).join(" - ");
+
+  return `<div class="lichtloot-fold own-p0-popout-card own-p0-summary-card">
+    <div>
+      <div class="own-p0-summary-title">Punkte zu ${safeHtml(charName || "diesem Charakter")}</div>
+      <div class="own-p0-summary-text">Alle P0/P0+ Punkte sind gesammelt. Die komplette Itemliste öffnet sich weiterhin als eigenes Fenster.</div>
+      <div class="own-p0-summary-stats">
+        <div class="own-p0-summary-stat"><strong>${safeHtml(points.length)}</strong><span>Einträge</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(totalPoints)}</strong><span>Punkte</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(raidNames.length)}</strong><span>Raids</span></div>
+        <div class="own-p0-summary-stat"><strong>${safeHtml(raidNames.slice(0,2).join(", ") || "-")}</strong><span>Bereiche</span></div>
+      </div>
+      ${topItems ? `<div class="own-p0-summary-items">${topItems}</div>` : ""}
+    </div>
+    <button class="right-inline-btn own-p0-summary-action" type="button" onclick="openOwnP0PlusModal()">Punkte anzeigen</button>
   </div>`;
 }
 
@@ -7824,6 +7879,8 @@ async function loadRaidPrioListIntoDetail(entry){
     if(!raidId && pin) request.playerPin=pin;
 
     const result=await fetchRaidApiJsonp(request);
+    const releaseResult=await fetchRaidApiJsonp({ action:"getP0ReleaseList" }).catch(()=>null);
+    window.myP0ReleaseCache = releaseResult && releaseResult.success ? (releaseResult.releases || {}) : {};
 
     if(!result.success && result.error){
       block.innerHTML='<div class="status"><span class="bad">'+safeHtml(result.error)+'</span></div>';
@@ -7835,6 +7892,13 @@ async function loadRaidPrioListIntoDetail(entry){
     console.error(error);
     block.innerHTML='<div class="status"><span class="bad">Prioliste konnte nicht geladen werden.</span></div>';
   }
+}
+
+function hasMyP0Release(playerName, raidKey){
+  const raid=String(raidKey || "").toLowerCase();
+  const name=String(playerName || "").trim().toLowerCase();
+  const names=(window.myP0ReleaseCache && window.myP0ReleaseCache[raid]) || [];
+  return Boolean(name && names.some(entry => String(entry || "").trim().toLowerCase() === name));
 }
 
 function renderFullRaidPrioTable(prios, entry){
@@ -7859,9 +7923,11 @@ function renderFullRaidPrioTable(prios, entry){
 
   sortedPrios.forEach((prio,index)=>{
     const rowEntry={raid:entry.raid,raidName:entry.raidName};
+    const playerName=prio.Spieler || "";
+    const releaseStar=hasMyP0Release(playerName, entry.raid) ? ' <span class="p0-release-star" title="P0+ Freigabe">★</span>' : "";
     html+=`<tr>
       <td data-label="#">${index+1}</td>
-      <td data-label="Spieler">${safeHtml(prio.Spieler || "")}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
+      <td data-label="Spieler">${safeHtml(playerName)}${releaseStar}${prio.Server ? '<br><span class="myprio-label">'+safeHtml(prio.Server)+'</span>' : ''}</td>
       <td data-label="Klasse">${safeHtml(prio.Klasse || "")}</td>
       <td data-label="P1">${myPrioItemHtml(rowEntry, prio.P1)}</td>
       <td data-label="P2">${myPrioItemHtml(rowEntry, prio.P2)}</td>
