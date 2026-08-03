@@ -4585,6 +4585,22 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   font-weight:900;
 }
 
+.worldbuff-icon{
+  width:26px;
+  height:26px;
+  flex:0 0 26px;
+  object-fit:cover;
+  border-radius:5px;
+  border:1px solid rgba(226,232,240,.55);
+  box-shadow:0 2px 7px rgba(0,0,0,.55);
+}
+
+.worldbuff-choice-control{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+
 .buff-hakkar{color:#86efac}
 .buff-ony{color:#fca5a5}
 .buff-nef{color:#f87171}
@@ -15193,17 +15209,37 @@ function renderWorldbuffBuffControl(entry, index){
   if(choices.length <= 1) return renderWorldbuffBadge(entry.buff);
   const current = String((entry && entry.buff) || "").trim();
   return `
-    <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff">
-      ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
-    </select>
+    <span class="worldbuff-choice-control">
+      <img id="worldbuffChoiceIcon_${index}" class="worldbuff-icon" src="${escapeAttr(worldbuffIconPath(current))}" alt="">
+      <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff" onchange="updateWorldbuffChoiceIcon(${index},this.value)">
+        ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
+      </select>
+    </span>
   `;
+}
+
+function worldbuffIconPath(buff){
+  const value = String(buff || "").trim().toLowerCase();
+  const icons = {
+    hakkar:"images/worldbuff-zg.png",
+    zg:"images/worldbuff-zg.png",
+    ony:"images/worldbuff-ony.png",
+    neff:"images/worldbuff-nef.png",
+    nef:"images/worldbuff-nef.png",
+    rend:"images/worldbuff-rend.png"
+  };
+  return icons[value] || "images/worldbuff-zg.png";
+}
+
+function updateWorldbuffChoiceIcon(index, buff){
+  const icon = document.getElementById(`worldbuffChoiceIcon_${index}`);
+  if(icon) icon.src = worldbuffIconPath(buff);
 }
 
 function renderWorldbuffBadge(buff){
   const value = String(buff || "").trim();
   const cls = "buff-" + value.toLowerCase();
-  const icon = value === "Hakkar" ? "🟢" : (value === "Rend" ? "🟠" : "🔴");
-  return `<span class="buff-pill ${escapeAttr(cls)}">${icon} ${escapeHtml(value || "-")}</span>`;
+  return `<span class="buff-pill ${escapeAttr(cls)}"><img class="worldbuff-icon" src="${escapeAttr(worldbuffIconPath(value))}" alt=""> ${escapeHtml(value || "-")}</span>`;
 }
 
 function getBuffDateKey(entry){
