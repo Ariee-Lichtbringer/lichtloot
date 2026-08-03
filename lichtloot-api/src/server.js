@@ -2232,117 +2232,6 @@ function requireMasterOrQueueToken(params = {}) {
   throw error;
 }
 
-async function ensureLichtlootHelpKnowledgeSchema() {
-  await query(
-    `create table if not exists lichtloot_help_knowledge (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       question text not null default '',
-       answer text not null default '',
-       status text not null default 'pending',
-       submitted_by_discord_id text not null default '',
-       submitted_by_name text not null default '',
-       approved_by_discord_id text not null default '',
-       approved_by_name text not null default '',
-       approved_at timestamptz,
-       created_at timestamptz not null default now(),
-       updated_at timestamptz not null default now(),
-       constraint lichtloot_help_knowledge_status_check
-         check (status in ('pending', 'approved', 'rejected'))
-     )`
-  );
-  await query(
-    `create index if not exists idx_lichtloot_help_knowledge_guild_status
-       on lichtloot_help_knowledge(guild_id, status, updated_at desc)`
-  );
-}
-
-async function getLichtlootHelpKnowledge({ guildId, params = {}, status = "approved" }) {
-  requireMasterOrQueueToken(params);
-  await ensureLichtlootHelpKnowledgeSchema();
-  const normalizedStatus = ["approved", "pending", "rejected"].includes(clean(status).toLowerCase())
-    ? clean(status).toLowerCase()
-    : "approved";
-  const result = await query(
-    `select id, question, answer, status,
-            submitted_by_discord_id as "submittedByDiscordId",
-            submitted_by_name as "submittedByName",
-            approved_by_discord_id as "approvedByDiscordId",
-            approved_by_name as "approvedByName",
-            approved_at as "approvedAt",
-            created_at as "createdAt",
-            updated_at as "updatedAt"
-       from lichtloot_help_knowledge
-      where guild_id = $1 and status = $2
-      order by updated_at desc
-      limit 250`,
-    [guildId, normalizedStatus]
-  );
-  return { success: true, entries: result.rows };
-}
-
-async function createLichtlootHelpQuestion({ guildId, params = {} }) {
-  requireMasterOrQueueToken(params);
-  await ensureLichtlootHelpKnowledgeSchema();
-  const question = clean(params.question).slice(0, 1000);
-  if (!question) {
-    const error = new Error("Die Hilfe-Frage fehlt.");
-    error.statusCode = 400;
-    throw error;
-  }
-  const result = await query(
-    `insert into lichtloot_help_knowledge
-       (guild_id, question, status, submitted_by_discord_id, submitted_by_name)
-     values ($1, $2, 'pending', $3, $4)
-     returning id, question, status, created_at as "createdAt"`,
-    [guildId, question, clean(params.discordUserId), clean(params.discordName).slice(0, 200)]
-  );
-  return { success: true, entry: result.rows[0] };
-}
-
-async function approveLichtlootHelpKnowledge({ guildId, params = {} }) {
-  requireMasterOrQueueToken(params);
-  await ensureLichtlootHelpKnowledgeSchema();
-  const id = clean(params.id || params.knowledgeId);
-  const question = clean(params.question).slice(0, 1000);
-  const answer = clean(params.answer).slice(0, 4000);
-  if (!answer || (!id && !question)) {
-    const error = new Error("Frage oder Antwort fehlt.");
-    error.statusCode = 400;
-    throw error;
-  }
-  let result;
-  if (id) {
-    result = await query(
-      `update lichtloot_help_knowledge
-          set question = case when $3 = '' then question else $3 end,
-              answer = $4,
-              status = 'approved',
-              approved_by_discord_id = $5,
-              approved_by_name = $6,
-              approved_at = now(),
-              updated_at = now()
-        where id = $2 and guild_id = $1
-        returning id, question, answer, status, approved_at as "approvedAt"`,
-      [guildId, id, question, answer, clean(params.approvedByDiscordId), clean(params.approvedByName).slice(0, 200)]
-    );
-  } else {
-    result = await query(
-      `insert into lichtloot_help_knowledge
-         (guild_id, question, answer, status, approved_by_discord_id, approved_by_name, approved_at)
-       values ($1, $2, $3, 'approved', $4, $5, now())
-       returning id, question, answer, status, approved_at as "approvedAt"`,
-      [guildId, question, answer, clean(params.approvedByDiscordId), clean(params.approvedByName).slice(0, 200)]
-    );
-  }
-  if (!result.rows[0]) {
-    const error = new Error("Die Hilfe-Frage wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
-  }
-  return { success: true, entry: result.rows[0] };
-}
-
 async function ensureRaidSchema() {
   await query(
     `alter table raids
@@ -7833,6 +7722,26 @@ async function resolveBotQueue({ guildId, query: params }) {
   return { success: true };
 }
 
+async function claimBotQueue({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const rowNumber = clean(params.rowNumber);
+  if (!isUuid(rowNumber)) return { success: false, claimed: false };
+  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
+  const result = await query(
+    `update bot_update_queue
+     set status = 'processing', claimed_at = now()
+     where guild_id = $1
+       and id = $2
+       and (
+         status = 'open'
+         or (status = 'processing' and claimed_at < now() - interval '5 minutes')
+       )
+     returning id`,
+    [guildId, rowNumber]
+  );
+  return { success: true, claimed: result.rowCount === 1 };
+}
+
 async function findCharacterForPin(guildId, pin, charName, server) {
   const normalizedPin = normalizePin(pin);
   const characterName = clean(charName);
@@ -8122,6 +8031,9 @@ async function savePrio({ guildId, query: params }) {
     );
     const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
     const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
+    if (p0Selected) {
+      await requireGuildPoItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName);
+    }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
     const comment = JSON.stringify({
       p0Plus: p0Selected ? "ja" : "nein",
@@ -8494,6 +8406,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
+    await requireGuildPoItem(guildId, item.id, item.name);
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
 
     const existing = await client.query(
@@ -15073,6 +14986,9 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
 
 async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
+  await ensureGuildPoItemsSchema();
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  const restrictToConfiguredPoItems = guildResult.rows[0]?.slug === "nachtloot";
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender PO+-Raid gefunden.");
@@ -15088,6 +15004,9 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
        coalesce(sum(pp.points), 0)::numeric as p0plus_points,
        count(pp.id)::int as p0plus_count
      from items i
+     ${restrictToConfiguredPoItems
+       ? "join guild_po_items gpi on gpi.guild_id = $2 and gpi.item_id = i.id and gpi.enabled = true"
+       : ""}
      left join p0plus_points pp on pp.guild_id = $2 and pp.item_id = i.id
      where lower(i.raid_type) = any($1)
         or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
@@ -15277,6 +15196,8 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
+
+    await requireGuildPoItem(guildId, item.id, item.name);
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
@@ -18582,6 +18503,104 @@ async function getLootItems({ query: params }) {
   };
 }
 
+async function ensureGuildPoItemsSchema() {
+  await query(
+    `create table if not exists guild_po_items (
+       guild_id uuid not null references guilds(id) on delete cascade,
+       item_id uuid not null references items(id) on delete cascade,
+       raid_type text not null,
+       enabled boolean not null default true,
+       updated_by text,
+       updated_at timestamptz not null default now(),
+       primary key (guild_id, item_id)
+     )`
+  );
+  await query(`create index if not exists guild_po_items_guild_raid_idx on guild_po_items (guild_id, raid_type, enabled)`);
+}
+
+async function getGuildPoItems({ guild, query: params = {} }) {
+  await ensureGuildPoItemsSchema();
+  const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  const values = [guild.id];
+  let raidClause = "";
+  if (raidType && raidType !== "raid") {
+    values.push(raidTypeSearchValues(lootSourceRaidType(raidType)));
+    raidClause = `and (lower(i.raid_type) = any($2) or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($2))`;
+  }
+  const result = await query(
+    `select i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
+            i.slot, i.type, i.boss,
+            coalesce(gpi.enabled, false) as po_enabled
+     from items i
+     left join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id
+     where 1 = 1 ${raidClause}
+     order by lower(i.raid_type), lower(i.name)`,
+    values
+  );
+  const enabledOnly = clean(params.enabledOnly).toLowerCase() === "true" || clean(params.enabledOnly) === "1";
+  const rows = enabledOnly ? result.rows.filter(row => Boolean(row.po_enabled)) : result.rows;
+  return {
+    success: true,
+    raid: raidType,
+    items: rows.map(row => ({ ...normalizeLootItemForApi(row), poEnabled: Boolean(row.po_enabled) }))
+  };
+}
+
+async function setGuildPoItem({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(guild?.slug).toLowerCase() !== "nachtloot") {
+    const error = new Error("PO-Items werden nur für Nachtwächter verwaltet.");
+    error.statusCode = 403;
+    throw error;
+  }
+  await ensureGuildPoItemsSchema();
+  const itemId = clean(params.itemId || params.id);
+  const enabled = String(params.enabled).toLowerCase() === "true" || String(params.enabled) === "1";
+  if (!itemId) {
+    const error = new Error("Item-ID fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const itemResult = await query(`select id, raid_type, name from items where id::text = $1 or item_id = $1 limit 1`, [itemId]);
+  const item = itemResult.rows[0];
+  if (!item) {
+    const error = new Error("Item wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  await query(
+    `insert into guild_po_items (guild_id, item_id, raid_type, enabled, updated_by, updated_at)
+     values ($1, $2, $3, $4, $5, now())
+     on conflict (guild_id, item_id) do update
+       set raid_type = excluded.raid_type,
+           enabled = excluded.enabled,
+           updated_by = excluded.updated_by,
+           updated_at = now()`,
+    [guild.id, item.id, normalizeRaidType(item.raid_type), enabled, clean(params.updatedBy) || "Gildenleitung"]
+  );
+  return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled };
+}
+
+async function requireGuildPoItem(guildId, itemId, itemName = "") {
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  if (guildResult.rows[0]?.slug !== "nachtloot") return { bypassed: true };
+  await ensureGuildPoItemsSchema();
+  const result = await query(
+    `select i.id, i.name
+     from items i
+     join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id and gpi.enabled = true
+     where i.id::text = $2 or ($3 <> '' and lower(i.name) = lower($3))
+     limit 1`,
+    [guildId, clean(itemId), clean(itemName)]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Dieses Item ist von der Gildenleitung nicht als PO-Item freigegeben.");
+    error.statusCode = 403;
+    throw error;
+  }
+  return result.rows[0];
+}
+
 async function loadStaticLootItems(raidType) {
   return [];
 }
@@ -18840,16 +18859,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetQueueAllGuilds") {
       const queue = await getBotQueueAllGuilds({ query: req.query });
       return res.json(queue);
-    }
-
-    if (action === "lichtbotGetHelpKnowledge") {
-      const guild = await requireGuild(resolveGuildSlug(req.query.guild));
-      const knowledge = await getLichtlootHelpKnowledge({
-        guildId: guild.id,
-        params: req.query,
-        status: req.query.status || "approved"
-      });
-      return res.json({ ...knowledge, guild: guild.slug });
     }
 
     if (action === "resolveGuildByPin") {
@@ -19114,6 +19123,11 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "getLootItems" || action === "guildGetLootItems") {
       const items = await getLootItems({ query: req.query });
+      return res.json({ ...items, guild: guild.slug });
+    }
+
+    if (action === "guildGetPoItems" || action === "getGuildPoItems") {
+      const items = await getGuildPoItems({ guild, query: req.query });
       return res.json({ ...items, guild: guild.slug });
     }
 
@@ -19701,21 +19715,16 @@ app.post("/api/apps-script", async (req, res, next) => {
       requireMasterCodeForGuild(guild, postParams.masterCode);
     }
 
-    if (action === "lichtbotCreateHelpQuestion") {
-      const saved = await createLichtlootHelpQuestion({ guildId: guild.id, params: postParams });
-      return res.json({ ...saved, guild: guild.slug });
-    }
-    if (action === "lichtbotApproveHelpKnowledge") {
-      const saved = await approveLichtlootHelpKnowledge({ guildId: guild.id, params: postParams });
-      return res.json({ ...saved, guild: guild.slug });
-    }
-
     if (action === "lichtbotSaveDiscordChannels") {
       const saved = await saveDiscordBotChannels({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
     if (action === "lichtbotSaveDiscordRoles") {
       const saved = await saveDiscordBotRoles({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildSetPoItem") {
+      const saved = await setGuildPoItem({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -20065,6 +20074,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotResolveQueue") {
       const resolved = await resolveBotQueue({ guildId: guild.id, query: postParams });
       return res.json({ ...resolved, guild: guild.slug });
+    }
+
+    if (action === "lichtbotClaimQueue") {
+      const claimed = await claimBotQueue({ guildId: guild.id, query: postParams });
+      return res.json({ ...claimed, guild: guild.slug });
     }
 
     if (action === "guildSaveLogAnalysis" || action === "lichtbotSaveLogAnalysis") {
