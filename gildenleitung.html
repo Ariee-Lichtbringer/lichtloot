@@ -14265,11 +14265,11 @@ function setPoReleaseSearch(value){
   renderPoReleaseRows();
 }
 
-function poReleaseCheckHtml(entry, raid){
+function poReleaseCheckHtml(entry, raid, index){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
   return checked
     ? `<span class="po-release-state active" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
-    : `<span class="po-release-state empty">offen</span>`;
+    : `<button class="po-release-state empty" type="button" title="${escapeAttr(poReleaseRaidLabel(raid))} erteilen" onclick="setPoReleaseDirect(${Number(index)}, '${escapeAttr(raid)}', true)">offen</button>`;
 }
 
 function recruitStatusLiftHtml(entry){
@@ -14323,13 +14323,13 @@ function renderPoReleaseRows(){
             </button>
           </td>
         ` : ""}
-        <td>${poReleaseCheckHtml(entry,"mc")}</td>
-        <td>${poReleaseCheckHtml(entry,"bwl")}</td>
-        <td>${poReleaseCheckHtml(entry,"aq40")}</td>
-        <td>${poReleaseCheckHtml(entry,"naxx")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-mittwoch")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-prime")}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-late")}</td>
+        <td>${poReleaseCheckHtml(entry,"mc",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"bwl",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"aq40",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"naxx",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-mittwoch",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-prime",index)}</td>
+        <td>${poReleaseCheckHtml(entry,"zg-late",index)}</td>
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
@@ -14396,6 +14396,17 @@ async function setPoReleaseFromPopup(index, enabled){
   }
   const raidKey = await choosePoReleaseRaid(entry, enabled);
   if(!raidKey) return;
+  return setPoReleaseDirect(index, raidKey, enabled);
+}
+
+async function setPoReleaseDirect(index, raidKey, enabled = true){
+  const entry = poReleaseCharacters[index];
+  if(!entry || !raidKey) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){
+    setStatus("Bitte Master-Code eingeben.", "bad");
+    return;
+  }
   try{
     setStatus((enabled ? "P0+ Freigabe wird gespeichert ..." : "P0+ Freigabe wird entfernt ..."), "");
     const result = await railwayWrite({
@@ -14410,7 +14421,7 @@ async function setPoReleaseFromPopup(index, enabled){
       setStatus(result.error || "P0+ Freigabe konnte nicht gespeichert werden.", "bad");
       return;
     }
-    entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false }, entry.releases || {});
+    entry.releases = Object.assign({ mc:false, bwl:false, aq40:false, naxx:false, "zg-mittwoch":false, "zg-prime":false, "zg-late":false }, entry.releases || {});
     entry.releases[raidKey] = Boolean(enabled);
     raidHelperP0ReleaseCache = null;
     renderPoReleaseRows();
