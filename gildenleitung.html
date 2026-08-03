@@ -6670,6 +6670,10 @@ async function loadPoItemSettingsPanel(){
     const result = await railwayApi({ action:"guildGetPoItems", masterCode, raid:poItemSettingsRaid, t:Date.now() });
     if(!result.success) throw new Error(result.error || "PO-Items konnten nicht geladen werden.");
     poItemSettingsRows = Array.isArray(result.items) ? result.items : [];
+    poItemSettingsRows.forEach(item => {
+      const name = item && (item.name || item.Item || item.item);
+      if(name) lootItemIndex[itemKey(name)] = normalizeLootItem(item);
+    });
     renderPoItemSettingsPanel();
   }catch(error){
     box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "PO-Items konnten nicht geladen werden.")}</div>`;
@@ -6697,7 +6701,7 @@ function renderPoItemSettingsPanel(){
       ${rows.length ? rows.map((item,index) => `
         <tr>
           <td><label style="display:inline-flex;align-items:center;gap:8px;font-weight:900"><input type="checkbox" ${item.poEnabled ? "checked" : ""} onchange="setPoItemEnabled('${escapeAttr(item.id || item.itemId)}',this.checked,this)"> PO Item</label></td>
-          <td><strong>${escapeHtml(item.name || "-")}</strong>${item.itemId ? `<br><span class="muted">ID ${escapeHtml(item.itemId)}</span>` : ""}</td>
+          <td>${renderLootItem(item.name || item.Item || "-")}${item.itemId ? `<br><span class="muted">ID ${escapeHtml(item.itemId)}</span>` : ""}</td>
           <td>${escapeHtml(item.boss || "-")}</td><td>${escapeHtml(item.slot || "-")}</td>
         </tr>`).join("") : '<tr><td colspan="4" class="muted">Keine Items gefunden.</td></tr>'}
     </tbody></table></div>
