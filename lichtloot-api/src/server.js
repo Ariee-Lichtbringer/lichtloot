@@ -994,7 +994,7 @@ function mergeGuildLayoutDefaults(slug, layout) {
 async function listGuilds() {
   await ensureGuildLayoutSchema();
   await ensureGuildDiscordConfigSchema();
-  const result = await query(
+  let result = await query(
     `select g.slug, g.name, g.server,
             case when g.slug = 'lichtloot' then 'Lichtbringer' else coalesce(nullif(g.name, ''), g.slug) end as guild_pin,
             g.logo_url, g.background_url, g.discord_guild_id, g.created_at,
@@ -9081,6 +9081,20 @@ async function deletePrio({ guildId, query: params }) {
      returning pr.id, pr.raid_id`,
     values
   );
+
+  if (!result.rowCount && resolvedDeleteRaid?.id) {
+    result = await query(
+      `delete from prios pr
+       using characters c, players p
+       where pr.character_id = c.id
+         and c.player_id = p.id
+         and p.guild_id = $1
+         and lower(c.name) = lower($2)
+         and pr.raid_id = $3
+       returning pr.id, pr.raid_id`,
+      [guildId, character.name, resolvedDeleteRaid.id]
+    );
+  }
 
   if (!result.rowCount) {
     const error = new Error("Die Prio wurde nicht gefunden und deshalb nicht gelöscht. Bitte die Raidseite neu laden und erneut versuchen.");
@@ -20120,11 +20134,6 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPoItem") {
       const saved = await setGuildPoItem({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
-    }
-
-    if (action === "guildImportEmergencyPrios") {
-      const imported = await importEmergencyPrios({ guild, query: postParams });
-      return res.json({ ...imported, guild: guild.slug });
     }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
