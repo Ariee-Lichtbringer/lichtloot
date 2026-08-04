@@ -6174,17 +6174,26 @@ let pendingMessageContext = null;
 let raidHelperDeepLinkHandled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  sessionStorage.removeItem(MASTER_STORAGE_KEY);
+  const masterField = document.getElementById("masterCode");
+  const worldbuffField = document.getElementById("worldbuffAccessPassword");
+  if(masterField) masterField.value = "";
+  if(worldbuffField) worldbuffField.value = "";
+  setGuildLocked(true);
+  setWorldbuffOnlyMode(false);
   await fetchCurrentGuildInfo();
   applyGuildBrand();
   if(CURRENT_GUILD_SLUG !== "nachtloot"){
     document.querySelectorAll('option[value="zg-mittwoch"],option[value="zg-prime"],option[value="zg-late"]').forEach(option => option.remove());
   }
-  const saved = sessionStorage.getItem(MASTER_STORAGE_KEY) || "";
-  if (saved) document.getElementById("masterCode").value = saved;
   const raidDateSearch = document.getElementById("raidDateSearch");
   if(raidDateSearch) raidDateSearch.value = "";
   setDefaultCreateRaidDate();
-  if(saved) loadOverview();
+});
+
+window.addEventListener("pageshow", event => {
+  if(!event.persisted) return;
+  clearMasterCode();
 });
 
 function enterLoads(event){
@@ -6628,7 +6637,7 @@ async function loadOverview(options){
       return;
     }
 
-    sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    sessionStorage.removeItem(MASTER_STORAGE_KEY);
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
     guildData = {
