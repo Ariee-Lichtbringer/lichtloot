@@ -3676,21 +3676,19 @@ async function getWorldbuffs({ guildId, query: params }) {
             null::text as entry_status, null::text as entry_note, null::text as entry_source
      from worldbuff_poster_events p
      where p.guild_id = $1
-       and p.event_date >= current_date
-       ${windowClause.replace(/\be\./g, "p.")}
      order by p.event_date asc, p.event_time asc, p.buff asc, p.guild_name asc`,
-    values
+    [guildId]
   );
 
   const railwayRows = dedupeWorldbuffRows(
     [...result.rows, ...posterResult.rows].map(normalizeWorldbuffDbRow)
   );
   if (source === "railway") {
-    return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+    return { success: true, source: "railway", posterStored: posterResult.rows.length, buffs: railwayRows, entries: railwayRows };
   }
 
   if (railwayRows.length) {
-    return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
+    return { success: true, source: "railway", posterStored: posterResult.rows.length, buffs: railwayRows, entries: railwayRows };
   }
 
   if (!allowSheetFallback) {
