@@ -7929,6 +7929,7 @@ async function deleteOwnPrio(payload){
   const deleteRaidId=payload.raidId || currentRaidId || '';
 
   const baseParams=
+    '&guild='+encodeURIComponent(currentGuildSlug())+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
