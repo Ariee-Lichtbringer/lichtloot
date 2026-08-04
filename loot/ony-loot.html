@@ -7259,6 +7259,7 @@ async function deleteOwnPrio(payload){
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
     '&masterCharacterPin='+encodeURIComponent(pin)+
+    '&prioPin='+encodeURIComponent(document.getElementById("raidPin")?.value.trim() || '')+
     '&player='+encodeURIComponent(playerName)+
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
