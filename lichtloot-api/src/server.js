@@ -16602,6 +16602,7 @@ async function setP0PlusPoints({ guildId, query: params }) {
 
 async function clearP0PlusForPlayer({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid);
+  const requestedRaidId = clean(params.raidId || params.id);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
@@ -16617,6 +16618,20 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    let receivedRaidId = null;
+    if (requestedRaidId) {
+      const raidResult = await client.query(
+        `select id
+         from raids
+         where guild_id = $1
+           and lower(raid_type) = any($2)
+           and (id::text = $3 or external_raid_id = $3 or raid_pin = $3)
+         order by created_at desc
+         limit 1`,
+        [guildId, raidTypeSearchValues(raidType), requestedRaidId]
+      );
+      receivedRaidId = raidResult.rows[0]?.id || null;
+    }
     let itemResult = await client.query(
       `select id, name
        from items
@@ -16654,6 +16669,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
           guildId,
           characterId: character.id,
           itemId: item.id,
+          raidId: receivedRaidId,
           raidType,
           playerName: character.name || player,
           server: character.server || server,
@@ -17156,7 +17172,19 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
-  const candidates = priosResult.rows.filter(row => commentMeta(row.comment).p0Plus === "ja");
+  const receivedResult = await query(
+    `select distinct character_id
+     from p0plus_point_audit
+     where guild_id = $1
+       and action = 'item_received_clear'
+       and raid_id = $2`,
+    [guildId, raid.id]
+  );
+  const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
+  const candidates = priosResult.rows.filter(row =>
+    commentMeta(row.comment).p0Plus === "ja" &&
+    !receivedCharacters.has(clean(row.character_id))
+  );
   const dedupedCandidates = [];
   const seenCharacters = new Set();
   const skipped = [];
