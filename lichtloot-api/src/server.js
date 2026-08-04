@@ -9000,21 +9000,26 @@ async function deletePrio({ guildId, query: params }) {
     throw error;
   }
 
-  const values = [character.id];
+  const values = [guildId, character.name];
+  let characterServerClause = "";
+  if (clean(character.server)) {
+    values.push(character.server);
+    characterServerClause = `and lower(c.server) = lower($${values.length})`;
+  }
   let raidClause = "";
 
   let resolvedDeleteRaid = null;
   if (raidId) {
     resolvedDeleteRaid = await findRaid(guildId, { raidId });
-    if (!resolvedDeleteRaid && clean(params.prioPin || params.raidPin)) {
-      resolvedDeleteRaid = await findRaid(guildId, { prioPin: clean(params.prioPin || params.raidPin) });
-    }
     if (!resolvedDeleteRaid && clean(params.raid) && clean(params.raidDate)) {
       resolvedDeleteRaid = await findRaid(guildId, {
         raid: clean(params.raid),
         raidDate: clean(params.raidDate),
         raidTime: clean(params.raidTime)
       });
+    }
+    if (!resolvedDeleteRaid && clean(params.prioPin || params.raidPin)) {
+      resolvedDeleteRaid = await findRaid(guildId, { prioPin: clean(params.prioPin || params.raidPin) });
     }
     if (!resolvedDeleteRaid && clean(params.raid)) {
       const legacyRaidDate = raidId.match(/(?:^|-)(\d{4}-\d{2}-\d{2})(?:-|$)/)?.[1] || "";
@@ -9030,12 +9035,15 @@ async function deletePrio({ guildId, query: params }) {
         `select r.*
          from prios pr
          join raids r on r.id = pr.raid_id
-         where pr.character_id = $1
-           and r.guild_id = $2
+         join characters c on c.id = pr.character_id
+         join players p on p.id = c.player_id
+         where p.guild_id = $1
+           and lower(c.name) = lower($2)
+           and r.guild_id = $1
            and pr.created_at = $3::timestamptz
          order by pr.created_at desc
          limit 1`,
-        [character.id, guildId, clean(params.createdAt)]
+        [guildId, character.name, clean(params.createdAt)]
       );
       resolvedDeleteRaid = prioRaidResult.rows[0] || null;
     }
@@ -9055,9 +9063,13 @@ async function deletePrio({ guildId, query: params }) {
 
   const result = await query(
     `delete from prios pr
-     using raids r
+     using raids r, characters c, players p
      where pr.raid_id = r.id
-       and pr.character_id = $1
+       and pr.character_id = c.id
+       and c.player_id = p.id
+       and p.guild_id = $1
+       and lower(c.name) = lower($2)
+       ${characterServerClause}
        ${raidClause}
      returning pr.id, pr.raid_id`,
     values
