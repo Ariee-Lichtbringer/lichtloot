@@ -3192,6 +3192,27 @@ async function ensureCharacterPoReleaseSchema() {
      )`
   );
   await query(`create index if not exists idx_po_release_requests_guild_status on po_release_requests(guild_id, status, created_at desc)`);
+  await query(
+    `create table if not exists character_recruit_releases (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       character_id uuid not null references characters(id) on delete cascade,
+       raid_type text not null,
+       approved_by text not null default '',
+       approved_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique(guild_id, character_id, raid_type)
+     )`
+  );
+  await query(
+    `insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at)
+     select p.guild_id,c.id,raid.raid_type,coalesce(c.recruit_status_lifted_by,'Migration'),coalesce(c.recruit_status_lifted_at,now())
+     from characters c join players p on p.id=c.player_id
+     cross join (values ('mc'),('bwl'),('aq40'),('naxx'),('zg-mittwoch'),('zg-prime'),('zg-late')) raid(raid_type)
+     where c.recruit_status_lifted=true
+     on conflict(guild_id,character_id,raid_type) do nothing`
+  );
+  await query(`update characters set recruit_status_lifted=false where recruit_status_lifted=true`);
 }
 
 async function requireNachtlootGuild(guildId) {
@@ -3219,8 +3240,8 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   const requestType = clean(params.requestType || params.type).toLowerCase();
   if (!["recruit", "p1p3", "p0"].includes(requestType)) { const error = new Error("Bitte eine gültige Freigabe auswählen."); error.statusCode = 400; throw error; }
   const selectedRaid = normalizePoReleaseRaid(params.raid || params.raidType);
-  const raid = requestType === "p0" ? selectedRaid : "";
-  if (requestType === "p0" && (!raid || raid === "p1p3")) { const error = new Error("Bitte den Raid für die P0-Freigabe auswählen."); error.statusCode = 400; throw error; }
+  const raid = selectedRaid;
+  if (!raid || raid === "p1p3") { const error = new Error("Bitte den Raid für die Freigabe auswählen."); error.statusCode = 400; throw error; }
   const armoryUrl = clean(params.armoryUrl);
   const screenshotData = clean(params.screenshotData);
   if (!armoryUrl && !screenshotData) { const error = new Error("Bitte Armory-Link oder Screenshot angeben."); error.statusCode = 400; throw error; }
@@ -3262,9 +3283,13 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   const request = found.rows[0]; if (!request) { const error=new Error("Antrag wurde nicht gefunden."); error.statusCode=404; throw error; }
   const reviewer=clean(params.reviewedBy || params.reviewer || "Gildenleitung");
   if (decision === "approved") {
-    if (request.request_type === "recruit") await query(`update characters set recruit_status_lifted=true,recruit_status_lifted_at=now(),recruit_status_lifted_by=$2 where id=$1`,[request.character_id,reviewer]);
+    if (request.request_type === "recruit" || request.request_type === "p1p3") {
+      const raid=normalizePoReleaseRaid(request.raid_type);
+      if(!raid || raid==="p1p3"){const error=new Error("Beim Antrag fehlt der Raid.");error.statusCode=400;throw error;}
+      await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
+    }
     else {
-      const raid=request.request_type === "p1p3" ? "p1p3" : normalizePoReleaseRaid(request.raid_type);
+      const raid=normalizePoReleaseRaid(request.raid_type);
       await query(`insert into character_po_releases(guild_id,character_id,raid_type,source,approved_by,approved_at) values($1,$2,$3,'application',$4,now()) on conflict(guild_id,character_id,raid_type) do update set source='application',approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
     }
   }
@@ -3347,6 +3372,7 @@ async function getCharacterPoReleaseRows(guildId) {
         recruitStatusLifted: Boolean(row.recruit_status_lifted),
         recruitStatusLiftedAt: row.recruit_status_lifted_at || "",
         recruitStatusLiftedBy: row.recruit_status_lifted_by || "",
+        recruitReleases: { mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false },
         playerId: row.player_id,
         playerPin: row.player_pin || "",
         releases: {
@@ -3366,6 +3392,8 @@ async function getCharacterPoReleaseRows(guildId) {
       entry.approvedAt[raid] = row.approved_at || "";
     }
   }
+  const recruitResult=await query(`select character_id,raid_type,approved_by,approved_at from character_recruit_releases where guild_id=$1`,[guildId]);
+  for(const row of recruitResult.rows){const entry=byCharacter.get(row.character_id),raid=normalizePoReleaseRaid(row.raid_type);if(entry&&raid&&raid!=="p1p3"){entry.recruitReleases[raid]=true;}}
   return [...byCharacter.values()];
 }
 
@@ -3435,41 +3463,36 @@ async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
   const characterId = clean(params.characterId || params.charId);
+  const raid = normalizePoReleaseRaid(params.raid || params.raidType);
   const lifted = !["false", "0", "no", "nein", "reset"].includes(clean(params.lifted || params.enabled || params.value || "true").toLowerCase());
   if (!isUuid(characterId)) {
     const error = new Error("Charakter fehlt.");
     error.statusCode = 400;
     throw error;
   }
+  if(!raid || raid==="p1p3") { const error=new Error("Bitte den Raid auswählen.");error.statusCode=400;throw error; }
   const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
   if (clean(guildResult.rows[0]?.slug).toLowerCase() !== "nachtloot") {
     const error = new Error("Der Rekrutenstatus wird nur für Nachtwächter verwaltet.");
     error.statusCode = 403;
     throw error;
   }
-  const result = await query(
-    `update characters c
-     set recruit_status_lifted = $3,
-         recruit_status_lifted_at = case when $3 then now() else null end,
-         recruit_status_lifted_by = case when $3 then $4 else null end
-     from players p
-     where c.player_id = p.id
-       and p.guild_id = $1
-       and c.id = $2
-     returning c.id, c.name, c.recruit_status_lifted, c.recruit_status_lifted_at, c.recruit_status_lifted_by`,
-    [guildId, characterId, lifted, clean(params.approvedBy || params.reviewer || "Gildenleitung")]
-  );
-  if (!result.rows[0]) {
+  const found=await query(`select c.id,c.name from characters c join players p on p.id=c.player_id where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,characterId]);
+  if (!found.rows[0]) {
     const error = new Error("Charakter wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
   }
+  const reviewer=clean(params.approvedBy || params.reviewer || "Gildenleitung");
+  if(lifted) await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,characterId,raid,reviewer]);
+  else await query(`delete from character_recruit_releases where guild_id=$1 and character_id=$2 and raid_type=$3`,[guildId,characterId,raid]);
   return {
     success: true,
     characterId,
-    lifted: Boolean(result.rows[0].recruit_status_lifted),
-    liftedAt: result.rows[0].recruit_status_lifted_at || "",
-    liftedBy: result.rows[0].recruit_status_lifted_by || ""
+    raid,
+    lifted,
+    liftedAt: lifted ? new Date().toISOString() : "",
+    liftedBy: lifted ? reviewer : ""
   };
 }
 
@@ -8199,12 +8222,12 @@ async function savePrio({ guildId, query: params }) {
     if (releaseRaid) {
       const recruitResult = await client.query(
         `select lower(g.slug) as guild_slug,
-                coalesce(c.recruit_status_lifted, false) as recruit_status_lifted
+                exists(select 1 from character_recruit_releases crr where crr.guild_id=$1 and crr.character_id=$2 and crr.raid_type=$3) as recruit_status_lifted
          from guilds g
          join characters c on c.id = $2
          where g.id = $1
          limit 1`,
-        [guildId, character.id]
+        [guildId, character.id, releaseRaid]
       );
       nachtlootRecruitRestricted = recruitResult.rows[0]?.guild_slug === "nachtloot"
         && !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
@@ -8863,6 +8886,9 @@ async function getPlayerPrioHistory(guildId, params) {
     [guildId, character.id]
   );
   const poReleases = poReleaseFlagsFromRows(releaseResult.rows);
+  const recruitReleaseResult=await query(`select raid_type,approved_by,approved_at from character_recruit_releases where guild_id=$1 and character_id=$2`,[guildId,character.id]);
+  const recruitReleases={mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false};
+  for(const row of recruitReleaseResult.rows){const raid=normalizePoReleaseRaid(row.raid_type);if(raid&&raid!=="p1p3")recruitReleases[raid]=true;}
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -8904,6 +8930,7 @@ async function getPlayerPrioHistory(guildId, params) {
     className: character.class_name,
     entries,
     poReleases,
+    recruitReleases,
     characterId: character.id,
     poReleaseDetails: releaseResult.rows.map(row => ({
       raid: normalizePoReleaseRaid(row.raid_type),
