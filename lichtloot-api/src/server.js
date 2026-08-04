@@ -2812,7 +2812,6 @@ function normalizeWorldbuffGuildName(value) {
   text = text.replace(/^(Montag|Dienstag|Mittwoch|Donnerstag|Freitag|Samstag|Sonntag|Mo|Di|Mi|Do|Fr|Sa|So)\s*[·•\-:|/]\s*/i, "").trim();
   if (/lichtbringer/i.test(text)) return "Lichtbringer";
   if (/lichtloot/i.test(text)) return "lichtloot";
-  if (/worldbuff/i.test(text)) return "";
   return text;
 }
 
