@@ -2595,10 +2595,25 @@ async function ensureBuffTables() {
        source text not null default 'railway',
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
+    )`
+  );
+  await query(
+    `create table if not exists worldbuff_poster_events (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       buff text not null,
+       event_date date not null,
+       event_time text not null,
+       guild_name text not null,
+       source text not null default 'wb_poster',
+       created_at timestamptz not null default now(),
+       updated_at timestamptz not null default now(),
+       unique (guild_id, buff, event_date, event_time, guild_name)
      )`
   );
   await query(`create index if not exists hordenbuff_events_guild_date_idx on hordenbuff_events (guild_id, event_date, event_time)`);
   await query(`create index if not exists worldbuff_events_guild_date_idx on worldbuff_events (guild_id, event_date, event_time)`);
+  await query(`create index if not exists worldbuff_poster_events_guild_date_idx on worldbuff_poster_events (guild_id, event_date, event_time)`);
 }
 
 function isUuid(value) {
@@ -3654,7 +3669,22 @@ async function getWorldbuffs({ guildId, query: params }) {
     values
   );
 
-  const railwayRows = dedupeWorldbuffRows(result.rows.map(normalizeWorldbuffDbRow));
+  const posterResult = await query(
+    `select p.id as event_id, p.buff, p.event_date, p.event_time, p.guild_name,
+            'offen' as event_status, '' as event_note, p.source as event_source,
+            null::uuid as entry_id, null::text as caster, null::text as discord_name,
+            null::text as entry_status, null::text as entry_note, null::text as entry_source
+     from worldbuff_poster_events p
+     where p.guild_id = $1
+       and p.event_date >= current_date
+       ${windowClause.replace(/\be\./g, "p.")}
+     order by p.event_date asc, p.event_time asc, p.buff asc, p.guild_name asc`,
+    values
+  );
+
+  const railwayRows = dedupeWorldbuffRows(
+    [...result.rows, ...posterResult.rows].map(normalizeWorldbuffDbRow)
+  );
   if (source === "railway") {
     return { success: true, source: "railway", buffs: railwayRows, entries: railwayRows };
   }
@@ -4036,6 +4066,7 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   const client = await pool.connect();
   let synced = 0;
   let skippedOccupied = 0;
+  let stored = 0;
   try {
     await client.query("begin");
     // Pro Gilde darf immer nur ein Poster-Snapshot geschrieben werden.
@@ -4045,12 +4076,27 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
       `select pg_advisory_xact_lock(hashtext($1))`,
       [`worldbuff-import:${guildId}`]
     );
+    // Der letzte WBPoster-Post ist ein vollständiger Snapshot. Seine Zeilen
+    // liegen bewusst separat von Spieler-Anmeldungen und werden atomar ersetzt.
+    await client.query(
+      `delete from worldbuff_poster_events where guild_id = $1`,
+      [guildId]
+    );
     for (const entry of sourceRows) {
       const eventDate = parseDateValue(entry.datum || entry.date);
       const eventTime = clean(entry.uhrzeit || entry.time);
       const buff = normalizeWorldbuffName(entry.buff);
       const guildName = normalizeWorldbuffGuildName(entry.gilde || entry.guild);
       if (!eventDate || !eventTime || !buff || !guildName) continue;
+
+      await client.query(
+        `insert into worldbuff_poster_events
+           (guild_id, buff, event_date, event_time, guild_name, source)
+         values ($1, $2, $3, $4, $5, 'wb_poster')
+         on conflict (guild_id, buff, event_date, event_time, guild_name) do update
+           set source = 'wb_poster', updated_at = now()`,
+        [guildId, buff, eventDate, eventTime, guildName]
+      );
 
       // Der WBPoster ist eine Liste einzelner, exakter Termine. Beim Import
       // darf deshalb weder nach Tag noch nach Buff-Gruppe zusammengefasst
@@ -4129,6 +4175,13 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
       }
       synced += 1;
     }
+    const storedResult = await client.query(
+      `select count(*)::int as count
+       from worldbuff_poster_events
+       where guild_id = $1`,
+      [guildId]
+    );
+    stored = Number(storedResult.rows[0]?.count || 0);
     await client.query("commit");
   } catch (error) {
     await client.query("rollback").catch(() => {});
@@ -4136,22 +4189,13 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   } finally {
     client.release();
   }
-  const storedResult = await query(
-    `select count(*)::int as count
-     from worldbuff_events
-     where guild_id = $1
-       and source = 'wb_poster'
-       and event_date >= current_date`,
-    [guildId]
-  );
-  const stored = Number(storedResult.rows[0]?.count || 0);
   await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_import" } }).catch(() => {});
   return {
     success: true,
     synced,
     skippedOccupied,
     stored,
-    syncVersion: "wb-poster-exact-v3"
+    syncVersion: "wb-poster-snapshot-v4"
   };
 }
 
