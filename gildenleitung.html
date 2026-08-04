@@ -7915,6 +7915,7 @@ function renderPlayerRoleControl(group){
   const playerId=main.playerId || "";
   const roleIds=Array.isArray(main.discordRoleIds)?main.discordRoleIds.map(String):[];
   const permissions=Array.isArray(main.permissions)?main.permissions.map(String):[];
+  const notificationNames=Array.isArray(main.notificationDiscordNames)?main.notificationDiscordNames:[];
   const roleLabel=id=>playerAccessDiscordRoles.find(role=>String(role.id||role.roleId)===String(id))?.name||id;
   return `
     <div class="role-control" style="display:grid;gap:7px;min-width:310px">
@@ -7922,15 +7923,23 @@ function renderPlayerRoleControl(group){
       <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Keine Discord-Rolle zugewiesen.</span>'}</div>
       <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">LichtLoot-Recht auswählen …</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
       <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine LichtLoot-Rechte zugewiesen.</span>'}</div>
+      <label style="display:grid;gap:5px;font-weight:850">Zusätzliche Discord-Spielernamen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="z. B. Ariee, Juksi" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
     </div>
   `;
 }
 
 let playerAccessDiscordRoles=[];
-async function savePlayerAccessValues(playerId,playerPin,discordRoleIds,permissions){
-  const result=await railwayApi({action:"guildSetPlayerLoginAccess",masterCode:document.getElementById("masterCode").value.trim(),playerId,playerPin,discordRoleIds:JSON.stringify(discordRoleIds),permissions:JSON.stringify(permissions)});
+async function savePlayerAccessValues(playerId,playerPin,discordRoleIds,permissions,notificationDiscordNames){
+  const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
+  const names=Array.isArray(notificationDiscordNames)?notificationDiscordNames:(player.notificationDiscordNames||[]);
+  const result=await railwayApi({action:"guildSetPlayerLoginAccess",masterCode:document.getElementById("masterCode").value.trim(),playerId,playerPin,discordRoleIds:JSON.stringify(discordRoleIds),permissions:JSON.stringify(permissions),notificationDiscordNames:JSON.stringify(names)});
   if(!result.success)throw new Error(result.error||"Rollen und Rechte konnten nicht gespeichert werden.");
   await loadOverview({preserveStatus:true});setStatus("Rollen und Rechte wurden gespeichert.","good");
+}
+async function savePlayerNotificationNames(playerId,playerPin,input){
+  const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
+  const names=[...new Set(String(input?.value||"").split(/[,;\n]/).map(value=>value.trim()).filter(Boolean))];
+  try{await savePlayerAccessValues(playerId,playerPin,(player.discordRoleIds||[]).map(String),(player.permissions||[]).map(String),names)}catch(error){setStatus(error.message,"bad")}
 }
 async function addPlayerAccessValue(playerId,playerPin,type,select){
   const value=String(select?.value||"");if(!value)return;
@@ -7949,7 +7958,10 @@ async function removePlayerAccessValue(playerId,playerPin,type,value){
 const LICHTLOOT_PERMISSIONS=[
   {value:"create_raids",label:"Raids erstellen"},
   {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung"},
-  {value:"guild_admin",label:"Gildenverwaltung"}
+  {value:"guild_admin",label:"Gildenverwaltung"},
+  {value:"notify_player_logins",label:"Benachrichtigung: Spielerlogins freigeben"},
+  {value:"notify_worldbuff_changes",label:"Benachrichtigung: Worldbuff angemeldet/verschoben"},
+  {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
 ];
 async function openPlayerAccessDialog(playerId,playerPin=""){
   const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
