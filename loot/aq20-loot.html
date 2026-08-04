@@ -7276,6 +7276,8 @@ async function deleteOwnPrio(payload){
     '&server='+encodeURIComponent(payload.server || '')+
     '&raidId='+encodeURIComponent(deleteRaidId)+
     '&raid='+encodeURIComponent(payload.raid || '')+
+    '&raidDate='+encodeURIComponent(currentRaidDate || '')+
+    '&raidTime='+encodeURIComponent(currentRaidTime || '')+
     '&createdAt='+encodeURIComponent(payload.createdAt || '')+
     '&t='+Date.now();
 
