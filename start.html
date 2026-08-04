@@ -1643,6 +1643,8 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 #meinLichtLootCard .right-pin-row input,
 #meinLichtLootCard .dashboard-select-row select{min-height:32px!important;padding:6px 9px!important;border-radius:7px!important;font-size:12px!important}
 #meinLichtLootCard .right-inline-btn{min-height:32px!important;padding:6px 10px!important;border-radius:7px!important;font-size:12px!important}
+.back-to-raids-btn{min-height:54px!important;padding:13px 24px!important;border:2px solid #facc15!important;border-radius:12px!important;background:linear-gradient(90deg,#facc15,#f59e0b)!important;color:#111827!important;font-size:17px!important;font-weight:950!important;box-shadow:0 8px 24px rgba(245,158,11,.32)!important}
+.back-to-raids-btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
 #meinLichtLootCard .dashboard-inline-status{padding:8px 10px!important;font-size:12px!important;border-radius:7px!important;margin-top:8px!important}
 #meinLichtLootCard .dashboard-fold{margin-top:9px!important;border-radius:8px!important}
 #meinLichtLootCard .dashboard-fold summary{padding:9px 10px!important;font-size:12px!important;letter-spacing:.02em!important}
@@ -2417,6 +2419,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   padding:5px 9px!important;
   font-size:11.5px!important;
 }
+#meinLichtLootCard .back-to-raids-btn{min-height:54px!important;padding:13px 24px!important;border:2px solid #facc15!important;border-radius:12px!important;background:linear-gradient(90deg,#facc15,#f59e0b)!important;color:#111827!important;font-size:17px!important;font-weight:950!important;box-shadow:0 8px 24px rgba(245,158,11,.32)!important}
 #meinLichtLootCard .guild-switch-select{
   min-width:190px;
   min-height:40px;
@@ -3002,7 +3005,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
       <section class="dash-panel account-management-panel hidden" id="accountManagementPanel">
         <div class="section-head account-management-head">
           <div></div>
-          <button class="right-inline-btn" type="button" onclick="goHomeView()">Zurück zu den Raids</button>
+          <button class="right-inline-btn back-to-raids-btn" type="button" onclick="goHomeView()">← Zurück zu den Raids</button>
         </div>
         <section class="dash-panel right-card account-management-card" id="meinLichtLootCard">
           <h2>Mein <span data-guild-brand="lootName">LichtLoot</span></h2>
@@ -7502,21 +7505,22 @@ function renderMyPrios(data){
 }
 
 function renderMyPoReleasesCard(releases,requests,data){
-  const labels=(CURRENT_GUILD_SLUG === "nachtloot" ? [["recruit","Rekrutenstatus aufgehoben"]] : []).concat([
-    ["p1p3","P1–P3 Freigabe"],
+  const labels=[
     ["mc","P0+ Freigabe MC"],
     ["bwl","P0+ Freigabe BWL"],
     ["aq40","P0+ Freigabe AQ40"],
     ["naxx","P0+ Freigabe NAXX"]
-  ]).concat(CURRENT_GUILD_SLUG === "nachtloot" ? [
+  ].concat(CURRENT_GUILD_SLUG === "nachtloot" ? [
     ["zg-mittwoch","P0+ ZG Mittwoch"],
     ["zg-prime","P0+ ZG PRIME"],
     ["zg-late","P0+ ZG LATE"]
   ] : []);
-  const pendingKeys=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(entry=>entry.requestType==="recruit" ? "recruit" : entry.requestType==="p1p3" ? "p1p3" : String(entry.raid||"").toLowerCase()).filter(Boolean));
+  const pendingKeys=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(entry=>`${entry.requestType||""}:${String(entry.raid||"").toLowerCase()}`).filter(Boolean));
+  const recruitLabels=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+  const recruitChips=CURRENT_GUILD_SLUG!=="nachtloot"?"":recruitLabels.map(([key,label])=>{const active=Boolean(data?.recruitReleases?.[key]),pending=!active&&(pendingKeys.has(`recruit:${key}`)||pendingKeys.has(`p1p3:${key}`));return `<span class="own-p0-release-chip${active?" is-active":pending?" is-pending":""}"><span>Rekrutenstatus ${safeHtml(label)}</span><strong class="${active?"ok":pending?"warn":"muted"}">${active?"✓ Freigegeben":pending?"● In Prüfung":"– Offen"}</strong></span>`;}).join("");
   const chips=labels.map(([key,label])=>{
-    const active=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases && releases[key]);
-    const pending=!active && pendingKeys.has(key);
+    const active=Boolean(releases && releases[key]);
+    const pending=!active && (pendingKeys.has(`p0:${key}`)||pendingKeys.has(`p1p3:${key}`));
     const stateClass=active ? " is-active" : pending ? " is-pending" : "";
     const stateText=active ? "✓ Freigegeben" : pending ? "● In Prüfung" : "– Offen";
     const textClass=active ? "ok" : pending ? "warn" : "muted";
@@ -7525,7 +7529,7 @@ function renderMyPoReleasesCard(releases,requests,data){
   return `<div class="lichtloot-fold own-p0-popout-card">
     <div class="own-p0-release-title">Meine P0+ Freigaben</div>
     <div class="own-p0-release-text">Diese Haken gelten auch für die P0+-Anmeldung im Discord.</div>
-    <div class="own-p0-release-items">${chips}</div>
+    <div class="own-p0-release-items">${recruitChips}${chips}</div>
     <div class="own-p0-release-legend"><span><i class="own-p0-release-dot pending"></i>Gelb: Antrag in Prüfung</span><span><i class="own-p0-release-dot approved"></i>Grün: freigegeben</span><span><i class="own-p0-release-dot empty"></i>Dunkel: noch nicht beantragt/freigegeben</span></div>
   </div>`;
 }
@@ -8878,6 +8882,20 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   loadActiveRaidCards();
   loadDashboardWorldbuffs();
   loadDashboardLogAnalyses();
+  let startMenuAction="";
+  try{
+    startMenuAction=sessionStorage.getItem("lichtlootStartMenuAction") || "";
+    sessionStorage.removeItem("lichtlootStartMenuAction");
+  }catch(error){}
+  if(startMenuAction && startMenuAction!=="dashboard"){
+    window.setTimeout(()=>{
+      if(startMenuAction==="worldbuff" || startMenuAction==="hordenbuff") showBuffOverview(startMenuAction);
+      else if(startMenuAction==="logs") showLogsDashboard();
+      else if(startMenuAction==="p0plus") toggleP0PlusOverview();
+      else if(startMenuAction==="raidlead") toggleRaidleadLogin();
+      else if(startMenuAction==="create") toggleRaidCreate();
+    },120);
+  }
   document.addEventListener("click",event=>{
     const menu=document.getElementById("raidCalendarMenu");
     if(menu && !menu.classList.contains("hidden") && !menu.contains(event.target)){
