@@ -9004,7 +9004,12 @@ async function deletePrio({ guildId, query: params }) {
   const exactPrioId = isUuid(prioId);
   const values = [guildId, exactPrioId ? character.player_id : character.name];
   const characterIdentityClause = exactPrioId
-    ? "and c.player_id = $2"
+    ? `and exists (
+         select 1
+         from characters owned_character
+         where owned_character.player_id = $2
+           and lower(owned_character.name) = lower(c.name)
+       )`
     : "and lower(c.name) = lower($2)";
   let characterServerClause = "";
   if (!exactPrioId && clean(character.server)) {
