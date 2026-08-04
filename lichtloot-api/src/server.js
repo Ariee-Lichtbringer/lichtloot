@@ -1761,6 +1761,7 @@ function canPlayerRoleCreateRaid(value) {
 
 function normalizeCharacter(row) {
   const playerRole = normalizePlayerRole(row.player_role || row.role);
+  const permissions = Array.isArray(row.permissions) ? row.permissions : [];
   const isBlocked = Boolean(row.is_blocked);
   const approvalStatus = normalizePlayerApprovalStatus(row.approval_status);
   return {
@@ -1776,7 +1777,8 @@ function normalizeCharacter(row) {
     role: playerRole,
     playerRole,
     playerRoleLabel: playerRoleLabel(playerRole),
-    canCreateRaid: canPlayerRoleCreateRaid(playerRole),
+    permissions,
+    canCreateRaid: permissions.includes("create_raids") || permissions.includes("guild_admin") || canPlayerRoleCreateRaid(playerRole),
     approvalStatus,
     playerApprovalStatus: approvalStatus,
     approvalLabel: playerApprovalLabel(approvalStatus),
@@ -1914,6 +1916,7 @@ async function getCharactersByPin(guildId, pin) {
        c.is_main,
        c.created_at,
        p.role as player_role,
+       p.permissions,
        p.approval_status,
        p.is_blocked,
        p.blocked_at,
@@ -2534,9 +2537,17 @@ async function ensurePlayerRoleSchema() {
        add column if not exists approved_by text not null default '',
        add column if not exists is_blocked boolean not null default false,
        add column if not exists blocked_at timestamptz,
-       add column if not exists blocked_reason text not null default ''`
+       add column if not exists blocked_reason text not null default '',
+       add column if not exists discord_role_ids jsonb not null default '[]'::jsonb,
+       add column if not exists permissions jsonb not null default '[]'::jsonb`
   );
   await query(`alter table players alter column approval_status set default 'pending'`);
+  await query(`update players set permissions=case
+    when lower(role)='gildenleitung' then '["guild_admin"]'::jsonb
+    when lower(role) in ('gildenoffiziere','gildenoffizier') then '["create_raids","manage_worldbuffs"]'::jsonb
+    when lower(role) in ('raidoffiziere','raidoffizier','raidlead') then '["create_raids"]'::jsonb
+    else permissions end
+    where jsonb_array_length(coalesce(permissions,'[]'::jsonb))=0 and lower(role)<>'member'`);
 }
 
 async function ensureBuffTables() {
@@ -9018,6 +9029,8 @@ async function getGuildLeadershipOverview(guildId, params) {
        p.id as player_id,
        p.player_pin,
        p.role as player_role,
+       p.discord_role_ids,
+       p.permissions,
        p.approval_status,
        p.approved_at,
        p.approved_by,
@@ -9054,6 +9067,8 @@ async function getGuildLeadershipOverview(guildId, params) {
       playerRole: normalizePlayerRole(row.player_role),
       playerRoleLabel: playerRoleLabel(row.player_role),
       canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
+      discordRoleIds: Array.isArray(row.discord_role_ids) ? row.discord_role_ids : [],
+      permissions: Array.isArray(row.permissions) ? row.permissions : [],
       approvalStatus: normalizePlayerApprovalStatus(row.approval_status),
       playerApprovalStatus: normalizePlayerApprovalStatus(row.approval_status),
       approvalLabel: playerApprovalLabel(row.approval_status),
@@ -17469,6 +17484,28 @@ async function setPlayerLoginRole({ guildId, query: params }) {
   };
 }
 
+async function setPlayerLoginAccess({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePlayerRoleSchema();
+  const playerId = clean(params.playerId || params.player_id || params.id);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const parseList = value => {
+    if (Array.isArray(value)) return value;
+    try { const parsed=JSON.parse(clean(value) || "[]"); return Array.isArray(parsed) ? parsed : []; } catch(error) { return clean(value).split(",").filter(Boolean); }
+  };
+  const allowedPermissions = new Set(["create_raids","manage_worldbuffs","guild_admin"]);
+  const permissions = [...new Set(parseList(params.permissions).map(clean).filter(value=>allowedPermissions.has(value)))];
+  const discordRoleIds = [...new Set(parseList(params.discordRoleIds || params.discordRoles).map(clean).filter(Boolean))];
+  const values=[guildId,JSON.stringify(discordRoleIds),JSON.stringify(permissions)];
+  const clauses=[];
+  if(playerId){ values.push(playerId); clauses.push(`id::text=$${values.length}`); }
+  if(playerPin){ values.push(playerPin); clauses.push(`player_pin=$${values.length}`); }
+  if(!clauses.length){ const error=new Error("SpielerLogin fehlt."); error.statusCode=400; throw error; }
+  const result=await query(`update players set discord_role_ids=$2::jsonb,permissions=$3::jsonb,updated_at=now() where guild_id=$1 and (${clauses.join(" or ")}) returning id,player_pin,discord_role_ids,permissions`,values);
+  if(!result.rows[0]){ const error=new Error("SpielerLogin wurde nicht gefunden."); error.statusCode=404; throw error; }
+  return {success:true,playerId:result.rows[0].id,playerPin:result.rows[0].player_pin,discordRoleIds:result.rows[0].discord_role_ids||[],permissions:result.rows[0].permissions||[]};
+}
+
 async function setPlayerLoginBlocked({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensurePlayerRoleSchema();
@@ -19256,6 +19293,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
+    if (action === "guildSetPlayerLoginAccess") {
+      const saved = await setPlayerLoginAccess({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
 
     if (action === "guildSetPlayerLoginBlocked") {
       const saved = await setPlayerLoginBlocked({ guildId: guild.id, query: req.query });
@@ -19953,6 +19994,10 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetPlayerLoginRole") {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildSetPlayerLoginAccess") {
+      const saved = await setPlayerLoginAccess({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
