@@ -2594,6 +2594,78 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 }
 
 </style>
+<style id="mobile-login-and-raids-only">
+@media (max-width:720px){
+  /* Auf dem Handy gibt es bewusst nur Login und aktuelle Raids. */
+  body.start-dashboard-body .start-sidebar,
+  body.start-dashboard-body .start-header,
+  body.start-dashboard-body #nextRaidPanel,
+  body.start-dashboard-body #buffOverviewPanel,
+  body.start-dashboard-body #accountManagementPanel,
+  body.start-dashboard-body #logsDashboardSection,
+  body.start-dashboard-body .dashboard-right,
+  body.start-dashboard-body .start-footer,
+  body.start-dashboard-body > .site-footer{
+    display:none!important;
+  }
+  body.start-dashboard-body .start-main{
+    padding:12px 10px calc(18px + env(safe-area-inset-bottom))!important;
+  }
+  body.start-dashboard-body .mobile-prio-home{
+    display:grid!important;
+    margin:0 0 12px!important;
+    padding:16px!important;
+  }
+  body.start-dashboard-body .mobile-prio-home h1{
+    font-size:25px!important;
+  }
+  body.start-dashboard-body .mobile-prio-home p{
+    margin-bottom:0!important;
+  }
+  .mobile-loot-login-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+  .mobile-loot-login{
+    min-height:48px;
+    padding:10px 12px;
+    border-radius:9px;
+    color:#fff;
+    font-size:14px;
+    font-weight:950;
+    cursor:pointer;
+  }
+  .mobile-loot-login.lichtloot{
+    border:1px solid rgba(250,204,21,.65);
+    background:linear-gradient(135deg,#ca8a04,#854d0e);
+  }
+  .mobile-loot-login.nachtloot{
+    border:1px solid rgba(34,211,238,.65);
+    background:linear-gradient(135deg,#0891b2,#164e63);
+  }
+  body.start-dashboard-body .dashboard-layout,
+  body.start-dashboard-body .dashboard-left{
+    display:block!important;
+  }
+  body.start-dashboard-body #raidInstances{
+    display:block!important;
+    padding:12px!important;
+  }
+  body.start-dashboard-body #raidInstances .section-head{
+    margin-bottom:10px!important;
+  }
+  body.start-dashboard-body #raidInstances .section-head .text-link-btn{
+    display:none!important;
+  }
+}
+
+@media (max-width:420px){
+  .mobile-loot-login-actions{
+    grid-template-columns:1fr;
+  }
+}
+</style>
 </head>
 
 <body class="start-dashboard-body">
@@ -2864,24 +2936,15 @@ body.start-dashboard-body .raid-create-box input[readonly]{
     </nav>
   </aside>
   <main class="start-main">
-    <section class="mobile-prio-home" aria-label="Prioliste eintragen">
+    <section class="mobile-prio-home" aria-label="LichtLoot oder NachtLoot Login">
       <div>
-        <div class="mobile-prio-eyebrow">LichtLoot</div>
-        <h1>Prioliste eintragen</h1>
-        <p>Öffne den aktuellen Raid, setze deine Prios und prüfe danach alles in Mein LichtLoot.</p>
+        <div class="mobile-prio-eyebrow">Willkommen</div>
+        <h1>Lootsystem wählen</h1>
+        <p>Logge dich bei deiner Gilde ein und öffne danach einen aktuellen Raid.</p>
       </div>
-      <div class="mobile-prio-actions">
-        <button class="mobile-prio-primary" type="button" onclick="openNextRaidLoot()">Aktuellen Raid öffnen</button>
-        <button type="button" onclick="openAccountManagementCenter()">Mein LichtLoot</button>
-      </div>
-      <div class="mobile-prio-raid-chips" aria-label="Direkte Prioseiten">
-        <button type="button" onclick="openPrioPage('mc')">MC</button>
-        <button type="button" onclick="openPrioPage('bwl')">BWL</button>
-        <button type="button" onclick="openPrioPage('aq40')">AQ40</button>
-        <button type="button" onclick="openPrioPage('naxx')">NAXX</button>
-        <button type="button" onclick="openPrioPage('zg')">ZG</button>
-        <button type="button" onclick="openPrioPage('aq20')">AQ20</button>
-        <button type="button" onclick="openPrioPage('ony')">ONY</button>
+      <div class="mobile-loot-login-actions">
+        <button class="mobile-loot-login lichtloot" type="button" onclick="window.location.href='github-index.html?guild=lichtloot'">Login LichtLoot</button>
+        <button class="mobile-loot-login nachtloot" type="button" onclick="window.location.href='github-index.html?guild=nachtloot'">Login NachtLoot</button>
       </div>
     </section>
     <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
