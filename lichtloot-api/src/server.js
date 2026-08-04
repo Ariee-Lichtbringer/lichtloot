@@ -9001,6 +9001,36 @@ async function deletePrio({ guildId, query: params }) {
     throw error;
   }
 
+  const directRaidPin = clean(params.prioPin || params.raidPin);
+  if (directRaidPin && clean(player)) {
+    const directRaid = await findRaid(guildId, {
+      prioPin: directRaidPin,
+      raid: clean(params.raid)
+    });
+    if (directRaid) {
+      let directPrio = await findPrioForRaidAndPlayer(directRaid.id, player, params.server);
+      if (!directPrio && clean(params.server)) {
+        directPrio = await findPrioForRaidAndPlayer(directRaid.id, player, "");
+      }
+      if (directPrio) {
+        const directDelete = await query(
+          "delete from prios where id = $1 returning id, raid_id",
+          [directPrio.id]
+        );
+        const refresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+          guildId,
+          directRaid,
+          "player_prio_deleted"
+        );
+        return {
+          success: true,
+          deleted: directDelete.rowCount,
+          raidAnnouncementRefreshes: [refresh]
+        };
+      }
+    }
+  }
+
   const exactPrioId = isUuid(prioId);
   const values = [guildId, exactPrioId ? character.player_id : character.name];
   const characterIdentityClause = exactPrioId
@@ -20710,8 +20740,57 @@ app.use((error, req, res, next) => {
   });
 });
 
+async function runRequestedArieeJuksiPrioCleanupOnce() {
+  const actionKey = "manual-prio-cleanup-2026-08-04-ariee-juksi-naxx-zg";
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `create table if not exists maintenance_actions (
+         action_key text primary key,
+         completed_at timestamptz not null default now()
+       )`
+    );
+    const marker = await client.query(
+      "select 1 from maintenance_actions where action_key = $1 for update",
+      [actionKey]
+    );
+    if (marker.rows.length) {
+      await client.query("commit");
+      return { skipped: true, deleted: 0, entries: [] };
+    }
+    const deleted = await client.query(
+      `delete from prios pr
+       using raids r, characters c, players p, guilds g
+       where pr.raid_id = r.id
+         and pr.character_id = c.id
+         and c.player_id = p.id
+         and p.guild_id = g.id
+         and r.guild_id = g.id
+         and lower(g.slug) = 'nachtloot'
+         and upper(r.raid_pin) in ('QLU', 'MYU')
+         and lower(c.name) in ('ariee', 'juksi')
+       returning pr.id, c.name, c.server, r.raid_type, r.raid_pin`
+    );
+    await client.query(
+      "insert into maintenance_actions(action_key) values($1)",
+      [actionKey]
+    );
+    await client.query("commit");
+    return { skipped: false, deleted: deleted.rowCount, entries: deleted.rows };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
+  runRequestedArieeJuksiPrioCleanupOnce()
+    .then(result => console.log(`Manuelle Prio-Bereinigung Ariee/Juksi: ${result.deleted || 0} gelöscht`, result.entries || []))
+    .catch(error => console.warn("Manuelle Prio-Bereinigung Ariee/Juksi fehlgeschlagen:", error.message || error));
   applyOnyLootMetadataBackfillOnce()
     .then(result => console.log(`Ony-Lootmetadaten geprüft: ${result.updated || 0}/${result.checked || 0} aktualisiert`))
     .catch(error => console.warn("Ony-Lootmetadaten konnten nicht korrigiert werden:", error.message || error));
