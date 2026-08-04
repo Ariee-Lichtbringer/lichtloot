@@ -2102,6 +2102,7 @@ function openRaidStartAction(action){
 const RAID_NAME = "naxx";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const EMERGENCY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
+try{ localStorage.removeItem("lichtloot_emergency_prios_v1"); }catch(error){}
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
@@ -3626,13 +3627,37 @@ async function submitPrioWithPin(savePin, oldPin){
     throw new Error(text || "Railway-Antwort konnte nicht gelesen werden.");
   }
   if(!response.ok){
-    throw new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
+    const apiError=new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
+    apiError.httpStatus=response.status;
+    throw apiError;
   }
   return data;
 }
 
 function emergencyPrioPayload(){const p1=document.getElementById("p1").value,p2=PRIO_COUNT>=2?document.getElementById("p2").value:"",p3=PRIO_COUNT>=3?document.getElementById("p3").value:"";const isP0Plus=SUPPORTS_P0PLUS&&Boolean(window.p0PlusWasClicked)&&p1&&p1===p2&&p2===p3;let playerPin=document.getElementById("playerPin").value.trim();if(!playerPin){playerPin="NF-"+Math.random().toString(36).slice(2,7).toUpperCase();document.getElementById("playerPin").value=playerPin;}return {action:"saveEmergencyPrio",guild:currentGuildSlug(),raid:RAID_NAME,raidId:currentRaidId||"",raidPin:document.getElementById("raidPin").value.trim(),raidDate:currentRaidDate||"",raidTime:currentRaidTime||"",playerPin,player:document.getElementById("playerName").value.trim(),server:document.getElementById("playerServer").value,className:document.getElementById("playerClass").value,p1,p2,p3,p0Plus:isP0Plus?"ja":"nein",submittedAt:new Date().toISOString()};}
 async function saveEmergencyPrio(){const entry=emergencyPrioPayload(),storageKey="lichtloot_emergency_prios_v1";let entries=[];try{entries=JSON.parse(localStorage.getItem(storageKey)||"[]");}catch(error){}const key=[entry.guild,entry.raidId||entry.raidPin||(entry.raidDate+"|"+entry.raidTime),entry.raid,entry.player,entry.server].map(value=>String(value||"").trim().toLowerCase()).join("|"),index=entries.findIndex(item=>item.entryKey===key),stored={...entry,entryKey:key,status:"offen"};if(index>=0)entries[index]=stored;else entries.push(stored);localStorage.setItem(storageKey,JSON.stringify(entries));try{await fetch(EMERGENCY_APPS_SCRIPT_URL+"?"+new URLSearchParams(entry).toString()+"&t="+Date.now(),{mode:"no-cors",cache:"no-store"});}catch(error){console.warn("Google-Notfallspeicher nicht erreichbar; lokale Kopie bleibt erhalten.",error);}autoSaveDraft();saveCharacterProfile();return entry;}
+
+function isRealEmergencySaveError(error){
+  const status=Number(error && error.httpStatus || 0);
+  const message=String(error && error.message || "").toLowerCase();
+  return status>=500 || error?.name==="TypeError" || error?.name==="AbortError" || message.includes("zeitüberschreitung") || message.includes("failed to fetch") || message.includes("netzwerk");
+}
+
+async function removeEmergencyPrioRecord(payload,playerPin){
+  const storageKey="lichtloot_emergency_prios_v1";
+  try{
+    const entries=JSON.parse(localStorage.getItem(storageKey)||"[]");
+    const player=String(payload.player||"").trim().toLowerCase();
+    const server=String(payload.server||"").trim().toLowerCase();
+    const raid=String(payload.raid||RAID_NAME||"").trim().toLowerCase();
+    const filtered=entries.filter(entry=>!(String(entry.player||"").trim().toLowerCase()===player && String(entry.raid||"").trim().toLowerCase()===raid && (!server || String(entry.server||"").trim().toLowerCase()===server)));
+    localStorage.setItem(storageKey,JSON.stringify(filtered));
+  }catch(error){ console.warn("Lokaler Notfalldatensatz konnte nicht bereinigt werden.",error); }
+  try{
+    const params=new URLSearchParams({action:"deleteEmergencyPrio",guild:currentGuildSlug(),raid:payload.raid||RAID_NAME,player:payload.player||"",server:payload.server||"",playerPin:playerPin||""});
+    await fetch(EMERGENCY_APPS_SCRIPT_URL+"?"+params.toString()+"&t="+Date.now(),{mode:"no-cors",cache:"no-store"});
+  }catch(error){ console.warn("Notfalldatensatz konnte extern nicht bereinigt werden.",error); }
+}
 
 function isPinConflictError(result){
   const message=String((result && (result.error || result.message)) || "").toLowerCase();
@@ -3737,6 +3762,8 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
+    status.innerHTML=`<span class="bad">Prios konnten nicht gespeichert werden.</span><br>${safe(error.message||"Bitte später erneut versuchen.")}`;
+    return;
     try{const emergency=await saveEmergencyPrio();status.innerHTML=`<span class="warn">⚠ Notfallmodus aktiv.</span><br>Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;}catch(emergencyError){console.error(emergencyError);status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(emergencyError.message||"Notfallspeicherung fehlgeschlagen.")}`;}
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
@@ -7328,6 +7355,7 @@ async function deleteOwnPrio(payload){
     }
 
     clearDeletedCurrentSelection(payload);
+    await removeEmergencyPrioRecord(payload,pin);
     if(status) status.innerHTML='<span class="ok">✓ Komplette Prioauswahl wurde gelöscht.</span>';
 
     if(payload.rowId){
