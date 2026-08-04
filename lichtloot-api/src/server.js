@@ -3223,6 +3223,28 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   return { success:true, request:updated.rows[0] };
 }
 
+async function deletePoReleaseRequest({ guildId, query: params = {} }) {
+  requireMasterCode(params.masterCode);
+  await ensureCharacterPoReleaseSchema();
+  await requireNachtlootGuild(guildId);
+  const id = clean(params.id || params.requestId);
+  if (!isUuid(id)) {
+    const error = new Error("Antrag ist ungültig.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const deleted = await query(
+    `delete from po_release_requests where guild_id=$1 and id=$2 returning id, character_id, request_type, raid_type`,
+    [guildId, id]
+  );
+  if (!deleted.rows[0]) {
+    const error = new Error("Antrag wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  return { success:true, deleted:deleted.rows[0] };
+}
+
 function poReleaseFlagsFromRows(rows) {
   const flags = { p1p3: false, mc: false, bwl: false, aq40: false, naxx: false, "zg-mittwoch": false, "zg-prime": false, "zg-late": false };
   for (const row of rows || []) {
@@ -19498,6 +19520,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const saved = await reviewPoReleaseRequest({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
+    if (action === "guildDeletePoReleaseRequest") {
+      const deleted = await deletePoReleaseRequest({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
@@ -20000,6 +20026,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildReviewPoReleaseRequest") {
       const saved = await reviewPoReleaseRequest({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildDeletePoReleaseRequest") {
+      const deleted = await deletePoReleaseRequest({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
