@@ -9003,8 +9003,17 @@ async function deletePrio({ guildId, query: params }) {
   const values = [character.id];
   let raidClause = "";
 
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raidId)) {
-    values.push(raidId);
+  let resolvedDeleteRaid = null;
+  if (raidId) {
+    resolvedDeleteRaid = await findRaid(guildId, { raidId });
+    if (!resolvedDeleteRaid) {
+      const error = new Error("Der zugehörige Raid wurde nicht gefunden. Bitte die Raidseite neu laden und erneut versuchen.");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+  if (resolvedDeleteRaid?.id) {
+    values.push(resolvedDeleteRaid.id);
     raidClause = `and pr.raid_id = $${values.length}`;
   } else if (clean(params.raid)) {
     values.push(normalizeRaidType(params.raid));
@@ -9020,6 +9029,12 @@ async function deletePrio({ guildId, query: params }) {
      returning pr.id, pr.raid_id`,
     values
   );
+
+  if (!result.rowCount) {
+    const error = new Error("Die Prio wurde nicht gefunden und deshalb nicht gelöscht. Bitte die Raidseite neu laden und erneut versuchen.");
+    error.statusCode = 404;
+    throw error;
+  }
 
   const raidIds = Array.from(new Set(result.rows.map(row => clean(row.raid_id)).filter(Boolean)));
   const refreshes = [];
