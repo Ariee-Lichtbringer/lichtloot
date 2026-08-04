@@ -4796,6 +4796,12 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .nachtloot-only{display:none!important}
 body.guild-nachtloot .nachtloot-only{display:flex!important}
 body.guild-nachtloot details.nachtloot-only{display:block!important}
+body.worldbuff-only .side-nav>*{display:none!important}
+body.worldbuff-only #sideGroupBuffs{display:grid!important}
+body.worldbuff-only #sideGroupBuffs .side-group-items .side-link:not(:first-child){display:none!important}
+body.worldbuff-only .dashboard-main>*:not(.topbar):not(#worldbuffPanel){display:none!important}
+body.worldbuff-only #worldbuffPanel{display:block!important}
+body.worldbuff-only .master-only{display:none!important}
 </style>
 </head>
 <body class="guild-locked">
@@ -4809,6 +4815,7 @@ body.guild-nachtloot details.nachtloot-only{display:block!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
           <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
+          <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupRaidorga">
@@ -4877,6 +4884,11 @@ body.guild-nachtloot details.nachtloot-only{display:block!important}
         <input id="masterCode" type="text" placeholder="Master-Code" autocomplete="off" onkeydown="enterLoads(event)">
       </div>
       <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
+      <div class="field worldbuff-login-field">
+        <label for="worldbuffAccessPassword">Worldbuff-Passwort</label>
+        <input id="worldbuffAccessPassword" type="password" placeholder="Separates Worldbuff-Passwort" onkeydown="if(event.key==='Enter') loginWorldbuffManagement()">
+      </div>
+      <button class="btn ghost" type="button" onclick="loginWorldbuffManagement()">Nur Worldbuffs öffnen</button>
       <div class="login-summary-card">
         <div>
           <div class="stat-icon">☷</div>
@@ -6191,9 +6203,81 @@ function setGuildLocked(locked){
   document.body.classList.toggle("guild-locked", Boolean(locked));
 }
 
+function setWorldbuffOnlyMode(enabled){
+  document.body.classList.toggle("worldbuff-only", Boolean(enabled));
+  if(!enabled) return;
+  const buffsGroup = document.getElementById("sideGroupBuffs");
+  if(buffsGroup) buffsGroup.classList.remove("collapsed");
+}
+
+async function loginWorldbuffManagement(){
+  const password = String(document.getElementById("worldbuffAccessPassword")?.value || "").trim();
+  if(!password){
+    setStatus("Bitte das Worldbuff-Passwort eingeben.", "bad");
+    return;
+  }
+  setStatus("Worldbuff-Zugang wird geprüft ...", "");
+  try{
+    const result = await railwayWrite({ action:"guildVerifyWorldbuffAccess", masterCode:password });
+    if(!result?.success) throw new Error(result?.error || "Das Worldbuff-Passwort ist nicht gültig.");
+    document.getElementById("masterCode").value = password;
+    sessionStorage.removeItem(MASTER_STORAGE_KEY);
+    setGuildLocked(false);
+    setWorldbuffOnlyMode(true);
+    openWorldbuffPanel();
+    await loadWorldbuffPanel();
+    setStatus("Worldbuff-Verwaltung geöffnet.", "good");
+  }catch(error){
+    setGuildLocked(true);
+    setWorldbuffOnlyMode(false);
+    setStatus(error.message || "Das Worldbuff-Passwort ist nicht gültig.", "bad");
+  }
+}
+
+function openWorldbuffPasswordDialog(){
+  if(document.body.classList.contains("worldbuff-only")) return;
+  const backdrop = document.createElement("div");
+  backdrop.className = "raid-helper-notify-backdrop";
+  backdrop.innerHTML = `<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:560px">
+    <h3>Worldbuff-Passwort festlegen</h3>
+    <p>Dieses Passwort öffnet ausschließlich <strong>Buffs → Worldbuffs</strong>. Hordenbuffs und alle anderen Bereiche bleiben gesperrt.</p>
+    <label style="display:grid;gap:7px">Neues Worldbuff-Passwort
+      <input id="newWorldbuffAccessPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Mindestens 6 Zeichen">
+    </label>
+    <label style="display:grid;gap:7px;margin-top:12px">Passwort wiederholen
+      <input id="repeatWorldbuffAccessPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Passwort wiederholen">
+    </label>
+    <div class="raid-helper-notify-actions">
+      <button class="small-btn ghost" type="button" data-close>Abbrechen</button>
+      <button class="small-btn good" type="button" data-save>Passwort speichern</button>
+    </div>
+  </div>`;
+  const close = () => backdrop.remove();
+  backdrop.querySelector("[data-close]")?.addEventListener("click", close);
+  backdrop.addEventListener("click", event => { if(event.target === backdrop) close(); });
+  backdrop.querySelector("[data-save]")?.addEventListener("click", async () => {
+    const password = String(backdrop.querySelector("#newWorldbuffAccessPassword")?.value || "").trim();
+    const repeat = String(backdrop.querySelector("#repeatWorldbuffAccessPassword")?.value || "").trim();
+    if(password.length < 6){ setStatus("Das Worldbuff-Passwort muss mindestens 6 Zeichen haben.", "bad"); return; }
+    if(password !== repeat){ setStatus("Die beiden Passwörter stimmen nicht überein.", "bad"); return; }
+    const masterCode = String(document.getElementById("masterCode")?.value || "").trim();
+    try{
+      const result = await railwayWrite({ action:"guildSetWorldbuffAccessPassword", masterCode, password });
+      if(!result?.success) throw new Error(result?.error || "Das Passwort konnte nicht gespeichert werden.");
+      close();
+      setStatus("Das Worldbuff-Passwort wurde gespeichert und ist sofort gültig.", "good");
+    }catch(error){ setStatus(error.message || "Das Passwort konnte nicht gespeichert werden.", "bad"); }
+  });
+  document.body.appendChild(backdrop);
+  window.setTimeout(() => backdrop.querySelector("#newWorldbuffAccessPassword")?.focus(), 30);
+}
+
 function clearMasterCode(){
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
   document.getElementById("masterCode").value = "";
+  const worldbuffPassword = document.getElementById("worldbuffAccessPassword");
+  if(worldbuffPassword) worldbuffPassword.value = "";
+  setWorldbuffOnlyMode(false);
   guildData = { raids: [], players: [] };
   renderAll();
   setGuildLocked(true);
@@ -6541,6 +6625,7 @@ async function loadOverview(options){
     }
 
     sessionStorage.setItem(MASTER_STORAGE_KEY, masterCode);
+    setWorldbuffOnlyMode(false);
     setGuildLocked(false);
     guildData = {
       raids: Array.isArray(result.raids) ? result.raids : [],
