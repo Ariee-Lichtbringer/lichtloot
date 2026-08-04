@@ -9091,6 +9091,26 @@ async function deletePrio({ guildId, query: params }) {
     values
   );
 
+  if (!result.rowCount && exactPrioId && clean(params.prioPin || params.raidPin)) {
+    const pinRaid = await findRaid(guildId, {
+      prioPin: clean(params.prioPin || params.raidPin),
+      raid: clean(params.raid)
+    });
+    if (pinRaid) {
+      result = await query(
+        `delete from prios pr
+         using characters c, players p
+         where pr.character_id = c.id
+           and c.player_id = p.id
+           and p.guild_id = $1
+           and lower(c.name) = lower($2)
+           and pr.raid_id = $3
+         returning pr.id, pr.raid_id`,
+        [guildId, clean(player), pinRaid.id]
+      );
+    }
+  }
+
   if (!result.rowCount && resolvedDeleteRaid?.id) {
     result = await query(
       `delete from prios pr
