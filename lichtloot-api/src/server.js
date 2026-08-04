@@ -8959,6 +8959,7 @@ async function deletePrio({ guildId, query: params }) {
   const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
   const player = params.player || params.char || params.spieler;
   const raidId = clean(params.raidId);
+  const prioId = clean(params.prioId || params.prio_id || params.id);
   const leadPin = clean(params.leadPin || params.raidleadPin);
 
   if (leadPin && raidId && player) {
@@ -9002,14 +9003,19 @@ async function deletePrio({ guildId, query: params }) {
 
   const values = [guildId, character.name];
   let characterServerClause = "";
-  if (clean(character.server)) {
+  if (!isUuid(prioId) && clean(character.server)) {
     values.push(character.server);
     characterServerClause = `and lower(c.server) = lower($${values.length})`;
+  }
+  let prioClause = "";
+  if (isUuid(prioId)) {
+    values.push(prioId);
+    prioClause = `and pr.id = $${values.length}`;
   }
   let raidClause = "";
 
   let resolvedDeleteRaid = null;
-  if (raidId) {
+  if (raidId && !isUuid(prioId)) {
     resolvedDeleteRaid = await findRaid(guildId, { raidId });
     if (!resolvedDeleteRaid && clean(params.raid) && clean(params.raidDate)) {
       resolvedDeleteRaid = await findRaid(guildId, {
@@ -9056,7 +9062,7 @@ async function deletePrio({ guildId, query: params }) {
   if (resolvedDeleteRaid?.id) {
     values.push(resolvedDeleteRaid.id);
     raidClause = `and pr.raid_id = $${values.length}`;
-  } else if (clean(params.raid)) {
+  } else if (!isUuid(prioId) && clean(params.raid)) {
     values.push(normalizeRaidType(params.raid));
     raidClause = `and r.raid_type = $${values.length}`;
   }
@@ -9070,6 +9076,7 @@ async function deletePrio({ guildId, query: params }) {
        and p.guild_id = $1
        and lower(c.name) = lower($2)
        ${characterServerClause}
+       ${prioClause}
        ${raidClause}
      returning pr.id, pr.raid_id`,
     values
