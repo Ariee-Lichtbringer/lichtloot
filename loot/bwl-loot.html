@@ -154,23 +154,6 @@ th{color:var(--gold);text-transform:uppercase;font-size:10px}
 @media(max-width:900px){.myprios-box{position:fixed;top:12px;left:12px;right:12px;width:auto}.myprios-form{grid-template-columns:1fr}}
 
 
-/* Linke LichtLoot-Navigation und Freigabestatus */
-.loot-side-shell{position:fixed;left:18px;top:18px;bottom:18px;width:205px;z-index:9000;padding:14px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(var(--gold-rgb),.34);border-radius:20px;background:linear-gradient(180deg,rgba(12,18,32,.96),rgba(2,6,23,.92));box-shadow:0 18px 38px rgba(0,0,0,.45);backdrop-filter:blur(12px)}
-.loot-side-shell .logo-banner-mini{width:100%;max-height:105px;margin:0;object-fit:contain}
-.loot-side-shell .main-nav{position:static;width:100%;margin:0;padding:0;display:flex;flex-direction:column;align-items:stretch;gap:8px;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
-.loot-side-shell .nav-btn{width:100%;min-height:42px;text-align:left;display:flex;align-items:center;justify-content:flex-start}
-.loot-side-shell .nav-login{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;margin-top:auto;padding-top:10px;border-top:1px solid rgba(var(--gold-rgb),.24)}
-.loot-side-shell .nav-login input{width:100%}
-body:not(.random-prio)>.overlay{padding-left:245px}
-.loot-release-status{margin-top:8px;padding:10px;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:rgba(2,6,23,.78)}
-.loot-release-title{color:var(--gold);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:7px}
-.loot-release-list{display:flex;flex-wrap:wrap;gap:6px}
-.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900}
-.loot-release-chip.approved{border-color:#4ade80;background:#166534;color:#f0fdf4}
-.loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
-.loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
-@media(max-width:1100px){.loot-side-shell{position:static;width:100%;max-width:none;margin:0 0 16px}.loot-side-shell .logo-banner-mini{max-height:90px}.loot-side-shell .main-nav{flex-direction:row;overflow-x:auto}.loot-side-shell .nav-btn{width:auto;min-width:max-content}.loot-side-shell .nav-login{width:auto;min-width:240px;margin:0;padding:0 0 0 8px;border:0;border-left:1px solid rgba(var(--gold-rgb),.24)}body:not(.random-prio)>.overlay{padding-left:22px}}
-
 /* === LichtLoot Navigation & Index-Overlays === */
 .logo-banner-mini{
   display:block;
@@ -1649,6 +1632,13 @@ body.random-prio .tooltip-p0{
 }
 
 </style>
+<style class="mobile-raid-selection-only">
+@media(max-width:800px){
+  .main-nav{display:flex!important;justify-content:center!important;overflow:visible!important;margin:8px auto 16px!important}
+  .main-nav > *{display:none!important}
+  .main-nav > a.nav-btn:first-child{display:inline-flex!important;width:min(100%,360px)!important;min-height:48px!important;align-items:center!important;justify-content:center!important}
+}
+</style>
 </head>
 
 <body class="raid-bwl">
@@ -1759,11 +1749,10 @@ body.random-prio .tooltip-p0{
 <div class="overlay">
 
 
-<aside class="loot-side-shell" aria-label="LichtLoot Seitennavigation">
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
+  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Raidauswahl</a>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -1772,7 +1761,6 @@ body.random-prio .tooltip-p0{
     <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
   </div>
 </nav>
-</aside>
 
 <div id="raidCreateBox" class="raid-create-box hidden">
   <div class="popup-head">
@@ -1822,10 +1810,6 @@ body.random-prio .tooltip-p0{
           <label>Ausgewählter Charakter</label>
           <div id="selectedCharacterDrop" class="character-dropzone" ondragover="allowCharacterDrop(event)" ondrop="dropCharacterOnZone(event)">
             Charakter aus „Mein LichtLoot“ hierher ziehen oder unten anklicken.
-          </div>
-          <div id="selectedCharacterPoReleases" class="loot-release-status">
-            <div class="loot-release-title">PO-Freigaben für alle Raids</div>
-            <div class="loot-release-help">Bitte Charakter auswählen – der Status wird automatisch geladen.</div>
           </div>
         </div>
       </div>
@@ -2152,16 +2136,6 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
-let GUILD_PO_ITEM_KEYS = new Set();
-function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
-async function loadGuildPoItems(){
-  try{
-    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
-    const response=await fetch(url,{cache:"no-store"});
-    const data=await response.json();
-    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name)));
-  }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
-}
 const PRIO_COUNT = 3;
 
 
@@ -2774,7 +2748,7 @@ async function loadLootFromSheet(){
       throw new Error("Keine BWL-Lootdaten gefunden.");
     }
 
-    await Promise.all([loadP0PlusFromSheet(), loadGuildPoItems()]);
+    await loadP0PlusFromSheet();
 
     fillItems();
     renderLootList();
@@ -3016,7 +2990,7 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
+    if(SUPPORTS_P0PLUS){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -4360,15 +4334,25 @@ let lichtlootLoggedInCharacters = [];
 let lichtlootSelectedCharacter = null;
 
 function getStoredLichtLootPlayerPin(){
-  return String(
-    localStorage.getItem("lichtlootPlayerPin") ||
-    localStorage.getItem("lichtLootPlayerPin") ||
-    localStorage.getItem("spielerPin") ||
-    sessionStorage.getItem("lichtlootPlayerPin") ||
-    sessionStorage.getItem("lichtLootPlayerPin") ||
-    sessionStorage.getItem("spielerPin") ||
-    ""
-  ).trim().toUpperCase();
+  const slug=String(currentGuildSlug() || "lichtloot").trim().toLowerCase();
+  const keys=[
+    "lichtlootPlayerPin_"+slug,
+    "lichtlootSharedPlayerPin",
+    "lichtlootPlayerPin",
+    "lichtLootPlayerPin",
+    "spielerPin",
+    "playerPin",
+    "lichtloot_spielerpin"
+  ];
+  for(const storage of [localStorage,sessionStorage]){
+    for(const key of keys){
+      try{
+        const value=storage.getItem(key);
+        if(value && String(value).trim()) return String(value).trim().toUpperCase();
+      }catch(error){}
+    }
+  }
+  return "";
 }
 
 function getLastSelectedCharacterStorageKey(){
@@ -4489,7 +4473,6 @@ function selectLoggedInCharacter(index){
   }
 
   renderCharacterButtons();
-  if(typeof loadSelectedCharacterPoReleases === "function") loadSelectedCharacterPoReleases(char);
   loadPlayerData();
   autoSaveDraft();
   if(typeof renderCurrentPrios === "function"){
@@ -10385,7 +10368,5 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="po-release-status.js"></script>
-<script src="../pin-visibility.js"></script>
 </body>
 </html>
