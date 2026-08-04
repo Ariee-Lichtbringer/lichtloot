@@ -166,7 +166,7 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-title{color:var(--gold);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:7px}
 .loot-release-list{display:flex;flex-wrap:wrap;gap:6px}
 .loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900}
-.loot-release-chip.approved{border-color:#4ade80;background:#166534;color:#f0fdf4}
+.loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
 @media(max-width:1100px){.loot-side-shell{position:static;width:100%;max-width:none;margin:0 0 16px}.loot-side-shell .logo-banner-mini{max-height:90px}.loot-side-shell .main-nav{flex-direction:row;overflow-x:auto}.loot-side-shell .nav-btn{width:auto;min-width:max-content}.loot-side-shell .nav-login{width:auto;min-width:240px;margin:0;padding:0 0 0 8px;border:0;border-left:1px solid rgba(var(--gold-rgb),.24)}body:not(.random-prio)>.overlay{padding-left:22px}}
@@ -1650,10 +1650,26 @@ body.random-prio .tooltip-p0{
 
 </style>
 <style class="mobile-raid-selection-only">
+.mobile-nav-label{display:none}
+.mobile-raid-selection-link{display:none}
+.raid-start-side-nav{display:flex;flex-direction:column;gap:10px;width:100%}
+.main-nav>.nav-btn:not(.mobile-raid-selection-link),.main-nav>.nav-login{display:none!important}
+.raid-start-dashboard,.raid-start-group-toggle,.raid-start-group-items button{width:100%;min-height:46px;border:1px solid rgba(var(--gold-rgb),.28);border-radius:10px;background:rgba(2,6,23,.72);color:#f8fafc;font-weight:900;text-align:left;cursor:pointer}
+.raid-start-dashboard{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center;padding:8px 12px;border-color:rgba(var(--gold-rgb),.58);background:linear-gradient(90deg,rgba(var(--gold-rgb),.23),rgba(var(--blue-rgb),.12))}
+.raid-start-dashboard img{width:38px;height:38px;border-radius:7px;object-fit:cover}
+.raid-start-group{display:grid;gap:7px}
+.raid-start-group-toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:var(--gold)}
+.raid-start-group:not(.collapsed) .raid-start-group-toggle span:last-child{transform:rotate(90deg)}
+.raid-start-group-items{display:grid;gap:6px;padding-left:8px}
+.raid-start-group.collapsed .raid-start-group-items{display:none}
+.raid-start-group-items button{min-height:38px;padding:8px 12px;font-size:12px}
 @media(max-width:800px){
   .main-nav{display:flex!important;justify-content:center!important;overflow:visible!important;margin:8px auto 16px!important}
   .main-nav > *{display:none!important}
   .main-nav > a.nav-btn:first-child{display:inline-flex!important;width:min(100%,360px)!important;min-height:48px!important;align-items:center!important;justify-content:center!important}
+  .raid-selection-link .desktop-nav-label{display:none!important}
+  .raid-selection-link .mobile-nav-label{display:inline!important}
+  .raid-start-side-nav{display:none!important}
 }
 </style>
 </head>
@@ -1770,7 +1786,22 @@ body.random-prio .tooltip-p0{
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Raidauswahl</a>
+  <a class="nav-btn raid-selection-link" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')"><span class="desktop-nav-label">Startseite</span><span class="mobile-nav-label">Raidauswahl</span></a>
+  <div class="raid-start-side-nav">
+    <button class="raid-start-dashboard" type="button" onclick="openRaidStartAction('dashboard')"><img src="../images/dashboard-icons/dashboard.jpg" alt=""><span>Dashboard</span></button>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Buffs</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('worldbuff')">Worldbuffs</button><button type="button" onclick="openRaidStartAction('hordenbuff')">Hordenbuffs</button></div>
+    </div>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidinformationen</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('logs')">Logs &amp; Analysen</button><button type="button" onclick="window.location.href=guildUrl('../raidregeln.html')">Raidregeln</button><button type="button" onclick="openRaidStartAction('p0plus')">P0+ Liste</button><button type="button" onclick="openRaidStartAction('dashboard')">Prioseiten</button></div>
+    </div>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidorga</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Raidleadpanel</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
+    </div>
+  </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
@@ -1779,6 +1810,16 @@ body.random-prio .tooltip-p0{
     <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
   </div>
 </nav>
+<script>
+function toggleRaidStartGroup(button){
+  const group=button && button.closest(".raid-start-group");
+  if(group) group.classList.toggle("collapsed");
+}
+function openRaidStartAction(action){
+  try{ sessionStorage.setItem("lichtlootStartMenuAction",String(action||"dashboard")); }catch(error){}
+  window.location.href=guildUrl("../start.html");
+}
+</script>
 </aside>
 
 <div id="raidCreateBox" class="raid-create-box hidden">
