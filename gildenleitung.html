@@ -7430,7 +7430,7 @@ function renderDashboardCards(){
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
             <div class="active-raid-topline">
-              <div class="active-raid-meta" role="button" tabindex="0" title="Datum/Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
+              <div class="active-raid-meta" role="button" tabindex="0" title="Name, Datum und Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')}">
                 <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
                 <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
                 <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
@@ -9059,6 +9059,14 @@ async function editRaidDateTimePopup(raidId){
     setStatus("Raid wurde nicht gefunden.", "bad");
     return;
   }
+  const key = getRaidKey(raid);
+  const raidName = prompt("Neuer Raidname:", raid.raidName || RAID_OPTIONS[key]?.name || "Raid");
+  if(raidName === null) return;
+  const nameValue = String(raidName || "").trim();
+  if(!nameValue){
+    setStatus("Bitte einen Raidnamen eingeben.", "bad");
+    return;
+  }
   const raidDate = prompt("Neues Datum im Format JJJJ-MM-TT:", raid.raidDate || "");
   if(raidDate === null) return;
   const raidTime = prompt("Neue Uhrzeit im Format HH:MM:", raid.raidTime || "");
@@ -9074,7 +9082,6 @@ async function editRaidDateTimePopup(raidId){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
-  const key = getRaidKey(raid);
   const guildName = raid.guild || raid.gilde || getCurrentGuildBrand().guildName;
   try{
     const result = await railwayWrite({
@@ -9082,7 +9089,7 @@ async function editRaidDateTimePopup(raidId){
       masterCode,
       raidId:raid.raidId || raid.id || raidId,
       raid:key,
-      raidName:raid.raidName || RAID_OPTIONS[key]?.name || "Raid",
+      raidName:nameValue,
       raidDate:dateValue,
       raidTime:timeValue,
       datum:dateValue,
