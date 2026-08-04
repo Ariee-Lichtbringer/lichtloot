@@ -14497,7 +14497,7 @@ function poReleaseCheckHtml(entry, raid, index){
 }
 
 function recruitStatusLiftHtml(entry,index){
-  const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mi"],["zg-prime","ZG Prime"],["zg-late","ZG Late"]];
+  const raids=[["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
   const releases=entry?.recruitReleases||{};
   return `<div style="display:flex;gap:5px;flex-wrap:wrap">${raids.map(([raid,label])=>{
     const lifted=Boolean(releases[raid]);
