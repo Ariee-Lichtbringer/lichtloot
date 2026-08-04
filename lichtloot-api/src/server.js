@@ -2825,9 +2825,11 @@ function worldbuffDailySlotType(buff) {
 
 function worldbuffDailySlotKey(entry) {
   const date = parseDateValue(entry.date || entry.datum || entry.event_date || entry.eventDate);
-  const slotType = worldbuffDailySlotType(entry.buff);
-  if (!date || !slotType) return "";
-  return [date, slotType].join("|");
+  const time = clean(entry.uhrzeit || entry.time || entry.event_time || entry.eventTime).replace(/:00$/, "");
+  const buff = normalizeWorldbuffName(entry.buff);
+  const guild = normalizeWorldbuffGuildName(entry.gilde || entry.guild || entry.guild_name).toLowerCase();
+  if (!date || !time || !buff) return "";
+  return [date, time, buff, guild].join("|");
 }
 
 function normalizeWorldbuffRow(row) {
@@ -3152,17 +3154,18 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   if (!character) { const error = new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode = 403; throw error; }
   const requestType = clean(params.requestType || params.type).toLowerCase();
   if (!["recruit", "p1p3", "p0"].includes(requestType)) { const error = new Error("Bitte eine gültige Freigabe auswählen."); error.statusCode = 400; throw error; }
-  const raid = requestType === "p0" ? normalizePoReleaseRaid(params.raid || params.raidType) : "";
+  const selectedRaid = normalizePoReleaseRaid(params.raid || params.raidType);
+  const raid = requestType === "p0" ? selectedRaid : "";
   if (requestType === "p0" && (!raid || raid === "p1p3")) { const error = new Error("Bitte den Raid für die P0-Freigabe auswählen."); error.statusCode = 400; throw error; }
   const armoryUrl = clean(params.armoryUrl);
   const screenshotData = clean(params.screenshotData);
   if (!armoryUrl && !screenshotData) { const error = new Error("Bitte Armory-Link oder Screenshot angeben."); error.statusCode = 400; throw error; }
   if (screenshotData && !/^data:image\/(png|jpe?g|webp);base64,/i.test(screenshotData)) { const error = new Error("Screenshot-Format ist ungültig."); error.statusCode = 400; throw error; }
-  const requirements = poRequestRequirements(requestType, raid, clean(params.className) || character.class_name, params.specialization);
+  const requirements = poRequestRequirements(requestType, selectedRaid, clean(params.className) || character.class_name, params.specialization);
   const result = await query(
     `insert into po_release_requests (guild_id, character_id, request_type, raid_type, specialization, armory_url, screenshot_data, requirements)
      values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) returning *`,
-    [guildId, character.id, requestType, raid || null, clean(params.specialization), armoryUrl, screenshotData, JSON.stringify(requirements)]
+    [guildId, character.id, requestType, selectedRaid || null, clean(params.specialization), armoryUrl, screenshotData, JSON.stringify(requirements)]
   );
   return { success:true, request:result.rows[0] };
 }
@@ -3678,74 +3681,6 @@ async function upsertWorldbuffEvent(client, guildId, params) {
   const status = normalizeWorldbuffStatus(params.eventStatus || params.status || "offen");
   const note = clean(params.eventNote || params.note || params.notiz);
   const source = clean(params.source || "railway");
-  const slotType = worldbuffDailySlotType(buff);
-  const existingValues = [guildId, eventDate];
-  let existingBuffClause = "";
-
-  if (slotType === "hakkar") {
-    existingBuffClause = "and buff = 'Hakkar'";
-  } else if (slotType === "ony-nef") {
-    existingBuffClause = "and buff in ('Ony', 'Nef')";
-  }
-
-  if (existingBuffClause) {
-    const existing = await client.query(
-      `select e.*,
-              we.caster as selected_caster,
-              we.status as selected_entry_status
-       from worldbuff_events e
-       left join lateral (
-         select caster, status
-         from worldbuff_entries entry
-         where entry.event_id = e.id
-         order by
-           case when nullif(entry.caster, '') is not null then 0 else 1 end,
-           entry.updated_at desc,
-           entry.created_at desc
-         limit 1
-       ) we on true
-       where e.guild_id = $1
-         and e.event_date = $2
-         ${existingBuffClause}
-       order by
-         case when nullif(we.caster, '') is not null then 0 else 1 end,
-         case when e.source = 'railway' then 0 else 1 end,
-         e.updated_at desc,
-         e.created_at desc
-       limit 1`,
-      existingValues
-    );
-
-    if (existing.rows[0]) {
-      const existingRow = existing.rows[0];
-      const existingStatus = normalizeWorldbuffStatus(existingRow.selected_entry_status || existingRow.status);
-      const keepConfirmedSlot = existingStatus === "bestätigt" && status === "offen";
-      const updated = await client.query(
-        `update worldbuff_events
-         set buff = $2,
-             event_time = coalesce(nullif($3, ''), event_time),
-             guild_name = $4,
-             status = coalesce(nullif($5, ''), status),
-             note = coalesce(nullif($6, ''), note),
-             source = coalesce(nullif($7, ''), source),
-             updated_at = now()
-         where id = $1 and guild_id = $8
-         returning *`,
-        [
-          existingRow.id,
-          keepConfirmedSlot ? existingRow.buff : buff,
-          keepConfirmedSlot ? existingRow.event_time : eventTime,
-          keepConfirmedSlot ? existingRow.guild_name : guildName,
-          keepConfirmedSlot ? existingRow.status : status,
-          note,
-          source,
-          guildId
-        ]
-      );
-      return updated.rows[0];
-    }
-  }
-
   const result = await client.query(
     `insert into worldbuff_events (guild_id, buff, event_date, event_time, guild_name, status, note, source)
      values ($1, $2, $3, $4, $5, $6, $7, $8)
