@@ -3169,6 +3169,10 @@ function normalizePoReleaseCharacterName(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+function isNachtlootRecruitRaid(value) {
+  return ["bwl", "aq40", "naxx"].includes(normalizePoReleaseRaid(value));
+}
+
 async function ensureCharacterPoReleaseSchema() {
   await ensureRaidSchema();
   await query(`alter table characters add column if not exists recruit_status_lifted boolean not null default false`);
@@ -3244,6 +3248,11 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   const selectedRaid = normalizePoReleaseRaid(params.raid || params.raidType);
   const raid = selectedRaid;
   if (!raid || raid === "p1p3") { const error = new Error("Bitte den Raid für die Freigabe auswählen."); error.statusCode = 400; throw error; }
+  if (["recruit", "p1p3"].includes(requestType) && !isNachtlootRecruitRaid(raid)) {
+    const error = new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");
+    error.statusCode = 400;
+    throw error;
+  }
   const armoryUrl = clean(params.armoryUrl);
   const screenshotData = clean(params.screenshotData);
   if (!armoryUrl && !screenshotData) { const error = new Error("Bitte Armory-Link oder Screenshot angeben."); error.statusCode = 400; throw error; }
@@ -3287,7 +3296,7 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   if (decision === "approved") {
     if (request.request_type === "recruit" || request.request_type === "p1p3") {
       const raid=normalizePoReleaseRaid(request.raid_type);
-      if(!raid || raid==="p1p3"){const error=new Error("Beim Antrag fehlt der Raid.");error.statusCode=400;throw error;}
+      if(!isNachtlootRecruitRaid(raid)){const error=new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");error.statusCode=400;throw error;}
       await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
     }
     else {
@@ -3472,7 +3481,7 @@ async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
     error.statusCode = 400;
     throw error;
   }
-  if(!raid || raid==="p1p3") { const error=new Error("Bitte den Raid auswählen.");error.statusCode=400;throw error; }
+  if(!isNachtlootRecruitRaid(raid)) { const error=new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");error.statusCode=400;throw error; }
   const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
   if (clean(guildResult.rows[0]?.slug).toLowerCase() !== "nachtloot") {
     const error = new Error("Der Rekrutenstatus wird nur für Nachtwächter verwaltet.");
@@ -8228,7 +8237,7 @@ async function savePrio({ guildId, query: params }) {
     const p0Selected = p0Plus === "ja" || p0Plus === "true";
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let nachtlootRecruitRestricted = false;
-    if (releaseRaid) {
+    if (isNachtlootRecruitRaid(releaseRaid)) {
       const recruitResult = await client.query(
         `select lower(g.slug) as guild_slug,
                 exists(select 1 from character_recruit_releases crr where crr.guild_id=$1 and crr.character_id=$2 and crr.raid_type=$3) as recruit_status_lifted
