@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1597,7 +1598,7 @@ let prioCheckTimer = null;
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 function raidKeyFromRaidId(raidId){
-  const id = String(raidId || "").toUpperCase().replace(/^(?:NL|LL)-/, "");
+  const id = String(raidId || "").toUpperCase();
 
   if(id.startsWith("ZG MI-") || id.startsWith("ZG-MI-") || id.startsWith("ZG MITTWOCH-")) return "zg-mittwoch";
   if(id.startsWith("ZG PRIME-") || id.startsWith("ZG-PRIME-")) return "zg-prime";
@@ -2881,11 +2882,23 @@ function openPrio(){
     alert("Kein Raid geladen.");
     return;
   }
+  const access=raidleadPrioAccessWindow(currentRaidData);
+  if(!access.allowed){alert(access.message);return;}
 
   window.location.href =
     guildUrl(raids[currentRaidKey].lootPage +
     "?pin=" +
     encodeURIComponent(currentRaidData.playerPin));
+}
+
+function raidleadPrioAccessWindow(raid){
+  const date=String(raid?.date||raid?.raidDate||"").trim();
+  const time=String(raid?.time||raid?.raidTime||"20:00").trim().slice(0,5);
+  let iso=date;const de=date.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);if(de)iso=`${de[3]}-${String(de[2]).padStart(2,"0")}-${String(de[1]).padStart(2,"0")}`;
+  const start=/^\d{4}-\d{2}-\d{2}$/.test(iso)?new Date(`${iso}T${/^\d{2}:\d{2}$/.test(time)?time:"20:00"}:00`):null;
+  if(!start||Number.isNaN(start.getTime()))return {allowed:false,message:"Raidbeginn fehlt oder ist ungültig. Die Prioliste kann nicht geöffnet werden."};
+  const opensAt=new Date(start.getTime()-30*60*1000);
+  return Date.now()>=opensAt.getTime()?{allowed:true}:{allowed:false,message:`Die Prioliste kann erst 30 Minuten vor Raidbeginn geöffnet werden: ${opensAt.toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"})} Uhr.`};
 }
 
 function openOverview(){
@@ -3255,7 +3268,6 @@ async function clearP0PlusForPlayer(player,server,itemName){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=clearP0PlusForPlayer" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
@@ -3276,8 +3288,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
       "P0+ Punkte gelöscht.\n\n" +
       "Spieler: " + player + "\n" +
       "Item: " + itemName + "\n" +
-      "Gelöschte Zeilen: " + (result.deleted || 0) + "\n\n" +
-      "Der Spieler ist für die spätere PO+ Übertragung dieses Raids gesperrt."
+      "Gelöschte Zeilen: " + (result.deleted || 0)
     );
 
     await reloadCurrentRaid();

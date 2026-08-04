@@ -5835,7 +5835,7 @@ body.guild-nachtloot details.nachtloot-only{display:block!important}
             <tr>
               <th>Main & Twinks</th>
               <th>Klassen</th>
-              <th>Rolle</th>
+              <th>Discord-Rollen &amp; LichtLoot-Rechte</th>
               <th>Login</th>
               <th>Aktion</th>
             </tr>
@@ -6546,6 +6546,10 @@ async function loadOverview(options){
       raids: Array.isArray(result.raids) ? result.raids : [],
       players: Array.isArray(result.players) ? result.players : []
     };
+    try{
+      const roleResult=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
+      playerAccessDiscordRoles=Array.isArray(roleResult.roles)?roleResult.roles:[];
+    }catch(error){ playerAccessDiscordRoles=[]; }
     refreshEmergencyImportRaids();
     raidHelperAttendanceCache = null;
     lastOverviewLoadedAt = new Date();
@@ -7811,17 +7815,37 @@ function normalizePlayerLoginRole(value){
 function renderPlayerRoleControl(group){
   const main=group.main || {};
   const playerId=main.playerId || "";
-  const selected=normalizePlayerLoginRole(main.playerRole || main.role);
-  const selectId="role_"+String(playerId || main.rowNumber || "").replace(/[^a-zA-Z0-9_-]/g,"");
+  const roleIds=Array.isArray(main.discordRoleIds)?main.discordRoleIds.map(String):[];
+  const permissions=Array.isArray(main.permissions)?main.permissions.map(String):[];
+  const roleLabel=id=>playerAccessDiscordRoles.find(role=>String(role.id||role.roleId)===String(id))?.name||id;
   return `
-    <div class="role-control">
-      <select id="${escapeAttr(selectId)}">
-        ${PLAYER_LOGIN_ROLES.map(role => `<option value="${role.value}"${role.value === selected ? " selected" : ""}>${escapeHtml(role.label)}</option>`).join("")}
-      </select>
-      <button class="small-btn" type="button" onclick="setPlayerLoginRole('${escapeAttr(playerId)}','${escapeAttr(selectId)}','${escapeAttr(main.playerPin || "")}')">Speichern</button>
-      <button class="small-btn primary" type="button" onclick="openPlayerAccessDialog('${escapeAttr(playerId)}','${escapeAttr(main.playerPin || "")}')">DC-Rollen &amp; Rechte</button>
+    <div class="role-control" style="display:grid;gap:7px;min-width:310px">
+      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">Discord-Rolle auswählen …</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
+      <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Keine Discord-Rolle zugewiesen.</span>'}</div>
+      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">LichtLoot-Recht auswählen …</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
+      <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine LichtLoot-Rechte zugewiesen.</span>'}</div>
     </div>
   `;
+}
+
+let playerAccessDiscordRoles=[];
+async function savePlayerAccessValues(playerId,playerPin,discordRoleIds,permissions){
+  const result=await railwayApi({action:"guildSetPlayerLoginAccess",masterCode:document.getElementById("masterCode").value.trim(),playerId,playerPin,discordRoleIds:JSON.stringify(discordRoleIds),permissions:JSON.stringify(permissions)});
+  if(!result.success)throw new Error(result.error||"Rollen und Rechte konnten nicht gespeichert werden.");
+  await loadOverview({preserveStatus:true});setStatus("Rollen und Rechte wurden gespeichert.","good");
+}
+async function addPlayerAccessValue(playerId,playerPin,type,select){
+  const value=String(select?.value||"");if(!value)return;
+  const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
+  const roles=[...new Set([...(player.discordRoleIds||[]).map(String),...(type==="discord"?[value]:[])])];
+  const permissions=[...new Set([...(player.permissions||[]).map(String),...(type==="permission"?[value]:[])])];
+  try{await savePlayerAccessValues(playerId,playerPin,roles,permissions)}catch(error){setStatus(error.message,"bad")}
+}
+async function removePlayerAccessValue(playerId,playerPin,type,value){
+  const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
+  const roles=(player.discordRoleIds||[]).map(String).filter(item=>type!=="discord"||item!==String(value));
+  const permissions=(player.permissions||[]).map(String).filter(item=>type!=="permission"||item!==String(value));
+  try{await savePlayerAccessValues(playerId,playerPin,roles,permissions)}catch(error){setStatus(error.message,"bad")}
 }
 
 const LICHTLOOT_PERMISSIONS=[
@@ -13567,6 +13591,12 @@ async function openPrioModal(raidId){
     setStatus("Raid wurde nicht gefunden.", "bad");
     return;
   }
+  const prioAccess=raidPrioAccessWindow(raid);
+  if(!prioAccess.allowed){
+    setStatus(prioAccess.message,"bad");
+    alert(prioAccess.message);
+    return;
+  }
 
   document.getElementById("prioModalTitle").textContent = raid.raidName || raid.raid || "Prioliste";
   document.getElementById("prioModalSubline").textContent = [
@@ -13596,6 +13626,19 @@ async function openPrioModal(raidId){
   }catch(error){
     document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Prioliste konnte nicht geladen werden.")}</div>`;
   }
+}
+
+function raidPrioAccessWindow(raid){
+  const date=String(raid?.raidDate||raid?.date||raid?.datum||"").trim();
+  const time=String(raid?.raidTime||raid?.time||raid?.uhrzeit||"20:00").trim().slice(0,5);
+  let iso=date;
+  const de=date.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if(de) iso=`${de[3]}-${String(de[2]).padStart(2,"0")}-${String(de[1]).padStart(2,"0")}`;
+  const start=/^\d{4}-\d{2}-\d{2}$/.test(iso)?new Date(`${iso}T${/^\d{2}:\d{2}$/.test(time)?time:"20:00"}:00`):null;
+  if(!start||Number.isNaN(start.getTime()))return {allowed:false,message:"Raidbeginn fehlt oder ist ungültig. Die Prioliste kann nicht geöffnet werden."};
+  const opensAt=new Date(start.getTime()-30*60*1000);
+  if(Date.now()<opensAt.getTime())return {allowed:false,message:`Die Prioliste kann erst 30 Minuten vor Raidbeginn geöffnet werden: ${opensAt.toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"})} Uhr.`};
+  return {allowed:true,opensAt};
 }
 
 function closePrioModal(){
