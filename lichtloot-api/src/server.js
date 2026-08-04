@@ -9006,6 +9006,9 @@ async function deletePrio({ guildId, query: params }) {
   let resolvedDeleteRaid = null;
   if (raidId) {
     resolvedDeleteRaid = await findRaid(guildId, { raidId });
+    if (!resolvedDeleteRaid && clean(params.prioPin || params.raidPin)) {
+      resolvedDeleteRaid = await findRaid(guildId, { prioPin: clean(params.prioPin || params.raidPin) });
+    }
     if (!resolvedDeleteRaid) {
       const error = new Error("Der zugehörige Raid wurde nicht gefunden. Bitte die Raidseite neu laden und erneut versuchen.");
       error.statusCode = 404;
