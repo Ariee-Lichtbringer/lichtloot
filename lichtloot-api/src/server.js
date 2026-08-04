@@ -4129,8 +4129,23 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   } finally {
     client.release();
   }
+  const storedResult = await query(
+    `select count(*)::int as count
+     from worldbuff_events
+     where guild_id = $1
+       and source = 'wb_poster'
+       and event_date >= current_date`,
+    [guildId]
+  );
+  const stored = Number(storedResult.rows[0]?.count || 0);
   await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_import" } }).catch(() => {});
-  return { success: true, synced, skippedOccupied };
+  return {
+    success: true,
+    synced,
+    skippedOccupied,
+    stored,
+    syncVersion: "wb-poster-exact-v3"
+  };
 }
 
 async function resolveGuildBackupChannelId({ guildId, envFallbackChannelId = "", kind = "backup" }) {
