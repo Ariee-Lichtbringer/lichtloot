@@ -4910,18 +4910,6 @@ body.worldbuff-only .master-only{display:none!important}
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
   </section>
 
-  <details class="panel">
-    <summary>🚨 Notfall-Prio CSV importieren</summary>
-    <div style="display:grid;gap:12px;padding-top:14px">
-      <p class="muted">CSV von lichtloot.de/notfall auswählen, Zielraid festlegen und Prios einschließlich P0+ übernehmen.</p>
-      <button class="btn danger" type="button" onclick="window.open('notfall/meister.html','_blank')">Notfall-Plündermeister öffnen</button>
-      <select id="emergencyImportRaid"><option value="">Erst Gildenleitung freischalten</option></select>
-      <input id="emergencyImportFile" type="file" accept=".csv,text/csv">
-      <button class="btn" type="button" onclick="importEmergencyPrioCsv()">CSV prüfen und in Raid übertragen</button>
-      <div id="emergencyImportStatus" class="status">Noch keine CSV ausgewählt.</div>
-    </div>
-  </details>
-
   <div class="dashboard-grid">
     <div class="dashboard-column">
       <section class="dashboard-card">
