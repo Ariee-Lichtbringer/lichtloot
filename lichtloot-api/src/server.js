@@ -4039,15 +4039,40 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   try {
     await client.query("begin");
     for (const entry of sourceRows) {
-      const event = await upsertWorldbuffEvent(client, guildId, {
-        datum: entry.datum,
-        uhrzeit: entry.uhrzeit,
-        buff: entry.buff,
-        gilde: entry.gilde,
-        status: entry.status || "offen",
-        note: entry.notiz || entry.note || "",
-        source: entry.source || "sheet-import"
-      });
+      const eventDate = parseDateValue(entry.datum || entry.date);
+      const eventTime = clean(entry.uhrzeit || entry.time);
+      const buff = normalizeWorldbuffName(entry.buff);
+      const guildName = normalizeWorldbuffGuildName(entry.gilde || entry.guild);
+      if (!eventDate || !eventTime || !buff || !guildName) continue;
+
+      // Der WBPoster ist eine Liste einzelner, exakter Termine. Beim Import
+      // darf deshalb weder nach Tag noch nach Buff-Gruppe zusammengefasst
+      // werden. Datum, Uhrzeit, Buff und Gilde bilden gemeinsam den Termin.
+      const savedEvent = await client.query(
+        `insert into worldbuff_events
+           (guild_id, buff, event_date, event_time, guild_name, status, note, source)
+         values ($1, $2, $3, $4, $5, $6, $7, $8)
+         on conflict (guild_id, buff, event_date, event_time, guild_name) do update
+           set status = case
+                 when worldbuff_events.status = 'bestätigt' then worldbuff_events.status
+                 else excluded.status
+               end,
+               note = coalesce(nullif(excluded.note, ''), worldbuff_events.note),
+               source = excluded.source,
+               updated_at = now()
+         returning *`,
+        [
+          guildId,
+          buff,
+          eventDate,
+          eventTime,
+          guildName,
+          normalizeWorldbuffStatus(entry.status || "offen"),
+          clean(entry.notiz || entry.note),
+          clean(entry.source || "wb_poster")
+        ]
+      );
+      const event = savedEvent.rows[0];
       const caster = clean(entry.charakter || entry.caster || entry.werfer);
       if (caster) {
         const existingEntry = await client.query(
