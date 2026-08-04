@@ -5062,13 +5062,20 @@ async function getBotQueue({ guildId, query: params }) {
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  const requestedTypes = clean(params.types || params.typeFilter)
+    .split(",")
+    .map(clean)
+    .filter(Boolean);
+  const limit = Math.max(1, Math.min(500, Number(params.limit || 50) || 50));
   const result = await query(
     `select q.id, q.type, q.payload, q.created_at, g.slug as guild_slug, g.name as guild_name
      from bot_update_queue q
      join guilds g on g.id = q.guild_id
      where q.status = 'open'
+       and ($1::text[] is null or q.type = any($1::text[]))
      order by q.created_at asc
-     limit 50`
+     limit $2`,
+    [requestedTypes.length ? requestedTypes : null, limit]
   );
   return {
     success: true,
