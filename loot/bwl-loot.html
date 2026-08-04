@@ -7321,6 +7321,7 @@ async function deleteOwnPrio(payload){
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
     '&server='+encodeURIComponent(payload.server || '')+
+    '&prioId='+encodeURIComponent(payload.prioId || '')+
     '&raidId='+encodeURIComponent(deleteRaidId)+
     '&raid='+encodeURIComponent(payload.raid || '')+
     '&raidDate='+encodeURIComponent(currentRaidDate || '')+
@@ -10060,6 +10061,7 @@ function prioReportPayload(prio){
 function publishedPrioDeletePayload(prio,index){
   return {
     rowId:"published-prio-row-"+index,
+    prioId:prio.id || prio.prioId || "",
     raidId:currentRaidId || prio.raidId || prio.RaidID || "",
     raid:RAID_NAME,
     raidName:RAID_NAME,
