@@ -3158,7 +3158,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   const screenshotData = clean(params.screenshotData);
   if (!armoryUrl && !screenshotData) { const error = new Error("Bitte Armory-Link oder Screenshot angeben."); error.statusCode = 400; throw error; }
   if (screenshotData && !/^data:image\/(png|jpe?g|webp);base64,/i.test(screenshotData)) { const error = new Error("Screenshot-Format ist ungültig."); error.statusCode = 400; throw error; }
-  const requirements = poRequestRequirements(requestType, raid, character.class_name, params.specialization);
+  const requirements = poRequestRequirements(requestType, raid, clean(params.className) || character.class_name, params.specialization);
   const result = await query(
     `insert into po_release_requests (guild_id, character_id, request_type, raid_type, specialization, armory_url, screenshot_data, requirements)
      values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) returning *`,
