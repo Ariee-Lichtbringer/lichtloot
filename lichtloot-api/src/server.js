@@ -4038,6 +4038,13 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
   let skippedOccupied = 0;
   try {
     await client.query("begin");
+    // Pro Gilde darf immer nur ein Poster-Snapshot geschrieben werden.
+    // Der Lock gilt bis commit/rollback und wirkt auch über mehrere
+    // Bot-Instanzen oder Railway-Replikate hinweg.
+    await client.query(
+      `select pg_advisory_xact_lock(hashtext($1))`,
+      [`worldbuff-import:${guildId}`]
+    );
     for (const entry of sourceRows) {
       const eventDate = parseDateValue(entry.datum || entry.date);
       const eventTime = clean(entry.uhrzeit || entry.time);
