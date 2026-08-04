@@ -7256,6 +7256,13 @@ async function loadMyPrios(){
       return;
     }
 
+    if(CURRENT_GUILD_SLUG === "nachtloot"){
+      const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild:CURRENT_GUILD_SLUG,character:charName,server:selectedChar.server||"",pin,t:Date.now()});
+      const requestResponse=await fetch(LICHTLOOT_API_URL+"?"+requestQuery.toString(),{cache:"no-store"});
+      const requestData=await requestResponse.json().catch(()=>({}));
+      data.poReleaseRequests=Array.isArray(requestData.entries) ? requestData.entries : [];
+    }
+
     await Promise.all(
       Object.keys(LOOT_JSON_URLS).map(raid => loadLootDataForRaid(raid).catch(error => {
         console.warn('Lootdaten konnten nicht geladen werden:', raid, error);
@@ -7303,6 +7310,7 @@ function renderMyPrios(data){
   const pastEntries=entries.filter(entry=>entry && entry.current === false);
   const ownP0=data.ownP0PlusPoints || [];
   const poReleases=data.poReleases || {};
+  const poReleaseRequests=data.poReleaseRequests || [];
   const hasPoRelease=Object.values(poReleases).some(Boolean);
   window.myOwnP0PlusPoints=ownP0.slice();
 
@@ -7313,6 +7321,7 @@ function renderMyPrios(data){
 
   let html='';
 
+  if(CURRENT_GUILD_SLUG === "nachtloot") html+=renderPoReleaseRequestCard(data,poReleaseRequests);
   html+=renderMyPoReleasesCard(poReleases);
 
   if(!pastEntries.length && !ownP0.length && !hasPoRelease){
@@ -7377,6 +7386,7 @@ function renderMyPrios(data){
 
 function renderMyPoReleasesCard(releases){
   const labels=[
+    ["p1p3","P1–P3 Freigabe"],
     ["mc","P0+ Freigabe MC"],
     ["bwl","P0+ Freigabe BWL"],
     ["aq40","P0+ Freigabe AQ40"],
@@ -7396,6 +7406,17 @@ function renderMyPoReleasesCard(releases){
     <div class="own-p0-release-items">${chips}</div>
   </div>`;
 }
+
+function renderPoReleaseRequestCard(data,requests){
+  window.currentPoReleaseRequestData=data || {};
+  const pending=(requests||[]).filter(entry=>entry.status==="pending");
+  const last=(requests||[])[0];
+  const statusText=pending.length ? `${pending.length} Antrag/Anträge warten auf Prüfung.` : (last ? `Letzter Antrag: ${last.status==="approved"?"freigegeben":last.status==="rejected"?"abgelehnt":"offen"}.` : "Noch kein Antrag gestellt.");
+  return `<div class="lichtloot-fold own-p0-popout-card" style="border-color:#21c77a"><div style="width:100%"><div class="own-p0-release-title">PO Freigabe beantragen</div><div class="own-p0-release-text">Armory-Link oder Screenshot einreichen. Die Gildenleitung prüft die Nachtwächter-Voraussetzungen.</div><div style="display:grid;gap:8px;margin-top:10px"><select id="poRequestType" onchange="updatePoRequestRaidVisibility()"><option value="recruit">Aufhebung Rekrutenstatus</option><option value="p1p3">P1–P3 Freigabe</option><option value="p0">P0 Freigabe</option></select><select id="poRequestRaid" class="hidden"><option value="mc">Molten Core</option><option value="bwl">Blackwing Lair</option><option value="aq40">Ahn'Qiraj 40</option><option value="naxx">Naxxramas</option><option value="zg-mittwoch">ZG Mittwoch</option><option value="zg-prime">ZG Primetime</option><option value="zg-late">ZG Latenight</option></select><input id="poRequestSpec" type="text" placeholder="Rolle / Skillung (z. B. Fury, Heiler, Tank)"><input id="poRequestArmory" type="url" placeholder="Armory-Link (optional, wenn Screenshot gewählt)"><label class="tool-btn" style="display:block;text-align:center">Screenshot auswählen<input id="poRequestScreenshot" type="file" accept="image/png,image/jpeg,image/webp" style="display:none"></label><button class="tool-btn primary" type="button" onclick="submitMyPoReleaseRequest()">Antrag absenden</button><div id="poRequestStatus" class="status">${safeHtml(statusText)}</div></div></div></div>`;
+}
+function updatePoRequestRaidVisibility(){document.getElementById("poRequestRaid")?.classList.toggle("hidden",document.getElementById("poRequestType")?.value!=="p0");}
+async function compressPoRequestImage(file){if(!file)return "";const bitmap=await createImageBitmap(file);const scale=Math.min(1,1400/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement("canvas");canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);return canvas.toDataURL("image/jpeg",.82);}
+async function submitMyPoReleaseRequest(){const data=window.currentPoReleaseRequestData||{};const pin=document.getElementById("myPriosPin")?.value.trim()||"";const type=document.getElementById("poRequestType")?.value||"";const armoryUrl=document.getElementById("poRequestArmory")?.value.trim()||"";const file=document.getElementById("poRequestScreenshot")?.files?.[0];const status=document.getElementById("poRequestStatus");try{if(status)status.innerHTML='<span class="warn">Antrag wird übermittelt …</span>';const screenshotData=await compressPoRequestImage(file);const body={action:"submitPoReleaseRequest",guild:CURRENT_GUILD_SLUG,pin,character:data.player||"",server:data.server||"",requestType:type,raid:document.getElementById("poRequestRaid")?.value||"",specialization:document.getElementById("poRequestSpec")?.value.trim()||"",armoryUrl,screenshotData};const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const result=await response.json();if(!result.success)throw new Error(result.error||"Antrag konnte nicht gespeichert werden.");if(status)status.innerHTML='<span class="ok">✓ Antrag wurde an die Gildenleitung geschickt.</span>';window.setTimeout(()=>loadMyPrios(),700);}catch(error){if(status)status.innerHTML='<span class="bad">'+safeHtml(error.message||"Antrag konnte nicht gespeichert werden.")+'</span>';}}
 
 function raidCalendarStorageKey(){
   const pinField=document.getElementById("dashboardPlayerPin") || document.getElementById("myPriosPin");
