@@ -4799,8 +4799,12 @@ body.guild-nachtloot details.nachtloot-only{display:block!important}
 body.worldbuff-only .side-nav>*{display:none!important}
 body.worldbuff-only #sideGroupBuffs{display:grid!important}
 body.worldbuff-only #sideGroupBuffs .side-group-items .side-link:not(:first-child){display:none!important}
-body.worldbuff-only .dashboard-main>*:not(.topbar):not(#worldbuffPanel){display:none!important}
-body.worldbuff-only #worldbuffPanel{display:block!important}
+body.worldbuff-only .dashboard-main>*:not(.topbar):not(.dashboard-grid){display:none!important}
+body.worldbuff-only .dashboard-grid{display:block!important}
+body.worldbuff-only .dashboard-grid>*{display:none!important}
+body.worldbuff-only .dashboard-grid>.dashboard-column{display:block!important}
+body.worldbuff-only .dashboard-column>*:not(#worldbuffPanel){display:none!important}
+body.worldbuff-only #worldbuffPanel{display:block!important;width:100%;max-width:none}
 body.worldbuff-only .master-only{display:none!important}
 </style>
 </head>
