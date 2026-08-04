@@ -1919,6 +1919,7 @@ async function getCharactersByPin(guildId, pin) {
        c.created_at,
        p.role as player_role,
        p.permissions,
+       p.notification_discord_names,
        p.approval_status,
        p.is_blocked,
        p.blocked_at,
@@ -2555,7 +2556,8 @@ async function ensurePlayerRoleSchema() {
        add column if not exists blocked_at timestamptz,
        add column if not exists blocked_reason text not null default '',
        add column if not exists discord_role_ids jsonb not null default '[]'::jsonb,
-       add column if not exists permissions jsonb not null default '[]'::jsonb`
+       add column if not exists permissions jsonb not null default '[]'::jsonb,
+       add column if not exists notification_discord_names jsonb not null default '[]'::jsonb`
   );
   await query(`alter table players alter column approval_status set default 'pending'`);
   await query(`update players set permissions=case
@@ -9135,6 +9137,7 @@ async function getGuildLeadershipOverview(guildId, params) {
       canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
       discordRoleIds: Array.isArray(row.discord_role_ids) ? row.discord_role_ids : [],
       permissions: Array.isArray(row.permissions) ? row.permissions : [],
+      notificationDiscordNames: Array.isArray(row.notification_discord_names) ? row.notification_discord_names : [],
       approvalStatus: normalizePlayerApprovalStatus(row.approval_status),
       playerApprovalStatus: normalizePlayerApprovalStatus(row.approval_status),
       approvalLabel: playerApprovalLabel(row.approval_status),
@@ -17559,17 +17562,38 @@ async function setPlayerLoginAccess({ guildId, query: params }) {
     if (Array.isArray(value)) return value;
     try { const parsed=JSON.parse(clean(value) || "[]"); return Array.isArray(parsed) ? parsed : []; } catch(error) { return clean(value).split(",").filter(Boolean); }
   };
-  const allowedPermissions = new Set(["create_raids","manage_worldbuffs","guild_admin"]);
+  const allowedPermissions = new Set([
+    "create_raids","manage_worldbuffs","guild_admin",
+    "notify_player_logins","notify_worldbuff_changes","notify_po_releases"
+  ]);
   const permissions = [...new Set(parseList(params.permissions).map(clean).filter(value=>allowedPermissions.has(value)))];
   const discordRoleIds = [...new Set(parseList(params.discordRoleIds || params.discordRoles).map(clean).filter(Boolean))];
-  const values=[guildId,JSON.stringify(discordRoleIds),JSON.stringify(permissions)];
+  const notificationDiscordNames=[...new Set(parseList(params.notificationDiscordNames || params.notificationNames).map(clean).filter(Boolean))];
+  const values=[guildId,JSON.stringify(discordRoleIds),JSON.stringify(permissions),JSON.stringify(notificationDiscordNames)];
   const clauses=[];
   if(playerId){ values.push(playerId); clauses.push(`id::text=$${values.length}`); }
   if(playerPin){ values.push(playerPin); clauses.push(`player_pin=$${values.length}`); }
   if(!clauses.length){ const error=new Error("SpielerLogin fehlt."); error.statusCode=400; throw error; }
-  const result=await query(`update players set discord_role_ids=$2::jsonb,permissions=$3::jsonb,updated_at=now() where guild_id=$1 and (${clauses.join(" or ")}) returning id,player_pin,discord_role_ids,permissions`,values);
+  const result=await query(`update players set discord_role_ids=$2::jsonb,permissions=$3::jsonb,notification_discord_names=$4::jsonb,updated_at=now() where guild_id=$1 and (${clauses.join(" or ")}) returning id,player_pin,discord_role_ids,permissions,notification_discord_names`,values);
   if(!result.rows[0]){ const error=new Error("SpielerLogin wurde nicht gefunden."); error.statusCode=404; throw error; }
-  return {success:true,playerId:result.rows[0].id,playerPin:result.rows[0].player_pin,discordRoleIds:result.rows[0].discord_role_ids||[],permissions:result.rows[0].permissions||[]};
+  return {success:true,playerId:result.rows[0].id,playerPin:result.rows[0].player_pin,discordRoleIds:result.rows[0].discord_role_ids||[],permissions:result.rows[0].permissions||[],notificationDiscordNames:result.rows[0].notification_discord_names||[]};
+}
+
+async function notificationDiscordRoleIds(guildId, permission){
+  await ensurePlayerRoleSchema();
+  const result=await query(
+    `select distinct jsonb_array_elements_text(coalesce(discord_role_ids,'[]'::jsonb)) as role_id
+     from players
+     where guild_id=$1 and coalesce(permissions,'[]'::jsonb) ? $2`,
+    [guildId,clean(permission)]
+  );
+  return result.rows.map(row=>clean(row.role_id)).filter(Boolean);
+}
+
+async function notificationDiscordNames(guildId,permission){
+  await ensurePlayerRoleSchema();
+  const result=await query(`select distinct jsonb_array_elements_text(coalesce(notification_discord_names,'[]'::jsonb)) as discord_name from players where guild_id=$1 and coalesce(permissions,'[]'::jsonb) ? $2`,[guildId,clean(permission)]);
+  return result.rows.map(row=>clean(row.discord_name)).filter(Boolean);
 }
 
 async function setPlayerLoginBlocked({ guildId, query: params }) {
@@ -19861,6 +19885,8 @@ app.get("/api/apps-script", async (req, res, next) => {
         className: req.query.className
       });
       if (normalizePlayerApprovalStatus(result.player.approval_status) !== "approved") {
+        const notificationRoleIds=await notificationDiscordRoleIds(guild.id,"notify_player_logins");
+        const notificationNames=await notificationDiscordNames(guild.id,"notify_player_logins");
         await enqueueBotUpdate({
           guildId: guild.id,
           type: "player_login_approval_notice",
@@ -19871,6 +19897,8 @@ app.get("/api/apps-script", async (req, res, next) => {
             character: result.character?.name || clean(req.query.char),
             server: result.character?.server || clean(req.query.server),
             className: result.character?.className || result.character?.class_name || clean(req.query.className),
+            notificationRoleIds,
+            notificationNames,
             createdAt: result.player.created_at || new Date().toISOString()
           }
         }).catch(error => {
