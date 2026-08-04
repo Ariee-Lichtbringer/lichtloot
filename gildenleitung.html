@@ -14408,7 +14408,7 @@ function renderP0ReleasePanelContent(){
               <th>Charakter</th>
               <th>Klasse</th>
               <th>LichtLootAccount</th>
-              ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Aufhebung Rekrutenstatus</th>" : ""}
+              ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Rekrutenstatus je Raid</th>" : ""}
               <th>P0+ Freigabe MC</th>
               <th>P0+ Freigabe BWL</th>
               <th>P0+ Freigabe AQ40</th>
@@ -14452,7 +14452,7 @@ function renderP0ReleasePanelContent(){
   renderP0ReviewRows();
 }
 
-function poRequestTypeLabel(entry){if(entry?.requestType==="recruit")return "Aufhebung Rekrutenstatus";if(entry?.requestType==="p1p3")return "P1–P3 Freigabe";return `P0 Freigabe ${(entry?.raid||"").toUpperCase()}`;}
+function poRequestTypeLabel(entry){if(entry?.requestType==="recruit"||entry?.requestType==="p1p3")return `Aufhebung Rekrutenstatus ${(entry?.raid||"").toUpperCase()}`;return `P0 Freigabe ${(entry?.raid||"").toUpperCase()}`;}
 function renderPoReleaseRequestsBlock(){const pending=poReleaseRequests.filter(entry=>entry.status==="pending");return `<div class="p0-review-block" style="border-color:#21c77a"><div class="section-head"><div><h3>PO-Freigabeanträge <span class="badge warn">${pending.length} offen</span></h3><p>Armory, Screenshot und Voraussetzungen prüfen. Eine Freigabe aktualisiert die Tabelle automatisch.</p></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Eingang</th><th>Aktion</th></tr></thead><tbody>${poReleaseRequests.length?poReleaseRequests.map((entry,index)=>`<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(entry.status==="approved"?"freigegeben":entry.status==="rejected"?"abgelehnt":"offen")}</span></td><td><strong>${escapeHtml(entry.name||"-")}</strong><br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td>${escapeHtml(poRequestTypeLabel(entry))}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn primary" type="button" onclick="openPoReleaseRequestReview(${index})">Prüfen</button><button class="small-btn danger" type="button" onclick="deletePoReleaseRequest(${index})">Löschen</button></div></td></tr>`).join(""):'<tr><td colspan="5" class="muted">Keine Anträge vorhanden.</td></tr>'}</tbody></table></div></div>`;}
 
 async function deletePoReleaseRequest(index){
@@ -14488,10 +14488,13 @@ function poReleaseCheckHtml(entry, raid, index){
     : `<button class="po-release-state empty" type="button" title="${escapeAttr(poReleaseRaidLabel(raid))} erteilen" onclick="setPoReleaseDirect(${Number(index)}, '${escapeAttr(raid)}', true)">offen</button>`;
 }
 
-function recruitStatusLiftHtml(entry){
-  return entry?.recruitStatusLifted
-    ? '<span class="po-release-state active">✓ aufgehoben</span>'
-    : '<span class="po-release-state empty">Rekrut</span>';
+function recruitStatusLiftHtml(entry,index){
+  const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mi"],["zg-prime","ZG Prime"],["zg-late","ZG Late"]];
+  const releases=entry?.recruitReleases||{};
+  return `<div style="display:flex;gap:5px;flex-wrap:wrap">${raids.map(([raid,label])=>{
+    const lifted=Boolean(releases[raid]);
+    return `<button class="po-release-state ${lifted?"active":"empty"}" type="button" onclick="toggleRecruitStatusLift(${Number(index)},'${raid}')" title="Rekrutenstatus für ${label} ${lifted?"zurücksetzen":"aufheben"}">${lifted?"✓ ":""}${label}</button>`;
+  }).join("")}</div>`;
 }
 
 function renderPoReleaseRows(){
@@ -14533,10 +14536,7 @@ function renderPoReleaseRows(){
         <td><span class="pin">xxx</span></td>
         ${CURRENT_GUILD_SLUG === "nachtloot" ? `
           <td>
-            ${recruitStatusLiftHtml(entry)}
-            <button class="small-btn ${entry.recruitStatusLifted ? "danger" : "good"}" type="button" onclick="toggleRecruitStatusLift(${index})">
-              ${entry.recruitStatusLifted ? "Zurücksetzen" : "Rekrutenstatus aufheben"}
-            </button>
+            ${recruitStatusLiftHtml(entry,index)}
           </td>
         ` : ""}
         <td>${poReleaseCheckHtml(entry,"mc",index)}</td>
@@ -14647,7 +14647,7 @@ async function setPoReleaseDirect(index, raidKey, enabled = true){
   }
 }
 
-async function toggleRecruitStatusLift(index){
+async function toggleRecruitStatusLift(index,raid){
   if(CURRENT_GUILD_SLUG !== "nachtloot") return;
   const entry = poReleaseCharacters[index];
   if(!entry) return;
@@ -14656,20 +14656,21 @@ async function toggleRecruitStatusLift(index){
     setStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
-  const lifted = !entry.recruitStatusLifted;
+  const raidKey=String(raid||"").toLowerCase();
+  entry.recruitReleases=Object.assign({mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false},entry.recruitReleases||{});
+  const lifted = !entry.recruitReleases[raidKey];
   try{
     setStatus(lifted ? "Rekrutenstatus wird aufgehoben ..." : "Aufhebung wird zurückgesetzt ...", "");
     const result = await railwayWrite({
       action:"guildSetCharacterRecruitStatusLift",
       masterCode,
       characterId:entry.characterId || entry.id,
+      raid:raidKey,
       lifted:lifted ? "true" : "false",
       approvedBy:"Gildenleitung"
     });
     if(!result.success) throw new Error(result.error || "Rekrutenstatus konnte nicht geändert werden.");
-    entry.recruitStatusLifted = Boolean(result.lifted);
-    entry.recruitStatusLiftedAt = result.liftedAt || "";
-    entry.recruitStatusLiftedBy = result.liftedBy || "";
+    entry.recruitReleases[raidKey] = Boolean(result.lifted);
     renderPoReleaseRows();
     setStatus(lifted ? "Rekrutenstatus aufgehoben." : "Aufhebung des Rekrutenstatus zurückgesetzt.", "good");
   }catch(error){
