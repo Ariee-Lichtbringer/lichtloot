@@ -2644,6 +2644,29 @@ body.start-dashboard-body .raid-create-box input[readonly]{
     border:1px solid rgba(34,211,238,.65);
     background:linear-gradient(135deg,#0891b2,#164e63);
   }
+  .mobile-loot-login-panel{
+    display:grid;
+    gap:8px;
+    padding:12px;
+    border:1px solid rgba(148,163,184,.24);
+    border-radius:10px;
+    background:rgba(2,6,23,.68);
+  }
+  .mobile-loot-login-panel.hidden{display:none!important}
+  .mobile-loot-login-panel label{color:#f8fafc;font-weight:900}
+  .mobile-loot-login-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  .mobile-loot-login-row input{
+    min-width:0;min-height:46px;padding:10px 12px;border:1px solid rgba(148,163,184,.35);
+    border-radius:8px;background:#020617;color:#fff;font-size:16px;font-weight:850
+  }
+  .mobile-loot-login-row button{
+    min-height:46px;padding:10px 14px;border:0;border-radius:8px;
+    background:linear-gradient(90deg,#facc15,#f59e0b);color:#111827;font-weight:950
+  }
+  .mobile-loot-login-status{min-height:18px;color:#cbd5e1;font-size:12px;font-weight:800}
+  .mobile-loot-login-status.ok{color:#86efac}
+  .mobile-loot-login-status.bad{color:#fca5a5}
+  body.start-dashboard-body #emergencyPrioButton{display:none!important}
   body.start-dashboard-body .dashboard-layout,
   body.start-dashboard-body .dashboard-left{
     display:block!important;
@@ -2664,12 +2687,13 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   .mobile-loot-login-actions{
     grid-template-columns:1fr;
   }
+  .mobile-loot-login-row{grid-template-columns:1fr}
 }
 </style>
 </head>
 
 <body class="start-dashboard-body">
-<button type="button" onclick="openEmergencyPrio()" style="position:fixed;right:18px;bottom:18px;z-index:9999;background:#b91c1c;color:#fff;border:2px solid #f87171;border-radius:14px;padding:14px 20px;font-weight:900;box-shadow:0 10px 30px #0009;cursor:pointer">🚨 Notfall-Prio</button>
+<button id="emergencyPrioButton" type="button" onclick="openEmergencyPrio()" style="position:fixed;right:18px;bottom:18px;z-index:9999;background:#b91c1c;color:#fff;border:2px solid #f87171;border-radius:14px;padding:14px 20px;font-weight:900;box-shadow:0 10px 30px #0009;cursor:pointer">🚨 Notfall-Prio</button>
 
 <div id="p0plusOverlay" class="p0plus-overlay hidden">
   <div class="p0plus-box">
@@ -2943,9 +2967,17 @@ body.start-dashboard-body .raid-create-box input[readonly]{
         <p>Logge dich bei deiner Gilde ein und öffne danach einen aktuellen Raid.</p>
       </div>
       <div class="mobile-loot-login-actions">
-        <button class="mobile-loot-login lichtloot" type="button" onclick="window.location.href='github-index.html?guild=lichtloot'">Login LichtLoot</button>
-        <button class="mobile-loot-login nachtloot" type="button" onclick="window.location.href='github-index.html?guild=nachtloot'">Login NachtLoot</button>
+        <button class="mobile-loot-login lichtloot" type="button" aria-expanded="false" onclick="toggleMobileLootLogin('lichtloot',this)">Login LichtLoot</button>
+        <button class="mobile-loot-login nachtloot" type="button" aria-expanded="false" onclick="toggleMobileLootLogin('nachtloot',this)">Login NachtLoot</button>
       </div>
+      <form id="mobileLootLoginPanel" class="mobile-loot-login-panel hidden" onsubmit="submitMobileLootLogin(event)">
+        <label id="mobileLootLoginLabel" for="mobileLootPlayerPin">SpielerLogin eingeben</label>
+        <div class="mobile-loot-login-row">
+          <input id="mobileLootPlayerPin" type="password" autocomplete="current-password" placeholder="SpielerLogin">
+          <button type="submit">Einloggen</button>
+        </div>
+        <div id="mobileLootLoginStatus" class="mobile-loot-login-status" aria-live="polite"></div>
+      </form>
     </section>
     <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
@@ -8776,6 +8808,65 @@ function renderP0PlusOverview(entries){
   }
   content.innerHTML = html;
   p0V5BindOpenStateHandlers();
+}
+
+let mobileLootLoginGuild="";
+
+function toggleMobileLootLogin(guild,button){
+  const panel=document.getElementById("mobileLootLoginPanel");
+  const input=document.getElementById("mobileLootPlayerPin");
+  const label=document.getElementById("mobileLootLoginLabel");
+  const status=document.getElementById("mobileLootLoginStatus");
+  if(!panel) return;
+  const normalized=guild === "nachtloot" ? "nachtloot" : "lichtloot";
+  const close=!panel.classList.contains("hidden") && mobileLootLoginGuild===normalized;
+  mobileLootLoginGuild=close ? "" : normalized;
+  panel.classList.toggle("hidden",close);
+  document.querySelectorAll(".mobile-loot-login").forEach(item=>item.setAttribute("aria-expanded",String(!close && item===button)));
+  if(close) return;
+  if(label) label.textContent="SpielerLogin für "+(normalized==="nachtloot" ? "NachtLoot" : "LichtLoot");
+  if(status){ status.textContent=""; status.className="mobile-loot-login-status"; }
+  window.setTimeout(()=>input?.focus(),50);
+}
+
+async function submitMobileLootLogin(event){
+  event.preventDefault();
+  const input=document.getElementById("mobileLootPlayerPin");
+  const status=document.getElementById("mobileLootLoginStatus");
+  const pin=String(input?.value || "").trim().toUpperCase();
+  const guild=mobileLootLoginGuild || CURRENT_GUILD_SLUG;
+  if(!pin){
+    if(status){ status.textContent="Bitte SpielerLogin eingeben."; status.className="mobile-loot-login-status bad"; }
+    return;
+  }
+  if(status){ status.textContent="Login wird geprüft …"; status.className="mobile-loot-login-status"; }
+  try{
+    const checkUrl=LICHTLOOT_API_URL+"?action=getCharactersByPin&guild="+encodeURIComponent(guild)+"&pin="+encodeURIComponent(pin)+"&t="+Date.now();
+    const checkResponse=await fetch(checkUrl,{cache:"no-store"});
+    const checkData=await checkResponse.json();
+    if(!checkData.success) throw new Error(checkData.error || "SpielerLogin wurde nicht gefunden.");
+    try{
+      localStorage.setItem("lichtlootSharedPlayerPin",pin);
+      localStorage.setItem("lichtlootPlayerPin_"+guild,pin);
+      sessionStorage.setItem("lichtlootSharedPlayerPin",pin);
+      sessionStorage.setItem("lichtlootPlayerPin_"+guild,pin);
+    }catch(error){}
+    if(guild!==CURRENT_GUILD_SLUG){
+      window.location.href="start.html?guild="+encodeURIComponent(guild)+"&mobileLogin=1";
+      return;
+    }
+    const dashboardPin=document.getElementById("dashboardPlayerPin");
+    const priosPin=document.getElementById("myPriosPin");
+    if(dashboardPin) dashboardPin.value=pin;
+    if(priosPin) priosPin.value=pin;
+    await dashboardLoadLichtLoot();
+    const hiddenStatus=document.getElementById("myPriosStatus");
+    const failed=Boolean(hiddenStatus?.querySelector(".bad"));
+    if(failed) throw new Error(hiddenStatus.textContent.trim() || "SpielerLogin wurde nicht gefunden.");
+    if(status){ status.textContent="✓ Eingeloggt. Du kannst jetzt einen aktuellen Raid öffnen."; status.className="mobile-loot-login-status ok"; }
+  }catch(error){
+    if(status){ status.textContent=error?.message || "Login nicht möglich."; status.className="mobile-loot-login-status bad"; }
+  }
 }
 
 document.addEventListener("DOMContentLoaded",async ()=>{
