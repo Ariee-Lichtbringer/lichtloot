@@ -9009,6 +9009,36 @@ async function deletePrio({ guildId, query: params }) {
     if (!resolvedDeleteRaid && clean(params.prioPin || params.raidPin)) {
       resolvedDeleteRaid = await findRaid(guildId, { prioPin: clean(params.prioPin || params.raidPin) });
     }
+    if (!resolvedDeleteRaid && clean(params.raid) && clean(params.raidDate)) {
+      resolvedDeleteRaid = await findRaid(guildId, {
+        raid: clean(params.raid),
+        raidDate: clean(params.raidDate),
+        raidTime: clean(params.raidTime)
+      });
+    }
+    if (!resolvedDeleteRaid && clean(params.raid)) {
+      const legacyRaidDate = raidId.match(/(?:^|-)(\d{4}-\d{2}-\d{2})(?:-|$)/)?.[1] || "";
+      if (legacyRaidDate) {
+        resolvedDeleteRaid = await findRaid(guildId, {
+          raid: clean(params.raid),
+          raidDate: legacyRaidDate
+        });
+      }
+    }
+    if (!resolvedDeleteRaid && clean(params.createdAt)) {
+      const prioRaidResult = await query(
+        `select r.*
+         from prios pr
+         join raids r on r.id = pr.raid_id
+         where pr.character_id = $1
+           and r.guild_id = $2
+           and pr.created_at = $3::timestamptz
+         order by pr.created_at desc
+         limit 1`,
+        [character.id, guildId, clean(params.createdAt)]
+      );
+      resolvedDeleteRaid = prioRaidResult.rows[0] || null;
+    }
     if (!resolvedDeleteRaid) {
       const error = new Error("Der zugehörige Raid wurde nicht gefunden. Bitte die Raidseite neu laden und erneut versuchen.");
       error.statusCode = 404;
