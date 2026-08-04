@@ -2857,6 +2857,7 @@ async function postBossTokenNotice(player,server){
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&raid=" + encodeURIComponent(currentRaidKey) +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
     "&player=" + encodeURIComponent(player || "") +
     "&server=" + encodeURIComponent(server || "") +
     "&raidDate=" + encodeURIComponent(getRaidDateLabel()) +
