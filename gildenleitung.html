@@ -14409,7 +14409,6 @@ function renderP0ReleasePanelContent(){
               <th>Klasse</th>
               <th>LichtLootAccount</th>
               ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Aufhebung Rekrutenstatus</th>" : ""}
-              ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>P1–P3 Freigabe</th>" : ""}
               <th>P0+ Freigabe MC</th>
               <th>P0+ Freigabe BWL</th>
               <th>P0+ Freigabe AQ40</th>
@@ -14515,7 +14514,7 @@ function renderPoReleaseRows(){
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
-  const columnCount = CURRENT_GUILD_SLUG === "nachtloot" ? 13 : 11;
+  const columnCount = CURRENT_GUILD_SLUG === "nachtloot" ? 12 : 11;
   if(!document.getElementById("masterCode").value.trim()){
     tbody.innerHTML = `<tr><td colspan="${columnCount}" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>`;
     return;
@@ -14540,7 +14539,6 @@ function renderPoReleaseRows(){
             </button>
           </td>
         ` : ""}
-        ${CURRENT_GUILD_SLUG === "nachtloot" ? `<td>${poReleaseCheckHtml(entry,"p1p3",index)}</td>` : ""}
         <td>${poReleaseCheckHtml(entry,"mc",index)}</td>
         <td>${poReleaseCheckHtml(entry,"bwl",index)}</td>
         <td>${poReleaseCheckHtml(entry,"aq40",index)}</td>
