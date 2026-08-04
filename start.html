@@ -1610,7 +1610,8 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .own-p0-release-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:8px;margin-top:8px}
 .own-p0-release-chip{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:38px;padding:8px 10px;border:1px solid #475569;border-radius:10px;background:#111827;color:#e2e8f0;font-size:11px;font-weight:900;line-height:1.25}
 .own-p0-release-chip.is-active{border-color:#4ade80;background:#166534;color:#f0fdf4;box-shadow:0 0 0 1px rgba(74,222,128,.18)}
-.own-p0-release-chip.is-pending{border-color:#fde047;background:#facc15;color:#422006;box-shadow:0 0 0 1px rgba(250,204,21,.24)}
+.own-p0-release-chip.is-pending{border-color:#fde047;background:#facc15;color:#321800!important;box-shadow:0 0 0 1px rgba(250,204,21,.24)}
+.own-p0-release-chip.is-pending span,.own-p0-release-chip.is-pending strong{color:#321800!important;text-shadow:none!important}
 .own-p0-release-chip .ok,.own-p0-release-chip.is-active .ok{color:#dcfce7}
 .own-p0-release-chip .warn{color:#422006}
 .own-p0-release-chip .muted{color:#cbd5e1}
@@ -1624,7 +1625,14 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .po-request-form select,.po-request-form input{width:100%;min-height:42px;padding:9px 38px 9px 12px;border:1px solid rgba(45,212,191,.38);border-radius:10px;background-color:#071426;color:#f8fafc;font-size:13px;font-weight:850;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
 .po-request-form select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#2dd4bf 50%),linear-gradient(135deg,#2dd4bf 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer}
 .po-request-form select:focus,.po-request-form input:focus{border-color:#facc15;box-shadow:0 0 0 3px rgba(250,204,21,.12)}
-.po-request-file{display:flex!important;align-items:center;justify-content:center;min-height:42px!important;margin:0!important;border:1px dashed rgba(45,212,191,.55)!important;background:rgba(13,148,136,.1)!important;color:#ccfbf1!important}
+.po-request-file{display:flex!important;align-items:center;justify-content:center;min-height:42px!important;margin:0!important;border:2px solid #2dd4bf!important;background:#ccfbf1!important;background-image:none!important;color:#063b3b!important;text-shadow:none!important;font-weight:950!important}
+.po-request-file:hover{background:#99f6e4!important;color:#042f2e!important}
+.po-request-form button.primary{border:2px solid #facc15!important;background:#facc15!important;background-image:none!important;color:#321800!important;text-shadow:none!important;font-size:13px!important;font-weight:950!important}
+.po-request-form button.primary:hover{background:#fde047!important;color:#271200!important}
+.po-request-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:7px 9px;margin:-7px -9px 2px;border:0;border-radius:8px;background:transparent;color:#facc15;font:inherit;font-size:12px;font-weight:950;text-align:left;text-transform:uppercase;cursor:pointer}
+.po-request-toggle:hover{background:rgba(250,204,21,.08)}
+.po-request-toggle-arrow{font-size:16px;line-height:1;transition:transform .18s ease}.po-request-toggle[aria-expanded="false"] .po-request-toggle-arrow{transform:rotate(-90deg)}
+.po-request-collapsible.hidden{display:none!important}
 @media(max-width:700px){.po-request-row{grid-template-columns:1fr}}
 
 /* === FINAL: Rechte Mein-LichtLoot Box kompakter === */
@@ -7435,12 +7443,20 @@ function renderPoReleaseRequestCard(data,requests){
   return `<div class="lichtloot-fold own-p0-popout-card" style="border-color:#21c77a"><div style="width:100%"><div class="own-p0-release-title">PO Freigabe beantragen</div><div class="own-p0-release-text">Armory-Link oder Screenshot einreichen. Die Gildenleitung prüft die Nachtwächter-Voraussetzungen.</div><div class="po-request-form"><div class="po-request-row"><div class="po-request-field"><label for="poRequestType">Gewünschte Freigabe</label><select id="poRequestType" onchange="updatePoRequestRaidVisibility()"><option value="recruit">Rekrutenstatus aufheben</option><option value="p1p3">P1–P3 freigeben</option><option value="p0">P0 freigeben</option></select></div><div class="po-request-field"><label for="poRequestRaid">Raid</label><select id="poRequestRaid" disabled><option value="">Erst P0 auswählen</option><option value="mc">Molten Core</option><option value="bwl">Blackwing Lair</option><option value="aq40">Ahn'Qiraj 40</option><option value="naxx">Naxxramas</option><option value="zg-mittwoch">ZG Mittwoch</option><option value="zg-prime">ZG Primetime</option><option value="zg-late">ZG Latenight</option></select></div></div><div class="po-request-row"><div class="po-request-field"><label for="poRequestClass">Klasse</label><select id="poRequestClass" onchange="updatePoRequestSpecs()"></select></div><div class="po-request-field"><label for="poRequestSpec">Skillung</label><select id="poRequestSpec"></select></div></div><div class="po-request-field full"><label for="poRequestArmory">Armory-Link</label><input id="poRequestArmory" type="url" placeholder="https://classic-armory.org/… (oder Screenshot wählen)"></div><label class="tool-btn po-request-file">📎 Screenshot auswählen<input id="poRequestScreenshot" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="updatePoRequestFileLabel(this)"></label><button class="tool-btn primary" type="button" onclick="submitMyPoReleaseRequest()">Antrag absenden</button><div id="poRequestStatus" class="status">${safeHtml(statusText)}</div></div></div></div>`;
 }
 const PO_REQUEST_SPECS={Krieger:["Tank","Fury","Waffen"],Paladin:["Heilig","Schutz","Vergeltung"],Jäger:["Tierherrschaft","Treffsicherheit","Überleben"],Schurke:["Meucheln","Kampf","Täuschung"],Priester:["Disziplin","Heilig","Schatten"],Schamane:["Elementar","Verstärkung","Wiederherstellung"],Magier:["Arkan","Feuer","Frost"],Hexenmeister:["Gebrechen","Dämonologie","Zerstörung"],Druide:["Gleichgewicht","Wildheit (Tank)","Wildheit (Schaden)","Wiederherstellung"]};
-function updatePoRequestRaidVisibility(){const raid=document.getElementById("poRequestRaid");const active=document.getElementById("poRequestType")?.value==="p0";if(!raid)return;raid.disabled=!active;if(!active)raid.value="";else if(!raid.value)raid.value="mc";}
+function updatePoRequestRaidVisibility(){const raid=document.getElementById("poRequestRaid");if(!raid)return;raid.disabled=false;const placeholder=raid.querySelector('option[value=""]');if(placeholder)placeholder.remove();if(!raid.value)raid.value="mc";}
 function updatePoRequestSpecs(){const classSelect=document.getElementById("poRequestClass");const specSelect=document.getElementById("poRequestSpec");if(!classSelect||!specSelect)return;const specs=PO_REQUEST_SPECS[classSelect.value]||[];specSelect.innerHTML=specs.map(spec=>`<option value="${safeAttr(spec)}">${safeHtml(spec)}</option>`).join("");}
 function initPoRequestClassSelect(){
   const select=document.getElementById("poRequestClass");
   const form=document.querySelector(".po-request-form");
   if(!select||!form)return;
+  const card=form.closest(".own-p0-popout-card");
+  const title=card?.querySelector(".own-p0-release-title");
+  const description=card?.querySelector(".own-p0-release-text");
+  if(title && !card.querySelector(".po-request-toggle")){
+    title.outerHTML='<button type="button" class="po-request-toggle" aria-expanded="true" onclick="togglePoRequestForm(this)"><span>PO Freigabe beantragen</span><span class="po-request-toggle-arrow">⌄</span></button>';
+    if(description)description.classList.add("po-request-collapsible");
+    form.classList.add("po-request-collapsible");
+  }
   const source=document.getElementById("myLichtlootCharSelect");
   const characterField=document.createElement("div");
   characterField.className="po-request-field full";
@@ -7456,6 +7472,7 @@ function initPoRequestClassSelect(){
   updatePoRequestSpecs();
   updatePoRequestRaidVisibility();
 }
+function togglePoRequestForm(button){const card=button?.closest(".own-p0-popout-card");if(!card)return;const open=button.getAttribute("aria-expanded")!=="false";button.setAttribute("aria-expanded",open?"false":"true");card.querySelectorAll(".po-request-collapsible").forEach(element=>element.classList.toggle("hidden",open));}
 function changePoRequestCharacter(){const requestSelect=document.getElementById("poRequestCharacter");const mainSelect=document.getElementById("myLichtlootCharSelect");if(!requestSelect||!mainSelect||!requestSelect.value)return;mainSelect.value=requestSelect.value;selectLichtLootCharacter();loadMyPrios();}
 function updatePoRequestFileLabel(input){const label=input?.closest("label");if(label)label.firstChild.textContent=input.files?.[0]?`📎 ${input.files[0].name} `:"📎 Screenshot auswählen ";}
 async function compressPoRequestImage(file){if(!file)return "";const bitmap=await createImageBitmap(file);const scale=Math.min(1,1400/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement("canvas");canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext("2d").drawImage(bitmap,0,0,canvas.width,canvas.height);return canvas.toDataURL("image/jpeg",.82);}
