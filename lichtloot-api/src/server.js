@@ -15,6 +15,7 @@ const p0PlusTransferExportChannelId = "1529393614247952434";
 const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
+const worldbuffAccessCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -267,6 +268,7 @@ app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
 app.get("/api/dashboard", async (req, res, next) => {
   try {
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+    await loadWorldbuffAccessCode(guild.id);
     const result = await query(
       `select r.*,
               (
@@ -2192,14 +2194,14 @@ async function saveGuildMasterCodeValue(client, guildId, code) {
 
 function requireMasterCode(value) {
   const code = clean(value);
-  if (code !== masterCode && !Array.from(masterCodeOverrides.values()).includes(code)) {
+  if (code !== masterCode && !Array.from(masterCodeOverrides.values()).includes(code) && !Array.from(worldbuffAccessCodeOverrides.values()).includes(code)) {
     const error = new Error("Falscher Master-Code.");
     error.statusCode = 403;
     throw error;
   }
 }
 
-function requireMasterCodeForGuild(guild, value) {
+function requireMasterCodeForGuild(guild, value, action="", params={}) {
   const code = clean(value);
   const guildId = String(guild?.id || "");
   const guildSlug = clean(guild?.slug).toLowerCase();
@@ -2210,6 +2212,20 @@ function requireMasterCodeForGuild(guild, value) {
   const allowedCodes = new Set(
     [guildCode, isDefaultGuild ? clean(masterCode) : ""].filter(Boolean)
   );
+
+  const worldbuffCode=clean(worldbuffAccessCodeOverrides.get(guildId));
+  if(code && worldbuffCode && code===worldbuffCode){
+    const worldbuffActions=new Set([
+      "guildVerifyWorldbuffAccess","guildGetWorldbuffs","guildSetWorldbuffCaster",
+      "guildRequestWorldbuffReplacement","guildDeleteWorldbuffTerm",
+      "guildQueueWorldbuffBackup","guildRestoreDeletedWorldbuffTerms","guildSyncPublicBuffTerms"
+    ]);
+    const allowed=worldbuffActions.has(action)
+      || (action==="guildCreateBuffTerm" && clean(params.target).toLowerCase()==="worldbuff")
+      || (action==="guildQueueWorldbuffBotUpdate" && clean(params.type).toLowerCase()==="worldbuff_update");
+    if(allowed)return;
+    const error=new Error("Dieses Passwort erlaubt ausschließlich die Worldbuff-Verwaltung.");error.statusCode=403;throw error;
+  }
 
   if (!code || !allowedCodes.has(code)) {
     const error = new Error("Dieser Master-Code gehört nicht zu dieser Gilde.");
@@ -2548,6 +2564,29 @@ async function ensurePlayerRoleSchema() {
     when lower(role) in ('raidoffiziere','raidoffizier','raidlead') then '["create_raids"]'::jsonb
     else permissions end
     where jsonb_array_length(coalesce(permissions,'[]'::jsonb))=0 and lower(role)<>'member'`);
+}
+
+async function ensureWorldbuffAccessSchema(){
+  await query(`create table if not exists guild_worldbuff_access (guild_id uuid primary key references guilds(id) on delete cascade,password text not null,updated_at timestamptz not null default now())`);
+}
+async function loadWorldbuffAccessCode(guildId){
+  await ensureWorldbuffAccessSchema();
+  const id=String(guildId||"");
+  if(worldbuffAccessCodeOverrides.has(id))return worldbuffAccessCodeOverrides.get(id);
+  const result=await query(`select password from guild_worldbuff_access where guild_id=$1 limit 1`,[guildId]);
+  const value=clean(result.rows[0]?.password);if(value)worldbuffAccessCodeOverrides.set(id,value);return value;
+}
+async function setWorldbuffAccessPassword({guildId,query:params={}}){
+  const code=clean(params.masterCode);
+  const allowedAdminCodes=new Set([clean(masterCode),clean(masterCodeOverrides.get(String(guildId||"")))].filter(Boolean));
+  if(!code || !allowedAdminCodes.has(code)){
+    const error=new Error("Nur die Gildenleitung darf das Worldbuff-Passwort ändern.");error.statusCode=403;throw error;
+  }
+  await ensureWorldbuffAccessSchema();
+  const password=clean(params.password||params.worldbuffPassword);
+  if(password.length<6){const error=new Error("Das Worldbuff-Passwort muss mindestens 6 Zeichen haben.");error.statusCode=400;throw error;}
+  await query(`insert into guild_worldbuff_access(guild_id,password,updated_at) values($1,$2,now()) on conflict(guild_id) do update set password=$2,updated_at=now()`,[guildId,password]);
+  worldbuffAccessCodeOverrides.set(String(guildId),password);return {success:true};
 }
 
 async function ensureBuffTables() {
@@ -19109,11 +19148,12 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+    await loadWorldbuffAccessCode(guild.id);
     if (clean(req.query.masterCode)) {
       if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") {
         requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
       } else {
-        requireMasterCodeForGuild(guild, req.query.masterCode);
+        requireMasterCodeForGuild(guild, req.query.masterCode, action, req.query);
       }
     }
 
@@ -19292,6 +19332,10 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPlayerLoginRole") {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action==="guildVerifyWorldbuffAccess") return res.json({success:true,scope:"manage_worldbuffs",guild:guild.slug});
+    if(action==="guildSetWorldbuffAccessPassword"){
+      const saved=await setWorldbuffAccessPassword({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
     }
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: req.query });
@@ -19938,8 +19982,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
+    await loadWorldbuffAccessCode(guild.id);
     if (clean(postParams.masterCode)) {
-      requireMasterCodeForGuild(guild, postParams.masterCode);
+      requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
     }
 
     if (action === "lichtbotSaveDiscordChannels") {
@@ -19995,6 +20040,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPlayerLoginRole") {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action==="guildVerifyWorldbuffAccess") return res.json({success:true,scope:"manage_worldbuffs",guild:guild.slug});
+    if(action==="guildSetWorldbuffAccessPassword"){
+      const saved=await setWorldbuffAccessPassword({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
     }
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: postParams });
