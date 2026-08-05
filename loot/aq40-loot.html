@@ -10418,6 +10418,20 @@ function getExportRaidLabel(){
   return String(RAID_NAME || "raid").toUpperCase();
 }
 
+function formatItemForPrio3Reforged(itemName){
+  const name = String(itemName || "").trim();
+  if(!name || name === "-") return "-0";
+  const existing = name.match(/^(.*)-(\d+)$/);
+  if(existing){
+    const itemText = existing[1].trim();
+    const itemId = existing[2];
+    return /\d/.test(itemText) ? itemId + "-" + itemText : name;
+  }
+  const itemId = getPrio3ItemId(name);
+  if(!itemId || itemId === name) return name;
+  return /\d/.test(name) ? itemId + "-" + name : name + "-" + itemId;
+}
+
 function getExportDateLabel(){
   return new Date().toISOString().slice(0,10);
 }
@@ -10453,28 +10467,16 @@ function exportPrioListTXT(){
     return;
   }
 
-  const lines = [];
-  lines.push(getExportRaidLabel() + " Prioliste");
-  lines.push("Stand: " + new Date().toLocaleString("de-DE"));
-  lines.push("");
-
-  prios.forEach((entry,index) => {
+  const lines = prios.map(entry => {
     const player = getPrioEntryValue(entry, ["Spieler", "player", "Player", "name", "Name"]);
     const playerClass = getPrioEntryValue(entry, ["Klasse", "class", "Class", "klasse"]);
-    const p1 = getPrioEntryValue(entry, ["P1", "p1"]);
-    const p2 = getPrioEntryValue(entry, ["P2", "p2"]);
-    const p3 = getPrioEntryValue(entry, ["P3", "p3"]);
-    const p0 = String(entry.P0Plus || entry.p0Plus || "").toLowerCase() === "ja" ? "ja" : "nein";
-
-    lines.push((index + 1) + ". " + player + " (" + playerClass + ")");
-    lines.push("   P1: " + (p1 || "-"));
-    lines.push("   P2: " + (p2 || "-"));
-    lines.push("   P3: " + (p3 || "-"));
-    lines.push("   P0/PO: " + p0);
-    lines.push("");
+    const p1 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P1", "p1"]));
+    const p2 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P2", "p2"]));
+    const p3 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P3", "p3"]));
+    return player + "\t\t" + playerClass + "\t" + p1 + "\t" + p2 + "\t" + p3;
   });
 
-  downloadTextFile(lines.join("\n"), getExportRaidLabel() + "-Prioliste-" + getExportDateLabel() + ".txt", "text/plain;charset=utf-8;");
+  downloadTextFile(lines.join("\r\n") + "\r\n", getExportRaidLabel() + "-prio3-reforged.txt", "text/plain;charset=utf-8;");
 }
 
 function exportPrioListCSV(){
