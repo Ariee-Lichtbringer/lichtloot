@@ -20976,6 +20976,35 @@ app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
     );
     await client.query("commit");
 
+    if (normalizePlayerApprovalStatus(player.approval_status) !== "approved") {
+      const notificationTargets = await notificationTargetsForPermissions(guild.id, "notify_player_logins");
+      const notificationRoleIds = notificationTargets
+        .filter(target => target.type === "role")
+        .map(target => target.value);
+      const notificationNames = notificationTargets
+        .filter(target => target.type === "name")
+        .map(target => target.value);
+      const messageTemplate = await notificationMessageTemplate(guild.id, "notify_player_logins").catch(() => "");
+      await enqueueBotUpdate({
+        guildId: guild.id,
+        type: "player_login_approval_notice",
+        payload: {
+          guildSlug: guild.slug,
+          guildName: guild.name || guild.guild_name || guild.slug,
+          playerPin: player.player_pin,
+          character: characterResult.rows[0]?.name || character.name,
+          server: characterResult.rows[0]?.server || character.server,
+          className: characterResult.rows[0]?.class_name || character.className,
+          notificationRoleIds,
+          notificationNames,
+          messageTemplate,
+          createdAt: player.created_at || new Date().toISOString()
+        }
+      }).catch(error => {
+        console.warn("SpielerLogin-Freigabehinweis konnte nicht queued werden:", error.message || error);
+      });
+    }
+
     res.status(201).json({
       success: true,
       guild: guild.slug,
