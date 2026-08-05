@@ -4022,15 +4022,16 @@ th{
 .player-identity-title strong{font-size:15px;color:#fff}
 .player-class-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
 .player-class-list span{padding:3px 7px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.45);font-size:11px;font-weight:850}
-.player-access-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player-access-grid{display:grid;grid-template-columns:1fr 38px 1fr;gap:8px;align-items:stretch}
+.player-access-link{display:grid;place-items:center;color:#facc15;font-size:25px;font-weight:950;text-shadow:0 0 12px rgba(250,204,21,.45)}
 .player-access-section{display:grid;align-content:start;gap:8px;padding:11px;border:1px solid rgba(148,163,184,.16);border-radius:10px;background:rgba(2,6,23,.38)}
 .player-access-section.discord{border-color:rgba(88,101,242,.38);background:rgba(88,101,242,.07)}
 .access-section-title{display:flex;align-items:center;gap:8px;color:#f8fafc;font-size:12px;font-weight:950}
 .access-section-help{color:#94a3b8;font-size:10px;line-height:1.35}
 .player-access-section select,.player-access-section input{width:100%}
 .player-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-@media(max-width:1100px){.player-login-table tr{grid-template-columns:220px 1fr;grid-template-areas:"identity status" "access access" "actions actions"}.player-access-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:720px){.player-login-table tr{grid-template-columns:1fr;grid-template-areas:"identity" "status" "access" "actions"}.player-access-grid{grid-template-columns:1fr}.player-actions{justify-content:stretch}.player-actions .small-btn{flex:1}}
+@media(max-width:1100px){.player-login-table tr{grid-template-columns:220px 1fr;grid-template-areas:"identity status" "access access" "actions actions"}}
+@media(max-width:720px){.player-login-table tr{grid-template-columns:1fr;grid-template-areas:"identity" "status" "access" "actions"}.player-access-grid{grid-template-columns:1fr}.player-access-link{transform:rotate(90deg);min-height:28px}.player-actions{justify-content:stretch}.player-actions .small-btn{flex:1}}
 
 tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
@@ -8074,14 +8075,15 @@ function renderPlayerRoleControl(group){
     <div class="player-access-grid">
       <section class="player-access-section discord">
         <div class="access-section-title"><img class="access-section-icon" src="images/discord.svg" alt=""><span>Discord-Empfänger</span></div>
-        <div class="access-section-help">Diese Rollen oder Namen erhalten die zugehörigen Discord-Nachrichten.</div>
+        <div class="access-section-help"><strong>1. Wer?</strong> Alle hier gewählten Rollen und Namen erhalten die rechts ausgewählten Nachrichten.</div>
         <select aria-label="Discord-Rolle hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">+ Discord-Rolle hinzufügen</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
         <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" aria-label="Rolle entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Noch keine Discord-Rolle</span>'}</div>
         <label style="display:grid;gap:5px;font-weight:850">Weitere Discord-Namen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="Mehrere Namen mit Komma trennen" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
       </section>
+      <div class="player-access-link" title="Diese Empfänger erhalten die ausgewählten Nachrichten">→</div>
       <section class="player-access-section">
-        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔐</span><span>LichtLoot-Rechte</span></div>
-        <div class="access-section-help">Diese Rechte gelten nur innerhalb von LichtLoot und versenden keine Discord-Nachricht.</div>
+        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔔</span><span>Aufgabe oder Benachrichtigung</span></div>
+        <div class="access-section-help"><strong>2. Wofür?</strong> Wähle aus, bei welchen LichtLoot-Aufgaben die Empfänger links informiert werden.</div>
         <select aria-label="LichtLoot-Recht hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">+ LichtLoot-Recht hinzufügen</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
         <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" aria-label="Recht entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine zusätzlichen LichtLoot-Rechte</span>'}</div>
       </section>
@@ -8118,9 +8120,9 @@ async function removePlayerAccessValue(playerId,playerPin,type,value){
 
 const LICHTLOOT_PERMISSIONS=[
   {value:"create_raids",label:"Raids erstellen"},
-  {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung"},
+  {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung + Bot-Hinweise"},
   {value:"guild_admin",label:"Gildenverwaltung"},
-  {value:"loot_master",label:"Plündermeister"},
+  {value:"loot_master",label:"Plündermeister + LeadPIN-Nachricht"},
   {value:"notify_player_logins",label:"Benachrichtigung: Spielerlogins freigeben"},
   {value:"notify_worldbuff_changes",label:"Benachrichtigung: Worldbuff angemeldet/verschoben"},
   {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
