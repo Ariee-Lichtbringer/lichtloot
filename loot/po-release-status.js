@@ -9,11 +9,15 @@
     const box=document.getElementById("selectedCharacterPoReleases");
     if(!box) return;
     const releases=(data && data.poReleases) || {};
+    const normalizeRaidKey=function(value){return String(value||"").trim().toLowerCase().replace(/[_\s]+/g,"-").replace(/^zg$/,"zg-prime");};
+    const approvedKeys=new Set();
+    Object.keys(releases).forEach(function(key){if(releases[key]===true||String(releases[key]).toLowerCase()==="true"||Number(releases[key])>0)approvedKeys.add(normalizeRaidKey(key));});
+    ((data&&data.poReleaseDetails)||[]).forEach(function(entry){approvedKeys.add(normalizeRaidKey(entry&&entry.raid));});
     const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
     const pending=new Set((requests||[]).filter(entry=>String((entry&&entry.status)||"").toLowerCase()==="pending").map(requestKey));
     const chips=labels.map(function(item){
       const key=item[0],label=item[1];
-      const approved=key==="recruit" ? Boolean(data&&data.recruitStatusLifted) : Boolean(releases[key]);
+      const approved=key==="recruit" ? Boolean(data&&data.recruitStatusLifted) : approvedKeys.has(normalizeRaidKey(key));
       const inReview=!approved && pending.has(key);
       return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'>'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
     }).join("");
