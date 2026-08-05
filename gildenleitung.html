@@ -52,7 +52,7 @@ button,input,select{font:inherit}
 .app-frame{
   min-height:100vh;
   display:grid;
-  grid-template-columns:220px minmax(0,1fr);
+  grid-template-columns:280px minmax(0,1fr);
 }
 
 .sidebar{
@@ -63,7 +63,7 @@ button,input,select{font:inherit}
   border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
-  width:220px;
+  width:280px;
   min-width:0;
   overflow-x:hidden;
 }
@@ -199,7 +199,8 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .side-label{
   min-width:0;
   line-height:1.1;
-  overflow-wrap:anywhere;
+  overflow-wrap:normal;
+  word-break:normal;
 }
 
 .discord-settings-panel{display:grid;gap:14px}
