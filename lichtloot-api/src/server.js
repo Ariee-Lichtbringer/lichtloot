@@ -5208,7 +5208,7 @@ async function resolveLogAnalysisPostChannelId(guildId, raid) {
     return nachtlootChannels[normalizeLogRaidType(raid)] || configuredChannelId || "1533914926190428393";
   }
 
-  return logAnalysisPostChannelId(raid);
+  return configuredChannelId || logAnalysisPostChannelId(raid);
 }
 
 async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
@@ -5359,7 +5359,15 @@ async function getBotQueueAllGuilds({ query: params }) {
        and ($1::text[] is null or q.type = any($1::text[]))
      order by case
        when q.type = 'player_login_approval_notice' then 0
-       when q.type in ('po_release_request_notice', 'raid_status_staff_notice', 'loot_master_leadpin_notice') then 1
+       when q.type in (
+         'po_release_request_notice',
+         'raid_status_staff_notice',
+         'loot_master_leadpin_notice',
+         'p0plus_transfer_export',
+         'p0plus_backup_export',
+         'log_analysis_post'
+       ) then 1
+       when q.type in ('worldbuff_update', 'hordenbuff_update') then 3
        else 2
      end, q.created_at asc
      limit $2`,
