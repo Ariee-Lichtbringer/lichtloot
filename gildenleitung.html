@@ -14251,12 +14251,13 @@ async function queueP0PlusBackup(raidOverride, sourceId){
 
   try{
     setStatus("PO+ Sicherung wird für den Bot vorbereitet ...", "");
-    const result = await railwayApi({
+    const result = await railwayWrite({
       action:"guildQueueP0PlusBackup",
       masterCode,
       raid,
       channelId:P0PLUS_BACKUP_CHANNEL_ID,
-      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID
+      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID,
+      requestedAt:new Date().toISOString()
     });
 
     if(!result.success){
