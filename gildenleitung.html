@@ -12893,6 +12893,10 @@ function raidHelperValue(id){
 function defaultRaidHelperImageUrl(raidKey){
   const raw = String(raidKey || "").trim().toLowerCase();
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
+  if(CURRENT_GUILD_SLUG !== "lichtloot"){
+    const images=currentGuildInfo?.layout?.raidImages || {};
+    return String(images[raw] || images[key] || "").trim();
+  }
   return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
