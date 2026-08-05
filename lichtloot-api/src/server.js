@@ -2612,16 +2612,18 @@ async function notificationMessageTemplate(guildId,notificationKey){
   return clean(result.rows[0]?.message_template);
 }
 
-const ALL_PO_RELEASE_DISPLAY_RAIDS = ["p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
+const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
 
 async function getPoReleaseDisplaySettings(guildId) {
   await ensureGuildLayoutSchema();
   const result = await query(`select layout_json from guild_settings where guild_id=$1`, [guildId]);
   const saved = result.rows[0]?.layout_json?.poReleaseVisibleRaids;
   const configured = Array.isArray(saved);
+  const settingVersion = Number(result.rows[0]?.layout_json?.poReleaseDisplayVersion || 0);
   const visibleRaids = Array.isArray(saved)
     ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
+  if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
   return { success:true, visibleRaids, configured };
 }
 
@@ -2635,9 +2637,9 @@ async function setPoReleaseDisplaySettings({ guildId, query: params }) {
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   await query(
     `insert into guild_settings (guild_id, layout_json)
-     values ($1, jsonb_build_object('poReleaseVisibleRaids', $2::jsonb))
+     values ($1, jsonb_build_object('poReleaseVisibleRaids', $2::jsonb, 'poReleaseDisplayVersion', 2))
      on conflict (guild_id) do update
-       set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{poReleaseVisibleRaids}',$2::jsonb,true), updated_at=now()`,
+       set layout_json=jsonb_set(jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{poReleaseVisibleRaids}',$2::jsonb,true),'{poReleaseDisplayVersion}','2'::jsonb,true), updated_at=now()`,
     [guildId, JSON.stringify(visibleRaids)]
   );
   return { success:true, visibleRaids };
