@@ -13,7 +13,8 @@
     const approvedKeys=new Set();
     Object.keys(releases).forEach(function(key){if(releases[key]===true||String(releases[key]).toLowerCase()==="true"||Number(releases[key])>0)approvedKeys.add(normalizeRaidKey(key));});
     ((data&&data.poReleaseDetails)||[]).forEach(function(entry){approvedKeys.add(normalizeRaidKey(entry&&entry.raid));});
-    const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+    const visibleRaids=new Set(Array.isArray(data&&data.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["p1p3","mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"]);
+    const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(function(item){return item[0]==="recruit"||visibleRaids.has(item[0]);});
     const pending=new Set((requests||[]).filter(entry=>String((entry&&entry.status)||"").toLowerCase()==="pending").map(requestKey));
     const chips=labels.map(function(item){
       const key=item[0],label=item[1];
@@ -31,8 +32,11 @@
     box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
     try{
       const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),char:char.name,server:char.server||"",pin:pin,t:Date.now()});
-      const historyResponse=await fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"});
-      const history=await historyResponse.json();
+      const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()});
+      const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
+      const history=await responses[0].json();
+      const display=await responses[1].json().catch(function(){return {};});
+      history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
       if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
       let requests=[];
       if(currentGuildSlug()==="nachtloot"){
