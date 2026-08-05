@@ -4007,6 +4007,31 @@ th{
 .raid-panel th,
 .player-panel th{color:var(--gold);background:rgba(2,6,23,.62)}
 
+.player-access-hint{display:flex;align-items:center;gap:12px;margin:10px 0;padding:12px 14px;border:1px solid rgba(88,101,242,.34);border-radius:10px;background:rgba(88,101,242,.08);color:#dbeafe;font-size:12px;font-weight:750}
+.player-access-hint img,.access-section-icon{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
+.player-login-table{min-width:0;border-collapse:separate;border-spacing:0 10px}
+.player-login-table thead{display:none}
+.player-login-table tbody{display:grid;gap:12px}
+.player-login-table tr{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(430px,1.55fr) minmax(170px,.55fr);grid-template-areas:"identity access status" "identity access actions";gap:12px;padding:14px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:linear-gradient(135deg,rgba(12,18,32,.88),rgba(2,6,23,.62))}
+.player-login-table td{padding:0;border:0;background:transparent!important}
+.player-identity-cell{grid-area:identity}
+.player-access-cell{grid-area:access}
+.player-status-cell{grid-area:status}
+.player-actions-cell{grid-area:actions}
+.player-identity-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.player-identity-title strong{font-size:15px;color:#fff}
+.player-class-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.player-class-list span{padding:3px 7px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.45);font-size:11px;font-weight:850}
+.player-access-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.player-access-section{display:grid;align-content:start;gap:8px;padding:11px;border:1px solid rgba(148,163,184,.16);border-radius:10px;background:rgba(2,6,23,.38)}
+.player-access-section.discord{border-color:rgba(88,101,242,.38);background:rgba(88,101,242,.07)}
+.access-section-title{display:flex;align-items:center;gap:8px;color:#f8fafc;font-size:12px;font-weight:950}
+.access-section-help{color:#94a3b8;font-size:10px;line-height:1.35}
+.player-access-section select,.player-access-section input{width:100%}
+.player-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:1100px){.player-login-table tr{grid-template-columns:220px 1fr;grid-template-areas:"identity status" "access access" "actions actions"}.player-access-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){.player-login-table tr{grid-template-columns:1fr;grid-template-areas:"identity" "status" "access" "actions"}.player-access-grid{grid-template-columns:1fr}.player-actions{justify-content:stretch}.player-actions .small-btn{flex:1}}
+
 tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .raid-title{
@@ -5912,8 +5937,9 @@ body.worldbuff-only .master-only{display:none!important}
           <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
         </div>
       </div>
+      <div class="player-access-hint"><img src="images/discord.svg" alt="Discord"><span><strong>Discord-Zuordnung:</strong> Lege fest, welche Discord-Rollen und zusätzlichen Discord-Namen Nachrichten erhalten. LichtLoot-Rechte steuern separat den Zugriff innerhalb der Webseite.</span></div>
       <div class="table-wrap">
-        <table>
+        <table class="player-login-table">
           <thead>
             <tr>
               <th class="raid-select-cell">
@@ -8000,24 +8026,24 @@ function renderPlayers(){
     const approvalClass = approvalStatus === "approved" ? "open" : approvalStatus === "rejected" ? "danger" : "warn";
     return `
     <tr>
-      <td>
-        <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
+      <td class="player-identity-cell">
+        <div class="player-identity-title"><strong>${escapeHtml(group.main.char || "-")}</strong><span class="muted">${escapeHtml(group.main.server || "")}</span></div>
         ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
+        <div class="player-class-list">${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("") || "-"}</div>
       </td>
-      <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
-      <td>${renderPlayerRoleControl(group)}</td>
-      <td>
+      <td class="player-access-cell">${renderPlayerRoleControl(group)}</td>
+      <td class="player-status-cell">
         <span class="badge ${approvalClass}">${escapeHtml(approvalLabel)}</span>
         ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : ""}
         ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
       </td>
-      <td>
+      <td class="player-actions-cell"><div class="player-actions">
         ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false, '${escapeAttr(group.main.playerPin || "")}')">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true, '${escapeAttr(group.main.playerPin || "")}')">Sperren</button>`}
         ${group.main.id ? `<button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>` : ""}
-        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button>
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button></div>
       </td>
     </tr>
   `;
@@ -8045,12 +8071,20 @@ function renderPlayerRoleControl(group){
   const notificationNames=Array.isArray(main.notificationDiscordNames)?main.notificationDiscordNames:[];
   const roleLabel=id=>playerAccessDiscordRoles.find(role=>String(role.id||role.roleId)===String(id))?.name||id;
   return `
-    <div class="role-control" style="display:grid;gap:7px;min-width:310px">
-      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">Discord-Rolle auswählen …</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
-      <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Keine Discord-Rolle zugewiesen.</span>'}</div>
-      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">LichtLoot-Recht auswählen …</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
-      <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine LichtLoot-Rechte zugewiesen.</span>'}</div>
-      <label style="display:grid;gap:5px;font-weight:850">Zusätzliche Discord-Spielernamen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="z. B. Ariee, Juksi" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
+    <div class="player-access-grid">
+      <section class="player-access-section discord">
+        <div class="access-section-title"><img class="access-section-icon" src="images/discord.svg" alt=""><span>Discord-Empfänger</span></div>
+        <div class="access-section-help">Diese Rollen oder Namen erhalten die zugehörigen Discord-Nachrichten.</div>
+        <select aria-label="Discord-Rolle hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">+ Discord-Rolle hinzufügen</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
+        <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" aria-label="Rolle entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Noch keine Discord-Rolle</span>'}</div>
+        <label style="display:grid;gap:5px;font-weight:850">Weitere Discord-Namen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="Mehrere Namen mit Komma trennen" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
+      </section>
+      <section class="player-access-section">
+        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔐</span><span>LichtLoot-Rechte</span></div>
+        <div class="access-section-help">Diese Rechte gelten nur innerhalb von LichtLoot und versenden keine Discord-Nachricht.</div>
+        <select aria-label="LichtLoot-Recht hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">+ LichtLoot-Recht hinzufügen</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
+        <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" aria-label="Recht entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine zusätzlichen LichtLoot-Rechte</span>'}</div>
+      </section>
     </div>
   `;
 }
