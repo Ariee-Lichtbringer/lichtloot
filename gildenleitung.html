@@ -6312,7 +6312,7 @@ let poPostEntries = [];
 let poReleaseCharacters = [];
 let poReleaseRequests = [];
 let poReleaseSearch = "";
-const PO_RELEASE_RAIDS = [["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
 const PO_RELEASE_COLUMNS_KEY = "lichtloot:p0-release-columns";
 let poReleaseVisibleColumns = (() => {try{const saved=JSON.parse(localStorage.getItem(PO_RELEASE_COLUMNS_KEY)||"null");if(Array.isArray(saved))return new Set(saved.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));}catch(_error){}return new Set(PO_RELEASE_RAIDS.map(([raid])=>raid));})();
 let poItemSettingsRaid = "mc";
@@ -14673,7 +14673,6 @@ function renderP0ReleasePanelContent(){
               <th>Charakter</th>
               <th>Klasse</th>
               <th>LichtLootAccount</th>
-              ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Rekrutenstatus je Raid</th>" : ""}
               ${PO_RELEASE_RAIDS.filter(([raid])=>poReleaseVisibleColumns.has(raid)).map(([raid])=>`<th>${escapeHtml(poReleaseRaidLabel(raid))}</th>`).join("")}
               <th>Aktion</th>
             </tr>
@@ -14731,7 +14730,7 @@ async function deletePoReleaseRequest(index){
 function openPoReleaseRequestReview(index){const entry=poReleaseRequests[index];if(!entry)return;const req=entry.requirements||{};const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:900px;max-height:92vh;overflow:auto"><h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3><p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p><div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}<br>${(req.checks||[]).map(check=>`☐ ${escapeHtml(check)}`).join("<br>")}</div>${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:""}${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;max-width:100%;max-height:52vh;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="muted">Kein Screenshot hochgeladen.</p>'}<label style="display:grid;gap:6px;margin-top:12px">Notiz<textarea id="poRequestReviewNote" rows="3">${escapeHtml(entry.reviewNote||"")}</textarea></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?'<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved">Freigeben</button>':""}</div></div>`;backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{try{const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");backdrop.remove();setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");await loadP0ReleasePanel();}catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}}));document.body.appendChild(backdrop);}
 
 function poReleaseRaidLabel(raid){
-  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
+  const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
   return labels[raid] || String(raid || "").toUpperCase();
 }
 
@@ -14767,6 +14766,12 @@ function recruitStatusLiftHtml(entry,index){
   }).join("")}</div>`;
 }
 
+function lichtbringerRecruitStatusHtml(entry){
+  return entry?.recruitStatusLifted
+    ? '<span class="po-release-state active" title="Rekrutenstatus aufgehoben">✓ aufgehoben</span>'
+    : '<span class="po-release-state empty" title="Rekrutenstatus aktiv">aktiv</span>';
+}
+
 function renderPoReleaseRows(){
   const tbody = document.getElementById("poReleaseRows");
   if(!tbody) return;
@@ -14787,7 +14792,7 @@ function renderPoReleaseRows(){
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
-  const columnCount = 4 + poReleaseVisibleColumns.size + (CURRENT_GUILD_SLUG === "nachtloot" ? 1 : 0);
+  const columnCount = 4 + poReleaseVisibleColumns.size;
   if(!document.getElementById("masterCode").value.trim()){
     tbody.innerHTML = `<tr><td colspan="${columnCount}" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>`;
     return;
@@ -14804,12 +14809,12 @@ function renderPoReleaseRows(){
         <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
         <td>${entry.className ? `<span class="${escapeAttr(classColor(entry.className))}">${escapeHtml(entry.className)}</span>` : '<span class="muted">-</span>'}</td>
         <td><span class="pin">xxx</span></td>
-        ${CURRENT_GUILD_SLUG === "nachtloot" ? `
+        ${poReleaseVisibleColumns.has("recruit") ? `
           <td>
-            ${recruitStatusLiftHtml(entry,index)}
+            ${CURRENT_GUILD_SLUG === "nachtloot" ? recruitStatusLiftHtml(entry,index) : lichtbringerRecruitStatusHtml(entry)}
           </td>
         ` : ""}
-        ${PO_RELEASE_RAIDS.filter(([raid])=>poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td>${poReleaseCheckHtml(entry,raid,index)}</td>`).join("")}
+        ${PO_RELEASE_RAIDS.filter(([raid])=>raid!=="recruit"&&poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td>${poReleaseCheckHtml(entry,raid,index)}</td>`).join("")}
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
