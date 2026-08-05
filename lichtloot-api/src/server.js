@@ -2596,7 +2596,9 @@ async function setGuildNotificationSetting({guildId,query:params}){
   await ensureGuildNotificationSettingsSchema();
   const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","raid_status_changes"]);
   const notificationKey=clean(params.notificationKey||params.key);
-  if(!allowed.has(notificationKey)){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
+  const allowedLootMasterKey=/^loot_master:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  if(!allowed.has(notificationKey)&&!allowedLootMasterKey&&!allowedPoReleaseKey){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
   let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
   targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
   const messageTemplate=String(params.messageTemplate||params.template||"").trim();
@@ -3340,9 +3342,10 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
     [guildId, character.id, requestType, selectedRaid || null, clean(params.specialization), armoryUrl, screenshotData, JSON.stringify(requirements)]
   );
   const request=result.rows[0];
-  const notificationTargets=await notificationTargetsForPermissions(guildId,"notify_po_releases").catch(()=>[]);
+  const poNotificationKey=`notify_po_releases:${clean(selectedRaid).toLowerCase()}`;
+  const notificationTargets=await notificationTargetsForPermissions(guildId,poNotificationKey).catch(()=>[]);
   if(notificationTargets.length){
-    const messageTemplate=await notificationMessageTemplate(guildId,"notify_po_releases").catch(()=>"");
+    const messageTemplate=(await notificationMessageTemplate(guildId,poNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_releases").catch(()=>""));
     await enqueueBotUpdate({guildId,type:"po_release_request_notice",payload:{targets:notificationTargets,messageTemplate,character:character.name||"",server:character.server||"",className:character.class_name||"",requestType,raid:selectedRaid||"",requestId:request.id}}).catch(error=>console.warn("PO-Freigabehinweis konnte nicht queued werden:",error.message||error));
   }
   return { success:true, request };
@@ -5139,11 +5142,31 @@ async function resolveLogAnalysisPostChannelId(guildId, raid) {
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  await query(
+    `update bot_update_queue q
+     set status = 'done', resolved_at = now()
+     where q.guild_id = $1
+       and q.status = 'open'
+       and q.type in ('worldbuff_update', 'hordenbuff_update')
+       and exists (
+         select 1
+         from bot_update_queue newer
+         where newer.guild_id = q.guild_id
+           and newer.type = q.type
+           and newer.status = 'open'
+           and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
+       )`,
+    [guildId]
+  );
   const result = await query(
     `select id, type, payload, created_at
      from bot_update_queue
      where guild_id = $1 and status = 'open'
-     order by created_at asc
+     order by case
+       when type = 'player_login_approval_notice' then 0
+       when type in ('po_release_request_notice', 'raid_status_staff_notice', 'loot_master_leadpin_notice') then 1
+       else 2
+     end, created_at asc
      limit 10`,
     [guildId]
   );
@@ -5161,6 +5184,20 @@ async function getBotQueue({ guildId, query: params }) {
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  await query(
+    `update bot_update_queue q
+     set status = 'done', resolved_at = now()
+     where q.status = 'open'
+       and q.type in ('worldbuff_update', 'hordenbuff_update')
+       and exists (
+         select 1
+         from bot_update_queue newer
+         where newer.guild_id = q.guild_id
+           and newer.type = q.type
+           and newer.status = 'open'
+           and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
+       )`
+  );
   const requestedTypes = clean(params.types || params.typeFilter)
     .split(",")
     .map(clean)
@@ -5172,7 +5209,11 @@ async function getBotQueueAllGuilds({ query: params }) {
      join guilds g on g.id = q.guild_id
      where q.status = 'open'
        and ($1::text[] is null or q.type = any($1::text[]))
-     order by q.created_at asc
+     order by case
+       when q.type = 'player_login_approval_notice' then 0
+       when q.type in ('po_release_request_notice', 'raid_status_staff_notice', 'loot_master_leadpin_notice') then 1
+       else 2
+     end, q.created_at asc
      limit $2`,
     [requestedTypes.length ? requestedTypes : null, limit]
   );
@@ -14357,12 +14398,13 @@ async function createRaidRecord({ guildId, query: params }) {
   });
   if(clean(raid.lead_pin)){
     const savedTargets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
-    const configuredTargets=await notificationTargetsForPermissions(guildId,"loot_master").catch(()=>[]);
+    const lootMasterNotificationKey=`loot_master:${clean(raid.raid_type).toLowerCase()}`;
+    const configuredTargets=await notificationTargetsForPermissions(guildId,lootMasterNotificationKey).catch(()=>[]);
     const targetKeys=new Set();
     const targets=[...savedTargets,...configuredTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(targetKeys.has(key))return false;targetKeys.add(key);return clean(target?.value||target?.name);});
     if(targets.length){
       const lootMasterPin=await effectiveLootMasterPin(guildId);
-      const messageTemplate=await notificationMessageTemplate(guildId,"loot_master").catch(()=>"");
+      const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
       await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin,messageTemplate}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
     }
   }
@@ -14381,7 +14423,8 @@ async function setRaidLootMasterTargets({guildId,query:params}){
   let queued=false;
   if(targets.length&&clean(saved.lead_pin)){
     const lootMasterPin=await effectiveLootMasterPin(guildId);
-    const messageTemplate=await notificationMessageTemplate(guildId,"loot_master").catch(()=>"");
+    const lootMasterNotificationKey=`loot_master:${clean(saved.raid_type).toLowerCase()}`;
+    const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
     const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin,messageTemplate}});
     queued=Boolean(notice?.success);
   }
