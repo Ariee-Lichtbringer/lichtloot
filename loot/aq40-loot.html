@@ -201,6 +201,10 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
+.player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
+.player-status-panel #playerStatus{grid-area:auto!important}
+.plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
+.plundermeister-login-btn img{width:34px;height:34px;border-radius:8px;object-fit:cover}
 @media(max-width:1100px){.loot-side-shell{position:static;width:100%;max-width:none;margin:0 0 16px}.loot-side-shell .logo-banner-mini{max-height:90px}.loot-side-shell .main-nav{flex-direction:row;overflow-x:auto}.loot-side-shell .nav-btn{width:auto;min-width:max-content}.loot-side-shell .nav-login{width:auto;min-width:240px;margin:0;padding:0 0 0 8px;border:0;border-left:1px solid rgba(var(--gold-rgb),.24)}body:not(.random-prio)>.overlay{padding-left:22px}}
 
 /* === LichtLoot Navigation & Index-Overlays === */
@@ -1904,15 +1908,15 @@ body.random-prio .tooltip-p0{
     </div>
     <div class="raid-start-group collapsed">
       <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidorga</span><span>›</span></button>
-      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Raidleadpanel</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Plündermeister</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
     </div>
   </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
-    <input id="raidleadPin" type="text" placeholder="Raidlead PIN" onkeydown="raidleadEnter(event)">
-    <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
+    <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
+    <button class="nav-btn" onclick="raidleadLogin()">Plündermeister</button>
   </div>
 </nav>
 <script>
@@ -1992,7 +1996,10 @@ function openRaidStartAction(action){
         </div>
       </div>
 
-      <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+      <div class="player-status-panel">
+        <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
+      </div>
     </div>
 
   </div>
@@ -2209,7 +2216,6 @@ function openRaidStartAction(action){
 <script>
 const RAID_NAME = "aq40";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
-const EMERGENCY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
@@ -3787,50 +3793,6 @@ async function submitPrioWithPin(savePin, oldPin){
   return data;
 }
 
-function emergencyPrioPayload(){
-  const p1=document.getElementById("p1").value;
-  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
-  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
-  const isP0Plus=SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) && p1 && p1 === p2 && p2 === p3;
-  let playerPin=document.getElementById("playerPin").value.trim();
-  if(!playerPin){
-    playerPin="NF-"+Math.random().toString(36).slice(2,7).toUpperCase();
-    document.getElementById("playerPin").value=playerPin;
-  }
-  return {
-    action:"saveEmergencyPrio", guild:currentGuildSlug(), raid:RAID_NAME,
-    raidId:currentRaidId || "", raidPin:document.getElementById("raidPin").value.trim(),
-    raidDate:currentRaidDate || "", raidTime:currentRaidTime || "", playerPin,
-    player:document.getElementById("playerName").value.trim(),
-    server:document.getElementById("playerServer").value,
-    className:document.getElementById("playerClass").value,
-    p1, p2, p3, p0Plus:isP0Plus ? "ja" : "nein", submittedAt:new Date().toISOString()
-  };
-}
-
-async function saveEmergencyPrio(){
-  const entry=emergencyPrioPayload();
-  const storageKey="lichtloot_emergency_prios_v1";
-  let entries=[];
-  try{ entries=JSON.parse(localStorage.getItem(storageKey) || "[]"); }catch(error){}
-  const key=[entry.guild,entry.raidId || entry.raidPin || (entry.raidDate+"|"+entry.raidTime),entry.raid,entry.player,entry.server]
-    .map(value=>String(value || "").trim().toLowerCase()).join("|");
-  const existingIndex=entries.findIndex(item=>item.entryKey === key);
-  const stored={...entry,entryKey:key,status:"offen"};
-  if(existingIndex >= 0) entries[existingIndex]=stored; else entries.push(stored);
-  localStorage.setItem(storageKey,JSON.stringify(entries));
-
-  const url=EMERGENCY_APPS_SCRIPT_URL+"?"+new URLSearchParams(entry).toString()+"&t="+Date.now();
-  try{
-    await fetch(url,{mode:"no-cors",cache:"no-store"});
-  }catch(error){
-    console.warn("Google-Notfallspeicher nicht erreichbar; lokale Kopie bleibt erhalten.",error);
-  }
-  autoSaveDraft();
-  saveCharacterProfile();
-  return entry;
-}
-
 function isPinConflictError(result){
   const message=String((result && (result.error || result.message)) || "").toLowerCase();
 
@@ -3937,17 +3899,7 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    try{
-      const emergency=await saveEmergencyPrio();
-      status.innerHTML=
-        `<span class="warn">⚠ Notfallmodus aktiv.</span><br>`+
-        `Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>`+
-        `Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;
-    }catch(emergencyError){
-      console.error(emergencyError);
-      const message=(emergencyError && emergencyError.message) ? emergencyError.message : "Notfallspeicherung fehlgeschlagen.";
-      status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
-    }
+    status.innerHTML=`<span class="bad">Speichern fehlgeschlagen.</span><br>${safe(error.message||"Die Prios konnten nicht gespeichert werden.")}`;
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -4009,6 +3961,16 @@ function raidleadEnter(event){
   if(event.key === "Enter"){
     raidleadLogin();
   }
+}
+
+function openPlundermeisterLogin(){
+  const pin=prompt("LeadPIN für den Plündermeister eingeben:","");
+  if(pin===null)return;
+  const value=String(pin||"").trim();
+  if(!value){alert("Bitte LeadPIN eingeben.");return;}
+  const input=document.getElementById("raidleadPin");
+  if(input)input.value=value;
+  raidleadLogin();
 }
 
 async function refreshPrios(){
