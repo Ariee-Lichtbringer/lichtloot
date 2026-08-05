@@ -5152,11 +5152,20 @@ async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
   await query(`alter table players add column if not exists login_notice_queued_at timestamptz`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
   await query(
-    `update bot_update_queue
-     set status = 'done', resolved_at = now()
-     where type = 'player_login_approval_notice'
-       and status = 'processing'
-       and claimed_at < now() - interval '5 minutes'`
+    `with stale as (
+       update bot_update_queue
+       set status = 'done', resolved_at = now()
+       where type = 'player_login_approval_notice'
+         and status = 'processing'
+         and claimed_at < now() - interval '5 minutes'
+       returning guild_id, payload->>'playerPin' as player_pin
+     )
+     update players p
+     set login_notice_queued_at = null
+     from stale
+     where p.guild_id = stale.guild_id
+       and p.player_pin = stale.player_pin
+       and p.approval_status = 'pending'`
   );
   const pending = await query(
     `select p.id as player_id, p.guild_id, p.player_pin, p.created_at,
