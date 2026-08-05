@@ -825,15 +825,37 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .login-summary-card{
-  min-height:68px;
+  min-height:132px;
   border:1px solid rgba(148,163,184,.18);
   border-radius:8px;
   background:linear-gradient(135deg,rgba(12,18,32,.84),rgba(2,6,23,.48));
-  padding:10px 12px;
+  padding:14px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  align-items:stretch;
+  gap:10px;
+}
+
+.login-summary-card .login-card-heading{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
+  gap:9px;
+}
+
+.login-summary-card .login-card-heading span{font-size:13px}
+
+.login-summary-card .login-card-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.login-summary-card .login-card-stat{
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
 }
 
 .login-summary-card .stat-icon{
@@ -863,13 +885,18 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .login-summary-card button{
-  border:0;
-  background:transparent;
+  width:100%;
+  min-height:34px;
+  border:1px solid rgba(var(--gold-rgb),.34);
+  border-radius:7px;
+  background:rgba(var(--gold-rgb),.08);
   color:var(--gold);
   font-weight:950;
   white-space:nowrap;
   cursor:pointer;
 }
+
+.login-summary-card button:hover{background:rgba(var(--gold-rgb),.16)}
 
 .compact-auth .status{
   display:inline-flex;
@@ -4894,7 +4921,6 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
           <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
-          <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupRaidorga">
@@ -4908,7 +4934,6 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link nachtloot-only" type="button" onclick="openPoItemSettingsPanel()" aria-label="PO Items festlegen" title="PO Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">PO Items festlegen</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
-          <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
           <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
         </div>
       </div>
@@ -4927,10 +4952,12 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
-      <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
       <div class="side-group collapsed lichtloot-admin-only" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
+          <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
+          <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
+          <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
@@ -4970,13 +4997,12 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <button class="btn ghost" type="button" onclick="loginWorldbuffManagement()">Nur Worldbuffs öffnen</button>
       <div class="login-summary-card">
-        <div>
-          <div class="stat-icon">☷</div>
-          <span>Spielerlogins</span>
-          <strong id="playerCount">0</strong>
-          <div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div>
+        <div class="login-card-heading"><div class="stat-icon">☷</div><span>Spielerlogins</span></div>
+        <div class="login-card-stats">
+          <div class="login-card-stat"><strong id="playerCount">0</strong><div class="stat-subline">Spielerlogins</div></div>
+          <div class="login-card-stat"><strong id="linkedCount">0</strong><div class="stat-subline">Konten mit Twinks</div></div>
         </div>
-        <button type="button" onclick="openPlayerPanel()">Anzeigen →</button>
+        <button type="button" onclick="openPlayerPanel()">Spielerlogins anzeigen →</button>
       </div>
       <button id="pendingLoginCard" class="login-summary-card pending-login-card hidden" type="button" onclick="openPendingLoginReview()" style="border-color:#f59e0b;text-align:left;cursor:pointer">
         <div><div class="stat-icon">!</div><span>Neue SpielerLogins</span><strong id="pendingLoginCount">0</strong><div class="stat-subline">warten auf Freigabe</div></div>
