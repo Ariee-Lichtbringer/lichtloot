@@ -1,19 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script src="../guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="loot-side-navigation.css">
-<script src="loot-side-navigation.js" defer></script>
-<script src="nachtloot-recruit-prio.js" defer></script>
-<script src="p0-release-guard.js" defer></script>
 <title>Lichtloot - Blackwing Lair</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-.start-sidebar,.start-side-nav,.legacy-navigation{display:none!important}
 body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
@@ -157,6 +153,27 @@ th{color:var(--gold);text-transform:uppercase;font-size:10px}
 .myprio-p0-list strong{color:var(--gold)}
 @media(max-width:900px){.myprios-box{position:fixed;top:12px;left:12px;right:12px;width:auto}.myprios-form{grid-template-columns:1fr}}
 
+
+/* Linke LichtLoot-Navigation und Freigabestatus */
+.loot-side-shell{position:fixed;left:18px;top:18px;bottom:18px;width:205px;z-index:9000;padding:14px;display:flex;flex-direction:column;gap:12px;border:1px solid rgba(var(--gold-rgb),.34);border-radius:20px;background:linear-gradient(180deg,rgba(12,18,32,.96),rgba(2,6,23,.92));box-shadow:0 18px 38px rgba(0,0,0,.45);backdrop-filter:blur(12px)}
+.loot-side-shell .logo-banner-mini{width:100%;max-height:105px;margin:0;object-fit:contain}
+.loot-side-shell .main-nav{position:static;width:100%;margin:0;padding:0;display:flex;flex-direction:column;align-items:stretch;gap:8px;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
+.loot-side-shell .nav-btn{width:100%;min-height:42px;text-align:left;display:flex;align-items:center;justify-content:flex-start}
+.loot-side-shell .nav-login{display:flex;flex-direction:column;align-items:stretch;gap:8px;width:100%;margin-top:auto;padding-top:10px;border-top:1px solid rgba(var(--gold-rgb),.24)}
+.loot-side-shell .nav-login input{width:100%}
+body:not(.random-prio)>.overlay{padding-left:245px}
+.loot-release-status{margin-top:8px;padding:10px;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:rgba(2,6,23,.78)}
+.loot-release-title{color:var(--gold);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:7px}
+.loot-release-list{display:flex;flex-wrap:wrap;gap:6px}
+.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900}
+.loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
+.loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
+.loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
+.player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
+.player-status-panel #playerStatus{grid-area:auto!important}
+.plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
+.plundermeister-login-btn img{width:34px;height:34px;border-radius:8px;object-fit:cover}
+@media(max-width:1100px){.loot-side-shell{position:static;width:100%;max-width:none;margin:0 0 16px}.loot-side-shell .logo-banner-mini{max-height:90px}.loot-side-shell .main-nav{flex-direction:row;overflow-x:auto}.loot-side-shell .nav-btn{width:auto;min-width:max-content}.loot-side-shell .nav-login{width:auto;min-width:240px;margin:0;padding:0 0 0 8px;border:0;border-left:1px solid rgba(var(--gold-rgb),.24)}body:not(.random-prio)>.overlay{padding-left:22px}}
 
 /* === LichtLoot Navigation & Index-Overlays === */
 .logo-banner-mini{
@@ -865,11 +882,6 @@ body.random-prio .tooltip-p0{
   background:linear-gradient(135deg,rgba(var(--gold-rgb),.18),rgba(var(--blue-rgb),.14));
   color:var(--gold);
 }
-.selected-po-releases{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap;min-height:22px}
-.selected-po-releases-title{width:100%;color:#4ade80;font-size:10px;font-weight:900}
-.selected-po-release{padding:3px 7px;border-radius:999px;border:1px solid rgba(148,163,184,.25);background:rgba(15,23,42,.72);color:#94a3b8;font-size:10px;font-weight:900}
-.selected-po-release.active{border-color:rgba(34,197,94,.45);background:rgba(22,101,52,.22);color:#86efac}
-.selected-recruit-status{width:100%;color:#bfdbfe;font-size:11px;font-weight:900}
 
 .own-selection-card{
   grid-area:selection;
@@ -1641,6 +1653,85 @@ body.random-prio .tooltip-p0{
 }
 
 </style>
+<style class="mobile-raid-selection-only">
+.mobile-nav-label{display:none}
+.mobile-raid-selection-link{display:none}
+.raid-start-side-nav{display:flex;flex-direction:column;gap:10px;width:100%}
+.main-nav>.nav-btn:not(.mobile-raid-selection-link),.main-nav>.nav-login{display:none!important}
+.raid-start-dashboard,.raid-start-group-toggle,.raid-start-group-items button{width:100%;min-height:46px;border:1px solid rgba(var(--gold-rgb),.28);border-radius:10px;background:rgba(2,6,23,.72);color:#f8fafc;font-weight:900;text-align:left;cursor:pointer}
+.raid-start-dashboard{display:grid;grid-template-columns:38px 1fr;gap:10px;align-items:center;padding:8px 12px;border-color:rgba(var(--gold-rgb),.58);background:linear-gradient(90deg,rgba(var(--gold-rgb),.23),rgba(var(--blue-rgb),.12))}
+.raid-start-dashboard img{width:38px;height:38px;border-radius:7px;object-fit:cover}
+.raid-start-group{display:grid;gap:7px}
+.raid-start-group-toggle{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;color:var(--gold)}
+.raid-start-group:not(.collapsed) .raid-start-group-toggle span:last-child{transform:rotate(90deg)}
+.raid-start-group-items{display:grid;gap:6px;padding-left:8px}
+.raid-start-group.collapsed .raid-start-group-items{display:none}
+.raid-start-group-items button{min-height:38px;padding:8px 12px;font-size:12px}
+@media(max-width:800px){
+  .main-nav{display:flex!important;justify-content:center!important;overflow:visible!important;margin:8px auto 16px!important}
+  .main-nav > *{display:none!important}
+  .main-nav > a.nav-btn:first-child{display:inline-flex!important;width:min(100%,360px)!important;min-height:48px!important;align-items:center!important;justify-content:center!important}
+  .raid-selection-link .desktop-nav-label{display:none!important}
+  .raid-selection-link .mobile-nav-label{display:inline!important}
+  .raid-start-side-nav{display:none!important}
+}
+</style>
+<style>
+/* Freigaben als übersichtliche zweite Zeile unter den Prio-Daten */
+.player-card-layout{
+  grid-template-areas:
+    "pin selected chars status"
+    "releases releases releases releases" !important;
+}
+.player-input-grid > div:nth-child(2){display:contents!important}
+.player-input-grid > div:nth-child(2) > label{display:none!important}
+.character-dropzone{grid-area:selected!important}
+#selectedCharacterPoReleases{
+  grid-area:releases!important;
+  width:100%!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  display:grid!important;
+  grid-template-columns:150px minmax(0,1fr)!important;
+  gap:10px 14px!important;
+  align-items:center!important;
+}
+#selectedCharacterPoReleases .loot-release-title{margin:0!important}
+#selectedCharacterPoReleases .loot-release-list{
+  display:grid!important;
+  grid-template-columns:repeat(10,minmax(82px,1fr))!important;
+  gap:7px!important;
+  min-width:0!important;
+}
+#selectedCharacterPoReleases .loot-release-chip{
+  width:100%!important;
+  min-height:34px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:6px 8px!important;
+  text-align:center!important;
+  white-space:normal!important;
+}
+#selectedCharacterPoReleases .loot-release-chip.approved{
+  background:#16833f!important;
+  border-color:#4ade80!important;
+  color:#fff!important;
+}
+#selectedCharacterPoReleases:has(.loot-release-list) .loot-release-help{display:none!important}
+@media(max-width:1250px){
+  #selectedCharacterPoReleases .loot-release-list{grid-template-columns:repeat(5,minmax(92px,1fr))!important}
+}
+@media(max-width:900px){
+  .player-card-layout{grid-template-areas:"pin" "selected" "releases" "chars" "status"!important}
+  #selectedCharacterPoReleases{grid-template-columns:1fr!important}
+  #selectedCharacterPoReleases .loot-release-list{grid-template-columns:repeat(2,minmax(110px,1fr))!important}
+}
+</style>
+<style>
+.raid-page-title{display:flex;align-items:center;gap:16px}
+.raid-page-title-icon{width:72px;height:72px;flex:0 0 72px;border-radius:12px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.48);box-shadow:0 10px 24px rgba(0,0,0,.38)}
+@media(max-width:700px){.raid-page-title{gap:10px}.raid-page-title-icon{width:48px;height:48px;flex-basis:48px;border-radius:9px}}
+</style>
 </head>
 
 <body class="raid-bwl">
@@ -1751,18 +1842,45 @@ body.random-prio .tooltip-p0{
 <div class="overlay">
 
 
+<aside class="loot-side-shell" aria-label="LichtLoot Seitennavigation">
 <img src="../images/content.png" alt="Lichtbringer Lootsystem" class="logo-banner-mini">
 
 <nav class="main-nav" aria-label="LichtLoot Navigation">
-  <a class="nav-btn" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')">Startseite</a>
+  <a class="nav-btn raid-selection-link" href="../start.html" onclick="event.preventDefault(); window.location.href=guildUrl('../start.html')"><span class="desktop-nav-label">Startseite</span><span class="mobile-nav-label">Raidauswahl</span></a>
+  <div class="raid-start-side-nav">
+    <button class="raid-start-dashboard" type="button" onclick="openRaidStartAction('dashboard')"><img src="../images/dashboard-icons/dashboard.jpg" alt=""><span>Dashboard</span></button>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Buffs</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('worldbuff')">Worldbuffs</button><button type="button" onclick="openRaidStartAction('hordenbuff')">Hordenbuffs</button></div>
+    </div>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidinformationen</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('logs')">Logs &amp; Analysen</button><button type="button" onclick="window.location.href=guildUrl('../raidregeln.html')">Raidregeln</button><button type="button" onclick="openRaidStartAction('p0plus')">P0+ Liste</button><button type="button" onclick="openRaidStartAction('dashboard')">Prioseiten</button></div>
+    </div>
+    <div class="raid-start-group collapsed">
+      <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidorga</span><span>›</span></button>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Plündermeister</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
+    </div>
+  </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
-    <input id="raidleadPin" type="text" placeholder="Raidlead PIN" onkeydown="raidleadEnter(event)">
-    <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
+    <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
+    <button class="nav-btn" onclick="raidleadLogin()">Plündermeister</button>
   </div>
 </nav>
+<script>
+function toggleRaidStartGroup(button){
+  const group=button && button.closest(".raid-start-group");
+  if(group) group.classList.toggle("collapsed");
+}
+function openRaidStartAction(action){
+  try{ sessionStorage.setItem("lichtlootStartMenuAction",String(action||"dashboard")); }catch(error){}
+  window.location.href=guildUrl("../start.html");
+}
+</script>
+</aside>
 
 <div id="raidCreateBox" class="raid-create-box hidden">
   <div class="popup-head">
@@ -1795,7 +1913,7 @@ body.random-prio .tooltip-p0{
 </div>
 
 <div class="header">
-<h1>Blackwing Lair – Prio-Auswahl</h1>
+<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/bwl.jpg" alt="">Blackwing Lair – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 
 <div class="header-tools">
@@ -1813,7 +1931,10 @@ body.random-prio .tooltip-p0{
           <div id="selectedCharacterDrop" class="character-dropzone" ondragover="allowCharacterDrop(event)" ondrop="dropCharacterOnZone(event)">
             Charakter aus „Mein LichtLoot“ hierher ziehen oder unten anklicken.
           </div>
-          <div id="selectedCharacterPoReleases" class="selected-po-releases"></div>
+          <div id="selectedCharacterPoReleases" class="loot-release-status">
+            <div class="loot-release-title">PO-Freigaben für alle Raids</div>
+            <div class="loot-release-help">Bitte Charakter auswählen – der Status wird automatisch geladen.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1826,7 +1947,10 @@ body.random-prio .tooltip-p0{
         </div>
       </div>
 
-      <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+      <div class="player-status-panel">
+        <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
+      </div>
     </div>
 
   </div>
@@ -2138,6 +2262,16 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
+let GUILD_PO_ITEM_KEYS = new Set();
+function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
+async function loadGuildPoItems(){
+  try{
+    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    const data=await response.json();
+    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name)));
+  }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+}
 const PRIO_COUNT = 3;
 
 
@@ -2750,7 +2884,7 @@ async function loadLootFromSheet(){
       throw new Error("Keine BWL-Lootdaten gefunden.");
     }
 
-    await loadP0PlusFromSheet();
+    await Promise.all([loadP0PlusFromSheet(), loadGuildPoItems()]);
 
     fillItems();
     renderLootList();
@@ -2992,7 +3126,7 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS){
+    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -3561,12 +3695,6 @@ function isPinConflictError(result){
   );
 }
 
-function getSelectedPrioItemId(slot){
-  const select=document.getElementById(slot);
-  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
-  return option ? String(option.dataset.itemId || "").trim() : "";
-}
-
 async function savePrio(){
   const pin=document.getElementById("raidPin").value.trim();
   const player=document.getElementById("playerName").value.trim();
@@ -3608,20 +3736,24 @@ async function savePrio(){
   if(saveButton) saveButton.disabled=true;
 
   try{
-    const pinInfo = await ensurePlayerPinForSave();
+    const pinInfo = await Promise.race([
+      ensurePlayerPinForSave(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
     if(!pinInfo.success){
-      status.innerHTML=`<span class="bad">${safe(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.")}</span>`;
-      return;
+      throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
     }
 
     const playerPin = pinInfo.pin;
     status.innerHTML=`<span class="warn">Speichere Prios in Railway …</span>`;
 
-    let result=await submitPrioWithPin(playerPin, "");
+    let result=await Promise.race([
+      submitPrioWithPin(playerPin, ""),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+    ]);
 
     if(result.error){
-      status.innerHTML=`<span class="bad">${safe(result.error)}</span>`;
-      return;
+      throw new Error(result.error);
     }
 
     autoSaveDraft();
@@ -3632,11 +3764,8 @@ async function savePrio(){
       Server:server,
       Klasse:playerClass,
       P1:p1,
-      P1ItemId:getSelectedPrioItemId("p1"),
       P2:p2,
-      P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
       P3:p3,
-      P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
       P0Plus:isP0Plus ? "ja" : "nein",
       P0Item:isP0Plus ? p1 : ""
     });
@@ -3658,8 +3787,7 @@ async function savePrio(){
 
   }catch(error){
     console.error(error);
-    const message=(error && error.message) ? error.message : "Railway konnte die Prios nicht speichern.";
-    status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(message)}`;
+    status.innerHTML=`<span class="bad">Speichern fehlgeschlagen.</span><br>${safe(error.message||"Die Prios konnten nicht gespeichert werden.")}`;
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
   }
@@ -3721,6 +3849,16 @@ function raidleadEnter(event){
   if(event.key === "Enter"){
     raidleadLogin();
   }
+}
+
+function openPlundermeisterLogin(){
+  const pin=prompt("LeadPIN für den Plündermeister eingeben:","");
+  if(pin===null)return;
+  const value=String(pin||"").trim();
+  if(!value){alert("Bitte LeadPIN eingeben.");return;}
+  const input=document.getElementById("raidleadPin");
+  if(input)input.value=value;
+  raidleadLogin();
 }
 
 async function refreshPrios(){
@@ -4322,13 +4460,14 @@ let lichtlootLoggedInCharacters = [];
 let lichtlootSelectedCharacter = null;
 
 function getStoredLichtLootPlayerPin(){
-  const guild=String(new URLSearchParams(location.search).get("guild") || "lichtloot")
-    .trim().toLowerCase().replace(/[^a-z0-9_-]/g,"") || "lichtloot";
-  const keys=["lichtlootPlayerPin_"+guild,"lichtlootSharedPlayerPin","lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
+  const slug=String(currentGuildSlug() || "lichtloot").trim().toLowerCase();
+  const keys=["lichtlootPlayerPin_"+slug,"lichtlootSharedPlayerPin","lichtlootPlayerPin","lichtLootPlayerPin","spielerPin","playerPin","lichtloot_spielerpin"];
   for(const storage of [localStorage,sessionStorage]){
     for(const key of keys){
-      const value=String(storage.getItem(key) || "").trim();
-      if(value) return value.toUpperCase();
+      try{
+        const value=storage.getItem(key);
+        if(value && String(value).trim()) return String(value).trim().toUpperCase();
+      }catch(error){}
     }
   }
   return "";
@@ -4452,7 +4591,7 @@ function selectLoggedInCharacter(index){
   }
 
   renderCharacterButtons();
-  loadSelectedCharacterPoReleases(char);
+  if(typeof loadSelectedCharacterPoReleases === "function") loadSelectedCharacterPoReleases(char);
   loadPlayerData();
   autoSaveDraft();
   if(typeof renderCurrentPrios === "function"){
@@ -4462,26 +4601,6 @@ function selectLoggedInCharacter(index){
   const status=document.getElementById("playerStatus");
   if(status){
     status.innerHTML='<span class="ok">✓ Charakter ausgewählt: '+safe(char.name)+'</span><br>Gib jetzt nur noch den Prio-PIN ein und wähle deine Items.';
-  }
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(typeof resetCurrentRaidPoReleaseGuard==="function") resetCurrentRaidPoReleaseGuard();
-  if(!box || !char || !pin) return;
-  box.innerHTML='<span class="selected-po-release">P0+ Freigaben werden geladen …</span>';
-  try{
-    const query=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),pin,char:char.name || "",server:char.server || "",t:Date.now()});
-    const response=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"});
-    const data=await response.json();
-    if(!data.success) throw new Error(data.error || "Freigaben konnten nicht geladen werden.");
-    if(typeof applyCurrentRaidPoReleaseGuard==="function") applyCurrentRaidPoReleaseGuard(Boolean(data.poReleases?.[RAID_NAME]));
-    if(typeof applyNachtlootRecruitPrioRule==="function") applyNachtlootRecruitPrioRule(data.recruitStatusLifted);
-    const raids=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].concat(currentGuildSlug()==="nachtloot" ? [["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]] : []);
-    box.innerHTML='<div class="selected-po-releases-title">Deine P0+-Freigaben</div>'+raids.map(([key,label])=>'<span class="selected-po-release'+(data.poReleases?.[key] ? ' active' : '')+'">'+(data.poReleases?.[key] ? '✓ ' : '○ ')+safe(label)+'</span>').join("")+(currentGuildSlug()==="nachtloot" ? '<div class="selected-recruit-status">Rekrutenstatus: '+(data.recruitStatusLifted ? '<span class="ok">✓ aufgehoben</span>' : '<span class="warn">Rekrut</span>')+'</div>' : "");
-  }catch(error){
-    box.innerHTML='<span class="selected-po-release">P0+ Freigaben nicht verfügbar</span>';
   }
 }
 
@@ -7245,10 +7364,12 @@ async function deleteOwnPrio(payload){
   const deleteRaidId=payload.raidId || currentRaidId || '';
 
   const baseParams=
+    '&guild='+encodeURIComponent(typeof currentGuildSlug === "function" ? currentGuildSlug() : "lichtloot")+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
     '&masterCharacterPin='+encodeURIComponent(pin)+
+    '&prioPin='+encodeURIComponent(document.getElementById("raidPin")?.value.trim() || '')+
     '&player='+encodeURIComponent(playerName)+
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
@@ -10368,5 +10489,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
+<script src="po-release-status.js?v=20260805-1700"></script>
+<script src="../pin-visibility.js"></script>
 </body>
 </html>
