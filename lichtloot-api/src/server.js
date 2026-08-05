@@ -5102,6 +5102,15 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
      returning id, type, payload`,
     [guildId, type, JSON.stringify(payload || {})]
   );
+  if (type === "player_login_approval_notice" && clean(payload?.playerPin)) {
+    await query(`alter table players add column if not exists login_notice_queued_at timestamptz`);
+    await query(
+      `update players
+       set login_notice_queued_at = coalesce(login_notice_queued_at, now())
+       where guild_id = $1 and player_pin = $2`,
+      [guildId, clean(payload.playerPin)]
+    );
+  }
   return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type, payload: result.rows[0].payload || {} };
 }
 
@@ -5139,8 +5148,74 @@ async function resolveLogAnalysisPostChannelId(guildId, raid) {
   return logAnalysisPostChannelId(raid);
 }
 
+async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
+  await query(`alter table players add column if not exists login_notice_queued_at timestamptz`);
+  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
+  await query(
+    `update bot_update_queue
+     set status = 'done', resolved_at = now()
+     where type = 'player_login_approval_notice'
+       and status = 'processing'
+       and claimed_at < now() - interval '5 minutes'`
+  );
+  const pending = await query(
+    `select p.id as player_id, p.guild_id, p.player_pin, p.created_at,
+            g.slug as guild_slug, g.name as guild_name,
+            c.name as character_name, c.server, c.class_name
+     from players p
+     join guilds g on g.id = p.guild_id
+     left join lateral (
+       select name, server, class_name
+       from characters
+       where player_id = p.id
+       order by is_main desc nulls last, created_at asc
+       limit 1
+     ) c on true
+     where p.approval_status = 'pending'
+       and p.login_notice_queued_at is null
+       and ($1::uuid is null or p.guild_id = $1)
+     order by p.created_at asc
+     limit 50`,
+    [guildId]
+  );
+  for (const row of pending.rows) {
+    const claimed = await query(
+      `update players
+       set login_notice_queued_at = now()
+       where id = $1 and login_notice_queued_at is null
+       returning id`,
+      [row.player_id]
+    );
+    if (!claimed.rowCount) continue;
+    try {
+      const notificationTargets = await notificationTargetsForPermissions(row.guild_id, "notify_player_logins");
+      const messageTemplate = await notificationMessageTemplate(row.guild_id, "notify_player_logins").catch(() => "");
+      await enqueueBotUpdate({
+        guildId: row.guild_id,
+        type: "player_login_approval_notice",
+        payload: {
+          guildSlug: row.guild_slug,
+          guildName: row.guild_name || row.guild_slug,
+          playerPin: row.player_pin,
+          character: row.character_name || "Unbekannt",
+          server: row.server || "",
+          className: row.class_name || "",
+          notificationRoleIds: notificationTargets.filter(target => target.type === "role").map(target => target.value),
+          notificationNames: notificationTargets.filter(target => target.type === "name").map(target => target.value),
+          messageTemplate,
+          createdAt: row.created_at || new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      await query(`update players set login_notice_queued_at = null where id = $1`, [row.player_id]);
+      console.warn("Offener SpielerLogin konnte nicht zur Benachrichtigung vorgemerkt werden:", error.message || error);
+    }
+  }
+}
+
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
+  await ensurePendingPlayerLoginNoticesQueued(guildId);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(
     `update bot_update_queue q
@@ -5183,6 +5258,7 @@ async function getBotQueue({ guildId, query: params }) {
 
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
+  await ensurePendingPlayerLoginNoticesQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(
     `update bot_update_queue q
