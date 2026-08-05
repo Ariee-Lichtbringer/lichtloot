@@ -2709,6 +2709,35 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   .mobile-loot-login-row{grid-template-columns:1fr}
 }
 </style>
++<style id="start-fluid-layout-fix">
+html,body{max-width:100%;overflow-x:hidden}
+.start-shell{grid-template-columns:clamp(190px,12vw,246px) minmax(0,1fr)}
+.start-main{min-width:0;max-width:none!important}
+.dashboard-layout{min-width:0;grid-template-columns:minmax(0,1fr) minmax(290px,370px)!important}
+.dashboard-left,.dashboard-right,.raid-instance-section,.raid-card-group,.instance-grid,.instance-card{min-width:0}
+.instance-grid{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))!important}
+.instance-card{grid-template-columns:max-content minmax(0,1fr)!important}
+.raid-card-image-actions{width:max-content;justify-items:start}
+.raid-card-image-actions button{width:max-content!important;min-width:0;padding:5px 9px;border-color:rgba(var(--gold-rgb),.72);background:linear-gradient(135deg,rgba(var(--gold-rgb),.34),rgba(var(--blue-rgb),.32));color:#fff;white-space:nowrap}
+.start-current-guild-switch{justify-content:flex-start}
+.start-current-guild-switch select{flex:0 0 auto;width:18ch;min-width:0}
+.account-management-entry .account-entry-nudge{display:none!important}
+@media(max-width:1600px){
+.dashboard-layout{grid-template-columns:1fr!important}
+.dashboard-right{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.dashboard-right .start-current-guild-callout,.dashboard-right #startPoLoginCallout{min-width:0;width:100%}
+}
+@media(max-width:1050px){
+.start-shell{grid-template-columns:175px minmax(0,1fr)}
+.start-sidebar{padding-left:10px;padding-right:10px}
+.dashboard-right{grid-template-columns:1fr!important}
+}
+@media(max-width:720px){
+.start-shell{display:block}
+.instance-card{grid-template-columns:92px minmax(0,1fr)!important}
+.instance-card .raid-card-image-actions img{width:92px!important}
+}
+</style>
 </head>
 
 <body class="start-dashboard-body">
