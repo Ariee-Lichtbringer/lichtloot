@@ -2596,6 +2596,22 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   .start-current-guild-switch{flex-wrap:wrap}
 }
 
++.dashboard-right .start-po-login-callout{width:100%;max-width:none;min-width:0}
+.dashboard-right .start-po-login-callout:before{display:none}
+.dashboard-right .start-current-guild-callout{grid-template-columns:auto minmax(0,1fr)}
+.start-header-actions{flex-wrap:nowrap}
+.start-profile-btn{min-width:205px}
+.raid-card-image-actions{display:grid;gap:7px;align-content:start}
+.instance-card .raid-card-image-actions img{width:78px;height:92px}
+.raid-card-image-actions button{width:78px;min-height:27px;padding:4px 5px;border:1px solid rgba(250,204,21,.45);border-radius:6px;background:rgba(30,41,59,.9);color:#f8fafc;font-size:10px;font-weight:950;cursor:pointer}
+.raid-card-image-actions button:hover{border-color:#facc15;color:#facc15}
+.raid-pm-login-overlay{position:fixed;inset:0;z-index:60000;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.78);backdrop-filter:blur(5px)}
+.raid-pm-login-box{width:min(390px,calc(100vw - 30px));padding:20px;border:1px solid rgba(250,204,21,.55);border-radius:12px;background:linear-gradient(145deg,#0b1425,#050b17);box-shadow:0 24px 70px rgba(0,0,0,.65)}
+.raid-pm-login-box h3{margin:0 0 7px;color:#facc15;font-size:20px}.raid-pm-login-box p{margin:0 0 14px;color:#cbd5e1;font-weight:800}
+.raid-pm-login-box input{width:100%;min-height:44px;padding:10px 12px;border:1px solid #475569;border-radius:8px;background:#020617;color:#fff;font-size:17px;font-weight:900;letter-spacing:.08em}
+.raid-pm-login-status{min-height:24px;padding-top:7px;color:#fca5a5;font-size:12px;font-weight:850}
+.raid-pm-login-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}.raid-pm-login-actions button{min-height:36px;padding:8px 13px;border:1px solid #475569;border-radius:7px;background:#172033;color:#fff;font-weight:900;cursor:pointer}.raid-pm-login-actions button.primary{border-color:#facc15;background:#facc15;color:#261700}
+@media(max-width:700px){.instance-card .raid-card-image-actions img,.raid-card-image-actions button{width:100%}}
 </style>
 <style id="mobile-login-and-raids-only">
 @media (max-width:720px){
@@ -2982,7 +2998,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
         <div id="mobileLootLoginStatus" class="mobile-loot-login-status" aria-live="polite"></div>
       </form>
     </section>
-    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerLogin / Passwort</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerLogin beim Eintragen im DC beim PO-Anmelder angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><div class="start-header-actions"><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/raid-templates/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -3077,7 +3093,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3319,7 +3335,7 @@ function applyGuildThemeColor(cssName, rgbName, value){
 function applyGuildBrand(){
   const guild = currentGuildInfo;
   const brand = guild ? {
-    guildName: guild.name || CURRENT_GUILD_BRAND.guildName,
+    guildName: CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : (guild.name || CURRENT_GUILD_BRAND.guildName),
     lootName: lootTitleFromGuild(guild),
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
@@ -4069,7 +4085,7 @@ function renderUpcomingRaidCards(list){
     const buttonLabel="Zur Prio";
 
     return '<article class="dash-panel instance-card">'+
-      '<img src="'+safeAttr(raidImagePath(raidKey))+'" alt="">'+
+      '<div class="raid-card-image-actions"><img src="'+safeAttr(raidImagePath(raidKey))+'" alt=""><button type="button" onclick="openRaidLootMasterLogin('+index+')">Plündermeister</button></div>'+
       '<div>'+
         '<h3>'+safeHtml(name)+'</h3>'+
         '<p class="raid-card-date">⌚ '+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
@@ -4100,6 +4116,17 @@ function openUpcomingRaidCard(index){
     return;
   }
   openLootPageWithPin(entry._raidKey,activeRaidPin(entry));
+}
+
+function openRaidLootMasterLogin(index){
+  const entry=(window.dashboardUpcomingRaidCards||[])[Number(index)];
+  if(!entry){alert("Raid wurde nicht gefunden.");return;}
+  const old=document.getElementById("raidLootMasterLogin");if(old)old.remove();
+  const overlay=document.createElement("div");overlay.id="raidLootMasterLogin";overlay.className="raid-pm-login-overlay";
+  overlay.innerHTML='<div class="raid-pm-login-box" role="dialog" aria-modal="true"><h3>'+safeHtml(entry.raidName||entry.name||raids[entry._raidKey]?.name||"Raid")+'</h3><p>LeadPIN für den Plündermeister-Zugang eingeben.</p><input id="raidPmLeadPin" type="password" autocomplete="current-password" placeholder="LeadPIN"><div id="raidPmLoginStatus" class="raid-pm-login-status"></div><div class="raid-pm-login-actions"><button type="button" data-close>Abbrechen</button><button type="button" class="primary" data-login>Öffnen</button></div></div>';
+  const close=()=>overlay.remove();overlay.querySelector("[data-close]")?.addEventListener("click",close);overlay.addEventListener("click",event=>{if(event.target===overlay)close();});
+  const login=async()=>{const pin=overlay.querySelector("#raidPmLeadPin")?.value.trim()||"";const status=overlay.querySelector("#raidPmLoginStatus");if(!pin){status.textContent="Bitte LeadPIN eingeben.";return;}status.textContent="LeadPIN wird geprüft …";try{const query=new URLSearchParams({action:"validateLeadPin",guild:CURRENT_GUILD_SLUG,leadPin:pin,t:String(Date.now())});const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});const result=await response.json();const expected=String(entry.raidId||entry.id||"");if(!result.success||String(result.raidId||result.id||"")!==expected){status.textContent="Die LeadPIN gehört nicht zu diesem Raid.";return;}sessionStorage.setItem("raidlead","true");sessionStorage.setItem("raidleadRole","master");sessionStorage.setItem("raidleadRaidId",result.raidId||expected);sessionStorage.setItem("raidleadPrioPin",result.leadPin||pin);if(result.playerPin||result.prioPin||result.raidPin)sessionStorage.setItem("raidleadPlayerPin",result.playerPin||result.prioPin||result.raidPin);const target=new URL(withGuildUrl("raidlead-panel.html"),window.location.href);target.searchParams.set("raidId",result.raidId||expected);target.searchParams.set("leadPin",result.leadPin||pin);window.location.href=target.href;}catch(error){status.textContent="LeadPIN konnte nicht geprüft werden.";}};
+  overlay.querySelector("[data-login]")?.addEventListener("click",login);overlay.querySelector("#raidPmLeadPin")?.addEventListener("keydown",event=>{if(event.key==="Enter")login();});document.body.appendChild(overlay);window.setTimeout(()=>overlay.querySelector("#raidPmLeadPin")?.focus(),20);
 }
 
 function normalizeDashboardWorldbuff(row){
