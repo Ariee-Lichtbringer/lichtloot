@@ -8208,6 +8208,14 @@ function sendReport(){
   const note=document.getElementById("reportNote")?.value || "";
   const status=document.getElementById("reportStatus");
   const payload=currentReportPayload || {};
+  let selectedReportCharacter={};
+  const reportCharacterSelect=document.getElementById("myLichtlootCharSelect");
+  if(reportCharacterSelect?.value){
+    try{selectedReportCharacter=JSON.parse(reportCharacterSelect.value)||{};}catch(error){selectedReportCharacter={name:reportCharacterSelect.value};}
+  }
+  const reportPlayer=String(payload.player||selectedReportCharacter.name||getSelectedMyLichtLootCharacterName()||"").trim();
+  const reportServer=String(payload.server||selectedReportCharacter.server||"").trim();
+  const reportPlayerPin=String(document.getElementById("myPriosPin")?.value||getStoredLichtLootPlayerPin()||"").trim();
 
   if(status) status.textContent="Meldung wird gesendet...";
 
@@ -8222,8 +8230,9 @@ function sendReport(){
     item:payload.item || "",
     slot:payload.slot || "",
     points:payload.points || "",
-    player:payload.player || "",
-    server:payload.server || "",
+    player:reportPlayer,
+    server:reportServer,
+    playerPin:reportPlayerPin,
     createdAt:payload.createdAt || "",
     page:location.href,
     t:Date.now()
