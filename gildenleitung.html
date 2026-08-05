@@ -63,6 +63,9 @@ button,input,select{font:inherit}
   border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
+  width:220px;
+  min-width:0;
+  overflow-x:hidden;
 }
 
 .side-logo{
@@ -77,12 +80,14 @@ button,input,select{font:inherit}
 .side-nav{
   display:grid;
   gap:7px;
+  min-width:0;
 }
 
 .side-group{
   display:grid;
   gap:6px;
   margin-top:8px;
+  min-width:0;
 }
 
 .side-group-toggle{
@@ -124,6 +129,9 @@ button,input,select{font:inherit}
   border:1px solid rgba(148,163,184,.18);
   border-radius:8px;
   background:rgba(2,6,23,.34);
+  width:calc(100% - 8px);
+  min-width:0;
+  overflow:hidden;
 }
 
 .side-group.collapsed .side-group-items{
@@ -160,6 +168,8 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   text-align:left;
   font-weight:800;
   cursor:pointer;
+  min-width:0;
+  overflow:hidden;
 }
 
 .side-link:hover,
@@ -189,7 +199,19 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .side-label{
   min-width:0;
   line-height:1.1;
+  overflow-wrap:anywhere;
 }
+
+.discord-settings-panel{display:grid;gap:14px}
+.discord-settings-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.discord-settings-title{display:flex;align-items:center;gap:12px}.discord-settings-title img{width:46px;height:46px}
+.discord-settings-list{display:grid;gap:14px}
+.discord-settings-card{padding:16px;border:1px solid rgba(88,101,242,.38);border-radius:12px;background:rgba(88,101,242,.07)}
+.discord-role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:7px;margin:9px 0 13px;max-height:250px;overflow:auto;padding:4px}
+.discord-role-grid label{display:flex;align-items:center;gap:7px;min-width:0;padding:7px;border:1px solid rgba(148,163,184,.14);border-radius:7px;background:rgba(2,6,23,.34);overflow-wrap:anywhere}
+.discord-role-grid input{flex:0 0 auto;width:17px;height:17px;margin:0}
+.discord-template{display:grid;gap:6px;margin-top:12px}.discord-template textarea{width:100%;min-height:108px}
+.discord-template-help{color:#94a3b8;font-size:10px}
 
 .side-count{
   margin-left:auto;
@@ -4857,7 +4879,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 @media (max-width:1000px){
   .app-frame{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
+  .sidebar{position:relative;width:100%;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
   .sidebar-foot{position:static;margin-top:14px}
   .side-logo{width:140px;height:80px;margin-bottom:10px}
   .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -5052,7 +5074,8 @@ body.worldbuff-only .master-only{display:none!important}
 
   <div class="dashboard-grid">
     <div class="dashboard-column">
-      <section class="dashboard-card">
+      <section id="discordNotificationPanel" class="dashboard-card discord-settings-panel hidden"></section>
+      <section id="raidDashboardSection" class="dashboard-card">
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
           <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
@@ -6806,6 +6829,7 @@ async function loadOverview(options){
     fillClassFilter();
     renderAll();
     handleRaidHelperDeepLink();
+    handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
@@ -6902,6 +6926,15 @@ function openPoPostPanel(){
 
 function openPlayerPanel(){
   openDetailsPanel("playerLoginPanel");
+}
+
+function handlePlayerLoginDeepLink(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get("panel")!=="spielerlogins") return;
+  openPlayerPanel();
+  const player=params.get("player")||"";
+  const search=document.getElementById("playerSearch");
+  if(search&&player){search.value=player;renderPlayers();}
 }
 
 function openP0PlusPanel(){
@@ -8119,20 +8152,21 @@ const LICHTLOOT_PERMISSIONS=[
   {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
 ];
 const DISCORD_NOTIFICATION_TYPES=[
-  {key:"notify_player_logins",icon:"👤",title:"Neue Spielerlogins",text:"Informiert, wenn ein neuer Spielerlogin auf Freigabe wartet."},
-  {key:"loot_master",icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink."},
-  {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine."}
+  {key:"notify_player_logins",icon:"👤",title:"Neue Spielerlogins",text:"Informiert, wenn ein neuer Spielerlogin auf Freigabe wartet.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {link}",defaultTemplate:"🔐 **Neuer SpielerLogin wartet auf Freigabe**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n\nBitte den neuen SpielerLogin prüfen und freigeben.\n🔗 **[Direkt zur Spielerfreigabe]({link})**"},
+  {key:"loot_master",icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink.",tokens:"{raid}",defaultTemplate:"Du bist für **{raid}** als Plündermeister eingetragen."},
+  {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine.",tokens:"{charakter}, {aktion}, {termin}, {neuer_termin}, {grund}",defaultTemplate:"🌍 **Worldbuff-Termin {aktion}**\n**Charakter:** {charakter}\n**Termin:** {termin}\n**Neuer Termin:** {neuer_termin}\n**Grund:** {grund}"}
 ];
 async function openDiscordNotificationSettings(){
   try{
     const masterCode=document.getElementById("masterCode").value.trim();
     const [settingsResult,rolesResult]=await Promise.all([railwayApi({action:"guildGetNotificationSettings",masterCode,t:Date.now()}),railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()})]);
-    const settings=settingsResult.settings||{};const roles=Array.isArray(rolesResult.roles)?rolesResult.roles:[];
-    const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
-    backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:980px;max-height:92vh;overflow:auto"><div style="display:flex;align-items:center;gap:12px"><img src="images/discord.svg" alt="Discord" style="width:42px;height:42px"><div><h3 style="margin:0">Discord-Benachrichtigungen</h3><p style="margin:4px 0 0">Für jede Nachricht separat festlegen, wer sie als Discord-DM erhält.</p></div></div><div style="display:grid;gap:12px;margin-top:16px">${DISCORD_NOTIFICATION_TYPES.map(type=>{const targets=Array.isArray(settings[type.key])?settings[type.key]:[];const selectedRoles=new Set(targets.filter(t=>t.type==="role").map(t=>String(t.value)));const names=targets.filter(t=>t.type==="name").map(t=>t.value);return `<section data-notification-card="${type.key}" style="padding:14px;border:1px solid rgba(88,101,242,.38);border-radius:12px;background:rgba(88,101,242,.07)"><h4 style="margin:0 0 4px">${type.icon} ${escapeHtml(type.title)}</h4><p class="muted" style="margin:0 0 12px">${escapeHtml(type.text)}</p><strong>Discord-Rollen</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px;margin:8px 0 12px">${roles.map(role=>{const id=String(role.id||role.roleId||"");return `<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" data-role value="${escapeAttr(id)}" data-label="${escapeAttr(role.name||role.roleName||id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><label style="display:grid;gap:6px;font-weight:850">Einzelne Discord-Namen<textarea data-names rows="2" placeholder="Mehrere Namen mit Komma, Semikolon oder Zeilenumbruch trennen">${escapeHtml(names.join("\n"))}</textarea></label></section>`}).join("")}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Alle Einstellungen speichern</button></div></div>`;
-    backdrop.querySelector("[data-close]").onclick=()=>backdrop.remove();
-    backdrop.querySelector("[data-save]").onclick=async()=>{try{for(const card of backdrop.querySelectorAll("[data-notification-card]")){const targets=[...card.querySelectorAll("[data-role]:checked")].map(input=>({type:"role",value:input.value,label:input.dataset.label||input.value}));String(card.querySelector("[data-names]")?.value||"").split(/[,;\n]+/).map(name=>name.trim()).filter(Boolean).forEach(name=>targets.push({type:"name",value:name,label:name}));await railwayWrite({action:"guildSetNotificationSetting",masterCode,notificationKey:card.dataset.notificationCard,targets:JSON.stringify(targets)});}backdrop.remove();setStatus("Discord-Benachrichtigungen wurden gespeichert.","good");}catch(error){setStatus(error.message||"Einstellungen konnten nicht gespeichert werden.","bad");}};
-    document.body.appendChild(backdrop);
+    const settings=settingsResult.settings||{},templates=settingsResult.templates||{};const roles=Array.isArray(rolesResult.roles)?rolesResult.roles:[];
+    const panel=document.getElementById("discordNotificationPanel"),raidSection=document.getElementById("raidDashboardSection");
+    raidSection?.classList.add("hidden");panel.classList.remove("hidden");
+    panel.innerHTML=`<div class="discord-settings-header"><div class="discord-settings-title"><img src="images/discord.svg" alt="Discord"><div><h2 style="margin:0">Discord-Benachrichtigungen</h2><p class="muted" style="margin:4px 0 0">Empfänger und Nachrichtentext für jede Bot-DM getrennt verwalten.</p></div></div><button class="small-btn ghost" data-close>Zurück zu den Raids</button></div><div class="discord-settings-list">${DISCORD_NOTIFICATION_TYPES.map(type=>{const targets=Array.isArray(settings[type.key])?settings[type.key]:[];const selectedRoles=new Set(targets.filter(t=>t.type==="role").map(t=>String(t.value)));const names=targets.filter(t=>t.type==="name").map(t=>t.value);const template=templates[type.key]||type.defaultTemplate;return `<section class="discord-settings-card" data-notification-card="${type.key}"><h3 style="margin:0 0 4px">${type.icon} ${escapeHtml(type.title)}</h3><p class="muted" style="margin:0 0 12px">${escapeHtml(type.text)}</p><strong>Discord-Rollen dieser Gilde</strong><div class="discord-role-grid">${roles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-role value="${escapeAttr(id)}" data-label="${escapeAttr(role.name||role.roleName||id)}" ${selectedRoles.has(id)?"checked":""}><span>${escapeHtml(role.name||role.roleName||id)}</span></label>`}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><label style="display:grid;gap:6px;font-weight:850">Einzelne Discord-Namen<textarea data-names rows="2" placeholder="Mehrere Namen mit Komma, Semikolon oder Zeilenumbruch trennen">${escapeHtml(names.join("\n"))}</textarea></label><label class="discord-template"><strong>Standardtext der Bot-Nachricht</strong><textarea data-template>${escapeHtml(template)}</textarea><span class="discord-template-help">Verfügbare Platzhalter: ${escapeHtml(type.tokens)}. PINs, Termine und feste Sicherheitsinformationen werden weiterhin automatisch ergänzt.</span></label></section>`}).join("")}</div><div class="raid-helper-notify-actions"><button class="small-btn good" data-save>Alle Einstellungen speichern</button></div>`;
+    panel.querySelector("[data-close]").onclick=()=>{panel.classList.add("hidden");raidSection?.classList.remove("hidden");};
+    panel.querySelector("[data-save]").onclick=async()=>{try{for(const card of panel.querySelectorAll("[data-notification-card]")){const targets=[...card.querySelectorAll("[data-role]:checked")].map(input=>({type:"role",value:input.value,label:input.dataset.label||input.value}));String(card.querySelector("[data-names]")?.value||"").split(/[,;\n]+/).map(name=>name.trim()).filter(Boolean).forEach(name=>targets.push({type:"name",value:name,label:name}));await railwayWrite({action:"guildSetNotificationSetting",masterCode,notificationKey:card.dataset.notificationCard,targets:JSON.stringify(targets),messageTemplate:card.querySelector("[data-template]")?.value||""});}setStatus("Discord-Benachrichtigungen und Texte wurden gespeichert.","good");}catch(error){setStatus(error.message||"Einstellungen konnten nicht gespeichert werden.","bad");}};
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
   }catch(error){setStatus(error.message||"Discord-Benachrichtigungen konnten nicht geladen werden.","bad");}
 }
 async function openPlayerAccessDialog(playerId,playerPin=""){
