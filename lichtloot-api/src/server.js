@@ -16782,6 +16782,32 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
     awardedByKey.set(key, (awardedByKey.get(key) || 0) + 1);
   }
 
+  // Bei einer manuellen Sicherung gibt es keine awardedRows aus dem aktuellen
+  // Transferlauf. Deshalb werden die heute wirklich übertragenen Punkte aus
+  // dem unveränderlichen Audit-Protokoll ergänzt.
+  const todayTransferResult = await query(
+    `select player_name, server, item_name, old_points, new_points, delta_points,
+            source, note, created_at
+     from p0plus_point_audit
+     where guild_id = $1
+       and lower(coalesce(raid_type, '')) = any($2)
+       and action = 'raid_transfer'
+       and delta_points > 0
+       and (created_at at time zone 'Europe/Berlin')::date =
+           (now() at time zone 'Europe/Berlin')::date
+     order by created_at asc, player_name asc, item_name asc`,
+    [guildId, raidTypeSearchValues(raidType)]
+  );
+  const todayAwardedByKey = new Map();
+  for (const row of todayTransferResult.rows) {
+    const key = p0PlusExportKey(row.player_name, row.server, row.item_name);
+    const transferred = Number(row.delta_points || 0);
+    todayAwardedByKey.set(key, (todayAwardedByKey.get(key) || 0) + transferred);
+  }
+  for (const [key, transferred] of todayAwardedByKey.entries()) {
+    awardedByKey.set(key, Math.max(awardedByKey.get(key) || 0, transferred));
+  }
+
   const currentRows = [
     ["Raid", "Spieler", "Server", "Item", "Slot", "PO+ Punkte pre Raid", "Uebertragung", "Aktuelle Punkte", "Quelle", "Letzte Aenderung"]
   ];
@@ -16838,8 +16864,28 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
   if (receivedRows.length === 1) {
     receivedRows.push(["", "", "Noch keine protokollierten Items erhalten.", "", "", "", "", "", ""]);
   }
+  const todayTransferRows = [
+    ["Spieler", "Server", "Item", "Punkte vorher", "Heute uebertragen", "Aktuelle Punkte", "Quelle", "Raid", "Datum"]
+  ];
+  for (const row of todayTransferResult.rows) {
+    todayTransferRows.push([
+      row.player_name || "",
+      row.server || "",
+      row.item_name || "",
+      Number(row.old_points || 0),
+      Number(row.delta_points || 0),
+      Number(row.new_points || 0),
+      row.source || "",
+      raidType,
+      formatCsvDateTime(row.created_at || "")
+    ]);
+  }
+  if (todayTransferRows.length === 1) {
+    todayTransferRows.push(["", "", "Heute wurden fuer diesen Raid noch keine PO+ Punkte uebertragen.", "", "", "", "", raidType, ""]);
+  }
   return [
     { name: "PO+ aktuell", rows: currentRows },
+    { name: "Heute uebertragen", rows: todayTransferRows },
     { name: "Items erhalten", rows: receivedRows }
   ];
 }
