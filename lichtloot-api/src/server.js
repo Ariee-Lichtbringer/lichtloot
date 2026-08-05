@@ -6977,6 +6977,29 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), itemName, rejectionReason, raidPin]
     );
   }
+  if (!result.rows[0] && raidPin && playerName && itemName) {
+    result = await query(
+      `update po_post_entries
+       set approval_status = $5,
+           approved_by = $6,
+           approved_at = case when $5 = 'approved' then now() else null end,
+           rejection_reason = case when $5 = 'rejected' then $7 else '' end,
+           updated_at = now()
+       where id = (
+         select id
+         from po_post_entries
+         where guild_id = $1
+           and raid_pin = $2
+           and lower(player_name) = lower($3)
+           and lower(item_name) = lower($4)
+           and archived_at is null
+         order by updated_at desc nulls last, created_at desc
+         limit 1
+       )
+       returning *`,
+      [guildId, raidPin, playerName, itemName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), rejectionReason]
+    );
+  }
   const row = result.rows[0];
   if (!row) {
     const error = new Error("PO-Eintrag wurde nicht gefunden.");
