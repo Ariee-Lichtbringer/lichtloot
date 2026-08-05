@@ -2596,7 +2596,7 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   .start-current-guild-switch{flex-wrap:wrap}
 }
 
-+.dashboard-right .start-po-login-callout{width:100%;max-width:none;min-width:0}
+.dashboard-right .start-po-login-callout{width:100%;max-width:none;min-width:0}
 .dashboard-right .start-po-login-callout:before{display:none}
 .dashboard-right .start-current-guild-callout{grid-template-columns:auto minmax(0,1fr)}
 .start-header-actions{flex-wrap:nowrap}
@@ -2709,18 +2709,24 @@ body.start-dashboard-body .raid-create-box input[readonly]{
   .mobile-loot-login-row{grid-template-columns:1fr}
 }
 </style>
-+<style id="start-fluid-layout-fix">
+<style id="start-fluid-layout-fix">
 html,body{max-width:100%;overflow-x:hidden}
 .start-shell{grid-template-columns:clamp(190px,12vw,246px) minmax(0,1fr)}
 .start-main{min-width:0;max-width:none!important}
 .dashboard-layout{min-width:0;grid-template-columns:minmax(0,1fr) minmax(290px,370px)!important}
 .dashboard-left,.dashboard-right,.raid-instance-section,.raid-card-group,.instance-grid,.instance-card{min-width:0}
-.instance-grid{grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))!important}
-.instance-card{grid-template-columns:max-content minmax(0,1fr)!important}
+.instance-grid{grid-template-columns:repeat(auto-fill,340px)!important;justify-content:start}
+.instance-card{width:340px;min-height:214px!important;grid-template-columns:max-content minmax(0,1fr)!important}
 .raid-card-image-actions{width:max-content;justify-items:start}
 .raid-card-image-actions button{width:max-content!important;min-width:0;padding:5px 9px;border-color:rgba(var(--gold-rgb),.72);background:linear-gradient(135deg,rgba(var(--gold-rgb),.34),rgba(var(--blue-rgb),.32));color:#fff;white-space:nowrap}
 .start-current-guild-switch{justify-content:flex-start}
 .start-current-guild-switch select{flex:0 0 auto;width:18ch;min-width:0}
+.dashboard-right .start-current-guild-callout{min-height:58px;grid-template-columns:minmax(0,1fr) auto!important;gap:8px;padding:9px 10px!important}
+.dashboard-right .start-current-guild-callout .start-po-arrow{display:none}
+.dashboard-right .start-current-guild-callout .start-current-guild-switch{grid-column:auto;width:auto;padding:0;border:0;background:transparent;box-shadow:none}
+.dashboard-right .start-current-guild-callout .start-current-guild-switch label,
+.dashboard-right .start-current-guild-callout .guild-switch-arrow{display:none}
+.dashboard-right .start-current-guild-callout .start-current-guild-switch select{min-height:32px;width:18ch}
 .account-management-entry .account-entry-nudge{display:none!important}
 @media(max-width:1600px){
 .dashboard-layout{grid-template-columns:1fr!important}
@@ -2734,7 +2740,8 @@ html,body{max-width:100%;overflow-x:hidden}
 }
 @media(max-width:720px){
 .start-shell{display:block}
-.instance-card{grid-template-columns:92px minmax(0,1fr)!important}
+.instance-grid{grid-template-columns:1fr!important}
+.instance-card{width:100%;grid-template-columns:92px minmax(0,1fr)!important}
 .instance-card .raid-card-image-actions img{width:92px!important}
 }
 </style>
