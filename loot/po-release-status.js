@@ -19,7 +19,7 @@
       const key=item[0],label=item[1];
       const approved=key==="recruit" ? Boolean(data&&data.recruitStatusLifted) : approvedKeys.has(normalizeRaidKey(key));
       const inReview=!approved && pending.has(key);
-      return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'>'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
+      return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
     }).join("");
     box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
   };
