@@ -2608,6 +2608,13 @@ async function loadLootMasterAccessCode(guildId){
   if(value) lootMasterAccessCodeOverrides.set(id,value);
   return value;
 }
+async function effectiveLootMasterPin(guildId){
+  const configured=clean(await loadLootMasterAccessCode(guildId));
+  if(configured)return configured;
+  const result=await query(`select slug from guilds where id=$1 limit 1`,[guildId]);
+  const slug=clean(result.rows[0]?.slug).toLowerCase();
+  return ["lichtloot","lichtbringer"].includes(slug)?"1301":"";
+}
 async function setLootMasterAccessPassword({guildId,query:params={}}){
   const code=clean(params.masterCode);
   const allowedAdminCodes=new Set([clean(masterCode),clean(masterCodeOverrides.get(String(guildId||"")))].filter(Boolean));
@@ -14300,7 +14307,8 @@ async function createRaidRecord({ guildId, query: params }) {
   if(clean(raid.lead_pin)){
     const targets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
     if(targets.length){
-      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
+      const lootMasterPin=await effectiveLootMasterPin(guildId);
+      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
     }
   }
   return { success: true, ...normalizeRaidRow(raid) };
@@ -14317,7 +14325,8 @@ async function setRaidLootMasterTargets({guildId,query:params}){
   const saved=result.rows[0];
   let queued=false;
   if(targets.length&&clean(saved.lead_pin)){
-    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin}});
+    const lootMasterPin=await effectiveLootMasterPin(guildId);
+    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin}});
     queued=Boolean(notice?.success);
   }
   return {success:true,targets,queued,...normalizeRaidRow(saved)};
