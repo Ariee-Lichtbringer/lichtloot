@@ -532,6 +532,34 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
 }
 
+.active-raid-visual{
+  width:120px;
+  display:grid;
+  gap:8px;
+  align-content:start;
+}
+
+.active-raid-pm-send{
+  width:120px;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:6px 7px;
+  border:1px solid rgba(88,101,242,.72);
+  border-radius:7px;
+  background:linear-gradient(135deg,rgba(88,101,242,.24),rgba(15,23,42,.82));
+  color:#f8fafc;
+  font-size:11px;
+  font-weight:950;
+  line-height:1.15;
+  text-align:left;
+  cursor:pointer;
+}
+.active-raid-pm-send:hover{border-color:#818cf8;background:rgba(88,101,242,.32)}
+.active-raid-pm-send img{width:24px;height:24px;flex:0 0 24px;border-radius:6px}
+
 .active-raid-body{
   display:flex;
   flex-direction:column;
@@ -4755,6 +4783,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   .stat-grid{grid-template-columns:1fr}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
+  .active-raid-visual{width:100%;grid-template-columns:120px minmax(0,220px);align-items:start}
+  .active-raid-pm-send{width:100%}
   .active-raid-group-grid{grid-template-columns:1fr}
   .active-raid-topline{grid-template-columns:1fr}
   .raid-helper-calendar{grid-template-columns:1fr}
@@ -7474,7 +7504,10 @@ function renderDashboardCards(){
     const createdBy = getRaidCreatorName(raid);
     return `
       <article class="active-raid-card">
-        <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
+        <div class="active-raid-visual">
+          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
+          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
+        </div>
         <div class="active-raid-body">
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
@@ -7503,7 +7536,6 @@ function renderDashboardCards(){
             </div>
             <div class="active-raid-actions">
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM schicken</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
