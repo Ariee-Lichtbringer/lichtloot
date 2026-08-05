@@ -2594,7 +2594,7 @@ async function getGuildNotificationSettings({guildId,query:params}){
 async function setGuildNotificationSetting({guildId,query:params}){
   requireMasterCode(params.masterCode);
   await ensureGuildNotificationSettingsSchema();
-  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs"]);
+  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","raid_status_changes"]);
   const notificationKey=clean(params.notificationKey||params.key);
   if(!allowed.has(notificationKey)){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
   let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
@@ -3339,7 +3339,13 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
      values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) returning *`,
     [guildId, character.id, requestType, selectedRaid || null, clean(params.specialization), armoryUrl, screenshotData, JSON.stringify(requirements)]
   );
-  return { success:true, request:result.rows[0] };
+  const request=result.rows[0];
+  const notificationTargets=await notificationTargetsForPermissions(guildId,"notify_po_releases").catch(()=>[]);
+  if(notificationTargets.length){
+    const messageTemplate=await notificationMessageTemplate(guildId,"notify_po_releases").catch(()=>"");
+    await enqueueBotUpdate({guildId,type:"po_release_request_notice",payload:{targets:notificationTargets,messageTemplate,character:character.name||"",server:character.server||"",className:character.class_name||"",requestType,raid:selectedRaid||"",requestId:request.id}}).catch(error=>console.warn("PO-Freigabehinweis konnte nicht queued werden:",error.message||error));
+  }
+  return { success:true, request };
 }
 
 async function getPoReleaseRequests({ guildId, query: params = {}, management = false }) {
@@ -15043,6 +15049,12 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
     refreshQueued = Boolean(refresh?.success);
   }
 
+  const configuredStatusTargets=await notificationTargetsForPermissions(guildId,"raid_status_changes").catch(()=>[]);
+  const savedStatusTargets=Array.isArray(signup?.statusNotifyTargets)?signup.statusNotifyTargets:[];
+  const statusTargetKeys=new Set();
+  const statusTargets=[...savedStatusTargets,...configuredStatusTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(statusTargetKeys.has(key))return false;statusTargetKeys.add(key);return clean(target?.value||target?.name);});
+  const statusMessageTemplate=await notificationMessageTemplate(guildId,"raid_status_changes").catch(()=>"");
+
   await enqueueBotUpdate({
     guildId,
     type: "raid_status_staff_notice",
@@ -15056,7 +15068,8 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
       changedBy: "Gildenleitung",
       createdBy: clean(signup?.createdBy || ""),
       lootMaster: clean(signup?.lootMaster || ""),
-      targets: Array.isArray(signup?.statusNotifyTargets) ? signup.statusNotifyTargets : []
+      targets: statusTargets,
+      messageTemplate: statusMessageTemplate
     }
   }).catch(() => null);
 
