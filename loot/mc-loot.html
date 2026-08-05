@@ -1723,6 +1723,11 @@ body.random-prio .tooltip-p0{
   #selectedCharacterPoReleases .loot-release-list{grid-template-columns:repeat(2,minmax(110px,1fr))!important}
 }
 </style>
+<style>
+.raid-page-title{display:flex;align-items:center;gap:16px}
+.raid-page-title-icon{width:72px;height:72px;flex:0 0 72px;border-radius:12px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.48);box-shadow:0 10px 24px rgba(0,0,0,.38)}
+@media(max-width:700px){.raid-page-title{gap:10px}.raid-page-title-icon{width:48px;height:48px;flex-basis:48px;border-radius:9px}}
+</style>
 </head>
 
 <body class="raid-mc">
@@ -1904,7 +1909,7 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header">
-<h1>Molten Core – Prio-Auswahl</h1>
+<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/mc.jpg" alt="">Molten Core – Prio-Auswahl</h1>
 <div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
 
 <div class="header-tools">
@@ -4548,8 +4553,8 @@ function renderSelectedCharacterPoReleases(data,requests){
   const box=document.getElementById("selectedCharacterPoReleases");
   if(!box) return;
   const releases=data?.poReleases || {};
-  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["p1p3","mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"]);
-  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>key==="recruit"||visibleRaids.has(key));
+  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"]);
+  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
   const pending=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(poReleaseStatusKey));
   const chips=labels.map(([key,label])=>{
     const approved=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases[key]);
