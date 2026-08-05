@@ -4982,6 +4982,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
+          <button class="side-link master-only" type="button" onclick="openDiscordNotificationSettings()" aria-label="Discord-Benachrichtigungen" title="Discord-Benachrichtigungen"><img class="side-icon-img" src="images/discord.svg" alt=""><span class="side-label">DC-Benachrichtigungen</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
@@ -8067,24 +8068,14 @@ function normalizePlayerLoginRole(value){
 function renderPlayerRoleControl(group){
   const main=group.main || {};
   const playerId=main.playerId || "";
-  const roleIds=Array.isArray(main.discordRoleIds)?main.discordRoleIds.map(String):[];
   const permissions=Array.isArray(main.permissions)?main.permissions.map(String):[];
-  const notificationNames=Array.isArray(main.notificationDiscordNames)?main.notificationDiscordNames:[];
-  const roleLabel=id=>playerAccessDiscordRoles.find(role=>String(role.id||role.roleId)===String(id))?.name||id;
+  const accessPermissions=LICHTLOOT_PERMISSIONS.filter(permission=>!["loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases"].includes(permission.value));
   return `
-    <div class="player-access-grid">
-      <section class="player-access-section discord">
-        <div class="access-section-title"><img class="access-section-icon" src="images/discord.svg" alt=""><span>Discord-Empfänger</span></div>
-        <div class="access-section-help"><strong>1. Wer?</strong> Alle hier gewählten Rollen und Namen erhalten die rechts ausgewählten Nachrichten.</div>
-        <select aria-label="Discord-Rolle hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">+ Discord-Rolle hinzufügen</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
-        <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" aria-label="Rolle entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Noch keine Discord-Rolle</span>'}</div>
-        <label style="display:grid;gap:5px;font-weight:850">Weitere Discord-Namen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="Mehrere Namen mit Komma trennen" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
-      </section>
-      <div class="player-access-link" title="Diese Empfänger erhalten die ausgewählten Nachrichten">→</div>
+    <div class="player-access-grid" style="grid-template-columns:1fr">
       <section class="player-access-section">
-        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔔</span><span>Aufgabe oder Benachrichtigung</span></div>
-        <div class="access-section-help"><strong>2. Wofür?</strong> Wähle aus, bei welchen LichtLoot-Aufgaben die Empfänger links informiert werden.</div>
-        <select aria-label="LichtLoot-Recht hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">+ LichtLoot-Recht hinzufügen</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
+        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔐</span><span>LichtLoot-Zugriffsrechte</span></div>
+        <div class="access-section-help">Nur der Zugriff auf Funktionen der Webseite. Discord-Nachrichten werden zentral unter Admin → DC-Benachrichtigungen eingerichtet.</div>
+        <select aria-label="LichtLoot-Recht hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">+ Zugriffsrecht hinzufügen</option>${accessPermissions.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
         <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" aria-label="Recht entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine zusätzlichen LichtLoot-Rechte</span>'}</div>
       </section>
     </div>
@@ -8127,6 +8118,23 @@ const LICHTLOOT_PERMISSIONS=[
   {value:"notify_worldbuff_changes",label:"Benachrichtigung: Worldbuff angemeldet/verschoben"},
   {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
 ];
+const DISCORD_NOTIFICATION_TYPES=[
+  {key:"notify_player_logins",icon:"👤",title:"Neue Spielerlogins",text:"Informiert, wenn ein neuer Spielerlogin auf Freigabe wartet."},
+  {key:"loot_master",icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink."},
+  {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine."}
+];
+async function openDiscordNotificationSettings(){
+  try{
+    const masterCode=document.getElementById("masterCode").value.trim();
+    const [settingsResult,rolesResult]=await Promise.all([railwayApi({action:"guildGetNotificationSettings",masterCode,t:Date.now()}),railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()})]);
+    const settings=settingsResult.settings||{};const roles=Array.isArray(rolesResult.roles)?rolesResult.roles:[];
+    const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
+    backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:980px;max-height:92vh;overflow:auto"><div style="display:flex;align-items:center;gap:12px"><img src="images/discord.svg" alt="Discord" style="width:42px;height:42px"><div><h3 style="margin:0">Discord-Benachrichtigungen</h3><p style="margin:4px 0 0">Für jede Nachricht separat festlegen, wer sie als Discord-DM erhält.</p></div></div><div style="display:grid;gap:12px;margin-top:16px">${DISCORD_NOTIFICATION_TYPES.map(type=>{const targets=Array.isArray(settings[type.key])?settings[type.key]:[];const selectedRoles=new Set(targets.filter(t=>t.type==="role").map(t=>String(t.value)));const names=targets.filter(t=>t.type==="name").map(t=>t.value);return `<section data-notification-card="${type.key}" style="padding:14px;border:1px solid rgba(88,101,242,.38);border-radius:12px;background:rgba(88,101,242,.07)"><h4 style="margin:0 0 4px">${type.icon} ${escapeHtml(type.title)}</h4><p class="muted" style="margin:0 0 12px">${escapeHtml(type.text)}</p><strong>Discord-Rollen</strong><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:7px;margin:8px 0 12px">${roles.map(role=>{const id=String(role.id||role.roleId||"");return `<label style="display:flex;align-items:center;gap:7px"><input type="checkbox" data-role value="${escapeAttr(id)}" data-label="${escapeAttr(role.name||role.roleName||id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><label style="display:grid;gap:6px;font-weight:850">Einzelne Discord-Namen<textarea data-names rows="2" placeholder="Mehrere Namen mit Komma, Semikolon oder Zeilenumbruch trennen">${escapeHtml(names.join("\n"))}</textarea></label></section>`}).join("")}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Alle Einstellungen speichern</button></div></div>`;
+    backdrop.querySelector("[data-close]").onclick=()=>backdrop.remove();
+    backdrop.querySelector("[data-save]").onclick=async()=>{try{for(const card of backdrop.querySelectorAll("[data-notification-card]")){const targets=[...card.querySelectorAll("[data-role]:checked")].map(input=>({type:"role",value:input.value,label:input.dataset.label||input.value}));String(card.querySelector("[data-names]")?.value||"").split(/[,;\n]+/).map(name=>name.trim()).filter(Boolean).forEach(name=>targets.push({type:"name",value:name,label:name}));await railwayWrite({action:"guildSetNotificationSetting",masterCode,notificationKey:card.dataset.notificationCard,targets:JSON.stringify(targets)});}backdrop.remove();setStatus("Discord-Benachrichtigungen wurden gespeichert.","good");}catch(error){setStatus(error.message||"Einstellungen konnten nicht gespeichert werden.","bad");}};
+    document.body.appendChild(backdrop);
+  }catch(error){setStatus(error.message||"Discord-Benachrichtigungen konnten nicht geladen werden.","bad");}
+}
 async function openPlayerAccessDialog(playerId,playerPin=""){
   const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
   const selectedRoles=new Set(Array.isArray(player.discordRoleIds)?player.discordRoleIds.map(String):[]);
