@@ -164,8 +164,12 @@ th{color:var(--gold);text-transform:uppercase;font-size:10px}
 body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-status{margin-top:8px;padding:10px;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:rgba(2,6,23,.78)}
 .loot-release-title{color:var(--gold);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:7px}
-.loot-release-list{display:flex;flex-wrap:wrap;gap:6px}
-.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900}
+.loot-release-list{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:3px}
+.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900;flex:0 0 auto;white-space:nowrap}
+.player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
+.player-status-panel #playerStatus{grid-area:auto!important}
+.plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
+.plundermeister-login-btn img{width:34px;height:34px;border-radius:8px;object-fit:cover}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
@@ -1799,15 +1803,15 @@ body.random-prio .tooltip-p0{
     </div>
     <div class="raid-start-group collapsed">
       <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidorga</span><span>›</span></button>
-      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Raidleadpanel</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Plündermeister</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
     </div>
   </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
-    <input id="raidleadPin" type="text" placeholder="Raidlead PIN" onkeydown="raidleadEnter(event)">
-    <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
+    <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
+    <button class="nav-btn" onclick="raidleadLogin()">Plündermeister</button>
   </div>
 </nav>
 <script>
@@ -1887,7 +1891,10 @@ function openRaidStartAction(action){
         </div>
       </div>
 
-      <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+      <div class="player-status-panel">
+        <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
+        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
+      </div>
     </div>
 
   </div>
@@ -3752,17 +3759,9 @@ async function savePrio(){
       P0Item:isP0Plus ? p1 : ""
     });
 
-    const displayedPin = result.tempPin || result.characterPin || playerPin;
-
     status.innerHTML =
       `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
-      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
-      `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
-      `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
-
-    if(pinInfo.generated){
-      showParticipantPinPopup(displayedPin);
-    }
+      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong>`;
 
     await refreshAfterPrioSave();
     renderCurrentPrios();
@@ -3828,6 +3827,16 @@ async function raidleadLogin(){
   }
 
   alert("Falsche Raidlead-PIN.");
+}
+
+function openPlundermeisterLogin(){
+  const pin=prompt("LeadPIN für den Plündermeister eingeben:","");
+  if(pin===null)return;
+  const value=String(pin||"").trim();
+  if(!value){alert("Bitte LeadPIN eingeben.");return;}
+  const input=document.getElementById("raidleadPin");
+  if(input)input.value=value;
+  raidleadLogin();
 }
 
 function raidleadEnter(event){
