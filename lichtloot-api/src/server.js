@@ -2589,7 +2589,7 @@ async function ensureGuildNotificationSettingsSchema(){
 }
 
 async function getGuildNotificationSettings({guildId,query:params}){
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensureGuildNotificationSettingsSchema();
   const result=await query(`select notification_key,targets,message_template from guild_notification_settings where guild_id=$1`,[guildId]);
   return {success:true,settings:Object.fromEntries(result.rows.map(row=>[row.notification_key,Array.isArray(row.targets)?row.targets:[]])),templates:Object.fromEntries(result.rows.map(row=>[row.notification_key,clean(row.message_template)]))};
@@ -2598,7 +2598,7 @@ async function getGuildNotificationSettings({guildId,query:params}){
 async function setGuildNotificationSetting({guildId,query:params}){
   requireMasterCode(params.masterCode);
   await ensureGuildNotificationSettingsSchema();
-  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","raid_status_changes"]);
+  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","raid_status_changes","po_reviewers"]);
   const notificationKey=clean(params.notificationKey||params.key);
   const allowedLootMasterKey=/^loot_master:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
   const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
