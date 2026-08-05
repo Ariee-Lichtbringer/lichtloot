@@ -4552,7 +4552,7 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
   if (!chars.some(char => clean(char.name).toLowerCase() === charakter.toLowerCase())) {
     return { success: false, error: "Dieser Charakter gehört nicht zu deinem SpielerLogin." };
   }
-  return setWorldbuffCaster({
+  const saved=await setWorldbuffCaster({
     guildId,
     query: {
       ...params,
@@ -4561,10 +4561,14 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
       status: "bestätigt"
     }
   });
+  if(saved?.success){
+    await notifyWorldbuffPlayerChange({guildId,pin,character:charakter,action:"registered",reason:"",fromEvent:{buff:saved.buff,event_date:params.datum||params.date||"",event_time:saved.uhrzeit||params.uhrzeit||params.time||"",guild_name:params.gilde||params.guild||"Lichtbringer"}});
+  }
+  return saved;
 }
 
 async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, reason, fromEvent, toEvent }) {
-  const actionLabel = action === "cancelled" ? "abgesagt" : "verschoben";
+  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : "verschoben";
   const formatEvent = event => event
     ? [event.buff, event.event_date ? new Date(event.event_date).toISOString().slice(0, 10) : "", clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
     : "-";
@@ -4572,7 +4576,7 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
   const body = [
     `${character} hat einen Worldbuff-Termin ${actionLabel}.`,
     "",
-    `Bisheriger Termin: ${formatEvent(fromEvent)}`,
+    `${action === "registered" ? "Termin" : "Bisheriger Termin"}: ${formatEvent(fromEvent)}`,
     action === "moved" ? `Neuer Termin: ${formatEvent(toEvent)}` : "",
     `Grund: ${reason}`
   ].filter(Boolean).join("\n");
@@ -4586,11 +4590,13 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
     ).catch(() => {});
   }
 
+  const configuredTargets=await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]);
   await enqueueBotUpdate({
     guildId,
     type: "worldbuff_player_change_notice",
     payload: {
-      recipient: "Ariee",
+      recipient: configuredTargets.length ? "" : "Ariee",
+      targets: configuredTargets,
       character,
       action,
       actionLabel,
@@ -14305,7 +14311,10 @@ async function createRaidRecord({ guildId, query: params }) {
     console.warn("PO-Anmelder konnten nach Raid-Änderung nicht aktualisiert werden:", error.message || error);
   });
   if(clean(raid.lead_pin)){
-    const targets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
+    const savedTargets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
+    const configuredTargets=await notificationTargetsForPermissions(guildId,"loot_master").catch(()=>[]);
+    const targetKeys=new Set();
+    const targets=[...savedTargets,...configuredTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(targetKeys.has(key))return false;targetKeys.add(key);return clean(target?.value||target?.name);});
     if(targets.length){
       const lootMasterPin=await effectiveLootMasterPin(guildId);
       await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
@@ -17844,6 +17853,21 @@ async function notificationDiscordNames(guildId,permission){
   await ensurePlayerRoleSchema();
   const result=await query(`select distinct jsonb_array_elements_text(coalesce(notification_discord_names,'[]'::jsonb)) as discord_name from players where guild_id=$1 and coalesce(permissions,'[]'::jsonb) ? $2`,[guildId,clean(permission)]);
   return result.rows.map(row=>clean(row.discord_name)).filter(Boolean);
+}
+
+async function notificationTargetsForPermissions(guildId, permissions){
+  const permissionList=[...new Set((Array.isArray(permissions)?permissions:[permissions]).map(clean).filter(Boolean))];
+  const targets=[];
+  for(const permission of permissionList){
+    const [roleIds,names]=await Promise.all([
+      notificationDiscordRoleIds(guildId,permission),
+      notificationDiscordNames(guildId,permission)
+    ]);
+    roleIds.forEach(value=>targets.push({type:"role",value,label:value}));
+    names.forEach(value=>targets.push({type:"name",value,label:value}));
+  }
+  const seen=new Set();
+  return targets.filter(target=>{const key=`${target.type}:${target.value}`;if(seen.has(key))return false;seen.add(key);return true;});
 }
 
 async function setPlayerLoginBlocked({ guildId, query: params }) {
