@@ -14621,10 +14621,11 @@ async function loadP0ReleasePanel(){
       if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
       return;
     }
-    const [releaseResult, reviewResult, requestResult] = await Promise.all([
+    const [releaseResult, reviewResult, requestResult, displayResult] = await Promise.all([
       railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
       railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" }),
-      CURRENT_GUILD_SLUG === "nachtloot" ? railwayApi({ action:"guildGetPoReleaseRequests", masterCode }) : Promise.resolve({success:true,entries:[]})
+      CURRENT_GUILD_SLUG === "nachtloot" ? railwayApi({ action:"guildGetPoReleaseRequests", masterCode }) : Promise.resolve({success:true,entries:[]}),
+      railwayApi({ action:"getPoReleaseDisplaySettings" })
     ]);
     if(!releaseResult.success){
       if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
@@ -14637,6 +14638,11 @@ async function loadP0ReleasePanel(){
     poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
     p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
     poReleaseRequests = Array.isArray(requestResult.entries) ? requestResult.entries : [];
+    if(displayResult.configured && Array.isArray(displayResult.visibleRaids)){
+      poReleaseVisibleColumns = new Set(displayResult.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
+    }else{
+      await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+    }
     renderP0ReleasePanelContent();
   }catch(error){
     if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
@@ -14734,10 +14740,15 @@ function setPoReleaseSearch(value){
   renderPoReleaseRows();
 }
 
-function togglePoReleaseColumn(raid, visible){
+async function togglePoReleaseColumn(raid, visible){
   if(visible) poReleaseVisibleColumns.add(raid); else poReleaseVisibleColumns.delete(raid);
   try{localStorage.setItem(PO_RELEASE_COLUMNS_KEY,JSON.stringify(Array.from(poReleaseVisibleColumns)));}catch(_error){}
   renderP0ReleasePanelContent();
+  try{
+    const result=await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode:document.getElementById("masterCode").value.trim(),visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+    if(!result.success) throw new Error(result.error||"Spaltenauswahl konnte nicht gespeichert werden.");
+    setStatus("Sichtbare PO-Freigaben wurden für diese Gilde gespeichert.","good");
+  }catch(error){setStatus(error.message||"Spaltenauswahl konnte nicht gespeichert werden.","bad");}
 }
 
 function poReleaseCheckHtml(entry, raid, index){
