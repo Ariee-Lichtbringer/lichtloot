@@ -793,6 +793,37 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   width:100%;
 }
 
+/* Geordneter Zugangskopf: drei klar getrennte Funktionsspalten. */
+.compact-auth{max-width:1120px}
+.unlock{
+  grid-template-columns:repeat(3,minmax(240px,1fr));
+  grid-template-rows:auto auto;
+  gap:8px 14px;
+  align-items:stretch;
+}
+.unlock>.field{
+  padding:14px 14px 6px;
+  border:1px solid rgba(148,163,184,.18);
+  border-bottom:0;
+  border-radius:10px 10px 0 0;
+  background:linear-gradient(135deg,rgba(12,18,32,.88),rgba(2,6,23,.56));
+}
+.unlock>.btn{
+  min-height:42px;
+  border-radius:0 0 10px 10px;
+}
+.unlock>.field:nth-child(1){grid-column:1;grid-row:1}
+.unlock>.btn:nth-child(2){grid-column:1;grid-row:2}
+.unlock>.field:nth-child(3){grid-column:2;grid-row:1}
+.unlock>.btn:nth-child(4){grid-column:2;grid-row:2}
+.unlock>.login-summary-card:nth-child(5){grid-column:3;grid-row:1 / span 2;min-height:0;padding:14px}
+.unlock>#pendingLoginCard{grid-column:3;grid-row:3}
+.compact-auth>#status{max-width:100%;margin-top:10px!important}
+@media(max-width:900px){
+  .unlock{grid-template-columns:1fr;grid-template-rows:auto}
+  .unlock>*{grid-column:1!important;grid-row:auto!important}
+}
+
 .login-summary-card{
   min-height:68px;
   border:1px solid rgba(148,163,184,.18);
@@ -6337,6 +6368,7 @@ function openLootMasterPasswordDialog(){
   const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
   backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:560px"><h3>Plündermeister-Passwort festlegen</h3><p>Dieses Passwort gilt im Raidleadpanel ausschließlich für <strong>PO+ übertragen</strong> und <strong>Item erhalten / Punkte entfernen</strong>. Die Gildenleitungsseite bleibt gesperrt; der Mastercode bleibt zusätzlich gültig.</p><label style="display:grid;gap:7px">Neues Passwort<input id="newLootMasterPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Mindestens 6 Zeichen"></label><label style="display:grid;gap:7px;margin-top:12px">Passwort wiederholen<input id="repeatLootMasterPassword" type="password" minlength="6" autocomplete="new-password"></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern</button></div></div>`;
   const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.querySelector("[data-save]")?.addEventListener("click",()=>{const field=backdrop.querySelector("#lootMasterDiscordNames");if(field)field.value=field.value.replace(/\r?\n/g,";");});
   backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const password=backdrop.querySelector("#newLootMasterPassword")?.value.trim()||"";const repeat=backdrop.querySelector("#repeatLootMasterPassword")?.value.trim()||"";if(password.length<6){setStatus("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.","bad");return;}if(password!==repeat){setStatus("Die beiden Passwörter stimmen nicht überein.","bad");return;}try{const result=await railwayWrite({action:"guildSetLootMasterAccessPassword",masterCode:document.getElementById("masterCode").value.trim(),password});if(!result.success)throw new Error(result.error||"Passwort konnte nicht gespeichert werden.");close();setStatus("Plündermeister-Passwort gespeichert.","good");}catch(error){setStatus(error.message||"Passwort konnte nicht gespeichert werden.","bad");}});
   document.body.appendChild(backdrop);
 }
@@ -6344,11 +6376,11 @@ function openLootMasterPasswordDialog(){
 async function openLootMasterTargetsDialog(raidId){
   const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id)===String(raidId));if(!raid)return;
   if(!raidHelperDiscordRoles.length){try{const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode:document.getElementById("masterCode").value.trim(),t:Date.now()});raidHelperDiscordRoles=Array.isArray(result.roles)?result.roles:[];}catch(_error){}}
-  const saved=Array.isArray(raid.lootMasterTargets)?raid.lootMasterTargets:[];const selectedRoles=new Set(saved.filter(item=>item.type==="role").map(item=>String(item.value)));const savedNames=saved.filter(item=>item.type!=="role").map(item=>item.value).join(", ");
+  const saved=Array.isArray(raid.lootMasterTargets)?raid.lootMasterTargets:[];const selectedRoles=new Set(saved.filter(item=>item.type==="role").map(item=>String(item.value)));const savedNames=saved.filter(item=>item.type!=="role").map(item=>item.value).join("\n");
   const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
-  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:680px"><h3>LeadPIN an Plündermeister schicken</h3><p><strong>${escapeHtml(raid.raidName||raid.raid||"Raid")}</strong> · Mehrfachauswahl möglich. Die Auswahl bleibt für diesen Raid gespeichert.</p><label style="display:grid;gap:7px">Discord-Namen<input id="lootMasterDiscordNames" value="${escapeAttr(savedNames)}" placeholder="z. B. Ariee, Juksi"></label><h4>Discord-Rollen</h4><div class="status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:7px;max-height:280px;overflow:auto">${raidHelperDiscordRoles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-pm-role value="${escapeAttr(id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`;}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern &amp; LeadPIN senden</button></div></div>`;
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:680px"><h3>LeadPIN an Plündermeister schicken</h3><p><strong>${escapeHtml(raid.raidName||raid.raid||"Raid")}</strong> · Mehrfachauswahl möglich. Die Auswahl bleibt für diesen Raid gespeichert.</p><label style="display:grid;gap:7px">Discord-Namen<textarea id="lootMasterDiscordNames" rows="3" placeholder="Ein Name pro Zeile, z. B.&#10;Ariee&#10;Juksi">${escapeHtml(savedNames)}</textarea><small class="muted">Mehrere Namen mit neuer Zeile, Komma oder Semikolon trennen.</small></label><h4>Discord-Rollen</h4><div class="status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:7px;max-height:280px;overflow:auto">${raidHelperDiscordRoles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-pm-role value="${escapeAttr(id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`;}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern &amp; LeadPIN senden</button></div></div>`;
   const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
-  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const names=(backdrop.querySelector("#lootMasterDiscordNames")?.value||"").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value,label:value}));const roles=[...backdrop.querySelectorAll("[data-pm-role]:checked")].map(input=>{const role=raidHelperDiscordRoles.find(item=>String(item.id||item.roleId)===input.value);return {type:"role",value:input.value,label:role?.name||role?.roleName||input.value};});try{const result=await railwayWrite({action:"guildSetRaidLootMasterTargets",masterCode:document.getElementById("masterCode").value.trim(),raidId:raid.raidId||raid.id,targets:JSON.stringify([...names,...roles])});if(!result.success)throw new Error(result.error||"Empfänger konnten nicht gespeichert werden.");raid.lootMasterTargets=result.targets||[];close();renderDashboardCards();renderRaids();setStatus(result.queued?"Plündermeister gespeichert und LeadPIN per Discord versendet.":"Plündermeister gespeichert. Keine DM-Empfänger ausgewählt.","good");}catch(error){setStatus(error.message||"Empfänger konnten nicht gespeichert werden.","bad");}});
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const names=(backdrop.querySelector("#lootMasterDiscordNames")?.value||"").split(/[,;\\n]+/).map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value,label:value}));const roles=[...backdrop.querySelectorAll("[data-pm-role]:checked")].map(input=>{const role=raidHelperDiscordRoles.find(item=>String(item.id||item.roleId)===input.value);return {type:"role",value:input.value,label:role?.name||role?.roleName||input.value};});try{const result=await railwayWrite({action:"guildSetRaidLootMasterTargets",masterCode:document.getElementById("masterCode").value.trim(),raidId:raid.raidId||raid.id,targets:JSON.stringify([...names,...roles])});if(!result.success)throw new Error(result.error||"Empfänger konnten nicht gespeichert werden.");raid.lootMasterTargets=result.targets||[];close();renderDashboardCards();renderRaids();setStatus(result.queued?"Plündermeister gespeichert und LeadPIN per Discord versendet.":"Plündermeister gespeichert. Keine DM-Empfänger ausgewählt.","good");}catch(error){setStatus(error.message||"Empfänger konnten nicht gespeichert werden.","bad");}});
   document.body.appendChild(backdrop);
 }
 
