@@ -4468,6 +4468,20 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 }
 
 .p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
+.po-release-column-picker{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:9px 10px;
+  border:1px solid rgba(148,163,184,.2);
+  border-radius:10px;
+  background:rgba(15,23,42,.38);
+}
+.po-release-column-picker > span{color:var(--muted);font-size:12px;font-weight:800}
+.po-release-column-toggle{display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:4px 9px;border:1px solid rgba(148,163,184,.24);border-radius:999px;color:#cbd5e1;background:rgba(2,6,23,.45);font-size:12px;font-weight:800;cursor:pointer}
+.po-release-column-toggle:has(input:checked){color:#fde047;border-color:rgba(250,204,21,.48);background:rgba(250,204,21,.08)}
+.po-release-column-toggle input{accent-color:#eab308}
 .po-release-state{
   display:inline-flex;
   align-items:center;
@@ -4833,6 +4847,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link nachtloot-only" type="button" onclick="openPoItemSettingsPanel()" aria-label="PO Items festlegen" title="PO Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">PO Items festlegen</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
+          <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
           <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
         </div>
       </div>
@@ -4909,6 +4924,18 @@ body.worldbuff-only .master-only{display:none!important}
     </div>
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
   </section>
+
+  <details class="panel">
+    <summary>🚨 Notfall-Prio CSV importieren</summary>
+    <div style="display:grid;gap:12px;padding-top:14px">
+      <p class="muted">CSV von lichtloot.de/notfall auswählen, Zielraid festlegen und Prios einschließlich P0+ übernehmen.</p>
+      <button class="btn danger" type="button" onclick="window.open('notfall/meister.html','_blank')">Notfall-Plündermeister öffnen</button>
+      <select id="emergencyImportRaid"><option value="">Erst Gildenleitung freischalten</option></select>
+      <input id="emergencyImportFile" type="file" accept=".csv,text/csv">
+      <button class="btn" type="button" onclick="importEmergencyPrioCsv()">CSV prüfen und in Raid übertragen</button>
+      <div id="emergencyImportStatus" class="status">Noch keine CSV ausgewählt.</div>
+    </div>
+  </details>
 
   <div class="dashboard-grid">
     <div class="dashboard-column">
@@ -6134,6 +6161,9 @@ let poPostEntries = [];
 let poReleaseCharacters = [];
 let poReleaseRequests = [];
 let poReleaseSearch = "";
+const PO_RELEASE_RAIDS = [["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+const PO_RELEASE_COLUMNS_KEY = "lichtloot:p0-release-columns";
+let poReleaseVisibleColumns = (() => {try{const saved=JSON.parse(localStorage.getItem(PO_RELEASE_COLUMNS_KEY)||"null");if(Array.isArray(saved))return new Set(saved.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));}catch(_error){}return new Set(PO_RELEASE_RAIDS.map(([raid])=>raid));})();
 let poItemSettingsRaid = "mc";
 let poItemSettingsRows = [];
 let poItemSettingsSearch = "";
@@ -6271,6 +6301,25 @@ function openWorldbuffPasswordDialog(){
   });
   document.body.appendChild(backdrop);
   window.setTimeout(() => backdrop.querySelector("#newWorldbuffAccessPassword")?.focus(), 30);
+}
+
+function openLootMasterPasswordDialog(){
+  const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:560px"><h3>Plündermeister-Passwort festlegen</h3><p>Dieses Passwort gilt im Raidleadpanel ausschließlich für <strong>PO+ übertragen</strong> und <strong>Item erhalten / Punkte entfernen</strong>. Die Gildenleitungsseite bleibt gesperrt; der Mastercode bleibt zusätzlich gültig.</p><label style="display:grid;gap:7px">Neues Passwort<input id="newLootMasterPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Mindestens 6 Zeichen"></label><label style="display:grid;gap:7px;margin-top:12px">Passwort wiederholen<input id="repeatLootMasterPassword" type="password" minlength="6" autocomplete="new-password"></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern</button></div></div>`;
+  const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const password=backdrop.querySelector("#newLootMasterPassword")?.value.trim()||"";const repeat=backdrop.querySelector("#repeatLootMasterPassword")?.value.trim()||"";if(password.length<6){setStatus("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.","bad");return;}if(password!==repeat){setStatus("Die beiden Passwörter stimmen nicht überein.","bad");return;}try{const result=await railwayWrite({action:"guildSetLootMasterAccessPassword",masterCode:document.getElementById("masterCode").value.trim(),password});if(!result.success)throw new Error(result.error||"Passwort konnte nicht gespeichert werden.");close();setStatus("Plündermeister-Passwort gespeichert.","good");}catch(error){setStatus(error.message||"Passwort konnte nicht gespeichert werden.","bad");}});
+  document.body.appendChild(backdrop);
+}
+
+async function openLootMasterTargetsDialog(raidId){
+  const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id)===String(raidId));if(!raid)return;
+  if(!raidHelperDiscordRoles.length){try{const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode:document.getElementById("masterCode").value.trim(),t:Date.now()});raidHelperDiscordRoles=Array.isArray(result.roles)?result.roles:[];}catch(_error){}}
+  const saved=Array.isArray(raid.lootMasterTargets)?raid.lootMasterTargets:[];const selectedRoles=new Set(saved.filter(item=>item.type==="role").map(item=>String(item.value)));const savedNames=saved.filter(item=>item.type!=="role").map(item=>item.value).join(", ");
+  const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:680px"><h3>LeadPIN an Plündermeister schicken</h3><p><strong>${escapeHtml(raid.raidName||raid.raid||"Raid")}</strong> · Mehrfachauswahl möglich. Die Auswahl bleibt für diesen Raid gespeichert.</p><label style="display:grid;gap:7px">Discord-Namen<input id="lootMasterDiscordNames" value="${escapeAttr(savedNames)}" placeholder="z. B. Ariee, Juksi"></label><h4>Discord-Rollen</h4><div class="status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:7px;max-height:280px;overflow:auto">${raidHelperDiscordRoles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-pm-role value="${escapeAttr(id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`;}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern &amp; LeadPIN senden</button></div></div>`;
+  const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const names=(backdrop.querySelector("#lootMasterDiscordNames")?.value||"").split(",").map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value,label:value}));const roles=[...backdrop.querySelectorAll("[data-pm-role]:checked")].map(input=>{const role=raidHelperDiscordRoles.find(item=>String(item.id||item.roleId)===input.value);return {type:"role",value:input.value,label:role?.name||role?.roleName||input.value};});try{const result=await railwayWrite({action:"guildSetRaidLootMasterTargets",masterCode:document.getElementById("masterCode").value.trim(),raidId:raid.raidId||raid.id,targets:JSON.stringify([...names,...roles])});if(!result.success)throw new Error(result.error||"Empfänger konnten nicht gespeichert werden.");raid.lootMasterTargets=result.targets||[];close();renderDashboardCards();renderRaidTable();setStatus(result.queued?"Plündermeister gespeichert und LeadPIN per Discord versendet.":"Plündermeister gespeichert. Keine DM-Empfänger ausgewählt.","good");}catch(error){setStatus(error.message||"Empfänger konnten nicht gespeichert werden.","bad");}});
+  document.body.appendChild(backdrop);
 }
 
 function clearMasterCode(){
@@ -7455,6 +7504,7 @@ function renderDashboardCards(){
             <div class="active-raid-actions">
               <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+              <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM schicken</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
@@ -7715,6 +7765,7 @@ function renderRaids(){
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+            <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
@@ -7947,6 +7998,7 @@ const LICHTLOOT_PERMISSIONS=[
   {value:"create_raids",label:"Raids erstellen"},
   {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung"},
   {value:"guild_admin",label:"Gildenverwaltung"},
+  {value:"loot_master",label:"Plündermeister"},
   {value:"notify_player_logins",label:"Benachrichtigung: Spielerlogins freigeben"},
   {value:"notify_worldbuff_changes",label:"Benachrichtigung: Worldbuff angemeldet/verschoben"},
   {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
@@ -14408,6 +14460,7 @@ function renderP0ReleasePanelContent(){
       </div>
       <div class="p0-toolbar">
         <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
+        <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span>Spalten anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -14417,13 +14470,7 @@ function renderP0ReleasePanelContent(){
               <th>Klasse</th>
               <th>LichtLootAccount</th>
               ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Rekrutenstatus je Raid</th>" : ""}
-              <th>P0+ Freigabe MC</th>
-              <th>P0+ Freigabe BWL</th>
-              <th>P0+ Freigabe AQ40</th>
-              <th>P0+ Freigabe NAXX</th>
-              <th>P0+ ZG Mittwoch</th>
-              <th>P0+ ZG PRIME</th>
-              <th>P0+ ZG LATE</th>
+              ${PO_RELEASE_RAIDS.filter(([raid])=>poReleaseVisibleColumns.has(raid)).map(([raid])=>`<th>${escapeHtml(poReleaseRaidLabel(raid))}</th>`).join("")}
               <th>Aktion</th>
             </tr>
           </thead>
@@ -14489,6 +14536,12 @@ function setPoReleaseSearch(value){
   renderPoReleaseRows();
 }
 
+function togglePoReleaseColumn(raid, visible){
+  if(visible) poReleaseVisibleColumns.add(raid); else poReleaseVisibleColumns.delete(raid);
+  try{localStorage.setItem(PO_RELEASE_COLUMNS_KEY,JSON.stringify(Array.from(poReleaseVisibleColumns)));}catch(_error){}
+  renderP0ReleasePanelContent();
+}
+
 function poReleaseCheckHtml(entry, raid, index){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
   return checked
@@ -14525,7 +14578,7 @@ function renderPoReleaseRows(){
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
-  const columnCount = CURRENT_GUILD_SLUG === "nachtloot" ? 12 : 11;
+  const columnCount = 4 + poReleaseVisibleColumns.size + (CURRENT_GUILD_SLUG === "nachtloot" ? 1 : 0);
   if(!document.getElementById("masterCode").value.trim()){
     tbody.innerHTML = `<tr><td colspan="${columnCount}" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>`;
     return;
@@ -14547,13 +14600,7 @@ function renderPoReleaseRows(){
             ${recruitStatusLiftHtml(entry,index)}
           </td>
         ` : ""}
-        <td>${poReleaseCheckHtml(entry,"mc",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"bwl",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"aq40",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"naxx",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-mittwoch",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-prime",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-late",index)}</td>
+        ${PO_RELEASE_RAIDS.filter(([raid])=>poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td>${poReleaseCheckHtml(entry,raid,index)}</td>`).join("")}
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
