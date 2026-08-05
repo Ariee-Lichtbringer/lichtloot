@@ -164,12 +164,8 @@ th{color:var(--gold);text-transform:uppercase;font-size:10px}
 body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-status{margin-top:8px;padding:10px;border:1px solid rgba(var(--gold-rgb),.3);border-radius:12px;background:rgba(2,6,23,.78)}
 .loot-release-title{color:var(--gold);font-size:11px;font-weight:900;text-transform:uppercase;margin-bottom:7px}
-.loot-release-list{display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:3px}
-.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900;flex:0 0 auto;white-space:nowrap}
-.player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
-.player-status-panel #playerStatus{grid-area:auto!important}
-.plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
-.plundermeister-login-btn img{width:34px;height:34px;border-radius:8px;object-fit:cover}
+.loot-release-list{display:flex;flex-wrap:wrap;gap:6px}
+.loot-release-chip{padding:5px 8px;border-radius:8px;border:1px solid #475569;background:#111827;color:#cbd5e1;font-size:10px;font-weight:900}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
@@ -1676,6 +1672,57 @@ body.random-prio .tooltip-p0{
   .raid-start-side-nav{display:none!important}
 }
 </style>
+<style>
+/* Freigaben als übersichtliche zweite Zeile unter den Prio-Daten */
+.player-card-layout{
+  grid-template-areas:
+    "pin selected chars status"
+    "releases releases releases releases" !important;
+}
+.player-input-grid > div:nth-child(2){display:contents!important}
+.player-input-grid > div:nth-child(2) > label{display:none!important}
+.character-dropzone{grid-area:selected!important}
+#selectedCharacterPoReleases{
+  grid-area:releases!important;
+  width:100%!important;
+  margin:0!important;
+  padding:12px 14px!important;
+  display:grid!important;
+  grid-template-columns:150px minmax(0,1fr)!important;
+  gap:10px 14px!important;
+  align-items:center!important;
+}
+#selectedCharacterPoReleases .loot-release-title{margin:0!important}
+#selectedCharacterPoReleases .loot-release-list{
+  display:grid!important;
+  grid-template-columns:repeat(10,minmax(82px,1fr))!important;
+  gap:7px!important;
+  min-width:0!important;
+}
+#selectedCharacterPoReleases .loot-release-chip{
+  width:100%!important;
+  min-height:34px!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:6px 8px!important;
+  text-align:center!important;
+  white-space:normal!important;
+}
+#selectedCharacterPoReleases .loot-release-chip.approved{
+  background:#16833f!important;
+  border-color:#4ade80!important;
+  color:#fff!important;
+}
+#selectedCharacterPoReleases:has(.loot-release-list) .loot-release-help{display:none!important}
+@media(max-width:1250px){
+  #selectedCharacterPoReleases .loot-release-list{grid-template-columns:repeat(5,minmax(92px,1fr))!important}
+}
+@media(max-width:900px){
+  .player-card-layout{grid-template-areas:"pin" "selected" "releases" "chars" "status"!important}
+  #selectedCharacterPoReleases{grid-template-columns:1fr!important}
+  #selectedCharacterPoReleases .loot-release-list{grid-template-columns:repeat(2,minmax(110px,1fr))!important}
+}
+</style>
 </head>
 
 <body class="raid-aq20 p0-only">
@@ -1803,15 +1850,15 @@ body.random-prio .tooltip-p0{
     </div>
     <div class="raid-start-group collapsed">
       <button class="raid-start-group-toggle" type="button" onclick="toggleRaidStartGroup(this)"><span>Raidorga</span><span>›</span></button>
-      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Plündermeister</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
+      <div class="raid-start-group-items"><button type="button" onclick="openRaidStartAction('raidlead')">Raidleadpanel</button><button type="button" onclick="openRaidStartAction('create')">Raid erstellen</button></div>
     </div>
   </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
   <button class="nav-btn nav-p0plus-overview" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
-    <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
-    <button class="nav-btn" onclick="raidleadLogin()">Plündermeister</button>
+    <input id="raidleadPin" type="text" placeholder="Raidlead PIN" onkeydown="raidleadEnter(event)">
+    <button class="nav-btn" onclick="raidleadLogin()">Raidlead</button>
   </div>
 </nav>
 <script>
@@ -1891,10 +1938,7 @@ function openRaidStartAction(action){
         </div>
       </div>
 
-      <div class="player-status-panel">
-        <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
-        <button class="plundermeister-login-btn" type="button" onclick="openPlundermeisterLogin()"><img src="../images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
-      </div>
+      <div id="playerStatus" class="status">Status: Spielerlogin wird geprüft …</div>
     </div>
 
   </div>
@@ -2105,7 +2149,6 @@ function openRaidStartAction(action){
 const RAID_NAME = "aq20";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const EMERGENCY_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
-try{ localStorage.removeItem("lichtloot_emergency_prios_v1"); }catch(error){}
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
@@ -3599,37 +3642,13 @@ async function submitPrioWithPin(savePin, oldPin){
     throw new Error(text || "Railway-Antwort konnte nicht gelesen werden.");
   }
   if(!response.ok){
-    const apiError=new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
-    apiError.httpStatus=response.status;
-    throw apiError;
+    throw new Error((data && (data.error || data.message)) || ("Railway-API Fehler " + response.status));
   }
   return data;
 }
 
 function emergencyPrioPayload(){const p1=document.getElementById("p1").value,p2=PRIO_COUNT>=2?document.getElementById("p2").value:"",p3=PRIO_COUNT>=3?document.getElementById("p3").value:"";const isP0Plus=SUPPORTS_P0PLUS&&Boolean(window.p0PlusWasClicked)&&p1&&p1===p2&&p2===p3;let playerPin=document.getElementById("playerPin").value.trim();if(!playerPin){playerPin="NF-"+Math.random().toString(36).slice(2,7).toUpperCase();document.getElementById("playerPin").value=playerPin;}return {action:"saveEmergencyPrio",guild:currentGuildSlug(),raid:RAID_NAME,raidId:currentRaidId||"",raidPin:document.getElementById("raidPin").value.trim(),raidDate:currentRaidDate||"",raidTime:currentRaidTime||"",playerPin,player:document.getElementById("playerName").value.trim(),server:document.getElementById("playerServer").value,className:document.getElementById("playerClass").value,p1,p2,p3,p0Plus:isP0Plus?"ja":"nein",submittedAt:new Date().toISOString()};}
 async function saveEmergencyPrio(){const entry=emergencyPrioPayload(),storageKey="lichtloot_emergency_prios_v1";let entries=[];try{entries=JSON.parse(localStorage.getItem(storageKey)||"[]");}catch(error){}const key=[entry.guild,entry.raidId||entry.raidPin||(entry.raidDate+"|"+entry.raidTime),entry.raid,entry.player,entry.server].map(value=>String(value||"").trim().toLowerCase()).join("|"),index=entries.findIndex(item=>item.entryKey===key),stored={...entry,entryKey:key,status:"offen"};if(index>=0)entries[index]=stored;else entries.push(stored);localStorage.setItem(storageKey,JSON.stringify(entries));try{await fetch(EMERGENCY_APPS_SCRIPT_URL+"?"+new URLSearchParams(entry).toString()+"&t="+Date.now(),{mode:"no-cors",cache:"no-store"});}catch(error){console.warn("Google-Notfallspeicher nicht erreichbar; lokale Kopie bleibt erhalten.",error);}autoSaveDraft();saveCharacterProfile();return entry;}
-
-function isRealEmergencySaveError(error){
-  const status=Number(error && error.httpStatus || 0);
-  const message=String(error && error.message || "").toLowerCase();
-  return status>=500 || error?.name==="TypeError" || error?.name==="AbortError" || message.includes("zeitüberschreitung") || message.includes("failed to fetch") || message.includes("netzwerk");
-}
-
-async function removeEmergencyPrioRecord(payload,playerPin){
-  const storageKey="lichtloot_emergency_prios_v1";
-  try{
-    const entries=JSON.parse(localStorage.getItem(storageKey)||"[]");
-    const player=String(payload.player||"").trim().toLowerCase();
-    const server=String(payload.server||"").trim().toLowerCase();
-    const raid=String(payload.raid||RAID_NAME||"").trim().toLowerCase();
-    const filtered=entries.filter(entry=>!(String(entry.player||"").trim().toLowerCase()===player && String(entry.raid||"").trim().toLowerCase()===raid && (!server || String(entry.server||"").trim().toLowerCase()===server)));
-    localStorage.setItem(storageKey,JSON.stringify(filtered));
-  }catch(error){ console.warn("Lokaler Notfalldatensatz konnte nicht bereinigt werden.",error); }
-  try{
-    const params=new URLSearchParams({action:"deleteEmergencyPrio",guild:currentGuildSlug(),raid:payload.raid||RAID_NAME,player:payload.player||"",server:payload.server||"",playerPin:playerPin||""});
-    await fetch(EMERGENCY_APPS_SCRIPT_URL+"?"+params.toString()+"&t="+Date.now(),{mode:"no-cors",cache:"no-store"});
-  }catch(error){ console.warn("Notfalldatensatz konnte extern nicht bereinigt werden.",error); }
-}
 
 function isPinConflictError(result){
   const message=String((result && (result.error || result.message)) || "").toLowerCase();
@@ -3721,17 +3740,23 @@ async function savePrio(){
       P0Item:isP0Plus ? p1 : ""
     });
 
+    const displayedPin = result.tempPin || result.characterPin || playerPin;
+
     status.innerHTML =
       `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
-      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong>`;
+      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
+      `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
+      `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
+
+    if(pinInfo.generated){
+      showParticipantPinPopup(displayedPin);
+    }
 
     await refreshAfterPrioSave();
     renderCurrentPrios();
 
   }catch(error){
     console.error(error);
-    status.innerHTML=`<span class="bad">Prios konnten nicht gespeichert werden.</span><br>${safe(error.message||"Bitte später erneut versuchen.")}`;
-    return;
     try{const emergency=await saveEmergencyPrio();status.innerHTML=`<span class="warn">⚠ Notfallmodus aktiv.</span><br>Deine Prios wurden lokal und an den Notfallspeicher gesendet.<br>Teilnehmer-PIN: <strong>${safe(emergency.playerPin)}</strong>`;}catch(emergencyError){console.error(emergencyError);status.innerHTML=`<span class="bad">Fehler beim Speichern.</span><br>${safe(emergencyError.message||"Notfallspeicherung fehlgeschlagen.")}`;}
   }finally{
     setTimeout(()=>{ if(saveButton) saveButton.disabled=false; },3000);
@@ -3788,16 +3813,6 @@ async function raidleadLogin(){
   }
 
   alert("Falsche Raidlead-PIN.");
-}
-
-function openPlundermeisterLogin(){
-  const pin=prompt("LeadPIN für den Plündermeister eingeben:","");
-  if(pin===null)return;
-  const value=String(pin||"").trim();
-  if(!value){alert("Bitte LeadPIN eingeben.");return;}
-  const input=document.getElementById("raidleadPin");
-  if(input)input.value=value;
-  raidleadLogin();
 }
 
 function raidleadEnter(event){
@@ -7301,7 +7316,6 @@ async function deleteOwnPrio(payload){
   const deleteRaidId=payload.raidId || currentRaidId || '';
 
   const baseParams=
-    '&guild='+encodeURIComponent(currentGuildSlug())+
     '&pin='+encodeURIComponent(pin)+
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
@@ -7311,11 +7325,8 @@ async function deleteOwnPrio(payload){
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
     '&server='+encodeURIComponent(payload.server || '')+
-    '&prioId='+encodeURIComponent(payload.prioId || '')+
     '&raidId='+encodeURIComponent(deleteRaidId)+
     '&raid='+encodeURIComponent(payload.raid || '')+
-    '&raidDate='+encodeURIComponent(currentRaidDate || '')+
-    '&raidTime='+encodeURIComponent(currentRaidTime || '')+
     '&createdAt='+encodeURIComponent(payload.createdAt || '')+
     '&t='+Date.now();
 
@@ -7334,7 +7345,6 @@ async function deleteOwnPrio(payload){
     }
 
     clearDeletedCurrentSelection(payload);
-    await removeEmergencyPrioRecord(payload,pin);
     if(status) status.innerHTML='<span class="ok">✓ Komplette Prioauswahl wurde gelöscht.</span>';
 
     if(payload.rowId){
@@ -9785,20 +9795,6 @@ function getExportRaidLabel(){
   return String(RAID_NAME || "raid").toUpperCase();
 }
 
-function formatItemForPrio3Reforged(itemName){
-  const name = String(itemName || "").trim();
-  if(!name || name === "-") return "-0";
-  const existing = name.match(/^(.*)-(\d+)$/);
-  if(existing){
-    const itemText = existing[1].trim();
-    const itemId = existing[2];
-    return /\d/.test(itemText) ? itemId + "-" + itemText : name;
-  }
-  const itemId = getPrio3ItemId(name);
-  if(!itemId || itemId === name) return name;
-  return /\d/.test(name) ? itemId + "-" + name : name + "-" + itemId;
-}
-
 function getExportDateLabel(){
   return new Date().toISOString().slice(0,10);
 }
@@ -9834,16 +9830,28 @@ function exportPrioListTXT(){
     return;
   }
 
-  const lines = prios.map(entry => {
+  const lines = [];
+  lines.push(getExportRaidLabel() + " Prioliste");
+  lines.push("Stand: " + new Date().toLocaleString("de-DE"));
+  lines.push("");
+
+  prios.forEach((entry,index) => {
     const player = getPrioEntryValue(entry, ["Spieler", "player", "Player", "name", "Name"]);
     const playerClass = getPrioEntryValue(entry, ["Klasse", "class", "Class", "klasse"]);
-    const p1 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P1", "p1"]));
-    const p2 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P2", "p2"]));
-    const p3 = formatItemForPrio3Reforged(getPrioEntryValue(entry, ["P3", "p3"]));
-    return player + "\t\t" + playerClass + "\t" + p1 + "\t" + p2 + "\t" + p3;
+    const p1 = getPrioEntryValue(entry, ["P1", "p1"]);
+    const p2 = getPrioEntryValue(entry, ["P2", "p2"]);
+    const p3 = getPrioEntryValue(entry, ["P3", "p3"]);
+    const p0 = String(entry.P0Plus || entry.p0Plus || "").toLowerCase() === "ja" ? "ja" : "nein";
+
+    lines.push((index + 1) + ". " + player + " (" + playerClass + ")");
+    lines.push("   P1: " + (p1 || "-"));
+    lines.push("   P2: " + (p2 || "-"));
+    lines.push("   P3: " + (p3 || "-"));
+    lines.push("   P0/PO: " + p0);
+    lines.push("");
   });
 
-  downloadTextFile(lines.join("\r\n") + "\r\n", getExportRaidLabel() + "-prio3-reforged.txt", "text/plain;charset=utf-8;");
+  downloadTextFile(lines.join("\n"), getExportRaidLabel() + "-Prioliste-" + getExportDateLabel() + ".txt", "text/plain;charset=utf-8;");
 }
 
 function exportPrioListCSV(){
@@ -10054,7 +10062,6 @@ function prioReportPayload(prio){
 function publishedPrioDeletePayload(prio,index){
   return {
     rowId:"published-prio-row-"+index,
-    prioId:prio.id || prio.prioId || "",
     raidId:currentRaidId || prio.raidId || prio.RaidID || "",
     raid:RAID_NAME,
     raidName:RAID_NAME,
