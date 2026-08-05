@@ -2581,13 +2581,14 @@ async function ensureGuildNotificationSettingsSchema(){
     updated_at timestamptz not null default now(),
     primary key (guild_id,notification_key)
   )`);
+  await query(`alter table guild_notification_settings add column if not exists message_template text not null default ''`);
 }
 
 async function getGuildNotificationSettings({guildId,query:params}){
   requireMasterCode(params.masterCode);
   await ensureGuildNotificationSettingsSchema();
-  const result=await query(`select notification_key,targets from guild_notification_settings where guild_id=$1`,[guildId]);
-  return {success:true,settings:Object.fromEntries(result.rows.map(row=>[row.notification_key,Array.isArray(row.targets)?row.targets:[]]))};
+  const result=await query(`select notification_key,targets,message_template from guild_notification_settings where guild_id=$1`,[guildId]);
+  return {success:true,settings:Object.fromEntries(result.rows.map(row=>[row.notification_key,Array.isArray(row.targets)?row.targets:[]])),templates:Object.fromEntries(result.rows.map(row=>[row.notification_key,clean(row.message_template)]))};
 }
 
 async function setGuildNotificationSetting({guildId,query:params}){
@@ -2598,8 +2599,15 @@ async function setGuildNotificationSetting({guildId,query:params}){
   if(!allowed.has(notificationKey)){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
   let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
   targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
-  await query(`insert into guild_notification_settings(guild_id,notification_key,targets,updated_at) values($1,$2,$3::jsonb,now()) on conflict(guild_id,notification_key) do update set targets=$3::jsonb,updated_at=now()`,[guildId,notificationKey,JSON.stringify(targets)]);
-  return {success:true,notificationKey,targets};
+  const messageTemplate=String(params.messageTemplate||params.template||"").trim();
+  await query(`insert into guild_notification_settings(guild_id,notification_key,targets,message_template,updated_at) values($1,$2,$3::jsonb,$4,now()) on conflict(guild_id,notification_key) do update set targets=$3::jsonb,message_template=$4,updated_at=now()`,[guildId,notificationKey,JSON.stringify(targets),messageTemplate]);
+  return {success:true,notificationKey,targets,messageTemplate};
+}
+
+async function notificationMessageTemplate(guildId,notificationKey){
+  await ensureGuildNotificationSettingsSchema();
+  const result=await query(`select message_template from guild_notification_settings where guild_id=$1 and notification_key=$2`,[guildId,clean(notificationKey)]);
+  return clean(result.rows[0]?.message_template);
 }
 
 async function ensureWorldbuffAccessSchema(){
@@ -4620,12 +4628,14 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
   }
 
   const configuredTargets=await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]);
+  const messageTemplate=await notificationMessageTemplate(guildId,"manage_worldbuffs").catch(()=>"");
   await enqueueBotUpdate({
     guildId,
     type: "worldbuff_player_change_notice",
     payload: {
       recipient: configuredTargets.length ? "" : "Ariee",
       targets: configuredTargets,
+      messageTemplate,
       character,
       action,
       actionLabel,
@@ -14346,7 +14356,8 @@ async function createRaidRecord({ guildId, query: params }) {
     const targets=[...savedTargets,...configuredTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(targetKeys.has(key))return false;targetKeys.add(key);return clean(target?.value||target?.name);});
     if(targets.length){
       const lootMasterPin=await effectiveLootMasterPin(guildId);
-      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
+      const messageTemplate=await notificationMessageTemplate(guildId,"loot_master").catch(()=>"");
+      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin,messageTemplate}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
     }
   }
   return { success: true, ...normalizeRaidRow(raid) };
@@ -14364,7 +14375,8 @@ async function setRaidLootMasterTargets({guildId,query:params}){
   let queued=false;
   if(targets.length&&clean(saved.lead_pin)){
     const lootMasterPin=await effectiveLootMasterPin(guildId);
-    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin}});
+    const messageTemplate=await notificationMessageTemplate(guildId,"loot_master").catch(()=>"");
+    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin,messageTemplate}});
     queued=Boolean(notice?.success);
   }
   return {success:true,targets,queued,...normalizeRaidRow(saved)};
@@ -20207,8 +20219,10 @@ app.get("/api/apps-script", async (req, res, next) => {
         className: req.query.className
       });
       if (normalizePlayerApprovalStatus(result.player.approval_status) !== "approved") {
-        const notificationRoleIds=await notificationDiscordRoleIds(guild.id,"notify_player_logins");
-        const notificationNames=await notificationDiscordNames(guild.id,"notify_player_logins");
+        const notificationTargets=await notificationTargetsForPermissions(guild.id,"notify_player_logins");
+        const notificationRoleIds=notificationTargets.filter(target=>target.type==="role").map(target=>target.value);
+        const notificationNames=notificationTargets.filter(target=>target.type==="name").map(target=>target.value);
+        const messageTemplate=await notificationMessageTemplate(guild.id,"notify_player_logins").catch(()=>"");
         await enqueueBotUpdate({
           guildId: guild.id,
           type: "player_login_approval_notice",
@@ -20221,6 +20235,7 @@ app.get("/api/apps-script", async (req, res, next) => {
             className: result.character?.className || result.character?.class_name || clean(req.query.className),
             notificationRoleIds,
             notificationNames,
+            messageTemplate,
             createdAt: result.player.created_at || new Date().toISOString()
           }
         }).catch(error => {
