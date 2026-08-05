@@ -2573,6 +2573,35 @@ async function ensurePlayerRoleSchema() {
     where jsonb_array_length(coalesce(permissions,'[]'::jsonb))=0 and lower(role)<>'member'`);
 }
 
+async function ensureGuildNotificationSettingsSchema(){
+  await query(`create table if not exists guild_notification_settings (
+    guild_id uuid not null references guilds(id) on delete cascade,
+    notification_key text not null,
+    targets jsonb not null default '[]'::jsonb,
+    updated_at timestamptz not null default now(),
+    primary key (guild_id,notification_key)
+  )`);
+}
+
+async function getGuildNotificationSettings({guildId,query:params}){
+  requireMasterCode(params.masterCode);
+  await ensureGuildNotificationSettingsSchema();
+  const result=await query(`select notification_key,targets from guild_notification_settings where guild_id=$1`,[guildId]);
+  return {success:true,settings:Object.fromEntries(result.rows.map(row=>[row.notification_key,Array.isArray(row.targets)?row.targets:[]]))};
+}
+
+async function setGuildNotificationSetting({guildId,query:params}){
+  requireMasterCode(params.masterCode);
+  await ensureGuildNotificationSettingsSchema();
+  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs"]);
+  const notificationKey=clean(params.notificationKey||params.key);
+  if(!allowed.has(notificationKey)){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
+  let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
+  targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
+  await query(`insert into guild_notification_settings(guild_id,notification_key,targets,updated_at) values($1,$2,$3::jsonb,now()) on conflict(guild_id,notification_key) do update set targets=$3::jsonb,updated_at=now()`,[guildId,notificationKey,JSON.stringify(targets)]);
+  return {success:true,notificationKey,targets};
+}
+
 async function ensureWorldbuffAccessSchema(){
   await query(`create table if not exists guild_worldbuff_access (guild_id uuid primary key references guilds(id) on delete cascade,password text not null,updated_at timestamptz not null default now())`);
 }
@@ -17859,6 +17888,12 @@ async function notificationTargetsForPermissions(guildId, permissions){
   const permissionList=[...new Set((Array.isArray(permissions)?permissions:[permissions]).map(clean).filter(Boolean))];
   const targets=[];
   for(const permission of permissionList){
+    await ensureGuildNotificationSettingsSchema();
+    const central=await query(`select targets from guild_notification_settings where guild_id=$1 and notification_key=$2`,[guildId,permission]);
+    if(central.rows.length){
+      (Array.isArray(central.rows[0].targets)?central.rows[0].targets:[]).forEach(target=>targets.push(target));
+      continue;
+    }
     const [roleIds,names]=await Promise.all([
       notificationDiscordRoleIds(guildId,permission),
       notificationDiscordNames(guildId,permission)
@@ -19545,6 +19580,9 @@ app.get("/api/apps-script", async (req, res, next) => {
       const roles = await getDiscordBotRoles({ guildId: guild.id, query: req.query });
       return res.json({ ...roles, guild: guild.slug });
     }
+    if(action==="guildGetNotificationSettings"){
+      const settings=await getGuildNotificationSettings({guildId:guild.id,query:req.query});return res.json({...settings,guild:guild.slug});
+    }
 
     if (action === "guildGetRaidHelperTemplates") {
       const templates = await getRaidHelperTemplates({ guildId: guild.id, query: req.query });
@@ -19669,6 +19707,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action==="guildSetNotificationSetting"){
+      const saved=await setGuildNotificationSetting({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
     }
     if(action==="guildSetRaidLootMasterTargets"){
       const saved=await setRaidLootMasterTargets({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
@@ -20384,6 +20425,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action==="guildSetNotificationSetting"){
+      const saved=await setGuildNotificationSetting({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
     }
     if(action==="guildSetRaidLootMasterTargets"){
       const saved=await setRaidLootMasterTargets({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
