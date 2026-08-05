@@ -967,7 +967,7 @@ const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
 
 function defaultGuildLayoutForSlug(slug) {
   if (String(slug || "").trim().toLowerCase() === "lichtloot") return {};
-  return { raidImages: defaultNewGuildRaidImages };
+  return { raidImages: {} };
 }
 
 function guildLogoUrlForSlug(slug, logoUrl) {
@@ -1034,11 +1034,13 @@ async function ensureGuildDiscordConfigSchema() {
 async function listGuildsForBot({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensureGuildDiscordConfigSchema();
+  await ensureGuildLayoutSchema();
   const result = await query(
     `select g.slug,
             g.name,
             g.server,
             g.discord_guild_id,
+            coalesce(gs.layout_json, '{}'::jsonb) as layout_json,
             coalesce(nullif(g.discord_guild_id, ''), (
               select nullif(ga.discord_guild_id, '')
               from guild_applications ga
@@ -1049,6 +1051,7 @@ async function listGuildsForBot({ query: params }) {
               limit 1
             ), '') as resolved_discord_guild_id
      from guilds g
+     left join guild_settings gs on gs.guild_id = g.id
      order by g.created_at asc, g.name asc`
   );
   return {
@@ -1057,7 +1060,8 @@ async function listGuildsForBot({ query: params }) {
       slug: row.slug,
       name: row.name,
       server: row.server || "",
-      discordGuildId: row.resolved_discord_guild_id || row.discord_guild_id || ""
+      discordGuildId: row.resolved_discord_guild_id || row.discord_guild_id || "",
+      layout: row.layout_json && typeof row.layout_json === "object" ? row.layout_json : {}
     }))
   };
 }
