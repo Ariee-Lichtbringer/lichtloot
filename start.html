@@ -4370,8 +4370,8 @@ function dashboardWorldbuffSharedSlotKey(entry){
 function dashboardWorldbuffDailySlotKey(entry){
   if(!entry || !entry.datum || !entry.buff) return "";
   const buffKey=dashboardWorldbuffBuffKey(entry.buff);
-  if(buffKey === "hakkar") return [entry.datum,"hakkar"].join("|");
-  if(buffKey === "ony" || buffKey === "nef") return [entry.datum,"ony-nef"].join("|");
+  if(buffKey === "hakkar") return [entry.datum,entry.uhrzeit || "","hakkar"].join("|");
+  if(buffKey === "ony" || buffKey === "nef") return [entry.datum,entry.uhrzeit || "","ony-nef"].join("|");
   return [entry.datum,entry.uhrzeit || "",buffKey].join("|");
 }
 
@@ -7151,7 +7151,10 @@ function refreshMyWorldbuffClaimSlots(){
 
   const selectedBuff=normalizeMyWorldbuffBuff(buffSelect.value) || "Nef";
   buffSelect.value=selectedBuff;
-  const matchingSlots=(myWorldbuffOpenSlots || []).filter(slot => normalizeMyWorldbuffBuff(slot && slot.buff) === selectedBuff);
+  const matchingSlots=(myWorldbuffOpenSlots || []).filter(slot => {
+    const slotBuff=normalizeMyWorldbuffBuff(slot && slot.buff);
+    return slotBuff === selectedBuff || (["Ony","Nef"].includes(slotBuff) && ["Ony","Nef"].includes(selectedBuff));
+  });
   slotSelect.innerHTML=matchingSlots.length
     ? matchingSlots.map(slot => `<option value="${safeAttr(getMyWorldbuffSlotValue(slot))}">${safeHtml([slot.datum, slot.uhrzeit, slot.gilde].filter(Boolean).join(" · "))}</option>`).join("")
     : '<option value="">Kein freier Termin für diesen Buff</option>';
@@ -7346,7 +7349,8 @@ async function claimMyWorldbuff(){
   const select=document.getElementById("myWorldbuffClaimSlot");
   const slot=getSelectedMyWorldbuffClaimSlot();
   const rowNumber=slot ? slot.rowNumber : "";
-  const buff=slot ? normalizeMyWorldbuffBuff(slot.buff) : "";
+  const buffSelect=document.getElementById("myWorldbuffClaimBuff");
+  const buff=normalizeMyWorldbuffBuff(buffSelect && buffSelect.value) || (slot ? normalizeMyWorldbuffBuff(slot.buff) : "");
 
   if(!pin || !charakter || !rowNumber || !buff){
     alert("Bitte zuerst Charakter auswählen und einen freien Termin wählen.");
