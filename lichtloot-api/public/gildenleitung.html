@@ -63,6 +63,9 @@ button,input,select{font:inherit}
   border-right:1px solid rgba(var(--gold-rgb),.16);
   background:linear-gradient(180deg,rgba(2,6,23,.92),rgba(8,17,31,.70));
   backdrop-filter:blur(10px);
+  width:280px;
+  min-width:0;
+  overflow-x:hidden;
 }
 
 .side-logo{
@@ -77,12 +80,14 @@ button,input,select{font:inherit}
 .side-nav{
   display:grid;
   gap:7px;
+  min-width:0;
 }
 
 .side-group{
   display:grid;
   gap:6px;
   margin-top:8px;
+  min-width:0;
 }
 
 .side-group-toggle{
@@ -124,6 +129,9 @@ button,input,select{font:inherit}
   border:1px solid rgba(148,163,184,.18);
   border-radius:8px;
   background:rgba(2,6,23,.34);
+  width:calc(100% - 8px);
+  min-width:0;
+  overflow:hidden;
 }
 
 .side-group.collapsed .side-group-items{
@@ -160,6 +168,8 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   text-align:left;
   font-weight:800;
   cursor:pointer;
+  min-width:0;
+  overflow:hidden;
 }
 
 .side-link:hover,
@@ -192,6 +202,30 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   overflow-wrap:normal;
   word-break:normal;
 }
+
+.discord-settings-panel{display:grid;gap:18px;max-width:1320px;margin-inline:auto}
+.discord-settings-header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.discord-settings-title{display:flex;align-items:center;gap:12px}.discord-settings-title img{width:46px;height:46px}
+.discord-settings-list{display:grid;gap:10px}
+.discord-settings-card{padding:0;border:1px solid rgba(88,101,242,.38);border-radius:12px;background:linear-gradient(135deg,rgba(88,101,242,.10),rgba(15,23,42,.54));overflow:hidden}
+.discord-settings-card-toggle{width:100%;padding:15px 18px;border:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;text-align:left;color:#f8fafc;background:rgba(15,23,42,.46);cursor:pointer}
+.discord-settings-card-toggle strong{font-size:17px;line-height:1.2}.discord-settings-card-toggle span{grid-column:1;color:#94a3b8;font-size:12px}.discord-settings-card-toggle b{grid-column:2;grid-row:1 / span 2;align-self:center;color:#a5b4fc;font-size:20px;transition:transform .18s ease}
+.discord-settings-card:not(.collapsed) .discord-settings-card-toggle{background:linear-gradient(90deg,rgba(88,101,242,.24),rgba(15,23,42,.36))}
+.discord-settings-card:not(.collapsed) .discord-settings-card-toggle b{transform:rotate(180deg)}
+.discord-settings-card-body{padding:18px}
+.discord-settings-card.collapsed .discord-settings-card-body{display:none}
+.discord-role-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:9px 0 14px;max-height:220px;overflow:auto;padding:4px}
+.discord-role-grid label{display:flex;align-items:center;gap:7px;min-width:0;padding:7px;border:1px solid rgba(148,163,184,.14);border-radius:7px;background:rgba(2,6,23,.34);overflow-wrap:anywhere}
+.discord-role-grid input{flex:0 0 auto;width:17px;height:17px;margin:0}
+.discord-template{display:grid;gap:6px;margin-top:12px}.discord-template textarea{width:100%;min-height:108px}
+.discord-template-help{color:#94a3b8;font-size:10px}
+.discord-auto-preview{margin-top:10px;padding:12px;border:1px dashed rgba(250,204,21,.34);border-radius:9px;background:rgba(250,204,21,.05);color:#dbeafe;font-size:12px;line-height:1.55;white-space:pre-wrap}
+.discord-auto-preview strong{display:block;margin-bottom:5px;color:var(--gold)}
+.discord-message-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.discord-message-preview{min-height:150px;padding:14px;border:1px solid rgba(88,101,242,.34);border-radius:10px;background:#111827;color:#e5e7eb;font-size:12px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.discord-message-preview::before{content:"Discord-Vorschau";display:block;margin-bottom:9px;color:#a5b4fc;font-size:10px;font-weight:950;text-transform:uppercase}
+@media(max-width:1050px){.discord-role-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.discord-message-layout{grid-template-columns:1fr}.discord-role-grid{grid-template-columns:1fr}.discord-settings-card-body{padding:13px}}
 
 .side-count{
   margin-left:auto;
@@ -534,6 +568,34 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   box-shadow:inset 0 0 0 999px rgba(2,6,23,.20);
 }
 
+.active-raid-visual{
+  width:120px;
+  display:grid;
+  gap:8px;
+  align-content:start;
+}
+
+.active-raid-pm-send{
+  width:120px;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:6px 7px;
+  border:1px solid rgba(88,101,242,.72);
+  border-radius:7px;
+  background:linear-gradient(135deg,rgba(88,101,242,.24),rgba(15,23,42,.82));
+  color:#f8fafc;
+  font-size:11px;
+  font-weight:950;
+  line-height:1.15;
+  text-align:left;
+  cursor:pointer;
+}
+.active-raid-pm-send:hover{border-color:#818cf8;background:rgba(88,101,242,.32)}
+.active-raid-pm-send img{width:24px;height:24px;flex:0 0 24px;border-radius:6px}
+
 .active-raid-body{
   display:flex;
   flex-direction:column;
@@ -767,16 +829,69 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   width:100%;
 }
 
+/* Geordneter Zugangskopf: drei klar getrennte Funktionsspalten. */
+.compact-auth{max-width:1120px}
+.unlock{
+  grid-template-columns:repeat(3,minmax(240px,1fr));
+  grid-template-rows:auto auto;
+  gap:8px 14px;
+  align-items:stretch;
+}
+.unlock>.field{
+  padding:14px 14px 6px;
+  border:1px solid rgba(148,163,184,.18);
+  border-bottom:0;
+  border-radius:10px 10px 0 0;
+  background:linear-gradient(135deg,rgba(12,18,32,.88),rgba(2,6,23,.56));
+}
+.unlock>.btn{
+  min-height:42px;
+  border-radius:0 0 10px 10px;
+}
+.unlock>.field:nth-child(1){grid-column:1;grid-row:1}
+.unlock>.btn:nth-child(2){grid-column:1;grid-row:2}
+.unlock>.field:nth-child(3){grid-column:2;grid-row:1}
+.unlock>.btn:nth-child(4){grid-column:2;grid-row:2}
+.unlock>.login-summary-card:nth-child(5){grid-column:3;grid-row:1 / span 2;min-height:0;padding:14px}
+.unlock>#pendingLoginCard{grid-column:3;grid-row:3}
+.compact-auth>#status{max-width:100%;margin-top:10px!important}
+@media(max-width:900px){
+  .unlock{grid-template-columns:1fr;grid-template-rows:auto}
+  .unlock>*{grid-column:1!important;grid-row:auto!important}
+}
+
 .login-summary-card{
-  min-height:68px;
+  min-height:132px;
   border:1px solid rgba(148,163,184,.18);
   border-radius:8px;
   background:linear-gradient(135deg,rgba(12,18,32,.84),rgba(2,6,23,.48));
-  padding:10px 12px;
+  padding:14px;
+  display:grid;
+  grid-template-rows:auto 1fr auto;
+  align-items:stretch;
+  gap:10px;
+}
+
+.login-summary-card .login-card-heading{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
+  gap:9px;
+}
+
+.login-summary-card .login-card-heading span{font-size:13px}
+
+.login-summary-card .login-card-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.login-summary-card .login-card-stat{
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid rgba(148,163,184,.14);
+  border-radius:8px;
+  background:rgba(2,6,23,.34);
 }
 
 .login-summary-card .stat-icon{
@@ -806,13 +921,18 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 .login-summary-card button{
-  border:0;
-  background:transparent;
+  width:100%;
+  min-height:34px;
+  border:1px solid rgba(var(--gold-rgb),.34);
+  border-radius:7px;
+  background:rgba(var(--gold-rgb),.08);
   color:var(--gold);
   font-weight:950;
   white-space:nowrap;
   cursor:pointer;
 }
+
+.login-summary-card button:hover{background:rgba(var(--gold-rgb),.16)}
 
 .compact-auth .status{
   display:inline-flex;
@@ -3923,6 +4043,32 @@ th{
 .raid-panel th,
 .player-panel th{color:var(--gold);background:rgba(2,6,23,.62)}
 
+.player-access-hint{display:flex;align-items:center;gap:12px;margin:10px 0;padding:12px 14px;border:1px solid rgba(88,101,242,.34);border-radius:10px;background:rgba(88,101,242,.08);color:#dbeafe;font-size:12px;font-weight:750}
+.player-access-hint img,.access-section-icon{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
+.player-login-table{min-width:0;border-collapse:separate;border-spacing:0 10px}
+.player-login-table thead{display:none}
+.player-login-table tbody{display:grid;gap:12px}
+.player-login-table tr{display:grid;grid-template-columns:minmax(210px,.8fr) minmax(430px,1.55fr) minmax(170px,.55fr);grid-template-areas:"identity access status" "identity access actions";gap:12px;padding:14px;border:1px solid rgba(148,163,184,.18);border-radius:12px;background:linear-gradient(135deg,rgba(12,18,32,.88),rgba(2,6,23,.62))}
+.player-login-table td{padding:0;border:0;background:transparent!important}
+.player-identity-cell{grid-area:identity}
+.player-access-cell{grid-area:access}
+.player-status-cell{grid-area:status}
+.player-actions-cell{grid-area:actions}
+.player-identity-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.player-identity-title strong{font-size:15px;color:#fff}
+.player-class-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.player-class-list span{padding:3px 7px;border:1px solid rgba(148,163,184,.16);border-radius:999px;background:rgba(2,6,23,.45);font-size:11px;font-weight:850}
+.player-access-grid{display:grid;grid-template-columns:1fr 38px 1fr;gap:8px;align-items:stretch}
+.player-access-link{display:grid;place-items:center;color:#facc15;font-size:25px;font-weight:950;text-shadow:0 0 12px rgba(250,204,21,.45)}
+.player-access-section{display:grid;align-content:start;gap:8px;padding:11px;border:1px solid rgba(148,163,184,.16);border-radius:10px;background:rgba(2,6,23,.38)}
+.player-access-section.discord{border-color:rgba(88,101,242,.38);background:rgba(88,101,242,.07)}
+.access-section-title{display:flex;align-items:center;gap:8px;color:#f8fafc;font-size:12px;font-weight:950}
+.access-section-help{color:#94a3b8;font-size:10px;line-height:1.35}
+.player-access-section select,.player-access-section input{width:100%}
+.player-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:1100px){.player-login-table tr{grid-template-columns:220px 1fr;grid-template-areas:"identity status" "access access" "actions actions"}}
+@media(max-width:720px){.player-login-table tr{grid-template-columns:1fr;grid-template-areas:"identity" "status" "access" "actions"}.player-access-grid{grid-template-columns:1fr}.player-access-link{transform:rotate(90deg);min-height:28px}.player-actions{justify-content:stretch}.player-actions .small-btn{flex:1}}
+
 tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 .raid-title{
@@ -4470,6 +4616,20 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 }
 
 .p0-table th{color:var(--gold);background:rgba(2,6,23,.62)}
+.po-release-column-picker{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:9px 10px;
+  border:1px solid rgba(148,163,184,.2);
+  border-radius:10px;
+  background:rgba(15,23,42,.38);
+}
+.po-release-column-picker > span{flex:0 0 auto;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap}
+.po-release-column-toggle{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:6px;min-width:72px;min-height:32px;padding:5px 11px;border:1px solid rgba(148,163,184,.24);border-radius:999px;color:#cbd5e1;background:rgba(2,6,23,.45);font-size:12px;font-weight:800;line-height:1.15;white-space:nowrap;cursor:pointer}
+.po-release-column-toggle:has(input:checked){color:#fde047;border-color:rgba(250,204,21,.48);background:rgba(250,204,21,.08)}
+.po-release-column-toggle input{flex:0 0 auto;width:16px;height:16px;margin:0;accent-color:#eab308}
 .po-release-state{
   display:inline-flex;
   align-items:center;
@@ -4735,7 +4895,7 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 
 @media (max-width:1000px){
   .app-frame{grid-template-columns:1fr}
-  .sidebar{position:relative;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
+  .sidebar{position:relative;width:100%;min-height:auto;border-right:0;border-bottom:1px solid rgba(var(--gold-rgb),.16)}
   .sidebar-foot{position:static;margin-top:14px}
   .side-logo{width:140px;height:80px;margin-bottom:10px}
   .side-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -4745,6 +4905,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   .stat-grid{grid-template-columns:1fr}
   .raid-helper-tabs{grid-template-columns:1fr}
   .active-raid-card{grid-template-columns:1fr}
+  .active-raid-visual{width:100%;grid-template-columns:120px minmax(0,220px);align-items:start}
+  .active-raid-pm-send{width:100%}
   .active-raid-group-grid{grid-template-columns:1fr}
   .active-raid-topline{grid-template-columns:1fr}
   .raid-helper-calendar{grid-template-columns:1fr}
@@ -4823,7 +4985,6 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openWorldbuffPanel()" aria-label="Worldbuffs" title="Worldbuffs"><img class="side-icon-img" src="images/dashboard-icons/worldbuffs.jpg" alt=""><span class="side-label">Worldbuffs</span></button>
           <button class="side-link" type="button" onclick="openHordenbuffPanel()" aria-label="Hordenbuffs" title="Hordenbuffs"><img class="side-icon-img" src="images/dashboard-icons/hordenbuffs.jpg" alt=""><span class="side-label">Hordenbuffs</span></button>
-          <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupRaidorga">
@@ -4836,8 +4997,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link nachtloot-only" type="button" onclick="openPoItemSettingsPanel()" aria-label="PO Items festlegen" title="PO Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">PO Items festlegen</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
-          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Raidleadpanel" title="Raidleadpanel"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidleadpanel</span></button>
-          <button class="side-link" type="button" onclick="openCombatlogUploadPanel()" aria-label="Loganalysen Upload" title="Loganalysen Upload"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen Upload</span></button>
+          <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Plündermeister</span></button>
         </div>
       </div>
       <div class="side-group collapsed" id="sideGroupBackup">
@@ -4855,12 +5015,15 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
       </div>
       <button class="side-link" type="button" onclick="openIssueInboxPanel()" aria-label="Postfach" title="Postfach"><span class="side-icon">✉</span><span class="side-label">Postfach</span><span id="issueCount" class="side-count">0</span></button>
-      <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
-      <div class="side-group collapsed lichtloot-admin-only" id="sideGroupAdmin">
+      <div class="side-group collapsed" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
+          <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
+          <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
+          <button class="side-link master-only" type="button" onclick="openDiscordNotificationSettings()" aria-label="Discord-Benachrichtigungen" title="Discord-Benachrichtigungen"><img class="side-icon-img" src="images/discord.svg" alt=""><span class="side-label">DC-Benachrichtigungen</span></button>
+          <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
-          <button class="side-link" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
+          <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
         </div>
       </div>
@@ -4898,13 +5061,12 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <button class="btn ghost" type="button" onclick="loginWorldbuffManagement()">Nur Worldbuffs öffnen</button>
       <div class="login-summary-card">
-        <div>
-          <div class="stat-icon">☷</div>
-          <span>Spielerlogins</span>
-          <strong id="playerCount">0</strong>
-          <div class="stat-subline"><span id="linkedCount">0</span> Konten mit Twinks</div>
+        <div class="login-card-heading"><div class="stat-icon">☷</div><span>Spielerlogins</span></div>
+        <div class="login-card-stats">
+          <div class="login-card-stat"><strong id="playerCount">0</strong><div class="stat-subline">Spielerlogins</div></div>
+          <div class="login-card-stat"><strong id="linkedCount">0</strong><div class="stat-subline">Konten mit Twinks</div></div>
         </div>
-        <button type="button" onclick="openPlayerPanel()">Anzeigen →</button>
+        <button type="button" onclick="openPlayerPanel()">Spielerlogins anzeigen →</button>
       </div>
       <button id="pendingLoginCard" class="login-summary-card pending-login-card hidden" type="button" onclick="openPendingLoginReview()" style="border-color:#f59e0b;text-align:left;cursor:pointer">
         <div><div class="stat-icon">!</div><span>Neue SpielerLogins</span><strong id="pendingLoginCount">0</strong><div class="stat-subline">warten auf Freigabe</div></div>
@@ -4914,9 +5076,22 @@ body.worldbuff-only .master-only{display:none!important}
     <div id="status" class="status" style="margin-top:12px">Bereit.</div>
   </section>
 
+  <details class="panel">
+    <summary>🚨 Notfall-Prio CSV importieren</summary>
+    <div style="display:grid;gap:12px;padding-top:14px">
+      <p class="muted">CSV von lichtloot.de/notfall auswählen, Zielraid festlegen und Prios einschließlich P0+ übernehmen.</p>
+      <button class="btn danger" type="button" onclick="window.open('notfall/meister.html','_blank')">Notfall-Plündermeister öffnen</button>
+      <select id="emergencyImportRaid"><option value="">Erst Gildenleitung freischalten</option></select>
+      <input id="emergencyImportFile" type="file" accept=".csv,text/csv">
+      <button class="btn" type="button" onclick="importEmergencyPrioCsv()">CSV prüfen und in Raid übertragen</button>
+      <div id="emergencyImportStatus" class="status">Noch keine CSV ausgewählt.</div>
+    </div>
+  </details>
+
   <div class="dashboard-grid">
     <div class="dashboard-column">
-      <section class="dashboard-card">
+      <section id="discordNotificationPanel" class="dashboard-card discord-settings-panel hidden"></section>
+      <section id="raidDashboardSection" class="dashboard-card">
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
           <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
@@ -5803,8 +5978,9 @@ body.worldbuff-only .master-only{display:none!important}
           <button id="raidBulkDeleteButton" class="small-btn danger" type="button" onclick="deleteSelectedRaids()">Ausgewählte löschen</button>
         </div>
       </div>
+      <div class="player-access-hint"><img src="images/discord.svg" alt="Discord"><span><strong>Discord-Zuordnung:</strong> Lege fest, welche Discord-Rollen und zusätzlichen Discord-Namen Nachrichten erhalten. LichtLoot-Rechte steuern separat den Zugriff innerhalb der Webseite.</span></div>
       <div class="table-wrap">
-        <table>
+        <table class="player-login-table">
           <thead>
             <tr>
               <th class="raid-select-cell">
@@ -6138,6 +6314,9 @@ let poPostEntries = [];
 let poReleaseCharacters = [];
 let poReleaseRequests = [];
 let poReleaseSearch = "";
+const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
+const PO_RELEASE_COLUMNS_KEY = "lichtloot:p0-release-columns";
+let poReleaseVisibleColumns = (() => {try{const saved=JSON.parse(localStorage.getItem(PO_RELEASE_COLUMNS_KEY)||"null");if(Array.isArray(saved))return new Set(saved.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));}catch(_error){}return new Set(PO_RELEASE_RAIDS.map(([raid])=>raid));})();
 let poItemSettingsRaid = "mc";
 let poItemSettingsRows = [];
 let poItemSettingsSearch = "";
@@ -6294,6 +6473,26 @@ function openWorldbuffPasswordDialog(){
   });
   document.body.appendChild(backdrop);
   window.setTimeout(() => backdrop.querySelector("#newWorldbuffAccessPassword")?.focus(), 30);
+}
+
+function openLootMasterPasswordDialog(){
+  const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:560px"><h3>Plündermeister-Passwort festlegen</h3><p>Dieses Passwort gilt im Raidleadpanel ausschließlich für <strong>PO+ übertragen</strong> und <strong>Item erhalten / Punkte entfernen</strong>. Die Gildenleitungsseite bleibt gesperrt; der Mastercode bleibt zusätzlich gültig.</p><label style="display:grid;gap:7px">Neues Passwort<input id="newLootMasterPassword" type="password" minlength="6" autocomplete="new-password" placeholder="Mindestens 6 Zeichen"></label><label style="display:grid;gap:7px;margin-top:12px">Passwort wiederholen<input id="repeatLootMasterPassword" type="password" minlength="6" autocomplete="new-password"></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern</button></div></div>`;
+  const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.querySelector("[data-save]")?.addEventListener("click",()=>{const field=backdrop.querySelector("#lootMasterDiscordNames");if(field)field.value=field.value.replace(/\r?\n/g,";");});
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const password=backdrop.querySelector("#newLootMasterPassword")?.value.trim()||"";const repeat=backdrop.querySelector("#repeatLootMasterPassword")?.value.trim()||"";if(password.length<6){setStatus("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.","bad");return;}if(password!==repeat){setStatus("Die beiden Passwörter stimmen nicht überein.","bad");return;}try{const result=await railwayWrite({action:"guildSetLootMasterAccessPassword",masterCode:document.getElementById("masterCode").value.trim(),password});if(!result.success)throw new Error(result.error||"Passwort konnte nicht gespeichert werden.");close();setStatus("Plündermeister-Passwort gespeichert.","good");}catch(error){setStatus(error.message||"Passwort konnte nicht gespeichert werden.","bad");}});
+  document.body.appendChild(backdrop);
+}
+
+async function openLootMasterTargetsDialog(raidId){
+  const raid=(guildData.raids||[]).find(entry=>String(entry.raidId||entry.id)===String(raidId));if(!raid)return;
+  if(!raidHelperDiscordRoles.length){try{const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode:document.getElementById("masterCode").value.trim(),t:Date.now()});raidHelperDiscordRoles=Array.isArray(result.roles)?result.roles:[];}catch(_error){}}
+  const saved=Array.isArray(raid.lootMasterTargets)?raid.lootMasterTargets:[];const selectedRoles=new Set(saved.filter(item=>item.type==="role").map(item=>String(item.value)));const savedNames=saved.filter(item=>item.type!=="role").map(item=>item.value).join("\n");
+  const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:680px"><h3>LeadPIN an Plündermeister schicken</h3><p><strong>${escapeHtml(raid.raidName||raid.raid||"Raid")}</strong> · Mehrfachauswahl möglich. Die Auswahl bleibt für diesen Raid gespeichert.</p><label style="display:grid;gap:7px">Discord-Namen<textarea id="lootMasterDiscordNames" rows="3" placeholder="Ein Name pro Zeile, z. B.&#10;Ariee&#10;Juksi">${escapeHtml(savedNames)}</textarea><small class="muted">Mehrere Namen mit neuer Zeile, Komma oder Semikolon trennen.</small></label><h4>Discord-Rollen</h4><div class="status" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:7px;max-height:280px;overflow:auto">${raidHelperDiscordRoles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-pm-role value="${escapeAttr(id)}" ${selectedRoles.has(id)?"checked":""}> ${escapeHtml(role.name||role.roleName||id)}</label>`;}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Speichern &amp; LeadPIN senden</button></div></div>`;
+  const close=()=>backdrop.remove();backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const names=(backdrop.querySelector("#lootMasterDiscordNames")?.value||"").split(/[,;\\n]+/).map(value=>value.trim()).filter(Boolean).map(value=>({type:"name",value,label:value}));const roles=[...backdrop.querySelectorAll("[data-pm-role]:checked")].map(input=>{const role=raidHelperDiscordRoles.find(item=>String(item.id||item.roleId)===input.value);return {type:"role",value:input.value,label:role?.name||role?.roleName||input.value};});try{const result=await railwayWrite({action:"guildSetRaidLootMasterTargets",masterCode:document.getElementById("masterCode").value.trim(),raidId:raid.raidId||raid.id,targets:JSON.stringify([...names,...roles])});if(!result.success)throw new Error(result.error||"Empfänger konnten nicht gespeichert werden.");raid.lootMasterTargets=result.targets||[];close();renderDashboardCards();renderRaids();setStatus(result.queued?"Plündermeister gespeichert und LeadPIN per Discord versendet.":"Plündermeister gespeichert. Keine DM-Empfänger ausgewählt.","good");}catch(error){setStatus(error.message||"Empfänger konnten nicht gespeichert werden.","bad");}});
+  document.body.appendChild(backdrop);
 }
 
 function clearMasterCode(){
@@ -6663,8 +6862,10 @@ async function loadOverview(options){
     raidHelperAttendanceCache = null;
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
+    showRaidDashboard();
     renderAll();
     handleRaidHelperDeepLink();
+    handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
     loadWorldbuffMiniOverview();
@@ -6693,8 +6894,15 @@ function renderAll(){
 }
 
 function scrollToDashboard(){
+  showRaidDashboard();
   document.getElementById("dashboardTop")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
+
+function showRaidDashboard(){
+  document.getElementById("discordNotificationPanel")?.classList.add("hidden");
+  document.getElementById("raidDashboardSection")?.classList.remove("hidden");
+}
+window.addEventListener("pageshow",showRaidDashboard);
 
 function toggleSideGroup(id){
   const group = document.getElementById(id);
@@ -6702,6 +6910,7 @@ function toggleSideGroup(id){
 }
 
 function openDetailsPanel(id){
+  showRaidDashboard();
   const panel = document.getElementById(id);
   if(!panel) return;
   document.querySelectorAll(".dashboard-column details.panel, .dashboard-column .grid details.panel").forEach(detail => {
@@ -6761,6 +6970,16 @@ function openPoPostPanel(){
 
 function openPlayerPanel(){
   openDetailsPanel("playerLoginPanel");
+}
+
+function handlePlayerLoginDeepLink(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get("panel")==="po-freigaben"){openP0ReleasePanel();loadP0ReleasePanel();return;}
+  if(params.get("panel")!=="spielerlogins") return;
+  openPlayerPanel();
+  const player=params.get("player")||"";
+  const search=document.getElementById("playerSearch");
+  if(search&&player){search.value=player;renderPlayers();}
 }
 
 function openP0PlusPanel(){
@@ -7448,7 +7667,10 @@ function renderDashboardCards(){
     const createdBy = getRaidCreatorName(raid);
     return `
       <article class="active-raid-card">
-        <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
+        <div class="active-raid-visual">
+          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key]}')"></div>
+          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
+        </div>
         <div class="active-raid-body">
           <div>
             <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
@@ -7476,9 +7698,8 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
-              <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios verwalten</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
-              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(key)}')">PO+ sichern</button>` : ""}
+              ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
             </div>
           </div>
@@ -7610,7 +7831,7 @@ async function loadWorldbuffMiniOverview(){
   try{
     const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, source:"railway", days:4 });
     if(result && result.success){
-      worldbuffEntries = collapseWorldbuffDailySlots(filterManagedGuildWorldbuffs(result.buffs));
+      worldbuffEntries = collapseWorldbuffDailySlots(Array.isArray(result.buffs) ? result.buffs : []);
       renderWorldbuffMiniList();
       return;
     }
@@ -7738,6 +7959,7 @@ function renderRaids(){
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
             <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+            <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
             ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
@@ -7884,24 +8106,24 @@ function renderPlayers(){
     const approvalClass = approvalStatus === "approved" ? "open" : approvalStatus === "rejected" ? "danger" : "warn";
     return `
     <tr>
-      <td>
-        <strong>${escapeHtml(group.main.char || "-")}</strong> <span class="muted">${escapeHtml(group.main.server || "")}</span>
+      <td class="player-identity-cell">
+        <div class="player-identity-title"><strong>${escapeHtml(group.main.char || "-")}</strong><span class="muted">${escapeHtml(group.main.server || "")}</span></div>
         ${group.twinks.length ? `<div class="character-stack">${group.twinks.map(twink => `<span class="character-chip">${escapeHtml(twink.char || "-")} <span class="muted">${escapeHtml(twink.server || "")}</span></span>`).join("")}</div>` : '<div class="muted">Keine Twinks</div>'}
+        <div class="player-class-list">${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("") || "-"}</div>
       </td>
-      <td>${group.classes.map(name => `<span class="${classColor(name)}">${escapeHtml(name)}</span>`).join("<br>") || "-"}</td>
-      <td>${renderPlayerRoleControl(group)}</td>
-      <td>
+      <td class="player-access-cell">${renderPlayerRoleControl(group)}</td>
+      <td class="player-status-cell">
         <span class="badge ${approvalClass}">${escapeHtml(approvalLabel)}</span>
         ${group.isBlocked ? `<span class="badge danger">gesperrt</span><div class="muted">${escapeHtml(group.blockedReason || "Kein Zugriff")}</div>` : ""}
         ${approvalStatus === "approved" && !group.isBlocked ? '<div class="muted">aktiv</div>' : ""}
       </td>
-      <td>
+      <td class="player-actions-cell"><div class="player-actions">
         ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Freigeben</button>` : ""}
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false, '${escapeAttr(group.main.playerPin || "")}')">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true, '${escapeAttr(group.main.playerPin || "")}')">Sperren</button>`}
         ${group.main.id ? `<button class="small-btn danger" type="button" onclick="resetPlayerLogin(${Number(group.main.rowNumber || 0)})">Zurücksetzen</button>` : ""}
-        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button>
+        <button class="small-btn danger" type="button" onclick="deletePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Löschen</button></div>
       </td>
     </tr>
   `;
@@ -7924,17 +8146,16 @@ function normalizePlayerLoginRole(value){
 function renderPlayerRoleControl(group){
   const main=group.main || {};
   const playerId=main.playerId || "";
-  const roleIds=Array.isArray(main.discordRoleIds)?main.discordRoleIds.map(String):[];
   const permissions=Array.isArray(main.permissions)?main.permissions.map(String):[];
-  const notificationNames=Array.isArray(main.notificationDiscordNames)?main.notificationDiscordNames:[];
-  const roleLabel=id=>playerAccessDiscordRoles.find(role=>String(role.id||role.roleId)===String(id))?.name||id;
+  const accessPermissions=LICHTLOOT_PERMISSIONS.filter(permission=>!["loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases"].includes(permission.value));
   return `
-    <div class="role-control" style="display:grid;gap:7px;min-width:310px">
-      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord',this)"><option value="">Discord-Rolle auswählen …</option>${playerAccessDiscordRoles.filter(role=>!roleIds.includes(String(role.id||role.roleId))).map(role=>`<option value="${escapeAttr(role.id||role.roleId)}">${escapeHtml(role.name||role.roleName)}</option>`).join("")}</select>
-      <div class="discord-preview-pills">${roleIds.length?roleIds.map(id=>`<span class="raid-helper-role-tag">${escapeHtml(roleLabel(id))}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','discord','${escapeAttr(id)}')">×</button></span>`).join(""):'<span class="muted">Keine Discord-Rolle zugewiesen.</span>'}</div>
-      <select onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">LichtLoot-Recht auswählen …</option>${LICHTLOOT_PERMISSIONS.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
-      <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine LichtLoot-Rechte zugewiesen.</span>'}</div>
-      <label style="display:grid;gap:5px;font-weight:850">Zusätzliche Discord-Spielernamen<input type="text" value="${escapeAttr(notificationNames.join(", "))}" placeholder="z. B. Ariee, Juksi" onchange="savePlayerNotificationNames('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}',this)"></label>
+    <div class="player-access-grid" style="grid-template-columns:1fr">
+      <section class="player-access-section">
+        <div class="access-section-title"><span class="access-section-icon" aria-hidden="true" style="display:grid;place-items:center">🔐</span><span>LichtLoot-Zugriffsrechte</span></div>
+        <div class="access-section-help">Nur der Zugriff auf Funktionen der Webseite. Discord-Nachrichten werden zentral unter Admin → DC-Benachrichtigungen eingerichtet.</div>
+        <select aria-label="LichtLoot-Recht hinzufügen" onchange="addPlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission',this)"><option value="">+ Zugriffsrecht hinzufügen</option>${accessPermissions.filter(permission=>!permissions.includes(permission.value)).map(permission=>`<option value="${permission.value}">${escapeHtml(permission.label)}</option>`).join("")}</select>
+        <div class="discord-preview-pills">${permissions.length?permissions.map(value=>`<span class="raid-helper-role-tag">${escapeHtml(LICHTLOOT_PERMISSIONS.find(permission=>permission.value===value)?.label||value)}<button type="button" aria-label="Recht entfernen" onclick="removePlayerAccessValue('${escapeAttr(playerId)}','${escapeAttr(main.playerPin||"")}','permission','${escapeAttr(value)}')">×</button></span>`).join(""):'<span class="muted">Keine zusätzlichen LichtLoot-Rechte</span>'}</div>
+      </section>
     </div>
   `;
 }
@@ -7968,12 +8189,44 @@ async function removePlayerAccessValue(playerId,playerPin,type,value){
 
 const LICHTLOOT_PERMISSIONS=[
   {value:"create_raids",label:"Raids erstellen"},
-  {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung"},
+  {value:"manage_worldbuffs",label:"Worldbuff-Verwaltung + Bot-Hinweise"},
   {value:"guild_admin",label:"Gildenverwaltung"},
+  {value:"loot_master",label:"Plündermeister + LeadPIN-Nachricht"},
   {value:"notify_player_logins",label:"Benachrichtigung: Spielerlogins freigeben"},
   {value:"notify_worldbuff_changes",label:"Benachrichtigung: Worldbuff angemeldet/verschoben"},
   {value:"notify_po_releases",label:"Benachrichtigung: neue PO-Freigaben im Discord"}
 ];
+const DISCORD_NOTIFICATION_TYPES=[
+  {key:"po_reviewers",accessOnly:true,icon:"✅",title:"PO im Discord freigeben",text:"Diese Discord-Rollen oder Namen dürfen Einträge direkt im PO-Anmelder freigeben.",tokens:"",defaultTemplate:"",automaticText:""},
+  {key:"notify_player_logins",icon:"👤",title:"Neue Spielerlogins",text:"Informiert, wenn ein neuer Spielerlogin auf Freigabe wartet.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {link}",defaultTemplate:"🔐 **Neuer SpielerLogin wartet auf Freigabe**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n\nBitte den neuen SpielerLogin prüfen und freigeben.\n🔗 **[Direkt zur Spielerfreigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
+  {key:"loot_master",raidScoped:true,icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink.",tokens:"{raid}",defaultTemplate:"Du bist für **{raid}** als Plündermeister eingetragen.",automaticText:"LeadPIN: [LeadPIN des Raids]\nPlündermeister-PIN: [aktueller PM-PIN]\n\nZugang:\nAlternativ wird auch der Mastercode der Gildenleitung als Plündermeister-Passwort akzeptiert.\n\nDatum: [Raid-Datum]\nUhrzeit: [Raid-Uhrzeit]\n\nDirekt zum Plündermeisterpanel:\n[Plündermeisterseite für den Raid öffnen]\n\nErinnerung für nach dem Raid:\n• PO+ Punkte übertragen\n• Erhaltene Items markieren und die zugehörigen Punkte entfernen\n\nHinweis: Der PM-PIN erlaubt nur PO+ übertragen und Item erhalten/Punkte entfernen. Der Mastercode bleibt voll gültig."},
+  {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine.",tokens:"{charakter}, {aktion}, {termin}, {neuer_termin}, {grund}",defaultTemplate:"🌍 **Worldbuff-Termin {aktion}**\n**Charakter:** {charakter}\n**Termin:** {termin}\n**Neuer Termin:** {neuer_termin}\n**Grund:** {grund}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
+  {key:"notify_po_releases",raidScoped:true,icon:"🔎",title:"PO-Freigabe wartet",text:"Informiert, sobald im PO-Anmelder eine neue PO-Freigabe geprüft werden muss.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}, {antrag}, {link}",defaultTemplate:"🔎 **Neue PO-Freigabe wartet**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n**Raid:** {raid}\n**Antrag:** {antrag}\n\n🔗 **[Direkt zur PO-Freigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
+  {key:"notify_po_release_granted",raidScoped:true,icon:"✅",title:"Gildenzuständige über PO-Freigabe informieren",text:"Diese interne Nachricht geht an die hier ausgewählten Gildenzuständigen, sobald du in der PO-Freigabeliste die Spieler-DM verschickst.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}",defaultTemplate:"✅ **PO-Freigabe wurde verschickt**\n\nFür **{charakter}-{server}** wurde die PO-Freigabe für **{raid}** erteilt und der Spieler per DM informiert.\n\n**Gilde:** {gilde}\n**Klasse:** {klasse}",automaticText:"Der betroffene Spieler erhält separat automatisch: „Deine PO für [Raid] wurde freigegeben.“ Diese Vorschau zeigt ausschließlich die zusätzliche interne Nachricht für die ausgewählten Gildenzuständigen. Ausgelöst werden beide Nachrichten über „DM verschicken“ in der PO-Freigabeliste."},
+  {key:"raid_status_changes",icon:"📋",title:"Raidstatus geändert",text:"Informiert bei Bench, verspätet, vorläufig, abwesend oder abgemeldet im Raidanmelder.",tokens:"{spieler}, {raid}, {status}, {datum}, {uhrzeit}, {hinweis}",defaultTemplate:"📋 **Änderung im Raidanmelder**\n\n**{spieler}** wurde für **{raid}** **{status}**.\n**Datum:** {datum}\n**Uhrzeit:** {uhrzeit}\n**Hinweis:** {hinweis}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."}
+];
+const DISCORD_NOTIFICATION_RAIDS=[["mc","Molten Core"],["bwl","Blackwing Lair"],["aq40","AQ40"],["naxx","Naxxramas"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG Prime"],["zg-late","ZG Late"],["aq20","AQ20"]];
+function renderDiscordTemplatePreview(text){return escapeHtml(String(text||"")).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<span style="color:#60a5fa;text-decoration:underline">$1</span>');}
+async function openDiscordNotificationSettings(){
+  try{
+    const masterCode=document.getElementById("masterCode").value.trim();
+    const [settingsResult,rolesResult,membersResult]=await Promise.all([railwayApi({action:"guildGetNotificationSettings",masterCode,t:Date.now()}),railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()}),railwayApi({action:"guildGetDiscordBotMembers",masterCode,t:Date.now()})]);
+    const settings=settingsResult.settings||{},templates=settingsResult.templates||{};const roles=Array.isArray(rolesResult.roles)?rolesResult.roles:[];const members=Array.isArray(membersResult.members)?membersResult.members:[];
+    const panel=document.getElementById("discordNotificationPanel"),raidSection=document.getElementById("raidDashboardSection");
+    raidSection?.classList.add("hidden");panel.classList.remove("hidden");
+    panel.innerHTML=`<div class="discord-settings-header"><div class="discord-settings-title"><img src="images/discord.svg" alt="Discord"><div><h2 style="margin:0">Discord-Benachrichtigungen & Rechte</h2><p class="muted" style="margin:4px 0 0">Empfänger, Texte und Discord-Berechtigungen dieser Gilde verwalten.</p></div></div><button class="small-btn ghost" data-close>Zurück zu den Raids</button></div><div class="discord-settings-list">${DISCORD_NOTIFICATION_TYPES.map(type=>{const targets=Array.isArray(settings[type.key])?settings[type.key]:[];const selectedRoles=new Set(targets.filter(t=>t.type==="role").map(t=>String(t.value)));const names=targets.filter(t=>t.type==="name").map(t=>t.value);const template=templates[type.key]||type.defaultTemplate;return `<section class="discord-settings-card" data-notification-card="${type.key}"><h3 style="margin:0 0 4px">${type.icon} ${escapeHtml(type.title)}</h3><p class="muted" style="margin:0 0 12px">${escapeHtml(type.text)}</p><strong>Discord-Rollen dieser Gilde</strong><div class="discord-role-grid">${roles.map(role=>{const id=String(role.id||role.roleId||"");return `<label><input type="checkbox" data-role value="${escapeAttr(id)}" data-label="${escapeAttr(role.name||role.roleName||id)}" ${selectedRoles.has(id)?"checked":""}><span>${escapeHtml(role.name||role.roleName||id)}</span></label>`}).join("")||'<span class="muted">Keine Discord-Rollen geladen.</span>'}</div><label style="display:grid;gap:6px;font-weight:850">Einzelne Discord-Mitglieder<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px"><input type="search" data-member-search list="discord-members-${type.key}" placeholder="Discord-Mitglied suchen …"><button class="small-btn ghost" type="button" data-add-member>Hinzufügen</button></div><datalist id="discord-members-${type.key}">${members.map(member=>`<option value="${escapeAttr(member.username)}">${escapeHtml(member.displayName||member.username)} · @${escapeHtml(member.username)}</option>`).join("")}</datalist><textarea data-names hidden>${escapeHtml(names.join("\n"))}</textarea><div class="discord-preview-pills" data-member-pills></div>${members.length?'':'<span class="muted">Der Bot hat noch keine Discord-Mitglieder synchronisiert.</span>'}</label>${type.accessOnly?'<div class="discord-auto-preview"><strong>Wirkung:</strong> Die Auswahl gilt ausschließlich für das Freigeben im Discord-PO-Anmelder dieser Gilde.</div>':`<div class="discord-message-layout"><label class="discord-template"><strong>${type.key==="loot_master"?"Bearbeitbare Einleitung":"Nachrichtentext bearbeiten"}</strong><textarea data-template>${escapeHtml(template)}</textarea><span class="discord-template-help">Platzhalter: ${escapeHtml(type.tokens)}</span></label><div><div class="discord-message-preview" data-preview>${renderDiscordTemplatePreview(template)}</div><div class="discord-auto-preview"><strong>${type.key==="loot_master"?"Automatisch darunter ergänzt:":"Automatische Ergänzungen:"}</strong>${escapeHtml(type.automaticText)}</div></div></div>`}</section>`}).join("")}</div><div class="raid-helper-notify-actions"><button class="small-btn good" data-save>Alle Einstellungen speichern</button></div>`;
+    const selectedMemberNames=card=>[...new Set(String(card.querySelector("[data-names]")?.value||"").split(/[,;\n]+/).map(value=>value.trim()).filter(Boolean))];
+    const renderMemberPills=card=>{const box=card.querySelector("[data-member-pills]");if(!box)return;box.innerHTML=selectedMemberNames(card).map(name=>`<span class="raid-helper-role-tag">${escapeHtml(members.find(member=>member.username===name)?.displayName||name)} <small>@${escapeHtml(name)}</small><button type="button" data-remove-member="${escapeAttr(name)}">×</button></span>`).join("")||'<span class="muted">Keine einzelnen Discord-Mitglieder ausgewählt.</span>';box.querySelectorAll("[data-remove-member]").forEach(button=>button.onclick=()=>{const field=card.querySelector("[data-names]");field.value=selectedMemberNames(card).filter(name=>name!==button.dataset.removeMember).join("\n");renderMemberPills(card);});};
+    panel.querySelectorAll("[data-notification-card]").forEach(card=>{renderMemberPills(card);const add=()=>{const input=card.querySelector("[data-member-search]");const username=String(input?.value||"").trim();if(!username)return;const member=members.find(entry=>String(entry.username).toLowerCase()===username.toLowerCase());if(!member){setStatus("Bitte ein Mitglied aus der Discord-Liste auswählen.","bad");return;}const field=card.querySelector("[data-names]");field.value=[...new Set([...selectedMemberNames(card),member.username])].join("\n");input.value="";renderMemberPills(card);};card.querySelector("[data-add-member]")?.addEventListener("click",add);card.querySelector("[data-member-search]")?.addEventListener("keydown",event=>{if(event.key==="Enter"){event.preventDefault();add();}});});
+    panel.querySelectorAll("[data-notification-card]").forEach((card,index)=>{const title=card.querySelector("h3"),description=card.querySelector("p.muted");const body=document.createElement("div");body.className="discord-settings-card-body";while(card.firstChild)body.appendChild(card.firstChild);const toggle=document.createElement("button");toggle.type="button";toggle.className="discord-settings-card-toggle";toggle.innerHTML=`<strong>${title?.innerHTML||"Benachrichtigung"}</strong><span>${escapeHtml(description?.textContent||"")}</span><b aria-hidden="true">⌄</b>`;title?.remove();description?.remove();card.append(toggle,body);if(index>0)card.classList.add("collapsed");toggle.addEventListener("click",()=>{const willOpen=card.classList.contains("collapsed");panel.querySelectorAll("[data-notification-card]").forEach(other=>other.classList.add("collapsed"));if(willOpen)card.classList.remove("collapsed");});const editor=card.querySelector("[data-template]"),preview=card.querySelector("[data-preview]");editor?.addEventListener("input",()=>{preview.innerHTML=renderDiscordTemplatePreview(editor.value);});});
+    const targetsFromCard=card=>{const targets=[...card.querySelectorAll("[data-role]:checked")].map(input=>({type:"role",value:input.value,label:input.dataset.label||input.value}));String(card.querySelector("[data-names]")?.value||"").split(/[,;\n]+/).map(name=>name.trim()).filter(Boolean).forEach(name=>targets.push({type:"name",value:name,label:name}));return targets;};
+    const loadTargetsIntoCard=(card,targets)=>{const roleIds=new Set((targets||[]).filter(target=>target.type==="role").map(target=>String(target.value)));card.querySelectorAll("[data-role]").forEach(input=>input.checked=roleIds.has(String(input.value)));const names=(targets||[]).filter(target=>target.type==="name").map(target=>target.value);const field=card.querySelector("[data-names]");if(field)field.value=names.join("\n");};
+    DISCORD_NOTIFICATION_TYPES.filter(type=>type.raidScoped).forEach(type=>{const card=panel.querySelector(`[data-notification-card="${type.key}"]`);if(!card)return;const drafts=Object.fromEntries(DISCORD_NOTIFICATION_RAIDS.map(([raid])=>[raid,Array.isArray(settings[`${type.key}:${raid}`])?settings[`${type.key}:${raid}`]:[]]));let activeRaid=DISCORD_NOTIFICATION_RAIDS[0][0];const picker=document.createElement("label");picker.style.cssText="display:grid;gap:6px;margin:10px 0 12px;font-weight:900;color:var(--gold)";picker.innerHTML=`Empfänger für Raid auswählen<select data-raid-scope>${DISCORD_NOTIFICATION_RAIDS.map(([raid,label])=>`<option value="${raid}">${escapeHtml(label)}</option>`).join("")}</select>`;card.querySelector(".discord-role-grid")?.before(picker);const select=picker.querySelector("select");const capture=()=>{drafts[activeRaid]=targetsFromCard(card);};select.addEventListener("change",()=>{capture();activeRaid=select.value;loadTargetsIntoCard(card,drafts[activeRaid]);});card._raidNotificationDrafts=drafts;card._captureRaidNotification=capture;loadTargetsIntoCard(card,drafts[activeRaid]);});
+    panel.querySelector("[data-close]").onclick=()=>{panel.classList.add("hidden");raidSection?.classList.remove("hidden");};
+    panel.querySelector("[data-save]").onclick=async()=>{try{for(const card of panel.querySelectorAll("[data-notification-card]")){const template=card.querySelector("[data-template]")?.value||"";if(card._raidNotificationDrafts){card._captureRaidNotification();for(const [raid,targets] of Object.entries(card._raidNotificationDrafts)){await railwayWrite({action:"guildSetNotificationSetting",masterCode,notificationKey:`${card.dataset.notificationCard}:${raid}`,targets:JSON.stringify(targets),messageTemplate:template});}}else{await railwayWrite({action:"guildSetNotificationSetting",masterCode,notificationKey:card.dataset.notificationCard,targets:JSON.stringify(targetsFromCard(card)),messageTemplate:template});}}setStatus("Discord-Benachrichtigungen, Raid-Zuordnungen und Texte wurden gespeichert.","good");}catch(error){setStatus(error.message||"Einstellungen konnten nicht gespeichert werden.","bad");}};
+    panel.scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(error){setStatus(error.message||"Discord-Benachrichtigungen konnten nicht geladen werden.","bad");}
+}
 async function openPlayerAccessDialog(playerId,playerPin=""){
   const player=(guildData.players||[]).find(entry=>String(entry.playerId||"")===String(playerId)||String(entry.playerPin||"")===String(playerPin))||{};
   const selectedRoles=new Set(Array.isArray(player.discordRoleIds)?player.discordRoleIds.map(String):[]);
@@ -12666,6 +12919,10 @@ function raidHelperValue(id){
 function defaultRaidHelperImageUrl(raidKey){
   const raw = String(raidKey || "").trim().toLowerCase();
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
+  if(CURRENT_GUILD_SLUG !== "lichtloot"){
+    const images=currentGuildInfo?.layout?.raidImages || {};
+    return String(images[raw] || images[key] || "").trim();
+  }
   return RAID_HELPER_BANNER_BASE_URL + key + ".jpg";
 }
 
@@ -14019,12 +14276,13 @@ async function queueP0PlusBackup(raidOverride, sourceId){
 
   try{
     setStatus("PO+ Sicherung wird für den Bot vorbereitet ...", "");
-    const result = await railwayApi({
+    const result = await railwayWrite({
       action:"guildQueueP0PlusBackup",
       masterCode,
       raid,
       channelId:P0PLUS_BACKUP_CHANNEL_ID,
-      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID
+      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID,
+      requestedAt:new Date().toISOString()
     });
 
     if(!result.success){
@@ -14394,10 +14652,11 @@ async function loadP0ReleasePanel(){
       if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
       return;
     }
-    const [releaseResult, reviewResult, requestResult] = await Promise.all([
+    const [releaseResult, reviewResult, requestResult, displayResult] = await Promise.all([
       railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
       railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" }),
-      CURRENT_GUILD_SLUG === "nachtloot" ? railwayApi({ action:"guildGetPoReleaseRequests", masterCode }) : Promise.resolve({success:true,entries:[]})
+      CURRENT_GUILD_SLUG === "nachtloot" ? railwayApi({ action:"guildGetPoReleaseRequests", masterCode }) : Promise.resolve({success:true,entries:[]}),
+      railwayApi({ action:"getPoReleaseDisplaySettings" })
     ]);
     if(!releaseResult.success){
       if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
@@ -14410,6 +14669,11 @@ async function loadP0ReleasePanel(){
     poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
     p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
     poReleaseRequests = Array.isArray(requestResult.entries) ? requestResult.entries : [];
+    if(displayResult.configured && Array.isArray(displayResult.visibleRaids)){
+      poReleaseVisibleColumns = new Set(displayResult.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
+    }else{
+      await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+    }
     renderP0ReleasePanelContent();
   }catch(error){
     if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
@@ -14431,6 +14695,7 @@ function renderP0ReleasePanelContent(){
       </div>
       <div class="p0-toolbar">
         <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
+        <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span>Spalten anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
       </div>
       <div class="table-wrap">
         <table class="p0-table">
@@ -14439,14 +14704,7 @@ function renderP0ReleasePanelContent(){
               <th>Charakter</th>
               <th>Klasse</th>
               <th>LichtLootAccount</th>
-              ${CURRENT_GUILD_SLUG === "nachtloot" ? "<th>Rekrutenstatus je Raid</th>" : ""}
-              <th>P0+ Freigabe MC</th>
-              <th>P0+ Freigabe BWL</th>
-              <th>P0+ Freigabe AQ40</th>
-              <th>P0+ Freigabe NAXX</th>
-              <th>P0+ ZG Mittwoch</th>
-              <th>P0+ ZG PRIME</th>
-              <th>P0+ ZG LATE</th>
+              ${PO_RELEASE_RAIDS.filter(([raid])=>poReleaseVisibleColumns.has(raid)).map(([raid])=>`<th>${escapeHtml(poReleaseRaidLabel(raid))}</th>`).join("")}
               <th>Aktion</th>
             </tr>
           </thead>
@@ -14503,13 +14761,24 @@ async function deletePoReleaseRequest(index){
 function openPoReleaseRequestReview(index){const entry=poReleaseRequests[index];if(!entry)return;const req=entry.requirements||{};const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:900px;max-height:92vh;overflow:auto"><h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3><p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p><div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}<br>${(req.checks||[]).map(check=>`☐ ${escapeHtml(check)}`).join("<br>")}</div>${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:""}${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;max-width:100%;max-height:52vh;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="muted">Kein Screenshot hochgeladen.</p>'}<label style="display:grid;gap:6px;margin-top:12px">Notiz<textarea id="poRequestReviewNote" rows="3">${escapeHtml(entry.reviewNote||"")}</textarea></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?'<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved">Freigeben</button>':""}</div></div>`;backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{try{const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");backdrop.remove();setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");await loadP0ReleasePanel();}catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}}));document.body.appendChild(backdrop);}
 
 function poReleaseRaidLabel(raid){
-  const labels = { mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
+  const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
   return labels[raid] || String(raid || "").toUpperCase();
 }
 
 function setPoReleaseSearch(value){
   poReleaseSearch = String(value || "");
   renderPoReleaseRows();
+}
+
+async function togglePoReleaseColumn(raid, visible){
+  if(visible) poReleaseVisibleColumns.add(raid); else poReleaseVisibleColumns.delete(raid);
+  try{localStorage.setItem(PO_RELEASE_COLUMNS_KEY,JSON.stringify(Array.from(poReleaseVisibleColumns)));}catch(_error){}
+  renderP0ReleasePanelContent();
+  try{
+    const result=await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode:document.getElementById("masterCode").value.trim(),visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+    if(!result.success) throw new Error(result.error||"Spaltenauswahl konnte nicht gespeichert werden.");
+    setStatus("Sichtbare PO-Freigaben wurden für diese Gilde gespeichert.","good");
+  }catch(error){setStatus(error.message||"Spaltenauswahl konnte nicht gespeichert werden.","bad");}
 }
 
 function poReleaseCheckHtml(entry, raid, index){
@@ -14526,6 +14795,12 @@ function recruitStatusLiftHtml(entry,index){
     const lifted=Boolean(releases[raid]);
     return `<button class="po-release-state ${lifted?"active":"empty"}" type="button" onclick="toggleRecruitStatusLift(${Number(index)},'${raid}')" title="Rekrutenstatus für ${label} ${lifted?"zurücksetzen":"aufheben"}">${lifted?"✓ ":""}${label}</button>`;
   }).join("")}</div>`;
+}
+
+function lichtbringerRecruitStatusHtml(entry){
+  return entry?.recruitStatusLifted
+    ? '<span class="po-release-state active" title="Rekrutenstatus aufgehoben">✓ aufgehoben</span>'
+    : '<span class="po-release-state empty" title="Rekrutenstatus aktiv">aktiv</span>';
 }
 
 function renderPoReleaseRows(){
@@ -14548,7 +14823,7 @@ function renderPoReleaseRows(){
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
-  const columnCount = CURRENT_GUILD_SLUG === "nachtloot" ? 12 : 11;
+  const columnCount = 4 + poReleaseVisibleColumns.size;
   if(!document.getElementById("masterCode").value.trim()){
     tbody.innerHTML = `<tr><td colspan="${columnCount}" class="muted">Master-Code eingeben, um P0+ Freigaben zu laden.</td></tr>`;
     return;
@@ -14565,22 +14840,17 @@ function renderPoReleaseRows(){
         <td><strong>${escapeHtml(entry.name || entry.char || "-")}</strong>${server}</td>
         <td>${entry.className ? `<span class="${escapeAttr(classColor(entry.className))}">${escapeHtml(entry.className)}</span>` : '<span class="muted">-</span>'}</td>
         <td><span class="pin">xxx</span></td>
-        ${CURRENT_GUILD_SLUG === "nachtloot" ? `
+        ${poReleaseVisibleColumns.has("recruit") ? `
           <td>
-            ${recruitStatusLiftHtml(entry,index)}
+            ${CURRENT_GUILD_SLUG === "nachtloot" ? recruitStatusLiftHtml(entry,index) : lichtbringerRecruitStatusHtml(entry)}
           </td>
         ` : ""}
-        <td>${poReleaseCheckHtml(entry,"mc",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"bwl",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"aq40",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"naxx",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-mittwoch",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-prime",index)}</td>
-        <td>${poReleaseCheckHtml(entry,"zg-late",index)}</td>
+        ${PO_RELEASE_RAIDS.filter(([raid])=>raid!=="recruit"&&poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td>${poReleaseCheckHtml(entry,raid,index)}</td>`).join("")}
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
             <button class="small-btn danger" type="button" onclick="openPoReleaseDeletePopup(${index})">P0+ löschen</button>
+            <button class="small-btn" type="button" onclick="openPoReleaseGrantedDmPopup(${index})"><img src="images/discord.svg" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">DM verschicken</button>
           </div>
         </td>
       </tr>
@@ -14594,6 +14864,39 @@ async function openPoReleasePopup(index){
 
 async function openPoReleaseDeletePopup(index){
   return setPoReleaseFromPopup(index, false);
+}
+
+async function openPoReleaseGrantedDmPopup(index){
+  const entry=poReleaseCharacters[index];
+  if(!entry) return;
+  const raidKey=await choosePoReleaseGrantedDmRaid(entry);
+  if(!raidKey) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
+  try{
+    setStatus("Discord-DM wird vorbereitet ...","");
+    const result=await railwayWrite({action:"guildSendPoReleaseGrantedDm",masterCode,characterId:entry.characterId||entry.id,raid:raidKey});
+    if(!result.success) throw new Error(result.error||"Discord-DM konnte nicht verschickt werden.");
+    setStatus(`Discord-DM für ${result.raidLabel||raidKey} wurde eingeplant.`,"good");
+  }catch(error){setStatus(error.message||"Discord-DM konnte nicht verschickt werden.","bad");}
+}
+
+function choosePoReleaseGrantedDmRaid(entry){
+  return new Promise(resolve=>{
+    const releases=entry?.releases||{};
+    const raids=DISCORD_NOTIFICATION_RAIDS.filter(([key])=>key!=="aq20");
+    const granted=raids.filter(([key])=>Boolean(releases[key]));
+    const options=(granted.length?granted:raids).map(([key,label])=>`<option value="${escapeAttr(key)}">${escapeHtml(label)}${releases[key]?" · freigegeben":""}</option>`).join("");
+    const backdrop=document.createElement("div");
+    backdrop.className="raid-helper-notify-backdrop";
+    backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-labelledby="poReleaseDmTitle"><h3 id="poReleaseDmTitle"><img src="images/discord.svg" alt="" style="width:24px;height:24px;vertical-align:middle;margin-right:8px">PO-Freigabe per DM verschicken</h3><p>Für welchen Raid wurde die PO von <strong>${escapeHtml(entry?.name||entry?.char||"dem Charakter")}</strong> freigegeben?</p><select id="poReleaseDmRaidSelect">${options}</select><div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-cancel>Abbrechen</button><button class="small-btn good" type="button" data-confirm>DM verschicken</button></div></div>`;
+    const finish=value=>{backdrop.remove();resolve(value);};
+    backdrop.addEventListener("click",event=>{if(event.target===backdrop)finish("");});
+    backdrop.querySelector("[data-cancel]")?.addEventListener("click",()=>finish(""));
+    backdrop.querySelector("[data-confirm]")?.addEventListener("click",()=>finish(backdrop.querySelector("#poReleaseDmRaidSelect")?.value||""));
+    document.body.appendChild(backdrop);
+    window.setTimeout(()=>backdrop.querySelector("#poReleaseDmRaidSelect")?.focus(),30);
+  });
 }
 
 function choosePoReleaseRaid(entry, enabled){
@@ -15598,7 +15901,7 @@ async function loadWorldbuffPanel(){
       return;
     }
 
-    worldbuffEntries = collapseWorldbuffDailySlots(filterManagedGuildWorldbuffs(result.buffs));
+    worldbuffEntries = collapseWorldbuffDailySlots(Array.isArray(result.buffs) ? result.buffs : []);
     renderWorldbuffMiniList();
     renderWorldbuffPanel(days);
   }catch(error){
@@ -15607,12 +15910,19 @@ async function loadWorldbuffPanel(){
 }
 
 function renderWorldbuffPanel(days){
+  const guildNames = [...new Set(worldbuffEntries.map(entry=>String(entry.gilde||entry.guild||entry.fraktion||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"de"));
+  const ownGuildName = managedWorldbuffGuildName();
   document.getElementById("worldbuffPanelContent").innerHTML = `
     <div class="worldbuff-toolbar">
       <div class="worldbuff-filter-card">
         <select id="worldbuffDays" onchange="loadWorldbuffPanel()">
           <option value="all" ${String(days || "all") === "all" ? "selected" : ""}>Alle kommenden</option>
           ${[7,14,21,30,60].map(value => `<option value="${value}" ${String(value) === String(days || "all") ? "selected" : ""}>${value} Tage</option>`).join("")}
+        </select>
+        <select id="worldbuffGuildFilter" onchange="renderWorldbuffRows()" aria-label="Gilde filtern">
+          <option value="__own__">Meine Gilde: ${escapeHtml(ownGuildName)}</option>
+          <option value="">Alle Gilden</option>
+          ${guildNames.map(name=>`<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>`).join("")}
         </select>
         <select id="worldbuffFilter" onchange="renderWorldbuffRows()">
           <option value="">Alle Buffs</option>
@@ -15674,8 +15984,13 @@ function renderWorldbuffRows(){
   if(!tbody) return;
 
   const buffFilter = document.getElementById("worldbuffFilter").value;
+  const guildFilter = document.getElementById("worldbuffGuildFilter")?.value ?? "__own__";
   const search = normalize(document.getElementById("worldbuffSearch").value);
-  const rows = worldbuffEntries.filter(entry => isManagedGuildWorldbuff(entry)).filter(entry => {
+  const rows = worldbuffEntries.filter(entry => {
+    if(guildFilter === "__own__") return isManagedGuildWorldbuff(entry);
+    if(!guildFilter) return true;
+    return normalizedWorldbuffGuild(entry.gilde || entry.guild || entry.fraktion) === normalizedWorldbuffGuild(guildFilter);
+  }).filter(entry => {
     const haystack = normalize([
       entry.tag,
       entry.datum,
@@ -15696,6 +16011,7 @@ function renderWorldbuffRows(){
 
   tbody.innerHTML = rows.map((entry,rowIndex) => {
     const index = worldbuffEntries.indexOf(entry);
+    const ownGuildEntry = isManagedGuildWorldbuff(entry);
     const statusOptions = ["", "🟡 offen", "🟢 bestätigt", "erledigt"];
     const statusValue = normalizeBuffStatus(entry.status || "");
     if(statusValue && !statusOptions.includes(statusValue)) statusOptions.push(statusValue);
@@ -15707,16 +16023,16 @@ function renderWorldbuffRows(){
       <tr class="${dateClass}">
         ${renderBuffGroupCell(formatWorldbuffDay(entry.tag, entry.datum), hideDateCells)}
         ${renderBuffGroupCell(entry.datum || "-", hideDateCells)}
-        <td class="${hideTimeCell ? "buff-group-empty" : ""}">${hideTimeCell ? "" : `<input id="worldbuffTime_${index}" class="worldbuff-status" type="time" value="${escapeAttr(entry.uhrzeit || "")}" aria-label="Uhrzeit">`}</td>
-        <td>${renderWorldbuffBuffControl(entry, index)}</td>
+        <td class="${hideTimeCell ? "buff-group-empty" : ""}">${hideTimeCell ? "" : (ownGuildEntry ? `<input id="worldbuffTime_${index}" class="worldbuff-status" type="time" value="${escapeAttr(entry.uhrzeit || "")}" aria-label="Uhrzeit">` : escapeHtml(entry.uhrzeit || "-"))}</td>
+        <td>${ownGuildEntry ? renderWorldbuffBuffControl(entry, index) : renderWorldbuffBadge(entry.buff)}</td>
         <td>${escapeHtml(entry.gilde || "-")}</td>
-        <td><input id="worldbuffCaster_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
+        <td>${ownGuildEntry ? `<input id="worldbuffCaster_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter">` : `<span class="muted">${escapeHtml(entry.charakter || "Nur Ansicht")}</span>`}</td>
         <td>
-          <select id="worldbuffStatus_${index}" class="worldbuff-status">
+          ${ownGuildEntry ? `<select id="worldbuffStatus_${index}" class="worldbuff-status">
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
-          </select>
+          </select>` : `<span class="badge ${statusValue.includes("bestätigt") ? "open" : "warn"}">${escapeHtml(statusValue || "offen")}</span>`}
         </td>
-        <td><div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div></td>
+        <td>${ownGuildEntry ? `<div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div>` : '<span class="muted">Fremdgilde · nur ansehen</span>'}</td>
       </tr>
     `;
   }).join("");
@@ -15747,9 +16063,10 @@ function isOnyNefBuff(buff){
 function worldbuffDailySlotKey(entry){
   if(!entry || !entry.datum || !entry.buff) return "";
   const buff = String(entry.buff || "").trim().toLowerCase();
-  if(buff === "hakkar") return entry.datum + "|hakkar";
-  if(buff === "ony" || buff === "nef") return entry.datum + "|ony-nef";
-  return entry.datum + "|" + buff;
+  const guild = normalizedWorldbuffGuild(entry.gilde || entry.guild || entry.fraktion) || "ohne-gilde";
+  if(buff === "hakkar") return guild + "|" + entry.datum + "|hakkar";
+  if(buff === "ony" || buff === "nef") return guild + "|" + entry.datum + "|ony-nef";
+  return guild + "|" + entry.datum + "|" + buff;
 }
 
 function worldbuffEntryPriority(entry){
