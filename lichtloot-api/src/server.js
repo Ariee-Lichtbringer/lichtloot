@@ -14963,6 +14963,17 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
+  const relatedRaidResult = await query(
+    `select id
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3
+       and ($4 = '' or coalesce(raid_time, '') = $4)`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date, clean(raid.raid_time)]
+  );
+  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+
   const signupResult = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
@@ -14971,17 +14982,17 @@ async function getRaidHelper({ guildId, query: params }) {
        exists(
          select 1
          from prios pr
-         where pr.raid_id = rs.raid_id
+         where pr.raid_id = $2
            and pr.character_id = rs.character_id
        ) as has_prio
      from raid_signups rs
      join characters c on c.id = rs.character_id
-     where rs.raid_id = $1
+     where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
-    [raid.id]
+    [relatedRaidIds, raid.id]
   );
 
   const externalResult = await query(
@@ -14998,9 +15009,9 @@ async function getRaidHelper({ guildId, query: params }) {
             ) as has_prio
      from raid_external_signups res
      where res.guild_id = $1
-       and (res.raid_id = $2 or (res.raid_id is null and lower(res.raid_type) = any($3) and res.raid_date = $4))
+       and (res.raid_id = any($5) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
      order by res.player_name asc`,
-    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date, relatedRaidIds]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
