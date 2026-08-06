@@ -4629,6 +4629,8 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .buff-ony{color:#fca5a5}
 .buff-nef{color:#f87171}
 .buff-rend{color:#fdba74}
+.buff-control{display:flex;align-items:center;gap:7px}
+.buff-icon-img{width:25px;height:25px;flex:0 0 25px;border:1px solid rgba(var(--gold-rgb),.48);border-radius:6px;object-fit:cover;box-shadow:0 3px 9px rgba(0,0,0,.38)}
 
 .worldbuff-caster{
   min-width:150px;
@@ -6155,16 +6157,24 @@ const LOG_ANALYSIS_PAGE_SIZE = 10;
 let guildSentMessages = [];
 let guildInboxTab = "reports";
 let worldbuffEntries = [];
-const NACHTWAECHTER_WORLDBUFF_GUILD = "Nachtwächter";
-
-function isNachtwaechterWorldbuff(entry){
-  const raw = String(entry && (entry.gilde || entry.guild || entry.fraktion) || "").trim();
-  const guild = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return guild.includes("nachtwachter") || guild.includes("nachtloot");
+function normalizedWorldbuffGuild(value){
+  return String(value || "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-function filterNachtwaechterWorldbuffs(entries){
-  return (Array.isArray(entries) ? entries : []).filter(isNachtwaechterWorldbuff);
+function managedWorldbuffGuildName(){
+  return CURRENT_GUILD_SLUG === "nachtloot" ? "Nachtwächter" : (getCurrentGuildBrand().guildName || "Lichtbringer");
+}
+
+function isManagedGuildWorldbuff(entry){
+  const entryGuild = normalizedWorldbuffGuild(entry && (entry.gilde || entry.guild || entry.fraktion));
+  if(!entryGuild) return false;
+  if(CURRENT_GUILD_SLUG === "nachtloot") return entryGuild.includes("nachtwachter") || entryGuild.includes("nachtloot");
+  const managedGuild = normalizedWorldbuffGuild(managedWorldbuffGuildName());
+  return entryGuild === managedGuild;
+}
+
+function filterManagedGuildWorldbuffs(entries){
+  return (Array.isArray(entries) ? entries : []).filter(isManagedGuildWorldbuff);
 }
 let hordenbuffEntries = [];
 let lootItemIndex = {};
@@ -7600,7 +7610,7 @@ async function loadWorldbuffMiniOverview(){
   try{
     const result = await railwayApi({ action:"guildGetWorldbuffs", masterCode, source:"railway", days:4 });
     if(result && result.success){
-      worldbuffEntries = collapseWorldbuffDailySlots(filterNachtwaechterWorldbuffs(result.buffs));
+      worldbuffEntries = collapseWorldbuffDailySlots(filterManagedGuildWorldbuffs(result.buffs));
       renderWorldbuffMiniList();
       return;
     }
@@ -15588,7 +15598,7 @@ async function loadWorldbuffPanel(){
       return;
     }
 
-    worldbuffEntries = collapseWorldbuffDailySlots(filterNachtwaechterWorldbuffs(result.buffs));
+    worldbuffEntries = collapseWorldbuffDailySlots(filterManagedGuildWorldbuffs(result.buffs));
     renderWorldbuffMiniList();
     renderWorldbuffPanel(days);
   }catch(error){
@@ -15632,7 +15642,7 @@ function renderWorldbuffPanel(days){
           <option value="Nef">Nef</option>
           <option value="Rend">Rend</option>
         </select>
-        <input id="newWorldbuffGuild" type="text" value="${escapeAttr(NACHTWAECHTER_WORLDBUFF_GUILD)}" readonly aria-label="Gilde">
+        <input id="newWorldbuffGuild" type="text" value="${escapeAttr(managedWorldbuffGuildName())}" readonly aria-label="Gilde">
         <input id="newWorldbuffCaster" type="text" placeholder="Werfer">
         <input id="newWorldbuffNote" type="text" placeholder="Notiz">
         <button class="small-btn good" type="button" onclick="createWorldbuffTerm()">Termin erstellen</button>
@@ -15665,7 +15675,7 @@ function renderWorldbuffRows(){
 
   const buffFilter = document.getElementById("worldbuffFilter").value;
   const search = normalize(document.getElementById("worldbuffSearch").value);
-  const rows = worldbuffEntries.filter(entry => isNachtwaechterWorldbuff(entry)).filter(entry => {
+  const rows = worldbuffEntries.filter(entry => isManagedGuildWorldbuff(entry)).filter(entry => {
     const haystack = normalize([
       entry.tag,
       entry.datum,
@@ -15794,17 +15804,33 @@ function renderWorldbuffBuffControl(entry, index){
   if(choices.length <= 1) return renderWorldbuffBadge(entry.buff);
   const current = String((entry && entry.buff) || "").trim();
   return `
-    <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff">
-      ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
-    </select>
+    <span class="buff-control">
+      ${renderWorldbuffIcon(current)}
+      <select id="worldbuffBuff_${index}" class="worldbuff-status" aria-label="Buff">
+        ${choices.map(buff => `<option value="${escapeAttr(buff)}" ${buff === current ? "selected" : ""}>${escapeHtml(buff)}</option>`).join("")}
+      </select>
+    </span>
   `;
+}
+
+function worldbuffIconUrl(buff){
+  const icons = {
+    hakkar:"https://wow.zamimg.com/images/wow/icons/large/spell_holy_mindvision.jpg",
+    ony:"https://wow.zamimg.com/images/wow/icons/large/inv_misc_head_dragon_01.jpg",
+    nef:"https://wow.zamimg.com/images/wow/icons/large/inv_misc_head_dragon_black.jpg",
+    rend:"https://wow.zamimg.com/images/wow/icons/large/spell_arcane_teleportorgrimmar.jpg"
+  };
+  return icons[String(buff || "").trim().toLowerCase()] || icons.hakkar;
+}
+
+function renderWorldbuffIcon(buff){
+  return `<img class="buff-icon-img" src="${escapeAttr(worldbuffIconUrl(buff))}" alt="${escapeAttr(buff || "Buff")}">`;
 }
 
 function renderWorldbuffBadge(buff){
   const value = String(buff || "").trim();
   const cls = "buff-" + value.toLowerCase();
-  const icon = value === "Hakkar" ? "🟢" : (value === "Rend" ? "🟠" : "🔴");
-  return `<span class="buff-pill ${escapeAttr(cls)}">${icon} ${escapeHtml(value || "-")}</span>`;
+  return `<span class="buff-pill ${escapeAttr(cls)}">${renderWorldbuffIcon(value)} ${escapeHtml(value || "-")}</span>`;
 }
 
 function getBuffDateKey(entry){
@@ -15871,7 +15897,7 @@ async function saveWorldbuffCaster(index){
       buff,
       datum:entry.datum || "",
       uhrzeit,
-      gilde:NACHTWAECHTER_WORLDBUFF_GUILD,
+      gilde:managedWorldbuffGuildName(),
       charakter,
       status
     });
@@ -15916,7 +15942,7 @@ async function requestWorldbuffReplacement(index){
       buff:entry.buff || "",
       datum:entry.datum || "",
       uhrzeit:entry.uhrzeit || "",
-      gilde:NACHTWAECHTER_WORLDBUFF_GUILD,
+      gilde:managedWorldbuffGuildName(),
       charakter:entry.charakter || "",
       status:entry.status || "",
       note
@@ -15954,7 +15980,7 @@ async function deleteWorldbuffTerm(index){
       datum:entry.datum || "",
       uhrzeit:entry.uhrzeit || "",
       buff:entry.buff || "",
-      gilde:NACHTWAECHTER_WORLDBUFF_GUILD,
+      gilde:managedWorldbuffGuildName(),
       source:entry.source || ""
     });
 
@@ -15983,7 +16009,7 @@ async function createWorldbuffTerm(){
   const datum = document.getElementById("newWorldbuffDate").value || todayIsoDate();
   const uhrzeit = document.getElementById("newWorldbuffTime").value || "19:35";
   const buff = document.getElementById("newWorldbuffBuff").value || "Hakkar";
-  const gilde = NACHTWAECHTER_WORLDBUFF_GUILD;
+  const gilde = managedWorldbuffGuildName();
   const charakter = document.getElementById("newWorldbuffCaster").value.trim();
   const note = document.getElementById("newWorldbuffNote").value.trim();
 
