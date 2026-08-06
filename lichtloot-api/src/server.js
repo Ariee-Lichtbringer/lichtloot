@@ -3600,14 +3600,14 @@ async function sendPoReleaseGrantedDm({guildId,query:params={}}){
   const raid=normalizePoReleaseRaid(params.raid||params.raidType);
   if(!isUuid(characterId)){const error=new Error("Charakter fehlt.");error.statusCode=400;throw error;}
   if(!raid||!PO_RELEASE_DM_RAID_LABELS[raid]){const error=new Error("Bitte einen gültigen Raid auswählen.");error.statusCode=400;throw error;}
-  const found=await query(`select c.id,c.name,c.server,c.class_name,g.slug,g.name as guild_name from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,characterId]);
+  const found=await query(`select c.id,c.name,c.server,c.class_name,g.slug,g.name as guild_name,link.discord_user_id,link.discord_name from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id left join lateral (select dpl.discord_user_id,dpl.discord_name from discord_player_links dpl where dpl.guild_id=p.guild_id and dpl.character_id=c.id order by dpl.updated_at desc,dpl.created_at desc limit 1) link on true where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,characterId]);
   const character=found.rows[0];
   if(!character){const error=new Error("Charakter wurde nicht gefunden.");error.statusCode=404;throw error;}
+  if(!clean(character.discord_user_id)){const error=new Error("Für diesen Charakter ist noch kein Discord-Account verknüpft. Der Spieler muss seine PO einmal über den PO-Bot eintragen oder seinen SpielerLogin verbinden.");error.statusCode=400;throw error;}
   const notificationKey=`notify_po_release_granted:${raid}`;
   const targets=await notificationTargetsForPermissions(guildId,[notificationKey,"notify_po_release_granted"]);
-  if(!targets.length){const error=new Error("Für diesen Raid sind unter DC-Benachrichtigungen noch keine Empfänger gespeichert.");error.statusCode=400;throw error;}
   const messageTemplate=(await notificationMessageTemplate(guildId,notificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_release_granted").catch(()=>""))||"✅ **Deine PO-Freigabe wurde erteilt**\n\nDeine PO für **{raid}** wurde freigegeben.\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}";
-  await enqueueBotUpdate({guildId,type:"po_release_granted_notice",payload:{guildSlug:character.slug,guildName:character.guild_name||character.slug,character:character.name||"",server:character.server||"",className:character.class_name||"",raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],targets,messageTemplate,createdAt:new Date().toISOString()}});
+  await enqueueBotUpdate({guildId,type:"po_release_granted_notice",payload:{guildSlug:character.slug,guildName:character.guild_name||character.slug,character:character.name||"",server:character.server||"",className:character.class_name||"",raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],discordUserId:character.discord_user_id,discordName:character.discord_name||"",targets,messageTemplate,createdAt:new Date().toISOString()}});
   return {success:true,queued:true,raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],character:character.name||""};
 }
 
