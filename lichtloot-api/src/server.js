@@ -2481,6 +2481,22 @@ async function ensureDiscordChannelSchema() {
        unique (guild_id, role_id)
      )`
   );
+  await query(
+    `create table if not exists discord_bot_members (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       discord_guild_id text,
+       user_id text not null,
+       username text not null,
+       display_name text,
+       global_name text,
+       avatar_url text,
+       bot boolean not null default false,
+       updated_at timestamptz not null default now(),
+       unique (guild_id, user_id)
+     )`
+  );
+  await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
 }
 
 async function ensureRaidHelperTemplateSchema() {
@@ -5525,6 +5541,41 @@ async function getDiscordBotRoles({ guildId, query: params }) {
   await ensureDiscordChannelSchema();
   const result = await query(`select role_id,role_name,color,position from discord_bot_roles where guild_id=$1 order by position desc,lower(role_name)`, [guildId]);
   return { success:true, roles:result.rows.map(row => ({id:row.role_id,roleId:row.role_id,name:row.role_name,roleName:row.role_name,color:row.color,position:row.position})) };
+}
+
+async function saveDiscordBotMembers({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureDiscordChannelSchema();
+  const members = Array.isArray(params.members) ? params.members : [];
+  const seen = [];
+  for (const member of members) {
+    const userId = clean(member.id || member.userId);
+    const username = clean(member.username || member.name);
+    if (!userId || !username || member.bot === true) continue;
+    seen.push(userId);
+    await query(
+      `insert into discord_bot_members (guild_id,discord_guild_id,user_id,username,display_name,global_name,avatar_url,bot,updated_at)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,now())
+       on conflict (guild_id,user_id) do update
+       set discord_guild_id=excluded.discord_guild_id,username=excluded.username,display_name=excluded.display_name,
+           global_name=excluded.global_name,avatar_url=excluded.avatar_url,bot=excluded.bot,updated_at=now()`,
+      [guildId,clean(member.discordGuildId || member.guildId),userId,username,clean(member.displayName),clean(member.globalName),clean(member.avatarUrl),Boolean(member.bot)]
+    );
+  }
+  if (seen.length) await query(`delete from discord_bot_members where guild_id=$1 and not (user_id=any($2::text[]))`, [guildId,seen]);
+  return {success:true,saved:seen.length};
+}
+
+async function getDiscordBotMembers({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureDiscordChannelSchema();
+  const result = await query(
+    `select user_id,username,display_name,global_name,avatar_url
+     from discord_bot_members where guild_id=$1 and bot=false
+     order by lower(coalesce(nullif(display_name,''),nullif(global_name,''),username)),lower(username)`,
+    [guildId]
+  );
+  return {success:true,members:result.rows.map(row=>({id:row.user_id,userId:row.user_id,username:row.username,displayName:row.display_name||row.global_name||row.username,globalName:row.global_name||"",avatarUrl:row.avatar_url||""}))};
 }
 
 function normalizeRaidHelperTemplateRow(row) {
@@ -19920,6 +19971,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const roles = await getDiscordBotRoles({ guildId: guild.id, query: req.query });
       return res.json({ ...roles, guild: guild.slug });
     }
+    if (action === "guildGetDiscordBotMembers") {
+      const members = await getDiscordBotMembers({ guildId: guild.id, query: req.query });
+      return res.json({ ...members, guild: guild.slug });
+    }
     if(action==="guildGetNotificationSettings"){
       const settings=await getGuildNotificationSettings({guildId:guild.id,query:req.query});return res.json({...settings,guild:guild.slug});
     }
@@ -20719,6 +20774,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
     if (action === "lichtbotSaveDiscordRoles") {
       const saved = await saveDiscordBotRoles({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "lichtbotSaveDiscordMembers") {
+      const saved = await saveDiscordBotMembers({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
     if (action === "guildSetPoItem") {
