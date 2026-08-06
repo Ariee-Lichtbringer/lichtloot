@@ -1,5 +1,7 @@
 (function(){
   const CLASS_ICONS={warrior:"krieger.png",krieger:"krieger.png",druid:"druide.png",druide:"druide.png",paladin:"Pala.png",rogue:"schurke.png",schurke:"schurke.png",hunter:"jäger.png",jäger:"jäger.png",jaeger:"jäger.png",priest:"priester.png",priester:"priester.png",mage:"magier.png",magier:"magier.png",warlock:"hexenmeister.png",hexenmeister:"hexenmeister.png"};
+  const CLASS_COLORS={Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Unbekannt:"#94a3b8"};
+  const CLASS_CANON={warrior:"Warrior",krieger:"Warrior",paladin:"Paladin",pala:"Paladin",rogue:"Rogue",schurke:"Rogue",hunter:"Hunter",jäger:"Hunter",jaeger:"Hunter",druid:"Druid",druide:"Druid",priest:"Priest",priester:"Priest",mage:"Mage",magier:"Mage",warlock:"Warlock",hexenmeister:"Warlock",shaman:"Shaman",schamane:"Shaman"};
   const ROLE_INFO={tank:["🛡️","Tank",0],heal:["💚","Heiler",1],healer:["💚","Heiler",1],melee:["⚔️","Nahkampf",2],range:["🏹","Fernkampf",3],ranged:["🏹","Fernkampf",3],dd:["⚔️","DD",4],flex:["✨","Flex",5]};
   const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
   const norm=value=>String(value||"").trim().toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]/g,"");
@@ -19,8 +21,7 @@
     const groups=new Map();
     for(const row of unique){
       const role=String(row.role||"").toLowerCase();
-      let key=role==="tank"?"Tank":String(row.className||row.class||"Unbekannt").trim()||"Unbekannt";
-      key=order.find(item=>norm(item)===norm(key))||"Unbekannt";
+      let key=role==="tank"?"Tank":CLASS_CANON[String(row.className||row.class||"").trim().toLowerCase()]||"Unbekannt";
       if(!groups.has(key))groups.set(key,[]);
       groups.get(key).push(row);
     }
@@ -32,7 +33,7 @@
         const name=row.player||row.char||row.playerName||"-",status=statusInfo(row.status),own=me&&norm(name)===me;
         return `<div class="raid-signup-compact-player ${own?'is-me':''} ${status[2]==='bench'?'is-bench':''}"><span class="raid-signup-player-state ${status[2]}" title="${esc(status[1])}">${status[0]}</span><span class="raid-signup-name">${esc(name)}${own?' <em>Du</em>':''}</span>${row.note?`<span class="raid-signup-note">${esc(row.note)}</span>`:''}</div>`;
       }).join("");
-      return `<section class="raid-signup-class-group"><header>${key==="Tank"?'<span class="raid-signup-shield">🛡️</span>':iconFor(key)}<div><h3>${esc(labels[key])}</h3><span>${players.length} ${players.length===1?'Spieler':'Spieler'}</span></div></header><div class="raid-signup-class-players">${playerRows}</div></section>`;
+      return `<section class="raid-signup-class-group" style="--class-color:${CLASS_COLORS[key]||CLASS_COLORS.Unbekannt}"><header>${key==="Tank"?'<span class="raid-signup-shield">🛡️</span>':iconFor(key)}<div><h3>${esc(labels[key])}</h3><span>${players.length} ${players.length===1?'Spieler':'Spieler'}</span></div></header><div class="raid-signup-class-players">${playerRows}</div></section>`;
     }).join("");
     box.innerHTML=`<div class="raid-signup-summary">${summary}</div><div class="raid-signup-class-grid">${sections}</div>`;
   }
