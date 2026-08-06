@@ -14669,6 +14669,7 @@ async function createRaidRecord({ guildId, query: params }) {
     console.warn("PO-Anmelder konnten nach Raid-Änderung nicht aktualisiert werden:", error.message || error);
   });
   if(clean(raid.lead_pin)){
+    const guildRow=(await query(`select name,slug from guilds where id=$1 limit 1`,[guildId])).rows[0]||{};
     const savedTargets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
     const lootMasterNotificationKey=`loot_master:${clean(raid.raid_type).toLowerCase()}`;
     const configuredTargets=await notificationTargetsForPermissions(guildId,lootMasterNotificationKey).catch(()=>[]);
@@ -14677,7 +14678,7 @@ async function createRaidRecord({ guildId, query: params }) {
     if(targets.length){
       const lootMasterPin=await effectiveLootMasterPin(guildId);
       const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
-      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin,messageTemplate}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
+      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,guildSlug:guildRow.slug||"",guildName:guildRow.name||guildRow.slug||"",raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin,messageTemplate}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
     }
   }
   return { success: true, ...normalizeRaidRow(raid) };
@@ -14694,10 +14695,11 @@ async function setRaidLootMasterTargets({guildId,query:params}){
   const saved=result.rows[0];
   let queued=false;
   if(targets.length&&clean(saved.lead_pin)){
+    const guildRow=(await query(`select name,slug from guilds where id=$1 limit 1`,[guildId])).rows[0]||{};
     const lootMasterPin=await effectiveLootMasterPin(guildId);
     const lootMasterNotificationKey=`loot_master:${clean(saved.raid_type).toLowerCase()}`;
     const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
-    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin,messageTemplate}});
+    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,guildSlug:guildRow.slug||"",guildName:guildRow.name||guildRow.slug||"",raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin,messageTemplate}});
     queued=Boolean(notice?.success);
   }
   return {success:true,targets,queued,...normalizeRaidRow(saved)};
