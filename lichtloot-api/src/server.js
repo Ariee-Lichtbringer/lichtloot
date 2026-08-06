@@ -15505,10 +15505,33 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     );
   }
 
+  const guildCharactersResult = await query(
+    `select c.name, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1`,
+    [guildId]
+  );
+  const guildCharactersByName = new Map();
+  for (const character of guildCharactersResult.rows || []) {
+    const key = clean(character.name).toLocaleLowerCase("de-DE");
+    if (key && !guildCharactersByName.has(key)) guildCharactersByName.set(key, character);
+  }
+
   let written = 0;
   for (const row of rows) {
-    const playerName = clean(row.char || row.spieler || row.player || row.name);
+    let playerName = clean(row.char || row.spieler || row.player || row.name);
     if (!playerName) continue;
+    const playerAliases = [playerName, ...playerName.split(/[\/|]/g)]
+      .map(clean)
+      .filter(Boolean);
+    let matchedCharacter = null;
+    for (const alias of playerAliases) {
+      matchedCharacter = guildCharactersByName.get(alias.toLocaleLowerCase("de-DE")) || null;
+      if (matchedCharacter) break;
+    }
+    if (matchedCharacter?.name) playerName = clean(matchedCharacter.name);
+    const resolvedClassName = clean(matchedCharacter?.class_name || row.klasse || row.className);
     const source = clean(row.quelle || row.source || `Discord:${clean(params.discordChannelId)}:${clean(params.raidHelperMessageId || params.discordMessageId)}`);
     const discordUserId = clean(row.discordUserId);
     const normalizedStatus = normalizeSignupStatus(row.status);
@@ -15589,7 +15612,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
         source,
         parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
         clean(params.raidTime || row.raidTime || raid.raid_time),
-        clean(row.klasse || row.className),
+        resolvedClassName,
         normalizedRole,
         normalizedStatus,
         discordUserId,
@@ -15616,7 +15639,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
           clean(params.raidTime || row.raidTime || raid.raid_time),
           playerName,
-          clean(row.klasse || row.className),
+          resolvedClassName,
           normalizedRole,
           normalizedStatus,
           source,
