@@ -14968,9 +14968,8 @@ async function getRaidHelper({ guildId, query: params }) {
      from raids
      where guild_id = $1
        and lower(raid_type) = any($2)
-       and raid_date = $3
-       and ($4 = '' or coalesce(raid_time, '') = $4)`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date, clean(raid.raid_time)]
+       and raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
 
