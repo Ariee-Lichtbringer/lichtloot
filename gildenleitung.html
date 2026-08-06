@@ -8181,6 +8181,7 @@ const DISCORD_NOTIFICATION_TYPES=[
   {key:"loot_master",raidScoped:true,icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink.",tokens:"{raid}",defaultTemplate:"Du bist für **{raid}** als Plündermeister eingetragen.",automaticText:"LeadPIN: [LeadPIN des Raids]\nPlündermeister-PIN: [aktueller PM-PIN]\n\nZugang:\nAlternativ wird auch der Mastercode der Gildenleitung als Plündermeister-Passwort akzeptiert.\n\nDatum: [Raid-Datum]\nUhrzeit: [Raid-Uhrzeit]\n\nDirekt zum Plündermeisterpanel:\n[Plündermeisterseite für den Raid öffnen]\n\nErinnerung für nach dem Raid:\n• PO+ Punkte übertragen\n• Erhaltene Items markieren und die zugehörigen Punkte entfernen\n\nHinweis: Der PM-PIN erlaubt nur PO+ übertragen und Item erhalten/Punkte entfernen. Der Mastercode bleibt voll gültig."},
   {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine.",tokens:"{charakter}, {aktion}, {termin}, {neuer_termin}, {grund}",defaultTemplate:"🌍 **Worldbuff-Termin {aktion}**\n**Charakter:** {charakter}\n**Termin:** {termin}\n**Neuer Termin:** {neuer_termin}\n**Grund:** {grund}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
   {key:"notify_po_releases",raidScoped:true,icon:"🔎",title:"PO-Freigabe wartet",text:"Informiert, sobald im PO-Anmelder eine neue PO-Freigabe geprüft werden muss.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}, {antrag}, {link}",defaultTemplate:"🔎 **Neue PO-Freigabe wartet**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n**Raid:** {raid}\n**Antrag:** {antrag}\n\n🔗 **[Direkt zur PO-Freigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
+  {key:"notify_po_release_granted",raidScoped:true,icon:"✅",title:"PO-Freigabe erteilt",text:"Sendet auf Wunsch eine Discord-DM, nachdem eine PO-Freigabe für einen Raid erteilt wurde.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}",defaultTemplate:"✅ **Deine PO-Freigabe wurde erteilt**\n\nDeine PO für **{raid}** wurde freigegeben.\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
   {key:"raid_status_changes",icon:"📋",title:"Raidstatus geändert",text:"Informiert bei Bench, verspätet, vorläufig, abwesend oder abgemeldet im Raidanmelder.",tokens:"{spieler}, {raid}, {status}, {datum}, {uhrzeit}, {hinweis}",defaultTemplate:"📋 **Änderung im Raidanmelder**\n\n**{spieler}** wurde für **{raid}** **{status}**.\n**Datum:** {datum}\n**Uhrzeit:** {uhrzeit}\n**Hinweis:** {hinweis}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."}
 ];
 const DISCORD_NOTIFICATION_RAIDS=[["mc","Molten Core"],["bwl","Blackwing Lair"],["aq40","AQ40"],["naxx","Naxxramas"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG Prime"],["zg-late","ZG Late"],["aq20","AQ20"]];
@@ -14825,6 +14826,7 @@ function renderPoReleaseRows(){
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
             <button class="small-btn danger" type="button" onclick="openPoReleaseDeletePopup(${index})">P0+ löschen</button>
+            <button class="small-btn" type="button" onclick="openPoReleaseGrantedDmPopup(${index})"><img src="images/discord.svg" alt="" style="width:18px;height:18px;vertical-align:middle;margin-right:6px">DM verschicken</button>
           </div>
         </td>
       </tr>
@@ -14838,6 +14840,39 @@ async function openPoReleasePopup(index){
 
 async function openPoReleaseDeletePopup(index){
   return setPoReleaseFromPopup(index, false);
+}
+
+async function openPoReleaseGrantedDmPopup(index){
+  const entry=poReleaseCharacters[index];
+  if(!entry) return;
+  const raidKey=await choosePoReleaseGrantedDmRaid(entry);
+  if(!raidKey) return;
+  const masterCode=document.getElementById("masterCode").value.trim();
+  if(!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
+  try{
+    setStatus("Discord-DM wird vorbereitet ...","");
+    const result=await railwayWrite({action:"guildSendPoReleaseGrantedDm",masterCode,characterId:entry.characterId||entry.id,raid:raidKey});
+    if(!result.success) throw new Error(result.error||"Discord-DM konnte nicht verschickt werden.");
+    setStatus(`Discord-DM für ${result.raidLabel||raidKey} wurde eingeplant.`,"good");
+  }catch(error){setStatus(error.message||"Discord-DM konnte nicht verschickt werden.","bad");}
+}
+
+function choosePoReleaseGrantedDmRaid(entry){
+  return new Promise(resolve=>{
+    const releases=entry?.releases||{};
+    const raids=DISCORD_NOTIFICATION_RAIDS.filter(([key])=>key!=="aq20");
+    const granted=raids.filter(([key])=>Boolean(releases[key]));
+    const options=(granted.length?granted:raids).map(([key,label])=>`<option value="${escapeAttr(key)}">${escapeHtml(label)}${releases[key]?" · freigegeben":""}</option>`).join("");
+    const backdrop=document.createElement("div");
+    backdrop.className="raid-helper-notify-backdrop";
+    backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" aria-labelledby="poReleaseDmTitle"><h3 id="poReleaseDmTitle"><img src="images/discord.svg" alt="" style="width:24px;height:24px;vertical-align:middle;margin-right:8px">PO-Freigabe per DM verschicken</h3><p>Für welchen Raid wurde die PO von <strong>${escapeHtml(entry?.name||entry?.char||"dem Charakter")}</strong> freigegeben?</p><select id="poReleaseDmRaidSelect">${options}</select><div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-cancel>Abbrechen</button><button class="small-btn good" type="button" data-confirm>DM verschicken</button></div></div>`;
+    const finish=value=>{backdrop.remove();resolve(value);};
+    backdrop.addEventListener("click",event=>{if(event.target===backdrop)finish("");});
+    backdrop.querySelector("[data-cancel]")?.addEventListener("click",()=>finish(""));
+    backdrop.querySelector("[data-confirm]")?.addEventListener("click",()=>finish(backdrop.querySelector("#poReleaseDmRaidSelect")?.value||""));
+    document.body.appendChild(backdrop);
+    window.setTimeout(()=>backdrop.querySelector("#poReleaseDmRaidSelect")?.focus(),30);
+  });
 }
 
 function choosePoReleaseRaid(entry, enabled){
