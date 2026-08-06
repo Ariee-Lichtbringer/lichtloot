@@ -6883,6 +6883,41 @@ async function getPoPostEntries({ guildId, query: params }) {
   };
 }
 
+async function getActivePoPostChannels({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const result = await query(
+    `select distinct on (post_key, source_channel_id, target_channel_id)
+       post_key, source_channel_id, target_channel_id, discord_message_id,
+       raid, title, raid_pin, raid_date, raid_time, mode, updated_at
+     from po_post_entries
+     where guild_id = $1
+       and archived_at is null
+       and (source_channel_id <> '' or target_channel_id <> '')
+     order by post_key, source_channel_id, target_channel_id, updated_at desc`,
+    [guildId]
+  );
+  return {
+    success: true,
+    posts: result.rows.map(row => ({
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || row.source_channel_id || "",
+      discordMessageId: row.discord_message_id || "",
+      messageId: row.discord_message_id || "",
+      raid: row.raid || "",
+      title: row.title || "PO-Anmelder",
+      raidPin: row.raid_pin || "",
+      prioPin: row.raid_pin || "",
+      lichtlootRaidId: row.raid_pin || "",
+      raidDate: row.raid_date || "",
+      raidTime: row.raid_time || "",
+      mode: row.mode || "",
+      updatedAt: row.updated_at || ""
+    }))
+  };
+}
+
 async function setPoPostDiscordMessage({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -20375,6 +20410,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
+    if (action === "lichtbotGetPoPostChannels" || action === "guildGetPoPostChannels") {
+      const list = await getActivePoPostChannels({ guildId: guild.id, query: req.query });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
     if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
@@ -20912,6 +20952,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "getPoPostEntries" || action === "guildGetPoPostEntries" || action === "lichtbotGetPoPostEntries") {
       const list = await getPoPostEntries({ guildId: guild.id, query: postParams });
+      return res.json({ ...list, guild: guild.slug });
+    }
+
+    if (action === "lichtbotGetPoPostChannels" || action === "guildGetPoPostChannels") {
+      const list = await getActivePoPostChannels({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
     }
 
