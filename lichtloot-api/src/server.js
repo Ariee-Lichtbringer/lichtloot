@@ -2598,11 +2598,12 @@ async function getGuildNotificationSettings({guildId,query:params}){
 async function setGuildNotificationSetting({guildId,query:params}){
   requireMasterCode(params.masterCode);
   await ensureGuildNotificationSettingsSchema();
-  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","raid_status_changes","po_reviewers"]);
+  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","notify_po_release_granted","raid_status_changes","po_reviewers"]);
   const notificationKey=clean(params.notificationKey||params.key);
   const allowedLootMasterKey=/^loot_master:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
   const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  if(!allowed.has(notificationKey)&&!allowedLootMasterKey&&!allowedPoReleaseKey){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
+  const allowedPoReleaseGrantedKey=/^notify_po_release_granted:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
+  if(!allowed.has(notificationKey)&&!allowedLootMasterKey&&!allowedPoReleaseKey&&!allowedPoReleaseGrantedKey){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
   let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
   targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
   const messageTemplate=String(params.messageTemplate||params.template||"").trim();
@@ -3590,6 +3591,24 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   }
   p0ReleaseCache = null;
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
+}
+
+const PO_RELEASE_DM_RAID_LABELS={mc:"Molten Core",bwl:"Blackwing Lair",aq40:"AQ40",naxx:"Naxxramas","zg-mittwoch":"ZG Mittwoch","zg-prime":"ZG Prime","zg-late":"ZG Late",aq20:"AQ20"};
+async function sendPoReleaseGrantedDm({guildId,query:params={}}){
+  requireMasterCode(params.masterCode);
+  const characterId=clean(params.characterId||params.charId);
+  const raid=normalizePoReleaseRaid(params.raid||params.raidType);
+  if(!isUuid(characterId)){const error=new Error("Charakter fehlt.");error.statusCode=400;throw error;}
+  if(!raid||!PO_RELEASE_DM_RAID_LABELS[raid]){const error=new Error("Bitte einen gültigen Raid auswählen.");error.statusCode=400;throw error;}
+  const found=await query(`select c.id,c.name,c.server,c.class_name,g.slug,g.name as guild_name from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,characterId]);
+  const character=found.rows[0];
+  if(!character){const error=new Error("Charakter wurde nicht gefunden.");error.statusCode=404;throw error;}
+  const notificationKey=`notify_po_release_granted:${raid}`;
+  const targets=await notificationTargetsForPermissions(guildId,[notificationKey,"notify_po_release_granted"]);
+  if(!targets.length){const error=new Error("Für diesen Raid sind unter DC-Benachrichtigungen noch keine Empfänger gespeichert.");error.statusCode=400;throw error;}
+  const messageTemplate=(await notificationMessageTemplate(guildId,notificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_release_granted").catch(()=>""))||"✅ **Deine PO-Freigabe wurde erteilt**\n\nDeine PO für **{raid}** wurde freigegeben.\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}";
+  await enqueueBotUpdate({guildId,type:"po_release_granted_notice",payload:{guildSlug:character.slug,guildName:character.guild_name||character.slug,character:character.name||"",server:character.server||"",className:character.class_name||"",raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],targets,messageTemplate,createdAt:new Date().toISOString()}});
+  return {success:true,queued:true,raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],character:character.name||""};
 }
 
 async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
@@ -20308,6 +20327,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
+    if(action === "guildSendPoReleaseGrantedDm"){
+      const sent=await sendPoReleaseGrantedDm({guildId:guild.id,query:req.query});
+      return res.json({...sent,guild:guild.slug});
+    }
 
     if (action === "guildSetCharacterRecruitStatusLift") {
       const saved = await setCharacterRecruitStatusLift({ guildId: guild.id, query: req.query });
@@ -20839,6 +20862,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action === "guildSendPoReleaseGrantedDm"){
+      const sent=await sendPoReleaseGrantedDm({guildId:guild.id,query:postParams});
+      return res.json({...sent,guild:guild.slug});
     }
 
     if (action === "guildSetCharacterRecruitStatusLift") {
