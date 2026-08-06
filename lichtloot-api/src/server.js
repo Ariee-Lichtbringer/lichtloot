@@ -15449,6 +15449,17 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     raid.discord_message_id = incomingMessageId || raid.discord_message_id;
   }
 
+  const replaceSnapshot = ["1", "true", "yes", "ja", "on"].includes(clean(params.replaceSnapshot).toLowerCase());
+  if (replaceSnapshot && incomingMessageId) {
+    await query(
+      `delete from raid_external_signups
+       where guild_id = $1
+         and raid_id = $2
+         and discord_message_id = $3`,
+      [guildId, raid.id, incomingMessageId]
+    );
+  }
+
   let written = 0;
   for (const row of rows) {
     const playerName = clean(row.char || row.spieler || row.player || row.name);
