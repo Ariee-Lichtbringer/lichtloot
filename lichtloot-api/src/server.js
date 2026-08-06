@@ -16,7 +16,6 @@ const worldbuffBackupChannelId = "1529393614247952434";
 const worldbuffAnnouncementChannelId = process.env.WORLDBUFF_ANNOUNCEMENT_CHANNEL_ID || "1281152286772695071";
 const masterCodeOverrides = new Map();
 const worldbuffAccessCodeOverrides = new Map();
-const lootMasterAccessCodeOverrides = new Map();
 const worldbuffPublicCsvUrl =
   process.env.WORLDBUFF_PUBLIC_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1eItzaMGhpJ28vv4sDA8wwmu0YhUxcbiz-2VLiCVyjv4/export?format=csv&gid=1498762908";
@@ -270,7 +269,6 @@ app.get("/api/dashboard", async (req, res, next) => {
   try {
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
     await loadWorldbuffAccessCode(guild.id);
-    await loadLootMasterAccessCode(guild.id);
     const result = await query(
       `select r.*,
               (
@@ -967,7 +965,7 @@ const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
 
 function defaultGuildLayoutForSlug(slug) {
   if (String(slug || "").trim().toLowerCase() === "lichtloot") return {};
-  return { raidImages: {} };
+  return { raidImages: defaultNewGuildRaidImages };
 }
 
 function guildLogoUrlForSlug(slug, logoUrl) {
@@ -1034,13 +1032,11 @@ async function ensureGuildDiscordConfigSchema() {
 async function listGuildsForBot({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensureGuildDiscordConfigSchema();
-  await ensureGuildLayoutSchema();
   const result = await query(
     `select g.slug,
             g.name,
             g.server,
             g.discord_guild_id,
-            coalesce(gs.layout_json, '{}'::jsonb) as layout_json,
             coalesce(nullif(g.discord_guild_id, ''), (
               select nullif(ga.discord_guild_id, '')
               from guild_applications ga
@@ -1051,7 +1047,6 @@ async function listGuildsForBot({ query: params }) {
               limit 1
             ), '') as resolved_discord_guild_id
      from guilds g
-     left join guild_settings gs on gs.guild_id = g.id
      order by g.created_at asc, g.name asc`
   );
   return {
@@ -1060,8 +1055,7 @@ async function listGuildsForBot({ query: params }) {
       slug: row.slug,
       name: row.name,
       server: row.server || "",
-      discordGuildId: row.resolved_discord_guild_id || row.discord_guild_id || "",
-      layout: row.layout_json && typeof row.layout_json === "object" ? row.layout_json : {}
+      discordGuildId: row.resolved_discord_guild_id || row.discord_guild_id || ""
     }))
   };
 }
@@ -2246,8 +2240,6 @@ function requireRaidleadP0MasterCodeForGuild(guild, value) {
   const guildSlug = clean(guild?.slug).toLowerCase();
   const isLichtbringer = guildSlug === "lichtloot" || guildSlug === "lichtbringer";
   if (isLichtbringer && code === "1301") return;
-  const lootMasterCode = clean(lootMasterAccessCodeOverrides.get(String(guild?.id || "")));
-  if (code && lootMasterCode && code === lootMasterCode) return;
   requireMasterCodeForGuild(guild, code);
 }
 
@@ -2280,7 +2272,6 @@ async function ensureRaidSchema() {
        add column if not exists description text,
        add column if not exists raid_image_url text,
        add column if not exists loot_master text,
-       add column if not exists loot_master_targets jsonb not null default '[]'::jsonb,
        add column if not exists status_notify_targets jsonb not null default '[]'::jsonb,
        add column if not exists announcement_notify_targets jsonb not null default '[]'::jsonb`
   );
@@ -2481,22 +2472,6 @@ async function ensureDiscordChannelSchema() {
        unique (guild_id, role_id)
      )`
   );
-  await query(
-    `create table if not exists discord_bot_members (
-       id uuid primary key default gen_random_uuid(),
-       guild_id uuid not null references guilds(id) on delete cascade,
-       discord_guild_id text,
-       user_id text not null,
-       username text not null,
-       display_name text,
-       global_name text,
-       avatar_url text,
-       bot boolean not null default false,
-       updated_at timestamptz not null default now(),
-       unique (guild_id, user_id)
-     )`
-  );
-  await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
 }
 
 async function ensureRaidHelperTemplateSchema() {
@@ -2593,79 +2568,6 @@ async function ensurePlayerRoleSchema() {
     where jsonb_array_length(coalesce(permissions,'[]'::jsonb))=0 and lower(role)<>'member'`);
 }
 
-async function ensureGuildNotificationSettingsSchema(){
-  await query(`create table if not exists guild_notification_settings (
-    guild_id uuid not null references guilds(id) on delete cascade,
-    notification_key text not null,
-    targets jsonb not null default '[]'::jsonb,
-    updated_at timestamptz not null default now(),
-    primary key (guild_id,notification_key)
-  )`);
-  await query(`alter table guild_notification_settings add column if not exists message_template text not null default ''`);
-}
-
-async function getGuildNotificationSettings({guildId,query:params}){
-  requireMasterOrQueueToken(params);
-  await ensureGuildNotificationSettingsSchema();
-  const result=await query(`select notification_key,targets,message_template from guild_notification_settings where guild_id=$1`,[guildId]);
-  return {success:true,settings:Object.fromEntries(result.rows.map(row=>[row.notification_key,Array.isArray(row.targets)?row.targets:[]])),templates:Object.fromEntries(result.rows.map(row=>[row.notification_key,clean(row.message_template)]))};
-}
-
-async function setGuildNotificationSetting({guildId,query:params}){
-  requireMasterCode(params.masterCode);
-  await ensureGuildNotificationSettingsSchema();
-  const allowed=new Set(["notify_player_logins","loot_master","manage_worldbuffs","notify_po_releases","notify_po_release_granted","raid_status_changes","po_reviewers"]);
-  const notificationKey=clean(params.notificationKey||params.key);
-  const allowedLootMasterKey=/^loot_master:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  const allowedPoReleaseKey=/^notify_po_releases:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  const allowedPoReleaseGrantedKey=/^notify_po_release_granted:(mc|bwl|aq40|naxx|zg-mittwoch|zg-prime|zg-late|aq20)$/i.test(notificationKey);
-  if(!allowed.has(notificationKey)&&!allowedLootMasterKey&&!allowedPoReleaseKey&&!allowedPoReleaseGrantedKey){const error=new Error("Unbekannte Discord-Benachrichtigung.");error.statusCode=400;throw error;}
-  let targets=[];try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
-  targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
-  const messageTemplate=String(params.messageTemplate||params.template||"").trim();
-  await query(`insert into guild_notification_settings(guild_id,notification_key,targets,message_template,updated_at) values($1,$2,$3::jsonb,$4,now()) on conflict(guild_id,notification_key) do update set targets=$3::jsonb,message_template=$4,updated_at=now()`,[guildId,notificationKey,JSON.stringify(targets),messageTemplate]);
-  return {success:true,notificationKey,targets,messageTemplate};
-}
-
-async function notificationMessageTemplate(guildId,notificationKey){
-  await ensureGuildNotificationSettingsSchema();
-  const result=await query(`select message_template from guild_notification_settings where guild_id=$1 and notification_key=$2`,[guildId,clean(notificationKey)]);
-  return clean(result.rows[0]?.message_template);
-}
-
-const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
-
-async function getPoReleaseDisplaySettings(guildId) {
-  await ensureGuildLayoutSchema();
-  const result = await query(`select layout_json from guild_settings where guild_id=$1`, [guildId]);
-  const saved = result.rows[0]?.layout_json?.poReleaseVisibleRaids;
-  const configured = Array.isArray(saved);
-  const settingVersion = Number(result.rows[0]?.layout_json?.poReleaseDisplayVersion || 0);
-  const visibleRaids = Array.isArray(saved)
-    ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
-    : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
-  if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
-  return { success:true, visibleRaids, configured };
-}
-
-async function setPoReleaseDisplaySettings({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
-  await ensureGuildLayoutSchema();
-  let requested = [];
-  try { requested = typeof params.visibleRaids === "string" ? JSON.parse(params.visibleRaids) : params.visibleRaids; } catch {}
-  const visibleRaids = Array.isArray(requested)
-    ? [...new Set(requested.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value)))]
-    : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
-  await query(
-    `insert into guild_settings (guild_id, layout_json)
-     values ($1, jsonb_build_object('poReleaseVisibleRaids', $2::jsonb, 'poReleaseDisplayVersion', 2))
-     on conflict (guild_id) do update
-       set layout_json=jsonb_set(jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{poReleaseVisibleRaids}',$2::jsonb,true),'{poReleaseDisplayVersion}','2'::jsonb,true), updated_at=now()`,
-    [guildId, JSON.stringify(visibleRaids)]
-  );
-  return { success:true, visibleRaids };
-}
-
 async function ensureWorldbuffAccessSchema(){
   await query(`create table if not exists guild_worldbuff_access (guild_id uuid primary key references guilds(id) on delete cascade,password text not null,updated_at timestamptz not null default now())`);
 }
@@ -2687,39 +2589,6 @@ async function setWorldbuffAccessPassword({guildId,query:params={}}){
   if(password.length<6){const error=new Error("Das Worldbuff-Passwort muss mindestens 6 Zeichen haben.");error.statusCode=400;throw error;}
   await query(`insert into guild_worldbuff_access(guild_id,password,updated_at) values($1,$2,now()) on conflict(guild_id) do update set password=$2,updated_at=now()`,[guildId,password]);
   worldbuffAccessCodeOverrides.set(String(guildId),password);return {success:true};
-}
-
-async function ensureLootMasterAccessSchema(){
-  await query(`create table if not exists guild_loot_master_access (guild_id uuid primary key references guilds(id) on delete cascade,password text not null,updated_at timestamptz not null default now())`);
-}
-async function loadLootMasterAccessCode(guildId){
-  await ensureLootMasterAccessSchema();
-  const id=String(guildId||"");
-  if(lootMasterAccessCodeOverrides.has(id)) return lootMasterAccessCodeOverrides.get(id);
-  const result=await query(`select password from guild_loot_master_access where guild_id=$1 limit 1`,[guildId]);
-  const value=clean(result.rows[0]?.password);
-  if(value) lootMasterAccessCodeOverrides.set(id,value);
-  return value;
-}
-async function effectiveLootMasterPin(guildId){
-  const configured=clean(await loadLootMasterAccessCode(guildId));
-  if(configured)return configured;
-  const result=await query(`select slug from guilds where id=$1 limit 1`,[guildId]);
-  const slug=clean(result.rows[0]?.slug).toLowerCase();
-  return ["lichtloot","lichtbringer"].includes(slug)?"1301":"";
-}
-async function setLootMasterAccessPassword({guildId,query:params={}}){
-  const code=clean(params.masterCode);
-  const allowedAdminCodes=new Set([clean(masterCode),clean(masterCodeOverrides.get(String(guildId||"")))].filter(Boolean));
-  if(!code || !allowedAdminCodes.has(code)){
-    const error=new Error("Nur die Gildenleitung darf das Plündermeister-Passwort ändern.");error.statusCode=403;throw error;
-  }
-  const password=clean(params.password||params.lootMasterPassword);
-  if(password.length<6){const error=new Error("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.");error.statusCode=400;throw error;}
-  await ensureLootMasterAccessSchema();
-  await query(`insert into guild_loot_master_access(guild_id,password,updated_at) values($1,$2,now()) on conflict(guild_id) do update set password=$2,updated_at=now()`,[guildId,password]);
-  lootMasterAccessCodeOverrides.set(String(guildId),password);
-  return {success:true,scope:"loot_master_p0"};
 }
 
 async function ensureBuffTables() {
@@ -2906,7 +2775,6 @@ function normalizeRaidRow(row) {
     erstelltVon: row.created_by || "",
     lootMaster: row.loot_master || "",
     pluendermeister: row.loot_master || "",
-    lootMasterTargets: Array.isArray(row.loot_master_targets) ? row.loot_master_targets : [],
     statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
     announcementNotifyTargets: Array.isArray(row.announcement_notify_targets) ? row.announcement_notify_targets : [],
     createdAt: row.created_at,
@@ -3395,14 +3263,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
      values ($1,$2,$3,$4,$5,$6,$7,$8::jsonb) returning *`,
     [guildId, character.id, requestType, selectedRaid || null, clean(params.specialization), armoryUrl, screenshotData, JSON.stringify(requirements)]
   );
-  const request=result.rows[0];
-  const poNotificationKey=`notify_po_releases:${clean(selectedRaid).toLowerCase()}`;
-  const notificationTargets=await notificationTargetsForPermissions(guildId,poNotificationKey).catch(()=>[]);
-  if(notificationTargets.length){
-    const messageTemplate=(await notificationMessageTemplate(guildId,poNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_releases").catch(()=>""));
-    await enqueueBotUpdate({guildId,type:"po_release_request_notice",payload:{targets:notificationTargets,messageTemplate,character:character.name||"",server:character.server||"",className:character.class_name||"",requestType,raid:selectedRaid||"",requestId:request.id}}).catch(error=>console.warn("PO-Freigabehinweis konnte nicht queued werden:",error.message||error));
-  }
-  return { success:true, request };
+  return { success:true, request:result.rows[0] };
 }
 
 async function getPoReleaseRequests({ guildId, query: params = {}, management = false }) {
@@ -3607,24 +3468,6 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
   }
   p0ReleaseCache = null;
   return { success: true, enabled, raid, character: normalizeCharacter(character.rows[0]) };
-}
-
-const PO_RELEASE_DM_RAID_LABELS={mc:"Molten Core",bwl:"Blackwing Lair",aq40:"AQ40",naxx:"Naxxramas","zg-mittwoch":"ZG Mittwoch","zg-prime":"ZG Prime","zg-late":"ZG Late",aq20:"AQ20"};
-async function sendPoReleaseGrantedDm({guildId,query:params={}}){
-  requireMasterCode(params.masterCode);
-  const characterId=clean(params.characterId||params.charId);
-  const raid=normalizePoReleaseRaid(params.raid||params.raidType);
-  if(!isUuid(characterId)){const error=new Error("Charakter fehlt.");error.statusCode=400;throw error;}
-  if(!raid||!PO_RELEASE_DM_RAID_LABELS[raid]){const error=new Error("Bitte einen gültigen Raid auswählen.");error.statusCode=400;throw error;}
-  const found=await query(`select c.id,c.name,c.server,c.class_name,g.slug,g.name as guild_name,link.discord_user_id,link.discord_name from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id left join lateral (select dpl.discord_user_id,dpl.discord_name from discord_player_links dpl where dpl.guild_id=p.guild_id and dpl.character_id=c.id order by dpl.updated_at desc,dpl.created_at desc limit 1) link on true where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,characterId]);
-  const character=found.rows[0];
-  if(!character){const error=new Error("Charakter wurde nicht gefunden.");error.statusCode=404;throw error;}
-  if(!clean(character.discord_user_id)){const error=new Error("Für diesen Charakter ist noch kein Discord-Account verknüpft. Der Spieler muss seine PO einmal über den PO-Bot eintragen oder seinen SpielerLogin verbinden.");error.statusCode=400;throw error;}
-  const notificationKey=`notify_po_release_granted:${raid}`;
-  const targets=await notificationTargetsForPermissions(guildId,[notificationKey,"notify_po_release_granted"]);
-  const messageTemplate=(await notificationMessageTemplate(guildId,notificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"notify_po_release_granted").catch(()=>""))||"✅ **Deine PO-Freigabe wurde erteilt**\n\nDeine PO für **{raid}** wurde freigegeben.\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}";
-  await enqueueBotUpdate({guildId,type:"po_release_granted_notice",payload:{guildSlug:character.slug,guildName:character.guild_name||character.slug,character:character.name||"",server:character.server||"",className:character.class_name||"",raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],discordUserId:character.discord_user_id,discordName:character.discord_name||"",targets,messageTemplate,createdAt:new Date().toISOString()}});
-  return {success:true,queued:true,raid,raidLabel:PO_RELEASE_DM_RAID_LABELS[raid],character:character.name||""};
 }
 
 async function setCharacterRecruitStatusLift({ guildId, query: params = {} }) {
@@ -4656,7 +4499,12 @@ async function getPlayerWorldbuffs({ guildId, query: params }) {
     .map(entry => ({
       ...entry,
       alternatives: openSlots
-        .filter(slot => normalizeWorldbuffName(slot.buff) === normalizeWorldbuffName(entry.buff) && slot.rowNumber !== entry.rowNumber)
+        .filter(slot => {
+          const slotBuff = normalizeWorldbuffName(slot.buff);
+          const entryBuff = normalizeWorldbuffName(entry.buff);
+          const sameOrSharedOnyNef = slotBuff === entryBuff || (["Ony", "Nef"].includes(slotBuff) && ["Ony", "Nef"].includes(entryBuff));
+          return sameOrSharedOnyNef && slot.rowNumber !== entry.rowNumber;
+        })
         .slice(0, 20)
     }));
   return { success: true, buffs, openSlots };
@@ -4670,7 +4518,7 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
   if (!chars.some(char => clean(char.name).toLowerCase() === charakter.toLowerCase())) {
     return { success: false, error: "Dieser Charakter gehört nicht zu deinem SpielerLogin." };
   }
-  const saved=await setWorldbuffCaster({
+  return setWorldbuffCaster({
     guildId,
     query: {
       ...params,
@@ -4679,14 +4527,10 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
       status: "bestätigt"
     }
   });
-  if(saved?.success){
-    await notifyWorldbuffPlayerChange({guildId,pin,character:charakter,action:"registered",reason:"",fromEvent:{buff:saved.buff,event_date:params.datum||params.date||"",event_time:saved.uhrzeit||params.uhrzeit||params.time||"",guild_name:params.gilde||params.guild||"Lichtbringer"}});
-  }
-  return saved;
 }
 
 async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, reason, fromEvent, toEvent }) {
-  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : "verschoben";
+  const actionLabel = action === "cancelled" ? "abgesagt" : "verschoben";
   const formatEvent = event => event
     ? [event.buff, event.event_date ? new Date(event.event_date).toISOString().slice(0, 10) : "", clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
     : "-";
@@ -4694,7 +4538,7 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
   const body = [
     `${character} hat einen Worldbuff-Termin ${actionLabel}.`,
     "",
-    `${action === "registered" ? "Termin" : "Bisheriger Termin"}: ${formatEvent(fromEvent)}`,
+    `Bisheriger Termin: ${formatEvent(fromEvent)}`,
     action === "moved" ? `Neuer Termin: ${formatEvent(toEvent)}` : "",
     `Grund: ${reason}`
   ].filter(Boolean).join("\n");
@@ -4708,15 +4552,11 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
     ).catch(() => {});
   }
 
-  const configuredTargets=await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]);
-  const messageTemplate=await notificationMessageTemplate(guildId,"manage_worldbuffs").catch(()=>"");
   await enqueueBotUpdate({
     guildId,
     type: "worldbuff_player_change_notice",
     payload: {
-      recipient: configuredTargets.length ? "" : "Ariee",
-      targets: configuredTargets,
-      messageTemplate,
+      recipient: "Ariee",
       character,
       action,
       actionLabel,
@@ -5108,32 +4948,6 @@ async function queueBotUpdate({ guildId, query: params }) {
 
 async function enqueueBotUpdate({ guildId, type, payload }) {
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
-  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
-  if (type === "po_release_request_notice" && clean(payload?.requestId)) {
-    const existing = await query(
-      `select id
-       from bot_update_queue
-       where guild_id = $1
-         and type = $2
-         and status in ('open', 'processing')
-         and payload->>'requestId' = $3
-       order by created_at desc
-       limit 1`,
-      [guildId, type, clean(payload.requestId)]
-    );
-    if (existing.rows[0]) {
-      await query(
-        `update bot_update_queue
-         set payload = $2::jsonb,
-             status = 'open',
-             created_at = now(),
-             claimed_at = null
-         where id = $1`,
-        [existing.rows[0].id, JSON.stringify(payload || {})]
-      );
-      return { success: true, skipped: true, reason: "po_release_notice_already_open", rowNumber: existing.rows[0].id, type, payload };
-    }
-  }
   if (type === "raid_announcement_role_notice") {
     const raidId = clean(payload?.raidId || "");
     if (raidId) {
@@ -5200,15 +5014,6 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
      returning id, type, payload`,
     [guildId, type, JSON.stringify(payload || {})]
   );
-  if (type === "player_login_approval_notice" && clean(payload?.playerPin)) {
-    await query(`alter table players add column if not exists login_notice_queued_at timestamptz`);
-    await query(
-      `update players
-       set login_notice_queued_at = coalesce(login_notice_queued_at, now())
-       where guild_id = $1 and player_pin = $2`,
-      [guildId, clean(payload.playerPin)]
-    );
-  }
   return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type, payload: result.rows[0].payload || {} };
 }
 
@@ -5243,112 +5048,17 @@ async function resolveLogAnalysisPostChannelId(guildId, raid) {
     return nachtlootChannels[normalizeLogRaidType(raid)] || configuredChannelId || "1533914926190428393";
   }
 
-  return configuredChannelId || logAnalysisPostChannelId(raid);
-}
-
-async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
-  await query(`alter table players add column if not exists login_notice_queued_at timestamptz`);
-  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
-  await query(
-    `with stale as (
-       update bot_update_queue
-       set status = 'done', resolved_at = now()
-       where type = 'player_login_approval_notice'
-         and status = 'processing'
-         and claimed_at < now() - interval '5 minutes'
-       returning guild_id, payload->>'playerPin' as player_pin
-     )
-     update players p
-     set login_notice_queued_at = null
-     from stale
-     where p.guild_id = stale.guild_id
-       and p.player_pin = stale.player_pin
-       and p.approval_status = 'pending'`
-  );
-  const pending = await query(
-    `select p.id as player_id, p.guild_id, p.player_pin, p.created_at,
-            g.slug as guild_slug, g.name as guild_name,
-            c.name as character_name, c.server, c.class_name
-     from players p
-     join guilds g on g.id = p.guild_id
-     left join lateral (
-       select name, server, class_name
-       from characters
-       where player_id = p.id
-       order by is_main desc nulls last, created_at asc
-       limit 1
-     ) c on true
-     where p.approval_status = 'pending'
-       and p.login_notice_queued_at is null
-       and ($1::uuid is null or p.guild_id = $1)
-     order by p.created_at asc
-     limit 50`,
-    [guildId]
-  );
-  for (const row of pending.rows) {
-    const claimed = await query(
-      `update players
-       set login_notice_queued_at = now()
-       where id = $1 and login_notice_queued_at is null
-       returning id`,
-      [row.player_id]
-    );
-    if (!claimed.rowCount) continue;
-    try {
-      const notificationTargets = await notificationTargetsForPermissions(row.guild_id, "notify_player_logins");
-      const messageTemplate = await notificationMessageTemplate(row.guild_id, "notify_player_logins").catch(() => "");
-      await enqueueBotUpdate({
-        guildId: row.guild_id,
-        type: "player_login_approval_notice",
-        payload: {
-          guildSlug: row.guild_slug,
-          guildName: row.guild_name || row.guild_slug,
-          playerPin: row.player_pin,
-          character: row.character_name || "Unbekannt",
-          server: row.server || "",
-          className: row.class_name || "",
-          notificationRoleIds: notificationTargets.filter(target => target.type === "role").map(target => target.value),
-          notificationNames: notificationTargets.filter(target => target.type === "name").map(target => target.value),
-          messageTemplate,
-          createdAt: row.created_at || new Date().toISOString()
-        }
-      });
-    } catch (error) {
-      await query(`update players set login_notice_queued_at = null where id = $1`, [row.player_id]);
-      console.warn("Offener SpielerLogin konnte nicht zur Benachrichtigung vorgemerkt werden:", error.message || error);
-    }
-  }
+  return logAnalysisPostChannelId(raid);
 }
 
 async function getBotQueue({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  await ensurePendingPlayerLoginNoticesQueued(guildId);
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
-  await query(
-    `update bot_update_queue q
-     set status = 'done', resolved_at = now()
-     where q.guild_id = $1
-       and q.status = 'open'
-       and q.type in ('worldbuff_update', 'hordenbuff_update')
-       and exists (
-         select 1
-         from bot_update_queue newer
-         where newer.guild_id = q.guild_id
-           and newer.type = q.type
-           and newer.status = 'open'
-           and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
-       )`,
-    [guildId]
-  );
   const result = await query(
     `select id, type, payload, created_at
      from bot_update_queue
      where guild_id = $1 and status = 'open'
-     order by case
-       when type = 'player_login_approval_notice' then 0
-       when type in ('po_release_request_notice', 'raid_status_staff_notice', 'loot_master_leadpin_notice') then 1
-       else 2
-     end, created_at asc
+     order by created_at asc
      limit 10`,
     [guildId]
   );
@@ -5365,22 +5075,7 @@ async function getBotQueue({ guildId, query: params }) {
 
 async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
-  await ensurePendingPlayerLoginNoticesQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
-  await query(
-    `update bot_update_queue q
-     set status = 'done', resolved_at = now()
-     where q.status = 'open'
-       and q.type in ('worldbuff_update', 'hordenbuff_update')
-       and exists (
-         select 1
-         from bot_update_queue newer
-         where newer.guild_id = q.guild_id
-           and newer.type = q.type
-           and newer.status = 'open'
-           and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
-       )`
-  );
   const requestedTypes = clean(params.types || params.typeFilter)
     .split(",")
     .map(clean)
@@ -5392,19 +5087,7 @@ async function getBotQueueAllGuilds({ query: params }) {
      join guilds g on g.id = q.guild_id
      where q.status = 'open'
        and ($1::text[] is null or q.type = any($1::text[]))
-     order by case
-       when q.type = 'player_login_approval_notice' then 0
-       when q.type in (
-         'po_release_request_notice',
-         'raid_status_staff_notice',
-         'loot_master_leadpin_notice',
-         'p0plus_transfer_export',
-         'p0plus_backup_export',
-         'log_analysis_post'
-       ) then 1
-       when q.type in ('worldbuff_update', 'hordenbuff_update') then 3
-       else 2
-     end, q.created_at asc
+     order by q.created_at asc
      limit $2`,
     [requestedTypes.length ? requestedTypes : null, limit]
   );
@@ -5541,41 +5224,6 @@ async function getDiscordBotRoles({ guildId, query: params }) {
   await ensureDiscordChannelSchema();
   const result = await query(`select role_id,role_name,color,position from discord_bot_roles where guild_id=$1 order by position desc,lower(role_name)`, [guildId]);
   return { success:true, roles:result.rows.map(row => ({id:row.role_id,roleId:row.role_id,name:row.role_name,roleName:row.role_name,color:row.color,position:row.position})) };
-}
-
-async function saveDiscordBotMembers({ guildId, query: params }) {
-  requireMasterOrQueueToken(params);
-  await ensureDiscordChannelSchema();
-  const members = Array.isArray(params.members) ? params.members : [];
-  const seen = [];
-  for (const member of members) {
-    const userId = clean(member.id || member.userId);
-    const username = clean(member.username || member.name);
-    if (!userId || !username || member.bot === true) continue;
-    seen.push(userId);
-    await query(
-      `insert into discord_bot_members (guild_id,discord_guild_id,user_id,username,display_name,global_name,avatar_url,bot,updated_at)
-       values ($1,$2,$3,$4,$5,$6,$7,$8,now())
-       on conflict (guild_id,user_id) do update
-       set discord_guild_id=excluded.discord_guild_id,username=excluded.username,display_name=excluded.display_name,
-           global_name=excluded.global_name,avatar_url=excluded.avatar_url,bot=excluded.bot,updated_at=now()`,
-      [guildId,clean(member.discordGuildId || member.guildId),userId,username,clean(member.displayName),clean(member.globalName),clean(member.avatarUrl),Boolean(member.bot)]
-    );
-  }
-  if (seen.length) await query(`delete from discord_bot_members where guild_id=$1 and not (user_id=any($2::text[]))`, [guildId,seen]);
-  return {success:true,saved:seen.length};
-}
-
-async function getDiscordBotMembers({ guildId, query: params }) {
-  requireMasterOrQueueToken(params);
-  await ensureDiscordChannelSchema();
-  const result = await query(
-    `select user_id,username,display_name,global_name,avatar_url
-     from discord_bot_members where guild_id=$1 and bot=false
-     order by lower(coalesce(nullif(display_name,''),nullif(global_name,''),username)),lower(username)`,
-    [guildId]
-  );
-  return {success:true,members:result.rows.map(row=>({id:row.user_id,userId:row.user_id,username:row.username,displayName:row.display_name||row.global_name||row.username,globalName:row.global_name||"",avatarUrl:row.avatar_url||""}))};
 }
 
 function normalizeRaidHelperTemplateRow(row) {
@@ -6883,41 +6531,6 @@ async function getPoPostEntries({ guildId, query: params }) {
   };
 }
 
-async function getActivePoPostChannels({ guildId, query: params }) {
-  requireMasterOrQueueToken(params);
-  await ensurePoPostEntriesSchema();
-  const result = await query(
-    `select distinct on (post_key, source_channel_id, target_channel_id)
-       post_key, source_channel_id, target_channel_id, discord_message_id,
-       raid, title, raid_pin, raid_date, raid_time, mode, updated_at
-     from po_post_entries
-     where guild_id = $1
-       and archived_at is null
-       and (source_channel_id <> '' or target_channel_id <> '')
-     order by post_key, source_channel_id, target_channel_id, updated_at desc`,
-    [guildId]
-  );
-  return {
-    success: true,
-    posts: result.rows.map(row => ({
-      postKey: row.post_key || "",
-      sourceChannelId: row.source_channel_id || "",
-      targetChannelId: row.target_channel_id || row.source_channel_id || "",
-      discordMessageId: row.discord_message_id || "",
-      messageId: row.discord_message_id || "",
-      raid: row.raid || "",
-      title: row.title || "PO-Anmelder",
-      raidPin: row.raid_pin || "",
-      prioPin: row.raid_pin || "",
-      lichtlootRaidId: row.raid_pin || "",
-      raidDate: row.raid_date || "",
-      raidTime: row.raid_time || "",
-      mode: row.mode || "",
-      updatedAt: row.updated_at || ""
-    }))
-  };
-}
-
 async function setPoPostDiscordMessage({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -7160,29 +6773,6 @@ async function reviewPoPostEntry({ guildId, query: params }) {
          and archived_at is null
        returning *`,
       [guildId, postKey, sourceChannelId, targetChannelId, playerName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), itemName, rejectionReason, raidPin]
-    );
-  }
-  if (!result.rows[0] && raidPin && playerName && itemName) {
-    result = await query(
-      `update po_post_entries
-       set approval_status = $5,
-           approved_by = $6,
-           approved_at = case when $5 = 'approved' then now() else null end,
-           rejection_reason = case when $5 = 'rejected' then $7 else '' end,
-           updated_at = now()
-       where id = (
-         select id
-         from po_post_entries
-         where guild_id = $1
-           and raid_pin = $2
-           and lower(player_name) = lower($3)
-           and lower(item_name) = lower($4)
-           and archived_at is null
-         order by updated_at desc nulls last, created_at desc
-         limit 1
-       )
-       returning *`,
-      [guildId, raidPin, playerName, itemName, approvalStatus, clean(params.reviewer || params.discordName || "Gildenleitung"), rejectionReason]
     );
   }
   const row = result.rows[0];
@@ -8093,29 +7683,6 @@ async function savePoPostEntry({ guildId, query: params }) {
         );
     await client.query("commit");
     const row = result.rows[0];
-    const poNotificationKey = `notify_po_releases:${clean(raidKey).toLowerCase()}`;
-    const notificationTargets = await notificationTargetsForPermissions(guildId, poNotificationKey).catch(() => []);
-    if (notificationTargets.length) {
-      const messageTemplate =
-        (await notificationMessageTemplate(guildId, poNotificationKey).catch(() => "")) ||
-        (await notificationMessageTemplate(guildId, "notify_po_releases").catch(() => ""));
-      await enqueueBotUpdate({
-        guildId,
-        type: "po_release_request_notice",
-        payload: {
-          targets: notificationTargets,
-          messageTemplate,
-          character: row.player_name || character.name || "",
-          server: character.server || server || "",
-          className: row.class_name || character.class_name || "",
-          requestType: "po",
-          raid: raidKey,
-          requestId: row.id,
-          postKey: row.post_key || postKey,
-          item: row.item_name || itemName
-        }
-      }).catch(error => console.warn("PO-Freigabehinweis konnte nicht queued werden:", error.message || error));
-    }
     return {
       success: true,
       entry: {
@@ -14604,10 +14171,10 @@ async function createRaidRecord({ guildId, query: params }) {
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
-       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets
+       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, status_notify_targets, announcement_notify_targets
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -14649,7 +14216,6 @@ async function createRaidRecord({ guildId, query: params }) {
            description = coalesce(excluded.description, raids.description),
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
-           loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
            status_notify_targets = case when excluded.status_notify_targets = '[]'::jsonb then raids.status_notify_targets else excluded.status_notify_targets end,
            announcement_notify_targets = case when excluded.announcement_notify_targets = '[]'::jsonb then raids.announcement_notify_targets else excluded.announcement_notify_targets end,
            updated_at = now()
@@ -14679,7 +14245,6 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.description || params.beschreibung) || null,
       clean(params.raidImageUrl || params.imageUrl || params.bildUrl) || null,
       clean(params.lootMaster || params.pluendermeister) || null,
-      (() => {try{const value=typeof params.lootMasterTargets==="string"?JSON.parse(params.lootMasterTargets):params.lootMasterTargets;return JSON.stringify(Array.isArray(value)?value:[]);}catch{return "[]";}})(),
       (() => {
         try {
           const value = typeof params.statusNotifyTargets === "string" ? JSON.parse(params.statusNotifyTargets) : params.statusNotifyTargets;
@@ -14703,41 +14268,7 @@ async function createRaidRecord({ guildId, query: params }) {
   await syncPoPostDateTimeForRaid(guildId, raid).catch(error => {
     console.warn("PO-Anmelder konnten nach Raid-Änderung nicht aktualisiert werden:", error.message || error);
   });
-  if(clean(raid.lead_pin)){
-    const guildRow=(await query(`select name,slug from guilds where id=$1 limit 1`,[guildId])).rows[0]||{};
-    const savedTargets=Array.isArray(raid.loot_master_targets)?raid.loot_master_targets:[];
-    const lootMasterNotificationKey=`loot_master:${clean(raid.raid_type).toLowerCase()}`;
-    const configuredTargets=await notificationTargetsForPermissions(guildId,lootMasterNotificationKey).catch(()=>[]);
-    const targetKeys=new Set();
-    const targets=[...savedTargets,...configuredTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(targetKeys.has(key))return false;targetKeys.add(key);return clean(target?.value||target?.name);});
-    if(targets.length){
-      const lootMasterPin=await effectiveLootMasterPin(guildId);
-      const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
-      await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,guildSlug:guildRow.slug||"",guildName:guildRow.name||guildRow.slug||"",raidId:raidPublicId(raid),raidName:raid.name||displayRaidName(raid.raid_type),raidDate:raid.raid_date||"",raidTime:raid.raid_time||"",leadPin:raid.lead_pin,lootMasterPin,messageTemplate}}).catch(error=>console.warn("LeadPIN-DM konnte nicht eingereiht werden:",error.message||error));
-    }
-  }
   return { success: true, ...normalizeRaidRow(raid) };
-}
-
-async function setRaidLootMasterTargets({guildId,query:params}){
-  requireMasterCode(params.masterCode);
-  const raid=await findRaid(guildId,params);
-  if(!raid){const error=new Error("Raid wurde nicht gefunden.");error.statusCode=404;throw error;}
-  let targets=[];
-  try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
-  targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
-  const result=await query(`update raids set loot_master_targets=$1::jsonb,updated_at=now() where id=$2 returning *`,[JSON.stringify(targets),raid.id]);
-  const saved=result.rows[0];
-  let queued=false;
-  if(targets.length&&clean(saved.lead_pin)){
-    const guildRow=(await query(`select name,slug from guilds where id=$1 limit 1`,[guildId])).rows[0]||{};
-    const lootMasterPin=await effectiveLootMasterPin(guildId);
-    const lootMasterNotificationKey=`loot_master:${clean(saved.raid_type).toLowerCase()}`;
-    const messageTemplate=(await notificationMessageTemplate(guildId,lootMasterNotificationKey).catch(()=>""))||(await notificationMessageTemplate(guildId,"loot_master").catch(()=>""));
-    const notice=await enqueueBotUpdate({guildId,type:"loot_master_leadpin_notice",payload:{targets,guildSlug:guildRow.slug||"",guildName:guildRow.name||guildRow.slug||"",raidId:raidPublicId(saved),raidName:saved.name||displayRaidName(saved.raid_type),raidDate:saved.raid_date||"",raidTime:saved.raid_time||"",leadPin:saved.lead_pin,lootMasterPin,messageTemplate}});
-    queued=Boolean(notice?.success);
-  }
-  return {success:true,targets,queued,...normalizeRaidRow(saved)};
 }
 
 async function syncPoPostDateTimeForRaid(guildId, raid) {
@@ -14998,16 +14529,6 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
-
   const signupResult = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
@@ -15016,17 +14537,17 @@ async function getRaidHelper({ guildId, query: params }) {
        exists(
          select 1
          from prios pr
-         where pr.raid_id = $2
+         where pr.raid_id = rs.raid_id
            and pr.character_id = rs.character_id
        ) as has_prio
      from raid_signups rs
      join characters c on c.id = rs.character_id
-     where rs.raid_id = any($1)
+     where rs.raid_id = $1
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
-    [relatedRaidIds, raid.id]
+    [raid.id]
   );
 
   const externalResult = await query(
@@ -15043,9 +14564,9 @@ async function getRaidHelper({ guildId, query: params }) {
             ) as has_prio
      from raid_external_signups res
      where res.guild_id = $1
-       and (res.raid_id = any($5) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
+       and (res.raid_id = $2 or (res.raid_id is null and lower(res.raid_type) = any($3) and res.raid_date = $4))
      order by res.player_name asc`,
-    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date, relatedRaidIds]
+    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
@@ -15411,12 +14932,6 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
     refreshQueued = Boolean(refresh?.success);
   }
 
-  const configuredStatusTargets=await notificationTargetsForPermissions(guildId,"raid_status_changes").catch(()=>[]);
-  const savedStatusTargets=Array.isArray(signup?.statusNotifyTargets)?signup.statusNotifyTargets:[];
-  const statusTargetKeys=new Set();
-  const statusTargets=[...savedStatusTargets,...configuredStatusTargets].filter(target=>{const key=`${clean(target?.type)||"name"}:${clean(target?.value||target?.name)}`;if(statusTargetKeys.has(key))return false;statusTargetKeys.add(key);return clean(target?.value||target?.name);});
-  const statusMessageTemplate=await notificationMessageTemplate(guildId,"raid_status_changes").catch(()=>"");
-
   await enqueueBotUpdate({
     guildId,
     type: "raid_status_staff_notice",
@@ -15430,8 +14945,7 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
       changedBy: "Gildenleitung",
       createdBy: clean(signup?.createdBy || ""),
       lootMaster: clean(signup?.lootMaster || ""),
-      targets: statusTargets,
-      messageTemplate: statusMessageTemplate
+      targets: Array.isArray(signup?.statusNotifyTargets) ? signup.statusNotifyTargets : []
     }
   }).catch(() => null);
 
@@ -15494,44 +15008,10 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     raid.discord_message_id = incomingMessageId || raid.discord_message_id;
   }
 
-  const replaceSnapshot = ["1", "true", "yes", "ja", "on"].includes(clean(params.replaceSnapshot).toLowerCase());
-  if (replaceSnapshot && incomingMessageId) {
-    await query(
-      `delete from raid_external_signups
-       where guild_id = $1
-         and raid_id = $2
-         and discord_message_id = $3`,
-      [guildId, raid.id, incomingMessageId]
-    );
-  }
-
-  const guildCharactersResult = await query(
-    `select c.name, c.class_name
-     from characters c
-     join players p on p.id = c.player_id
-     where p.guild_id = $1`,
-    [guildId]
-  );
-  const guildCharactersByName = new Map();
-  for (const character of guildCharactersResult.rows || []) {
-    const key = clean(character.name).toLocaleLowerCase("de-DE");
-    if (key && !guildCharactersByName.has(key)) guildCharactersByName.set(key, character);
-  }
-
   let written = 0;
   for (const row of rows) {
-    let playerName = clean(row.char || row.spieler || row.player || row.name);
+    const playerName = clean(row.char || row.spieler || row.player || row.name);
     if (!playerName) continue;
-    const playerAliases = [playerName, ...playerName.split(/[\/|]/g)]
-      .map(clean)
-      .filter(Boolean);
-    let matchedCharacter = null;
-    for (const alias of playerAliases) {
-      matchedCharacter = guildCharactersByName.get(alias.toLocaleLowerCase("de-DE")) || null;
-      if (matchedCharacter) break;
-    }
-    if (matchedCharacter?.name) playerName = clean(matchedCharacter.name);
-    const resolvedClassName = clean(matchedCharacter?.class_name || row.klasse || row.className);
     const source = clean(row.quelle || row.source || `Discord:${clean(params.discordChannelId)}:${clean(params.raidHelperMessageId || params.discordMessageId)}`);
     const discordUserId = clean(row.discordUserId);
     const normalizedStatus = normalizeSignupStatus(row.status);
@@ -15612,7 +15092,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
         source,
         parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
         clean(params.raidTime || row.raidTime || raid.raid_time),
-        resolvedClassName,
+        clean(row.klasse || row.className),
         normalizedRole,
         normalizedStatus,
         discordUserId,
@@ -15639,7 +15119,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           parseDateValue(params.raidDate || row.raidDate || raid.raid_date),
           clean(params.raidTime || row.raidTime || raid.raid_time),
           playerName,
-          resolvedClassName,
+          clean(row.klasse || row.className),
           normalizedRole,
           normalizedStatus,
           source,
@@ -16933,32 +16413,6 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
     awardedByKey.set(key, (awardedByKey.get(key) || 0) + 1);
   }
 
-  // Bei einer manuellen Sicherung gibt es keine awardedRows aus dem aktuellen
-  // Transferlauf. Deshalb werden die heute wirklich übertragenen Punkte aus
-  // dem unveränderlichen Audit-Protokoll ergänzt.
-  const todayTransferResult = await query(
-    `select player_name, server, item_name, old_points, new_points, delta_points,
-            source, note, created_at
-     from p0plus_point_audit
-     where guild_id = $1
-       and lower(coalesce(raid_type, '')) = any($2)
-       and action = 'raid_transfer'
-       and delta_points > 0
-       and (created_at at time zone 'Europe/Berlin')::date =
-           (now() at time zone 'Europe/Berlin')::date
-     order by created_at asc, player_name asc, item_name asc`,
-    [guildId, raidTypeSearchValues(raidType)]
-  );
-  const todayAwardedByKey = new Map();
-  for (const row of todayTransferResult.rows) {
-    const key = p0PlusExportKey(row.player_name, row.server, row.item_name);
-    const transferred = Number(row.delta_points || 0);
-    todayAwardedByKey.set(key, (todayAwardedByKey.get(key) || 0) + transferred);
-  }
-  for (const [key, transferred] of todayAwardedByKey.entries()) {
-    awardedByKey.set(key, Math.max(awardedByKey.get(key) || 0, transferred));
-  }
-
   const currentRows = [
     ["Raid", "Spieler", "Server", "Item", "Slot", "PO+ Punkte pre Raid", "Uebertragung", "Aktuelle Punkte", "Quelle", "Letzte Aenderung"]
   ];
@@ -17015,28 +16469,8 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
   if (receivedRows.length === 1) {
     receivedRows.push(["", "", "Noch keine protokollierten Items erhalten.", "", "", "", "", "", ""]);
   }
-  const todayTransferRows = [
-    ["Spieler", "Server", "Item", "Punkte vorher", "Heute uebertragen", "Aktuelle Punkte", "Quelle", "Raid", "Datum"]
-  ];
-  for (const row of todayTransferResult.rows) {
-    todayTransferRows.push([
-      row.player_name || "",
-      row.server || "",
-      row.item_name || "",
-      Number(row.old_points || 0),
-      Number(row.delta_points || 0),
-      Number(row.new_points || 0),
-      row.source || "",
-      raidType,
-      formatCsvDateTime(row.created_at || "")
-    ]);
-  }
-  if (todayTransferRows.length === 1) {
-    todayTransferRows.push(["", "", "Heute wurden fuer diesen Raid noch keine PO+ Punkte uebertragen.", "", "", "", "", raidType, ""]);
-  }
   return [
     { name: "PO+ aktuell", rows: currentRows },
-    { name: "Heute uebertragen", rows: todayTransferRows },
     { name: "Items erhalten", rows: receivedRows }
   ];
 }
@@ -18319,7 +17753,7 @@ async function setPlayerLoginAccess({ guildId, query: params }) {
   };
   const allowedPermissions = new Set([
     "create_raids","manage_worldbuffs","guild_admin",
-    "loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases"
+    "notify_player_logins","notify_worldbuff_changes","notify_po_releases"
   ]);
   const permissions = [...new Set(parseList(params.permissions).map(clean).filter(value=>allowedPermissions.has(value)))];
   const discordRoleIds = [...new Set(parseList(params.discordRoleIds || params.discordRoles).map(clean).filter(Boolean))];
@@ -18349,27 +17783,6 @@ async function notificationDiscordNames(guildId,permission){
   await ensurePlayerRoleSchema();
   const result=await query(`select distinct jsonb_array_elements_text(coalesce(notification_discord_names,'[]'::jsonb)) as discord_name from players where guild_id=$1 and coalesce(permissions,'[]'::jsonb) ? $2`,[guildId,clean(permission)]);
   return result.rows.map(row=>clean(row.discord_name)).filter(Boolean);
-}
-
-async function notificationTargetsForPermissions(guildId, permissions){
-  const permissionList=[...new Set((Array.isArray(permissions)?permissions:[permissions]).map(clean).filter(Boolean))];
-  const targets=[];
-  for(const permission of permissionList){
-    await ensureGuildNotificationSettingsSchema();
-    const central=await query(`select targets from guild_notification_settings where guild_id=$1 and notification_key=$2`,[guildId,permission]);
-    if(central.rows.length){
-      (Array.isArray(central.rows[0].targets)?central.rows[0].targets:[]).forEach(target=>targets.push(target));
-      continue;
-    }
-    const [roleIds,names]=await Promise.all([
-      notificationDiscordRoleIds(guildId,permission),
-      notificationDiscordNames(guildId,permission)
-    ]);
-    roleIds.forEach(value=>targets.push({type:"role",value,label:value}));
-    names.forEach(value=>targets.push({type:"name",value,label:value}));
-  }
-  const seen=new Set();
-  return targets.filter(target=>{const key=`${target.type}:${target.value}`;if(seen.has(key))return false;seen.add(key);return true;});
 }
 
 async function setPlayerLoginBlocked({ guildId, query: params }) {
@@ -19976,7 +19389,6 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     const guild = await requireGuild(resolveGuildSlug(req.query.guild));
     await loadWorldbuffAccessCode(guild.id);
-    await loadLootMasterAccessCode(guild.id);
     if (clean(req.query.masterCode)) {
       if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") {
         requireRaidleadP0MasterCodeForGuild(guild, req.query.masterCode);
@@ -19993,11 +19405,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPlayerPrioHistory") {
       const history = await getPlayerPrioHistory(guild.id, req.query);
       return res.json({ ...history, guild: guild.slug });
-    }
-
-    if (action === "getPoReleaseDisplaySettings") {
-      const settings = await getPoReleaseDisplaySettings(guild.id);
-      return res.json({ ...settings, guild: guild.slug });
     }
 
     if (action === "getGuildLeadershipOverview") {
@@ -20051,13 +19458,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetDiscordBotRoles") {
       const roles = await getDiscordBotRoles({ guildId: guild.id, query: req.query });
       return res.json({ ...roles, guild: guild.slug });
-    }
-    if (action === "guildGetDiscordBotMembers") {
-      const members = await getDiscordBotMembers({ guildId: guild.id, query: req.query });
-      return res.json({ ...members, guild: guild.slug });
-    }
-    if(action==="guildGetNotificationSettings"){
-      const settings=await getGuildNotificationSettings({guildId:guild.id,query:req.query});return res.json({...settings,guild:guild.slug});
     }
 
     if (action === "guildGetRaidHelperTemplates") {
@@ -20177,18 +19577,9 @@ app.get("/api/apps-script", async (req, res, next) => {
     if(action==="guildSetWorldbuffAccessPassword"){
       const saved=await setWorldbuffAccessPassword({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
     }
-    if(action==="guildSetLootMasterAccessPassword"){
-      const saved=await setLootMasterAccessPassword({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
-    }
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
-    }
-    if(action==="guildSetNotificationSetting"){
-      const saved=await setGuildNotificationSetting({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
-    }
-    if(action==="guildSetRaidLootMasterTargets"){
-      const saved=await setRaidLootMasterTargets({guildId:guild.id,query:req.query});return res.json({...saved,guild:guild.slug});
     }
 
     if (action === "guildSetPlayerLoginBlocked") {
@@ -20433,11 +19824,6 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
-    if (action === "lichtbotGetPoPostChannels" || action === "guildGetPoPostChannels") {
-      const list = await getActivePoPostChannels({ guildId: guild.id, query: req.query });
-      return res.json({ ...list, guild: guild.slug });
-    }
-
     if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
@@ -20467,10 +19853,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
-    }
-    if(action === "guildSendPoReleaseGrantedDm"){
-      const sent=await sendPoReleaseGrantedDm({guildId:guild.id,query:req.query});
-      return res.json({...sent,guild:guild.slug});
     }
 
     if (action === "guildSetCharacterRecruitStatusLift") {
@@ -20692,10 +20074,8 @@ app.get("/api/apps-script", async (req, res, next) => {
         className: req.query.className
       });
       if (normalizePlayerApprovalStatus(result.player.approval_status) !== "approved") {
-        const notificationTargets=await notificationTargetsForPermissions(guild.id,"notify_player_logins");
-        const notificationRoleIds=notificationTargets.filter(target=>target.type==="role").map(target=>target.value);
-        const notificationNames=notificationTargets.filter(target=>target.type==="name").map(target=>target.value);
-        const messageTemplate=await notificationMessageTemplate(guild.id,"notify_player_logins").catch(()=>"");
+        const notificationRoleIds=await notificationDiscordRoleIds(guild.id,"notify_player_logins");
+        const notificationNames=await notificationDiscordNames(guild.id,"notify_player_logins");
         await enqueueBotUpdate({
           guildId: guild.id,
           type: "player_login_approval_notice",
@@ -20708,7 +20088,6 @@ app.get("/api/apps-script", async (req, res, next) => {
             className: result.character?.className || result.character?.class_name || clean(req.query.className),
             notificationRoleIds,
             notificationNames,
-            messageTemplate,
             createdAt: result.player.created_at || new Date().toISOString()
           }
         }).catch(error => {
@@ -20848,10 +20227,8 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     const guild = await requireGuild(requireExplicitGuildSlug(postParams.guild));
     await loadWorldbuffAccessCode(guild.id);
-    await loadLootMasterAccessCode(guild.id);
     if (clean(postParams.masterCode)) {
-      if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
-      else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+      requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
     }
 
     if (action === "lichtbotSaveDiscordChannels") {
@@ -20860,10 +20237,6 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
     if (action === "lichtbotSaveDiscordRoles") {
       const saved = await saveDiscordBotRoles({ guildId: guild.id, query: postParams });
-      return res.json({ ...saved, guild: guild.slug });
-    }
-    if (action === "lichtbotSaveDiscordMembers") {
-      const saved = await saveDiscordBotMembers({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
     if (action === "guildSetPoItem") {
@@ -20911,21 +20284,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     if(action==="guildSetWorldbuffAccessPassword"){
       const saved=await setWorldbuffAccessPassword({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
     }
-    if(action==="guildSetLootMasterAccessPassword"){
-      const saved=await setLootMasterAccessPassword({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
-    }
     if (action === "guildSetPlayerLoginAccess") {
       const saved = await setPlayerLoginAccess({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
-    }
-    if(action==="guildSetNotificationSetting"){
-      const saved=await setGuildNotificationSetting({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
-    }
-    if(action==="guildSetPoReleaseDisplaySettings"){
-      const saved=await setPoReleaseDisplaySettings({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
-    }
-    if(action==="guildSetRaidLootMasterTargets"){
-      const saved=await setRaidLootMasterTargets({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
     }
 
     if (action === "guildSetPlayerLoginBlocked") {
@@ -20978,11 +20339,6 @@ app.post("/api/apps-script", async (req, res, next) => {
       return res.json({ ...list, guild: guild.slug });
     }
 
-    if (action === "lichtbotGetPoPostChannels" || action === "guildGetPoPostChannels") {
-      const list = await getActivePoPostChannels({ guildId: guild.id, query: postParams });
-      return res.json({ ...list, guild: guild.slug });
-    }
-
     if (action === "guildGetCharacterPoReleases" || action === "getCharacterPoReleases") {
       const list = await getCharacterPoReleases({ guildId: guild.id, query: postParams });
       return res.json({ ...list, guild: guild.slug });
@@ -21012,10 +20368,6 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetCharacterPoRelease" || action === "setCharacterPoRelease") {
       const saved = await setCharacterPoRelease({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
-    }
-    if(action === "guildSendPoReleaseGrantedDm"){
-      const sent=await sendPoReleaseGrantedDm({guildId:guild.id,query:postParams});
-      return res.json({...sent,guild:guild.slug});
     }
 
     if (action === "guildSetCharacterRecruitStatusLift") {
@@ -21408,35 +20760,6 @@ app.post("/api/guilds/:guildSlug/players", async (req, res, next) => {
       [player.id, character.name, character.server, character.className]
     );
     await client.query("commit");
-
-    if (normalizePlayerApprovalStatus(player.approval_status) !== "approved") {
-      const notificationTargets = await notificationTargetsForPermissions(guild.id, "notify_player_logins");
-      const notificationRoleIds = notificationTargets
-        .filter(target => target.type === "role")
-        .map(target => target.value);
-      const notificationNames = notificationTargets
-        .filter(target => target.type === "name")
-        .map(target => target.value);
-      const messageTemplate = await notificationMessageTemplate(guild.id, "notify_player_logins").catch(() => "");
-      await enqueueBotUpdate({
-        guildId: guild.id,
-        type: "player_login_approval_notice",
-        payload: {
-          guildSlug: guild.slug,
-          guildName: guild.name || guild.guild_name || guild.slug,
-          playerPin: player.player_pin,
-          character: characterResult.rows[0]?.name || character.name,
-          server: characterResult.rows[0]?.server || character.server,
-          className: characterResult.rows[0]?.class_name || character.className,
-          notificationRoleIds,
-          notificationNames,
-          messageTemplate,
-          createdAt: player.created_at || new Date().toISOString()
-        }
-      }).catch(error => {
-        console.warn("SpielerLogin-Freigabehinweis konnte nicht queued werden:", error.message || error);
-      });
-    }
 
     res.status(201).json({
       success: true,
