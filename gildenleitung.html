@@ -5224,8 +5224,16 @@ body.worldbuff-only .master-only{display:none!important}
               </div>
               <div class="raid-helper-row">
                 <div class="field">
-                  <label for="raidHelperAnnouncementNotifyNames">Weitere Namen</label>
-                  <input id="raidHelperAnnouncementNotifyNames" type="text" placeholder="z. B. Ariee, Offiziername">
+                  <label for="raidHelperAnnouncementNotifyMemberSelect">Discord-Namen</label>
+                  <input id="raidHelperAnnouncementNotifyNames" type="hidden">
+                  <div class="raid-helper-role-picker">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px">
+                      <input id="raidHelperAnnouncementNotifyMemberSelect" type="search" list="raidHelperAnnouncementDiscordMembers" placeholder="Discord-Mitglied suchen …" onkeydown="if(event.key==='Enter'){event.preventDefault();addRaidHelperAnnouncementNotifyMember()}">
+                      <button class="small-btn ghost" type="button" onclick="addRaidHelperAnnouncementNotifyMember()">Hinzufügen</button>
+                    </div>
+                    <datalist id="raidHelperAnnouncementDiscordMembers"></datalist>
+                    <div id="raidHelperAnnouncementNotifyMemberTags" class="raid-helper-role-tags"><span class="muted">Noch kein Discord-Mitglied ausgewählt.</span></div>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="raidHelperAnnouncementNotifyRoles">Discord-Rollen</label>
@@ -5246,8 +5254,16 @@ body.worldbuff-only .master-only{display:none!important}
               </div>
               <div class="raid-helper-row">
                 <div class="field">
-                  <label for="raidHelperNotifyNames">Weitere Namen</label>
-                  <input id="raidHelperNotifyNames" type="text" placeholder="z. B. Ariee, Offiziername">
+                  <label for="raidHelperNotifyMemberSelect">Discord-Namen</label>
+                  <input id="raidHelperNotifyNames" type="hidden">
+                  <div class="raid-helper-role-picker">
+                    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px">
+                      <input id="raidHelperNotifyMemberSelect" type="search" list="raidHelperStatusDiscordMembers" placeholder="Discord-Mitglied suchen …" onkeydown="if(event.key==='Enter'){event.preventDefault();addRaidHelperNotifyMember()}">
+                      <button class="small-btn ghost" type="button" onclick="addRaidHelperNotifyMember()">Hinzufügen</button>
+                    </div>
+                    <datalist id="raidHelperStatusDiscordMembers"></datalist>
+                    <div id="raidHelperNotifyMemberTags" class="raid-helper-role-tags"><span class="muted">Noch kein Discord-Mitglied ausgewählt.</span></div>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="raidHelperNotifyRoles">Discord-Rollen</label>
@@ -8443,6 +8459,7 @@ const RAID_HELPER_IMAGE_BASE_URL = "https://lichtloot.de/images/";
 const RAID_HELPER_BANNER_BASE_URL = "https://lichtloot-production.up.railway.app/images/raid-banners/";
 let raidHelperDiscordChannels = [];
 let raidHelperDiscordRoles = [];
+let raidHelperDiscordMembers = [];
 let raidHelperSelectedNotifyRoles = [];
 let raidHelperSelectedAnnouncementNotifyRoles = [];
 let raidHelperTemplates = [];
@@ -8547,7 +8564,83 @@ function initRaidHelperPanel(){
   renderRaidHelperClassGrid();
   loadRaidHelperDiscordChannels();
   loadRaidHelperDiscordRoles();
+  loadRaidHelperDiscordMembers();
   updateRaidHelperDefaults();
+}
+
+async function loadRaidHelperDiscordMembers(){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  const selects=[document.getElementById("raidHelperNotifyMemberSelect"),document.getElementById("raidHelperAnnouncementNotifyMemberSelect")].filter(Boolean);
+  if(!selects.length) return;
+  if(!masterCode){
+    selects.forEach(select=>select.innerHTML='<option value="">Nach Freischaltung werden die Discord-Namen geladen</option>');
+    return;
+  }
+  try{
+    const result=await railwayApi({action:"guildGetDiscordBotMembers",masterCode,t:Date.now()});
+    raidHelperDiscordMembers=Array.isArray(result.members)?result.members:[];
+    const options=raidHelperDiscordMembers.length
+      ? raidHelperDiscordMembers.map(member=>`<option value="${escapeAttr(member.username)}">${escapeHtml(member.displayName||member.username)} · @${escapeHtml(member.username)}</option>`).join("")
+      : '<option value="">Keine Discord-Namen geladen – Bot neu starten</option>';
+    selects.forEach(select=>select.innerHTML='<option value="">Discord-Mitglied auswählen …</option>'+options);
+    renderRaidHelperNotifyMemberTags();
+    renderRaidHelperAnnouncementNotifyMemberTags();
+  }catch(error){
+    raidHelperDiscordMembers=[];
+    selects.forEach(select=>select.innerHTML='<option value="">Discord-Namen konnten nicht geladen werden</option>');
+  }
+}
+
+function raidHelperSelectedNames(fieldId){
+  return [...new Set(raidHelperValue(fieldId).split(",").map(value=>value.trim()).filter(Boolean))];
+}
+
+function addRaidHelperNotifyMember(username){
+  const value=String(username||"").trim();
+  if(value){
+    const field=document.getElementById("raidHelperNotifyNames");
+    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperNotifyNames"),value])].join(", ");
+  }
+  const select=document.getElementById("raidHelperNotifyMemberSelect");
+  if(select) select.value="";
+  renderRaidHelperNotifyMemberTags();
+}
+
+function removeRaidHelperNotifyMember(username){
+  const field=document.getElementById("raidHelperNotifyNames");
+  if(field) field.value=raidHelperSelectedNames("raidHelperNotifyNames").filter(value=>value!==username).join(", ");
+  renderRaidHelperNotifyMemberTags();
+}
+
+function renderRaidHelperNotifyMemberTags(){
+  const box=document.getElementById("raidHelperNotifyMemberTags");
+  if(!box) return;
+  const names=raidHelperSelectedNames("raidHelperNotifyNames");
+  box.innerHTML=names.length?names.map(name=>{const member=raidHelperDiscordMembers.find(item=>String(item.username).toLowerCase()===name.toLowerCase());return `<span class="raid-helper-role-tag">${escapeHtml(member?.displayName||name)} <small>@${escapeHtml(member?.username||name)}</small><button type="button" title="Mitglied entfernen" onclick="removeRaidHelperNotifyMember(decodeURIComponent('${encodeURIComponent(name)}'))">×</button></span>`;}).join(""):'<span class="muted">Noch kein Discord-Mitglied ausgewählt.</span>';
+}
+
+function addRaidHelperAnnouncementNotifyMember(username){
+  const value=String(username||"").trim();
+  if(value){
+    const field=document.getElementById("raidHelperAnnouncementNotifyNames");
+    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperAnnouncementNotifyNames"),value])].join(", ");
+  }
+  const select=document.getElementById("raidHelperAnnouncementNotifyMemberSelect");
+  if(select) select.value="";
+  renderRaidHelperAnnouncementNotifyMemberTags();
+}
+
+function removeRaidHelperAnnouncementNotifyMember(username){
+  const field=document.getElementById("raidHelperAnnouncementNotifyNames");
+  if(field) field.value=raidHelperSelectedNames("raidHelperAnnouncementNotifyNames").filter(value=>value!==username).join(", ");
+  renderRaidHelperAnnouncementNotifyMemberTags();
+}
+
+function renderRaidHelperAnnouncementNotifyMemberTags(){
+  const box=document.getElementById("raidHelperAnnouncementNotifyMemberTags");
+  if(!box) return;
+  const names=raidHelperSelectedNames("raidHelperAnnouncementNotifyNames");
+  box.innerHTML=names.length?names.map(name=>{const member=raidHelperDiscordMembers.find(item=>String(item.username).toLowerCase()===name.toLowerCase());return `<span class="raid-helper-role-tag">${escapeHtml(member?.displayName||name)} <small>@${escapeHtml(member?.username||name)}</small><button type="button" title="Mitglied entfernen" onclick="removeRaidHelperAnnouncementNotifyMember(decodeURIComponent('${encodeURIComponent(name)}'))">×</button></span>`;}).join(""):'<span class="muted">Noch kein Discord-Mitglied ausgewählt.</span>';
 }
 
 async function loadRaidHelperDiscordRoles(){
@@ -9166,10 +9259,13 @@ async function editRaidHelperEvent(raidId){
   setRaidHelperEditValue("raidHelperAnnouncementNotifyNames", announcementTargets.filter(item => item?.type === "name").map(item => item.value).join(", "));
   setRaidHelperTab("createEvent");
   await loadRaidHelperDiscordRoles();
+  await loadRaidHelperDiscordMembers();
   raidHelperSelectedNotifyRoles = targets.filter(item => item?.type === "role").map(item => ({type:"role",value:String(item.value),label:item.label || raidHelperDiscordRoles.find(role => String(role.id || role.roleId) === String(item.value))?.name || String(item.value)}));
   raidHelperSelectedAnnouncementNotifyRoles = announcementTargets.filter(item => item?.type === "role").map(item => ({type:"role",value:String(item.value),label:item.label || raidHelperDiscordRoles.find(role => String(role.id || role.roleId) === String(item.value))?.name || String(item.value)}));
   renderRaidHelperNotifyRoleTags();
   renderRaidHelperAnnouncementNotifyRoleTags();
+  renderRaidHelperNotifyMemberTags();
+  renderRaidHelperAnnouncementNotifyMemberTags();
   renderRaidHelperDiscordChannels();
   const banner = document.getElementById("raidHelperRaidEditMode");
   banner?.classList.remove("hidden");
@@ -9579,7 +9675,7 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
   const raid = findRaidByAnyId(raidId) || raidHelperEditingData?.raid || {};
   if(!masterCode || !raidId) return null;
   return railwayWrite({
-    action:"guildQueueRaidAnnouncement",
+    action:"guildQueueRaidAnnouncementRefresh",
     masterCode,
     raidId,
     playerPin:raid.playerPin || raid.prioPin || "",
