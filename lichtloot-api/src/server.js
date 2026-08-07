@@ -4938,7 +4938,7 @@ async function syncExternalRendSheet(guildId) {
   if (!response.ok) throw new Error(`Rend-Sheet nicht erreichbar (${response.status}).`);
 
   const rows = parseCsvRows(await response.text())
-    .map(row => ({ eventDate: parseExternalRendDate(row[0]), hordeChar: clean(row[2]) }))
+    .map(row => ({ eventDate: parseExternalRendDate(row[0]), caster: clean(row[2]) }))
     .filter(row => row.eventDate);
   if (!rows.length) throw new Error("Im Rend-Sheet wurden keine Datumszeilen gefunden.");
 
@@ -4974,7 +4974,7 @@ async function syncExternalRendSheet(guildId) {
         );
       }
 
-      if (row.hordeChar) {
+      if (row.caster) {
         if (!event) {
           const created = await client.query(
             `insert into hordenbuff_events
@@ -4990,8 +4990,8 @@ async function syncExternalRendSheet(guildId) {
         await client.query(
           `insert into hordenbuff_entries
              (event_id, ally_char, horde_char, status, note, source)
-           values ($1, '', $2, 'bestätigt', $3, $4)`,
-          [event.id, row.hordeChar, sourceNote, source]
+           values ($1, $2, '', 'bestätigt', $3, $4)`,
+          [event.id, row.caster, sourceNote, source]
         );
       } else if (event && clean(event.note) === sourceNote) {
         await client.query(
