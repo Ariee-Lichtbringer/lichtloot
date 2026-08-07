@@ -7852,12 +7852,33 @@ async function deletePoPostEntry({ guildId, query: params }) {
       .catch(error => console.warn("PO-Post konnte nach Eintrag-Löschung nicht queued werden:", error.message || error));
   }
 
+  const raidAnnouncementRefreshes = [];
+  const refreshedRaidIds = new Set();
+  for (const row of result.rows || []) {
+    const linkedRaid = await findRaid(guildId, {
+      raidId: row.post_key || postKey,
+      raid: row.raid || params.raid || params.raidName,
+      raidDate: row.raid_date || params.raidDate || params.date || params.datum,
+      raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
+      raidPin: row.raid_pin || params.raidPin || params.prioPin,
+      prioPin: row.raid_pin || params.raidPin || params.prioPin,
+      playerPin: row.raid_pin || params.raidPin || params.prioPin
+    }).catch(() => null);
+    const linkedRaidId = clean(linkedRaid?.id);
+    if (!linkedRaidId || refreshedRaidIds.has(linkedRaidId)) continue;
+    refreshedRaidIds.add(linkedRaidId);
+    raidAnnouncementRefreshes.push(
+      await enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, linkedRaid, "po_entry_deleted")
+    );
+  }
+
   return {
     success: true,
     deleted: result.rowCount || 0,
     deletedPrios,
     prioDeleteResults,
     queued: payloads.size,
+    raidAnnouncementRefreshes,
     entries: result.rows.map(row => ({
       postKey: row.post_key || "",
       sourceChannelId: row.source_channel_id || "",
