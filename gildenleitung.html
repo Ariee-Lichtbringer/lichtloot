@@ -6346,6 +6346,7 @@ let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
+let raidHelperPoSignupSelectedPostKey = "";
 const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
 let guildApplications = [];
@@ -12220,39 +12221,98 @@ function renderRaidHelperPoSignupTab(){
   if(!box) return;
   const rows = raidHelperPoSignupRows();
   if(!rows.length){
+    raidHelperPoSignupSelectedPostKey = "";
     box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
     return;
   }
-  box.innerHTML = rows.map(row => {
-    const isArchivedOnly = Boolean(row.archivedCount && !row.count);
-    const count = Number(row.count || row.archivedCount || 0);
-    const approved = Number(row.approvedCount || 0);
-    return `
-      <div class="raid-helper-event-card">
-        <div class="raid-helper-event-card-main">
-          <div class="raid-helper-event-title">${escapeHtml(row.title || `${poSignupRaidLabel(row.raid)} PO-Anmelder`)}</div>
-          <div class="raid-helper-event-meta">
-            <span>${escapeHtml(String(row.raid || "-").toUpperCase())}</span>
-            <span>${escapeHtml([row.raidDate ? formatRaidDate(row.raidDate) : "", row.raidTime ? row.raidTime + " Uhr" : ""].filter(Boolean).join(" · ") || "-")}</span>
-            <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))}</span>
-          </div>
-          <div class="raid-helper-event-meta">
-            <span>Post-ID: ${escapeHtml(row.postKey || "-")}</span>
-            <span>Prio: ${escapeHtml(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-")}</span>
-            <span>Lead: ${escapeHtml(row.lichtlootLeadPin || row.leadPin || "-")}</span>
-            <span>${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} grün${isArchivedOnly ? " · archiviert" : ""}</span>
-          </div>
-        </div>
-        <div class="raid-helper-card-actions">
-          <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
-          <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
-          ${isArchivedOnly
-            ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
-            : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
-        </div>
+  const selectedStillExists = rows.some(row => String(row.postKey || "") === String(raidHelperPoSignupSelectedPostKey || ""));
+  if(!selectedStillExists) raidHelperPoSignupSelectedPostKey = String(rows[0].postKey || "");
+  box.innerHTML = `
+    <div class="raid-helper-current-layout">
+      <div class="raid-helper-current-rail">
+        ${rows.map(renderRaidHelperPoSignupButton).join("")}
       </div>
-    `;
-  }).join("");
+      <div id="raidHelperPoSignupDetail" class="raid-helper-current-detail">
+        <div class="muted">PO-Anmelder wird geladen ...</div>
+      </div>
+    </div>
+  `;
+  renderRaidHelperPoSignupDetail(raidHelperPoSignupSelectedPostKey);
+}
+
+function renderRaidHelperPoSignupButton(row){
+  const postKey = String(row.postKey || "");
+  const raidKey = normalizePoSignupRaidKey(row.raid);
+  const imageKey = raidKey.startsWith("zg-") ? "zg" : raidKey;
+  const imageUrl = `images/raid-templates/${imageKey || "aq40"}.jpg`;
+  const active = postKey === String(raidHelperPoSignupSelectedPostKey || "");
+  const count = Number(row.count || row.archivedCount || 0);
+  const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
+  return `
+    <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(raidKey)}" type="button" onclick="selectRaidHelperPoSignup('${escapeAttr(postKey)}')">
+      <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}">
+      <span>
+        <strong>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</strong>
+        <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
+      </span>
+      <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
+    </button>
+  `;
+}
+
+function selectRaidHelperPoSignup(postKey){
+  raidHelperPoSignupSelectedPostKey = String(postKey || "");
+  renderRaidHelperPoSignupTab();
+}
+
+function renderRaidHelperPoSignupDetail(postKey){
+  const box = document.getElementById("raidHelperPoSignupDetail");
+  const row = raidHelperPoSignupRows().find(item => String(item.postKey || "") === String(postKey || ""));
+  if(!box || !row) return;
+  const raidKey = normalizePoSignupRaidKey(row.raid);
+  const imageKey = raidKey.startsWith("zg-") ? "zg" : raidKey;
+  const imageUrl = `images/raid-templates/${imageKey || "aq40"}.jpg`;
+  const count = Number(row.count || row.archivedCount || 0);
+  const approved = Number(row.approvedCount || 0);
+  const isArchivedOnly = Boolean(row.archivedCount && !row.count);
+  const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
+  const leadPin = row.lichtlootLeadPin || row.leadPin || "-";
+  box.innerHTML = `
+    <div class="raid-helper-current-detail-head">
+      <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(poSignupRaidLabel(raidKey))}">
+      <div class="raid-helper-current-detail-copy">
+        <h4>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</h4>
+        <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · Prio-PIN ${escapeHtml(pin)} · Lead-PIN ${escapeHtml(leadPin)}</span>
+        <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
+      </div>
+      <div class="raid-helper-current-actions">
+        <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
+        <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
+        ${isArchivedOnly
+          ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
+          : `<button class="small-btn ghost" type="button" onclick="archivePoSignupEverywhere('${escapeAttr(row.postKey)}')">Archivieren</button>`}
+        <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Liste neu laden</button>
+      </div>
+    </div>
+    <div class="status good">${escapeHtml(String(count))} Einträge geladen · ${escapeHtml(String(approved))} freigegeben${isArchivedOnly ? " · archiviert" : ""}</div>
+    <div>
+      <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
+        <div><h3 style="font-size:16px">PO-Anmeldungen</h3><span id="raidHelperPoSignupDetailHint">Einträge dieses PO-Anmelders prüfen und freigeben.</span></div>
+      </div>
+      <div class="table-wrap">
+        <table class="po-post-entry-table">
+          <thead><tr><th>Status</th><th>Spieler</th><th>Item</th><th>Aktion</th></tr></thead>
+          <tbody id="raidHelperPoSignupDetailRows"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+  renderPoPostEntryReviewRows(
+    document.getElementById("raidHelperPoSignupDetailRows"),
+    document.getElementById("raidHelperPoSignupDetailHint"),
+    row.postKey,
+    "Noch keine PO-Anmeldungen vorhanden."
+  );
 }
 
 function openRaidHelperPoSignup(postKey){
