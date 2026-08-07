@@ -3301,6 +3301,54 @@ function normalizePoReleaseCharacterName(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+function poClassPermission(value) {
+  const key = clean(value).toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z]/g, "");
+  const classes = {
+    krieger:"warrior", warrior:"warrior",
+    paladin:"paladin",
+    jager:"hunter", hunter:"hunter",
+    schurke:"rogue", rogue:"rogue",
+    priester:"priest", priest:"priest",
+    schamane:"shaman", shaman:"shaman",
+    magier:"mage", mage:"mage",
+    hexenmeister:"warlock", warlock:"warlock",
+    druide:"druid", druid:"druid"
+  };
+  return classes[key] ? `po_class_${classes[key]}` : "";
+}
+
+function isGuildMasterCode(guildId, value) {
+  const code = clean(value);
+  return Boolean(code) && (code === clean(masterCode) || code === clean(masterCodeOverrides.get(String(guildId))));
+}
+
+async function authorizePoClassManagement(guildId, params, className) {
+  if (isGuildMasterCode(guildId, params.masterCode)) return { master:true, permissions:["guild_admin"] };
+  const reviewerPin = normalizePin(params.reviewerPlayerPin || params.playerPin || params.pin);
+  await ensurePlayerRoleSchema();
+  let result = reviewerPin ? await query(
+    `select permissions from players where guild_id=$1 and player_pin=$2 and approval_status='approved' and coalesce(is_blocked,false)=false limit 1`,
+    [guildId, reviewerPin]
+  ) : { rows:[] };
+  if (!result.rows[0] && lichtbotQueueToken && clean(params.queueToken) === lichtbotQueueToken && clean(params.reviewerDiscordId || params.discordUserId)) {
+    result = await query(
+      `select p.permissions from discord_player_links dpl join characters c on c.id=dpl.character_id join players p on p.id=c.player_id
+       where dpl.guild_id=$1 and dpl.discord_user_id=$2 and p.approval_status='approved' and coalesce(p.is_blocked,false)=false
+       order by dpl.updated_at desc limit 1`,
+      [guildId, clean(params.reviewerDiscordId || params.discordUserId)]
+    );
+  }
+  if (!result.rows[0]) { const error=new Error("Master-Code oder Klassenleiter-Zuordnung fehlt.");error.statusCode=403;throw error; }
+  const permissions = Array.isArray(result.rows[0]?.permissions) ? result.rows[0].permissions : [];
+  const needed = poClassPermission(className);
+  if (!permissions.includes("guild_admin") && (!needed || !permissions.includes(needed))) {
+    const error=new Error(`Keine PO-Freigabeberechtigung für ${clean(className) || "diese Klasse"}.`);error.statusCode=403;throw error;
+  }
+  return { master:false, permissions };
+}
+
 function isNachtlootRecruitRaid(value) {
   return ["bwl", "aq40", "naxx"].includes(normalizePoReleaseRaid(value));
 }
@@ -3425,12 +3473,13 @@ async function getPoReleaseRequests({ guildId, query: params = {}, management = 
 }
 
 async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
-  requireMasterCode(params.masterCode); await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
+  await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
   const id = clean(params.id || params.requestId);
   const decision = clean(params.decision || params.status).toLowerCase();
   if (!isUuid(id) || !["approved","rejected"].includes(decision)) { const error = new Error("Antrag oder Entscheidung ist ungültig."); error.statusCode=400; throw error; }
-  const found = await query(`select * from po_release_requests where guild_id=$1 and id=$2 limit 1`, [guildId,id]);
+  const found = await query(`select r.*,c.class_name from po_release_requests r join characters c on c.id=r.character_id where r.guild_id=$1 and r.id=$2 limit 1`, [guildId,id]);
   const request = found.rows[0]; if (!request) { const error=new Error("Antrag wurde nicht gefunden."); error.statusCode=404; throw error; }
+  await authorizePoClassManagement(guildId, params, request.class_name);
   const reviewer=clean(params.reviewedBy || params.reviewer || "Gildenleitung");
   if (decision === "approved") {
     if (request.request_type === "recruit" || request.request_type === "p1p3") {
@@ -3560,7 +3609,6 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
 }
 
 async function setCharacterPoRelease({ guildId, query: params = {} }) {
-  requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
   const raid = normalizePoReleaseRaid(params.raid || params.raidType);
   const characterId = clean(params.characterId || params.charId);
@@ -3588,6 +3636,7 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
     error.statusCode = 404;
     throw error;
   }
+  await authorizePoClassManagement(guildId, params, character.rows[0].class_name);
   if (enabled) {
     await query(
       `insert into character_po_releases (guild_id, character_id, raid_type, source, approved_by, approved_at)
@@ -18319,7 +18368,9 @@ async function setPlayerLoginAccess({ guildId, query: params }) {
   };
   const allowedPermissions = new Set([
     "create_raids","manage_worldbuffs","guild_admin",
-    "loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases"
+    "loot_master","notify_player_logins","notify_worldbuff_changes","notify_po_releases",
+    "po_class_warrior","po_class_paladin","po_class_hunter","po_class_rogue","po_class_priest",
+    "po_class_shaman","po_class_mage","po_class_warlock","po_class_druid"
   ]);
   const permissions = [...new Set(parseList(params.permissions).map(clean).filter(value=>allowedPermissions.has(value)))];
   const discordRoleIds = [...new Set(parseList(params.discordRoleIds || params.discordRoles).map(clean).filter(Boolean))];
