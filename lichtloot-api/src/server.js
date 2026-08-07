@@ -15219,11 +15219,16 @@ async function getRaidHelper({ guildId, query: params }) {
          select 1
          from prios pr
          join characters prio_character on prio_character.id = pr.character_id
+         join players prio_player on prio_player.id = prio_character.player_id
          where pr.raid_id = any($1)
-           and prio_character.player_id = c.player_id
+           and prio_player.guild_id = signup_player.guild_id
+           and regexp_replace(upper(coalesce(prio_player.player_pin, '')), '[^A-Z0-9]+', '', 'g')
+             = regexp_replace(upper(coalesce(signup_player.player_pin, '')), '[^A-Z0-9]+', '', 'g')
+           and (pr.p1_item_id is not null or pr.p2_item_id is not null or pr.p3_item_id is not null)
        ) as has_prio
      from raid_signups rs
      join characters c on c.id = rs.character_id
+     join players signup_player on signup_player.id = c.player_id
      where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
