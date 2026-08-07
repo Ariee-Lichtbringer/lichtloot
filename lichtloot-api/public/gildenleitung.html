@@ -5899,6 +5899,7 @@ body.worldbuff-only .master-only{display:none!important}
               <span id="logAnalysisCount">0</span>
               <small>Reports</small>
             </div>
+            <button class="btn danger" id="deleteSelectedLogAnalysesButton" type="button" onclick="deleteSelectedLogAnalyses()" disabled>Ausgewählte löschen (0)</button>
             <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
             <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
             <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
@@ -5916,6 +5917,7 @@ body.worldbuff-only .master-only{display:none!important}
         <table>
           <thead>
             <tr>
+              <th><input id="selectAllVisibleLogAnalyses" type="checkbox" aria-label="Alle sichtbaren Loganalysen auswählen" onchange="toggleVisibleLogAnalyses(this.checked)"></th>
               <th>Raid</th>
               <th>Datum</th>
               <th>Status</th>
@@ -5923,7 +5925,7 @@ body.worldbuff-only .master-only{display:none!important}
             </tr>
           </thead>
           <tbody id="logAnalysisRows">
-            <tr><td colspan="4" class="muted">Noch keine Loganalysen geladen.</td></tr>
+            <tr><td colspan="5" class="muted">Noch keine Loganalysen geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -6351,6 +6353,7 @@ const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
+const selectedLogAnalysisIds = new Set();
 let logAnalysisRefreshTimer = null;
 let logAnalysisPage = 1;
 const LOG_ANALYSIS_PAGE_SIZE = 10;
@@ -17328,7 +17331,9 @@ function renderLogAnalyses(){
   if(count) count.textContent = String((logAnalyses || []).length);
   if(!tbody) return;
   if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    selectedLogAnalysisIds.clear();
+    updateSelectedLogAnalysisControls();
     renderLogAnalysisFooter(0, 0, 0);
     scheduleLogAnalysisRefresh();
     return;
@@ -17339,6 +17344,8 @@ function renderLogAnalyses(){
   if(logAnalysisPage > pages) logAnalysisPage = pages;
   const start = (logAnalysisPage - 1) * LOG_ANALYSIS_PAGE_SIZE;
   const visible = logAnalyses.slice(start, start + LOG_ANALYSIS_PAGE_SIZE);
+  const availableIds = new Set(logAnalyses.map(entry => String(entry.id || "")).filter(Boolean));
+  [...selectedLogAnalysisIds].forEach(id => { if(!availableIds.has(id)) selectedLogAnalysisIds.delete(id); });
 
   tbody.innerHTML = visible.map(entry => {
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
@@ -17352,6 +17359,7 @@ function renderLogAnalyses(){
     if(isLogAnalysisQueued(entry, "rpb") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(rpbDownloadUrl)) rpbDownloadUrl = "";
     return `
       <tr>
+        <td><input class="log-analysis-select" type="checkbox" aria-label="Loganalyse auswählen" value="${escapeAttr(entry.id || "")}" ${selectedLogAnalysisIds.has(String(entry.id || "")) ? "checked" : ""} onchange="toggleLogAnalysisSelection(this.value,this.checked)"></td>
         <td>
           <div class="log-raid-cell">
             <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
@@ -17384,8 +17392,53 @@ function renderLogAnalyses(){
       </tr>
     `;
   }).join("");
+  updateSelectedLogAnalysisControls();
   renderLogAnalysisFooter(start + 1, Math.min(start + LOG_ANALYSIS_PAGE_SIZE, total), total);
   scheduleLogAnalysisRefresh();
+}
+
+function toggleLogAnalysisSelection(id, checked){
+  const key = String(id || "");
+  if(!key) return;
+  if(checked) selectedLogAnalysisIds.add(key); else selectedLogAnalysisIds.delete(key);
+  updateSelectedLogAnalysisControls();
+}
+
+function toggleVisibleLogAnalyses(checked){
+  document.querySelectorAll("#logAnalysisRows .log-analysis-select").forEach(input => {
+    input.checked = checked;
+    const key = String(input.value || "");
+    if(checked) selectedLogAnalysisIds.add(key); else selectedLogAnalysisIds.delete(key);
+  });
+  updateSelectedLogAnalysisControls();
+}
+
+function updateSelectedLogAnalysisControls(){
+  const button = document.getElementById("deleteSelectedLogAnalysesButton");
+  const all = document.getElementById("selectAllVisibleLogAnalyses");
+  const visible = [...document.querySelectorAll("#logAnalysisRows .log-analysis-select")];
+  const selectedVisible = visible.filter(input => selectedLogAnalysisIds.has(input.value)).length;
+  if(button){ button.disabled = selectedLogAnalysisIds.size === 0; button.textContent = `Ausgewählte löschen (${selectedLogAnalysisIds.size})`; }
+  if(all){ all.checked = visible.length > 0 && selectedVisible === visible.length; all.indeterminate = selectedVisible > 0 && selectedVisible < visible.length; }
+}
+
+async function deleteSelectedLogAnalyses(){
+  const ids = [...selectedLogAnalysisIds];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!ids.length) return;
+  if(!masterCode){ if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>'; return; }
+  if(!confirm(`${ids.length} ausgewählte Loganalyse(n) dauerhaft löschen?`)) return;
+  if(status) status.textContent = "Ausgewählte Loganalysen werden gelöscht ...";
+  try{
+    const result = await railwayWrite({action:"guildDeleteSelectedLogAnalyses",masterCode,ids:JSON.stringify(ids)});
+    if(!result.success) throw new Error(result.error || "Ausgewählte Loganalysen konnten nicht gelöscht werden.");
+    const deletedIds = new Set((result.deletedIds || ids).map(String));
+    logAnalyses = logAnalyses.filter(entry => !deletedIds.has(String(entry.id || "")));
+    deletedIds.forEach(id => selectedLogAnalysisIds.delete(id));
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedAnalyses || deletedIds.size)}</span> Loganalyse(n) gelöscht.`;
+  }catch(error){ if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Löschen fehlgeschlagen.")}</span>`; }
 }
 
 function renderLogAnalysisFooter(from, to, total){
