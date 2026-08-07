@@ -16787,6 +16787,7 @@ function renderHordenbuffPanel(days){
             <th>Fraktion</th>
             <th>Charakter</th>
             <th>Übernehmer</th>
+            <th>Rendwerfer</th>
             <th>Status</th>
             <th>Notiz</th>
             <th>Aktion</th>
@@ -16814,6 +16815,7 @@ function renderHordenbuffRows(){
       entry.gilde,
       entry.charakter,
       entry.uebernehmer,
+      entry.rendwerfer,
       entry.status,
       entry.note
     ].join(" "));
@@ -16821,7 +16823,7 @@ function renderHordenbuffRows(){
   });
 
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="10" class="muted">Keine Hordenbuffs gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" class="muted">Keine Hordenbuffs gefunden.</td></tr>';
     return;
   }
 
@@ -16843,6 +16845,7 @@ function renderHordenbuffRows(){
         <td>${escapeHtml(entry.gilde || "-")}</td>
         <td><input id="hordenbuffChar_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
         <td><input id="hordenbuffHelper_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.uebernehmer || "")}" placeholder="Übernehmer"></td>
+        <td><span title="Wird automatisch aus dem Rend-Sheet übernommen und kann hier nicht geändert werden." style="display:inline-flex;min-width:110px;min-height:30px;align-items:center;padding:4px 9px;border:1px solid rgba(245,158,11,.45);border-radius:8px;background:rgba(120,53,15,.20);color:#fcd34d;font-weight:900;white-space:nowrap">${escapeHtml(entry.rendwerfer || "–")}</span></td>
         <td>
           <select id="hordenbuffStatus_${index}" class="worldbuff-status">
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
