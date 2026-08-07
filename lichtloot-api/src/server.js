@@ -15041,24 +15041,13 @@ async function findRaidForDiscordImport(guildId, params) {
     if (result.rows[0]) return result.rows[0];
   }
 
-  if (!raidType || !raidDate) return null;
-  const created = await createRaidRecord({
-    guildId,
-    query: {
-      raid: raidType,
-      raidName: clean(params.raidName) || displayRaidName(raidType),
-      raidDate,
-      raidTime,
-      raidId: `discord-${raidType}-${raidDate}-${raidTime || "time"}`,
-      status: "geschlossen",
-      p0PlusFreigabe: "geöffnet",
-      createdBy: "Discord-Import",
-      discordChannelId,
-      discordMessageId,
-      raidHelperEnabled: "true"
-    }
-  });
-  return findRaid(guildId, { raidId: created.raidId });
+  // Discord synchronisiert ausschließlich Anmeldungen zu einem Raid, der
+  // zuvor in LichtLoot erstellt wurde. Der frühere Fallback hat bei einer
+  // abweichenden/fehlenden Bot-ID stillschweigend einen zweiten Raid mit
+  // "Discord-Import" angelegt. Das verdeckte den Zuordnungsfehler und führte
+  // zu doppelten Raidkarten. Ohne eindeutigen Treffer wird deshalb nichts
+  // mehr automatisch erzeugt.
+  return null;
 }
 
 async function getRaidHelper({ guildId, query: params }) {
@@ -15233,30 +15222,40 @@ async function saveRaidSignup({ guildId, query: params }) {
   const discordUserId = clean(params.discordUserId);
   const discordName = clean(params.discordName);
 
+  const relatedRaidResult = await query(
+    `select id
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+
   // Pro Raid darf ein SpielerLogin nur genau einen Charakter anmelden.
   // Ein Wechsel des Charakters ersetzt deshalb die bisherige Anmeldung.
   await query(
     `delete from raid_signups rs
      using characters c
      where rs.character_id = c.id
-       and rs.raid_id = $1
+       and rs.raid_id = any($1)
        and c.player_id = $2
        and rs.character_id <> $3`,
-    [raid.id, character.player_id, character.id]
+    [relatedRaidIds, character.player_id, character.id]
   );
 
   // Ältere Discord-Importe desselben Spielers dürfen nicht parallel zur
   // verifizierten SpielerLogin-Anmeldung im Embed stehen bleiben.
   await query(
-    `delete from raid_external_signups
+     `delete from raid_external_signups
      where guild_id = $1
-       and raid_id = $2
+       and raid_id = any($2)
        and (
          lower(player_name) = lower($3)
          or ($4 <> '' and player_pin = $4)
          or ($5 <> '' and discord_user_id = $5)
        )`,
-    [guildId, raid.id, charName, playerPin, discordUserId]
+    [guildId, relatedRaidIds, charName, playerPin, discordUserId]
   );
 
   const result = await query(
