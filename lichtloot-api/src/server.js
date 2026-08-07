@@ -14229,6 +14229,28 @@ async function resetLogAnalyses({ guildId, query: params }) {
   };
 }
 
+async function deleteSelectedLogAnalyses({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureLogAnalysesTable();
+  let ids = params.ids || params.analysisIds || [];
+  if (typeof ids === "string") {
+    try { ids = JSON.parse(ids); } catch { ids = ids.split(","); }
+  }
+  ids = [...new Set((Array.isArray(ids) ? ids : []).map(clean).filter(isUuid))].slice(0, 500);
+  if (!ids.length) {
+    const error = new Error("Bitte mindestens eine Loganalyse auswählen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `delete from log_analyses
+     where guild_id = $1 and id = any($2::uuid[])
+     returning id`,
+    [guildId, ids]
+  );
+  return { success: true, deletedAnalyses: result.rowCount, deletedIds: result.rows.map(row => row.id) };
+}
+
 async function clearLogAnalysisType({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureLogAnalysesTable();
@@ -16801,6 +16823,27 @@ async function setRaidStatus({ guildId, query: params }) {
   }
 
   const status = normalizeStatus(params.status || raid.status);
+  if (status === "geöffnet") {
+    const raidDateText = raid.raid_date instanceof Date
+      ? raid.raid_date.toISOString().slice(0, 10)
+      : clean(raid.raid_date).slice(0, 10);
+    const raidTimeText = clean(raid.raid_time).slice(0, 5);
+    const raidStartsAtBerlin = /^\d{4}-\d{2}-\d{2}$/.test(raidDateText) && /^\d{2}:\d{2}$/.test(raidTimeText)
+      ? new Date(`${raidDateText}T${raidTimeText}:00`)
+      : null;
+    const nowBerlin = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Berlin" }));
+    const opensAt = raidStartsAtBerlin ? new Date(raidStartsAtBerlin.getTime() - 30 * 60 * 1000) : null;
+    if (!opensAt || Number.isNaN(opensAt.getTime())) {
+      const error = new Error("Raidbeginn fehlt oder ist ungültig. Die Prioliste kann nicht geöffnet werden.");
+      error.statusCode = 409;
+      throw error;
+    }
+    if (nowBerlin < opensAt) {
+      const error = new Error(`Die Prioliste kann erst 30 Minuten vor Raidbeginn geöffnet werden (${raidDateText}, ${raidTimeText} Uhr).`);
+      error.statusCode = 409;
+      throw error;
+    }
+  }
   const p0plus = clean(params.p0PlusFreigabe || params.p0PlusOverride || params.value)
     ? normalizeStatus(params.p0PlusFreigabe || params.p0PlusOverride || params.value)
     : raid.p0plus_freigabe;
@@ -18151,8 +18194,15 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      from p0plus_point_audit
      where guild_id = $1
        and action = 'item_received_clear'
-       and raid_id = $2`,
-    [guildId, raid.id]
+       and (
+         raid_id = $2
+         or (
+           raid_id is null
+           and lower(coalesce(raid_type, '')) = any($3)
+           and (created_at at time zone 'Europe/Berlin')::date = $4::date
+         )
+       )`,
+    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
   const candidates = priosResult.rows.filter(row =>
@@ -20548,6 +20598,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...reset, guild: guild.slug });
     }
 
+    if (action === "guildDeleteSelectedLogAnalyses") {
+      const deleted = await deleteSelectedLogAnalyses({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
+
     if (action === "guildResolveIssueReport") {
       const resolved = await resolveIssueReport({ guildId: guild.id, query: req.query });
       return res.json({ ...resolved, guild: guild.slug });
@@ -21716,6 +21771,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildResetLogAnalyses") {
       const reset = await resetLogAnalyses({ guildId: guild.id, query: postParams });
       return res.json({ ...reset, guild: guild.slug });
+    }
+
+    if (action === "guildDeleteSelectedLogAnalyses") {
+      const deleted = await deleteSelectedLogAnalyses({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "guildClearLogAnalysisType") {
