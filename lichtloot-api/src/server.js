@@ -8968,6 +8968,24 @@ async function savePrio({ guildId, query: params }) {
     const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, savedRaid, "lichtloot_prio_saved")
       .catch(error => ({ success: false, error: error.message || String(error) }));
     const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "lichtloot_prio_saved");
+    // P1/P2/P3 werden direkt auf LichtLoot gespeichert. Der zugehörige
+    // Discord-Raidanmelder muss danach genauso aktualisiert werden wie beim
+    // Löschen einer Prio. Lade den vollständigen Raid erneut, weil die
+    // UPDATE-RETURNING-Abfrage oben die Discord-Nachrichten-ID nicht enthält.
+    const linkedRaid = await findRaid(guildId, {
+      raidId: savedRaid.external_raid_id || savedRaid.id,
+      raidPin: savedRaid.raid_pin || prioPin,
+      prioPin: savedRaid.raid_pin || prioPin,
+      playerPin: savedRaid.raid_pin || prioPin,
+      raid: savedRaid.raid_type || raidType,
+      raidDate: savedRaid.raid_date || params.raidDate || params.date || params.datum,
+      raidTime: savedRaid.raid_time || params.raidTime || params.uhrzeit
+    }).catch(() => null);
+    const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+      guildId,
+      linkedRaid,
+      "lichtloot_prio_saved"
+    );
     return {
       success: true,
       characterPin: normalizePin(pin),
@@ -8977,7 +8995,8 @@ async function savePrio({ guildId, query: params }) {
       raidId: savedRaid.external_raid_id || savedRaid.id,
       p0PostRefreshQueued: Boolean(p0PostRefresh && p0PostRefresh.success && !p0PostRefresh.skipped),
       p0PostRefresh,
-      poPostRefresh
+      poPostRefresh,
+      raidAnnouncementRefresh
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
