@@ -5629,21 +5629,6 @@ body.worldbuff-only .master-only{display:none!important}
           <div><h3>PO-Anmelder</h3><span>Automatisch erstellte PO-Anmelder öffnen, prüfen und übertragen</span></div>
           <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Neu laden</button>
         </div>
-        <div class="po-signup-list-toolbar">
-          <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
-            <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
-            <button class="small-btn" type="button" data-po-signup-tier="20" onclick="setPoSignupListTierFilter('20')">20er</button>
-            <button class="small-btn" type="button" data-po-signup-tier="40" onclick="setPoSignupListTierFilter('40')">40er</button>
-          </div>
-          <div id="raidHelperPoSignupRaidTabs" class="po-signup-raid-tabs" aria-label="PO-Anmelder Raid-Auswahl"></div>
-        </div>
-        <div id="raidHelperPoSignupBulkActions" class="raid-bulk-actions" hidden>
-          <strong id="raidHelperPoSignupBulkSelectionText">0 PO-Anmelder ausgewählt</strong>
-          <div class="raid-bulk-action-buttons">
-            <button class="small-btn ghost" type="button" onclick="clearPoSignupSelection()">Auswahl aufheben</button>
-            <button class="small-btn danger" type="button" onclick="deleteSelectedPoSignups()">Ausgewählte löschen</button>
-          </div>
-        </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
     </div>
@@ -5914,6 +5899,7 @@ body.worldbuff-only .master-only{display:none!important}
               <span id="logAnalysisCount">0</span>
               <small>Reports</small>
             </div>
+            <button class="btn danger" id="deleteSelectedLogAnalysesButton" type="button" onclick="deleteSelectedLogAnalyses()" disabled>Ausgewählte löschen (0)</button>
             <button class="btn ghost" type="button" onclick="focusLogAnalysisInput()">⇧ Log aufnehmen</button>
             <button class="btn" type="button" onclick="loadLogAnalysisPanel(true)">＋ Neu laden</button>
             <button class="btn danger" type="button" onclick="cleanupIncompleteClaAnalyses()">Fehlerhafte CLA löschen</button>
@@ -5931,6 +5917,7 @@ body.worldbuff-only .master-only{display:none!important}
         <table>
           <thead>
             <tr>
+              <th><input id="selectAllVisibleLogAnalyses" type="checkbox" aria-label="Alle sichtbaren Loganalysen auswählen" onchange="toggleVisibleLogAnalyses(this.checked)"></th>
               <th>Raid</th>
               <th>Datum</th>
               <th>Status</th>
@@ -5938,7 +5925,7 @@ body.worldbuff-only .master-only{display:none!important}
             </tr>
           </thead>
           <tbody id="logAnalysisRows">
-            <tr><td colspan="4" class="muted">Noch keine Loganalysen geladen.</td></tr>
+            <tr><td colspan="5" class="muted">Noch keine Loganalysen geladen.</td></tr>
           </tbody>
         </table>
       </div>
@@ -6366,6 +6353,7 @@ const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
 let guildApplications = [];
 let logAnalyses = [];
+const selectedLogAnalysisIds = new Set();
 let logAnalysisRefreshTimer = null;
 let logAnalysisPage = 1;
 const LOG_ANALYSIS_PAGE_SIZE = 10;
@@ -12234,23 +12222,10 @@ async function refreshRaidHelperPoSignupTab(){
 function renderRaidHelperPoSignupTab(){
   const box = document.getElementById("raidHelperPoSignupBox");
   if(!box) return;
-  renderPoSignupListFilters();
-  const rows = raidHelperPoSignupRows().filter(poSignupConfigMatchesListFilter);
-  const visibleKeys = new Set(rows.map(row => String(row.postKey || "")).filter(Boolean));
-  Array.from(selectedPoSignupPostKeys).forEach(key => {
-    if(!visibleKeys.has(key)) selectedPoSignupPostKeys.delete(key);
-  });
+  const rows = raidHelperPoSignupRows();
   if(!rows.length){
     raidHelperPoSignupSelectedPostKey = "";
-    const emptyText = poSignupListRaidFilter
-      ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
-      : poSignupListTierFilter === "20"
-        ? "Keine 20er-PO-Anmelder gespeichert."
-        : poSignupListTierFilter === "40"
-          ? "Keine 40er-PO-Anmelder gespeichert."
-          : "Noch keine PO-Anmelder gespeichert.";
-    box.innerHTML = `<div class="muted">${escapeHtml(emptyText)}</div>`;
-    updatePoSignupBulkActions(rows);
+    box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
     return;
   }
   const selectedStillExists = rows.some(row => String(row.postKey || "") === String(raidHelperPoSignupSelectedPostKey || ""));
@@ -12265,7 +12240,6 @@ function renderRaidHelperPoSignupTab(){
       </div>
     </div>
   `;
-  updatePoSignupBulkActions(rows);
   renderRaidHelperPoSignupDetail(raidHelperPoSignupSelectedPostKey);
 }
 
@@ -12275,7 +12249,6 @@ function renderRaidHelperPoSignupButton(row){
   const imageKey = raidKey.startsWith("zg-") ? "zg" : raidKey;
   const imageUrl = `images/raid-templates/${imageKey || "aq40"}.jpg`;
   const active = postKey === String(raidHelperPoSignupSelectedPostKey || "");
-  const selected = selectedPoSignupPostKeys.has(postKey);
   const count = Number(row.count || row.archivedCount || 0);
   const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
   return `
@@ -12286,7 +12259,6 @@ function renderRaidHelperPoSignupButton(row){
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
       </span>
       <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
-      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.title || postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="togglePoSignupSelection('${escapeAttr(postKey)}', this.checked)">
     </button>
   `;
 }
@@ -12348,10 +12320,8 @@ function renderRaidHelperPoSignupDetail(postKey){
 
 function openRaidHelperPoSignup(postKey){
   selectPoSignupForReview(postKey);
-  raidHelperPoSignupSelectedPostKey = String(postKey || "");
-  setRaidHelperTab("poSignup");
-  renderRaidHelperPoSignupTab();
-  document.getElementById("raidHelperPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  openDetailsPanel("poPostPanel");
+  document.getElementById("poPostPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 function togglePoSignupSelection(postKey, checked){
@@ -12360,7 +12330,6 @@ function togglePoSignupSelection(postKey, checked){
   if(checked) selectedPoSignupPostKeys.add(key);
   else selectedPoSignupPostKeys.delete(key);
   renderPoSignupConfigRows();
-  renderRaidHelperPoSignupTab();
 }
 
 function toggleAllVisiblePoSignups(checked){
@@ -12374,26 +12343,20 @@ function toggleAllVisiblePoSignups(checked){
       else selectedPoSignupPostKeys.delete(key);
     });
   renderPoSignupConfigRows();
-  renderRaidHelperPoSignupTab();
 }
 
 function clearPoSignupSelection(){
   selectedPoSignupPostKeys.clear();
   renderPoSignupConfigRows();
-  renderRaidHelperPoSignupTab();
 }
 
 function updatePoSignupBulkActions(rows = []){
   const bar = document.getElementById("poSignupBulkActions");
   const text = document.getElementById("poSignupBulkSelectionText");
-  const helperBar = document.getElementById("raidHelperPoSignupBulkActions");
-  const helperText = document.getElementById("raidHelperPoSignupBulkSelectionText");
   const selectAll = document.getElementById("selectAllVisiblePoSignups");
   const count = selectedPoSignupPostKeys.size;
   if(bar) bar.hidden = count === 0;
   if(text) text.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
-  if(helperBar) helperBar.hidden = count === 0;
-  if(helperText) helperText.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
   if(selectAll){
     const keys = rows.map(row => String(row.postKey || "").trim()).filter(Boolean);
     const selected = keys.filter(key => selectedPoSignupPostKeys.has(key)).length;
@@ -12418,7 +12381,6 @@ async function deleteSelectedPoSignups(){
     selectedPoSignupPostKeys.delete(key);
   }
   await loadPoPostStoredEntries();
-  renderRaidHelperPoSignupTab();
   if(status){
     status.innerHTML = `<span class="good">Ausgewählte PO-Anmelder gelöscht.</span>`;
     status.className = "status good";
@@ -12467,14 +12429,12 @@ function setPoSignupListTierFilter(tier){
   poSignupListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
   poSignupListRaidFilter = "";
   renderPoSignupConfigRows();
-  renderRaidHelperPoSignupTab();
 }
 
 function setPoSignupListRaidFilter(raid){
   const key = normalizePoSignupRaidKey(raid);
   poSignupListRaidFilter = poSignupListRaidFilter === key ? "" : key;
   renderPoSignupConfigRows();
-  renderRaidHelperPoSignupTab();
 }
 
 function renderPoSignupListFilters(){
@@ -12482,16 +12442,14 @@ function renderPoSignupListFilters(){
     button.classList.toggle("primary", button.dataset.poSignupTier === poSignupListTierFilter);
     button.classList.toggle("ghost", button.dataset.poSignupTier !== poSignupListTierFilter);
   });
+  const box = document.getElementById("poSignupRaidTabs");
+  if(!box) return;
   const raidKeys = poSignupListRaidKeys();
   const allLabel = poSignupListTierFilter === "20" ? "Alle 20er" : poSignupListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
-  const markup = [
+  box.innerHTML = [
     `<button class="small-btn ${poSignupListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setPoSignupListRaidFilter('')">${allLabel}</button>`,
     ...raidKeys.map(raid => `<button class="small-btn ${poSignupListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoSignupListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
   ].join("");
-  ["poSignupRaidTabs","raidHelperPoSignupRaidTabs"].forEach(id => {
-    const box = document.getElementById(id);
-    if(box) box.innerHTML = markup;
-  });
 }
 
 async function runPoSignupRowAction(select, postKey){
@@ -13437,11 +13395,7 @@ async function createRaidHelperSignup(){
         discordChannelId,
         raid:raidKey,
         raidDate,
-        date:raidDate,
-        datum:raidDate,
         raidTime,
-        time:raidTime,
-        uhrzeit:raidTime,
         mode:"signup",
         note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",
         restoreArchived:"true",
@@ -17377,7 +17331,9 @@ function renderLogAnalyses(){
   if(count) count.textContent = String((logAnalyses || []).length);
   if(!tbody) return;
   if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="4" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    selectedLogAnalysisIds.clear();
+    updateSelectedLogAnalysisControls();
     renderLogAnalysisFooter(0, 0, 0);
     scheduleLogAnalysisRefresh();
     return;
@@ -17388,6 +17344,8 @@ function renderLogAnalyses(){
   if(logAnalysisPage > pages) logAnalysisPage = pages;
   const start = (logAnalysisPage - 1) * LOG_ANALYSIS_PAGE_SIZE;
   const visible = logAnalyses.slice(start, start + LOG_ANALYSIS_PAGE_SIZE);
+  const availableIds = new Set(logAnalyses.map(entry => String(entry.id || "")).filter(Boolean));
+  [...selectedLogAnalysisIds].forEach(id => { if(!availableIds.has(id)) selectedLogAnalysisIds.delete(id); });
 
   tbody.innerHTML = visible.map(entry => {
     const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
@@ -17401,6 +17359,7 @@ function renderLogAnalyses(){
     if(isLogAnalysisQueued(entry, "rpb") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(rpbDownloadUrl)) rpbDownloadUrl = "";
     return `
       <tr>
+        <td><input class="log-analysis-select" type="checkbox" aria-label="Loganalyse auswählen" value="${escapeAttr(entry.id || "")}" ${selectedLogAnalysisIds.has(String(entry.id || "")) ? "checked" : ""} onchange="toggleLogAnalysisSelection(this.value,this.checked)"></td>
         <td>
           <div class="log-raid-cell">
             <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
@@ -17433,8 +17392,53 @@ function renderLogAnalyses(){
       </tr>
     `;
   }).join("");
+  updateSelectedLogAnalysisControls();
   renderLogAnalysisFooter(start + 1, Math.min(start + LOG_ANALYSIS_PAGE_SIZE, total), total);
   scheduleLogAnalysisRefresh();
+}
+
+function toggleLogAnalysisSelection(id, checked){
+  const key = String(id || "");
+  if(!key) return;
+  if(checked) selectedLogAnalysisIds.add(key); else selectedLogAnalysisIds.delete(key);
+  updateSelectedLogAnalysisControls();
+}
+
+function toggleVisibleLogAnalyses(checked){
+  document.querySelectorAll("#logAnalysisRows .log-analysis-select").forEach(input => {
+    input.checked = checked;
+    const key = String(input.value || "");
+    if(checked) selectedLogAnalysisIds.add(key); else selectedLogAnalysisIds.delete(key);
+  });
+  updateSelectedLogAnalysisControls();
+}
+
+function updateSelectedLogAnalysisControls(){
+  const button = document.getElementById("deleteSelectedLogAnalysesButton");
+  const all = document.getElementById("selectAllVisibleLogAnalyses");
+  const visible = [...document.querySelectorAll("#logAnalysisRows .log-analysis-select")];
+  const selectedVisible = visible.filter(input => selectedLogAnalysisIds.has(input.value)).length;
+  if(button){ button.disabled = selectedLogAnalysisIds.size === 0; button.textContent = `Ausgewählte löschen (${selectedLogAnalysisIds.size})`; }
+  if(all){ all.checked = visible.length > 0 && selectedVisible === visible.length; all.indeterminate = selectedVisible > 0 && selectedVisible < visible.length; }
+}
+
+async function deleteSelectedLogAnalyses(){
+  const ids = [...selectedLogAnalysisIds];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  const status = document.getElementById("logAnalysisStatus");
+  if(!ids.length) return;
+  if(!masterCode){ if(status) status.innerHTML = '<span class="bad">Bitte Master-Code eingeben.</span>'; return; }
+  if(!confirm(`${ids.length} ausgewählte Loganalyse(n) dauerhaft löschen?`)) return;
+  if(status) status.textContent = "Ausgewählte Loganalysen werden gelöscht ...";
+  try{
+    const result = await railwayWrite({action:"guildDeleteSelectedLogAnalyses",masterCode,ids:JSON.stringify(ids)});
+    if(!result.success) throw new Error(result.error || "Ausgewählte Loganalysen konnten nicht gelöscht werden.");
+    const deletedIds = new Set((result.deletedIds || ids).map(String));
+    logAnalyses = logAnalyses.filter(entry => !deletedIds.has(String(entry.id || "")));
+    deletedIds.forEach(id => selectedLogAnalysisIds.delete(id));
+    renderLogAnalyses();
+    if(status) status.innerHTML = `<span class="ok">${Number(result.deletedAnalyses || deletedIds.size)}</span> Loganalyse(n) gelöscht.`;
+  }catch(error){ if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Löschen fehlgeschlagen.")}</span>`; }
 }
 
 function renderLogAnalysisFooter(from, to, total){
