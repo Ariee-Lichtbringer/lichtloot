@@ -2106,6 +2106,8 @@ function renderRaidView(){
   }
 
   const r = raids[currentRaidKey];
+  const prioAccess = raidleadPrioAccessWindow(currentRaidData);
+  const releaseBlocked = !currentReleased && !prioAccess.allowed;
   view.classList.remove("hidden");
   updateRaidNavigation();
 
@@ -2121,7 +2123,9 @@ function renderRaidView(){
       : hasP0Control()
         ? "Die Prioliste ist geöffnet. P0 kann geprüft werden."
         : "Die Prioliste ist geöffnet. Ony nutzt nur P1."
-    : `Die Prioliste ist geschlossen. Es wird nur angezeigt, ob ${prioLabelText()} gesetzt wurde.`;
+    : releaseBlocked
+      ? prioAccess.message
+      : `Die Prioliste ist geschlossen. Es wird nur angezeigt, ob ${prioLabelText()} gesetzt wurde.`;
 
   view.innerHTML = `
     <div class="raid-hero">
@@ -2139,7 +2143,7 @@ function renderRaidView(){
     ${renderRaidStatCards()}
 
     <div class="raid-control-bar">
-      <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}">
+      <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
         ${currentReleased ? "Prio schließen" : "Prio öffnen"}
       </button>
       <button class="btn action-soft" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
@@ -2692,7 +2696,7 @@ function bossTokenNoticeConfig(){
   if(currentRaidKey === "ony"){
     return { label:"Kopf posten", text:"Kopf von Onyxia" };
   }
-  if(currentRaidKey === "zg"){
+  if(["zg","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey)){
     return { label:"Herz posten", text:"Herz von Hakkar" };
   }
   return null;
@@ -2854,7 +2858,6 @@ async function postBossTokenNotice(player,server){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=queueRaidleadBossTokenNotice" +
-    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
@@ -2983,6 +2986,8 @@ async function releaseList(){
     alert("Bitte zuerst einen gültigen Raid laden.");
     return;
   }
+  const access = raidleadPrioAccessWindow(currentRaidData);
+  if(!access.allowed){ alert(access.message); return; }
 
   const ok = await sendRaidStatus("geöffnet");
   if(!ok) return;
@@ -3269,6 +3274,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=clearP0PlusForPlayer" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
