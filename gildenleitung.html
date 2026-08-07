@@ -5629,6 +5629,21 @@ body.worldbuff-only .master-only{display:none!important}
           <div><h3>PO-Anmelder</h3><span>Automatisch erstellte PO-Anmelder öffnen, prüfen und übertragen</span></div>
           <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Neu laden</button>
         </div>
+        <div class="po-signup-list-toolbar">
+          <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
+            <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
+            <button class="small-btn" type="button" data-po-signup-tier="20" onclick="setPoSignupListTierFilter('20')">20er</button>
+            <button class="small-btn" type="button" data-po-signup-tier="40" onclick="setPoSignupListTierFilter('40')">40er</button>
+          </div>
+          <div id="raidHelperPoSignupRaidTabs" class="po-signup-raid-tabs" aria-label="PO-Anmelder Raid-Auswahl"></div>
+        </div>
+        <div id="raidHelperPoSignupBulkActions" class="raid-bulk-actions" hidden>
+          <strong id="raidHelperPoSignupBulkSelectionText">0 PO-Anmelder ausgewählt</strong>
+          <div class="raid-bulk-action-buttons">
+            <button class="small-btn ghost" type="button" onclick="clearPoSignupSelection()">Auswahl aufheben</button>
+            <button class="small-btn danger" type="button" onclick="deleteSelectedPoSignups()">Ausgewählte löschen</button>
+          </div>
+        </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
     </div>
@@ -12219,10 +12234,23 @@ async function refreshRaidHelperPoSignupTab(){
 function renderRaidHelperPoSignupTab(){
   const box = document.getElementById("raidHelperPoSignupBox");
   if(!box) return;
-  const rows = raidHelperPoSignupRows();
+  renderPoSignupListFilters();
+  const rows = raidHelperPoSignupRows().filter(poSignupConfigMatchesListFilter);
+  const visibleKeys = new Set(rows.map(row => String(row.postKey || "")).filter(Boolean));
+  Array.from(selectedPoSignupPostKeys).forEach(key => {
+    if(!visibleKeys.has(key)) selectedPoSignupPostKeys.delete(key);
+  });
   if(!rows.length){
     raidHelperPoSignupSelectedPostKey = "";
-    box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
+    const emptyText = poSignupListRaidFilter
+      ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
+      : poSignupListTierFilter === "20"
+        ? "Keine 20er-PO-Anmelder gespeichert."
+        : poSignupListTierFilter === "40"
+          ? "Keine 40er-PO-Anmelder gespeichert."
+          : "Noch keine PO-Anmelder gespeichert.";
+    box.innerHTML = `<div class="muted">${escapeHtml(emptyText)}</div>`;
+    updatePoSignupBulkActions(rows);
     return;
   }
   const selectedStillExists = rows.some(row => String(row.postKey || "") === String(raidHelperPoSignupSelectedPostKey || ""));
@@ -12237,6 +12265,7 @@ function renderRaidHelperPoSignupTab(){
       </div>
     </div>
   `;
+  updatePoSignupBulkActions(rows);
   renderRaidHelperPoSignupDetail(raidHelperPoSignupSelectedPostKey);
 }
 
@@ -12246,6 +12275,7 @@ function renderRaidHelperPoSignupButton(row){
   const imageKey = raidKey.startsWith("zg-") ? "zg" : raidKey;
   const imageUrl = `images/raid-templates/${imageKey || "aq40"}.jpg`;
   const active = postKey === String(raidHelperPoSignupSelectedPostKey || "");
+  const selected = selectedPoSignupPostKeys.has(postKey);
   const count = Number(row.count || row.archivedCount || 0);
   const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
   return `
@@ -12256,6 +12286,7 @@ function renderRaidHelperPoSignupButton(row){
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
       </span>
       <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
+      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.title || postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="togglePoSignupSelection('${escapeAttr(postKey)}', this.checked)">
     </button>
   `;
 }
@@ -12317,8 +12348,10 @@ function renderRaidHelperPoSignupDetail(postKey){
 
 function openRaidHelperPoSignup(postKey){
   selectPoSignupForReview(postKey);
-  openDetailsPanel("poPostPanel");
-  document.getElementById("poPostPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  raidHelperPoSignupSelectedPostKey = String(postKey || "");
+  setRaidHelperTab("poSignup");
+  renderRaidHelperPoSignupTab();
+  document.getElementById("raidHelperPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 function togglePoSignupSelection(postKey, checked){
@@ -12327,6 +12360,7 @@ function togglePoSignupSelection(postKey, checked){
   if(checked) selectedPoSignupPostKeys.add(key);
   else selectedPoSignupPostKeys.delete(key);
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function toggleAllVisiblePoSignups(checked){
@@ -12340,20 +12374,26 @@ function toggleAllVisiblePoSignups(checked){
       else selectedPoSignupPostKeys.delete(key);
     });
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function clearPoSignupSelection(){
   selectedPoSignupPostKeys.clear();
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function updatePoSignupBulkActions(rows = []){
   const bar = document.getElementById("poSignupBulkActions");
   const text = document.getElementById("poSignupBulkSelectionText");
+  const helperBar = document.getElementById("raidHelperPoSignupBulkActions");
+  const helperText = document.getElementById("raidHelperPoSignupBulkSelectionText");
   const selectAll = document.getElementById("selectAllVisiblePoSignups");
   const count = selectedPoSignupPostKeys.size;
   if(bar) bar.hidden = count === 0;
   if(text) text.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
+  if(helperBar) helperBar.hidden = count === 0;
+  if(helperText) helperText.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
   if(selectAll){
     const keys = rows.map(row => String(row.postKey || "").trim()).filter(Boolean);
     const selected = keys.filter(key => selectedPoSignupPostKeys.has(key)).length;
@@ -12378,6 +12418,7 @@ async function deleteSelectedPoSignups(){
     selectedPoSignupPostKeys.delete(key);
   }
   await loadPoPostStoredEntries();
+  renderRaidHelperPoSignupTab();
   if(status){
     status.innerHTML = `<span class="good">Ausgewählte PO-Anmelder gelöscht.</span>`;
     status.className = "status good";
@@ -12426,12 +12467,14 @@ function setPoSignupListTierFilter(tier){
   poSignupListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
   poSignupListRaidFilter = "";
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function setPoSignupListRaidFilter(raid){
   const key = normalizePoSignupRaidKey(raid);
   poSignupListRaidFilter = poSignupListRaidFilter === key ? "" : key;
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function renderPoSignupListFilters(){
@@ -12439,14 +12482,16 @@ function renderPoSignupListFilters(){
     button.classList.toggle("primary", button.dataset.poSignupTier === poSignupListTierFilter);
     button.classList.toggle("ghost", button.dataset.poSignupTier !== poSignupListTierFilter);
   });
-  const box = document.getElementById("poSignupRaidTabs");
-  if(!box) return;
   const raidKeys = poSignupListRaidKeys();
   const allLabel = poSignupListTierFilter === "20" ? "Alle 20er" : poSignupListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
-  box.innerHTML = [
+  const markup = [
     `<button class="small-btn ${poSignupListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setPoSignupListRaidFilter('')">${allLabel}</button>`,
     ...raidKeys.map(raid => `<button class="small-btn ${poSignupListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoSignupListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
   ].join("");
+  ["poSignupRaidTabs","raidHelperPoSignupRaidTabs"].forEach(id => {
+    const box = document.getElementById(id);
+    if(box) box.innerHTML = markup;
+  });
 }
 
 async function runPoSignupRowAction(select, postKey){
