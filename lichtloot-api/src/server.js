@@ -15116,7 +15116,7 @@ async function getRaidHelper({ guildId, query: params }) {
        exists(
          select 1
          from prios pr
-         where pr.raid_id = $2
+         where pr.raid_id = any($1)
            and pr.character_id = rs.character_id
        ) as has_prio
      from raid_signups rs
@@ -15126,7 +15126,7 @@ async function getRaidHelper({ guildId, query: params }) {
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
-    [relatedRaidIds, raid.id]
+    [relatedRaidIds]
   );
 
   const externalResult = await query(
@@ -15137,15 +15137,15 @@ async function getRaidHelper({ guildId, query: params }) {
               from prios pr
               join characters c on c.id = pr.character_id
               join players p on p.id = c.player_id
-              where pr.raid_id = $2
+              where pr.raid_id = any($2)
                 and p.guild_id = $1
                 and lower(c.name) = lower(res.player_name)
             ) as has_prio
      from raid_external_signups res
      where res.guild_id = $1
-       and (res.raid_id = any($5) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
+       and (res.raid_id = any($2) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
      order by res.player_name asc`,
-    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date, relatedRaidIds]
+    [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
@@ -15172,7 +15172,10 @@ async function getRaidHelper({ guildId, query: params }) {
   for (const row of [...signups, ...externalSignups]) {
     row.poApprovalStatus = poApprovalByPlayer.get(clean(row.player || row.char).toLowerCase()) || "";
   }
-  const prioCountResult = await query("select count(*)::int as count from prios where raid_id = $1", [raid.id]);
+  const prioCountResult = await query(
+    "select count(*)::int as count from prios where raid_id = any($1)",
+    [relatedRaidIds]
+  );
   const prioCount = Number(prioCountResult.rows[0]?.count || 0);
   const signupCount = signups.length + externalSignups.length;
   const warnings = [];
