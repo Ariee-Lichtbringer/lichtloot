@@ -8570,24 +8570,25 @@ function initRaidHelperPanel(){
 
 async function loadRaidHelperDiscordMembers(){
   const masterCode=document.getElementById("masterCode")?.value.trim();
-  const selects=[document.getElementById("raidHelperNotifyMemberSelect"),document.getElementById("raidHelperAnnouncementNotifyMemberSelect")].filter(Boolean);
-  if(!selects.length) return;
+  const inputs=[document.getElementById("raidHelperNotifyMemberSelect"),document.getElementById("raidHelperAnnouncementNotifyMemberSelect")].filter(Boolean);
+  const lists=[document.getElementById("raidHelperStatusDiscordMembers"),document.getElementById("raidHelperAnnouncementDiscordMembers")].filter(Boolean);
+  if(!inputs.length) return;
   if(!masterCode){
-    selects.forEach(select=>select.innerHTML='<option value="">Nach Freischaltung werden die Discord-Namen geladen</option>');
+    inputs.forEach(input=>{input.placeholder="Nach Freischaltung werden die Discord-Namen geladen";input.disabled=true;});
     return;
   }
   try{
     const result=await railwayApi({action:"guildGetDiscordBotMembers",masterCode,t:Date.now()});
     raidHelperDiscordMembers=Array.isArray(result.members)?result.members:[];
-    const options=raidHelperDiscordMembers.length
-      ? raidHelperDiscordMembers.map(member=>`<option value="${escapeAttr(member.username)}">${escapeHtml(member.displayName||member.username)} · @${escapeHtml(member.username)}</option>`).join("")
-      : '<option value="">Keine Discord-Namen geladen – Bot neu starten</option>';
-    selects.forEach(select=>select.innerHTML='<option value="">Discord-Mitglied auswählen …</option>'+options);
+    const options=raidHelperDiscordMembers.map(member=>`<option value="${escapeAttr(member.username)}">${escapeHtml(member.displayName||member.username)} · @${escapeHtml(member.username)}</option>`).join("");
+    lists.forEach(list=>list.innerHTML=options);
+    inputs.forEach(input=>{input.disabled=false;input.placeholder=raidHelperDiscordMembers.length?"Discord-Mitglied suchen …":"Keine Discord-Namen geladen – Bot neu starten";});
     renderRaidHelperNotifyMemberTags();
     renderRaidHelperAnnouncementNotifyMemberTags();
   }catch(error){
     raidHelperDiscordMembers=[];
-    selects.forEach(select=>select.innerHTML='<option value="">Discord-Namen konnten nicht geladen werden</option>');
+    lists.forEach(list=>list.innerHTML="");
+    inputs.forEach(input=>{input.placeholder="Discord-Namen konnten nicht geladen werden";input.disabled=true;});
   }
 }
 
@@ -8595,14 +8596,18 @@ function raidHelperSelectedNames(fieldId){
   return [...new Set(raidHelperValue(fieldId).split(",").map(value=>value.trim()).filter(Boolean))];
 }
 
-function addRaidHelperNotifyMember(username){
-  const value=String(username||"").trim();
-  if(value){
+function addRaidHelperNotifyMember(username=""){
+  const input=document.getElementById("raidHelperNotifyMemberSelect");
+  const value=String(username||input?.value||"").trim();
+  const member=raidHelperDiscordMembers.find(item=>String(item.username).toLowerCase()===value.toLowerCase()||String(item.displayName||"").toLowerCase()===value.toLowerCase());
+  if(member){
     const field=document.getElementById("raidHelperNotifyNames");
-    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperNotifyNames"),value])].join(", ");
+    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperNotifyNames"),String(member.username)])].join(", ");
+  }else if(value){
+    setStatus("Bitte ein Mitglied aus der Discord-Liste auswählen.","bad");
+    return;
   }
-  const select=document.getElementById("raidHelperNotifyMemberSelect");
-  if(select) select.value="";
+  if(input) input.value="";
   renderRaidHelperNotifyMemberTags();
 }
 
@@ -8619,14 +8624,18 @@ function renderRaidHelperNotifyMemberTags(){
   box.innerHTML=names.length?names.map(name=>{const member=raidHelperDiscordMembers.find(item=>String(item.username).toLowerCase()===name.toLowerCase());return `<span class="raid-helper-role-tag">${escapeHtml(member?.displayName||name)} <small>@${escapeHtml(member?.username||name)}</small><button type="button" title="Mitglied entfernen" onclick="removeRaidHelperNotifyMember(decodeURIComponent('${encodeURIComponent(name)}'))">×</button></span>`;}).join(""):'<span class="muted">Noch kein Discord-Mitglied ausgewählt.</span>';
 }
 
-function addRaidHelperAnnouncementNotifyMember(username){
-  const value=String(username||"").trim();
-  if(value){
+function addRaidHelperAnnouncementNotifyMember(username=""){
+  const input=document.getElementById("raidHelperAnnouncementNotifyMemberSelect");
+  const value=String(username||input?.value||"").trim();
+  const member=raidHelperDiscordMembers.find(item=>String(item.username).toLowerCase()===value.toLowerCase()||String(item.displayName||"").toLowerCase()===value.toLowerCase());
+  if(member){
     const field=document.getElementById("raidHelperAnnouncementNotifyNames");
-    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperAnnouncementNotifyNames"),value])].join(", ");
+    if(field) field.value=[...new Set([...raidHelperSelectedNames("raidHelperAnnouncementNotifyNames"),String(member.username)])].join(", ");
+  }else if(value){
+    setStatus("Bitte ein Mitglied aus der Discord-Liste auswählen.","bad");
+    return;
   }
-  const select=document.getElementById("raidHelperAnnouncementNotifyMemberSelect");
-  if(select) select.value="";
+  if(input) input.value="";
   renderRaidHelperAnnouncementNotifyMemberTags();
 }
 
