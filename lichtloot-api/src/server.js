@@ -15398,10 +15398,13 @@ async function saveRaidSignup({ guildId, query: params }) {
     refreshQueued = Boolean(refresh?.success);
   }
 
+  const snapshotSignup = [...(snapshot?.signups || []), ...(snapshot?.externalSignups || [])]
+    .find(row => clean(row.player || row.char).toLowerCase() === clean(character.name).toLowerCase());
+
   return {
     success: true,
     raid: snapshot?.raid || normalizeRaidRow(raid),
-    signup: normalizeRaidSignupRow({
+    signup: snapshotSignup || normalizeRaidSignupRow({
       ...result.rows[0],
       player_name: character.name,
       server: character.server,
