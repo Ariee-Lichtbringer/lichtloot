@@ -18986,6 +18986,38 @@ async function setPlayerLoginApproved({ guildId, query: params }) {
   const playerId = clean(params.playerId || params.player_id || params.id);
   const playerPin = normalizePin(params.playerPin || params.pin);
   const approvedBy = clean(params.approvedBy || params.by) || "Gildenleitung";
+  const selectorValues = [guildId];
+  const selectorClauses = [];
+
+  if (playerId) {
+    selectorValues.push(playerId);
+    selectorClauses.push(`id::text = $${selectorValues.length}`);
+  }
+
+  if (playerPin) {
+    selectorValues.push(playerPin);
+    selectorClauses.push(`player_pin = $${selectorValues.length}`);
+  }
+
+  if (!selectorClauses.length) {
+    const error = new Error("SpielerLogin fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const previousResult = await query(
+    `select id, approval_status
+     from players
+     where guild_id = $1 and (${selectorClauses.join(" or ")})
+     limit 1`,
+    selectorValues
+  );
+  if (!previousResult.rows.length) {
+    const error = new Error("SpielerLogin wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const wasApproved = normalizePlayerApprovalStatus(previousResult.rows[0].approval_status) === "approved";
   const values = [guildId, approvedBy];
   const clauses = [];
 
@@ -19023,6 +19055,58 @@ async function setPlayerLoginApproved({ guildId, query: params }) {
     throw error;
   }
 
+  let notificationQueued = false;
+  let notificationReason = wasApproved ? "already_approved" : "discord_not_linked";
+  if (!wasApproved) {
+    const recipientResult = await query(
+      `select g.slug as guild_slug, g.name as guild_name,
+              c.name as character_name, c.server, c.class_name,
+              link.discord_user_id, link.discord_name
+       from players p
+       join guilds g on g.id = p.guild_id
+       left join lateral (
+         select c.*
+         from characters c
+         where c.player_id = p.id
+         order by coalesce(c.is_main, false) desc, c.created_at asc, c.name asc
+         limit 1
+       ) c on true
+       left join lateral (
+         select dpl.discord_user_id, dpl.discord_name
+         from discord_player_links dpl
+         join characters linked_char on linked_char.id = dpl.character_id
+         where dpl.guild_id = p.guild_id and linked_char.player_id = p.id
+         order by dpl.updated_at desc, dpl.created_at desc
+         limit 1
+       ) link on true
+       where p.guild_id = $1 and p.id = $2
+       limit 1`,
+      [guildId, result.rows[0].id]
+    );
+    const recipient = recipientResult.rows[0] || {};
+    if (clean(recipient.discord_user_id)) {
+      const queuedNotice = await enqueueBotUpdate({
+        guildId,
+        type: "player_login_granted_notice",
+        payload: {
+          guildSlug: recipient.guild_slug || "",
+          guildName: recipient.guild_name || recipient.guild_slug || "",
+          character: recipient.character_name || "",
+          server: recipient.server || "",
+          className: recipient.class_name || "",
+          discordUserId: recipient.discord_user_id,
+          discordName: recipient.discord_name || "",
+          createdAt: new Date().toISOString()
+        }
+      }).catch(error => {
+        console.warn("SpielerLogin-Freigabe-DM konnte nicht vorgemerkt werden:", error.message || error);
+        return { success: false };
+      });
+      notificationQueued = Boolean(queuedNotice?.success);
+      notificationReason = notificationQueued ? "queued" : "queue_failed";
+    }
+  }
+
   return {
     success: true,
     playerId: result.rows[0].id,
@@ -19036,7 +19120,9 @@ async function setPlayerLoginApproved({ guildId, query: params }) {
     approvedBy: result.rows[0].approved_by || "",
     isBlocked: Boolean(result.rows[0].is_blocked),
     blockedAt: result.rows[0].blocked_at || null,
-    blockedReason: result.rows[0].blocked_reason || ""
+    blockedReason: result.rows[0].blocked_reason || "",
+    notificationQueued,
+    notificationReason
   };
 }
 
