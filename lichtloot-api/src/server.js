@@ -6798,6 +6798,72 @@ async function resolvePoPostPlayerName(client, guildId, entry) {
   return clean(linked.rows[0]?.name) || fallback;
 }
 
+async function linkDiscordUserToPlayer(client, guildId, discordUserId, discordName, character) {
+  const userId = clean(discordUserId);
+  if (!userId || !character?.id || !character?.player_id) return;
+  // Eine Discord-ID darf innerhalb einer Gilde nur zu genau einem
+  // SpielerLogin gehören. Charaktere desselben SpielerLogins bleiben erlaubt.
+  await client.query(
+    `delete from discord_player_links dpl
+     using characters linked_character
+     where dpl.character_id = linked_character.id
+       and dpl.guild_id = $1
+       and dpl.discord_user_id = $2
+       and linked_character.player_id <> $3`,
+    [guildId, userId, character.player_id]
+  );
+  await client.query(
+    `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
+     values ($1,$2,$3,$4,'spielerlogin')
+     on conflict (guild_id, discord_user_id, character_id) do update
+       set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
+           source = 'spielerlogin',
+           updated_at = now()`,
+    [guildId, userId, character.id, clean(discordName)]
+  );
+}
+
+async function getPoLinkedCharacters({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const discordUserId = clean(params.discordUserId || params.userId);
+  if (!discordUserId) return { success: true, linked: false, characters: [] };
+  const linkedPlayer = await query(
+    `select c.player_id, max(dpl.updated_at) as linked_at
+     from discord_player_links dpl
+     join characters c on c.id = dpl.character_id
+     join players p on p.id = c.player_id
+     where dpl.guild_id = $1
+       and dpl.discord_user_id = $2
+       and p.guild_id = $1
+     group by c.player_id
+     order by linked_at desc
+     limit 1`,
+    [guildId, discordUserId]
+  );
+  const playerId = linkedPlayer.rows[0]?.player_id;
+  if (!playerId) return { success: true, linked: false, characters: [] };
+  const result = await query(
+    `select c.name, c.server, c.class_name, p.player_pin
+     from characters c
+     join players p on p.id = c.player_id
+     where c.player_id = $1
+       and p.guild_id = $2
+       and coalesce(p.approval_status, 'approved') = 'approved'
+     order by coalesce(c.is_main, false) desc, c.created_at asc, lower(c.name)`,
+    [playerId, guildId]
+  );
+  return {
+    success: true,
+    linked: true,
+    characters: result.rows.map(row => ({
+      name: row.name || "",
+      server: row.server || "",
+      className: row.class_name || "",
+      playerPin: row.player_pin || ""
+    }))
+  };
+}
+
 async function savePoPostEntries({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -8104,14 +8170,7 @@ async function savePoPostEntry({ guildId, query: params }) {
       itemSlot = itemSlot || clean(itemDetail.rows[0]?.slot);
       itemBoss = itemBoss || clean(itemDetail.rows[0]?.boss);
     }
-    await client.query(
-      `insert into discord_player_links (guild_id, discord_user_id, character_id, discord_name, source)
-       values ($1, $2, $3, $4, 'discord-po')
-       on conflict (guild_id, discord_user_id, character_id) do update
-         set discord_name = coalesce(nullif(excluded.discord_name, ''), discord_player_links.discord_name),
-             updated_at = now()`,
-      [guildId, discordUserId, character.id, discordName]
-    );
+    await linkDiscordUserToPlayer(client, guildId, discordUserId, discordName, character);
     const existingEntries = await client.query(
       `select *
        from po_post_entries
@@ -15296,6 +15355,15 @@ async function saveRaidSignup({ guildId, query: params }) {
   const discordUserId = clean(params.discordUserId);
   const discordName = clean(params.discordName);
 
+  if (discordUserId) {
+    const linkClient = await pool.connect();
+    try {
+      await linkDiscordUserToPlayer(linkClient, guildId, discordUserId, discordName, character);
+    } finally {
+      linkClient.release();
+    }
+  }
+
   const relatedRaidResult = await query(
     `select id
      from raids
@@ -20652,6 +20720,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...context, guild: guild.slug });
     }
 
+    if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
+      const linked = await getPoLinkedCharacters({ guildId: guild.id, query: req.query });
+      return res.json({ ...linked, guild: guild.slug });
+    }
+
     if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
       const list = await getP0DiscordSignupList({ guildId: guild.id, query: req.query });
       return res.json({ ...list, guild: guild.slug });
@@ -21195,6 +21268,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
       const context = await getP0DiscordSignupContext({ guildId: guild.id, query: postParams });
       return res.json({ ...context, guild: guild.slug });
+    }
+
+    if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
+      const linked = await getPoLinkedCharacters({ guildId: guild.id, query: postParams });
+      return res.json({ ...linked, guild: guild.slug });
     }
 
     if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
