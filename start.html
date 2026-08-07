@@ -1345,6 +1345,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .dashboard-mini-link{width:100%;min-height:38px;margin-top:8px;border-radius:6px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:#facc15;font-weight:950;cursor:pointer;text-align:left;padding:8px 10px}
 
 .dashboard-worldbuff-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);color:#f8fafc;font-weight:850}
+.dashboard-worldbuff-icon{width:27px;height:27px;border-radius:5px;object-fit:cover;border:1px solid rgba(255,255,255,.20);box-shadow:0 3px 10px rgba(0,0,0,.38)}
 .dashboard-worldbuff-dot{width:10px;height:10px;border-radius:999px;background:#facc15;box-shadow:0 0 12px rgba(250,204,21,.45)}
 .dashboard-worldbuff-dot.hakkar{background:#22c55e}.dashboard-worldbuff-dot.ony,.dashboard-worldbuff-dot.nef{background:#ef4444}.dashboard-worldbuff-dot.rend{background:#f59e0b}
 .dashboard-worldbuff-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dashboard-worldbuff-time{color:#86efac;font-weight:950;white-space:nowrap}
@@ -4795,9 +4796,10 @@ async function loadDashboardWorldbuffs(){
   }
   box.innerHTML=list.map(entry=>{
     const meta=[entry.gilde,entry.charakter ? "Werfer: "+entry.charakter : "",entry.source].filter(Boolean).join(" · ");
+    const icon=dashboardBuffIconName(entry.buff);
     return '<div class="dashboard-worldbuff-row">' +
-      '<span class="dashboard-worldbuff-dot '+dashboardBuffClass(entry.buff)+'"></span>' +
-      '<span class="dashboard-worldbuff-name">'+safeHtml(entry.buff || "Buff")+'</span>' +
+      '<img class="dashboard-worldbuff-icon" src="'+safeAttr(getIconUrl(icon))+'" alt="" loading="lazy" onerror="iconFallback(this)">' +
+      '<span class="dashboard-worldbuff-name">'+safeHtml(dashboardBuffDisplayName(entry.buff) || entry.buff || "Buff")+'</span>' +
       '<span class="dashboard-worldbuff-time">'+safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))+'</span>' +
       '<div class="dashboard-worldbuff-meta">'+safeHtml([formatRaidDateForDisplay(entry.datum),meta].filter(Boolean).join(' · '))+'</div>' +
     '</div>';
