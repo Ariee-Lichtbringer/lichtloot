@@ -17781,7 +17781,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [raidTypeSearchValues(raidType), itemName]
       );
     }
-    const item = itemResult.rows[0];
+    const item = itemResult.rows[0] || await upsertItem(client, raidType, itemName);
     let deleted = 0;
     let oldPoints = 0;
     if (item) {
@@ -17793,23 +17793,24 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
         [guildId, character.id, item.id]
       );
       deleted = result.rowCount;
-      if (deleted || oldPoints) {
-        await insertP0PlusAudit(client, {
-          guildId,
-          characterId: character.id,
-          itemId: item.id,
-          raidId: receivedRaidId,
-          raidType,
-          playerName: character.name || player,
-          server: character.server || server,
-          itemName: item.name || itemName,
-          oldPoints,
-          newPoints: 0,
-          action: "item_received_clear",
-          source: "PO item erhalten",
-          note: "PO+ Eintrag entfernt, weil Item erhalten wurde."
-        });
-      }
+      // Der Erhalt muss auch dann protokolliert werden, wenn vor dem Transfer
+      // noch kein PO+-Punkt existiert. Dieser Audit-Eintrag sperrt den Spieler
+      // beim anschliessenden Transfer fuer genau diesen Raid.
+      await insertP0PlusAudit(client, {
+        guildId,
+        characterId: character.id,
+        itemId: item.id,
+        raidId: receivedRaidId,
+        raidType,
+        playerName: character.name || player,
+        server: character.server || server,
+        itemName: item.name || itemName,
+        oldPoints,
+        newPoints: 0,
+        action: "item_received_clear",
+        source: "PO item erhalten",
+        note: "Kein PO+-Punkt fuer diesen Raid, weil das PO-Item erhalten wurde."
+      });
     }
     await client.query("commit");
     return { success: true, deleted };
