@@ -5158,6 +5158,38 @@ async function queueBotUpdate({ guildId, query: params }) {
 async function enqueueBotUpdate({ guildId, type, payload }) {
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
+  if (type === "raid_announcement") {
+    const raidId = clean(payload?.raidId || "");
+    if (!raidId) {
+      return { success: false, skipped: true, reason: "raid_announcement_missing_raid_id", type, payload: payload || {} };
+    }
+    const fromSchedule = clean(payload?.source) === "raid_helper_schedule";
+    const existing = await query(
+      `select id, status, payload
+       from bot_update_queue
+       where guild_id = $1
+         and type = $2
+         and payload->>'raidId' = $3
+         and (
+           status in ('open', 'processing')
+           or ($4::boolean and status = 'done')
+           or (not $4::boolean and status = 'done' and coalesce(resolved_at, created_at) > now() - interval '2 minutes')
+         )
+       order by created_at desc
+       limit 1`,
+      [guildId, type, raidId, fromSchedule]
+    );
+    if (existing.rows[0]) {
+      return {
+        success: true,
+        skipped: true,
+        reason: fromSchedule ? "scheduled_raid_announcement_already_queued" : "raid_announcement_recently_queued",
+        rowNumber: existing.rows[0].id,
+        type,
+        payload: existing.rows[0].payload || payload || {}
+      };
+    }
+  }
   if (type === "po_release_request_notice" && clean(payload?.requestId)) {
     const existing = await query(
       `select id
@@ -5856,6 +5888,17 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
       }
     });
 
+    const createdRaid = {
+      ...created,
+      raidId: externalRaidId,
+      raid: created.raid || schedule.raid_type,
+      raidName: created.raidName || created.name || schedule.title,
+      raidDate: created.raidDate || nextDateIso,
+      raidTime: created.raidTime || schedule.raid_time,
+      createdBy: created.createdBy || schedule.created_by || "Gildenleitung",
+      discordChannelId: created.discordChannelId || schedule.discord_channel_id || ""
+    };
+
     await query(
       `update raid_helper_schedules
        set next_raid_date = $2,
@@ -5874,8 +5917,16 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         type: "raid_announcement",
         payload: {
           raidId: externalRaidId,
+          playerPin: created.playerPin || created.raidPin || "",
+          prioPin: created.playerPin || created.raidPin || "",
+          raid: createdRaid.raid,
+          raidName: createdRaid.raidName,
+          raidDate: createdRaid.raidDate,
+          raidTime: createdRaid.raidTime,
+          createdBy: createdRaid.createdBy,
           channelId: schedule.discord_channel_id,
           discordChannelId: schedule.discord_channel_id,
+          raidSnapshot: createdRaid,
           source: "raid_helper_schedule"
         }
       }).catch(error => console.warn("Geplanter Raid-Anmelder konnte nicht queued werden:", error.message || error));
