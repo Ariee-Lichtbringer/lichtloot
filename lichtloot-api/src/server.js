@@ -2770,6 +2770,7 @@ async function ensureBuffTables() {
        updated_at timestamptz not null default now()
      )`
   );
+  await query(`alter table hordenbuff_events add column if not exists rend_caster text`);
   await query(
     `create table if not exists worldbuff_events (
        id uuid primary key default gen_random_uuid(),
@@ -2964,6 +2965,7 @@ function normalizeHordenbuffRow(row) {
     gilde: row.faction || "Horde",
     charakter: row.ally_char || "",
     uebernehmer: row.horde_char || "",
+    rendwerfer: row.rend_caster || "",
     status: row.entry_status || row.event_status || "offen",
     note: row.entry_note || row.event_note || "",
     notiz: row.entry_note || row.event_note || "",
@@ -4957,7 +4959,7 @@ async function syncExternalRendSheet(guildId) {
     await client.query("begin");
     for (const row of upcoming) {
       const existing = await client.query(
-        `select id, note
+        `select id, note, rend_caster
          from hordenbuff_events
          where guild_id = $1 and lower(buff) = 'rend'
            and event_date = $2 and event_time = '19:35'
@@ -4978,22 +4980,31 @@ async function syncExternalRendSheet(guildId) {
         if (!event) {
           const created = await client.query(
             `insert into hordenbuff_events
-               (guild_id, buff, event_date, event_time, faction, status, note)
-             values ($1, 'Rend', $2, '19:35', 'Horde', 'bestätigt', $3)
+               (guild_id, buff, event_date, event_time, faction, status, note, rend_caster)
+             values ($1, 'Rend', $2, '19:35', 'Horde', 'offen', $3, $4)
              on conflict (guild_id, buff, event_date, event_time) do update
-               set updated_at = now()
-             returning id, note`,
-            [guildId, row.eventDate, sourceNote]
+               set rend_caster = excluded.rend_caster,
+                   updated_at = now()
+             returning id, note, rend_caster`,
+            [guildId, row.eventDate, sourceNote, row.caster]
           );
           event = created.rows[0];
+        } else {
+          await client.query(
+            `update hordenbuff_events
+             set rend_caster = $2, updated_at = now()
+             where id = $1`,
+            [event.id, row.caster]
+          );
         }
+      } else if (event) {
         await client.query(
-          `insert into hordenbuff_entries
-             (event_id, ally_char, horde_char, status, note, source)
-           values ($1, $2, '', 'bestätigt', $3, $4)`,
-          [event.id, row.caster, sourceNote, source]
+          `update hordenbuff_events
+           set rend_caster = null, updated_at = now()
+           where id = $1`,
+          [event.id]
         );
-      } else if (event && clean(event.note) === sourceNote) {
+        if (clean(event.note) !== sourceNote) continue;
         await client.query(
           `delete from hordenbuff_events
            where id = $1
@@ -5027,7 +5038,7 @@ async function getHordenbuffs({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.faction,
+    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.faction, e.rend_caster,
             e.status as event_status, e.note as event_note,
             he.id as entry_id, he.ally_char, he.horde_char,
             he.status as entry_status, he.note as entry_note, he.source
