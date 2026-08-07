@@ -477,6 +477,19 @@ function resolveGuildSlug(value) {
   ) {
     return "lichtloot";
   }
+  if (
+    [
+      "nachtloot",
+      "nachtwachter",
+      "nachtwaechter",
+      "die-nachtwachter",
+      "die-nachtwaechter",
+      "nachtwachter-loot",
+      "nachtwaechter-loot"
+    ].includes(slug)
+  ) {
+    return "nachtloot";
+  }
   return slug;
 }
 
