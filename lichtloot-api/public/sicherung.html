@@ -189,6 +189,21 @@
 
     .section:first-of-type { border-top: 0; }
 
+    .raid-search {
+      display: grid;
+      grid-template-columns: minmax(0, 560px) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(10, 11, 18, 0.4);
+    }
+
+    .raid-search input { min-height: 38px; }
+    .raid-search-count { color: var(--muted); font-size: 12px; }
+    .raid-search-empty { display: none; color: var(--gold); font-size: 12px; font-weight: 800; }
+    .raid-search-empty.visible { display: block; }
+
     h2 {
       margin: 0 0 10px;
       font-size: 16px;
@@ -229,6 +244,12 @@
     .muted { color: var(--muted); }
     .p0 { color: var(--green); font-weight: 900; }
     .item { color: var(--violet); }
+    .class-row td:first-child { box-shadow: inset 3px 0 0 var(--class-color, var(--line)); }
+    .class-player,
+    .class-name { color: var(--class-color, var(--text)); font-weight: 900; }
+    .item-stack { display: grid; gap: 4px; white-space: normal; }
+    .item-name { color: var(--violet); font-weight: 800; }
+    .p0-points { display: inline-flex; width: fit-content; padding: 2px 7px; border: 1px solid rgba(115, 211, 154, 0.4); border-radius: 999px; background: rgba(115, 211, 154, 0.1); color: var(--green); font-size: 11px; font-weight: 900; }
     .empty { color: var(--muted); padding: 12px; }
 
     @media (max-width: 900px) {
@@ -236,6 +257,7 @@
       header { display: block; }
       .toolbar { grid-template-columns: 1fr; }
       .raid-head { grid-template-columns: 1fr; }
+      .raid-search { grid-template-columns: 1fr; }
       .raid-title { font-size: 18px; }
       button { width: 100%; }
     }
@@ -324,7 +346,22 @@
       return parts.filter(Boolean).map(escapeHtml).join(" ");
     }
 
-    function renderPrios(prios) {
+    function searchableText(...values) {
+      return values.flat().filter(value => value !== null && value !== undefined).join(" ").toLocaleLowerCase("de-DE");
+    }
+
+    function classColor(className) {
+      const key = String(className || "").trim().toLocaleLowerCase("de-DE");
+      return ({krieger:"#c79c6e",warrior:"#c79c6e",paladin:"#f58cba",schurke:"#fff569",rogue:"#fff569",jäger:"#abd473",jaeger:"#abd473",hunter:"#abd473",druide:"#ff7d0a",druid:"#ff7d0a",priester:"#ffffff",priest:"#ffffff",magier:"#69ccf0",mage:"#69ccf0",hexenmeister:"#9482c9",warlock:"#9482c9",schamane:"#0070de",shaman:"#0070de"})[key] || "#aaa5b8";
+    }
+
+    function p0PointsFor(prio, transfers) {
+      const player = String(prio.player || "").trim().toLocaleLowerCase("de-DE");
+      const item = String(prio.p0Item || "").trim().toLocaleLowerCase("de-DE");
+      return transfers.filter(row => String(row.player || "").trim().toLocaleLowerCase("de-DE") === player && (!item || String(row.item || "").trim().toLocaleLowerCase("de-DE") === item)).reduce((sum, row) => sum + (Number(row.points) || 0), 0);
+    }
+
+    function renderPrios(prios, transfers = []) {
       if (!prios.length) return '<div class="empty">Keine Prios gespeichert.</div>';
       return `
         <div class="table-wrap">
@@ -341,17 +378,17 @@
               </tr>
             </thead>
             <tbody>
-              ${prios.map(row => `
-                <tr>
-                  <td>${rowText(row.player, row.server ? `(${row.server})` : "")}</td>
-                  <td>${escapeHtml(row.className || "")}</td>
+              ${prios.map(row => { const points = p0PointsFor(row, transfers); return `
+                <tr class="backup-data-row class-row" style="--class-color:${classColor(row.className)}" data-search="${escapeHtml(searchableText(row.player, row.server, row.className, row.p1, row.p2, row.p3, row.p0Plus, row.p0Item, points, row.bench))}">
+                  <td><span class="class-player">${escapeHtml(row.player || "")}</span>${row.server ? ` <span class="muted">(${escapeHtml(row.server)})</span>` : ""}</td>
+                  <td><span class="class-name">${escapeHtml(row.className || "")}</span></td>
                   <td class="item">${escapeHtml(row.p1 || "")}</td>
                   <td class="item">${escapeHtml(row.p2 || "")}</td>
                   <td class="item">${escapeHtml(row.p3 || "")}</td>
-                  <td>${String(row.p0Plus || "").toLowerCase() === "ja" ? `<span class="p0">Ja</span>${row.p0Item ? ` <span class="muted">${escapeHtml(row.p0Item)}</span>` : ""}` : '<span class="muted">Nein</span>'}</td>
+                  <td>${String(row.p0Plus || "").toLowerCase() === "ja" ? `<div class="item-stack"><span class="p0">Ja</span>${row.p0Item ? `<span class="item-name">${escapeHtml(row.p0Item)}</span>` : ""}${points ? `<span class="p0-points">${escapeHtml(points)} P0+ ${points === 1 ? "Punkt" : "Punkte"}</span>` : ""}</div>` : '<span class="muted">Nein</span>'}</td>
                   <td>${escapeHtml(row.bench || "")}</td>
                 </tr>
-              `).join("")}
+              `}).join("")}
             </tbody>
           </table>
         </div>
@@ -368,18 +405,16 @@
                 <th>Spieler</th>
                 <th>Klasse</th>
                 <th>Item</th>
-                <th>Punkte</th>
                 <th>Quelle</th>
                 <th>Gesichert</th>
               </tr>
             </thead>
             <tbody>
               ${rows.map(row => `
-                <tr>
-                  <td>${rowText(row.player, row.server ? `(${row.server})` : "")}</td>
-                  <td>${escapeHtml(row.className || "")}</td>
-                  <td class="item">${escapeHtml(row.item || "")}</td>
-                  <td>${escapeHtml(row.points || "")}</td>
+                <tr class="backup-data-row class-row" style="--class-color:${classColor(row.className)}" data-search="${escapeHtml(searchableText(row.player, row.server, row.className, row.item, row.points, row.source, formatDate(row.createdAt)))}">
+                  <td><span class="class-player">${escapeHtml(row.player || "")}</span>${row.server ? ` <span class="muted">(${escapeHtml(row.server)})</span>` : ""}</td>
+                  <td><span class="class-name">${escapeHtml(row.className || "")}</span></td>
+                  <td><div class="item-stack"><span class="item-name">${escapeHtml(row.item || "")}</span><span class="p0-points">${escapeHtml(row.points || 0)} P0+ ${Number(row.points) === 1 ? "Punkt" : "Punkte"}</span></div></td>
                   <td>${escapeHtml(row.source || "")}</td>
                   <td class="muted">${escapeHtml(formatDate(row.createdAt))}</td>
                 </tr>
@@ -400,7 +435,7 @@
         return;
       }
 
-      raidsEl.innerHTML = raids.map(raid => `
+      raidsEl.innerHTML = raids.map((raid, raidIndex) => `
         <article class="raid">
           <div class="raid-head">
             <div>
@@ -422,9 +457,14 @@
               <span class="badge green">${escapeHtml(raid.p0PlusTransferCount || 0)} P0+ Punkte</span>
             </div>
           </div>
+          <div class="raid-search">
+            <input class="raid-search-input" type="search" autocomplete="off" placeholder="🔎 Spieler, Charakter, Klasse oder Item suchen …" aria-label="Diesen Raid durchsuchen">
+            <span class="raid-search-count" data-total="${(raid.prios || []).length + (raid.p0PlusTransfers || []).length}">Alle Einträge sichtbar</span>
+            <span class="raid-search-empty">Keine passenden Einträge in diesem Raid gefunden.</span>
+          </div>
           <div class="section">
             <h2>Prioliste</h2>
-            ${renderPrios(raid.prios || [])}
+            ${renderPrios(raid.prios || [], raid.p0PlusTransfers || [])}
           </div>
           <div class="section">
             <h2>P0+ dieses Raids</h2>
@@ -433,6 +473,24 @@
         </article>
       `).join("");
     }
+
+    raidsEl.addEventListener("input", event => {
+      const input = event.target.closest(".raid-search-input");
+      if (!input) return;
+      const raid = input.closest(".raid");
+      const query = input.value.trim().toLocaleLowerCase("de-DE");
+      const rows = [...raid.querySelectorAll(".backup-data-row")];
+      let visible = 0;
+      rows.forEach(row => {
+        const matches = !query || (row.dataset.search || "").includes(query);
+        row.hidden = !matches;
+        if (matches) visible += 1;
+      });
+      const count = raid.querySelector(".raid-search-count");
+      const empty = raid.querySelector(".raid-search-empty");
+      if (count) count.textContent = query ? `${visible} passende Einträge` : "Alle Einträge sichtbar";
+      if (empty) empty.classList.toggle("visible", Boolean(query) && visible === 0);
+    });
 
     async function loadBackup(event) {
       event.preventDefault();
