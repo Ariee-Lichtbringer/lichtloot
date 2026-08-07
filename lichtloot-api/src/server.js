@@ -15105,8 +15105,9 @@ async function getRaidHelper({ guildId, query: params }) {
        exists(
          select 1
          from prios pr
+         join characters prio_character on prio_character.id = pr.character_id
          where pr.raid_id = any($1)
-           and pr.character_id = rs.character_id
+           and prio_character.player_id = c.player_id
        ) as has_prio
      from raid_signups rs
      join characters c on c.id = rs.character_id
@@ -15187,6 +15188,66 @@ async function getRaidHelper({ guildId, query: params }) {
   };
 }
 
+async function deletePoEntriesAfterRaidSignupChange({ guildId, raid, playerId, discordUserId = "", source = "raid_signup_changed" }) {
+  await ensurePoPostEntriesSchema();
+  const charactersResult = await query(
+    `select c.name
+     from characters c
+     where c.player_id = $1`,
+    [playerId]
+  );
+  const characterNames = charactersResult.rows.map(row => clean(row.name)).filter(Boolean);
+  const relatedRaidsResult = await query(
+    `select id, raid_pin, external_raid_id
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+  const raidKeys = [...new Set(relatedRaidsResult.rows.flatMap(row => [row.id, row.raid_pin, row.external_raid_id]).map(clean).filter(Boolean))];
+  if (!raidKeys.length || (!characterNames.length && !clean(discordUserId))) return { deleted: 0, queued: 0 };
+
+  const result = await query(
+    `delete from po_post_entries
+     where guild_id = $1
+       and archived_at is null
+       and raid_pin = any($2)
+       and (
+         ($3 <> '' and discord_user_id = $3)
+         or lower(player_name) = any($4)
+       )
+     returning *`,
+    [guildId, raidKeys, clean(discordUserId), characterNames.map(name => name.toLowerCase())]
+  );
+
+  const payloads = new Map();
+  for (const row of result.rows || []) {
+    await deletePoSignupPrioForEntry(guildId, row).catch(error => {
+      console.warn("PO-Prio konnte nach Änderung der Raidanmeldung nicht gelöscht werden:", error.message || error);
+    });
+    const key = [row.post_key, row.source_channel_id, row.target_channel_id].join("|");
+    payloads.set(key, {
+      postKey: row.post_key || "",
+      sourceChannelId: row.source_channel_id || "",
+      targetChannelId: row.target_channel_id || row.source_channel_id || "",
+      messageId: row.discord_message_id || "",
+      discordMessageId: row.discord_message_id || "",
+      raid: row.raid || raid.raid_type || "",
+      raidPin: row.raid_pin || raid.raid_pin || "",
+      prioPin: row.raid_pin || raid.raid_pin || "",
+      title: row.title || "PO Liste",
+      source,
+      queuedAt: new Date().toISOString()
+    });
+  }
+  for (const payload of payloads.values()) {
+    await enqueueBotUpdate({ guildId, type: "po_post", payload })
+      .catch(error => console.warn("PO-Anmelder konnte nach Änderung der Raidanmeldung nicht aktualisiert werden:", error.message || error));
+  }
+  return { deleted: result.rowCount || 0, queued: payloads.size };
+}
+
 async function saveRaidSignup({ guildId, query: params }) {
   const raid = await findRaid(guildId, params);
   if (!raid) {
@@ -15231,6 +15292,26 @@ async function saveRaidSignup({ guildId, query: params }) {
     [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+
+  const previousSignup = await query(
+    `select rs.character_id
+     from raid_signups rs
+     join characters c on c.id = rs.character_id
+     where rs.raid_id = any($1)
+       and c.player_id = $2
+       and rs.character_id <> $3
+     limit 1`,
+    [relatedRaidIds, character.player_id, character.id]
+  );
+  if (previousSignup.rows[0]) {
+    await deletePoEntriesAfterRaidSignupChange({
+      guildId,
+      raid,
+      playerId: character.player_id,
+      discordUserId,
+      source: "raid_signup_character_changed"
+    });
+  }
 
   // Pro Raid darf ein SpielerLogin nur genau einen Charakter anmelden.
   // Ein Wechsel des Charakters ersetzt deshalb die bisherige Anmeldung.
@@ -15352,12 +15433,30 @@ async function deleteRaidSignup({ guildId, query: params }) {
     throw error;
   }
 
+  const poCleanup = await deletePoEntriesAfterRaidSignupChange({
+    guildId,
+    raid,
+    playerId: character.player_id,
+    discordUserId: clean(params.discordUserId),
+    source: "raid_signup_deleted"
+  });
+
+  const relatedRaidResult = await query(
+    `select id
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+
   const result = await query(
     `delete from raid_signups
-     where raid_id = $1 and character_id = $2`,
-    [raid.id, character.id]
+     where raid_id = any($1) and character_id = $2`,
+    [relatedRaidIds, character.id]
   );
-  return { success: true, deleted: result.rowCount };
+  return { success: true, deleted: result.rowCount, poDeleted: poCleanup.deleted, poRefreshQueued: poCleanup.queued };
 }
 
 async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
@@ -15766,6 +15865,16 @@ async function getPublishedPrios({ guildId, query: params }) {
     return { success: true, prios: [], published: false, status: "geschlossen" };
   }
 
+  const relatedRaidResult = await query(
+    `select id
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+
   const result = await query(
     `select
        pr.id,
@@ -15787,9 +15896,9 @@ async function getPublishedPrios({ guildId, query: params }) {
      left join items i1 on i1.id = pr.p1_item_id
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
-     where pr.raid_id = $1
+     where pr.raid_id = any($1)
      order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
-    [raid.id]
+    [relatedRaidIds]
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
