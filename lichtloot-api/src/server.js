@@ -23,6 +23,9 @@ const worldbuffPublicCsvUrl =
 const worldbuffTickerCsvUrl =
   process.env.WORLDBUFF_TICKER_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1o7fzOAn9wC0iWcauC3bDo2RYR8kZ1xQMjkvSi1lJG8Q/gviz/tq?tqx=out:csv&gid=0";
+const externalRendCsvUrl =
+  process.env.EXTERNAL_REND_CSV_URL ||
+  "https://docs.google.com/spreadsheets/d/1ZOGgQ6RrtJZ96vrhhA6QeFt8wYH5GCO0t7X0nVm9zYc/export?format=csv&gid=2046260998";
 const p0ReleaseCsvUrl =
   process.env.P0_RELEASE_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1ejape-5N42TDUIsglYZV1uPupQxYMiUK6JE1QiPJKbE/export?format=csv&gid=0";
@@ -35,6 +38,8 @@ let p0ReleaseCache = null;
 let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
 let warcraftLogsNextRequestAt = 0;
+const externalRendSyncCache = new Map();
+const EXTERNAL_REND_SYNC_TTL_MS = 5 * 60 * 1000;
 
 const defaultAllowedOrigins = [
   "https://lichtloot.de",
@@ -4915,7 +4920,103 @@ async function upsertHordenbuffEvent(client, guildId, params) {
   return result.rows[0];
 }
 
+function parseExternalRendDate(value) {
+  const match = clean(value).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (!match) return "";
+  return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+}
+
+async function syncExternalRendSheet(guildId) {
+  const cacheKey = String(guildId || "");
+  const cachedUntil = Number(externalRendSyncCache.get(cacheKey) || 0);
+  if (cachedUntil > Date.now()) return { success: true, cached: true };
+
+  const response = await fetch(externalRendCsvUrl, {
+    headers: { accept: "text/csv" },
+    signal: AbortSignal.timeout(12000)
+  });
+  if (!response.ok) throw new Error(`Rend-Sheet nicht erreichbar (${response.status}).`);
+
+  const rows = parseCsvRows(await response.text())
+    .map(row => ({ eventDate: parseExternalRendDate(row[0]), hordeChar: clean(row[2]) }))
+    .filter(row => row.eventDate);
+  if (!rows.length) throw new Error("Im Rend-Sheet wurden keine Datumszeilen gefunden.");
+
+  const todayBerlin = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Berlin",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(new Date());
+  const upcoming = rows.filter(row => row.eventDate >= todayBerlin);
+  const source = "external_rend_sheet";
+  const sourceNote = "Automatisch aus WB Liste Everlook/Lakeshire, Spalte C";
+  const client = await pool.connect();
+
+  try {
+    await client.query("begin");
+    for (const row of upcoming) {
+      const existing = await client.query(
+        `select id, note
+         from hordenbuff_events
+         where guild_id = $1 and lower(buff) = 'rend'
+           and event_date = $2 and event_time = '19:35'
+         limit 1`,
+        [guildId, row.eventDate]
+      );
+      let event = existing.rows[0] || null;
+
+      if (event) {
+        await client.query(
+          `delete from hordenbuff_entries
+           where event_id = $1 and source = $2`,
+          [event.id, source]
+        );
+      }
+
+      if (row.hordeChar) {
+        if (!event) {
+          const created = await client.query(
+            `insert into hordenbuff_events
+               (guild_id, buff, event_date, event_time, faction, status, note)
+             values ($1, 'Rend', $2, '19:35', 'Horde', 'bestätigt', $3)
+             on conflict (guild_id, buff, event_date, event_time) do update
+               set updated_at = now()
+             returning id, note`,
+            [guildId, row.eventDate, sourceNote]
+          );
+          event = created.rows[0];
+        }
+        await client.query(
+          `insert into hordenbuff_entries
+             (event_id, ally_char, horde_char, status, note, source)
+           values ($1, '', $2, 'bestätigt', $3, $4)`,
+          [event.id, row.hordeChar, sourceNote, source]
+        );
+      } else if (event && clean(event.note) === sourceNote) {
+        await client.query(
+          `delete from hordenbuff_events
+           where id = $1
+             and not exists (select 1 from hordenbuff_entries where event_id = $1)`,
+          [event.id]
+        );
+      }
+    }
+    await client.query("commit");
+    externalRendSyncCache.set(cacheKey, Date.now() + EXTERNAL_REND_SYNC_TTL_MS);
+    return { success: true, rows: upcoming.length };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function getHordenbuffs({ guildId, query: params }) {
+  await syncExternalRendSheet(guildId).catch(error => {
+    console.warn("Externes Rend-Sheet konnte nicht synchronisiert werden:", error.message || error);
+  });
   const days = clean(params.days || "all");
   const values = [guildId];
   let windowClause = "";
