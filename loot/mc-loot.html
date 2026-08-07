@@ -1732,7 +1732,28 @@ body.random-prio .tooltip-p0{
 .raid-page-title-icon{width:72px;height:72px;flex:0 0 72px;border-radius:12px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.48);box-shadow:0 10px 24px rgba(0,0,0,.38)}
 @media(max-width:700px){.raid-page-title{gap:10px}.raid-page-title-icon{width:48px;height:48px;flex-basis:48px;border-radius:9px}}
 </style>
-<link rel="stylesheet" href="raid-signup-mirror.css?v=20260806-2035">
+<style data-raid-signup-mirror>
+.raid-signup-mirror{margin:0 0 18px;border:1px solid rgba(45,212,191,.38);border-radius:16px;background:rgba(3,10,27,.72);overflow:hidden}
+.raid-signup-mirror summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px;cursor:pointer;font-weight:900;color:#2dd4bf;list-style:none}
+.raid-signup-mirror summary::-webkit-details-marker{display:none}.raid-signup-mirror summary:after{content:"⌄";font-size:18px}.raid-signup-mirror[open] summary:after{transform:rotate(180deg)}
+.raid-signup-mirror-count{font-size:12px;color:#dbeafe;background:#172033;border:1px solid #34425a;border-radius:999px;padding:3px 8px;margin-left:auto}
+.raid-signup-mirror-body{padding:0 10px 11px}.raid-signup-mirror-list{display:grid;gap:6px;max-height:330px;overflow:auto}
+.raid-signup-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px;border:1px solid #263248;border-radius:11px;background:#070d1e}
+.raid-signup-row.is-me{border-color:#2dd4bf;background:rgba(13,148,136,.16)}.raid-signup-row.is-bench{opacity:.72}.raid-signup-class-icon{width:30px;height:30px;border-radius:7px;object-fit:cover;background:#111827}
+.raid-signup-name{font-weight:900;color:#f8fafc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.raid-signup-meta{font-size:11px;color:#aebbd0;margin-top:2px}.raid-signup-role{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:900;border:1px solid #34425a;border-radius:999px;padding:4px 7px;color:#dbeafe;white-space:nowrap}
+.raid-signup-status{font-size:10px;margin-top:3px}.raid-signup-status.signed{color:#4ade80}.raid-signup-status.bench{color:#facc15}.raid-signup-status.late{color:#fb923c}.raid-signup-status.absent{color:#f87171}.raid-signup-mirror-empty{padding:12px;color:#94a3b8;text-align:center}
+.loot-side-shell{width:245px!important}body:not(.random-prio)>.overlay{padding-left:285px!important}
+.raid-signup-nav-tab{width:100%;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border:1px solid rgba(var(--gold-rgb),.28);border-radius:10px;background:rgba(2,6,23,.72);color:var(--gold);font-weight:900;text-align:left;cursor:pointer}.raid-signup-nav-tab span:first-child{display:flex;align-items:center;gap:9px}.raid-signup-nav-tab img{width:27px;height:27px;border-radius:6px;object-fit:cover}
+.raid-signup-modal-backdrop{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
+.raid-signup-modal{width:min(1080px,96vw);max-height:90vh;overflow:hidden;border:1px solid rgba(45,212,191,.5);border-radius:20px;background:#07101f;box-shadow:0 24px 80px rgba(0,0,0,.65);padding:18px}.raid-signup-modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.raid-signup-modal-head h2{margin:0;color:#2dd4bf}.raid-signup-modal-close{width:40px;height:40px;border-radius:10px;border:1px solid #3b4961;background:#111a2c;color:#fff;font-size:20px;cursor:pointer}.raid-signup-modal .raid-signup-mirror-list{display:block;max-height:76vh;padding-right:6px;overflow:auto}
+.raid-signup-summary{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;padding:10px;border:1px solid #263248;border-radius:13px;background:#091426}.raid-signup-summary-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid #31415b;border-radius:999px;color:#cbd5e1;background:#0d1729;font-size:11px;font-weight:700}.raid-signup-summary-chip b{color:#fff}.raid-signup-summary-chip .raid-signup-class-icon{width:18px;height:18px;border-radius:4px}
+.raid-signup-status-legend{display:flex;flex-wrap:wrap;gap:6px 10px;margin:-7px 0 14px;padding:8px 10px;border:1px solid #263248;border-radius:11px;background:#081122;color:#aebbd0;font-size:10px}.raid-signup-status-legend>span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.raid-signup-class-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:10px}.raid-signup-class-group{overflow:hidden;border:1px solid color-mix(in srgb,var(--class-color) 55%,#26364f);border-radius:14px;background:#07101f;box-shadow:inset 3px 0 0 var(--class-color)}.raid-signup-class-group>header{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--class-color) 35%,#26364f);background:linear-gradient(135deg,color-mix(in srgb,var(--class-color) 14%,#101c31),#0a1324)}.raid-signup-class-group>header .raid-signup-class-icon,.raid-signup-shield{width:32px;height:32px;border-radius:7px;display:grid;place-items:center;font-size:21px}.raid-signup-class-group h3{margin:0;color:var(--class-color);font-size:14px}.raid-signup-class-group header span:not(.raid-signup-shield){color:#94a3b8;font-size:10px}.raid-signup-class-players{display:grid}.raid-signup-compact-player{min-width:0;display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:6px;padding:7px 9px;border-bottom:1px solid rgba(49,65,91,.55)}.raid-signup-compact-player:last-child{border-bottom:0}.raid-signup-compact-player.is-me{background:rgba(13,148,136,.18)}.raid-signup-compact-player.status-bench{background:rgba(250,204,21,.06)}.raid-signup-compact-player.status-absent{opacity:.66;background:rgba(248,113,113,.06)}.raid-signup-player-state{font-size:12px}.raid-signup-player-main{min-width:0;display:grid;gap:3px}.raid-signup-compact-player .raid-signup-name{color:var(--class-color);font-size:12px}.raid-signup-compact-player .raid-signup-name em{padding:1px 5px;border-radius:999px;background:#0f766e;color:#fff;font-size:9px;font-style:normal}.raid-signup-player-details{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:4px}.raid-signup-role-badge,.raid-signup-attendance{display:inline-flex;align-items:center;gap:3px;border:1px solid #34425a;border-radius:999px;padding:1px 5px;background:#101a2c;color:#cbd5e1;font-size:9px;font-weight:800}.raid-signup-role-badge.role-tank{border-color:rgba(45,212,191,.5);color:#5eead4}.raid-signup-role-badge.role-heal{border-color:rgba(74,222,128,.5);color:#86efac}.raid-signup-role-badge.role-dd{border-color:rgba(251,146,60,.5);color:#fdba74}.raid-signup-attendance.bench{border-color:rgba(250,204,21,.55);color:#fde047}.raid-signup-attendance.late{border-color:rgba(251,146,60,.55);color:#fdba74}.raid-signup-attendance.absent{border-color:rgba(248,113,113,.55);color:#fca5a5}.raid-signup-prio-state{display:inline-grid;place-items:center;width:23px;height:23px;border:1px solid currentColor;border-radius:7px;font-size:13px;line-height:1;background:#111827}.raid-signup-prio-state.prio{color:#c084fc;background:rgba(126,34,206,.3)}.raid-signup-prio-state.pending{color:#fb923c;background:rgba(194,65,12,.3)}.raid-signup-prio-state.approved{color:#4ade80;background:rgba(21,128,61,.3)}.raid-signup-status-legend .raid-signup-prio-state{width:19px;height:19px;font-size:11px}.raid-signup-note{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8;font-size:9px}
+@media(max-width:1100px){.loot-side-shell{width:100%!important}body:not(.random-prio)>.overlay{padding-left:22px!important}}
+@media(max-width:900px){.raid-signup-mirror-list{max-height:65vh}.raid-signup-modal{padding:13px}.raid-signup-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.raid-signup-class-grid{grid-template-columns:1fr}.raid-signup-summary{position:sticky;top:0;z-index:2}}
+
+</style>
 </head>
 
 <body class="raid-mc">
@@ -10506,7 +10527,58 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="raid-signup-mirror.js?v=20260806-2035"></script>
+<script data-raid-signup-mirror>
+(function(){
+  const CLASS_ICONS={warrior:"krieger.png",krieger:"krieger.png",druid:"druide.png",druide:"druide.png",paladin:"Pala.png",rogue:"schurke.png",schurke:"schurke.png",hunter:"jäger.png",jäger:"jäger.png",jaeger:"jäger.png",priest:"priester.png",priester:"priester.png",mage:"magier.png",magier:"magier.png",warlock:"hexenmeister.png",hexenmeister:"hexenmeister.png"};
+  const CLASS_COLORS={Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Unbekannt:"#94a3b8"};
+  const CLASS_CANON={warrior:"Warrior",krieger:"Warrior",paladin:"Paladin",pala:"Paladin",rogue:"Rogue",schurke:"Rogue",hunter:"Hunter",jäger:"Hunter",jaeger:"Hunter",druid:"Druid",druide:"Druid",priest:"Priest",priester:"Priest",mage:"Mage",magier:"Mage",warlock:"Warlock",hexenmeister:"Warlock",shaman:"Shaman",schamane:"Shaman"};
+  const ROLE_INFO={tank:["🛡️","Tank",0],heal:["💚","Heiler",1],healer:["💚","Heiler",1],melee:["⚔️","Nahkampf",2],range:["🏹","Fernkampf",3],ranged:["🏹","Fernkampf",3],dd:["⚔️","DD",4],flex:["✨","Flex",5]};
+  const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const norm=value=>String(value||"").trim().toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]/g,"");
+  const roleInfo=value=>ROLE_INFO[String(value||"flex").trim().toLowerCase()]||ROLE_INFO.flex;
+  const statusInfo=value=>{const key=String(value||"signed").toLowerCase();if(key==="bench")return["🪑","Bank","bench",1];if(["late","spät","spaet"].includes(key))return["🕒","Verspätet","late",2];if(["absent","abgemeldet"].includes(key))return["🚫","Abgemeldet","absent",3];if(key==="tentative")return["⚖️","Vorläufig","late",1];return["✅","Angemeldet","signed",0];};
+  const prioInfo=row=>{const po=String(row.poApprovalStatus||"").toLowerCase();if(["approved","freigegeben"].includes(po))return["🧳","PO freigegeben","approved"];if(["pending","offen","wartet"].includes(po))return["🧳","PO eingetragen – wartet auf Freigabe","pending"];if(row.hasPrio===true||String(row.hasPrio).toLowerCase()==="true")return["🧳","P1, P2 und/oder P3 gespeichert","prio"];return null;};
+  const roleBadge=value=>{const info=roleInfo(value);return `<span class="raid-signup-role-badge role-${esc(String(value||"flex").toLowerCase())}" title="Skillung/Rolle: ${esc(info[1])}"><span aria-hidden="true">${info[0]}</span><span>${esc(info[1])}</span></span>`;};
+  function iconFor(className){const file=CLASS_ICONS[String(className||"").trim().toLowerCase()];return file?`<img class="raid-signup-class-icon" src="../images/${encodeURIComponent(file)}" alt="${esc(className)}" onerror="this.outerHTML='◆'">`:'<span class="raid-signup-class-icon" style="display:grid;place-items:center">◆</span>';}
+  function currentPlayer(){return norm(document.getElementById("playerName")?.value||document.getElementById("myPriosChar")?.value||"");}
+  function render(rows){
+    const box=document.getElementById("raidSignupMirrorList"),count=document.getElementById("raidSignupMirrorCount");
+    if(!box)return;
+    const unique=[],seen=new Set();
+    for(const row of rows){const name=row.player||row.char||row.playerName||"",key=norm(name);if(!key||seen.has(key))continue;seen.add(key);unique.push(row);}
+    if(count)count.textContent=`${unique.length} Spieler`;
+    if(!unique.length){box.innerHTML='<div class="raid-signup-mirror-empty">Noch keine Anmeldungen vorhanden.</div>';return;}
+    const order=["Tank","Warrior","Paladin","Rogue","Hunter","Druid","Priest","Mage","Warlock","Shaman","Unbekannt"];
+    const labels={Tank:"Tanks",Warrior:"Krieger",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Druid:"Druiden",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unbekannt:"Weitere"};
+    const groups=new Map();
+    for(const row of unique){
+      const role=String(row.role||"").toLowerCase();
+      let key=role==="tank"?"Tank":CLASS_CANON[String(row.className||row.class||"").trim().toLowerCase()]||"Unbekannt";
+      if(!groups.has(key))groups.set(key,[]);
+      groups.get(key).push(row);
+    }
+    const me=currentPlayer();
+    const summary=order.filter(key=>groups.has(key)).map(key=>`<span class="raid-signup-summary-chip">${key==="Tank"?'🛡️':iconFor(key)}<b>${groups.get(key).length}</b> ${esc(labels[key])}</span>`).join("");
+    const sections=order.filter(key=>groups.has(key)).map(key=>{
+      const players=groups.get(key).sort((a,b)=>String(a.player||a.char||"").localeCompare(String(b.player||b.char||""),"de"));
+      const playerRows=players.map(row=>{
+        const name=row.player||row.char||row.playerName||"-",status=statusInfo(row.status),prio=prioInfo(row),own=me&&norm(name)===me;
+        const attendance=status[2]==="signed"?"":`<span class="raid-signup-attendance ${status[2]}" title="Anmeldestatus: ${esc(status[1])}">${status[0]} ${esc(status[1])}</span>`;
+        const suitcase=prio?`<span class="raid-signup-prio-state ${prio[2]}" title="${esc(prio[1])}" aria-label="${esc(prio[1])}">${prio[0]}</span>`:"";
+        return `<div class="raid-signup-compact-player ${own?'is-me':''} status-${status[2]}"><span class="raid-signup-player-state ${status[2]}" title="${esc(status[1])}">${status[0]}</span><span class="raid-signup-player-main"><span class="raid-signup-name">${esc(name)}${own?' <em>Du</em>':''}</span><span class="raid-signup-player-details">${roleBadge(row.role)}${attendance}${row.note?`<span class="raid-signup-note" title="${esc(row.note)}">${esc(row.note)}</span>`:''}</span></span>${suitcase}</div>`;
+      }).join("");
+      return `<section class="raid-signup-class-group" style="--class-color:${CLASS_COLORS[key]||CLASS_COLORS.Unbekannt}"><header>${key==="Tank"?'<span class="raid-signup-shield">🛡️</span>':iconFor(key)}<div><h3>${esc(labels[key])}</h3><span>${players.length} ${players.length===1?'Spieler':'Spieler'}</span></div></header><div class="raid-signup-class-players">${playerRows}</div></section>`;
+    }).join("");
+    box.innerHTML=`<div class="raid-signup-summary">${summary}</div><div class="raid-signup-status-legend"><span><b class="raid-signup-prio-state prio">🧳</b> P1–P3 gespeichert</span><span><b class="raid-signup-prio-state pending">🧳</b> PO wartet auf Freigabe</span><span><b class="raid-signup-prio-state approved">🧳</b> PO freigegeben</span><span>🪑 Bank</span><span>🕒 Verspätet</span><span>🚫 Abwesend</span></div><div class="raid-signup-class-grid">${sections}</div>`;
+  }
+  async function load(){const box=document.getElementById("raidSignupMirrorList"),raidId=typeof currentRaidId!=="undefined"?currentRaidId:"",raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";if(!box||!raidId)return;box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';try{const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");render([...(result.signups||[]),...(result.externalSignups||[])]);}catch(error){box.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;}}
+  function close(){document.querySelector(".raid-signup-modal-backdrop")?.remove();}
+  function open(){close();const backdrop=document.createElement("div");backdrop.className="raid-signup-modal-backdrop";backdrop.innerHTML='<section class="raid-signup-modal" role="dialog" aria-modal="true"><div class="raid-signup-modal-head"><div><h2>👥 Raidanmeldungen</h2><div id="raidSignupMirrorCount" class="raid-signup-mirror-count">0 Spieler</div></div><button class="raid-signup-modal-close" type="button" aria-label="Schließen">×</button></div><div id="raidSignupMirrorList" class="raid-signup-mirror-list"><div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div></div></section>';backdrop.querySelector(".raid-signup-modal-close").onclick=close;backdrop.addEventListener("click",event=>{if(event.target===backdrop)close();});document.body.appendChild(backdrop);load();}
+  function init(){const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));if(group&&!document.querySelector(".raid-signup-nav-tab")){const button=document.createElement("button");button.type="button";button.className="raid-signup-nav-tab";button.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';button.onclick=open;group.insertAdjacentElement("afterend",button);}const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};}
+  window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+
+</script>
 <script src="../pin-visibility.js"></script>
 </body>
 </html>
