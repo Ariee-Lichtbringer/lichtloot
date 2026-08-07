@@ -6489,6 +6489,9 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
       type: "raid_announcement_role_notice",
       payload: {
         raidId,
+        raid: clean(params.raid || snapshot?.raid?.raid || ""),
+        playerPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
+        prioPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
         raidName: clean(params.raidName || snapshot?.raid?.raidName || "Raid"),
         raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
         raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
@@ -6521,6 +6524,9 @@ async function queueRaidAnnouncementNotice({ guildId, query: params }) {
     type: "raid_announcement_role_notice",
     payload: {
       raidId,
+      raid: clean(raid.raid || params.raid || ""),
+      playerPin: clean(raid.playerPin || raid.prioPin || params.playerPin || params.prioPin || params.raidPin || ""),
+      prioPin: clean(raid.playerPin || raid.prioPin || params.playerPin || params.prioPin || params.raidPin || ""),
       raidName: clean(raid.raidName || params.raidName || "Raid"),
       raidDate: clean(raid.raidDate || params.raidDate || ""),
       raidTime: clean(raid.raidTime || params.raidTime || ""),
