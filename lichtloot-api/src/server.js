@@ -2295,7 +2295,8 @@ async function ensureRaidSchema() {
        add column if not exists loot_master text,
        add column if not exists loot_master_targets jsonb not null default '[]'::jsonb,
        add column if not exists status_notify_targets jsonb not null default '[]'::jsonb,
-       add column if not exists announcement_notify_targets jsonb not null default '[]'::jsonb`
+       add column if not exists announcement_notify_targets jsonb not null default '[]'::jsonb,
+       add column if not exists announcement_message text not null default ''`
   );
   await query(
     `alter table raid_signups
@@ -2922,6 +2923,7 @@ function normalizeRaidRow(row) {
     lootMasterTargets: Array.isArray(row.loot_master_targets) ? row.loot_master_targets : [],
     statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
     announcementNotifyTargets: Array.isArray(row.announcement_notify_targets) ? row.announcement_notify_targets : [],
+    announcementMessage: row.announcement_message || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -6490,6 +6492,8 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         raidName: clean(params.raidName || snapshot?.raid?.raidName || "Raid"),
         raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
         raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
+        description: clean(params.description || snapshot?.raid?.description || ""),
+        announcementMessage: clean(params.announcementMessage || params.notificationMessage || snapshot?.raid?.announcementMessage || ""),
         channelId: channelId || clean(snapshot?.raid?.discordChannelId || ""),
         targets: announcementTargets,
         signupUrl: `https://lichtloot.de/?raidId=${encodeURIComponent(raidId)}`
@@ -6520,6 +6524,8 @@ async function queueRaidAnnouncementNotice({ guildId, query: params }) {
       raidName: clean(raid.raidName || params.raidName || "Raid"),
       raidDate: clean(raid.raidDate || params.raidDate || ""),
       raidTime: clean(raid.raidTime || params.raidTime || ""),
+      description: clean(raid.description || params.description || ""),
+      announcementMessage: clean(params.announcementMessage || params.notificationMessage || raid.announcementMessage || ""),
       channelId: clean(raid.discordChannelId || params.channelId || params.discordChannelId || ""),
       targets,
       signupUrl: `https://lichtloot.de/?raidId=${encodeURIComponent(raidId)}`
@@ -14836,10 +14842,10 @@ async function createRaidRecord({ guildId, query: params }) {
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
-       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets
+       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets, announcement_message
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -14884,6 +14890,7 @@ async function createRaidRecord({ guildId, query: params }) {
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
            status_notify_targets = case when excluded.status_notify_targets = '[]'::jsonb then raids.status_notify_targets else excluded.status_notify_targets end,
            announcement_notify_targets = case when excluded.announcement_notify_targets = '[]'::jsonb then raids.announcement_notify_targets else excluded.announcement_notify_targets end,
+           announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
            updated_at = now()
      returning *`,
     [
@@ -14927,7 +14934,8 @@ async function createRaidRecord({ guildId, query: params }) {
         } catch {
           return "[]";
         }
-      })()
+      })(),
+      clean(params.announcementMessage || params.notificationMessage)
     ]
   );
 
