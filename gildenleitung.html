@@ -5245,6 +5245,11 @@ body.worldbuff-only .master-only{display:none!important}
                   <button id="raidHelperSendAnnouncementNoticeButton" class="small-btn good hidden" type="button" style="margin-top:8px" onclick="sendRaidHelperAnnouncementNoticeNow()">Erstellungs-DM jetzt senden</button>
                 </div>
               </div>
+              <div class="field" style="margin-top:12px">
+                <label for="raidHelperAnnouncementMessage">Zusätzliche Informationen für die Erstellungs-DM</label>
+                <textarea id="raidHelperAnnouncementMessage" placeholder="Zum Beispiel: Bitte testweise anmelden und auf NachtLoot eine Fantasie-Prio erstellen. Bei Problemen gerne Ariee im Discord oder ingame anschreiben."></textarea>
+                <span class="muted">Der Standardtext mit Raid, Termin, Channel und Anmeldelink wird automatisch erstellt. Dieser Text erscheint zusätzlich als eigener Hinweis.</span>
+              </div>
             </div>
             <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
               <div class="raid-helper-card-head">
@@ -9282,6 +9287,7 @@ async function editRaidHelperEvent(raidId){
   setRaidHelperEditValue("raidHelperHeals", raid.healSlots || "");
   setRaidHelperEditValue("raidHelperDds", raid.ddSlots || "");
   setRaidHelperEditValue("raidHelperDescription", raid.description || raid.beschreibung || "");
+  setRaidHelperEditValue("raidHelperAnnouncementMessage", raid.announcementMessage || "");
   setRaidHelperEditValue("raidHelperChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
   setRaidHelperEditValue("raidHelperCreateEditStatus", raid.status || "geschlossen");
   let targets = raid.statusNotifyTargets || raid.status_notify_targets || [];
@@ -9349,6 +9355,7 @@ async function sendRaidHelperAnnouncementNoticeNow(){
       masterCode,
       raidId:raidHelperEditingRaidIdentifier,
       channelId:raidHelperValue("raidHelperChannel"),
+      announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets())
     });
     if(!result.success) throw new Error(result.error || "DM konnte nicht vorgemerkt werden.");
@@ -9397,6 +9404,7 @@ async function saveRaidHelperEventFromCreate(){
     pluendermeister:raidHelperValue("raidHelperLootMaster"),
     statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
     announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
+    announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
     description:raidHelperValue("raidHelperDescription"),
     raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
@@ -13275,6 +13283,7 @@ async function createRaidHelperSignup(){
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
       statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
+      announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
@@ -13304,6 +13313,7 @@ async function createRaidHelperSignup(){
       pluendermeister:raidHelperValue("raidHelperLootMaster"),
       statusNotifyTargets:JSON.stringify(raidHelperStatusNotifyTargets()),
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
+      announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
