@@ -9236,12 +9236,25 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
   const postKey = clean(params.postKey || params.poPostKey || params.postId);
+  const requestedRaidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin);
+  // Ein PO-Post besitzt eine eigene postKey-ID, die nicht zwingend der
+  // external_raid_id des LichtLoot-Raids entspricht. Die Prio-PIN ist die
+  // eindeutige Verbindung und muss deshalb zuerst verwendet werden.
   let raid = await findRaid(guildId, {
     ...params,
-    raidId: params.raidId || postKey,
-    prioPin: params.raidPin || params.prioPin || params.playerPin,
-    playerPin: params.raidPin || params.prioPin || params.playerPin
+    raidId: "",
+    prioPin: requestedRaidPin,
+    playerPin: requestedRaidPin
   });
+
+  if (!raid && clean(params.raidId) && clean(params.raidId) !== postKey) {
+    raid = await findRaid(guildId, {
+      ...params,
+      raidId: clean(params.raidId),
+      prioPin: requestedRaidPin,
+      playerPin: requestedRaidPin
+    });
+  }
 
   if (!raid && postKey) {
     const postConfig = await query(
@@ -9257,12 +9270,12 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     const row = postConfig.rows[0] || {};
     raid = await findRaid(guildId, {
       ...params,
-      raidId: postKey,
+      raidId: "",
       raid: row.raid || params.raid || params.raidName,
       raidDate: row.raid_date || params.raidDate || params.date || params.datum,
       raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
-      prioPin: row.raid_pin || params.raidPin || params.prioPin,
-      playerPin: row.raid_pin || params.raidPin || params.prioPin
+      prioPin: row.raid_pin || requestedRaidPin,
+      playerPin: row.raid_pin || requestedRaidPin
     });
   }
 
