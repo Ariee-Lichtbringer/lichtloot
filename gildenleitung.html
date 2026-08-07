@@ -6600,7 +6600,7 @@ function apiWrite(params){
 }
 
 async function railwayApi(params){
-  const query = new URLSearchParams(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }));
+  const query = new URLSearchParams(Object.assign({}, params, { guild: CURRENT_GUILD_SLUG, guildSlug: CURRENT_GUILD_SLUG, t: Date.now() }));
   const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
   if(!response.ok){
     const text = await response.text().catch(() => "");
@@ -6617,7 +6617,7 @@ async function railwayWrite(params){
     const response = await fetch(LICHTLOOT_API_URL, {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
-      body:JSON.stringify(Object.assign({ guild: CURRENT_GUILD_SLUG }, params, { t: Date.now() }))
+      body:JSON.stringify(Object.assign({}, params, { guild: CURRENT_GUILD_SLUG, guildSlug: CURRENT_GUILD_SLUG, t: Date.now() }))
     });
     const result = await response.json().catch(() => ({}));
     if(!response.ok){
@@ -6872,6 +6872,10 @@ async function loadOverview(options){
     handlePlayerLoginDeepLink();
     loadDashboardRaidStats();
     loadRaidHelperDiscordChannels();
+    // Das Panel kann bereits vor der Freischaltung geöffnet worden sein. In
+    // diesem Fall wurde der Rollenabruf wegen des noch leeren Master-Codes
+    // übersprungen. Nach erfolgreichem Login deshalb immer erneut befüllen.
+    loadRaidHelperDiscordRoles();
     loadWorldbuffMiniOverview();
     loadGuildApplicationsPanel({ silent:true }).catch(() => {});
     if(!options.preserveStatus) setStatus("Gildenleitung geladen.", "good");
@@ -8550,10 +8554,17 @@ async function loadRaidHelperDiscordRoles(){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   const select=document.getElementById("raidHelperNotifyRoles");
   const announcementSelect=document.getElementById("raidHelperAnnouncementNotifyRoles");
-  if(!select || !announcementSelect || !masterCode) return;
+  if(!select || !announcementSelect) return;
+  if(!masterCode){
+    select.innerHTML='<option value="">Nach Freischaltung werden die Rollen geladen</option>';
+    announcementSelect.innerHTML=select.innerHTML;
+    return;
+  }
   try{
     const result=await railwayApi({action:"guildGetDiscordBotRoles",masterCode,t:Date.now()});
-    raidHelperDiscordRoles=Array.isArray(result.roles) ? result.roles : [];
+    raidHelperDiscordRoles=Array.isArray(result.roles) && result.roles.length
+      ? result.roles
+      : (Array.isArray(playerAccessDiscordRoles) ? playerAccessDiscordRoles : []);
     select.innerHTML='<option value="">Rolle auswählen und anklicken …</option>'+(raidHelperDiscordRoles.length
       ? raidHelperDiscordRoles.map(role=>`<option value="${escapeAttr(role.id || role.roleId)}">${escapeHtml(role.name || role.roleName)}</option>`).join("")
       : '<option value="">Keine Rollen geladen – Bot neu starten</option>');
@@ -8561,7 +8572,12 @@ async function loadRaidHelperDiscordRoles(){
     renderRaidHelperNotifyRoleTags();
     renderRaidHelperAnnouncementNotifyRoleTags();
   }catch(error){
-    select.innerHTML='<option value="">Rollen konnten nicht geladen werden</option>';
+    raidHelperDiscordRoles=Array.isArray(playerAccessDiscordRoles) ? playerAccessDiscordRoles : [];
+    const fallbackOptions=raidHelperDiscordRoles.map(role=>`<option value="${escapeAttr(role.id || role.roleId)}">${escapeHtml(role.name || role.roleName)}</option>`).join("");
+    select.innerHTML=fallbackOptions
+      ? '<option value="">Rolle auswählen und anklicken …</option>'+fallbackOptions
+      : '<option value="">Rollen konnten nicht geladen werden</option>';
+    announcementSelect.innerHTML=select.innerHTML;
   }
 }
 
@@ -9225,7 +9241,8 @@ async function saveRaidHelperEventFromCreate(){
     raidTime:raidHelperValue("raidHelperTime"),
     datum:raidHelperValue("raidHelperDate"),
     uhrzeit:raidHelperValue("raidHelperTime"),
-    guild:existing.guild || CURRENT_GUILD_SLUG,
+    guild:CURRENT_GUILD_SLUG,
+    guildSlug:CURRENT_GUILD_SLUG,
     gilde:raidHelperValue("raidHelperGuild") || existing.gilde || getCurrentGuildBrand().guildName,
     guildName:raidHelperValue("raidHelperGuild") || existing.guildName || getCurrentGuildBrand().guildName,
     playerPin:existing.playerPin || existing.prioPin || "",
@@ -9294,7 +9311,8 @@ function currentRaidHelperEditPayload(){
     raidTime:raidHelperValue("raidHelperEditTime"),
     datum:raidHelperValue("raidHelperEditDate"),
     uhrzeit:raidHelperValue("raidHelperEditTime"),
-    guild:existing.guild || existing.gilde || getCurrentGuildBrand().guildName,
+    guild:CURRENT_GUILD_SLUG,
+    guildSlug:CURRENT_GUILD_SLUG,
     gilde:existing.guild || existing.gilde || getCurrentGuildBrand().guildName,
     playerPin:existing.playerPin || existing.prioPin || "",
     leadPin:existing.leadPin || "",
