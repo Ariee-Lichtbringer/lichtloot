@@ -8288,8 +8288,22 @@ async function savePoPostEntry({ guildId, query: params }) {
         }
       }).catch(error => console.warn("PO-Freigabehinweis konnte nicht queued werden:", error.message || error));
     }
+    const linkedRaid = await findRaid(guildId, {
+      raidPin: row.raid_pin || raidPin,
+      prioPin: row.raid_pin || raidPin,
+      playerPin: row.raid_pin || raidPin,
+      raid: row.raid || raidKey,
+      raidDate: row.raid_date || params.raidDate || params.date || params.datum,
+      raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit
+    }).catch(() => null);
+    const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+      guildId,
+      linkedRaid,
+      "po_signup_pending"
+    );
     return {
       success: true,
+      raidAnnouncementRefresh,
       entry: {
         postKey: row.post_key || "",
         sourceChannelId: row.source_channel_id || "",
@@ -9312,6 +9326,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     });
     await client.query("commit");
     const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "po_bot_prio_saved");
+    const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+      guildId,
+      raid,
+      "po_bot_prio_saved"
+    );
     return {
       success: true,
       prioId: prioResult.rows[0].id,
@@ -9320,7 +9339,8 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       server: character.server,
       className: character.class_name,
       item: item.name,
-      poPostRefresh
+      poPostRefresh,
+      raidAnnouncementRefresh
     };
   } catch (error) {
     await client.query("rollback").catch(() => {});
