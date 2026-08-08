@@ -1650,7 +1650,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .po-request-toggle:hover{background:rgba(250,204,21,.08)}
 .po-request-toggle-arrow{font-size:16px;line-height:1;transition:transform .18s ease}.po-request-toggle[aria-expanded="false"] .po-request-toggle-arrow{transform:rotate(-90deg)}
 .po-request-collapsible.hidden{display:none!important}
-.character-manage-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.character-manage-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:10px 0}
 .character-manage-tile{min-height:58px;padding:9px 10px;border:1px solid #334155;border-radius:11px;background:#0b1425;color:#cbd5e1;font-size:11px;font-weight:900;line-height:1.25;cursor:pointer}
 .character-manage-tile span{display:block;margin-bottom:4px;color:#f8fafc;font-size:14px}.character-manage-tile.is-active{border-color:#2dd4bf;background:linear-gradient(145deg,#0f2b34,#0b1830);box-shadow:0 0 0 2px rgba(45,212,191,.12)}
 .character-manage-panel.is-tile-hidden{display:none!important}
@@ -7613,33 +7613,29 @@ function renderMyPrios(data){
   results.innerHTML=html;
   initPoRequestClassSelect();
   initCharacterManagementTiles();
-  syncCharacterReleaseExtras("request");
 }
-
-function syncCharacterReleaseExtras(activeKey){const root=document.querySelector('[data-mein-lichtloot-section="chars"]');if(!root)return;root.querySelectorAll(".own-p0-popout-card").forEach(card=>{if(String(card.textContent||"").includes("Eigene P0/P0+ Punkte")){card.classList.add("character-manage-panel");card.dataset.characterManagePanel="releases-extra";card.classList.toggle("is-tile-hidden",activeKey!=="releases");}});}
-if(!window.characterReleaseTileListenerBound){window.characterReleaseTileListenerBound=true;document.addEventListener("click",event=>{const tile=event.target.closest("[data-character-manage-tile]");if(tile)syncCharacterReleaseExtras(tile.dataset.characterManageTile);});}
 
 function initCharacterManagementTiles(){
   const root=document.querySelector('[data-mein-lichtloot-section="chars"]');
   if(!root)return;
   root.querySelector(".character-manage-tiles")?.remove();
+  const results=root.querySelector("#dashboardMyPriosResults");
   const request=root.querySelector(".po-request-form")?.closest(".own-p0-popout-card");
   const releases=root.querySelector(".own-p0-release-items")?.closest(".own-p0-popout-card");
-  const releaseExtras=[...root.querySelectorAll(".own-p0-popout-card")].filter(card=>String(card.textContent||"").includes("Eigene P0/P0+ Punkte"));
   const chooser=root.querySelector(".character-subsection.is-active");
   const add=root.querySelector(".character-subsection.is-add");
   const remove=root.querySelector(".character-subsection.is-delete");
-  const panels={request:[request],releases:[releases,...releaseExtras],add:[add],remove:[remove]};
+  const history=results?[...results.children].filter(panel=>panel!==request&&panel!==releases):[];
+  const panels={request:[request],releases:[releases],add:[add],remove:[remove],history};
   Object.entries(panels).forEach(([key,list])=>list.filter(Boolean).forEach(panel=>{panel.classList.add("character-manage-panel");panel.dataset.characterManagePanel=key;}));
   const nav=document.createElement("div");
   nav.className="character-manage-tiles";
-  nav.innerHTML='<button class="character-manage-tile is-active" data-character-manage-tile="request"><span>📋 Antrag</span>P0-Freigabe beantragen</button><button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Freigaben</span>Meine P0+ Freigaben</button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button>';
-  const anchor=root.querySelector(".character-subsection");
-  root.insertBefore(nav,anchor||root.firstChild);
+  nav.innerHTML='<button class="character-manage-tile is-active" data-character-manage-tile="request"><span>📋 Antrag</span>P0-Freigabe beantragen</button><button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Freigaben</span>Meine P0+ Freigaben</button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button><button class="character-manage-tile" data-character-manage-tile="history"><span>🪙 Punkte & Prios</span>P0+ Punkte und Priolisten</button>';
+  if(chooser)chooser.insertAdjacentElement("afterend",nav);else root.prepend(nav);
   const show=key=>{
     nav.querySelectorAll(".character-manage-tile").forEach(button=>button.classList.toggle("is-active",button.dataset.characterManageTile===key));
     Object.entries(panels).forEach(([panelKey,list])=>list.filter(Boolean).forEach(panel=>panel.classList.toggle("is-tile-hidden",panelKey!==key)));
-    chooser?.classList.toggle("is-tile-hidden",!["request","releases"].includes(key));
+    chooser?.classList.remove("is-tile-hidden");
   };
   nav.addEventListener("click",event=>{const button=event.target.closest("[data-character-manage-tile]");if(button)show(button.dataset.characterManageTile);});
   show("request");
