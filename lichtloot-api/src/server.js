@@ -15582,6 +15582,13 @@ async function getRaidHelper({ guildId, query: params }) {
      from raid_signups rs
      join characters c on c.id = rs.character_id
      join players signup_player on signup_player.id = c.player_id
+     left join lateral (
+       select link.discord_user_id, link.discord_name
+       from discord_player_links link
+       where link.guild_id = signup_player.guild_id and link.character_id = c.id
+       order by link.updated_at desc, link.created_at desc
+       limit 1
+     ) dpl on true
      where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
@@ -16059,7 +16066,9 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
   const local = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
-       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
+       coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
+       coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
+       rs.created_at, rs.updated_at,
        c.name as player_name, c.server, c.class_name,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
        r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
@@ -17076,6 +17085,23 @@ async function validateLeadPin({ guildId, query: params }) {
     return { success: false, error: "Falsche Raidlead-PIN." };
   }
 
+  if (["1", "true", "yes", "ja"].includes(clean(params.allowMaster).toLowerCase())) {
+    try {
+      requireMasterCode(leadPin);
+      return { success: true, managerMode: "master" };
+    } catch {
+      // Kein Gildenleiter-PIN: anschließend als raidbezogene LeadPIN prüfen.
+    }
+  }
+
+  if (clean(params.raidId || params.id)) {
+    const requestedRaid = await findRaid(guildId, { raidId: params.raidId || params.id });
+    if (!requestedRaid || clean(requestedRaid.lead_pin).toLowerCase() !== leadPin.toLowerCase()) {
+      return { success: false, error: "LeadPIN passt nicht zu diesem Raid." };
+    }
+    return { success: true, managerMode: "raidlead", ...normalizeRaidRow(requestedRaid) };
+  }
+
   const result = await query(
     `select *
      from raids
@@ -17091,7 +17117,7 @@ async function validateLeadPin({ guildId, query: params }) {
     return { success: false, error: "Falsche Raidlead-PIN." };
   }
 
-  return { success: true, ...normalizeRaidRow(raid) };
+  return { success: true, managerMode: "raidlead", ...normalizeRaidRow(raid) };
 }
 
 async function findRaidByPrioPin({ guildId, query: params }) {
