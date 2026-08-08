@@ -5037,6 +5037,7 @@ function copyHiddenLichtLootToDashboard(clearHidden){
   if(resultSource && resultTarget){
     resultTarget.innerHTML=resultSource.innerHTML;
     if(clearHidden) resultSource.innerHTML="";
+    initCharacterManagementTiles();
   }
 
   const worldSource=document.getElementById("myWorldbuffContent");
@@ -7631,14 +7632,14 @@ function initCharacterManagementTiles(){
   const nav=document.createElement("div");
   nav.className="character-manage-tiles";
   nav.innerHTML='<button class="character-manage-tile is-active" data-character-manage-tile="request"><span>📋 Antrag</span>P0-Freigabe beantragen</button><button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Freigaben</span>Meine P0+ Freigaben</button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button><button class="character-manage-tile" data-character-manage-tile="history"><span>🪙 Punkte & Prios</span>P0+ Punkte und Priolisten</button>';
-  if(chooser)chooser.insertAdjacentElement("afterend",nav);else root.prepend(nav);
+  if(results)results.insertAdjacentElement("beforebegin",nav);else if(chooser)chooser.appendChild(nav);else root.prepend(nav);
   const show=key=>{
     nav.querySelectorAll(".character-manage-tile").forEach(button=>button.classList.toggle("is-active",button.dataset.characterManageTile===key));
     Object.entries(panels).forEach(([panelKey,list])=>list.filter(Boolean).forEach(panel=>panel.classList.toggle("is-tile-hidden",panelKey!==key)));
     chooser?.classList.remove("is-tile-hidden");
   };
   nav.addEventListener("click",event=>{const button=event.target.closest("[data-character-manage-tile]");if(button)show(button.dataset.characterManageTile);});
-  show("request");
+  show("");
 }
 
 function renderMyPoReleasesCard(releases,requests,data){
