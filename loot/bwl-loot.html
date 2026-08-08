@@ -3828,7 +3828,10 @@ async function raidleadLogin(){
   const url =
     APPS_SCRIPT_URL +
     "?action=validateLeadPin" +
+    "&guild=" + encodeURIComponent(currentGuildSlug()) +
     "&leadPin=" + encodeURIComponent(pin) +
+    "&raidId=" + encodeURIComponent(currentRaidId || "") +
+    "&allowLootMaster=true" +
     "&t=" + Date.now();
 
   const response = await fetch(url);
@@ -3839,11 +3842,13 @@ async function raidleadLogin(){
     sessionStorage.setItem("raidleadRole","master");
     sessionStorage.setItem("raidleadRaidId",result.raidId);
     sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
+    if(result.managerMode === "lootmaster") sessionStorage.setItem("raidleadLootMasterPin",pin);
+    else sessionStorage.removeItem("raidleadLootMasterPin");
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
 
-  alert("Falsche Raidlead-PIN.");
+  alert(result.error || "LeadPIN oder Plündermeister-Passwort ist falsch.");
 }
 
 function raidleadEnter(event){
@@ -3853,10 +3858,10 @@ function raidleadEnter(event){
 }
 
 function openPlundermeisterLogin(){
-  const pin=prompt("LeadPIN für den Plündermeister eingeben:","");
+  const pin=prompt("LeadPIN oder Plündermeister-Passwort eingeben:","");
   if(pin===null)return;
   const value=String(pin||"").trim();
-  if(!value){alert("Bitte LeadPIN eingeben.");return;}
+  if(!value){alert("Bitte LeadPIN oder Plündermeister-Passwort eingeben.");return;}
   const input=document.getElementById("raidleadPin");
   if(input)input.value=value;
   raidleadLogin();
