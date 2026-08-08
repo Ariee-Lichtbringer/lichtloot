@@ -7692,8 +7692,6 @@ function initPoRequestClassSelect(){
   const submitButton=form.querySelector('button[onclick*="submitMyPoReleaseRequest"]');
   if(submitButton && !submitButton.dataset.poRequestBound){
     submitButton.dataset.poRequestBound="true";
-    submitButton.removeAttribute("onclick");
-    submitButton.addEventListener("click",submitMyPoReleaseRequest);
   }
 }
 function togglePoRequestForm(button){const card=button?.closest(".own-p0-popout-card");if(!card)return;const open=button.getAttribute("aria-expanded")!=="false";button.setAttribute("aria-expanded",open?"false":"true");card.querySelectorAll(".po-request-collapsible").forEach(element=>element.classList.toggle("hidden",open));}
