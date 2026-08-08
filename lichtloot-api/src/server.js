@@ -4096,6 +4096,7 @@ async function setWorldbuffCaster({ guildId, query: params }) {
     await client.query("begin");
     const actionName = clean(params.action).toLowerCase();
     const isGuildAdminEdit = actionName === "guildsetworldbuffcaster";
+    const isDiscordPlayerSignup = actionName === "lichtbotclaimworldbuffslot";
     const rowNumber = clean(params.rowNumber);
     const found = await findWorldbuffEventOrEntry(client, guildId, rowNumber);
     const previousEvent = found.event ? { ...found.event } : null;
@@ -4263,6 +4264,23 @@ async function setWorldbuffCaster({ guildId, query: params }) {
 
     await client.query("commit");
     await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_saved" } }).catch(() => {});
+    if (isDiscordPlayerSignup && caster) {
+      await notifyWorldbuffPlayerChange({
+        guildId,
+        pin: "",
+        character: caster,
+        discordUserId: clean(params.discordUserId || params.discord_user_id),
+        action: "registered",
+        reason: "",
+        fromEvent: {
+          buff: normalizeWorldbuffName(event.buff),
+          event_date: event.event_date,
+          event_time: event.event_time,
+          guild_name: event.guild_name
+        },
+        toEvent: null
+      });
+    }
     if (isGuildAdminEdit) {
       const changeReason = clean(params.changeReason || params.reason) || "Durch die Gildenleitung geändert";
       const currentEvent = {
@@ -4798,7 +4816,7 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
   return saved;
 }
 
-async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, reason, fromEvent, toEvent }) {
+async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUserId = "", action, reason, fromEvent, toEvent }) {
   const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : action === "changed" ? "geändert" : "verschoben";
   const formatEvent = event => event
     ? [event.buff, event.event_date ? new Date(event.event_date).toISOString().slice(0, 10) : "", clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
@@ -4851,7 +4869,7 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
       targets: configuredTargets,
       messageTemplate,
       character,
-      playerDiscordUserId: clean(discordRecipient.discord_user_id),
+      playerDiscordUserId: clean(discordUserId || discordRecipient.discord_user_id),
       playerDiscordName: clean(discordRecipient.discord_name),
       guildName: clean(guildRow.name || guildRow.slug),
       action,
