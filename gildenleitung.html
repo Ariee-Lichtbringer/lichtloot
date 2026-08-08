@@ -5020,6 +5020,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openDiscordNotificationSettings()" aria-label="Discord-Benachrichtigungen" title="Discord-Benachrichtigungen"><img class="side-icon-img" src="images/discord.svg" alt=""><span class="side-label">DC-Benachrichtigungen</span></button>
+          <button class="side-link master-only" type="button" onclick="openRaidSignupSettingsDialog()" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
@@ -5629,6 +5630,21 @@ body.worldbuff-only .master-only{display:none!important}
           <div><h3>PO-Anmelder</h3><span>Automatisch erstellte PO-Anmelder öffnen, prüfen und übertragen</span></div>
           <button class="small-btn ghost" type="button" onclick="refreshRaidHelperPoSignupTab()">Neu laden</button>
         </div>
+        <div class="po-signup-list-toolbar">
+          <div class="po-signup-tier-tabs" role="tablist" aria-label="PO-Anmelder Raid-Gruppe">
+            <button class="small-btn" type="button" data-po-signup-tier="all" onclick="setPoSignupListTierFilter('all')">Alle</button>
+            <button class="small-btn" type="button" data-po-signup-tier="20" onclick="setPoSignupListTierFilter('20')">20er</button>
+            <button class="small-btn" type="button" data-po-signup-tier="40" onclick="setPoSignupListTierFilter('40')">40er</button>
+          </div>
+          <div id="raidHelperPoSignupRaidTabs" class="po-signup-raid-tabs" aria-label="PO-Anmelder Raid-Auswahl"></div>
+        </div>
+        <div id="raidHelperPoSignupBulkActions" class="raid-bulk-actions" hidden>
+          <strong id="raidHelperPoSignupBulkSelectionText">0 PO-Anmelder ausgewählt</strong>
+          <div class="raid-bulk-action-buttons">
+            <button class="small-btn ghost" type="button" onclick="clearPoSignupSelection()">Auswahl aufheben</button>
+            <button class="small-btn danger" type="button" onclick="deleteSelectedPoSignups()">Ausgewählte löschen</button>
+          </div>
+        </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
     </div>
@@ -5654,9 +5670,6 @@ body.worldbuff-only .master-only{display:none!important}
                 <h3>PO-Anmeldung erstellen</h3>
                 <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
               </div>
-            </div>
-            <div class="po-signup-action-buttons" style="justify-content:flex-start;margin:0 0 12px">
-              <button class="btn primary" type="button" onclick="newPoSignupConfig()">＋ Neuen PO-Anmelder erstellen</button>
             </div>
             <div class="raid-helper-row">
               <div class="field">
@@ -6509,6 +6522,42 @@ function openLootMasterPasswordDialog(){
   backdrop.querySelector("[data-save]")?.addEventListener("click",()=>{const field=backdrop.querySelector("#lootMasterDiscordNames");if(field)field.value=field.value.replace(/\r?\n/g,";");});
   backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const password=backdrop.querySelector("#newLootMasterPassword")?.value.trim()||"";const repeat=backdrop.querySelector("#repeatLootMasterPassword")?.value.trim()||"";if(password.length<6){setStatus("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.","bad");return;}if(password!==repeat){setStatus("Die beiden Passwörter stimmen nicht überein.","bad");return;}try{const result=await railwayWrite({action:"guildSetLootMasterAccessPassword",masterCode:document.getElementById("masterCode").value.trim(),password});if(!result.success)throw new Error(result.error||"Passwort konnte nicht gespeichert werden.");close();setStatus("Plündermeister-Passwort gespeichert.","good");}catch(error){setStatus(error.message||"Passwort konnte nicht gespeichert werden.","bad");}});
   document.body.appendChild(backdrop);
+}
+
+async function openRaidSignupSettingsDialog(){
+  const masterCode=String(document.getElementById("masterCode")?.value||"").trim();
+  if(!masterCode){setStatus("Bitte zuerst den Master-Code eingeben.","bad");return;}
+  const backdrop=document.createElement("div");
+  backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:600px">
+    <h3>👥 Raidanmelder auf den Lootseiten</h3>
+    <p>Lege fest, ob Spieler sich auf den Prio- und Lootseiten direkt für den zugehörigen Discord-Raid anmelden dürfen.</p>
+    <label style="display:flex;align-items:center;gap:12px;padding:16px;border:1px solid rgba(45,212,191,.35);border-radius:12px">
+      <input type="checkbox" data-enabled style="width:22px;height:22px">
+      <span><strong>Raidanmelder aktivieren</strong><br><small>Charakter, Skillung und Status können auf den Lootseiten gespeichert werden.</small></span>
+    </label>
+    <div data-state class="status" style="margin-top:12px">Einstellung wird geladen …</div>
+    <div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-close>Abbrechen</button><button class="small-btn good" type="button" data-save disabled>Speichern</button></div>
+  </div>`;
+  const close=()=>backdrop.remove();
+  backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop)close();});
+  document.body.appendChild(backdrop);
+  const checkbox=backdrop.querySelector("[data-enabled]"),save=backdrop.querySelector("[data-save]"),state=backdrop.querySelector("[data-state]");
+  try{
+    const result=await railwayApi({action:"getRaidSignupPageSettings",masterCode,t:Date.now()});
+    if(!result?.success)throw new Error(result?.error||"Einstellung konnte nicht geladen werden.");
+    checkbox.checked=Boolean(result.enabled);save.disabled=false;
+    state.textContent=result.enabled?"Der Raidanmelder ist auf den Lootseiten aktiv.":"Der Raidanmelder ist auf den Lootseiten deaktiviert.";
+  }catch(error){state.textContent=error.message||"Einstellung konnte nicht geladen werden.";state.className="status bad";}
+  save.addEventListener("click",async()=>{
+    save.disabled=true;state.textContent="Einstellung wird gespeichert …";
+    try{
+      const result=await railwayWrite({action:"guildSetRaidSignupPageSettings",masterCode,enabled:checkbox.checked?"true":"false"});
+      if(!result?.success)throw new Error(result?.error||"Einstellung konnte nicht gespeichert werden.");
+      close();setStatus(result.enabled?"Raidanmelder auf den Lootseiten aktiviert.":"Raidanmelder auf den Lootseiten deaktiviert.","good");
+    }catch(error){save.disabled=false;state.textContent=error.message||"Einstellung konnte nicht gespeichert werden.";state.className="status bad";}
+  });
 }
 
 async function openLootMasterTargetsDialog(raidId){
@@ -12225,10 +12274,23 @@ async function refreshRaidHelperPoSignupTab(){
 function renderRaidHelperPoSignupTab(){
   const box = document.getElementById("raidHelperPoSignupBox");
   if(!box) return;
-  const rows = raidHelperPoSignupRows();
+  renderPoSignupListFilters();
+  const rows = raidHelperPoSignupRows().filter(poSignupConfigMatchesListFilter);
+  const visibleKeys = new Set(rows.map(row => String(row.postKey || "")).filter(Boolean));
+  Array.from(selectedPoSignupPostKeys).forEach(key => {
+    if(!visibleKeys.has(key)) selectedPoSignupPostKeys.delete(key);
+  });
   if(!rows.length){
     raidHelperPoSignupSelectedPostKey = "";
-    box.innerHTML = '<div class="muted">Noch keine PO-Anmelder gespeichert.</div>';
+    const emptyText = poSignupListRaidFilter
+      ? `Keine PO-Anmelder für ${poSignupRaidLabel(poSignupListRaidFilter)} gespeichert.`
+      : poSignupListTierFilter === "20"
+        ? "Keine 20er-PO-Anmelder gespeichert."
+        : poSignupListTierFilter === "40"
+          ? "Keine 40er-PO-Anmelder gespeichert."
+          : "Noch keine PO-Anmelder gespeichert.";
+    box.innerHTML = `<div class="muted">${escapeHtml(emptyText)}</div>`;
+    updatePoSignupBulkActions(rows);
     return;
   }
   const selectedStillExists = rows.some(row => String(row.postKey || "") === String(raidHelperPoSignupSelectedPostKey || ""));
@@ -12243,6 +12305,7 @@ function renderRaidHelperPoSignupTab(){
       </div>
     </div>
   `;
+  updatePoSignupBulkActions(rows);
   renderRaidHelperPoSignupDetail(raidHelperPoSignupSelectedPostKey);
 }
 
@@ -12252,6 +12315,7 @@ function renderRaidHelperPoSignupButton(row){
   const imageKey = raidKey.startsWith("zg-") ? "zg" : raidKey;
   const imageUrl = `images/raid-templates/${imageKey || "aq40"}.jpg`;
   const active = postKey === String(raidHelperPoSignupSelectedPostKey || "");
+  const selected = selectedPoSignupPostKeys.has(postKey);
   const count = Number(row.count || row.archivedCount || 0);
   const pin = row.lichtlootPlayerPin || row.prioPin || row.raidPin || "-";
   return `
@@ -12262,6 +12326,7 @@ function renderRaidHelperPoSignupButton(row){
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
       </span>
       <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
+      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.title || postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="togglePoSignupSelection('${escapeAttr(postKey)}', this.checked)">
     </button>
   `;
 }
@@ -12323,8 +12388,10 @@ function renderRaidHelperPoSignupDetail(postKey){
 
 function openRaidHelperPoSignup(postKey){
   selectPoSignupForReview(postKey);
-  openDetailsPanel("poPostPanel");
-  document.getElementById("poPostPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  raidHelperPoSignupSelectedPostKey = String(postKey || "");
+  setRaidHelperTab("poSignup");
+  renderRaidHelperPoSignupTab();
+  document.getElementById("raidHelperPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 function togglePoSignupSelection(postKey, checked){
@@ -12333,6 +12400,7 @@ function togglePoSignupSelection(postKey, checked){
   if(checked) selectedPoSignupPostKeys.add(key);
   else selectedPoSignupPostKeys.delete(key);
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function toggleAllVisiblePoSignups(checked){
@@ -12346,20 +12414,26 @@ function toggleAllVisiblePoSignups(checked){
       else selectedPoSignupPostKeys.delete(key);
     });
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function clearPoSignupSelection(){
   selectedPoSignupPostKeys.clear();
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function updatePoSignupBulkActions(rows = []){
   const bar = document.getElementById("poSignupBulkActions");
   const text = document.getElementById("poSignupBulkSelectionText");
+  const helperBar = document.getElementById("raidHelperPoSignupBulkActions");
+  const helperText = document.getElementById("raidHelperPoSignupBulkSelectionText");
   const selectAll = document.getElementById("selectAllVisiblePoSignups");
   const count = selectedPoSignupPostKeys.size;
   if(bar) bar.hidden = count === 0;
   if(text) text.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
+  if(helperBar) helperBar.hidden = count === 0;
+  if(helperText) helperText.textContent = `${count} ${count === 1 ? "PO-Anmelder" : "PO-Anmelder"} ausgewählt`;
   if(selectAll){
     const keys = rows.map(row => String(row.postKey || "").trim()).filter(Boolean);
     const selected = keys.filter(key => selectedPoSignupPostKeys.has(key)).length;
@@ -12384,6 +12458,7 @@ async function deleteSelectedPoSignups(){
     selectedPoSignupPostKeys.delete(key);
   }
   await loadPoPostStoredEntries();
+  renderRaidHelperPoSignupTab();
   if(status){
     status.innerHTML = `<span class="good">Ausgewählte PO-Anmelder gelöscht.</span>`;
     status.className = "status good";
@@ -12432,12 +12507,14 @@ function setPoSignupListTierFilter(tier){
   poSignupListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
   poSignupListRaidFilter = "";
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function setPoSignupListRaidFilter(raid){
   const key = normalizePoSignupRaidKey(raid);
   poSignupListRaidFilter = poSignupListRaidFilter === key ? "" : key;
   renderPoSignupConfigRows();
+  renderRaidHelperPoSignupTab();
 }
 
 function renderPoSignupListFilters(){
@@ -12445,14 +12522,16 @@ function renderPoSignupListFilters(){
     button.classList.toggle("primary", button.dataset.poSignupTier === poSignupListTierFilter);
     button.classList.toggle("ghost", button.dataset.poSignupTier !== poSignupListTierFilter);
   });
-  const box = document.getElementById("poSignupRaidTabs");
-  if(!box) return;
   const raidKeys = poSignupListRaidKeys();
   const allLabel = poSignupListTierFilter === "20" ? "Alle 20er" : poSignupListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
-  box.innerHTML = [
+  const markup = [
     `<button class="small-btn ${poSignupListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setPoSignupListRaidFilter('')">${allLabel}</button>`,
     ...raidKeys.map(raid => `<button class="small-btn ${poSignupListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setPoSignupListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
   ].join("");
+  ["poSignupRaidTabs","raidHelperPoSignupRaidTabs"].forEach(id => {
+    const box = document.getElementById(id);
+    if(box) box.innerHTML = markup;
+  });
 }
 
 async function runPoSignupRowAction(select, postKey){
@@ -13398,7 +13477,11 @@ async function createRaidHelperSignup(){
         discordChannelId,
         raid:raidKey,
         raidDate,
+        date:raidDate,
+        datum:raidDate,
         raidTime,
+        time:raidTime,
+        uhrzeit:raidTime,
         mode:"signup",
         note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",
         restoreArchived:"true",
