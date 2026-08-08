@@ -12387,11 +12387,11 @@ function renderRaidHelperPoSignupDetail(postKey){
 }
 
 function openRaidHelperPoSignup(postKey){
-  selectPoSignupForReview(postKey);
-  raidHelperPoSignupSelectedPostKey = String(postKey || "");
-  setRaidHelperTab("poSignup");
-  renderRaidHelperPoSignupTab();
-  document.getElementById("raidHelperPanel")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  const key = String(postKey || "").trim();
+  if(!key) return;
+  raidHelperPoSignupSelectedPostKey = key;
+  openPoPostPanel();
+  selectPoSignupForReview(key);
 }
 
 function togglePoSignupSelection(postKey, checked){
