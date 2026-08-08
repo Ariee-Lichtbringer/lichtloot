@@ -15564,7 +15564,9 @@ async function getRaidHelper({ guildId, query: params }) {
   const signupResult = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
-       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
+       coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
+       coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
+       rs.created_at, rs.updated_at,
        c.name as player_name, c.server, c.class_name,
        exists(
          select 1
@@ -15941,7 +15943,6 @@ async function deleteRaidSignup({ guildId, query: params }) {
 }
 
 async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
   const signupId = clean(params.signupId || params.id);
   const nextStatus = normalizeSignupStatus(params.signupStatus || params.status);
   const shouldDelete = ["delete", "remove", "verwerfen"].includes(clean(params.mode || params.signupAction || params.actionMode).toLowerCase());
@@ -15958,6 +15959,17 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+
+  const masterCode = clean(params.masterCode);
+  const leadPin = clean(params.leadPin || params.raidleadPin);
+  if (masterCode) {
+    requireMasterCode(masterCode);
+  } else if (!leadPin || clean(existingSignup.leadPin).toLowerCase() !== leadPin.toLowerCase()) {
+    const error = new Error("LeadPIN passt nicht zu diesem Raid.");
+    error.statusCode = 403;
+    throw error;
+  }
+  existingSignup.changedBy = masterCode ? "Gildenleitung" : "Raidlead";
 
   if (shouldDelete) {
     const externalDelete = await query(
@@ -16020,7 +16032,7 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
        res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
        res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
-       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets
+       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
      from raid_external_signups res
      left join raids r on r.id = res.raid_id and r.guild_id = res.guild_id
      where res.guild_id = $1 and res.id = $2
@@ -16039,7 +16051,8 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
       discordMessageId: row.discord_message_id || "",
       createdBy: row.created_by || "",
       lootMaster: row.loot_master || "",
-      statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : []
+      statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
+      leadPin: row.lead_pin || ""
     };
   }
 
@@ -16049,10 +16062,17 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
        rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
        c.name as player_name, c.server, c.class_name,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
-       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets
+       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
      from raid_signups rs
      join raids r on r.id = rs.raid_id and r.guild_id = $1
      join characters c on c.id = rs.character_id
+     left join lateral (
+       select link.discord_user_id, link.discord_name
+       from discord_player_links link
+       where link.guild_id = r.guild_id and link.character_id = c.id
+       order by link.updated_at desc, link.created_at desc
+       limit 1
+     ) dpl on true
      where rs.id = $2
      limit 1`,
     [guildId, signupId]
@@ -16069,7 +16089,8 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
     discordMessageId: row.discord_message_id || "",
     createdBy: row.created_by || "",
     lootMaster: row.loot_master || "",
-    statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : []
+    statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
+    leadPin: row.lead_pin || ""
   };
 }
 
@@ -16109,7 +16130,7 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
       raidTime: clean(signup?.raidTime || ""),
       action: clean(action || ""),
       message: notifyMessage,
-      changedBy: "Gildenleitung",
+      changedBy: clean(signup?.changedBy || "Gildenleitung"),
       createdBy: clean(signup?.createdBy || ""),
       lootMaster: clean(signup?.lootMaster || ""),
       targets: statusTargets,
