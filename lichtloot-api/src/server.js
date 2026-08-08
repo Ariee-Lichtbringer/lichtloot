@@ -17094,8 +17094,23 @@ async function validateLeadPin({ guildId, query: params }) {
     }
   }
 
-  if (clean(params.raidId || params.id)) {
-    const requestedRaid = await findRaid(guildId, { raidId: params.raidId || params.id });
+  const requestedRaidId = clean(params.raidId || params.id);
+  const allowLootMaster = ["1", "true", "yes", "ja"].includes(
+    clean(params.allowLootMaster).toLowerCase()
+  );
+  if (allowLootMaster && requestedRaidId) {
+    const lootMasterPin = clean(await effectiveLootMasterPin(guildId));
+    if (lootMasterPin && leadPin === lootMasterPin) {
+      const requestedRaid = await findRaid(guildId, { raidId: requestedRaidId });
+      if (!requestedRaid) {
+        return { success: false, error: "Raid wurde nicht gefunden." };
+      }
+      return { success: true, managerMode: "lootmaster", ...normalizeRaidRow(requestedRaid) };
+    }
+  }
+
+  if (requestedRaidId) {
+    const requestedRaid = await findRaid(guildId, { raidId: requestedRaidId });
     if (!requestedRaid || clean(requestedRaid.lead_pin).toLowerCase() !== leadPin.toLowerCase()) {
       return { success: false, error: "LeadPIN passt nicht zu diesem Raid." };
     }
