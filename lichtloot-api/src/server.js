@@ -4585,6 +4585,27 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
       }
       synced += 1;
     }
+    // Offene Termine aus einem älteren WBPoster-Snapshot dürfen nicht weiter
+    // in Discord angeboten werden. Spielerbelegte Termine bleiben erhalten.
+    await client.query(
+      `delete from worldbuff_events e
+       where e.guild_id = $1
+         and lower(coalesce(e.source, '')) = 'wb_poster'
+         and not exists (
+           select 1
+           from worldbuff_poster_events p
+           where p.guild_id = e.guild_id
+             and p.buff = e.buff
+             and p.event_date = e.event_date
+             and p.event_time = e.event_time
+             and coalesce(p.guild_name, '') = coalesce(e.guild_name, '')
+         )
+         and not exists (
+           select 1 from worldbuff_entries we
+           where we.event_id = e.id and nullif(we.caster, '') is not null
+         )`,
+      [guildId]
+    );
     const storedResult = await client.query(
       `select count(*)::int as count
        from worldbuff_poster_events
@@ -4605,7 +4626,7 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
     synced,
     skippedOccupied,
     stored,
-    syncVersion: "wb-poster-snapshot-v4"
+    syncVersion: "wb-poster-snapshot-v5"
   };
 }
 
