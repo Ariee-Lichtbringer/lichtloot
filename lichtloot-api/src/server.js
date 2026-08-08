@@ -2242,7 +2242,7 @@ function requireMasterCodeForGuild(guild, value, action="", params={}) {
   if(code && worldbuffCode && code===worldbuffCode){
     const worldbuffActions=new Set([
       "guildVerifyWorldbuffAccess","guildGetWorldbuffs","guildSetWorldbuffCaster",
-      "guildRequestWorldbuffReplacement","guildDeleteWorldbuffTerm",
+      "guildRequestWorldbuffReplacement","guildRemindWorldbuffCaster","guildDeleteWorldbuffTerm",
       "guildQueueWorldbuffBackup","guildRestoreDeletedWorldbuffTerms","guildSyncPublicBuffTerms"
     ]);
     const allowed=worldbuffActions.has(action)
@@ -3047,9 +3047,11 @@ function worldbuffDailySlotKey(entry) {
   const date = parseDateValue(entry.date || entry.datum || entry.event_date || entry.eventDate);
   const time = clean(entry.uhrzeit || entry.time || entry.event_time || entry.eventTime).replace(/:00$/, "");
   const buff = normalizeWorldbuffName(entry.buff);
+  const slotType = worldbuffDailySlotType(buff);
   const guild = normalizeWorldbuffGuildName(entry.gilde || entry.guild || entry.guild_name).toLowerCase();
   if (!date || !time || !buff) return "";
-  return [date, time, buff, guild].join("|");
+  if (slotType === "ony-nef") return [date, slotType, guild].join("|");
+  return [date, time, slotType, guild].join("|");
 }
 
 function normalizeWorldbuffRow(row) {
@@ -4128,6 +4130,22 @@ async function setWorldbuffCaster({ guildId, query: params }) {
       event = nextOpen.rows[0] || null;
     }
     event = event || await upsertWorldbuffEvent(client, guildId, params);
+    if (caster && ["Ony", "Nef"].includes(normalizeWorldbuffName(params.buff || event.buff))) {
+      const occupiedSameDay = await client.query(
+        `select we.caster
+         from worldbuff_events other
+         join worldbuff_entries we on we.event_id = other.id
+         where other.guild_id = $1
+           and other.event_date = $2
+           and other.buff in ('Ony', 'Nef')
+           and other.id <> $3
+           and nullif(we.caster, '') is not null
+         order by we.updated_at desc
+         limit 1`,
+        [guildId, event.event_date, event.id]
+      );
+      if (occupiedSameDay.rows[0]) throwWorldbuffSlotOccupied(occupiedSameDay.rows[0].caster);
+    }
     const requestedBuff = normalizeWorldbuffName(params.buff);
     const requestedGuild = clean(params.gilde || params.guild || params.fraktion || params.faction);
     if (event && (requestedBuff || requestedGuild || note)) {
@@ -4816,10 +4834,18 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
   return saved;
 }
 
-async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUserId = "", action, reason, fromEvent, toEvent }) {
-  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : action === "changed" ? "geändert" : "verschoben";
+async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUserId = "", action, reason, fromEvent, toEvent, notifyStaff = true }) {
+  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : action === "changed" ? "geändert" : action === "reminder" ? "Erinnerung" : "verschoben";
+  const noticeDate = value => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString().slice(0, 10);
+    const raw = clean(value);
+    const german = raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    if (german) return `${german[3]}-${german[2]}-${german[1]}`;
+    const parsed = new Date(raw);
+    return raw && !Number.isNaN(parsed.getTime()) ? parsed.toISOString().slice(0, 10) : raw;
+  };
   const formatEvent = event => event
-    ? [event.buff, event.event_date ? new Date(event.event_date).toISOString().slice(0, 10) : "", clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
+    ? [event.buff, noticeDate(event.event_date), clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
     : "-";
   const title = `Worldbuff-Termin ${actionLabel}: ${character}`;
   const body = [
@@ -4839,8 +4865,8 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUse
     ).catch(() => {});
   }
 
-  const configuredTargets=await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]);
-  const messageTemplate=await notificationMessageTemplate(guildId,"manage_worldbuffs").catch(()=>"");
+  const configuredTargets=notifyStaff ? await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]) : [];
+  const messageTemplate=notifyStaff ? await notificationMessageTemplate(guildId,"manage_worldbuffs").catch(()=>"") : "";
   const discordRecipientResult = await query(
     `select dpl.discord_user_id, dpl.discord_name
      from players p
@@ -4865,8 +4891,9 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUse
     guildId,
     type: "worldbuff_player_change_notice",
     payload: {
-      recipient: configuredTargets.length ? "" : "Ariee",
+      recipient: notifyStaff && !configuredTargets.length ? "Ariee" : "",
       targets: configuredTargets,
+      notifyStaff,
       messageTemplate,
       character,
       playerDiscordUserId: clean(discordUserId || discordRecipient.discord_user_id),
@@ -4876,13 +4903,13 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, discordUse
       actionLabel,
       reason,
       buff: clean(fromEvent?.buff),
-      date: fromEvent?.event_date ? new Date(fromEvent.event_date).toISOString().slice(0, 10) : "",
+      date: noticeDate(fromEvent?.event_date),
       time: clean(fromEvent?.event_time),
       worldbuffGuild: clean(fromEvent?.guild_name),
       from: formatEvent(fromEvent),
       to: ["moved", "changed"].includes(action) ? formatEvent(toEvent) : "",
       newBuff: clean(toEvent?.buff),
-      newDate: toEvent?.event_date ? new Date(toEvent.event_date).toISOString().slice(0, 10) : "",
+      newDate: noticeDate(toEvent?.event_date),
       newTime: clean(toEvent?.event_time),
       newWorldbuffGuild: clean(toEvent?.guild_name)
     }
@@ -21958,6 +21985,28 @@ app.post("/api/apps-script", async (req, res, next) => {
         }
       });
       return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildRemindWorldbuffCaster") {
+      requireMasterCode(postParams.masterCode);
+      const character = clean(postParams.charakter || postParams.caster);
+      if (!character) return res.status(400).json({ success: false, error: "Für diesen Termin ist kein Werfer eingetragen." });
+      await notifyWorldbuffPlayerChange({
+        guildId: guild.id,
+        pin: "",
+        character,
+        action: "reminder",
+        reason: "",
+        fromEvent: {
+          buff: normalizeWorldbuffName(postParams.buff),
+          event_date: postParams.datum || postParams.date || "",
+          event_time: postParams.uhrzeit || postParams.time || "",
+          guild_name: postParams.gilde || postParams.guildName || ""
+        },
+        toEvent: null,
+        notifyStaff: false
+      });
+      return res.json({ success: true, queued: true, guild: guild.slug });
     }
 
     if (action === "guildQueueWorldbuffBotUpdate") {
