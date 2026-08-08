@@ -2685,6 +2685,36 @@ async function setPoReleaseDisplaySettings({ guildId, query: params }) {
   return { success:true, visibleRaids };
 }
 
+async function getRaidSignupPageSettings(guildId) {
+  await ensureGuildLayoutSchema();
+  const result = await query(
+    `select gs.layout_json, g.slug
+       from guilds g
+       left join guild_settings gs on gs.guild_id=g.id
+      where g.id=$1`,
+    [guildId]
+  );
+  const saved = result.rows[0]?.layout_json?.raidSignupEnabled;
+  const enabled = typeof saved === "boolean"
+    ? saved
+    : clean(result.rows[0]?.slug).toLowerCase() !== "lichtloot";
+  return { success:true, enabled, configured:typeof saved === "boolean" };
+}
+
+async function setRaidSignupPageSettings({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureGuildLayoutSchema();
+  const enabled = ["1", "true", "yes", "on"].includes(clean(params.enabled).toLowerCase());
+  await query(
+    `insert into guild_settings (guild_id, layout_json)
+     values ($1, jsonb_build_object('raidSignupEnabled', $2::boolean))
+     on conflict (guild_id) do update
+       set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{raidSignupEnabled}',to_jsonb($2::boolean),true), updated_at=now()`,
+    [guildId, enabled]
+  );
+  return { success:true, enabled };
+}
+
 async function ensureWorldbuffAccessSchema(){
   await query(`create table if not exists guild_worldbuff_access (guild_id uuid primary key references guilds(id) on delete cascade,password text not null,updated_at timestamptz not null default now())`);
 }
@@ -20779,6 +20809,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...settings, guild: guild.slug });
     }
 
+    if (action === "getRaidSignupPageSettings") {
+      const settings = await getRaidSignupPageSettings(guild.id);
+      return res.json({ ...settings, guild: guild.slug });
+    }
+
     if (action === "getGuildLeadershipOverview") {
       const overview = await getGuildLeadershipOverview(guild.id, req.query);
       return res.json({ ...overview, guild: guild.slug });
@@ -21712,6 +21747,9 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
     if(action==="guildSetPoReleaseDisplaySettings"){
       const saved=await setPoReleaseDisplaySettings({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
+    }
+    if(action==="guildSetRaidSignupPageSettings"){
+      const saved=await setRaidSignupPageSettings({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
     }
     if(action==="guildSetRaidLootMasterTargets"){
       const saved=await setRaidLootMasterTargets({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
