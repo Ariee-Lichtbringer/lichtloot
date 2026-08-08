@@ -1345,6 +1345,7 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .dashboard-mini-link{width:100%;min-height:38px;margin-top:8px;border-radius:6px;border:1px solid rgba(250,204,21,.25);background:rgba(250,204,21,.08);color:#facc15;font-weight:950;cursor:pointer;text-align:left;padding:8px 10px}
 
 .dashboard-worldbuff-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);color:#f8fafc;font-weight:850}
+.dashboard-worldbuff-icon{width:27px;height:27px;border-radius:5px;object-fit:cover;border:1px solid rgba(255,255,255,.20);box-shadow:0 3px 10px rgba(0,0,0,.38)}
 .dashboard-worldbuff-dot{width:10px;height:10px;border-radius:999px;background:#facc15;box-shadow:0 0 12px rgba(250,204,21,.45)}
 .dashboard-worldbuff-dot.hakkar{background:#22c55e}.dashboard-worldbuff-dot.ony,.dashboard-worldbuff-dot.nef{background:#ef4444}.dashboard-worldbuff-dot.rend{background:#f59e0b}
 .dashboard-worldbuff-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dashboard-worldbuff-time{color:#86efac;font-weight:950;white-space:nowrap}
@@ -1585,6 +1586,22 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 }
 #ownP0PlusModal .my-own-p0-block .p0plus-table th{font-size:10px!important}
 #ownP0PlusModal .my-own-p0-block .p0plus-table td{font-size:12px!important}
+#ownP0PlusModal .own-p0-accordion{display:grid;gap:12px}
+#ownP0PlusModal .own-p0-raid{border:1px solid rgba(250,204,21,.24);border-radius:12px;overflow:hidden;background:rgba(2,6,23,.48)}
+#ownP0PlusModal .own-p0-raid>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;color:#facc15;font-size:16px;font-weight:950;background:rgba(255,255,255,.055)}
+#ownP0PlusModal .own-p0-raid>summary::-webkit-details-marker{display:none}
+#ownP0PlusModal .own-p0-raid>summary:before{content:"\25BC";font-size:12px}
+#ownP0PlusModal .own-p0-raid:not([open])>summary:before{content:"\25B6"}
+#ownP0PlusModal .own-p0-raid-name{margin-right:auto}
+#ownP0PlusModal .own-p0-item-list{display:grid;gap:8px;padding:8px 12px 12px}
+#ownP0PlusModal .own-p0-item{border:1px solid rgba(148,163,184,.22);border-radius:11px;overflow:hidden;background:rgba(2,6,23,.52)}
+#ownP0PlusModal .own-p0-item>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px}
+#ownP0PlusModal .own-p0-item>summary::-webkit-details-marker{display:none}
+#ownP0PlusModal .own-p0-item>summary:before{content:"\25BC";color:#facc15;font-size:11px}
+#ownP0PlusModal .own-p0-item:not([open])>summary:before{content:"\25B6"}
+#ownP0PlusModal .own-p0-item .p0plus-summary-left{margin-right:auto}
+#ownP0PlusModal .own-p0-item-detail{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 14px 10px 31px;color:#f8fafc;font-size:13px;font-weight:900}
+#ownP0PlusModal .own-p0-item-detail strong{color:#facc15}
 .own-p0-popout-card{
   display:grid;
   gap:8px;
@@ -4795,9 +4812,10 @@ async function loadDashboardWorldbuffs(){
   }
   box.innerHTML=list.map(entry=>{
     const meta=[entry.gilde,entry.charakter ? "Werfer: "+entry.charakter : "",entry.source].filter(Boolean).join(" · ");
+    const icon=dashboardBuffIconName(entry.buff);
     return '<div class="dashboard-worldbuff-row">' +
-      '<span class="dashboard-worldbuff-dot '+dashboardBuffClass(entry.buff)+'"></span>' +
-      '<span class="dashboard-worldbuff-name">'+safeHtml(entry.buff || "Buff")+'</span>' +
+      '<img class="dashboard-worldbuff-icon" src="'+safeAttr(getIconUrl(icon))+'" alt="" loading="lazy" onerror="iconFallback(this)">' +
+      '<span class="dashboard-worldbuff-name">'+safeHtml(dashboardBuffDisplayName(entry.buff) || entry.buff || "Buff")+'</span>' +
       '<span class="dashboard-worldbuff-time">'+safeHtml(formatRaidTimeForDisplay(entry.uhrzeit))+'</span>' +
       '<div class="dashboard-worldbuff-meta">'+safeHtml([formatRaidDateForDisplay(entry.datum),meta].filter(Boolean).join(' · '))+'</div>' +
     '</div>';
@@ -8195,51 +8213,54 @@ function findItemInAnyRaid(itemName){
 
 function renderOwnP0PlusOverviewTable(points){
   const byRaid={};
+  const currentPlayer=String(document.getElementById('myPriosChar')?.value || '').trim();
+  const number=value=>{
+    const parsed=Number(String(value ?? 0).replace(',','.'));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const displayNumber=value=>Number.isInteger(value) ? String(value) : String(Math.round(value*100)/100).replace('.',',');
+
   (points || []).forEach(point=>{
-    const raid=point.raid || 'Raid';
-    if(!byRaid[raid]) byRaid[raid]=[];
-    byRaid[raid].push(point);
+    const raid=String(point.raid || 'Raid').trim() || 'Raid';
+    const item=String(point.item || 'Unbekanntes Item').trim() || 'Unbekanntes Item';
+    const key=item.toLocaleLowerCase('de-DE');
+    if(!byRaid[raid]) byRaid[raid]={total:0,items:{}};
+    if(!byRaid[raid].items[key]) byRaid[raid].items[key]={item,slot:point.slot || '',count:0,player:point.player || point.Spieler || currentPlayer};
+    const value=number(point.count ?? point.points ?? point.Punkte);
+    byRaid[raid].items[key].count+=value;
+    byRaid[raid].total+=value;
   });
 
-  let html='<div class="my-own-p0-block">';
-
-  Object.keys(byRaid).sort().forEach(raid=>{
-    html+=`<div class="p0plus-raid">${safeHtml(raid)}</div>`;
-    html+=`<table class="p0plus-table">
-      <thead>
-        <tr>
-          <th>Item</th>
-          <th>Slot</th>
-          <th>Punkte</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>`;
-
-    byRaid[raid]
-      .sort((a,b)=>String(a.item || '').localeCompare(String(b.item || ''),'de'))
-      .forEach(point=>{
-        const reportPayload=safeAttr(JSON.stringify({
-          source:"Mein LichtLoot",
-          category:"Prio/P0+ Punkte",
-          raid:raid,
-          item:point.item || "",
-          slot:point.slot || "",
-          points:point.count || 0
-        }));
-        html+=`<tr>
-          <td>${p0PlusItemHtml({raid:raid,item:point.item})}</td>
-          <td>${safeHtml(point.slot || '')}</td>
-          <td><strong>${safeHtml(point.count || 0)}</strong></td>
-          <td><button class="report-btn" title="Fehler melden" onclick='openReportModal(${reportPayload})'>✉</button></td>
-        </tr>`;
-      });
-
-    html+='</tbody></table>';
+  const preferred=['MC','BWL','AQ40','NAXX'];
+  const raids=Object.keys(byRaid).sort((a,b)=>{
+    const ai=preferred.indexOf(String(a).toUpperCase());
+    const bi=preferred.indexOf(String(b).toUpperCase());
+    if(ai!==-1 || bi!==-1) return (ai===-1 ? 999 : ai)-(bi===-1 ? 999 : bi);
+    return a.localeCompare(b,'de');
   });
+  let html='<div class="my-own-p0-block own-p0-accordion">';
 
-  html+='</div>';
-  return html;
+  raids.forEach(raid=>{
+    const raidData=byRaid[raid];
+    const items=Object.values(raidData.items).sort((a,b)=>b.count-a.count || a.item.localeCompare(b.item,'de'));
+    html+=`<details class="own-p0-raid" open>
+      <summary><span class="own-p0-raid-name">${safeHtml(raid)}</span><span class="p0plus-badge">${safeHtml(displayNumber(raidData.total))} P0+</span></summary>
+      <div class="own-p0-item-list">`;
+
+    items.forEach(item=>{
+      const reportPayload=safeAttr(JSON.stringify({source:"Mein LichtLoot",category:"Prio/P0+ Punkte",raid,item:item.item,slot:item.slot,points:item.count}));
+      html+=`<details class="own-p0-item" open>
+        <summary>${p0Aq40ItemSummaryHtml(raid,item.item)}<span class="p0plus-badge">${safeHtml(displayNumber(item.count))}</span></summary>
+        <div class="own-p0-item-detail">
+          <span>${safeHtml(item.player || currentPlayer || 'Eigene Punkte')}</span>
+          <strong>${safeHtml(displayNumber(item.count))} ${item.count === 1 ? 'Punkt' : 'Punkte'}</strong>
+          <button class="report-btn" title="Fehler melden" onclick='openReportModal(${reportPayload})'>✉</button>
+        </div>
+      </details>`;
+    });
+    html+='</div></details>';
+  });
+  return html+'</div>';
 }
 
 let currentReportPayload=null;
