@@ -3473,7 +3473,6 @@ function poRequestRequirements(type, raid, className, specialization) {
 
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
-  await requireNachtlootGuild(guildId);
   const pin = normalizePin(params.playerPin || params.pin);
   const character = await findCharacterForPin(guildId, pin, params.character || params.char || params.player, params.server);
   if (!character) { const error = new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode = 403; throw error; }
@@ -3508,7 +3507,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
 }
 
 async function getPoReleaseRequests({ guildId, query: params = {}, management = false }) {
-  await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
+  await ensureCharacterPoReleaseSchema();
   let characterId = "";
   if (management) requireMasterCode(params.masterCode);
   else {
@@ -3527,7 +3526,7 @@ async function getPoReleaseRequests({ guildId, query: params = {}, management = 
 }
 
 async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
-  await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
+  await ensureCharacterPoReleaseSchema();
   const id = clean(params.id || params.requestId);
   const decision = clean(params.decision || params.status).toLowerCase();
   if (!isUuid(id) || !["approved","rejected"].includes(decision)) { const error = new Error("Antrag oder Entscheidung ist ungültig."); error.statusCode=400; throw error; }
@@ -3554,7 +3553,6 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
 async function deletePoReleaseRequest({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
-  await requireNachtlootGuild(guildId);
   const id = clean(params.id || params.requestId);
   if (!isUuid(id)) {
     const error = new Error("Antrag ist ungültig.");
