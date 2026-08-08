@@ -16274,7 +16274,7 @@ function renderWorldbuffRows(){
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
           </select>` : `<span class="badge ${statusValue.includes("bestätigt") ? "open" : "warn"}">${escapeHtml(statusValue || "offen")}</span>`}
         </td>
-        <td>${ownGuildEntry ? `<div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div>` : '<span class="muted">Fremdgilde · nur ansehen</span>'}</td>
+        <td>${ownGuildEntry ? `<div class="action-row"><button class="small-btn good" type="button" onclick="saveWorldbuffCaster(${index})">Speichern</button><button class="small-btn ghost" type="button" onclick="remindWorldbuffCaster(${index})">Werfer informieren</button><button class="small-btn ghost" type="button" onclick="requestWorldbuffReplacement(${index})">Ersatz suchen</button><button class="small-btn danger" type="button" onclick="deleteWorldbuffTerm(${index})">Löschen</button></div>` : '<span class="muted">Fremdgilde · nur ansehen</span>'}</td>
       </tr>
     `;
   }).join("");
@@ -16516,6 +16516,13 @@ async function requestWorldbuffReplacement(index){
   }catch(error){
     setStatus(error.message || "Ersatzsuche konnte nicht vorgemerkt werden.", "bad");
   }
+}
+
+async function remindWorldbuffCaster(index){
+  const entry=worldbuffEntries[index], masterCode=document.getElementById("masterCode").value.trim();
+  if(!entry||!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
+  if(!String(entry.charakter||"").trim()){setStatus("Für diesen Termin ist kein Werfer eingetragen.","bad");return;}
+  try{const result=await railwayWrite({action:"guildRemindWorldbuffCaster",masterCode,rowNumber:entry.rowNumber||"",buff:entry.buff||"",datum:entry.datum||"",uhrzeit:entry.uhrzeit||"",gilde:entry.gilde||managedWorldbuffGuildName(),charakter:entry.charakter||""});setStatus(result.success?`Erinnerung für ${entry.charakter} wurde an den Bot übergeben.`:(result.error||"Werfer konnte nicht informiert werden."),result.success?"good":"bad");}catch(error){setStatus(error.message||"Werfer konnte nicht informiert werden.","bad");}
 }
 
 async function deleteWorldbuffTerm(index){
