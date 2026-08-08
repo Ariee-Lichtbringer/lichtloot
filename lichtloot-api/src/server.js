@@ -4098,6 +4098,8 @@ async function setWorldbuffCaster({ guildId, query: params }) {
     const isGuildAdminEdit = actionName === "guildsetworldbuffcaster";
     const rowNumber = clean(params.rowNumber);
     const found = await findWorldbuffEventOrEntry(client, guildId, rowNumber);
+    const previousEvent = found.event ? { ...found.event } : null;
+    const previousCaster = clean(found.entry?.caster);
     const caster = clean(params.charakter || params.caster || params.werfer);
     const discordName = clean(params.discord || params.discordName);
     let status = normalizeWorldbuffStatus(params.status || (caster ? "bestätigt" : "offen"));
@@ -4261,6 +4263,46 @@ async function setWorldbuffCaster({ guildId, query: params }) {
 
     await client.query("commit");
     await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_saved" } }).catch(() => {});
+    if (isGuildAdminEdit) {
+      const changeReason = clean(params.changeReason || params.reason) || "Durch die Gildenleitung geändert";
+      const currentEvent = {
+        buff: normalizeWorldbuffName(event.buff),
+        event_date: event.event_date,
+        event_time: event.event_time,
+        guild_name: event.guild_name
+      };
+      const eventValue = value => value instanceof Date ? value.toISOString() : clean(value);
+      const meaningfulAdminChange =
+        !sameWorldbuffCasterName(previousCaster, caster) ||
+        eventValue(previousEvent?.buff) !== eventValue(currentEvent.buff) ||
+        eventValue(previousEvent?.event_date) !== eventValue(currentEvent.event_date) ||
+        eventValue(previousEvent?.event_time) !== eventValue(currentEvent.event_time) ||
+        eventValue(previousEvent?.guild_name) !== eventValue(currentEvent.guild_name) ||
+        clean(found.entry?.status) !== status ||
+        clean(found.entry?.note) !== note;
+      if (meaningfulAdminChange && previousCaster && !sameWorldbuffCasterName(previousCaster, caster)) {
+        await notifyWorldbuffPlayerChange({
+          guildId,
+          pin: "",
+          character: previousCaster,
+          action: "cancelled",
+          reason: changeReason,
+          fromEvent: previousEvent || currentEvent,
+          toEvent: null
+        });
+      }
+      if (meaningfulAdminChange && caster) {
+        await notifyWorldbuffPlayerChange({
+          guildId,
+          pin: "",
+          character: caster,
+          action: previousCaster && sameWorldbuffCasterName(previousCaster, caster) ? "changed" : "registered",
+          reason: changeReason,
+          fromEvent: previousEvent || currentEvent,
+          toEvent: currentEvent
+        });
+      }
+    }
     return {
       success: true,
       rowNumber: savedId || event.id,
@@ -4757,7 +4799,7 @@ async function claimPlayerWorldbuff({ guildId, query: params }) {
 }
 
 async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, reason, fromEvent, toEvent }) {
-  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : "verschoben";
+  const actionLabel = action === "cancelled" ? "abgesagt" : action === "registered" ? "angemeldet" : action === "changed" ? "geändert" : "verschoben";
   const formatEvent = event => event
     ? [event.buff, event.event_date ? new Date(event.event_date).toISOString().slice(0, 10) : "", clean(event.event_time), clean(event.guild_name)].filter(Boolean).join(" · ")
     : "-";
@@ -4766,7 +4808,7 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
     `${character} hat einen Worldbuff-Termin ${actionLabel}.`,
     "",
     `${action === "registered" ? "Termin" : "Bisheriger Termin"}: ${formatEvent(fromEvent)}`,
-    action === "moved" ? `Neuer Termin: ${formatEvent(toEvent)}` : "",
+    ["moved", "changed"].includes(action) ? `Neuer Termin: ${formatEvent(toEvent)}` : "",
     `Grund: ${reason}`
   ].filter(Boolean).join("\n");
 
@@ -4781,6 +4823,26 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
 
   const configuredTargets=await notificationTargetsForPermissions(guildId,["manage_worldbuffs","notify_worldbuff_changes"]).catch(()=>[]);
   const messageTemplate=await notificationMessageTemplate(guildId,"manage_worldbuffs").catch(()=>"");
+  const discordRecipientResult = await query(
+    `select dpl.discord_user_id, dpl.discord_name
+     from players p
+     join characters c on c.player_id = p.id
+     join discord_player_links dpl
+       on dpl.guild_id = p.guild_id
+      and dpl.character_id = c.id
+     where p.guild_id = $1
+       and ($2 = '' or p.player_pin = $2)
+       and lower(c.name) = lower($3)
+     order by dpl.updated_at desc, dpl.created_at desc
+     limit 1`,
+    [guildId, normalizePin(pin), character]
+  ).catch(() => ({ rows: [] }));
+  const guildResult = await query(
+    `select name, slug from guilds where id = $1 limit 1`,
+    [guildId]
+  ).catch(() => ({ rows: [] }));
+  const discordRecipient = discordRecipientResult.rows[0] || {};
+  const guildRow = guildResult.rows[0] || {};
   await enqueueBotUpdate({
     guildId,
     type: "worldbuff_player_change_notice",
@@ -4789,11 +4851,22 @@ async function notifyWorldbuffPlayerChange({ guildId, pin, character, action, re
       targets: configuredTargets,
       messageTemplate,
       character,
+      playerDiscordUserId: clean(discordRecipient.discord_user_id),
+      playerDiscordName: clean(discordRecipient.discord_name),
+      guildName: clean(guildRow.name || guildRow.slug),
       action,
       actionLabel,
       reason,
+      buff: clean(fromEvent?.buff),
+      date: fromEvent?.event_date ? new Date(fromEvent.event_date).toISOString().slice(0, 10) : "",
+      time: clean(fromEvent?.event_time),
+      worldbuffGuild: clean(fromEvent?.guild_name),
       from: formatEvent(fromEvent),
-      to: action === "moved" ? formatEvent(toEvent) : ""
+      to: ["moved", "changed"].includes(action) ? formatEvent(toEvent) : "",
+      newBuff: clean(toEvent?.buff),
+      newDate: toEvent?.event_date ? new Date(toEvent.event_date).toISOString().slice(0, 10) : "",
+      newTime: clean(toEvent?.event_time),
+      newWorldbuffGuild: clean(toEvent?.guild_name)
     }
   }).catch(() => {});
 }
