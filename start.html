@@ -7550,7 +7550,7 @@ function renderMyPrios(data){
 
   let html='';
 
-  if(CURRENT_GUILD_SLUG === "nachtloot") html+=renderPoReleaseRequestCard(data,poReleaseRequests);
+  html+=renderPoReleaseRequestCard(data,poReleaseRequests);
   html+=renderMyPoReleasesCard(poReleases,poReleaseRequests,data);
 
   if(!pastEntries.length && !ownP0.length && !hasPoRelease){
@@ -7611,8 +7611,13 @@ function renderMyPrios(data){
   }
 
   results.innerHTML=html;
-  if(CURRENT_GUILD_SLUG === "nachtloot"){initPoRequestClassSelect();initCharacterManagementTiles();}
+  initPoRequestClassSelect();
+  initCharacterManagementTiles();
+  syncCharacterReleaseExtras("request");
 }
+
+function syncCharacterReleaseExtras(activeKey){const root=document.querySelector('[data-mein-lichtloot-section="chars"]');if(!root)return;root.querySelectorAll(".own-p0-popout-card").forEach(card=>{if(String(card.textContent||"").includes("Eigene P0/P0+ Punkte")){card.classList.add("character-manage-panel");card.dataset.characterManagePanel="releases-extra";card.classList.toggle("is-tile-hidden",activeKey!=="releases");}});}
+if(!window.characterReleaseTileListenerBound){window.characterReleaseTileListenerBound=true;document.addEventListener("click",event=>{const tile=event.target.closest("[data-character-manage-tile]");if(tile)syncCharacterReleaseExtras(tile.dataset.characterManageTile);});}
 
 function initCharacterManagementTiles(){const root=document.querySelector('[data-mein-lichtloot-section="chars"]');if(!root)return;root.querySelector(".character-manage-tiles")?.remove();const request=document.querySelector(".po-request-form")?.closest(".own-p0-popout-card");const releases=document.querySelector(".own-p0-release-items")?.closest(".own-p0-popout-card");const add=root.querySelector(".character-subsection.is-add");const remove=root.querySelector(".character-subsection.is-delete");const panels={request,releases,add,remove};Object.entries(panels).forEach(([key,panel])=>{if(panel){panel.classList.add("character-manage-panel");panel.dataset.characterManagePanel=key;}});const nav=document.createElement("div");nav.className="character-manage-tiles";nav.innerHTML='<button class="character-manage-tile is-active" data-character-manage-tile="request"><span>📋 Antrag</span>P0-Freigabe beantragen</button><button class="character-manage-tile" data-character-manage-tile="releases"><span>✓ Freigaben</span>Meine P0+ Freigaben</button><button class="character-manage-tile" data-character-manage-tile="add"><span>＋ Hinzufügen</span>Neuer Charakter</button><button class="character-manage-tile" data-character-manage-tile="remove"><span>🗑 Löschen</span>Charakter entfernen</button>';const anchor=root.querySelector(".character-subsection");root.insertBefore(nav,anchor||root.firstChild);const show=key=>{nav.querySelectorAll(".character-manage-tile").forEach(button=>button.classList.toggle("is-active",button.dataset.characterManageTile===key));Object.entries(panels).forEach(([panelKey,panel])=>panel?.classList.toggle("is-tile-hidden",panelKey!==key));};nav.addEventListener("click",event=>{const button=event.target.closest("[data-character-manage-tile]");if(button)show(button.dataset.characterManageTile);});show("request");}
 
@@ -7629,7 +7634,7 @@ function renderMyPoReleasesCard(releases,requests,data){
   ] : []);
   const pendingKeys=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(entry=>`${entry.requestType||""}:${String(entry.raid||"").toLowerCase()}`).filter(Boolean));
   const recruitLabels=[["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
-  const recruitChips=CURRENT_GUILD_SLUG!=="nachtloot"?"":recruitLabels.map(([key,label])=>{const active=Boolean(data?.recruitReleases?.[key]),pending=!active&&(pendingKeys.has(`recruit:${key}`)||pendingKeys.has(`p1p3:${key}`));return `<span class="own-p0-release-chip${active?" is-active":pending?" is-pending":""}"><span>Rekrutenstatus ${safeHtml(label)}</span><strong class="${active?"ok":pending?"warn":"muted"}">${active?"✓ Freigegeben":pending?"● In Prüfung":"– Offen"}</strong></span>`;}).join("");
+  const recruitChips=recruitLabels.map(([key,label])=>{const active=Boolean(data?.recruitReleases?.[key]),pending=!active&&(pendingKeys.has(`recruit:${key}`)||pendingKeys.has(`p1p3:${key}`));return `<span class="own-p0-release-chip${active?" is-active":pending?" is-pending":""}"><span>Rekrutenstatus ${safeHtml(label)}</span><strong class="${active?"ok":pending?"warn":"muted"}">${active?"✓ Freigegeben":pending?"● In Prüfung":"– Offen"}</strong></span>`;}).join("");
   const chips=labels.map(([key,label])=>{
     const active=Boolean(releases && releases[key]);
     const pending=!active && (pendingKeys.has(`p0:${key}`)||pendingKeys.has(`p1p3:${key}`));
@@ -7663,6 +7668,7 @@ function initPoRequestClassSelect(){
   const card=form.closest(".own-p0-popout-card");
   const title=card?.querySelector(".own-p0-release-title");
   const description=card?.querySelector(".own-p0-release-text");
+  if(description && CURRENT_GUILD_SLUG!=="nachtloot") description.textContent="Armory-Link oder Screenshot einreichen. Die Gildenleitung prüft die Voraussetzungen.";
   if(title && !card.querySelector(".po-request-toggle")){
     title.outerHTML='<button type="button" class="po-request-toggle" aria-expanded="true" onclick="togglePoRequestForm(this)"><span>PO Freigabe beantragen</span><span class="po-request-toggle-arrow">⌄</span></button>';
     if(description)description.classList.add("po-request-collapsible");
