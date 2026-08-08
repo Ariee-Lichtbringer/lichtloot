@@ -8429,7 +8429,9 @@ async function savePoPostEntry({ guildId, query: params }) {
           raid: raidKey,
           requestId: row.id,
           postKey: row.post_key || postKey,
-          item: row.item_name || itemName
+          item: row.item_name || itemName,
+          sourceChannelId: row.source_channel_id || sourceChannelId,
+          targetChannelId: row.target_channel_id || targetChannelId
         }
       }).catch(error => console.warn("PO-Freigabehinweis konnte nicht queued werden:", error.message || error));
     }
