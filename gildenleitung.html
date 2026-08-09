@@ -9344,6 +9344,12 @@ async function renderRaidHelperCurrentDetail(raidId){
       </div>
       <div class="raid-helper-current-actions">
         <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
+        <label class="raid-helper-meta-pill" title="Discord-Channel für diesen Post auswählen">
+          Channel
+          <select id="raidDiscordChannel-${escapeAttr(raidId)}" style="min-width:190px">
+            ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
+          </select>
+        </label>
         <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>
         <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
           <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
