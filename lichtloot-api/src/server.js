@@ -6840,6 +6840,19 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
   } catch {
     snapshot = null;
   }
+  const storedRaid = snapshot?.raid || {};
+  const latestRaidSnapshot = {
+    ...storedRaid,
+    ...(clean(params.raidName) ? { raidName: clean(params.raidName) } : {}),
+    ...(clean(params.description) ? { description: clean(params.description) } : {}),
+    ...(clean(params.createdBy) ? { createdBy: clean(params.createdBy) } : {}),
+    ...(clean(params.maxPlayers) ? { maxPlayers: clean(params.maxPlayers) } : {}),
+    ...(clean(params.tankSlots) ? { tankSlots: clean(params.tankSlots) } : {}),
+    ...(clean(params.healSlots) ? { healSlots: clean(params.healSlots) } : {}),
+    ...(clean(params.ddSlots) ? { ddSlots: clean(params.ddSlots) } : {}),
+    ...(clean(params.signupDeadline) ? { signupDeadline: clean(params.signupDeadline) } : {}),
+    ...(clean(params.raidImageUrl) ? { raidImageUrl: clean(params.raidImageUrl) } : {})
+  };
   return queueBotUpdate({
     guildId,
     query: {
@@ -6850,11 +6863,20 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
         playerPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
         prioPin: clean(params.playerPin || params.prioPin || params.raidPin || snapshot?.raid?.playerPin || ""),
         raid: clean(params.raid || snapshot?.raid?.raid || ""),
+        raidName: clean(params.raidName || snapshot?.raid?.raidName || ""),
         raidDate: clean(params.raidDate || snapshot?.raid?.raidDate || ""),
         raidTime: clean(params.raidTime || snapshot?.raid?.raidTime || ""),
+        description: clean(params.description || snapshot?.raid?.description || ""),
+        createdBy: clean(params.createdBy || snapshot?.raid?.createdBy || ""),
+        maxPlayers: clean(params.maxPlayers || snapshot?.raid?.maxPlayers || ""),
+        tankSlots: clean(params.tankSlots || snapshot?.raid?.tankSlots || ""),
+        healSlots: clean(params.healSlots || snapshot?.raid?.healSlots || ""),
+        ddSlots: clean(params.ddSlots || snapshot?.raid?.ddSlots || ""),
+        signupDeadline: clean(params.signupDeadline || snapshot?.raid?.signupDeadline || ""),
+        raidImageUrl: clean(params.raidImageUrl || snapshot?.raid?.raidImageUrl || ""),
         channelId: clean(params.channelId || params.discordChannelId),
         messageId: clean(params.messageId || params.discordMessageId || params.raidHelperMessageId),
-        raidSnapshot: snapshot?.raid || null,
+        raidSnapshot: Object.keys(latestRaidSnapshot).length ? latestRaidSnapshot : null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
         source: "gildenleitung"
