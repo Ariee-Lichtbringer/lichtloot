@@ -1368,6 +1368,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
 }
+.layout-loot-toggle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.layout-loot-toggle{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:10px;padding:13px;border:1px solid rgba(148,163,184,.22);border-radius:10px;background:rgba(2,6,23,.62);cursor:pointer}.layout-loot-toggle:hover{border-color:rgba(var(--gold-rgb),.5)}.layout-loot-toggle input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--gold)}.layout-loot-toggle span{display:grid;gap:3px}.layout-loot-toggle strong{color:#f8fafc}.layout-loot-toggle small{color:#94a3b8;line-height:1.35}@media(max-width:800px){.layout-loot-toggle-grid{grid-template-columns:1fr}}
 
 .layout-raid-image-grid{
   display:grid;
@@ -7506,6 +7507,21 @@ function renderLootLayoutPanel(){
         </div>
       </details>
 
+      <details class="layout-accordion">
+        <summary>5. Lootseiten</summary>
+        <div class="layout-accordion-content">
+          <section class="layout-info-box gold">
+            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Inhalte der Prio- und Lootseiten</h4><p>Mit den Haken legst du für diese Gilde fest, welche Zusatzbereiche auf allen Lootseiten sichtbar sind.</p></div></div>
+            <div class="layout-loot-toggle-grid">
+              <label class="layout-loot-toggle"><input id="layoutLootWorldbuffs" type="checkbox" ${layout.lootPageSections?.worldbuffs !== false ? "checked" : ""}><span><strong>Worldbuffs</strong><small>Worldbuff- und Rend-Termine des jeweiligen Raidtages anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutLootRaidSignup" type="checkbox" ${layout.lootPageSections?.raidSignup !== false ? "checked" : ""}><span><strong>Raidanmelder</strong><small>Anmeldung auf der Lootseite und den Menüpunkt Raidanmeldungen anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutLootPoReleases" type="checkbox" ${layout.lootPageSections?.poReleases !== false ? "checked" : ""}><span><strong>PO-Freigaben</strong><small>Die raidübergreifenden PO+-Freigaben auf den Lootseiten anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutLootMiniRaids" type="checkbox" ${layout.lootPageSections?.miniRaids !== false ? "checked" : ""}><span><strong>Mini-Raidkacheln</strong><small>Die aktuellen 20er- und 40er-Raids links unter dem letzten Menüpunkt anzeigen.</small></span></label>
+            </div>
+          </section>
+        </div>
+      </details>
+
       <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
   `;
@@ -7530,6 +7546,7 @@ async function saveLootLayoutPanel(){
   const nextLayout = {
     ...existingLayout,
     raidImages,
+    lootPageSections:{worldbuffs:Boolean(document.getElementById("layoutLootWorldbuffs")?.checked),raidSignup:Boolean(document.getElementById("layoutLootRaidSignup")?.checked),poReleases:Boolean(document.getElementById("layoutLootPoReleases")?.checked),miniRaids:Boolean(document.getElementById("layoutLootMiniRaids")?.checked)},
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
