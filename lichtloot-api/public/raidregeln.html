@@ -668,6 +668,44 @@ th{
 .edit-raid-tabs button{padding:9px 14px;border:1px solid var(--line);border-radius:9px;background:#0b1222;color:var(--text);font-weight:900;cursor:pointer}
 .edit-raid-tabs button.active{border-color:var(--gold);color:var(--gold);background:rgba(250,204,21,.13)}
 
+/* Im Dashboard nur den eigentlichen Regelbereich zeigen. */
+body.rules-embedded{
+  min-height:0;
+  background:transparent!important;
+}
+body.rules-embedded .overlay{
+  min-height:0;
+  padding:0;
+  backdrop-filter:none;
+}
+body.rules-embedded .logo-banner,
+body.rules-embedded .brand-fallback,
+body.rules-embedded .main-nav{
+  display:none!important;
+}
+body.rules-embedded .rules-shell{
+  width:100%;
+  margin:0;
+  padding:4px 0 0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+body.rules-embedded .rules-head{
+  display:block;
+  padding:0 0 12px;
+}
+body.rules-embedded .rules-head>div:first-child{
+  display:none;
+}
+body.rules-embedded .rules-search{
+  max-width:none;
+}
+body.rules-embedded .rules-tabs{
+  margin:12px 0 16px;
+}
+
 @media(max-width:860px){
   .overlay{padding:18px 12px 32px}
   .rules-shell{width:100%;padding:16px;border-radius:16px}
@@ -731,6 +769,8 @@ th{
 </div>
 
 <script>
+const RULES_EMBEDDED=window.self!==window.top || new URLSearchParams(location.search).get("embed")==="1";
+if(RULES_EMBEDDED) document.body.classList.add("rules-embedded");
 const LICHTLOOT_API_URL="https://lichtloot-production.up.railway.app/api/apps-script";
 const CURRENT_GUILD_SLUG=(new URLSearchParams(location.search).get("guild") || "lichtloot").trim().toLowerCase();
 const RULES_EDIT_MODE=new URLSearchParams(location.search).get("edit")==="1";
@@ -740,6 +780,28 @@ let currentGuildInfo=null;
 let activeTab="raids";
 let activeRaid=(new URLSearchParams(location.search).get("raid") || "bwl").trim().toLowerCase();
 let activeClass="all";
+
+function syncEmbeddedRulesHeight(){
+  if(!RULES_EMBEDDED) return;
+  const height=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight);
+  try{
+    const frames=[...window.parent.document.querySelectorAll("iframe")];
+    const ownFrame=frames.find(frame=>frame.contentWindow===window);
+    if(ownFrame){
+      ownFrame.style.height=`${height}px`;
+      ownFrame.style.minHeight="0";
+      ownFrame.style.border="0";
+      ownFrame.style.borderRadius="0";
+      ownFrame.style.background="transparent";
+      ownFrame.setAttribute("scrolling","no");
+    }
+  }catch(error){}
+  window.parent.postMessage({type:"lichtloot:raid-rules-height",height},"*");
+}
+if(RULES_EMBEDDED){
+  addEventListener("load",syncEmbeddedRulesHeight);
+  new ResizeObserver(syncEmbeddedRulesHeight).observe(document.body);
+}
 
 const generalLabels={
   prio:"Prio & Loot",
