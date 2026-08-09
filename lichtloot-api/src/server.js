@@ -16079,6 +16079,49 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   }
   existingSignup.changedBy = masterCode ? "Gildenleitung" : "Raidlead";
 
+  const editedPlayerName = clean(params.playerName || params.player || params.char);
+  const editedClassName = clean(params.className || params.klasse);
+  const editedRole = clean(params.role).toLowerCase();
+  const editedSpecialization = clean(params.specialization || params.spec);
+  const editedNote = clean(params.note) || (editedSpecialization ? `Skillung: ${editedSpecialization}` : "");
+  if (editedPlayerName || editedSpecialization || editedRole) {
+    const nextRole = ["tank", "heal", "dd"].includes(editedRole) ? editedRole : clean(existingSignup.role || "dd");
+    const nextPlayerName = editedPlayerName || clean(existingSignup.player || existingSignup.playerName);
+    const nextClassName = editedClassName || clean(existingSignup.className);
+    const nextNote = editedNote || clean(existingSignup.note);
+    const externalUpdate = await query(
+      `update raid_external_signups
+       set player_name=$3, class_name=$4, role=$5, note=$6, updated_at=now()
+       where guild_id=$1 and id=$2
+       returning *`,
+      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote]
+    );
+    if (externalUpdate.rows[0]) {
+      const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
+      const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup }, "edited", notifyMessage);
+      return { success:true, signup, queued:true, ...sideEffects };
+    }
+    const characterResult = await query(
+      `select id, name, class_name from characters where guild_id=$1 and lower(name)=lower($2) order by updated_at desc nulls last limit 1`,
+      [guildId, nextPlayerName]
+    );
+    if (!characterResult.rows[0]) {
+      const error = new Error("Der ausgewählte Charakter wurde in der Spielerdatenbank nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    const localUpdate = await query(
+      `update raid_signups rs set character_id=$3, role=$4, note=$5, updated_at=now()
+       from raids r where rs.raid_id=r.id and r.guild_id=$1 and rs.id=$2 returning rs.*`,
+      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote]
+    );
+    if (localUpdate.rows[0]) {
+      const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
+      const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup, player:nextPlayerName, className:nextClassName }, "edited", notifyMessage);
+      return { success:true, signup, queued:true, ...sideEffects };
+    }
+  }
+
   if (shouldDelete) {
     const externalDelete = await query(
       `delete from raid_external_signups
