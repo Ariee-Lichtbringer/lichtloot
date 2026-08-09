@@ -12764,11 +12764,20 @@ async function addManualPoSignup(postKey, raidKey){
     return;
   }
   try{
-    const result = await railwayWrite({ action:"guildAddManualPoPostEntry", masterCode, postKey, raid:raidKey, player, item });
+    const config = raidHelperPoSignupRows().find(row => String(row.postKey || "") === String(postKey || "")) || {};
+    const result = await railwayWrite({
+      action:"guildAddManualPoPostEntry", masterCode, postKey, raid:raidKey, player, item,
+      title:config.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`,
+      raidDate:config.raidDate || "", raidTime:config.raidTime || "",
+      raidPin:config.lichtlootPlayerPin || config.prioPin || config.raidPin || "",
+      sourceChannelId:config.sourceChannelId || "", targetChannelId:config.targetChannelId || config.sourceChannelId || "",
+      discordMessageId:config.discordMessageId || "", mode:config.mode || "signup"
+    });
     if(!result.success) throw new Error(result.error || "PO konnte nicht hinzugefügt werden.");
-    await loadPoPostEntries({ preserveSelection:true });
+    await loadPoPostStoredEntries();
     renderRaidHelperPoSignupDetail(postKey);
-    if(hint) hint.textContent = `${player}: ${item} wurde als offene PO-Anmeldung hinzugefügt.`;
+    const refreshedHint = document.getElementById("raidHelperPoSignupDetailHint");
+    if(refreshedHint) refreshedHint.textContent = result.saved ? `${player}: ${item} wurde als offene PO-Anmeldung hinzugefügt.` : `${player}: ${item} ist für diesen PO-Anmelder bereits eingetragen.`;
   }catch(error){
     if(hint) hint.textContent = error.message || "PO konnte nicht hinzugefügt werden.";
   }
