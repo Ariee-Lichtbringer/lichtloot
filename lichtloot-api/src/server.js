@@ -7285,6 +7285,7 @@ async function getPoPostEntries({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId);
   const includeArchived = ["1", "true", "yes", "ja"].includes(clean(params.includeArchived || params.archived || "").toLowerCase());
+  const limit = Math.max(1, Math.min(5000, Number(params.limit || 2000) || 2000));
   const values = [guildId];
   const clauses = ["guild_id = $1"];
   if (!includeArchived) clauses.push("archived_at is null");
@@ -7304,12 +7305,14 @@ async function getPoPostEntries({ guildId, query: params }) {
     values.push(targetChannelId);
     clauses.push(`target_channel_id = $${values.length}`);
   }
+  values.push(limit);
+  const limitPlaceholder = `$${values.length}`;
   const result = await query(
     `select *
      from po_post_entries
      where ${clauses.join(" and ")}
      order by updated_at desc, lower(player_name) asc, lower(item_name) asc
-     limit 500`,
+     limit ${limitPlaceholder}`,
     values
   );
   return {
@@ -15552,15 +15555,10 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+  // Ein Raidanmelder ist ausschließlich über seine eindeutige Datenbank-ID
+  // definiert. Raids desselben Typs oder Datums dürfen niemals gemeinsam
+  // geladen werden, da mehrere getrennte Anmelder parallel existieren können.
+  const relatedRaidIds = [raid.id];
 
   const signupResult = await query(
     `select
@@ -15603,9 +15601,9 @@ async function getRaidHelper({ guildId, query: params }) {
             ) as has_prio
      from raid_external_signups res
      where res.guild_id = $1
-       and (res.raid_id = any($2) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
+       and res.raid_id = any($2)
      order by res.player_name asc`,
-    [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    [guildId, relatedRaidIds]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
