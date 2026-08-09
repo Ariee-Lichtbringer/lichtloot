@@ -15569,6 +15569,46 @@ async function getRaidHelper({ guildId, query: params }) {
   // geladen werden, da mehrere getrennte Anmelder parallel existieren können.
   const relatedRaidIds = [raid.id];
 
+  // Historische Imports konnten mehrere Discord-Anmelder (und frueher auch
+  // Raid-Helper-Listen) an dieselbe LichtLoot-Raid-ID haengen. Fuer bereits
+  // vermischte Datensaetze gilt die zuerst importierte Discord-Nachricht als
+  // urspruenglicher Anmelder. Manuelle/LichtLoot-Anmeldungen bleiben erhalten.
+  const signupSourceResult = await query(
+    `select message_id, min(first_seen) as first_seen, sum(entry_count)::int as entry_count
+     from (
+       select split_part(coalesce(rs.source, ''), ':', 3) as message_id,
+              min(rs.created_at) as first_seen,
+              count(*)::int as entry_count
+       from raid_signups rs
+       where rs.raid_id = any($1)
+         and lower(coalesce(rs.source, '')) like 'discordsignup:%'
+       group by split_part(coalesce(rs.source, ''), ':', 3)
+       union all
+       select coalesce(nullif(res.discord_message_id, ''), split_part(coalesce(res.source, ''), ':', 3)) as message_id,
+              min(res.created_at) as first_seen,
+              count(*)::int as entry_count
+       from raid_external_signups res
+       where res.guild_id = $2
+         and res.raid_id = any($1)
+         and lower(coalesce(res.source, '')) not like 'raid-helper:%'
+         and (
+           coalesce(res.discord_message_id, '') <> ''
+           or lower(coalesce(res.source, '')) like 'discordsignup:%'
+         )
+       group by coalesce(nullif(res.discord_message_id, ''), split_part(coalesce(res.source, ''), ':', 3))
+     ) sources
+     where coalesce(message_id, '') <> ''
+     group by message_id
+     order by min(first_seen) asc, message_id asc`,
+    [relatedRaidIds, guildId]
+  );
+  const signupSources = signupSourceResult.rows.map(row => ({
+    messageId: clean(row.message_id),
+    firstSeen: row.first_seen || null,
+    count: Number(row.entry_count || 0)
+  }));
+  const originalSignupMessageId = signupSources[0]?.messageId || clean(raid.discord_message_id);
+
   const signupResult = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
@@ -15589,16 +15629,21 @@ async function getRaidHelper({ guildId, query: params }) {
      join characters c on c.id = rs.character_id
      join players signup_player on signup_player.id = c.player_id
      where rs.raid_id = any($1)
+       and lower(coalesce(rs.source, '')) not like 'raid-helper:%'
+       and (
+         lower(coalesce(rs.source, '')) not like 'discordsignup:%'
+         or ($2 <> '' and split_part(coalesce(rs.source, ''), ':', 3) = $2)
+       )
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
-    [relatedRaidIds]
+    [relatedRaidIds, originalSignupMessageId]
   );
 
   const externalResult = await query(
     `select res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
-            res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
+            res.discord_user_id, res.discord_name, res.discord_message_id, res.created_at, res.updated_at,
             exists(
               select 1
               from prios pr
@@ -15611,12 +15656,36 @@ async function getRaidHelper({ guildId, query: params }) {
      from raid_external_signups res
      where res.guild_id = $1
        and res.raid_id = any($2)
+       and lower(coalesce(res.source, '')) not like 'raid-helper:%'
+       and (
+         lower(coalesce(res.source, '')) not like 'discordsignup:%'
+         or ($3 <> '' and (
+           coalesce(res.discord_message_id, '') = $3
+           or split_part(coalesce(res.source, ''), ':', 3) = $3
+         ))
+       )
+       and (
+         coalesce(res.discord_message_id, '') = ''
+         or ($3 <> '' and coalesce(res.discord_message_id, '') = $3)
+       )
      order by res.player_name asc`,
-    [guildId, relatedRaidIds]
+    [guildId, relatedRaidIds, originalSignupMessageId]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
-  const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  // Externe Dubletten mit demselben Charakternamen werden entfernt. Ein
+  // echter LichtLoot-Login hat dabei Vorrang vor einem externen Datensatz.
+  const seenSignupNames = new Set(
+    signups.map(row => clean(row.player || row.char).toLocaleLowerCase("de-DE")).filter(Boolean)
+  );
+  const externalSignups = externalResult.rows
+    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }))
+    .filter(row => {
+      const key = clean(row.player || row.char).toLocaleLowerCase("de-DE");
+      if (!key || seenSignupNames.has(key)) return false;
+      seenSignupNames.add(key);
+      return true;
+    });
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
@@ -15646,6 +15715,9 @@ async function getRaidHelper({ guildId, query: params }) {
   const prioCount = Number(prioCountResult.rows[0]?.count || 0);
   const signupCount = signups.length + externalSignups.length;
   const warnings = [];
+  if (signupSources.length > 1) {
+    warnings.push(`${signupSources.length - 1} fremde oder spaetere Anmelderquelle(n) wurden ausgeblendet.`);
+  }
   if (signupCount > 0 && prioCount === 0) {
     warnings.push("Attendance vorhanden, aber keine Prioliste gespeichert.");
   }
@@ -15660,6 +15732,8 @@ async function getRaidHelper({ guildId, query: params }) {
     signups,
     externalSignups,
     counts: buildSignupCounts(signups, externalSignups),
+    activeSignupMessageId: originalSignupMessageId,
+    signupSources,
     prioCount,
     warnings
   };
@@ -21095,12 +21169,12 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildAdminCreatePlayerLogin") {
-      const created = await createPlayerLoginByGuildLeadership({ guild, params: postParams });
+      const created = await createPlayerLoginByGuildLeadership({ guild, params: req.query });
       return res.json({ ...created, guild: guild.slug });
     }
 
     if (action === "guildAdminAddTwink") {
-      const created = await addTwinkByGuildLeadership({ guild, params: postParams });
+      const created = await addTwinkByGuildLeadership({ guild, params: req.query });
       return res.json({ ...created, guild: guild.slug });
     }
 
@@ -21847,6 +21921,16 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPlayerLoginBlocked") {
       const saved = await setPlayerLoginBlocked({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildAdminCreatePlayerLogin") {
+      const created = await createPlayerLoginByGuildLeadership({ guild, params: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "guildAdminAddTwink") {
+      const created = await addTwinkByGuildLeadership({ guild, params: postParams });
+      return res.json({ ...created, guild: guild.slug });
     }
 
     if (action === "guildApprovePlayerLogin" || action === "guildSetPlayerLoginApproved") {
