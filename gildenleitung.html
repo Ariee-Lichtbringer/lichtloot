@@ -2825,7 +2825,7 @@ tr.selected-row td{
 
 .raid-helper-manual-signup{
   display:grid;
-  grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) minmax(130px,1fr) auto;
+  grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) minmax(150px,1fr) minmax(130px,1fr) auto;
   gap:8px;
   align-items:end;
   padding:10px;
@@ -9251,6 +9251,44 @@ function raidHelperManualPlayerOptions(){
     .join("");
 }
 
+const RAID_HELPER_MANUAL_SPECS = {
+  warrior:["Waffen","Furor","Tank"], krieger:["Waffen","Furor","Tank"],
+  druid:["Heilung","Tank","FeralDD","Eule"], druide:["Heilung","Tank","FeralDD","Eule"],
+  paladin:["Heilig","Vergeltung","Tank"],
+  rogue:["Assassination","Combat","Subtlety"], schurke:["Assassination","Combat","Subtlety"],
+  hunter:["Survival","Marksman","Beastmaster"], jäger:["Survival","Marksman","Beastmaster"], jaeger:["Survival","Marksman","Beastmaster"],
+  priest:["Disziplin","Heilig","Schatten"], priester:["Disziplin","Heilig","Schatten"],
+  mage:["Feuer","Frost","Arkan"], magier:["Feuer","Frost","Arkan"],
+  warlock:["Gebrechen","Dämonologie","Zerstörung"], hexenmeister:["Gebrechen","Dämonologie","Zerstörung"],
+  shaman:["Heilung","Elemental","Enhancement"], schamane:["Heilung","Elemental","Enhancement"]
+};
+
+function raidHelperManualRoleForSpec(spec){
+  const value = normalize(spec);
+  if(value === "tank") return "tank";
+  if(["heilung","heilig","disziplin"].includes(value)) return "heal";
+  return "dd";
+}
+
+function updateRaidHelperManualSpecs(raidId, syncRole=true){
+  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
+  const specField = document.getElementById(`raidHelperManualSpec-${raidId}`);
+  if(!specField) return;
+  const className = normalize(playerField?.selectedOptions?.[0]?.dataset.class || "");
+  const specs = RAID_HELPER_MANUAL_SPECS[className] || [];
+  specField.innerHTML = specs.length
+    ? specs.map(spec => `<option value="${escapeAttr(spec)}">${escapeHtml(spec)}</option>`).join("")
+    : '<option value="">Skillung wählen …</option>';
+  specField.disabled = !specs.length;
+  if(syncRole && specs.length) updateRaidHelperManualRoleFromSpec(raidId);
+}
+
+function updateRaidHelperManualRoleFromSpec(raidId){
+  const spec = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
+  const roleField = document.getElementById(`raidHelperManualRole-${raidId}`);
+  if(roleField && spec) roleField.value = raidHelperManualRoleForSpec(spec);
+}
+
 function toggleRaidHelperSelection(raidId, checked){
   const id = String(raidId || "");
   if(!id) return;
@@ -9360,10 +9398,13 @@ async function renderRaidHelperCurrentDetail(raidId){
     </div>
     <div class="raid-helper-manual-signup">
       <label>Spieler aus der Datenbank
-        <select id="raidHelperManualPlayer-${escapeAttr(raidId)}"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
+        <select id="raidHelperManualPlayer-${escapeAttr(raidId)}" onchange="updateRaidHelperManualSpecs('${escapeAttr(raidId)}')"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
       </label>
       <label>Rolle
         <select id="raidHelperManualRole-${escapeAttr(raidId)}"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select>
+      </label>
+      <label>Skillung
+        <select id="raidHelperManualSpec-${escapeAttr(raidId)}" onchange="updateRaidHelperManualRoleFromSpec('${escapeAttr(raidId)}')" disabled><option value="">Erst Charakter wählen …</option></select>
       </label>
       <label>Status
         <select id="raidHelperManualStatus-${escapeAttr(raidId)}"><option value="signed">Aktiv</option><option value="bench">Bank</option><option value="late">Verspätet</option><option value="tentative">Vorläufig</option><option value="absent">Abwesend</option></select>
@@ -9390,7 +9431,9 @@ async function addRaidHelperDatabasePlayer(raidId){
   if(!masterCode){ setRaidHelperCurrentStatus("Bitte zuerst den Master-Code eingeben.", "bad"); return; }
   if(!raid || !player){ setRaidHelperCurrentStatus("Bitte einen Charakter aus der Spielerdatenbank auswählen.", "bad"); return; }
   const role = document.getElementById(`raidHelperManualRole-${raidId}`)?.value || "dd";
+  const specialization = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
   const status = document.getElementById(`raidHelperManualStatus-${raidId}`)?.value || "signed";
+  if(!specialization){ setRaidHelperCurrentStatus("Bitte eine Skillung auswählen.", "bad"); return; }
   setRaidHelperCurrentStatus(`${player} wird angemeldet …`, "");
   try{
     const result = await railwayWrite({
@@ -9408,7 +9451,7 @@ async function addRaidHelperDatabasePlayer(raidId){
         role,
         status,
         source:"loot_page",
-        note:"Manuell durch Gildenleitung angemeldet"
+        note:`Skillung: ${specialization}`
       }]
     });
     if(!result.success) throw new Error(result.error || "Spieler konnte nicht angemeldet werden.");
