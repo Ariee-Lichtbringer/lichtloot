@@ -137,3 +137,63 @@
   function init(){mountPageSignup();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};}
   window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
+
+/* Raidregeln direkt im Inhaltsbereich der Lootseite anzeigen. */
+(function(){
+  function currentLootRaidKey(){
+    const bodyClass=[...document.body.classList].find(name=>name.startsWith("raid-"));
+    if(bodyClass) return bodyClass.slice(5);
+    const file=location.pathname.split("/").pop() || "";
+    return file.replace(/-loot\.html$/i,"").toLowerCase();
+  }
+  function currentLootGuild(){
+    if(typeof currentGuildSlug==="function") return currentGuildSlug();
+    return new URLSearchParams(location.search).get("guild") || "lichtloot";
+  }
+  function ensureRulesStyles(){
+    if(document.getElementById("lootRaidRulesStyles")) return;
+    const style=document.createElement("style");
+    style.id="lootRaidRulesStyles";
+    style.textContent=`
+      .loot-raid-rules-view{margin-top:18px;padding:18px;border:1px solid rgba(var(--gold-rgb),.38);border-radius:18px;background:linear-gradient(180deg,rgba(12,18,32,.9),rgba(2,6,23,.82));box-shadow:0 18px 38px rgba(0,0,0,.32)}
+      .loot-raid-rules-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+      .loot-raid-rules-head h2{margin:0;color:var(--gold);font-size:24px}
+      .loot-raid-rules-back{padding:9px 14px;border:1px solid rgba(var(--gold-rgb),.48);border-radius:10px;background:rgba(var(--gold-rgb),.12);color:#fff;font-weight:900;cursor:pointer}
+      .loot-raid-rules-frame{display:block;width:100%;min-height:520px;border:0;background:transparent}
+      @media(max-width:800px){.loot-raid-rules-view{padding:12px}.loot-raid-rules-head{align-items:flex-start}.loot-raid-rules-head h2{font-size:20px}}
+    `;
+    document.head.appendChild(style);
+  }
+  function hideLootRaidRules(){
+    document.getElementById("lootRaidRulesView")?.remove();
+    const grid=document.getElementById("mainGrid");
+    if(grid) grid.hidden=false;
+    document.querySelectorAll('[data-loot-action="raidregeln"]').forEach(button=>button.classList.remove("active"));
+  }
+  function showLootRaidRules(){
+    ensureRulesStyles();
+    const grid=document.getElementById("mainGrid");
+    if(!grid) return;
+    document.getElementById("lootRaidRulesView")?.remove();
+    grid.hidden=true;
+    const raid=currentLootRaidKey();
+    const guild=currentLootGuild();
+    const view=document.createElement("section");
+    view.id="lootRaidRulesView";
+    view.className="loot-raid-rules-view";
+    view.innerHTML=`<div class="loot-raid-rules-head"><h2>Raidregeln</h2><button class="loot-raid-rules-back" type="button">← Zur Prioliste</button></div><iframe class="loot-raid-rules-frame" title="Raidregeln" scrolling="no" src="../raidregeln.html?guild=${encodeURIComponent(guild)}&raid=${encodeURIComponent(raid)}&embed=1"></iframe>`;
+    grid.insertAdjacentElement("beforebegin",view);
+    view.querySelector(".loot-raid-rules-back").onclick=hideLootRaidRules;
+    document.querySelectorAll('[data-loot-action="raidregeln"]').forEach(button=>button.classList.add("active"));
+    view.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  document.addEventListener("click",event=>{
+    const button=event.target.closest("button");
+    if(!button || button.textContent.trim()!=="Raidregeln") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showLootRaidRules();
+  },true);
+  window.showLootRaidRules=showLootRaidRules;
+  window.hideLootRaidRules=hideLootRaidRules;
+})();
