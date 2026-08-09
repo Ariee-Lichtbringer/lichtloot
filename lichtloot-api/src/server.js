@@ -7273,6 +7273,58 @@ async function savePoPostEntries({ guildId, query: params }) {
   }
 }
 
+async function addManualPoPostEntry({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensurePoPostEntriesSchema();
+  const postKey = clean(params.postKey || params.poPostKey);
+  const playerName = clean(params.player || params.playerName || params.char);
+  const itemName = normalizePoItemName(params.item || params.itemName);
+  if (!postKey || !playerName || !itemName) {
+    const error = new Error("PO-Anmelder, Spieler und Item müssen ausgewählt sein.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const configResult = await query(
+    `select * from po_post_entries
+     where guild_id = $1 and post_key = $2 and archived_at is null
+     order by config_only desc, created_at asc limit 1`,
+    [guildId, postKey]
+  );
+  const config = configResult.rows[0];
+  if (!config) {
+    const error = new Error("Der ausgewählte PO-Anmelder wurde nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const characterResult = await query(
+    `select c.name, c.class_name
+     from characters c join players p on p.id = c.player_id
+     where p.guild_id = $1 and lower(c.name) = lower($2)
+       and coalesce(p.approval_status, 'approved') = 'approved'
+     limit 1`,
+    [guildId, playerName]
+  );
+  const character = characterResult.rows[0];
+  if (!character) {
+    const error = new Error("Der Charakter wurde in der Spielerdatenbank nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const result = await query(
+    `insert into po_post_entries (
+       guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+       raid, title, player_name, item_name, class_name, approval_status,
+       raid_pin, raid_date, raid_time, mode, config_only
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending',$11,$12,$13,$14,false)
+     on conflict do nothing
+     returning id`,
+    [guildId, postKey, config.source_channel_id, config.target_channel_id, config.discord_message_id,
+      config.raid, config.title, character.name, itemName, character.class_name,
+      config.raid_pin, config.raid_date, config.raid_time, config.mode]
+  );
+  return { success: true, saved: result.rowCount || 0, player: character.name, item: itemName };
+}
+
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -15614,12 +15666,15 @@ async function getRaidHelper({ guildId, query: params }) {
   // nennt, muss sie deshalb exakt zum aktuell gewählten Raid-Post passen.
   const expectedDiscordMessageId = clean(raid.discord_message_id);
   const belongsToSelectedDiscordPost = row => {
-    if (!expectedDiscordMessageId) return true;
     const source = clean(row?.source);
     const sourceLower = source.toLowerCase();
-    if (!sourceLower.startsWith("discordsignup:")
-      && !sourceLower.startsWith("raid-helper:")
-      && !sourceLower.startsWith("raidhelper:")) return true;
+    // Raid-Helper-Importe sind historische Fremdbot-Snapshots. In mehreren
+    // Altbeständen wurde deren Message-ID einem falschen Raid/Termin
+    // zugeordnet (z. B. AQ40 vom 11.08. bei AQ20 vom 15.08.). Sie dürfen daher
+    // nie die aktuelle PO-Bot-Anmeldeliste speisen.
+    if (sourceLower.startsWith("raid-helper:") || sourceLower.startsWith("raidhelper:")) return false;
+    if (!sourceLower.startsWith("discordsignup:")) return true;
+    if (!expectedDiscordMessageId) return false;
     return clean(source.split(":").pop()) === expectedDiscordMessageId;
   };
   const signups = signupResult.rows.map(normalizeRaidSignupRow).filter(belongsToSelectedDiscordPost);
@@ -16220,7 +16275,7 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
 
 async function saveDiscordSignupRows({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  const rows = Array.isArray(params.rows)
+  const submittedRows = Array.isArray(params.rows)
     ? params.rows
     : (() => {
         try {
@@ -16230,6 +16285,23 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           return [];
         }
       })();
+
+  // Fremde Raid-Helper-Anmelder werden nicht mehr in LichtLoot importiert.
+  // Zulässig bleiben ausschließlich LichtLoot/PO-Bot-Anmeldungen
+  // (DiscordSignup) und direkte Anmeldungen der Lootseite (loot_page).
+  const isRaidHelperSource = row => {
+    const source = clean(row?.quelle || row?.source).toLowerCase();
+    return source.startsWith("raid-helper:") || source.startsWith("raidhelper:");
+  };
+  if (submittedRows.some(isRaidHelperSource)) {
+    return {
+      success: true,
+      ignored: true,
+      saved: 0,
+      reason: "raid_helper_import_disabled",
+    };
+  }
+  const rows = submittedRows;
 
   const raid = await findRaidForDiscordImport(guildId, params);
   if (!raid) {
@@ -21520,6 +21592,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildAddManualPoPostEntry") {
+      const saved = await addManualPoPostEntry({ guildId: guild.id, query: req.query });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
     if (action === "lichtbotSetPoPostMessage" || action === "setPoPostMessage") {
       const saved = await setPoPostDiscordMessage({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -22000,6 +22077,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+
+    if (action === "guildAddManualPoPostEntry") {
+      const saved = await addManualPoPostEntry({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
