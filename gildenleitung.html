@@ -12371,7 +12371,6 @@ function renderRaidHelperPoSignupDetail(postKey){
         <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
       </div>
       <div class="raid-helper-current-actions">
-        <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
         <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
         ${isArchivedOnly
           ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
