@@ -1368,8 +1368,6 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   grid-template-columns:repeat(2,minmax(0,1fr));
   gap:10px;
 }
-.layout-loot-toggle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.layout-loot-toggle{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:10px;padding:13px;border:1px solid rgba(148,163,184,.22);border-radius:10px;background:rgba(2,6,23,.62);cursor:pointer}.layout-loot-toggle:hover{border-color:rgba(var(--gold-rgb),.5)}.layout-loot-toggle input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--gold)}.layout-loot-toggle span{display:grid;gap:3px}.layout-loot-toggle strong{color:#f8fafc}.layout-loot-toggle small{color:#94a3b8;line-height:1.35}@media(max-width:800px){.layout-loot-toggle-grid{grid-template-columns:1fr}}
-.layout-loot-matrix-wrap{margin-top:16px;overflow:auto;border:1px solid rgba(148,163,184,.22);border-radius:12px}.layout-loot-matrix{display:grid;grid-template-columns:minmax(150px,1.35fr) repeat(5,minmax(110px,1fr));min-width:830px;background:rgba(2,6,23,.5)}.layout-loot-matrix>div{min-height:48px;padding:10px 12px;border-right:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14);display:flex;align-items:center}.layout-loot-matrix>div:nth-child(6n){border-right:0}.layout-loot-matrix-head{color:#facc15;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.04em;background:rgba(var(--gold-rgb),.08)}.layout-loot-matrix-raid{font-weight:900;color:#f8fafc}.layout-loot-matrix-check{justify-content:center;cursor:pointer}.layout-loot-matrix-check input{width:21px;height:21px;accent-color:var(--gold)}
 
 .layout-raid-image-grid{
   display:grid;
@@ -2825,24 +2823,6 @@ tr.selected-row td{
   margin-top:3px;
 }
 
-.raid-helper-manual-signup{
-  display:grid;
-  grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) minmax(150px,1fr) minmax(130px,1fr) auto;
-  gap:8px;
-  align-items:end;
-  padding:10px;
-  border:1px solid rgba(45,212,191,.3);
-  border-radius:10px;
-  background:rgba(13,148,136,.08);
-}
-.raid-helper-manual-signup label{display:grid;gap:5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
-.raid-helper-signup-name-button{appearance:none;background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:900;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(94,234,212,.45);text-underline-offset:3px}
-.raid-helper-signup-name-button:hover{color:#5eead4;text-decoration-color:#5eead4}
-.raid-helper-signup-edit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:16px 0}
-.raid-helper-signup-edit-grid label{display:grid;gap:6px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
-@media(max-width:700px){.raid-helper-signup-edit-grid{grid-template-columns:1fr}}
-@media(max-width:900px){.raid-helper-manual-signup{grid-template-columns:1fr 1fr}.raid-helper-manual-signup label:first-child{grid-column:1/-1}}
-
 .raid-helper-current-actions{
   display:flex;
   gap:7px;
@@ -3326,9 +3306,6 @@ tr.selected-row td{
   flex-wrap:wrap;
   justify-content:flex-end;
 }
-
-.raid-helper-loot-role-counter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.raid-helper-loot-role-counter span{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #3b4961;border-radius:999px;background:#101a2c;color:#e2e8f0;font-weight:900}.raid-helper-loot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:10px}.raid-helper-loot-group{overflow:hidden;border:1px solid color-mix(in srgb,var(--group-color) 55%,#26364f);border-radius:14px;background:#07101f;box-shadow:inset 3px 0 0 var(--group-color)}.raid-helper-loot-group>header{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,#26364f);background:linear-gradient(135deg,color-mix(in srgb,var(--group-color) 14%,#101c31),#0a1324)}.raid-helper-loot-group>header h3{margin:0;color:var(--group-color);font-size:14px}.raid-helper-loot-group>header small{display:block;color:#94a3b8}.raid-helper-loot-group .raid-helper-signup-row{border-radius:0;border-bottom:1px solid rgba(49,65,91,.55);background:#07101f;display:grid;gap:7px}.raid-helper-loot-group .raid-helper-signup-row:last-child{border-bottom:0}.raid-helper-loot-group .raid-helper-signup-actions{justify-content:flex-start}.raid-helper-loot-inactive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid #31415b}.raid-helper-loot-inactive .raid-helper-loot-group{--group-color:#94a3b8}.raid-helper-loot-inactive .status-bench{--group-color:#fde047}.raid-helper-loot-inactive .status-late{--group-color:#fb923c}.raid-helper-loot-inactive .status-tentative{--group-color:#c084fc}.raid-helper-loot-inactive .status-absent{--group-color:#f87171}@media(max-width:1050px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:1fr}}
-.raid-helper-loot-total{margin-bottom:10px;padding:9px 11px;border:1px solid #3b4961;border-radius:11px;background:#101a2c;color:#e2e8f0;font-size:14px;font-weight:950}.raid-helper-lootbag{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:2px 6px;border:1px solid #3b4961;border-radius:7px;background:#111827;color:#dbeafe;font-size:10px;vertical-align:middle}.raid-helper-lootbag img{width:20px;height:20px;border-radius:4px;object-fit:cover}
 
 .raid-helper-wcl-grid{
   display:grid;
@@ -5043,7 +5020,6 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openDiscordNotificationSettings()" aria-label="Discord-Benachrichtigungen" title="Discord-Benachrichtigungen"><img class="side-icon-img" src="images/discord.svg" alt=""><span class="side-label">DC-Benachrichtigungen</span></button>
-          <button class="side-link master-only" type="button" onclick="openRaidSignupSettingsDialog()" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
           <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
@@ -5144,7 +5120,6 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Prüfen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Erstellen</span></span></button>
       </div>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
@@ -5561,7 +5536,7 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Attendance</h3><span>Teilnahme aus Priolisten mit übertragener PO+‑Punktevergabe</span></div>
+          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, direkt aus den Raidanmeldern</span></div>
           <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
         </div>
         <div id="raidHelperAttendanceTabs" class="raid-helper-attendance-tabs"></div>
@@ -5671,7 +5646,6 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
-      <div id="raidHelperTab-poCreate" class="raid-helper-tab-panel hidden"></div>
     </div>
   </details>
 
@@ -5695,6 +5669,9 @@ body.worldbuff-only .master-only{display:none!important}
                 <h3>PO-Anmeldung erstellen</h3>
                 <p>Discord-Post vorbereiten, Einträge freigeben und danach in LichtLoot übertragen.</p>
               </div>
+            </div>
+            <div class="po-signup-action-buttons" style="justify-content:flex-start;margin:0 0 12px">
+              <button class="btn primary" type="button" onclick="newPoSignupConfig()">＋ Neuen PO-Anmelder erstellen</button>
             </div>
             <div class="raid-helper-row">
               <div class="field">
@@ -6034,14 +6011,6 @@ body.worldbuff-only .master-only{display:none!important}
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
       </div>
-      <div class="po-signup-list-toolbar raid-list-filter-toolbar">
-        <div class="po-signup-tier-tabs" role="tablist" aria-label="Raid-Größe">
-          <button class="small-btn" type="button" data-raid-list-tier="all" onclick="setRaidListTierFilter('all')">Alle</button>
-          <button class="small-btn" type="button" data-raid-list-tier="20" onclick="setRaidListTierFilter('20')">20er</button>
-          <button class="small-btn" type="button" data-raid-list-tier="40" onclick="setRaidListTierFilter('40')">40er</button>
-        </div>
-        <div id="raidListRaidTabs" class="po-signup-raid-tabs" aria-label="Raid-Auswahl"></div>
-      </div>
       <div id="raidBulkActions" class="raid-bulk-actions" hidden>
         <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
         <div class="raid-bulk-action-buttons">
@@ -6078,6 +6047,23 @@ body.worldbuff-only .master-only{display:none!important}
       <summary>Spielerlogins</summary>
       <div class="player-panel-body">
       <div id="lastReset" class="reset-card" style="display:none"></div>
+      <section class="status" style="display:grid;gap:10px;margin-bottom:12px;border-color:rgba(250,204,21,.42)">
+        <div>
+          <strong style="color:var(--gold)">SpielerLogin für einen Spieler anlegen</strong>
+          <div class="muted">Die Gildenleitung erstellt einen normalen, sofort freigegebenen LichtLoot-Account mit Main-Charakter. Weitere Twinks können anschließend direkt beim Account ergänzt werden.</div>
+        </div>
+        <div class="tools" style="margin:0;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+          <input id="adminPlayerLoginPin" type="text" autocomplete="off" placeholder="Login/PIN (leer = automatisch)">
+          <input id="adminPlayerMainName" type="text" placeholder="Main-Charakter">
+          <input id="adminPlayerMainServer" type="text" placeholder="Server, z. B. Everlook">
+          <select id="adminPlayerMainClass" aria-label="Klasse des Main-Charakters">
+            <option value="">Klasse wählen</option>
+            <option>Druide</option><option>Hexenmeister</option><option>Jäger</option><option>Krieger</option><option>Magier</option><option>Paladin</option><option>Priester</option><option>Schamane</option><option>Schurke</option>
+          </select>
+          <button class="small-btn good" type="button" onclick="adminCreatePlayerLogin()">Account anlegen</button>
+        </div>
+        <div id="adminPlayerLoginResult" class="muted">Wenn das PIN-Feld leer bleibt, erzeugt LichtLoot automatisch einen sicheren Login.</div>
+      </section>
       <div class="tools">
         <input id="playerSearch" type="search" placeholder="Spieler, Server oder Klasse suchen..." oninput="renderPlayers()">
         <select id="classFilter" onchange="renderPlayers()">
@@ -6351,23 +6337,6 @@ function applyGuildBrand(){
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
 }
-
-function applyGuildManagementLayout(){
-  const settings=currentGuildInfo?.layout?.guildManagementSections || {};
-  const show=(element,visible)=>{ if(element) element.style.display=visible ? "" : "none"; };
-  show(document.querySelector('.side-link[onclick*="scrollToDashboard"]'),settings.dashboard !== false);
-  show(document.getElementById("sideGroupBuffs"),settings.buffs !== false);
-  show(document.getElementById("sideGroupRaidorga"),settings.raidorga !== false);
-  show(document.getElementById("sideGroupBackup"),settings.backup !== false);
-  show(document.querySelector('.side-link[onclick*="openIssueInboxPanel"]'),settings.mailbox !== false);
-  const admin=document.getElementById("sideGroupAdmin");
-  if(admin){
-    admin.style.display="";
-    admin.querySelectorAll(".side-group-items > .side-link").forEach(link=>{
-      link.style.display=link.getAttribute("onclick")?.includes("openLootLayoutPanel") || settings.admin !== false ? "" : "none";
-    });
-  }
-}
 const RAID_IMAGES = {
   mc:"images/raid-templates/mc.jpg",
   bwl:"images/raid-templates/bwl.jpg",
@@ -6414,8 +6383,6 @@ let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
-let raidListTierFilter = "all";
-let raidListRaidFilter = "";
 let raidHelperPoSignupSelectedPostKey = "";
 const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
@@ -6465,7 +6432,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setWorldbuffOnlyMode(false);
   await fetchCurrentGuildInfo();
   applyGuildBrand();
-  applyGuildManagementLayout();
   if(CURRENT_GUILD_SLUG !== "nachtloot"){
     document.querySelectorAll('option[value="zg-mittwoch"],option[value="zg-prime"],option[value="zg-late"]').forEach(option => option.remove());
   }
@@ -6575,42 +6541,6 @@ function openLootMasterPasswordDialog(){
   backdrop.querySelector("[data-save]")?.addEventListener("click",()=>{const field=backdrop.querySelector("#lootMasterDiscordNames");if(field)field.value=field.value.replace(/\r?\n/g,";");});
   backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{const password=backdrop.querySelector("#newLootMasterPassword")?.value.trim()||"";const repeat=backdrop.querySelector("#repeatLootMasterPassword")?.value.trim()||"";if(password.length<6){setStatus("Das Plündermeister-Passwort muss mindestens 6 Zeichen haben.","bad");return;}if(password!==repeat){setStatus("Die beiden Passwörter stimmen nicht überein.","bad");return;}try{const result=await railwayWrite({action:"guildSetLootMasterAccessPassword",masterCode:document.getElementById("masterCode").value.trim(),password});if(!result.success)throw new Error(result.error||"Passwort konnte nicht gespeichert werden.");close();setStatus("Plündermeister-Passwort gespeichert.","good");}catch(error){setStatus(error.message||"Passwort konnte nicht gespeichert werden.","bad");}});
   document.body.appendChild(backdrop);
-}
-
-async function openRaidSignupSettingsDialog(){
-  const masterCode=String(document.getElementById("masterCode")?.value||"").trim();
-  if(!masterCode){setStatus("Bitte zuerst den Master-Code eingeben.","bad");return;}
-  const backdrop=document.createElement("div");
-  backdrop.className="raid-helper-notify-backdrop";
-  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:600px">
-    <h3>👥 Raidanmelder auf den Lootseiten</h3>
-    <p>Lege fest, ob Spieler sich auf den Prio- und Lootseiten direkt für den zugehörigen Discord-Raid anmelden dürfen.</p>
-    <label style="display:flex;align-items:center;gap:12px;padding:16px;border:1px solid rgba(45,212,191,.35);border-radius:12px">
-      <input type="checkbox" data-enabled style="width:22px;height:22px">
-      <span><strong>Raidanmelder aktivieren</strong><br><small>Charakter, Skillung und Status können auf den Lootseiten gespeichert werden.</small></span>
-    </label>
-    <div data-state class="status" style="margin-top:12px">Einstellung wird geladen …</div>
-    <div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-close>Abbrechen</button><button class="small-btn good" type="button" data-save disabled>Speichern</button></div>
-  </div>`;
-  const close=()=>backdrop.remove();
-  backdrop.querySelector("[data-close]")?.addEventListener("click",close);
-  backdrop.addEventListener("click",event=>{if(event.target===backdrop)close();});
-  document.body.appendChild(backdrop);
-  const checkbox=backdrop.querySelector("[data-enabled]"),save=backdrop.querySelector("[data-save]"),state=backdrop.querySelector("[data-state]");
-  try{
-    const result=await railwayApi({action:"getRaidSignupPageSettings",masterCode,t:Date.now()});
-    if(!result?.success)throw new Error(result?.error||"Einstellung konnte nicht geladen werden.");
-    checkbox.checked=Boolean(result.enabled);save.disabled=false;
-    state.textContent=result.enabled?"Der Raidanmelder ist auf den Lootseiten aktiv.":"Der Raidanmelder ist auf den Lootseiten deaktiviert.";
-  }catch(error){state.textContent=error.message||"Einstellung konnte nicht geladen werden.";state.className="status bad";}
-  save.addEventListener("click",async()=>{
-    save.disabled=true;state.textContent="Einstellung wird gespeichert …";
-    try{
-      const result=await railwayWrite({action:"guildSetRaidSignupPageSettings",masterCode,enabled:checkbox.checked?"true":"false"});
-      if(!result?.success)throw new Error(result?.error||"Einstellung konnte nicht gespeichert werden.");
-      close();setStatus(result.enabled?"Raidanmelder auf den Lootseiten aktiviert.":"Raidanmelder auf den Lootseiten deaktiviert.","good");
-    }catch(error){save.disabled=false;state.textContent=error.message||"Einstellung konnte nicht gespeichert werden.";state.className="status bad";}
-  });
 }
 
 async function openLootMasterTargetsDialog(raidId){
@@ -7102,8 +7032,7 @@ function openRaidleadPanelDirect(raidId){
 }
 
 function openPoPostPanel(){
-  openDetailsPanel("raidHelperPanel");
-  setRaidHelperTab("poCreate");
+  openDetailsPanel("poPostPanel");
 }
 
 function openPlayerPanel(){
@@ -7370,8 +7299,6 @@ function renderLootLayoutPanel(){
   const raidKeys = ["mc","bwl","ony","aq40","naxx","zg","aq20"].concat(
     CURRENT_GUILD_SLUG === "nachtloot" ? NACHTLOOT_SPECIAL_RAIDS : []
   );
-  const lootPageRaidNames = {mc:"Molten Core",bwl:"Blackwing Lair",ony:"Onyxia",aq40:"Ahn'Qiraj 40",naxx:"Naxxramas",zg:"Zul'Gurub",aq20:"Ahn'Qiraj 20"};
-  const lootPageRaidKeys = ["mc","bwl","aq40","naxx","zg","aq20","ony"];
   box.innerHTML = `
     <div class="layout-guide">
       <div class="layout-steps">
@@ -7528,65 +7455,6 @@ function renderLootLayoutPanel(){
         </div>
       </details>
 
-      <details class="layout-accordion">
-        <summary>5. Lootseiten</summary>
-        <div class="layout-accordion-content">
-          <section class="layout-info-box gold">
-            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Inhalte der Prio- und Lootseiten</h4><p>Mit den Haken legst du für diese Gilde fest, welche Zusatzbereiche auf allen Lootseiten sichtbar sind.</p></div></div>
-            <div class="layout-loot-toggle-grid">
-              <label class="layout-loot-toggle"><input id="layoutLootWorldbuffs" type="checkbox" ${layout.lootPageSections?.worldbuffs !== false ? "checked" : ""}><span><strong>Worldbuffs</strong><small>Worldbuff- und Rend-Termine des jeweiligen Raidtages anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutLootRaidSignup" type="checkbox" ${layout.lootPageSections?.raidSignup !== false ? "checked" : ""}><span><strong>Raidanmelder</strong><small>Anmeldung auf der Lootseite und den Menüpunkt Raidanmeldungen anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutLootPoReleases" type="checkbox" ${layout.lootPageSections?.poReleases !== false ? "checked" : ""}><span><strong>PO-Freigaben</strong><small>Die raidübergreifenden PO+-Freigaben auf den Lootseiten anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutLootMiniRaids" type="checkbox" ${layout.lootPageSections?.miniRaids !== false ? "checked" : ""}><span><strong>Mini-Raidkacheln</strong><small>Die aktuellen 20er- und 40er-Raids links unter dem letzten Menüpunkt anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutLootGearPlanner" type="checkbox" ${layout.lootPageSections?.gearPlanner !== false ? "checked" : ""}><span><strong>Ausrüstungsplaner</strong><small>Die Schaltfläche zum Ausrüstungsplaner auf den Lootseiten anzeigen.</small></span></label>
-            </div>
-            <div class="field" style="margin-top:14px">
-              <label>Umfang der PO-Freigaben</label>
-              <select id="layoutLootPoReleaseScope"><option value="all" ${layout.lootPagePoReleaseScope !== "raid" ? "selected" : ""}>Alle PO-Freigaben anzeigen</option><option value="raid" ${layout.lootPagePoReleaseScope === "raid" ? "selected" : ""}>Nur die zum angezeigten Raid passende PO-Freigabe</option></select>
-              <span class="muted">Beispiel: Auf der AQ40-Seite wird bei der zweiten Auswahl nur die AQ40-Freigabe gezeigt.</span>
-            </div>
-            <h4 style="margin:18px 0 5px">Anzeige je Lootseite</h4>
-            <p class="muted" style="margin:0">Hier kannst du die Bereiche zusätzlich pro Raid ein- oder ausblenden. Der jeweilige Hauptschalter oben muss dafür eingeschaltet sein.</p>
-            <div class="layout-loot-matrix-wrap"><div class="layout-loot-matrix">
-              <div class="layout-loot-matrix-head">Lootseite</div><div class="layout-loot-matrix-head">Worldbuffs</div><div class="layout-loot-matrix-head">Raidanmelder</div><div class="layout-loot-matrix-head">PO-Freigaben</div><div class="layout-loot-matrix-head">Mini-Raids</div><div class="layout-loot-matrix-head">Ausrüstungsplaner</div>
-              ${lootPageRaidKeys.map(key => {
-                const raidSettings = layout.lootPageSectionsByRaid?.[key] || {};
-                const cell = section => `<div class="layout-loot-matrix-check"><input type="checkbox" aria-label="${escapeAttr(lootPageRaidNames[key])}: ${escapeAttr(section)}" data-loot-raid-setting data-raid="${key}" data-section="${section}" ${raidSettings[section] !== false ? "checked" : ""}></div>`;
-                return `<div class="layout-loot-matrix-raid">${escapeHtml(lootPageRaidNames[key])}</div>${cell("worldbuffs")}${cell("raidSignup")}${cell("poReleases")}${cell("miniRaids")}${cell("gearPlanner")}`;
-              }).join("")}
-            </div></div>
-          </section>
-        </div>
-      </details>
-
-      <details class="layout-accordion">
-        <summary>6. Startseite und Gildenleitung</summary>
-        <div class="layout-accordion-content">
-          <section class="layout-info-box blue">
-            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Startseite</h4><p>Lege fest, welche Menüpunkte und Zusatzbereiche auf der Startseite sichtbar sind.</p></div></div>
-            <div class="layout-loot-toggle-grid">
-              <label class="layout-loot-toggle"><input id="layoutStartNavDashboard" type="checkbox" ${layout.startPageSections?.navigation?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong><small>Dashboard-Link links anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutStartNavBuffs" type="checkbox" ${layout.startPageSections?.navigation?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong><small>Worldbuffs und Hordenbuffs in der Navigation anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutStartNavRaidinfos" type="checkbox" ${layout.startPageSections?.navigation?.raidinfos !== false ? "checked" : ""}><span><strong>Raidinformationen</strong><small>Logs, Raidregeln, PO+ Liste und Prioseiten anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutStartNavRaidorga" type="checkbox" ${layout.startPageSections?.navigation?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong><small>Plündermeister und Raid erstellen anzeigen.</small></span></label>
-              <label class="layout-loot-toggle"><input id="layoutStartWorldbuffs" type="checkbox" ${layout.startPageSections?.worldbuffs !== false ? "checked" : ""}><span><strong>Nächste Worldbuffs</strong><small>Worldbuff-Termine rechts auf dem Dashboard anzeigen.</small></span></label>
-            </div>
-            <div class="field" style="margin-top:14px"><label>Zeitraum der Raidkacheln</label><select id="layoutStartRaidCardDays"><option value="7" ${String(layout.startPageSections?.raidCardDays || "all") === "7" ? "selected" : ""}>Nächste 7 Tage</option><option value="14" ${String(layout.startPageSections?.raidCardDays || "all") === "14" ? "selected" : ""}>Nächste 14 Tage</option><option value="30" ${String(layout.startPageSections?.raidCardDays || "all") === "30" ? "selected" : ""}>Nächste 30 Tage</option><option value="60" ${String(layout.startPageSections?.raidCardDays || "all") === "60" ? "selected" : ""}>Nächste 60 Tage</option><option value="all" ${!["7","14","30","60"].includes(String(layout.startPageSections?.raidCardDays || "all")) ? "selected" : ""}>Alle kommenden Raids</option></select></div>
-          </section>
-          <section class="layout-info-box gold" style="margin-top:14px">
-            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Gildenleitungsseite</h4><p>Diese Navigationsbereiche können ausgeblendet werden. „Layout bearbeiten“ bleibt immer erreichbar.</p></div></div>
-            <div class="layout-loot-toggle-grid">
-              <label class="layout-loot-toggle"><input id="layoutGuildNavDashboard" type="checkbox" ${layout.guildManagementSections?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong></span></label>
-              <label class="layout-loot-toggle"><input id="layoutGuildNavBuffs" type="checkbox" ${layout.guildManagementSections?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong></span></label>
-              <label class="layout-loot-toggle"><input id="layoutGuildNavRaidorga" type="checkbox" ${layout.guildManagementSections?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong></span></label>
-              <label class="layout-loot-toggle"><input id="layoutGuildNavBackup" type="checkbox" ${layout.guildManagementSections?.backup !== false ? "checked" : ""}><span><strong>Sicherung</strong></span></label>
-              <label class="layout-loot-toggle"><input id="layoutGuildNavMailbox" type="checkbox" ${layout.guildManagementSections?.mailbox !== false ? "checked" : ""}><span><strong>Postfach</strong></span></label>
-              <label class="layout-loot-toggle"><input id="layoutGuildNavAdmin" type="checkbox" ${layout.guildManagementSections?.admin !== false ? "checked" : ""}><span><strong>Admin</strong><small>Layout bearbeiten bleibt trotz dieses Schalters sichtbar.</small></span></label>
-            </div>
-          </section>
-        </div>
-      </details>
-
       <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
   `;
@@ -7608,22 +7476,9 @@ async function saveLootLayoutPanel(){
   const existingLayout = currentGuildInfo && currentGuildInfo.layout && typeof currentGuildInfo.layout === "object"
     ? currentGuildInfo.layout
     : {};
-  const lootPageSectionsByRaid = {};
-  document.querySelectorAll("[data-loot-raid-setting]").forEach(input => {
-    const raid = String(input.dataset.raid || "");
-    const section = String(input.dataset.section || "");
-    if(!raid || !section) return;
-    if(!lootPageSectionsByRaid[raid]) lootPageSectionsByRaid[raid] = {};
-    lootPageSectionsByRaid[raid][section] = Boolean(input.checked);
-  });
   const nextLayout = {
     ...existingLayout,
     raidImages,
-    lootPageSections:{worldbuffs:Boolean(document.getElementById("layoutLootWorldbuffs")?.checked),raidSignup:Boolean(document.getElementById("layoutLootRaidSignup")?.checked),poReleases:Boolean(document.getElementById("layoutLootPoReleases")?.checked),miniRaids:Boolean(document.getElementById("layoutLootMiniRaids")?.checked),gearPlanner:Boolean(document.getElementById("layoutLootGearPlanner")?.checked)},
-    lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
-    lootPageSectionsByRaid,
-    startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
-    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
@@ -7648,7 +7503,6 @@ async function saveLootLayoutPanel(){
     }
     currentGuildInfo = result.guild || currentGuildInfo || {};
     applyGuildBrand();
-    applyGuildManagementLayout();
     renderAll();
     renderLootLayoutPanel();
     const savedStatus = document.getElementById("lootLayoutStatus");
@@ -7664,41 +7518,7 @@ function clearRaidFilters(shouldRender = true){
   document.getElementById("raidSearch").value = "";
   document.getElementById("raidDateSearch").value = "";
   document.getElementById("raidFilter").value = "";
-  raidListTierFilter = "all";
-  raidListRaidFilter = "";
   if(shouldRender) renderRaids();
-}
-
-function raidListRaidKeys(){
-  if(raidListTierFilter === "20") return ["aq20","zg"];
-  if(raidListTierFilter === "40") return ["naxx","aq40","bwl","mc","ony"];
-  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
-}
-
-function setRaidListTierFilter(tier){
-  raidListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
-  raidListRaidFilter = "";
-  renderRaids();
-}
-
-function setRaidListRaidFilter(raid){
-  const key = normalizePoSignupRaidKey(raid);
-  raidListRaidFilter = raidListRaidFilter === key ? "" : key;
-  renderRaids();
-}
-
-function renderRaidListFilters(){
-  document.querySelectorAll("[data-raid-list-tier]").forEach(button => {
-    button.classList.toggle("primary", button.dataset.raidListTier === raidListTierFilter);
-    button.classList.toggle("ghost", button.dataset.raidListTier !== raidListTierFilter);
-  });
-  const box = document.getElementById("raidListRaidTabs");
-  if(!box) return;
-  const allLabel = raidListTierFilter === "20" ? "Alle 20er" : raidListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
-  box.innerHTML = [
-    `<button class="small-btn ${raidListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setRaidListRaidFilter('')">${allLabel}</button>`,
-    ...raidListRaidKeys().map(raid => `<button class="small-btn ${raidListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setRaidListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
-  ].join("");
 }
 
 function renderSummary(){
@@ -8135,7 +7955,6 @@ function fillClassFilter(){
 
 function renderRaids(){
   const tbody = document.getElementById("raidRows");
-  renderRaidListFilters();
   const search = normalize(document.getElementById("raidSearch").value);
   const filter = normalize(document.getElementById("raidFilter").value);
   const dateSearch = document.getElementById("raidDateSearch").value;
@@ -8159,10 +7978,7 @@ function renderRaids(){
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
-    const raidKey = normalizePoSignupRaidKey(raid.raid || raid.raidName);
-    const sizeMatches = raidListTierFilter === "all" || raidListRaidKeys().includes(raidKey);
-    const raidMatches = !raidListRaidFilter || raidKey === raidListRaidFilter;
-    return filterMatches && dateMatches && sizeMatches && raidMatches && (!search || haystack.includes(search));
+    return filterMatches && dateMatches && (!search || haystack.includes(search));
   }).sort((a,b) => {
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
@@ -8370,6 +8186,7 @@ function renderPlayers(){
       </td>
       <td class="player-actions-cell"><div class="player-actions">
         ${approvalStatus !== "approved" ? `<button class="small-btn good" type="button" onclick="approvePlayerLogin('${escapeAttr(group.main.playerId || "")}','${escapeAttr(group.main.playerPin || "")}')">Freigeben</button>` : ""}
+        <button class="small-btn primary" type="button" onclick="openAdminAddTwink('${escapeAttr(group.main.playerPin || "")}','${escapeAttr(group.main.char || "SpielerLogin")}','${escapeAttr(group.main.server || "")}')">Twink hinzufügen</button>
         ${group.isBlocked
           ? `<button class="small-btn primary" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', false, '${escapeAttr(group.main.playerPin || "")}')">Sperre aufheben</button>`
           : `<button class="small-btn danger" type="button" onclick="setPlayerLoginBlocked('${escapeAttr(group.main.playerId || "")}', true, '${escapeAttr(group.main.playerPin || "")}')">Sperren</button>`}
@@ -8379,6 +8196,54 @@ function renderPlayers(){
     </tr>
   `;
   }).join("");
+}
+
+async function adminCreatePlayerLogin(){
+  const masterCode=String(document.getElementById("masterCode")?.value||"").trim();
+  const playerPin=String(document.getElementById("adminPlayerLoginPin")?.value||"").trim();
+  const charName=String(document.getElementById("adminPlayerMainName")?.value||"").trim();
+  const server=String(document.getElementById("adminPlayerMainServer")?.value||"").trim();
+  const className=String(document.getElementById("adminPlayerMainClass")?.value||"").trim();
+  const resultBox=document.getElementById("adminPlayerLoginResult");
+  if(!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
+  if(!charName||!server||!className){setStatus("Bitte Main-Charakter, Server und Klasse vollständig ausfüllen.","bad");return;}
+  try{
+    if(resultBox)resultBox.textContent="SpielerLogin wird angelegt …";
+    const result=await railwayWrite({action:"guildAdminCreatePlayerLogin",masterCode,playerPin,charName,server,className});
+    if(!result.success)throw new Error(result.error||"SpielerLogin konnte nicht angelegt werden.");
+    document.getElementById("adminPlayerLoginPin").value="";
+    document.getElementById("adminPlayerMainName").value="";
+    document.getElementById("adminPlayerMainServer").value="";
+    document.getElementById("adminPlayerMainClass").value="";
+    if(resultBox){
+      resultBox.innerHTML=`<span class="badge open">Account freigegeben</span> <strong>${escapeHtml(charName)}s Login/PIN:</strong> <code>${escapeHtml(result.playerPin||playerPin)}</code> <button class="small-btn ghost" type="button" data-copy-pin>PIN kopieren</button>`;
+      resultBox.querySelector("[data-copy-pin]")?.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(String(result.playerPin||playerPin));setStatus("Login/PIN wurde kopiert.","good");}catch(_error){prompt("Login/PIN kopieren:",String(result.playerPin||playerPin));}});
+    }
+    setStatus(`SpielerLogin für ${charName} wurde angelegt und freigegeben.`,"good");
+    await loadOverview({preserveStatus:true});
+  }catch(error){if(resultBox)resultBox.textContent=error.message||"SpielerLogin konnte nicht angelegt werden.";setStatus(error.message||"SpielerLogin konnte nicht angelegt werden.","bad");}
+}
+
+function openAdminAddTwink(playerPin,mainName,defaultServer=""){
+  if(!playerPin){setStatus("Für diesen SpielerLogin fehlt der PIN.","bad");return;}
+  const backdrop=document.createElement("div");
+  backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true"><h3>Twink hinzufügen</h3><p>Der neue Charakter wird dem SpielerLogin von <strong>${escapeHtml(mainName||"Spieler")}</strong> zugeordnet.</p><div class="status" style="display:grid;gap:9px"><label><strong>Charaktername</strong><input data-char type="text" placeholder="Name des Twinks"></label><label><strong>Server</strong><input data-server type="text" value="${escapeAttr(defaultServer||"")}" placeholder="z. B. Everlook"></label><label><strong>Klasse</strong><select data-class><option value="">Klasse wählen</option><option>Druide</option><option>Hexenmeister</option><option>Jäger</option><option>Krieger</option><option>Magier</option><option>Paladin</option><option>Priester</option><option>Schamane</option><option>Schurke</option></select></label></div><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close type="button">Abbrechen</button><button class="small-btn good" data-save type="button">Twink speichern</button></div></div>`;
+  const close=()=>backdrop.remove();
+  backdrop.querySelector("[data-close]")?.addEventListener("click",close);
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop)close();});
+  backdrop.querySelector("[data-save]")?.addEventListener("click",async()=>{
+    const masterCode=String(document.getElementById("masterCode")?.value||"").trim();
+    const charName=String(backdrop.querySelector("[data-char]")?.value||"").trim();
+    const server=String(backdrop.querySelector("[data-server]")?.value||"").trim();
+    const className=String(backdrop.querySelector("[data-class]")?.value||"").trim();
+    if(!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
+    if(!charName||!server||!className){setStatus("Bitte Charaktername, Server und Klasse vollständig ausfüllen.","bad");return;}
+    const button=backdrop.querySelector("[data-save]");button.disabled=true;button.textContent="Speichert …";
+    try{const result=await railwayWrite({action:"guildAdminAddTwink",masterCode,playerPin,charName,server,className});if(!result.success)throw new Error(result.error||"Twink konnte nicht gespeichert werden.");close();setStatus(`${charName} wurde als Twink von ${mainName} gespeichert.`,"good");await loadOverview({preserveStatus:true});}catch(error){button.disabled=false;button.textContent="Twink speichern";setStatus(error.message||"Twink konnte nicht gespeichert werden.","bad");}
+  });
+  document.body.appendChild(backdrop);
+  backdrop.querySelector("[data-char]")?.focus();
 }
 
 const PLAYER_LOGIN_ROLES=[
@@ -8461,9 +8326,9 @@ const DISCORD_NOTIFICATION_TYPES=[
   {key:"notify_player_logins",icon:"👤",title:"Neue Spielerlogins",text:"Informiert, wenn ein neuer Spielerlogin auf Freigabe wartet.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {link}",defaultTemplate:"🔐 **Neuer SpielerLogin wartet auf Freigabe**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n\nBitte den neuen SpielerLogin prüfen und freigeben.\n🔗 **[Direkt zur Spielerfreigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
   {key:"loot_master",raidScoped:true,icon:"🪙",title:"Plündermeister / LeadPIN",text:"Sendet bei der Raiderstellung LeadPIN, PM-PIN, Erinnerung und Direktlink.",tokens:"{raid}",defaultTemplate:"Du bist für **{raid}** als Plündermeister eingetragen.",automaticText:"LeadPIN: [LeadPIN des Raids]\nPlündermeister-PIN: [aktueller PM-PIN]\n\nZugang:\nAlternativ wird auch der Mastercode der Gildenleitung als Plündermeister-Passwort akzeptiert.\n\nDatum: [Raid-Datum]\nUhrzeit: [Raid-Uhrzeit]\n\nDirekt zum Plündermeisterpanel:\n[Plündermeisterseite für den Raid öffnen]\n\nErinnerung für nach dem Raid:\n• PO+ Punkte übertragen\n• Erhaltene Items markieren und die zugehörigen Punkte entfernen\n\nHinweis: Der PM-PIN erlaubt nur PO+ übertragen und Item erhalten/Punkte entfernen. Der Mastercode bleibt voll gültig."},
   {key:"manage_worldbuffs",icon:"🌍",title:"Worldbuff-Änderungen",text:"Informiert über angemeldete, verschobene und abgesagte Worldbuff-Termine.",tokens:"{charakter}, {aktion}, {termin}, {neuer_termin}, {grund}",defaultTemplate:"🌍 **Worldbuff-Termin {aktion}**\n**Charakter:** {charakter}\n**Termin:** {termin}\n**Neuer Termin:** {neuer_termin}\n**Grund:** {grund}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
-  {key:"notify_po_releases",raidScoped:true,icon:"🔎",title:"PO-Freigabe wartet",text:"Informiert, sobald im PO-Anmelder eine neue PO-Freigabe geprüft werden muss.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}, {antrag}, {link}",defaultTemplate:"**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n**Raid:** {raid}\n**Antrag:** {antrag}\n\n🔗 **[Direkt zur PO-Freigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
+  {key:"notify_po_releases",raidScoped:true,icon:"🔎",title:"PO-Freigabe wartet",text:"Informiert, sobald im PO-Anmelder eine neue PO-Freigabe geprüft werden muss.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}, {antrag}, {link}",defaultTemplate:"🔎 **Neue PO-Freigabe wartet**\n\n**Gilde:** {gilde}\n**Charakter:** {charakter}-{server}\n**Klasse:** {klasse}\n**Raid:** {raid}\n**Antrag:** {antrag}\n\n🔗 **[Direkt zur PO-Freigabe]({link})**",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."},
   {key:"notify_po_release_granted",raidScoped:true,icon:"✅",title:"Gildenzuständige über PO-Freigabe informieren",text:"Diese interne Nachricht geht an die hier ausgewählten Gildenzuständigen, sobald du in der PO-Freigabeliste die Spieler-DM verschickst.",tokens:"{gilde}, {charakter}, {server}, {klasse}, {raid}",defaultTemplate:"✅ **PO-Freigabe wurde verschickt**\n\nFür **{charakter}-{server}** wurde die PO-Freigabe für **{raid}** erteilt und der Spieler per DM informiert.\n\n**Gilde:** {gilde}\n**Klasse:** {klasse}",automaticText:"Der betroffene Spieler erhält separat automatisch: „Deine PO für [Raid] wurde freigegeben.“ Diese Vorschau zeigt ausschließlich die zusätzliche interne Nachricht für die ausgewählten Gildenzuständigen. Ausgelöst werden beide Nachrichten über „DM verschicken“ in der PO-Freigabeliste."},
-  {key:"raid_status_changes",icon:"📋",title:"Raidstatus geändert",text:"Informiert bei Bench, verspätet, vorläufig, abwesend oder abgemeldet im Raidanmelder.",tokens:"{spieler}, {raid}, {status}, {datum}, {uhrzeit}, {hinweis}",defaultTemplate:"**{spieler}** wurde für **{raid}** **{status}**.\n**Datum:** {datum}\n**Uhrzeit:** {uhrzeit}\n**Hinweis:** {hinweis}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."}
+  {key:"raid_status_changes",icon:"📋",title:"Raidstatus geändert",text:"Informiert bei Bench, verspätet, vorläufig, abwesend oder abgemeldet im Raidanmelder.",tokens:"{spieler}, {raid}, {status}, {datum}, {uhrzeit}, {hinweis}",defaultTemplate:"📋 **Änderung im Raidanmelder**\n\n**{spieler}** wurde für **{raid}** **{status}**.\n**Datum:** {datum}\n**Uhrzeit:** {uhrzeit}\n**Hinweis:** {hinweis}",automaticText:"Keine versteckten Ergänzungen – dieser Text ist die vollständige Nachricht."}
 ];
 const DISCORD_NOTIFICATION_RAIDS=[["mc","Molten Core"],["bwl","Blackwing Lair"],["aq40","AQ40"],["naxx","Naxxramas"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG Prime"],["zg-late","ZG Late"],["aq20","AQ20"]];
 function renderDiscordTemplatePreview(text){return escapeHtml(String(text||"")).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<span style="color:#60a5fa;text-decoration:underline">$1</span>');}
@@ -9033,7 +8898,6 @@ function setRaidHelperTab(tabName){
     attendance:"20,184,166",
     templates:"236,72,153",
     poSignup:"250,204,21",
-    poCreate:"34,197,94",
     settings:"100,116,139"
   };
   document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
@@ -9048,7 +8912,6 @@ function setRaidHelperTab(tabName){
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
   if(target === "poSignup") refreshRaidHelperPoSignupTab();
-  if(target === "poCreate") mountPoSignupCreatorInRaidHelper();
   if(target === "scheduledEvents"){
     renderRaidHelperScheduleRules();
     renderRaidHelperScheduledEvents();
@@ -9059,15 +8922,6 @@ function setRaidHelperTab(tabName){
     loadRaidHelperAttendance();
   }
   if(target === "templates") loadRaidHelperTemplates();
-}
-
-function mountPoSignupCreatorInRaidHelper(){
-  const target = document.getElementById("raidHelperTab-poCreate");
-  const creator = document.getElementById("poPostTab-signup");
-  if(!target || !creator) return;
-  if(creator.parentElement !== target) target.appendChild(creator);
-  creator.classList.remove("hidden");
-  initPoPostPanel();
 }
 
 function raidHelperUpcomingRaids(){
@@ -9333,62 +9187,6 @@ function renderRaidHelperCurrentRaidButton(raid){
   `;
 }
 
-function raidHelperManualPlayerOptions(){
-  const unique = new Map();
-  for(const player of guildData.players || []){
-    const name = String(player.char || player.name || "").trim();
-    if(!name) continue;
-    const key = normalize(name);
-    if(!unique.has(key)) unique.set(key, {
-      name,
-      className:String(player.className || player.klasse || "").trim(),
-      server:String(player.server || "").trim()
-    });
-  }
-  return [...unique.values()]
-    .sort((a,b) => a.name.localeCompare(b.name,"de"))
-    .map(player => `<option value="${escapeAttr(player.name)}" data-class="${escapeAttr(player.className)}" data-server="${escapeAttr(player.server)}">${escapeHtml(player.name)}${player.className ? ` · ${escapeHtml(player.className)}` : ""}${player.server ? ` · ${escapeHtml(player.server)}` : ""}</option>`)
-    .join("");
-}
-
-const RAID_HELPER_MANUAL_SPECS = {
-  warrior:["Waffen","Furor","Tank"], krieger:["Waffen","Furor","Tank"],
-  druid:["Heilung","Tank","FeralDD","Eule"], druide:["Heilung","Tank","FeralDD","Eule"],
-  paladin:["Heilig","Vergeltung","Tank"],
-  rogue:["Assassination","Combat","Subtlety"], schurke:["Assassination","Combat","Subtlety"],
-  hunter:["Survival","Marksman","Beastmaster"], jäger:["Survival","Marksman","Beastmaster"], jaeger:["Survival","Marksman","Beastmaster"],
-  priest:["Disziplin","Heilig","Schatten"], priester:["Disziplin","Heilig","Schatten"],
-  mage:["Feuer","Frost","Arkan"], magier:["Feuer","Frost","Arkan"],
-  warlock:["Gebrechen","Dämonologie","Zerstörung"], hexenmeister:["Gebrechen","Dämonologie","Zerstörung"],
-  shaman:["Heilung","Elemental","Enhancement"], schamane:["Heilung","Elemental","Enhancement"]
-};
-
-function raidHelperManualRoleForSpec(spec){
-  const value = normalize(spec);
-  if(value === "tank") return "tank";
-  if(["heilung","heilig","disziplin"].includes(value)) return "heal";
-  return "dd";
-}
-
-function updateRaidHelperManualSpecs(raidId, syncRole=true){
-  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
-  const specField = document.getElementById(`raidHelperManualSpec-${raidId}`);
-  if(!specField) return;
-  const className = normalize(playerField?.selectedOptions?.[0]?.dataset.class || "");
-  const specs = RAID_HELPER_MANUAL_SPECS[className] || [];
-  specField.innerHTML = specs.length
-    ? specs.map(spec => `<option value="${escapeAttr(spec)}">${escapeHtml(spec)}</option>`).join("")
-    : '<option value="">Skillung wählen …</option>';
-  specField.disabled = !specs.length;
-  if(syncRole && specs.length) updateRaidHelperManualRoleFromSpec(raidId);
-}
-
-function updateRaidHelperManualRoleFromSpec(raidId){
-  const spec = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
-  const roleField = document.getElementById(`raidHelperManualRole-${raidId}`);
-  if(roleField && spec) roleField.value = raidHelperManualRoleForSpec(spec);
-}
-
 function toggleRaidHelperSelection(raidId, checked){
   const id = String(raidId || "");
   if(!id) return;
@@ -9478,16 +9276,10 @@ async function renderRaidHelperCurrentDetail(raidId){
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
-        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b> · ${escapeHtml(slots || "Slots offen")}</span>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
       <div class="raid-helper-current-actions">
         <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
-        <label class="raid-helper-meta-pill" title="Discord-Channel für diesen Post auswählen">
-          Channel
-          <select id="raidDiscordChannel-${escapeAttr(raidId)}" style="min-width:190px">
-            ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
-          </select>
-        </label>
         <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>
         <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
           <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
@@ -9495,21 +9287,6 @@ async function renderRaidHelperCurrentDetail(raidId){
         </label>
         <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
       </div>
-    </div>
-    <div class="raid-helper-manual-signup">
-      <label>Spieler aus der Datenbank
-        <select id="raidHelperManualPlayer-${escapeAttr(raidId)}" onchange="updateRaidHelperManualSpecs('${escapeAttr(raidId)}')"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
-      </label>
-      <label>Rolle
-        <select id="raidHelperManualRole-${escapeAttr(raidId)}"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select>
-      </label>
-      <label>Skillung
-        <select id="raidHelperManualSpec-${escapeAttr(raidId)}" onchange="updateRaidHelperManualRoleFromSpec('${escapeAttr(raidId)}')" disabled><option value="">Erst Charakter wählen …</option></select>
-      </label>
-      <label>Status
-        <select id="raidHelperManualStatus-${escapeAttr(raidId)}"><option value="signed">Aktiv</option><option value="bench">Bank</option><option value="late">Verspätet</option><option value="tentative">Vorläufig</option><option value="absent">Abwesend</option></select>
-      </label>
-      <button class="small-btn good" type="button" onclick="addRaidHelperDatabasePlayer('${escapeAttr(raidId)}')">Spieler anmelden</button>
     </div>
     <div id="raidHelperCurrentSignupStatus" class="status"></div>
     <div>
@@ -9520,48 +9297,6 @@ async function renderRaidHelperCurrentDetail(raidId){
     </div>
   `;
   await loadRaidHelperCurrentEventSignups(raidId);
-}
-
-async function addRaidHelperDatabasePlayer(raidId){
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  const raid = findRaidByAnyId(raidId);
-  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
-  const selected = playerField?.selectedOptions?.[0];
-  const player = String(playerField?.value || "").trim();
-  if(!masterCode){ setRaidHelperCurrentStatus("Bitte zuerst den Master-Code eingeben.", "bad"); return; }
-  if(!raid || !player){ setRaidHelperCurrentStatus("Bitte einen Charakter aus der Spielerdatenbank auswählen.", "bad"); return; }
-  const role = document.getElementById(`raidHelperManualRole-${raidId}`)?.value || "dd";
-  const specialization = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
-  const status = document.getElementById(`raidHelperManualStatus-${raidId}`)?.value || "signed";
-  if(!specialization){ setRaidHelperCurrentStatus("Bitte eine Skillung auswählen.", "bad"); return; }
-  setRaidHelperCurrentStatus(`${player} wird angemeldet …`, "");
-  try{
-    const result = await railwayWrite({
-      action:"saveDiscordSignupRows",
-      masterCode,
-      raidId:raid.raidId || raid.id || raidId,
-      raid:raid.raid || getRaidKey(raid),
-      raidDate:raid.raidDate || "",
-      raidTime:raid.raidTime || "",
-      rows:[{
-        char:player,
-        spieler:player,
-        klasse:selected?.dataset.class || "",
-        server:selected?.dataset.server || "",
-        role,
-        status,
-        source:"loot_page",
-        note:`Skillung: ${specialization}`
-      }]
-    });
-    if(!result.success) throw new Error(result.error || "Spieler konnte nicht angemeldet werden.");
-    raidHelperAttendanceCache = null;
-    await loadRaidHelperCurrentEventSignups(raidId);
-    await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
-    setRaidHelperCurrentStatus(`${player} wurde für diesen Raid angemeldet.`, "good");
-  }catch(error){
-    setRaidHelperCurrentStatus(error.message || "Spieler konnte nicht angemeldet werden.", "bad");
-  }
 }
 
 function setRaidHelperCurrentStatus(message, type){
@@ -9588,7 +9323,7 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
       setRaidHelperCurrentStatus("Keine Anmeldungen gespeichert.", "");
       return;
     }
-    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
+    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
     setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
@@ -9946,25 +9681,22 @@ async function loadRaidHelperEventSignups(){
       box.innerHTML = '<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
       return;
     }
-    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
+    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
   }
 }
 
-const raidHelperSignupEditRows = new Map();
-
 function renderRaidHelperSignupAdminRow(row){
   const id = row.id || "";
   const player = row.player || row.char || "-";
-  if(id) raidHelperSignupEditRows.set(String(id), row);
   const status = normalize(row.status || "signed") || "signed";
   const statusLabel = status === "bench" ? "Bank" : status === "late" || status === "spät" || status === "spaet" ? "Verspätet" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Aktiv";
   const statusIcon = status === "bench" ? "🪑" : status === "late" || status === "spät" || status === "spaet" ? "🕒" : status === "absent" ? "🚫" : status === "tentative" ? "⚖️" : "✅";
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter oder Skillung ändern">${escapeHtml(player)}</button>${renderRaidHelperLootbag(row)}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
@@ -9978,144 +9710,6 @@ function renderRaidHelperSignupAdminRow(row){
       </div>
     </div>
   `;
-}
-
-function raidHelperSignupSpecFromNote(note){
-  const match = String(note || "").match(/Skillung\s*:\s*([^·|,;]+)/i);
-  return match ? match[1].trim() : "";
-}
-
-function updateRaidHelperSignupEditSpecs(){
-  const playerField = document.getElementById("raidHelperSignupEditPlayer");
-  const specField = document.getElementById("raidHelperSignupEditSpec");
-  const roleField = document.getElementById("raidHelperSignupEditRole");
-  if(!playerField || !specField) return;
-  const className = normalize(playerField.selectedOptions?.[0]?.dataset.class || "");
-  const specs = RAID_HELPER_MANUAL_SPECS[className] || [];
-  const previous = specField.dataset.current || specField.value || "";
-  specField.innerHTML = specs.length ? specs.map(spec => `<option value="${escapeAttr(spec)}">${escapeHtml(spec)}</option>`).join("") : '<option value="">Keine Skillungen hinterlegt</option>';
-  specField.disabled = !specs.length;
-  if(specs.includes(previous)) specField.value = previous;
-  specField.dataset.current = "";
-  if(roleField && specField.value) roleField.value = raidHelperManualRoleForSpec(specField.value);
-}
-
-function openRaidHelperSignupEdit(signupId){
-  const row = raidHelperSignupEditRows.get(String(signupId || ""));
-  if(!row) return;
-  const player = row.player || row.char || "";
-  const currentSpec = raidHelperSignupSpecFromNote(row.note);
-  const backdrop = document.createElement("div");
-  backdrop.className = "raid-helper-notify-backdrop";
-  backdrop.innerHTML = `<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:760px">
-    <h3>Raidanmeldung bearbeiten</h3>
-    <p class="muted">Charakter und Skillung gelten nur für den aktuell ausgewählten Raid.</p>
-    <div class="raid-helper-signup-edit-grid">
-      <label>Charakter<select id="raidHelperSignupEditPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select></label>
-      <label>Skillung<select id="raidHelperSignupEditSpec" data-current="${escapeAttr(currentSpec)}"></select></label>
-      <label>Rolle<select id="raidHelperSignupEditRole"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select></label>
-    </div>
-    <div id="raidHelperSignupEditStatus" class="status"></div>
-    <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Änderungen speichern</button></div>
-  </div>`;
-  document.body.appendChild(backdrop);
-  const playerField = backdrop.querySelector("#raidHelperSignupEditPlayer");
-  const roleField = backdrop.querySelector("#raidHelperSignupEditRole");
-  playerField.value = player;
-  roleField.value = normalize(row.role) === "heal" ? "heal" : normalize(row.role) === "tank" ? "tank" : "dd";
-  updateRaidHelperSignupEditSpecs();
-  const specField = backdrop.querySelector("#raidHelperSignupEditSpec");
-  if(currentSpec && [...specField.options].some(option => option.value === currentSpec)) specField.value = currentSpec;
-  roleField.value = normalize(row.role) === "heal" ? "heal" : normalize(row.role) === "tank" ? "tank" : raidHelperManualRoleForSpec(specField.value);
-  playerField.addEventListener("change", updateRaidHelperSignupEditSpecs);
-  specField.addEventListener("change", () => { roleField.value = raidHelperManualRoleForSpec(specField.value); });
-  backdrop.querySelector("[data-close]").addEventListener("click", () => backdrop.remove());
-  backdrop.addEventListener("click", event => { if(event.target === backdrop) backdrop.remove(); });
-  backdrop.querySelector("[data-save]").addEventListener("click", () => saveRaidHelperSignupEdit(signupId, backdrop));
-}
-
-async function saveRaidHelperSignupEdit(signupId, backdrop){
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  const playerField = backdrop.querySelector("#raidHelperSignupEditPlayer");
-  const specField = backdrop.querySelector("#raidHelperSignupEditSpec");
-  const roleField = backdrop.querySelector("#raidHelperSignupEditRole");
-  const status = backdrop.querySelector("#raidHelperSignupEditStatus");
-  const player = playerField?.value || "";
-  const specialization = specField?.value || "";
-  if(!masterCode || !player || !specialization){ status.textContent = "Bitte Charakter und Skillung vollständig auswählen."; status.className = "status bad"; return; }
-  status.textContent = "Änderung wird gespeichert …";
-  status.className = "status";
-  try{
-    const result = await railwayWrite({
-      action:"guildUpdateRaidHelperSignup",
-      masterCode,
-      signupId,
-      playerName:player,
-      className:playerField.selectedOptions?.[0]?.dataset.class || "",
-      server:playerField.selectedOptions?.[0]?.dataset.server || "",
-      role:roleField.value || "dd",
-      specialization,
-      note:`Skillung: ${specialization}`
-    });
-    if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
-    backdrop.remove();
-    await loadRaidHelperCurrentEventSignups();
-    setRaidHelperCurrentStatus("Charakter und Skillung wurden geändert. Discord-Aktualisierung ist vorgemerkt.", "good");
-  }catch(error){ status.textContent = error.message || "Anmeldung konnte nicht geändert werden."; status.className = "status bad"; }
-}
-
-function renderRaidHelperLootbag(row){
-  const po = normalize(row.poApprovalStatus || row.po_approval_status || "");
-  let file = "", label = "", type = "";
-  if(["approved","freigegeben"].includes(po)){ file = "beutegrun.jpg"; label = "PO freigegeben"; type = "approved"; }
-  else if(["pending","offen","wartet"].includes(po)){ file = "beuteorange.jpg"; label = "PO eingetragen"; type = "pending"; }
-  else if(row.hasPrio === true || ["true","1","yes","ja"].includes(normalize(row.hasPrio))){ file = "beutelilia.jpg"; label = "P1–P3 eingetragen"; type = "prio"; }
-  return file ? `<span class="raid-helper-lootbag ${type}" title="${escapeAttr(label)}"><img src="images/lootbags/${file}" alt="Lootbag"><span>${escapeHtml(label)}</span></span>` : "";
-}
-
-function renderRaidHelperSignupAdminLayout(rows){
-  const unique = [];
-  const seen = new Set();
-  for(const row of rows || []){
-    const key = normalize(row.player || row.char || row.playerName || "");
-    if(!key || seen.has(key)) continue;
-    seen.add(key);
-    unique.push(row);
-  }
-  const canon = value => {
-    const name = normalize(value);
-    if(name.includes("krieger") || name.includes("warrior")) return "Warrior";
-    if(name.includes("paladin")) return "Paladin";
-    if(name.includes("schurke") || name.includes("rogue")) return "Rogue";
-    if(name.includes("jäger") || name.includes("jaeger") || name.includes("hunter")) return "Hunter";
-    if(name.includes("druide") || name.includes("druid")) return "Druid";
-    if(name.includes("priester") || name.includes("priest")) return "Priest";
-    if(name.includes("magier") || name.includes("mage")) return "Mage";
-    if(name.includes("hexenmeister") || name.includes("warlock")) return "Warlock";
-    if(name.includes("schamane") || name.includes("shaman")) return "Shaman";
-    return "Other";
-  };
-  const labels = {Tank:"Tanks",Warrior:"Krieger",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Druid:"Druiden",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Other:"Weitere"};
-  const colors = {Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Other:"#94a3b8"};
-  const order = ["Tank","Warrior","Paladin","Rogue","Hunter","Druid","Priest","Mage","Warlock","Shaman","Other"];
-  const statusKey = row => normalize(row.status || "signed");
-  const active = unique.filter(row => ["signed","aktiv","angemeldet"].includes(statusKey(row)));
-  const roleCounts = {tank:0,melee:0,ranged:0,heal:0};
-  active.forEach(row => {
-    const role = normalize(row.role || "");
-    const cls = canon(row.className || row.class || "");
-    if(role === "tank") roleCounts.tank++;
-    else if(role === "heal" || role === "healer") roleCounts.heal++;
-    else if(["Warrior","Paladin","Rogue","Druid"].includes(cls)) roleCounts.melee++;
-    else roleCounts.ranged++;
-  });
-  const group = (key, players, extraClass = "") => `<section class="raid-helper-loot-group ${extraClass}" style="--group-color:${colors[key] || colors.Other}"><header>${key === "Tank" ? '<span style="font-size:24px">🛡️</span>' : raidHelperClassIconMarkup(key,"◆")}<div><h3>${escapeHtml(labels[key] || key)}</h3><small>${players.length} ${players.length === 1 ? "Spieler" : "Spieler"}</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>`;
-  const activeGroups = new Map();
-  active.forEach(row => { const key = normalize(row.role) === "tank" ? "Tank" : canon(row.className || row.class); if(!activeGroups.has(key)) activeGroups.set(key,[]); activeGroups.get(key).push(row); });
-  const activeHtml = order.filter(key => activeGroups.has(key)).map(key => group(key,activeGroups.get(key))).join("");
-  const inactiveDefs = [["bench","🪑 Bank"],["late","🕒 Verspätet"],["tentative","⚖️ Vorläufig"],["absent","🚫 Abwesend"]];
-  const inactiveHtml = inactiveDefs.map(([status,label]) => { const players = unique.filter(row => statusKey(row) === status || (status === "late" && ["spät","spaet"].includes(statusKey(row)))); return players.length ? `<section class="raid-helper-loot-group status-${status}" style="--group-color:${status === "bench" ? "#fde047" : status === "late" ? "#fb923c" : status === "tentative" ? "#c084fc" : "#f87171"}"><header><span style="font-size:22px">${label.split(" ")[0]}</span><div><h3>${escapeHtml(label.substring(label.indexOf(" ") + 1))}</h3><small>${players.length} Spieler</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>` : ""; }).join("");
-  return `<div class="raid-helper-loot-total">👥 Gesamt angemeldet: ${unique.length}</div><div class="raid-helper-loot-role-counter"><span>🛡️ Tanks <b>${roleCounts.tank}</b></span><span>⚔️ Nahkampf <b>${roleCounts.melee}</b></span><span>🏹 Fernkampf <b>${roleCounts.ranged}</b></span><span>✚ Heiler <b>${roleCounts.heal}</b></span></div><div class="raid-helper-loot-grid">${activeHtml || '<div class="muted">Keine aktiv Angemeldeten.</div>'}</div>${inactiveHtml ? `<div class="raid-helper-loot-inactive">${inactiveHtml}</div>` : ""}`;
 }
 
 function raidHelperSignupNotifyPrompt(action, player){
@@ -10255,7 +9849,7 @@ function renderRaidHelperPastEvents(){
 function raidHelperAttendanceRaids(raidKey = raidHelperAttendanceRaidKey){
   return (guildData.raids || [])
     .slice()
-    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey && hasP0PlusTransfer(raid))
+    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey)
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
     .slice(0,18);
 }
@@ -10272,7 +9866,7 @@ async function loadRaidHelperAttendance(){
   }
   const raids = raidHelperAttendanceRaids(raidKey);
   if(!raids.length){
-    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Prioliste mit übertragener PO+‑Punktevergabe gefunden.</div>`;
+    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Raidanmelder für Attendance gefunden.</div>`;
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
@@ -10286,12 +9880,10 @@ async function loadRaidHelperAttendance(){
         playerPin:raid.playerPin || "",
         t:Date.now()
       });
-      if(result.p0PlusTransferred || hasP0PlusTransfer(raid)){
-        rows.push({
-          raid:{...(result.raid || raid),p0PlusTransferred:true,p0PlusTransferCount:Number(result.p0PlusTransferCount || raid.p0PlusTransferCount || 0)},
-          signups:Array.isArray(result.attendancePrios) ? result.attendancePrios : []
-        });
-      }
+      rows.push({
+        raid:result.raid || raid,
+        signups:[...(result.signups || []), ...(result.externalSignups || [])]
+      });
     }catch(error){
       rows.push({ raid, signups:[] });
     }
@@ -10348,7 +9940,7 @@ function renderRaidHelperAttendance(rows){
   });
   const playerList = Array.from(players.values()).sort((a,b) => b.signed - a.signed || a.name.localeCompare(b.name));
   if(!playerList.length){
-    box.innerHTML = '<div class="raid-helper-loading">In den übertragenen Priolisten wurden noch keine Spieler gefunden.</div>';
+    box.innerHTML = '<div class="raid-helper-loading">Noch keine Anmeldungen in den letzten Raids gefunden.</div>';
     return;
   }
   const head = `
@@ -12797,6 +12389,7 @@ function renderRaidHelperPoSignupDetail(postKey){
         <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
       </div>
       <div class="raid-helper-current-actions">
+        <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
         <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
         ${isArchivedOnly
           ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
@@ -12805,15 +12398,6 @@ function renderRaidHelperPoSignupDetail(postKey){
       </div>
     </div>
     <div class="status good">${escapeHtml(String(count))} Einträge geladen · ${escapeHtml(String(approved))} freigegeben${isArchivedOnly ? " · archiviert" : ""}</div>
-    <div class="raid-helper-manual-signup">
-      <label>Spieler aus der Datenbank
-        <select id="poManualPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
-      </label>
-      <label style="grid-column:span 2">PO-Item aus der Lootdatenbank
-        <select id="poManualItem"><option value="">Itemliste wird geladen …</option></select>
-      </label>
-      <button class="small-btn good" type="button" onclick="addManualPoSignup('${escapeAttr(row.postKey)}','${escapeAttr(raidKey)}')">PO hinzufügen</button>
-    </div>
     <div>
       <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
         <div><h3 style="font-size:16px">PO-Anmeldungen</h3><span id="raidHelperPoSignupDetailHint">Einträge dieses PO-Anmelders prüfen und freigeben.</span></div>
@@ -12832,50 +12416,6 @@ function renderRaidHelperPoSignupDetail(postKey){
     row.postKey,
     "Noch keine PO-Anmeldungen vorhanden."
   );
-  loadManualPoItemOptions(raidKey);
-}
-
-async function loadManualPoItemOptions(raidKey){
-  const select = document.getElementById("poManualItem");
-  if(!select) return;
-  try{
-    const items = await loadPoSignupLootItems(raidKey);
-    select.innerHTML = '<option value="">Item auswählen …</option>' + items.map(item => {
-      const name = typeof item === "string" ? item : item?.name || "";
-      return name ? `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>` : "";
-    }).join("");
-  }catch(error){
-    select.innerHTML = '<option value="">Itemliste konnte nicht geladen werden</option>';
-  }
-}
-
-async function addManualPoSignup(postKey, raidKey){
-  const masterCode = document.getElementById("masterCode")?.value.trim();
-  const player = document.getElementById("poManualPlayer")?.value.trim() || "";
-  const item = document.getElementById("poManualItem")?.value.trim() || "";
-  const hint = document.getElementById("raidHelperPoSignupDetailHint");
-  if(!masterCode || !player || !item){
-    if(hint) hint.textContent = !masterCode ? "Bitte zuerst den Master-Code eingeben." : "Bitte Spieler und PO-Item auswählen.";
-    return;
-  }
-  try{
-    const config = raidHelperPoSignupRows().find(row => String(row.postKey || "") === String(postKey || "")) || {};
-    const result = await railwayWrite({
-      action:"guildAddManualPoPostEntry", masterCode, postKey, raid:raidKey, player, item,
-      title:config.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`,
-      raidDate:config.raidDate || "", raidTime:config.raidTime || "",
-      raidPin:config.lichtlootPlayerPin || config.prioPin || config.raidPin || "",
-      sourceChannelId:config.sourceChannelId || "", targetChannelId:config.targetChannelId || config.sourceChannelId || "",
-      discordMessageId:config.discordMessageId || "", mode:config.mode || "signup"
-    });
-    if(!result.success) throw new Error(result.error || "PO konnte nicht hinzugefügt werden.");
-    await loadPoPostStoredEntries();
-    renderRaidHelperPoSignupDetail(postKey);
-    const refreshedHint = document.getElementById("raidHelperPoSignupDetailHint");
-    if(refreshedHint) refreshedHint.textContent = result.saved ? `${player}: ${item} wurde als offene PO-Anmeldung hinzugefügt.` : `${player}: ${item} ist für diesen PO-Anmelder bereits eingetragen.`;
-  }catch(error){
-    if(hint) hint.textContent = error.message || "PO konnte nicht hinzugefügt werden.";
-  }
 }
 
 function openRaidHelperPoSignup(postKey){
@@ -17094,10 +16634,19 @@ async function requestWorldbuffReplacement(index){
 }
 
 async function remindWorldbuffCaster(index){
-  const entry=worldbuffEntries[index], masterCode=document.getElementById("masterCode").value.trim();
-  if(!entry||!masterCode){setStatus("Bitte Master-Code eingeben.","bad");return;}
-  if(!String(entry.charakter||"").trim()){setStatus("Für diesen Termin ist kein Werfer eingetragen.","bad");return;}
-  try{const result=await railwayWrite({action:"guildRemindWorldbuffCaster",masterCode,rowNumber:entry.rowNumber||"",buff:entry.buff||"",datum:entry.datum||"",uhrzeit:entry.uhrzeit||"",gilde:entry.gilde||managedWorldbuffGuildName(),charakter:entry.charakter||""});setStatus(result.success?`Erinnerung für ${entry.charakter} wurde an den Bot übergeben.`:(result.error||"Werfer konnte nicht informiert werden."),result.success?"good":"bad");}catch(error){setStatus(error.message||"Werfer konnte nicht informiert werden.","bad");}
+  const entry = worldbuffEntries[index];
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!entry || !masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  if(!String(entry.charakter || "").trim()){ setStatus("Für diesen Termin ist kein Werfer eingetragen.", "bad"); return; }
+  try{
+    const result = await railwayWrite({
+      action:"guildRemindWorldbuffCaster", masterCode,
+      rowNumber:entry.rowNumber || "", buff:entry.buff || "", datum:entry.datum || "",
+      uhrzeit:entry.uhrzeit || "", gilde:entry.gilde || managedWorldbuffGuildName(),
+      charakter:entry.charakter || ""
+    });
+    setStatus(result.success ? `Erinnerung für ${entry.charakter} wurde an den Bot übergeben.` : (result.error || "Werfer konnte nicht informiert werden."), result.success ? "good" : "bad");
+  }catch(error){ setStatus(error.message || "Werfer konnte nicht informiert werden.", "bad"); }
 }
 
 async function deleteWorldbuffTerm(index){
@@ -17372,7 +16921,6 @@ function renderHordenbuffPanel(days){
             <th>Fraktion</th>
             <th>Charakter</th>
             <th>Übernehmer</th>
-            <th>Rendwerfer</th>
             <th>Status</th>
             <th>Notiz</th>
             <th>Aktion</th>
@@ -17400,7 +16948,6 @@ function renderHordenbuffRows(){
       entry.gilde,
       entry.charakter,
       entry.uebernehmer,
-      entry.rendwerfer,
       entry.status,
       entry.note
     ].join(" "));
@@ -17408,7 +16955,7 @@ function renderHordenbuffRows(){
   });
 
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="11" class="muted">Keine Hordenbuffs gefunden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="muted">Keine Hordenbuffs gefunden.</td></tr>';
     return;
   }
 
@@ -17430,7 +16977,6 @@ function renderHordenbuffRows(){
         <td>${escapeHtml(entry.gilde || "-")}</td>
         <td><input id="hordenbuffChar_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.charakter || "")}" placeholder="Charakter"></td>
         <td><input id="hordenbuffHelper_${index}" class="worldbuff-caster" type="text" value="${escapeAttr(entry.uebernehmer || "")}" placeholder="Übernehmer"></td>
-        <td><span title="Wird automatisch aus dem Rend-Sheet übernommen und kann hier nicht geändert werden." style="display:inline-flex;min-width:110px;min-height:30px;align-items:center;padding:4px 9px;border:1px solid rgba(245,158,11,.45);border-radius:8px;background:rgba(120,53,15,.20);color:#fcd34d;font-weight:900;white-space:nowrap">${escapeHtml(entry.rendwerfer || "–")}</span></td>
         <td>
           <select id="hordenbuffStatus_${index}" class="worldbuff-status">
             ${statusOptions.map(value => `<option value="${escapeAttr(value)}" ${value === statusValue ? "selected" : ""}>${escapeHtml(value || "offen")}</option>`).join("")}
@@ -18006,8 +17552,14 @@ function updateSelectedLogAnalysisControls(){
   const all = document.getElementById("selectAllVisibleLogAnalyses");
   const visible = [...document.querySelectorAll("#logAnalysisRows .log-analysis-select")];
   const selectedVisible = visible.filter(input => selectedLogAnalysisIds.has(input.value)).length;
-  if(button){ button.disabled = selectedLogAnalysisIds.size === 0; button.textContent = `Ausgewählte löschen (${selectedLogAnalysisIds.size})`; }
-  if(all){ all.checked = visible.length > 0 && selectedVisible === visible.length; all.indeterminate = selectedVisible > 0 && selectedVisible < visible.length; }
+  if(button){
+    button.disabled = selectedLogAnalysisIds.size === 0;
+    button.textContent = `Ausgewählte löschen (${selectedLogAnalysisIds.size})`;
+  }
+  if(all){
+    all.checked = visible.length > 0 && selectedVisible === visible.length;
+    all.indeterminate = selectedVisible > 0 && selectedVisible < visible.length;
+  }
 }
 
 async function deleteSelectedLogAnalyses(){
@@ -18026,7 +17578,9 @@ async function deleteSelectedLogAnalyses(){
     deletedIds.forEach(id => selectedLogAnalysisIds.delete(id));
     renderLogAnalyses();
     if(status) status.innerHTML = `<span class="ok">${Number(result.deletedAnalyses || deletedIds.size)}</span> Loganalyse(n) gelöscht.`;
-  }catch(error){ if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Löschen fehlgeschlagen.")}</span>`; }
+  }catch(error){
+    if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Löschen fehlgeschlagen.")}</span>`;
+  }
 }
 
 function renderLogAnalysisFooter(from, to, total){
