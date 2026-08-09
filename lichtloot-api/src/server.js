@@ -16050,7 +16050,7 @@ async function deleteRaidSignup({ guildId, query: params }) {
 async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const signupId = clean(params.signupId || params.id);
-  const nextStatus = normalizeSignupStatus(params.signupStatus || params.status);
+  const hasStatusChange = Boolean(clean(params.signupStatus || params.status));
   const shouldDelete = ["delete", "remove", "verwerfen"].includes(clean(params.mode || params.signupAction || params.actionMode).toLowerCase());
   const notifyMessage = clean(params.notifyMessage || params.message || params.reason || "");
   if (!signupId || !isUuid(signupId)) {
@@ -16064,6 +16064,25 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
     const error = new Error("Anmeldung wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
+  }
+
+  const nextStatus = hasStatusChange
+    ? normalizeSignupStatus(params.signupStatus || params.status)
+    : normalizeSignupStatus(existingSignup.status);
+  const requestedPlayer = clean(params.playerName || params.player || params.char);
+  const requestedServer = clean(params.server);
+  const requestedClass = clean(params.className || params.klasse);
+  const requestedRole = clean(params.role) ? normalizeSignupRole(params.role) : normalizeSignupRole(existingSignup.role);
+  const requestedSpec = clean(params.specialization || params.specialisation || params.spec || params.skillung);
+  const requestedNote = clean(params.note) || (requestedSpec ? `Skillung: ${requestedSpec}` : clean(existingSignup.note));
+  let requestedCharacter = null;
+  if (requestedPlayer) {
+    requestedCharacter = await findCharacterByName(guildId, requestedPlayer, requestedServer);
+    if (!requestedCharacter) {
+      const error = new Error("Der ausgewählte Charakter wurde in der Spielerdatenbank nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
   }
 
   if (shouldDelete) {
@@ -16088,10 +16107,22 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const externalUpdate = await query(
     `update raid_external_signups
      set status = $3,
+         player_name = coalesce(nullif($4, ''), player_name),
+         class_name = coalesce(nullif($5, ''), class_name),
+         role = $6,
+         note = $7,
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
-    [guildId, signupId, nextStatus]
+    [
+      guildId,
+      signupId,
+      nextStatus,
+      requestedCharacter?.name || requestedPlayer,
+      requestedCharacter?.class_name || requestedClass,
+      requestedRole,
+      requestedNote
+    ]
   );
   if (externalUpdate.rows[0]) {
     const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
@@ -16102,13 +16133,16 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const localUpdate = await query(
     `update raid_signups rs
      set status = $3,
+         character_id = coalesce($4::uuid, rs.character_id),
+         role = $5,
+         note = $6,
          updated_at = now()
      from raids r
      where rs.raid_id = r.id
        and r.guild_id = $1
        and rs.id = $2
      returning rs.*`,
-    [guildId, signupId, nextStatus]
+    [guildId, signupId, nextStatus, requestedCharacter?.id || null, requestedRole, requestedNote]
   );
   if (localUpdate.rows[0]) {
     const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
