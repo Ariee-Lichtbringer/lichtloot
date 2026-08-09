@@ -15549,15 +15549,10 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+  // Die Detailansicht eines Raids darf niemals Anmeldungen eines anderen
+  // Termins übernehmen. Auch mehrere AQ20-/ZG-Raids am selben Tag bleiben
+  // über ihre interne Raid-ID strikt voneinander getrennt.
+  const relatedRaidIds = [raid.id];
 
   const signupResult = await query(
     `select
@@ -15609,9 +15604,9 @@ async function getRaidHelper({ guildId, query: params }) {
             ) as has_prio
      from raid_external_signups res
      where res.guild_id = $1
-       and (res.raid_id = any($2) or (lower(res.raid_type) = any($3) and res.raid_date = $4))
+       and res.raid_id = any($2)
      order by res.player_name asc`,
-    [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    [guildId, relatedRaidIds]
   );
 
   const signups = signupResult.rows.map(normalizeRaidSignupRow);
