@@ -121,9 +121,22 @@
       box.innerHTML='<div class="loot-sidebar-raids-title">Aktuelle Raids</div>'+(rows.length?renderGroup("40er Raids",raids40)+renderGroup("20er Raids",raids20):'<div class="loot-sidebar-raids-empty">Keine aktuellen Raids.</div>');
     }catch(error){box.innerHTML=`<div class="loot-sidebar-raids-title">Aktuelle Raids</div><div class="loot-sidebar-raids-empty">${esc(error.message||"Nicht verfügbar")}</div>`;}
   }
-  function lootPageSectionSettings(){const layout=currentGuildInfo&&currentGuildInfo.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{},saved=layout.lootPageSections&&typeof layout.lootPageSections==="object"?layout.lootPageSections:{},pageKey=sidebarRaidKey(window.location.pathname.split("/").pop()?.replace("-loot.html","")),byRaid=layout.lootPageSectionsByRaid&&typeof layout.lootPageSectionsByRaid==="object"?layout.lootPageSectionsByRaid:{},raidSaved=byRaid[pageKey]&&typeof byRaid[pageKey]==="object"?byRaid[pageKey]:{};return{worldbuffs:saved.worldbuffs!==false&&raidSaved.worldbuffs!==false,raidSignup:saved.raidSignup!==false&&raidSaved.raidSignup!==false,poReleases:saved.poReleases!==false&&raidSaved.poReleases!==false,miniRaids:saved.miniRaids!==false&&raidSaved.miniRaids!==false};}
+  function lootPageSectionSettings(){const layout=currentGuildInfo&&currentGuildInfo.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{},saved=layout.lootPageSections&&typeof layout.lootPageSections==="object"?layout.lootPageSections:{},pageKey=sidebarRaidKey(window.location.pathname.split("/").pop()?.replace("-loot.html","")),byRaid=layout.lootPageSectionsByRaid&&typeof layout.lootPageSectionsByRaid==="object"?layout.lootPageSectionsByRaid:{},raidSaved=byRaid[pageKey]&&typeof byRaid[pageKey]==="object"?byRaid[pageKey]:{};return{worldbuffs:saved.worldbuffs!==false&&raidSaved.worldbuffs!==false,raidSignup:saved.raidSignup!==false&&raidSaved.raidSignup!==false,poReleases:saved.poReleases!==false&&raidSaved.poReleases!==false,miniRaids:saved.miniRaids!==false&&raidSaved.miniRaids!==false,gearPlanner:saved.gearPlanner!==false&&raidSaved.gearPlanner!==false,poReleaseScope:layout.lootPagePoReleaseScope==="raid"?"raid":"all",pageKey};}
   function setLootSectionVisible(selector,visible){document.querySelectorAll(selector).forEach(node=>{node.hidden=!visible;node.style.setProperty("display",visible?"":"none",visible?"":"important");});}
-  function applyLootPageSectionSettings(){const settings=lootPageSectionSettings();setLootSectionVisible("#lootRaidHeaderBuffs",settings.worldbuffs);setLootSectionVisible("#raidSignupPageBox,.raid-signup-nav-tab",settings.raidSignup);setLootSectionVisible("#selectedCharacterPoReleases",settings.poReleases);setLootSectionVisible("#lootSidebarCurrentRaids",settings.miniRaids);}
+  function filterLootPagePoReleases(settings){
+    const box=document.getElementById("selectedCharacterPoReleases");if(!box)return;
+    const chips=[...box.querySelectorAll(".loot-release-chip")],title=box.querySelector(".loot-release-title"),oldEmpty=box.querySelector(".loot-release-scope-empty");
+    oldEmpty?.remove();
+    chips.forEach(chip=>chip.style.removeProperty("display"));
+    if(settings.poReleaseScope!=="raid"){if(title)title.textContent="PO-Freigaben für alle Raids";return;}
+    const names={mc:"MC",bwl:"BWL",aq40:"AQ40",naxx:"NAXX",zg:"ZG",aq20:"AQ20",ony:"Onyxia"},wanted=names[settings.pageKey]||String(settings.pageKey||"").toUpperCase();
+    let visible=0;
+    chips.forEach(chip=>{const label=String(chip.textContent||"").trim().toUpperCase();const match=settings.pageKey==="zg"?label.startsWith("ZG "):label.startsWith(wanted.toUpperCase()+":");chip.style.setProperty("display",match?"":"none",match?"":"important");if(match)visible++;});
+    if(title)title.textContent=`PO-Freigabe für ${wanted}`;
+    const list=box.querySelector(".loot-release-list");
+    if(list&&chips.length&&!visible){const empty=document.createElement("span");empty.className="loot-release-scope-empty";empty.textContent="Für diesen Raid ist keine eigene PO-Freigabe eingerichtet.";list.appendChild(empty);}
+  }
+  function applyLootPageSectionSettings(){const settings=lootPageSectionSettings();setLootSectionVisible("#lootRaidHeaderBuffs",settings.worldbuffs);setLootSectionVisible("#raidSignupPageBox,.raid-signup-nav-tab",settings.raidSignup);setLootSectionVisible("#selectedCharacterPoReleases",settings.poReleases);setLootSectionVisible("#lootSidebarCurrentRaids",settings.miniRaids);setLootSectionVisible('button[onclick*="toggleGearPlanner"]',settings.gearPlanner);filterLootPagePoReleases(settings);}
   async function loadLootPageSectionSettings(){
     try{
       const slug=String(typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot").trim().toLowerCase();
