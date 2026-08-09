@@ -44,7 +44,7 @@
       if(action==="dashboard") go("../start.html");
       else if(action==="worldbuffs") go("../worldbuffs.html");
       else if(action==="hordenbuffs") go("../hordenbuffs.html");
-      else if(action==="raidregeln") go("../raidregeln.html");
+      else if(action==="raidregeln") typeof window.showLootRaidRules==="function" ? window.showLootRaidRules() : go("../raidregeln.html");
       else if(action==="p0plus") act("toggleP0PlusOverview");
       else if(action==="create") act("toggleRaidCreate");
       else if(action==="raidlead") act("raidleadLogin");
