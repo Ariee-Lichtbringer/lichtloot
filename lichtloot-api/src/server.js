@@ -15189,7 +15189,7 @@ async function createRaidRecord({ guildId, query: params }) {
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
-  const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
+  let externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
   const raidTime = clean(params.raidTime || params.uhrzeit) || null;
   const prioPin = clean(params.playerPin || params.prioPin || params.raidPin);
   const leadPin = clean(params.leadPin || params.raidleadPin);
@@ -15199,6 +15199,22 @@ async function createRaidRecord({ guildId, query: params }) {
   const createdBy =
     clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) ||
     (creatorLogin ? `SpielerLogin ${creatorLogin}` : "");
+
+  // Alte Ansichten können die interne UUID statt der öffentlichen Raid-ID
+  // senden. Beide Kennungen müssen beim Bearbeiten denselben Raid treffen.
+  if (externalRaidId) {
+    const exactExisting = await query(
+      `select external_raid_id
+       from raids
+       where guild_id = $1
+         and (external_raid_id = $2 or id::text = $2)
+       limit 1`,
+      [guildId, externalRaidId]
+    );
+    if (exactExisting.rows[0]?.external_raid_id) {
+      externalRaidId = exactExisting.rows[0].external_raid_id;
+    }
+  }
 
   if (raidType && raidDate && raidTime) {
     const existing = await query(
