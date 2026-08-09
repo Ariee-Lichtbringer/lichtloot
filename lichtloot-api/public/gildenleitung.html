@@ -2823,6 +2823,19 @@ tr.selected-row td{
   margin-top:3px;
 }
 
+.raid-helper-manual-signup{
+  display:grid;
+  grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) minmax(130px,1fr) auto;
+  gap:8px;
+  align-items:end;
+  padding:10px;
+  border:1px solid rgba(45,212,191,.3);
+  border-radius:10px;
+  background:rgba(13,148,136,.08);
+}
+.raid-helper-manual-signup label{display:grid;gap:5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
+@media(max-width:900px){.raid-helper-manual-signup{grid-template-columns:1fr 1fr}.raid-helper-manual-signup label:first-child{grid-column:1/-1}}
+
 .raid-helper-current-actions{
   display:flex;
   gap:7px;
@@ -9220,6 +9233,24 @@ function renderRaidHelperCurrentRaidButton(raid){
   `;
 }
 
+function raidHelperManualPlayerOptions(){
+  const unique = new Map();
+  for(const player of guildData.players || []){
+    const name = String(player.char || player.name || "").trim();
+    if(!name) continue;
+    const key = normalize(name);
+    if(!unique.has(key)) unique.set(key, {
+      name,
+      className:String(player.className || player.klasse || "").trim(),
+      server:String(player.server || "").trim()
+    });
+  }
+  return [...unique.values()]
+    .sort((a,b) => a.name.localeCompare(b.name,"de"))
+    .map(player => `<option value="${escapeAttr(player.name)}" data-class="${escapeAttr(player.className)}" data-server="${escapeAttr(player.server)}">${escapeHtml(player.name)}${player.className ? ` · ${escapeHtml(player.className)}` : ""}${player.server ? ` · ${escapeHtml(player.server)}` : ""}</option>`)
+    .join("");
+}
+
 function toggleRaidHelperSelection(raidId, checked){
   const id = String(raidId || "");
   if(!id) return;
@@ -9321,6 +9352,18 @@ async function renderRaidHelperCurrentDetail(raidId){
         <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
       </div>
     </div>
+    <div class="raid-helper-manual-signup">
+      <label>Spieler aus der Datenbank
+        <select id="raidHelperManualPlayer-${escapeAttr(raidId)}"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
+      </label>
+      <label>Rolle
+        <select id="raidHelperManualRole-${escapeAttr(raidId)}"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select>
+      </label>
+      <label>Status
+        <select id="raidHelperManualStatus-${escapeAttr(raidId)}"><option value="signed">Aktiv</option><option value="bench">Bank</option><option value="late">Verspätet</option><option value="tentative">Vorläufig</option><option value="absent">Abwesend</option></select>
+      </label>
+      <button class="small-btn good" type="button" onclick="addRaidHelperDatabasePlayer('${escapeAttr(raidId)}')">Spieler anmelden</button>
+    </div>
     <div id="raidHelperCurrentSignupStatus" class="status"></div>
     <div>
       <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
@@ -9330,6 +9373,46 @@ async function renderRaidHelperCurrentDetail(raidId){
     </div>
   `;
   await loadRaidHelperCurrentEventSignups(raidId);
+}
+
+async function addRaidHelperDatabasePlayer(raidId){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const raid = findRaidByAnyId(raidId);
+  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
+  const selected = playerField?.selectedOptions?.[0];
+  const player = String(playerField?.value || "").trim();
+  if(!masterCode){ setRaidHelperCurrentStatus("Bitte zuerst den Master-Code eingeben.", "bad"); return; }
+  if(!raid || !player){ setRaidHelperCurrentStatus("Bitte einen Charakter aus der Spielerdatenbank auswählen.", "bad"); return; }
+  const role = document.getElementById(`raidHelperManualRole-${raidId}`)?.value || "dd";
+  const status = document.getElementById(`raidHelperManualStatus-${raidId}`)?.value || "signed";
+  setRaidHelperCurrentStatus(`${player} wird angemeldet …`, "");
+  try{
+    const result = await railwayWrite({
+      action:"saveDiscordSignupRows",
+      masterCode,
+      raidId:raid.raidId || raid.id || raidId,
+      raid:raid.raid || getRaidKey(raid),
+      raidDate:raid.raidDate || "",
+      raidTime:raid.raidTime || "",
+      rows:[{
+        char:player,
+        spieler:player,
+        klasse:selected?.dataset.class || "",
+        server:selected?.dataset.server || "",
+        role,
+        status,
+        source:"loot_page",
+        note:"Manuell durch Gildenleitung angemeldet"
+      }]
+    });
+    if(!result.success) throw new Error(result.error || "Spieler konnte nicht angemeldet werden.");
+    raidHelperAttendanceCache = null;
+    await loadRaidHelperCurrentEventSignups(raidId);
+    await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    setRaidHelperCurrentStatus(`${player} wurde für diesen Raid angemeldet.`, "good");
+  }catch(error){
+    setRaidHelperCurrentStatus(error.message || "Spieler konnte nicht angemeldet werden.", "bad");
+  }
 }
 
 function setRaidHelperCurrentStatus(message, type){
@@ -12486,6 +12569,15 @@ function renderRaidHelperPoSignupDetail(postKey){
       </div>
     </div>
     <div class="status good">${escapeHtml(String(count))} Einträge geladen · ${escapeHtml(String(approved))} freigegeben${isArchivedOnly ? " · archiviert" : ""}</div>
+    <div class="raid-helper-manual-signup">
+      <label>Spieler aus der Datenbank
+        <select id="poManualPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
+      </label>
+      <label style="grid-column:span 2">PO-Item aus der Lootdatenbank
+        <select id="poManualItem"><option value="">Itemliste wird geladen …</option></select>
+      </label>
+      <button class="small-btn good" type="button" onclick="addManualPoSignup('${escapeAttr(row.postKey)}','${escapeAttr(raidKey)}')">PO hinzufügen</button>
+    </div>
     <div>
       <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
         <div><h3 style="font-size:16px">PO-Anmeldungen</h3><span id="raidHelperPoSignupDetailHint">Einträge dieses PO-Anmelders prüfen und freigeben.</span></div>
@@ -12504,6 +12596,41 @@ function renderRaidHelperPoSignupDetail(postKey){
     row.postKey,
     "Noch keine PO-Anmeldungen vorhanden."
   );
+  loadManualPoItemOptions(raidKey);
+}
+
+async function loadManualPoItemOptions(raidKey){
+  const select = document.getElementById("poManualItem");
+  if(!select) return;
+  try{
+    const items = await loadPoSignupLootItems(raidKey);
+    select.innerHTML = '<option value="">Item auswählen …</option>' + items.map(item => {
+      const name = typeof item === "string" ? item : item?.name || "";
+      return name ? `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>` : "";
+    }).join("");
+  }catch(error){
+    select.innerHTML = '<option value="">Itemliste konnte nicht geladen werden</option>';
+  }
+}
+
+async function addManualPoSignup(postKey, raidKey){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const player = document.getElementById("poManualPlayer")?.value.trim() || "";
+  const item = document.getElementById("poManualItem")?.value.trim() || "";
+  const hint = document.getElementById("raidHelperPoSignupDetailHint");
+  if(!masterCode || !player || !item){
+    if(hint) hint.textContent = !masterCode ? "Bitte zuerst den Master-Code eingeben." : "Bitte Spieler und PO-Item auswählen.";
+    return;
+  }
+  try{
+    const result = await railwayWrite({ action:"guildAddManualPoPostEntry", masterCode, postKey, raid:raidKey, player, item });
+    if(!result.success) throw new Error(result.error || "PO konnte nicht hinzugefügt werden.");
+    await loadPoPostEntries({ preserveSelection:true });
+    renderRaidHelperPoSignupDetail(postKey);
+    if(hint) hint.textContent = `${player}: ${item} wurde als offene PO-Anmeldung hinzugefügt.`;
+  }catch(error){
+    if(hint) hint.textContent = error.message || "PO konnte nicht hinzugefügt werden.";
+  }
 }
 
 function openRaidHelperPoSignup(postKey){
