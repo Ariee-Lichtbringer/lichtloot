@@ -3307,6 +3307,8 @@ tr.selected-row td{
   justify-content:flex-end;
 }
 
+.raid-helper-loot-role-counter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.raid-helper-loot-role-counter span{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #3b4961;border-radius:999px;background:#101a2c;color:#e2e8f0;font-weight:900}.raid-helper-loot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:10px}.raid-helper-loot-group{overflow:hidden;border:1px solid color-mix(in srgb,var(--group-color) 55%,#26364f);border-radius:14px;background:#07101f;box-shadow:inset 3px 0 0 var(--group-color)}.raid-helper-loot-group>header{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,#26364f);background:linear-gradient(135deg,color-mix(in srgb,var(--group-color) 14%,#101c31),#0a1324)}.raid-helper-loot-group>header h3{margin:0;color:var(--group-color);font-size:14px}.raid-helper-loot-group>header small{display:block;color:#94a3b8}.raid-helper-loot-group .raid-helper-signup-row{border-radius:0;border-bottom:1px solid rgba(49,65,91,.55);background:#07101f;display:grid;gap:7px}.raid-helper-loot-group .raid-helper-signup-row:last-child{border-bottom:0}.raid-helper-loot-group .raid-helper-signup-actions{justify-content:flex-start}.raid-helper-loot-inactive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid #31415b}.raid-helper-loot-inactive .raid-helper-loot-group{--group-color:#94a3b8}.raid-helper-loot-inactive .status-bench{--group-color:#fde047}.raid-helper-loot-inactive .status-late{--group-color:#fb923c}.raid-helper-loot-inactive .status-tentative{--group-color:#c084fc}.raid-helper-loot-inactive .status-absent{--group-color:#f87171}@media(max-width:1050px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:1fr}}
+
 .raid-helper-wcl-grid{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -9353,7 +9355,7 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
       setRaidHelperCurrentStatus("Keine Anmeldungen gespeichert.", "");
       return;
     }
-    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
+    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
     setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
@@ -9711,7 +9713,7 @@ async function loadRaidHelperEventSignups(){
       box.innerHTML = '<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
       return;
     }
-    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
+    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
   }
@@ -9740,6 +9742,51 @@ function renderRaidHelperSignupAdminRow(row){
       </div>
     </div>
   `;
+}
+
+function renderRaidHelperSignupAdminLayout(rows){
+  const unique = [];
+  const seen = new Set();
+  for(const row of rows || []){
+    const key = normalize(row.player || row.char || row.playerName || "");
+    if(!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+  const canon = value => {
+    const name = normalize(value);
+    if(name.includes("krieger") || name.includes("warrior")) return "Warrior";
+    if(name.includes("paladin")) return "Paladin";
+    if(name.includes("schurke") || name.includes("rogue")) return "Rogue";
+    if(name.includes("jäger") || name.includes("jaeger") || name.includes("hunter")) return "Hunter";
+    if(name.includes("druide") || name.includes("druid")) return "Druid";
+    if(name.includes("priester") || name.includes("priest")) return "Priest";
+    if(name.includes("magier") || name.includes("mage")) return "Mage";
+    if(name.includes("hexenmeister") || name.includes("warlock")) return "Warlock";
+    if(name.includes("schamane") || name.includes("shaman")) return "Shaman";
+    return "Other";
+  };
+  const labels = {Tank:"Tanks",Warrior:"Krieger",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Druid:"Druiden",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Other:"Weitere"};
+  const colors = {Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Other:"#94a3b8"};
+  const order = ["Tank","Warrior","Paladin","Rogue","Hunter","Druid","Priest","Mage","Warlock","Shaman","Other"];
+  const statusKey = row => normalize(row.status || "signed");
+  const active = unique.filter(row => ["signed","aktiv","angemeldet"].includes(statusKey(row)));
+  const roleCounts = {tank:0,melee:0,ranged:0,heal:0};
+  active.forEach(row => {
+    const role = normalize(row.role || "");
+    const cls = canon(row.className || row.class || "");
+    if(role === "tank") roleCounts.tank++;
+    else if(role === "heal" || role === "healer") roleCounts.heal++;
+    else if(["Warrior","Paladin","Rogue","Druid"].includes(cls)) roleCounts.melee++;
+    else roleCounts.ranged++;
+  });
+  const group = (key, players, extraClass = "") => `<section class="raid-helper-loot-group ${extraClass}" style="--group-color:${colors[key] || colors.Other}"><header>${key === "Tank" ? '<span style="font-size:24px">🛡️</span>' : raidHelperClassIconMarkup(key,"◆")}<div><h3>${escapeHtml(labels[key] || key)}</h3><small>${players.length} ${players.length === 1 ? "Spieler" : "Spieler"}</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>`;
+  const activeGroups = new Map();
+  active.forEach(row => { const key = normalize(row.role) === "tank" ? "Tank" : canon(row.className || row.class); if(!activeGroups.has(key)) activeGroups.set(key,[]); activeGroups.get(key).push(row); });
+  const activeHtml = order.filter(key => activeGroups.has(key)).map(key => group(key,activeGroups.get(key))).join("");
+  const inactiveDefs = [["bench","🪑 Bank"],["late","🕒 Verspätet"],["tentative","⚖️ Vorläufig"],["absent","🚫 Abwesend"]];
+  const inactiveHtml = inactiveDefs.map(([status,label]) => { const players = unique.filter(row => statusKey(row) === status || (status === "late" && ["spät","spaet"].includes(statusKey(row)))); return players.length ? `<section class="raid-helper-loot-group status-${status}" style="--group-color:${status === "bench" ? "#fde047" : status === "late" ? "#fb923c" : status === "tentative" ? "#c084fc" : "#f87171"}"><header><span style="font-size:22px">${label.split(" ")[0]}</span><div><h3>${escapeHtml(label.substring(label.indexOf(" ") + 1))}</h3><small>${players.length} Spieler</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>` : ""; }).join("");
+  return `<div class="raid-helper-loot-role-counter"><span>🛡️ Tanks <b>${roleCounts.tank}</b></span><span>⚔️ Nahkampf <b>${roleCounts.melee}</b></span><span>🏹 Fernkampf <b>${roleCounts.ranged}</b></span><span>✚ Heiler <b>${roleCounts.heal}</b></span></div><div class="raid-helper-loot-grid">${activeHtml || '<div class="muted">Keine aktiv Angemeldeten.</div>'}</div>${inactiveHtml ? `<div class="raid-helper-loot-inactive">${inactiveHtml}</div>` : ""}`;
 }
 
 function raidHelperSignupNotifyPrompt(action, player){
