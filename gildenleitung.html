@@ -9282,7 +9282,7 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
   primeRaidHelperCurrentEditState(raid);
   box.innerHTML = '<div class="muted">Anmeldungen werden geladen ...</div>';
   try{
-    const helper = await railwayApi({ action:"getRaidHelper", raidId, playerPin:raidId, t:Date.now() });
+    const helper = await railwayApi({ action:"getRaidHelper", raidId, t:Date.now() });
     raidHelperEditingData = { raid:helper.raid || raid || findRaidByAnyId(raidId), helper };
     const rows = [...(helper.signups || []), ...(helper.externalSignups || [])];
     const count = rows.length;
@@ -9642,7 +9642,7 @@ async function loadRaidHelperEventSignups(){
   if(!box || !raidId) return;
   box.innerHTML = '<div class="muted">Anmeldungen werden geladen ...</div>';
   try{
-    const helper = await railwayApi({ action:"getRaidHelper", raidId, playerPin:raidId });
+    const helper = await railwayApi({ action:"getRaidHelper", raidId });
     raidHelperEditingData = { raid:helper.raid || raidHelperEditingData?.raid || findRaidByAnyId(raidId), helper };
     const rows = [...(helper.signups || []), ...(helper.externalSignups || [])];
     if(!rows.length){
@@ -12712,7 +12712,7 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", t:Date.now() });
+    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", limit:"5000", t:Date.now() });
     poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
     await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
