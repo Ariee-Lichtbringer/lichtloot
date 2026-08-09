@@ -15609,8 +15609,23 @@ async function getRaidHelper({ guildId, query: params }) {
     [guildId, relatedRaidIds]
   );
 
-  const signups = signupResult.rows.map(normalizeRaidSignupRow);
-  const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  // Historische Importfehler konnten Anmeldungen verschiedener Discord-Posts
+  // unter derselben Raid-ID speichern. Sobald eine Quelle eine Message-ID
+  // nennt, muss sie deshalb exakt zum aktuell gewählten Raid-Post passen.
+  const expectedDiscordMessageId = clean(raid.discord_message_id);
+  const belongsToSelectedDiscordPost = row => {
+    if (!expectedDiscordMessageId) return true;
+    const source = clean(row?.source);
+    const sourceLower = source.toLowerCase();
+    if (!sourceLower.startsWith("discordsignup:")
+      && !sourceLower.startsWith("raid-helper:")
+      && !sourceLower.startsWith("raidhelper:")) return true;
+    return clean(source.split(":").pop()) === expectedDiscordMessageId;
+  };
+  const signups = signupResult.rows.map(normalizeRaidSignupRow).filter(belongsToSelectedDiscordPost);
+  const externalSignups = externalResult.rows
+    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }))
+    .filter(belongsToSelectedDiscordPost);
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
