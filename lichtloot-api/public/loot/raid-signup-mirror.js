@@ -92,6 +92,10 @@
   function sidebarRaidPin(row){return String(row.playerPin||row.prioPin||row.raidPin||row.pin||"").trim();}
   function sidebarRaidTimestamp(row){const date=sidebarRaidDate(row),time=sidebarRaidTime(row)||"00:00";if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return Number.MAX_SAFE_INTEGER;const stamp=new Date(`${date}T${time}:00`).getTime();return Number.isFinite(stamp)?stamp:Number.MAX_SAFE_INTEGER;}
   function sidebarRaidDateLabel(value){const match=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return match?`${match[3]}.${match[2]}.${match[1]}`:String(value||"-");}
+  function sidebarRaidWeekday(value){const match=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!match)return"";const date=new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));return new Intl.DateTimeFormat("de-DE",{weekday:"long"}).format(date);}
+  function currentSidebarRaidPin(){return String(new URLSearchParams(window.location.search).get("pin")||(typeof currentRaidId!=="undefined"?currentRaidId:"")||document.getElementById("raidPin")?.value||"").trim();}
+  function isCurrentSidebarRaid(row,key){const currentPin=currentSidebarRaidPin();if(currentPin&&sidebarRaidPin(row))return norm(currentPin)===norm(sidebarRaidPin(row));const pageKey=sidebarRaidKey(window.location.pathname.split("/").pop()?.replace("-loot.html",""));return pageKey===key;}
+  function mountRaidHeaderDate(row){const title=document.querySelector(".raid-page-title");if(!title)return;let meta=document.getElementById("lootRaidHeaderDate");if(!meta){meta=document.createElement("div");meta.id="lootRaidHeaderDate";meta.className="loot-raid-header-date";title.insertAdjacentElement("afterend",meta);}const date=sidebarRaidDate(row),time=sidebarRaidTime(row);meta.textContent=`${sidebarRaidWeekday(date)} · ${sidebarRaidDateLabel(date)} · ${time||"-"} Uhr`;}
   function sidebarRaidLink(row,key){const pin=sidebarRaidPin(row),guild=typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot",url=new URL(`${key}-loot.html`,window.location.href);if(pin)url.searchParams.set("pin",pin);if(guild&&guild!=="lichtloot")url.searchParams.set("guild",guild);return url.href;}
   async function mountSidebarCurrentRaids(anchor){
     if(!anchor||document.getElementById("lootSidebarCurrentRaids"))return;
@@ -102,7 +106,9 @@
       const today=new Date();today.setHours(0,0,0,0);
       const rows=[...(result.allRaids||result.raids||result.entries||result.activeRaids||[])].map(row=>({row,key:sidebarRaidKey(row.raid||row.raidName||row.name||row.raidId||row.id)})).filter(item=>item.key&&(!sidebarRaidDate(item.row)||sidebarRaidTimestamp(item.row)>=today.getTime())).sort((a,b)=>sidebarRaidTimestamp(a.row)-sidebarRaidTimestamp(b.row));
       const names={mc:"Molten Core",bwl:"Blackwing Lair",aq20:"Ahn’Qiraj 20",aq40:"Ahn’Qiraj 40",zg:"Zul’Gurub",ony:"Onyxia",naxx:"Naxxramas"};
-      const renderCard=({row,key})=>`<a class="loot-sidebar-raid-card" href="${esc(sidebarRaidLink(row,key))}"><img src="../images/raid-templates/${esc(key)}.jpg" alt=""><span><strong>${esc(row.raidName||row.name||names[key])}</strong><small>${esc(sidebarRaidDateLabel(sidebarRaidDate(row)))} · ${esc(sidebarRaidTime(row)||"-")} Uhr</small></span><b>›</b></a>`;
+      const currentRaid=rows.find(({row,key})=>isCurrentSidebarRaid(row,key));
+      if(currentRaid)mountRaidHeaderDate(currentRaid.row);
+      const renderCard=({row,key})=>`<a class="loot-sidebar-raid-card${isCurrentSidebarRaid(row,key)?" is-current":""}" href="${esc(sidebarRaidLink(row,key))}"${isCurrentSidebarRaid(row,key)?' aria-current="page"':''}><img src="../images/raid-templates/${esc(key)}.jpg" alt=""><span><strong>${esc(row.raidName||row.name||names[key])}</strong><small>${esc(sidebarRaidDateLabel(sidebarRaidDate(row)))} · ${esc(sidebarRaidTime(row)||"-")} Uhr</small></span><b>›</b></a>`;
       const renderGroup=(title,items)=>items.length?`<div class="loot-sidebar-raid-group"><div class="loot-sidebar-raid-group-title">${esc(title)}</div>${items.map(renderCard).join("")}</div>`:"";
       const raids40=rows.filter(item=>!["aq20","zg"].includes(item.key)),raids20=rows.filter(item=>["aq20","zg"].includes(item.key));
       box.innerHTML='<div class="loot-sidebar-raids-title">Aktuelle Raids</div>'+(rows.length?renderGroup("40er Raids",raids40)+renderGroup("20er Raids",raids20):'<div class="loot-sidebar-raids-empty">Keine aktuellen Raids.</div>');
@@ -130,4 +136,64 @@
   }
   function init(){mountPageSignup();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};}
   window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+
+/* Raidregeln direkt im Inhaltsbereich der Lootseite anzeigen. */
+(function(){
+  function currentLootRaidKey(){
+    const bodyClass=[...document.body.classList].find(name=>name.startsWith("raid-"));
+    if(bodyClass) return bodyClass.slice(5);
+    const file=location.pathname.split("/").pop() || "";
+    return file.replace(/-loot\.html$/i,"").toLowerCase();
+  }
+  function currentLootGuild(){
+    if(typeof currentGuildSlug==="function") return currentGuildSlug();
+    return new URLSearchParams(location.search).get("guild") || "lichtloot";
+  }
+  function ensureRulesStyles(){
+    if(document.getElementById("lootRaidRulesStyles")) return;
+    const style=document.createElement("style");
+    style.id="lootRaidRulesStyles";
+    style.textContent=`
+      .loot-raid-rules-view{margin-top:18px;padding:18px;border:1px solid rgba(var(--gold-rgb),.38);border-radius:18px;background:linear-gradient(180deg,rgba(12,18,32,.9),rgba(2,6,23,.82));box-shadow:0 18px 38px rgba(0,0,0,.32)}
+      .loot-raid-rules-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+      .loot-raid-rules-head h2{margin:0;color:var(--gold);font-size:24px}
+      .loot-raid-rules-back{padding:9px 14px;border:1px solid rgba(var(--gold-rgb),.48);border-radius:10px;background:rgba(var(--gold-rgb),.12);color:#fff;font-weight:900;cursor:pointer}
+      .loot-raid-rules-frame{display:block;width:100%;min-height:520px;border:0;background:transparent}
+      @media(max-width:800px){.loot-raid-rules-view{padding:12px}.loot-raid-rules-head{align-items:flex-start}.loot-raid-rules-head h2{font-size:20px}}
+    `;
+    document.head.appendChild(style);
+  }
+  function hideLootRaidRules(){
+    document.getElementById("lootRaidRulesView")?.remove();
+    const grid=document.getElementById("mainGrid");
+    if(grid) grid.hidden=false;
+    document.querySelectorAll('[data-loot-action="raidregeln"]').forEach(button=>button.classList.remove("active"));
+  }
+  function showLootRaidRules(){
+    ensureRulesStyles();
+    const grid=document.getElementById("mainGrid");
+    if(!grid) return;
+    document.getElementById("lootRaidRulesView")?.remove();
+    grid.hidden=true;
+    const raid=currentLootRaidKey();
+    const guild=currentLootGuild();
+    const view=document.createElement("section");
+    view.id="lootRaidRulesView";
+    view.className="loot-raid-rules-view";
+    view.innerHTML=`<div class="loot-raid-rules-head"><h2>Raidregeln</h2><button class="loot-raid-rules-back" type="button">← Zur Prioliste</button></div><iframe class="loot-raid-rules-frame" title="Raidregeln" scrolling="no" src="../raidregeln.html?guild=${encodeURIComponent(guild)}&raid=${encodeURIComponent(raid)}&embed=1"></iframe>`;
+    grid.insertAdjacentElement("beforebegin",view);
+    view.querySelector(".loot-raid-rules-back").onclick=hideLootRaidRules;
+    document.querySelectorAll('[data-loot-action="raidregeln"]').forEach(button=>button.classList.add("active"));
+    view.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  document.addEventListener("click",event=>{
+    const button=event.target.closest("button");
+    if(!button || button.textContent.trim()!=="Raidregeln") return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    showLootRaidRules();
+  },true);
+  window.showLootRaidRules=showLootRaidRules;
+  window.hideLootRaidRules=hideLootRaidRules;
 })();
