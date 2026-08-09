@@ -5538,7 +5538,7 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, direkt aus den Raidanmeldern</span></div>
+          <div><h3>Attendance</h3><span>Teilnahme aus Priolisten mit übertragener PO+‑Punktevergabe</span></div>
           <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
         </div>
         <div id="raidHelperAttendanceTabs" class="raid-helper-attendance-tabs"></div>
@@ -6011,6 +6011,14 @@ body.worldbuff-only .master-only{display:none!important}
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
       </div>
+      <div class="po-signup-list-toolbar raid-list-filter-toolbar">
+        <div class="po-signup-tier-tabs" role="tablist" aria-label="Raid-Größe">
+          <button class="small-btn" type="button" data-raid-list-tier="all" onclick="setRaidListTierFilter('all')">Alle</button>
+          <button class="small-btn" type="button" data-raid-list-tier="20" onclick="setRaidListTierFilter('20')">20er</button>
+          <button class="small-btn" type="button" data-raid-list-tier="40" onclick="setRaidListTierFilter('40')">40er</button>
+        </div>
+        <div id="raidListRaidTabs" class="po-signup-raid-tabs" aria-label="Raid-Auswahl"></div>
+      </div>
       <div id="raidBulkActions" class="raid-bulk-actions" hidden>
         <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
         <div class="raid-bulk-action-buttons">
@@ -6366,6 +6374,8 @@ let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
+let raidListTierFilter = "all";
+let raidListRaidFilter = "";
 let raidHelperPoSignupSelectedPostKey = "";
 const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
@@ -7538,7 +7548,41 @@ function clearRaidFilters(shouldRender = true){
   document.getElementById("raidSearch").value = "";
   document.getElementById("raidDateSearch").value = "";
   document.getElementById("raidFilter").value = "";
+  raidListTierFilter = "all";
+  raidListRaidFilter = "";
   if(shouldRender) renderRaids();
+}
+
+function raidListRaidKeys(){
+  if(raidListTierFilter === "20") return ["aq20","zg"];
+  if(raidListTierFilter === "40") return ["naxx","aq40","bwl","mc","ony"];
+  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
+}
+
+function setRaidListTierFilter(tier){
+  raidListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
+  raidListRaidFilter = "";
+  renderRaids();
+}
+
+function setRaidListRaidFilter(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  raidListRaidFilter = raidListRaidFilter === key ? "" : key;
+  renderRaids();
+}
+
+function renderRaidListFilters(){
+  document.querySelectorAll("[data-raid-list-tier]").forEach(button => {
+    button.classList.toggle("primary", button.dataset.raidListTier === raidListTierFilter);
+    button.classList.toggle("ghost", button.dataset.raidListTier !== raidListTierFilter);
+  });
+  const box = document.getElementById("raidListRaidTabs");
+  if(!box) return;
+  const allLabel = raidListTierFilter === "20" ? "Alle 20er" : raidListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
+  box.innerHTML = [
+    `<button class="small-btn ${raidListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setRaidListRaidFilter('')">${allLabel}</button>`,
+    ...raidListRaidKeys().map(raid => `<button class="small-btn ${raidListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setRaidListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
+  ].join("");
 }
 
 function renderSummary(){
@@ -7975,6 +8019,7 @@ function fillClassFilter(){
 
 function renderRaids(){
   const tbody = document.getElementById("raidRows");
+  renderRaidListFilters();
   const search = normalize(document.getElementById("raidSearch").value);
   const filter = normalize(document.getElementById("raidFilter").value);
   const dateSearch = document.getElementById("raidDateSearch").value;
@@ -7998,7 +8043,10 @@ function renderRaids(){
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
-    return filterMatches && dateMatches && (!search || haystack.includes(search));
+    const raidKey = normalizePoSignupRaidKey(raid.raid || raid.raidName);
+    const sizeMatches = raidListTierFilter === "all" || raidListRaidKeys().includes(raidKey);
+    const raidMatches = !raidListRaidFilter || raidKey === raidListRaidFilter;
+    return filterMatches && dateMatches && sizeMatches && raidMatches && (!search || haystack.includes(search));
   }).sort((a,b) => {
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
@@ -9831,7 +9879,7 @@ function renderRaidHelperPastEvents(){
 function raidHelperAttendanceRaids(raidKey = raidHelperAttendanceRaidKey){
   return (guildData.raids || [])
     .slice()
-    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey)
+    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey && hasP0PlusTransfer(raid))
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
     .slice(0,18);
 }
@@ -9848,7 +9896,7 @@ async function loadRaidHelperAttendance(){
   }
   const raids = raidHelperAttendanceRaids(raidKey);
   if(!raids.length){
-    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Raidanmelder für Attendance gefunden.</div>`;
+    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Prioliste mit übertragener PO+‑Punktevergabe gefunden.</div>`;
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
@@ -9862,10 +9910,12 @@ async function loadRaidHelperAttendance(){
         playerPin:raid.playerPin || "",
         t:Date.now()
       });
-      rows.push({
-        raid:result.raid || raid,
-        signups:[...(result.signups || []), ...(result.externalSignups || [])]
-      });
+      if(result.p0PlusTransferred || hasP0PlusTransfer(raid)){
+        rows.push({
+          raid:{...(result.raid || raid),p0PlusTransferred:true,p0PlusTransferCount:Number(result.p0PlusTransferCount || raid.p0PlusTransferCount || 0)},
+          signups:Array.isArray(result.attendancePrios) ? result.attendancePrios : []
+        });
+      }
     }catch(error){
       rows.push({ raid, signups:[] });
     }
@@ -9922,7 +9972,7 @@ function renderRaidHelperAttendance(rows){
   });
   const playerList = Array.from(players.values()).sort((a,b) => b.signed - a.signed || a.name.localeCompare(b.name));
   if(!playerList.length){
-    box.innerHTML = '<div class="raid-helper-loading">Noch keine Anmeldungen in den letzten Raids gefunden.</div>';
+    box.innerHTML = '<div class="raid-helper-loading">In den übertragenen Priolisten wurden noch keine Spieler gefunden.</div>';
     return;
   }
   const head = `
