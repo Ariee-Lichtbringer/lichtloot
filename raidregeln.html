@@ -703,7 +703,7 @@ body.rules-embedded .rules-search{
   max-width:none;
 }
 body.rules-embedded .rules-tabs{
-  margin:12px 0 16px;
+  display:none!important;
 }
 body.rules-embedded .raid-layout{
   display:block;
@@ -1139,6 +1139,23 @@ function renderRaids(){
     renderRaidSection(raidCategoryLabels.other, groups.other, true)
   ].filter(Boolean).join("");
   const count=Object.values(groups).reduce((total,rules) => total + rules.length, 0);
+  let embeddedRequirements="";
+  if(RULES_EMBEDDED){
+    renderConsumables();
+    renderEnchants();
+    const consumablesHtml=document.getElementById("panelConsumables")?.innerHTML || "";
+    const enchantsHtml=document.getElementById("panelEnchants")?.innerHTML || "";
+    embeddedRequirements=`
+      <section class="raid-section-card is-wide">
+        <h3>Consumables für ${escapeHtml(raid.name)}</h3>
+        ${consumablesHtml}
+      </section>
+      <section class="raid-section-card is-wide">
+        <h3>Verzauberungen für ${escapeHtml(raid.name)}</h3>
+        ${enchantsHtml}
+      </section>
+    `;
+  }
   panel.innerHTML=`
     <div class="raid-layout">
       <aside class="raid-menu" aria-label="Raid auswählen">${menu}</aside>
@@ -1155,7 +1172,7 @@ function renderRaids(){
             `).join("")}
           </div>
         </section>
-        ${sections ? `<div class="raid-section-grid">${sections}</div>` : `<div class="empty-state">Keine Raidregeln gefunden.</div>`}
+        ${sections || embeddedRequirements ? `<div class="raid-section-grid">${sections}${embeddedRequirements}</div>` : `<div class="empty-state">Keine Raidregeln gefunden.</div>`}
       </div>
     </div>
   `;
