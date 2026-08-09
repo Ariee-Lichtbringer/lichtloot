@@ -7290,11 +7290,20 @@ async function addManualPoPostEntry({ guildId, query: params }) {
      order by config_only desc, created_at asc limit 1`,
     [guildId, postKey]
   );
-  const config = configResult.rows[0];
+  let config = configResult.rows[0];
   if (!config) {
-    const error = new Error("Der ausgewählte PO-Anmelder wurde nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
+    const createdConfig = await query(
+      `insert into po_post_entries (
+         guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
+         raid, title, raid_pin, raid_date, raid_time, mode, config_only, approval_status
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,'pending')
+       returning *`,
+      [guildId, postKey, clean(params.sourceChannelId), clean(params.targetChannelId || params.sourceChannelId),
+        clean(params.discordMessageId || params.messageId), clean(params.raid).toUpperCase(),
+        clean(params.title) || "PO-Anmelder", clean(params.raidPin || params.prioPin),
+        clean(params.raidDate), clean(params.raidTime), clean(params.mode) || "signup"]
+    );
+    config = createdConfig.rows[0];
   }
   const characterResult = await query(
     `select c.name, c.class_name
