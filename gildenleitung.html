@@ -2834,6 +2834,11 @@ tr.selected-row td{
   background:rgba(13,148,136,.08);
 }
 .raid-helper-manual-signup label{display:grid;gap:5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
+.raid-helper-signup-name-button{appearance:none;background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:900;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(94,234,212,.45);text-underline-offset:3px}
+.raid-helper-signup-name-button:hover{color:#5eead4;text-decoration-color:#5eead4}
+.raid-helper-signup-edit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:16px 0}
+.raid-helper-signup-edit-grid label{display:grid;gap:6px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
+@media(max-width:700px){.raid-helper-signup-edit-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.raid-helper-manual-signup{grid-template-columns:1fr 1fr}.raid-helper-manual-signup label:first-child{grid-column:1/-1}}
 
 .raid-helper-current-actions{
@@ -9852,16 +9857,19 @@ async function loadRaidHelperEventSignups(){
   }
 }
 
+const raidHelperSignupEditRows = new Map();
+
 function renderRaidHelperSignupAdminRow(row){
   const id = row.id || "";
   const player = row.player || row.char || "-";
+  if(id) raidHelperSignupEditRows.set(String(id), row);
   const status = normalize(row.status || "signed") || "signed";
   const statusLabel = status === "bench" ? "Bank" : status === "late" || status === "spät" || status === "spaet" ? "Verspätet" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Aktiv";
   const statusIcon = status === "bench" ? "🪑" : status === "late" || status === "spät" || status === "spaet" ? "🕒" : status === "absent" ? "🚫" : status === "tentative" ? "⚖️" : "✅";
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}${renderRaidHelperLootbag(row)}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter oder Skillung ändern">${escapeHtml(player)}</button>${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
@@ -9875,6 +9883,90 @@ function renderRaidHelperSignupAdminRow(row){
       </div>
     </div>
   `;
+}
+
+function raidHelperSignupSpecFromNote(note){
+  const match = String(note || "").match(/Skillung\s*:\s*([^·|,;]+)/i);
+  return match ? match[1].trim() : "";
+}
+
+function updateRaidHelperSignupEditSpecs(){
+  const playerField = document.getElementById("raidHelperSignupEditPlayer");
+  const specField = document.getElementById("raidHelperSignupEditSpec");
+  const roleField = document.getElementById("raidHelperSignupEditRole");
+  if(!playerField || !specField) return;
+  const className = normalize(playerField.selectedOptions?.[0]?.dataset.class || "");
+  const specs = RAID_HELPER_MANUAL_SPECS[className] || [];
+  const previous = specField.dataset.current || specField.value || "";
+  specField.innerHTML = specs.length ? specs.map(spec => `<option value="${escapeAttr(spec)}">${escapeHtml(spec)}</option>`).join("") : '<option value="">Keine Skillungen hinterlegt</option>';
+  specField.disabled = !specs.length;
+  if(specs.includes(previous)) specField.value = previous;
+  specField.dataset.current = "";
+  if(roleField && specField.value) roleField.value = raidHelperManualRoleForSpec(specField.value);
+}
+
+function openRaidHelperSignupEdit(signupId){
+  const row = raidHelperSignupEditRows.get(String(signupId || ""));
+  if(!row) return;
+  const player = row.player || row.char || "";
+  const currentSpec = raidHelperSignupSpecFromNote(row.note);
+  const backdrop = document.createElement("div");
+  backdrop.className = "raid-helper-notify-backdrop";
+  backdrop.innerHTML = `<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:760px">
+    <h3>Raidanmeldung bearbeiten</h3>
+    <p class="muted">Charakter und Skillung gelten nur für den aktuell ausgewählten Raid.</p>
+    <div class="raid-helper-signup-edit-grid">
+      <label>Charakter<select id="raidHelperSignupEditPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select></label>
+      <label>Skillung<select id="raidHelperSignupEditSpec" data-current="${escapeAttr(currentSpec)}"></select></label>
+      <label>Rolle<select id="raidHelperSignupEditRole"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select></label>
+    </div>
+    <div id="raidHelperSignupEditStatus" class="status"></div>
+    <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Änderungen speichern</button></div>
+  </div>`;
+  document.body.appendChild(backdrop);
+  const playerField = backdrop.querySelector("#raidHelperSignupEditPlayer");
+  const roleField = backdrop.querySelector("#raidHelperSignupEditRole");
+  playerField.value = player;
+  roleField.value = normalize(row.role) === "heal" ? "heal" : normalize(row.role) === "tank" ? "tank" : "dd";
+  updateRaidHelperSignupEditSpecs();
+  const specField = backdrop.querySelector("#raidHelperSignupEditSpec");
+  if(currentSpec && [...specField.options].some(option => option.value === currentSpec)) specField.value = currentSpec;
+  roleField.value = normalize(row.role) === "heal" ? "heal" : normalize(row.role) === "tank" ? "tank" : raidHelperManualRoleForSpec(specField.value);
+  playerField.addEventListener("change", updateRaidHelperSignupEditSpecs);
+  specField.addEventListener("change", () => { roleField.value = raidHelperManualRoleForSpec(specField.value); });
+  backdrop.querySelector("[data-close]").addEventListener("click", () => backdrop.remove());
+  backdrop.addEventListener("click", event => { if(event.target === backdrop) backdrop.remove(); });
+  backdrop.querySelector("[data-save]").addEventListener("click", () => saveRaidHelperSignupEdit(signupId, backdrop));
+}
+
+async function saveRaidHelperSignupEdit(signupId, backdrop){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const playerField = backdrop.querySelector("#raidHelperSignupEditPlayer");
+  const specField = backdrop.querySelector("#raidHelperSignupEditSpec");
+  const roleField = backdrop.querySelector("#raidHelperSignupEditRole");
+  const status = backdrop.querySelector("#raidHelperSignupEditStatus");
+  const player = playerField?.value || "";
+  const specialization = specField?.value || "";
+  if(!masterCode || !player || !specialization){ status.textContent = "Bitte Charakter und Skillung vollständig auswählen."; status.className = "status bad"; return; }
+  status.textContent = "Änderung wird gespeichert …";
+  status.className = "status";
+  try{
+    const result = await railwayWrite({
+      action:"guildUpdateRaidHelperSignup",
+      masterCode,
+      signupId,
+      playerName:player,
+      className:playerField.selectedOptions?.[0]?.dataset.class || "",
+      server:playerField.selectedOptions?.[0]?.dataset.server || "",
+      role:roleField.value || "dd",
+      specialization,
+      note:`Skillung: ${specialization}`
+    });
+    if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
+    backdrop.remove();
+    await loadRaidHelperCurrentEventSignups();
+    setRaidHelperCurrentStatus("Charakter und Skillung wurden geändert. Discord-Aktualisierung ist vorgemerkt.", "good");
+  }catch(error){ status.textContent = error.message || "Anmeldung konnte nicht geändert werden."; status.className = "status bad"; }
 }
 
 function renderRaidHelperLootbag(row){
