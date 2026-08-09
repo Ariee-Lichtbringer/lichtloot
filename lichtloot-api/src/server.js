@@ -2895,6 +2895,7 @@ function normalizeSignupRole(value) {
   if (["tank", "tanks"].includes(raw)) return "tank";
   if (["heal", "heiler", "heals", "healer"].includes(raw)) return "heal";
   if (["dd", "dps", "damage"].includes(raw)) return "dd";
+  if (["multi", "multichar", "multi-char", "multi char", "mehrere chars"].includes(raw)) return "multi";
   return "flex";
 }
 
@@ -3473,6 +3474,7 @@ function poRequestRequirements(type, raid, className, specialization) {
 
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
+  await requireNachtlootGuild(guildId);
   const pin = normalizePin(params.playerPin || params.pin);
   const character = await findCharacterForPin(guildId, pin, params.character || params.char || params.player, params.server);
   if (!character) { const error = new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode = 403; throw error; }
@@ -3507,7 +3509,7 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
 }
 
 async function getPoReleaseRequests({ guildId, query: params = {}, management = false }) {
-  await ensureCharacterPoReleaseSchema();
+  await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
   let characterId = "";
   if (management) requireMasterCode(params.masterCode);
   else {
@@ -3526,7 +3528,7 @@ async function getPoReleaseRequests({ guildId, query: params = {}, management = 
 }
 
 async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
-  await ensureCharacterPoReleaseSchema();
+  await ensureCharacterPoReleaseSchema(); await requireNachtlootGuild(guildId);
   const id = clean(params.id || params.requestId);
   const decision = clean(params.decision || params.status).toLowerCase();
   if (!isUuid(id) || !["approved","rejected"].includes(decision)) { const error = new Error("Antrag oder Entscheidung ist ungültig."); error.statusCode=400; throw error; }
@@ -3553,6 +3555,7 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
 async function deletePoReleaseRequest({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   await ensureCharacterPoReleaseSchema();
+  await requireNachtlootGuild(guildId);
   const id = clean(params.id || params.requestId);
   if (!isUuid(id)) {
     const error = new Error("Antrag ist ungültig.");
@@ -6028,6 +6031,15 @@ function randomRaidCode(length = 3) {
   return code;
 }
 
+function randomPlayerLoginPin(length = 8) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let index = 0; index < length; index += 1) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 function localDateOnly(value = new Date()) {
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const [year, month, day] = value.split("-").map(Number);
@@ -7273,67 +7285,6 @@ async function savePoPostEntries({ guildId, query: params }) {
   }
 }
 
-async function addManualPoPostEntry({ guildId, query: params }) {
-  requireMasterOrQueueToken(params);
-  await ensurePoPostEntriesSchema();
-  const postKey = clean(params.postKey || params.poPostKey);
-  const playerName = clean(params.player || params.playerName || params.char);
-  const itemName = normalizePoItemName(params.item || params.itemName);
-  if (!postKey || !playerName || !itemName) {
-    const error = new Error("PO-Anmelder, Spieler und Item müssen ausgewählt sein.");
-    error.statusCode = 400;
-    throw error;
-  }
-  const configResult = await query(
-    `select * from po_post_entries
-     where guild_id = $1 and post_key = $2 and archived_at is null
-     order by config_only desc, created_at asc limit 1`,
-    [guildId, postKey]
-  );
-  let config = configResult.rows[0];
-  if (!config) {
-    const createdConfig = await query(
-      `insert into po_post_entries (
-         guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-         raid, title, raid_pin, raid_date, raid_time, mode, config_only, approval_status
-       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,true,'pending')
-       returning *`,
-      [guildId, postKey, clean(params.sourceChannelId), clean(params.targetChannelId || params.sourceChannelId),
-        clean(params.discordMessageId || params.messageId), clean(params.raid).toUpperCase(),
-        clean(params.title) || "PO-Anmelder", clean(params.raidPin || params.prioPin),
-        clean(params.raidDate), clean(params.raidTime), clean(params.mode) || "signup"]
-    );
-    config = createdConfig.rows[0];
-  }
-  const characterResult = await query(
-    `select c.name, c.class_name
-     from characters c join players p on p.id = c.player_id
-     where p.guild_id = $1 and lower(c.name) = lower($2)
-       and coalesce(p.approval_status, 'approved') = 'approved'
-     limit 1`,
-    [guildId, playerName]
-  );
-  const character = characterResult.rows[0];
-  if (!character) {
-    const error = new Error("Der Charakter wurde in der Spielerdatenbank nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
-  }
-  const result = await query(
-    `insert into po_post_entries (
-       guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
-       raid, title, player_name, item_name, class_name, approval_status,
-       raid_pin, raid_date, raid_time, mode, config_only
-     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending',$11,$12,$13,$14,false)
-     on conflict do nothing
-     returning id`,
-    [guildId, postKey, config.source_channel_id, config.target_channel_id, config.discord_message_id,
-      config.raid, config.title, character.name, itemName, character.class_name,
-      config.raid_pin, config.raid_date, config.raid_time, config.mode]
-  );
-  return { success: true, saved: result.rowCount || 0, player: character.name, item: itemName };
-}
-
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -7343,6 +7294,7 @@ async function getPoPostEntries({ guildId, query: params }) {
   const sourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const targetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId);
   const includeArchived = ["1", "true", "yes", "ja"].includes(clean(params.includeArchived || params.archived || "").toLowerCase());
+  const limit = Math.max(1, Math.min(5000, Number(params.limit || 2000) || 2000));
   const values = [guildId];
   const clauses = ["guild_id = $1"];
   if (!includeArchived) clauses.push("archived_at is null");
@@ -7362,12 +7314,14 @@ async function getPoPostEntries({ guildId, query: params }) {
     values.push(targetChannelId);
     clauses.push(`target_channel_id = $${values.length}`);
   }
+  values.push(limit);
+  const limitPlaceholder = `$${values.length}`;
   const result = await query(
     `select *
      from po_post_entries
      where ${clauses.join(" and ")}
      order by updated_at desc, lower(player_name) asc, lower(item_name) asc
-     limit 500`,
+     limit ${limitPlaceholder}`,
     values
   );
   return {
@@ -15610,17 +15564,15 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
-  // Die Detailansicht eines Raids darf niemals Anmeldungen eines anderen
-  // Termins übernehmen. Auch mehrere AQ20-/ZG-Raids am selben Tag bleiben
-  // über ihre interne Raid-ID strikt voneinander getrennt.
+  // Ein Raidanmelder ist ausschließlich über seine eindeutige Datenbank-ID
+  // definiert. Raids desselben Typs oder Datums dürfen niemals gemeinsam
+  // geladen werden, da mehrere getrennte Anmelder parallel existieren können.
   const relatedRaidIds = [raid.id];
 
   const signupResult = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
-       coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
-       coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
-       rs.created_at, rs.updated_at,
+       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
        c.name as player_name, c.server, c.class_name,
        exists(
          select 1
@@ -15636,13 +15588,6 @@ async function getRaidHelper({ guildId, query: params }) {
      from raid_signups rs
      join characters c on c.id = rs.character_id
      join players signup_player on signup_player.id = c.player_id
-     left join lateral (
-       select link.discord_user_id, link.discord_name
-       from discord_player_links link
-       where link.guild_id = signup_player.guild_id and link.character_id = c.id
-       order by link.updated_at desc, link.created_at desc
-       limit 1
-     ) dpl on true
      where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
@@ -15670,26 +15615,8 @@ async function getRaidHelper({ guildId, query: params }) {
     [guildId, relatedRaidIds]
   );
 
-  // Historische Importfehler konnten Anmeldungen verschiedener Discord-Posts
-  // unter derselben Raid-ID speichern. Sobald eine Quelle eine Message-ID
-  // nennt, muss sie deshalb exakt zum aktuell gewählten Raid-Post passen.
-  const expectedDiscordMessageId = clean(raid.discord_message_id);
-  const belongsToSelectedDiscordPost = row => {
-    const source = clean(row?.source);
-    const sourceLower = source.toLowerCase();
-    // Raid-Helper-Importe sind historische Fremdbot-Snapshots. In mehreren
-    // Altbeständen wurde deren Message-ID einem falschen Raid/Termin
-    // zugeordnet (z. B. AQ40 vom 11.08. bei AQ20 vom 15.08.). Sie dürfen daher
-    // nie die aktuelle PO-Bot-Anmeldeliste speisen.
-    if (sourceLower.startsWith("raid-helper:") || sourceLower.startsWith("raidhelper:")) return false;
-    if (!sourceLower.startsWith("discordsignup:")) return true;
-    if (!expectedDiscordMessageId) return false;
-    return clean(source.split(":").pop()) === expectedDiscordMessageId;
-  };
-  const signups = signupResult.rows.map(normalizeRaidSignupRow).filter(belongsToSelectedDiscordPost);
-  const externalSignups = externalResult.rows
-    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }))
-    .filter(belongsToSelectedDiscordPost);
+  const signups = signupResult.rows.map(normalizeRaidSignupRow);
+  const externalSignups = externalResult.rows.map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
@@ -15717,41 +15644,6 @@ async function getRaidHelper({ guildId, query: params }) {
     [relatedRaidIds]
   );
   const prioCount = Number(prioCountResult.rows[0]?.count || 0);
-  const attendancePrioResult = await query(
-    `select distinct on (lower(c.name))
-       c.name as player_name,
-       c.server,
-       c.class_name,
-       pr.bench
-     from prios pr
-     join characters c on c.id = pr.character_id
-     join players p on p.id = c.player_id
-     where pr.raid_id = any($1)
-       and p.guild_id = $2
-     order by lower(c.name), c.is_main desc, c.created_at asc`,
-    [relatedRaidIds, guildId]
-  );
-  const transferResult = await query(
-    `select count(*)::int as count
-     from p0plus_points
-     where guild_id = $1
-       and source = 'Raidlead Transfer'
-       and note in ($2, $3, $4)`,
-    [guildId, `RaidID: ${raidPublicId(raid)}`, `RaidID: ${raid.id}`, `RaidID: ${raid.raid_pin}`]
-  );
-  const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
-  const attendancePrios = attendancePrioResult.rows.map(row => {
-    const bench = clean(row.bench).toLowerCase();
-    const isBench = Boolean(bench && !["0", "false", "nein", "no"].includes(bench));
-    return {
-      player: clean(row.player_name),
-      char: clean(row.player_name),
-      server: clean(row.server),
-      className: clean(row.class_name),
-      status: isBench ? "bench" : "signed",
-      source: "prio-list"
-    };
-  });
   const signupCount = signups.length + externalSignups.length;
   const warnings = [];
   if (signupCount > 0 && prioCount === 0) {
@@ -15767,9 +15659,6 @@ async function getRaidHelper({ guildId, query: params }) {
     },
     signups,
     externalSignups,
-    attendancePrios,
-    p0PlusTransferred: p0PlusTransferCount > 0,
-    p0PlusTransferCount,
     counts: buildSignupCounts(signups, externalSignups),
     prioCount,
     warnings
@@ -16060,6 +15949,7 @@ async function deleteRaidSignup({ guildId, query: params }) {
 }
 
 async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
   const signupId = clean(params.signupId || params.id);
   const nextStatus = normalizeSignupStatus(params.signupStatus || params.status);
   const shouldDelete = ["delete", "remove", "verwerfen"].includes(clean(params.mode || params.signupAction || params.actionMode).toLowerCase());
@@ -16075,60 +15965,6 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
     const error = new Error("Anmeldung wurde nicht gefunden.");
     error.statusCode = 404;
     throw error;
-  }
-
-  const masterCode = clean(params.masterCode);
-  const leadPin = clean(params.leadPin || params.raidleadPin);
-  if (masterCode) {
-    requireMasterCode(masterCode);
-  } else if (!leadPin || clean(existingSignup.leadPin).toLowerCase() !== leadPin.toLowerCase()) {
-    const error = new Error("LeadPIN passt nicht zu diesem Raid.");
-    error.statusCode = 403;
-    throw error;
-  }
-  existingSignup.changedBy = masterCode ? "Gildenleitung" : "Raidlead";
-
-  const editedPlayerName = clean(params.playerName || params.player || params.char);
-  const editedClassName = clean(params.className || params.klasse);
-  const editedRole = clean(params.role).toLowerCase();
-  const editedSpecialization = clean(params.specialization || params.spec);
-  const editedNote = clean(params.note) || (editedSpecialization ? `Skillung: ${editedSpecialization}` : "");
-  if (editedPlayerName || editedSpecialization || editedRole) {
-    const nextRole = ["tank", "heal", "dd"].includes(editedRole) ? editedRole : clean(existingSignup.role || "dd");
-    const nextPlayerName = editedPlayerName || clean(existingSignup.player || existingSignup.playerName);
-    const nextClassName = editedClassName || clean(existingSignup.className);
-    const nextNote = editedNote || clean(existingSignup.note);
-    const externalUpdate = await query(
-      `update raid_external_signups
-       set player_name=$3, class_name=$4, role=$5, note=$6, updated_at=now()
-       where guild_id=$1 and id=$2
-       returning *`,
-      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote]
-    );
-    if (externalUpdate.rows[0]) {
-      const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
-      const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup }, "edited", notifyMessage);
-      return { success:true, signup, queued:true, ...sideEffects };
-    }
-    const characterResult = await query(
-      `select id, name, class_name from characters where guild_id=$1 and lower(name)=lower($2) order by updated_at desc nulls last limit 1`,
-      [guildId, nextPlayerName]
-    );
-    if (!characterResult.rows[0]) {
-      const error = new Error("Der ausgewählte Charakter wurde in der Spielerdatenbank nicht gefunden.");
-      error.statusCode = 404;
-      throw error;
-    }
-    const localUpdate = await query(
-      `update raid_signups rs set character_id=$3, role=$4, note=$5, updated_at=now()
-       from raids r where rs.raid_id=r.id and r.guild_id=$1 and rs.id=$2 returning rs.*`,
-      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote]
-    );
-    if (localUpdate.rows[0]) {
-      const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
-      const sideEffects = await enqueueRaidHelperAdminSideEffects(guildId, { ...existingSignup, ...signup, player:nextPlayerName, className:nextClassName }, "edited", notifyMessage);
-      return { success:true, signup, queued:true, ...sideEffects };
-    }
   }
 
   if (shouldDelete) {
@@ -16192,7 +16028,7 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
        res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
        res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
-       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
+       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets
      from raid_external_signups res
      left join raids r on r.id = res.raid_id and r.guild_id = res.guild_id
      where res.guild_id = $1 and res.id = $2
@@ -16211,30 +16047,20 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
       discordMessageId: row.discord_message_id || "",
       createdBy: row.created_by || "",
       lootMaster: row.loot_master || "",
-      statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
-      leadPin: row.lead_pin || ""
+      statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : []
     };
   }
 
   const local = await query(
     `select
        rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
-       coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
-       coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
-       rs.created_at, rs.updated_at,
+       rs.discord_user_id, rs.discord_name, rs.created_at, rs.updated_at,
        c.name as player_name, c.server, c.class_name,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
-       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
+       r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets
      from raid_signups rs
      join raids r on r.id = rs.raid_id and r.guild_id = $1
      join characters c on c.id = rs.character_id
-     left join lateral (
-       select link.discord_user_id, link.discord_name
-       from discord_player_links link
-       where link.guild_id = r.guild_id and link.character_id = c.id
-       order by link.updated_at desc, link.created_at desc
-       limit 1
-     ) dpl on true
      where rs.id = $2
      limit 1`,
     [guildId, signupId]
@@ -16251,8 +16077,7 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
     discordMessageId: row.discord_message_id || "",
     createdBy: row.created_by || "",
     lootMaster: row.loot_master || "",
-    statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
-    leadPin: row.lead_pin || ""
+    statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : []
   };
 }
 
@@ -16292,7 +16117,7 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
       raidTime: clean(signup?.raidTime || ""),
       action: clean(action || ""),
       message: notifyMessage,
-      changedBy: clean(signup?.changedBy || "Gildenleitung"),
+      changedBy: "Gildenleitung",
       createdBy: clean(signup?.createdBy || ""),
       lootMaster: clean(signup?.lootMaster || ""),
       targets: statusTargets,
@@ -16327,7 +16152,7 @@ async function enqueueRaidHelperAdminSideEffects(guildId, signup, action, notify
 
 async function saveDiscordSignupRows({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  const submittedRows = Array.isArray(params.rows)
+  const rows = Array.isArray(params.rows)
     ? params.rows
     : (() => {
         try {
@@ -16337,23 +16162,6 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
           return [];
         }
       })();
-
-  // Fremde Raid-Helper-Anmelder werden nicht mehr in LichtLoot importiert.
-  // Zulässig bleiben ausschließlich LichtLoot/PO-Bot-Anmeldungen
-  // (DiscordSignup) und direkte Anmeldungen der Lootseite (loot_page).
-  const isRaidHelperSource = row => {
-    const source = clean(row?.quelle || row?.source).toLowerCase();
-    return source.startsWith("raid-helper:") || source.startsWith("raidhelper:");
-  };
-  if (submittedRows.some(isRaidHelperSource)) {
-    return {
-      success: true,
-      ignored: true,
-      saved: 0,
-      reason: "raid_helper_import_disabled",
-    };
-  }
-  const rows = submittedRows;
 
   const raid = await findRaidForDiscordImport(guildId, params);
   if (!raid) {
@@ -17255,38 +17063,6 @@ async function validateLeadPin({ guildId, query: params }) {
     return { success: false, error: "Falsche Raidlead-PIN." };
   }
 
-  if (["1", "true", "yes", "ja"].includes(clean(params.allowMaster).toLowerCase())) {
-    try {
-      requireMasterCode(leadPin);
-      return { success: true, managerMode: "master" };
-    } catch {
-      // Kein Gildenleiter-PIN: anschließend als raidbezogene LeadPIN prüfen.
-    }
-  }
-
-  const requestedRaidId = clean(params.raidId || params.id);
-  const allowLootMaster = ["1", "true", "yes", "ja"].includes(
-    clean(params.allowLootMaster).toLowerCase()
-  );
-  if (allowLootMaster && requestedRaidId) {
-    const lootMasterPin = clean(await effectiveLootMasterPin(guildId));
-    if (lootMasterPin && leadPin === lootMasterPin) {
-      const requestedRaid = await findRaid(guildId, { raidId: requestedRaidId });
-      if (!requestedRaid) {
-        return { success: false, error: "Raid wurde nicht gefunden." };
-      }
-      return { success: true, managerMode: "lootmaster", ...normalizeRaidRow(requestedRaid) };
-    }
-  }
-
-  if (requestedRaidId) {
-    const requestedRaid = await findRaid(guildId, { raidId: requestedRaidId });
-    if (!requestedRaid || clean(requestedRaid.lead_pin).toLowerCase() !== leadPin.toLowerCase()) {
-      return { success: false, error: "LeadPIN passt nicht zu diesem Raid." };
-    }
-    return { success: true, managerMode: "raidlead", ...normalizeRaidRow(requestedRaid) };
-  }
-
   const result = await query(
     `select *
      from raids
@@ -17302,7 +17078,7 @@ async function validateLeadPin({ guildId, query: params }) {
     return { success: false, error: "Falsche Raidlead-PIN." };
   }
 
-  return { success: true, managerMode: "raidlead", ...normalizeRaidRow(raid) };
+  return { success: true, ...normalizeRaidRow(raid) };
 }
 
 async function findRaidByPrioPin({ guildId, query: params }) {
@@ -18965,6 +18741,77 @@ async function addCharacterToPlayer({ guildId, pin, charName, server, className 
   );
 
   return normalizeCharacter(result.rows[0]);
+}
+
+async function createPlayerLoginByGuildLeadership({ guild, params }) {
+  requireMasterCodeForGuild(guild, params.masterCode, "guildAdminCreatePlayerLogin", params);
+  const charName = clean(params.charName);
+  const server = clean(params.server);
+  const className = clean(params.className);
+  if (!charName || !server || !className) {
+    const error = new Error("Charaktername, Server und Klasse werden benötigt.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  let playerPin = normalizePin(params.playerPin);
+  if (!playerPin) {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const candidate = randomPlayerLoginPin(8);
+      const existing = await query(
+        "select 1 from players where guild_id = $1 and player_pin = $2 limit 1",
+        [guild.id, candidate]
+      );
+      if (!existing.rows.length) {
+        playerPin = candidate;
+        break;
+      }
+    }
+  }
+  if (!playerPin) {
+    const error = new Error("Es konnte kein freier SpielerLogin erzeugt werden.");
+    error.statusCode = 500;
+    throw error;
+  }
+
+  const created = await createPlayerWithCharacter({
+    guildId: guild.id,
+    playerPin,
+    securityQuestion: "",
+    securityAnswer: "",
+    charName,
+    server,
+    className
+  });
+  await query(
+    `update players
+     set approval_status = 'approved', approved_at = now(), approved_by = 'Gildenleitung',
+         is_blocked = false, blocked_at = null, blocked_reason = null, updated_at = now()
+     where guild_id = $1 and id = $2`,
+    [guild.id, created.player.id]
+  );
+  return {
+    success: true,
+    playerPin,
+    playerId: created.player.id,
+    character: created.character,
+    approvalStatus: "approved"
+  };
+}
+
+async function addTwinkByGuildLeadership({ guild, params }) {
+  requireMasterCodeForGuild(guild, params.masterCode, "guildAdminAddTwink", params);
+  const playerPin = normalizePin(params.playerPin);
+  const charName = clean(params.charName);
+  const server = clean(params.server);
+  const className = clean(params.className);
+  if (!playerPin || !charName || !server || !className) {
+    const error = new Error("SpielerLogin, Charaktername, Server und Klasse werden benötigt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const character = await addCharacterToPlayer({ guildId: guild.id, pin: playerPin, charName, server, className });
+  return { success: true, playerPin, character };
 }
 
 async function deleteCharacterFromPlayer({ guildId, pin, charName, server }) {
@@ -21247,6 +21094,16 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...saved, guild: guild.slug });
     }
 
+    if (action === "guildAdminCreatePlayerLogin") {
+      const created = await createPlayerLoginByGuildLeadership({ guild, params: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
+    if (action === "guildAdminAddTwink") {
+      const created = await addTwinkByGuildLeadership({ guild, params: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+
     if (action === "guildApprovePlayerLogin" || action === "guildSetPlayerLoginApproved") {
       const saved = await setPlayerLoginApproved({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
@@ -21641,11 +21498,6 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: req.query });
-      return res.json({ ...saved, guild: guild.slug });
-    }
-
-    if (action === "guildAddManualPoPostEntry") {
-      const saved = await addManualPoPostEntry({ guildId: guild.id, query: req.query });
       return res.json({ ...saved, guild: guild.slug });
     }
 
@@ -22129,11 +21981,6 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: postParams });
-      return res.json({ ...saved, guild: guild.slug });
-    }
-
-    if (action === "guildAddManualPoPostEntry") {
-      const saved = await addManualPoPostEntry({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
