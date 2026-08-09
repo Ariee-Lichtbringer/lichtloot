@@ -6351,6 +6351,23 @@ function applyGuildBrand(){
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
 }
+
+function applyGuildManagementLayout(){
+  const settings=currentGuildInfo?.layout?.guildManagementSections || {};
+  const show=(element,visible)=>{ if(element) element.style.display=visible ? "" : "none"; };
+  show(document.querySelector('.side-link[onclick*="scrollToDashboard"]'),settings.dashboard !== false);
+  show(document.getElementById("sideGroupBuffs"),settings.buffs !== false);
+  show(document.getElementById("sideGroupRaidorga"),settings.raidorga !== false);
+  show(document.getElementById("sideGroupBackup"),settings.backup !== false);
+  show(document.querySelector('.side-link[onclick*="openIssueInboxPanel"]'),settings.mailbox !== false);
+  const admin=document.getElementById("sideGroupAdmin");
+  if(admin){
+    admin.style.display="";
+    admin.querySelectorAll(".side-group-items > .side-link").forEach(link=>{
+      link.style.display=link.getAttribute("onclick")?.includes("openLootLayoutPanel") || settings.admin !== false ? "" : "none";
+    });
+  }
+}
 const RAID_IMAGES = {
   mc:"images/raid-templates/mc.jpg",
   bwl:"images/raid-templates/bwl.jpg",
@@ -6448,6 +6465,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   setWorldbuffOnlyMode(false);
   await fetchCurrentGuildInfo();
   applyGuildBrand();
+  applyGuildManagementLayout();
   if(CURRENT_GUILD_SLUG !== "nachtloot"){
     document.querySelectorAll('option[value="zg-mittwoch"],option[value="zg-prime"],option[value="zg-late"]').forEach(option => option.remove());
   }
@@ -7541,6 +7559,34 @@ function renderLootLayoutPanel(){
         </div>
       </details>
 
+      <details class="layout-accordion">
+        <summary>6. Startseite und Gildenleitung</summary>
+        <div class="layout-accordion-content">
+          <section class="layout-info-box blue">
+            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Startseite</h4><p>Lege fest, welche Menüpunkte und Zusatzbereiche auf der Startseite sichtbar sind.</p></div></div>
+            <div class="layout-loot-toggle-grid">
+              <label class="layout-loot-toggle"><input id="layoutStartNavDashboard" type="checkbox" ${layout.startPageSections?.navigation?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong><small>Dashboard-Link links anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutStartNavBuffs" type="checkbox" ${layout.startPageSections?.navigation?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong><small>Worldbuffs und Hordenbuffs in der Navigation anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutStartNavRaidinfos" type="checkbox" ${layout.startPageSections?.navigation?.raidinfos !== false ? "checked" : ""}><span><strong>Raidinformationen</strong><small>Logs, Raidregeln, PO+ Liste und Prioseiten anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutStartNavRaidorga" type="checkbox" ${layout.startPageSections?.navigation?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong><small>Plündermeister und Raid erstellen anzeigen.</small></span></label>
+              <label class="layout-loot-toggle"><input id="layoutStartWorldbuffs" type="checkbox" ${layout.startPageSections?.worldbuffs !== false ? "checked" : ""}><span><strong>Nächste Worldbuffs</strong><small>Worldbuff-Termine rechts auf dem Dashboard anzeigen.</small></span></label>
+            </div>
+            <div class="field" style="margin-top:14px"><label>Zeitraum der Raidkacheln</label><select id="layoutStartRaidCardDays"><option value="7" ${String(layout.startPageSections?.raidCardDays || "all") === "7" ? "selected" : ""}>Nächste 7 Tage</option><option value="14" ${String(layout.startPageSections?.raidCardDays || "all") === "14" ? "selected" : ""}>Nächste 14 Tage</option><option value="30" ${String(layout.startPageSections?.raidCardDays || "all") === "30" ? "selected" : ""}>Nächste 30 Tage</option><option value="60" ${String(layout.startPageSections?.raidCardDays || "all") === "60" ? "selected" : ""}>Nächste 60 Tage</option><option value="all" ${!["7","14","30","60"].includes(String(layout.startPageSections?.raidCardDays || "all")) ? "selected" : ""}>Alle kommenden Raids</option></select></div>
+          </section>
+          <section class="layout-info-box gold" style="margin-top:14px">
+            <div class="layout-box-head"><span class="layout-comic-arrow">↘</span><div><h4>Gildenleitungsseite</h4><p>Diese Navigationsbereiche können ausgeblendet werden. „Layout bearbeiten“ bleibt immer erreichbar.</p></div></div>
+            <div class="layout-loot-toggle-grid">
+              <label class="layout-loot-toggle"><input id="layoutGuildNavDashboard" type="checkbox" ${layout.guildManagementSections?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavBuffs" type="checkbox" ${layout.guildManagementSections?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavRaidorga" type="checkbox" ${layout.guildManagementSections?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavBackup" type="checkbox" ${layout.guildManagementSections?.backup !== false ? "checked" : ""}><span><strong>Sicherung</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavMailbox" type="checkbox" ${layout.guildManagementSections?.mailbox !== false ? "checked" : ""}><span><strong>Postfach</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavAdmin" type="checkbox" ${layout.guildManagementSections?.admin !== false ? "checked" : ""}><span><strong>Admin</strong><small>Layout bearbeiten bleibt trotz dieses Schalters sichtbar.</small></span></label>
+            </div>
+          </section>
+        </div>
+      </details>
+
       <div id="lootLayoutStatus" class="status">Änderungen speichern und danach die Seite neu laden, falls ein altes Bild noch aus dem Browsercache kommt.</div>
     </div>
   `;
@@ -7576,6 +7622,8 @@ async function saveLootLayoutPanel(){
     lootPageSections:{worldbuffs:Boolean(document.getElementById("layoutLootWorldbuffs")?.checked),raidSignup:Boolean(document.getElementById("layoutLootRaidSignup")?.checked),poReleases:Boolean(document.getElementById("layoutLootPoReleases")?.checked),miniRaids:Boolean(document.getElementById("layoutLootMiniRaids")?.checked),gearPlanner:Boolean(document.getElementById("layoutLootGearPlanner")?.checked)},
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
     lootPageSectionsByRaid,
+    startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
+    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
@@ -7600,6 +7648,7 @@ async function saveLootLayoutPanel(){
     }
     currentGuildInfo = result.guild || currentGuildInfo || {};
     applyGuildBrand();
+    applyGuildManagementLayout();
     renderAll();
     renderLootLayoutPanel();
     const savedStatus = document.getElementById("lootLayoutStatus");
