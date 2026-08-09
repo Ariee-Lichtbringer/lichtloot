@@ -15852,9 +15852,9 @@ async function saveRaidSignup({ guildId, query: params }) {
     throw error;
   }
 
-  const status = normalizeSignupStatus(params.signupStatus || params.signup || params.status);
+  let status = normalizeSignupStatus(params.signupStatus || params.signup || params.status);
   const role = normalizeSignupRole(params.signupRole || params.role);
-  const note = clean(params.note || params.comment);
+  let note = clean(params.note || params.comment);
   const source = clean(params.source || "lichtloot");
   const discordUserId = clean(params.discordUserId);
   const discordName = clean(params.discordName);
@@ -15923,6 +15923,31 @@ async function saveRaidSignup({ guildId, query: params }) {
        )`,
     [guildId, relatedRaidIds, charName, playerPin, discordUserId]
   );
+
+  // Sobald die festgelegte Raidgröße erreicht ist, landen ausschließlich
+  // neue aktive Anmeldungen automatisch auf der Bank. Charakter- oder
+  // Skillungswechsel einer bereits vorhandenen Anmeldung behalten ihren
+  // bisherigen Platz.
+  let automaticallyBenched = false;
+  const maximumPlayers = Number(raid.max_players || 0);
+  if (maximumPlayers > 0 && status === "signed") {
+    const occupiedResult = await query(
+      `select count(*)::int as count
+       from raid_signups
+       where raid_id = $1
+         and character_id <> $2
+         and lower(coalesce(status, 'signed')) not in ('absent', 'abwesend', 'bench', 'bank')
+         and lower(coalesce(role, '')) not in ('multi', 'multichar', 'multi-char', 'multi char')`,
+      [raid.id, character.id]
+    );
+    if (Number(occupiedResult.rows[0]?.count || 0) >= maximumPlayers) {
+      status = "bench";
+      automaticallyBenched = true;
+      if (!note.toLowerCase().includes("automatisch gebencht")) {
+        note = `${note}${note ? " " : ""}(automatisch gebencht)`;
+      }
+    }
+  }
 
   const result = await query(
     `insert into raid_signups (
@@ -15998,7 +16023,8 @@ async function saveRaidSignup({ guildId, query: params }) {
     helper: snapshot || null,
     signups: snapshot?.signups || [],
     externalSignups: snapshot?.externalSignups || [],
-    refreshQueued
+    refreshQueued,
+    automaticallyBenched
   };
 }
 
