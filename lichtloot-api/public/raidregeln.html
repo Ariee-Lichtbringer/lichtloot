@@ -705,6 +705,12 @@ body.rules-embedded .rules-search{
 body.rules-embedded .rules-tabs{
   margin:12px 0 16px;
 }
+body.rules-embedded .raid-layout{
+  display:block;
+}
+body.rules-embedded .raid-menu{
+  display:none!important;
+}
 
 @media(max-width:860px){
   .overlay{padding:18px 12px 32px}
@@ -1202,11 +1208,38 @@ function generalRequirementText(value){
     .trim();
 }
 
+const raidRuleTokens={
+  mc:["mc","molten core"],
+  bwl:["bwl","blackwing lair"],
+  aq40:["aq40","ahn'qiraj 40","ahn’qiraj 40"],
+  naxx:["naxx","naxxramas"],
+  zg:["zg","zul gurub","zul'gurub","zul’gurub"],
+  aq20:["aq20","ahn'qiraj 20","ahn’qiraj 20"],
+  ony:["ony","onyxia"]
+};
+
+function requirementAppliesToRaid(value){
+  const text=String(value || "").toLowerCase();
+  const mentioned=Object.entries(raidRuleTokens).filter(([,tokens])=>tokens.some(token=>text.includes(token)));
+  if(!mentioned.length) return true;
+  return mentioned.some(([raidId])=>raidId===activeRaid);
+}
+
+function raidProvidesRequirementSection(type){
+  if(CURRENT_GUILD_SLUG==="nachtloot") return true;
+  const raid=rulesData.raids.find(entry=>entry.id===activeRaid);
+  const text=(raid?.rules || []).join(" ").toLowerCase();
+  return type==="consumables"
+    ? /verbrauchsmaterial|consumable/.test(text)
+    : /verzauberung/.test(text);
+}
+
 function renderConsumables(){
   const panel=document.getElementById("panelConsumables");
   const classes=allConsumableClasses();
   const visibleItems=rulesData.consumables.map(item => ({...item,displayName:generalRequirementText(item.name)}));
   const rows=visibleItems.filter(item => {
+    if(!raidProvidesRequirementSection("consumables") || !requirementAppliesToRaid(item.name)) return false;
     const classMatch=activeClass === "all" || item.classes.includes(activeClass);
     const searchText=[item.displayName,item.required ? "wichtig" : "",item.optional ? "optional" : "",...item.classes].join(" ");
     return classMatch && matchesSearch(searchText);
@@ -1223,7 +1256,7 @@ function renderConsumables(){
               <td><span class="pill ${item.required || item.status === "important" ? "required" : "optional"}">${item.required ? "verpflichtend" : item.status === "important" ? "wichtig" : "optional"}</span></td>
               <td><div class="pill-row">${item.classes.map(cls => renderClassPill(cls)).join("")}</div></td>
             </tr>
-          `).join("") || `<tr><td colspan="3">Keine Consumables gefunden.</td></tr>`}
+          `).join("") || `<tr><td colspan="3">Für den ausgewählten Raid sind keine eigenen Consumables hinterlegt.</td></tr>`}
         </tbody>
       </table>
     </div>
@@ -1242,6 +1275,7 @@ function renderEnchants(){
   const rows=[];
   rulesData.enchantments.rows.forEach(entryRow => {
     entryRow.forEach(entry => {
+      if(!raidProvidesRequirementSection("enchants") || !requirementAppliesToRaid(entry.text)) return;
       if(activeClass !== "all" && entry.className !== activeClass) return;
       const parsed=parseEnchantSlot(generalRequirementText(entry.text));
       const searchText=[entry.className,parsed.slot,parsed.value].join(" ");
@@ -1261,7 +1295,7 @@ function renderEnchants(){
               <td>${escapeHtml(row.slot)}</td>
               <td>${escapeHtml(row.value)}</td>
             </tr>
-          `).join("") || `<tr><td colspan="3">Keine Verzauberungen gefunden.</td></tr>`}
+          `).join("") || `<tr><td colspan="3">Für den ausgewählten Raid sind keine eigenen Verzauberungen hinterlegt.</td></tr>`}
         </tbody>
       </table>
     </div>
