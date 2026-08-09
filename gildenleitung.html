@@ -9309,7 +9309,7 @@ async function renderRaidHelperCurrentDetail(raidId){
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
-        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${escapeHtml(slots || "Slots offen")}</span>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b> · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
       <div class="raid-helper-current-actions">
         <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
