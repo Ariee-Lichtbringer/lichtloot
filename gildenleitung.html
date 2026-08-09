@@ -3308,6 +3308,7 @@ tr.selected-row td{
 }
 
 .raid-helper-loot-role-counter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.raid-helper-loot-role-counter span{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #3b4961;border-radius:999px;background:#101a2c;color:#e2e8f0;font-weight:900}.raid-helper-loot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:10px}.raid-helper-loot-group{overflow:hidden;border:1px solid color-mix(in srgb,var(--group-color) 55%,#26364f);border-radius:14px;background:#07101f;box-shadow:inset 3px 0 0 var(--group-color)}.raid-helper-loot-group>header{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,#26364f);background:linear-gradient(135deg,color-mix(in srgb,var(--group-color) 14%,#101c31),#0a1324)}.raid-helper-loot-group>header h3{margin:0;color:var(--group-color);font-size:14px}.raid-helper-loot-group>header small{display:block;color:#94a3b8}.raid-helper-loot-group .raid-helper-signup-row{border-radius:0;border-bottom:1px solid rgba(49,65,91,.55);background:#07101f;display:grid;gap:7px}.raid-helper-loot-group .raid-helper-signup-row:last-child{border-bottom:0}.raid-helper-loot-group .raid-helper-signup-actions{justify-content:flex-start}.raid-helper-loot-inactive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid #31415b}.raid-helper-loot-inactive .raid-helper-loot-group{--group-color:#94a3b8}.raid-helper-loot-inactive .status-bench{--group-color:#fde047}.raid-helper-loot-inactive .status-late{--group-color:#fb923c}.raid-helper-loot-inactive .status-tentative{--group-color:#c084fc}.raid-helper-loot-inactive .status-absent{--group-color:#f87171}@media(max-width:1050px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:1fr}}
+.raid-helper-loot-total{margin-bottom:10px;padding:9px 11px;border:1px solid #3b4961;border-radius:11px;background:#101a2c;color:#e2e8f0;font-size:14px;font-weight:950}.raid-helper-lootbag{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:2px 6px;border:1px solid #3b4961;border-radius:7px;background:#111827;color:#dbeafe;font-size:10px;vertical-align:middle}.raid-helper-lootbag img{width:20px;height:20px;border-radius:4px;object-fit:cover}
 
 .raid-helper-wcl-grid{
   display:grid;
@@ -9728,7 +9729,7 @@ function renderRaidHelperSignupAdminRow(row){
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
@@ -9742,6 +9743,15 @@ function renderRaidHelperSignupAdminRow(row){
       </div>
     </div>
   `;
+}
+
+function renderRaidHelperLootbag(row){
+  const po = normalize(row.poApprovalStatus || row.po_approval_status || "");
+  let file = "", label = "", type = "";
+  if(["approved","freigegeben"].includes(po)){ file = "beutegrun.jpg"; label = "PO freigegeben"; type = "approved"; }
+  else if(["pending","offen","wartet"].includes(po)){ file = "beuteorange.jpg"; label = "PO eingetragen"; type = "pending"; }
+  else if(row.hasPrio === true || ["true","1","yes","ja"].includes(normalize(row.hasPrio))){ file = "beutelilia.jpg"; label = "P1–P3 eingetragen"; type = "prio"; }
+  return file ? `<span class="raid-helper-lootbag ${type}" title="${escapeAttr(label)}"><img src="images/lootbags/${file}" alt="Lootbag"><span>${escapeHtml(label)}</span></span>` : "";
 }
 
 function renderRaidHelperSignupAdminLayout(rows){
@@ -9786,7 +9796,7 @@ function renderRaidHelperSignupAdminLayout(rows){
   const activeHtml = order.filter(key => activeGroups.has(key)).map(key => group(key,activeGroups.get(key))).join("");
   const inactiveDefs = [["bench","🪑 Bank"],["late","🕒 Verspätet"],["tentative","⚖️ Vorläufig"],["absent","🚫 Abwesend"]];
   const inactiveHtml = inactiveDefs.map(([status,label]) => { const players = unique.filter(row => statusKey(row) === status || (status === "late" && ["spät","spaet"].includes(statusKey(row)))); return players.length ? `<section class="raid-helper-loot-group status-${status}" style="--group-color:${status === "bench" ? "#fde047" : status === "late" ? "#fb923c" : status === "tentative" ? "#c084fc" : "#f87171"}"><header><span style="font-size:22px">${label.split(" ")[0]}</span><div><h3>${escapeHtml(label.substring(label.indexOf(" ") + 1))}</h3><small>${players.length} Spieler</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>` : ""; }).join("");
-  return `<div class="raid-helper-loot-role-counter"><span>🛡️ Tanks <b>${roleCounts.tank}</b></span><span>⚔️ Nahkampf <b>${roleCounts.melee}</b></span><span>🏹 Fernkampf <b>${roleCounts.ranged}</b></span><span>✚ Heiler <b>${roleCounts.heal}</b></span></div><div class="raid-helper-loot-grid">${activeHtml || '<div class="muted">Keine aktiv Angemeldeten.</div>'}</div>${inactiveHtml ? `<div class="raid-helper-loot-inactive">${inactiveHtml}</div>` : ""}`;
+  return `<div class="raid-helper-loot-total">👥 Gesamt angemeldet: ${unique.length}</div><div class="raid-helper-loot-role-counter"><span>🛡️ Tanks <b>${roleCounts.tank}</b></span><span>⚔️ Nahkampf <b>${roleCounts.melee}</b></span><span>🏹 Fernkampf <b>${roleCounts.ranged}</b></span><span>✚ Heiler <b>${roleCounts.heal}</b></span></div><div class="raid-helper-loot-grid">${activeHtml || '<div class="muted">Keine aktiv Angemeldeten.</div>'}</div>${inactiveHtml ? `<div class="raid-helper-loot-inactive">${inactiveHtml}</div>` : ""}`;
 }
 
 function raidHelperSignupNotifyPrompt(action, player){
