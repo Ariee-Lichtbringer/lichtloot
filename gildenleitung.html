@@ -5121,6 +5121,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Prüfen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Erstellen</span></span></button>
       </div>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
@@ -5647,6 +5648,7 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
+      <div id="raidHelperTab-poCreate" class="raid-helper-tab-panel hidden"></div>
     </div>
   </details>
 
@@ -7049,7 +7051,8 @@ function openRaidleadPanelDirect(raidId){
 }
 
 function openPoPostPanel(){
-  openDetailsPanel("poPostPanel");
+  openDetailsPanel("raidHelperPanel");
+  setRaidHelperTab("poCreate");
 }
 
 function openPlayerPanel(){
@@ -8866,6 +8869,7 @@ function setRaidHelperTab(tabName){
     attendance:"20,184,166",
     templates:"236,72,153",
     poSignup:"250,204,21",
+    poCreate:"34,197,94",
     settings:"100,116,139"
   };
   document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
@@ -8880,6 +8884,7 @@ function setRaidHelperTab(tabName){
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
   if(target === "poSignup") refreshRaidHelperPoSignupTab();
+  if(target === "poCreate") mountPoSignupCreatorInRaidHelper();
   if(target === "scheduledEvents"){
     renderRaidHelperScheduleRules();
     renderRaidHelperScheduledEvents();
@@ -8890,6 +8895,15 @@ function setRaidHelperTab(tabName){
     loadRaidHelperAttendance();
   }
   if(target === "templates") loadRaidHelperTemplates();
+}
+
+function mountPoSignupCreatorInRaidHelper(){
+  const target = document.getElementById("raidHelperTab-poCreate");
+  const creator = document.getElementById("poPostTab-signup");
+  if(!target || !creator) return;
+  if(creator.parentElement !== target) target.appendChild(creator);
+  creator.classList.remove("hidden");
+  initPoPostPanel();
 }
 
 function raidHelperUpcomingRaids(){
