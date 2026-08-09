@@ -7195,8 +7195,7 @@ async function savePoPostEntries({ guildId, query: params }) {
   try {
     await client.query("begin");
     const approvalResult = await client.query(
-      `select po_message_id, player_name, item_name, class_name, approval_status, approved_by, approved_at,
-              luck_by, luck_by_discord_id, luck_at
+      `select *
        from po_post_entries
        where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
       [guildId, postKey, sourceChannelId, targetChannelId]
@@ -7216,9 +7215,35 @@ async function savePoPostEntries({ guildId, query: params }) {
       if (poMessageId) approvalByKey.set(poMessageId, status);
       approvalByKey.set(`${clean(row.player_name).toLowerCase()}|${normalizePoItemName(row.item_name).toLowerCase()}`, status);
     }
+
+    // Eine vom Bot gesendete Sammelliste ist nur eine Momentaufnahme. Während
+    // sie aufgebaut wird, kann bereits ein neuer PO-Eintrag gespeichert worden
+    // sein. Deshalb bestehende Datenbankeinträge immer ergänzen, statt sie mit
+    // einer eventuell älteren Liste zu überschreiben. Einzelne Löschungen
+    // laufen über den dafür vorgesehenen Lösch-Endpunkt.
+    const snapshotPlayerKeys = new Set(
+      entries
+        .map(entry => clean(entry?.player || entry?.playerName || entry?.char || entry?.character).toLowerCase())
+        .filter(Boolean)
+    );
+    for (const row of approvalResult.rows) {
+      const playerKey = clean(row.player_name).toLowerCase();
+      if (!playerKey || snapshotPlayerKeys.has(playerKey) || row.config_only) continue;
+      snapshotPlayerKeys.add(playerKey);
+      entries.push({
+        player: row.player_name || "",
+        item: row.item_name || "",
+        discordUserId: row.discord_user_id || "",
+        discordName: row.discord_name || "",
+        className: row.class_name || "",
+        messageId: row.po_message_id || "",
+        createdAt: row.po_created_at || row.created_at || null
+      });
+    }
     await client.query(
       `delete from po_post_entries
-       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4 and archived_at is null`,
+       where guild_id = $1 and post_key = $2 and source_channel_id = $3 and target_channel_id = $4
+         and archived_at is null and config_only = false`,
       [guildId, postKey, sourceChannelId, targetChannelId]
     );
     const seenPlayers = new Set();
