@@ -1819,7 +1819,7 @@ function normalizeCharacter(row) {
 
 async function findPlayerByPin(guildId, pin) {
   const result = await query(
-    `select id, player_pin, role, is_blocked, blocked_at, blocked_reason, approval_status
+    `select id, player_pin, role, permissions, is_blocked, blocked_at, blocked_reason, approval_status
      from players
      where guild_id = $1
        and player_pin = $2
@@ -15274,7 +15274,8 @@ async function createRandomRaid({ guildId, query: params }) {
     throw error;
   }
   const creatorPlayer = creatorLogin ? await findPlayerByPin(guildId, creatorLogin) : null;
-  if (!creatorPlayer || !canPlayerRoleCreateRaid(creatorPlayer.role)) {
+  const creatorPermissions = Array.isArray(creatorPlayer?.permissions) ? creatorPlayer.permissions : [];
+  if (!creatorPlayer || !(creatorPermissions.includes("create_raids") || creatorPermissions.includes("guild_admin") || canPlayerRoleCreateRaid(creatorPlayer.role))) {
     const error = new Error("Zum Erstellen von Raids wende dich an die Gildenleitung.");
     error.statusCode = 403;
     throw error;
