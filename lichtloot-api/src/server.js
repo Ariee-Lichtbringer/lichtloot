@@ -6840,6 +6840,7 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     meetingExtra: clean(params.meetingExtra).slice(0, 1000),
     meetingSignup: clean(params.meetingSignup).toLowerCase() === "true",
     meetingNotifyTargets,
+    updateExisting: clean(params.updateExisting).toLowerCase() === "true",
     footer: clean(params.footer).slice(0, 500),
     color: ["sky", "purple", "gold", "green", "red"].includes(clean(params.color)) ? clean(params.color) : "sky",
     channelId: clean(params.channelId || params.discordChannelId),
