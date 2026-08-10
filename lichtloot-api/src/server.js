@@ -6818,6 +6818,15 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     catch { points = points.split(/\r?\n/); }
   }
   points = (Array.isArray(points) ? points : []).map(item => clean(item)).filter(Boolean).slice(0, embedType === "poll" ? 10 : 20);
+  let meetingNotifyTargets = params.meetingNotifyTargets || [];
+  if (typeof meetingNotifyTargets === "string") {
+    try { meetingNotifyTargets = JSON.parse(meetingNotifyTargets); } catch { meetingNotifyTargets = []; }
+  }
+  meetingNotifyTargets = (Array.isArray(meetingNotifyTargets) ? meetingNotifyTargets : []).map(target => ({
+    type: clean(target?.type).toLowerCase() === "role" ? "role" : "name",
+    value: clean(target?.value || target?.name),
+    label: clean(target?.label || target?.value || target?.name)
+  })).filter(target => target.value).slice(0, 50);
   const payload = {
     embedType,
     title: clean(params.title).slice(0, 256),
@@ -6827,6 +6836,10 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     meetingDate: clean(params.meetingDate).slice(0, 20),
     meetingTime: clean(params.meetingTime).slice(0, 20),
     meetingLocation: clean(params.meetingLocation).slice(0, 200),
+    meetingTopicPrompt: clean(params.meetingTopicPrompt).slice(0, 200),
+    meetingExtra: clean(params.meetingExtra).slice(0, 1000),
+    meetingSignup: clean(params.meetingSignup).toLowerCase() === "true",
+    meetingNotifyTargets,
     footer: clean(params.footer).slice(0, 500),
     color: ["sky", "purple", "gold", "green", "red"].includes(clean(params.color)) ? clean(params.color) : "sky",
     channelId: clean(params.channelId || params.discordChannelId),
