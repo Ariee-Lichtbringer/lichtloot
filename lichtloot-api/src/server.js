@@ -6806,6 +6806,38 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   return { ...announcement, roleNoticeQueued };
 }
 
+async function queueFreeDiscordEmbed({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const embedType = clean(params.embedType || "custom").toLowerCase();
+  if (!["poll", "meeting", "announcement", "custom"].includes(embedType)) {
+    return { success: false, error: "Unbekannte Embed-Vorlage." };
+  }
+  let points = params.points || [];
+  if (typeof points === "string") {
+    try { points = JSON.parse(points); }
+    catch { points = points.split(/\r?\n/); }
+  }
+  points = (Array.isArray(points) ? points : []).map(item => clean(item)).filter(Boolean).slice(0, embedType === "poll" ? 10 : 20);
+  const payload = {
+    embedType,
+    title: clean(params.title).slice(0, 256),
+    description: clean(params.description).slice(0, 3000),
+    sectionTitle: clean(params.sectionTitle).slice(0, 100),
+    points,
+    meetingDate: clean(params.meetingDate).slice(0, 20),
+    meetingTime: clean(params.meetingTime).slice(0, 20),
+    meetingLocation: clean(params.meetingLocation).slice(0, 200),
+    footer: clean(params.footer).slice(0, 500),
+    color: ["sky", "purple", "gold", "green", "red"].includes(clean(params.color)) ? clean(params.color) : "sky",
+    channelId: clean(params.channelId || params.discordChannelId),
+    source: "gildenleitung"
+  };
+  if (!payload.channelId) return { success: false, error: "Discord-Channel fehlt." };
+  if (!payload.title && !payload.description && !points.length) return { success: false, error: "Das Embed ist noch leer." };
+  if (embedType === "poll" && points.length < 2) return { success: false, error: "Eine Abstimmung braucht mindestens zwei Antworten." };
+  return queueBotUpdate({ guildId, query: { ...params, type: "free_discord_embed", payload } });
+}
+
 async function queueRaidAnnouncementNotice({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const raidId = clean(params.raidId || params.id || "");
@@ -22389,6 +22421,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildQueueRaidAnnouncement") {
       const queued = await queueRaidAnnouncement({ guildId: guild.id, query: postParams });
+      return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildQueueFreeDiscordEmbed") {
+      const queued = await queueFreeDiscordEmbed({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
     }
 
