@@ -5461,6 +5461,11 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
       return { success: false, skipped: true, reason: "raid_announcement_missing_raid_id", type, payload: payload || {} };
     }
     const fromSchedule = clean(payload?.source) === "raid_helper_schedule";
+    const forceNewMessage = ["1", "true", "yes", "ja"].includes(clean(payload?.forceNewMessage || payload?.forceRepost || "").toLowerCase());
+    if (forceNewMessage) {
+      // Ein bewusst neu angeforderter Discord-Post darf nicht von der
+      // Kurzzeit-Deduplizierung als vermeintliches Doppel verworfen werden.
+    } else {
     const existing = await query(
       `select id, status, payload
        from bot_update_queue
@@ -5485,6 +5490,7 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
         type,
         payload: existing.rows[0].payload || payload || {}
       };
+    }
     }
   }
   if (type === "po_release_request_notice" && clean(payload?.requestId)) {
@@ -6708,6 +6714,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   const raidId = clean(params.raidId || params.id || "");
   if (!raidId) return { success: false, error: "Raid-ID fehlt." };
   const channelId = clean(params.channelId || params.discordChannelId);
+  const forceNewMessage = ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase());
   let followupPoPost = params.followupPoPost || null;
   if (typeof followupPoPost === "string") {
     try {
@@ -6762,8 +6769,9 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         raidImageUrl: clean(params.raidImageUrl || snapshot?.raid?.raidImageUrl || snapshot?.raid?.imageUrl || ""),
         channelId,
         discordChannelId: channelId,
-        messageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
-        discordMessageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
+        forceNewMessage: forceNewMessage ? "true" : "false",
+        messageId: forceNewMessage ? "" : clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
+        discordMessageId: forceNewMessage ? "" : clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
