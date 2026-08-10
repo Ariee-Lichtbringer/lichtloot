@@ -17345,6 +17345,56 @@ async function getPublicPrioCharacters({ guildId }) {
   };
 }
 
+async function getPublicGuildCharacters({ guildId }) {
+  const result = await query(
+    `select c.name, c.server, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and p.approval_status = 'approved'
+       and coalesce(p.is_blocked, false) = false
+     order by lower(c.name), lower(coalesce(c.server, ''))`,
+    [guildId]
+  );
+  return {
+    success: true,
+    characters: result.rows.map(row => ({
+      name: row.name || "",
+      className: row.class_name || "",
+      role: row.class_name || "",
+      server: row.server || ""
+    }))
+  };
+}
+
+async function getPublicRaidSignups({ guildId, query: params }) {
+  const helper = await getRaidHelper({ guildId, query: params });
+  if (!helper.success) return helper;
+  const combined = [...(helper.signups || []), ...(helper.externalSignups || [])];
+  const seen = new Set();
+  const signups = [];
+  for (const row of combined) {
+    const name = clean(row.name || row.player || row.char || row.characterName);
+    const server = clean(row.server);
+    const key = `${name.toLowerCase()}|${server.toLowerCase()}`;
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    signups.push({
+      name,
+      role: clean(row.role || row.raidRole),
+      className: clean(row.className || row.class_name || row.class || row.klasse),
+      status: clean(row.status || "signed"),
+      server
+    });
+  }
+  return {
+    success: true,
+    raid: helper.raid,
+    signups,
+    count: signups.length
+  };
+}
+
 async function getPrioCheck({ guildId, query: params }) {
   const raid = await findRaid(guildId, params);
   if (!raid) {
@@ -21633,6 +21683,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicPrioCharacters") {
       const characters = await getPublicPrioCharacters({ guildId: guild.id });
       return res.json({ ...characters, guild: guild.slug });
+    }
+
+    if (action === "getPublicGuildCharacters") {
+      const characters = await getPublicGuildCharacters({ guildId: guild.id });
+      return res.json({ ...characters, guild: guild.slug });
+    }
+
+    if (action === "getPublicRaidSignups") {
+      const signups = await getPublicRaidSignups({ guildId: guild.id, query: req.query });
+      return res.json({ ...signups, guild: guild.slug });
     }
 
     if (action === "lichtbotGetP0SignupContext" || action === "getP0DiscordSignupContext") {
