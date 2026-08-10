@@ -2516,6 +2516,24 @@ async function ensureDiscordChannelSchema() {
      )`
   );
   await query(`create index if not exists idx_discord_bot_members_guild_name on discord_bot_members(guild_id, lower(username), lower(display_name))`);
+  await query(
+    `create table if not exists free_discord_embed_posts (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       embed_type text not null default 'custom',
+       title text,
+       channel_id text not null,
+       message_id text not null,
+       jump_url text,
+       meeting_date text,
+       meeting_time text,
+       payload jsonb not null default '{}'::jsonb,
+       updated_at timestamptz not null default now(),
+       unique (guild_id, message_id)
+     )`
+  );
+  await query(`create index if not exists idx_free_embed_posts_guild_updated on free_discord_embed_posts(guild_id, updated_at desc)`);
+  await query(`alter table free_discord_embed_posts add column if not exists payload jsonb not null default '{}'::jsonb`);
 }
 
 async function ensureRaidHelperTemplateSchema() {
@@ -6827,6 +6845,8 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     value: clean(target?.value || target?.name),
     label: clean(target?.label || target?.value || target?.name)
   })).filter(target => target.value).slice(0, 50);
+  let meetingPresetSignups=params.meetingPresetSignups||[]; if(typeof meetingPresetSignups==="string"){try{meetingPresetSignups=JSON.parse(meetingPresetSignups);}catch{meetingPresetSignups=[];}}
+  meetingPresetSignups=(Array.isArray(meetingPresetSignups)?meetingPresetSignups:[]).map(entry=>({name:clean(entry?.name).slice(0,100),className:clean(entry?.className).slice(0,100),status:["yes","maybe","no"].includes(clean(entry?.status))?clean(entry.status):"yes"})).filter(entry=>entry.name).slice(0,100);
   const payload = {
     embedType,
     title: clean(params.title).slice(0, 256),
@@ -6840,14 +6860,16 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     meetingExtra: clean(params.meetingExtra).slice(0, 1000),
     meetingSignup: clean(params.meetingSignup).toLowerCase() === "true",
     meetingNotifyTargets,
+    meetingPresetSignups,
     updateExisting: clean(params.updateExisting).toLowerCase() === "true",
+    discoverExisting: clean(params.discoverExisting).toLowerCase() === "true",
     footer: clean(params.footer).slice(0, 500),
     color: ["sky", "purple", "gold", "green", "red"].includes(clean(params.color)) ? clean(params.color) : "sky",
     channelId: clean(params.channelId || params.discordChannelId),
     source: "gildenleitung"
   };
   if (!payload.channelId) return { success: false, error: "Discord-Channel fehlt." };
-  if (!payload.title && !payload.description && !points.length) return { success: false, error: "Das Embed ist noch leer." };
+  if (!payload.discoverExisting && !payload.title && !payload.description && !points.length) return { success: false, error: "Das Embed ist noch leer." };
   if (embedType === "poll" && points.length < 2) return { success: false, error: "Eine Abstimmung braucht mindestens zwei Antworten." };
   return queueBotUpdate({ guildId, query: { ...params, type: "free_discord_embed", payload } });
 }
@@ -8951,6 +8973,30 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
     ]
   );
   return { success: true, raid: normalizeRaidRow(result.rows[0]) };
+}
+
+async function setFreeDiscordEmbedMessage({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureDiscordChannelSchema();
+  const messageId = clean(params.messageId || params.discordMessageId);
+  const channelId = clean(params.channelId || params.discordChannelId);
+  if (!messageId || !channelId) return { success:false, error:"Discord-Nachricht oder Channel fehlt." };
+  let postPayload=params.postPayload||params.payload||{}; if(typeof postPayload==="string"){try{postPayload=JSON.parse(postPayload);}catch{postPayload={};}}
+  const result = await query(
+    `insert into free_discord_embed_posts (guild_id,embed_type,title,channel_id,message_id,jump_url,meeting_date,meeting_time,payload,updated_at)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,now())
+     on conflict (guild_id,message_id) do update set embed_type=excluded.embed_type,title=excluded.title,channel_id=excluded.channel_id,jump_url=excluded.jump_url,meeting_date=excluded.meeting_date,meeting_time=excluded.meeting_time,payload=excluded.payload,updated_at=now()
+     returning *`,
+    [guildId,clean(params.embedType||"custom"),clean(params.title),channelId,messageId,clean(params.jumpUrl),clean(params.meetingDate),clean(params.meetingTime),JSON.stringify(postPayload&&typeof postPayload==="object"?postPayload:{})]
+  );
+  return {success:true,post:result.rows[0]};
+}
+
+async function getFreeDiscordEmbedPosts({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureDiscordChannelSchema();
+  const result=await query(`select embed_type as "embedType",title,channel_id as "channelId",message_id as "messageId",jump_url as "jumpUrl",meeting_date as "meetingDate",meeting_time as "meetingTime",payload,updated_at as "updatedAt" from free_discord_embed_posts where guild_id=$1 and embed_type='meeting' order by updated_at desc limit 50`,[guildId]);
+  return {success:true,posts:result.rows};
 }
 
 async function queueLogAnalysisDiscordPost({ guildId, query: params }) {
@@ -21200,6 +21246,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const members = await getDiscordBotMembers({ guildId: guild.id, query: req.query });
       return res.json({ ...members, guild: guild.slug });
     }
+    if (action === "guildGetFreeDiscordEmbedPosts") {
+      const posts = await getFreeDiscordEmbedPosts({ guildId: guild.id, query: req.query });
+      return res.json({ ...posts, guild: guild.slug });
+    }
     if(action==="guildGetNotificationSettings"){
       const settings=await getGuildNotificationSettings({guildId:guild.id,query:req.query});return res.json({...settings,guild:guild.slug});
     }
@@ -22460,6 +22510,10 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotSetRaidDiscordMessage") {
       const saved = await setRaidDiscordMessage({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "lichtbotSetFreeDiscordEmbedMessage") {
+      const saved = await setFreeDiscordEmbedMessage({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
 
