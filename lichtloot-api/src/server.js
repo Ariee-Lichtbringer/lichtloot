@@ -6863,6 +6863,7 @@ async function queueFreeDiscordEmbed({ guildId, query: params }) {
     meetingPresetSignups,
     updateExisting: clean(params.updateExisting).toLowerCase() === "true",
     discoverExisting: clean(params.discoverExisting).toLowerCase() === "true",
+    messageId: clean(params.messageId || params.discordMessageId),
     footer: clean(params.footer).slice(0, 500),
     color: ["sky", "purple", "gold", "green", "red"].includes(clean(params.color)) ? clean(params.color) : "sky",
     channelId: clean(params.channelId || params.discordChannelId),
