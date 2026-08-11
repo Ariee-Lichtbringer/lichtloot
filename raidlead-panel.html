@@ -1906,6 +1906,7 @@ async function loadPriosFromSheet(leadPin){
       p3: p.P3 || "",
       p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
+      worldbuffRulesAccepted: Boolean(p.WorldbuffRulesAccepted || p.worldbuffRulesAccepted),
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
 
@@ -2177,6 +2178,7 @@ function renderRaidView(){
           ${renderRows()}
         </tbody>
       </table>
+      ${bossTokenNoticeConfig() ? '<div style="margin-top:12px;padding:10px 12px;border:1px solid rgba(34,197,94,.35);border-radius:10px;color:#cbd5e1"><strong style="color:#4ade80">✓ Worldbuff-Regeln:</strong> Mit diesem Haken hat sich der Spieler mit den Regeln und der verpflichtenden Abgabe des Worldbuffs zum Gildentermin einverstanden erklärt.</div>' : ''}
     </section>
   `;
 
@@ -2708,7 +2710,7 @@ function renderBossTokenNoticeButton(entry){
   return `
     <button class="btn neutral small-btn"
       onclick="postBossTokenNotice('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
-      ${safe(config.label)}
+      ${safe(config.label)} ${entry.worldbuffRulesAccepted ? '<span title="Worldbuff-Regeln akzeptiert" style="color:#4ade80;font-weight:950">✓</span>' : ''}
     </button>
   `;
 }
