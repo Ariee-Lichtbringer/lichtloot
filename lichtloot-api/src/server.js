@@ -19864,6 +19864,17 @@ async function setPlayerLoginApproved({ guildId, query: params }) {
     throw error;
   }
 
+  // Ein bereits vorgemerkter Hinweis darf nach der Freigabe nicht mehr als
+  // "wartet auf Freigabe" vom PO-Bot verschickt werden.
+  await query(
+    `delete from bot_update_queue
+     where guild_id = $1
+       and type = 'player_login_approval_notice'
+       and coalesce(payload->>'playerPin', '') = $2`,
+    [guildId, result.rows[0].player_pin]
+  );
+  console.log(`SpielerLogin freigegeben und gespeichert: ${guildId}:${result.rows[0].id}`);
+
   let notificationQueued = false;
   let notificationReason = wasApproved ? "already_approved" : "discord_not_linked";
   if (!wasApproved) {
