@@ -64,6 +64,8 @@
     const box=document.getElementById("selectedCharacterPoReleases");
     if(!box) return;
     const releases=(data && data.poReleases) || {};
+    const poReleasesEnabled=data&&data.poReleasesEnabled!==false;
+    if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(poReleasesEnabled);
     const normalizeRaidKey=function(value){return String(value||"").trim().toLowerCase().replace(/[_\s]+/g,"-").replace(/^zg$/,"zg-prime");};
     const approvedKeys=new Set();
     Object.keys(releases).forEach(function(key){if(releases[key]===true||String(releases[key]).toLowerCase()==="true"||Number(releases[key])>0)approvedKeys.add(normalizeRaidKey(key));});
@@ -76,7 +78,7 @@
       try{raidText=JSON.stringify(typeof currentRaidData!=="undefined"&&currentRaidData?currentRaidData:{}).toLowerCase();}catch(_error){}
       releaseKeys=raidText.includes("mittwoch")?["zg-mittwoch"]:raidText.includes("late")?["zg-late"]:raidText.includes("prime")?["zg-prime"]:["zg-mittwoch","zg-prime","zg-late"];
     }
-    window.currentCharacterPoPlusReleased=releaseKeys.length?releaseKeys.some(key=>approvedKeys.has(key)):true;
+    window.currentCharacterPoPlusReleased=!poReleasesEnabled || (releaseKeys.length?releaseKeys.some(key=>approvedKeys.has(key)):true);
     if(typeof renderLootList==="function")renderLootList();
     const visibleRaids=new Set(Array.isArray(data&&data.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"]);
     const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(function(item){return visibleRaids.has(item[0]);});
@@ -103,6 +105,8 @@
       const display=await responses[1].json().catch(function(){return {};});
       showRaidMemberNotice(display.raidMemberNotice);
       window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
+      history.poReleasesEnabled=display.poReleasesEnabled!==false;
+      if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(history.poReleasesEnabled);
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
       if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
       let requests=[];
@@ -123,5 +127,5 @@
   if(typeof originalSetPrio==="function") window.setPrio=async function(slot,item){if(await requireWorldbuffAgreementForSave(item))return originalSetPrio.apply(this,arguments);};
   const originalSetP0Plus=window.setP0Plus;
   if(typeof originalSetP0Plus==="function") window.setP0Plus=async function(item){if(await requireWorldbuffAgreementForSave(item))return originalSetP0Plus.apply(this,arguments);};
-  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
+  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;if(typeof window.applyPoReleaseRequirementSetting==="function")window.applyPoReleaseRequirementSetting(data.poReleasesEnabled!==false);showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
 })();
