@@ -24,6 +24,32 @@
     return String((entry && entry.raid) || "").trim().toLowerCase();
   }
 
+  function selectedWorldbuffToken(candidateItem){
+    const page=String(location.pathname||"").toLowerCase();
+    const selected=[["p1","p2","p3"].map(id=>String(document.getElementById(id)?.value||"")).join(" | "),candidateItem||""].join(" | ").toLowerCase();
+    if(/\/zg-loot\.html$/.test(page) && selected.includes("herz") && selected.includes("hakkar")) return "Herz von Hakkar";
+    if(/\/bwl-loot\.html$/.test(page) && selected.includes("kopf") && selected.includes("nefar")) return "Kopf von Nefarian";
+    if(/\/ony-loot\.html$/.test(page) && selected.includes("kopf") && selected.includes("ony")) return "Kopf von Onyxia";
+    return "";
+  }
+
+  async function requireWorldbuffAgreementForSave(candidateItem){
+    const token=selectedWorldbuffToken(candidateItem);
+    if(!token || window.worldbuffAgreementEnabled===false) return true;
+    const pin=getStoredLichtLootPlayerPin(),character=String(document.getElementById("playerName")?.value||"").trim(),server=String(document.getElementById("playerServer")?.value||"").trim(),raidKey=String(window.currentRaidId||document.getElementById("raidPin")?.value||"").trim(),guild=currentGuildSlug();
+    if(!pin||!character||!raidKey) return false;
+    const query=new URLSearchParams({action:"getWorldbuffRuleAgreement",guild,pin,character,server,raidKey,t:Date.now()});
+    const current=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"}).then(r=>r.json()).catch(()=>({}));
+    if(current.agreed) return true;
+    return new Promise(resolve=>{
+      const modal=document.createElement("div");modal.id="worldbuffRuleAgreementModal";modal.style.cssText="position:fixed;inset:0;z-index:100000;background:rgba(2,6,23,.86);display:grid;place-items:center;padding:20px";
+      modal.innerHTML='<div style="width:min(620px,100%);background:#0b1222;border:2px solid #facc15;border-radius:18px;padding:24px;color:#e5e7eb;box-shadow:0 24px 80px #000"><h2 style="margin:0 0 14px;color:#facc15">📯 Worldbuff-Regeln für diesen Raid</h2><p>Du möchtest <strong>'+token+'</strong> auf Prio nehmen. Damit verpflichtest du dich, den daraus entstehenden Worldbuff zum von der Gilde festgelegten Termin abzugeben.</p><p>Erfolgt die Abgabe trotz Prio nicht zum vorgesehenen Termin, kann dies zum Raidausschluss bei den Lichtbringern führen.</p><label style="display:flex;align-items:flex-start;gap:10px;margin:20px 0;font-weight:800"><input data-check type="checkbox" style="width:22px;height:22px;flex:0 0 auto"> <span>Ich habe die Regeln gelesen und bin für diesen Raid mit der verpflichtenden Abgabe zum Gildentermin einverstanden.</span></label><div data-status style="min-height:22px;color:#fca5a5"></div><div style="display:flex;gap:10px"><button data-cancel type="button" style="flex:1;padding:12px;border-radius:10px;background:#334155;color:white;border:0">Abbrechen</button><button data-accept type="button" disabled style="flex:2;padding:12px;border-radius:10px;background:#16a34a;color:white;border:0;font-weight:900;opacity:.45">Zustimmen und Prio speichern</button></div></div>';
+      document.body.appendChild(modal);const check=modal.querySelector("[data-check]"),accept=modal.querySelector("[data-accept]"),status=modal.querySelector("[data-status]");
+      check.onchange=()=>{accept.disabled=!check.checked;accept.style.opacity=check.checked?"1":".45";};modal.querySelector("[data-cancel]").onclick=()=>{modal.remove();resolve(false);};
+      accept.onclick=async()=>{accept.disabled=true;status.textContent="Zustimmung wird gespeichert …";try{const response=await fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptWorldbuffRuleAgreement",guild,pin,character,server,raidKey})});const result=await response.json();if(!result.success)throw new Error(result.error||"Zustimmung konnte nicht gespeichert werden.");modal.remove();resolve(true);}catch(error){status.textContent=error.message||"Zustimmung konnte nicht gespeichert werden.";accept.disabled=false;}};
+    });
+  }
+
   window.renderSelectedCharacterPoReleases=function(data,requests){
     const box=document.getElementById("selectedCharacterPoReleases");
     if(!box) return;
@@ -55,6 +81,7 @@
       const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
       const history=await responses[0].json();
       const display=await responses[1].json().catch(function(){return {};});
+      window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
       if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
       let requests=[];
@@ -65,9 +92,14 @@
         requests=Array.isArray(requestData.entries)?requestData.entries:[];
       }
       window.renderSelectedCharacterPoReleases(history,requests);
-      await maybeShowWorldbuffAgreement(char,display.worldbuffAgreementEnabled!==false);
     }catch(error){
       box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
     }
   };
+  const originalSavePrio=window.savePrio;
+  if(typeof originalSavePrio==="function") window.savePrio=async function(){if(await requireWorldbuffAgreementForSave())return originalSavePrio.apply(this,arguments);};
+  const originalSetPrio=window.setPrio;
+  if(typeof originalSetPrio==="function") window.setPrio=async function(slot,item){if(await requireWorldbuffAgreementForSave(item))return originalSetPrio.apply(this,arguments);};
+  const originalSetP0Plus=window.setP0Plus;
+  if(typeof originalSetP0Plus==="function") window.setP0Plus=async function(item){if(await requireWorldbuffAgreementForSave(item))return originalSetP0Plus.apply(this,arguments);};
 })();
