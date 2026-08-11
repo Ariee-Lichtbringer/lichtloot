@@ -2264,9 +2264,10 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
 let GUILD_PO_ITEM_KEYS = new Set();
+let GUILD_PO_PLUS_ITEM_KEYS = new Set();
 function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
 async function loadGuildPoItems(){
-  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
 
@@ -3145,6 +3146,9 @@ function renderLootList(){
   filteredLoot.forEach(item=>{
     const row=document.createElement("div");
     row.className="loot-item-row";
+    const isPoPlusItem=currentGuildSlug()==="nachtloot"&&GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name));
+    const poPlusLocked=isPoPlusItem&&window.currentCharacterPoPlusReleased!==true;
+    if(poPlusLocked){row.style.opacity=".42";row.title="PO+-Freigabe fehlt – dieses Item kann nicht ausgewählt werden.";}
 
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
@@ -3176,8 +3180,8 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P0</button>`);
+    if(SUPPORTS_P0PLUS){
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p0plus" ${poPlusLocked?'disabled title="PO+-Freigabe fehlt"':''} onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">${isPoPlusItem?'PO+':'PO'}</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -3192,6 +3196,7 @@ function renderLootList(){
       createdAt:""
     }));
     buttons.innerHTML = prioButtonParts.join("");
+    if(poPlusLocked)buttons.querySelectorAll("button[data-prio]").forEach(button=>button.disabled=true);
 
     row.appendChild(name);
     row.appendChild(buttons);
