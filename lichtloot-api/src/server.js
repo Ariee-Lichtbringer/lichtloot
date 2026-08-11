@@ -3500,6 +3500,19 @@ async function ensureCharacterPoReleaseSchema() {
      on conflict(guild_id,character_id,raid_type) do nothing`
   );
   await query(`update characters set recruit_status_lifted=false where recruit_status_lifted=true`);
+  // Eine bestehende PO-Freigabe ist bereits strenger als die Rekrutenfreigabe.
+  // Bestehende Nachtwächter-Freigaben werden deshalb je Raid automatisch übernommen.
+  await query(
+    `insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at)
+     select cpr.guild_id,cpr.character_id,cpr.raid_type,
+            coalesce(nullif(cpr.approved_by,''),'Automatisch durch PO-Freigabe'),
+            coalesce(cpr.approved_at,now()),now()
+     from character_po_releases cpr
+     join guilds g on g.id=cpr.guild_id
+     where lower(g.slug)='nachtloot'
+       and cpr.raid_type in ('bwl','aq40','naxx')
+     on conflict(guild_id,character_id,raid_type) do nothing`
+  );
 }
 
 async function requireNachtlootGuild(guildId) {
@@ -3591,6 +3604,9 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
     else {
       const raid=normalizePoReleaseRaid(request.raid_type);
       await query(`insert into character_po_releases(guild_id,character_id,raid_type,source,approved_by,approved_at) values($1,$2,$3,'application',$4,now()) on conflict(guild_id,character_id,raid_type) do update set source='application',approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
+      if (isNachtlootRecruitRaid(raid)) {
+        await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,request.character_id,raid,reviewer]);
+      }
     }
   }
   const updated=await query(`update po_release_requests set status=$3,review_note=$4,reviewed_by=$5,reviewed_at=now(),updated_at=now() where guild_id=$1 and id=$2 returning *`,[guildId,id,decision,clean(params.reviewNote),reviewer]);
@@ -3749,6 +3765,11 @@ async function setCharacterPoRelease({ guildId, query: params = {} }) {
              updated_at = now()`,
       [guildId, characterId, raid, clean(params.source || "manual"), clean(params.approvedBy || params.reviewer || "Gildenleitung")]
     );
+    const guild=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
+    if(guild.rows[0]?.slug==="nachtloot" && isNachtlootRecruitRaid(raid)) {
+      const reviewer=clean(params.approvedBy || params.reviewer || "Automatisch durch PO-Freigabe");
+      await query(`insert into character_recruit_releases(guild_id,character_id,raid_type,approved_by,approved_at,updated_at) values($1,$2,$3,$4,now(),now()) on conflict(guild_id,character_id,raid_type) do update set approved_by=$4,approved_at=now(),updated_at=now()`,[guildId,characterId,raid,reviewer]);
+    }
   } else {
     await query(
       `delete from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3`,
