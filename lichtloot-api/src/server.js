@@ -6947,7 +6947,23 @@ async function queueRaidCalendar({guildId,query:params}){
   if(!channelId)return {success:false,error:"Discord-Channel fehlt."};
   let events=[];
   try{events=typeof params.events==="string"?JSON.parse(params.events):params.events;}catch{}
-  events=Array.isArray(events)?events.slice(0,50).map(event=>({raidId:clean(event?.raidId),raid:clean(event?.raid),name:clean(event?.name||event?.raidName||"Raid").slice(0,100),date:clean(event?.date||event?.raidDate).slice(0,10),time:clean(event?.time||event?.raidTime).slice(0,5),lead:clean(event?.lead||event?.createdBy).slice(0,80),signups:Math.max(0,parseOptionalInteger(event?.signups)||0),maxPlayers:Math.max(0,parseOptionalInteger(event?.maxPlayers)||0),discordChannelId:clean(event?.discordChannelId),prioUrl:clean(event?.prioUrl).slice(0,500)}).filter(event=>/^\d{4}-\d{2}-\d{2}$/.test(event.date)):[];
+  events = Array.isArray(events)
+    ? events
+        .slice(0, 50)
+        .map((event) => ({
+          raidId: clean(event?.raidId),
+          raid: clean(event?.raid),
+          name: clean(event?.name || event?.raidName || "Raid").slice(0, 100),
+          date: clean(event?.date || event?.raidDate).slice(0, 10),
+          time: clean(event?.time || event?.raidTime).slice(0, 5),
+          lead: clean(event?.lead || event?.createdBy).slice(0, 80),
+          signups: Math.max(0, parseOptionalInteger(event?.signups) || 0),
+          maxPlayers: Math.max(0, parseOptionalInteger(event?.maxPlayers) || 0),
+          discordChannelId: clean(event?.discordChannelId),
+          prioUrl: clean(event?.prioUrl).slice(0, 500)
+        }))
+        .filter((event) => /^\d{4}-\d{2}-\d{2}$/.test(event.date))
+    : [];
   if(!events.length)return {success:false,error:"Keine kommenden Raidtermine gefunden."};
   return enqueueBotUpdate({guildId,type:"raid_calendar",payload:{channelId,events,source:"gildenleitung"}});
 }
