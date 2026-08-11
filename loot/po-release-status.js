@@ -1,4 +1,26 @@
 (function(){
+  function currentPagePoReleaseKeys(){
+    const file=String(location.pathname||"").split("/").pop().toLowerCase();
+    if(file==="aq20-loot.html")return["aq20"];
+    if(file==="zg-loot.html"){
+      let raidText="";try{raidText=JSON.stringify(window.currentRaidData||{}).toLowerCase();}catch(_error){}
+      if(raidText.includes("mittwoch"))return["zg-mittwoch"];
+      if(raidText.includes("late"))return["zg-late"];
+      if(raidText.includes("prime"))return["zg-prime"];
+      return["zg-mittwoch","zg-prime","zg-late"];
+    }
+    return[file.replace(/-loot\.html$/,"")];
+  }
+  function poReleasesEnabledForCurrentPage(apiEnabled,visibleRaids,configured){
+    if(apiEnabled===false)return false;
+    const layout=window.currentGuildInfo&&currentGuildInfo.layout&&typeof currentGuildInfo.layout==="object"?currentGuildInfo.layout:{};
+    if(layout.lootPageSections?.poReleases===false)return false;
+    const file=String(location.pathname||"").split("/").pop().toLowerCase();
+    const pageKey=file.replace(/-loot\.html$/,"").replace(/^zg.*$/,"zg");
+    if(layout.lootPageSectionsByRaid?.[pageKey]?.poReleases===false)return false;
+    if(configured===true&&Array.isArray(visibleRaids)&&!currentPagePoReleaseKeys().some(key=>visibleRaids.includes(key)))return false;
+    return true;
+  }
   async function showRaidMemberNotice(notice){
     if(!notice||!notice.active||!notice.text||!notice.version||document.getElementById("raidMemberNoticeModal"))return;
     const guild=currentGuildSlug(),pin=getStoredLichtLootPlayerPin();
@@ -64,7 +86,7 @@
     const box=document.getElementById("selectedCharacterPoReleases");
     if(!box) return;
     const releases=(data && data.poReleases) || {};
-    const poReleasesEnabled=data&&data.poReleasesEnabled!==false;
+    const poReleasesEnabled=poReleasesEnabledForCurrentPage(data&&data.poReleasesEnabled!==false,data&&data.visiblePoReleaseRaids,data&&data.poReleaseDisplayConfigured);
     if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(poReleasesEnabled);
     const normalizeRaidKey=function(value){return String(value||"").trim().toLowerCase().replace(/[_\s]+/g,"-").replace(/^zg$/,"zg-prime");};
     const approvedKeys=new Set();
@@ -105,7 +127,8 @@
       const display=await responses[1].json().catch(function(){return {};});
       showRaidMemberNotice(display.raidMemberNotice);
       window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
-      history.poReleasesEnabled=display.poReleasesEnabled!==false;
+      history.poReleasesEnabled=poReleasesEnabledForCurrentPage(display.poReleasesEnabled!==false,display.visibleRaids,display.configured);
+      history.poReleaseDisplayConfigured=display.configured===true;
       if(typeof window.applyPoReleaseRequirementSetting==="function") window.applyPoReleaseRequirementSetting(history.poReleasesEnabled);
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
       if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
@@ -127,5 +150,5 @@
   if(typeof originalSetPrio==="function") window.setPrio=async function(slot,item){if(await requireWorldbuffAgreementForSave(item))return originalSetPrio.apply(this,arguments);};
   const originalSetP0Plus=window.setP0Plus;
   if(typeof originalSetP0Plus==="function") window.setP0Plus=async function(item){if(await requireWorldbuffAgreementForSave(item))return originalSetP0Plus.apply(this,arguments);};
-  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;if(typeof window.applyPoReleaseRequirementSetting==="function")window.applyPoReleaseRequirementSetting(data.poReleasesEnabled!==false);showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
+  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;if(typeof window.applyPoReleaseRequirementSetting==="function")window.applyPoReleaseRequirementSetting(poReleasesEnabledForCurrentPage(data.poReleasesEnabled!==false,data.visibleRaids,data.configured));showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
 })();
