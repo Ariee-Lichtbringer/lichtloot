@@ -2594,6 +2594,9 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 .buymeacoffee-support.header-coffee strong{font-size:14px}
 .buymeacoffee-support.header-coffee small{font-size:11px}
 @media(max-width:760px){.start-title-row{align-items:flex-start}.buymeacoffee-support.header-coffee{width:100%;max-width:none}}
+.lichtstats-embed{width:100%;height:calc(100vh - 145px);min-height:720px;border:0;border-radius:8px;background:#111827}
+.logs-dashboard-section.is-lichtstats{padding:0;overflow:hidden;background:#111827}
+@media(max-width:760px){.lichtstats-embed{height:calc(100vh - 110px);min-height:620px}}
 .start-current-guild-callout{
   border-color:rgba(34,197,94,.78);
   background:linear-gradient(135deg,rgba(34,197,94,.20),rgba(15,23,42,.82));
@@ -3044,7 +3047,7 @@ html,body{max-width:100%;overflow-x:hidden}
       <div class="start-side-group collapsed" data-start-group="raidinfos" data-start-layout-nav="raidinfos">
         <button class="start-side-group-toggle" type="button" onclick="toggleStartSideGroup('raidinfos')"><span>Raidinformationen</span><span class="start-side-group-arrow">›</span></button>
         <div class="start-side-group-items">
-          <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span>Logs & Analysen</span></button>
+          <button class="start-side-link" data-start-nav="logs" onclick="showLogsDashboard()"><img class="start-side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span id="logsNavLabel">Logs & Analysen</span></button>
           <button class="start-side-link" data-start-nav="raidRules" onclick="toggleRaidRulesDrawer()"><img class="start-side-icon-img" src="images/dashboard-icons/raidregeln.svg" alt=""><span>Raidregeln</span><span id="raidRulesArrow">›</span></button>
           <div id="raidRulesDrawer" class="prio-pages-drawer hidden">
             <button class="prio-page-link" onclick="showRaidRules('mc')"><span>Molten Core</span><span>MC</span></button>
@@ -3172,8 +3175,8 @@ html,body{max-width:100%;overflow-x:hidden}
           <div class="logs-dashboard-title">
             <img src="images/content.png" alt="">
             <div>
-              <h2>Warcraft Logs <span>Auswertungen</span></h2>
-              <p>Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.</p>
+              <h2 id="logsDashboardTitle">Warcraft Logs <span>Auswertungen</span></h2>
+              <p id="logsDashboardDescription">Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.</p>
             </div>
           </div>
           <div class="logs-dashboard-actions">
@@ -3182,10 +3185,10 @@ html,body{max-width:100%;overflow-x:hidden}
           </div>
         </div>
         <div class="logs-dashboard-stats">
-          <div><strong id="logDashReports">0</strong><span>Reports</span></div>
-          <div><strong id="logDashCla">0</strong><span>CLA fertig</span></div>
-          <div><strong id="logDashRpb">0</strong><span>RPB fertig</span></div>
-          <div><strong id="logDashOpen">0</strong><span>offen</span></div>
+          <div><strong id="logDashReports">0</strong><span id="logDashReportsLabel">Reports</span></div>
+          <div><strong id="logDashCla">0</strong><span id="logDashClaLabel">CLA fertig</span></div>
+          <div><strong id="logDashRpb">0</strong><span id="logDashRpbLabel">RPB fertig</span></div>
+          <div><strong id="logDashOpen">0</strong><span id="logDashOpenLabel">offen</span></div>
         </div>
         <div class="logs-dashboard-tabs">
           <button id="logDashTab40" class="logs-dashboard-tab active" type="button" onclick="setDashboardLogRaidGroup('40')">40er Raids</button>
@@ -3205,6 +3208,7 @@ html,body{max-width:100%;overflow-x:hidden}
           <div class="logs-table-head"><span>Raid</span><span>Datum</span><span>Status</span><span>Aktion</span></div>
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
+        <iframe id="lichtstatsEmbed" class="lichtstats-embed hidden" title="LichtStats Raidauswertungen" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
 </div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
@@ -4957,11 +4961,40 @@ function refreshStartDashboard(){
 }
 
 function showLogsDashboard(){
+  configureDashboardLogView();
   setDashboardCenterMode("logs");
   setStartNavActive("logs");
   const section=document.getElementById("logsDashboardSection");
   if(section) section.scrollIntoView({behavior:"smooth",block:"start"});
   loadDashboardLogAnalyses();
+}
+
+function configureDashboardLogView(){
+  const isLichtstats=CURRENT_GUILD_SLUG === "lichtloot";
+  const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+  setText("logsNavLabel",isLichtstats ? "LichtStats" : "Logs & Analysen");
+  const title=document.getElementById("logsDashboardTitle");
+  if(title) title.innerHTML=isLichtstats ? "LichtStats <span>Raidauswertungen</span>" : "Warcraft Logs <span>Auswertungen</span>";
+  setText("logsDashboardDescription",isLichtstats ? "Übersicht der ausgewerteten Raidberichte von lichtstats.de." : "Reports aus dem Logchannel, CLA/RPB-Auswertungen und Warcraft-Logs-Links.");
+  setText("logDashReportsLabel","Reports");
+  setText("logDashClaLabel",isLichtstats ? "abgeschlossen" : "CLA fertig");
+  setText("logDashRpbLabel",isLichtstats ? "Bosskills" : "RPB fertig");
+  setText("logDashOpenLabel",isLichtstats ? "Wipes" : "offen");
+  const search=document.getElementById("logsDashboardSearch");
+  if(search) search.placeholder=isLichtstats ? "Nach Raid, Zone oder Datum suchen..." : "Nach Raid, Datum, CLA, RPB oder WCL suchen...";
+  const section=document.getElementById("logsDashboardSection");
+  const embed=document.getElementById("lichtstatsEmbed");
+  if(section){
+    section.classList.toggle("is-lichtstats",isLichtstats);
+    Array.from(section.children).forEach(child=>{
+      if(child === embed) return;
+      child.classList.toggle("hidden",isLichtstats);
+    });
+  }
+  if(embed){
+    embed.classList.toggle("hidden",!isLichtstats);
+    if(isLichtstats && !embed.src) embed.src="https://lichtstats.de/";
+  }
 }
 
 let dashboardLogAnalysesCache = [];
@@ -4993,7 +5026,7 @@ function dashboardLogStatus(entry,type){
 }
 
 function dashboardLogRaidKey(entry){
-  const text=String((entry && (entry.raid || entry.title)) || "").toLowerCase();
+  const text=String((entry && (entry.raid || entry.title || entry.zone || entry.name)) || "").toLowerCase();
   if(text.includes("bwl") || text.includes("blackwing")) return "bwl";
   if(text.includes("aq20") || text.includes("qiraj 20")) return "aq20";
   if(text.includes("aq40") || text.includes("qiraj 40")) return "aq40";
@@ -5062,6 +5095,10 @@ function dashboardLogMatchesSearch(entry,query){
 
 function renderDashboardLogAnalyses(entries){
   dashboardLogAnalysesCache = Array.isArray(entries) ? entries : [];
+  if(CURRENT_GUILD_SLUG === "lichtloot"){
+    renderLichtstatsReports(dashboardLogAnalysesCache);
+    return;
+  }
   const query=document.getElementById("logsDashboardSearch")?.value || "";
   const groupedList=dashboardLogAnalysesCache.filter(entry=>dashboardLogRaidGroupForEntry(entry) === dashboardLogRaidGroup);
   const list=groupedList.filter(entry=>dashboardLogMatchesSearch(entry,query));
@@ -5102,16 +5139,61 @@ function renderDashboardLogAnalyses(entries){
   }).join("");
 }
 
+function renderLichtstatsReports(entries){
+  configureDashboardLogView();
+  const query=String(document.getElementById("logsDashboardSearch")?.value || "").trim().toLowerCase();
+  const grouped=(Array.isArray(entries) ? entries : []).filter(entry=>dashboardLogRaidGroupForEntry(entry) === dashboardLogRaidGroup);
+  const list=grouped.filter(entry=>{
+    if(!query) return true;
+    const text=[entry.name,entry.zone,formatRaidDateForDisplay(entry.raidDate),entry.status,entry.logId].filter(Boolean).join(" ").toLowerCase();
+    return query.split(/\s+/).every(part=>text.includes(part));
+  });
+  const completed=grouped.filter(entry=>String(entry.status || "").toLowerCase()==="completed").length;
+  const bossKills=grouped.reduce((sum,entry)=>sum + (Number(entry.bossKills) || 0),0);
+  const wipes=grouped.reduce((sum,entry)=>sum + (Number(entry.wipeCount) || 0),0);
+  const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value);};
+  setText("logDashReports",grouped.length);
+  setText("logDashCla",completed);
+  setText("logDashRpb",bossKills);
+  setText("logDashOpen",wipes);
+  const rows=document.getElementById("logsDashboardRows");
+  if(!rows) return;
+  if(!list.length){
+    rows.innerHTML=query ? '<div class="status">Keine passenden LichtStats-Auswertungen gefunden.</div>' : '<div class="status">Noch keine LichtStats-Auswertungen für diesen Reiter vorhanden.</div>';
+    return;
+  }
+  rows.innerHTML=list.slice(0,25).map(entry=>{
+    const raidKey=dashboardLogRaidKey(entry);
+    const status=String(entry.status || "").toLowerCase();
+    const statusLabel=status==="completed" ? "fertig" : status==="failed" ? "Fehler" : status==="processing" ? "läuft" : "wartet";
+    const badgeClass=status==="completed" ? "done" : status==="failed" ? "fail" : "wait";
+    const actions=[
+      entry.url ? `<a class="rpb" href="${safeAttr(entry.url)}" target="_blank" rel="noopener">Auswertung</a>` : "",
+      entry.logUrl ? `<a class="wcl" href="${safeAttr(entry.logUrl)}" target="_blank" rel="noopener">WCL</a>` : ""
+    ].filter(Boolean).join("");
+    return `<div class="log-dashboard-row">
+      <div class="log-dashboard-raid"><img src="${safeAttr(raidImagePath(raidKey))}" alt=""><div><strong>${safeHtml(entry.zone || entry.name || "Raid")}</strong><span>${safeHtml(entry.name || entry.logId || "")}</span></div></div>
+      <div class="log-dashboard-date">${safeHtml(formatRaidDateForDisplay(entry.raidDate || ""))}<br>${Number(entry.playerCount)||0} Spieler</div>
+      <div class="log-dashboard-badges"><span class="log-badge ${badgeClass}">${safeHtml(statusLabel)}</span><span class="log-badge done">${Number(entry.bossKills)||0}/${Number(entry.totalBosses)||0} Bosse</span><span class="log-badge ${Number(entry.wipeCount)>0 ? "wait" : "done"}">${Number(entry.wipeCount)||0} Wipes</span></div>
+      <div class="log-dashboard-actions">${actions || '<span class="log-badge wait">kein Link</span>'}</div>
+    </div>`;
+  }).join("");
+}
+
 async function loadDashboardLogAnalyses(){
   const rows=document.getElementById("logsDashboardRows");
-  if(rows) rows.innerHTML='<div class="status">Loganalysen werden geladen …</div>';
+  configureDashboardLogView();
+  if(CURRENT_GUILD_SLUG === "lichtloot") return;
+  if(rows) rows.innerHTML='<div class="status">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
   try{
-    const data=await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
-    dashboardLogAnalysesCache = data.analyses || [];
+    const data=CURRENT_GUILD_SLUG === "lichtloot"
+      ? await fetchRailwayApi("/api/lichtstats/reports?limit=100")
+      : await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
+    dashboardLogAnalysesCache = CURRENT_GUILD_SLUG === "lichtloot" ? (data.reports || []) : (data.analyses || []);
     renderDashboardLogAnalyses(dashboardLogAnalysesCache);
   }catch(error){
-    console.warn("Loganalysen konnten nicht geladen werden:", error);
-    if(rows) rows.innerHTML='<div class="status bad">Loganalysen konnten nicht geladen werden.</div>';
+    console.warn("Raidauswertungen konnten nicht geladen werden:", error);
+    if(rows) rows.innerHTML='<div class="status bad">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
     dashboardLogAnalysesCache = [];
     renderDashboardLogAnalyses([]);
   }
