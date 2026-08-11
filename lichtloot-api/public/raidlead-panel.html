@@ -1695,11 +1695,11 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
-  return ["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
+  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
 }
 
 function isPlainP0Raid(){
-  return ["zg","aq20"].includes(currentRaidKey);
+  return ["zg"].includes(currentRaidKey);
 }
 
 function isP1OnlyRaid(){
@@ -1716,7 +1716,11 @@ function isActiveP0Value(value){
 }
 
 function isActiveP0Entry(entry){
-  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+  return isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+}
+
+function isActiveP0PlusEntry(entry){
+  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus));
 }
 
 function p0Label(){
@@ -1906,6 +1910,7 @@ async function loadPriosFromSheet(leadPin){
       p3: p.P3 || "",
       p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
+      worldbuffRulesAccepted: Boolean(p.WorldbuffRulesAccepted || p.worldbuffRulesAccepted),
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
 
@@ -2058,7 +2063,7 @@ function getTransferableP0Count(){
 
   return (currentPrios || []).filter(entry =>
     !isBenchPrio(entry) &&
-    isActiveP0Entry(entry)
+    isActiveP0PlusEntry(entry)
   ).length;
 }
 
@@ -2177,6 +2182,7 @@ function renderRaidView(){
           ${renderRows()}
         </tbody>
       </table>
+      ${bossTokenNoticeConfig() ? '<div style="margin-top:12px;padding:10px 12px;border:1px solid rgba(34,197,94,.35);border-radius:10px;color:#cbd5e1"><strong style="color:#4ade80">✓ Worldbuff-Regeln:</strong> Mit diesem Haken hat sich der Spieler mit den Regeln und der verpflichtenden Abgabe des Worldbuffs zum Gildentermin einverstanden erklärt.</div>' : ''}
     </section>
   `;
 
@@ -2696,7 +2702,7 @@ function bossTokenNoticeConfig(){
   if(currentRaidKey === "ony"){
     return { label:"Kopf posten", text:"Kopf von Onyxia" };
   }
-  if(["zg","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey)){
+  if(currentRaidKey === "zg"){
     return { label:"Herz posten", text:"Herz von Hakkar" };
   }
   return null;
@@ -2708,7 +2714,7 @@ function renderBossTokenNoticeButton(entry){
   return `
     <button class="btn neutral small-btn"
       onclick="postBossTokenNotice('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
-      ${safe(config.label)}
+      ${safe(config.label)} ${entry.worldbuffRulesAccepted ? '<span title="Worldbuff-Regeln akzeptiert" style="color:#4ade80;font-weight:950">✓</span>' : ''}
     </button>
   `;
 }
@@ -2737,7 +2743,8 @@ function renderRows(){
   }
 
   return rows.map((entry,index)=>{
-    const isP0Plus = isActiveP0Entry(entry);
+    const isPo = isActiveP0Entry(entry);
+    const isP0Plus = isActiveP0PlusEntry(entry);
 
     const clearButton =
       currentReleased && isP0Plus && isAllowedP0Raid()
@@ -2778,7 +2785,7 @@ function renderRows(){
           <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${isAllowedP0Raid() ? renderP0PlusPoints(entry.p1, isP0Plus) : renderPlainP0Cell(entry,currentReleased,isP0Plus)}</td>
+          <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -2804,7 +2811,7 @@ function renderRows(){
         <td>${renderItem(entry.p1)}</td>
         <td>${renderItem(entry.p2)}</td>
         <td>${renderItem(entry.p3)}</td>
-        <td>${isAllowedP0Raid() ? renderP0PlusPoints(entry.p1, isP0Plus) : renderPlainP0Cell(entry,currentReleased,isP0Plus)}</td>
+        <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
     `;
@@ -2858,6 +2865,7 @@ async function postBossTokenNotice(player,server){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=queueRaidleadBossTokenNotice" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
@@ -3185,7 +3193,7 @@ async function transferP0PlusPoints(){
   }
 
   if(!isAllowedP0Raid()){
-    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx übertragen werden.");
+    alert("P0+ Punkte können nur für MC, BWL, AQ40, AQ20, Naxx und die freigegebenen ZG-Raids übertragen werden.");
     return;
   }
 
@@ -3252,7 +3260,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
   }
 
   if(!isAllowedP0Raid()){
-    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx gelöscht werden.");
+    alert("P0+ Punkte können nur für MC, BWL, AQ40, AQ20, Naxx und die freigegebenen ZG-Raids gelöscht werden.");
     return;
   }
 
