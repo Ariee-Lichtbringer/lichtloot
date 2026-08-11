@@ -8622,7 +8622,8 @@ async function savePoPostEntry({ guildId, query: params }) {
   }
 
   const releaseRaid = normalizePoReleaseRaid(raidKey);
-  if (releaseRaid) {
+  const poCountsAsPoPlus = await isGuildPoPlusItem(guildId,itemGameId,itemName);
+  if (poCountsAsPoPlus && releaseRaid) {
     const release = await checkCharacterPoRelease({
       guildId,
       query: {
@@ -8635,7 +8636,7 @@ async function savePoPostEntry({ guildId, query: params }) {
     });
     if (!release.allowed) {
       const error = new Error(
-        `Dieser Charakter hat für ${releaseRaid.toUpperCase()} keine PO-Freigabe bei dieser Gilde.`
+        `Dieses PO+-Item benötigt eine PO+-Freigabe für ${releaseRaid.toUpperCase()}.`
       );
       error.statusCode = 403;
       throw error;
