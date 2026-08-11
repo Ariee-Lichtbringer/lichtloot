@@ -2670,7 +2670,7 @@ async function notificationMessageTemplate(guildId,notificationKey){
   return clean(result.rows[0]?.message_template);
 }
 
-const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
+const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
 
 async function getPoReleaseDisplaySettings(guildId) {
   await ensureGuildLayoutSchema();
@@ -2682,6 +2682,7 @@ async function getPoReleaseDisplaySettings(guildId) {
     ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
+  if (configured && settingVersion < 3 && !visibleRaids.includes("aq20")) visibleRaids.push("aq20");
   return { success:true, visibleRaids, configured };
 }
 
@@ -2695,9 +2696,9 @@ async function setPoReleaseDisplaySettings({ guildId, query: params }) {
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   await query(
     `insert into guild_settings (guild_id, layout_json)
-     values ($1, jsonb_build_object('poReleaseVisibleRaids', $2::jsonb, 'poReleaseDisplayVersion', 2))
+     values ($1, jsonb_build_object('poReleaseVisibleRaids', $2::jsonb, 'poReleaseDisplayVersion', 3))
      on conflict (guild_id) do update
-       set layout_json=jsonb_set(jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{poReleaseVisibleRaids}',$2::jsonb,true),'{poReleaseDisplayVersion}','2'::jsonb,true), updated_at=now()`,
+       set layout_json=jsonb_set(jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{poReleaseVisibleRaids}',$2::jsonb,true),'{poReleaseDisplayVersion}','3'::jsonb,true), updated_at=now()`,
     [guildId, JSON.stringify(visibleRaids)]
   );
   return { success:true, visibleRaids };
@@ -3304,7 +3305,7 @@ async function getP0ReleaseList(guildId = "") {
   }
 
   const releases = {
-    mc: [], bwl: [], aq40: [], naxx: [],
+    mc: [], bwl: [], aq40: [], aq20: [], naxx: [],
     "zg-mittwoch": [], "zg-prime": [], "zg-late": []
   };
   let includeLegacyCsv = !guildId;
@@ -3362,7 +3363,7 @@ async function getP0ReleaseList(guildId = "") {
 function normalizePoReleaseRaid(value) {
   const raid = normalizeRaidType(value);
   if (["p1p3", "p1-p3", "p1_p3"].includes(clean(value).toLowerCase())) return "p1p3";
-  return ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
+  return ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? raid : "";
 }
 
 function normalizePoReleaseCharacterName(value) {
@@ -3593,7 +3594,7 @@ async function deletePoReleaseRequest({ guildId, query: params = {} }) {
 }
 
 function poReleaseFlagsFromRows(rows) {
-  const flags = { p1p3: false, mc: false, bwl: false, aq40: false, naxx: false, "zg-mittwoch": false, "zg-prime": false, "zg-late": false };
+  const flags = { p1p3: false, mc: false, bwl: false, aq40: false, aq20: false, naxx: false, "zg-mittwoch": false, "zg-prime": false, "zg-late": false };
   for (const row of rows || []) {
     const raid = normalizePoReleaseRaid(row.raid_type || row.raid);
     if (raid) flags[raid] = true;
@@ -3649,7 +3650,7 @@ async function getCharacterPoReleaseRows(guildId) {
         playerPin: row.player_pin || "",
         releases: {
           p1p3: false,
-          mc: false, bwl: false, aq40: false, naxx: false,
+          mc: false, bwl: false, aq40: false, aq20: false, naxx: false,
           "zg-mittwoch": false, "zg-prime": false, "zg-late": false
         },
         approvedBy: {},
@@ -3834,9 +3835,9 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
         await client.query(
           `delete from character_po_releases
            where guild_id = $1 and character_id = $2 and raid_type = any($3)`,
-          [guildId, characterId, ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]]
+          [guildId, characterId, ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]]
         );
-        for (const raid of ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]) {
+        for (const raid of ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]) {
           const value = rawEntry[raid] ?? rawEntry[raid.toUpperCase()] ?? rawEntry[`po_${raid}`] ?? rawEntry[`p0_${raid}`];
           const enabled = ["true", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
           if (enabled) {
@@ -16760,7 +16761,7 @@ async function findP0DiscordRaid(guildId, params) {
       raidPin: prioPin
     });
     if (raid) {
-      const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
+      const allowed = new Set(["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
       return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
     }
   }
@@ -16791,7 +16792,7 @@ async function findP0DiscordRaid(guildId, params) {
 
   const raid = await findRaid(guildId, params);
   if (!raid) return null;
-  const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
+  const allowed = new Set(["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
   return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
 }
 
@@ -16828,7 +16829,7 @@ function normalizeP0SignupRow(row) {
 }
 
 function isP0PostRefreshRaid(raidType) {
-  return new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]).has(normalizeRaidType(raidType));
+  return new Set(["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]).has(normalizeRaidType(raidType));
 }
 
 async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
@@ -17496,7 +17497,7 @@ async function setRaidStatus({ guildId, query: params }) {
   const archiveRequested = ["archiviert", "archive"].includes(status);
   const raidType = normalizeRaidType(raid.raid_type || raid.raid || params.raid);
 
-  if (archiveRequested && ["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
+  if (archiveRequested && ["mc", "bwl", "aq40", "aq20", "naxx", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
     const transferNotes = Array.from(new Set([
       `RaidID: ${raidPublicId(raid)}`,
       `RaidID: ${raid.id}`,
