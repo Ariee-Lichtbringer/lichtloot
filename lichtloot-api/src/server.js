@@ -2768,7 +2768,15 @@ async function getPoReleaseDisplaySettings(guildId) {
     ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
-  return { success:true, visibleRaids, configured, poReleasesEnabled:result.rows[0]?.layout_json?.lootPageSections?.poReleases !== false };
+  return { success:true, visibleRaids, configured, poReleasesEnabled:result.rows[0]?.layout_json?.lootPageSections?.poReleases !== false, poReleaseSectionsByRaid:result.rows[0]?.layout_json?.lootPageSectionsByRaid || {} };
+}
+
+function poReleasesRequiredForRaid(settings, raidType) {
+  if (settings?.poReleasesEnabled === false) return false;
+  const normalized = normalizePoReleaseRaid(raidType);
+  if (settings?.configured && normalized && !settings.visibleRaids?.includes(normalized)) return false;
+  const pageKey = normalized?.startsWith("zg-") ? "zg" : normalized;
+  return settings?.poReleaseSectionsByRaid?.[pageKey]?.poReleases !== false;
 }
 
 async function setPoReleaseDisplaySettings({ guildId, query: params }) {
@@ -9429,7 +9437,7 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
     const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-    if (poReleaseSettings.poReleasesEnabled !== false && p0Selected && releaseRaid) {
+    if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0Selected && releaseRaid) {
       const releaseResult = await client.query(
         `select 1
          from character_po_releases
@@ -10163,6 +10171,7 @@ async function getPlayerPrioHistory(guildId, params) {
     poReleases,
     recruitReleases,
     poReleasesEnabled: poReleaseDisplaySettings.poReleasesEnabled,
+    poReleaseDisplayConfigured: poReleaseDisplaySettings.configured,
     visiblePoReleaseRaids: poReleaseDisplaySettings.visibleRaids,
     characterId: character.id,
     poReleaseDetails: releaseResult.rows.map(row => ({
