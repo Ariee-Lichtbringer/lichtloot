@@ -2683,7 +2683,7 @@ async function getPoReleaseDisplaySettings(guildId) {
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
   if (configured && settingVersion < 3 && !visibleRaids.includes("aq20")) visibleRaids.push("aq20");
-  return { success:true, visibleRaids, configured };
+  return { success:true, visibleRaids, configured, worldbuffAgreementEnabled:result.rows[0]?.layout_json?.lootPageSections?.worldbuffAgreement !== false };
 }
 
 async function setPoReleaseDisplaySettings({ guildId, query: params }) {
@@ -9125,6 +9125,32 @@ async function findCharacterForPin(guildId, pin, charName, server) {
     [guildId, normalizedPin, characterName, clean(server)]
   );
   return result.rows[0] || null;
+}
+
+async function ensureWorldbuffRuleAgreementSchema() {
+  await query(`create table if not exists worldbuff_rule_agreements (
+    guild_id uuid not null references guilds(id) on delete cascade,
+    character_id uuid not null references characters(id) on delete cascade,
+    agreed_at timestamptz not null default now(),
+    rule_version integer not null default 1,
+    primary key (guild_id, character_id)
+  )`);
+}
+
+async function getWorldbuffRuleAgreement({ guildId, query: params = {} }) {
+  await ensureWorldbuffRuleAgreementSchema();
+  const character = await findCharacterForPin(guildId, params.pin || params.playerPin, params.character || params.char || params.player, params.server);
+  if (!character) return { success:false, error:"Charakter oder SpielerLogin ist nicht gültig." };
+  const result = await query(`select agreed_at,rule_version from worldbuff_rule_agreements where guild_id=$1 and character_id=$2`, [guildId, character.id]);
+  return { success:true, agreed:Boolean(result.rows[0]), agreedAt:result.rows[0]?.agreed_at || "", ruleVersion:Number(result.rows[0]?.rule_version || 1) };
+}
+
+async function acceptWorldbuffRuleAgreement({ guildId, query: params = {} }) {
+  await ensureWorldbuffRuleAgreementSchema();
+  const character = await findCharacterForPin(guildId, params.pin || params.playerPin, params.character || params.char || params.player, params.server);
+  if (!character) { const error=new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode=403; throw error; }
+  const result = await query(`insert into worldbuff_rule_agreements(guild_id,character_id,agreed_at,rule_version) values($1,$2,now(),1) on conflict(guild_id,character_id) do update set agreed_at=now(),rule_version=1 returning agreed_at`, [guildId,character.id]);
+  return { success:true, agreed:true, agreedAt:result.rows[0]?.agreed_at || new Date().toISOString(), character:character.name };
 }
 
 async function upsertItem(client, raidType, itemName, itemGameId = "") {
@@ -16655,6 +16681,7 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
 }
 
 async function getPublishedPrios({ guildId, query: params }) {
+  await ensureWorldbuffRuleAgreementSchema();
   const raid = await findRaid(guildId, params);
   if (!raid) {
     return { success: true, prios: [], published: false, status: "geschlossen" };
@@ -16680,6 +16707,7 @@ async function getPublishedPrios({ guildId, query: params }) {
        c.class_name,
        c.is_main,
        c.created_at as character_created_at,
+       (wra.character_id is not null) as worldbuff_rules_accepted,
        i1.name as p1,
        i1.item_id as p1_item_id,
        i2.name as p2,
@@ -16688,12 +16716,13 @@ async function getPublishedPrios({ guildId, query: params }) {
        i3.item_id as p3_item_id
      from prios pr
      join characters c on c.id = pr.character_id
+     left join worldbuff_rule_agreements wra on wra.guild_id=$2 and wra.character_id=c.id
      left join items i1 on i1.id = pr.p1_item_id
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
      where pr.raid_id = any($1)
      order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
-    [relatedRaidIds]
+    [relatedRaidIds, guildId]
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
@@ -16742,6 +16771,8 @@ async function getPublishedPrios({ guildId, query: params }) {
         p3ItemId: row.p3_item_id || "",
         P0Plus: meta.p0Plus || "nein",
         p0Plus: meta.p0Plus || "nein",
+        WorldbuffRulesAccepted: Boolean(row.worldbuff_rules_accepted),
+        worldbuffRulesAccepted: Boolean(row.worldbuff_rules_accepted),
         Bench: row.bench || "",
         bench: row.bench || ""
       };
@@ -21244,6 +21275,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...settings, guild: guild.slug });
     }
 
+    if (action === "getWorldbuffRuleAgreement") {
+      const agreement = await getWorldbuffRuleAgreement({ guildId:guild.id, query:req.query });
+      return res.json({ ...agreement, guild:guild.slug });
+    }
+
     if (action === "getRaidSignupPageSettings") {
       const settings = await getRaidSignupPageSettings(guild.id);
       return res.json({ ...settings, guild: guild.slug });
@@ -22135,6 +22171,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (clean(postParams.masterCode)) {
       if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+    }
+
+    if (action === "acceptWorldbuffRuleAgreement") {
+      const agreement = await acceptWorldbuffRuleAgreement({ guildId:guild.id, query:postParams });
+      return res.json({ ...agreement, guild:guild.slug });
     }
 
     if (action === "lichtbotSaveDiscordChannels") {
