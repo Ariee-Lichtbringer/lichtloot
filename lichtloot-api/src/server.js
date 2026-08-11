@@ -1330,6 +1330,74 @@ async function updateGuildConfig({ query: params, body = {} }) {
   }
 }
 
+async function setRaidMemberNotice({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  await ensureGuildLayoutSchema();
+  const title = clean(params.title) || "Änderungen der Raidregeln";
+  const text = String(params.text || "").trim().slice(0, 5000);
+  const active = ["true", "1", "yes", "ja"].includes(clean(params.active).toLowerCase()) && Boolean(text);
+  const notice = {
+    title,
+    text,
+    active,
+    version: String(Date.now()),
+    publishedAt: new Date().toISOString()
+  };
+  await query(
+    `insert into guild_settings(guild_id,layout_json)
+     values($1,jsonb_build_object('raidMemberNotice',$2::jsonb))
+     on conflict(guild_id) do update
+       set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{raidMemberNotice}',$2::jsonb,true),
+           updated_at=now()`,
+    [guild.id, JSON.stringify(notice)]
+  );
+  return { success: true, notice };
+}
+
+async function ensureRaidMemberNoticeAcceptanceSchema() {
+  await query(
+    `create table if not exists raid_member_notice_acceptances(
+       guild_id uuid not null references guilds(id) on delete cascade,
+       player_id uuid not null references players(id) on delete cascade,
+       notice_version text not null,
+       accepted_at timestamptz not null default now(),
+       primary key(guild_id,player_id,notice_version)
+     )`
+  );
+}
+
+async function raidMemberNoticeAcceptance({ guildId, query: params = {}, accept = false }) {
+  await ensureRaidMemberNoticeAcceptanceSchema();
+  const pin = normalizePin(params.pin || params.playerPin);
+  const version = clean(params.version || params.noticeVersion);
+  if (!pin || !version) return { success: false, error: "SpielerLogin oder Version fehlt." };
+  const player = await query(
+    `select id from players
+     where guild_id=$1 and player_pin=$2 and coalesce(is_blocked,false)=false
+     limit 1`,
+    [guildId, pin]
+  );
+  if (!player.rows[0]) return { success: false, error: "SpielerLogin wurde nicht gefunden." };
+  if (accept) {
+    await query(
+      `insert into raid_member_notice_acceptances(guild_id,player_id,notice_version,accepted_at)
+       values($1,$2,$3,now())
+       on conflict(guild_id,player_id,notice_version) do update set accepted_at=now()`,
+      [guildId, player.rows[0].id, version]
+    );
+  }
+  const result = await query(
+    `select accepted_at from raid_member_notice_acceptances
+     where guild_id=$1 and player_id=$2 and notice_version=$3`,
+    [guildId, player.rows[0].id, version]
+  );
+  return {
+    success: true,
+    accepted: Boolean(result.rows[0]),
+    acceptedAt: result.rows[0]?.accepted_at || ""
+  };
+}
+
 async function ensureGuildPinSchema() {
   await query(
     `alter table guilds
@@ -21158,6 +21226,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...settings, guild: guild.slug });
     }
 
+    if (action === "getRaidMemberNoticeAcceptance") {
+      const result = await raidMemberNoticeAcceptance({ guildId: guild.id, query: req.query });
+      return res.json({ ...result, guild: guild.slug });
+    }
+
     if (action === "getRaidSignupPageSettings") {
       const settings = await getRaidSignupPageSettings(guild.id);
       return res.json({ ...settings, guild: guild.slug });
@@ -22047,6 +22120,14 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPoItem") {
       const saved = await setGuildPoItem({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildSetRaidMemberNotice") {
+      const saved = await setRaidMemberNotice({ guild, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "acceptRaidMemberNotice") {
+      const result = await raidMemberNoticeAcceptance({ guildId: guild.id, query: postParams, accept: true });
+      return res.json({ ...result, guild: guild.slug });
     }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
