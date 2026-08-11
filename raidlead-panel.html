@@ -1716,7 +1716,11 @@ function isActiveP0Value(value){
 }
 
 function isActiveP0Entry(entry){
-  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+  return isActiveP0Value(entry && (entry.poSelected ?? entry.PoSelected ?? entry.p0Plus ?? entry.P0Plus ?? entry.p0 ?? entry.P0));
+}
+
+function isActiveP0PlusEntry(entry){
+  return isActiveP0Value(entry && (entry.p0Plus ?? entry.P0Plus));
 }
 
 function p0Label(){
@@ -2059,7 +2063,7 @@ function getTransferableP0Count(){
 
   return (currentPrios || []).filter(entry =>
     !isBenchPrio(entry) &&
-    isActiveP0Entry(entry)
+    isActiveP0PlusEntry(entry)
   ).length;
 }
 
@@ -2739,7 +2743,8 @@ function renderRows(){
   }
 
   return rows.map((entry,index)=>{
-    const isP0Plus = isActiveP0Entry(entry);
+    const isPo = isActiveP0Entry(entry);
+    const isP0Plus = isActiveP0PlusEntry(entry);
 
     const clearButton =
       currentReleased && isP0Plus && isAllowedP0Raid()
@@ -2780,7 +2785,7 @@ function renderRows(){
           <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${isAllowedP0Raid() ? renderP0PlusPoints(entry.p1, isP0Plus) : renderPlainP0Cell(entry,currentReleased,isP0Plus)}</td>
+          <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -2806,7 +2811,7 @@ function renderRows(){
         <td>${renderItem(entry.p1)}</td>
         <td>${renderItem(entry.p2)}</td>
         <td>${renderItem(entry.p3)}</td>
-        <td>${isAllowedP0Raid() ? renderP0PlusPoints(entry.p1, isP0Plus) : renderPlainP0Cell(entry,currentReleased,isP0Plus)}</td>
+        <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
     `;
