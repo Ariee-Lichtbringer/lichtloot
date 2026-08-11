@@ -3217,7 +3217,7 @@ html,body{max-width:100%;overflow-x:hidden}
           <div class="logs-table-head"><span>Raid</span><span>Datum</span><span>Status</span><span>Aktion</span></div>
           <div id="logsDashboardRows" class="logs-dashboard-rows"><div class="status">Loganalysen werden geladen …</div></div>
         </div>
-        <div id="lichtstatsLoginBar" class="lichtstats-login-bar hidden"><span>Discord-Anmeldungen müssen aus Sicherheitsgründen direkt auf LichtStats geöffnet werden.</span><a href="https://lichtstats.de/" target="_blank" rel="noopener noreferrer">👾 Mit Discord anmelden</a></div>
+        <div id="lichtstatsLoginBar" class="lichtstats-login-bar hidden"><span>Dies ist eine öffentliche Vorschau der LichtStats-Auswertungen. Anmeldung und weitere Funktionen öffnen sich direkt auf LichtStats.</span><a href="https://lichtstats.de/" target="_blank" rel="noopener noreferrer">↗ LichtStats direkt öffnen</a></div>
         <iframe id="lichtstatsEmbed" class="lichtstats-embed hidden" title="LichtStats Raidauswertungen" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
 </div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
@@ -5018,15 +5018,11 @@ function configureDashboardLogView(){
   const embed=document.getElementById("lichtstatsEmbed");
   const loginBar=document.getElementById("lichtstatsLoginBar");
   if(section){
-    section.classList.toggle("is-lichtstats",isLichtstats);
-    Array.from(section.children).forEach(child=>{
-      if(child === embed) return;
-      child.classList.toggle("hidden",isLichtstats);
-    });
+    section.classList.remove("is-lichtstats");
   }
   if(embed){
-    embed.classList.toggle("hidden",!isLichtstats);
-    if(isLichtstats && !embed.src) embed.src="https://lichtstats.de/";
+    embed.classList.add("hidden");
+    embed.removeAttribute("src");
   }
   if(loginBar) loginBar.classList.toggle("hidden",!isLichtstats);
 }
@@ -5217,7 +5213,6 @@ function renderLichtstatsReports(entries){
 async function loadDashboardLogAnalyses(){
   const rows=document.getElementById("logsDashboardRows");
   configureDashboardLogView();
-  if(CURRENT_GUILD_SLUG === "lichtloot") return;
   if(rows) rows.innerHTML='<div class="status">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
   try{
     const data=CURRENT_GUILD_SLUG === "lichtloot"
