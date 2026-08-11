@@ -1695,11 +1695,11 @@ function clearLeadPin(){
 }
 
 function isAllowedP0Raid(){
-  return ["mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
+  return ["mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey);
 }
 
 function isPlainP0Raid(){
-  return ["zg","aq20"].includes(currentRaidKey);
+  return ["zg"].includes(currentRaidKey);
 }
 
 function isP1OnlyRaid(){
@@ -2696,7 +2696,7 @@ function bossTokenNoticeConfig(){
   if(currentRaidKey === "ony"){
     return { label:"Kopf posten", text:"Kopf von Onyxia" };
   }
-  if(["zg","zg-mittwoch","zg-prime","zg-late"].includes(currentRaidKey)){
+  if(currentRaidKey === "zg"){
     return { label:"Herz posten", text:"Herz von Hakkar" };
   }
   return null;
@@ -2858,6 +2858,7 @@ async function postBossTokenNotice(player,server){
   const url =
     RAID_API_URL +
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=queueRaidleadBossTokenNotice" +
+    "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
     "&raid=" + encodeURIComponent(currentRaidKey) +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId || "") +
@@ -3185,7 +3186,7 @@ async function transferP0PlusPoints(){
   }
 
   if(!isAllowedP0Raid()){
-    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx übertragen werden.");
+    alert("P0+ Punkte können nur für MC, BWL, AQ40, AQ20, Naxx und die freigegebenen ZG-Raids übertragen werden.");
     return;
   }
 
@@ -3252,7 +3253,7 @@ async function clearP0PlusForPlayer(player,server,itemName){
   }
 
   if(!isAllowedP0Raid()){
-    alert("P0+ Punkte können nur für MC, BWL, AQ40 und Naxx gelöscht werden.");
+    alert("P0+ Punkte können nur für MC, BWL, AQ40, AQ20, Naxx und die freigegebenen ZG-Raids gelöscht werden.");
     return;
   }
 
