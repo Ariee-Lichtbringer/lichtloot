@@ -1,4 +1,14 @@
 (function(){
+  async function showRaidMemberNotice(notice){
+    if(!notice||!notice.active||!notice.text||!notice.version||document.getElementById("raidMemberNoticeModal"))return;
+    const guild=currentGuildSlug(),pin=getStoredLichtLootPlayerPin();
+    if(!pin)return;
+    const acceptance=await fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getRaidMemberNoticeAcceptance",guild,pin,version:notice.version,t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).catch(()=>({}));
+    if(acceptance.accepted)return;
+    const modal=document.createElement("div");modal.id="raidMemberNoticeModal";modal.style.cssText="position:fixed;inset:0;z-index:100001;background:rgba(2,6,23,.88);display:grid;place-items:center;padding:20px";
+    modal.innerHTML='<div style="width:min(680px,100%);max-height:90vh;overflow:auto;background:#081221;border:2px solid #facc15;border-radius:18px;padding:25px;color:#e5e7eb;box-shadow:0 28px 90px #000"><h2 style="margin:0 0 15px;color:#facc15">📣 '+String(notice.title||"Information für Raidmitglieder").replace(/[<>&]/g,"")+'</h2><div style="white-space:pre-wrap;line-height:1.6">'+String(notice.text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</div><label style="display:flex;gap:10px;align-items:flex-start;margin:22px 0;font-weight:850"><input data-check type="checkbox" style="width:22px;height:22px;flex:0 0 auto"><span>Ich habe die Mitteilung gelesen und stimme den genannten Nutzungsbedingungen beziehungsweise Änderungen der Raidregeln zu.</span></label><button data-accept type="button" disabled style="width:100%;padding:13px;border:0;border-radius:10px;background:#16a34a;color:white;font-weight:950;opacity:.45">Gelesen und zugestimmt</button></div>';
+    document.body.appendChild(modal);const check=modal.querySelector("[data-check]"),button=modal.querySelector("[data-accept]");check.onchange=()=>{button.disabled=!check.checked;button.style.opacity=check.checked?"1":".45";};button.onclick=async()=>{button.disabled=true;const result=await fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptRaidMemberNotice",guild,pin,version:notice.version})}).then(response=>response.json()).catch(()=>({}));if(result.accepted)modal.remove();else button.disabled=false;};
+  }
   async function maybeShowWorldbuffAgreement(char,enabled){
     const page=String(location.pathname||"").toLowerCase();
     if(!/(^|\/)(bwl|ony|zg)-loot\.html$/.test(page)) return;
@@ -81,6 +91,7 @@
       const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
       const history=await responses[0].json();
       const display=await responses[1].json().catch(function(){return {};});
+      showRaidMemberNotice(display.raidMemberNotice);
       window.worldbuffAgreementEnabled=display.worldbuffAgreementEnabled!==false;
       history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
       if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
@@ -102,4 +113,5 @@
   if(typeof originalSetPrio==="function") window.setPrio=async function(slot,item){if(await requireWorldbuffAgreementForSave(item))return originalSetPrio.apply(this,arguments);};
   const originalSetP0Plus=window.setP0Plus;
   if(typeof originalSetP0Plus==="function") window.setP0Plus=async function(item){if(await requireWorldbuffAgreementForSave(item))return originalSetP0Plus.apply(this,arguments);};
+  fetch(APPS_SCRIPT_URL+"?"+new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).then(data=>{window.worldbuffAgreementEnabled=data.worldbuffAgreementEnabled!==false;showRaidMemberNotice(data.raidMemberNotice);}).catch(()=>{});
 })();
