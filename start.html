@@ -2593,7 +2593,11 @@ body.start-dashboard-body .raid-create-box input[readonly]{
 .buymeacoffee-support.header-coffee img{width:44px;height:44px}
 .buymeacoffee-support.header-coffee strong{font-size:14px}
 .buymeacoffee-support.header-coffee small{font-size:11px}
-@media(max-width:760px){.start-title-row{align-items:flex-start}.buymeacoffee-support.header-coffee{width:100%;max-width:none}}
+.raid-records-header{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;min-height:58px;padding:7px 12px;border:1px solid rgba(45,212,191,.46);border-radius:9px;background:linear-gradient(135deg,rgba(20,184,166,.17),rgba(15,23,42,.88));box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.raid-records-header-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:linear-gradient(145deg,#facc15,#f59e0b);color:#111827;font-size:22px;box-shadow:0 0 0 3px rgba(250,204,21,.12)}
+.raid-records-header-copy{display:grid;gap:3px}.raid-records-header-copy strong{color:#5eead4;font-size:13px;font-weight:950;text-transform:uppercase;letter-spacing:.04em}.raid-records-list{display:flex;gap:5px 10px;flex-wrap:wrap;color:#f8fafc;font-size:10px;font-weight:850}.raid-records-list span{white-space:nowrap}.raid-records-list b{color:#fde047}
+@media(max-width:1120px){.raid-records-header{grid-column:1 / -1}.start-title-row{align-items:flex-start}}
+@media(max-width:760px){.start-title-row{align-items:flex-start}.buymeacoffee-support.header-coffee,.raid-records-header{width:100%;max-width:none}.raid-records-list{display:grid;grid-template-columns:1fr 1fr}}
 .lichtstats-embed{width:100%;height:calc(100vh - 145px);min-height:720px;border:0;border-radius:8px;background:#111827}
 .logs-dashboard-section.is-lichtstats{padding:0;overflow:hidden;background:#111827}
 @media(max-width:760px){.lichtstats-embed{height:calc(100vh - 110px);min-height:620px}}
@@ -3103,7 +3107,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div id="mobileLootLoginStatus" class="mobile-loot-login-status" aria-live="polite"></div>
       </form>
     </section>
-    <header class="start-header"><div><div class="start-title-row"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><a class="buymeacoffee-support header-coffee" href="https://buymeacoffee.com/lichtloot" target="_blank" rel="noopener noreferrer" aria-label="LichtLoot auf Buy Me a Coffee unterstützen"><img src="images/buymeacoffee-lichtloot.png" alt="Kaffeebecher"><span><strong>Kaffee für LichtLoot ☕</strong><small>Damit der Server wacher bleibt als der Raid.</small></span><b aria-hidden="true">›</b></a></div></div><div class="start-header-actions"><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
+    <header class="start-header"><div><div class="start-title-row"><div><div class="start-kicker">Dashboard</div><div class="start-subtitle">Übersicht aller Raids, Priofenster und wichtigen Informationen.</div></div><a class="buymeacoffee-support header-coffee" href="https://buymeacoffee.com/lichtloot" target="_blank" rel="noopener noreferrer" aria-label="LichtLoot auf Buy Me a Coffee unterstützen"><img src="images/buymeacoffee-lichtloot.png" alt="Kaffeebecher"><span><strong>Kaffee für LichtLoot ☕</strong><small>Damit der Server wacher bleibt als der Raid.</small></span><b aria-hidden="true">›</b></a><div id="lichtlootRaidRecords" class="raid-records-header" aria-label="Raidrekorde der Lichtbringer"><div class="raid-records-header-icon" aria-hidden="true">🏆</div><div class="raid-records-header-copy"><strong>Unsere Raidrekorde</strong><div class="raid-records-list"><span>Onyxia <b>1:19 Min.</b></span><span>MC <b>24 Min.</b></span><span>BWL <b>30 Min.</b></span><span>AQ40 <b>54 Min.</b></span><span>Naxxramas <b>1:52 Std.</b></span></div></div></div></div></div><div class="start-header-actions"><button class="start-profile-btn" data-guild-onclick="gildenleitung.html" onclick="window.location.href='gildenleitung.html'"><img src="images/content.png" alt=""><span><span data-guild-brand="guildName">Lichtbringer</span><small>Gildenleitung</small></span></button></div></header>
     <div class="dashboard-layout"><div class="dashboard-left">
       <section class="dash-panel next-raid-panel" id="nextRaidPanel"><div><div class="section-title">Nächster Raid</div><div id="nextRaidImage" class="next-raid-image" style="background-image:url('./images/raid-templates/bwl.jpg')"></div></div><div><div id="nextRaidName" class="next-raid-name">Lade Raid …</div><div class="next-raid-meta"><div>▣ <span id="nextRaidDate">-</span></div><div>◷ <span id="nextRaidTime">-</span></div><div>♚ <span id="nextRaidGuild">-</span></div></div></div><div class="next-raid-status"><div class="next-raid-status-row"><strong id="nextRaidStatus">Prio lädt</strong><span id="nextRaidDeadline">Priofenster wird geprüft.</span></div><div class="next-raid-status-row"><span id="nextRaidPinInfo">PIN: -</span></div><button class="start-gold-action" onclick="openNextRaidLoot()">Zur Prio <span>›</span></button></div></section>
       <section class="dash-panel buff-overview-panel hidden" id="buffOverviewPanel">
@@ -3432,8 +3436,28 @@ async function showRaidMemberNoticeIfNeeded(){
   const acceptance=await fetch(LICHTLOOT_API_URL+"?"+new URLSearchParams({action:"getRaidMemberNoticeAcceptance",guild:CURRENT_GUILD_SLUG,pin,version:notice.version,t:Date.now()}).toString(),{cache:"no-store"}).then(response=>response.json()).catch(()=>({}));
   if(acceptance.accepted)return;
   const modal=document.createElement("div");modal.id="raidMemberNoticeModal";modal.style.cssText="position:fixed;inset:0;z-index:100000;background:rgba(2,6,23,.88);display:grid;place-items:center;padding:20px";
-  modal.innerHTML=`<div style="width:min(680px,100%);max-height:90vh;overflow:auto;background:#081221;border:2px solid var(--gold,#facc15);border-radius:18px;padding:25px;color:#e5e7eb;box-shadow:0 28px 90px #000"><h2 style="margin:0 0 15px;color:var(--gold,#facc15)">📣 ${safeHtml(notice.title||"Information für Raidmitglieder")}</h2><div style="white-space:pre-wrap;line-height:1.6">${safeHtml(notice.text)}</div><label style="display:flex;gap:10px;align-items:flex-start;margin:22px 0;font-weight:850"><input data-notice-check type="checkbox" style="width:22px;height:22px;flex:0 0 auto"><span>Ich habe die Mitteilung gelesen und stimme den genannten Nutzungsbedingungen beziehungsweise Änderungen der Raidregeln zu.</span></label><button data-notice-accept type="button" disabled style="width:100%;padding:13px;border:0;border-radius:10px;background:#16a34a;color:white;font-weight:950;opacity:.45">Gelesen und zugestimmt</button></div>`;
-  document.body.appendChild(modal);const check=modal.querySelector("[data-notice-check]"),button=modal.querySelector("[data-notice-accept]");check.onchange=()=>{button.disabled=!check.checked;button.style.opacity=check.checked?"1":".45";};button.onclick=async()=>{button.disabled=true;const result=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptRaidMemberNotice",guild:CURRENT_GUILD_SLUG,pin,version:notice.version})}).then(response=>response.json()).catch(()=>({}));if(result.accepted)modal.remove();else button.disabled=false;};
+  modal.innerHTML=`<div style="width:min(680px,100%);max-height:90vh;overflow:auto;background:#081221;border:2px solid var(--gold,#facc15);border-radius:18px;padding:25px;color:#e5e7eb;box-shadow:0 28px 90px #000"><h2 style="margin:0 0 15px;color:var(--gold,#facc15)">📣 ${safeHtml(notice.title||"Information für Raidmitglieder")}</h2><div style="white-space:pre-wrap;line-height:1.6">${safeHtml(notice.text)}</div><label style="display:flex;gap:10px;align-items:flex-start;margin:22px 0;font-weight:850"><input data-notice-check type="checkbox" style="width:22px;height:22px;flex:0 0 auto"><span>Ich habe die Mitteilung gelesen und stimme den genannten Nutzungsbedingungen beziehungsweise Änderungen der Raidregeln zu.</span></label><div data-notice-status role="status" style="display:none;margin:0 0 12px;padding:10px 12px;border-radius:9px;background:rgba(239,68,68,.13);border:1px solid rgba(239,68,68,.48);color:#fecaca;font-weight:800"></div><button data-notice-accept type="button" disabled style="width:100%;padding:13px;border:0;border-radius:10px;background:#16a34a;color:white;font-weight:950;opacity:.45">Gelesen und zugestimmt</button></div>`;
+  document.body.appendChild(modal);
+  const check=modal.querySelector("[data-notice-check]");
+  const button=modal.querySelector("[data-notice-accept]");
+  const status=modal.querySelector("[data-notice-status]");
+  check.onchange=()=>{button.disabled=!check.checked;button.style.opacity=check.checked?"1":".45";};
+  button.onclick=async()=>{
+    button.disabled=true;
+    button.textContent="Wird gespeichert …";
+    status.style.display="none";
+    try{
+      const response=await fetch(LICHTLOOT_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptRaidMemberNotice",guild:CURRENT_GUILD_SLUG,pin,version:notice.version})});
+      const result=await response.json().catch(()=>({}));
+      if(response.ok&&result.accepted){modal.remove();return;}
+      throw new Error(result.error||"Die Zustimmung konnte nicht gespeichert werden.");
+    }catch(error){
+      status.textContent=error?.message||"Die Zustimmung konnte nicht gespeichert werden. Bitte erneut versuchen.";
+      status.style.display="block";
+      button.disabled=!check.checked;
+      button.textContent="Erneut speichern";
+    }
+  };
 }
 
 async function refreshRaidMemberNoticeAfterLogin(){
@@ -3537,6 +3561,8 @@ function applyGuildBrand(){
   if(accountEntry) accountEntry.setAttribute("aria-label", (CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot") + " öffnen");
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
+  const raidRecords = document.getElementById("lichtlootRaidRecords");
+  if(raidRecords) raidRecords.classList.toggle("hidden", CURRENT_GUILD_SLUG !== "lichtloot");
 }
 
 function guildLogoUrl(guild){
