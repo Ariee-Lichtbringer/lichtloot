@@ -1,4 +1,23 @@
 (function(){
+  async function maybeShowWorldbuffAgreement(char,enabled){
+    const page=String(location.pathname||"").toLowerCase();
+    if(!/(^|\/)(bwl|ony|zg)-loot\.html$/.test(page)) return;
+    if(!enabled || !char || !char.name || document.getElementById("worldbuffRuleAgreementModal")) return;
+    const pin=getStoredLichtLootPlayerPin();
+    if(!pin) return;
+    const guild=currentGuildSlug();
+    const query=new URLSearchParams({action:"getWorldbuffRuleAgreement",guild:guild,pin:pin,character:char.name,server:char.server||"",t:Date.now()});
+    const status=await fetch(APPS_SCRIPT_URL+"?"+query.toString(),{cache:"no-store"}).then(response=>response.json()).catch(()=>({}));
+    if(status.agreed) return;
+    const modal=document.createElement("div");
+    modal.id="worldbuffRuleAgreementModal";
+    modal.style.cssText="position:fixed;inset:0;z-index:100000;background:rgba(2,6,23,.86);display:grid;place-items:center;padding:20px";
+    modal.innerHTML='<div style="width:min(620px,100%);background:#0b1222;border:2px solid #facc15;border-radius:18px;padding:24px;color:#e5e7eb;box-shadow:0 24px 80px #000"><h2 style="margin:0 0 14px;color:#facc15">📯 Worldbuff-Regeln</h2><p>Wenn du <strong>Herz oder Kopf auf Prio</strong> nimmst, verpflichtest du dich, den daraus entstehenden Worldbuff zum von der Gilde festgelegten Termin abzugeben.</p><p>Erfolgt die Abgabe trotz entsprechender Prio nicht zum vorgesehenen Termin, kann dies zum Raidausschluss bei den Lichtbringern führen.</p><label style="display:flex;align-items:flex-start;gap:10px;margin:20px 0;font-weight:800"><input id="worldbuffRuleAgreementCheck" type="checkbox" style="width:22px;height:22px;flex:0 0 auto"> <span>Ich habe die Regeln gelesen und bin mit der verpflichtenden Abgabe zum Gildentermin einverstanden.</span></label><div id="worldbuffRuleAgreementStatus" style="min-height:22px;color:#fca5a5"></div><button id="worldbuffRuleAgreementAccept" type="button" disabled style="width:100%;padding:13px;border:0;border-radius:10px;background:#16a34a;color:white;font-weight:900;cursor:pointer;opacity:.45">Gelesen und akzeptiert</button></div>';
+    document.body.appendChild(modal);
+    const check=modal.querySelector("#worldbuffRuleAgreementCheck"),button=modal.querySelector("#worldbuffRuleAgreementAccept"),message=modal.querySelector("#worldbuffRuleAgreementStatus");
+    check.addEventListener("change",()=>{button.disabled=!check.checked;button.style.opacity=check.checked?"1":".45";});
+    button.addEventListener("click",async()=>{button.disabled=true;message.textContent="Bestätigung wird gespeichert …";try{const response=await fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"acceptWorldbuffRuleAgreement",guild:guild,pin:pin,character:char.name,server:char.server||""})});const result=await response.json();if(!result.success)throw new Error(result.error||"Bestätigung konnte nicht gespeichert werden.");modal.remove();}catch(error){message.textContent=error.message||"Bestätigung konnte nicht gespeichert werden.";button.disabled=false;}});
+  }
   function requestKey(entry){
     if(entry && entry.requestType === "recruit") return "recruit";
     if(entry && entry.requestType === "p1p3") return "p1p3";
@@ -46,6 +65,7 @@
         requests=Array.isArray(requestData.entries)?requestData.entries:[];
       }
       window.renderSelectedCharacterPoReleases(history,requests);
+      await maybeShowWorldbuffAgreement(char,display.worldbuffAgreementEnabled!==false);
     }catch(error){
       box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
     }
