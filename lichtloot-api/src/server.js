@@ -2768,7 +2768,7 @@ async function getPoReleaseDisplaySettings(guildId) {
     ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
-  return { success:true, visibleRaids, configured };
+  return { success:true, visibleRaids, configured, poReleasesEnabled:result.rows[0]?.layout_json?.lootPageSections?.poReleases !== false };
 }
 
 async function setPoReleaseDisplaySettings({ guildId, query: params }) {
@@ -9428,7 +9428,8 @@ async function savePrio({ guildId, query: params }) {
       error.statusCode = 403;
       throw error;
     }
-    if (p0Selected && releaseRaid) {
+    const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
+    if (poReleaseSettings.poReleasesEnabled !== false && p0Selected && releaseRaid) {
       const releaseResult = await client.query(
         `select 1
          from character_po_releases
@@ -10118,6 +10119,7 @@ async function getPlayerPrioHistory(guildId, params) {
   const recruitReleaseResult=await query(`select raid_type,approved_by,approved_at from character_recruit_releases where guild_id=$1 and character_id=$2`,[guildId,character.id]);
   const recruitReleases={mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false};
   for(const row of recruitReleaseResult.rows){const raid=normalizePoReleaseRaid(row.raid_type);if(raid&&raid!=="p1p3")recruitReleases[raid]=true;}
+  const poReleaseDisplaySettings = await getPoReleaseDisplaySettings(guildId);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -10160,6 +10162,8 @@ async function getPlayerPrioHistory(guildId, params) {
     entries,
     poReleases,
     recruitReleases,
+    poReleasesEnabled: poReleaseDisplaySettings.poReleasesEnabled,
+    visiblePoReleaseRaids: poReleaseDisplaySettings.visibleRaids,
     characterId: character.id,
     poReleaseDetails: releaseResult.rows.map(row => ({
       raid: normalizePoReleaseRaid(row.raid_type),
