@@ -20822,6 +20822,7 @@ async function ensureGuildPoItemsSchema() {
        primary key (guild_id, item_id)
      )`
   );
+  await query(`alter table guild_po_items add column if not exists po_plus_enabled boolean not null default false`);
   await query(`create index if not exists guild_po_items_guild_raid_idx on guild_po_items (guild_id, raid_type, enabled)`);
 }
 
@@ -20837,7 +20838,8 @@ async function getGuildPoItems({ guild, query: params = {} }) {
   const result = await query(
     `select i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
             i.slot, i.type, i.boss,
-            coalesce(gpi.enabled, false) as po_enabled
+            coalesce(gpi.enabled, false) as po_enabled,
+            coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
      from items i
      left join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id
      where 1 = 1 ${raidClause}
@@ -20849,7 +20851,7 @@ async function getGuildPoItems({ guild, query: params = {} }) {
   return {
     success: true,
     raid: raidType,
-    items: rows.map(row => ({ ...normalizeLootItemForApi(row), poEnabled: Boolean(row.po_enabled) }))
+    items: rows.map(row => ({ ...normalizeLootItemForApi(row), poEnabled: Boolean(row.po_enabled), poPlusEnabled: Boolean(row.po_plus_enabled) }))
   };
 }
 
@@ -20863,6 +20865,7 @@ async function setGuildPoItem({ guild, query: params = {} }) {
   await ensureGuildPoItemsSchema();
   const itemId = clean(params.itemId || params.id);
   const enabled = String(params.enabled).toLowerCase() === "true" || String(params.enabled) === "1";
+  const setting = clean(params.setting || params.kind || "po").toLowerCase() === "poplus" ? "poplus" : "po";
   if (!itemId) {
     const error = new Error("Item-ID fehlt.");
     error.statusCode = 400;
@@ -20876,16 +20879,40 @@ async function setGuildPoItem({ guild, query: params = {} }) {
     throw error;
   }
   await query(
-    `insert into guild_po_items (guild_id, item_id, raid_type, enabled, updated_by, updated_at)
-     values ($1, $2, $3, $4, $5, now())
+    `insert into guild_po_items (guild_id, item_id, raid_type, enabled, po_plus_enabled, updated_by, updated_at)
+     values ($1, $2, $3, $4, $5, $6, now())
      on conflict (guild_id, item_id) do update
        set raid_type = excluded.raid_type,
-           enabled = excluded.enabled,
+           enabled = case when $7 = 'poplus' then (guild_po_items.enabled or $4) else $4 end,
+           po_plus_enabled = case when $7 = 'poplus' then $4 when not $4 then false else guild_po_items.po_plus_enabled end,
            updated_by = excluded.updated_by,
            updated_at = now()`,
-    [guild.id, item.id, normalizeRaidType(item.raid_type), enabled, clean(params.updatedBy) || "Gildenleitung"]
+    [guild.id, item.id, normalizeRaidType(item.raid_type), enabled, setting === "poplus" ? enabled : false, clean(params.updatedBy) || "Gildenleitung", setting]
   );
-  return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled };
+  return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled, setting };
+}
+
+async function setGuildPoItemsBulk({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(guild?.slug).toLowerCase() !== "nachtloot") { const error=new Error("PO-Items werden nur für Nachtwächter verwaltet."); error.statusCode=403; throw error; }
+  await ensureGuildPoItemsSchema();
+  let itemIds=[];
+  try { itemIds=typeof params.itemIds==="string"?JSON.parse(params.itemIds):params.itemIds; } catch {}
+  itemIds=Array.isArray(itemIds)?[...new Set(itemIds.map(clean).filter(Boolean))]:[];
+  if(!itemIds.length){const error=new Error("Keine Items ausgewählt.");error.statusCode=400;throw error;}
+  const enabled=["true","1","yes","ja"].includes(clean(params.enabled).toLowerCase());
+  const setting=clean(params.setting||params.kind||"po").toLowerCase()==="poplus"?"poplus":"po";
+  const result=await query(
+    `insert into guild_po_items(guild_id,item_id,raid_type,enabled,po_plus_enabled,updated_by,updated_at)
+     select $1,i.id,lower(i.raid_type),$3,case when $5='poplus' then $3 else false end,$4,now() from items i where i.id::text=any($2) or i.item_id=any($2)
+     on conflict(guild_id,item_id) do update set raid_type=excluded.raid_type,
+       enabled=case when $5='poplus' then (guild_po_items.enabled or $3) else $3 end,
+       po_plus_enabled=case when $5='poplus' then $3 when not $3 then false else guild_po_items.po_plus_enabled end,
+       updated_by=excluded.updated_by,updated_at=now()
+     returning item_id`,
+    [guild.id,itemIds,enabled,clean(params.updatedBy)||"Gildenleitung",setting]
+  );
+  return {success:true,updated:result.rowCount,enabled,setting};
 }
 
 async function requireGuildPoItem(guildId, itemId, itemName = "") {
@@ -22132,6 +22159,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
     if (action === "guildSetPoItem") {
       const saved = await setGuildPoItem({ guild, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildSetPoItemsBulk") {
+      const saved = await setGuildPoItemsBulk({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
     if (action === "guildSetRaidMemberNotice") {
