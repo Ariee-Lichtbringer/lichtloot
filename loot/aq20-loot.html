@@ -4504,7 +4504,7 @@ function normalizePageChar(raw){
   if(!raw) return null;
   const name = raw.char || raw.charName || raw.player || raw.name || raw.Charakter || raw.Spieler || "";
   const server = raw.server || raw.Server || "";
-  const className = raw.className || raw.class || raw.Klasse || "";
+  const className = normalizeLichtLootClassName(raw.className || raw.class || raw.Klasse || "");
   const mainChar = raw.mainChar || raw.MainChar || "";
   if(!String(name).trim()) return null;
   return {
@@ -4513,6 +4513,13 @@ function normalizePageChar(raw){
     className:String(className || "").trim(),
     mainChar:String(mainChar || "").trim()
   };
+}
+
+function normalizeLichtLootClassName(value){
+  const raw=String(value || "").trim();
+  const key=raw.toUpperCase().replace(/[^A-Z]/g,"");
+  const names={WARRIOR:"Krieger",PALADIN:"Paladin",HUNTER:"Jäger",ROGUE:"Schurke",PRIEST:"Priester",SHAMAN:"Schamane",MAGE:"Magier",WARLOCK:"Hexenmeister",DRUID:"Druide"};
+  return names[key] || raw;
 }
 
 function classChipClass(className){

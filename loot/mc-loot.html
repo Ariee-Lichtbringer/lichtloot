@@ -4498,7 +4498,7 @@ function normalizePageChar(raw){
   if(!raw) return null;
   const name = raw.char || raw.charName || raw.player || raw.name || raw.Charakter || raw.Spieler || "";
   const server = raw.server || raw.Server || "";
-  const className = raw.className || raw.class || raw.Klasse || "";
+  const className = normalizeLichtLootClassName(raw.className || raw.class || raw.Klasse || "");
   const mainChar = raw.mainChar || raw.MainChar || "";
   if(!String(name).trim()) return null;
   return {
@@ -4507,6 +4507,13 @@ function normalizePageChar(raw){
     className:String(className || "").trim(),
     mainChar:String(mainChar || "").trim()
   };
+}
+
+function normalizeLichtLootClassName(value){
+  const raw=String(value || "").trim();
+  const key=raw.toUpperCase().replace(/[^A-Z]/g,"");
+  const names={WARRIOR:"Krieger",PALADIN:"Paladin",HUNTER:"Jäger",ROGUE:"Schurke",PRIEST:"Priester",SHAMAN:"Schamane",MAGE:"Magier",WARLOCK:"Hexenmeister",DRUID:"Druide"};
+  return names[key] || raw;
 }
 
 function classChipClass(className){
@@ -4567,8 +4574,8 @@ function renderSelectedCharacterPoReleases(data,requests){
   const box=document.getElementById("selectedCharacterPoReleases");
   if(!box) return;
   const releases=data?.poReleases || {};
-  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","naxx","zg-mittwoch","zg-prime","zg-late"]);
-  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
+  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"]);
+  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
   const pending=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(poReleaseStatusKey));
   const chips=labels.map(([key,label])=>{
     const approved=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases[key]);
@@ -10513,5 +10520,6 @@ function lichtlootFilterCurrentGuildP0Stores(){
 </script>
 <script src="raid-signup-mirror.js?v=20260809-1555"></script>
 <script src="../pin-visibility.js"></script>
+<script src="po-release-status.js?v=20260811-raidmitglieder"></script>
 </body>
 </html>
