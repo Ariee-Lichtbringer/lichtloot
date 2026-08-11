@@ -9445,22 +9445,6 @@ async function savePrio({ guildId, query: params }) {
       error.statusCode = 403;
       throw error;
     }
-    if (p0Selected && releaseRaid) {
-      const releaseResult = await client.query(
-        `select 1
-         from character_po_releases
-         where guild_id = $1
-           and character_id = $2
-           and raid_type = $3
-         limit 1`,
-        [guildId, character.id, releaseRaid]
-      );
-      if (!releaseResult.rows[0]) {
-        const error = new Error("Du hast keine P0+-Berechtigung für diesen Raid.");
-        error.statusCode = 403;
-        throw error;
-      }
-    }
     if (nachtlootRecruitRestricted && (!clean(params.p2) || !clean(params.p3))) {
       const error = new Error("Als Nachtwächter-Rekrut musst du P2 und P3 auswählen. P1 wird automatisch mit Kaese belegt.");
       error.statusCode = 400;
@@ -9479,9 +9463,21 @@ async function savePrio({ guildId, query: params }) {
     if (p0Selected) {
       await requireGuildPoItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName);
     }
+    const p0CountsAsPoPlus = p0Selected
+      ? await isGuildPoPlusItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName)
+      : false;
+    if (p0CountsAsPoPlus && releaseRaid) {
+      const releaseResult = await client.query(
+        `select 1 from character_po_releases
+         where guild_id=$1 and character_id=$2 and raid_type=$3 limit 1`,
+        [guildId,character.id,releaseRaid]
+      );
+      if(!releaseResult.rows[0]){const error=new Error("Du hast für dieses PO+-Item keine PO+-Berechtigung.");error.statusCode=403;throw error;}
+    }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
     const comment = JSON.stringify({
-      p0Plus: p0Selected ? "ja" : "nein",
+      p0Plus: p0CountsAsPoPlus ? "ja" : "nein",
+      poSelected: p0Selected ? "ja" : "nein",
       p0Item: p0Selected ? (p1?.name || "") : "",
       raidTime: clean(params.raidTime || params.uhrzeit),
       source: "railway"
@@ -9850,27 +9846,6 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     throw error;
   }
 
-  const releaseRaid = normalizePoReleaseRaid(raidType);
-  if (releaseRaid) {
-    const release = await checkCharacterPoRelease({
-      guildId,
-      query: {
-        ...params,
-        raid: releaseRaid,
-        playerPin,
-        player: verifiedCharacter.name,
-        server: verifiedCharacter.server
-      }
-    });
-    if (!release.allowed) {
-      const error = new Error(
-        `Dieser Charakter hat für ${releaseRaid.toUpperCase()} keine PO-Freigabe bei dieser Gilde.`
-      );
-      error.statusCode = 403;
-      throw error;
-    }
-  }
-
   const client = await pool.connect();
 
   try {
@@ -9884,6 +9859,12 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
       throw error;
     }
     await requireGuildPoItem(guildId, item.id, item.name);
+    const poCountsAsPoPlus=await isGuildPoPlusItem(guildId,item.id,item.name);
+    const releaseRaid=normalizePoReleaseRaid(raidType);
+    if(poCountsAsPoPlus&&releaseRaid){
+      const release=await checkCharacterPoRelease({guildId,query:{...params,raid:releaseRaid,playerPin,player:verifiedCharacter.name,server:verifiedCharacter.server}});
+      if(!release.allowed){const error=new Error(`Dieses PO+-Item benötigt eine PO+-Freigabe für ${releaseRaid.toUpperCase()}.`);error.statusCode=403;throw error;}
+    }
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
 
     const existing = await client.query(
@@ -9896,7 +9877,8 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     const previousMeta = commentMeta(existing.rows[0]?.comment);
     const comment = JSON.stringify({
       ...previousMeta,
-      p0Plus: "ja",
+      p0Plus: poCountsAsPoPlus ? "ja" : "nein",
+      poSelected: "ja",
       p0Item: item.name,
       raidTime: raid.raid_time || clean(params.raidTime || params.uhrzeit),
       source: "po-bot",
@@ -10043,6 +10025,7 @@ function commentMeta(comment) {
 
 async function getPlayerPrioHistory(guildId, params) {
   await ensureCharacterPoReleaseSchema();
+  await ensureGuildPoItemsSchema();
   const pin = params.pin || params.playerPin || params.characterPin || params.masterCharacterPin;
   const charName = params.char || params.player || params.spieler;
   const character = await findCharacterForPin(guildId, pin, charName, params.server);
@@ -10110,9 +10093,12 @@ async function getPlayerPrioHistory(guildId, params) {
      from p0plus_points pp
      join characters c on c.id = pp.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
+     join guilds g on g.id = pp.guild_id
      left join items i on i.id = pp.item_id
+     left join guild_po_items gpi on gpi.guild_id=pp.guild_id and gpi.item_id=pp.item_id
      where pp.guild_id = $1
        and lower(c.name) = lower($2)
+       and (lower(g.slug) <> 'nachtloot' or lower(coalesce(i.raid_type,'')) not in ('zg','aq20') or coalesce(gpi.po_plus_enabled,false)=true)
        ${pointsServerClause}
      group by
        coalesce(i.raid_type, 'Raid'),
@@ -10164,6 +10150,7 @@ async function getPlayerPrioHistory(guildId, params) {
       p2: row.p2 || "",
       p3: row.p3 || "",
       p0Plus: meta.p0Plus || "nein",
+      poSelected: meta.poSelected || meta.p0Plus || "nein",
       current: raidDay ? raidDay >= today : true,
       pinType: "Railway"
     };
@@ -16829,6 +16816,8 @@ async function getPublishedPrios({ guildId, query: params }) {
         p3ItemId: row.p3_item_id || "",
         P0Plus: meta.p0Plus || "nein",
         p0Plus: meta.p0Plus || "nein",
+        PoSelected: meta.poSelected || meta.p0Plus || "nein",
+        poSelected: meta.poSelected || meta.p0Plus || "nein",
         WorldbuffRulesAccepted: Boolean(row.worldbuff_rules_accepted),
         worldbuffRulesAccepted: Boolean(row.worldbuff_rules_accepted),
         Bench: row.bench || "",
@@ -17013,29 +17002,30 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
   await ensureGuildPoItemsSchema();
   const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  const restrictToConfiguredPoItems = guildResult.rows[0]?.slug === "nachtloot";
   const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Kein passender PO+-Raid gefunden.");
     error.statusCode = 404;
     throw error;
   }
+  const restrictToConfiguredPoItems = guildResult.rows[0]?.slug === "nachtloot" && !isOpenNachtlootPoRaid(raid.raid_type);
 
   const itemResult = await query(
     `select
        i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
        i.slot, i.type, i.boss, i.bind, i.category, i.wowhead,
        i.stats_text, i.tooltip, i.needed, i.equip, i.price, i.dropchance,
+       coalesce(gpi.po_plus_enabled,false) as po_plus_enabled,
        coalesce(sum(pp.points), 0)::numeric as p0plus_points,
        count(pp.id)::int as p0plus_count
      from items i
      ${restrictToConfiguredPoItems
        ? "join guild_po_items gpi on gpi.guild_id = $2 and gpi.item_id = i.id and gpi.enabled = true"
-       : ""}
+       : "left join guild_po_items gpi on gpi.guild_id = $2 and gpi.item_id = i.id"}
      left join p0plus_points pp on pp.guild_id = $2 and pp.item_id = i.id
      where lower(i.raid_type) = any($1)
         or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
-     group by i.id
+     group by i.id, gpi.po_plus_enabled
      order by i.name asc`,
     [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId]
   );
@@ -17115,6 +17105,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     raidId: raidPublicId(raid),
     items: itemResult.rows.map(row => ({
       ...normalizeLootItemForApi(row),
+      poPlusEnabled: Boolean(row.po_plus_enabled),
       p0PlusPoints: Number(row.p0plus_points || 0),
       p0PlusCount: Number(row.p0plus_count || 0)
     })),
@@ -17223,23 +17214,25 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     }
 
     await requireGuildPoItem(guildId, item.id, item.name);
+    const poCountsAsPoPlus = await isGuildPoPlusItem(guildId,item.id,item.name);
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
-    if (releaseRaid) {
+    if (poCountsAsPoPlus && releaseRaid) {
       const releaseResult = await client.query(
         `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
         [guildId, character.id, releaseRaid]
       );
       if (!releaseResult.rows[0]) {
-        const error = new Error("du hast keine P0+ Freigabe wende dich an den Raidlead");
+        const error = new Error("Dieses PO+-Item benötigt eine PO+-Freigabe. Wende dich an den Raidlead.");
         error.statusCode = 403;
         throw error;
       }
     }
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     const comment = JSON.stringify({
-      p0Plus: "ja",
+      p0Plus: poCountsAsPoPlus ? "ja" : "nein",
+      poSelected: "ja",
       p0Item: item.name,
       raidTime: raid.raid_time || "",
       source: "discord-p0",
@@ -17264,7 +17257,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
          discord_user_id, discord_name, discord_channel_id, discord_message_id,
          approval_status, approved_by_discord_id, approved_by_discord_name, approved_at
        )
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending', null, null, null)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, null, null, case when $12='approved' then now() else null end)
        on conflict (guild_id, raid_id, discord_user_id) do update
          set character_id = excluded.character_id,
              item_id = excluded.item_id,
@@ -17274,10 +17267,10 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
              discord_name = excluded.discord_name,
              discord_channel_id = coalesce(nullif(excluded.discord_channel_id, ''), p0_discord_signups.discord_channel_id),
              discord_message_id = coalesce(nullif(excluded.discord_message_id, ''), p0_discord_signups.discord_message_id),
-             approval_status = 'pending',
+             approval_status = excluded.approval_status,
              approved_by_discord_id = null,
              approved_by_discord_name = null,
-             approved_at = null,
+             approved_at = excluded.approved_at,
              updated_at = now()
        returning *`,
       [
@@ -17291,7 +17284,8 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         discordUserId,
         clean(params.discordName),
         clean(params.discordChannelId),
-        clean(params.discordMessageId)
+        clean(params.discordMessageId),
+        poCountsAsPoPlus ? "pending" : "approved"
       ]
     );
     const itemSignupResult = await client.query(
@@ -17827,6 +17821,7 @@ async function deleteGuildPrio({ guildId, query: params }) {
 }
 
 async function getP0Plus(guildId, params = {}) {
+  await ensureGuildPoItemsSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guildId];
   let raidClause = "";
@@ -17847,8 +17842,11 @@ async function getP0Plus(guildId, params = {}) {
        pp.created_at
      from p0plus_points pp
      join characters c on c.id = pp.character_id
+     join guilds g on g.id = pp.guild_id
      left join items i on i.id = pp.item_id
+     left join guild_po_items gpi on gpi.guild_id=pp.guild_id and gpi.item_id=pp.item_id
      where pp.guild_id = $1
+       and (lower(g.slug) <> 'nachtloot' or lower(coalesce(i.raid_type,'')) not in ('zg','aq20') or coalesce(gpi.po_plus_enabled,false)=true)
        ${raidClause}
      order by raid asc, item asc, player asc`,
     values
@@ -18312,6 +18310,7 @@ async function setP0PlusPoints({ guildId, query: params }) {
   try {
     await client.query("begin");
     const item = await upsertItem(client, raidType, itemName);
+    if(!(await isGuildPoPlusItem(guildId,item.id,item.name))){const error=new Error("Für dieses normale PO-Item können keine PO+-Punkte gespeichert werden.");error.statusCode=400;throw error;}
     const oldPoints = await getP0PlusPointTotal(client, guildId, character.id, item.id);
 
     await client.query(
@@ -18942,13 +18941,18 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
-  const candidates = priosResult.rows.filter(row =>
+  const initialCandidates = priosResult.rows.filter(row =>
     commentMeta(row.comment).p0Plus === "ja" &&
     !receivedCharacters.has(clean(row.character_id))
   );
   const dedupedCandidates = [];
   const seenCharacters = new Set();
   const skipped = [];
+  const candidates=[];
+  for(const row of initialCandidates){
+    if(await isGuildPoPlusItem(guildId,row.item_id,row.item_name)) candidates.push(row);
+    else skipped.push({player:row.player||"",item:row.item_name||"",reason:"normales-po-item-ohne-po-plus"});
+  }
 
   for (const row of candidates) {
     const characterKey = normalizeTransferKey(row.player) || clean(row.character_id).toLowerCase();
@@ -20916,6 +20920,7 @@ async function ensureGuildPoItemsSchema() {
        primary key (guild_id, item_id)
      )`
   );
+  await query(`alter table guild_po_items add column if not exists po_plus_enabled boolean not null default false`);
   await query(`create index if not exists guild_po_items_guild_raid_idx on guild_po_items (guild_id, raid_type, enabled)`);
 }
 
@@ -20931,7 +20936,8 @@ async function getGuildPoItems({ guild, query: params = {} }) {
   const result = await query(
     `select i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
             i.slot, i.type, i.boss,
-            coalesce(gpi.enabled, false) as po_enabled
+            coalesce(gpi.enabled, false) as po_enabled,
+            coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
      from items i
      left join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id
      where 1 = 1 ${raidClause}
@@ -20943,7 +20949,7 @@ async function getGuildPoItems({ guild, query: params = {} }) {
   return {
     success: true,
     raid: raidType,
-    items: rows.map(row => ({ ...normalizeLootItemForApi(row), poEnabled: Boolean(row.po_enabled) }))
+    items: rows.map(row => ({ ...normalizeLootItemForApi(row), poEnabled: Boolean(row.po_enabled), poPlusEnabled: Boolean(row.po_plus_enabled) }))
   };
 }
 
@@ -20957,6 +20963,7 @@ async function setGuildPoItem({ guild, query: params = {} }) {
   await ensureGuildPoItemsSchema();
   const itemId = clean(params.itemId || params.id);
   const enabled = String(params.enabled).toLowerCase() === "true" || String(params.enabled) === "1";
+  const setting = clean(params.setting || params.kind || "po").toLowerCase() === "poplus" ? "poplus" : "po";
   if (!itemId) {
     const error = new Error("Item-ID fehlt.");
     error.statusCode = 400;
@@ -20970,16 +20977,17 @@ async function setGuildPoItem({ guild, query: params = {} }) {
     throw error;
   }
   await query(
-    `insert into guild_po_items (guild_id, item_id, raid_type, enabled, updated_by, updated_at)
-     values ($1, $2, $3, $4, $5, now())
+    `insert into guild_po_items (guild_id, item_id, raid_type, enabled, po_plus_enabled, updated_by, updated_at)
+     values ($1, $2, $3, $4, $5, $6, now())
      on conflict (guild_id, item_id) do update
        set raid_type = excluded.raid_type,
-           enabled = excluded.enabled,
+           enabled = case when $7 = 'poplus' then (guild_po_items.enabled or $4) else $4 end,
+           po_plus_enabled = case when $7 = 'poplus' then $4 when not $4 then false else guild_po_items.po_plus_enabled end,
            updated_by = excluded.updated_by,
            updated_at = now()`,
-    [guild.id, item.id, normalizeRaidType(item.raid_type), enabled, clean(params.updatedBy) || "Gildenleitung"]
+    [guild.id, item.id, normalizeRaidType(item.raid_type), enabled, setting === "poplus" ? enabled : false, clean(params.updatedBy) || "Gildenleitung", setting]
   );
-  return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled };
+  return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled, setting };
 }
 
 async function setGuildPoItemsBulk({ guild, query: params = {} }) {
@@ -20991,20 +20999,51 @@ async function setGuildPoItemsBulk({ guild, query: params = {} }) {
   itemIds=Array.isArray(itemIds)?[...new Set(itemIds.map(clean).filter(Boolean))]:[];
   if(!itemIds.length){const error=new Error("Keine Items ausgewählt.");error.statusCode=400;throw error;}
   const enabled=["true","1","yes","ja"].includes(clean(params.enabled).toLowerCase());
+  const setting=clean(params.setting||params.kind||"po").toLowerCase()==="poplus"?"poplus":"po";
   const result=await query(
-    `insert into guild_po_items(guild_id,item_id,raid_type,enabled,updated_by,updated_at)
-     select $1,i.id,lower(i.raid_type),$3,$4,now() from items i where i.id::text=any($2) or i.item_id=any($2)
-     on conflict(guild_id,item_id) do update set raid_type=excluded.raid_type,enabled=excluded.enabled,updated_by=excluded.updated_by,updated_at=now()
+    `insert into guild_po_items(guild_id,item_id,raid_type,enabled,po_plus_enabled,updated_by,updated_at)
+     select $1,i.id,lower(i.raid_type),$3,case when $5='poplus' then $3 else false end,$4,now() from items i where i.id::text=any($2) or i.item_id=any($2)
+     on conflict(guild_id,item_id) do update set raid_type=excluded.raid_type,
+       enabled=case when $5='poplus' then (guild_po_items.enabled or $3) else $3 end,
+       po_plus_enabled=case when $5='poplus' then $3 when not $3 then false else guild_po_items.po_plus_enabled end,
+       updated_by=excluded.updated_by,updated_at=now()
      returning item_id`,
-    [guild.id,itemIds,enabled,clean(params.updatedBy)||"Gildenleitung"]
+    [guild.id,itemIds,enabled,clean(params.updatedBy)||"Gildenleitung",setting]
   );
-  return {success:true,updated:result.rowCount,enabled};
+  return {success:true,updated:result.rowCount,enabled,setting};
+}
+
+async function getGuildPoItemRule(guildId, itemId, itemName = "") {
+  await ensureGuildPoItemsSchema();
+  const result = await query(
+    `select lower(g.slug) as guild_slug, lower(i.raid_type) as raid_type,
+            coalesce(gpi.enabled,false) as po_enabled,
+            coalesce(gpi.po_plus_enabled,false) as po_plus_enabled
+     from items i
+     join guilds g on g.id=$1
+     left join guild_po_items gpi on gpi.guild_id=$1 and gpi.item_id=i.id
+     where i.id::text=$2 or ($3<>'' and lower(i.name)=lower($3)) limit 1`,
+    [guildId,clean(itemId),clean(itemName)]
+  );
+  return result.rows[0] || {};
+}
+
+function isOpenNachtlootPoRaid(raidType) {
+  return ["zg","aq20"].includes(normalizeRaidType(raidType));
+}
+
+async function isGuildPoPlusItem(guildId, itemId, itemName = "") {
+  const rule=await getGuildPoItemRule(guildId,itemId,itemName);
+  if(rule.guild_slug!=="nachtloot" || !isOpenNachtlootPoRaid(rule.raid_type)) return true;
+  return Boolean(rule.po_plus_enabled);
 }
 
 async function requireGuildPoItem(guildId, itemId, itemName = "") {
   const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
   if (guildResult.rows[0]?.slug !== "nachtloot") return { bypassed: true };
   await ensureGuildPoItemsSchema();
+  const rule=await getGuildPoItemRule(guildId,itemId,itemName);
+  if(isOpenNachtlootPoRaid(rule.raid_type)) return { ...rule, openPoRaid:true };
   const result = await query(
     `select i.id, i.name
      from items i
