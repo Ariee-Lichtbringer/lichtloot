@@ -1294,6 +1294,17 @@ async function updateGuildConfig({ query: params, body = {} }) {
   }
 }
 
+async function setRaidMemberNotice({guild,query:params={}}){
+  requireMasterCodeForGuild(guild,params.masterCode);
+  await ensureGuildLayoutSchema();
+  const title=clean(params.title)||"Änderungen der Raidregeln";
+  const text=String(params.text||"").trim().slice(0,5000);
+  const active=["true","1","yes","ja"].includes(clean(params.active).toLowerCase())&&Boolean(text);
+  const notice={title,text,active,version:String(Date.now()),publishedAt:new Date().toISOString()};
+  await query(`insert into guild_settings(guild_id,layout_json) values($1,jsonb_build_object('raidMemberNotice',$2::jsonb)) on conflict(guild_id) do update set layout_json=jsonb_set(coalesce(guild_settings.layout_json,'{}'::jsonb),'{raidMemberNotice}',$2::jsonb,true),updated_at=now()`,[guild.id,JSON.stringify(notice)]);
+  return {success:true,notice};
+}
+
 async function ensureGuildPinSchema() {
   await query(
     `alter table guilds
@@ -9131,17 +9142,29 @@ async function ensureWorldbuffRuleAgreementSchema() {
   await query(`create table if not exists worldbuff_rule_agreements (
     guild_id uuid not null references guilds(id) on delete cascade,
     character_id uuid not null references characters(id) on delete cascade,
+    raid_key text not null default '',
     agreed_at timestamptz not null default now(),
     rule_version integer not null default 1,
-    primary key (guild_id, character_id)
+    primary key (guild_id, character_id, raid_key)
   )`);
+  await query(`alter table worldbuff_rule_agreements add column if not exists raid_key text not null default ''`);
+  await query(`do $$ begin
+    if exists(select 1 from pg_constraint where conname='worldbuff_rule_agreements_pkey' and pg_get_constraintdef(oid) not ilike '%raid_key%') then
+      alter table worldbuff_rule_agreements drop constraint worldbuff_rule_agreements_pkey;
+    end if;
+    if not exists(select 1 from pg_constraint where conname='worldbuff_rule_agreements_pkey') then
+      alter table worldbuff_rule_agreements add primary key(guild_id,character_id,raid_key);
+    end if;
+  end $$`);
 }
 
 async function getWorldbuffRuleAgreement({ guildId, query: params = {} }) {
   await ensureWorldbuffRuleAgreementSchema();
   const character = await findCharacterForPin(guildId, params.pin || params.playerPin, params.character || params.char || params.player, params.server);
   if (!character) return { success:false, error:"Charakter oder SpielerLogin ist nicht gültig." };
-  const result = await query(`select agreed_at,rule_version from worldbuff_rule_agreements where guild_id=$1 and character_id=$2`, [guildId, character.id]);
+  const raidKey=clean(params.raidKey || params.raidId || params.raidPin);
+  if(!raidKey) return {success:false,error:"Raid fehlt."};
+  const result = await query(`select agreed_at,rule_version from worldbuff_rule_agreements where guild_id=$1 and character_id=$2 and raid_key=$3`, [guildId, character.id, raidKey]);
   return { success:true, agreed:Boolean(result.rows[0]), agreedAt:result.rows[0]?.agreed_at || "", ruleVersion:Number(result.rows[0]?.rule_version || 1) };
 }
 
@@ -9149,7 +9172,9 @@ async function acceptWorldbuffRuleAgreement({ guildId, query: params = {} }) {
   await ensureWorldbuffRuleAgreementSchema();
   const character = await findCharacterForPin(guildId, params.pin || params.playerPin, params.character || params.char || params.player, params.server);
   if (!character) { const error=new Error("Charakter oder SpielerLogin ist nicht gültig."); error.statusCode=403; throw error; }
-  const result = await query(`insert into worldbuff_rule_agreements(guild_id,character_id,agreed_at,rule_version) values($1,$2,now(),1) on conflict(guild_id,character_id) do update set agreed_at=now(),rule_version=1 returning agreed_at`, [guildId,character.id]);
+  const raidKey=clean(params.raidKey || params.raidId || params.raidPin);
+  if(!raidKey){const error=new Error("Raid fehlt.");error.statusCode=400;throw error;}
+  const result = await query(`insert into worldbuff_rule_agreements(guild_id,character_id,raid_key,agreed_at,rule_version) values($1,$2,$3,now(),1) on conflict(guild_id,character_id,raid_key) do update set agreed_at=now(),rule_version=1 returning agreed_at`, [guildId,character.id,raidKey]);
   return { success:true, agreed:true, agreedAt:result.rows[0]?.agreed_at || new Date().toISOString(), character:character.name };
 }
 
@@ -9264,6 +9289,7 @@ async function savePrio({ guildId, query: params }) {
   // statements through the pool while this transaction already holds raid locks
   // makes the request wait on itself until PostgreSQL cancels it.
   await ensureCharacterPoReleaseSchema();
+  await ensureWorldbuffRuleAgreementSchema();
   const pin = params.playerPin || params.characterPin || params.masterCharacterPin || params.pin;
   const player = params.player || params.char || params.spieler;
   const server = params.server;
@@ -9369,6 +9395,18 @@ async function savePrio({ guildId, query: params }) {
     }
 
     const p0Selected = p0Plus === "ja" || p0Plus === "true";
+    const selectedPrioText=[params.p1,params.p2,params.p3,params.p0Item].map(value=>clean(value).toLowerCase()).join(" | ");
+    const resolvedRaidType=normalizeRaidType(raidResult.rows[0].raid_type || raidType);
+    const needsWorldbuffAgreement=(resolvedRaidType==="zg"&&selectedPrioText.includes("herz")&&selectedPrioText.includes("hakkar"))||(resolvedRaidType==="bwl"&&selectedPrioText.includes("kopf")&&selectedPrioText.includes("nefar"))||(resolvedRaidType==="ony"&&selectedPrioText.includes("kopf")&&selectedPrioText.includes("ony"));
+    if(needsWorldbuffAgreement){
+      const layoutResult=await client.query(`select layout_json from guild_settings where guild_id=$1`,[guildId]);
+      const agreementEnabled=layoutResult.rows[0]?.layout_json?.lootPageSections?.worldbuffAgreement !== false;
+      if(agreementEnabled){
+        const raidKeys=[clean(raidResult.rows[0].id),clean(raidResult.rows[0].external_raid_id),clean(raidResult.rows[0].raid_pin)].filter(Boolean);
+        const agreement=await client.query(`select 1 from worldbuff_rule_agreements where guild_id=$1 and character_id=$2 and raid_key=any($3) limit 1`,[guildId,character.id,raidKeys]);
+        if(!agreement.rows[0]){const error=new Error("Bitte bestätige zuerst die Worldbuff-Abgaberegeln für diesen Raid.");error.statusCode=403;throw error;}
+      }
+    }
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let nachtlootRecruitRestricted = false;
     if (isNachtlootRecruitRaid(releaseRaid)) {
@@ -16716,13 +16754,13 @@ async function getPublishedPrios({ guildId, query: params }) {
        i3.item_id as p3_item_id
      from prios pr
      join characters c on c.id = pr.character_id
-     left join worldbuff_rule_agreements wra on wra.guild_id=$2 and wra.character_id=c.id
+     left join worldbuff_rule_agreements wra on wra.guild_id=$2 and wra.character_id=c.id and wra.raid_key=any($3)
      left join items i1 on i1.id = pr.p1_item_id
      left join items i2 on i2.id = pr.p2_item_id
      left join items i3 on i3.id = pr.p3_item_id
      where pr.raid_id = any($1)
      order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
-    [relatedRaidIds, guildId]
+    [relatedRaidIds, guildId, [clean(raid.id),clean(raidPublicId(raid)),clean(raid.raid_pin)].filter(Boolean)]
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
@@ -20924,6 +20962,25 @@ async function setGuildPoItem({ guild, query: params = {} }) {
   return { success: true, itemId: item.id, itemName: item.name, raid: normalizeRaidType(item.raid_type), enabled };
 }
 
+async function setGuildPoItemsBulk({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(guild?.slug).toLowerCase() !== "nachtloot") { const error=new Error("PO-Items werden nur für Nachtwächter verwaltet."); error.statusCode=403; throw error; }
+  await ensureGuildPoItemsSchema();
+  let itemIds=[];
+  try { itemIds=typeof params.itemIds==="string"?JSON.parse(params.itemIds):params.itemIds; } catch {}
+  itemIds=Array.isArray(itemIds)?[...new Set(itemIds.map(clean).filter(Boolean))]:[];
+  if(!itemIds.length){const error=new Error("Keine Items ausgewählt.");error.statusCode=400;throw error;}
+  const enabled=["true","1","yes","ja"].includes(clean(params.enabled).toLowerCase());
+  const result=await query(
+    `insert into guild_po_items(guild_id,item_id,raid_type,enabled,updated_by,updated_at)
+     select $1,i.id,lower(i.raid_type),$3,$4,now() from items i where i.id::text=any($2) or i.item_id=any($2)
+     on conflict(guild_id,item_id) do update set raid_type=excluded.raid_type,enabled=excluded.enabled,updated_by=excluded.updated_by,updated_at=now()
+     returning item_id`,
+    [guild.id,itemIds,enabled,clean(params.updatedBy)||"Gildenleitung"]
+  );
+  return {success:true,updated:result.rowCount,enabled};
+}
+
 async function requireGuildPoItem(guildId, itemId, itemName = "") {
   const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
   if (guildResult.rows[0]?.slug !== "nachtloot") return { bypassed: true };
@@ -22193,6 +22250,14 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildSetPoItem") {
       const saved = await setGuildPoItem({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildSetPoItemsBulk") {
+      const saved = await setGuildPoItemsBulk({ guild, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if(action==="guildSetRaidMemberNotice"){
+      const saved=await setRaidMemberNotice({guild,query:postParams});
+      return res.json({...saved,guild:guild.slug});
     }
 
     if (action === "guildSetHordenbuffEntry" || action === "lichtbotSetHordenbuffEntry") {
