@@ -6962,6 +6962,7 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
     ...(clean(params.healSlots) ? { healSlots: clean(params.healSlots) } : {}),
     ...(clean(params.ddSlots) ? { ddSlots: clean(params.ddSlots) } : {}),
     ...(clean(params.signupDeadline) ? { signupDeadline: clean(params.signupDeadline) } : {}),
+    ...(clean(params.announcementMessage) ? { announcementMessage: clean(params.announcementMessage) } : {}),
     ...(clean(params.raidImageUrl) ? { raidImageUrl: clean(params.raidImageUrl) } : {})
   };
   return queueBotUpdate({
@@ -6984,6 +6985,7 @@ async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
         healSlots: clean(params.healSlots || snapshot?.raid?.healSlots || ""),
         ddSlots: clean(params.ddSlots || snapshot?.raid?.ddSlots || ""),
         signupDeadline: clean(params.signupDeadline || snapshot?.raid?.signupDeadline || ""),
+        announcementMessage: clean(params.announcementMessage || snapshot?.raid?.announcementMessage || ""),
         raidImageUrl: clean(params.raidImageUrl || snapshot?.raid?.raidImageUrl || ""),
         channelId: clean(params.channelId || params.discordChannelId),
         messageId: clean(params.messageId || params.discordMessageId || params.raidHelperMessageId),
