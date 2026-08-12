@@ -6942,6 +6942,13 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
     if (Array.isArray(raw)) return raw;
     try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
   })();
+  const existingDiscordMessageId = clean(
+    params.messageId ||
+    params.discordMessageId ||
+    snapshot?.raid?.discordMessageId ||
+    snapshot?.raid?.discord_message_id ||
+    ""
+  );
   const announcement = await queueBotUpdate({
     guildId,
     query: {
@@ -6984,7 +6991,9 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   });
   const announcementTargets = announcementNotifyTargets.filter(target => ["role", "name"].includes(clean(target?.type).toLowerCase()) && clean(target?.value));
   let roleNoticeQueued = false;
-  if (announcement?.success && announcementTargets.length) {
+  // The creation notice is sent only for the first Discord post. Saving changes
+  // edits the existing post and must not notify all selected recipients again.
+  if (announcement?.success && !existingDiscordMessageId && announcementTargets.length) {
     const notice = await enqueueBotUpdate({
       guildId,
       type: "raid_announcement_role_notice",
@@ -15545,8 +15554,8 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
-           status_notify_targets = case when excluded.status_notify_targets = '[]'::jsonb then raids.status_notify_targets else excluded.status_notify_targets end,
-           announcement_notify_targets = case when excluded.announcement_notify_targets = '[]'::jsonb then raids.announcement_notify_targets else excluded.announcement_notify_targets end,
+           status_notify_targets = case when $29 then excluded.status_notify_targets else raids.status_notify_targets end,
+           announcement_notify_targets = case when $30 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
            announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
            updated_at = now()
      returning *`,
@@ -15592,7 +15601,9 @@ async function createRaidRecord({ guildId, query: params }) {
           return "[]";
         }
       })(),
-      clean(params.announcementMessage || params.notificationMessage)
+      clean(params.announcementMessage || params.notificationMessage),
+      Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
+      Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
     ]
   );
 
