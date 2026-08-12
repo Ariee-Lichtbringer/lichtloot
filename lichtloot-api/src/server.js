@@ -9247,11 +9247,9 @@ async function findCharacterForPin(guildId, pin, charName, server) {
        and p.player_pin = $2
        and coalesce(p.is_blocked, false) = false
        and lower(c.name) = lower($3)
-     order by
-       case when lower(c.server) = lower($4) then 0 else 1 end,
-       c.created_at asc
+     order by c.created_at asc
      limit 1`,
-    [guildId, normalizedPin, characterName, clean(server)]
+    [guildId, normalizedPin, characterName]
   );
   return result.rows[0] || null;
 }
@@ -17975,11 +17973,6 @@ async function importUnlinkedP0Plus({ guild, params }) {
 
 async function queueP0PlusPointsUpdate({ guild, query: params = {} }) {
   requireMasterCodeForGuild(guild, params.masterCode);
-  if (clean(guild.slug).toLowerCase() !== "nachtloot") {
-    const error = new Error("PO+ Punkte Updates sind derzeit nur für NachtLoot aktiviert.");
-    error.statusCode = 400;
-    throw error;
-  }
   let targets = [];
   try {
     const parsed = typeof params.targets === "string" ? JSON.parse(params.targets) : params.targets;
