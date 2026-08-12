@@ -8377,12 +8377,13 @@ async function deletePoPostEntry({ guildId, query: params }) {
       raidPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
       prioPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
       title: row.title || "PO Liste",
+      mode: "po-anmelder",
       source: "po_entry_delete",
       queuedAt: new Date().toISOString()
     });
   }
   for (const payload of payloads.values()) {
-    await enqueueBotUpdate({ guildId, type: "po_post", payload })
+    await enqueueBotUpdate({ guildId, type: "p0_post_refresh", payload })
       .catch(error => console.warn("PO-Post konnte nach Eintrag-Löschung nicht queued werden:", error.message || error));
   }
 
