@@ -5042,6 +5042,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
+          <button class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link nachtloot-only" type="button" onclick="openPoItemSettingsPanel()" aria-label="PO Items festlegen" title="PO Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">PO Items festlegen</span></button>
@@ -6373,6 +6374,12 @@ function getCurrentGuildSlug(){
 function withGuildUrl(url){
   const sep = String(url || "").includes("?") ? "&" : "?";
   return String(url || "") + sep + CURRENT_GUILD_QUERY;
+}
+
+function openRaidSetupPage(){
+  const masterCode=document.getElementById("masterCode")?.value.trim() || "";
+  try{ if(masterCode) sessionStorage.setItem(MASTER_STORAGE_KEY,masterCode); }catch(_error){}
+  window.location.href=withGuildUrl("raidaufstellung.html");
 }
 
 const GUILD_BRANDS = {
