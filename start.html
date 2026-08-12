@@ -5765,6 +5765,7 @@ async function switchMeinLichtLootGuild(value){
     }
     const target=new URL(window.location.href);
     target.searchParams.set("guild", guild.slug);
+    try{ sessionStorage.setItem("lichtlootStartMenuAction","account"); }catch(error){}
     window.location.href=target.href;
   }catch(error){
     const status=document.getElementById("dashboardMyStatus");
@@ -9319,6 +9320,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
       else if(startMenuAction==="p0plus") toggleP0PlusOverview();
       else if(startMenuAction==="raidlead") toggleRaidleadLogin();
       else if(startMenuAction==="create") toggleRaidCreate();
+      else if(startMenuAction==="account") openAccountManagementCenter();
     },120);
   }
   document.addEventListener("click",event=>{
