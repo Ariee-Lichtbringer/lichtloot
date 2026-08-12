@@ -2449,7 +2449,7 @@ tr.selected-row td{
 
 .raid-helper-tabs{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px;
   margin-bottom:14px;
 }
@@ -2459,8 +2459,8 @@ tr.selected-row td{
 .raid-helper-workflow button:hover{border-color:#38bdf8;background:rgba(14,165,233,.12)}
 .raid-helper-workflow b{grid-row:1 / span 2;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#0ea5e9;color:#fff}
 .raid-helper-workflow strong{font-size:13px}.raid-helper-workflow span{color:#94a3b8;font-size:11px;line-height:1.3}
-.raid-helper-tools{margin:0 0 14px;padding:10px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:rgba(2,6,23,.28)}
-.raid-helper-tools-title{padding:1px 3px 10px;color:#cbd5e1;font-size:12px;font-weight:900}
+.raid-helper-tools{margin:0 0 14px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:rgba(2,6,23,.28)}
+.raid-helper-tools>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;color:#cbd5e1;font-size:12px;font-weight:900;cursor:pointer;list-style:none}.raid-helper-tools>summary::-webkit-details-marker{display:none}.raid-helper-tools>summary::after{content:"anzeigen +";color:#7dd3fc}.raid-helper-tools[open]>summary::after{content:"schließen −"}
 .raid-helper-tools .raid-helper-tabs{padding:0 10px 10px;margin:0;grid-template-columns:repeat(3,minmax(0,1fr))}
 .raid-center-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}
 .raid-center-modal{width:min(760px,100%);max-height:92vh;overflow:auto;border:1px solid rgba(56,189,248,.38);border-radius:16px;background:linear-gradient(145deg,#111c32,#060c19);box-shadow:0 28px 80px rgba(0,0,0,.55);padding:20px}
@@ -2468,6 +2468,9 @@ tr.selected-row td{
 .raid-center-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.raid-center-action{min-height:150px;padding:16px;border:1px solid rgba(148,163,184,.24);border-radius:12px;background:rgba(15,23,42,.72);color:#f8fafc;text-align:left;cursor:pointer}.raid-center-action:hover{border-color:#38bdf8;background:rgba(14,165,233,.12)}.raid-center-action b,.raid-center-action strong,.raid-center-action span{display:block}.raid-center-action b{font-size:25px;margin-bottom:12px}.raid-center-action strong{font-size:15px}.raid-center-action span{margin-top:7px;color:#94a3b8;font-size:12px;line-height:1.45}.raid-center-action em{display:inline-block;margin-top:12px;color:#7dd3fc;font-style:normal;font-size:12px;font-weight:900}
 @media(max-width:700px){.raid-center-actions{grid-template-columns:1fr}.raid-center-action{min-height:0}}
 .raid-unified-back{margin-bottom:12px}.raid-unified-columns{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:14px;align-items:start}.raid-unified-pane{min-width:0;overflow:hidden;padding:14px;border:1px solid rgba(148,163,184,.2);border-radius:12px;background:rgba(2,6,23,.34)}.raid-unified-pane.po{border-color:rgba(168,85,247,.32)}.raid-unified-pane-title{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}.raid-unified-pane-title h3{margin:0;color:#f8fafc}.raid-unified-pane-title span{display:block;margin-top:3px;color:#94a3b8;font-size:12px}.raid-unified-pane .raid-helper-manual-signup{grid-template-columns:1fr}.raid-unified-pane .raid-helper-signup-list{min-width:0;overflow:hidden}.raid-unified-pane .raid-helper-loot-grid{column-count:2}.raid-unified-pane .raid-helper-loot-inactive{grid-template-columns:repeat(2,minmax(0,1fr))}.raid-unified-pane .table-wrap{max-width:100%;overflow:auto}.raid-unified-pane .po-post-entry-table{min-width:680px}body.raid-unified-open .app-frame{grid-template-columns:minmax(0,1fr)}body.raid-unified-open .sidebar{display:none}body.raid-unified-open .shell{padding-left:16px;padding-right:16px}@media(max-width:1200px){.raid-unified-columns{grid-template-columns:1fr}.raid-unified-pane .raid-helper-loot-grid{column-count:2}}@media(max-width:700px){.raid-unified-pane .raid-helper-loot-grid{column-count:1}.raid-unified-pane .raid-helper-loot-inactive{grid-template-columns:1fr}}
+.raid-unified-toolbar{grid-column:1/-1;display:grid;grid-template-columns:minmax(210px,.34fr) minmax(0,1fr);gap:12px;width:100%;margin-top:12px}.raid-unified-toolbar-group{min-width:0;padding:12px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:rgba(15,23,42,.52)}.raid-unified-toolbar-group>strong{display:block;margin-bottom:9px;color:#f8fafc;font-size:13px}.raid-unified-toolbar-buttons{display:flex;flex-wrap:wrap;gap:8px}.raid-unified-discord-grid{display:grid;grid-template-columns:minmax(260px,1fr) auto auto;gap:8px;align-items:end}.raid-unified-discord-grid label{display:grid;gap:5px;min-width:0;color:#94a3b8;font-size:11px;font-weight:900}.raid-unified-discord-grid select{width:100%;min-width:0}.raid-unified-repost{display:flex!important;grid-column:1/-1;align-items:center;gap:8px;padding-top:4px;color:#cbd5e1!important;text-transform:none!important}.raid-unified-repost input{width:18px;height:18px;flex:0 0 auto}@media(max-width:1000px){.raid-unified-toolbar,.raid-unified-discord-grid{grid-template-columns:1fr}.raid-unified-discord-grid .small-btn{width:100%}}
+.raid-manual-tools{margin:0 0 10px;border:1px solid rgba(34,197,94,.3);border-radius:10px;background:rgba(6,78,59,.08);overflow:hidden}.raid-manual-tools>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;color:#bbf7d0;font-size:13px;font-weight:900;cursor:pointer;list-style:none}.raid-manual-tools>summary::-webkit-details-marker{display:none}.raid-manual-tools>summary::after{content:"öffnen +";color:#6ee7b7;font-size:11px}.raid-manual-tools[open]>summary::after{content:"schließen −"}.raid-manual-tools>.raid-helper-manual-signup{margin:0 10px 10px}
+body.raid-unified-open .raid-helper-current-detail-head{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;justify-content:stretch;width:100%}body.raid-unified-open .raid-helper-current-detail-copy{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:14px}body.raid-unified-open .raid-helper-current-detail-copy h4{white-space:nowrap}body.raid-unified-open .raid-helper-current-detail-copy>span{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:0;line-height:1.5}body.raid-unified-open .raid-helper-current-detail-copy>span b{display:inline-block;padding:2px 6px;border-radius:5px;background:rgba(59,130,246,.12);white-space:nowrap}@media(max-width:800px){body.raid-unified-open .raid-helper-current-detail-head{grid-template-columns:64px minmax(0,1fr)}body.raid-unified-open .raid-helper-current-detail-banner{width:64px;height:64px;flex-basis:64px}body.raid-unified-open .raid-helper-current-detail-copy{grid-template-columns:1fr}body.raid-unified-open .raid-helper-current-detail-copy h4{white-space:normal}}
 
 .raid-helper-tab{
   --tab-accent:96,165,250;
@@ -5102,7 +5105,8 @@ body.worldbuff-only .master-only{display:none!important}
     <div class="unlock">
       <div class="field">
         <label for="masterCode">Master-Code</label>
-        <input id="masterCode" type="text" placeholder="Master-Code" autocomplete="off" onkeydown="enterLoads(event)">
+        <input id="masterCode" type="password" placeholder="Master-Code" autocomplete="current-password" onkeydown="enterLoads(event)">
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;text-transform:none;letter-spacing:0;cursor:pointer"><input id="rememberMasterCode" type="checkbox" style="width:18px;height:18px;min-height:0"><span>Auf diesem Gerät merken</span></label>
       </div>
       <button class="btn" type="button" onclick="loadOverview()">Freischalten</button>
       <div class="field worldbuff-login-field">
@@ -5162,20 +5166,15 @@ body.worldbuff-only .master-only{display:none!important}
       </span>
     </summary>
     <div class="raid-helper-body">
-      <div class="raid-helper-workflow" aria-label="Empfohlener Ablauf">
-        <button type="button" onclick="setRaidHelperTab('createEvent')"><b>1</b><strong>Anmelder erstellen</strong><span>Raid und Termin festlegen</span></button>
-        <button type="button" onclick="setRaidHelperTab('currentEvents')"><b>2</b><strong>Anmeldungen prüfen</strong><span>Teilnehmer ansehen oder Raid bearbeiten</span></button>
-        <button type="button" onclick="setRaidHelperTab('poSignup')"><b>3</b><strong>POs prüfen</strong><span>PO-Anmeldungen kontrollieren und übertragen</span></button>
+      <div class="raid-helper-tabs" role="tablist" aria-label="Raidanmelder">
+        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>Neuen Raid erstellen</strong><span>Raid und Anmelder gemeinsam anlegen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Erstellte Raids verwalten</strong><span>Raid auswählen, Teilnehmer und POs bearbeiten</span></span></button>
       </div>
-      <div class="raid-helper-tabs" role="tablist" aria-label="Häufige Aufgaben">
-        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>Neu erstellen</strong><span>Raidanmelder</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Anmeldungen</strong><span>Prüfen & bearbeiten</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>POs prüfen</strong><span>Kontrollieren & übertragen</span></span></button>
-        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder erstellen</strong><span>Manueller Sonderfall</span></span></button>
-      </div>
-      <div class="raid-helper-tools">
-        <div class="raid-helper-tools-title">Weitere Funktionen</div>
+      <details class="raid-helper-tools">
+        <summary>Weitere Funktionen und Sonderfälle</summary>
         <div class="raid-helper-tabs" role="tablist" aria-label="Weitere Werkzeuge">
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>Alle PO-Anmelder</strong><span>Raidübergreifende Übersicht</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO ohne Raid erstellen</strong><span>Manueller Sonderfall</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="createEmbed" onclick="setRaidHelperTab('createEmbed')"><span class="raid-helper-tab-icon">✦</span><span class="raid-helper-tab-copy"><strong>Freies Embed</strong><span>Abstimmung & Meeting</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="calendar" onclick="setRaidHelperTab('calendar')"><span class="raid-helper-tab-icon">◷</span><span class="raid-helper-tab-copy"><strong>Kalender</strong><span>Termine</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="pastEvents" onclick="setRaidHelperTab('pastEvents')"><span class="raid-helper-tab-icon">×</span><span class="raid-helper-tab-copy"><strong>Vergangene</strong><span>Archiv</span></span></button>
@@ -5183,7 +5182,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
         </div>
-      </div>
+      </details>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
@@ -5220,6 +5219,13 @@ body.worldbuff-only .master-only{display:none!important}
                 <h3>Raid und Termin</h3>
                 <p>Grunddaten für den Discord-Post und die LichtLoot-Anmeldung.</p>
               </div>
+            </div>
+            <div class="field" style="margin-bottom:14px">
+              <label for="raidHelperQuickTemplate">Vorlage nutzen</label>
+              <select id="raidHelperQuickTemplate" onchange="applyRaidHelperQuickTemplate(this.value)">
+                <option value="">Vorlage auswählen …</option>
+              </select>
+              <span class="muted">Die Vorlage füllt Raid, Titel, Plätze, Regeln und Discord-Channel automatisch aus.</span>
             </div>
             <div class="raid-helper-row">
               <div class="field">
@@ -6585,10 +6591,14 @@ let pendingMessageContext = null;
 let raidHelperDeepLinkHandled = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  sessionStorage.removeItem(MASTER_STORAGE_KEY);
   const masterField = document.getElementById("masterCode");
+  const rememberField = document.getElementById("rememberMasterCode");
   const worldbuffField = document.getElementById("worldbuffAccessPassword");
-  if(masterField) masterField.value = "";
+  let rememberedMasterCode="";
+  try{rememberedMasterCode=localStorage.getItem(MASTER_STORAGE_KEY)||"";}catch(_error){}
+  if(masterField) masterField.value = rememberedMasterCode;
+  if(rememberField) rememberField.checked = Boolean(rememberedMasterCode);
+  rememberField?.addEventListener("change",()=>{if(!rememberField.checked){try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}}});
   if(worldbuffField) worldbuffField.value = "";
   setGuildLocked(true);
   setWorldbuffOnlyMode(false);
@@ -6601,11 +6611,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   const raidDateSearch = document.getElementById("raidDateSearch");
   if(raidDateSearch) raidDateSearch.value = "";
   setDefaultCreateRaidDate();
+  if(rememberedMasterCode) await loadOverview();
 });
 
 window.addEventListener("pageshow", event => {
   if(!event.persisted) return;
-  clearMasterCode();
+  let remembered=false;try{remembered=Boolean(localStorage.getItem(MASTER_STORAGE_KEY));}catch(_error){}
+  if(!remembered) clearMasterCode();
 });
 
 function enterLoads(event){
@@ -6759,7 +6771,10 @@ async function openLootMasterTargetsDialog(raidId){
 
 function clearMasterCode(){
   sessionStorage.removeItem(MASTER_STORAGE_KEY);
+  try{localStorage.removeItem(MASTER_STORAGE_KEY);}catch(_error){}
   document.getElementById("masterCode").value = "";
+  const rememberField=document.getElementById("rememberMasterCode");
+  if(rememberField)rememberField.checked=false;
   const worldbuffPassword = document.getElementById("worldbuffAccessPassword");
   if(worldbuffPassword) worldbuffPassword.value = "";
   setWorldbuffOnlyMode(false);
@@ -7104,6 +7119,10 @@ async function loadOverview(options){
     }
 
     sessionStorage.removeItem(MASTER_STORAGE_KEY);
+    try{
+      if(document.getElementById("rememberMasterCode")?.checked) localStorage.setItem(MASTER_STORAGE_KEY,masterCode);
+      else localStorage.removeItem(MASTER_STORAGE_KEY);
+    }catch(_error){}
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
     guildData = {
@@ -7192,6 +7211,12 @@ function openRaidHelperPanel(tabName){
 
 function closeRaidCenter(){
   document.getElementById("raidCenterBackdrop")?.remove();
+}
+
+function openRaidInUnifiedOverview(raidId){
+  openRaidHelperPanel("currentEvents");
+  selectRaidHelperCurrentEvent(raidId);
+  document.getElementById("raidHelperTab-currentEvents")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function matchingPoSignupForRaid(raid){
@@ -8208,7 +8233,7 @@ function renderDashboardCards(){
               ${renderP0TransferState(raid)}
             </div>
             <div class="active-raid-actions">
-              <button class="small-btn primary" type="button" onclick="openRaidCenter('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
+              <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
               <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
               ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+ übertragen</button>` : ""}
               ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>`}
@@ -8456,7 +8481,7 @@ function renderRaids(){
         </td>
         <td>
           <div class="raid-title">
-            <button class="raid-helper-signup-name-button" type="button" onclick="openRaidCenter('${escapeAttr(raid.raidId || raid.id)}')"><strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong></button>
+            <button class="raid-helper-signup-name-button" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')"><strong>${escapeHtml(raid.raidName || raid.raid || "-")}</strong></button>
             <div class="raid-meta">
               <span>${escapeHtml(raid.raidId || "-")}</span>
               <span>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span>
@@ -8470,7 +8495,7 @@ function renderRaids(){
         <td>${statusBadge(status)}</td>
         <td>
           <div class="actions">
-            <button class="small-btn primary" type="button" onclick="openRaidCenter('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
+            <button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Raid öffnen</button>
             <button class="small-btn good" type="button" onclick="activateRaidCardFromPage('${escapeAttr(raid.raidId)}')">Aktivieren</button>
             <button class="small-btn ghost" type="button" onclick="toggleRaidPrioStatus('${escapeAttr(raid.raidId)}')">${isOpenStatus(status) ? "Prio schließen" : "Prio öffnen"}</button>
             <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId)}')">Prios</button>
@@ -9142,7 +9167,58 @@ function initRaidHelperPanel(){
   loadRaidHelperDiscordChannels();
   loadRaidHelperDiscordRoles();
   loadRaidHelperDiscordMembers();
+  loadRaidHelperQuickTemplates();
   updateRaidHelperDefaults();
+}
+
+function renderRaidHelperQuickTemplates(){
+  const select=document.getElementById("raidHelperQuickTemplate");
+  if(!select)return;
+  const current=select.value;
+  const templates=allRaidHelperTemplates();
+  const saved=templates.filter(template=>!template.builtin);
+  const defaults=templates.filter(template=>template.builtin);
+  const oldRaids=(guildData.raids||[]).filter(raid=>String(raid.raidDate||"")<todayIsoDate()).sort((a,b)=>String(b.raidDate||"").localeCompare(String(a.raidDate||""))).slice(0,30);
+  const optionMarkup=template=>{
+    const key=raidHelperTemplateKey(template);
+    const raidKey=String(template.raid||template.raidType||"").toLowerCase();
+    const raidLabel=RAID_OPTIONS[raidKey]?.short||raidKey.toUpperCase()||"Raid";
+    const rawDate=String(template.raidDate||template.date||template.eventDate||template.createdForDate||"").slice(0,10);
+    const dateLabel=rawDate?formatRaidDate(rawDate):"";
+    const timeLabel=String(template.raidTime||template.time||template.eventTime||"").slice(0,5);
+    const oldRaidLabel=[dateLabel,timeLabel&&`${timeLabel} Uhr`].filter(Boolean).join(" · ");
+    const label=`${template.title||template.name||raidLabel}${oldRaidLabel?` — Raid vom ${oldRaidLabel}`:""}`;
+    return `<option value="${escapeAttr(key)}">${escapeHtml(label)}</option>`;
+  };
+  select.innerHTML='<option value="">Vorlage auswählen …</option>'+
+    (saved.length?`<optgroup label="★ EIGENE GESPEICHERTE VORLAGEN">${saved.map(optionMarkup).join("")}</optgroup>`:"")+
+    (oldRaids.length?`<optgroup label="FRÜHERE RAIDS ALS VORLAGE">${oldRaids.map(raid=>`<option value="oldraid:${escapeAttr(raid.raidId||raid.id)}">${escapeHtml(raid.raidName||raid.raid||"Raid")} — ${escapeHtml(formatRaidDate(raid.raidDate))}${raid.raidTime?` · ${escapeHtml(String(raid.raidTime).slice(0,5))} Uhr`:""}</option>`).join("")}</optgroup>`:"")+
+    `<optgroup label="LICHTLOOT-STANDARDVORLAGEN">${defaults.map(optionMarkup).join("")}</optgroup>`;
+  if([...select.options].some(option=>option.value===current))select.value=current;
+}
+
+async function loadRaidHelperQuickTemplates(){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(masterCode){
+    try{const result=await railwayApi({action:"guildGetRaidHelperTemplates",masterCode,t:Date.now()});if(result.success)raidHelperTemplates=Array.isArray(result.templates)?result.templates:[];}catch(_error){}
+  }
+  renderRaidHelperQuickTemplates();
+}
+
+function applyRaidHelperQuickTemplate(identifier){
+  if(!identifier)return;
+  const oldRaidId=String(identifier).startsWith("oldraid:")?String(identifier).slice(8):"";
+  const oldRaid=oldRaidId?findRaidByAnyId(oldRaidId):null;
+  const template=oldRaid?{
+    raid:getRaidKey(oldRaid),title:oldRaid.raidName||oldRaid.raid||"Raid",
+    description:oldRaid.description||oldRaid.beschreibung||"",maxPlayers:oldRaid.maxPlayers,
+    tankSlots:oldRaid.tankSlots,healSlots:oldRaid.healSlots,ddSlots:oldRaid.ddSlots,
+    discordChannelId:oldRaid.discordChannelId,raidImageUrl:oldRaid.raidImageUrl||oldRaid.imageUrl
+  }:(findRaidHelperTemplate(identifier)||raidHelperTemplateDefaults(identifier));
+  applyRaidHelperTemplateObject(template);
+  const select=document.getElementById("raidHelperQuickTemplate");
+  if(select)select.value=identifier;
+  setStatus(`Vorlage „${template.title||template.name||"Raid"}“ wurde übernommen. Datum und Uhrzeit bitte prüfen.`,"good");
 }
 
 async function loadRaidHelperDiscordMembers(){
@@ -9370,7 +9446,8 @@ function raidHelperClassIconMarkup(className, fallbackIcon, filename){
 
 function setRaidHelperTab(tabName){
   const target = String(tabName || "createEvent");
-  if(target!=="currentEvents") document.body.classList.remove("raid-unified-open");
+  if(target==="currentEvents" && raidHelperCurrentSelectedRaidId) document.body.classList.add("raid-unified-open");
+  else if(target!=="currentEvents") document.body.classList.remove("raid-unified-open");
   const tabAccents = {
     dashboard:"148,163,184",
     createEvent:"34,197,94",
@@ -9912,6 +9989,7 @@ async function renderRaidHelperCurrentDetail(raidId){
   const box = document.getElementById("raidHelperCurrentDetail");
   const raid = findRaidByAnyId(raidId);
   if(!box || !raid) return;
+  document.body.classList.add("raid-unified-open");
   primeRaidHelperCurrentEditState(raid);
   const key = getRaidKey(raid);
   const slots = [
@@ -9930,26 +10008,30 @@ async function renderRaidHelperCurrentDetail(raidId){
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
         <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b> · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
-      <div class="raid-helper-current-actions">
-        <button class="small-btn primary" type="button" onclick="openRaidCenter('${escapeAttr(raidId)}')">Raid verwalten</button>
-        <label class="raid-helper-meta-pill" title="Discord-Channel für diesen Post auswählen">
-          Channel
-          <select id="raidDiscordChannel-${escapeAttr(raidId)}" style="min-width:190px">
-            ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
-          </select>
-        </label>
-        <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${escapeHtml(raidDiscordSignupActionLabel(raid))}</button>
-        ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Neu erstellen</button>` : ""}
-        <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
-          <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
-          PO+-Anmelder ebenfalls posten
-        </label>
-        <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
+      <div class="raid-unified-toolbar">
+        <div class="raid-unified-toolbar-group">
+          <strong>Raid-Einstellungen</strong>
+          <div class="raid-unified-toolbar-buttons">
+            <button class="small-btn primary" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Raid und Anmelder bearbeiten</button>
+            <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Daten neu laden</button>
+          </div>
+        </div>
+        <div class="raid-unified-toolbar-group">
+          <strong>Discord-Anmelder</strong>
+          <div class="raid-unified-discord-grid">
+            <label>Discord-Channel<select id="raidDiscordChannel-${escapeAttr(raidId)}">${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}</select></label>
+            <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${raidHasDiscordSignupPost(raid) ? "Vorhandenen Post aktualisieren" : "Anmelder im Discord erstellen"}</button>
+            ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Zusätzlichen Post erstellen</button>` : ""}
+            <label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox"><span>Den passenden PO-Anmelder ebenfalls im Discord veröffentlichen</span></label>
+          </div>
+        </div>
       </div>
     </div>
     <div class="raid-unified-columns">
     <section class="raid-unified-pane">
       <div class="raid-unified-pane-title"><div><h3>Raidanmeldungen</h3><span>Teilnehmer, Rollen, Skillungen und Status bearbeiten</span></div></div>
+    <details class="raid-manual-tools">
+      <summary>＋ Spieler manuell anmelden</summary>
     <div class="raid-helper-manual-signup">
       <label>Spieler aus der Datenbank
         <input id="raidHelperManualPlayerSearch-${escapeAttr(raidId)}" type="search" placeholder="Name oder SpielerLogin suchen …" autocomplete="off" oninput="filterRaidHelperManualPlayers('${escapeAttr(raidId)}')" style="margin-bottom:6px">
@@ -9966,6 +10048,7 @@ async function renderRaidHelperCurrentDetail(raidId){
       </label>
       <button class="small-btn good" type="button" onclick="addRaidHelperDatabasePlayer('${escapeAttr(raidId)}')">Spieler anmelden</button>
     </div>
+    </details>
     <div id="raidHelperCurrentSignupStatus" class="status"></div>
     <div>
       <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
@@ -10001,11 +10084,14 @@ async function renderRaidHelperCurrentPoPanel(raid){
       <button class="small-btn good" type="button" ${approved?"":"disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(postKey)}')">Freigegebene POs übertragen</button>
       <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentPoPanel(findRaidByAnyId('${escapeAttr(raid.raidId||raid.id)}'))">Neu laden</button>
     </div>
+    <details class="raid-manual-tools">
+      <summary>＋ PO manuell hinzufügen</summary>
     <div class="raid-helper-manual-signup">
       <label>Spieler aus der Datenbank<select id="raidCurrentPoPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select></label>
       <label>PO-Item aus der Lootdatenbank<select id="raidCurrentPoItem"><option value="">Itemliste wird geladen …</option></select></label>
       <button class="small-btn good" type="button" onclick="addManualPoSignupFromRaid('${escapeAttr(postKey)}','${escapeAttr(raidKey)}')">PO hinzufügen</button>
     </div>
+    </details>
     <div class="table-wrap"><table class="po-post-entry-table"><thead><tr><th>Status</th><th>Spieler</th><th>Item</th><th>Aktion</th></tr></thead><tbody id="raidCurrentPoRows"></tbody></table></div>`;
   renderPoPostEntryReviewRows(document.getElementById("raidCurrentPoRows"),null,postKey,"Noch keine PO-Anmeldungen vorhanden.");
   loadManualPoItemOptions(raidKey,"raidCurrentPoItem");
@@ -11623,6 +11709,7 @@ async function loadRaidHelperTemplates(){
   }catch(error){
     setRaidHelperTemplateStatus(error.message || "Vorlagen konnten nicht geladen werden.", "bad");
   }
+  renderRaidHelperQuickTemplates();
   renderRaidHelperTemplates();
 }
 
