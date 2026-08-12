@@ -8750,7 +8750,8 @@ async function savePoPostEntry({ guildId, query: params }) {
   }
 
   const releaseRaid = normalizePoReleaseRaid(raidKey);
-  if (releaseRaid) {
+  const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
+  if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
       guildId,
       query: {
@@ -9901,7 +9902,8 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   }
 
   const releaseRaid = normalizePoReleaseRaid(raidType);
-  if (releaseRaid) {
+  const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
+  if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
       guildId,
       query: {
