@@ -5041,6 +5041,7 @@ body.worldbuff-only .master-only{display:none!important}
       <div class="side-group collapsed" id="sideGroupRaidorga">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupRaidorga')"><span>Raidorga</span></button>
         <div class="side-group-items">
+          <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
           <button class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
@@ -5149,7 +5150,10 @@ body.worldbuff-only .master-only{display:none!important}
       <section id="raidDashboardSection" class="dashboard-card">
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
-          <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" onclick="restoreArchivedRaids()">Archivierte Raids wiederherstellen</button>
+            <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
+          </div>
         </div>
         <div id="activeRaidCards" class="active-raid-list">
           <div class="muted">Noch keine Daten geladen.</div>
@@ -5352,10 +5356,6 @@ body.worldbuff-only .master-only{display:none!important}
                 </div>
               </div>
             </div>
-            <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
-              <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
-              <span>PO-Anmelder automatisch mit erstellen</span>
-            </label>
             <input id="raidHelperImageUrl" type="hidden">
           </section>
 
@@ -14690,7 +14690,7 @@ async function createRaidHelperSignup(){
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
-  const shouldCreatePoSignup = true;
+  const shouldCreatePoSignup = false;
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
@@ -15322,7 +15322,7 @@ function matchingPoPostConfigForRaid(raid){
   if(!raid) return null;
   const raidId = String(raid.raidId || raid.id || "").trim();
   const raidKey = getRaidKey(raid);
-  const configs = readPoPostConfigs();
+  const configs = poPostConfigGroups();
   return configs.find(item =>
     (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
     (
@@ -15339,7 +15339,7 @@ async function queueMatchingPoPostForRaid(raid, masterCode){
   if(!raid) return { success:false, error:"Raid wurde nicht gefunden." };
   const raidId = String(raid.raidId || raid.id || "").trim();
   const raidKey = getRaidKey(raid);
-  const configs = readPoPostConfigs();
+  const configs = poPostConfigGroups();
   const config = configs.find(item =>
     (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
     (
@@ -15512,6 +15512,18 @@ async function deleteRaidFromDashboard(raidId){
   }catch(error){
     setStatus(error.message || "Raid konnte nicht archiviert werden.", "bad");
   }
+}
+
+async function restoreArchivedRaids(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  if(!confirm("Alle archivierten Raids ab gestern für diese Gilde wiederherstellen?")) return;
+  try{
+    const result = await railwayApi({ action:"guildRestoreArchivedRaids", masterCode, t:Date.now() });
+    if(!result.success) throw new Error(result.error || "Raids konnten nicht wiederhergestellt werden.");
+    await loadOverview({ preserveStatus:true });
+    setStatus(`${Number(result.restored || 0)} Raid(s) wiederhergestellt.`, "good");
+  }catch(error){ setStatus(error.message || "Raids konnten nicht wiederhergestellt werden.", "bad"); }
 }
 
 async function hardDeleteRaidFromPage(raidId){
