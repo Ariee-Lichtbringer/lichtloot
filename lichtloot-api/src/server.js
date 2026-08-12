@@ -8751,7 +8751,8 @@ async function savePoPostEntry({ guildId, query: params }) {
 
   const releaseRaid = normalizePoReleaseRaid(raidKey);
   const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-  if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
+  const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, itemGameId, itemName);
+  if (itemRequiresRelease && releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
       guildId,
       query: {
@@ -9903,7 +9904,12 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
 
   const releaseRaid = normalizePoReleaseRaid(raidType);
   const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-  if (releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
+  const itemRequiresRelease = await guildPoItemRequiresRelease(
+    guildId,
+    params.itemId || params.itemGameId || params.p1ItemId,
+    itemName
+  );
+  if (itemRequiresRelease && releaseRaid && poReleasesRequiredForRaid(poReleaseSettings, releaseRaid)) {
     const release = await checkCharacterPoRelease({
       guildId,
       query: {
@@ -17270,7 +17276,8 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
     const character = await findOrCreateDiscordP0Character(client, guildId, params);
     const releaseRaid = normalizePoReleaseRaid(raid.raid_type);
-    if (releaseRaid) {
+    const itemRequiresRelease = await guildPoItemRequiresRelease(guildId, item.id, item.name);
+    if (itemRequiresRelease && releaseRaid) {
       const releaseResult = await client.query(
         `select 1 from character_po_releases where guild_id = $1 and character_id = $2 and raid_type = $3 limit 1`,
         [guildId, character.id, releaseRaid]
@@ -21144,6 +21151,26 @@ async function requireGuildPoItem(guildId, itemId, itemName = "") {
     throw error;
   }
   return result.rows[0];
+}
+
+async function guildPoItemRequiresRelease(guildId, itemId, itemName = "") {
+  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
+  // Other guilds keep their existing raid-wide release behaviour. Nachtloot
+  // controls the requirement per item through the PO+ selection in leadership.
+  if (guildResult.rows[0]?.slug !== "nachtloot") return true;
+  await ensureGuildPoItemsSchema();
+  const result = await query(
+    `select coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
+     from items i
+     left join guild_po_items gpi on gpi.guild_id = $1 and gpi.item_id = i.id
+     where i.id::text = $2
+        or i.item_id = $2
+        or ($3 <> '' and lower(i.name) = lower($3))
+     order by case when i.id::text = $2 or i.item_id = $2 then 0 else 1 end
+     limit 1`,
+    [guildId, clean(itemId), clean(itemName)]
+  );
+  return Boolean(result.rows[0]?.po_plus_enabled);
 }
 
 async function loadStaticLootItems(raidType) {
