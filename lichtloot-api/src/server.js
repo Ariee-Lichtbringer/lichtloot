@@ -18014,6 +18014,14 @@ async function queueP0PlusPointsUpdate({ guild, query: params = {} }) {
     if (!accounts.has(discordUserId)) accounts.set(discordUserId, { discordUserId, discordName: clean(row.discord_name), entries: [] });
     accounts.get(discordUserId).entries.push({ player: row.player, server: row.server || "", raid: row.raid, item: row.item, points: Number(row.points || 0) });
   }
+  const selectedUserIds = new Set(targets.filter(target => clean(target.type).toLowerCase() === "user").map(target => clean(target.value)).filter(Boolean));
+  const selectedNames = new Set(targets.filter(target => clean(target.type).toLowerCase() === "name").map(target => clean(target.value).toLowerCase()).filter(Boolean));
+  const hasRoleTargets = targets.some(target => clean(target.type).toLowerCase() === "role");
+  if ((selectedUserIds.size || selectedNames.size) && !hasRoleTargets) {
+    for (const [discordUserId, account] of accounts) {
+      if (!selectedUserIds.has(discordUserId) && !selectedNames.has(clean(account.discordName).toLowerCase())) accounts.delete(discordUserId);
+    }
+  }
   if (!accounts.size) {
     const error = new Error("Es wurden keine Spieler mit PO+-Punkten und verknüpftem Discord-Konto gefunden.");
     error.statusCode = 400;
