@@ -6981,6 +6981,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         discordChannelId: channelId,
         messageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
         discordMessageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
+        forceNewMessage: ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()) ? "true" : "false",
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
@@ -15393,6 +15394,29 @@ async function deleteRaid({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount, raid: result.rows[0] || null };
 }
 
+async function restoreArchivedRaids({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const result = await query(
+    `update raids
+     set status = 'geschlossen', updated_at = now()
+     where guild_id = $1
+       and coalesce(status, '') in ('archiviert', 'archive')
+       and raid_date >= current_date - interval '1 day'
+     returning id, external_raid_id, name, raid_date`,
+    [guildId]
+  );
+  return {
+    success: true,
+    restored: result.rowCount,
+    raids: result.rows.map(row => ({
+      id: row.id,
+      raidId: row.external_raid_id || row.id,
+      raidName: row.name || "Raid",
+      raidDate: row.raid_date || ""
+    }))
+  };
+}
+
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   return createRaidRecord({ guildId, query: params });
@@ -21957,6 +21981,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildDeleteRaid" || action === "deleteRaid") {
       const deleted = await deleteRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
+    }
+
+    if (action === "guildRestoreArchivedRaids") {
+      const restored = await restoreArchivedRaids({ guildId: guild.id, query: req.query });
+      return res.json({ ...restored, guild: guild.slug });
     }
 
     if (action === "getPublishedPrios") {
