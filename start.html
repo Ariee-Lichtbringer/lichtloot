@@ -1230,8 +1230,6 @@ body{
 .p0plus-player-list{padding:0 10px 8px 20px;display:flex;flex-direction:column;gap:4px}
 .p0plus-player-row{display:grid;grid-template-columns:minmax(0,1fr) 96px!important;gap:12px;align-items:center;color:#dbeafe;font-size:13px}
 .p0plus-player-name{font-weight:900;color:#f8fafc}
-.p0plus-player-name.unlinked{color:#94a3b8;font-weight:700;opacity:.78}
-.p0plus-player-name.unlinked:after{content:" · noch kein Account";font-size:11px;font-weight:600}
 .p0plus-player-points{font-weight:900;color:#facc15;text-align:left}
 .p0plus-empty{padding:14px;border-radius:14px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.12);color:#dbeafe}
 .p0plus-item-summary{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center!important}
@@ -8880,8 +8878,7 @@ function p0V5FinalBuildGrouped(entries){
 
     const itemGroup = grouped[raid].items[itemKey];
     const playerKey = p0V5FinalKey(player);
-    if(!itemGroup.players[playerKey]) itemGroup.players[playerKey] = {name:player, points:0, accountLinked:entry.accountLinked !== false};
-    if(entry.accountLinked === false) itemGroup.players[playerKey].accountLinked=false;
+    if(!itemGroup.players[playerKey]) itemGroup.players[playerKey] = {name:player, points:0};
 
     itemGroup.players[playerKey].points += points;
     itemGroup.points += points;
@@ -8984,7 +8981,7 @@ function renderP0PlusOverview(entries){
             <div class="p0plus-player-list">
               ${players.map(player => `
                 <div class="p0plus-player-row">
-                  <span class="p0plus-player-name${player.accountLinked===false?' unlinked':''}">${safeHtml(player.name)}</span>
+                  <span class="p0plus-player-name">${safeHtml(player.name)}</span>
                   <span class="p0plus-player-points">${safeHtml(String(player.points))} Punkte</span>
                 </div>
               `).join("")}
