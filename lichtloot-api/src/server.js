@@ -3706,19 +3706,19 @@ function poReleaseFlagsFromRows(rows) {
   return flags;
 }
 
-const WCL_PO_ATTENDANCE_GUILD_ID = 755306;
+const WCL_PO_ATTENDANCE_GUILD_IDS = { lichtloot:755306, lichtbringer:755306, nachtloot:703333 };
 const WCL_PO_ATTENDANCE_ZONES = { mc:2000, bwl:2002, aq40:2005, naxx:2006 };
 const wclPoAttendanceCache = new Map();
 function normalizeAttendanceName(value) { return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
-async function getWclPoAttendance(raid) {
+async function getWclPoAttendance(raid,wclGuildId) {
   const zoneId=WCL_PO_ATTENDANCE_ZONES[raid]; if(!zoneId)return {total:0,players:{}};
-  const cached=wclPoAttendanceCache.get(raid); if(cached&&cached.expiresAt>Date.now())return cached.value;
+  const cacheKey=`${wclGuildId}:${raid}`; const cached=wclPoAttendanceCache.get(cacheKey); if(cached&&cached.expiresAt>Date.now())return cached.value;
   const token=await getWarcraftLogsAccessToken();
   const gqlQuery="query($guildID:Int!,$zoneID:Int!){guildData{guild(id:$guildID){attendance(zoneID:$zoneID,limit:16,page:1){data{code startTime players{name type presence}}}}}}";
-  const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:WCL_PO_ATTENDANCE_GUILD_ID,zoneID:zoneId});
+  const data=await warcraftLogsGraphql(token,gqlQuery,{guildID:wclGuildId,zoneID:zoneId});
   const raids=Array.isArray(data?.guildData?.guild?.attendance?.data)?data.guildData.guild.attendance.data:[]; const players={};
   raids.forEach(entry=>(Array.isArray(entry?.players)?entry.players:[]).forEach(player=>{const key=normalizeAttendanceName(player?.name);if(!key)return;if(!players[key])players[key]={attended:0,bench:0};if(Number(player?.presence)===1)players[key].attended+=1;if(Number(player?.presence)===2)players[key].bench+=1;}));
-  const value={total:Math.min(16,raids.length),players}; wclPoAttendanceCache.set(raid,{value,expiresAt:Date.now()+15*60*1000}); return value;
+  const value={total:Math.min(16,raids.length),players}; wclPoAttendanceCache.set(cacheKey,{value,expiresAt:Date.now()+15*60*1000}); return value;
 }
 
 async function getCharacterPoReleaseRows(guildId) {
@@ -3799,7 +3799,10 @@ async function getCharacterPoReleases({ guildId, query: params = {} }) {
     );
   }
   try {
-    const attendance=Object.fromEntries(await Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>[raid,await getWclPoAttendance(raid)])));
+    const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
+    const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
+    const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+    const attendance=Object.fromEntries(await Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId)])));
     characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+Number(player.bench||0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
   } catch(error) { console.warn("Warcraft-Logs-Attendance konnte nicht geladen werden:",error.message||error); characters.forEach(entry=>{entry.attendance16={};}); }
   return { success: true, characters, entries: characters, count: characters.length };
