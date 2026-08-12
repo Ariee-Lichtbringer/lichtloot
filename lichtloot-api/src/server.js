@@ -18014,6 +18014,24 @@ async function queueP0PlusPointsUpdate({ guild, query: params = {} }) {
     if (!accounts.has(discordUserId)) accounts.set(discordUserId, { discordUserId, discordName: clean(row.discord_name), entries: [] });
     accounts.get(discordUserId).entries.push({ player: row.player, server: row.server || "", raid: row.raid, item: row.item, points: Number(row.points || 0) });
   }
+  // An explicitly selected Discord member may not yet have a discord_player_links
+  // row. In that case use the selected member label (for example "Ariee / Juksi")
+  // to attach matching characters to that exact Discord user ID for this DM only.
+  const normalizePersonName = value => clean(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const explicitUsers = targets.filter(target => clean(target.type).toLowerCase() === "user" && clean(target.value));
+  for (const target of explicitUsers) {
+    const discordUserId = clean(target.value);
+    if (accounts.has(discordUserId)) continue;
+    const labelParts = clean(target.label).split(/[\s/|,;()\[\]-]+/).map(normalizePersonName).filter(part => part.length >= 2);
+    if (!labelParts.length) continue;
+    const matchingRows = result.rows.filter(row => labelParts.includes(normalizePersonName(row.player)));
+    if (!matchingRows.length) continue;
+    const account = { discordUserId, discordName: clean(target.label), entries: [] };
+    for (const row of matchingRows) {
+      account.entries.push({ player: row.player, server: row.server || "", raid: row.raid, item: row.item, points: Number(row.points || 0) });
+    }
+    accounts.set(discordUserId, account);
+  }
   const selectedUserIds = new Set(targets.filter(target => clean(target.type).toLowerCase() === "user").map(target => clean(target.value)).filter(Boolean));
   const selectedNames = new Set(targets.filter(target => clean(target.type).toLowerCase() === "name").map(target => clean(target.value).toLowerCase()).filter(Boolean));
   const hasRoleTargets = targets.some(target => clean(target.type).toLowerCase() === "role");
