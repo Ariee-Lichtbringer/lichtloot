@@ -8592,6 +8592,15 @@ async function deletePoPost({ guildId, query: params }) {
     values
   );
 
+  const staleQueue = await query(
+    `delete from bot_update_queue
+     where guild_id = $1
+       and coalesce(payload->>'postKey', '') = $2
+       and status in ('open', 'processing')
+     returning id`,
+    [guildId, postKey]
+  );
+
   const payloads = new Map();
   for (const row of result.rows || []) {
     const key = [
@@ -8629,6 +8638,7 @@ async function deletePoPost({ guildId, query: params }) {
   return {
     success: true,
     deleted: result.rowCount || 0,
+    deletedQueueJobs: staleQueue.rowCount || 0,
     queued: payloads.size,
     postKey
   };
