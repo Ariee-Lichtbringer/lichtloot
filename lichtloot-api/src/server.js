@@ -5953,6 +5953,17 @@ async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
+  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
+  // Wurde der Bot während eines Versands beendet, darf der Auftrag beim
+  // Neustart zeitnah erneut übernommen werden. Kurze Unterbrechungen werden
+  // damit nach einer Minute statt erst nach fünf Minuten fortgesetzt.
+  await query(
+    `update bot_update_queue
+        set status = 'open', claimed_at = null
+      where status = 'processing'
+        and type = 'p0plus_points_update_dm'
+        and claimed_at < now() - interval '1 minute'`
+  );
   await query(
     `update bot_update_queue q
      set status = 'done', resolved_at = now()
