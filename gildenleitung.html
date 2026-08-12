@@ -17422,7 +17422,7 @@ function renderIssueRows(){
       <td>${escapeHtml(report.player || "-")}<br><span class="muted">${escapeHtml(report.server || "")}</span></td>
       <td class="issue-note">${escapeHtml(report.note || "-")}</td>
       <td>${escapeHtml(report.source || "-")}<br><span class="muted">${escapeHtml(report.page || "")}</span></td>
-      <td><button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}')">Erledigt</button></td>
+      <td>${String(report.category||"").toLowerCase()==="item_received"?`<button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}',true)">Item entfernen &amp; erledigen</button>`:String(report.category||"").toLowerCase()==="points_incorrect"?`<button class="small-btn primary" type="button" onclick="correctIssueP0Plus('${escapeAttr(report.id || report.rowNumber || "")}','${escapeAttr(report.points || "0")}')">Punktestand korrigieren</button>`:`<button class="small-btn good" type="button" onclick="resolveIssueReport('${escapeAttr(report.id || report.rowNumber || "")}')">Erledigt</button>`}</td>
     </tr>
   `).join("");
 }
@@ -17506,7 +17506,7 @@ function renderIssueItem(report){
   return names.map(renderLootItem).join("<br>");
 }
 
-async function resolveIssueReport(rowNumber){
+async function resolveIssueReport(rowNumber,removeP0Plus=false){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){
     setStatus("Bitte Master-Code eingeben.", "bad");
@@ -17515,7 +17515,8 @@ async function resolveIssueReport(rowNumber){
   if(!rowNumber) return;
 
   try{
-    const result = await railwayApi({ action:"guildResolveIssueReport", masterCode, rowNumber });
+    if(removeP0Plus&&!confirm("Dieses Item wirklich aus der PO+-Liste des Spielers entfernen und die Meldung erledigen?"))return;
+    const result = await railwayApi({ action:"guildResolveIssueReport", masterCode, rowNumber, removeP0Plus:removeP0Plus?"true":"false" });
     if(!result.success){
       setStatus(result.error || "Meldung konnte nicht erledigt werden.", "bad");
       return;
@@ -17523,7 +17524,9 @@ async function resolveIssueReport(rowNumber){
     issueReports = issueReports.filter(report => String(report.id || report.rowNumber || "") !== String(rowNumber));
     renderSummary();
     renderIssueRows();
-    if(result.notified){
+    if(result.removedP0Plus){
+      setStatus(`PO+-Eintrag entfernt und Meldung erledigt.${result.discordNotified?" Discord-Bestätigung wurde vorbereitet.":" Keine Discord-Verknüpfung für eine DM gefunden."}`,result.discordNotified?"good":"bad");
+    }else if(result.notified){
       setStatus("Meldung erledigt und automatische Antwort ins Spieler-Postfach gelegt.", "good");
     }else if(result.notificationError){
       setStatus(`Meldung erledigt, aber keine automatische Antwort gesendet: ${result.notificationError}`, "bad");
@@ -17533,6 +17536,15 @@ async function resolveIssueReport(rowNumber){
   }catch(error){
     setStatus(error.message || "Meldung konnte nicht erledigt werden.", "bad");
   }
+}
+
+async function correctIssueP0Plus(rowNumber,currentPoints){
+  const value=prompt("Neuen PO+-Punktestand eingeben (0 entfernt den Eintrag):",String(currentPoints||"0"));
+  if(value===null)return;
+  const points=Number(String(value).replace(",","."));
+  if(!Number.isFinite(points)||points<0){setStatus("Bitte einen gültigen Punktestand ab 0 eingeben.","bad");return;}
+  const masterCode=document.getElementById("masterCode").value.trim();
+  try{const result=await railwayApi({action:"guildResolveIssueReport",masterCode,rowNumber,correctP0Plus:"true",correctedPoints:String(points)});if(!result.success)throw new Error(result.error||"Punktestand konnte nicht korrigiert werden.");issueReports=issueReports.filter(report=>String(report.id||report.rowNumber||"")!==String(rowNumber));renderSummary();renderIssueRows();setStatus(`Punktestand auf ${points} korrigiert und Meldung erledigt.${result.discordNotified?" Discord-Bestätigung wurde vorbereitet.":" Keine Discord-Verknüpfung für eine DM gefunden."}`,result.discordNotified?"good":"bad");}catch(error){setStatus(error.message||"Punktestand konnte nicht korrigiert werden.","bad");}
 }
 
 function toggleWorldbuffPanel(){
