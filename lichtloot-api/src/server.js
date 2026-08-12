@@ -151,6 +151,10 @@ await ensureP0PlusAuditSchema().catch(error => {
   console.warn("P0+-Audit-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureUnlinkedP0PlusSchema().catch(error => {
+  console.warn("Nicht zugeordnete PO+-Punkte konnten nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureDiscordChannelSchema().catch(error => {
   console.warn("Discord-Channel-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -2568,6 +2572,54 @@ async function ensureP0PlusAuditSchema() {
   );
   await query(`create index if not exists idx_p0plus_point_audit_guild_created on p0plus_point_audit(guild_id, created_at desc)`);
   await query(`create index if not exists idx_p0plus_point_audit_raid on p0plus_point_audit(guild_id, raid_type, raid_id)`);
+}
+
+async function ensureUnlinkedP0PlusSchema() {
+  await query(
+    `create table if not exists unlinked_p0plus_points (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       player_name text not null,
+       server text not null default 'Everlook',
+       class_name text not null default '',
+       item_id uuid not null references items(id) on delete cascade,
+       points numeric not null default 0,
+       source text not null default 'Nachtwächter Import',
+       updated_at timestamptz not null default now()
+     )`
+  );
+  await query(`create unique index if not exists idx_unlinked_p0plus_unique on unlinked_p0plus_points(guild_id, lower(player_name), lower(server), item_id)`);
+  await query(`create index if not exists idx_unlinked_p0plus_guild on unlinked_p0plus_points(guild_id, lower(player_name), lower(server))`);
+}
+
+async function mergeUnlinkedP0PlusForCharacter(client, guildId, character) {
+  if (!character?.id) return 0;
+  const pending = await client.query(
+    `select * from unlinked_p0plus_points
+     where guild_id=$1 and lower(player_name)=lower($2) and lower(server)=lower($3)`,
+    [guildId, character.name, character.server]
+  );
+  for (const row of pending.rows) {
+    await client.query(
+      `delete from p0plus_points where guild_id=$1 and character_id=$2 and item_id=$3`,
+      [guildId, character.id, row.item_id]
+    );
+    if (Number(row.points) > 0) {
+      await client.query(
+        `insert into p0plus_points (guild_id,character_id,item_id,points,source,note)
+         values ($1,$2,$3,$4,$5,'Automatisch mit SpielerLogin zusammengeführt')`,
+        [guildId, character.id, row.item_id, row.points, row.source]
+      );
+    }
+  }
+  if (pending.rowCount) {
+    await client.query(
+      `delete from unlinked_p0plus_points
+       where guild_id=$1 and lower(player_name)=lower($2) and lower(server)=lower($3)`,
+      [guildId, character.name, character.server]
+    );
+  }
+  return pending.rowCount;
 }
 
 async function ensureDiscordChannelSchema() {
@@ -17797,6 +17849,7 @@ async function deleteGuildPrio({ guildId, query: params }) {
 }
 
 async function getP0Plus(guildId, params = {}) {
+  await ensureUnlinkedP0PlusSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guildId];
   let raidClause = "";
@@ -17814,11 +17867,28 @@ async function getP0Plus(guildId, params = {}) {
        pp.points,
        pp.source,
        pp.note,
-       pp.created_at
+       pp.created_at,
+       true as account_linked
      from p0plus_points pp
      join characters c on c.id = pp.character_id
      left join items i on i.id = pp.item_id
      where pp.guild_id = $1
+       ${raidClause}
+     union all
+     select
+       coalesce(i.raid_type, 'Raid') as raid,
+       i.name as item,
+       coalesce(i.quality, '') as quality,
+       up.player_name as player,
+       up.server,
+       up.points,
+       up.source,
+       'Noch keinem SpielerLogin zugeordnet' as note,
+       up.updated_at as created_at,
+       false as account_linked
+     from unlinked_p0plus_points up
+     join items i on i.id=up.item_id
+     where up.guild_id=$1
        ${raidClause}
      order by raid asc, item asc, player asc`,
     values
@@ -17844,6 +17914,7 @@ async function getP0Plus(guildId, params = {}) {
       source: row.source || "",
       createdAt: row.created_at,
       created_at: row.created_at
+      ,accountLinked: row.account_linked !== false
     };
     if (row.created_at) {
       const currentTime = current.createdAt ? new Date(current.createdAt).getTime() : 0;
@@ -17860,6 +17931,105 @@ async function getP0Plus(guildId, params = {}) {
   });
 
   return { success: true, entries: Array.from(grouped.values()).filter(entry => Number(entry.count) > 0) };
+}
+
+async function importUnlinkedP0Plus({ guild, params }) {
+  requireMasterCodeForGuild(guild, params.masterCode, 'guildImportUnlinkedP0Plus', params);
+  await ensureUnlinkedP0PlusSchema();
+  const entries=Array.isArray(params.entries)?params.entries:[];
+  if(!entries.length){const error=new Error('Keine PO+-Punkte zum Importieren.');error.statusCode=400;throw error;}
+  const client=await pool.connect();
+  let linked=0,unlinked=0;
+  try{
+    await client.query('begin');
+    for(const entry of entries){
+      const playerName=clean(entry.player); const server=clean(entry.server)||'Everlook';
+      const className=clean(entry.className); const raidType=normalizeRaidType(entry.raid);
+      const itemName=clean(entry.item); const points=Number(entry.points)||0;
+      if(!playerName||!itemName||points<0) continue;
+      const itemResult=await client.query(
+        `select id,name from items where lower(name)=lower($1) and lower(coalesce(raid_type,''))=any($2) order by created_at asc limit 1`,
+        [itemName,raidTypeSearchValues(raidType)]
+      );
+      if(!itemResult.rows.length){const error=new Error(`Item nicht gefunden: ${raidType} – ${itemName}`);error.statusCode=400;throw error;}
+      const itemId=itemResult.rows[0].id;
+      const charResult=await client.query(
+        `select c.id,c.name,c.server from characters c join players p on p.id=c.player_id
+         where p.guild_id=$1 and lower(c.name)=lower($2) and lower(c.server)=lower($3) limit 1`,
+        [guild.id,playerName,server]
+      );
+      await client.query(`delete from unlinked_p0plus_points where guild_id=$1 and lower(player_name)=lower($2) and lower(server)=lower($3) and item_id=$4`,[guild.id,playerName,server,itemId]);
+      if(charResult.rows.length){
+        await client.query(`delete from p0plus_points where guild_id=$1 and character_id=$2 and item_id=$3`,[guild.id,charResult.rows[0].id,itemId]);
+        if(points>0) await client.query(`insert into p0plus_points(guild_id,character_id,item_id,points,source,note) values($1,$2,$3,$4,'Nachtwächter Import','Importierter Punktestand – ersetzt vorherigen Stand')`,[guild.id,charResult.rows[0].id,itemId,points]);
+        linked++;
+      }else{
+        await client.query(`insert into unlinked_p0plus_points(guild_id,player_name,server,class_name,item_id,points,source) values($1,$2,$3,$4,$5,$6,'Nachtwächter Import')`,[guild.id,playerName,server,className,itemId,points]);
+        unlinked++;
+      }
+    }
+    await client.query('commit');
+    return {success:true,imported:linked+unlinked,linked,unlinked};
+  }catch(error){await client.query('rollback').catch(()=>{});throw error;}finally{client.release();}
+}
+
+async function queueP0PlusPointsUpdate({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(guild.slug).toLowerCase() !== "nachtloot") {
+    const error = new Error("PO+ Punkte Updates sind derzeit nur für NachtLoot aktiviert.");
+    error.statusCode = 400;
+    throw error;
+  }
+  let targets = [];
+  try {
+    const parsed = typeof params.targets === "string" ? JSON.parse(params.targets) : params.targets;
+    targets = Array.isArray(parsed) ? parsed : [];
+  } catch {}
+  const result = await query(
+    `select c.name as player, c.server, coalesce(i.raid_type,'Raid') as raid,
+            coalesce(i.name,pp.note,'P0/P0+') as item, sum(pp.points)::numeric as points,
+            coalesce(link.discord_user_id,'') as discord_user_id,
+            coalesce(link.discord_name,'') as discord_name
+       from p0plus_points pp
+       join characters c on c.id=pp.character_id
+       join players p on p.id=c.player_id
+       left join items i on i.id=pp.item_id
+       left join lateral (
+         select dpl.discord_user_id,dpl.discord_name
+           from discord_player_links dpl
+          where dpl.guild_id=pp.guild_id and (dpl.character_id=c.id or dpl.character_id in (select c2.id from characters c2 where c2.player_id=p.id))
+          order by case when dpl.character_id=c.id then 0 else 1 end,dpl.updated_at desc
+          limit 1
+       ) link on true
+      where pp.guild_id=$1
+      group by c.name,c.server,i.raid_type,i.name,pp.note,link.discord_user_id,link.discord_name
+     having sum(pp.points)>0
+      order by lower(c.name),lower(coalesce(i.raid_type,'')),lower(coalesce(i.name,pp.note,''))`,
+    [guild.id]
+  );
+  const accounts = new Map();
+  for (const row of result.rows) {
+    const discordUserId = clean(row.discord_user_id);
+    if (!discordUserId) continue;
+    if (!accounts.has(discordUserId)) accounts.set(discordUserId, { discordUserId, discordName: clean(row.discord_name), entries: [] });
+    accounts.get(discordUserId).entries.push({ player: row.player, server: row.server || "", raid: row.raid, item: row.item, points: Number(row.points || 0) });
+  }
+  if (!accounts.size) {
+    const error = new Error("Es wurden keine Spieler mit PO+-Punkten und verknüpftem Discord-Konto gefunden.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const payload = {
+    guildSlug: guild.slug,
+    guildName: guild.name || guild.slug,
+    targets,
+    onlyPlayersWithPoints: true,
+    messageTemplate: String(params.messageTemplate || "").trim().slice(0, 1800),
+    accounts: [...accounts.values()],
+    createdAt: new Date().toISOString()
+  };
+  await enqueueBotUpdate({ guildId: guild.id, type: "p0plus_points_update_dm", payload });
+  return { success: true, queued: true, playerCount: accounts.size, itemCount: result.rows.length };
 }
 
 async function getRaidP0PlusAudit({ guildId, query: params }) {
@@ -19085,6 +19255,7 @@ async function createPlayerWithCharacter({
          returning id, name, server, class_name, created_at`,
         [existingPlayer.rows[0].id, clean(charName), clean(server), clean(className)]
       );
+      await mergeUnlinkedP0PlusForCharacter(client, guildId, characterResult.rows[0]);
       const playerResult = await client.query(
         `select id, player_pin, approval_status, created_at
          from players
@@ -19122,6 +19293,7 @@ async function createPlayerWithCharacter({
        returning id, name, server, class_name, created_at`,
       [playerResult.rows[0].id, clean(charName), clean(server), clean(className)]
     );
+    await mergeUnlinkedP0PlusForCharacter(client, guildId, characterResult.rows[0]);
 
     await client.query("commit");
     return { player: playerResult.rows[0], character: normalizeCharacter({ ...characterResult.rows[0], approval_status: "pending" }) };
@@ -19148,14 +19320,24 @@ async function addCharacterToPlayer({ guildId, pin, charName, server, className 
     throw error;
   }
 
-  const result = await query(
-    `insert into characters (player_id, name, server, class_name)
-     values ($1, $2, $3, $4)
-     returning id, name, server, class_name, created_at`,
-    [player.id, clean(charName), clean(server), clean(className)]
-  );
-
-  return normalizeCharacter(result.rows[0]);
+  const client=await pool.connect();
+  try {
+    await client.query('begin');
+    const result = await client.query(
+      `insert into characters (player_id, name, server, class_name)
+       values ($1, $2, $3, $4)
+       returning id, name, server, class_name, created_at`,
+      [player.id, clean(charName), clean(server), clean(className)]
+    );
+    await mergeUnlinkedP0PlusForCharacter(client,guildId,result.rows[0]);
+    await client.query('commit');
+    return normalizeCharacter(result.rows[0]);
+  } catch(error) {
+    await client.query('rollback').catch(()=>{});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function deleteCharacterFromPlayer({ guildId, pin, charName, server }) {
@@ -22169,6 +22351,10 @@ app.post("/api/apps-script", async (req, res, next) => {
       const saved = await setGuildPoItemsBulk({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
+    if (action === "guildImportUnlinkedP0Plus") {
+      const imported = await importUnlinkedP0Plus({ guild, params: postParams });
+      return res.json({ ...imported, guild: guild.slug });
+    }
     if (action === "guildSetRaidMemberNotice") {
       const saved = await setRaidMemberNotice({ guild, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
@@ -22227,6 +22413,12 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
     if(action==="guildSetNotificationSetting"){
       const saved=await setGuildNotificationSetting({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
+    }
+    if(action==="guildQueueP0PlusPointsUpdate"){
+      const queued=await queueP0PlusPointsUpdate({guild,query:postParams});return res.json({...queued,guild:guild.slug});
+    }
+    if(action==="reportIssue"){
+      const report=await reportIssue({guildId:guild.id,query:postParams});return res.json({...report,guild:guild.slug});
     }
     if(action==="guildSetPoReleaseDisplaySettings"){
       const saved=await setPoReleaseDisplaySettings({guildId:guild.id,query:postParams});return res.json({...saved,guild:guild.slug});
