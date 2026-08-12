@@ -33,6 +33,19 @@
  .aq40-board .task-grid{grid-template-columns:repeat(3,minmax(380px,1fr))}
  .tactic-board{min-height:520px}
 }
+/* C'Thun-Raster entsprechend der klassischen Acht-Gruppen-Aufstellung. */
+.cthun-grid{left:14%;top:8%;width:51%;height:84%;filter:drop-shadow(0 1px 1px #0008)}
+.cthun-grid .ring{fill:none;stroke:#263238;stroke-width:.42;opacity:.72}
+.cthun-grid .sector{fill:none;stroke:#f2d21b;stroke-width:.7;stroke-dasharray:2.2 1.5;stroke-linejoin:round;opacity:1}
+.cthun-grid .link{stroke:#f2d21b;stroke-width:.8;stroke-dasharray:1.4 1}
+.cthun-grid .node{stroke:#202020;stroke-width:.38}.cthun-grid .node.yellow{fill:#f8df16}.cthun-grid .node.red{fill:#f52222}.cthun-grid .node.white{fill:#f7f7f7}
+.cthun-grid .node-text{fill:#111;font:900 2.7px system-ui,sans-serif;text-anchor:middle;dominant-baseline:middle;stroke:none}
+.cthun-grid .group-number{fill:#fff;font:900 7.5px system-ui,sans-serif;text-anchor:middle;paint-order:stroke;stroke:#111;stroke-width:1.4px}
+.cthun-grid .group-pair{fill:#fff;font:900 4px system-ui,sans-serif;text-anchor:middle;paint-order:stroke;stroke:#111;stroke-width:1px}
+.cthun-grid .distance{fill:#111;font:4px system-ui,sans-serif}
+.cthun-grid .center{fill:#9d160b;stroke:#5d0d07;stroke-width:.7}
+.cthun-grid.editable{pointer-events:auto;cursor:grab;outline:2px dashed #facc15;outline-offset:3px}.cthun-grid.editable:active{cursor:grabbing}
+.cthun-grid-edit{display:none}.cthun-grid-edit.visible{display:inline-flex}
 </style></head><body>
 <header class="top"><img src="images/content.png" alt=""><div><h1>Raidaufstellung</h1><p>Spielerbank · Gruppenplanung · MRT-/Addon-Export</p></div><button class="btn back" onclick="location.href=withGuild('gildenleitung.html')">← Gildenleitung</button></header>
 <main class="wrap"><section class="toolbar">
@@ -52,7 +65,7 @@ const groupLayoutNames={BWL:[['standard','Trash / Standard'],['razorgore','Razor
 const colors={Krieger:'#c79c6e',Paladin:'#f58cba','Jäger':'#abd473',Schurke:'#fff569',Priester:'#fff',Schamane:'#0070de',Magier:'#69ccf0',Hexenmeister:'#9482c9',Druide:'#ff7d0a'};
 const classImages={Krieger:'images/krieger.png',Paladin:'images/Pala.png','Jäger':'images/jäger.png',Schurke:'images/schurke.png',Priester:'images/priester.png',Schamane:'https://wow.zamimg.com/images/wow/icons/large/classicon_shaman.jpg',Magier:'images/magier.png',Hexenmeister:'images/hexenmeister.png',Druide:'images/druide.png'};
 const specIcons={tank:'inv_shield_06','krieger|waffen':'ability_warrior_savageblow','krieger|furor':'ability_warrior_innerrage','paladin|heilig':'spell_holy_holybolt','paladin|schutz':'inv_shield_06','paladin|vergeltung':'spell_holy_auraoflight','schurke|meucheln':'ability_rogue_eviscerate','schurke|kampf':'ability_backstab','schurke|täuschung':'ability_stealth','jäger|tierherrschaft':'ability_hunter_beasttaming','jäger|treffsicherheit':'ability_marksmanship','jäger|überleben':'ability_hunter_camouflage','druide|heilung':'spell_holy_flashheal','druide|wildheit dd':'ability_druid_catform','druide|gleichgewicht':'spell_nature_starfall','priester|heilig':'spell_holy_guardianspirit','priester|disziplin':'spell_holy_powerwordshield','priester|schatten':'spell_shadow_shadowwordpain','magier|feuer':'spell_fire_firebolt02','magier|arkan':'spell_holy_magicalsentry','magier|frost':'spell_frost_frostbolt02','hexenmeister|dämonologie':'spell_shadow_metamorphosis','hexenmeister|zerstörung':'spell_shadow_rainoffire','hexenmeister|gebrechen':'spell_shadow_deathcoil','schamane|heilung':'spell_holy_flashheal','schamane|verstärkung':'ability_shaman_stormstrike','schamane|elementar':'spell_nature_lightningshield'};
-let assignments={};let customSlots={};let tacticPlan={image:'',markers:[],cthunGrid:false};let selectedTacticMarkerId='';
+let assignments={};let customSlots={};let tacticPlan={image:'',markers:[],cthunGrid:false,cthunGridX:14,cthunGridY:8,cthunGridScale:1};let selectedTacticMarkerId='';let cthunGridEditMode=false;
 let activeAq40Tab='general';let protectionPotions={};
 const aq40Tabs=[['general','Allgemein'],['skeram','Skeram + Käfer-Trio'],['sartura','Sartura + Fankriss'],['viscidus','Viscidus + Huhuran'],['twins','Zwillingsimperatoren + Trash'],['cthun','Ouro + C’Thun'],['tanks','Tanks / Buffs'],['groups','Gruppen']];
 const protectionPotionChoices=['Kein Schutztrank','Großer Arkanschutztrank','Großer Feuerschutztrank','Großer Frostschutztrank','Großer Naturschutztrank','Großer Schattenschutztrank','Großer Heiligschutztrank'];
@@ -84,7 +97,13 @@ taskBoards.BWL.forEach(card=>{if(bwlMarkerSlots[card[0]])card[2]=bwlMarkerSlots[
 function withGuild(page){return page+'?guild='+encodeURIComponent(guild)}
 function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function tacticLabel(type){return ({boss:'Boss',tank:'Tank',heal:'Heiler',dd:'DD',note:'Hinweis'})[type]||'Position'}
-function cthunGridHtml(){const spokes=[[50,50,10,50],[50,50,22,22],[50,50,22,78],[50,50,50,10],[50,50,50,90],[50,50,78,22],[50,50,78,78],[50,50,90,50]],groups=[[10,50,1],[22,22,2],[22,78,3],[50,10,4],[50,90,5],[78,22,6],[78,78,7],[90,50,8]];return `<svg class="cthun-grid" viewBox="0 0 100 100" aria-label="C’Thun-Raster mit acht Gruppensektoren"><g>${[12,20,28,36].map(r=>`<circle class="ring" cx="50" cy="50" r="${r}"></circle>`).join('')}${spokes.map(([x1,y1,x2,y2])=>`<line class="axis" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`).join('')}<circle class="center" cx="50" cy="50" r="3"></circle>${groups.map(([x,y,n])=>`<g><circle class="group-disc" cx="${x}" cy="${y}" r="4.2"></circle><text x="${x}" y="${y}">${n}</text></g>`).join('')}</g></svg>`}
+function cthunGridHtml(){
+  const groups=[{n:1,p:8,a:180},{n:2,p:7,a:225},{n:3,p:6,a:135},{n:4,p:5,a:270},{n:5,p:4,a:90},{n:6,p:3,a:315},{n:7,p:2,a:45},{n:8,p:1,a:0}];
+  const pt=(a,r,o=0)=>{const t=a*Math.PI/180,c=Math.cos(t),s=Math.sin(t);return [50+c*r-s*o,50+s*r+c*o]};
+  const node=(p,kind,label='')=>`<g><circle class="node ${kind}" cx="${p[0].toFixed(2)}" cy="${p[1].toFixed(2)}" r="1.75"></circle>${label?`<text class="node-text" x="${p[0].toFixed(2)}" y="${p[1].toFixed(2)}">${label}</text>`:''}</g>`;
+  const sectors=groups.map(g=>{const inner=pt(g.a,10),red=pt(g.a,14),near=pt(g.a,18),sideA=pt(g.a,25,-5),sideB=pt(g.a,25,5),farA=pt(g.a,32,-4),farB=pt(g.a,32,4),label=pt(g.a,40);const polygon=[near,sideA,farA,farB,sideB].map(p=>p.map(v=>v.toFixed(2)).join(',')).join(' ');return `<g><line class="link" x1="${inner[0]}" y1="${inner[1]}" x2="${near[0]}" y2="${near[1]}"></line><polyline class="sector" points="${polygon} ${near[0]},${near[1]}"></polyline>${node(inner,'yellow')}${node(red,'red')}${node(near,'yellow','1')}${node(sideA,'white','2')}${node(sideB,'white','5')}${node(farA,'white','3')}${node(farB,'white','4')}<text class="group-number" x="${label[0]}" y="${label[1]-1}">${g.n}</text><text class="group-pair" x="${label[0]}" y="${label[1]+4}">(${g.p})</text></g>`}).join('');
+  return `<svg class="cthun-grid" viewBox="0 0 100 100" aria-label="C’Thun-Aufstellung mit acht Gruppen"><g>${[13,21,29].map(r=>`<circle class="ring" cx="50" cy="50" r="${r}"></circle>`).join('')}<circle class="center" cx="50" cy="50" r="8.5"></circle>${sectors}<text class="distance" x="65" y="64">20</text><text class="distance" x="70" y="69">30</text><text class="distance" x="75" y="74">40</text></g></svg>`
+}
 function tacticBoardHtml(readonly=false){const markers=(tacticPlan.markers||[]).map(m=>`<div class="tactic-marker ${esc(m.type)} ${!readonly&&m.id===selectedTacticMarkerId?'selected':''}" data-id="${esc(m.id)}" style="left:${Number(m.x)||50}%;top:${Number(m.y)||50}%" ${readonly?'':`onpointerdown="startTacticDrag(event,'${esc(m.id)}')" ondblclick="renameTacticMarker(event,'${esc(m.id)}')"`}><small>${esc(tacticLabel(m.type))}</small>${esc(m.label)}</div>`).join('');return `${tacticPlan.image?`<img class="tactic-map" src="${tacticPlan.image}" alt="Grundriss des Bosskampfs">`:'<div class="tactic-empty">Noch kein Raum- oder Bossbild hochgeladen</div>'}${tacticPlan.cthunGrid?cthunGridHtml():''}${markers}`}
 function updateCthunGridButton(){const button=document.getElementById('cthunGridButton');if(!button)return;const available=currentRaidType()==='AQ40'&&activeAq40Tab==='cthun';button.classList.toggle('hidden',!available);button.classList.toggle('grid-active',available&&!!tacticPlan.cthunGrid);button.textContent=tacticPlan.cthunGrid?'◉ C’Thun-Raster an':'◎ C’Thun-Raster'}
 function renderTacticBoard(){const board=document.getElementById('tacticBoard');if(!board)return;board.classList.toggle('has-map',!!tacticPlan.image);board.innerHTML=tacticBoardHtml(false);updateCthunGridButton()}
