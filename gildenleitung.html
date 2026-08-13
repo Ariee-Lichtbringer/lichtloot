@@ -16555,18 +16555,9 @@ function renderPoReleaseRows(){
   const tbody = document.getElementById("poReleaseRows");
   if(!tbody) return;
   const needle = normalize(poReleaseSearch);
-  const preferredByName = new Map();
-  (poReleaseCharacters || []).forEach(entry => {
-    const key = normalize(entry.name || entry.char || "");
-    if(!key) return;
-    const current = preferredByName.get(key);
-    const server = normalize(entry.server || "");
-    const currentServer = normalize(current && current.server || "");
-    if(!current || server === "lichtbringer" || (currentServer !== "lichtbringer" && server === "everlook")){
-      preferredByName.set(key, entry);
-    }
-  });
-  const displayCharacters = Array.from(preferredByName.values());
+  // Gleichnamige Charaktere auf unterschiedlichen Servern sind eigenständige
+  // Datensätze und müssen getrennt freigegeben werden können.
+  const displayCharacters = poReleaseCharacters || [];
   const rows = displayCharacters.filter(entry => {
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
