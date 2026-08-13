@@ -18605,6 +18605,7 @@ async function setP0PlusPoints({ guildId, query: params }) {
   const itemName = clean(params.item);
   const slot = clean(params.slot);
   const points = Number(String(params.points || "0").replace(",", "."));
+  const explicitlyUnlinked = clean(params.accountLinked).toLowerCase() === "false";
 
   if (!raidType || !player || !itemName || !Number.isFinite(points) || points < 0) {
     const error = new Error("Raid, Spieler, Item und Punkte werden benötigt.");
@@ -18612,17 +18613,58 @@ async function setP0PlusPoints({ guildId, query: params }) {
     throw error;
   }
 
-  const character = await findCharacterByName(guildId, player, server);
-  if (!character) {
-    const error = new Error("Dieser Charakter wurde in Railway nicht gefunden.");
-    error.statusCode = 404;
-    throw error;
-  }
+  const character = explicitlyUnlinked ? null : await findCharacterByName(guildId, player, server);
 
   const client = await pool.connect();
   try {
     await client.query("begin");
     const item = await upsertItem(client, raidType, itemName);
+    if (!character) {
+      const unlinkedResult = await client.query(
+        `select coalesce(sum(points), 0)::numeric as points
+         from unlinked_p0plus_points
+         where guild_id = $1 and lower(player_name) = lower($2)
+           and lower(coalesce(server, '')) = lower($3) and item_id = $4`,
+        [guildId, player, server, item.id]
+      );
+      const oldPoints = Number(unlinkedResult.rows[0]?.points || 0);
+      if (oldPoints <= 0 && points > 0) {
+        const error = new Error("Dieser Charakter wurde in dieser Gilde nicht gefunden.");
+        error.statusCode = 404;
+        throw error;
+      }
+      await client.query(
+        `delete from unlinked_p0plus_points
+         where guild_id = $1 and lower(player_name) = lower($2)
+           and lower(coalesce(server, '')) = lower($3) and item_id = $4`,
+        [guildId, player, server, item.id]
+      );
+      if (points > 0) {
+        await client.query(
+          `insert into unlinked_p0plus_points
+             (guild_id, player_name, server, item_id, points, source)
+           values ($1,$2,$3,$4,$5,$6)`,
+          [guildId, player, server, item.id, points, "Gildenleitung"]
+        );
+      }
+      await insertP0PlusAudit(client, {
+        guildId,
+        characterId: null,
+        itemId: item.id,
+        raidType,
+        playerName: player,
+        server,
+        itemName,
+        oldPoints,
+        newPoints: points,
+        action: points > 0 ? "manual_set_unlinked" : "manual_clear_unlinked",
+        source: "Gildenleitung",
+        note: slot ? `Slot: ${slot}` : "Unverknüpfter PO+-Eintrag"
+      });
+      await client.query("commit");
+      return { success: true, deleted: points === 0, raid: raidType, player, item: itemName, slot, count: points, points, accountLinked: false };
+    }
+
     const oldPoints = await getP0PlusPointTotal(client, guildId, character.id, item.id);
 
     await client.query(
