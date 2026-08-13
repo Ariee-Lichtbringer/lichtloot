@@ -1230,6 +1230,8 @@ body{
 .p0plus-player-list{padding:0 10px 8px 20px;display:flex;flex-direction:column;gap:4px}
 .p0plus-player-row{display:grid;grid-template-columns:minmax(0,1fr) 96px!important;gap:12px;align-items:center;color:#dbeafe;font-size:13px}
 .p0plus-player-name{font-weight:900;color:#f8fafc}
+.p0plus-player-name.unlinked{color:#94a3b8;font-weight:700;opacity:.78}
+.p0plus-player-name.unlinked:after{content:" · noch kein Account";font-size:11px;font-weight:600}
 .p0plus-player-points{font-weight:900;color:#facc15;text-align:left}
 .p0plus-empty{padding:14px;border-radius:14px;background:rgba(2,6,23,.55);border:1px solid rgba(255,255,255,.12);color:#dbeafe}
 .p0plus-item-summary{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto;align-items:center!important}
@@ -1632,6 +1634,10 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
 .own-p0-release-chip .ok,.own-p0-release-chip.is-active .ok{color:#dcfce7}
 .own-p0-release-chip .warn{color:#422006}
 .own-p0-release-chip .muted{color:#cbd5e1}
+.own-attendance-title{margin-top:14px;color:#bfdbfe;font-size:12px;font-weight:950}
+.own-attendance-items{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:7px}
+.own-attendance-chip{display:flex;flex-direction:column;gap:3px;padding:9px 10px;border:1px solid #334155;border-radius:10px;background:#0b1220;color:#e2e8f0;font-size:11px;font-weight:850}
+.own-attendance-chip strong{color:#93c5fd;font-size:13px}.own-attendance-chip.low strong{color:#fca5a5}.own-attendance-chip small{color:#94a3b8;font-size:10px}
 .own-p0-release-legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(148,163,184,.22);color:#cbd5e1;font-size:11px;font-weight:800}
 .own-p0-release-legend span{display:inline-flex;align-items:center;gap:6px}
 .own-p0-release-dot{width:10px;height:10px;border-radius:3px;display:inline-block}.own-p0-release-dot.pending{background:#facc15}.own-p0-release-dot.approved{background:#22c55e}.own-p0-release-dot.empty{background:#334155;border:1px solid #64748b}
@@ -5765,6 +5771,7 @@ async function switchMeinLichtLootGuild(value){
     }
     const target=new URL(window.location.href);
     target.searchParams.set("guild", guild.slug);
+    try{ sessionStorage.setItem("lichtlootStartMenuAction","account"); }catch(error){}
     window.location.href=target.href;
   }catch(error){
     const status=document.getElementById("dashboardMyStatus");
@@ -5890,7 +5897,7 @@ function logoutLichtLootPlayer(){
   renderRaidCalendar();
   refreshRaidCreateAccess();
   window.setTimeout(()=>{
-    const target=new URL("github-index.html", window.location.href);
+    const target=new URL("index.html", window.location.href);
     target.searchParams.set("guild", CURRENT_GUILD_SLUG);
     window.location.href=target.toString();
   },450);
@@ -7922,10 +7929,21 @@ function renderMyPoReleasesCard(releases,requests,data){
     const textClass=active ? "ok" : pending ? "warn" : "muted";
     return `<span class="own-p0-release-chip${stateClass}"><span>${safeHtml(label)}</span><strong class="${textClass}">${stateText}</strong></span>`;
   }).join("");
+  const attendanceLabels=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]];
+  const attendanceChips=attendanceLabels.map(([key,label])=>{
+    const attendance=data?.attendance16?.[key];
+    const total=Number(attendance?.total||0),attended=Number(attendance?.attended||0),bench=Number(attendance?.bench||0);
+    const detail=total ? `${attended}/${total} Teilnahmen` : "keine WCL-Daten";
+    const bank=bench>0 ? ` · davon ${bench} Bank` : "";
+    const source=total ? `letzte ${total} Raidtermine${bank}` : "Warcraft Logs";
+    return `<span class="own-attendance-chip${total&&attended<=6?" low":""}"><span>${label}</span><strong>${safeHtml(detail)}</strong><small>${safeHtml(source)}</small></span>`;
+  }).join("");
   return `<div class="lichtloot-fold own-p0-popout-card">
     <div class="own-p0-release-title">Meine P0+ Freigaben</div>
     <div class="own-p0-release-text">Diese Haken gelten auch für die P0+-Anmeldung im Discord.</div>
     <div class="own-p0-release-items">${recruitChips}${chips}</div>
+    <div class="own-attendance-title">Meine Attendance (Warcraft Logs)</div>
+    <div class="own-attendance-items">${attendanceChips}</div>
     <div class="own-p0-release-legend"><span><i class="own-p0-release-dot pending"></i>Gelb: Antrag in Prüfung</span><span><i class="own-p0-release-dot approved"></i>Grün: freigegeben</span><span><i class="own-p0-release-dot empty"></i>Dunkel: noch nicht beantragt/freigegeben</span></div>
   </div>`;
 }
@@ -8878,7 +8896,8 @@ function p0V5FinalBuildGrouped(entries){
 
     const itemGroup = grouped[raid].items[itemKey];
     const playerKey = p0V5FinalKey(player);
-    if(!itemGroup.players[playerKey]) itemGroup.players[playerKey] = {name:player, points:0};
+    if(!itemGroup.players[playerKey]) itemGroup.players[playerKey] = {name:player, points:0, accountLinked:entry.accountLinked !== false};
+    if(entry.accountLinked === false) itemGroup.players[playerKey].accountLinked=false;
 
     itemGroup.players[playerKey].points += points;
     itemGroup.points += points;
@@ -8981,7 +9000,7 @@ function renderP0PlusOverview(entries){
             <div class="p0plus-player-list">
               ${players.map(player => `
                 <div class="p0plus-player-row">
-                  <span class="p0plus-player-name">${safeHtml(player.name)}</span>
+                  <span class="p0plus-player-name${player.accountLinked===false?' unlinked':''}">${safeHtml(player.name)}</span>
                   <span class="p0plus-player-points">${safeHtml(String(player.points))} Punkte</span>
                 </div>
               `).join("")}
@@ -9319,6 +9338,7 @@ document.addEventListener("DOMContentLoaded",async ()=>{
       else if(startMenuAction==="p0plus") toggleP0PlusOverview();
       else if(startMenuAction==="raidlead") toggleRaidleadLogin();
       else if(startMenuAction==="create") toggleRaidCreate();
+      else if(startMenuAction==="account") openAccountManagementCenter();
     },120);
   }
   document.addEventListener("click",event=>{
