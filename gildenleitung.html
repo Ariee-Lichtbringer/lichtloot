@@ -13662,6 +13662,7 @@ function renderRaidHelperPoSignupDetail(postKey){
         <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
       </div>
       <div class="raid-helper-current-actions">
+        <button class="small-btn primary" type="button" ${isArchivedOnly ? "disabled" : ""} onclick="refreshPoSignupDiscordPost('${escapeAttr(row.postKey)}', this)">Discord-Post aktualisieren</button>
         <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
         ${isArchivedOnly
           ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
@@ -13698,6 +13699,43 @@ function renderRaidHelperPoSignupDetail(postKey){
     "Noch keine PO-Anmeldungen vorhanden."
   );
   loadManualPoItemOptions(raidKey);
+}
+
+async function refreshPoSignupDiscordPost(postKey, button){
+  const row = raidHelperPoSignupRows().find(item => String(item.postKey || "") === String(postKey || ""));
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  if(!row || !masterCode){
+    setStatus(!masterCode ? "Bitte zuerst die Gildenleitung freischalten." : "PO-Anmelder wurde nicht gefunden.", "bad");
+    return;
+  }
+  const originalText = button?.textContent || "Discord-Post aktualisieren";
+  if(button){ button.disabled = true; button.textContent = "Wird aktualisiert …"; }
+  try{
+    const result = await railwayWrite({
+      action:"guildQueuePoPost",
+      masterCode,
+      postKey:row.postKey,
+      sourceChannelId:row.sourceChannelId || row.targetChannelId,
+      targetChannelId:row.targetChannelId || row.sourceChannelId,
+      title:row.title || `${poSignupRaidLabel(row.raid)} PO-Anmelder`,
+      raid:row.raid || "",
+      raidDate:row.raidDate || "",
+      raidTime:row.raidTime || "",
+      mode:row.mode || "signup",
+      note:row.note || "",
+      itemOptions:row.itemOptions || "",
+      lichtlootRaidId:row.lichtlootRaidId || row.raidPin || row.prioPin || "",
+      lichtlootPlayerPin:row.lichtlootPlayerPin || row.raidPin || row.prioPin || "",
+      lichtlootLeadPin:row.lichtlootLeadPin || row.leadPin || ""
+    });
+    if(!result.success) throw new Error(result.error || "Discord-Post konnte nicht aktualisiert werden.");
+    setStatus(result.skipped ? "Die Aktualisierung ist bereits in der Bot-Warteschlange." : "Der PO-Anmelder wird jetzt im Discord aktualisiert.", result.skipped ? "" : "good");
+    if(button) button.textContent = result.skipped ? "Bereits vorgemerkt" : "Aktualisierung vorgemerkt";
+    window.setTimeout(()=>{ if(button){ button.disabled=false; button.textContent=originalText; } }, 2500);
+  }catch(error){
+    if(button){ button.disabled=false; button.textContent=originalText; }
+    setStatus(error.message || "Discord-Post konnte nicht aktualisiert werden.", "bad");
+  }
 }
 
 async function loadManualPoItemOptions(raidKey,selectId="poManualItem"){
