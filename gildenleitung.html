@@ -7899,6 +7899,19 @@ function renderLootLayoutPanel(){
     element.addEventListener("input", markLootLayoutDirty);
     element.addEventListener("change", markLootLayoutDirty);
   });
+  const lichtbuffSignupToggle = document.getElementById("layoutLichtbuffSelfSignupButtons");
+  if(lichtbuffSignupToggle){
+    lichtbuffSignupToggle.addEventListener("change", async () => {
+      const status = document.getElementById("lootLayoutStatus");
+      lichtbuffSignupToggle.disabled = true;
+      if(status) status.textContent = "Lichtbuff-Bot-Einstellung wird sofort gespeichert ...";
+      try{
+        await saveLootLayoutPanel();
+      } finally {
+        lichtbuffSignupToggle.disabled = false;
+      }
+    });
+  }
 }
 
 async function saveLootLayoutPanel(){
