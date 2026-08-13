@@ -155,6 +155,10 @@ await ensureUnlinkedP0PlusSchema().catch(error => {
   console.warn("Nicht zugeordnete PO+-Punkte konnten nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureIssueReportDiscordSchema().catch(error => {
+  console.warn("Discord-Felder für Meldungen konnten nicht vorbereitet werden:", error.message || error);
+});
+
 await ensureDiscordChannelSchema().catch(error => {
   console.warn("Discord-Channel-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -2590,6 +2594,11 @@ async function ensureUnlinkedP0PlusSchema() {
   );
   await query(`create unique index if not exists idx_unlinked_p0plus_unique on unlinked_p0plus_points(guild_id, lower(player_name), lower(server), item_id)`);
   await query(`create index if not exists idx_unlinked_p0plus_guild on unlinked_p0plus_points(guild_id, lower(player_name), lower(server))`);
+}
+
+async function ensureIssueReportDiscordSchema() {
+  await query(`alter table issue_reports add column if not exists discord_user_id text`);
+  await query(`alter table issue_reports add column if not exists discord_name text`);
 }
 
 async function mergeUnlinkedP0PlusForCharacter(client, guildId, character) {
@@ -5953,17 +5962,6 @@ async function getBotQueueAllGuilds({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePendingPlayerLoginNoticesQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
-  await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
-  // Wurde der Bot während eines Versands beendet, darf der Auftrag beim
-  // Neustart zeitnah erneut übernommen werden. Kurze Unterbrechungen werden
-  // damit nach einer Minute statt erst nach fünf Minuten fortgesetzt.
-  await query(
-    `update bot_update_queue
-        set status = 'open', claimed_at = null
-      where status = 'processing'
-        and type = 'p0plus_points_update_dm'
-        and claimed_at < now() - interval '1 minute'`
-  );
   await query(
     `update bot_update_queue q
      set status = 'done', resolved_at = now()
@@ -6942,13 +6940,6 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
     if (Array.isArray(raw)) return raw;
     try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
   })();
-  const existingDiscordMessageId = clean(
-    params.messageId ||
-    params.discordMessageId ||
-    snapshot?.raid?.discordMessageId ||
-    snapshot?.raid?.discord_message_id ||
-    ""
-  );
   const announcement = await queueBotUpdate({
     guildId,
     query: {
@@ -6981,7 +6972,6 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         discordChannelId: channelId,
         messageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
         discordMessageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
-        forceNewMessage: ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()) ? "true" : "false",
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
@@ -6992,9 +6982,7 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
   });
   const announcementTargets = announcementNotifyTargets.filter(target => ["role", "name"].includes(clean(target?.type).toLowerCase()) && clean(target?.value));
   let roleNoticeQueued = false;
-  // The creation notice is sent only for the first Discord post. Saving changes
-  // edits the existing post and must not notify all selected recipients again.
-  if (announcement?.success && !existingDiscordMessageId && announcementTargets.length) {
+  if (announcement?.success && announcementTargets.length) {
     const notice = await enqueueBotUpdate({
       guildId,
       type: "raid_announcement_role_notice",
@@ -7758,12 +7746,41 @@ async function setPoPostDiscordMessage({ guildId, query: params }) {
       [guildId, postKey, sourceChannelId, targetChannelId || sourceChannelId, discordMessageId, raidKey, title, raidPin, raidDate, raidTime, mode]
     );
   }
+  let backfill = { success: true, synced: 0, payloads: [] };
+  let poPostRefresh = { success: true, queued: 0, skipped: 0, results: [] };
+  let raidAnnouncementRefresh = { success: true, skipped: true, reason: "missing_raid" };
+  if (raidPin) {
+    const raid = await findRaid(guildId, {
+      raidPin,
+      prioPin: raidPin,
+      playerPin: raidPin,
+      raid: raidKey,
+      raidDate,
+      raidTime
+    });
+    if (raid) {
+      backfill = await backfillPoPostEntriesFromExistingPrios(guildId, raid);
+      poPostRefresh = await enqueuePoPostRefreshPayloads(
+        guildId,
+        backfill.payloads,
+        "lichtloot_prio_backfill"
+      );
+      raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+        guildId,
+        raid,
+        "lichtloot_prio_backfill"
+      );
+    }
+  }
   return {
     success: true,
     updated: result.rowCount || 0,
     insertedConfig: !result.rowCount,
     postKey,
-    discordMessageId
+    discordMessageId,
+    backfilledPrios: backfill.synced,
+    poPostRefresh,
+    raidAnnouncementRefresh
   };
 }
 
@@ -8366,7 +8383,6 @@ async function updatePoPostEntry({ guildId, query: params }) {
 async function deletePoPostEntry({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
-  const entryId = clean(params.entryId || params.id || "");
   const postKey = clean(params.postKey || params.poPostKey || "");
   const sourceChannelId = clean(params.sourceChannelId || "");
   const targetChannelId = clean(params.targetChannelId || "");
@@ -8397,29 +8413,26 @@ async function deletePoPostEntry({ guildId, query: params }) {
 
   const values = [guildId];
   const clauses = ["guild_id = $1", "archived_at is null"];
-  if (entryId && isUuid(entryId)) {
-    values.push(entryId);
-    clauses.push(`id = $${values.length}`);
-  } else if (playerName) {
+  if (playerName) {
     values.push(playerName);
     clauses.push(`regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($${values.length}), '[^a-z0-9]+', '', 'g')`);
   } else if (discordUserId) {
     values.push(discordUserId);
     clauses.push(`discord_user_id = $${values.length}`);
   }
-  if (!entryId && postKey) {
+  if (postKey) {
     values.push(postKey);
     clauses.push(`post_key = $${values.length}`);
   }
-  if (!entryId && sourceChannelId) {
+  if (sourceChannelId) {
     values.push(sourceChannelId);
     clauses.push(`source_channel_id = $${values.length}`);
   }
-  if (!entryId && targetChannelId) {
+  if (targetChannelId) {
     values.push(targetChannelId);
     clauses.push(`target_channel_id = $${values.length}`);
   }
-  if (!entryId && itemName) {
+  if (itemName) {
     const itemClauses = [];
     for (const variant of poItemAliasVariants(itemName)) {
       values.push(variant);
@@ -9130,6 +9143,66 @@ async function enqueuePoPostRefreshPayloads(guildId, payloads, source) {
     skipped: queued.filter(result => result && result.skipped).length,
     results: queued
   };
+}
+
+async function backfillPoPostEntriesFromExistingPrios(guildId, raid) {
+  if (!raid?.id || !clean(raid.raid_pin)) {
+    return { success: true, synced: 0, payloads: [] };
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const result = await client.query(
+      `select pr.comment,
+              c.id, c.name, c.server, c.class_name,
+              i.id as item_id, i.item_id as item_game_id, i.name as item_name,
+              i.slot as item_slot, i.boss as item_boss
+       from prios pr
+       join characters c on c.id = pr.character_id
+       left join items i on i.id = pr.p1_item_id
+       where pr.raid_id = $1
+       order by pr.updated_at asc, lower(c.name) asc`,
+      [raid.id]
+    );
+
+    const payloads = [];
+    let synced = 0;
+    for (const row of result.rows) {
+      const meta = commentMeta(row.comment);
+      if (clean(meta.p0Plus).toLowerCase() !== "ja" || !row.item_id || !row.item_name) continue;
+      payloads.push(...await syncPoPostEntryFromPrio(client, guildId, {
+        raid,
+        character: {
+          id: row.id,
+          name: row.name,
+          server: row.server,
+          class_name: row.class_name
+        },
+        item: {
+          id: row.item_id,
+          item_id: row.item_game_id,
+          name: clean(meta.p0Item) || row.item_name,
+          slot: row.item_slot,
+          boss: row.item_boss
+        },
+        source: "lichtloot_prio_backfill"
+      }));
+      synced += 1;
+    }
+    await client.query("commit");
+
+    const uniquePayloads = Array.from(new Map(payloads.map(payload => [
+      [payload.postKey, payload.sourceChannelId, payload.targetChannelId, payload.discordMessageId || ""].join("|"),
+      payload
+    ])).values());
+    return { success: true, synced, payloads: uniquePayloads };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function archivePoPostEntriesForRaid(client, guildId, raidType) {
@@ -14962,7 +15035,9 @@ function normalizeIssueReportRow(row, index = 0) {
     server: row.server || "",
     note: row.note || "",
     page: row.page || "",
-    originalDate: row.original_date || ""
+    originalDate: row.original_date || "",
+    discordUserId: row.discord_user_id || "",
+    discordName: row.discord_name || ""
   };
 }
 
@@ -14984,9 +15059,9 @@ async function reportIssue({ guildId, query: params }) {
   const result = await query(
     `insert into issue_reports (
        guild_id, type, source, category, raid, item, slot, points,
-       player, server, note, page, original_date
+       player, server, note, page, original_date, discord_user_id, discord_name
      )
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      returning *`,
     [
       guildId,
@@ -15001,7 +15076,9 @@ async function reportIssue({ guildId, query: params }) {
       reportServer,
       clean(params.note),
       clean(params.page),
-      clean(params.createdAt || params.originalDate)
+      clean(params.createdAt || params.originalDate),
+      clean(params.discordUserId),
+      clean(params.discordName)
     ]
   );
   return { success: true, report: normalizeIssueReportRow(result.rows[0]) };
@@ -15022,6 +15099,79 @@ async function getIssueReports({ guildId, query: params }) {
 async function resolveIssueReport({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const id = clean(params.id || params.rowNumber);
+  const removeP0Plus = clean(params.removeP0Plus).toLowerCase() === "true";
+  const correctP0Plus = clean(params.correctP0Plus).toLowerCase() === "true";
+  const correctedPoints = Number(params.correctedPoints);
+  const pending = await query(`select * from issue_reports where guild_id=$1 and id=$2 and resolved_at is null limit 1`, [guildId, id]);
+  const pendingReport = pending.rows[0] || null;
+  let removedP0Plus = 0;
+  let correctedP0Plus = 0;
+  if (removeP0Plus) {
+    if (!pendingReport || clean(pendingReport.category).toLowerCase() !== "item_received") {
+      const error = new Error("Diese Aktion ist nur für die Meldung „Item erhalten“ möglich.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const removedLinked = await query(
+      `delete from p0plus_points pp using characters c, items i
+       where pp.guild_id=$1 and pp.character_id=c.id and pp.item_id=i.id
+         and lower(c.name)=lower($2) and lower(coalesce(c.server,''))=lower($3)
+         and lower(i.name)=lower($4)
+       returning pp.id`,
+      [guildId, clean(pendingReport.player), clean(pendingReport.server), clean(pendingReport.item)]
+    );
+    const removedUnlinked = await query(
+      `delete from unlinked_p0plus_points up using items i
+       where up.guild_id=$1 and up.item_id=i.id
+         and lower(up.player_name)=lower($2) and lower(coalesce(up.server,''))=lower($3)
+         and lower(i.name)=lower($4)
+       returning up.id`,
+      [guildId, clean(pendingReport.player), clean(pendingReport.server), clean(pendingReport.item)]
+    );
+    removedP0Plus = removedLinked.rowCount + removedUnlinked.rowCount;
+    if (!removedP0Plus) {
+      const error = new Error("Der passende PO+-Eintrag wurde nicht gefunden oder bereits entfernt.");
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+  if (correctP0Plus) {
+    if (!pendingReport || clean(pendingReport.category).toLowerCase() !== "points_incorrect") {
+      const error = new Error("Diese Aktion ist nur für die Meldung „Punktestand falsch“ möglich.");
+      error.statusCode = 400;
+      throw error;
+    }
+    if (!Number.isFinite(correctedPoints) || correctedPoints < 0) {
+      const error = new Error("Bitte einen gültigen Punktestand ab 0 eingeben.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const linked = await query(
+      `select pp.id from p0plus_points pp join characters c on c.id=pp.character_id join items i on i.id=pp.item_id
+       where pp.guild_id=$1 and lower(c.name)=lower($2) and lower(coalesce(c.server,''))=lower($3) and lower(i.name)=lower($4) limit 1`,
+      [guildId,clean(pendingReport.player),clean(pendingReport.server),clean(pendingReport.item)]
+    );
+    const unlinked = linked.rows.length ? {rows:[]} : await query(
+      `select up.id from unlinked_p0plus_points up join items i on i.id=up.item_id
+       where up.guild_id=$1 and lower(up.player_name)=lower($2) and lower(coalesce(up.server,''))=lower($3) and lower(i.name)=lower($4) limit 1`,
+      [guildId,clean(pendingReport.player),clean(pendingReport.server),clean(pendingReport.item)]
+    );
+    const pointId = linked.rows[0]?.id;
+    const unlinkedId = unlinked.rows[0]?.id;
+    if (!pointId && !unlinkedId) {
+      const error = new Error("Der passende PO+-Eintrag wurde nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    if (pointId) {
+      if (correctedPoints === 0) await query(`delete from p0plus_points where guild_id=$1 and id=$2`,[guildId,pointId]);
+      else await query(`update p0plus_points set points=$3,source='Gildenleitung Korrektur',note='Punktestand über Postfach korrigiert' where guild_id=$1 and id=$2`,[guildId,pointId,correctedPoints]);
+    } else {
+      if (correctedPoints === 0) await query(`delete from unlinked_p0plus_points where guild_id=$1 and id=$2`,[guildId,unlinkedId]);
+      else await query(`update unlinked_p0plus_points set points=$3,source='Gildenleitung Korrektur',updated_at=now() where guild_id=$1 and id=$2`,[guildId,unlinkedId,correctedPoints]);
+    }
+    correctedP0Plus = 1;
+  }
   const result = await query(
     `update issue_reports
      set resolved_at = now()
@@ -15039,10 +15189,13 @@ async function resolveIssueReport({ guildId, query: params }) {
       const player = await findPlayerByRecipient(guildId, report.player, report.server);
       if (player) {
         const playerName = clean(player.main_name || player.character_name || report.player) || "Spieler";
+        const correctionText = correctP0Plus
+          ? `der PO+-Punktestand für „${report.item || "das Item"}“ wurde auf ${correctedPoints} Punkte korrigiert.`
+          : "das Item wurde geändert.";
         const bodyParts = [
           `Lieber ${playerName},`,
           "",
-          "vielen Dank für deine Mithilfe, das Item wurde geändert.",
+          `vielen Dank für deine Mithilfe, ${correctionText}`,
           "",
           "LG"
         ];
@@ -15055,7 +15208,7 @@ async function resolveIssueReport({ guildId, query: params }) {
           [
             guildId,
             player.player_pin,
-            "Item wurde geändert",
+            correctP0Plus ? "PO+-Punktestand korrigiert" : "Item wurde geändert",
             bodyParts.join("\n"),
             report.raid || "",
             "Gildenleitung"
@@ -15072,7 +15225,35 @@ async function resolveIssueReport({ guildId, query: params }) {
     notificationError = "Kein Spieler in der Meldung.";
   }
 
-  return { success: true, resolved: result.rowCount, notified, notificationError };
+  let discordNotified = false;
+  if (report && ((removeP0Plus && removedP0Plus) || (correctP0Plus && correctedP0Plus))) {
+    const recipient = report.discord_user_id ? { rows: [{
+      slug: "", guild_name: "", discord_user_id: report.discord_user_id, discord_name: report.discord_name || ""
+    }] } : await query(
+      `select g.slug,g.name as guild_name,dpl.discord_user_id,dpl.discord_name
+       from guilds g
+       join characters c on c.name ilike $2 and lower(coalesce(c.server,''))=lower($3)
+       join players p on p.id=c.player_id and p.guild_id=g.id
+       join discord_player_links dpl on dpl.guild_id=g.id and (dpl.character_id=c.id or dpl.character_id in (select c2.id from characters c2 where c2.player_id=p.id))
+       where g.id=$1 order by dpl.updated_at desc limit 1`,
+      [guildId, clean(report.player), clean(report.server)]
+    );
+    const target = recipient.rows[0];
+    if (target?.discord_user_id) {
+      const guildResult = target.slug ? null : await query(`select slug,name as guild_name from guilds where id=$1 limit 1`,[guildId]);
+      const guildRow = guildResult?.rows?.[0] || target;
+      await enqueueBotUpdate({guildId,type:"p0plus_resolution_notice",payload:{
+        guildSlug:guildRow.slug,guildName:guildRow.guild_name,discordUserId:target.discord_user_id,
+        discordName:target.discord_name||"",player:report.player,server:report.server||"",
+        raid:report.raid||"",item:report.item||"",correctedPoints:correctP0Plus?correctedPoints:null,
+        noticeTitle:correctP0Plus?"✅ PO+-Punktestand korrigiert":"✅ PO+-Meldung erledigt",
+        message:correctP0Plus?`Deine Meldung wurde geprüft. Der PO+-Punktestand wurde auf ${correctedPoints} Punkte korrigiert.`:"Deine Meldung wurde geprüft. Das bereits erhaltene Item wurde aus deiner PO+-Liste entfernt.",createdAt:new Date().toISOString()
+      }});
+      discordNotified = true;
+    }
+  }
+
+  return { success: true, resolved: result.rowCount, notified, notificationError, removedP0Plus, correctedP0Plus, correctedPoints:correctP0Plus?correctedPoints:null, discordNotified };
 }
 
 function normalizePlayerMessageRow(row) {
@@ -15394,29 +15575,6 @@ async function deleteRaid({ guildId, query: params }) {
   return { success: true, deleted: result.rowCount, raid: result.rows[0] || null };
 }
 
-async function restoreArchivedRaids({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
-  const result = await query(
-    `update raids
-     set status = 'geschlossen', updated_at = now()
-     where guild_id = $1
-       and coalesce(status, '') in ('archiviert', 'archive')
-       and raid_date >= current_date - interval '1 day'
-     returning id, external_raid_id, name, raid_date`,
-    [guildId]
-  );
-  return {
-    success: true,
-    restored: result.rowCount,
-    raids: result.rows.map(row => ({
-      id: row.id,
-      raidId: row.external_raid_id || row.id,
-      raidName: row.name || "Raid",
-      raidDate: row.raid_date || ""
-    }))
-  };
-}
-
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   return createRaidRecord({ guildId, query: params });
@@ -15578,8 +15736,8 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
-           status_notify_targets = case when $29 then excluded.status_notify_targets else raids.status_notify_targets end,
-           announcement_notify_targets = case when $30 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
+           status_notify_targets = case when excluded.status_notify_targets = '[]'::jsonb then raids.status_notify_targets else excluded.status_notify_targets end,
+           announcement_notify_targets = case when excluded.announcement_notify_targets = '[]'::jsonb then raids.announcement_notify_targets else excluded.announcement_notify_targets end,
            announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
            updated_at = now()
      returning *`,
@@ -15625,9 +15783,7 @@ async function createRaidRecord({ guildId, query: params }) {
           return "[]";
         }
       })(),
-      clean(params.announcementMessage || params.notificationMessage),
-      Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
-      Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
+      clean(params.announcementMessage || params.notificationMessage)
     ]
   );
 
@@ -21981,11 +22137,6 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildDeleteRaid" || action === "deleteRaid") {
       const deleted = await deleteRaid({ guildId: guild.id, query: req.query });
       return res.json({ ...deleted, guild: guild.slug });
-    }
-
-    if (action === "guildRestoreArchivedRaids") {
-      const restored = await restoreArchivedRaids({ guildId: guild.id, query: req.query });
-      return res.json({ ...restored, guild: guild.slug });
     }
 
     if (action === "getPublishedPrios") {
