@@ -7235,8 +7235,13 @@ function matchingPoSignupForRaid(raid){
   const playerPin = String(raid.playerPin || raid.prioPin || "");
   return raidHelperPoSignupRows().find(row => {
     const rowId = String(row.raidId || row.lichtlootRaidId || row.externalRaidId || "");
+    const rowPin = String(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "");
     if(raidId && rowId && raidId === rowId) return true;
-    if(playerPin && String(row.lichtlootPlayerPin || row.prioPin || row.raidPin || "") === playerPin) return true;
+    if(playerPin && rowPin && rowPin === playerPin) return true;
+    // Hat der PO-Anmelder bereits eine Raid-ID oder Prio-PIN, ist diese
+    // bindend. Ein geloeschter Raid mit gleichem Termin darf niemals einem
+    // neu erstellten Raid zugeordnet werden.
+    if(rowId || rowPin) return false;
     return normalizePoSignupRaidKey(row.raid) === raidKey && String(row.raidDate || "") === raidDate && String(row.raidTime || "").slice(0,5) === raidTime;
   }) || null;
 }
@@ -15328,35 +15333,41 @@ async function queueRaidToDiscord(raidId, options = {}){
 function matchingPoPostConfigForRaid(raid){
   if(!raid) return null;
   const raidId = String(raid.raidId || raid.id || "").trim();
+  const playerPin = String(raid.playerPin || raid.prioPin || raid.raidPin || "").trim();
   const raidKey = getRaidKey(raid);
   const configs = poPostConfigGroups();
-  return configs.find(item =>
-    (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
+  return configs.find(item => {
+    const itemId=String(item.lichtlootCanonicalRaidId || item.lichtlootRaidId || item.raidId || item.externalRaidId || "").trim();
+    const itemPin=String(item.lichtlootPlayerPin || item.prioPin || item.raidPin || "").trim();
+    return (raidId && itemId && itemId === raidId) ||
+    (playerPin && itemPin && itemPin === playerPin) ||
     (
+      !itemId && !itemPin &&
       String(item.raid || "").trim().toLowerCase() === raidKey &&
       String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
       String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
-    )
-  ) || configs.find(item =>
-    String(item.raid || "").trim().toLowerCase() === raidKey
-  ) || null;
+    );
+  }) || null;
 }
 
 async function queueMatchingPoPostForRaid(raid, masterCode, targetChannelId="", forceNew=false){
   if(!raid) return { success:false, error:"Raid wurde nicht gefunden." };
   const raidId = String(raid.raidId || raid.id || "").trim();
+  const playerPin = String(raid.playerPin || raid.prioPin || raid.raidPin || "").trim();
   const raidKey = getRaidKey(raid);
   const configs = poPostConfigGroups();
-  const config = configs.find(item =>
-    (raidId && String(item.lichtlootRaidId || "").trim() === raidId) ||
+  const config = configs.find(item => {
+    const itemId=String(item.lichtlootCanonicalRaidId || item.lichtlootRaidId || item.raidId || item.externalRaidId || "").trim();
+    const itemPin=String(item.lichtlootPlayerPin || item.prioPin || item.raidPin || "").trim();
+    return (raidId && itemId && itemId === raidId) ||
+    (playerPin && itemPin && itemPin === playerPin) ||
     (
+      !itemId && !itemPin &&
       String(item.raid || "").trim().toLowerCase() === raidKey &&
       String(item.raidDate || "").trim() === String(raid.raidDate || "").trim() &&
       String(item.raidTime || "").trim() === String(raid.raidTime || "").trim()
-    )
-  ) || configs.find(item =>
-    String(item.raid || "").trim().toLowerCase() === raidKey
-  );
+    );
+  });
   if(!config) return { success:false, error:"Kein passender PO+-Anmelder gespeichert." };
   return railwayWrite({
     action:"guildQueuePoPost",
