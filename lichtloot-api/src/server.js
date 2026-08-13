@@ -15022,10 +15022,50 @@ async function getIssueReports({ guildId, query: params }) {
 async function resolveIssueReport({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const id = clean(params.id || params.rowNumber);
+  const pendingResult = await query(
+    `select * from issue_reports
+     where guild_id = $1 and id = $2 and resolved_at is null
+     limit 1`,
+    [guildId, id]
+  );
+  const pendingReport = pendingResult.rows[0] || null;
+  if (!pendingReport) {
+    return { success: false, error: "Meldung wurde nicht gefunden oder bereits erledigt." };
+  }
+
+  const removeP0Plus = ["1", "true", "yes", "ja"].includes(clean(params.removeP0Plus).toLowerCase());
+  const correctP0Plus = ["1", "true", "yes", "ja"].includes(clean(params.correctP0Plus).toLowerCase());
+  let removedP0Plus = false;
+  let correctedPoints = null;
+
+  if (removeP0Plus || correctP0Plus) {
+    correctedPoints = removeP0Plus
+      ? 0
+      : Number(String(params.correctedPoints ?? "").replace(",", "."));
+    if (!Number.isFinite(correctedPoints) || correctedPoints < 0) {
+      const error = new Error("Bitte einen gültigen PO+-Punktestand ab 0 eingeben.");
+      error.statusCode = 400;
+      throw error;
+    }
+    await setP0PlusPoints({
+      guildId,
+      query: {
+        masterCode: params.masterCode,
+        raid: pendingReport.raid,
+        player: pendingReport.player,
+        server: pendingReport.server,
+        item: clean(pendingReport.item).split("|")[0],
+        slot: pendingReport.slot,
+        points: String(correctedPoints)
+      }
+    });
+    removedP0Plus = correctedPoints === 0;
+  }
+
   const result = await query(
     `update issue_reports
      set resolved_at = now()
-     where guild_id = $1 and id = $2
+     where guild_id = $1 and id = $2 and resolved_at is null
      returning *`,
     [guildId, id]
   );
@@ -15072,7 +15112,48 @@ async function resolveIssueReport({ guildId, query: params }) {
     notificationError = "Kein Spieler in der Meldung.";
   }
 
-  return { success: true, resolved: result.rowCount, notified, notificationError };
+  let discordNotified = false;
+  if ((removeP0Plus || correctP0Plus) && report?.player) {
+    const recipient = await query(
+      `select dpl.discord_user_id
+       from characters c
+       join discord_player_links dpl on dpl.character_id = c.id and dpl.guild_id = $1
+       where lower(c.name) = lower($2)
+         and ($3 = '' or lower(coalesce(c.server, '')) = lower($3))
+       order by dpl.updated_at desc, dpl.created_at desc
+       limit 1`,
+      [guildId, clean(report.player), clean(report.server)]
+    );
+    const discordUserId = clean(recipient.rows[0]?.discord_user_id);
+    if (discordUserId) {
+      const queued = await enqueueBotUpdate({
+        guildId,
+        type: "p0plus_resolution_notice",
+        payload: {
+          discordUserId,
+          player: report.player || "",
+          raid: report.raid || "",
+          item: clean(report.item).split("|")[0],
+          ...(correctP0Plus && !removeP0Plus ? { correctedPoints } : {}),
+          message: removedP0Plus
+            ? "Deine Meldung wurde bearbeitet und das bereits erhaltene Item aus deiner PO+-Liste entfernt."
+            : "Deine Meldung wurde bearbeitet und dein PO+-Punktestand korrigiert."
+        }
+      }).catch(() => null);
+      discordNotified = Boolean(queued?.success);
+    }
+  }
+
+  return {
+    success: true,
+    resolved: result.rowCount,
+    notified,
+    notificationError,
+    removedP0Plus,
+    correctedP0Plus: correctP0Plus,
+    correctedPoints,
+    discordNotified
+  };
 }
 
 function normalizePlayerMessageRow(row) {
@@ -18439,8 +18520,10 @@ async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippe
   const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
   const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
   const fixedNachtlootChannel = guildSlug === "nachtloot" ? "1531288738326642828" : "";
+  const fixedLichtbringerChannel = ["lichtloot", "lichtbringer"].includes(guildSlug) ? "1529393614247952434" : "";
   const backupChannelId = clean(backupChannelIdOverride)
     || fixedNachtlootChannel
+    || fixedLichtbringerChannel
     || await resolveGuildBackupChannelId({
       guildId,
       envFallbackChannelId: p0PlusTransferExportChannelId,
