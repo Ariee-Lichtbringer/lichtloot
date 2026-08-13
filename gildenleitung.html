@@ -15296,8 +15296,7 @@ async function queueRaidToDiscord(raidId, options = {}){
       pluendermeister:raid?.pluendermeister || raid?.lootMaster || "",
       statusNotifyTargets:JSON.stringify(raid?.statusNotifyTargets || raid?.status_notify_targets || []),
       announcementNotifyTargets:JSON.stringify(raid?.announcementNotifyTargets || raid?.announcement_notify_targets || []),
-      forceNewMessage:forceNew ? "true" : "false",
-      followupPoPost:followupPoPost ? JSON.stringify(followupPoPost) : ""
+      forceNewMessage:forceNew ? "true" : "false"
     });
 
     if(!result.success){
@@ -15305,7 +15304,15 @@ async function queueRaidToDiscord(raidId, options = {}){
       return;
     }
 
-    const poMessage = repostPo ? " Der PO+-Anmelder wird direkt nach dem Raidanmelder gepostet." : "";
+    let poMessage = "";
+    if(repostPo){
+      setStatus("Raidanmelder wurde vorgemerkt. Neuer PO+-Anmelder wird jetzt separat vorgemerkt ...", "");
+      const poResult = await queueMatchingPoPostForRaid(raid, masterCode, channelId, true);
+      if(!poResult?.success){
+        throw new Error("Der Raidanmelder wurde vorgemerkt, aber der PO+-Anmelder nicht: " + (poResult?.error || "Unbekannter Fehler"));
+      }
+      poMessage = " Der neue PO+-Anmelder wurde separat vorgemerkt" + (poResult.rowNumber ? " (Queue " + poResult.rowNumber + ")" : "") + ".";
+    }
 
     setStatus(
       (alreadyPosted ? "Raidanmelder-Aktualisierung wurde vorgemerkt" : "Nachträglicher Raidanmelder wurde vorgemerkt") +
@@ -15335,7 +15342,7 @@ function matchingPoPostConfigForRaid(raid){
   ) || null;
 }
 
-async function queueMatchingPoPostForRaid(raid, masterCode){
+async function queueMatchingPoPostForRaid(raid, masterCode, targetChannelId="", forceNew=false){
   if(!raid) return { success:false, error:"Raid wurde nicht gefunden." };
   const raidId = String(raid.raidId || raid.id || "").trim();
   const raidKey = getRaidKey(raid);
@@ -15356,7 +15363,7 @@ async function queueMatchingPoPostForRaid(raid, masterCode){
     masterCode,
     postKey:config.postKey,
     sourceChannelId:config.sourceChannelId,
-    targetChannelId:config.targetChannelId,
+    targetChannelId:targetChannelId || config.targetChannelId,
     reviewRecipient:config.reviewRecipient,
     title:config.title,
     raid:config.raid,
@@ -15368,6 +15375,7 @@ async function queueMatchingPoPostForRaid(raid, masterCode){
     itemOptions:config.itemOptions,
     postedEntries:JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
     restoreArchived:"true",
+    forceNewMessage:forceNew ? "true" : "false",
     createLichtlootRaid:config.createLichtlootRaid ? "true" : "",
     lichtlootRaidId:config.lichtlootRaidId || raidId,
     lichtlootPlayerPin:config.lichtlootPlayerPin || raid.playerPin || raid.prioPin || "",
