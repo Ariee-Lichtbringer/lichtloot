@@ -3008,6 +3008,20 @@ async function ensureBuffTables() {
        unique (guild_id, buff, event_date, event_time, guild_name)
      )`
   );
+  await query(
+    `create table if not exists worldbuff_deleted_events (
+       id uuid primary key default gen_random_uuid(),
+       guild_id uuid not null references guilds(id) on delete cascade,
+       buff text not null,
+       event_date date not null,
+       event_time text not null,
+       guild_name text not null,
+       event_snapshot jsonb not null default '{}'::jsonb,
+       entry_snapshot jsonb,
+       deleted_at timestamptz not null default now(),
+       unique (guild_id, buff, event_date, event_time, guild_name)
+     )`
+  );
   await query(`create index if not exists hordenbuff_events_guild_date_idx on hordenbuff_events (guild_id, event_date, event_time)`);
   await query(`create index if not exists worldbuff_events_guild_date_idx on worldbuff_events (guild_id, event_date, event_time)`);
   await query(`create index if not exists worldbuff_poster_events_guild_date_idx on worldbuff_poster_events (guild_id, event_date, event_time)`);
@@ -4603,6 +4617,12 @@ async function createWorldbuffTerm({ guildId, query: params }) {
   try {
     await client.query("begin");
     const event = await upsertWorldbuffEvent(client, guildId, params);
+    await client.query(
+      `delete from worldbuff_deleted_events
+       where guild_id = $1 and buff = $2 and event_date = $3 and event_time = $4
+         and guild_name = coalesce($5, '')`,
+      [guildId, event.buff, event.event_date, event.event_time, event.guild_name]
+    );
     const caster = clean(params.charakter || params.caster || params.werfer);
     if (caster || clean(params.note || params.notiz)) {
       const existingEntry = await client.query(
@@ -4661,37 +4681,110 @@ async function deleteWorldbuffTerm({ guildId, query: params }) {
   const rowNumber = clean(params.rowNumber);
   if (rowNumber && isUuid(rowNumber)) {
     const deleted = await query(
-      `delete from worldbuff_events e
-       where e.guild_id = $1
-         and (
-           e.id = $2
-           or exists (
-             select 1
-             from worldbuff_entries we
-             where we.event_id = e.id and we.id = $2
-           )
-         )`,
+      `with target as (
+         select e.*,
+                (select to_jsonb(we) from worldbuff_entries we where we.event_id=e.id order by we.updated_at desc limit 1) entry_snapshot
+         from worldbuff_events e
+         where e.guild_id=$1 and (e.id=$2 or exists (select 1 from worldbuff_entries we where we.event_id=e.id and we.id=$2))
+       ), remembered as (
+         insert into worldbuff_deleted_events
+           (guild_id,buff,event_date,event_time,guild_name,event_snapshot,entry_snapshot,deleted_at)
+         select guild_id,buff,event_date,event_time,coalesce(guild_name,''),to_jsonb(target)-'entry_snapshot',entry_snapshot,now()
+         from target
+         on conflict (guild_id,buff,event_date,event_time,guild_name) do update
+           set event_snapshot=excluded.event_snapshot,entry_snapshot=excluded.entry_snapshot,deleted_at=now()
+       )
+       delete from worldbuff_events e using target where e.id=target.id`,
       [guildId, rowNumber]
     );
-    await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_deleted" } }).catch(() => {});
-    return { success: true, deleted: deleted.rowCount > 0 };
+    if (deleted.rowCount > 0) {
+      await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_deleted" } }).catch(() => {});
+      return { success: true, deleted: true };
+    }
   }
 
   const eventDate = parseDateValue(params.datum || params.date);
   const eventTime = clean(params.uhrzeit || params.time);
   const buff = normalizeWorldbuffName(params.buff);
   const guildName = normalizeWorldbuffGuildName(params.gilde || params.guild || params.fraktion || params.faction);
-  await query(
-    `delete from worldbuff_events
-     where guild_id = $1
-       and event_date = $2
-       and event_time = $3
-       and buff = $4
-       and coalesce(guild_name, '') = $5`,
-    [guildId, eventDate, eventTime, buff, guildName]
-  );
+  const client = await pool.connect();
+  let deletedCount = 0;
+  try {
+    await client.query("begin");
+    const snapshotResult = await client.query(
+      `select to_jsonb(e) as event_snapshot,
+              (select to_jsonb(we) from worldbuff_entries we where we.event_id=e.id order by we.updated_at desc limit 1) as entry_snapshot
+       from worldbuff_events e
+       where e.guild_id=$1 and e.event_date=$2 and e.event_time=$3 and e.buff=$4 and coalesce(e.guild_name,'')=$5
+       limit 1`,
+      [guildId,eventDate,eventTime,buff,guildName]
+    );
+    const snapshot = snapshotResult.rows[0] || {};
+    await client.query(
+      `insert into worldbuff_deleted_events
+         (guild_id,buff,event_date,event_time,guild_name,event_snapshot,entry_snapshot,deleted_at)
+       values ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,now())
+       on conflict (guild_id,buff,event_date,event_time,guild_name) do update
+         set event_snapshot=excluded.event_snapshot,entry_snapshot=excluded.entry_snapshot,deleted_at=now()`,
+      [guildId,buff,eventDate,eventTime,guildName,JSON.stringify(snapshot.event_snapshot || {
+        buff,event_date:eventDate,event_time:eventTime,guild_name:guildName,status:"offen",source:clean(params.source || "wb_poster")
+      }),snapshot.entry_snapshot ? JSON.stringify(snapshot.entry_snapshot) : null]
+    );
+    const deletedEvents = await client.query(
+      `delete from worldbuff_events where guild_id=$1 and event_date=$2 and event_time=$3 and buff=$4 and coalesce(guild_name,'')=$5`,
+      [guildId,eventDate,eventTime,buff,guildName]
+    );
+    const deletedPoster = await client.query(
+      `delete from worldbuff_poster_events where guild_id=$1 and event_date=$2 and event_time=$3 and buff=$4 and guild_name=$5`,
+      [guildId,eventDate,eventTime,buff,guildName]
+    );
+    deletedCount = deletedEvents.rowCount + deletedPoster.rowCount;
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally { client.release(); }
   await enqueueBotUpdate({ guildId, type: "worldbuff_update", payload: { source: "worldbuff_deleted" } }).catch(() => {});
-  return { success: true };
+  return { success: true, deleted: deletedCount > 0 };
+}
+
+async function restoreDeletedWorldbuffTerms({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureBuffTables();
+  const client = await pool.connect();
+  let restored = 0;
+  let skipped = 0;
+  try {
+    await client.query("begin");
+    const remembered = await client.query(`select * from worldbuff_deleted_events where guild_id=$1 order by deleted_at`, [guildId]);
+    for (const deleted of remembered.rows) {
+      const snapshot = deleted.event_snapshot || {};
+      const inserted = await client.query(
+        `insert into worldbuff_events (guild_id,buff,event_date,event_time,guild_name,status,note,source)
+         values ($1,$2,$3,$4,$5,$6,$7,$8)
+         on conflict (guild_id,buff,event_date,event_time,guild_name) do nothing returning id`,
+        [guildId,deleted.buff,deleted.event_date,deleted.event_time,deleted.guild_name,
+         snapshot.status || "offen",snapshot.note || "",snapshot.source || "railway"]
+      );
+      if (!inserted.rows[0]) { skipped += 1; continue; }
+      const entry = deleted.entry_snapshot || null;
+      if (entry) {
+        await client.query(
+          `insert into worldbuff_entries (event_id,caster,discord_name,status,note,source)
+           values ($1,$2,$3,$4,$5,$6)`,
+          [inserted.rows[0].id,entry.caster || "",entry.discord_name || "",entry.status || "offen",entry.note || "",entry.source || "railway"]
+        );
+      }
+      await client.query(`delete from worldbuff_deleted_events where id=$1`, [deleted.id]);
+      restored += 1;
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally { client.release(); }
+  await enqueueBotUpdate({ guildId, type:"worldbuff_update", payload:{source:"worldbuff_restored"} }).catch(() => {});
+  return { success:true, restored, skipped };
 }
 
 async function importWorldbuffsFromSheets({ guildId, query: params }) {
@@ -4737,6 +4830,13 @@ async function importWorldbuffsFromSheets({ guildId, query: params }) {
       const buff = normalizeWorldbuffName(entry.buff);
       const guildName = normalizeWorldbuffGuildName(entry.gilde || entry.guild);
       if (!eventDate || !eventTime || !buff || !guildName) continue;
+
+      const wasDeleted = await client.query(
+        `select 1 from worldbuff_deleted_events
+         where guild_id=$1 and buff=$2 and event_date=$3 and event_time=$4 and guild_name=$5`,
+        [guildId,buff,eventDate,eventTime,guildName]
+      );
+      if (wasDeleted.rows[0]) continue;
 
       await client.query(
         `insert into worldbuff_poster_events
@@ -10225,6 +10325,26 @@ async function getPlayerPrioHistory(guildId, params) {
   const recruitReleases={mc:false,bwl:false,aq40:false,naxx:false,"zg-mittwoch":false,"zg-prime":false,"zg-late":false};
   for(const row of recruitReleaseResult.rows){const raid=normalizePoReleaseRaid(row.raid_type);if(raid&&raid!=="p1p3")recruitReleases[raid]=true;}
   const poReleaseDisplaySettings = await getPoReleaseDisplaySettings(guildId);
+  let attendance16 = {};
+  try {
+    const guildResult = await query(`select lower(slug) as slug from guilds where id=$1 limit 1`, [guildId]);
+    const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
+    const wclGuildId = WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug] || WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+    const attendance = Object.fromEntries(await Promise.all(
+      Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid => [raid, await getWclPoAttendance(raid, wclGuildId)])
+    ));
+    const characterKey = normalizeAttendanceName(character.name);
+    Object.entries(attendance).forEach(([raid, stats]) => {
+      const player = stats.players[characterKey] || { attended: 0, bench: 0 };
+      attendance16[raid] = {
+        attended: Number(player.attended || 0) + Number(player.bench || 0),
+        bench: Number(player.bench || 0),
+        total: Number(stats.total || 0)
+      };
+    });
+  } catch (error) {
+    console.warn("Warcraft-Logs-Attendance für Mein LichtLoot konnte nicht geladen werden:", error.message || error);
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -10267,6 +10387,7 @@ async function getPlayerPrioHistory(guildId, params) {
     entries,
     poReleases,
     recruitReleases,
+    attendance16,
     poReleasesEnabled: poReleaseDisplaySettings.poReleasesEnabled,
     poReleaseDisplayConfigured: poReleaseDisplaySettings.configured,
     visiblePoReleaseRaids: poReleaseDisplaySettings.visibleRaids,
@@ -22049,8 +22170,8 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildRestoreDeletedWorldbuffTerms") {
-      requireMasterOrQueueToken(req.query);
-      return res.json({ success: true, guild: guild.slug, restored: 0, skipped: 0 });
+      const restored = await restoreDeletedWorldbuffTerms({ guildId: guild.id, query: req.query });
+      return res.json({ ...restored, guild: guild.slug });
     }
 
     if (action === "lichtbotGetQueue") {
@@ -22978,7 +23099,8 @@ app.post("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "guildRestoreDeletedWorldbuffTerms") {
-      return res.json({ success: true, guild: guild.slug, restored: 0, skipped: 0 });
+      const restored = await restoreDeletedWorldbuffTerms({ guildId: guild.id, query: postParams });
+      return res.json({ ...restored, guild: guild.slug });
     }
 
     if (action === "guildRequestWorldbuffReplacement") {
