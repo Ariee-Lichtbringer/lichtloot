@@ -125,7 +125,7 @@
   function setLootSectionVisible(selector,visible){document.querySelectorAll(selector).forEach(node=>{node.hidden=!visible;node.style.setProperty("display",visible?"":"none",visible?"":"important");});}
   function filterLootPagePoReleases(settings){
     const box=document.getElementById("selectedCharacterPoReleases");if(!box)return;
-    const chips=[...box.querySelectorAll(".loot-release-chip")],title=box.querySelector(".loot-release-title"),oldEmpty=box.querySelector(".loot-release-scope-empty");
+    const chips=[...box.querySelectorAll(".loot-release-chip")],title=box.querySelector(".loot-release-title:not(.loot-attendance-title)"),oldEmpty=box.querySelector(".loot-release-scope-empty");
     oldEmpty?.remove();
     chips.forEach(chip=>chip.style.removeProperty("display"));
     if(settings.poReleaseScope!=="raid"){if(title)title.textContent="PO-Freigaben für alle Raids";return;}

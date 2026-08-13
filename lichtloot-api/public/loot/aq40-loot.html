@@ -201,6 +201,9 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
+.loot-attendance-list{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:6px;margin:0 0 8px}.loot-attendance-chip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #334155;border-radius:8px;background:#0b1220;color:#cbd5e1;font-size:9px;font-weight:850}.loot-attendance-chip strong{color:#93c5fd;font-size:11px}.loot-attendance-chip.low strong{color:#fca5a5}
+#selectedCharacterPoReleases .loot-attendance-title{grid-column:1!important}#selectedCharacterPoReleases .loot-attendance-list{grid-column:2!important}
+@media(max-width:900px){#selectedCharacterPoReleases .loot-attendance-title,#selectedCharacterPoReleases .loot-attendance-list{grid-column:1!important}.loot-attendance-list{grid-template-columns:repeat(2,minmax(90px,1fr))}}
 .player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
 .player-status-panel #playerStatus{grid-area:auto!important}
 .plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
@@ -4714,6 +4717,54 @@ function dropCharacterOnZone(event){
   if(zone) zone.classList.remove("active");
   const index=Number(event.dataTransfer.getData("text/plain"));
   if(!isNaN(index)) selectLoggedInCharacter(index);
+}
+
++function poReleaseStatusKey(entry){
+  if(entry?.requestType === "recruit") return "recruit";
+  if(entry?.requestType === "p1p3") return "p1p3";
+  return String(entry?.raid || "").trim().toLowerCase();
+}
+
+function renderSelectedCharacterPoReleases(data,requests){
+  const box=document.getElementById("selectedCharacterPoReleases");
+  if(!box) return;
+  const releases=data?.poReleases || {};
+  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"]);
+  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
+  const pending=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(poReleaseStatusKey));
+  const chips=labels.map(([key,label])=>{
+    const approved=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases[key]);
+    const inReview=!approved && pending.has(key);
+    return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
+  }).join("");
+  const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(([key,label])=>{const attendance=data?.attendance16?.[key],total=Number(attendance?.total||0),attended=Number(attendance?.attended||0),bench=Number(attendance?.bench||0);return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';}).join('');
+  box.innerHTML='<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
+}
+
+async function loadSelectedCharacterPoReleases(char){
+  const box=document.getElementById("selectedCharacterPoReleases");
+  const pin=getStoredLichtLootPlayerPin();
+  if(!box || !pin || !char?.name) return;
+  box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
+  try{
+    const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),char:char.name,server:char.server||"",pin,t:Date.now()});
+    const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()});
+    const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
+    const history=await responses[0].json();
+    const display=await responses[1].json().catch(()=>({}));
+    history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
+    if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
+    let requests=[];
+    if(currentGuildSlug()==="nachtloot"){
+      const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild:currentGuildSlug(),character:char.name,server:char.server||"",pin,t:Date.now()});
+      const requestResponse=await fetch(APPS_SCRIPT_URL+"?"+requestQuery.toString(),{cache:"no-store"});
+      const requestData=await requestResponse.json().catch(()=>({}));
+      requests=Array.isArray(requestData.entries)?requestData.entries:[];
+    }
+    renderSelectedCharacterPoReleases(history,requests);
+  }catch(error){
+    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
+  }
 }
 
 function selectLoggedInCharacter(index){
@@ -11069,7 +11120,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 })();
 </script>
 <script src="po-release-status.js?v=20260805-1700"></script>
-<script src="raid-signup-mirror.js?v=20260809-1555"></script>
+<script src="raid-signup-mirror.js?v=20260813-1935"></script>
 <script src="../pin-visibility.js"></script>
 </body>
 </html>
