@@ -6220,6 +6220,7 @@ body.worldbuff-only .master-only{display:none!important}
           <option value="">Alle Klassen</option>
         </select>
       </div>
+      <section id="duplicatePlayerConflictPanel" class="status" style="display:block;margin:0 0 14px;border-color:#64748b;background:rgba(15,23,42,.78)">Doppelte Charaktere werden nach dem Laden geprüft …</section>
       <div class="table-wrap">
         <table>
           <thead>
@@ -8634,7 +8635,49 @@ async function deleteSelectedRaids(){
   await loadOverview({ preserveStatus:true });
 }
 
+function duplicatePlayerApprovalConflicts(players){
+  const characterKey=value=>String(value||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
+  const byCharacter=new Map();
+  (players||[]).forEach(player=>{
+    const name=String(player.char||player.name||"").trim();
+    const server=String(player.server||"").trim();
+    const login=String(player.playerPin||player.playerId||"").trim();
+    if(!name||!login)return;
+    const key=characterKey(name);
+    if(!byCharacter.has(key))byCharacter.set(key,{name,spellings:new Set(),server,servers:new Set(),entries:[]});
+    const group=byCharacter.get(key);
+    group.spellings.add(name);
+    if(server)group.servers.add(server);
+    if(!group.entries.some(entry=>entry.login===login&&normalize(entry.server)===normalize(server)))group.entries.push({
+      login,
+      server,
+      playerId:String(player.playerId||""),
+      status:String(player.approvalStatus||"approved").toLowerCase(),
+      blocked:Boolean(player.isBlocked||player.blocked)
+    });
+  });
+  return [...byCharacter.values()].filter(group=>group.entries.length>1).map(group=>{
+    const states=new Set(group.entries.map(entry=>(entry.blocked?"blocked":entry.status)));
+    const servers=new Set(group.entries.map(entry=>normalize(entry.server)).filter(Boolean));
+    const spellings=[...(group.spellings||[])];
+    return {...group,spellings,servers:[...(group.servers||[])],hasConflict:states.size>1||servers.size>1||spellings.length>1,serverConflict:servers.size>1,nameConflict:spellings.length>1};
+  }).sort((a,b)=>Number(b.hasConflict)-Number(a.hasConflict)||normalize(a.name).localeCompare(normalize(b.name)));
+}
+
+function renderDuplicatePlayerConflicts(){
+  const panel=document.getElementById("duplicatePlayerConflictPanel");
+  if(!panel)return;
+  const duplicates=duplicatePlayerApprovalConflicts(guildData.players||[]),conflicts=duplicates.filter(group=>group.hasConflict);
+  panel.style.display="block";
+  const label=status=>status==="approved"?"freigegeben":status==="rejected"?"abgelehnt":status==="blocked"?"gesperrt":"wartet auf Freigabe";
+  panel.style.borderColor=conflicts.length?"#ef4444":"#22c55e";
+  panel.style.background=conflicts.length?"rgba(127,29,29,.22)":"rgba(20,83,45,.18)";
+  if(!duplicates.length){panel.innerHTML='<h3 style="margin:0 0 6px;color:#86efac">✓ Prüfung auf doppelte Charaktere abgeschlossen</h3><p style="margin:0">In den geladenen SpielerLogin-Daten wurden keine Charaktere auf mehreren Accounts gefunden.</p>';return;}
+  panel.innerHTML=`<h3 style="margin:0 0 8px;color:${conflicts.length?'#fca5a5':'#fde68a'}">${conflicts.length?'⚠':'ℹ'} Doppelte Charaktere / Freigabekonflikte (${duplicates.length})</h3><p style="margin:0 0 10px">${conflicts.length?`${conflicts.length} Eintrag/Einträge besitzen unterschiedliche Schreibweisen, Server oder Freigabestatus und können das Speichern von Prios blockieren.`:'Mehrfache Charaktere gefunden.'}</p><div style="display:grid;gap:8px">${duplicates.map(group=>`<div style="padding:10px;border:1px solid ${group.hasConflict?'#ef4444':'#d97706'};border-radius:9px;background:#071020"><strong>${escapeHtml((group.spellings||[group.name]).join(' / '))}${group.servers?.length?` · ${escapeHtml(group.servers.join(' / '))}`:""}</strong>${group.nameConflict?'<span class="badge danger" style="margin-left:8px">unterschiedliche Schreibweise</span>':''}${group.serverConflict?'<span class="badge danger" style="margin-left:8px">auf mehreren Servern</span>':!group.nameConflict&&group.hasConflict?'<span class="badge danger" style="margin-left:8px">Freigabekonflikt</span>':'<span class="badge warn" style="margin-left:8px">doppelt</span>'}<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px">${group.entries.map(entry=>`<span class="badge ${entry.blocked||entry.status!=="approved"?"danger":"open"}">${escapeHtml(entry.login)}${entry.server?` · ${escapeHtml(entry.server)}`:''} · ${escapeHtml(label(entry.blocked?"blocked":entry.status))}</span>`).join("")}</div></div>`).join("")}</div>`;
+}
+
 function renderPlayers(){
+  renderDuplicatePlayerConflicts();
   const tbody = document.getElementById("playerRows");
   const search = normalize(document.getElementById("playerSearch").value);
   const classFilter = normalize(document.getElementById("classFilter").value);
