@@ -10085,7 +10085,7 @@ async function renderRaidHelperCurrentPoPanel(raid){
   try{await loadPoPostStoredEntries();}catch(error){box.innerHTML=`<div class="status bad">${escapeHtml(error.message||"PO-Anmeldungen konnten nicht geladen werden.")}</div>`;return;}
   const row=matchingPoSignupForRaid(raid);
   if(!row){
-    box.innerHTML=`<div class="status">Für diesen Raid wurde noch kein PO-Anmelder gefunden.</div><button class="small-btn good" type="button" onclick="setRaidHelperTab('poCreate')">PO-Anmelder erstellen</button>`;
+    box.innerHTML=`<div class="status">Für diesen Raid wurde noch kein PO-Anmelder gefunden.</div><button class="small-btn good" type="button" onclick="createPoSignupForSelectedRaid('${escapeAttr(raid.raidId||raid.id)}')">Passenden PO-Anmelder erstellen</button>`;
     return;
   }
   const postKey=String(row.postKey||"");
@@ -10108,6 +10108,52 @@ async function renderRaidHelperCurrentPoPanel(raid){
     <div class="table-wrap"><table class="po-post-entry-table"><thead><tr><th>Status</th><th>Spieler</th><th>Item</th><th>Aktion</th></tr></thead><tbody id="raidCurrentPoRows"></tbody></table></div>`;
   renderPoPostEntryReviewRows(document.getElementById("raidCurrentPoRows"),null,postKey,"Noch keine PO-Anmeldungen vorhanden.");
   loadManualPoItemOptions(raidKey,"raidCurrentPoItem");
+}
+
+async function createPoSignupForSelectedRaid(raidId){
+  const raid=findRaidByAnyId(raidId);
+  const box=document.getElementById("raidHelperCurrentPoPanel");
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  if(!raid||!box)return;
+  if(!masterCode){box.innerHTML='<div class="status bad">Bitte zuerst den Master-Code eingeben.</div>';return;}
+  box.innerHTML='<div class="status">Passender PO-Anmelder wird vorbereitet …</div>';
+  try{
+    await loadPoPostStoredEntries();
+    const existing=matchingPoSignupForRaid(raid);
+    if(existing){await renderRaidHelperCurrentPoPanel(raid);return;}
+    const raidKey=normalizePoSignupRaidKey(raid.raid||raid.raidName);
+    const raidDate=String(raid.raidDate||"");
+    const raidTime=String(raid.raidTime||"").slice(0,5);
+    const channelId=String(raid.discordChannelId||raid.channelId||"");
+    const raidPin=String(raid.playerPin||raid.prioPin||"");
+    const raidIdValue=String(raid.raidId||raid.id||"");
+    const leadPin=String(raid.leadPin||"");
+    if(!raidDate||!raidTime)throw new Error("Beim ausgewählten Raid fehlen Datum oder Uhrzeit.");
+    if(!channelId)throw new Error("Beim ausgewählten Raid ist noch kein Discord-Channel gespeichert.");
+    if(!raidPin)throw new Error("Beim ausgewählten Raid fehlt die Prio-ID.");
+    const label=RAID_OPTIONS[raidKey]?.short||raidKey.toUpperCase();
+    let config={
+      postKey:makePoSignupKey(raidKey,raidDate,raidTime),sourceChannelId:channelId,targetChannelId:channelId,
+      reviewRecipient:"",title:`${label} PO-Anmelder`,raid:raidKey,raidDate,raidTime,limit:"800",mode:"signup",
+      note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",itemOptions:"",createLichtlootRaid:false,
+      lichtlootRaidId:raidIdValue,lichtlootPlayerPin:raidPin,lichtlootLeadPin:leadPin
+    };
+    config=await ensurePoSignupItemOptions(config);
+    if(!config.itemOptions)throw new Error("Für diesen Raid wurden keine PO-Items gefunden.");
+    const configs=readPoPostConfigs();
+    configs.push(config);writePoPostConfigs(configs);selectedPoPostKey=config.postKey;
+    const result=await railwayWrite({
+      action:"guildQueuePoPost",masterCode,postKey:config.postKey,sourceChannelId:channelId,targetChannelId:channelId,
+      reviewRecipient:"",title:config.title,raid:raidKey,raidDate,raidTime,limit:"800",mode:"signup",note:config.note,
+      itemOptions:config.itemOptions,postedEntries:"[]",restoreArchived:"true",createLichtlootRaid:"",
+      lichtlootRaidId:raidIdValue,lichtlootPlayerPin:raidPin,lichtlootLeadPin:leadPin
+    });
+    if(!result.success)throw new Error(result.error||"PO-Anmelder konnte nicht erstellt werden.");
+    box.innerHTML=`<div class="status good">PO-Anmelder für Prio-ID <strong>${escapeHtml(raidPin)}</strong> wurde im Raid-Channel vorgemerkt. Du bleibst auf dieser Raid-Seite.</div>`;
+    window.setTimeout(async()=>{try{await renderRaidHelperCurrentPoPanel(raid);}catch(_error){}},3000);
+  }catch(error){
+    box.innerHTML=`<div class="status bad">${escapeHtml(error.message||"PO-Anmelder konnte nicht erstellt werden.")}</div><button class="small-btn good" type="button" onclick="createPoSignupForSelectedRaid('${escapeAttr(raidId)}')">Erneut versuchen</button>`;
+  }
 }
 
 async function addManualPoSignupFromRaid(postKey,raidKey){
