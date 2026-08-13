@@ -8002,6 +8002,14 @@ async function reviewPoPostEntry({ guildId, query: params }) {
     throw error;
   }
   let prioDelete = null;
+  let prioSync = null;
+  if (approvalStatus === "approved") {
+    prioSync = await syncApprovedPoEntryToPrio(guildId, row, params).catch(error => ({
+      success: false,
+      synced: 0,
+      error: error.message || String(error)
+    }));
+  }
   if (approvalStatus === "rejected") {
     prioDelete = await deletePoSignupPrioForEntry(guildId, row, params).catch(error => ({
       success: false,
@@ -8110,9 +8118,61 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       approvedAt: row.approved_at || "",
       rejectionReason: row.rejection_reason || rejectionReason || ""
     },
+    prioSync,
     prioDelete,
     raidAnnouncementRefresh
   };
+}
+
+async function syncApprovedPoEntryToPrio(guildId, entry, params = {}) {
+  const raidPin = clean(entry.raid_pin || params.raidPin || params.prioPin || params.playerPin);
+  if (!raidPin) {
+    return { success: false, synced: 0, error: "Beim PO-Anmelder fehlt die LichtLoot Prio-ID." };
+  }
+  const playerName = clean(entry.player_name || params.player || params.char || params.spieler);
+  const itemName = normalizePoItemName(entry.item_name || params.item || params.itemName);
+  if (!playerName || !itemName) {
+    return { success: false, synced: 0, error: "Spieler oder PO-Item fehlt." };
+  }
+  const playerResult = await query(
+    `select p.player_pin, c.name, c.server, c.class_name
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+       and p.approval_status = 'approved'
+       and coalesce(p.is_blocked, false) = false
+     order by c.is_main desc, c.created_at asc
+     limit 1`,
+    [guildId, playerName]
+  );
+  const player = playerResult.rows[0];
+  if (!player?.player_pin) {
+    return { success: false, synced: 0, error: `Für ${playerName} wurde kein freigegebener Spielerlogin gefunden.` };
+  }
+  const result = await savePoSignupPrioFromBot({
+    guildId,
+    query: {
+      ...params,
+      postKey: entry.post_key || params.postKey || "",
+      raidPin,
+      prioPin: raidPin,
+      playerPin: player.player_pin,
+      spielerLogin: player.player_pin,
+      player: player.name || playerName,
+      char: player.name || playerName,
+      server: player.server || "Everlook",
+      className: player.class_name || entry.class_name || "",
+      item: itemName,
+      itemName,
+      itemId: entry.item_game_id || "",
+      itemSlot: entry.item_slot || "",
+      itemBoss: entry.item_boss || "",
+      discordUserId: entry.discord_user_id || "",
+      discordName: entry.discord_name || ""
+    }
+  });
+  return { success: true, synced: 1, prioId: result.prioId, raidId: result.raidId };
 }
 
 async function deletePoSignupPrioForEntry(guildId, entry, params = {}) {
