@@ -3146,7 +3146,7 @@ html,body{max-width:100%;overflow-x:hidden}
             <div class="guild-switch-callout">
               <span class="guild-switch-label">LootGilde wechseln</span>
               <span class="guild-switch-arrow" aria-hidden="true">➜</span>
-              <select id="meinLichtLootGuildSwitch" class="guild-switch-select" aria-label="LootGilde wechseln" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select>
+              <select id="meinLichtLootGuildSwitch" class="guild-switch-select" aria-label="LootGilde wechseln" onchange="switchMeinLichtLootGuild(this.value)"><option value="">Gilden werden geladen …</option></select>
             </div>
             <button class="right-inline-btn" onclick="openPlayerMailbox()">Postfach <span id="playerMailboxBadge"></span></button>
             <button class="right-inline-btn" onclick="logoutLichtLootPlayer()">Ausloggen / Spieler wechseln</button>
@@ -3220,7 +3220,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div id="lichtstatsLoginBar" class="lichtstats-login-bar hidden"><span>Dies ist eine öffentliche Vorschau der LichtStats-Auswertungen. Anmeldung und weitere Funktionen öffnen sich direkt auf LichtStats.</span><a href="https://lichtstats.de/" target="_blank" rel="noopener noreferrer">↗ LichtStats direkt öffnen</a></div>
         <iframe id="lichtstatsEmbed" class="lichtstats-embed hidden" title="LichtStats Raidauswertungen" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
       </section>
-</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="Lichtbringer">Lichtbringer</option><option value="Die Nachtwächter">Die Nachtwächter</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
+</div><aside class="dashboard-right"><section class="dash-panel right-card account-management-entry" id="meinLichtLootRightEntry" role="button" tabindex="0" onclick="openAccountManagementCenter()" onkeydown="if(event.key==='Enter'||event.key===' ') openAccountManagementCenter()" aria-label="Mein LichtLoot öffnen"><span class="account-entry-nudge">Klick hier</span><span id="accountEntryButtonText" class="account-entry-button">Mein LichtLoot</span></section><section class="dash-panel right-card"><h2>Nächste Worldbuffs</h2><div id="dashboardWorldbuffs" class="side-list"><div class="side-row"><span>Worldbuffs</span><span>öffnen →</span></div></div><button class="text-link-btn" style="margin-top:12px" onclick="showBuffOverview('worldbuff')">Alle Worldbuffs anzeigen →</button></section><div id="startCurrentGuildCallout" class="start-po-login-callout start-current-guild-callout" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">GILDE</div><div class="start-po-login-copy"><span>Deine aktuelle Lootgilde</span><strong id="startCurrentGuildValue" data-guild-brand="guildName">Lichtbringer</strong><small>Für diese Gilde werden deine Raids und Prios angezeigt.</small></div><div class="start-current-guild-switch"><label for="startLootGuildSwitch">Lootgilde ändern</label><span class="guild-switch-arrow" aria-hidden="true">➜</span><select id="startLootGuildSwitch" aria-label="Lootgilde ändern" onchange="switchMeinLichtLootGuild(this.value)"><option value="">Gilden werden geladen …</option></select></div></div><div id="startPoLoginCallout" class="start-po-login-callout hidden" aria-live="polite"><div class="start-po-arrow" aria-hidden="true">PO!</div><div class="start-po-login-copy"><span>Dein SpielerPIN</span><strong id="startPoLoginValue">----</strong><small>Diesen SpielerPIN beim Eintragen im Discord angeben.</small></div><button type="button" onclick="copyStartPoLogin()">kopieren</button></div></aside></div>
     <footer class="start-footer"><span data-guild-brand="footerName">© 2026 Lichtbringer Lootsystem</span><a href="datenschutz.html">Datenschutz</a><a href="impressum.html">Impressum</a><a href="#">Support</a><a href="#">FAQ</a><span class="start-footer-love">Mit ♥ für eine faire Gilde.</span></footer>
   </main>
 </div>
@@ -3420,12 +3420,17 @@ function getCurrentGuildBrand(){
 
 const CURRENT_GUILD_BRAND = getCurrentGuildBrand();
 let currentGuildInfo = null;
+let availableLootGuilds = [];
+const START_LOOT_GUILD_SLUGS = new Set(["lichtloot", "nachtloot", "querloot"]);
 
 async function fetchCurrentGuildInfo(){
   try{
     const response = await fetch(LICHTLOOT_API_URL + "?action=listGuilds&t=" + Date.now(), {cache:"no-store"});
     const data = await response.json();
-    currentGuildInfo = (data.guilds || []).find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    availableLootGuilds = (Array.isArray(data.guilds) ? data.guilds : [])
+      .filter(entry => START_LOOT_GUILD_SLUGS.has(String(entry.slug || "").toLowerCase()));
+    currentGuildInfo = availableLootGuilds.find(entry => String(entry.slug || "").toLowerCase() === CURRENT_GUILD_SLUG) || null;
+    syncMeinLichtLootGuildSwitch();
     return currentGuildInfo;
   }catch(error){
     console.warn("Gildenbranding konnte nicht geladen werden.", error);
@@ -5750,11 +5755,12 @@ async function switchMeinLichtLootGuild(value){
   if(!selection) return;
   try{
     const normalizedSelection=selection.toLowerCase();
-    const guild=(normalizedSelection === "lichtbringer" || normalizedSelection === "lichtloot")
+    const listedGuild=availableLootGuilds.find(entry => String(entry.slug || "").toLowerCase() === normalizedSelection);
+    const guild=listedGuild || ((normalizedSelection === "lichtbringer" || normalizedSelection === "lichtloot")
       ? {slug:"lichtloot"}
       : (normalizedSelection === "die nachtwächter" || normalizedSelection === "nachtwächter" || normalizedSelection === "nachtloot")
         ? {slug:"nachtloot"}
-        : await resolveGuildPin(selection);
+        : await resolveGuildPin(selection));
     if(!guild?.slug) throw new Error("Gilde wurde nicht gefunden.");
     const sharedPin=getStoredLichtLootPlayerPin();
     if(sharedPin){
@@ -5775,10 +5781,20 @@ async function switchMeinLichtLootGuild(value){
 }
 
 function syncMeinLichtLootGuildSwitch(){
-  const value=CURRENT_GUILD_SLUG === "lichtloot" ? "Lichtbringer" : "Die Nachtwächter";
   ["meinLichtLootGuildSwitch","startLootGuildSwitch"].forEach(id=>{
     const select=document.getElementById(id);
-    if(select) select.value=value;
+    if(!select) return;
+    if(availableLootGuilds.length){
+      select.innerHTML="";
+      availableLootGuilds.forEach(guild=>{
+        const option=document.createElement("option");
+        option.value=String(guild.slug || "");
+        option.textContent=String(guild.slug === "lichtloot" ? "Lichtbringer" : (guild.name || titleFromSlug(guild.slug) || guild.slug));
+        select.appendChild(option);
+      });
+    }
+    const hasCurrent=Array.from(select.options).some(option=>option.value === CURRENT_GUILD_SLUG);
+    if(hasCurrent) select.value=CURRENT_GUILD_SLUG;
   });
 }
 
