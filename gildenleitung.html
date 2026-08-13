@@ -16883,7 +16883,11 @@ async function reviewPoPostEntryFromGuild(index, status){
       rejectionReason
     });
     renderPoPostEntryRows();
-    setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+    if(status === "approved" && result.prioSync?.success === false){
+      setStatus("PO freigegeben, aber nicht automatisch in die Prioliste eingetragen: " + (result.prioSync.error || "unbekannter Fehler"), "bad");
+    }else{
+      setStatus(status === "approved" ? "PO freigegeben und automatisch in die Prioliste eingetragen. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+    }
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
   }
@@ -16944,7 +16948,11 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     renderPoSignupReviewRows();
     updatePoSignupPreview();
     refreshUnifiedPoIfOpen();
-    setStatus(status === "approved" ? "PO-Eintrag freigegeben. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+    if(status === "approved" && result.prioSync?.success === false){
+      setStatus("PO freigegeben, aber nicht automatisch in die Prioliste eingetragen: " + (result.prioSync.error || "unbekannter Fehler"), "bad");
+    }else{
+      setStatus(status === "approved" ? "PO freigegeben und automatisch in die Prioliste eingetragen. Der DC-Post bekommt den grünen Haken." : "PO-Eintrag abgelehnt.", "good");
+    }
   }catch(error){
     setStatus(error.message || "PO-Eintrag konnte nicht gespeichert werden.", "bad");
   }
