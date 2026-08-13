@@ -8650,6 +8650,8 @@ function duplicatePlayerApprovalConflicts(players){
     if(server)group.servers.add(server);
     if(!group.entries.some(entry=>entry.login===login&&normalize(entry.server)===normalize(server)))group.entries.push({
       login,
+      characterId:String(player.id||""),
+      name,
       server,
       playerId:String(player.playerId||""),
       status:String(player.approvalStatus||"approved").toLowerCase(),
@@ -8673,7 +8675,33 @@ function renderDuplicatePlayerConflicts(){
   panel.style.borderColor=conflicts.length?"#ef4444":"#22c55e";
   panel.style.background=conflicts.length?"rgba(127,29,29,.22)":"rgba(20,83,45,.18)";
   if(!duplicates.length){panel.innerHTML='<h3 style="margin:0 0 6px;color:#86efac">✓ Prüfung auf doppelte Charaktere abgeschlossen</h3><p style="margin:0">In den geladenen SpielerLogin-Daten wurden keine Charaktere auf mehreren Accounts gefunden.</p>';return;}
-  panel.innerHTML=`<h3 style="margin:0 0 8px;color:${conflicts.length?'#fca5a5':'#fde68a'}">${conflicts.length?'⚠':'ℹ'} Doppelte Charaktere / Freigabekonflikte (${duplicates.length})</h3><p style="margin:0 0 10px">${conflicts.length?`${conflicts.length} Eintrag/Einträge besitzen unterschiedliche Schreibweisen, Server oder Freigabestatus und können das Speichern von Prios blockieren.`:'Mehrfache Charaktere gefunden.'}</p><div style="display:grid;gap:8px">${duplicates.map(group=>`<div style="padding:10px;border:1px solid ${group.hasConflict?'#ef4444':'#d97706'};border-radius:9px;background:#071020"><strong>${escapeHtml((group.spellings||[group.name]).join(' / '))}${group.servers?.length?` · ${escapeHtml(group.servers.join(' / '))}`:""}</strong>${group.nameConflict?'<span class="badge danger" style="margin-left:8px">unterschiedliche Schreibweise</span>':''}${group.serverConflict?'<span class="badge danger" style="margin-left:8px">auf mehreren Servern</span>':!group.nameConflict&&group.hasConflict?'<span class="badge danger" style="margin-left:8px">Freigabekonflikt</span>':'<span class="badge warn" style="margin-left:8px">doppelt</span>'}<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px">${group.entries.map(entry=>`<span class="badge ${entry.blocked||entry.status!=="approved"?"danger":"open"}">${escapeHtml(entry.login)}${entry.server?` · ${escapeHtml(entry.server)}`:''} · ${escapeHtml(label(entry.blocked?"blocked":entry.status))}</span>`).join("")}</div></div>`).join("")}</div>`;
+  panel.innerHTML=`<h3 style="margin:0 0 8px;color:${conflicts.length?'#fca5a5':'#fde68a'}">${conflicts.length?'⚠':'ℹ'} Doppelte Charaktere / Freigabekonflikte (${duplicates.length})</h3><p style="margin:0 0 10px">${conflicts.length?`${conflicts.length} Eintrag/Einträge besitzen unterschiedliche Schreibweisen, Server oder Freigabestatus und können das Speichern von Prios blockieren.`:'Mehrfache Charaktere gefunden.'}</p><div style="display:grid;gap:8px">${duplicates.map((group,index)=>`<div style="padding:10px;border:1px solid ${group.hasConflict?'#ef4444':'#d97706'};border-radius:9px;background:#071020"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap"><div><strong>${escapeHtml((group.spellings||[group.name]).join(' / '))}${group.servers?.length?` · ${escapeHtml(group.servers.join(' / '))}`:""}</strong>${group.nameConflict?'<span class="badge danger" style="margin-left:8px">unterschiedliche Schreibweise</span>':''}${group.serverConflict?'<span class="badge danger" style="margin-left:8px">auf mehreren Servern</span>':!group.nameConflict&&group.hasConflict?'<span class="badge danger" style="margin-left:8px">Freigabekonflikt</span>':'<span class="badge warn" style="margin-left:8px">doppelt</span>'}</div><button class="small-btn good" type="button" onclick="openDuplicateCharacterMerge(${index})">Problem lösen</button></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:7px">${group.entries.map(entry=>`<span class="badge ${entry.blocked||entry.status!=="approved"?"danger":"open"}">${escapeHtml(entry.name||group.name)} · ${escapeHtml(entry.login)}${entry.server?` · ${escapeHtml(entry.server)}`:''} · ${escapeHtml(label(entry.blocked?"blocked":entry.status))}</span>`).join("")}</div></div>`).join("")}</div>`;
+}
+
+function openDuplicateCharacterMerge(index){
+  const group=duplicatePlayerApprovalConflicts(guildData.players||[])[Number(index)];
+  if(!group||group.entries.length<2)return;
+  const backdrop=document.createElement("div");
+  backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="max-width:720px"><h3>Doppelte Charaktere zusammenführen</h3><p>Wähle den richtigen Eintrag aus. Dieser Charakter und sein SpielerLogin bleiben erhalten. Prioritäten, PO+-Punkte, Raid-Anmeldungen, Freigaben und Discord-Verknüpfungen der anderen Einträge werden übernommen.</p><div class="status" style="display:grid;gap:8px">${group.entries.map((entry,entryIndex)=>`<label style="display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:10px;border:1px solid #334155;border-radius:9px"><input type="radio" name="duplicateKeepCharacter" value="${escapeAttr(entry.characterId)}" ${entryIndex===0?'checked':''}><span><strong>${escapeHtml(entry.name||group.name)}</strong> · ${escapeHtml(entry.server||'ohne Server')}<br><small>SpielerLogin: ${escapeHtml(entry.login)} · ${escapeHtml(entry.blocked?'gesperrt':entry.status==='approved'?'freigegeben':entry.status==='rejected'?'abgelehnt':'wartet auf Freigabe')}</small></span></label>`).join("")}</div><div class="status warn" style="margin-top:12px"><strong>Wichtig:</strong> Die übrigen Charakter-Dubletten werden danach entfernt. Andere Twinks auf deren SpielerLogins bleiben erhalten; nur vollständig leere Doppelkonten werden gelöscht.</div><div data-merge-status class="status" style="display:none"></div><div class="raid-helper-notify-actions"><button class="small-btn ghost" type="button" data-close>Abbrechen</button><button class="small-btn good" type="button" data-merge>Auswahl zusammenführen</button></div></div>`;
+  const close=()=>backdrop.remove();
+  backdrop.querySelector("[data-close]").onclick=close;
+  backdrop.onclick=event=>{if(event.target===backdrop)close();};
+  backdrop.querySelector("[data-merge]").onclick=async()=>{
+    const keepCharacterId=backdrop.querySelector('input[name="duplicateKeepCharacter"]:checked')?.value||"";
+    const keep=group.entries.find(entry=>entry.characterId===keepCharacterId);
+    if(!keepCharacterId||!keep)return;
+    if(!confirm(`${keep.name||group.name} auf ${keep.server||"dem gewählten Server"} wirklich behalten und die anderen ${group.entries.length-1} Einträge damit zusammenführen?`))return;
+    const button=backdrop.querySelector("[data-merge]"),status=backdrop.querySelector("[data-merge-status]");
+    button.disabled=true;button.textContent="Wird zusammengeführt …";status.style.display="block";status.textContent="Daten werden sicher übernommen …";
+    try{
+      const result=await railwayWrite({action:"guildMergeDuplicateCharacters",masterCode:document.getElementById("masterCode").value.trim(),keepCharacterId,duplicateCharacterIds:JSON.stringify(group.entries.filter(entry=>entry.characterId!==keepCharacterId).map(entry=>entry.characterId))});
+      if(!result.success)throw new Error(result.error||"Zusammenführung fehlgeschlagen.");
+      close();setStatus(`${keep.name||group.name} wurde zusammengeführt. ${result.mergedCharacters||0} Dublette(n) und ${result.removedAccounts||0} leere Doppelkonten wurden bereinigt.`,"good");
+      await loadOverview({preserveStatus:true});
+    }catch(error){button.disabled=false;button.textContent="Auswahl zusammenführen";status.className="status bad";status.textContent=error.message||"Zusammenführung fehlgeschlagen.";}
+  };
+  document.body.appendChild(backdrop);
 }
 
 function renderPlayers(){
