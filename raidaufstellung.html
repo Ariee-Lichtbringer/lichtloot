@@ -124,6 +124,31 @@
 .tactic-boss-icon>span{display:none!important}
 .tasks-head{cursor:pointer}.tasks-head-actions{display:flex;align-items:center;gap:8px}.tasks-collapse{min-width:132px}.tasks.collapsed #bossMenu,.tasks.collapsed #raidEncounterTabs,.tasks.collapsed #taskGrid{display:none!important}.tasks.collapsed .tasks-head{margin-bottom:0}
 .player-pdf-button{display:inline-flex!important;margin-left:auto!important}.player-modal-head .player-close-button{display:inline-flex!important;margin-left:0!important}
+.tasks-head-actions{display:flex;align-items:center;gap:8px}.tasks-collapse-button{white-space:nowrap}.tasks.collapsed .tasks-head{margin-bottom:0}.tasks.collapsed #taskSubtitle{display:none}.aq40-player-common{display:grid;grid-template-columns:1fr;gap:14px}.tactic-target-badge{position:absolute;right:-9px;top:-9px;width:28px!important;height:28px!important;object-fit:contain!important;border-radius:0!important;filter:drop-shadow(0 2px 3px #000)}.player-tactic:not(.tactic-collapsed){min-width:min(980px,calc(100% - 8px))!important;min-height:660px!important}.player-tactic:not(.tactic-collapsed) .player-tactic-content{min-height:600px!important}.player-tactic .tactic-board{min-height:560px!important}.player-tactic .tactic-map{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important}.tactic-boss-icon>span{display:none!important}
+/* Editor und Spieleransicht verwenden dieselbe 16:9-Koordinatenflaeche.
+   Marker bleiben dadurch beim Ansichtswechsel exakt auf derselben Kartenposition. */
+.player-tactic:not(.tactic-collapsed) .player-tactic-content,
+.player-tactic:not(.tactic-collapsed) .player-tactic-phases,
+.player-tactic:not(.tactic-collapsed) .player-tactic-phase{
+  height:auto!important;
+  min-height:0!important;
+}
+.player-tactic:not(.tactic-collapsed) .player-tactic-phase .tactic-board,
+.player-tactic:not(.tactic-collapsed) .player-tactic-content:not(.player-tactic-phases) .tactic-board{
+  position:relative!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  aspect-ratio:16/9!important;
+}
+.player-tactic:not(.tactic-collapsed) .tactic-map{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+}
 @media print{body.printing-player-view{background:#fff!important}body.printing-player-view>*:not(#playerModal){display:none!important}body.printing-player-view #playerModal{display:block!important;position:static!important;background:#fff!important;padding:0!important}body.printing-player-view .player-modal-shell{width:100%!important;height:auto!important;overflow:visible!important;border:0!important;box-shadow:none!important}body.printing-player-view .player-modal-head{position:static!important;height:auto!important;background:#071020!important}body.printing-player-view .player-modal-head .btn,body.printing-player-view .player-encounter-nav,body.printing-player-view .player-layout-tools{display:none!important}body.printing-player-view .player-modal-body{overflow:visible!important;padding:12px!important}body.printing-player-view .player-sheet-layout.free-card-layout{position:static!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:auto!important;min-height:0!important}body.printing-player-view .free-card-layout>.player-sheet-card{position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;break-inside:avoid}body.printing-player-view .player-tactic{grid-column:1/-1!important;break-before:page}body.printing-player-view .player-tactic-content{height:auto!important;overflow:visible!important}body.printing-player-view *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 </style></head><body>
 <div id="campPickerPopup" class="camp-picker-popup hidden" onclick="if(event.target===this)closeCampPicker()"><div class="camp-picker-dialog"><h3 id="campPickerTitle">Charaktere für das Camp auswählen</h3><div id="campPickerPresets" class="camp-picker-presets"></div><div id="campPickerList" class="camp-picker-list"></div><div class="camp-picker-actions"><button class="btn" onclick="closeCampPicker()">Abbrechen</button><button class="btn good" onclick="confirmCampPicker()">Auswahl übernehmen</button></div></div></div>
