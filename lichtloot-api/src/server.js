@@ -4085,7 +4085,7 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
   let allowed = Boolean(result.rows[0]);
   if (!allowed) {
     const releasedCharacters = await query(
-      `select c.name
+      `select c.name, c.server
        from character_po_releases cpr
        join characters c on c.id = cpr.character_id
        where cpr.guild_id = $1
@@ -4093,8 +4093,10 @@ async function checkCharacterPoRelease({ guildId, query: params = {} }) {
       [guildId, raid]
     );
     const wantedName = normalizePoReleaseCharacterName(character.name);
+    const wantedServer = clean(character.server).toLowerCase();
     allowed = releasedCharacters.rows.some(row =>
       normalizePoReleaseCharacterName(row.name) === wantedName
+      && clean(row.server).toLowerCase() === wantedServer
     );
   }
   return {
