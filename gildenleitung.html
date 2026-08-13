@@ -15325,6 +15325,27 @@ async function queueRaidToDiscord(raidId, options = {}){
 
   setStatus(alreadyPosted ? "Raidanmelder-Aktualisierung wird vorgemerkt ..." : "Nachträglicher Raidanmelder wird vorgemerkt ...", "");
   try{
+    const followupPoPayload = repostPo && followupPoPost ? {
+      postKey:followupPoPost.postKey,
+      sourceChannelId:followupPoPost.sourceChannelId || channelId,
+      targetChannelId:channelId || followupPoPost.targetChannelId,
+      reviewRecipient:followupPoPost.reviewRecipient || "",
+      title:followupPoPost.title || "PO-Anmelder",
+      raid:followupPoPost.raid || getRaidKey(raid),
+      raidDate:followupPoPost.raidDate || raid.raidDate || "",
+      raidTime:followupPoPost.raidTime || raid.raidTime || "",
+      limit:followupPoPost.limit || "800",
+      mode:followupPoPost.mode || "signup",
+      note:followupPoPost.note || "",
+      itemOptions:followupPoPost.itemOptions || "",
+      postedEntries:poSignupEntriesForDiscordPost(followupPoPost.postKey),
+      restoreArchived:"true",
+      forceNewMessage:"true",
+      createLichtlootRaid:"",
+      lichtlootRaidId:followupPoPost.lichtlootRaidId || raid.raidId || raid.id || "",
+      lichtlootPlayerPin:followupPoPost.lichtlootPlayerPin || raid.playerPin || raid.prioPin || "",
+      lichtlootLeadPin:followupPoPost.lichtlootLeadPin || raid.leadPin || ""
+    } : null;
     const result = await railwayWrite({
       action:"guildQueueRaidAnnouncement",
       masterCode,
@@ -15347,7 +15368,8 @@ async function queueRaidToDiscord(raidId, options = {}){
       pluendermeister:raid?.pluendermeister || raid?.lootMaster || "",
       statusNotifyTargets:JSON.stringify(raid?.statusNotifyTargets || raid?.status_notify_targets || []),
       announcementNotifyTargets:JSON.stringify(raid?.announcementNotifyTargets || raid?.announcement_notify_targets || []),
-      forceNewMessage:forceNew ? "true" : "false"
+      forceNewMessage:forceNew ? "true" : "false",
+      followupPoPost:followupPoPayload ? JSON.stringify(followupPoPayload) : ""
     });
 
     if(!result.success){
@@ -15355,15 +15377,9 @@ async function queueRaidToDiscord(raidId, options = {}){
       return;
     }
 
-    let poMessage = "";
-    if(repostPo){
-      setStatus("Raidanmelder wurde vorgemerkt. Neuer PO+-Anmelder wird jetzt separat vorgemerkt ...", "");
-      const poResult = await queueMatchingPoPostForRaid(raid, masterCode, channelId, true);
-      if(!poResult?.success){
-        throw new Error("Der Raidanmelder wurde vorgemerkt, aber der PO+-Anmelder nicht: " + (poResult?.error || "Unbekannter Fehler"));
-      }
-      poMessage = " Der neue PO+-Anmelder wurde separat vorgemerkt" + (poResult.rowNumber ? " (Queue " + poResult.rowNumber + ")" : "") + ".";
-    }
+    const poMessage = repostPo
+      ? " Der PO+-Anmelder ist fest an denselben Auftrag gekoppelt und wird direkt danach gepostet."
+      : "";
 
     setStatus(
       (alreadyPosted ? "Raidanmelder-Aktualisierung wurde vorgemerkt" : "Nachträglicher Raidanmelder wurde vorgemerkt") +
