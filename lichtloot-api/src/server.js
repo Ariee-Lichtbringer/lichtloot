@@ -7171,7 +7171,7 @@ async function queuePoPost({ guildId, query: params }) {
         raid
       });
   const reviewRecipient = clean(params.reviewRecipient || params.reviewUserId || params.approvalUserId || params.freigabeAn);
-  const postKey = clean(params.postKey || params.poPostKey || params.postId || params.id);
+  let postKey = clean(params.postKey || params.poPostKey || params.postId || params.id);
   if (!sourceChannelId) {
     const error = new Error("PO-Quellchannel fehlt.");
     error.statusCode = 400;
@@ -7183,6 +7183,28 @@ async function queuePoPost({ guildId, query: params }) {
     throw error;
   }
   const limit = Math.max(50, Math.min(2000, Number(params.limit || 800) || 800));
+  const requestedRaidPin = clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid);
+  // Die Prio-ID ist die kanonische Verbindung. Für dieselbe Prio-ID und
+  // denselben Zielchannel darf es nicht mehrere aktive PO-Post-IDs geben.
+  // Bevorzugt wird der Post, der bereits echte Einträge enthält.
+  if (requestedRaidPin) {
+    const canonicalResult = await query(
+      `select post_key,
+              count(*) filter (where config_only = false)::int as entry_count,
+              max(updated_at) as last_update
+       from po_post_entries
+       where guild_id = $1
+         and raid_pin = $2
+         and target_channel_id = $3
+         and archived_at is null
+       group by post_key
+       order by entry_count desc, last_update desc
+       limit 1`,
+      [guildId, requestedRaidPin, targetChannelId]
+    );
+    const canonicalPostKey = clean(canonicalResult.rows[0]?.post_key);
+    if (canonicalPostKey) postKey = canonicalPostKey;
+  }
   let restoredEntries = 0;
   if (["1", "true", "yes", "ja"].includes(clean(params.restoreArchived || params.restore || params.repost || "").toLowerCase())) {
     const restoreResult = await query(
@@ -7231,7 +7253,7 @@ async function queuePoPost({ guildId, query: params }) {
       targetChannelId,
       normalizeRaidType(raid).toUpperCase(),
       clean(params.title) || "PO Liste",
-      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid),
+      requestedRaidPin,
       clean(params.raidDate || params.date || params.datum),
       clean(params.raidTime || params.time || params.uhrzeit),
       clean(params.mode || params.poMode) || "signup"
