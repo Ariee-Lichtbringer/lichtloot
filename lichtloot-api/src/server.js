@@ -5678,7 +5678,11 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
       return { success: false, skipped: true, reason: "raid_announcement_missing_raid_id", type, payload: payload || {} };
     }
     const fromSchedule = clean(payload?.source) === "raid_helper_schedule";
-    const existing = await query(
+    // Ein gekoppelter Raid+PO-Auftrag darf nicht durch die normale
+    // Raid-Deduplizierung übersprungen werden. Sonst bleibt nur der bereits
+    // vorhandene Raid-Auftrag übrig und der gewünschte PO-Anmelder fehlt.
+    const hasFollowupPoPost = Boolean(payload?.followupPoPost && typeof payload.followupPoPost === "object");
+    const existing = hasFollowupPoPost ? { rows: [] } : await query(
       `select id, status, payload
        from bot_update_queue
        where guild_id = $1
