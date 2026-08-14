@@ -6534,15 +6534,26 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
   if (saved > 0) {
     await query(
       `insert into guild_settings (guild_id, layout_json)
-       values ($1, jsonb_build_object('onboarding', $2::jsonb))
+       values ($1, jsonb_build_object(
+         'onboarding',
+         jsonb_build_object('status', 'layout_required', 'discordConnected', true, 'channelsSynced', true)
+       ))
        on conflict (guild_id) do update
          set layout_json = jsonb_set(
            coalesce(guild_settings.layout_json, '{}'::jsonb),
            '{onboarding}',
-           coalesce(guild_settings.layout_json->'onboarding', '{}'::jsonb) || $2::jsonb,
+           coalesce(guild_settings.layout_json->'onboarding', '{}'::jsonb)
+             || jsonb_build_object(
+                  'status', case
+                    when guild_settings.layout_json->'onboarding'->>'status' = 'ready' then 'ready'
+                    else 'layout_required'
+                  end,
+                  'discordConnected', true,
+                  'channelsSynced', true
+                ),
            true
          ), updated_at = now()`,
-      [guildId, JSON.stringify({ status: "layout_required", discordConnected: true, channelsSynced: true })]
+      [guildId]
     );
   }
 
