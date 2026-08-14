@@ -1978,13 +1978,13 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   display:block!important;
   opacity:1!important;
   pointer-events:auto!important;
-  transform:translateX(-50%) translateY(0)!important;
+  transform:translate(calc(-50% + var(--raid-drag-x,0px)),var(--raid-drag-y,0px))!important;
   padding:14px!important;
   margin:0!important;
   border:1px solid rgba(250,204,21,.38)!important;
 }
 .raid-create-box.hidden{
-  transform:translateX(-50%) translateY(-8px)!important;
+  transform:translate(calc(-50% + var(--raid-drag-x,0px)),calc(var(--raid-drag-y,0px) - 8px))!important;
 }
 .raid-create-head{
   position:sticky!important;
@@ -1992,7 +1992,27 @@ body.start-dashboard-body{background:linear-gradient(90deg,rgba(3,10,20,.96),rgb
   z-index:1!important;
   padding-bottom:8px!important;
   background:linear-gradient(145deg,rgba(15,23,42,.98),rgba(7,13,26,.98))!important;
+  cursor:grab!important;
+  user-select:none!important;
 }
+.raid-create-head:active{cursor:grabbing!important}
+.raid-create-title{display:flex;align-items:center;gap:10px;min-width:0}
+.raid-create-title-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,rgba(var(--gold-rgb),.30),rgba(var(--blue-rgb),.24));border:1px solid rgba(var(--gold-rgb),.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+.raid-create-title small{display:block;margin-top:2px;color:#94a3b8;font-size:10px;font-weight:800;letter-spacing:.04em}
+.quick-raid-block{display:flex!important;align-items:center!important;gap:11px!important;margin-top:10px!important;padding:11px 12px!important;border:1px solid rgba(148,163,184,.20)!important;border-radius:12px!important;background:linear-gradient(135deg,rgba(15,23,42,.72),rgba(30,41,59,.42))!important;text-transform:none!important;letter-spacing:0!important;cursor:pointer!important;transition:border-color .16s ease,background .16s ease,transform .16s ease!important}
+.quick-raid-block:hover{transform:translateY(-1px);border-color:rgba(var(--gold-rgb),.48)!important;background:linear-gradient(135deg,rgba(var(--gold-rgb),.12),rgba(var(--blue-rgb),.10))!important}
+.quick-raid-block input{width:18px!important;height:18px!important;min-height:18px!important;accent-color:var(--gold);flex:0 0 auto}
+.quick-raid-block span{font-size:12px;font-weight:900;color:#e2e8f0}
+.quick-raid-preview{position:fixed;top:110px;left:calc(50% + 275px);z-index:82;width:min(680px,calc(100vw - 28px));max-height:calc(100vh - 138px);overflow:auto;padding:0;border:1px solid rgba(139,92,246,.58);border-radius:18px;background:linear-gradient(145deg,rgba(15,23,42,.99),rgba(7,13,26,.99));box-shadow:0 28px 80px rgba(0,0,0,.68),0 0 0 1px rgba(139,92,246,.14);transform:translate(var(--preview-drag-x,0px),var(--preview-drag-y,0px))}
+.quick-raid-preview-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid rgba(139,92,246,.28);background:rgba(10,16,30,.98);cursor:grab;user-select:none}
+.quick-raid-preview-head:active{cursor:grabbing}.quick-raid-preview-head strong{color:#dbeafe;font-size:14px}.quick-raid-preview-body{padding:14px}
+.quick-discord-embed{border:1px solid #34353b;border-left:5px solid #9146ff;border-radius:8px;background:#202127;color:#f2f3f5;padding:16px;font-family:Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.24)}
+.quick-discord-title{font-size:16px;font-weight:900;color:#dbeafe;margin-bottom:13px;text-transform:uppercase}.quick-discord-description{white-space:pre-wrap;color:#dbdee1;font-size:12px;line-height:1.4;margin-bottom:13px}
+.quick-discord-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:13px}.quick-discord-field{font-size:12px;color:#dbdee1;line-height:1.35}.quick-discord-field strong{display:block;color:#f2f3f5;margin-bottom:2px}
+.quick-discord-pills{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 13px}.quick-discord-pill{padding:6px 9px;border-radius:7px;background:#343943;border:1px solid #4b5563;color:#f8fafc;font-size:11px;font-weight:900}
+.quick-discord-classes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.quick-discord-class{min-height:52px;font-size:11px;color:#aeb1b8}.quick-discord-class strong{display:block;color:#f2f3f5;text-decoration:underline;margin-bottom:4px}.quick-discord-links{margin-top:13px;color:#60a5fa;font-size:12px;font-weight:900}
+.quick-po-preview{margin-top:12px;border:1px solid rgba(34,197,94,.32);border-left:5px solid #22c55e;border-radius:8px;background:#202127;padding:13px;color:#f2f3f5}.quick-po-preview strong{display:block;color:#bbf7d0;margin-bottom:5px}
+.quick-raid-preview-warning{margin-top:8px;color:#fde68a;font-size:11px;font-weight:800}
 .raid-create-head{margin-bottom:8px!important;gap:6px!important}
 .raid-create-head h2{font-size:17px!important;line-height:1.15!important}
 .raid-create-box label{font-size:10px!important;margin:9px 0 4px!important;letter-spacing:.05em!important}
@@ -2018,6 +2038,10 @@ body.raid-create-open:before{
     max-height:calc(100vh - 82px)!important;
   }
   .raid-create-box:not(.hidden){padding:12px!important}
+  .raid-create-box{--raid-drag-x:0px!important;--raid-drag-y:0px!important}
+  .raid-create-head{cursor:default!important}
+  .quick-raid-preview{top:72px;left:9px;width:calc(100vw - 18px);max-height:calc(100vh - 88px);--preview-drag-x:0px!important;--preview-drag-y:0px!important}
+  .quick-raid-preview-head{cursor:default}.quick-discord-meta,.quick-discord-classes{grid-template-columns:1fr 1fr}
 }
 
 body.start-dashboard-body .dash-panel,
@@ -3013,12 +3037,12 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <div id="raidCreateBox" class="raid-create-box hidden">
   <div class="raid-create-head">
-    <h2>Schnell-Raid erstellen</h2>
+    <div class="raid-create-title"><span class="raid-create-title-icon">⚔️</span><div><h2>Schnell-Raid erstellen</h2><small>Kopfzeile festhalten und Fenster verschieben</small></div></div>
     <button class="raidlead-close" onclick="toggleRaidCreate()">✕</button>
   </div>
 
   <label>Raid auswählen</label>
-  <select id="createRaidSelect" onchange="loadQuickRaidTemplates()">
+  <select id="createRaidSelect" onchange="loadQuickRaidTemplates();renderQuickRaidPreview()">
     <option value="mc">Molten Core</option>
     <option value="bwl">Blackwing Lair</option>
     <option value="aq40">Ahn'Qiraj 40</option>
@@ -3029,32 +3053,35 @@ html,body{max-width:100%;overflow-x:hidden}
   </select>
 
   <label>Raid-Datum</label>
-  <input id="createRaidDate" type="date">
+  <input id="createRaidDate" type="date" onchange="renderQuickRaidPreview()">
 
   <label>Raid-Uhrzeit</label>
-  <input id="createRaidTime" type="time" value="20:00">
+  <input id="createRaidTime" type="time" value="20:00" onchange="renderQuickRaidPreview()">
 
   <label>Gilde</label>
   <input id="createRaidGuild" type="text" placeholder="Gilde wird automatisch gesetzt" readonly>
 
-  <label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:14px;text-transform:none">
+  <label class="quick-raid-block">
     <input id="createDiscordSignup" type="checkbox" style="width:auto" onchange="toggleQuickRaidDiscordOptions()">
     <span>Raidanmelder im Discord erstellen</span>
   </label>
   <div id="quickRaidDiscordOptions" class="hidden">
     <label>Vorlage für diesen Raid</label>
-    <select id="createRaidTemplate"><option value="">Bitte zuerst Raidanmelder aktivieren …</option></select>
+    <select id="createRaidTemplate" onchange="renderQuickRaidPreview()"><option value="">Bitte zuerst Raidanmelder aktivieren …</option></select>
     <div id="quickRaidTemplateStatus" class="status">Vorlagen werden nach Aktivierung geladen.</div>
   </div>
-  <label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:12px;text-transform:none">
+  <label class="quick-raid-block">
     <input id="createPrioId" type="checkbox" style="width:auto" checked onchange="syncQuickRaidBuildingBlocks()">
     <span>PrioID erstellen</span>
   </label>
-  <label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:12px;text-transform:none">
+  <label class="quick-raid-block">
     <input id="createPoSignup" type="checkbox" style="width:auto" onchange="syncQuickRaidBuildingBlocks()">
     <span>P0-Anmelder im Discord erstellen</span>
   </label>
   <div class="status">Die Bausteine können einzeln kombiniert werden. Ein P0-Anmelder aktiviert automatisch die dafür notwendige PrioID.</div>
+
+  <button class="copy-btn" style="width:100%;margin-top:12px" type="button" onclick="toggleQuickRaidPreview()">👁 Vorschau anzeigen</button>
+  <div id="quickRaidPreview" class="quick-raid-preview hidden"><div class="quick-raid-preview-head"><strong>Discord-Vorschau</strong><button class="raidlead-close" type="button" onclick="toggleQuickRaidPreview()">✕</button></div><div id="quickRaidPreviewBody" class="quick-raid-preview-body"></div></div>
 
   <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Schnell-Raid jetzt erstellen</button>
 
@@ -3685,8 +3712,10 @@ function placeSidebarDrawers(){
   const raidleadSlot=document.getElementById("sidebarRaidleadSlot");
   const raidleadBox=document.getElementById("raidleadLoginBox");
   const raidCreateBox=document.getElementById("raidCreateBox");
+  const quickRaidPreview=document.getElementById("quickRaidPreview");
   if(raidleadSlot && raidleadBox && raidleadBox.parentNode !== raidleadSlot) raidleadSlot.appendChild(raidleadBox);
   if(document.body && raidCreateBox && raidCreateBox.parentNode !== document.body) document.body.appendChild(raidCreateBox);
+  if(document.body && quickRaidPreview && quickRaidPreview.parentNode !== document.body) document.body.appendChild(quickRaidPreview);
 }
 
 function toggleStartSideGroup(group){
@@ -3743,6 +3772,82 @@ function syncRaidCreateBackdrop(){
   document.body.classList.toggle("raid-create-open", Boolean(raidCreateBox && !raidCreateBox.classList.contains("hidden")));
 }
 
+function initQuickRaidWindowDrag(){
+  const box=document.getElementById("raidCreateBox");
+  const handle=box?.querySelector(".raid-create-head");
+  if(!box || !handle || handle.dataset.dragReady) return;
+  handle.dataset.dragReady="true";
+  handle.addEventListener("pointerdown",event=>{
+    if(window.matchMedia("(max-width:700px)").matches || event.button!==0 || event.target.closest("button,input,select,a")) return;
+    event.preventDefault();
+    const startX=event.clientX,startY=event.clientY;
+    const initialX=Number(box.dataset.dragX||0),initialY=Number(box.dataset.dragY||0);
+    const initialRect=box.getBoundingClientRect();
+    handle.setPointerCapture(event.pointerId);
+    const move=moveEvent=>{
+      let dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;
+      dx=Math.max(8-initialRect.left,Math.min(window.innerWidth-8-initialRect.right,dx));
+      dy=Math.max(8-initialRect.top,Math.min(window.innerHeight-8-initialRect.bottom,dy));
+      const x=initialX+dx,y=initialY+dy;
+      box.dataset.dragX=String(x);box.dataset.dragY=String(y);
+      box.style.setProperty("--raid-drag-x",`${x}px`);
+      box.style.setProperty("--raid-drag-y",`${y}px`);
+    };
+    const stop=()=>{
+      handle.removeEventListener("pointermove",move);
+      handle.removeEventListener("pointerup",stop);
+      handle.removeEventListener("pointercancel",stop);
+    };
+    handle.addEventListener("pointermove",move);
+    handle.addEventListener("pointerup",stop);
+    handle.addEventListener("pointercancel",stop);
+  });
+}
+
+function initQuickRaidPreviewDrag(){
+  const box=document.getElementById("quickRaidPreview"),handle=box?.querySelector(".quick-raid-preview-head");
+  if(!box||!handle||handle.dataset.dragReady)return;
+  handle.dataset.dragReady="true";
+  handle.addEventListener("pointerdown",event=>{
+    if(window.matchMedia("(max-width:700px)").matches||event.button!==0||event.target.closest("button"))return;
+    event.preventDefault();
+    const startX=event.clientX,startY=event.clientY,initialX=Number(box.dataset.dragX||0),initialY=Number(box.dataset.dragY||0),rect=box.getBoundingClientRect();
+    handle.setPointerCapture(event.pointerId);
+    const move=moveEvent=>{
+      let dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;
+      dx=Math.max(8-rect.left,Math.min(window.innerWidth-8-rect.right,dx));dy=Math.max(8-rect.top,Math.min(window.innerHeight-8-rect.bottom,dy));
+      const x=initialX+dx,y=initialY+dy;box.dataset.dragX=String(x);box.dataset.dragY=String(y);box.style.setProperty("--preview-drag-x",`${x}px`);box.style.setProperty("--preview-drag-y",`${y}px`);
+    };
+    const stop=()=>{handle.removeEventListener("pointermove",move);handle.removeEventListener("pointerup",stop);handle.removeEventListener("pointercancel",stop);};
+    handle.addEventListener("pointermove",move);handle.addEventListener("pointerup",stop);handle.addEventListener("pointercancel",stop);
+  });
+}
+
+function renderQuickRaidPreview(){
+  const preview=document.getElementById("quickRaidPreviewBody");
+  if(!preview)return;
+  const raidKey=document.getElementById("createRaidSelect")?.value||"";
+  const raidName=raids[raidKey]?.name||raidKey.toUpperCase()||"Raid";
+  const date=document.getElementById("createRaidDate")?.value||"";
+  const time=document.getElementById("createRaidTime")?.value||"";
+  const discord=Boolean(document.getElementById("createDiscordSignup")?.checked);
+  const prio=Boolean(document.getElementById("createPrioId")?.checked)||Boolean(document.getElementById("createPoSignup")?.checked);
+  const po=Boolean(document.getElementById("createPoSignup")?.checked);
+  const templateSelect=document.getElementById("createRaidTemplate"),templateId=templateSelect?.value||"";
+  const template=(window.quickRaidTemplateRows||[]).find(item=>String(item.id)===String(templateId))||{};
+  const max=template.maxPlayers||"–",tanks=template.tankSlots||0,heals=template.healSlots||0,dds=template.ddSlots||0;
+  const classes=[["🛡️ Tank",tanks],["⚔️ Krieger",0],["🐻 Druide",0],["✨ Paladin",0],["🗡️ Schurke",0],["🏹 Jäger",0],["🙏 Priester",0],["🔥 Magier",0],["👁️ Hexenmeister",0],["🌊 Schamane",0],["🚫 Abwesenheit",0]];
+  preview.innerHTML=`${discord?`<div class="quick-discord-embed"><div class="quick-discord-title">${safeHtml(template.title||raidName)}</div>${template.description?`<div class="quick-discord-description">${safeHtml(template.description)}</div>`:""}<div class="quick-discord-meta"><div class="quick-discord-field"><strong>Raidlead</strong>${safeHtml(getSelectedDashboardCharacterName()||"Gildenleitung")}</div><div class="quick-discord-field"><strong>Datum</strong>${safeHtml(date?formatRaidDateForDisplay(date):"Noch wählen")}</div><div class="quick-discord-field"><strong>Start</strong>${safeHtml(time?time+" Uhr":"Noch wählen")}</div><div class="quick-discord-field"><strong>PrioID</strong>${prio?"Wird beim Erstellen erzeugt":"Nicht aktiviert"}</div><div class="quick-discord-field"><strong>Webansicht</strong>https://lichtloot.de/</div></div><strong>Anmeldungen</strong><div class="quick-discord-pills"><span class="quick-discord-pill">👥 Gesamt ${safeHtml(String(max))}</span><span class="quick-discord-pill">🛡️ Tanks ${safeHtml(String(tanks))}</span><span class="quick-discord-pill">✨ Heiler ${safeHtml(String(heals))}</span><span class="quick-discord-pill">⚔️ DD ${safeHtml(String(dds))}</span></div><div class="quick-discord-classes">${classes.map(([name,count])=>`<div class="quick-discord-class"><strong>${name} (${count})</strong>${name.includes("Abwesenheit")?"Optional":"Char · Skillung"}</div>`).join("")}</div><div class="quick-discord-links">Webansicht | Comp | GCal</div></div>`:'<div class="quick-raid-preview-warning">Der Discord-Raidanmelder ist nicht ausgewählt.</div>'}${po?`<div class="quick-po-preview"><strong>✓ P0-Anmelder</strong>${safeHtml(raidName)} · ${safeHtml(date?formatRaidDateForDisplay(date):"Datum fehlt")} · ${safeHtml(time?time+" Uhr":"Uhrzeit fehlt")}<br>${prio?"Mit verknüpfter PrioID":"PrioID wird automatisch aktiviert"}</div>`:""}${discord&&!templateId?'<div class="quick-raid-preview-warning">⚠ Für den Raidanmelder fehlt noch eine passende Vorlage.</div>':""}`;
+}
+
+function toggleQuickRaidPreview(){
+  const preview=document.getElementById("quickRaidPreview");
+  if(!preview)return;
+  const opening=preview.classList.contains("hidden");
+  preview.classList.toggle("hidden",!opening);
+  if(opening){initQuickRaidPreviewDrag();renderQuickRaidPreview();}
+}
+
 const RAID_CREATE_ALLOWED_ROLES=["gildenleitung","gildenoffiziere","raidoffiziere"];
 function normalizePlayerLoginRole(value){
   const raw=String(value || "").trim().toLowerCase();
@@ -3768,7 +3873,7 @@ function refreshRaidCreateAccess(){
   if(result && !allowed){
     result.innerHTML='<span class="warn">Zum Erstellen von Raids wende dich an die Gildenleitung.</span>';
   }else if(result && allowed && result.textContent.includes("Gildenleitung")){
-    result.innerHTML='Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.';
+    result.innerHTML='Die ausgewählten Bausteine und der LeadPIN werden nach dem Erstellen angezeigt.';
   }
   return allowed;
 }
@@ -3783,6 +3888,7 @@ function goHomeView(){
   const oldPinBox=document.getElementById("playerPinBox");
 
   if(raidCreateBox) raidCreateBox.classList.add("hidden");
+  document.getElementById("quickRaidPreview")?.classList.add("hidden");
   syncRaidCreateBackdrop();
   if(raidleadLoginBox) raidleadLoginBox.classList.add("hidden");
   if(p0plusOverlay) p0plusOverlay.classList.add("hidden");
@@ -3802,6 +3908,8 @@ function toggleRaidCreate(){
   if(oldPinBox) oldPinBox.classList.add("hidden");
   if(raidleadLoginBox) raidleadLoginBox.classList.add("hidden");
   if(raidCreateBox) raidCreateBox.classList.toggle("hidden");
+  if(raidCreateBox?.classList.contains("hidden"))document.getElementById("quickRaidPreview")?.classList.add("hidden");
+  initQuickRaidWindowDrag();
   const createRaidGuild=document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = currentGuildInfo?.name || CURRENT_GUILD_BRAND.guildName;
   syncRaidCreateBackdrop();
@@ -3813,12 +3921,14 @@ function toggleQuickRaidDiscordOptions(){
   const enabled=Boolean(document.getElementById("createDiscordSignup")?.checked);
   document.getElementById("quickRaidDiscordOptions")?.classList.toggle("hidden",!enabled);
   if(enabled) loadQuickRaidTemplates();
+  if(!document.getElementById("quickRaidPreview")?.classList.contains("hidden"))renderQuickRaidPreview();
 }
 
 function syncQuickRaidBuildingBlocks(){
   const createPo=Boolean(document.getElementById("createPoSignup")?.checked);
   const createPrio=document.getElementById("createPrioId");
   if(createPo && createPrio) createPrio.checked=true;
+  if(!document.getElementById("quickRaidPreview")?.classList.contains("hidden"))renderQuickRaidPreview();
 }
 
 async function loadQuickRaidTemplates(){
@@ -3842,6 +3952,7 @@ async function loadQuickRaidTemplates(){
     const result=await response.json().catch(()=>({}));
     if(!response.ok || !result.success) throw new Error(result.error || "Vorlagen konnten nicht geladen werden.");
     const templates=Array.isArray(result.templates)?result.templates:[];
+    window.quickRaidTemplateRows=templates;
     select.innerHTML=templates.length
       ? '<option value="">Vorlage auswählen …</option>'+templates.map(template=>`<option value="${safeAttr(template.id)}">${safeHtml(template.title || template.name || "Raidvorlage")}</option>`).join("")
       : '<option value="">Keine Vorlage für diesen Raid vorhanden</option>';
@@ -3849,10 +3960,12 @@ async function loadQuickRaidTemplates(){
       ? `<span class="ok">${templates.length} passende ${templates.length===1?"Vorlage":"Vorlagen"} gefunden.</span>`
       : '<span class="warn">In der Gildenleitung muss zuerst eine Vorlage für diesen Raid angelegt werden.</span>';
   }catch(error){
+    window.quickRaidTemplateRows=[];
     select.innerHTML='<option value="">Vorlagen nicht verfügbar</option>';
     if(status) status.innerHTML=`<span class="bad">${safeHtml(error.message || "Vorlagen konnten nicht geladen werden.")}</span>`;
   }finally{
     select.disabled=false;
+    if(!document.getElementById("quickRaidPreview")?.classList.contains("hidden"))renderQuickRaidPreview();
   }
 }
 
