@@ -2540,7 +2540,8 @@ async function ensureRaidSchema() {
        add column if not exists announcement_message text not null default '',
        add column if not exists link_url text not null default '',
        add column if not exists link_text text not null default '',
-       add column if not exists link_icon text not null default ''`
+       add column if not exists link_icon text not null default '',
+       add column if not exists prio_enabled boolean not null default true`
   );
   await query(
     `alter table raid_signups
@@ -2866,6 +2867,7 @@ async function ensureRaidHelperScheduleSchema() {
        link_icon text not null default '',
        clear_channel_before_post boolean not null default false,
        create_po_signup boolean not null default false,
+       prio_enabled boolean not null default true,
        last_raid_date date,
        last_raid_id uuid references raids(id) on delete set null,
        created_at timestamptz not null default now(),
@@ -2880,6 +2882,7 @@ async function ensureRaidHelperScheduleSchema() {
   await query(`alter table raid_helper_schedules add column if not exists link_icon text not null default ''`);
   await query(`alter table raid_helper_schedules add column if not exists clear_channel_before_post boolean not null default false`);
   await query(`alter table raid_helper_schedules add column if not exists create_po_signup boolean not null default false`);
+  await query(`alter table raid_helper_schedules add column if not exists prio_enabled boolean not null default true`);
   await query(
     `create index if not exists idx_raid_helper_schedules_guild
        on raid_helper_schedules(guild_id, enabled, next_raid_date, raid_time)`
@@ -3282,6 +3285,7 @@ function normalizeRaidRow(row) {
     linkUrl: row.link_url || "",
     linkText: row.link_text || "",
     linkIcon: row.link_icon || "",
+    prioEnabled: row.prio_enabled !== false,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -6578,6 +6582,7 @@ function normalizeRaidHelperScheduleRow(row) {
     linkIcon: row.link_icon || "",
     clearChannelBeforePost: row.clear_channel_before_post === true,
     createPoSignup: row.create_po_signup === true,
+    prioEnabled: row.prio_enabled !== false,
     lastRaidDate: scheduleDateIso(row.last_raid_date),
     lastRaidId: row.last_raid_id || "",
     currentRaidId: id ? `schedule-${id}` : "",
@@ -6741,6 +6746,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         p0PlusFreigabe: "geöffnet",
         createdBy: schedule.created_by || "Gildenleitung",
         raidHelperEnabled: "true",
+        prioEnabled: schedule.prio_enabled === false ? "false" : "true",
         maxPlayers: schedule.max_players,
         tankSlots: schedule.tank_slots,
         healSlots: schedule.heal_slots,
@@ -6891,7 +6897,8 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     clean(params.linkText || params.linkLabel),
     clean(params.linkIcon),
     ["1", "true", "yes", "ja"].includes(clean(params.clearChannelBeforePost).toLowerCase()),
-    ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase())
+    ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase()),
+    !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase())
   ];
 
   let result;
@@ -6923,8 +6930,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
            link_icon = $24,
            clear_channel_before_post = $25,
            create_po_signup = $26,
+           prio_enabled = $27,
            updated_at = now()
-       where guild_id = $1 and id = $27
+       where guild_id = $1 and id = $28
        returning *`,
       [...values, scheduleId]
     );
@@ -6935,9 +6943,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          max_players, tank_slots, heal_slots, dd_slots, signup_deadline,
          discord_channel_id, raid_image_url, created_by, recurrence,
          interval_weeks, weekday, raid_time, post_time, next_raid_date, next_post_date,
-         link_url, link_text, link_icon, clear_channel_before_post, create_po_signup
+         link_url, link_text, link_icon, clear_channel_before_post, create_po_signup, prio_enabled
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
        on conflict (guild_id, schedule_key)
        do update set
          enabled = excluded.enabled,
@@ -6964,6 +6972,7 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          link_icon = excluded.link_icon,
          clear_channel_before_post = excluded.clear_channel_before_post,
          create_po_signup = excluded.create_po_signup,
+         prio_enabled = excluded.prio_enabled,
          updated_at = now()
        returning *`,
       values
@@ -16105,10 +16114,10 @@ async function createRaidRecord({ guildId, query: params }) {
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
        discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets, announcement_message,
-       link_url, link_text, link_icon
+       link_url, link_text, link_icon, prio_enabled
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -16151,12 +16160,13 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
-           status_notify_targets = case when $32 then excluded.status_notify_targets else raids.status_notify_targets end,
-           announcement_notify_targets = case when $33 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
+           status_notify_targets = case when $33 then excluded.status_notify_targets else raids.status_notify_targets end,
+           announcement_notify_targets = case when $34 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
            announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
            link_url = excluded.link_url,
            link_text = excluded.link_text,
            link_icon = excluded.link_icon,
+           prio_enabled = excluded.prio_enabled,
            updated_at = now()
      returning *`,
     [
@@ -16205,6 +16215,7 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.linkUrl),
       clean(params.linkText || params.linkLabel),
       clean(params.linkIcon),
+      !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
       Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
       Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
     ]
