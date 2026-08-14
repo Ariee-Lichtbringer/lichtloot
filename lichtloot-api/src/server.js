@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import nodemailer from "nodemailer";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { pool, query, requireGuild } from "./db.js";
@@ -1670,6 +1671,8 @@ async function ensureGuildApplicationSchema() {
        primary_color text not null default '#facc15',
        accent_color text not null default '#1d4ed8',
        database_status text not null default 'pending',
+       approval_email_sent_at timestamptz,
+       approval_email_error text not null default '',
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
@@ -1683,7 +1686,9 @@ async function ensureGuildApplicationSchema() {
        add column if not exists background_url text not null default '',
        add column if not exists primary_color text not null default '#facc15',
        add column if not exists accent_color text not null default '#1d4ed8',
-       add column if not exists database_status text not null default 'pending'`
+       add column if not exists database_status text not null default 'pending',
+       add column if not exists approval_email_sent_at timestamptz,
+       add column if not exists approval_email_error text not null default ''`
   );
 }
 
@@ -1731,6 +1736,8 @@ function normalizeGuildApplicationRow(row, params = {}) {
     primaryColor: row.primary_color || "#facc15",
     accentColor: row.accent_color || "#1d4ed8",
     databaseStatus: row.database_status || "pending",
+    approvalEmailSentAt: row.approval_email_sent_at || null,
+    approvalEmailError: row.approval_email_error || "",
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null
   };
@@ -1749,8 +1756,13 @@ async function submitGuildApplication({ query: params, body = {} }) {
   const desiredGuildPin = normalizePin(values.guildPin || values.desiredGuildPin || values.desired_guild_pin);
   const notes = clean(values.notes);
 
-  if (!guildName || !contactName || (!contactDiscord && !contactEmail)) {
-    const error = new Error("Bitte Gildenname, Ansprechpartner und Discord oder E-Mail ausfüllen.");
+  if (!guildName || !contactName || !contactEmail) {
+    const error = new Error("Bitte Gildenname, Ansprechpartner und E-Mail-Adresse ausfüllen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail)) {
+    const error = new Error("Bitte eine gültige E-Mail-Adresse eingeben.");
     error.statusCode = 400;
     throw error;
   }
@@ -1816,10 +1828,140 @@ async function approveGuildApplication({ query: params, body = {} }) {
     error.statusCode = 404;
     throw error;
   }
+  const application = normalizeGuildApplicationRow(result.rows[0], values);
+  const email = await sendGuildApprovalEmail(application);
+  await query(
+    `update guild_applications
+     set approval_email_sent_at = case when $2 then now() else approval_email_sent_at end,
+         approval_email_error = $3,
+         updated_at = now()
+     where id = $1`,
+    [id, email.sent, email.sent ? "" : clean(email.error)]
+  );
   return {
     success: true,
-    application: normalizeGuildApplicationRow(result.rows[0], values)
+    application: {
+      ...application,
+      approvalEmailSentAt: email.sent ? new Date().toISOString() : application.approvalEmailSentAt,
+      approvalEmailError: email.sent ? "" : clean(email.error)
+    },
+    email
   };
+}
+
+function escapeEmailHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+async function sendGuildApprovalEmail(application) {
+  const gmailUser = clean(process.env.GMAIL_USER);
+  const gmailAppPassword = clean(process.env.GMAIL_APP_PASSWORD).replace(/\s+/g, "");
+  const from = clean(process.env.GUILD_MAIL_FROM) || (gmailUser ? `LichtLoot <${gmailUser}>` : "");
+  const replyTo = clean(process.env.GUILD_MAIL_REPLY_TO);
+  const to = clean(application?.contactEmail);
+  if (!to) return { sent: false, error: "Bei der Anfrage ist keine E-Mail-Adresse hinterlegt." };
+  if (!gmailUser || !gmailAppPassword) {
+    return { sent: false, error: "Gmail-Versand ist noch nicht konfiguriert (GMAIL_USER und GMAIL_APP_PASSWORD)." };
+  }
+
+  const guildName = clean(application.guildName) || "eure Gilde";
+  const setupUrl = clean(application.setupUrl);
+  const guildPin = clean(application.desiredGuildPin || application.guildPin) || "wird bei der Einrichtung festgelegt";
+  const server = clean(application.server) || "nicht angegeben";
+  const expiry = application.setupTokenExpiresAt
+    ? new Date(application.setupTokenExpiresAt).toLocaleDateString("de-DE")
+    : "14 Tage nach der Freigabe";
+  const subject = `LichtLoot-Freischaltung für ${guildName}`;
+  const text = [
+    `Hallo ${clean(application.contactName) || "Gildenleitung"},`,
+    "",
+    `eure Gilde ${guildName} wurde für LichtLoot freigeschaltet.`,
+    `Server: ${server}`,
+    `Gewünschter GildenPIN: ${guildPin}`,
+    "",
+    `Einrichtung öffnen: ${setupUrl}`,
+    `Der Link ist gültig bis: ${expiry}`,
+    "",
+    "Nächste Schritte:",
+    "1. Gildendesign und GildenPIN festlegen.",
+    "2. Discord-Server-ID hinterlegen und den Bot einladen.",
+    "3. Channels synchronisieren und das Layout speichern.",
+    "4. Ersten Raid und die gewünschten Discord-Anmelder erstellen.",
+    "",
+    "Viele Grüße",
+    "LichtLoot"
+  ].join("\n");
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:680px;margin:auto;background:#0f172a;color:#e5edf8;padding:30px;border-radius:14px">
+      <div style="color:#facc15;font-size:13px;font-weight:800;text-transform:uppercase">LichtLoot Gildenfreischaltung</div>
+      <h1 style="color:#fff">${escapeEmailHtml(guildName)} ist freigeschaltet</h1>
+      <p>Hallo ${escapeEmailHtml(application.contactName || "Gildenleitung")},</p>
+      <p>eure Gilde wurde für LichtLoot freigegeben. Über den folgenden Link richtet ihr euren eigenen Gildenbereich ein.</p>
+      <p style="margin:24px 0"><a href="${escapeEmailHtml(setupUrl)}" style="display:inline-block;background:#facc15;color:#111827;padding:14px 20px;border-radius:8px;font-weight:800;text-decoration:none">Gilde jetzt einrichten</a></p>
+      <div style="background:#020617;padding:16px;border-radius:9px">
+        <strong>Server:</strong> ${escapeEmailHtml(server)}<br>
+        <strong>Gewünschter GildenPIN:</strong> ${escapeEmailHtml(guildPin)}<br>
+        <strong>Link gültig bis:</strong> ${escapeEmailHtml(expiry)}
+      </div>
+      <h2 style="color:#facc15;margin-top:26px">Die nächsten Schritte</h2>
+      <ol style="line-height:1.7"><li>Gildendesign und GildenPIN festlegen</li><li>Discord-Server verbinden und Bot einladen</li><li>Channels synchronisieren und Layout speichern</li><li>Ersten Raid und Discord-Anmelder erstellen</li></ol>
+      <p style="color:#94a3b8;font-size:13px">Falls der Button nicht funktioniert: ${escapeEmailHtml(setupUrl)}</p>
+    </div>`;
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: gmailUser,
+        pass: gmailAppPassword
+      }
+    });
+    const info = await transporter.sendMail({
+      from,
+      to,
+      subject,
+      html,
+      text,
+      ...(replyTo ? { replyTo } : {})
+    });
+    return { sent: true, id: clean(info?.messageId) };
+  } catch (error) {
+    return { sent: false, error: clean(error?.message) || "E-Mail konnte nicht gesendet werden." };
+  }
+}
+
+async function resendGuildApprovalEmail({ query: params, body = {} }) {
+  requireMasterCode(params.masterCode || body.masterCode);
+  await ensureGuildApplicationSchema();
+  const values = { ...params, ...body };
+  const id = clean(values.id);
+  const result = await query(
+    `select * from guild_applications
+     where id = $1 and status in ('approved', 'completed')
+     limit 1`,
+    [id]
+  );
+  if (!result.rows[0]) {
+    const error = new Error("Freigegebene Gilden-Anfrage nicht gefunden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const application = normalizeGuildApplicationRow(result.rows[0], values);
+  const email = await sendGuildApprovalEmail(application);
+  await query(
+    `update guild_applications
+     set approval_email_sent_at = case when $2 then now() else approval_email_sent_at end,
+         approval_email_error = $3,
+         updated_at = now()
+     where id = $1`,
+    [id, email.sent, email.sent ? "" : clean(email.error)]
+  );
+  return { success: email.sent, email, application };
 }
 
 async function rejectGuildApplication({ query: params, body = {} }) {
@@ -22713,6 +22855,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json(approved);
     }
 
+    if (action === "guildSendApplicationEmail") {
+      const sent = await resendGuildApprovalEmail({ query: req.query });
+      return res.json(sent);
+    }
+
     if (action === "guildRejectApplication") {
       const rejected = await rejectGuildApplication({ query: req.query });
       return res.json(rejected);
@@ -23622,6 +23769,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildApproveApplication") {
       const approved = await approveGuildApplication({ query: req.query, body: req.body });
       return res.json(approved);
+    }
+
+    if (action === "guildSendApplicationEmail") {
+      const sent = await resendGuildApprovalEmail({ query: req.query, body: req.body });
+      return res.json(sent);
     }
 
     if (action === "guildRejectApplication") {
