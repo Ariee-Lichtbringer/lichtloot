@@ -5460,7 +5460,7 @@ body.worldbuff-only .master-only{display:none!important}
             <div class="discord-preview-section-title" style="margin-top:16px">Anmeldungen</div>
             <div class="discord-preview-pills" id="raidHelperPreviewRoles"></div>
             <div class="discord-preview-roster" id="raidHelperRosterPreview"></div>
-            <div class="discord-preview-links">Webansicht | Comp | Gcal</div>
+            <div id="raidHelperPreviewLinks" class="discord-preview-links">Webansicht | Comp | Gcal</div>
             <div id="raidHelperPreviewImage" class="discord-preview-image"></div>
           </div>
           <textarea id="raidHelperPreview" class="hidden" readonly></textarea>
@@ -15247,6 +15247,7 @@ function updateRaidHelperPreview(){
   const rolesEl = document.getElementById("raidHelperPreviewRoles");
   const rosterEl = document.getElementById("raidHelperRosterPreview");
   const imageEl = document.getElementById("raidHelperPreviewImage");
+  const linksEl = document.getElementById("raidHelperPreviewLinks");
 
   if(titleEl) titleEl.textContent = title.toUpperCase();
   if(descEl) descEl.textContent = description;
@@ -15290,6 +15291,12 @@ function updateRaidHelperPreview(){
   }
   if(imageEl){
     imageEl.style.setProperty("--preview-image", "url('" + defaultRaidHelperImageUrl(raidKey) + "')");
+  }
+  if(linksEl){
+    const customLinks=raidHelperLinksFromFields();
+    const standard=["Webansicht","Comp","GCal"].map(label=>`<span>${escapeHtml(label)}</span>`);
+    const custom=customLinks.filter(link=>/^https?:\/\//i.test(link.url)).map(link=>`<a href="${escapeAttr(link.url)}" target="_blank" rel="noopener">${escapeHtml(link.icon||"🔗")} ${escapeHtml(link.text||"Link")}</a>`);
+    linksEl.innerHTML=[...standard,...custom].join(" <b>|</b> ");
   }
 }
 
