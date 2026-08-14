@@ -5522,7 +5522,7 @@ body.worldbuff-only .master-only{display:none!important}
           <div><h3 id="raidHelperCalendarTitle">Kalender</h3><span>Raidtermine aus LichtLoot</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn good" type="button" onclick="publishRaidHelperDiscordCalendar()">📅 In Discord veröffentlichen</button><button class="small-btn ghost" type="button" onclick="renderRaidHelperCalendar()">Aktualisieren</button></div>
         </div>
-        <div class="p0-toolbar" style="margin-bottom:12px"><label style="display:grid;gap:6px;min-width:min(520px,100%)"><strong>Discord-Channel für den Terminkalender</strong><select id="raidHelperCalendarChannel"></select></label></div>
+        <div class="p0-toolbar" style="margin-bottom:12px"><label style="display:grid;gap:6px;min-width:min(520px,100%)"><strong>Discord-Channel für den Terminkalender</strong><select id="raidHelperCalendarChannel"></select><small>Nach der ersten Veröffentlichung aktualisiert der P0-Bot diesen Kalender automatisch alle 5 Minuten. Es wird immer derselbe Discord-Post bearbeitet.</small></label></div>
         <div id="raidHelperCalendarDiscordStatus" class="status">Der PO-Bot aktualisiert einen bereits vorhandenen Kalenderpost im ausgewählten Discord-Channel.</div>
         <div id="raidHelperCalendarGrid" class="raid-helper-calendar"></div>
       </div>
@@ -9885,7 +9885,7 @@ async function publishRaidHelperDiscordCalendar(){
     if(status){status.className="status";status.textContent="Discord-Terminkalender wird aktualisiert …";}
     const result=await railwayWrite({action:"guildQueueRaidCalendar",masterCode,channelId,events:JSON.stringify(events)});
     if(!result.success)throw new Error(result.error||"Terminkalender konnte nicht vorgemerkt werden.");
-    if(status){status.className="status good";status.textContent="Terminkalender wurde vorgemerkt. Der PO-Bot aktualisiert den vorhandenen Kalenderpost.";}
+    if(status){status.className="status good";status.textContent="Terminkalender wurde gespeichert. Der P0-Bot aktualisiert denselben Kalenderpost ab jetzt automatisch alle 5 Minuten.";}
   }catch(error){if(status){status.className="status bad";status.textContent=error.message||"Terminkalender konnte nicht vorgemerkt werden.";}}
 }
 
