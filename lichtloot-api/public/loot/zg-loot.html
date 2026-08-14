@@ -3147,7 +3147,7 @@ function renderLootList(){
     const row=document.createElement("div");
     row.className="loot-item-row";
     const isPoPlusItem=currentGuildSlug()==="nachtloot"&&GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name));
-    const poPlusLocked=isPoPlusItem&&window.currentCharacterPoPlusReleased!==true;
+    const poPlusLocked=false;
     if(poPlusLocked){row.style.opacity=".42";row.title="PO+-Freigabe fehlt – dieses Item kann nicht ausgewählt werden.";}
 
     const name=document.createElement("div");
@@ -10610,7 +10610,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 })();
 </script>
 <script src="po-release-status.js?v=20260805-1700"></script>
-<script src="raid-signup-mirror.js?v=20260809-1555"></script>
+<script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
 </body>
 </html>
