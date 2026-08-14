@@ -8317,6 +8317,18 @@ function getRaidCreatorName(raid){
   ).trim() || "Unbekannt";
 }
 
+function isSignupOnlyRaid(raid){
+  return ["other","scholomance","lbrs","ubrs","brd","strath-live"].includes(getRaidKey(raid));
+}
+
+function openSignupOnlyRaid(raidId){
+  const url = new URL("loot/bwl-loot.html", location.href);
+  url.searchParams.set("signupOnly", "1");
+  url.searchParams.set("raidId", String(raidId || ""));
+  url.searchParams.set("guild", CURRENT_GUILD_SLUG);
+  window.location.href = url.href;
+}
+
 function yesterdayIsoDate(){
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -8341,6 +8353,26 @@ function renderDashboardCards(){
   const renderRaidCard = raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
+    if(isSignupOnlyRaid(raid)) return `
+      <article class="active-raid-card active-raid-signup-only-card">
+        <div class="active-raid-visual">
+          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
+        </div>
+        <div class="active-raid-body">
+          <div>
+            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")}</div>
+            <div class="active-raid-topline">
+              <div class="active-raid-meta" role="button" tabindex="0" title="Name, Datum und Uhrzeit ändern" onclick="editRaidDateTimePopup('${escapeAttr(raid.raidId || raid.id)}')">
+                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
+                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
+              </div>
+              <div class="active-raid-info">${statusBadge(raid.status || "geschlossen")}<div class="active-raid-stats"><span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span></div></div>
+            </div>
+          </div>
+          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openSignupOnlyRaid('${escapeAttr(raid.raidId || raid.id)}')">Anmelder bearbeiten</button><button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button></div></div>
+        </div>
+      </article>`;
     return `
       <article class="active-raid-card">
         <div class="active-raid-visual">
@@ -8389,11 +8421,15 @@ function renderDashboardCards(){
   const raidGroups = [
     {
       title:"40er Raids",
-      raids:raids.filter(raid => !["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
+      raids:raids.filter(raid => !isSignupOnlyRaid(raid) && !["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
     },
     {
       title:"20er Raids",
-      raids:raids.filter(raid => ["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
+      raids:raids.filter(raid => !isSignupOnlyRaid(raid) && ["zg","aq20","zg-mittwoch","zg-prime","zg-late"].includes(getRaidKey(raid)))
+    },
+    {
+      title:"Andere Raids",
+      raids:raids.filter(isSignupOnlyRaid)
     }
   ].filter(group => group.raids.length);
 
@@ -14854,6 +14890,8 @@ async function loadRaidHelperDiscordChannels(){
 function updateRaidHelperDefaults(){
   const raidKey = document.getElementById("raidHelperRaid")?.value || "";
   const freeRaidKeys=["other","scholomance","lbrs","ubrs","brd","strath-live"];
+  const signupOnlyField=document.getElementById("raidHelperSignupOnly");
+  if(signupOnlyField)signupOnlyField.disabled=freeRaidKeys.includes(raidKey);
   const customField=document.getElementById("raidHelperCustomInstanceField");
   customField?.classList.toggle("hidden", raidKey!=="other");
   if(!raidKey){
@@ -14861,7 +14899,7 @@ function updateRaidHelperDefaults(){
     return;
   }
   if(freeRaidKeys.includes(raidKey)){
-    document.getElementById("raidHelperSignupOnly").checked=true;
+    signupOnlyField.checked=true;
     toggleRaidHelperSignupOnly();
     const desc=document.getElementById("raidHelperDescription");
     if(desc && Object.values(RAID_HELPER_DEFAULT_TEXT).includes(desc.value))desc.value="";
@@ -15154,7 +15192,8 @@ async function createRaidHelperSignup(){
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
-  const shouldCreatePoSignup = document.getElementById("raidHelperCreatePoSignup")?.checked !== false;
+  const signupOnlyRaid = ["other","scholomance","lbrs","ubrs","brd","strath-live"].includes(raidKey) || document.getElementById("raidHelperSignupOnly")?.checked === true;
+  const shouldCreatePoSignup = !signupOnlyRaid && document.getElementById("raidHelperCreatePoSignup")?.checked !== false;
   const includePoBindingNotice = document.getElementById("raidHelperPoBindingNotice")?.checked !== false;
   const poBindingNotice = "Die in LichtLoot eingetragene Prio ist bindend; jeder Spieler ist selbst dafür verantwortlich, seine Prio vor jedem Raid zu kontrollieren und fehlende oder falsche Einträge rechtzeitig zu korrigieren.";
 
@@ -15197,7 +15236,7 @@ async function createRaidHelperSignup(){
       createdBy:lead,
       erstelltVon:lead,
       raidHelperEnabled:"true",
-      prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
+      prioEnabled:signupOnlyRaid ? "false" : "true",
       showWorldbuffs:document.getElementById("raidHelperShowWorldbuffs")?.checked ? "true" : "false",
       maxPlayers:raidHelperValue("raidHelperMax"),
       tankSlots:raidHelperValue("raidHelperTanks"),
@@ -15307,7 +15346,7 @@ async function createRaidHelperSignup(){
         raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
         clearChannelBeforePost:document.getElementById("raidHelperWeeklyClearChannel")?.checked ? "true" : "false",
         createPoSignup:shouldCreatePoSignup ? "true" : "false",
-        prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
+        prioEnabled:signupOnlyRaid ? "false" : "true",
         showWorldbuffs:document.getElementById("raidHelperShowWorldbuffs")?.checked ? "true" : "false",
         deferFirstRun:"true"
       });
@@ -15317,7 +15356,7 @@ async function createRaidHelperSignup(){
       if(queued.success && poQueued.success && weeklyQueued.success){
         const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
         const weeklyText = document.getElementById("raidHelperWeeklyEnabled")?.checked ? " Der wöchentliche automatische Neuaufbau ist gespeichert." : "";
-        const accessText = document.getElementById("raidHelperSignupOnly")?.checked
+        const accessText = signupOnlyRaid
           ? 'Reine Anmeldung ohne Prios · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>'
           : 'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>';
         const botText = shouldCreatePoSignup ? "PO-Bot und Anmelde-Bot sollten die Posts" : "Der Anmelde-Bot sollte den Post";
