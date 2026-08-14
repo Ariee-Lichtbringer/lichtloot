@@ -7706,6 +7706,19 @@ async function queuePoPost({ guildId, query: params }) {
     restoredEntries = restoreResult.rowCount || 0;
   }
   await query(
+    `update po_post_entries
+     set source_channel_id = $3, target_channel_id = $4,
+         raid = coalesce(nullif($5, ''), raid), title = coalesce(nullif($6, ''), title),
+         raid_pin = coalesce(nullif($7, ''), raid_pin), raid_date = coalesce(nullif($8, ''), raid_date),
+         raid_time = coalesce(nullif($9, ''), raid_time), mode = coalesce(nullif($10, ''), mode), updated_at = now()
+     where guild_id = $1 and post_key = $2 and archived_at is null`,
+    [guildId, postKey, sourceChannelId, targetChannelId, normalizeRaidType(raid).toUpperCase(),
+      clean(params.title) || "PO Liste",
+      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid),
+      clean(params.raidDate || params.date || params.datum), clean(params.raidTime || params.time || params.uhrzeit),
+      clean(params.mode || params.poMode) || "signup"]
+  );
+  await query(
     `insert into po_post_entries (
        guild_id, post_key, source_channel_id, target_channel_id, discord_message_id,
        raid, title, raid_pin, raid_date, raid_time, mode, config_only
@@ -16053,6 +16066,17 @@ async function deleteRaid({ guildId, query: params }) {
     throw error;
   }
 
+  const linkedRaids = await query(
+    `select * from raids
+     where guild_id = $1
+       and (${clauses.join(" or ")})`,
+    values
+  );
+  const cleanup = [];
+  for (const linkedRaid of linkedRaids.rows) {
+    cleanup.push(await archiveLinkedRaidSignups(guildId, linkedRaid, "raid_deleted"));
+  }
+
   const result = await query(
     `delete from raids
      where guild_id = $1
@@ -16060,7 +16084,7 @@ async function deleteRaid({ guildId, query: params }) {
      returning id, external_raid_id, name`,
     values
   );
-  return { success: true, deleted: result.rowCount, raid: result.rows[0] || null };
+  return { success: true, deleted: result.rowCount, raid: result.rows[0] || null, cleanup };
 }
 
 async function restoreArchivedRaids({ guildId, query: params }) {
@@ -16388,6 +16412,82 @@ async function syncPoPostDateTimeForRaid(guildId, raid) {
       .catch(error => console.warn("PO-Anmelder-Refresh konnte nach Raid-Änderung nicht queued werden:", error.message || error));
   }
   return { updated: result.rowCount || 0, queued: payloads.size };
+}
+
+async function archiveLinkedRaidSignups(guildId, raid, source = "raid_archived") {
+  if (!raid?.id) return { raidSignups: 0, externalSignups: 0, p0Signups: 0, poEntries: 0, poPosts: 0, queueJobs: 0 };
+  await ensurePoPostEntriesSchema();
+  const raidKeys = [...new Set([raid.id, raid.external_raid_id, raid.raid_pin].map(clean).filter(Boolean))];
+  const poRows = clean(raid.raid_pin)
+    ? await query(
+        `update po_post_entries
+         set archived_at = coalesce(archived_at, now()), updated_at = now()
+         where guild_id = $1 and raid_pin = $2 and archived_at is null
+         returning post_key, source_channel_id, target_channel_id, discord_message_id, title, raid`,
+        [guildId, clean(raid.raid_pin)]
+      )
+    : { rows: [], rowCount: 0 };
+  const poPosts = new Map();
+  for (const row of poRows.rows || []) {
+    const key = [row.post_key, row.source_channel_id, row.target_channel_id, row.discord_message_id || ""].join("|");
+    poPosts.set(key, row);
+  }
+  for (const row of poPosts.values()) {
+    await enqueueBotUpdate({
+      guildId,
+      type: "po_post_delete",
+      payload: {
+        postKey: row.post_key || "",
+        sourceChannelId: row.source_channel_id || "",
+        targetChannelId: row.target_channel_id || row.source_channel_id || "",
+        messageId: row.discord_message_id || "",
+        discordMessageId: row.discord_message_id || "",
+        title: row.title || "P0-Anmelder",
+        raid: row.raid || raid.raid_type || "",
+        raidPin: raid.raid_pin || "",
+        source
+      }
+    });
+  }
+  if (clean(raid.discord_channel_id) && clean(raid.discord_message_id)) {
+    await enqueueBotUpdate({
+      guildId,
+      type: "raid_announcement_delete",
+      payload: {
+        raidId: raid.external_raid_id || raid.id,
+        raidPin: raid.raid_pin || "",
+        channelId: raid.discord_channel_id,
+        discordChannelId: raid.discord_channel_id,
+        messageId: raid.discord_message_id,
+        discordMessageId: raid.discord_message_id,
+        source
+      }
+    });
+  }
+  const raidSignups = await query(`delete from raid_signups where raid_id = $1`, [raid.id]);
+  const externalSignups = await query(`delete from raid_external_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
+  const p0Signups = await query(`delete from p0_discord_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
+  const queueJobs = raidKeys.length
+    ? await query(
+        `delete from bot_update_queue
+         where guild_id = $1
+           and status in ('open', 'processing')
+           and type not in ('po_post_delete', 'raid_announcement_delete')
+           and (coalesce(payload->>'raidId', '') = any($2::text[])
+             or coalesce(payload->>'lichtlootRaidId', '') = any($2::text[])
+             or coalesce(payload->>'raidPin', '') = any($2::text[])
+             or coalesce(payload->>'prioPin', '') = any($2::text[]))`,
+        [guildId, raidKeys]
+      )
+    : { rowCount: 0 };
+  return {
+    raidSignups: raidSignups.rowCount || 0,
+    externalSignups: externalSignups.rowCount || 0,
+    p0Signups: p0Signups.rowCount || 0,
+    poEntries: poRows.rowCount || 0,
+    poPosts: poPosts.size,
+    queueJobs: queueJobs.rowCount || 0
+  };
 }
 
 function normalizeRaidSignupRow(row) {
@@ -18387,8 +18487,11 @@ async function setRaidStatus({ guildId, query: params }) {
      returning *`,
     [status, p0plus, raid.id]
   );
+  const cleanup = archiveRequested
+    ? await archiveLinkedRaidSignups(guildId, result.rows[0], "raid_archived")
+    : null;
 
-  return { success: true, ...normalizeRaidRow(result.rows[0]) };
+  return { success: true, ...normalizeRaidRow(result.rows[0]), cleanup };
 }
 
 function bossTokenNoticeForRaid(raidType) {
