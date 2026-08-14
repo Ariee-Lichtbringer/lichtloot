@@ -10489,6 +10489,7 @@ async function saveRaidHelperEventFromCreate(){
   }
   const payload = {
     action:"createRaid",
+    updateExisting:"true",
     masterCode,
     raidId:raidHelperEditingRaidIdentifier,
     raid:raidKey,
@@ -10531,6 +10532,9 @@ async function saveRaidHelperEventFromCreate(){
   try{
     const result = await railwayWrite(payload);
     if(!result.success) throw new Error(result.error || "Raid konnte nicht gespeichert werden.");
+    if(String(result.linkUrl || "") !== String(payload.linkUrl || "")){
+      throw new Error("Der Link wurde vom Webdienst nicht übernommen. Bitte auch die aktuelle produktive server.js bereitstellen und den LichtLoot-API/Webdienst neu starten.");
+    }
     await queueRaidHelperDiscordRefresh(payload.raidId, { quiet:true, raid:payload });
     raidHelperEditingRaidIdentifier = "";
     raidHelperEditingData = null;
@@ -11108,6 +11112,9 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
     ddSlots:raid.ddSlots || "",
     signupDeadline:raid.signupDeadline || "",
     announcementMessage:raid.announcementMessage || raid.announcement_message || "",
+    linkUrl:raid.linkUrl || "",
+    linkText:raid.linkText || "",
+    linkIcon:raid.linkIcon || "",
     raidImageUrl:raid.raidImageUrl || "",
     channelId:raidHelperValue("raidHelperEditChannel") || raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
     messageId:raid.discordMessageId || ""
