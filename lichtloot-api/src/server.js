@@ -10818,6 +10818,8 @@ async function getGuildLeadershipOverview(guildId, params) {
        p.is_blocked,
        p.blocked_at,
        p.blocked_reason,
+       last_signup.role as last_raid_role,
+       last_signup.note as last_raid_note,
        count(*) over (partition by p.id) as linked_characters,
        first_value(c.name) over (
          partition by p.id
@@ -10825,6 +10827,28 @@ async function getGuildLeadershipOverview(guildId, params) {
        ) as main_char
      from players p
      left join characters c on c.player_id = p.id
+     left join lateral (
+       select recent.role, recent.note
+       from (
+         select rs.role, rs.note, r.raid_date, coalesce(rs.updated_at, rs.created_at) as signup_at
+         from raid_signups rs
+         join raids r on r.id = rs.raid_id
+         where rs.character_id = c.id
+           and lower(coalesce(rs.status, 'signed')) not in ('absent', 'declined', 'rejected', 'abgemeldet', 'abwesend', 'nein', 'verworfen')
+           and lower(coalesce(rs.role, '')) in ('tank', 'tanks', 'heal', 'heiler', 'heals', 'healer', 'dd', 'dps', 'damage')
+         union all
+         select res.role, res.note, coalesce(res.raid_date, r.raid_date), coalesce(res.updated_at, res.created_at) as signup_at
+         from raid_external_signups res
+         left join raids r on r.id = res.raid_id
+         where res.guild_id = p.guild_id
+           and c.name is not null
+           and lower(res.player_name) = lower(c.name)
+           and lower(coalesce(res.status, 'signed')) not in ('absent', 'declined', 'rejected', 'abgemeldet', 'abwesend', 'nein', 'verworfen')
+           and lower(coalesce(res.role, '')) in ('tank', 'tanks', 'heal', 'heiler', 'heals', 'healer', 'dd', 'dps', 'damage')
+       ) recent
+       order by recent.raid_date desc nulls last, recent.signup_at desc nulls last
+       limit 1
+     ) last_signup on true
      where p.guild_id = $1
      order by coalesce(c.name, p.player_pin) asc`,
     [guildId]
@@ -10848,6 +10872,9 @@ async function getGuildLeadershipOverview(guildId, params) {
       playerRole: normalizePlayerRole(row.player_role),
       playerRoleLabel: playerRoleLabel(row.player_role),
       canCreateRaid: canPlayerRoleCreateRaid(row.player_role),
+      raidRole: normalizeSignupRole(row.last_raid_role),
+      lastRaidRole: normalizeSignupRole(row.last_raid_role),
+      lastRaidNote: row.last_raid_note || "",
       discordRoleIds: Array.isArray(row.discord_role_ids) ? row.discord_role_ids : [],
       permissions: Array.isArray(row.permissions) ? row.permissions : [],
       notificationDiscordNames: Array.isArray(row.notification_discord_names) ? row.notification_discord_names : [],
