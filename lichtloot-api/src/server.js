@@ -352,6 +352,64 @@ app.get("/api/dashboard", async (req, res, next) => {
   }
 });
 
+// Schlanke, öffentliche Termin-Schnittstelle für externe Gildenseiten.
+// Bewusst ohne Raid-/Lead-PINs, interne UUIDs oder Anmeldedetails einzelner Spieler.
+app.get("/api/public/raids", async (req, res, next) => {
+  try {
+    const guild = await requireGuild(resolveGuildSlug(req.query.guild));
+    const requestedLimit = Number.parseInt(clean(req.query.limit), 10);
+    const limit = Math.min(50, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 20));
+    const requestedDays = Number.parseInt(clean(req.query.days), 10);
+    const days = Math.min(180, Math.max(1, Number.isFinite(requestedDays) ? requestedDays : 30));
+    const result = await query(
+      `select r.*,
+              (
+                select count(*)::int
+                from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) not in ('absent', 'abgemeldet', 'abwesend', 'nein')
+              ) + (
+                select count(*)::int
+                from raid_external_signups res
+                where res.guild_id = r.guild_id
+                  and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) not in ('absent', 'abgemeldet', 'abwesend', 'nein')
+              ) as signup_count
+       from raids r
+       where r.guild_id = $1
+         and r.raid_date >= current_date
+         and r.raid_date <= current_date + $2::int
+         and coalesce(r.status, '') not in ('archiviert', 'archive')
+       order by r.raid_date asc, coalesce(r.raid_time, '') asc, r.created_at asc
+       limit $3`,
+      [guild.id, days, limit]
+    );
+    const raids = result.rows.map(row => {
+      const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
+      const raidTime = clean(row.raid_time);
+      const raidId = String(raidPublicId(row));
+      const signupUrl = `/start.html?${new URLSearchParams({ guild: guild.slug, raidHelper: raidId })}`;
+      return {
+        id: raidId,
+        type: row.raid_type || "",
+        title: row.name || displayRaidName(row.raid_type),
+        date: raidDate,
+        time: raidTime,
+        startsAtLocal: raidDate && raidTime ? `${raidDate}T${raidTime}:00` : raidDate,
+        timezone: "Europe/Berlin",
+        signupCount: Number(row.signup_count || 0),
+        maxPlayers: row.max_players === null || row.max_players === undefined ? null : Number(row.max_players),
+        imageUrl: row.raid_image_url || "",
+        signupPath: signupUrl
+      };
+    });
+    res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+    res.json({ success: true, guild: guild.slug, generatedAt: new Date().toISOString(), raids });
+  } catch (error) {
+    next(error);
+  }
+});
+
 function clean(value) {
   return String(value || "").trim();
 }
