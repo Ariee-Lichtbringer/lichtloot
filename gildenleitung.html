@@ -6611,7 +6611,8 @@ let poReleaseRequests = [];
 let selectedPoReleaseRequestIds = new Set();
 let poReleaseSearch = "";
 const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
-const PO_RELEASE_COLUMNS_KEY = "lichtloot:p0-release-columns";
+const PO_RELEASE_COLUMNS_KEY = `lichtloot:p0-release-columns:${CURRENT_GUILD_SLUG}`;
+const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
 let poReleaseVisibleColumns = (() => {try{const saved=JSON.parse(localStorage.getItem(PO_RELEASE_COLUMNS_KEY)||"null");if(Array.isArray(saved))return new Set(saved.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));}catch(_error){}return new Set(PO_RELEASE_RAIDS.map(([raid])=>raid));})();
 let poItemSettingsRaid = "mc";
 let poItemSettingsRows = [];
@@ -7417,9 +7418,9 @@ function openRaidleadPanelDirect(raidId){
   if(raid?.playerPin) params.set("playerPin", raid.playerPin);
 
   try{
-    sessionStorage.setItem("raidlead", "true");
-    sessionStorage.setItem("raidleadRole", "master");
-    if(raid?.leadPin) sessionStorage.setItem("raidleadPrioPin", raid.leadPin);
+    sessionStorage.setItem(raidleadStorageKey("active"), "true");
+    sessionStorage.setItem(raidleadStorageKey("role"), "master");
+    if(raid?.leadPin) sessionStorage.setItem(raidleadStorageKey("prioPin"), raid.leadPin);
   }catch(error){}
 
   window.location.href = "raidlead-panel.html?" + params.toString();

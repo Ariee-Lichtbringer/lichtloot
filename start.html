@@ -3352,6 +3352,7 @@ const LICHTLOOT_API_URL =
 const RAILWAY_API_URL =
   window.LICHTLOOT_RAILWAY_API_URL || "https://lichtloot-production.up.railway.app";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
+const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const GUILD_MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 
@@ -4359,7 +4360,7 @@ function openRaidLootMasterLogin(index){
   const overlay=document.createElement("div");overlay.id="raidLootMasterLogin";overlay.className="raid-pm-login-overlay";
   overlay.innerHTML='<div class="raid-pm-login-box" role="dialog" aria-modal="true"><h3>'+safeHtml(entry.raidName||entry.name||raids[entry._raidKey]?.name||"Raid")+'</h3><p>LeadPIN für den Plündermeister-Zugang eingeben.</p><input id="raidPmLeadPin" type="password" autocomplete="current-password" placeholder="LeadPIN"><div id="raidPmLoginStatus" class="raid-pm-login-status"></div><div class="raid-pm-login-actions"><button type="button" data-close>Abbrechen</button><button type="button" class="primary" data-login>Öffnen</button></div></div>';
   const close=()=>overlay.remove();overlay.querySelector("[data-close]")?.addEventListener("click",close);overlay.addEventListener("click",event=>{if(event.target===overlay)close();});
-  const login=async()=>{const pin=overlay.querySelector("#raidPmLeadPin")?.value.trim()||"";const status=overlay.querySelector("#raidPmLoginStatus");if(!pin){status.textContent="Bitte LeadPIN eingeben.";return;}status.textContent="LeadPIN wird geprüft …";try{const query=new URLSearchParams({action:"validateLeadPin",guild:CURRENT_GUILD_SLUG,leadPin:pin,t:String(Date.now())});const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});const result=await response.json();const expected=String(entry.raidId||entry.id||"");if(!result.success||String(result.raidId||result.id||"")!==expected){status.textContent="Die LeadPIN gehört nicht zu diesem Raid.";return;}sessionStorage.setItem("raidlead","true");sessionStorage.setItem("raidleadRole","master");sessionStorage.setItem("raidleadRaidId",result.raidId||expected);sessionStorage.setItem("raidleadPrioPin",result.leadPin||pin);if(result.playerPin||result.prioPin||result.raidPin)sessionStorage.setItem("raidleadPlayerPin",result.playerPin||result.prioPin||result.raidPin);const target=new URL(withGuildUrl("raidlead-panel.html"),window.location.href);target.searchParams.set("raidId",result.raidId||expected);target.searchParams.set("leadPin",result.leadPin||pin);window.location.href=target.href;}catch(error){status.textContent="LeadPIN konnte nicht geprüft werden.";}};
+  const login=async()=>{const pin=overlay.querySelector("#raidPmLeadPin")?.value.trim()||"";const status=overlay.querySelector("#raidPmLoginStatus");if(!pin){status.textContent="Bitte LeadPIN eingeben.";return;}status.textContent="LeadPIN wird geprüft …";try{const query=new URLSearchParams({action:"validateLeadPin",guild:CURRENT_GUILD_SLUG,leadPin:pin,t:String(Date.now())});const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});const result=await response.json();const expected=String(entry.raidId||entry.id||"");if(!result.success||String(result.raidId||result.id||"")!==expected){status.textContent="Die LeadPIN gehört nicht zu diesem Raid.";return;}sessionStorage.setItem(raidleadStorageKey("active"),"true");sessionStorage.setItem(raidleadStorageKey("role"),"master");sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId||expected);sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin||pin);if(result.playerPin||result.prioPin||result.raidPin)sessionStorage.setItem(raidleadStorageKey("playerPin"),result.playerPin||result.prioPin||result.raidPin);const target=new URL(withGuildUrl("raidlead-panel.html"),window.location.href);target.searchParams.set("raidId",result.raidId||expected);target.searchParams.set("leadPin",result.leadPin||pin);window.location.href=target.href;}catch(error){status.textContent="LeadPIN konnte nicht geprüft werden.";}};
   overlay.querySelector("[data-login]")?.addEventListener("click",login);overlay.querySelector("#raidPmLeadPin")?.addEventListener("keydown",event=>{if(event.key==="Enter")login();});document.body.appendChild(overlay);window.setTimeout(()=>overlay.querySelector("#raidPmLeadPin")?.focus(),20);
 }
 
@@ -6198,8 +6199,8 @@ async function raidleadLogin(){
   if(status) status.innerHTML='<span class="warn">LeadPIN wird geprüft …</span>';
 
   if(raidleadAccounts[pin]){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),raidleadAccounts[pin]);
     window.location.href=withGuildUrl("raidlead-panel.html");
     return;
   }
@@ -6216,12 +6217,12 @@ async function raidleadLogin(){
     const result=await response.json();
 
     if(result.success){
-      sessionStorage.setItem("raidlead","true");
-      sessionStorage.setItem("raidleadRole","master");
-      sessionStorage.setItem("raidleadRaidId",result.raidId);
-      sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
+      sessionStorage.setItem(raidleadStorageKey("active"),"true");
+      sessionStorage.setItem(raidleadStorageKey("role"),"master");
+      sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId);
+      sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin || pin);
       if(result.playerPin || result.prioPin || result.raidPin){
-        sessionStorage.setItem("raidleadPlayerPin",result.playerPin || result.prioPin || result.raidPin);
+        sessionStorage.setItem(raidleadStorageKey("playerPin"),result.playerPin || result.prioPin || result.raidPin);
       }
       window.location.href=withGuildUrl("raidlead-panel.html");
       return;
