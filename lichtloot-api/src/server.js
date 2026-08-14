@@ -7379,7 +7379,14 @@ async function getQuickRaidTemplates({ guildId, query: params }) {
       tankSlots: row.tank_slots ?? "",
       healSlots: row.heal_slots ?? "",
       ddSlots: row.dd_slots ?? "",
-      signupDeadline: row.signup_deadline || ""
+      signupDeadline: row.signup_deadline || "",
+      links: Array.isArray(row.settings_json?.links)
+        ? row.settings_json.links.map(link => ({
+            url: clean(link?.url),
+            text: clean(link?.text),
+            icon: clean(link?.icon)
+          })).filter(link => link.url)
+        : []
     }))
   };
 }
@@ -16330,6 +16337,13 @@ async function createRandomRaid({ guildId, query: params }) {
   if (createDiscordSignup) {
     const templateId = clean(params.templateId || params.raidTemplateId);
     const template = quickTemplate;
+    const templateLinks = Array.isArray(template.settings_json?.links)
+      ? template.settings_json.links.map(link => ({
+          url: clean(link?.url),
+          text: clean(link?.text),
+          icon: clean(link?.icon)
+        })).filter(link => link.url)
+      : [];
     const channelId = clean(template.discord_channel_id);
     const createdRaidId = clean(created.raidId || created.RaidID || params.raidId);
     const createdPlayerPin = clean(created.playerPin || created.prioPin || params.playerPin);
@@ -16367,6 +16381,9 @@ async function createRandomRaid({ guildId, query: params }) {
         ddSlots: template.dd_slots,
         signupDeadline: clean(template.signup_deadline),
         description: clean(template.description),
+        linkUrl: templateLinks.length === 1 ? templateLinks[0].url : (templateLinks.length ? JSON.stringify(templateLinks) : ""),
+        linkText: templateLinks.length === 1 ? templateLinks[0].text : "",
+        linkIcon: templateLinks.length === 1 ? templateLinks[0].icon : "",
         raidImageUrl: clean(template.raid_image_url),
         channelId,
         followupPoPost
@@ -22186,6 +22203,7 @@ async function ensureGuildPoItemsSchema() {
 }
 
 async function getGuildPoItems({ guild, query: params = {} }) {
+  requireMasterCodeForGuild(guild, params.masterCode);
   await ensureGuildPoItemsSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guild.id];
