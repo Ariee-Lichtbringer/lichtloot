@@ -6674,6 +6674,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
 
   const processed = [];
   for (const schedule of schedules.rows) {
+    const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(clean(schedule.raid_type).toLowerCase());
     const nextDate = resolveNextScheduleDate({
       weekday: schedule.weekday,
       nextRaidDate: scheduleDateIso(schedule.next_raid_date),
@@ -6746,7 +6747,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         p0PlusFreigabe: "geöffnet",
         createdBy: schedule.created_by || "Gildenleitung",
         raidHelperEnabled: "true",
-        prioEnabled: schedule.prio_enabled === false ? "false" : "true",
+        prioEnabled: signupOnlyRaid || schedule.prio_enabled === false ? "false" : "true",
         showWorldbuffs: schedule.show_worldbuffs === false ? "false" : "true",
         maxPlayers: schedule.max_players,
         tankSlots: schedule.tank_slots,
@@ -6801,7 +6802,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
           channelId: schedule.discord_channel_id,
           discordChannelId: schedule.discord_channel_id,
           clearChannelBeforePost: schedule.clear_channel_before_post === true,
-          followupPoPost: schedule.create_po_signup ? {
+          followupPoPost: !signupOnlyRaid && schedule.create_po_signup ? {
             postKey: `scheduled-${schedule.id}-${nextDateIso}`,
             title: `${displayRaidName(schedule.raid_type)} P0-Anmelder`,
             raid: schedule.raid_type,
@@ -6861,6 +6862,7 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
   const intervalWeeks = Math.min(12, Math.max(1, Number(params.intervalWeeks || 1) || 1));
   const raidTime = clean(params.raidTime || params.time || "20:00") || "20:00";
   const postTime = clean(params.postTime || params.posterTime || params.autoPostTime || "09:00") || "09:00";
+  const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(raidType);
 
   if (!raidType || !title) {
     const error = new Error("Raid und Titel sind für den Rhythmus erforderlich.");
@@ -6898,8 +6900,8 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     clean(params.linkText || params.linkLabel),
     clean(params.linkIcon),
     ["1", "true", "yes", "ja"].includes(clean(params.clearChannelBeforePost).toLowerCase()),
-    ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase()),
-    !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
+    !signupOnlyRaid && ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase()),
+    !signupOnlyRaid && !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
     !["0", "false", "no", "nein"].includes(clean(params.showWorldbuffs).toLowerCase())
   ];
 
@@ -7564,6 +7566,18 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 async function queuePoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
+  const linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid);
+  if (linkedRaidId) {
+    const linkedRaid = await query(
+      `select prio_enabled from raids
+       where guild_id = $1 and (id::text = $2 or external_raid_id = $2 or raid_pin = $2)
+       limit 1`,
+      [guildId, linkedRaidId]
+    );
+    if (linkedRaid.rows[0]?.prio_enabled === false) {
+      return { success: true, skipped: true, reason: "signup_only_raid_has_no_po_post" };
+    }
+  }
   const requestedSourceChannelId = clean(params.sourceChannelId || params.sourceChannel || params.channelId);
   const requestedTargetChannelId = clean(params.targetChannelId || params.targetChannel || params.discordChannelId) || requestedSourceChannelId;
   const raid = clean(params.raid || params.raidName);
@@ -16076,6 +16090,7 @@ async function createRandomRaid({ guildId, query: params }) {
 
 async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
+  const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(raidType);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
@@ -16220,7 +16235,7 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.linkUrl),
       clean(params.linkText || params.linkLabel),
       clean(params.linkIcon),
-      !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
+      !signupOnlyRaid && !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
       !["0", "false", "no", "nein"].includes(clean(params.showWorldbuffs).toLowerCase()),
       Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
       Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
