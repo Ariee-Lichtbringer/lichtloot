@@ -6098,6 +6098,50 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
   }
   if (type === "po_post") {
     const payloadJson = JSON.stringify(payload || {});
+    const postKey = clean(payload?.postKey || payload?.poPostKey || payload?.postId || "");
+    if (postKey) {
+      const existingByKey = await query(
+        `select id
+         from bot_update_queue
+         where guild_id = $1
+           and type = $2
+           and status in ('open', 'processing')
+           and coalesce(payload->>'postKey', payload->>'poPostKey', payload->>'postId', '') = $3
+         order by created_at desc
+         limit 1`,
+        [guildId, type, postKey]
+      );
+      if (existingByKey.rows[0]) {
+        await query(
+          `update bot_update_queue
+           set payload = $2::jsonb,
+               status = 'open',
+               created_at = now(),
+               claimed_at = null,
+               resolved_at = null
+           where id = $1`,
+          [existingByKey.rows[0].id, payloadJson]
+        );
+        await query(
+          `update bot_update_queue
+           set status = 'done', resolved_at = now()
+           where guild_id = $1
+             and type = $2
+             and status in ('open', 'processing')
+             and id <> $3
+             and coalesce(payload->>'postKey', payload->>'poPostKey', payload->>'postId', '') = $4`,
+          [guildId, type, existingByKey.rows[0].id, postKey]
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "po_post_open_payload_replaced",
+          rowNumber: existingByKey.rows[0].id,
+          type,
+          payload: payload || {}
+        };
+      }
+    }
     const existing = await query(
       `select id, type, payload, status, created_at
        from bot_update_queue
@@ -6321,6 +6365,26 @@ async function getBotQueueAllGuilds({ query: params }) {
            and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
        )`
   );
+  // Alte oder mehrfach geklickte PO-Aufträge dürfen nicht nacheinander in
+  // verschiedene Channels posten. Pro Gilde und Post-ID bleibt nur der
+  // neueste offene Auftrag aktiv.
+  await query(
+    `update bot_update_queue q
+     set status = 'done', resolved_at = now()
+     where q.status = 'open'
+       and q.type = 'po_post'
+       and coalesce(q.payload->>'postKey', q.payload->>'poPostKey', q.payload->>'postId', '') <> ''
+       and exists (
+         select 1
+         from bot_update_queue newer
+         where newer.guild_id = q.guild_id
+           and newer.type = q.type
+           and newer.status = 'open'
+           and coalesce(newer.payload->>'postKey', newer.payload->>'poPostKey', newer.payload->>'postId', '') =
+               coalesce(q.payload->>'postKey', q.payload->>'poPostKey', q.payload->>'postId', '')
+           and (newer.created_at > q.created_at or (newer.created_at = q.created_at and newer.id::text > q.id::text))
+       )`
+  );
   const requestedTypes = clean(params.types || params.typeFilter)
     .split(",")
     .map(clean)
@@ -6384,6 +6448,7 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
   const channels = Array.isArray(params.channels) ? params.channels : [];
   const seen = new Set();
   const replaceChannels = clean(params.replace || params.fullSync).toLowerCase() === "true";
+  const updateOnly = clean(params.updateOnly).toLowerCase() === "true";
   let saved = 0;
 
   for (const raw of channels) {
@@ -6391,6 +6456,15 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
     const channelName = clean(raw.name || raw.channelName);
     if (!channelId || !channelName || seen.has(channelId)) continue;
     seen.add(channelId);
+    if (updateOnly) {
+      const existing = await query(
+        `select 1 from discord_bot_channels
+         where guild_id = $1 and channel_id = $2
+         limit 1`,
+        [guildId, channelId]
+      );
+      if (!existing.rows[0]) continue;
+    }
     await query(
       `insert into discord_bot_channels (
          guild_id, discord_guild_id, discord_guild_name, channel_id, channel_name,
