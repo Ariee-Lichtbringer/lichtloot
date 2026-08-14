@@ -2165,6 +2165,8 @@ function openRaidStartAction(action){
 const RAID_NAME = "bwl";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
+function guildLocalStorageKey(key){ return `lichtloot:${currentGuildSlug()}:${RAID_NAME}:${key}`; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
 function titleFromSlug(slug){
@@ -3300,7 +3302,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  const storageKey=RAID_NAME+"_prios";
+  const storageKey=guildLocalStorageKey("prios");
   let data=JSON.parse(localStorage.getItem(storageKey)||"[]");
 
   data=data.filter(entry=>
@@ -3822,8 +3824,8 @@ async function raidleadLogin(){
   }
 
   if(raidleadAccounts[pin]){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),raidleadAccounts[pin]);
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -3841,12 +3843,12 @@ async function raidleadLogin(){
   const result = await response.json();
 
   if(result.success){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole","master");
-    sessionStorage.setItem("raidleadRaidId",result.raidId);
-    sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
-    if(result.managerMode === "lootmaster") sessionStorage.setItem("raidleadLootMasterPin",pin);
-    else sessionStorage.removeItem("raidleadLootMasterPin");
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),"master");
+    sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId);
+    sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin || pin);
+    if(result.managerMode === "lootmaster") sessionStorage.setItem(raidleadStorageKey("lootMasterPin"),pin);
+    else sessionStorage.removeItem(raidleadStorageKey("lootMasterPin"));
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -4211,7 +4213,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -4223,7 +4225,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -4231,7 +4233,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -4292,7 +4294,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -4302,7 +4304,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
