@@ -1359,6 +1359,28 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
   const client = await pool.connect();
   try {
     await client.query("begin");
+    if (!trustedSetup) {
+      const previousSettings = await client.query(
+        `select coalesce(layout_json, '{}'::jsonb) as layout_json
+         from guild_settings where guild_id = $1 limit 1`,
+        [guild.id]
+      );
+      const previousLayout = previousSettings.rows[0]?.layout_json || {};
+      const previousOnboarding = previousLayout.onboarding && typeof previousLayout.onboarding === "object"
+        ? previousLayout.onboarding
+        : {};
+      if (previousOnboarding.channelsSynced === true) {
+        layoutJson.onboarding = {
+          ...previousOnboarding,
+          ...(layoutJson.onboarding && typeof layoutJson.onboarding === "object" ? layoutJson.onboarding : {}),
+          status: "ready",
+          setupComplete: true,
+          discordConnected: true,
+          channelsSynced: true,
+          layoutConfigured: true
+        };
+      }
+    }
     const guildResult = await client.query(
       `update guilds
        set name = coalesce(nullif($2, ''), name),
@@ -5366,11 +5388,7 @@ async function resolveDefaultGuildId() {
 
 async function queueWorldbuffBackup({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
-  const fixedNachtlootChannel = guildSlug === "nachtloot" ? "1531288515994718318" : "";
   const backupChannelId = clean(params.channelId || params.targetChannelId || params.backupChannelId)
-    || fixedNachtlootChannel
     || await resolveGuildBackupChannelId({
       guildId,
       envFallbackChannelId: "1529393614247952434",
@@ -6222,38 +6240,9 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
   return { success: true, rowNumber: result.rows[0].id, type: result.rows[0].type, payload: result.rows[0].payload || {} };
 }
 
-function logAnalysisPostChannelId(raid) {
-  switch (normalizeLogRaidType(raid)) {
-    case "MC":
-      return "1509236588410834965";
-    case "BWL":
-      return "1509236359141785600";
-    case "NAXX":
-      return "1509235847109804082";
-    case "AQ40":
-      return "1509236271816511651";
-    default:
-      return "";
-  }
-}
-
 async function resolveLogAnalysisPostChannelId(guildId, raid) {
-  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
   const configuredChannelId = await getGuildLayoutValue(guildId, "logAnalysisChannelId");
-
-  // Nachtloot verwendet eigene Log-Analyse-Kanäle je Raid.
-  if (guildSlug === "nachtloot") {
-    const nachtlootChannels = {
-      MC: "1533915098857341068",
-      BWL: "1533915161524441168",
-      AQ40: "1533915232085475469",
-      NAXX: "1533915287081193654"
-    };
-    return nachtlootChannels[normalizeLogRaidType(raid)] || configuredChannelId || "1533914926190428393";
-  }
-
-  return configuredChannelId || logAnalysisPostChannelId(raid);
+  return clean(configuredChannelId);
 }
 
 async function ensurePendingPlayerLoginNoticesQueued(guildId = null) {
@@ -19273,13 +19262,7 @@ async function buildP0PlusTransferWorkbook({ guildId, raid, awardedRows, skipped
 }
 
 async function queueP0PlusTransferCsvExport({ guildId, raid, awardedRows, skippedRows, backupChannelIdOverride = "", queueType = "p0plus_transfer_export" }) {
-  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
-  const fixedNachtlootChannel = guildSlug === "nachtloot" ? "1531288738326642828" : "";
-  const fixedLichtbringerChannel = ["lichtloot", "lichtbringer"].includes(guildSlug) ? "1529393614247952434" : "";
   const backupChannelId = clean(backupChannelIdOverride)
-    || fixedNachtlootChannel
-    || fixedLichtbringerChannel
     || await resolveGuildBackupChannelId({
       guildId,
       envFallbackChannelId: p0PlusTransferExportChannelId,
@@ -22386,6 +22369,12 @@ async function resetPlayerPinBySecurity({
 app.get("/api/apps-script", async (req, res, next) => {
   try {
     const action = clean(req.query.action);
+    // Railway kann mehrere Serverinstanzen parallel betreiben. Mastercode-
+    // Änderungen müssen deshalb vor jeder geschützten Anfrage aus der
+    // gemeinsamen Datenbank geladen werden, statt nur beim Serverstart.
+    if (clean(req.query.masterCode)) {
+      await loadMasterCodeOverrides();
+    }
 
     if (action === "listGuilds") {
       const guilds = await listGuilds();
@@ -23316,6 +23305,9 @@ app.post("/api/combat-log/import", async (req, res, next) => {
 app.post("/api/apps-script", async (req, res, next) => {
   try {
     const action = clean(req.body?.action || req.query?.action);
+    if (clean(req.body?.masterCode || req.query?.masterCode)) {
+      await loadMasterCodeOverrides();
+    }
 
     if (action === "updateGuildConfig") {
       const saved = await updateGuildConfig({ query: req.query, body: req.body });
