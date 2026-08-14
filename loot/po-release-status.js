@@ -111,7 +111,12 @@
       const inReview=!approved && pending.has(key);
       return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
     }).join("");
-    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
+    const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(function(item){
+      const key=item[0],label=item[1],attendance=data&&data.attendance16&&data.attendance16[key];
+      const total=Number(attendance&&attendance.total||0),attended=Number(attendance&&attendance.attended||0),bench=Number(attendance&&attendance.bench||0);
+      return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';
+    }).join("");
+    box.innerHTML='<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
   };
 
   window.loadSelectedCharacterPoReleases=async function(char){
