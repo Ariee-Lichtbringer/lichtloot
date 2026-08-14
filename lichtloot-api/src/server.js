@@ -2454,15 +2454,24 @@ function lootSourceRaidType(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
 }
 
-function isNachtlootSpecialRaid(value) {
+function isOptionalSpecialRaid(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(normalizeRaidType(value));
 }
 
-async function requireNachtlootSpecialRaidGuild(guildId, raidType) {
-  if (!isNachtlootSpecialRaid(raidType)) return;
-  const result = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
-  if (clean(result.rows[0]?.slug).toLowerCase() !== "nachtloot") {
-    const error = new Error("Dieser Raidtyp ist ausschließlich für NachtLoot verfügbar.");
+async function requireConfiguredSpecialRaidType(guildId, raidType) {
+  const normalizedRaid = normalizeRaidType(raidType);
+  if (!isOptionalSpecialRaid(normalizedRaid)) return;
+  const result = await query(
+    `select coalesce(layout_json, '{}'::jsonb) as layout_json
+     from guild_settings where guild_id = $1 limit 1`,
+    [guildId]
+  );
+  const layout = result.rows[0]?.layout_json || {};
+  const configured = Array.isArray(layout.specialRaidTypes)
+    ? layout.specialRaidTypes.map(normalizeRaidType)
+    : Object.keys(layout.raidImages || {}).map(normalizeRaidType);
+  if (!configured.includes(normalizedRaid)) {
+    const error = new Error("Dieser zusätzliche Raidtyp ist für diese Gilde nicht aktiviert.");
     error.statusCode = 403;
     throw error;
   }
@@ -16238,7 +16247,7 @@ async function createRandomRaid({ guildId, query: params }) {
 async function createRaidRecord({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const signupOnlyRaid = ["other", "scholomance", "lbrs", "ubrs", "brd", "strath-live"].includes(raidType);
-  await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  await requireConfiguredSpecialRaidType(guildId, raidType);
   const raidDate = parseDateValue(params.raidDate || params.datum || params.date);
   const raidName = clean(params.raidName) || displayRaidName(raidType);
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID) || `${raidType}-${Date.now()}`;
@@ -19459,7 +19468,7 @@ async function setP0PlusPoints({ guildId, query: params }) {
 async function clearP0PlusForPlayer({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid);
   const requestedRaidId = clean(params.raidId || params.id);
-  await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  await requireConfiguredSpecialRaidType(guildId, raidType);
   const player = clean(params.player || params.char || params.spieler);
   const server = clean(params.server);
   const itemName = clean(params.item);
@@ -19958,7 +19967,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 
 async function transferP0PlusPoints({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid);
-  await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  await requireConfiguredSpecialRaidType(guildId, raidType);
   const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
   const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
   if (guildSlug === "lichtloot" && ["zg", "aq20", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
