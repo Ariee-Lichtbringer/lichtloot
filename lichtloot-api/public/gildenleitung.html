@@ -7513,9 +7513,10 @@ function renderPoItemSettingsPanel(){
   ).join("");
   const needle = normalize(poItemSettingsSearch);
   const rows = poItemSettingsRows.filter(item => !needle || normalize([item.name,item.boss,item.slot,item.itemId].join(" ")).includes(needle));
+  const guildName=currentGuildInfo?.name||currentGuildInfo?.guildName||CURRENT_GUILD_SLUG;
   box.innerHTML = `
     <div class="section-head">
-      <div><h3>PO und PO+ Items festlegen</h3><p>Bei ZG und AQ20 darf jedes Item als PO gewählt werden. Nur markierte PO+-Items benötigen eine Freigabe und sammeln PO+-Punkte.</p></div>
+      <div><h3>P0- und P0+-Items für ${escapeHtml(guildName)} festlegen</h3><p>Diese Auswahl gilt ausschließlich für diese Gilde. P0+-Items benötigen zusätzlich eine Freigabe und sammeln P0+-Punkte.</p></div>
       <button class="small-btn ghost" type="button" onclick="loadPoItemSettingsPanel()">Neu laden</button>
     </div>
     <div class="p0-toolbar" style="display:grid;grid-template-columns:minmax(180px,260px) 1fr auto auto;gap:10px">
@@ -7524,28 +7525,28 @@ function renderPoItemSettingsPanel(){
       <button class="small-btn good" type="button" onclick="setAllVisiblePoItems(true)" ${rows.length ? "" : "disabled"}>Alle auswählen</button>
       <button class="small-btn danger" type="button" onclick="setAllVisiblePoItems(false)" ${rows.length ? "" : "disabled"}>Alle abwählen</button>
     </div>
-    <div class="table-wrap"><table class="p0-table"><thead><tr><th>PO Item</th><th>PO+ Item</th><th>Item</th><th>Boss</th><th>Slot</th></tr></thead><tbody>
+    <div class="table-wrap"><table class="p0-table"><thead><tr><th>P0-Item</th><th>P0+-Item</th><th>Item</th><th>Boss</th><th>Slot</th></tr></thead><tbody>
       ${rows.length ? rows.map((item,index) => `
         <tr>
-          <td><label style="display:inline-flex;align-items:center;gap:8px;font-weight:900"><input type="checkbox" ${item.poEnabled ? "checked" : ""} onchange="setPoItemEnabled('${escapeAttr(item.id || item.itemId)}',this.checked,this)"> PO Item</label></td>
-          <td><label style="display:inline-flex;align-items:center;gap:8px;font-weight:900"><input type="checkbox" ${item.poPlusEnabled ? "checked" : ""} onchange="setPoPlusItemEnabled('${escapeAttr(item.id || item.itemId)}',this.checked,this)"> PO+ Item</label></td>
+          <td><label style="display:inline-flex;align-items:center;gap:8px;font-weight:900"><input type="checkbox" ${item.poEnabled ? "checked" : ""} onchange="setPoItemEnabled('${escapeAttr(item.id || item.itemId)}',this.checked,this)"> P0-Item</label></td>
+          <td><label style="display:inline-flex;align-items:center;gap:8px;font-weight:900"><input type="checkbox" ${item.poPlusEnabled ? "checked" : ""} onchange="setPoPlusItemEnabled('${escapeAttr(item.id || item.itemId)}',this.checked,this)"> P0+-Item</label></td>
           <td>${renderLootItem(item.name || item.Item || "-")}${item.itemId ? `<br><span class="muted">ID ${escapeHtml(item.itemId)}</span>` : ""}</td>
           <td>${escapeHtml(item.boss || "-")}</td><td>${escapeHtml(item.slot || "-")}</td>
         </tr>`).join("") : '<tr><td colspan="5" class="muted">Keine Items gefunden.</td></tr>'}
     </tbody></table></div>
-    <div class="status good">${poItemSettingsRows.filter(item => item.poEnabled).length} PO-Items · ${poItemSettingsRows.filter(item => item.poPlusEnabled).length} PO+-Items in diesem Raid festgelegt.</div>`;
+    <div class="status good">${poItemSettingsRows.filter(item => item.poEnabled).length} P0-Items · ${poItemSettingsRows.filter(item => item.poPlusEnabled).length} P0+-Items für ${escapeHtml(guildName)} in diesem Raid festgelegt.</div>`;
 }
 
 async function setPoPlusItemEnabled(itemId,enabled,checkbox){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   try{
     const result=await railwayWrite({action:"guildSetPoItem",masterCode,itemId,setting:"poplus",enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
-    if(!result.success)throw new Error(result.error||"PO+-Item konnte nicht gespeichert werden.");
+    if(!result.success)throw new Error(result.error||"P0+-Item konnte nicht gespeichert werden.");
     const row=poItemSettingsRows.find(item=>String(item.id||item.itemId)===String(itemId));
     if(row){row.poPlusEnabled=Boolean(enabled);if(enabled)row.poEnabled=true;}
     renderPoItemSettingsPanel();
-    setStatus(enabled?"PO+-Item aktiviert.":"PO+-Punkte für dieses Item ausgeschaltet.","good");
-  }catch(error){if(checkbox)checkbox.checked=!enabled;setStatus(error.message||"PO+-Item konnte nicht gespeichert werden.","bad");}
+    setStatus(enabled?"P0+-Item aktiviert.":"P0+-Punkte für dieses Item ausgeschaltet.","good");
+  }catch(error){if(checkbox)checkbox.checked=!enabled;setStatus(error.message||"P0+-Item konnte nicht gespeichert werden.","bad");}
 }
 
 function setPoItemSettingsSearch(input){
@@ -7562,14 +7563,14 @@ async function setPoItemEnabled(itemId, enabled, checkbox){
   const masterCode = document.getElementById("masterCode")?.value.trim();
   try{
     const result = await railwayWrite({ action:"guildSetPoItem", masterCode, itemId, enabled:enabled ? "true" : "false", updatedBy:"Gildenleitung" });
-    if(!result.success) throw new Error(result.error || "PO-Item konnte nicht gespeichert werden.");
+    if(!result.success) throw new Error(result.error || "P0-Item konnte nicht gespeichert werden.");
     const row = poItemSettingsRows.find(item => String(item.id || item.itemId) === String(itemId));
     if(row) row.poEnabled = Boolean(enabled);
     renderPoItemSettingsPanel();
-    setStatus(enabled ? "PO-Item freigegeben." : "PO für dieses Item gesperrt.", "good");
+    setStatus(enabled ? "P0-Item freigegeben." : "P0 für dieses Item gesperrt.", "good");
   }catch(error){
     if(checkbox) checkbox.checked = !enabled;
-    setStatus(error.message || "PO-Item konnte nicht gespeichert werden.", "bad");
+    setStatus(error.message || "P0-Item konnte nicht gespeichert werden.", "bad");
   }
 }
 
