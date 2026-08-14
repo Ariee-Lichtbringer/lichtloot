@@ -16285,6 +16285,8 @@ async function createRandomRaid({ guildId, query: params }) {
   }
 
   const createDiscordSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createDiscordSignup).toLowerCase());
+  const createPoSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createPoSignup).toLowerCase());
+  const createPrioId = createPoSignup || ["1", "true", "yes", "ja", "on"].includes(clean(params.createPrioId ?? params.prioEnabled).toLowerCase());
   let quickTemplate = null;
   if (createDiscordSignup) {
     const templateId = clean(params.templateId || params.raidTemplateId);
@@ -16312,6 +16314,7 @@ async function createRandomRaid({ guildId, query: params }) {
     query: {
       ...params,
       raid: raidType,
+      prioEnabled: createPrioId ? "true" : "false",
       raidHelperEnabled: clean(params.createDiscordSignup).toLowerCase() === "true" ? "true" : params.raidHelperEnabled,
       status: "geschlossen",
       p0PlusFreigabe: "geöffnet"
@@ -16324,7 +16327,6 @@ async function createRandomRaid({ guildId, query: params }) {
     const channelId = clean(template.discord_channel_id);
     const createdRaidId = clean(created.raidId || created.RaidID || params.raidId);
     const createdPlayerPin = clean(created.playerPin || created.prioPin || params.playerPin);
-    const createPoSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createPoSignup).toLowerCase());
     const postKey = `${raidType}-po-anmelder-${clean(params.raidDate || params.datum).replace(/\D/g, "")}-${clean(params.raidTime || params.uhrzeit).replace(/\D/g, "")}-${randomRaidCode(4).toLowerCase()}`;
     const followupPoPost = createPoSignup ? {
       postKey,
@@ -16364,10 +16366,35 @@ async function createRandomRaid({ guildId, query: params }) {
         followupPoPost
       }
     });
-    return { ...created, quickRaid: { announcementQueued: Boolean(announcement?.success), poSignupQueued: createPoSignup, templateId } };
+    return { ...created, quickRaid: { announcementQueued: Boolean(announcement?.success), poSignupQueued: createPoSignup, prioIdCreated: createPrioId, templateId } };
   }
 
-  return created;
+  if (createPoSignup) {
+    const createdRaidId = clean(created.raidId || created.RaidID || params.raidId);
+    const createdPlayerPin = clean(created.playerPin || created.prioPin || params.playerPin);
+    const createdLeadPin = clean(created.leadPin || params.leadPin);
+    const postKey = `${raidType}-po-anmelder-${clean(params.raidDate || params.datum).replace(/\D/g, "")}-${clean(params.raidTime || params.uhrzeit).replace(/\D/g, "")}-${randomRaidCode(4).toLowerCase()}`;
+    const internalMasterCode = clean(masterCodeOverrides.get(String(guildId)) || masterCode);
+    const poPost = await queuePoPost({
+      guildId,
+      query: {
+        masterCode: internalMasterCode,
+        postKey,
+        title: `${raidType.toUpperCase()} P0-Anmelder`,
+        raid: raidType,
+        raidDate: clean(params.raidDate || params.datum),
+        raidTime: clean(params.raidTime || params.uhrzeit),
+        mode: "signup",
+        lichtlootRaidId: createdRaidId,
+        lichtlootPlayerPin: createdPlayerPin,
+        lichtlootLeadPin: createdLeadPin,
+        raidPin: createdPlayerPin
+      }
+    });
+    return { ...created, quickRaid: { announcementQueued: false, poSignupQueued: Boolean(poPost?.success), prioIdCreated: true, templateId: "" } };
+  }
+
+  return { ...created, quickRaid: { announcementQueued: false, poSignupQueued: false, prioIdCreated: createPrioId, templateId: "" } };
 }
 
 async function createRaidRecord({ guildId, query: params }) {
