@@ -8080,6 +8080,7 @@ async function saveLootLayoutPanel(){
   const payload = {
     action:"updateGuildConfig",
     guild:CURRENT_GUILD_SLUG,
+    masterCode:String(document.getElementById("masterCode")?.value || "").trim(),
     logoUrl:layoutFieldValue("layoutLogoUrl"),
     backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
     primaryColor:layoutFieldValue("layoutPrimaryColor"),
