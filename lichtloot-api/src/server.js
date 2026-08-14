@@ -2557,9 +2557,6 @@ function requireMasterCodeForGuild(guild, value, action="", params={}) {
 
 function requireRaidleadP0MasterCodeForGuild(guild, value) {
   const code = clean(value);
-  const guildSlug = clean(guild?.slug).toLowerCase();
-  const isLichtbringer = guildSlug === "lichtloot" || guildSlug === "lichtbringer";
-  if (isLichtbringer && code === "1301") return;
   const lootMasterCode = clean(lootMasterAccessCodeOverrides.get(String(guild?.id || "")));
   if (code && lootMasterCode && code === lootMasterCode) return;
   requireMasterCodeForGuild(guild, code);
@@ -3125,10 +3122,7 @@ async function loadLootMasterAccessCode(guildId){
 }
 async function effectiveLootMasterPin(guildId){
   const configured=clean(await loadLootMasterAccessCode(guildId));
-  if(configured)return configured;
-  const result=await query(`select slug from guilds where id=$1 limit 1`,[guildId]);
-  const slug=clean(result.rows[0]?.slug).toLowerCase();
-  return ["lichtloot","lichtbringer"].includes(slug)?"1301":"";
+  return configured;
 }
 async function setLootMasterAccessPassword({guildId,query:params={}}){
   const code=clean(params.masterCode);
