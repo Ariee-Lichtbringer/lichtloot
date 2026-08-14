@@ -2127,6 +2127,72 @@ async function getCharactersByPin(guildId, pin) {
   return result.rows.map(normalizeCharacter);
 }
 
+async function ensureWorldbuffRuleAgreementSchema() {
+  await query(
+    `create table if not exists worldbuff_rule_agreements (
+       guild_id uuid not null references guilds(id) on delete cascade,
+       player_id uuid not null references players(id) on delete cascade,
+       character_id uuid not null references characters(id) on delete cascade,
+       raid_key text not null default '',
+       agreed_at timestamptz not null default now(),
+       primary key (guild_id, player_id, character_id, raid_key)
+     )`
+  );
+}
+
+async function worldbuffRuleAgreementCharacter(guildId, params = {}) {
+  const pin = normalizePin(params.pin || params.playerPin);
+  const characterName = clean(params.character || params.char);
+  const server = clean(params.server);
+  if (!pin || !characterName) {
+    const error = new Error("SpielerLogin und Charakter fehlen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const characters = await getCharactersByPin(guildId, pin);
+  const character = characters.find(entry =>
+    clean(entry.name).toLowerCase() === characterName.toLowerCase()
+    && (!server || clean(entry.server).toLowerCase() === server.toLowerCase())
+  );
+  if (!character) {
+    const error = new Error("Der Charakter gehört nicht zu diesem SpielerLogin.");
+    error.statusCode = 403;
+    throw error;
+  }
+  const playerResult = await query(
+    "select id from players where guild_id=$1 and player_pin=$2 and approval_status='approved' and coalesce(is_blocked,false)=false limit 1",
+    [guildId, pin]
+  );
+  return { playerId: playerResult.rows[0].id, characterId: character.id };
+}
+
+async function getWorldbuffRuleAgreement(guildId, params = {}) {
+  const identity = await worldbuffRuleAgreementCharacter(guildId, params);
+  const raidKey = clean(params.raidKey);
+  await ensureWorldbuffRuleAgreementSchema();
+  const result = await query(
+    `select agreed_at from worldbuff_rule_agreements
+     where guild_id=$1 and player_id=$2 and character_id=$3 and raid_key=$4 limit 1`,
+    [guildId, identity.playerId, identity.characterId, raidKey]
+  );
+  return { success: true, agreed: Boolean(result.rows[0]), agreedAt: result.rows[0]?.agreed_at || null };
+}
+
+async function acceptWorldbuffRuleAgreement(guildId, params = {}) {
+  const identity = await worldbuffRuleAgreementCharacter(guildId, params);
+  const raidKey = clean(params.raidKey);
+  await ensureWorldbuffRuleAgreementSchema();
+  const result = await query(
+    `insert into worldbuff_rule_agreements (guild_id,player_id,character_id,raid_key,agreed_at)
+     values ($1,$2,$3,$4,now())
+     on conflict (guild_id,player_id,character_id,raid_key)
+     do update set agreed_at=excluded.agreed_at
+     returning agreed_at`,
+    [guildId, identity.playerId, identity.characterId, raidKey]
+  );
+  return { success: true, agreed: true, agreedAt: result.rows[0]?.agreed_at || null };
+}
+
 async function ensureCrossGuildPlayerLogin(guildId, pin) {
   const normalizedPin = normalizePin(pin);
   if (!normalizedPin) return null;
@@ -21973,6 +22039,11 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ success: true, guild: guild.slug, characters, entries: characters, chars: characters });
     }
 
+    if (action === "getWorldbuffRuleAgreement") {
+      const agreement = await getWorldbuffRuleAgreement(guild.id, req.query);
+      return res.json({ ...agreement, guild: guild.slug });
+    }
+
     if (action === "getPlayerPrioHistory") {
       const history = await getPlayerPrioHistory(guild.id, req.query);
       return res.json({ ...history, guild: guild.slug });
@@ -22869,6 +22940,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (clean(postParams.masterCode)) {
       if (action === "transferP0PlusPoints" || action === "clearP0PlusForPlayer") requireRaidleadP0MasterCodeForGuild(guild, postParams.masterCode);
       else requireMasterCodeForGuild(guild, postParams.masterCode, action, postParams);
+    }
+
+    if (action === "acceptWorldbuffRuleAgreement") {
+      const agreement = await acceptWorldbuffRuleAgreement(guild.id, postParams);
+      return res.json({ ...agreement, guild: guild.slug });
     }
 
     if (action === "lichtbotSaveDiscordChannels") {
