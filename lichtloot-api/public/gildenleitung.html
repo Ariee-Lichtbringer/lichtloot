@@ -15016,6 +15016,9 @@ async function createRaidHelperSignup(){
           "Wähle unten dein Item aus und trage danach deinen Charakter ein.",
           includePoBindingNotice ? poBindingNotice : ""
         ].filter(Boolean).join("\n\n"),
+        linkUrl:raidHelperValue("raidHelperLinkUrl"),
+        linkText:raidHelperValue("raidHelperLinkText"),
+        linkIcon:raidHelperValue("raidHelperLinkIcon"),
         restoreArchived:"true",
         createLichtlootRaid:"",
         lichtlootRaidId:raidId,
