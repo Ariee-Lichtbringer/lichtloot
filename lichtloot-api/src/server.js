@@ -2861,6 +2861,11 @@ async function ensureRaidHelperScheduleSchema() {
        post_time text not null default '09:00',
        next_raid_date date,
        next_post_date date,
+       link_url text not null default '',
+       link_text text not null default '',
+       link_icon text not null default '',
+       clear_channel_before_post boolean not null default false,
+       create_po_signup boolean not null default false,
        last_raid_date date,
        last_raid_id uuid references raids(id) on delete set null,
        created_at timestamptz not null default now(),
@@ -2870,6 +2875,11 @@ async function ensureRaidHelperScheduleSchema() {
   );
   await query(`alter table raid_helper_schedules add column if not exists post_time text not null default '09:00'`);
   await query(`alter table raid_helper_schedules add column if not exists next_post_date date`);
+  await query(`alter table raid_helper_schedules add column if not exists link_url text not null default ''`);
+  await query(`alter table raid_helper_schedules add column if not exists link_text text not null default ''`);
+  await query(`alter table raid_helper_schedules add column if not exists link_icon text not null default ''`);
+  await query(`alter table raid_helper_schedules add column if not exists clear_channel_before_post boolean not null default false`);
+  await query(`alter table raid_helper_schedules add column if not exists create_po_signup boolean not null default false`);
   await query(
     `create index if not exists idx_raid_helper_schedules_guild
        on raid_helper_schedules(guild_id, enabled, next_raid_date, raid_time)`
@@ -6563,6 +6573,11 @@ function normalizeRaidHelperScheduleRow(row) {
     postTime: row.post_time || "09:00",
     nextRaidDate: scheduleDateIso(row.next_raid_date),
     nextPostDate: scheduleDateIso(row.next_post_date),
+    linkUrl: row.link_url || "",
+    linkText: row.link_text || "",
+    linkIcon: row.link_icon || "",
+    clearChannelBeforePost: row.clear_channel_before_post === true,
+    createPoSignup: row.create_po_signup === true,
     lastRaidDate: scheduleDateIso(row.last_raid_date),
     lastRaidId: row.last_raid_id || "",
     currentRaidId: id ? `schedule-${id}` : "",
@@ -6671,7 +6686,10 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
     const existingRaid = existing.rows[0] || null;
     const existingDateIso = scheduleDateIso(existingRaid?.raid_date);
     const dateChanged = Boolean(existingRaid && existingDateIso && existingDateIso !== nextDateIso);
-    const nextPostDateIso = scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
+    const storedNextRaidDateIso = scheduleDateIso(schedule.next_raid_date);
+    const nextPostDateIso = storedNextRaidDateIso && storedNextRaidDateIso !== nextDateIso
+      ? nextDateIso
+      : scheduleDateIso(schedule.next_post_date || schedule.next_raid_date || nextDateIso);
     const postDue = schedulePostIsDue({
       postDate: nextPostDateIso,
       postTime: schedule.post_time,
@@ -6730,6 +6748,9 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         signupDeadline: schedule.signup_deadline,
         discordChannelId: schedule.discord_channel_id,
         description: schedule.description,
+        linkUrl: schedule.link_url,
+        linkText: schedule.link_text,
+        linkIcon: schedule.link_icon,
         raidImageUrl: schedule.raid_image_url
       }
     });
@@ -6748,7 +6769,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
     await query(
       `update raid_helper_schedules
        set next_raid_date = $2,
-           next_post_date = coalesce(next_post_date, $2),
+           next_post_date = $2,
            last_raid_date = case when $3::boolean then $4::date else last_raid_date end,
            last_raid_id = $5,
            updated_at = now()
@@ -6772,6 +6793,23 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
           createdBy: createdRaid.createdBy,
           channelId: schedule.discord_channel_id,
           discordChannelId: schedule.discord_channel_id,
+          clearChannelBeforePost: schedule.clear_channel_before_post === true,
+          followupPoPost: schedule.create_po_signup ? {
+            postKey: `scheduled-${schedule.id}-${nextDateIso}`,
+            title: `${displayRaidName(schedule.raid_type)} P0-Anmelder`,
+            raid: schedule.raid_type,
+            raidDate: nextDateIso,
+            raidTime: schedule.raid_time,
+            mode: "signup",
+            note: "Wähle unten dein Item aus und trage danach deinen Charakter ein.",
+            sourceChannelId: schedule.discord_channel_id,
+            targetChannelId: schedule.discord_channel_id,
+            discordChannelId: schedule.discord_channel_id,
+            lichtlootRaidId: externalRaidId,
+            lichtlootPlayerPin: created.playerPin || created.raidPin || "",
+            lichtlootLeadPin: created.leadPin || "",
+            restoreArchived: "true"
+          } : null,
           raidSnapshot: createdRaid,
           source: "raid_helper_schedule"
         }
@@ -6848,7 +6886,12 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     raidTime,
     postTime,
     parseDateValue(params.nextRaidDate || params.raidDate || params.date),
-    parseDateValue(params.nextPostDate || params.postDate || params.posterDate || params.autoPostDate || params.nextRaidDate || params.raidDate || params.date)
+    parseDateValue(params.nextPostDate || params.postDate || params.posterDate || params.autoPostDate || params.nextRaidDate || params.raidDate || params.date),
+    clean(params.linkUrl),
+    clean(params.linkText || params.linkLabel),
+    clean(params.linkIcon),
+    ["1", "true", "yes", "ja"].includes(clean(params.clearChannelBeforePost).toLowerCase()),
+    ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase())
   ];
 
   let result;
@@ -6875,8 +6918,13 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
            post_time = $19,
            next_raid_date = coalesce($20, next_raid_date),
            next_post_date = coalesce($21, next_post_date),
+           link_url = $22,
+           link_text = $23,
+           link_icon = $24,
+           clear_channel_before_post = $25,
+           create_po_signup = $26,
            updated_at = now()
-       where guild_id = $1 and id = $22
+       where guild_id = $1 and id = $27
        returning *`,
       [...values, scheduleId]
     );
@@ -6886,9 +6934,10 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          guild_id, schedule_key, enabled, raid_type, title, description,
          max_players, tank_slots, heal_slots, dd_slots, signup_deadline,
          discord_channel_id, raid_image_url, created_by, recurrence,
-         interval_weeks, weekday, raid_time, post_time, next_raid_date, next_post_date
+         interval_weeks, weekday, raid_time, post_time, next_raid_date, next_post_date,
+         link_url, link_text, link_icon, clear_channel_before_post, create_po_signup
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)
        on conflict (guild_id, schedule_key)
        do update set
          enabled = excluded.enabled,
@@ -6910,6 +6959,11 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          post_time = excluded.post_time,
          next_raid_date = coalesce(excluded.next_raid_date, raid_helper_schedules.next_raid_date),
          next_post_date = coalesce(excluded.next_post_date, raid_helper_schedules.next_post_date),
+         link_url = excluded.link_url,
+         link_text = excluded.link_text,
+         link_icon = excluded.link_icon,
+         clear_channel_before_post = excluded.clear_channel_before_post,
+         create_po_signup = excluded.create_po_signup,
          updated_at = now()
        returning *`,
       values
@@ -6918,7 +6972,8 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
 
   const savedSchedule = normalizeRaidHelperScheduleRow(result.rows[0]);
   const firstRun = !result.rows[0].last_raid_id;
-  const processed = await processRaidHelperSchedules({
+  const deferFirstRun = ["1", "true", "yes", "ja"].includes(clean(params.deferFirstRun).toLowerCase());
+  const processed = deferFirstRun && firstRun ? [] : await processRaidHelperSchedules({
     guildId,
     force: firstRun,
     scheduleId: result.rows[0].id
@@ -23791,6 +23846,23 @@ async function runRequestedArieeJuksiPrioCleanupOnce() {
   }
 }
 
+let raidHelperScheduleTickRunning = false;
+async function runRaidHelperScheduleTick(){
+  if(raidHelperScheduleTickRunning) return;
+  raidHelperScheduleTickRunning = true;
+  try{
+    await ensureRaidHelperScheduleSchema();
+    const guilds = await query(`select distinct guild_id from raid_helper_schedules where enabled = true`);
+    for(const row of guilds.rows){
+      await processRaidHelperSchedules({ guildId: row.guild_id }).catch(error => {
+        console.warn("Wöchentlicher Raidanmelder konnte nicht verarbeitet werden:", error.message || error);
+      });
+    }
+  }finally{
+    raidHelperScheduleTickRunning = false;
+  }
+}
+
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
   const syncNachtlootPoReleases = () => syncNachtlootPoReleasesFromSheet()
@@ -23798,6 +23870,8 @@ app.listen(port, () => {
     .catch(error => console.warn("NachtLoot-P0-Freigaben konnten nicht aus der Wahrheitstabelle synchronisiert werden:", error.message || error));
   syncNachtlootPoReleases();
   setInterval(syncNachtlootPoReleases, NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS).unref();
+  setTimeout(runRaidHelperScheduleTick, 5000).unref();
+  setInterval(runRaidHelperScheduleTick, 60000).unref();
   runRequestedArieeJuksiPrioCleanupOnce()
     .then(result => console.log(`Manuelle Prio-Bereinigung Ariee/Juksi: ${result.deleted || 0} gelöscht`, result.entries || []))
     .catch(error => console.warn("Manuelle Prio-Bereinigung Ariee/Juksi fehlgeschlagen:", error.message || error));
