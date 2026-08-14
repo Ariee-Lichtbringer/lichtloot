@@ -7863,6 +7863,7 @@ async function queueRaidAnnouncementNotice({ guildId, query: params }) {
 
 async function queueRaidCalendar({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
+  await ensureRaidCalendarConfigSchema();
   const channelId = clean(params.channelId || params.discordChannelId);
   if (!channelId) return { success: false, error: "Discord-Channel fehlt." };
   let events = [];
@@ -7884,7 +7885,92 @@ async function queueRaidCalendar({ guildId, query: params }) {
       })).filter(event => /^\d{4}-\d{2}-\d{2}$/.test(event.date))
     : [];
   if (!events.length) return { success: false, error: "Keine kommenden Raidtermine gefunden." };
+  await query(
+    `insert into guild_raid_calendar_configs (guild_id, channel_id, enabled, updated_at)
+     values ($1, $2, true, now())
+     on conflict (guild_id) do update
+       set channel_id = excluded.channel_id,
+           enabled = true,
+           updated_at = now()`,
+    [guildId, channelId]
+  );
   return enqueueBotUpdate({ guildId, type: "raid_calendar", payload: { channelId, events, source: "gildenleitung" } });
+}
+
+async function ensureRaidCalendarConfigSchema() {
+  await query(
+    `create table if not exists guild_raid_calendar_configs (
+       guild_id uuid primary key references guilds(id) on delete cascade,
+       channel_id text not null,
+       enabled boolean not null default true,
+       updated_at timestamptz not null default now()
+     )`
+  );
+}
+
+async function getBotRaidCalendars({ query: params }) {
+  requireMasterOrQueueToken(params);
+  await ensureRaidCalendarConfigSchema();
+  const configs = await query(
+    `select c.guild_id, c.channel_id, g.slug, g.name
+     from guild_raid_calendar_configs c
+     join guilds g on g.id = c.guild_id
+     where c.enabled = true and nullif(c.channel_id, '') is not null
+     order by g.slug`
+  );
+  const calendars = [];
+  for (const config of configs.rows) {
+    const raids = await query(
+      `select r.*,
+              (
+                select count(*)::int from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')
+              ) + (
+                select count(*)::int from raid_external_signups res
+                where res.guild_id = r.guild_id and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')
+              ) as signup_count
+       from raids r
+       where r.guild_id = $1
+         and r.raid_date >= current_date
+         and r.raid_date <= current_date + interval '60 days'
+         and lower(coalesce(r.status, '')) not in ('archiviert','archive')
+       order by r.raid_date asc, coalesce(r.raid_time, '') asc, r.created_at asc
+       limit 50`,
+      [config.guild_id]
+    );
+    const baseUrl = getPublicBaseUrl(params);
+    const events = raids.rows.map(row => {
+      const raid = normalizeRaidRow(row);
+      const raidKey = normalizeRaidType(raid.raid);
+      const lootKey = raidKey.startsWith("zg") ? "zg" : raidKey;
+      const prioUrl = new URL(`/loot/${lootKey}-loot.html`, baseUrl);
+      prioUrl.searchParams.set("guild", config.slug);
+      if (raid.playerPin) prioUrl.searchParams.set("pin", raid.playerPin);
+      return {
+        raidId: raid.raidId,
+        raid: raidKey,
+        name: raid.raidName,
+        date: raid.raidDate,
+        time: raid.raidTime,
+        lead: raid.createdBy,
+        signups: Number(row.signup_count || 0),
+        maxPlayers: Number(raid.maxPlayers || 0),
+        discordChannelId: raid.discordChannelId || config.channel_id,
+        prioUrl: prioUrl.toString()
+      };
+    });
+    calendars.push({
+      guild: config.slug,
+      guildSlug: config.slug,
+      guildName: config.name || config.slug,
+      channelId: config.channel_id,
+      events,
+      source: "automatic_raid_calendar"
+    });
+  }
+  return { success: true, calendars, generatedAt: new Date().toISOString() };
 }
 
 async function queueRaidAnnouncementRefresh({ guildId, query: params }) {
@@ -22822,6 +22908,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotGetQueueAllGuilds") {
       const queue = await getBotQueueAllGuilds({ query: req.query });
       return res.json(queue);
+    }
+
+    if (action === "lichtbotGetRaidCalendars") {
+      const calendars = await getBotRaidCalendars({ query: req.query });
+      return res.json(calendars);
     }
 
     if (action === "resolveGuildByPin") {
