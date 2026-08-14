@@ -5406,6 +5406,8 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
             <div class="raid-helper-class-grid" id="raidHelperClassGrid"></div>
             <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Krieger, Druide, Paladin, Schurke, Jäger, Priester, Magier, Hexenmeister und Schamane. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
+            <label class="layout-loot-toggle" style="margin-top:14px"><input id="raidHelperCreatePoSignup" type="checkbox" checked><span><strong>Passenden P0-Anmelder automatisch erstellen</strong><small>Erstellt zusammen mit dem Raidanmelder einen P0-Anmelder für denselben Raid und Discord-Channel.</small></span></label>
+            <label class="layout-loot-toggle" style="margin-top:10px"><input id="raidHelperPoBindingNotice" type="checkbox" checked><span><strong>Verbindlichen LichtLoot-Hinweis im P0-Anmelder anzeigen</strong><small>Weist darauf hin, dass LichtLoot bindend ist und jeder Spieler seine Prio vor dem Raid selbst kontrollieren muss.</small></span></label>
           </section>
 
           <div class="tools">
@@ -14897,7 +14899,9 @@ async function createRaidHelperSignup(){
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
-  const shouldCreatePoSignup = false;
+  const shouldCreatePoSignup = document.getElementById("raidHelperCreatePoSignup")?.checked !== false;
+  const includePoBindingNotice = document.getElementById("raidHelperPoBindingNotice")?.checked !== false;
+  const poBindingNotice = "Die in LichtLoot eingetragene Prio ist bindend; jeder Spieler ist selbst dafür verantwortlich, seine Prio vor jedem Raid zu kontrollieren und fehlende oder falsche Einträge rechtzeitig zu korrigieren.";
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
@@ -15008,7 +15012,10 @@ async function createRaidHelperSignup(){
         time:raidTime,
         uhrzeit:raidTime,
         mode:"signup",
-        note:"Wähle unten dein Item aus und trage danach deinen Charakter ein.",
+        note:[
+          "Wähle unten dein Item aus und trage danach deinen Charakter ein.",
+          includePoBindingNotice ? poBindingNotice : ""
+        ].filter(Boolean).join("\n\n"),
         restoreArchived:"true",
         createLichtlootRaid:"",
         lichtlootRaidId:raidId,
