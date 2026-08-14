@@ -5390,11 +5390,8 @@ body.worldbuff-only .master-only{display:none!important}
               <label for="raidHelperDescription">Beschreibung / Regeln</label>
               <textarea id="raidHelperDescription" oninput="updateRaidHelperPreview()"></textarea>
             </div>
-            <div class="raid-helper-row" style="margin-top:12px">
-              <div class="field"><label for="raidHelperLinkUrl">Zusätzlicher Link</label><input id="raidHelperLinkUrl" type="url" placeholder="https://…" oninput="updateRaidHelperPreview()"></div>
-              <div class="field"><label for="raidHelperLinkText">Link-Schlüsselwort</label><input id="raidHelperLinkText" type="text" placeholder="z. B. Raidregeln" oninput="updateRaidHelperPreview()"></div>
-              <div class="field"><label for="raidHelperLinkIcon">Oder Symbol</label><select id="raidHelperLinkIcon" onchange="updateRaidHelperPreview()"><option value="">Schlüsselwort verwenden</option><option value="🔗">🔗 Link</option><option value="📜">📜 Dokument</option><option value="⚔️">⚔️ Raid</option><option value="🌐">🌐 Webseite</option><option value="📌">📌 Wichtig</option></select></div>
-            </div>
+            <div id="raidHelperLinks" style="display:grid;gap:10px;margin-top:12px"></div>
+            <button class="small-btn ghost" type="button" style="margin-top:10px" onclick="addRaidHelperLinkRow()">＋ Weiteren Link hinzufügen</button>
           </section>
 
           <section class="raid-helper-card">
@@ -10403,6 +10400,7 @@ async function editRaidHelperEvent(raidId){
   setRaidHelperEditValue("raidHelperHeals", raid.healSlots || "");
   setRaidHelperEditValue("raidHelperDds", raid.ddSlots || "");
   setRaidHelperEditValue("raidHelperDescription", raid.description || raid.beschreibung || "");
+  setRaidHelperLinks(raid);
   setRaidHelperEditValue("raidHelperAnnouncementMessage", raid.announcementMessage || "");
   setRaidHelperEditValue("raidHelperChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
   setRaidHelperEditValue("raidHelperCreateEditStatus", raid.status || "geschlossen");
@@ -10522,9 +10520,7 @@ async function saveRaidHelperEventFromCreate(){
     announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
     announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
     description:raidHelperValue("raidHelperDescription"),
-    linkUrl:raidHelperValue("raidHelperLinkUrl"),
-    linkText:raidHelperValue("raidHelperLinkText"),
-    linkIcon:raidHelperValue("raidHelperLinkIcon"),
+    ...raidHelperLinkPayload(),
     raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
   if(!payload.raidId || !payload.raidDate || !payload.raidTime){
@@ -11987,9 +11983,7 @@ async function saveRaidHelperTemplateFromCreate(){
       raid:raidKey,
       title,
       description:raidHelperValue("raidHelperDescription"),
-      linkUrl:raidHelperValue("raidHelperLinkUrl"),
-      linkText:raidHelperValue("raidHelperLinkText"),
-      linkIcon:raidHelperValue("raidHelperLinkIcon"),
+      ...raidHelperLinkPayload(),
       maxPlayers:raidHelperValue("raidHelperMax"),
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
@@ -12081,6 +12075,7 @@ function applyRaidHelperTemplateObject(template){
   if(heals) heals.value = template.healSlots ?? heals.value;
   if(dds) dds.value = template.ddSlots ?? dds.value;
   if(channel) channel.value = template.discordChannelId || channel.value || RAID_HELPER_CHANNEL_ID;
+  setRaidHelperLinks(template);
   setRaidHelperTab("createEvent");
   updateRaidHelperDefaults();
   updateFreeEmbedBuilder();
@@ -14768,6 +14763,63 @@ function raidHelperValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
+function raidHelperLinkIconOptions(selected=""){
+  return [["","Schlüsselwort verwenden"],["🔗","🔗 Link"],["📜","📜 Dokument"],["⚔️","⚔️ Raid"],["🌐","🌐 Webseite"],["📌","📌 Wichtig"]]
+    .map(([value,label])=>`<option value="${escapeAttr(value)}" ${value===selected?"selected":""}>${escapeHtml(label)}</option>`).join("");
+}
+
+function parseRaidHelperLinks(data={}){
+  const raw=String(data.linkUrl||"").trim();
+  if(raw.startsWith("[")){
+    try{
+      const parsed=JSON.parse(raw);
+      if(Array.isArray(parsed)) return parsed.map(item=>({url:String(item?.url||"").trim(),text:String(item?.text||"").trim(),icon:String(item?.icon||"").trim()})).filter(item=>item.url);
+    }catch(_error){}
+  }
+  return raw ? [{url:raw,text:String(data.linkText||"").trim(),icon:String(data.linkIcon||"").trim()}] : [];
+}
+
+function addRaidHelperLinkRow(link={}, options={}){
+  const container=document.getElementById("raidHelperLinks");
+  if(!container)return;
+  const row=document.createElement("div");
+  row.className="raid-helper-row raid-helper-link-row";
+  row.innerHTML=`<div class="field"><label>Zusätzlicher Link</label><input class="raid-helper-link-url" type="url" placeholder="https://…" value="${escapeAttr(link.url||"")}" oninput="updateRaidHelperPreview()"></div><div class="field"><label>Link-Schlüsselwort</label><input class="raid-helper-link-text" type="text" placeholder="z. B. Raidregeln" value="${escapeAttr(link.text||"")}" oninput="updateRaidHelperPreview()"></div><div class="field"><label>Oder Symbol</label><select class="raid-helper-link-icon" onchange="updateRaidHelperPreview()">${raidHelperLinkIconOptions(link.icon||"")}</select></div><button class="small-btn danger" type="button" onclick="removeRaidHelperLinkRow(this)" aria-label="Link entfernen">Entfernen</button>`;
+  container.appendChild(row);
+  if(!options.quiet) updateRaidHelperPreview();
+}
+
+function removeRaidHelperLinkRow(button){
+  button?.closest(".raid-helper-link-row")?.remove();
+  if(!document.querySelector("#raidHelperLinks .raid-helper-link-row")) addRaidHelperLinkRow({}, {quiet:true});
+  updateRaidHelperPreview();
+}
+
+function setRaidHelperLinks(data={}){
+  const container=document.getElementById("raidHelperLinks");
+  if(!container)return;
+  container.innerHTML="";
+  const links=parseRaidHelperLinks(data);
+  (links.length?links:[{}]).forEach(link=>addRaidHelperLinkRow(link,{quiet:true}));
+  updateRaidHelperPreview();
+}
+
+function raidHelperLinksFromFields(){
+  return [...document.querySelectorAll("#raidHelperLinks .raid-helper-link-row")].map(row=>({
+    url:String(row.querySelector(".raid-helper-link-url")?.value||"").trim(),
+    text:String(row.querySelector(".raid-helper-link-text")?.value||"").trim(),
+    icon:String(row.querySelector(".raid-helper-link-icon")?.value||"").trim()
+  })).filter(item=>item.url);
+}
+
+function raidHelperLinkPayload(){
+  const links=raidHelperLinksFromFields();
+  if(links.length===1)return {linkUrl:links[0].url,linkText:links[0].text,linkIcon:links[0].icon};
+  return {linkUrl:links.length?JSON.stringify(links):"",linkText:"",linkIcon:""};
+}
+
+setRaidHelperLinks({});
+
 function defaultRaidHelperImageUrl(raidKey){
   const raw = String(raidKey || "").trim().toLowerCase();
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
@@ -14791,6 +14843,7 @@ function buildRaidHelperPreviewText(){
   const dds = raidHelperValue("raidHelperDds");
   const lootMaster = raidHelperValue("raidHelperLootMaster");
   const parts = [];
+  const links = raidHelperLinksFromFields();
   if(max) parts.push("Gesamt " + max);
   if(tanks) parts.push("Tanks " + tanks);
   if(heals) parts.push("Heals " + heals);
@@ -14810,7 +14863,8 @@ function buildRaidHelperPreviewText(){
     "Discord-Anmeldung: Klasse wählen, Charaktername und Skillung eintragen.",
     "Gruppierung: Tank · Krieger · Druide · Paladin · Schurke · Jäger · Priester · Magier · Hexenmeister · Schamane · Abwesenheit",
     "",
-    "🌐 Webansicht: " + new URL(withGuildUrl("start.html"), window.location.href).href
+    "🌐 Webansicht: " + new URL(withGuildUrl("start.html"), window.location.href).href,
+    ...links.map(link=>`${link.icon||"🔗"} ${link.text||"Link"}: ${link.url}`)
   ].filter(line => line !== "").join("\n");
 }
 
@@ -14967,9 +15021,7 @@ async function createRaidHelperSignup(){
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
-      linkUrl:raidHelperValue("raidHelperLinkUrl"),
-      linkText:raidHelperValue("raidHelperLinkText"),
-      linkIcon:raidHelperValue("raidHelperLinkIcon"),
+      ...raidHelperLinkPayload(),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
 
@@ -15000,9 +15052,7 @@ async function createRaidHelperSignup(){
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
-      linkUrl:raidHelperValue("raidHelperLinkUrl"),
-      linkText:raidHelperValue("raidHelperLinkText"),
-      linkIcon:raidHelperValue("raidHelperLinkIcon"),
+      ...raidHelperLinkPayload(),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
       discordChannelId
@@ -15030,9 +15080,7 @@ async function createRaidHelperSignup(){
           "Wähle unten dein Item aus und trage danach deinen Charakter ein.",
           includePoBindingNotice ? poBindingNotice : ""
         ].filter(Boolean).join("\n\n"),
-        linkUrl:raidHelperValue("raidHelperLinkUrl"),
-        linkText:raidHelperValue("raidHelperLinkText"),
-        linkIcon:raidHelperValue("raidHelperLinkIcon"),
+        ...raidHelperLinkPayload(),
         restoreArchived:"true",
         createLichtlootRaid:"",
         lichtlootRaidId:raidId,
