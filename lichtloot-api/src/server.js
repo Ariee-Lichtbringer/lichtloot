@@ -1129,16 +1129,14 @@ async function listGuilds() {
      left join guild_settings gs on gs.guild_id = g.id
      order by g.created_at asc, g.name asc`
   );
-  return {
-    success: true,
-    guilds: result.rows.map(row => {
+  const guilds = await Promise.all(result.rows.map(async row => {
+      const readiness = await evaluateGuildReadiness(row.slug);
       const layout = mergeGuildLayoutDefaults(row.slug, row.layout_json || {});
-      const onboarding = layout.onboarding && typeof layout.onboarding === "object" ? layout.onboarding : {};
-      const ready = onboarding.status === "ready" || (
-        onboarding.setupComplete === true
-        && onboarding.discordConnected === true
-        && onboarding.channelsSynced === true
-      );
+      layout.onboarding = {
+        ...(layout.onboarding || {}),
+        status: readiness.status,
+        ready: readiness.ready
+      };
       return ({
       slug: row.slug,
       name: row.name,
@@ -1150,11 +1148,14 @@ async function listGuilds() {
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
       layout,
-      setupStatus: ready ? "ready" : (onboarding.status || "setup_required"),
-      ready,
+      setupStatus: readiness.status,
+      ready: readiness.ready,
       createdAt: row.created_at
       });
-    })
+    }));
+  return {
+    success: true,
+    guilds
   };
 }
 
@@ -1202,6 +1203,61 @@ async function ensureGuildLayoutSchema() {
     `alter table guild_settings
        add column if not exists layout_json jsonb not null default '{}'::jsonb`
   );
+}
+
+async function evaluateGuildReadiness(slug) {
+  await ensureGuildDiscordConfigSchema();
+  await ensureGuildLayoutSchema();
+  await ensureDiscordChannelSchema();
+  await query(
+    `create table if not exists guild_master_codes (
+       guild_id uuid primary key references guilds(id) on delete cascade,
+       master_code text not null,
+       updated_at timestamptz not null default now()
+     )`
+  );
+  const result = await query(
+    `select g.slug,
+            nullif(g.discord_guild_id, '') is not null as discord_server_configured,
+            coalesce(nullif(gmc.master_code, ''), nullif(g.guild_pin, '')) is not null as master_configured,
+            exists (
+              select 1 from discord_bot_channels dbc
+              where dbc.guild_id = g.id and dbc.can_send = true
+            ) as bot_channels_synced,
+            coalesce((gs.layout_json->'onboarding'->>'layoutConfigured')::boolean, false) as layout_configured
+     from guilds g
+     left join guild_settings gs on gs.guild_id = g.id
+     left join guild_master_codes gmc on gmc.guild_id = g.id
+     where g.slug = $1
+     limit 1`,
+    [clean(slug).toLowerCase()]
+  );
+  const row = result.rows[0];
+  if (!row) {
+    return {
+      ready: false,
+      status: "setup_required",
+      checks: {
+        masterConfigured: false,
+        discordServerConfigured: false,
+        botChannelsSynced: false,
+        layoutConfigured: false
+      }
+    };
+  }
+  const checks = {
+    masterConfigured: row.master_configured === true,
+    discordServerConfigured: row.discord_server_configured === true,
+    botChannelsSynced: row.bot_channels_synced === true,
+    layoutConfigured: row.layout_configured === true
+  };
+  const ready = Object.values(checks).every(Boolean);
+  let status = "ready";
+  if (!checks.masterConfigured) status = "master_code_required";
+  else if (!checks.discordServerConfigured) status = "discord_required";
+  else if (!checks.botChannelsSynced) status = "bot_connection_required";
+  else if (!checks.layoutConfigured) status = "layout_required";
+  return { ready, status, checks };
 }
 
 async function ensureNewGuildAdminPlayerLogin(client, guildId, guildSlug, guildPin, server) {
@@ -1814,7 +1870,11 @@ async function getGuildSetup({ query: params }) {
     error.statusCode = 404;
     throw error;
   }
-  return { success: true, application: normalizeGuildApplicationRow(result.rows[0], params) };
+  const application = normalizeGuildApplicationRow(result.rows[0], params);
+  const readiness = application.guildSlug
+    ? await evaluateGuildReadiness(application.guildSlug)
+    : null;
+  return { success: true, application, readiness };
 }
 
 async function completeGuildSetup({ query: params, body = {} }) {
@@ -1906,12 +1966,15 @@ async function completeGuildSetup({ query: params, body = {} }) {
     [application.id, created.guild.slug, guildPin, logoUrl, backgroundUrl, primaryColor, accentColor]
   );
 
+  const readiness = await evaluateGuildReadiness(created.guild.slug);
+
   return {
     success: true,
     application: normalizeGuildApplicationRow(rowResult.rows[0], values),
     guild: { ...saved.guild, guildPin },
     guildSlug: created.guild.slug,
     guildPin,
+    readiness,
     startUrl: makeGuildPageUrl("start.html", created.guild.slug, values),
     leadershipUrl: makeGuildPageUrl("gildenleitung.html", created.guild.slug, values)
   };
@@ -7359,6 +7422,14 @@ async function getQuickRaidTemplates({ guildId, query: params }) {
      order by lower(title)`,
     values
   );
+  await ensureDiscordChannelSchema();
+  const channelResult = await query(
+    `select channel_id, channel_name, category_name
+     from discord_bot_channels
+     where guild_id = $1 and can_send = true
+     order by coalesce(category_name, ''), position nulls last, lower(channel_name)`,
+    [guildId]
+  );
   return {
     success: true,
     templates: result.rows.map(row => ({
@@ -7371,6 +7442,7 @@ async function getQuickRaidTemplates({ guildId, query: params }) {
       healSlots: row.heal_slots ?? "",
       ddSlots: row.dd_slots ?? "",
       signupDeadline: row.signup_deadline || "",
+      discordChannelId: row.discord_channel_id || "",
       links: Array.isArray(row.settings_json?.links)
         ? row.settings_json.links.map(link => ({
             url: clean(link?.url),
@@ -7378,6 +7450,10 @@ async function getQuickRaidTemplates({ guildId, query: params }) {
             icon: clean(link?.icon)
           })).filter(link => link.url)
         : []
+    })),
+    channels: channelResult.rows.map(row => ({
+      id: row.channel_id,
+      name: row.category_name ? `${row.category_name} / ${row.channel_name}` : row.channel_name
     }))
   };
 }
@@ -16291,6 +16367,31 @@ async function createRandomRaid({ guildId, query: params }) {
   const createDiscordSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createDiscordSignup).toLowerCase());
   const createPoSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createPoSignup).toLowerCase());
   const createPrioId = createPoSignup || ["1", "true", "yes", "ja", "on"].includes(clean(params.createPrioId ?? params.prioEnabled).toLowerCase());
+  const requestedRaidChannelId = clean(params.raidChannelId || params.channelId);
+  const requestedPoChannelId = clean(params.poChannelId || params.targetChannelId);
+  const requestedChannels = [
+    ...(createDiscordSignup ? [requestedRaidChannelId] : []),
+    ...(createPoSignup ? [requestedPoChannelId] : [])
+  ];
+  if (requestedChannels.some(channelId => !channelId)) {
+    const error = new Error("Bitte für jeden Discord-Post einen Channel auswählen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (requestedChannels.length) {
+    await ensureDiscordChannelSchema();
+    const allowedChannels = await query(
+      `select channel_id from discord_bot_channels
+       where guild_id = $1 and can_send = true and channel_id = any($2::text[])`,
+      [guildId, requestedChannels]
+    );
+    const allowed = new Set(allowedChannels.rows.map(row => clean(row.channel_id)));
+    if (requestedChannels.some(channelId => !allowed.has(channelId))) {
+      const error = new Error("Der ausgewählte Discord-Channel gehört nicht zu dieser Gilde oder der Bot darf dort nicht posten.");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
   let quickTemplate = null;
   if (createDiscordSignup) {
     const templateId = clean(params.templateId || params.raidTemplateId);
@@ -16306,8 +16407,8 @@ async function createRandomRaid({ guildId, query: params }) {
       [guildId, templateId, raidTypeSearchValues(raidType)]
     );
     quickTemplate = templateResult.rows[0] || null;
-    if (!quickTemplate || !clean(quickTemplate.discord_channel_id)) {
-      const error = new Error(quickTemplate ? "In der Raidvorlage ist kein Discord-Channel gespeichert." : "Die ausgewählte Raidvorlage gehört nicht zu diesem Raid oder dieser Gilde.");
+    if (!quickTemplate) {
+      const error = new Error("Die ausgewählte Raidvorlage gehört nicht zu diesem Raid oder dieser Gilde.");
       error.statusCode = 400;
       throw error;
     }
@@ -16335,14 +16436,14 @@ async function createRandomRaid({ guildId, query: params }) {
           icon: clean(link?.icon)
         })).filter(link => link.url)
       : [];
-    const channelId = clean(template.discord_channel_id);
+    const channelId = requestedRaidChannelId;
     const createdRaidId = clean(created.raidId || created.RaidID || params.raidId);
     const createdPlayerPin = clean(created.playerPin || created.prioPin || params.playerPin);
     const postKey = `${raidType}-po-anmelder-${clean(params.raidDate || params.datum).replace(/\D/g, "")}-${clean(params.raidTime || params.uhrzeit).replace(/\D/g, "")}-${randomRaidCode(4).toLowerCase()}`;
     const followupPoPost = createPoSignup ? {
       postKey,
-      sourceChannelId: channelId,
-      targetChannelId: channelId,
+      sourceChannelId: requestedPoChannelId,
+      targetChannelId: requestedPoChannelId,
       title: `${raidType.toUpperCase()} P0-Anmelder`,
       raid: raidType,
       raidDate: clean(params.raidDate || params.datum),
@@ -16402,7 +16503,9 @@ async function createRandomRaid({ guildId, query: params }) {
         lichtlootRaidId: createdRaidId,
         lichtlootPlayerPin: createdPlayerPin,
         lichtlootLeadPin: createdLeadPin,
-        raidPin: createdPlayerPin
+        raidPin: createdPlayerPin,
+        sourceChannelId: requestedPoChannelId,
+        targetChannelId: requestedPoChannelId
       }
     });
     return { ...created, quickRaid: { announcementQueued: false, poSignupQueued: Boolean(poPost?.success), prioIdCreated: true, templateId: "" } };
