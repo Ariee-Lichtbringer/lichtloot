@@ -30,6 +30,10 @@ const externalRendCsvUrl =
 const p0ReleaseCsvUrl =
   process.env.P0_RELEASE_CSV_URL ||
   "https://docs.google.com/spreadsheets/d/1ejape-5N42TDUIsglYZV1uPupQxYMiUK6JE1QiPJKbE/export?format=csv&gid=0";
+const nachtlootPoReleaseCsvUrl =
+  process.env.NACHTLOOT_PO_RELEASE_CSV_URL ||
+  "https://docs.google.com/spreadsheets/d/136_vXW_p3Z3CMGuXkRkv4hftcxW02p2QO_YMb7OaVfA/export?format=csv&gid=1207328819";
+const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const staticLootCache = new Map();
 const missingRaidHelperCache = new Map();
@@ -3429,6 +3433,7 @@ function normalizeWorldbuffDbRow(row) {
     notiz: row.entry_note || row.event_note || "",
     note: row.entry_note || row.event_note || "",
     source: row.entry_source || row.event_source || "railway",
+    updatedAt: row.event_updated_at || row.updated_at || "",
     key: `${formatGermanDate(row.event_date)}|${row.event_time || ""}|${normalizeWorldbuffName(row.buff || "")}|${guildName}`
   };
 }
@@ -4194,6 +4199,102 @@ async function importCharacterPoReleases({ guildId, query: params = {} }) {
   return { success: true, updated, skipped };
 }
 
+function nachtlootPoReleaseRowsFromCsv(text) {
+  const rows = parseCsvRows(text);
+  const headerIndex = rows.findIndex(row => row.some(cell => normalizeCsvHeader(cell) === "name"));
+  if (headerIndex < 0) throw new Error("Kopfzeile mit Name fehlt.");
+  const headers = rows[headerIndex].map(normalizeCsvHeader);
+  const columnIndex = (...needles) => headers.findIndex(header => needles.some(needle => header.includes(needle)));
+  const indexes = {
+    name: headers.findIndex(header => header === "name"),
+    mc: columnIndex("mc prio 0 freigabe", "molten core prio 0 freigabe"),
+    bwl: columnIndex("bwl prio 0 freigabe", "blackwing lair prio 0 freigabe"),
+    aq40: columnIndex("aq40 prio 0 freigabe", "ahn qiraj 40 prio 0 freigabe"),
+    naxx: columnIndex("naxx prio 0 freigabe", "naxxramas prio 0 freigabe")
+  };
+  if (Object.values(indexes).some(index => index < 0)) {
+    throw new Error("Eine der erwarteten P0-Freigabespalten fehlt.");
+  }
+  const enabled = value => ["true", "wahr", "1", "ja", "x", "✓", "✔", "freigabe", "freigegeben"].includes(clean(value).toLowerCase());
+  const entries = rows.slice(headerIndex + 1).map(row => ({
+    name: clean(row[indexes.name]),
+    mc: enabled(row[indexes.mc]),
+    bwl: enabled(row[indexes.bwl]),
+    aq40: enabled(row[indexes.aq40]),
+    naxx: enabled(row[indexes.naxx])
+  })).filter(entry => entry.name);
+  if (entries.length < 25) throw new Error(`Freigabeliste ist unerwartet kurz (${entries.length} Einträge).`);
+  return entries;
+}
+
+async function syncNachtlootPoReleasesFromSheet() {
+  await ensureCharacterPoReleaseSchema();
+  const guildResult = await query(`select id from guilds where lower(slug) = 'nachtloot' limit 1`);
+  const guildId = guildResult.rows[0]?.id;
+  if (!guildId) return { skipped:true, reason:"NachtLoot-Gilde fehlt" };
+  const entries = nachtlootPoReleaseRowsFromCsv(await fetchText(nachtlootPoReleaseCsvUrl));
+  const characterResult = await query(
+    `select c.id,c.name from characters c join players p on p.id=c.player_id where p.guild_id=$1`,
+    [guildId]
+  );
+  const charactersByExactName = new Map();
+  const charactersByName = new Map();
+  for (const character of characterResult.rows) {
+    const exactKey = clean(character.name).toLocaleLowerCase("de-DE");
+    if (!charactersByExactName.has(exactKey)) charactersByExactName.set(exactKey, []);
+    charactersByExactName.get(exactKey).push(character);
+    const key = normalizePoReleaseCharacterName(character.name);
+    if (!key) continue;
+    if (!charactersByName.has(key)) charactersByName.set(key, []);
+    charactersByName.get(key).push(character);
+  }
+  const sheetNormalizedNameCounts = new Map();
+  for (const entry of entries) {
+    const key = normalizePoReleaseCharacterName(entry.name);
+    sheetNormalizedNameCounts.set(key, (sheetNormalizedNameCounts.get(key) || 0) + 1);
+  }
+  const matchedCharacterIds = new Set();
+  const unmatchedNames = [];
+  const desired = [];
+  for (const entry of entries) {
+    const exactMatches = charactersByExactName.get(clean(entry.name).toLocaleLowerCase("de-DE")) || [];
+    const normalizedKey = normalizePoReleaseCharacterName(entry.name);
+    const fallbackMatches = charactersByName.get(normalizedKey) || [];
+    const matches = exactMatches.length
+      ? exactMatches
+      : (sheetNormalizedNameCounts.get(normalizedKey) === 1 && fallbackMatches.length === 1 ? fallbackMatches : []);
+    if (!matches.length) { unmatchedNames.push(entry.name); continue; }
+    for (const character of matches) {
+      matchedCharacterIds.add(character.id);
+      for (const raid of ["mc", "bwl", "aq40", "naxx"]) if (entry[raid]) desired.push([character.id, raid]);
+    }
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query(
+      `delete from character_po_releases where guild_id=$1 and raid_type=any($2::text[])`,
+      [guildId, ["mc", "bwl", "aq40", "naxx"]]
+    );
+    for (const [characterId, raid] of desired) {
+      await client.query(
+        `insert into character_po_releases(guild_id,character_id,raid_type,source,approved_by,approved_at)
+         values($1,$2,$3,'nachtloot-sheet','Nachtwächter-Freigabeliste · geprüft',now())
+         on conflict(guild_id,character_id,raid_type) do update set source=excluded.source,approved_by=excluded.approved_by,approved_at=now(),updated_at=now()`,
+        [guildId, characterId, raid]
+      );
+    }
+    await client.query("commit");
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+  p0ReleaseCache = null;
+  return { sheetEntries:entries.length, matchedCharacters:matchedCharacterIds.size, releases:desired.length, unmatchedNames };
+}
+
 async function checkCharacterPoRelease({ guildId, query: params = {} }) {
   requireMasterOrQueueToken(params);
   const raid = normalizePoReleaseRaid(params.raid || params.raidType || params.raidName);
@@ -4360,7 +4461,7 @@ async function getWorldbuffs({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name,
+    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name, e.updated_at as event_updated_at,
             e.status as event_status, e.note as event_note, e.source as event_source,
             we.id as entry_id, we.caster, we.discord_name,
             we.status as entry_status, we.note as entry_note, we.source as entry_source
@@ -4383,7 +4484,7 @@ async function getWorldbuffs({ guildId, query: params }) {
   );
 
   const posterResult = await query(
-    `select p.id as event_id, p.buff, p.event_date, p.event_time, p.guild_name,
+    `select p.id as event_id, p.buff, p.event_date, p.event_time, p.guild_name, p.updated_at as event_updated_at,
             'offen' as event_status, '' as event_note, p.source as event_source,
             null::uuid as entry_id, null::text as caster, null::text as discord_name,
             null::text as entry_status, null::text as entry_note, null::text as entry_source
@@ -23679,6 +23780,11 @@ async function runRequestedArieeJuksiPrioCleanupOnce() {
 
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
+  const syncNachtlootPoReleases = () => syncNachtlootPoReleasesFromSheet()
+    .then(result => console.log(`NachtLoot-P0-Freigaben geprüft: ${result.releases || 0} Freigaben für ${result.matchedCharacters || 0} Charaktere; ${result.unmatchedNames?.length || 0} Namen ohne SpielerLogin`, result.unmatchedNames || []))
+    .catch(error => console.warn("NachtLoot-P0-Freigaben konnten nicht aus der Wahrheitstabelle synchronisiert werden:", error.message || error));
+  syncNachtlootPoReleases();
+  setInterval(syncNachtlootPoReleases, NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS).unref();
   runRequestedArieeJuksiPrioCleanupOnce()
     .then(result => console.log(`Manuelle Prio-Bereinigung Ariee/Juksi: ${result.deleted || 0} gelöscht`, result.entries || []))
     .catch(error => console.warn("Manuelle Prio-Bereinigung Ariee/Juksi fehlgeschlagen:", error.message || error));
