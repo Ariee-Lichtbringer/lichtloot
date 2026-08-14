@@ -169,6 +169,70 @@
   object-fit:contain!important;
   object-position:center!important;
 }
+/* Professionelle Tabellenansicht (Layout C): ruhige Flaechen, klare Hierarchie. */
+:root{
+  --bg:#07101f;
+  --panel:#0c1729;
+  --panel-raised:#111e32;
+  --line:#26364f;
+  --line-strong:#344761;
+  --text:#edf2f8;
+  --muted:#8f9db1;
+  --gold:#e2b714;
+}
+body{background:var(--bg);font-size:14px}
+.top{height:58px;padding:8px 18px;background:#091321;border-bottom:1px solid var(--line);box-shadow:none}
+.top img{width:34px;height:34px}.top h1{color:var(--text);font-size:18px}.top p{font-size:12px}.top .back{padding:7px 11px}
+.wrap{max-width:none;padding:12px 16px 24px}
+.toolbar,.panel{background:var(--panel);border-color:var(--line);border-radius:8px;box-shadow:none}
+.toolbar{display:grid;grid-template-columns:minmax(155px,.8fr) minmax(280px,1.35fr) minmax(225px,1fr) minmax(190px,.9fr) minmax(170px,.8fr) minmax(440px,1.7fr);gap:8px 10px;padding:10px;margin-bottom:10px;align-items:end}
+.field{gap:4px}.field label{font-size:10px;color:#8290a5;letter-spacing:.04em}
+.field input,.field select,.search{min-height:34px;padding:7px 9px;background:#08111f;border-color:#31435e;border-radius:5px}
+.btn{min-height:34px;padding:7px 11px;border-color:#344761;background:#17243a;border-radius:5px;font-weight:750;box-shadow:none}
+.btn:hover{border-color:#60728c;background:#1b2a42}.btn.gold,.btn.good{background:var(--gold);border-color:#f1cd35;color:#171303}.btn.danger{background:#351922;border-color:#733342;color:#fecdd3}
+.toolbar>.btn{margin-top:1px}.toolbar>.btn:not(.good):not(.gold):not(.danger){color:#cbd5e1}.toolbar>.status{grid-column:1/-1;margin:0;padding:5px 2px 0;border-top:1px solid #1e2c40;font-size:12px}
+.layout{grid-template-columns:minmax(320px,36%) minmax(720px,64%);gap:10px;align-items:start}
+.layout>aside.panel{position:sticky;top:70px;padding:10px;height:calc(100vh - 82px);overflow:hidden}
+.roster-head{margin-bottom:7px}.roster{display:block;max-height:calc(100vh - 130px);padding-right:3px}
+.roster>.char{display:grid;grid-template-columns:46px 30px minmax(120px,1fr) auto;gap:7px;min-height:42px;margin:0;border:0;border-bottom:1px solid #223149;border-left:3px solid var(--class,#64748b);border-radius:0;padding:6px 8px;background:#0b1628}
+.roster>.char:nth-child(even){background:#0e1a2d}.roster>.char:hover{background:#15243a}.roster>.char.used{opacity:.42}
+.class-icon{width:27px;height:27px;border-radius:4px}.role-badge{width:42px;border-radius:4px}
+.signup-check{font-size:10px;color:#718096}
+.group-context{margin-bottom:8px!important;padding:8px 10px!important;border-color:var(--line)!important;border-radius:8px!important;background:var(--panel)!important}
+.group-context-head strong{color:var(--text)!important}.group-context-head span{color:var(--muted)!important}
+.group-tabs{gap:5px!important}.group-tab,.raid-tab{padding:7px 10px!important;border-radius:5px!important;background:#101b2d!important;border-color:#2c3c55!important;color:#aeb9c9!important}
+.group-tab.active,.raid-tab.active{background:#211d0d!important;border-color:var(--gold)!important;color:#f6d447!important;box-shadow:inset 0 -2px var(--gold)!important}
+.groups{grid-template-columns:repeat(4,minmax(150px,1fr));gap:8px}
+.group{min-height:0;border-color:#2b3c55;border-radius:7px;background:#091321;overflow:visible}
+.group h3{padding:8px 9px;background:#121f33;color:var(--text);font-size:13px;border-bottom:1px solid #2b3c55}
+.group h3 span{color:#97a6ba}.slots{gap:4px;min-height:0;padding:6px}
+.slot{min-height:43px;padding:3px;border-color:#30425d;border-radius:5px;background:#08111e}
+.slot:hover{border-color:#77869b;background:#0d192a}.slot-placeholder{min-height:35px;font-size:11px;color:#64748b}
+/* Belegte Gruppenslots bleiben bewusst deutlich in der jeweiligen Klassenfarbe. */
+.slot .char{min-height:35px;padding:5px 6px;border:1px solid color-mix(in srgb,var(--class,#64748b) 72%,#26364f);border-left:4px solid var(--class,#64748b);border-radius:4px;background:linear-gradient(90deg,color-mix(in srgb,var(--class,#64748b) 28%,#101b2d),#101b2d 78%)}
+.slot .char strong{color:var(--class,#fff)}.slot .char small{color:#c0cad8}.slot .char .class-icon{border:1px solid var(--class,#64748b)}
+.counts{margin:9px 0 0;gap:6px}.pill{padding:5px 9px;border-color:#30415a;border-radius:5px;background:#101b2d;font-size:12px}
+.tasks{margin-top:10px;padding:10px}.tasks-head{margin-bottom:8px}.tasks-head h2,.tactic-head h2{color:var(--text);font-size:18px}.task-grid{gap:8px}.task-card{border-color:#2b3d57;border-radius:6px;background:#0a1526;box-shadow:none}.task-card>h3,.task-card.boss h3,.mc-board .task-card.boss h3{min-height:44px;padding:8px 10px;border-radius:5px 5px 0 0;background:#142238;border-bottom:1px solid #30425d;color:var(--text);font-size:15px;text-shadow:none;box-shadow:none}.task-card.boss{box-shadow:none;border-color:#3b4860}.boss-title-icon{width:34px;height:34px;border-radius:5px;border-color:#586981;box-shadow:none}
+.assignment-cell.head{background:#121f33}.assignment-cell.assigned,.task-row.assigned{background:color-mix(in srgb,var(--row-color) 20%,#0a1526);box-shadow:inset 3px 0 var(--row-color)}
+.raid-marker-icon{filter:none!important}
+.tactic-panel{margin-top:10px!important}.export{border-radius:5px;background:#07101f}
+/* Auswahlfelder und Spieler-Karten nur so breit wie ihr laengster sinnvoller Inhalt. */
+.task-card:not(.wide){width:fit-content;min-width:340px;max-width:100%}
+.task-card:not(.wide) .task-row{grid-template-columns:minmax(125px,max-content) minmax(210px,260px);justify-content:start}
+.task-card:not(.wide) .player-picker{width:clamp(210px,22ch,260px)}
+.task-card:not(.wide) .picker-current{width:100%}
+.task-grid{grid-template-columns:repeat(auto-fit,minmax(340px,max-content));justify-content:start}
+.player-sheet-layout.free-card-layout>.player-sheet-card:not(.wide):not(.player-tactic){width:fit-content!important;min-width:340px;max-width:min(620px,100%)!important}
+.player-sheet-layout.free-card-layout>.player-sheet-card.wide:not(.player-tactic){width:fit-content!important;max-width:100%!important}
+.sheet-grid.tank{grid-template-columns:55px repeat(3,minmax(190px,max-content))}
+.sheet-grid.buff{grid-template-columns:70px repeat(4,minmax(190px,max-content))}
+.sheet-player-card{width:max-content;min-width:190px;max-width:260px}
+.sheet-player-card b,.sheet-player-card small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-list-row{grid-template-columns:minmax(125px,max-content) minmax(190px,max-content);width:max-content;max-width:100%}
+.sheet-list-row .sheet-player-card{width:max-content;min-width:190px;max-width:260px}
+@media(max-width:1500px){.toolbar{grid-template-columns:repeat(3,minmax(220px,1fr))}.layout{grid-template-columns:330px minmax(0,1fr)}.groups{grid-template-columns:repeat(4,minmax(145px,1fr))}}
+@media(max-width:1100px){.toolbar{grid-template-columns:repeat(2,minmax(220px,1fr))}.layout{grid-template-columns:300px minmax(0,1fr)}.groups{grid-template-columns:repeat(2,minmax(180px,1fr))}}
+@media(max-width:760px){.toolbar{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.layout>aside.panel{position:static;height:auto}.roster{max-height:320px}.groups{grid-template-columns:1fr}}
 @media print{body.printing-player-view{background:#fff!important}body.printing-player-view>*:not(#playerModal){display:none!important}body.printing-player-view #playerModal{display:block!important;position:static!important;background:#fff!important;padding:0!important}body.printing-player-view .player-modal-shell{width:100%!important;height:auto!important;overflow:visible!important;border:0!important;box-shadow:none!important}body.printing-player-view .player-modal-head{position:static!important;height:auto!important;background:#071020!important}body.printing-player-view .player-modal-head .btn,body.printing-player-view .player-encounter-nav,body.printing-player-view .player-layout-tools{display:none!important}body.printing-player-view .player-modal-body{overflow:visible!important;padding:12px!important}body.printing-player-view .player-sheet-layout.free-card-layout{position:static!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:auto!important;min-height:0!important}body.printing-player-view .free-card-layout>.player-sheet-card{position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;break-inside:avoid}body.printing-player-view .player-tactic{grid-column:1/-1!important;break-before:page}body.printing-player-view .player-tactic-content{height:auto!important;overflow:visible!important}body.printing-player-view *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 </style></head><body>
 <div id="campPickerPopup" class="camp-picker-popup hidden" onclick="if(event.target===this)closeCampPicker()"><div class="camp-picker-dialog"><h3 id="campPickerTitle">Charaktere für das Camp auswählen</h3><div id="campPickerPresets" class="camp-picker-presets"></div><div id="campPickerList" class="camp-picker-list"></div><div class="camp-picker-actions"><button class="btn" onclick="closeCampPicker()">Abbrechen</button><button class="btn good" onclick="confirmCampPicker()">Auswahl übernehmen</button></div></div></div>
@@ -370,7 +434,7 @@ function setPlayerBossTab(id){groupLayouts[groupLayoutKey()]=groups.map(g=>g.map
 function setPlayerAq40Tab(id){groupLayouts[groupLayoutKey()]=groups.map(g=>g.map(c=>c.id));activeAq40Tab=id;const layoutByTab={general:'standard',skeram:'skeram',sartura:'sartura',viscidus:'viscidus',twins:'twins',cthun:'cthun',tanks:'standard',groups:'standard'};activeGroupLayout=layoutByTab[id]||'standard';const source=groupLayouts[`AQ40:${activeGroupLayout}`]||groupLayouts['AQ40:standard']||Array.from({length:8},()=>[]);groups=source.map(ids=>ids.map(charId=>chars.find(c=>c.id===charId)).filter(Boolean));while(groups.length<8)groups.push([]);renderPlayerModalPage();document.getElementById('playerModalBody').scrollTop=0}
 function renderAq40PlayerEncounter(){const byName=(a,b)=>{const av=String(a?.name||a||''),bv=String(b?.name||b||'');if(!av&&bv)return 1;if(av&&!bv)return-1;return av.localeCompare(bv,'de',{sensitivity:'base'})},label=(aq40Tabs.find(([id])=>id===activeAq40Tab)||[])[1]||'AQ40',groupCards=groups.map((members,i)=>`<section class="aq40-player-group"><h3>Gruppe ${i+1}</h3>${members.length?[...members].sort(byName).map(c=>`<div class="aq40-player-member ${ownCharacterNames.has(String(c.name).toLowerCase())?'own-character':''}" style="--member-class:${esc(colors[c.className]||'#64748b')}">${esc(c.name)} <small>${esc(c.spec||c.className||'')}</small></div>`).join(''):'<div class="aq40-player-member">–</div>'}</section>`).join('');const cards=(aq40Boards[activeAq40Tab]||[]).map(([title,,slots])=>{const rows=slots.map(slot=>({slot,name:assignments[`AQ40|${title}|${slot}`]||''})).sort((a,b)=>byName(a.name,b.name));return `<section class="aq40-player-card"><h3>${esc(title)}</h3>${rows.map(({slot,name})=>`<div class="aq40-player-row ${ownClass(name)}"><span>${esc(slot)}</span><b>${esc(name||'–')}</b></div>`).join('')}</section>`}).join('');const potionKeys={skeram:['Skeram','Käfer-Trio'],viscidus:['Viscidus','Huhuran'],twins:['Linkes Team','Rechtes Team'],cthun:['Ouro','C’Thun']}[activeAq40Tab]||[],prep=potionKeys.length?`<section class="aq40-player-card"><h3>Vorbereitung</h3>${potionKeys.map(k=>`<div class="aq40-player-prep">${esc(k)}: ${esc(protectionPotions[activeAq40Tab+'|'+k]||'Kein Schutztrank')}</div>`).join('')}</section>`:'';return `<section class="aq40-player-page"><h2>${esc(label)}</h2><div class="aq40-player-groups">${groupCards}</div><div class="aq40-player-info">${cards}${prep}</div></section>`}
 function ownRaidPlacementHtml(){if(!ownCharacterNames.size)return '';const placements=[];groups.forEach((members,index)=>(members||[]).forEach(c=>{if(ownCharacterNames.has(String(c.name||'').toLowerCase()))placements.push({c,group:index+1})}));const known=chars.filter(c=>ownCharacterNames.has(String(c.name||'').toLowerCase())&&!placements.some(x=>x.c.id===c.id));return `<section class="player-sheet-card wide own-placement-card has-collapse"><h3>⭐ Deine Einteilung im Raid <button type="button" class="player-card-collapse" aria-expanded="true" onclick="togglePlayerCommonCard(this,event)">⌄</button></h3>${placements.map(({c,group})=>`<div class="sheet-list-row is-own"><span>Dein Platz</span><b class="sheet-assignee">Gruppe ${group} · ${playerDisplayHtml(c.name)}</b></div>`).join('')}${known.map(c=>`<div class="sheet-list-row is-own"><span>Noch nicht eingeplant</span><b class="sheet-assignee">${playerDisplayHtml(c.name)}</b></div>`).join('')||(!placements.length?'<div class="player-summary-empty">Der ausgewählte Charakter ist in dieser Aufstellung noch nicht eingeplant.</div>':'')}</section>`}
-function renderPlayerModalPage(){const aq40=currentRaidType()==='AQ40',nav=playerEncounterNavHtml();if(aq40){const label=(aq40Tabs.find(([id])=>id===activeAq40Tab)||[])[1]||'AQ40';document.getElementById('playerModalTitle').textContent=label+' – Spieleransicht';document.getElementById('playerModalSub').textContent='Gruppen, Aufgaben und Bossinformationen';document.getElementById('playerModalBody').innerHTML=nav+(activeAq40Tab==='cthun'?renderCthunPlayerSheet():renderAq40PlayerEncounter());return}renderPlayerModal();const layout=document.querySelector('#playerModalBody .player-sheet-layout');if(layout&&ownCharacterNames.size)layout.insertAdjacentHTML('afterbegin',ownRaidPlacementHtml());renderPlayerTactic()}
+function renderPlayerModalPage(){const aq40=currentRaidType()==='AQ40',nav=playerEncounterNavHtml();if(aq40){const label=(aq40Tabs.find(([id])=>id===activeAq40Tab)||[])[1]||'AQ40';document.getElementById('playerModalTitle').textContent=label+' – Spieleransicht';document.getElementById('playerModalSub').textContent='Gruppen, Aufgaben und Bossinformationen';document.getElementById('playerModalBody').innerHTML=nav+(activeAq40Tab==='cthun'?renderCthunPlayerSheet():renderAq40PlayerEncounter());return}renderPlayerModal();renderPlayerTactic()}
 async function togglePlayerView(){await loadOwnCharacterNames();loadPlayerCardOrders();renderPlayerModalPage();preparePlayerCardLayout();document.getElementById('playerModal').classList.remove('hidden');document.body.style.overflow='hidden'}
 function closePlayerView(){document.getElementById('playerModal').classList.add('hidden');document.body.style.overflow='';if(currentRaidType()==='AQ40')renderGroups()}
 function storageKey(){const raidId=document.getElementById('raid').value,template=document.getElementById('raidTemplate').value||templateRaidType||'entwurf';return `lichtlootRaidSetup_${guild}_${raidId||'vorlage-'+template}`}
