@@ -127,7 +127,7 @@
   </section>
 
   <form class="panel" id="guildApplicationForm" aria-labelledby="formTitle">
-    <div class="form-head"><div><h2 id="formTitle">Freischaltung beantragen</h2><p>Wir prüfen die Anfrage und richten danach euren eigenen Gildenbereich ein.</p></div><span class="required-note">Gildenname, Ansprechpartner und ein Kontaktweg sind erforderlich.</span></div>
+    <div class="form-head"><div><h2 id="formTitle">Freischaltung beantragen</h2><p>Wir prüfen die Anfrage und richten danach euren eigenen Gildenbereich ein.</p></div><span class="required-note">Gildenname, Ansprechpartner und E-Mail-Adresse sind erforderlich.</span></div>
     <div class="grid">
       <label>Gildenname
         <input name="guildName" autocomplete="organization" required placeholder="z.B. Lichtbringer">
@@ -150,7 +150,8 @@
         <input name="contactDiscord" placeholder="name#0000 oder User-ID">
       </label>
       <label>E-Mail
-        <input name="contactEmail" type="email" autocomplete="email" placeholder="optional">
+        <input name="contactEmail" type="email" autocomplete="email" placeholder="leitung@eure-gilde.de" required>
+        <span class="field-help">An diese Adresse senden wir den persönlichen Freischalt- und Einrichtungslink.</span>
       </label>
       <label>Discord-Server-ID
         <input name="discordGuildId" placeholder="optional">

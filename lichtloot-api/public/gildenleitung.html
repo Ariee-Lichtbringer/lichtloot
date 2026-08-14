@@ -18003,11 +18003,14 @@ function renderGuildApplicationsPanel(){
               <td>
                 ${entry.setupUrl ? `<code>${escapeHtml(entry.setupUrl)}</code>` : '<span class="muted">Noch nicht freigegeben</span>'}
                 ${entry.guildSlug ? `<div class="muted">Gilde: ${escapeHtml(entry.guildSlug)}</div>` : ""}
+                ${entry.approvalEmailSentAt ? `<div class="muted">E-Mail gesendet: ${escapeHtml(new Date(entry.approvalEmailSentAt).toLocaleString("de-DE"))}</div>` : ""}
+                ${entry.approvalEmailError ? `<div class="bad">E-Mail: ${escapeHtml(entry.approvalEmailError)}</div>` : ""}
               </td>
               <td>
                 <div class="issue-actions">
                   ${entry.status === "pending" ? `<button class="small-btn primary" type="button" onclick="approveGuildApplication('${escapeHtml(entry.id)}')">Freigeben</button>` : ""}
                   ${entry.setupUrl ? `<button class="small-btn ghost" type="button" onclick="copyGuildSetupLink('${escapeHtml(entry.setupUrl)}')">Link kopieren</button>` : ""}
+                  ${entry.setupUrl && entry.contactEmail ? `<button class="small-btn ghost" type="button" onclick="sendGuildApplicationEmail('${escapeHtml(entry.id)}')">E-Mail senden</button>` : ""}
                   ${entry.status !== "rejected" && entry.status !== "completed" ? `<button class="small-btn danger" type="button" onclick="rejectGuildApplication('${escapeHtml(entry.id)}')">Ablehnen</button>` : ""}
                 </div>
               </td>
@@ -18028,10 +18031,27 @@ async function approveGuildApplication(id){
   try{
     const result = await railwayWrite({ action:"guildApproveApplication", masterCode, id, baseUrl:location.origin });
     if(!result.success) throw new Error(result.error || "Gilde konnte nicht freigegeben werden.");
-    setStatus("Gilde freigegeben. Freischaltlink kann kopiert werden.", "good");
+    if(result.email?.sent){
+      setStatus("Gilde freigegeben. Die E-Mail mit dem Einrichtungslink wurde gesendet.", "good");
+    }else{
+      setStatus("Gilde freigegeben, aber die E-Mail konnte nicht gesendet werden: "+(result.email?.error || "Maildienst nicht verfügbar."), "bad");
+    }
     await loadGuildApplicationsPanel();
   }catch(error){
     setStatus(error.message || "Gilde konnte nicht freigegeben werden.", "bad");
+  }
+}
+
+async function sendGuildApplicationEmail(id){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  try{
+    const result = await railwayWrite({ action:"guildSendApplicationEmail", masterCode, id, baseUrl:location.origin });
+    if(!result.success) throw new Error(result.email?.error || result.error || "E-Mail konnte nicht gesendet werden.");
+    setStatus("E-Mail mit dem Einrichtungslink wurde gesendet.", "good");
+    await loadGuildApplicationsPanel();
+  }catch(error){
+    setStatus(error.message || "E-Mail konnte nicht gesendet werden.", "bad");
   }
 }
 
