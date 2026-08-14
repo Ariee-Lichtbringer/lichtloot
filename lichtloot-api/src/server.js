@@ -7590,16 +7590,13 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
   await ensureDiscordChannelSchema();
   const requested = clean(requestedChannelId);
   if (requested) {
-    const existing = await query(
-      `select channel_id
-       from discord_bot_channels
-       where guild_id = $1
-         and channel_id = $2
-         and can_send = true
-       limit 1`,
-      [guildId, requested]
-    );
-    if (existing.rows[0]?.channel_id) return requested;
+    // Eine in der Gildenleitung ausdrücklich ausgewählte Channel-ID ist
+    // verbindlich. Der Discord-Channel-Sync kann bei neuen Channels kurz
+    // hinterherhinken; in diesem Zeitraum darf der Auftrag nicht still auf
+    // einen lediglich ähnlich benannten PO-/Freigabe-Channel ausweichen.
+    // Kann der Bot den Channel tatsächlich nicht erreichen, bleibt der
+    // Queue-Auftrag offen und meldet den konkreten Zielchannel als Fehler.
+    return requested;
   }
 
   const raidKey = clean(normalizeRaidType(raid)).toLowerCase();
