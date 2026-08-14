@@ -1944,6 +1944,7 @@ function isGuildConfigMode(){
 }
 
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
+const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
 const CURRENT_GUILD_QUERY = CURRENT_GUILD_SLUG ? "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG) : "";
 let activeGuildSlug = CURRENT_GUILD_SLUG;
 
@@ -3073,8 +3074,8 @@ async function raidleadLogin(){
   const pin=document.getElementById("raidleadPin").value.trim();
 
   if(raidleadAccounts[pin]){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),raidleadAccounts[pin]);
     window.location.href=withCurrentGuildUrl("raidlead-panel.html");
     return;
   }
@@ -3091,12 +3092,12 @@ async function raidleadLogin(){
     const result=await response.json();
 
     if(result.success){
-      sessionStorage.setItem("raidlead","true");
-      sessionStorage.setItem("raidleadRole","master");
-      sessionStorage.setItem("raidleadRaidId",result.raidId);
-      sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
+      sessionStorage.setItem(raidleadStorageKey("active"),"true");
+      sessionStorage.setItem(raidleadStorageKey("role"),"master");
+      sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId);
+      sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin || pin);
       if(result.playerPin || result.prioPin || result.raidPin){
-        sessionStorage.setItem("raidleadPlayerPin",result.playerPin || result.prioPin || result.raidPin);
+        sessionStorage.setItem(raidleadStorageKey("playerPin"),result.playerPin || result.prioPin || result.raidPin);
       }
       window.location.href=withCurrentGuildUrl("raidlead-panel.html");
       return;

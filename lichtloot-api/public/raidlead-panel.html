@@ -1435,6 +1435,7 @@ const RAID_API_URL =
   "https://lichtloot-production.up.railway.app/api/apps-script";
 
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
 function titleFromSlug(slug){
@@ -1632,13 +1633,13 @@ function checkLogin(){
   const isRandomRaidleadLink = params.get("random") === "1" || urlMode === "random";
   if(urlLeadPin){
     document.body.classList.toggle("random-raidlead", isRandomRaidleadLink);
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole","master");
-    sessionStorage.setItem("raidleadPrioPin",urlLeadPin);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),"master");
+    sessionStorage.setItem(raidleadStorageKey("prioPin"),urlLeadPin);
   }
 
-  const isLoggedIn = sessionStorage.getItem("raidlead");
-  const role = sessionStorage.getItem("raidleadRole");
+  const isLoggedIn = sessionStorage.getItem(raidleadStorageKey("active"));
+  const role = sessionStorage.getItem(raidleadStorageKey("role"));
 
   if(isLoggedIn !== "true" || !role){
     alert("Bitte zuerst über die Startseite einloggen.");
@@ -1650,8 +1651,8 @@ function checkLogin(){
     `Rolle: <strong>${role}</strong>`;
 
   const savedPin =
-    sessionStorage.getItem("raidleadPrioPin") ||
-    sessionStorage.getItem("raidleadPlayerPin") ||
+    sessionStorage.getItem(raidleadStorageKey("prioPin")) ||
+    sessionStorage.getItem(raidleadStorageKey("playerPin")) ||
     "";
 
   if(savedPin){
@@ -1688,8 +1689,8 @@ function clearLeadPin(){
   const navPinInput = document.getElementById("navRaidPinInput");
   if(pinInput) pinInput.value = "";
   if(navPinInput) navPinInput.value = "";
-  sessionStorage.removeItem("raidleadPrioPin");
-  sessionStorage.removeItem("raidleadPlayerPin");
+  sessionStorage.removeItem(raidleadStorageKey("prioPin"));
+  sessionStorage.removeItem(raidleadStorageKey("playerPin"));
   document.getElementById("raidView")?.classList.add("hidden");
   document.getElementById("controlStatus").innerHTML = "Bitte LeadPIN eingeben.";
 }
@@ -1763,7 +1764,7 @@ async function loadRaidByPin(){
   document.getElementById("controlStatus").innerHTML =
     `<span class="warn">Raid wird geladen …</span>`;
 
-  const role = sessionStorage.getItem("raidleadRole") || "master";
+  const role = sessionStorage.getItem(raidleadStorageKey("role")) || "master";
   const possibleRaids = Object.keys(raids).filter(key => canAccessRaid(role,key));
 
   currentRaidKey = null;
@@ -1778,7 +1779,7 @@ async function loadRaidByPin(){
     const found = await tryLoadRaidByPin(pin, raidKey);
 
     if(found){
-      sessionStorage.setItem("raidleadPrioPin", pin);
+      sessionStorage.setItem(raidleadStorageKey("prioPin"), pin);
 
       await loadItemVisualData();
       await loadP0PlusPoints();
@@ -3769,11 +3770,11 @@ function backToRaidPrio(){
 
 function logout(){
   if(prioCheckTimer) clearInterval(prioCheckTimer);
-  sessionStorage.removeItem("raidlead");
-  sessionStorage.removeItem("raidleadRole");
-  sessionStorage.removeItem("raidleadRaidId");
-  sessionStorage.removeItem("raidleadPrioPin");
-  sessionStorage.removeItem("raidleadPlayerPin");
+  sessionStorage.removeItem(raidleadStorageKey("active"));
+  sessionStorage.removeItem(raidleadStorageKey("role"));
+  sessionStorage.removeItem(raidleadStorageKey("raidId"));
+  sessionStorage.removeItem(raidleadStorageKey("prioPin"));
+  sessionStorage.removeItem(raidleadStorageKey("playerPin"));
   window.location.href = guildUrl("index.html");
 }
 
