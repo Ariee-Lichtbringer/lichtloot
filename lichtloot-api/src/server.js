@@ -19813,6 +19813,13 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 async function transferP0PlusPoints({ guildId, query: params }) {
   const raidType = normalizeRaidType(params.raid);
   await requireNachtlootSpecialRaidGuild(guildId, raidType);
+  const guildResult = await query(`select slug from guilds where id = $1 limit 1`, [guildId]);
+  const guildSlug = clean(guildResult.rows[0]?.slug).toLowerCase();
+  if (guildSlug === "lichtloot" && ["zg", "aq20", "zg-mittwoch", "zg-prime", "zg-late"].includes(raidType)) {
+    const error = new Error("Bei Lichtbringer vergeben 20er-Raids keine P0+-Punkte.");
+    error.statusCode = 400;
+    throw error;
+  }
   const raidId = clean(params.raidId);
   const values = [guildId, raidType];
   let raidClause = "r.guild_id = $1 and r.raid_type = $2";
