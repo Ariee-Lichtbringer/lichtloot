@@ -22,7 +22,7 @@ body{
   color:var(--text);
   background:
     linear-gradient(rgba(8,17,31,.82),rgba(8,17,31,.94)),
-    url("./images/back.jpeg");
+    url("./images/app-background.svg");
   background-size:cover;
   background-position:center top;
   background-attachment:fixed;
@@ -372,10 +372,19 @@ async function loadGuild(){
 }
 
 async function saveConfig(){
+  const storageKey="lichtlootGuildMasterCode_"+GUILD_SLUG;
+  let masterCode="";
+  try{masterCode=sessionStorage.getItem(storageKey)||localStorage.getItem(storageKey)||"";}catch(error){}
+  if(!masterCode) masterCode=prompt("Bitte den Mastercode dieser Gilde eingeben.","")||"";
+  if(!masterCode){
+    setStatus('<span class="bad">Ohne Gilden-Mastercode können die Einstellungen nicht gespeichert werden.</span>');
+    return;
+  }
   setStatus('<span class="warn">Konfiguration wird gespeichert...</span>');
   const payload={
     action:"updateGuildConfig",
     guild:GUILD_SLUG,
+    masterCode,
     guildName:document.getElementById("guildName").value.trim(),
     server:document.getElementById("guildServer").value.trim(),
     pointsLabel:document.getElementById("pointsLabel").value.trim(),
@@ -391,6 +400,7 @@ async function saveConfig(){
       setStatus('<span class="bad">'+(data.error || "Speichern fehlgeschlagen.")+'</span>');
       return;
     }
+    try{sessionStorage.setItem(storageKey,masterCode);}catch(error){}
     setStatus('<span class="ok">Konfiguration gespeichert.</span>');
     loadGuild();
   }catch(error){

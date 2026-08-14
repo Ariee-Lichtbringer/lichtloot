@@ -5047,7 +5047,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
-          <button class="side-link nachtloot-only" type="button" onclick="openPoItemSettingsPanel()" aria-label="PO Items festlegen" title="PO Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">PO Items festlegen</span></button>
+          <button class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">P0-Items festlegen</span></button>
           <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Plündermeister</span></button>
           <button class="side-link" type="button" onclick="openRaidMemberNoticePanel()" aria-label="Raidmitglieder informieren" title="Raidmitglieder informieren"><span class="side-icon">📣</span><span class="side-label">Mitglieder informieren</span></button>
@@ -6034,7 +6034,7 @@ body.worldbuff-only .master-only{display:none!important}
     </div>
   </details>
 
-  <details id="poItemSettingsPanel" class="panel p0-panel nachtloot-only" ontoggle="if(this.open) loadPoItemSettingsPanel()">
+  <details id="poItemSettingsPanel" class="panel p0-panel" ontoggle="if(this.open) loadPoItemSettingsPanel()">
     <summary>PO Items festlegen</summary>
     <div class="p0-panel-body">
       <div id="poItemSettingsContent" class="create-result">Raid und PO-Items laden.</div>
