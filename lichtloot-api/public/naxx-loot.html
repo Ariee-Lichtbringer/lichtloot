@@ -174,6 +174,8 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
 .loot-attendance-list{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:6px;margin:0 0 8px}.loot-attendance-chip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #334155;border-radius:8px;background:#0b1220;color:#cbd5e1;font-size:9px;font-weight:850}.loot-attendance-chip strong{color:#93c5fd;font-size:11px}.loot-attendance-chip.low strong{color:#fca5a5}
+#selectedCharacterPoReleases .loot-attendance-title{grid-column:1!important}#selectedCharacterPoReleases .loot-attendance-list{grid-column:2!important}
+@media(max-width:900px){#selectedCharacterPoReleases .loot-attendance-title,#selectedCharacterPoReleases .loot-attendance-list{grid-column:1!important}.loot-attendance-list{grid-template-columns:repeat(2,minmax(90px,1fr))}}
 .player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
 .player-status-panel #playerStatus{grid-area:auto!important}
 .plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
@@ -2167,6 +2169,8 @@ function openRaidStartAction(action){
 const RAID_NAME = "naxx";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
+function guildLocalStorageKey(key){ return `lichtloot:${currentGuildSlug()}:${RAID_NAME}:${key}`; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
 function titleFromSlug(slug){
@@ -3308,7 +3312,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  let data=JSON.parse(localStorage.getItem("aq40_prios")||"[]");
+  let data=JSON.parse(localStorage.getItem(guildLocalStorageKey("prios"))||"[]");
 
   data=data.filter(entry=>
     !(
@@ -3328,7 +3332,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("aq40_prios",JSON.stringify(data));
+  localStorage.setItem(guildLocalStorageKey("prios"),JSON.stringify(data));
 }
 
 
@@ -3829,8 +3833,8 @@ async function raidleadLogin(){
   }
 
   if(raidleadAccounts[pin]){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),raidleadAccounts[pin]);
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -3848,12 +3852,12 @@ async function raidleadLogin(){
   const result = await response.json();
 
   if(result.success){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole","master");
-    sessionStorage.setItem("raidleadRaidId",result.raidId);
-    sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
-    if(result.managerMode === "lootmaster") sessionStorage.setItem("raidleadLootMasterPin",pin);
-    else sessionStorage.removeItem("raidleadLootMasterPin");
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),"master");
+    sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId);
+    sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin || pin);
+    if(result.managerMode === "lootmaster") sessionStorage.setItem(raidleadStorageKey("lootMasterPin"),pin);
+    else sessionStorage.removeItem(raidleadStorageKey("lootMasterPin"));
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -4219,7 +4223,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -4231,7 +4235,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -4239,7 +4243,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -4300,7 +4304,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -4310,7 +4314,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -4616,7 +4620,7 @@ function renderSelectedCharacterPoReleases(data,requests){
     return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
   }).join("");
   const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(([key,label])=>{const attendance=data?.attendance16?.[key],total=Number(attendance?.total||0),attended=Number(attendance?.attended||0),bench=Number(attendance?.bench||0);return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';}).join('');
-  box.innerHTML='<div class="loot-release-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
+  box.innerHTML='<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
 }
 
 async function loadSelectedCharacterPoReleases(char){
@@ -10552,8 +10556,8 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="po-release-status.js?v=20260805-1700"></script>
-<script src="raid-signup-mirror.js?v=20260809-1555"></script>
+<script src="po-release-status.js?v=20260814-0015"></script>
+<script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
 </body>
 </html>

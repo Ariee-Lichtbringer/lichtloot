@@ -5,12 +5,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot - Blackwing Lair</title>
+<title>Lichtloot - Ahn'Qiraj 20</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/aq20.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -169,9 +169,6 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
-.loot-attendance-list{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:6px;margin:0 0 8px}.loot-attendance-chip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #334155;border-radius:8px;background:#0b1220;color:#cbd5e1;font-size:9px;font-weight:850}.loot-attendance-chip strong{color:#93c5fd;font-size:11px}.loot-attendance-chip.low strong{color:#fca5a5}
-#selectedCharacterPoReleases .loot-attendance-title{grid-column:1!important}#selectedCharacterPoReleases .loot-attendance-list{grid-column:2!important}
-@media(max-width:900px){#selectedCharacterPoReleases .loot-attendance-title,#selectedCharacterPoReleases .loot-attendance-list{grid-column:1!important}.loot-attendance-list{grid-template-columns:repeat(2,minmax(90px,1fr))}}
 .player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
 .player-status-panel #playerStatus{grid-area:auto!important}
 .plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
@@ -1738,7 +1735,7 @@ body.random-prio .tooltip-p0{
 <link rel="stylesheet" href="raid-signup-mirror.css?v=20260809-1205">
 </head>
 
-<body class="raid-bwl">
+<body class="raid-aq20 p0-only">
 
 <div id="participantPinModal" class="participant-pin-modal hidden">
   <div class="participant-pin-card">
@@ -1867,7 +1864,7 @@ body.random-prio .tooltip-p0{
     </div>
   </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
-  <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
+  <button class="nav-btn nav-p0plus-overview" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
     <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
@@ -1896,10 +1893,10 @@ function openRaidStartAction(action){
   <select id="createRaidSelect">
     <option value="aq40">Ahn'Qiraj 40</option>
     <option value="mc">Molten Core</option>
-    <option value="bwl" selected>Blackwing Lair</option>
+    <option value="bwl">Blackwing Lair</option>
     <option value="naxx">Naxxramas</option>
     <option value="zg">Zul Gurub</option>
-    <option value="aq20">Ahn'Qiraj 20</option>
+    <option value="aq20" selected>Ahn'Qiraj 20</option>
     <option value="ony">Onyxia</option>
   </select>
 
@@ -1917,8 +1914,8 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header">
-<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/bwl.jpg" alt="">Blackwing Lair – Prio-Auswahl</h1>
-<div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
+<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/aq20.jpg" alt="">Ahn'Qiraj 20 – Prio-Auswahl</h1>
+<div class="subtitle">P0 zählt nur, wenn der P0-Button aktiv gewählt wurde.</div>
 
 <div class="header-tools">
 <div id="playerCard" class="player-input-card">
@@ -1980,7 +1977,7 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header-actions">
-  <button class="btn" type="button" disabled title="Der Ausrüstungsplaner ist für Blackwing Lair noch in Entwicklung." style="opacity:.58;cursor:not-allowed">Ausrüstungsplaner in Entwicklung</button>
+  <button class="btn" type="button" disabled title="Der Ausrüstungsplaner ist für Ahn'Qiraj 20 noch in Entwicklung." style="opacity:.58;cursor:not-allowed">Ausrüstungsplaner in Entwicklung</button>
 </div>
 </div>
 </div>
@@ -2162,7 +2159,7 @@ function openRaidStartAction(action){
 
 
 <script>
-const RAID_NAME = "bwl";
+const RAID_NAME = "aq20";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
@@ -2263,20 +2260,16 @@ function guildUrl(path){
   return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
 const LOOT_JSON_URL = "";
-const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_AQ20";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
 let GUILD_PO_ITEM_KEYS = new Set();
+let GUILD_PO_PLUS_ITEM_KEYS = new Set();
 function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
 async function loadGuildPoItems(){
-  try{
-    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
-    const response=await fetch(url,{cache:"no-store"});
-    const data=await response.json();
-    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name)));
-  }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
 
@@ -2470,13 +2463,6 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
 
   if(!raw){
     return fallback;
@@ -2494,9 +2480,7 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return numericIconMap[raw]
-      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
-      : fallback;
+    return fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -2504,16 +2488,6 @@ function getIconUrl(icon){
 }
 
 function getSheetIconName(obj){
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
-  const numericIcon = String((obj && (obj.Icon || obj.icon)) || "").trim();
-  if(numericIconMap[numericIcon]) return numericIconMap[numericIcon];
-
   const candidates = [
     obj.IconName,
     obj.WowheadIcon,
@@ -2524,7 +2498,6 @@ function getSheetIconName(obj){
 
   for(const value of candidates){
     const raw = String(value || "").trim();
-    if(numericIconMap[raw]) return numericIconMap[raw];
     if(raw && !/^\d+$/.test(raw)){
       return raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
     }
@@ -2887,7 +2860,7 @@ async function loadLootFromSheet(){
     const result=await loadAq40LootWithFallback();
     aq40Loot=filterLootPageDisplayItems(result.items);
     if(!aq40Loot.length){
-      throw new Error("Keine BWL-Lootdaten gefunden.");
+      throw new Error("Keine Naxx-Lootdaten gefunden.");
     }
 
     await Promise.all([loadP0PlusFromSheet(), loadGuildPoItems()]);
@@ -2936,15 +2909,15 @@ async function loadAq40LootWithFallback(){
         return {items:mapped,source:"JSON"};
       }
     }catch(error){
-      console.warn("BWL JSON-Fallback fehlgeschlagen:", url, error);
+      console.warn("Naxx JSON-Fallback fehlgeschlagen:", url, error);
     }
   }
 
   try{
     const response=await fetch(AQ40_LOOT_CSV_URL + "&t=" + Date.now(), {cache:"no-store"});
-    if(!response.ok) throw new Error("BWL CSV HTTP " + response.status);
+    if(!response.ok) throw new Error("Naxx CSV HTTP " + response.status);
     const csvText=await response.text();
-    if(/^\s*</.test(csvText)) throw new Error("BWL CSV lieferte HTML statt Daten");
+    if(/^\s*</.test(csvText)) throw new Error("Naxx CSV lieferte HTML statt Daten");
 
     const rows=parseCSV(csvText);
     if(rows.length){
@@ -2958,12 +2931,12 @@ async function loadAq40LootWithFallback(){
       if(mapped.length) return {items:mapped,source:"Google Sheet"};
     }
   }catch(error){
-    console.warn("BWL CSV-Fallback fehlgeschlagen:", error);
+    console.warn("Naxx CSV-Fallback fehlgeschlagen:", error);
   }
 
   const exportResult=await apiJsonp({
     action:"getFullExport",
-    raid:"BWL"
+    raid:"NAXX"
   });
   const exported=(exportResult.entries || []).map(entry=>mapAq40SheetLootRow({
     Itemname_DE: entry.item || entry.Item || "",
@@ -3101,6 +3074,9 @@ function renderLootList(){
   filteredLoot.forEach(item=>{
     const row=document.createElement("div");
     row.className="loot-item-row";
+    const isPoPlusItem=currentGuildSlug()==="nachtloot"&&GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name));
+    const poPlusLocked=false;
+    if(poPlusLocked){row.style.opacity=".42";row.title="PO+-Freigabe fehlt – dieses Item kann nicht ausgewählt werden.";}
 
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
@@ -3132,8 +3108,8 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
+    if(SUPPORTS_P0PLUS){
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" ${poPlusLocked?'disabled title="PO+-Freigabe fehlt"':''} onclick="setP0Plus('${escapeQuotes(item.name)}')">${isPoPlusItem?'PO+':'PO'}</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -3148,6 +3124,7 @@ function renderLootList(){
       createdAt:""
     }));
     buttons.innerHTML = prioButtonParts.join("");
+    if(poPlusLocked)buttons.querySelectorAll("button[data-prio]").forEach(button=>button.disabled=true);
 
     row.appendChild(name);
     row.appendChild(buttons);
@@ -3187,7 +3164,7 @@ function setP0Plus(itemName){
   document.getElementById("p3").value=itemName;
 
   document.getElementById("playerStatus").innerHTML=
-    `<span class="ok">✓ ${itemName} wurde aktiv als P0+ gesetzt.</span>`;
+    `<span class="ok">✓ ${itemName} wurde aktiv als P0 gesetzt.</span>`;
 
   autoSaveDraft();
   updateActiveButtons();
@@ -3252,7 +3229,7 @@ function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
 
-  return player ? RAID_NAME+"_prio_"+server+"_"+player : null;
+  return player ? "aq40_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -3302,8 +3279,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  const storageKey=guildLocalStorageKey("prios");
-  let data=JSON.parse(localStorage.getItem(storageKey)||"[]");
+  let data=JSON.parse(localStorage.getItem(guildLocalStorageKey("prios"))||"[]");
 
   data=data.filter(entry=>
     !(
@@ -3323,7 +3299,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem(storageKey,JSON.stringify(data));
+  localStorage.setItem(guildLocalStorageKey("prios"),JSON.stringify(data));
 }
 
 
@@ -3734,6 +3710,10 @@ async function savePrio(){
   }
 
   await loadPublishedPrios();
+  if(!currentRaidId){
+    status.innerHTML=`<span class="bad">Raid wurde zu diesem Prio-PIN nicht gefunden. Bitte Seite neu laden oder Prio-PIN prüfen.</span>`;
+    return;
+  }
   if(currentPublishedMode){
     status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
     return;
@@ -3935,6 +3915,7 @@ async function loadPublishedPrios(){
     const result = await apiJsonp({
       action:"getPublishedPrios",
       raid:RAID_NAME,
+      raidPin:pin,
       playerPin:pin
     });
 
@@ -4589,54 +4570,6 @@ function dropCharacterOnZone(event){
   if(zone) zone.classList.remove("active");
   const index=Number(event.dataTransfer.getData("text/plain"));
   if(!isNaN(index)) selectLoggedInCharacter(index);
-}
-
-+function poReleaseStatusKey(entry){
-  if(entry?.requestType === "recruit") return "recruit";
-  if(entry?.requestType === "p1p3") return "p1p3";
-  return String(entry?.raid || "").trim().toLowerCase();
-}
-
-function renderSelectedCharacterPoReleases(data,requests){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  if(!box) return;
-  const releases=data?.poReleases || {};
-  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"]);
-  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
-  const pending=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(poReleaseStatusKey));
-  const chips=labels.map(([key,label])=>{
-    const approved=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases[key]);
-    const inReview=!approved && pending.has(key);
-    return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
-  }).join("");
-  const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(([key,label])=>{const attendance=data?.attendance16?.[key],total=Number(attendance?.total||0),attended=Number(attendance?.attended||0),bench=Number(attendance?.bench||0);return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';}).join('');
-  box.innerHTML='<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(!box || !pin || !char?.name) return;
-  box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
-  try{
-    const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),char:char.name,server:char.server||"",pin,t:Date.now()});
-    const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()});
-    const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
-    const history=await responses[0].json();
-    const display=await responses[1].json().catch(()=>({}));
-    history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
-    if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
-    let requests=[];
-    if(currentGuildSlug()==="nachtloot"){
-      const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild:currentGuildSlug(),character:char.name,server:char.server||"",pin,t:Date.now()});
-      const requestResponse=await fetch(APPS_SCRIPT_URL+"?"+requestQuery.toString(),{cache:"no-store"});
-      const requestData=await requestResponse.json().catch(()=>({}));
-      requests=Array.isArray(requestData.entries)?requestData.entries:[];
-    }
-    renderSelectedCharacterPoReleases(history,requests);
-  }catch(error){
-    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
-  }
 }
 
 function selectLoggedInCharacter(index){
@@ -6041,7 +5974,7 @@ function setP0Plus(itemName){
   document.getElementById("p2").value=itemName;
   document.getElementById("p3").value=itemName;
   document.getElementById("playerStatus").innerHTML =
-    '<span class="ok">✓ '+safe(itemName)+' wurde aktiv als P0+ gesetzt.</span>';
+    '<span class="ok">✓ '+safe(itemName)+' wurde aktiv als P0 gesetzt.</span>';
   renderSelectedPrioPreviews();
   autoSaveDraft();
   updateActiveButtons();
@@ -6355,7 +6288,7 @@ async function createRaidFromLootPage(){
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
       <strong>Raid:</strong><br>${r.name}<br><br>
       <strong>Raidstart:</strong><br>${formatRaidDateForCreate(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/P0+ möglich, bis die Prioliste geöffnet wird.</span><br><br>
+      <span class="warn">P0/P0 möglich bis ${formatP0DeadlineForCreate(raidDate,raidTime)} Uhr.</span><br><br>
       <strong>Prio PIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
@@ -6610,13 +6543,6 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
 
   if(!raw){
     return fallback;
@@ -6634,9 +6560,7 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return numericIconMap[raw]
-      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
-      : fallback;
+    return fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -10521,6 +10445,12 @@ function renderPublishedItems(prios){
   });
 }
 
+</script>
+
+<script>
+/* ZG/AQ20: keine P0+-Punkte auf der Lootseite anzeigen, nur P0-Auswahl. */
+function renderP0PlusBelowItem(itemName){ return ""; }
+function buildTooltipP0PlusHtml(itemName,useSafeHtml){ return ""; }
 
 /* === Gilden-Schutz: PO+/P0+ Punkte nie aus einer anderen Gilde anzeigen === */
 function lichtlootP0GuildMatchesCurrent(entry){
@@ -10555,7 +10485,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="po-release-status.js?v=20260814-0015"></script>
+<script src="po-release-status.js?v=20260805-1700"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
 </body>

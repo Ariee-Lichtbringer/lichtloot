@@ -5,12 +5,12 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lichtloot - Blackwing Lair</title>
+<title>Lichtloot - Zul Gurub</title>
 
 <style>
 :root{--gold:#facc15;--gold-rgb:250,204,21;--blue:#60a5fa;--blue-rgb:96,165,250;--panel:rgba(12,18,32,.88);--text:#f8fafc;--muted:#cbd5e1;--line:rgba(255,255,255,.12);--danger:#ef4444;--green:#22c55e}
 *{box-sizing:border-box;margin:0;padding:0}
-body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/bwl.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.94)),url('../images/zg.jpg');background-size:cover;background-position:center top;background-attachment:fixed}
 .overlay{min-height:100vh;padding:36px 22px 60px;backdrop-filter:blur(3px)}
 .topbar,.header,.grid{width:min(1600px,100%);margin:auto}
 .topbar{margin-bottom:28px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -169,9 +169,6 @@ body:not(.random-prio)>.overlay{padding-left:245px}
 .loot-release-chip.approved{border-color:#4ade80!important;background:linear-gradient(135deg,#15803d,#166534)!important;color:#f0fdf4!important;box-shadow:0 0 0 1px rgba(74,222,128,.18),0 5px 14px rgba(22,101,52,.28)}
 .loot-release-chip.pending{border-color:#fde047;background:#facc15;color:#422006}
 .loot-release-help{margin-top:7px;color:#94a3b8;font-size:10px;line-height:1.35}
-.loot-attendance-list{display:grid;grid-template-columns:repeat(4,minmax(70px,1fr));gap:6px;margin:0 0 8px}.loot-attendance-chip{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border:1px solid #334155;border-radius:8px;background:#0b1220;color:#cbd5e1;font-size:9px;font-weight:850}.loot-attendance-chip strong{color:#93c5fd;font-size:11px}.loot-attendance-chip.low strong{color:#fca5a5}
-#selectedCharacterPoReleases .loot-attendance-title{grid-column:1!important}#selectedCharacterPoReleases .loot-attendance-list{grid-column:2!important}
-@media(max-width:900px){#selectedCharacterPoReleases .loot-attendance-title,#selectedCharacterPoReleases .loot-attendance-list{grid-column:1!important}.loot-attendance-list{grid-template-columns:repeat(2,minmax(90px,1fr))}}
 .player-status-panel{grid-area:status!important;display:grid;gap:8px;min-width:0;align-self:end}
 .player-status-panel #playerStatus{grid-area:auto!important}
 .plundermeister-login-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border:1px solid rgba(var(--gold-rgb),.6);border-radius:12px;background:linear-gradient(135deg,rgba(15,118,110,.72),rgba(113,83,24,.7));color:#fff;font-weight:900;cursor:pointer}
@@ -1738,7 +1735,7 @@ body.random-prio .tooltip-p0{
 <link rel="stylesheet" href="raid-signup-mirror.css?v=20260809-1205">
 </head>
 
-<body class="raid-bwl">
+<body class="raid-zg p0-only">
 
 <div id="participantPinModal" class="participant-pin-modal hidden">
   <div class="participant-pin-card">
@@ -1867,7 +1864,7 @@ body.random-prio .tooltip-p0{
     </div>
   </div>
   <button class="nav-btn nav-primary" onclick="toggleMyPrios()">Mein LichtLoot</button>
-  <button class="nav-btn" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
+  <button class="nav-btn nav-p0plus-overview" onclick="toggleP0PlusOverview()">P0+ Übersicht</button>
   <button class="nav-btn" onclick="toggleRaidCreate()">Raid erstellen</button>
   <div class="nav-login">
     <input id="raidleadPin" type="text" placeholder="LeadPIN" onkeydown="raidleadEnter(event)">
@@ -1896,9 +1893,9 @@ function openRaidStartAction(action){
   <select id="createRaidSelect">
     <option value="aq40">Ahn'Qiraj 40</option>
     <option value="mc">Molten Core</option>
-    <option value="bwl" selected>Blackwing Lair</option>
+    <option value="bwl">Blackwing Lair</option>
     <option value="naxx">Naxxramas</option>
-    <option value="zg">Zul Gurub</option>
+    <option value="zg" selected>Zul Gurub</option>
     <option value="aq20">Ahn'Qiraj 20</option>
     <option value="ony">Onyxia</option>
   </select>
@@ -1917,8 +1914,8 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header">
-<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/bwl.jpg" alt="">Blackwing Lair – Prio-Auswahl</h1>
-<div class="subtitle">P0+ zählt nur, wenn der P0+-Button aktiv gewählt wurde.</div>
+<h1 class="raid-page-title"><img class="raid-page-title-icon" src="../images/raid-templates/zg.jpg" alt="">Zul Gurub – Prio-Auswahl</h1>
+<div class="subtitle">P0 zählt nur, wenn der P0-Button aktiv gewählt wurde.</div>
 
 <div class="header-tools">
 <div id="playerCard" class="player-input-card">
@@ -1980,7 +1977,7 @@ function openRaidStartAction(action){
 </div>
 
 <div class="header-actions">
-  <button class="btn" type="button" disabled title="Der Ausrüstungsplaner ist für Blackwing Lair noch in Entwicklung." style="opacity:.58;cursor:not-allowed">Ausrüstungsplaner in Entwicklung</button>
+  <button class="btn" type="button" disabled title="Der Ausrüstungsplaner ist für Zul Gurub noch in Entwicklung." style="opacity:.58;cursor:not-allowed">Ausrüstungsplaner in Entwicklung</button>
 </div>
 </div>
 </div>
@@ -2162,7 +2159,7 @@ function openRaidStartAction(action){
 
 
 <script>
-const RAID_NAME = "bwl";
+const RAID_NAME = "zg";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
 function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
@@ -2263,20 +2260,16 @@ function guildUrl(path){
   return base + (base.includes("?") ? "&" : "?") + "guild=" + encodeURIComponent(slug) + hash;
 }
 const LOOT_JSON_URL = "";
-const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_BWL";
+const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7rEbiSzjd4q3LqPBa-OxH7hFSMMBNGQ/gviz/tq?tqx=out:csv&sheet=LOOT_ZG";
 // P0+ nutzt bewusst dieselbe Haupt-API wie „Mein LichtLoot".
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
 let GUILD_PO_ITEM_KEYS = new Set();
+let GUILD_PO_PLUS_ITEM_KEYS = new Set();
 function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
 async function loadGuildPoItems(){
-  try{
-    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
-    const response=await fetch(url,{cache:"no-store"});
-    const data=await response.json();
-    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name)));
-  }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
 
@@ -2310,6 +2303,7 @@ let prioCheckTimer = null;
 let p0DeadlineTimer = null;
 
 window.p0PlusWasClicked = false;
+window.selectedPrioItemIds = window.selectedPrioItemIds || {};
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 
@@ -2470,13 +2464,6 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
 
   if(!raw){
     return fallback;
@@ -2494,9 +2481,7 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return numericIconMap[raw]
-      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
-      : fallback;
+    return fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -2504,16 +2489,6 @@ function getIconUrl(icon){
 }
 
 function getSheetIconName(obj){
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
-  const numericIcon = String((obj && (obj.Icon || obj.icon)) || "").trim();
-  if(numericIconMap[numericIcon]) return numericIconMap[numericIcon];
-
   const candidates = [
     obj.IconName,
     obj.WowheadIcon,
@@ -2524,7 +2499,6 @@ function getSheetIconName(obj){
 
   for(const value of candidates){
     const raw = String(value || "").trim();
-    if(numericIconMap[raw]) return numericIconMap[raw];
     if(raw && !/^\d+$/.test(raw)){
       return raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
     }
@@ -2847,8 +2821,29 @@ function findAnyKnownLootItem(itemName, raid){
   return null;
 }
 
-function itemHtml(itemName){
-  const item=findAnyKnownLootItem(itemName, RAID_NAME);
+function findAnyKnownLootItemByGameId(itemId, raid){
+  const wanted=String(itemId || "").trim();
+  if(!wanted) return null;
+
+  const raidKey = raidKeyFromEntryRaid ? raidKeyFromEntryRaid(raid || RAID_NAME) : RAID_NAME;
+  const lists=[];
+  if(raidKey === RAID_NAME) lists.push({key:RAID_NAME,items:aq40Loot || []});
+  if(window.lootDataByRaid && window.lootDataByRaid[raidKey]) lists.push({key:raidKey,items:window.lootDataByRaid[raidKey] || []});
+  if(raidKey !== RAID_NAME) lists.push({key:RAID_NAME,items:aq40Loot || []});
+  if(window.lootDataByRaid){
+    Object.keys(window.lootDataByRaid).forEach(key=>lists.push({key,items:window.lootDataByRaid[key] || []}));
+  }
+
+  for(const list of lists){
+    const found=(list.items || []).find(item => String(item.itemId || item.id || item.ItemID || "").trim() === wanted);
+    if(found) return Object.assign({raidKey:list.key}, found);
+  }
+
+  return null;
+}
+
+function itemHtml(itemName,itemId){
+  const item=findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
 
   if(!item){
     return `<span class="p0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>`;
@@ -2857,7 +2852,7 @@ function itemHtml(itemName){
   return `
     <span
       class="item-with-icon"
-      onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
+      onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
     >
@@ -2887,7 +2882,7 @@ async function loadLootFromSheet(){
     const result=await loadAq40LootWithFallback();
     aq40Loot=filterLootPageDisplayItems(result.items);
     if(!aq40Loot.length){
-      throw new Error("Keine BWL-Lootdaten gefunden.");
+      throw new Error("Keine Naxx-Lootdaten gefunden.");
     }
 
     await Promise.all([loadP0PlusFromSheet(), loadGuildPoItems()]);
@@ -2936,15 +2931,15 @@ async function loadAq40LootWithFallback(){
         return {items:mapped,source:"JSON"};
       }
     }catch(error){
-      console.warn("BWL JSON-Fallback fehlgeschlagen:", url, error);
+      console.warn("Naxx JSON-Fallback fehlgeschlagen:", url, error);
     }
   }
 
   try{
     const response=await fetch(AQ40_LOOT_CSV_URL + "&t=" + Date.now(), {cache:"no-store"});
-    if(!response.ok) throw new Error("BWL CSV HTTP " + response.status);
+    if(!response.ok) throw new Error("Naxx CSV HTTP " + response.status);
     const csvText=await response.text();
-    if(/^\s*</.test(csvText)) throw new Error("BWL CSV lieferte HTML statt Daten");
+    if(/^\s*</.test(csvText)) throw new Error("Naxx CSV lieferte HTML statt Daten");
 
     const rows=parseCSV(csvText);
     if(rows.length){
@@ -2958,12 +2953,12 @@ async function loadAq40LootWithFallback(){
       if(mapped.length) return {items:mapped,source:"Google Sheet"};
     }
   }catch(error){
-    console.warn("BWL CSV-Fallback fehlgeschlagen:", error);
+    console.warn("Naxx CSV-Fallback fehlgeschlagen:", error);
   }
 
   const exportResult=await apiJsonp({
     action:"getFullExport",
-    raid:"BWL"
+    raid:"NAXX"
   });
   const exported=(exportResult.entries || []).map(entry=>mapAq40SheetLootRow({
     Itemname_DE: entry.item || entry.Item || "",
@@ -3062,6 +3057,57 @@ function filterLootPageDisplayItems(items){
   return Array.isArray(items) ? items : [];
 }
 
+function lootDuplicateNameCount(itemName){
+  const wanted=String(itemName || "").trim().toLowerCase();
+  if(!wanted) return 0;
+  return (aq40Loot || []).filter(item => String(item.name || "").trim().toLowerCase() === wanted).length;
+}
+
+function lootItemDisplayLabel(item){
+  const name=String(item && item.name || "").trim();
+  if(!name) return "";
+  if(lootDuplicateNameCount(name) < 2) return name;
+  const meta=[item.slot,item.boss,item.itemId ? "ID "+item.itemId : ""].filter(Boolean).join(" · ");
+  return meta ? name+" ("+meta+")" : name;
+}
+
+function setSelectedPrioItemId(slot,itemId){
+  window.selectedPrioItemIds = window.selectedPrioItemIds || {};
+  window.selectedPrioItemIds[slot] = String(itemId || "").trim();
+}
+
+function getSelectedPrioItemId(slot){
+  window.selectedPrioItemIds = window.selectedPrioItemIds || {};
+  const saved=String(window.selectedPrioItemIds[slot] || "").trim();
+  if(saved) return saved;
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  return option ? String(option.dataset.itemId || "").trim() : "";
+}
+
+function rememberSelectedPrioOption(slot){
+  const select=document.getElementById(slot);
+  const option=select && select.selectedOptions ? select.selectedOptions[0] : null;
+  setSelectedPrioItemId(slot, option ? option.dataset.itemId : "");
+}
+
+function selectPrioOption(slot,itemName,itemId){
+  const select=document.getElementById(slot);
+  if(!select) return;
+
+  const wantedId=String(itemId || "").trim();
+  const wantedName=String(itemName || "").trim();
+  const options=Array.from(select.options || []);
+  const option=(wantedId ? options.find(item => String(item.dataset.itemId || "").trim() === wantedId) : null) ||
+    options.find(item => item.value === wantedName);
+
+  if(option){
+    option.selected=true;
+  }else{
+    select.value=wantedName;
+  }
+}
+
 function fillItems(){
   ["p1","p2","p3"].filter((id,index)=>index < PRIO_COUNT).forEach(id=>{
     const select=document.getElementById(id);
@@ -3070,7 +3116,8 @@ function fillItems(){
     aq40Loot.forEach(item=>{
       const option=document.createElement("option");
       option.value=item.name;
-      option.textContent=item.name;
+      option.textContent=lootItemDisplayLabel(item);
+      option.dataset.itemId=item.itemId || "";
       select.appendChild(option);
     });
   });
@@ -3101,6 +3148,9 @@ function renderLootList(){
   filteredLoot.forEach(item=>{
     const row=document.createElement("div");
     row.className="loot-item-row";
+    const isPoPlusItem=currentGuildSlug()==="nachtloot"&&GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name));
+    const poPlusLocked=false;
+    if(poPlusLocked){row.style.opacity=".42";row.title="PO+-Freigabe fehlt – dieses Item kann nicht ausgewählt werden.";}
 
     const name=document.createElement("div");
     name.className=`loot-name ${item.quality}`;
@@ -3112,7 +3162,7 @@ function renderLootList(){
           alt=""
           loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"
         >
-        <span>${safe(item.name)}</span>
+        <span>${safe(lootItemDisplayLabel(item))}</span>
       </div>
       ${renderP0PlusBelowItem(item.name)}
     `;
@@ -3124,16 +3174,16 @@ function renderLootList(){
     const buttons=document.createElement("div");
     buttons.className="prio-buttons";
     const prioButtonParts = [
-      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}')">P1</button>`
+      `<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p1" onclick="setPrio('p1','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P1</button>`
     ];
     if(PRIO_COUNT >= 2){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}')">P2</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p2" onclick="setPrio('p2','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P2</button>`);
     }
     if(PRIO_COUNT >= 3){
-      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name)))){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
+    if(SUPPORTS_P0PLUS){
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-item-id="${htmlSafe(item.itemId || "")}" data-prio="p0plus" ${poPlusLocked?'disabled title="PO+-Freigabe fehlt"':''} onclick="setP0Plus('${escapeQuotes(item.name)}','${escapeQuotes(item.itemId || "")}')">${isPoPlusItem?'PO+':'PO'}</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -3148,6 +3198,7 @@ function renderLootList(){
       createdAt:""
     }));
     buttons.innerHTML = prioButtonParts.join("");
+    if(poPlusLocked)buttons.querySelectorAll("button[data-prio]").forEach(button=>button.disabled=true);
 
     row.appendChild(name);
     row.appendChild(buttons);
@@ -3157,19 +3208,20 @@ function renderLootList(){
   updateActiveButtons();
 }
 
-function setPrio(slot,itemName){
+function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
 
-  document.getElementById(slot).value=itemName;
+  setSelectedPrioItemId(slot,itemId);
+  selectPrioOption(slot,itemName,itemId);
   document.getElementById("playerStatus").innerHTML=
-    `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
+    `<span class="ok">✓ ${safe(itemName)} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
 
   autoSaveDraft();
   updateActiveButtons();
 }
 
-function setP0Plus(itemName){
+function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
@@ -3182,12 +3234,15 @@ function setP0Plus(itemName){
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
 
-  document.getElementById("p1").value=itemName;
-  document.getElementById("p2").value=itemName;
-  document.getElementById("p3").value=itemName;
+  setSelectedPrioItemId("p1",itemId);
+  setSelectedPrioItemId("p2",itemId);
+  setSelectedPrioItemId("p3",itemId);
+  selectPrioOption("p1",itemName,itemId);
+  selectPrioOption("p2",itemName,itemId);
+  selectPrioOption("p3",itemName,itemId);
 
   document.getElementById("playerStatus").innerHTML=
-    `<span class="ok">✓ ${itemName} wurde aktiv als P0+ gesetzt.</span>`;
+    `<span class="ok">✓ ${itemName} wurde aktiv als P0 gesetzt.</span>`;
 
   autoSaveDraft();
   updateActiveButtons();
@@ -3196,6 +3251,7 @@ function setP0Plus(itemName){
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
+  ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -3204,6 +3260,9 @@ function updateActiveButtons(){
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
 
   const p0Closed=isP0DeadlineClosed();
 
@@ -3221,7 +3280,7 @@ function updateActiveButtons(){
 
   if(window.p0PlusWasClicked && p1 && p1===p2 && p2===p3){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
+      .querySelectorAll(p1ItemId ? `.mini-btn[data-item-id="${cssEscape(p1ItemId)}"][data-prio="p0plus"]` : `.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
       .forEach(btn=>btn.classList.add("p0active"));
     renderCurrentPrios();
     return;
@@ -3229,19 +3288,19 @@ function updateActiveButtons(){
 
   if(p1){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`)
+      .querySelectorAll(p1ItemId ? `.mini-btn[data-item-id="${cssEscape(p1ItemId)}"][data-prio="p1"]` : `.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p1"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
   if(p2){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`)
+      .querySelectorAll(p2ItemId ? `.mini-btn[data-item-id="${cssEscape(p2ItemId)}"][data-prio="p2"]` : `.mini-btn[data-item="${cssEscape(p2)}"][data-prio="p2"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
   if(p3){
     document
-      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`)
+      .querySelectorAll(p3ItemId ? `.mini-btn[data-item-id="${cssEscape(p3ItemId)}"][data-prio="p3"]` : `.mini-btn[data-item="${cssEscape(p3)}"][data-prio="p3"]`)
       .forEach(btn=>btn.classList.add("active"));
   }
 
@@ -3252,7 +3311,7 @@ function getPlayerKey(){
   const player=document.getElementById("playerName").value.trim().toLowerCase();
   const server=document.getElementById("playerServer").value.trim().toLowerCase();
 
-  return player ? RAID_NAME+"_prio_"+server+"_"+player : null;
+  return player ? "aq40_prio_"+server+"_"+player : null;
 }
 
 function autoSaveDraft(){
@@ -3266,6 +3325,9 @@ function autoSaveDraft(){
     p1:document.getElementById("p1").value,
     p2:document.getElementById("p2").value,
     p3:document.getElementById("p3").value,
+    p1ItemId:getSelectedPrioItemId("p1"),
+    p2ItemId:getSelectedPrioItemId("p2"),
+    p3ItemId:getSelectedPrioItemId("p3"),
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
     timestamp:new Date().toLocaleString("de-DE")
@@ -3289,9 +3351,12 @@ function loadPlayerData(){
 
   document.getElementById("playerServer").value=data.server||"";
   document.getElementById("playerClass").value=data.class||"";
-  document.getElementById("p1").value=data.p1||"";
-  document.getElementById("p2").value=data.p2||"";
-  document.getElementById("p3").value=data.p3||"";
+  setSelectedPrioItemId("p1",data.p1ItemId || "");
+  setSelectedPrioItemId("p2",data.p2ItemId || "");
+  setSelectedPrioItemId("p3",data.p3ItemId || "");
+  selectPrioOption("p1",data.p1 || "",data.p1ItemId || "");
+  selectPrioOption("p2",data.p2 || "",data.p2ItemId || "");
+  selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
@@ -3302,8 +3367,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  const storageKey=guildLocalStorageKey("prios");
-  let data=JSON.parse(localStorage.getItem(storageKey)||"[]");
+  let data=JSON.parse(localStorage.getItem(guildLocalStorageKey("prios"))||"[]");
 
   data=data.filter(entry=>
     !(
@@ -3323,7 +3387,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem(storageKey,JSON.stringify(data));
+  localStorage.setItem(guildLocalStorageKey("prios"),JSON.stringify(data));
 }
 
 
@@ -3638,6 +3702,9 @@ function buildSavePrioUrl(savePin, oldPin){
   const p1=document.getElementById("p1").value;
   const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
   const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
 
   const isP0Plus =
     SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) &&
@@ -3662,6 +3729,9 @@ function buildSavePrioUrl(savePin, oldPin){
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
+    "&p1ItemId="+encodeURIComponent(p1ItemId)+
+    "&p2ItemId="+encodeURIComponent(p2ItemId)+
+    "&p3ItemId="+encodeURIComponent(p3ItemId)+
     "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
 
   if(oldPin && oldPin !== savePin){
@@ -3734,6 +3804,10 @@ async function savePrio(){
   }
 
   await loadPublishedPrios();
+  if(!currentRaidId){
+    status.innerHTML=`<span class="bad">Raid wurde zu diesem Prio-PIN nicht gefunden. Bitte Seite neu laden oder Prio-PIN prüfen.</span>`;
+    return;
+  }
   if(currentPublishedMode){
     status.innerHTML=`<span class="bad">Die Prioliste ist bereits geöffnet. Neue Einträge sind nicht mehr möglich.</span>`;
     return;
@@ -3935,6 +4009,7 @@ async function loadPublishedPrios(){
     const result = await apiJsonp({
       action:"getPublishedPrios",
       raid:RAID_NAME,
+      raidPin:pin,
       playerPin:pin
     });
 
@@ -4062,7 +4137,7 @@ function renderPublishedChecks(prios){
 ${
  String(prio.P0Plus).toLowerCase()==="ja"
  ?
- itemHtml(prio.P1)
+ itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))
  :
  '<span class="cross">✗</span>'
 }
@@ -4089,10 +4164,10 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${playerText}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
-        <td>${String(prio.P0Plus).toLowerCase()==="ja"?itemHtml(prio.P1):'nein'}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
+        <td>${String(prio.P0Plus).toLowerCase()==="ja"?itemHtml(prio.P1, prioItemIdForSlot(prio,"p1")):'nein'}</td>
       </tr>
     `;
   });
@@ -4591,54 +4666,6 @@ function dropCharacterOnZone(event){
   if(!isNaN(index)) selectLoggedInCharacter(index);
 }
 
-+function poReleaseStatusKey(entry){
-  if(entry?.requestType === "recruit") return "recruit";
-  if(entry?.requestType === "p1p3") return "p1p3";
-  return String(entry?.raid || "").trim().toLowerCase();
-}
-
-function renderSelectedCharacterPoReleases(data,requests){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  if(!box) return;
-  const releases=data?.poReleases || {};
-  const visibleRaids=new Set(Array.isArray(data?.visiblePoReleaseRaids)?data.visiblePoReleaseRaids:["recruit","p1p3","mc","bwl","aq40","aq20","naxx","zg-mittwoch","zg-prime","zg-late"]);
-  const labels=[["recruit","Rekrutenstatus"],["p1p3","P1–P3"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]].filter(([key])=>visibleRaids.has(key));
-  const pending=new Set((requests||[]).filter(entry=>String(entry?.status||"").toLowerCase()==="pending").map(poReleaseStatusKey));
-  const chips=labels.map(([key,label])=>{
-    const approved=key==="recruit" ? Boolean(data?.recruitStatusLifted) : Boolean(releases[key]);
-    const inReview=!approved && pending.has(key);
-    return '<span class="loot-release-chip '+(approved?'approved':inReview?'pending':'')+'">'+safe(label)+': '+(approved?'✓ freigegeben':inReview?'● in Prüfung':'– offen')+'</span>';
-  }).join("");
-  const attendanceChips=[["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["naxx","NAXX"]].map(([key,label])=>{const attendance=data?.attendance16?.[key],total=Number(attendance?.total||0),attended=Number(attendance?.attended||0),bench=Number(attendance?.bench||0);return '<span class="loot-attendance-chip '+(total&&attended<=6?'low':'')+'"><span>'+label+' Attendance</span><strong>'+(total?attended+'/'+total:'keine Daten')+'</strong><small>'+(bench?'davon '+bench+' Bank':'Warcraft Logs')+'</small></span>';}).join('');
-  box.innerHTML='<div class="loot-release-title loot-attendance-title">Meine Attendance</div><div class="loot-attendance-list">'+attendanceChips+'</div><div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-list">'+chips+'</div><div class="loot-release-help">Gelb = Antrag wird geprüft · Grün = freigegeben · Dunkel = noch nicht freigegeben</div>';
-}
-
-async function loadSelectedCharacterPoReleases(char){
-  const box=document.getElementById("selectedCharacterPoReleases");
-  const pin=getStoredLichtLootPlayerPin();
-  if(!box || !pin || !char?.name) return;
-  box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help">Status wird geladen …</div>';
-  try{
-    const historyQuery=new URLSearchParams({action:"getPlayerPrioHistory",guild:currentGuildSlug(),char:char.name,server:char.server||"",pin,t:Date.now()});
-    const displayQuery=new URLSearchParams({action:"getPoReleaseDisplaySettings",guild:currentGuildSlug(),t:Date.now()});
-    const responses=await Promise.all([fetch(APPS_SCRIPT_URL+"?"+historyQuery.toString(),{cache:"no-store"}),fetch(APPS_SCRIPT_URL+"?"+displayQuery.toString(),{cache:"no-store"})]);
-    const history=await responses[0].json();
-    const display=await responses[1].json().catch(()=>({}));
-    history.visiblePoReleaseRaids=Array.isArray(display.visibleRaids)?display.visibleRaids:null;
-    if(!history.success) throw new Error(history.error||"Freigaben konnten nicht geladen werden.");
-    let requests=[];
-    if(currentGuildSlug()==="nachtloot"){
-      const requestQuery=new URLSearchParams({action:"getMyPoReleaseRequests",guild:currentGuildSlug(),character:char.name,server:char.server||"",pin,t:Date.now()});
-      const requestResponse=await fetch(APPS_SCRIPT_URL+"?"+requestQuery.toString(),{cache:"no-store"});
-      const requestData=await requestResponse.json().catch(()=>({}));
-      requests=Array.isArray(requestData.entries)?requestData.entries:[];
-    }
-    renderSelectedCharacterPoReleases(history,requests);
-  }catch(error){
-    box.innerHTML='<div class="loot-release-title">PO-Freigaben für alle Raids</div><div class="loot-release-help"><span class="bad">Status konnte nicht geladen werden.</span></div>';
-  }
-}
-
 function selectLoggedInCharacter(index){
   const char=lichtlootLoggedInCharacters[index];
   if(!char) return;
@@ -4777,16 +4804,16 @@ function renderSelectedPrioPreviews(){
       preview.innerHTML="Noch kein Item gewählt.";
       return;
     }
-    preview.innerHTML=itemHtml(value);
+    preview.innerHTML=itemHtml(value,getSelectedPrioItemId(id));
   });
   renderOwnSelectionCard();
 }
 
-function ownSelectionValueHtml(value){
+function ownSelectionValueHtml(value,itemId){
   if(!value){
     return '<span>Noch kein Item gewählt.</span>';
   }
-  return '<strong>'+itemHtml(value)+'</strong>';
+  return '<strong>'+itemHtml(value,itemId)+'</strong>';
 }
 
 function renderOwnSelectionCard(){
@@ -4796,21 +4823,24 @@ function renderOwnSelectionCard(){
   const p1=document.getElementById("p1")?.value || "";
   const p2=PRIO_COUNT >= 2 ? (document.getElementById("p2")?.value || "") : "";
   const p3=PRIO_COUNT >= 3 ? (document.getElementById("p3")?.value || "") : "";
+  const p1ItemId=getSelectedPrioItemId("p1");
+  const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
+  const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
   const isP0Plus=SUPPORTS_P0PLUS && Boolean(window.p0PlusWasClicked) && p1 && p1===p2 && p2===p3;
 
   const rows=[
-    '<div class="own-selection-row"><span>P1</span><span>'+ownSelectionValueHtml(p1)+'</span></div>'
+    '<div class="own-selection-row"><span>P1</span><span>'+ownSelectionValueHtml(p1,p1ItemId)+'</span></div>'
   ];
 
   if(PRIO_COUNT >= 2){
-    rows.push('<div class="own-selection-row"><span>P2</span><span>'+ownSelectionValueHtml(p2)+'</span></div>');
+    rows.push('<div class="own-selection-row"><span>P2</span><span>'+ownSelectionValueHtml(p2,p2ItemId)+'</span></div>');
   }
 
   if(PRIO_COUNT >= 3){
-    rows.push('<div class="own-selection-row"><span>P3</span><span>'+ownSelectionValueHtml(p3)+'</span></div>');
+    rows.push('<div class="own-selection-row"><span>P3</span><span>'+ownSelectionValueHtml(p3,p3ItemId)+'</span></div>');
   }
 
-  rows.push('<div class="own-selection-row"><span>P0+</span><span>'+(isP0Plus ? ownSelectionValueHtml(p1) : '<span>Nein</span>')+'</span></div>');
+  rows.push('<div class="own-selection-row"><span>P0+</span><span>'+(isP0Plus ? ownSelectionValueHtml(p1,p1ItemId) : '<span>Nein</span>')+'</span></div>');
 
   content.innerHTML=rows.join("");
 }
@@ -6014,10 +6044,11 @@ async function loadGearPlanner(){
   }
 }
 
-function setPrio(slot,itemName){
+function setPrio(slot,itemName,itemId){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
-  document.getElementById(slot).value=itemName;
+  setSelectedPrioItemId(slot,itemId);
+  selectPrioOption(slot,itemName,itemId);
   document.getElementById("playerStatus").innerHTML =
     '<span class="ok">✓ '+safe(itemName)+' wurde auf '+slot.toUpperCase()+' gesetzt.</span>';
   renderSelectedPrioPreviews();
@@ -6025,7 +6056,7 @@ function setPrio(slot,itemName){
   updateActiveButtons();
 }
 
-function setP0Plus(itemName){
+function setP0Plus(itemName,itemId){
   if(!SUPPORTS_P0PLUS){ return; }
   if(isP0DeadlineClosed()){
     window.p0PlusWasClicked = false;
@@ -6037,11 +6068,14 @@ function setP0Plus(itemName){
 
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
-  document.getElementById("p1").value=itemName;
-  document.getElementById("p2").value=itemName;
-  document.getElementById("p3").value=itemName;
+  setSelectedPrioItemId("p1",itemId);
+  setSelectedPrioItemId("p2",itemId);
+  setSelectedPrioItemId("p3",itemId);
+  selectPrioOption("p1",itemName,itemId);
+  selectPrioOption("p2",itemName,itemId);
+  selectPrioOption("p3",itemName,itemId);
   document.getElementById("playerStatus").innerHTML =
-    '<span class="ok">✓ '+safe(itemName)+' wurde aktiv als P0+ gesetzt.</span>';
+    '<span class="ok">✓ '+safe(itemName)+' wurde aktiv als P0 gesetzt.</span>';
   renderSelectedPrioPreviews();
   autoSaveDraft();
   updateActiveButtons();
@@ -6050,6 +6084,7 @@ function setP0Plus(itemName){
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
   window.lastSavedPrioSignature = "";
+  ["p1","p2","p3"].forEach(rememberSelectedPrioOption);
   renderSelectedPrioPreviews();
   autoSaveDraft();
   updateActiveButtons();
@@ -6071,9 +6106,12 @@ function loadPlayerData(){
   }
 
   const data=JSON.parse(saved);
-  document.getElementById("p1").value=data.p1||"";
-  document.getElementById("p2").value=data.p2||"";
-  document.getElementById("p3").value=data.p3||"";
+  setSelectedPrioItemId("p1",data.p1ItemId || "");
+  setSelectedPrioItemId("p2",data.p2ItemId || "");
+  setSelectedPrioItemId("p3",data.p3ItemId || "");
+  selectPrioOption("p1",data.p1 || "",data.p1ItemId || "");
+  selectPrioOption("p2",data.p2 || "",data.p2ItemId || "");
+  selectPrioOption("p3",data.p3 || "",data.p3ItemId || "");
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML =
@@ -6355,7 +6393,7 @@ async function createRaidFromLootPage(){
       <span class="ok">✓ Raid wurde erstellt.</span><br><br>
       <strong>Raid:</strong><br>${r.name}<br><br>
       <strong>Raidstart:</strong><br>${formatRaidDateForCreate(raidDate)} um ${raidTime} Uhr<br>
-      <span class="warn">P0/P0+ möglich, bis die Prioliste geöffnet wird.</span><br><br>
+      <span class="warn">P0/P0 möglich bis ${formatP0DeadlineForCreate(raidDate,raidTime)} Uhr.</span><br><br>
       <strong>Prio PIN:</strong>
       <div class="result-row">
         <div class="pin-output" id="newPlayerPin">${playerPin}</div>
@@ -6610,13 +6648,6 @@ function normalizeQuality(value){
 function getIconUrl(icon){
   const raw = String(icon || "").trim();
   const fallback = "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";
-  const numericIconMap = {
-    "133639":"inv_misc_bag_10",
-    "133640":"inv_misc_bag_10_black",
-    "133641":"inv_misc_bag_10_blue",
-    "133642":"inv_misc_bag_10_green",
-    "133643":"inv_misc_bag_10_red"
-  };
 
   if(!raw){
     return fallback;
@@ -6634,9 +6665,7 @@ function getIconUrl(icon){
     die ItemID geladen und als Iconname gespeichert.
   */
   if(/^\d+$/.test(raw)){
-    return numericIconMap[raw]
-      ? "https://wow.zamimg.com/images/wow/icons/large/" + numericIconMap[raw] + ".jpg"
-      : fallback;
+    return fallback;
   }
 
   const clean = raw.toLowerCase().replace(/\.jpg$|\.png$/g,"");
@@ -7652,14 +7681,14 @@ function buildTooltipP0PlusHtml(itemName, useSafeHtml){
   return `<div class="tooltip-p0"><strong>🏆 P0+ Punkte:</strong><ul>${entries.map(e => `<li>${esc(getP0Player(e) || "?")}: ${esc(getP0Points(e) || 0)}</li>`).join("")}</ul></div>`;
 }
 
-function itemHtml(itemName){
+function itemHtml(itemName,itemId){
   if(!itemName) return "";
-  const item = findAnyKnownLootItem(itemName, RAID_NAME);
+  const item = findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
   const p0Line = renderP0PlusBelowItem(itemName);
   if(!item){
     return `<span class="p0plus-item" onmouseenter="showP0PlusTooltip(event,'${safeAttr(RAID_NAME)}','${safeAttr(itemName)}')" onmousemove="moveP0PlusTooltip(event)" onmouseleave="hideP0PlusTooltip()">${safe(itemName)}</span>${p0Line}`;
   }
-  return `<span class="item-with-icon" onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()"><img class="item-icon" src="${getIconUrl(item.icon)}" alt="" loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"><span class="${item.quality}" style="font-weight:400;cursor:pointer">${safe(item.name)}</span></span>${p0Line}`;
+  return `<span class="item-with-icon" onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))" onmousemove="moveTooltip(event)" onmouseleave="hideTooltip()"><img class="item-icon" src="${getIconUrl(item.icon)}" alt="" loading="lazy" data-icon="${safe(item.icon || "")}" onerror="iconFallback(this)"><span class="${item.quality}" style="font-weight:400;cursor:pointer">${safe(item.name)}</span></span>${p0Line}`;
 }
 
 function p0PlusItemHtml(entry){
@@ -8339,9 +8368,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${p0PlusCellForPrioV4(prio)}</td>
       </tr>
     `;
@@ -8648,9 +8677,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${p0PlusCellForPrioV4(prio)}</td>
       </tr>
     `;
@@ -9537,9 +9566,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Points(prio)}</td>
       </tr>
     `;
@@ -9637,9 +9666,23 @@ function lichtlootPrioP0Item(prio){
   ).trim();
 }
 
+function prioItemIdForSlot(prio,slot){
+  if(!prio) return "";
+  const upper=String(slot || "").toUpperCase();
+  const lower=upper.toLowerCase();
+  return String(
+    prio[upper+"ItemId"] ||
+    prio[lower+"ItemId"] ||
+    prio[upper+"ItemID"] ||
+    prio[lower+"_item_id"] ||
+    ""
+  ).trim();
+}
+
 function renderPrioP0Choice(prio){
   const isP0 = lichtlootPrioIsP0(prio);
   const itemName = lichtlootPrioP0Item(prio);
+  const itemId = prioItemIdForSlot(prio,"p1");
 
   if(!isP0 || !itemName){
     return '<div class="prio-p0-choice"><span class="empty">-</span></div>';
@@ -9648,7 +9691,7 @@ function renderPrioP0Choice(prio){
   return `
     <div class="prio-p0-choice">
       <strong>P0 gewählt</strong>
-      ${itemHtml(itemName)}
+      ${itemHtml(itemName,itemId)}
     </div>
   `;
 }
@@ -9720,9 +9763,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${renderPrioP0Points(prio)}</td>
       </tr>
@@ -9771,9 +9814,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
       </tr>
     `;
@@ -9825,6 +9868,7 @@ function buildTooltipP0PlusHtml(itemName, useSafeHtml){
 function renderPrioP0Choice(prio){
   const isP0 = lichtlootPrioIsP0(prio);
   const itemName = lichtlootPrioP0Item(prio);
+  const itemId = prioItemIdForSlot(prio,"p1");
 
   if(!isP0 || !itemName){
     return '<div class="prio-p0-choice"><span class="empty">-</span></div>';
@@ -9833,7 +9877,7 @@ function renderPrioP0Choice(prio){
   return `
     <div class="prio-p0-choice">
       <strong>P0 gewählt</strong>
-      ${itemHtml(itemName)}
+      ${itemHtml(itemName,itemId)}
     </div>
   `;
 }
@@ -10131,10 +10175,10 @@ function isOwnPublishedPrio(prio){
   return true;
 }
 
-function ownClosedPrioItemHtml(itemName){
+function ownClosedPrioItemHtml(itemName,itemId){
   if(!itemName) return '<span class="cross">✗</span>';
 
-  const item=findAnyKnownLootItem(itemName, RAID_NAME);
+  const item=findAnyKnownLootItemByGameId(itemId, RAID_NAME) || findAnyKnownLootItem(itemName, RAID_NAME);
   if(!item){
     return '<span class="p0plus-item">'+safe(itemName)+'</span>';
   }
@@ -10142,7 +10186,7 @@ function ownClosedPrioItemHtml(itemName){
   return `
     <span
       class="item-with-icon"
-      onmouseenter="showTooltip(event, findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
+      onmouseenter="showTooltip(event, findAnyKnownLootItemByGameId('${escapeQuotes(item.itemId || item.id || "")}','${escapeQuotes(item.raidKey || RAID_NAME)}') || findAnyKnownLootItem('${escapeQuotes(item.name)}','${escapeQuotes(item.raidKey || RAID_NAME)}'))"
       onmousemove="moveTooltip(event)"
       onmouseleave="hideTooltip()"
     >
@@ -10152,9 +10196,9 @@ function ownClosedPrioItemHtml(itemName){
   `;
 }
 
-function closedPrioCell(prio,itemName){
+function closedPrioCell(prio,itemName,itemId){
   if(isOwnPublishedPrio(prio)){
-    return ownClosedPrioItemHtml(itemName);
+    return ownClosedPrioItemHtml(itemName,itemId);
   }
   return itemName ? '<span class="check">✓</span>' : '<span class="cross">✗</span>';
 }
@@ -10229,8 +10273,11 @@ function getLiveDraftPrio(){
     Server:server,
     Klasse:playerClass,
     P1:p1,
+    P1ItemId:getSelectedPrioItemId("p1"),
     P2:p2,
+    P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
     P3:p3,
+    P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
     P0Plus:isP0Plus ? "ja" : "nein",
     P0Item:isP0Plus ? p1 : ""
   };
@@ -10243,8 +10290,11 @@ function prioDraftSignature(prio){
     normalizeOwnPrioText(prio.Server || prio.server || prio.Realm),
     normalizeOwnPrioText(prio.Klasse || prio.class || prio.Class),
     normalizeOwnPrioText(prio.P1 || prio.p1),
+    normalizeOwnPrioText(prio.P1ItemId || prio.p1ItemId || prio.P1ItemID || prio.p1_item_id),
     normalizeOwnPrioText(prio.P2 || prio.p2),
+    normalizeOwnPrioText(prio.P2ItemId || prio.p2ItemId || prio.P2ItemID || prio.p2_item_id),
     normalizeOwnPrioText(prio.P3 || prio.p3),
+    normalizeOwnPrioText(prio.P3ItemId || prio.p3ItemId || prio.P3ItemID || prio.p3_item_id),
     normalizeOwnPrioText(lichtlootPrioIsP0(prio) ? "ja" : "nein")
   ].join("|");
 }
@@ -10484,9 +10534,9 @@ function renderPublishedChecks(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}${liveRow ? '<span class="live-prio-hint">Deine aktuelle Auswahl</span>' : (ownRow ? '<span class="own-prio-hint">Deine Prio</span>' : '')}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${closedPrioCell(prio, prio.P1)}</td>
-        <td>${closedPrioCell(prio, prio.P2)}</td>
-        <td>${closedPrioCell(prio, prio.P3)}</td>
+        <td>${closedPrioCell(prio, prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${closedPrioCell(prio, prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${closedPrioCell(prio, prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${prioActionCellHtml(prio,index,ownRow)}</td>
       </tr>
@@ -10511,9 +10561,9 @@ function renderPublishedItems(prios){
         <td>${index + 1}</td>
         <td>${safe(prio.Spieler)}${liveRow ? '<span class="live-prio-hint">Deine aktuelle Auswahl</span>' : (ownRow ? '<span class="own-prio-hint">Deine Prio</span>' : '')}</td>
         <td><span class="${classColor(prio.Klasse)}">${safe(prio.Klasse)}</span></td>
-        <td>${itemHtml(prio.P1)}</td>
-        <td>${itemHtml(prio.P2)}</td>
-        <td>${itemHtml(prio.P3)}</td>
+        <td>${itemHtml(prio.P1, prioItemIdForSlot(prio,"p1"))}</td>
+        <td>${itemHtml(prio.P2, prioItemIdForSlot(prio,"p2"))}</td>
+        <td>${itemHtml(prio.P3, prioItemIdForSlot(prio,"p3"))}</td>
         <td>${renderPrioP0Choice(prio)}</td>
         <td>${prioActionCellHtml(prio,index,ownRow)}</td>
       </tr>
@@ -10521,6 +10571,12 @@ function renderPublishedItems(prios){
   });
 }
 
+</script>
+
+<script>
+/* ZG/AQ20: keine P0+-Punkte auf der Lootseite anzeigen, nur P0-Auswahl. */
+function renderP0PlusBelowItem(itemName){ return ""; }
+function buildTooltipP0PlusHtml(itemName,useSafeHtml){ return ""; }
 
 /* === Gilden-Schutz: PO+/P0+ Punkte nie aus einer anderen Gilde anzeigen === */
 function lichtlootP0GuildMatchesCurrent(entry){
@@ -10555,7 +10611,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="po-release-status.js?v=20260814-0015"></script>
+<script src="po-release-status.js?v=20260805-1700"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
 </body>
