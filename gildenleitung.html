@@ -5173,7 +5173,7 @@ body.worldbuff-only .master-only{display:none!important}
     </summary>
     <div class="raid-helper-body">
       <div class="raid-helper-tabs" role="tablist" aria-label="Raidanmelder">
-        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="setRaidHelperTab('createEvent')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>Neuen Raid erstellen</strong><span>Raid und Anmelder gemeinsam anlegen</span></span></button>
+        <button class="raid-helper-tab active" type="button" data-raid-helper-tab="createEvent" onclick="openNewRaidHelperForm()"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>Neuen Raid erstellen</strong><span>Raid und Anmelder gemeinsam anlegen</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="currentEvents" onclick="setRaidHelperTab('currentEvents')"><span class="raid-helper-tab-icon">✓</span><span class="raid-helper-tab-copy"><strong>Erstellte Raids verwalten</strong><span>Raid auswählen, Teilnehmer und POs bearbeiten</span></span></button>
       </div>
       <details class="raid-helper-tools">
@@ -5237,6 +5237,7 @@ body.worldbuff-only .master-only{display:none!important}
               <div class="field">
                 <label for="raidHelperRaid">Raid</label>
                 <select id="raidHelperRaid" onchange="updateRaidHelperDefaults()">
+                  <option value="">Raid auswählen …</option>
                   <option value="zg">Zul Gurub</option>
                   <option value="zg-mittwoch">ZG Mittwoch</option>
                   <option value="zg-prime">ZG PRIME</option>
@@ -5247,6 +5248,11 @@ body.worldbuff-only .master-only{display:none!important}
                   <option value="mc">MC</option>
                   <option value="naxx">Naxxramas</option>
                   <option value="ony">Onyxia</option>
+                  <option value="scholomance">Scholomance</option>
+                  <option value="lbrs">LBRS</option>
+                  <option value="ubrs">UBRS</option>
+                  <option value="brd">BRD</option>
+                  <option value="strath-live">Stratholme Live</option>
                   <option value="other">Andere Instanz …</option>
                 </select>
               </div>
@@ -5260,6 +5266,7 @@ body.worldbuff-only .master-only{display:none!important}
               <input id="raidHelperCustomInstance" type="text" placeholder="z. B. Stratholme, Scholomance oder UBRS" oninput="syncRaidHelperCustomInstance()">
             </div>
             <label class="layout-loot-toggle" style="margin-bottom:12px"><input id="raidHelperSignupOnly" type="checkbox" onchange="toggleRaidHelperSignupOnly()"><span><strong>Nur Raidanmeldung – keine Prios</strong><small>Spieler melden Charakter, Klasse und Skillung an. Prio-PIN, Lootseiten-Hilfe und P0-Anmelder werden für diesen Raid ausgeblendet.</small></span></label>
+            <label class="layout-loot-toggle" style="margin-bottom:12px"><input id="raidHelperShowWorldbuffs" type="checkbox" checked><span><strong>Worldbuffs im Raidanmelder anzeigen</strong><small>Blendet den Block „Aktuelle Worldbuffs“ im Discord-Anmelder dieses Raids ein oder aus.</small></span></label>
             <div class="raid-helper-row">
               <div class="field">
                 <label for="raidHelperDate">Datum</label>
@@ -5532,6 +5539,7 @@ body.worldbuff-only .master-only{display:none!important}
             <button class="small-btn primary" type="button" data-raid-helper-current-tier="all" onclick="setRaidHelperCurrentTierFilter('all')">Alle</button>
             <button class="small-btn ghost" type="button" data-raid-helper-current-tier="20" onclick="setRaidHelperCurrentTierFilter('20')">20er</button>
             <button class="small-btn ghost" type="button" data-raid-helper-current-tier="40" onclick="setRaidHelperCurrentTierFilter('40')">40er</button>
+            <button class="small-btn ghost" type="button" data-raid-helper-current-tier="free" onclick="setRaidHelperCurrentTierFilter('free')">Freie Raids</button>
           </div>
           <div id="raidHelperCurrentRaidTabs" class="po-signup-filter-row"></div>
         </div>
@@ -6392,6 +6400,11 @@ const RAID_OPTIONS = {
   "zg-late":{ name:"ZG LATE", short:"ZG LATE" },
   aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
   ony:{ name:"Onyxia", short:"ONY" },
+  scholomance:{ name:"Scholomance", short:"SCHOLO" },
+  lbrs:{ name:"LBRS", short:"LBRS" },
+  ubrs:{ name:"UBRS", short:"UBRS" },
+  brd:{ name:"BRD", short:"BRD" },
+  "strath-live":{ name:"Stratholme Live", short:"STRATH" },
   other:{ name:"Andere Instanz", short:"RAID" }
 };
 
@@ -7266,6 +7279,52 @@ function openRaidHelperPanel(tabName){
   if(tabName) setRaidHelperTab(tabName);
 }
 
+function openNewRaidHelperForm(){
+  raidHelperEditingRaidIdentifier = "";
+  raidHelperEditingData = null;
+  raidHelperEditingTemplateIdentifier = "";
+  const clearIds = [
+    "raidHelperRaid","raidHelperTitle","raidHelperCustomInstance","raidHelperLead",
+    "raidHelperLootMaster","raidHelperDescription","raidHelperAnnouncementMessage",
+    "raidHelperMax","raidHelperTanks","raidHelperHeals","raidHelperDds","raidHelperSignupDeadline"
+  ];
+  clearIds.forEach(id=>{const field=document.getElementById(id);if(field)field.value="";});
+  const template=document.getElementById("raidHelperQuickTemplate");
+  if(template)template.value="";
+  const guild=document.getElementById("raidHelperGuild");
+  if(guild)guild.value=getCurrentGuildBrand().guildName;
+  const date=document.getElementById("raidHelperDate");
+  if(date){
+    const now=new Date();
+    date.value=[now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");
+  }
+  const time=document.getElementById("raidHelperTime");
+  if(time)time.value="21:00";
+  const signupOnly=document.getElementById("raidHelperSignupOnly");
+  if(signupOnly)signupOnly.checked=false;
+  const showWorldbuffs=document.getElementById("raidHelperShowWorldbuffs");
+  if(showWorldbuffs)showWorldbuffs.checked=true;
+  const createP0=document.getElementById("raidHelperCreatePoSignup");
+  if(createP0){createP0.checked=true;createP0.disabled=false;}
+  const weekly=document.getElementById("raidHelperWeeklyEnabled");
+  if(weekly)weekly.checked=false;
+  document.getElementById("raidHelperWeeklyDetails")?.removeAttribute("open");
+  toggleRaidHelperWeeklyOptions();
+  setRaidHelperLinks({});
+  raidHelperSelectedNotifyRoles=[];
+  raidHelperSelectedAnnouncementNotifyRoles=[];
+  renderRaidHelperNotifyRoleTags();
+  renderRaidHelperAnnouncementNotifyRoleTags();
+  document.getElementById("raidHelperRaidEditMode")?.classList.add("hidden");
+  document.getElementById("raidHelperTemplateEditMode")?.classList.add("hidden");
+  const submit=document.getElementById("raidHelperCreateSubmitButton");
+  if(submit)submit.textContent="Raidanmelder erstellen";
+  document.getElementById("raidHelperSendAnnouncementNoticeButton")?.classList.add("hidden");
+  document.getElementById("raidHelperCustomInstanceField")?.classList.add("hidden");
+  setRaidHelperTab("createEvent");
+  updateRaidHelperPreview();
+}
+
 function closeRaidCenter(){
   document.getElementById("raidCenterBackdrop")?.remove();
 }
@@ -8102,6 +8161,7 @@ function openPendingLoginReview(){
 function getRaidKey(raid){
   const directRaw = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g,"");
   if(["zg-mittwoch","zg-prime","zg-late"].includes(directRaw)) return directRaw;
+  if(["scholomance","lbrs","ubrs","brd","strath-live"].includes(directRaw)) return directRaw;
   if(directRaw === "other") return "other";
   const directKey = directRaw.replace(/-/g, "");
   if(directKey === "aq20") return "aq20";
@@ -9202,7 +9262,8 @@ let raidHelperCurrentTierFilter = "all";
 let raidHelperCurrentRaidFilter = "";
 const RAID_HELPER_CURRENT_FILTER_GROUPS = {
   "20":["aq20","zg","zg-mittwoch","zg-prime","zg-late"],
-  "40":["naxx","aq40","bwl","mc","ony"]
+  "40":["naxx","aq40","bwl","mc","ony"],
+  "free":["other"]
 };
 const selectedRaidHelperIds = new Set();
 const selectedScheduledRaidHelperIds = new Set();
@@ -9852,7 +9913,7 @@ function raidHelperCurrentRaids(){
 }
 
 function setRaidHelperCurrentTierFilter(tier){
-  raidHelperCurrentTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
+  raidHelperCurrentTierFilter = ["20","40","free"].includes(String(tier)) ? String(tier) : "all";
   raidHelperCurrentRaidFilter = "";
   renderRaidHelperCurrentEvents();
 }
@@ -9872,10 +9933,10 @@ function renderRaidHelperCurrentFilters(){
   const tabs = document.getElementById("raidHelperCurrentRaidTabs");
   if(!tabs) return;
   const keys = raidHelperCurrentTierFilter === "all"
-    ? ["naxx","aq40","bwl","mc","ony","aq20","zg"]
+    ? ["naxx","aq40","bwl","mc","ony","aq20","zg","other"]
     : [...(RAID_HELPER_CURRENT_FILTER_GROUPS[raidHelperCurrentTierFilter] || [])].filter(key => !key.startsWith("zg-") || key === "zg");
   tabs.innerHTML = `<button class="small-btn ${raidHelperCurrentRaidFilter ? "ghost" : "primary"}" type="button" onclick="setRaidHelperCurrentRaidFilter('')">Alle Raids</button>` + keys.map(key => {
-    const label = key === "aq20" ? "AQ20" : key === "aq40" ? "AQ40" : key === "ony" ? "ONY" : key.toUpperCase();
+    const label = key === "aq20" ? "AQ20" : key === "aq40" ? "AQ40" : key === "ony" ? "ONY" : key === "other" ? "Freie Raids" : key.toUpperCase();
     const active = raidHelperCurrentRaidFilter === key;
     return `<button class="small-btn ${active ? "primary" : "ghost"}" type="button" onclick="setRaidHelperCurrentRaidFilter('${escapeAttr(key)}')">${escapeHtml(label)}</button>`;
   }).join("");
@@ -9909,6 +9970,7 @@ function renderRaidHelperEventCard(raid, mode){
   const description = String(raid.description || raid.beschreibung || "").trim();
   const raidId = raid.raidId || raid.id || "";
   const isArchived = ["archiviert","archive"].includes(normalize(statusText));
+  const prioEnabled = raid.prioEnabled !== false && String(raid.prioEnabled).toLowerCase() !== "false";
   return `
     <article class="raid-helper-event-detail" style="--raid-color:${raidHelperRaidColor(key)}">
       <div>
@@ -9919,7 +9981,7 @@ function renderRaidHelperEventCard(raid, mode){
           <span class="raid-helper-meta-pill">◷ ${escapeHtml(raid.raidTime || "-")}</span>
           <span class="raid-helper-meta-pill">${statusBadge(statusText)}</span>
           ${slots ? `<span class="raid-helper-meta-pill">${escapeHtml(slots)}</span>` : ""}
-          ${raid.playerPin ? `<span class="raid-helper-meta-pill">PIN ${escapeHtml(raid.playerPin)}</span>` : ""}
+          ${prioEnabled && raid.playerPin ? `<span class="raid-helper-meta-pill">PIN ${escapeHtml(raid.playerPin)}</span>` : ""}
         </div>
         ${description ? `<div class="raid-helper-event-description">${escapeHtml(description).slice(0,1200)}</div>` : ""}
       </div>
@@ -9927,7 +9989,7 @@ function renderRaidHelperEventCard(raid, mode){
         ${mode === "current" ? `<button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>` : ""}
         ${mode === "current" ? `<button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${escapeHtml(raidDiscordSignupActionLabel(raid))}</button>` : ""}
         ${mode === "current" && raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Raidanmelder neu erstellen</button>` : ""}
-        <button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}')">Prios</button>
+        ${prioEnabled ? `<button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raidId)}')">Prios</button>` : ""}
         ${!isArchived ? `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raidId)}')">Archivieren</button>` : ""}
         <button class="small-btn ghost" type="button" onclick="copyRaidDiscordText('${escapeAttr(raidId)}')">DC Text kopieren</button>
         <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Attendance</button>
@@ -10429,6 +10491,8 @@ async function editRaidHelperEvent(raidId){
   const signupOnly=raid.prioEnabled===false || String(raid.prioEnabled).toLowerCase()==="false";
   const signupOnlyField=document.getElementById("raidHelperSignupOnly");
   if(signupOnlyField)signupOnlyField.checked=signupOnly;
+  const worldbuffField=document.getElementById("raidHelperShowWorldbuffs");
+  if(worldbuffField)worldbuffField.checked=raid.showWorldbuffs!==false && String(raid.showWorldbuffs).toLowerCase()!=="false";
   if(key==="other")setRaidHelperEditValue("raidHelperCustomInstance", String(raid.raidName||"").replace(/\s+Anmeldung$/i,""));
   toggleRaidHelperSignupOnly();
   setRaidHelperLinks(raid);
@@ -10541,6 +10605,7 @@ async function saveRaidHelperEventFromCreate(){
     erstelltVon:raidHelperValue("raidHelperLead") || getRaidCreatorName(existing),
     raidHelperEnabled:"true",
     prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
+    showWorldbuffs:document.getElementById("raidHelperShowWorldbuffs")?.checked ? "true" : "false",
     maxPlayers:raidHelperValue("raidHelperMax"),
     tankSlots:raidHelperValue("raidHelperTanks"),
     healSlots:raidHelperValue("raidHelperHeals"),
@@ -11147,6 +11212,7 @@ async function queueRaidHelperDiscordRefresh(raidId, options = {}){
     linkUrl:raid.linkUrl || "",
     linkText:raid.linkText || "",
     linkIcon:raid.linkIcon || "",
+    showWorldbuffs:raid.showWorldbuffs === false || String(raid.showWorldbuffs).toLowerCase() === "false" ? "false" : "true",
     raidImageUrl:raid.raidImageUrl || "",
     channelId:raidHelperValue("raidHelperEditChannel") || raid.discordChannelId || RAID_HELPER_CHANNEL_ID,
     messageId:raid.discordMessageId || ""
@@ -14786,13 +14852,27 @@ async function loadRaidHelperDiscordChannels(){
 }
 
 function updateRaidHelperDefaults(){
-  const raidKey = document.getElementById("raidHelperRaid")?.value || "zg";
+  const raidKey = document.getElementById("raidHelperRaid")?.value || "";
+  const freeRaidKeys=["other","scholomance","lbrs","ubrs","brd","strath-live"];
   const customField=document.getElementById("raidHelperCustomInstanceField");
   customField?.classList.toggle("hidden", raidKey!=="other");
-  if(raidKey==="other"){
+  if(!raidKey){
+    updateRaidHelperPreview();
+    return;
+  }
+  if(freeRaidKeys.includes(raidKey)){
     document.getElementById("raidHelperSignupOnly").checked=true;
     toggleRaidHelperSignupOnly();
-    syncRaidHelperCustomInstance();
+    const desc=document.getElementById("raidHelperDescription");
+    if(desc && Object.values(RAID_HELPER_DEFAULT_TEXT).includes(desc.value))desc.value="";
+    const title=document.getElementById("raidHelperTitle");
+    if(title && (title.value==="ZG Raid 21 Uhr" || / Anmeldung$/.test(title.value)))title.value="";
+    if(raidKey==="other")syncRaidHelperCustomInstance();
+    else{
+      const raid=RAID_OPTIONS[raidKey];
+      if(title && !title.value.trim())title.value=raid.name+" Anmeldung";
+      updateRaidHelperPreview();
+    }
     return;
   }
   const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.zg;
@@ -14925,7 +15005,10 @@ setRaidHelperLinks({});
 
 function defaultRaidHelperImageUrl(raidKey){
   const raw = String(raidKey || "").trim().toLowerCase();
-  if(raw === "other") return "";
+  if(["other","scholomance","lbrs","ubrs","brd","strath-live"].includes(raw)){
+    return "https://lichtloot-production.up.railway.app/images/raid-templates/wow-other-raids.png";
+  }
+  if(!raw)return "";
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
   if(CURRENT_GUILD_SLUG !== "lichtloot"){
     const images=currentGuildInfo?.layout?.raidImages || {};
@@ -15063,8 +15146,8 @@ async function copyRaidHelperPreview(){
 async function createRaidHelperSignup(){
   const masterCode = document.getElementById("masterCode").value.trim();
   const status = document.getElementById("raidHelperStatus");
-  const raidKey = raidHelperValue("raidHelperRaid") || "zg";
-  const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.zg;
+  const raidKey = raidHelperValue("raidHelperRaid");
+  const raid = RAID_OPTIONS[raidKey];
   const raidDate = raidHelperValue("raidHelperDate");
   const raidTime = raidHelperValue("raidHelperTime");
   const title = raidHelperValue("raidHelperTitle") || raid.name;
@@ -15075,9 +15158,9 @@ async function createRaidHelperSignup(){
   const includePoBindingNotice = document.getElementById("raidHelperPoBindingNotice")?.checked !== false;
   const poBindingNotice = "Die in LichtLoot eingetragene Prio ist bindend; jeder Spieler ist selbst dafür verantwortlich, seine Prio vor jedem Raid zu kontrollieren und fehlende oder falsche Einträge rechtzeitig zu korrigieren.";
 
-  if(!masterCode || !raidDate || !raidTime){
+  if(!masterCode || !raidKey || !raid || !raidDate || !raidTime){
     if(status){
-      status.textContent = "Bitte Master-Code, Datum und Uhrzeit eintragen.";
+      status.textContent = !raidKey ? "Bitte zuerst einen Raid auswählen." : "Bitte Master-Code, Datum und Uhrzeit eintragen.";
       status.className = "status bad";
     }
     return;
@@ -15115,6 +15198,7 @@ async function createRaidHelperSignup(){
       erstelltVon:lead,
       raidHelperEnabled:"true",
       prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
+      showWorldbuffs:document.getElementById("raidHelperShowWorldbuffs")?.checked ? "true" : "false",
       maxPlayers:raidHelperValue("raidHelperMax"),
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
@@ -15224,6 +15308,7 @@ async function createRaidHelperSignup(){
         clearChannelBeforePost:document.getElementById("raidHelperWeeklyClearChannel")?.checked ? "true" : "false",
         createPoSignup:shouldCreatePoSignup ? "true" : "false",
         prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
+        showWorldbuffs:document.getElementById("raidHelperShowWorldbuffs")?.checked ? "true" : "false",
         deferFirstRun:"true"
       });
     }
