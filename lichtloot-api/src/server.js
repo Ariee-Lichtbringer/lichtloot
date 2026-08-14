@@ -1168,6 +1168,7 @@ async function listGuildsForBot({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensureGuildDiscordConfigSchema();
   await ensureGuildLayoutSchema();
+  await ensureDiscordChannelSchema();
   const result = await query(
     `select g.slug,
             g.name,
@@ -1175,6 +1176,13 @@ async function listGuildsForBot({ query: params }) {
             g.discord_guild_id,
             coalesce(gs.layout_json, '{}'::jsonb) as layout_json,
             coalesce(nullif(g.discord_guild_id, ''), (
+              select nullif(dbc.discord_guild_id, '')
+              from discord_bot_channels dbc
+              where dbc.guild_id = g.id
+                and nullif(dbc.discord_guild_id, '') is not null
+              order by dbc.updated_at desc
+              limit 1
+            ), (
               select nullif(ga.discord_guild_id, '')
               from guild_applications ga
               where ga.guild_slug = g.slug
@@ -22525,7 +22533,8 @@ async function ensureGuildPoItemsSchema() {
 }
 
 async function getGuildPoItems({ guild, query: params = {} }) {
-  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(params.queueToken)) requireMasterOrQueueToken(params);
+  else requireMasterCodeForGuild(guild, params.masterCode);
   await ensureGuildPoItemsSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guild.id];
