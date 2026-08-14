@@ -5832,7 +5832,7 @@ body.worldbuff-only .master-only{display:none!important}
     <div class="raid-helper-body">
       <div id="poPostTab-signup" class="po-post-tab-panel raid-helper-layout po-post-layout">
         <div class="raid-helper-form">
-          <section class="raid-helper-card">
+          <section id="poSignupEditorCard" class="raid-helper-card">
             <div class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▣</span>
               <div>
@@ -13901,6 +13901,7 @@ function renderRaidHelperPoSignupButton(row){
       <span>
         <strong>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</strong>
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · PIN ${escapeHtml(pin)}</span>
+        <span>Anmelde-ID: ${escapeHtml(postKey)}</span>
       </span>
       <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
       <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(row.title || postKey)} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="togglePoSignupSelection('${escapeAttr(postKey)}', this.checked)">
@@ -13911,6 +13912,21 @@ function renderRaidHelperPoSignupButton(row){
 function selectRaidHelperPoSignup(postKey){
   raidHelperPoSignupSelectedPostKey = String(postKey || "");
   renderRaidHelperPoSignupTab();
+}
+
+function editPoSignup(postKey){
+  const key = String(postKey || "").trim();
+  if(!key) return;
+  selectPoSignupForReview(key);
+  const panel = document.getElementById("poPostPanel");
+  if(panel) panel.open = true;
+  const editor = document.getElementById("poSignupEditorCard");
+  if(editor) editor.scrollIntoView({behavior:"smooth", block:"start"});
+  const status = document.getElementById("poSignupStatus");
+  if(status){
+    status.className = "status good";
+    status.textContent = `P0-Anmelder ${key} ist zur Bearbeitung geöffnet. Änderungen mit „Discord-Post senden“ speichern.`;
+  }
 }
 
 function renderRaidHelperPoSignupDetail(postKey){
@@ -13931,9 +13947,12 @@ function renderRaidHelperPoSignupDetail(postKey){
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(row.title || `${poSignupRaidLabel(raidKey)} PO-Anmelder`)}</h4>
         <span>${escapeHtml(row.raidDate ? formatRaidDate(row.raidDate) : "-")} · ${escapeHtml(row.raidTime || "-")} · Prio-PIN ${escapeHtml(pin)} · Lead-PIN ${escapeHtml(leadPin)}</span>
-        <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
+        <span><strong>Anmelde-ID:</strong> ${escapeHtml(row.postKey)}</span>
+        <span><strong>Discord-Channel:</strong> ${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ID ${escapeHtml(row.targetChannelId || row.sourceChannelId || "-")}</span>
+        <span>${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
       </div>
       <div class="raid-helper-current-actions">
+        <button class="small-btn primary" type="button" ${isArchivedOnly ? "disabled" : ""} onclick="editPoSignup('${escapeAttr(row.postKey)}')">P0-Anmelder bearbeiten</button>
         <button class="small-btn primary" type="button" ${isArchivedOnly ? "disabled" : ""} onclick="refreshPoSignupDiscordPost('${escapeAttr(row.postKey)}', this)">Discord-Post aktualisieren</button>
         <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
         ${isArchivedOnly
@@ -14444,7 +14463,12 @@ function loadPoSignupConfigFromRow(postKey){
         raidTime:group.raidTime || "",
         reviewRecipient:group.reviewRecipient || "",
         note:group.note || "",
-        itemOptions:group.itemOptions || ""
+        itemOptions:group.itemOptions || "",
+        raidPin:group.raidPin || group.prioPin || "",
+        prioPin:group.prioPin || group.raidPin || "",
+        lichtlootRaidId:group.lichtlootRaidId || "",
+        lichtlootPlayerPin:group.lichtlootPlayerPin || group.prioPin || group.raidPin || "",
+        lichtlootLeadPin:group.lichtlootLeadPin || group.leadPin || ""
       });
     }
   }
@@ -16076,7 +16100,7 @@ async function deleteRaidFromDashboard(raidId){
     return;
   }
   const label = raid ? `${raid.raidName || raid.raid || "Raid"} am ${formatRaidDate(raid.raidDate)}` : "diesen Raid";
-  if(!confirm(`${label} archivieren? Der Raid bleibt gespeichert und die Prios bleiben erhalten.`)) return;
+  if(!confirm(`${label} archivieren? Der Raid und seine Prios bleiben als Archiv erhalten. Der zugehörige Raidanmelder, P0-Anmelder und deren Anmeldungen werden entfernt.`)) return;
 
   try{
     const result = await railwayApi({
@@ -16097,7 +16121,7 @@ async function deleteRaidFromDashboard(raidId){
     renderRaids();
     renderRaidHelperCurrentEvents();
     renderRaidHelperPastEvents();
-    setStatus("Raid wurde archiviert.", "good");
+    setStatus("Raid archiviert; zugehörige Raid- und P0-Anmelder wurden aufgeräumt.", "good");
     await loadOverview({ preserveStatus:true });
   }catch(error){
     setStatus(error.message || "Raid konnte nicht archiviert werden.", "bad");
@@ -16158,7 +16182,7 @@ async function hardDeleteRaidFromPage(raidId){
     renderRaids();
     renderRaidHelperCurrentEvents();
     renderRaidHelperPastEvents();
-    setStatus("Raid wurde endgültig gelöscht.", "good");
+    setStatus("Raid endgültig gelöscht; zugehörige Raid- und P0-Anmelder wurden im gesamten Gildenbereich aufgeräumt.", "good");
     await loadOverview({ preserveStatus:true });
   }catch(error){
     setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
@@ -16190,7 +16214,7 @@ async function setRaidStatusFromPage(raidId, status){
     renderDashboardCards();
     loadDashboardRaidStats();
     renderRaids();
-    setStatus("Raidstatus wurde geändert.", "good");
+    setStatus(willArchive ? "Raid archiviert; zugehörige Raid- und P0-Anmelder wurden aufgeräumt." : "Raidstatus wurde geändert.", "good");
   }catch(error){
     setStatus(error.message || "Raidstatus konnte nicht geändert werden.", "bad");
   }
@@ -16214,7 +16238,7 @@ async function activateRaidCardFromPage(raidId){
 async function archiveRaidFromPage(raidId){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
   const label = raid ? (raid.raidName || raid.raid || raid.raidId) : raidId;
-  const ok = confirm(`Raid ${label} archivieren? Er verschwindet aus der Standardliste, bleibt aber gespeichert.`);
+  const ok = confirm(`Raid ${label} archivieren? Der Raid und seine Prios bleiben im Archiv. Zugehörige Raid- und P0-Anmelder werden entfernt.`);
   if(!ok) return;
   await setRaidStatusFromPage(raidId, "archiviert");
 }
