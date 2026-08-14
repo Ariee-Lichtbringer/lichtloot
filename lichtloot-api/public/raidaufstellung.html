@@ -218,11 +218,16 @@ body{background:var(--bg);font-size:14px}
 .raid-marker-icon{filter:none!important}
 .tactic-panel{margin-top:10px!important}.export{border-radius:5px;background:#07101f}
 /* Auswahlfelder und Spieler-Karten nur so breit wie ihr laengster sinnvoller Inhalt. */
-.task-card:not(.wide){width:fit-content;min-width:340px;max-width:100%}
-.task-card:not(.wide) .task-row{grid-template-columns:minmax(125px,max-content) minmax(210px,260px);justify-content:start}
+.task-card:not(.wide){width:auto;min-width:0;max-width:none}
+.task-card:not(.wide) .task-row{grid-template-columns:minmax(110px,1fr) minmax(190px,230px);justify-content:stretch}
 .task-card:not(.wide) .player-picker{width:clamp(210px,22ch,260px)}
 .task-card:not(.wide) .picker-current{width:100%}
-.task-grid{grid-template-columns:repeat(auto-fit,minmax(340px,max-content));justify-content:start}
+.task-grid{grid-template-columns:repeat(4,minmax(0,1fr));justify-content:stretch;align-items:start}
+.task-grid>.task-card{grid-column:span 1}
+.task-grid>.task-card.wide{grid-column:span 2;width:auto;max-width:none}
+.task-grid .assignment-table.tanks{grid-template-columns:62px repeat(3,minmax(150px,1fr))}
+.task-grid .assignment-table.buffs{grid-template-columns:72px repeat(4,minmax(135px,1fr))}
+.task-grid .assignment-cell{min-width:0}.task-grid .assignment-cell .player-picker{min-width:0;width:100%}
 .player-sheet-layout.free-card-layout>.player-sheet-card:not(.wide):not(.player-tactic){width:fit-content!important;min-width:340px;max-width:min(620px,100%)!important}
 .player-sheet-layout.free-card-layout>.player-sheet-card.wide:not(.player-tactic){width:fit-content!important;max-width:100%!important}
 .sheet-grid.tank{grid-template-columns:55px repeat(3,minmax(190px,max-content))}
@@ -231,9 +236,10 @@ body{background:var(--bg);font-size:14px}
 .sheet-player-card b,.sheet-player-card small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sheet-list-row{grid-template-columns:minmax(125px,max-content) minmax(190px,max-content);width:max-content;max-width:100%}
 .sheet-list-row .sheet-player-card{width:max-content;min-width:190px;max-width:260px}
+@media(max-width:1700px){.task-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.task-grid>.task-card.wide{grid-column:1/-1}}
 @media(max-width:1500px){.toolbar{grid-template-columns:repeat(3,minmax(220px,1fr))}.layout{grid-template-columns:fit-content(400px) minmax(0,1fr)}.layout>aside.panel{max-width:400px}.groups{grid-template-columns:repeat(4,minmax(145px,1fr))}}
-@media(max-width:1100px){.toolbar{grid-template-columns:repeat(2,minmax(220px,1fr))}.layout{grid-template-columns:fit-content(360px) minmax(0,1fr)}.layout>aside.panel{max-width:360px}.groups{grid-template-columns:repeat(2,minmax(180px,1fr))}}
-@media(max-width:760px){.toolbar{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.layout>aside.panel{position:static;width:100%;min-width:0;max-width:none;height:auto}.roster{max-height:320px}.roster>.char{width:100%;grid-template-columns:46px 30px minmax(0,1fr) auto}.groups{grid-template-columns:1fr}}
+@media(max-width:1100px){.toolbar{grid-template-columns:repeat(2,minmax(220px,1fr))}.layout{grid-template-columns:fit-content(360px) minmax(0,1fr)}.layout>aside.panel{max-width:360px}.groups{grid-template-columns:repeat(2,minmax(180px,1fr))}.task-grid{grid-template-columns:1fr}.task-grid>.task-card,.task-grid>.task-card.wide{grid-column:1}}
+@media(max-width:760px){.toolbar{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.layout>aside.panel{position:static;width:100%;min-width:0;max-width:none;height:auto}.roster{max-height:320px}.roster>.char{width:100%;grid-template-columns:46px 30px minmax(0,1fr) auto}.groups{grid-template-columns:1fr}.task-card:not(.wide) .task-row{grid-template-columns:minmax(0,1fr)}.task-card:not(.wide) .player-picker{width:100%}}
 @media print{body.printing-player-view{background:#fff!important}body.printing-player-view>*:not(#playerModal){display:none!important}body.printing-player-view #playerModal{display:block!important;position:static!important;background:#fff!important;padding:0!important}body.printing-player-view .player-modal-shell{width:100%!important;height:auto!important;overflow:visible!important;border:0!important;box-shadow:none!important}body.printing-player-view .player-modal-head{position:static!important;height:auto!important;background:#071020!important}body.printing-player-view .player-modal-head .btn,body.printing-player-view .player-encounter-nav,body.printing-player-view .player-layout-tools{display:none!important}body.printing-player-view .player-modal-body{overflow:visible!important;padding:12px!important}body.printing-player-view .player-sheet-layout.free-card-layout{position:static!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;height:auto!important;min-height:0!important}body.printing-player-view .free-card-layout>.player-sheet-card{position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;break-inside:avoid}body.printing-player-view .player-tactic{grid-column:1/-1!important;break-before:page}body.printing-player-view .player-tactic-content{height:auto!important;overflow:visible!important}body.printing-player-view *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 </style></head><body>
 <div id="campPickerPopup" class="camp-picker-popup hidden" onclick="if(event.target===this)closeCampPicker()"><div class="camp-picker-dialog"><h3 id="campPickerTitle">Charaktere für das Camp auswählen</h3><div id="campPickerPresets" class="camp-picker-presets"></div><div id="campPickerList" class="camp-picker-list"></div><div class="camp-picker-actions"><button class="btn" onclick="closeCampPicker()">Abbrechen</button><button class="btn good" onclick="confirmCampPicker()">Auswahl übernehmen</button></div></div></div>
