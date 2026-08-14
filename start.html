@@ -3520,7 +3520,7 @@ function applyStartPageLayout(){
     worldbuffHeading.parentElement.style.display=settings.worldbuffs === false ? "none" : "";
   }
   const discordLink=document.getElementById("startDiscordGuildLink");
-  const discordGuildId=String(settings.discordGuildId || (CURRENT_GUILD_SLUG === "nachtloot" ? "1327701882138923099" : "")).trim();
+  const discordGuildId=String(settings.discordGuildId || currentGuildInfo?.discordGuildId || "").trim();
   if(discordLink){
     const validId=/^\d{15,22}$/.test(discordGuildId);
     discordLink.style.display=validId ? "flex" : "none";
@@ -3547,12 +3547,8 @@ function applyGuildBrand(){
     footerName: (lootTitleFromGuild(guild) + " - " + (guild.name || CURRENT_GUILD_BRAND.guildName)).trim()
   } : CURRENT_GUILD_BRAND;
   document.title = brand.lootName + " - Lootsystem";
-  const primaryColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.primaryColor || String(guild.primaryColor).toLowerCase() === "#facc15")
-    ? "#22d3ee"
-    : guild?.primaryColor;
-  const accentColor = CURRENT_GUILD_SLUG === "nachtloot" && (!guild?.accentColor || ["#1d4ed8","#60a5fa"].includes(String(guild.accentColor).toLowerCase()))
-    ? "#0891b2"
-    : guild?.accentColor;
+  const primaryColor = guild?.primaryColor;
+  const accentColor = guild?.accentColor;
   applyGuildThemeColor("--gold", "--gold-rgb", primaryColor);
   applyGuildThemeColor("--blue", "--blue-rgb", accentColor);
   document.querySelectorAll("[data-guild-brand='lootName']").forEach(el => el.textContent = brand.lootName);
@@ -3572,9 +3568,10 @@ function applyGuildBrand(){
   }
   applyRaidLayoutImages(guild?.layout?.raidImages);
   const accountEntryText = document.getElementById("accountEntryButtonText");
-  if(accountEntryText) accountEntryText.textContent = CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot";
+  const accountLabel = `Mein ${brand.lootName || "LichtLoot"}`;
+  if(accountEntryText) accountEntryText.textContent = accountLabel;
   const accountEntry = document.getElementById("meinLichtLootRightEntry");
-  if(accountEntry) accountEntry.setAttribute("aria-label", (CURRENT_GUILD_SLUG === "nachtloot" ? "Mein NachtLoot" : "Mein LichtLoot") + " öffnen");
+  if(accountEntry) accountEntry.setAttribute("aria-label", accountLabel + " öffnen");
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
   const raidRecords = document.getElementById("lichtlootRaidRecords");
@@ -3656,7 +3653,7 @@ function createRaidId(raid){
     String(now.getSeconds()).padStart(2,"0")+"-"+
     randomCode(2);
 
-  const guildPrefix = CURRENT_GUILD_SLUG === "nachtloot" ? "NL" : "LL";
+  const guildPrefix = (CURRENT_GUILD_SLUG.replace(/[^a-z0-9]/gi, "").slice(0, 3) || "LL").toUpperCase();
   return guildPrefix+"-"+raids[raid].short+"-"+date;
 }
 
