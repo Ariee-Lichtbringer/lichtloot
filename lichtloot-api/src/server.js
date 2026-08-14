@@ -1086,7 +1086,6 @@ const defaultNewGuildRaidImages = {
 const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
 
 function defaultGuildLayoutForSlug(slug) {
-  if (String(slug || "").trim().toLowerCase() === "lichtloot") return {};
   return {
     raidImages: {},
     onboarding: {
@@ -1100,12 +1099,7 @@ function defaultGuildLayoutForSlug(slug) {
 
 function guildLogoUrlForSlug(slug, logoUrl) {
   const cleanLogo = clean(logoUrl);
-  const cleanSlug = String(slug || "").trim().toLowerCase();
-  if (cleanSlug === "lichtloot") return cleanLogo || "images/content.png";
-  if (!cleanLogo || cleanLogo === "images/content.png" || cleanLogo === "./images/content.png") {
-    return defaultNewGuildLogoUrl;
-  }
-  return cleanLogo;
+  return cleanLogo || defaultNewGuildLogoUrl;
 }
 
 function mergeGuildLayoutDefaults(slug, layout) {
@@ -1126,7 +1120,6 @@ async function listGuilds() {
   await ensureGuildDiscordConfigSchema();
   let result = await query(
     `select g.slug, g.name, g.server,
-            case when g.slug = 'lichtloot' then 'Lichtbringer' else coalesce(nullif(g.name, ''), g.slug) end as guild_pin,
             g.logo_url, g.background_url, g.discord_guild_id, g.created_at,
             coalesce(gs.points_label, 'P0/P0+') as points_label,
             coalesce(gs.primary_color, '#facc15') as primary_color,
@@ -1141,11 +1134,15 @@ async function listGuilds() {
     guilds: result.rows.map(row => {
       const layout = mergeGuildLayoutDefaults(row.slug, row.layout_json || {});
       const onboarding = layout.onboarding && typeof layout.onboarding === "object" ? layout.onboarding : {};
+      const ready = onboarding.status === "ready" || (
+        onboarding.setupComplete === true
+        && onboarding.discordConnected === true
+        && onboarding.channelsSynced === true
+      );
       return ({
       slug: row.slug,
       name: row.name,
       server: row.server || "",
-      guildPin: row.guild_pin || "",
       logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
       backgroundUrl: row.background_url || "",
       discordGuildId: row.discord_guild_id || "",
@@ -1153,8 +1150,8 @@ async function listGuilds() {
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
       layout,
-      setupStatus: onboarding.status || (row.slug === "lichtloot" ? "ready" : "setup_required"),
-      ready: row.slug === "lichtloot" || onboarding.status === "ready",
+      setupStatus: ready ? "ready" : (onboarding.status || "setup_required"),
+      ready,
       createdAt: row.created_at
       });
     })
@@ -1210,7 +1207,7 @@ async function ensureGuildLayoutSchema() {
 async function ensureNewGuildAdminPlayerLogin(client, guildId, guildSlug, guildPin, server) {
   const slug = clean(guildSlug).toLowerCase();
   const pin = normalizePin(guildPin);
-  if (!pin || !slug || slug === "lichtloot") return null;
+  if (!pin || !slug) return null;
   await ensurePlayerRoleSchema();
 
   const playerResult = await client.query(
@@ -1267,7 +1264,7 @@ async function createGuild({ query: params }) {
       }
     }
 
-    const defaultLogoUrl = slug === "lichtloot" ? "" : defaultNewGuildLogoUrl;
+    const defaultLogoUrl = defaultNewGuildLogoUrl;
     const guildResult = await client.query(
       `insert into guilds (name, slug, server, guild_pin, logo_url)
        values ($1, $2, $3, nullif($4, ''), $5)
