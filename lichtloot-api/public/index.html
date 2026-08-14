@@ -1415,25 +1415,26 @@ body.show-mylichtloot .mylichtloot-card{display:block}
   <div class="header">
     <img src="images/content.png" alt="LichtLoot" class="logo-banner">
   </div>
-  <div class="guild-soon-note"><strong>Hinweis:</strong> Die Registrierung für weitere Gilden kommt bald.</div>
+  <div class="guild-soon-note"><strong>Neu:</strong> Weitere Gilden können jetzt eine Freischaltung für LichtLoot beantragen.</div>
 
   <section id="guildGate" class="guild-gate hidden">
     <div class="guild-gate-head">
       <div>
-        <h1>Gildenregistrierung kommt bald</h1>
-        <p>Bald können sich weitere Gilden ein eigenes Lootsystem anlegen. Bis dahin bleibt dieser Bereich geschlossen.</p>
+        <h1>Gilde bei LichtLoot registrieren</h1>
+        <p>Beantragt ein eigenes, vollständig von anderen Gilden getrenntes Lootsystem.</p>
       </div>
     </div>
 
     <div class="guild-gate-grid">
       <div class="guild-register">
-        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Weitere Gilden bald verfügbar</span></div>
-        <p>Die Registrierung für andere Gilden wird gerade vorbereitet. Sobald alles fertig ist, erscheint hier wieder ein eigenes Anmeldefenster.</p>
+        <div class="guild-panel-title"><span class="guild-panel-icon">♢</span><span>Neue Gilde anmelden</span></div>
+        <p>Nach der Prüfung erhält die Gildenleitung einen persönlichen Einrichtungslink.</p>
         <div class="guild-config-actions">
+          <a class="guild-config-link" href="gilde-anmelden.html">Freischaltung beantragen <span>›</span></a>
           <a class="guild-config-link" href="index.html?guild=lichtloot">LichtLoot Login öffnen <span>›</span></a>
           <a class="guild-config-link" href="index.html?guild=lichtloot&open=createLogin">SpielerLogin erstellen <span>›</span></a>
         </div>
-        <div id="guildGateStatus" class="guild-status">Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.</div>
+        <div id="guildGateStatus" class="guild-status">Bereits eingerichtete Gilden werden hier angezeigt.</div>
       </div>
     </div>
   </section>
@@ -1989,6 +1990,34 @@ function selectGuildForLogin(value){
   syncGuildInputs(value, true);
 }
 
+async function loadGuildDropdowns(){
+  const selects=["homeGuildPin","leaderGuildName","pinGuildName"]
+    .map(id=>document.getElementById(id)).filter(Boolean);
+  if(!selects.length) return [];
+  try{
+    const query=new URLSearchParams({action:"listGuilds",t:Date.now()});
+    const response=await fetch(LICHTLOOT_API_URL+"?"+query.toString(),{cache:"no-store"});
+    const data=await response.json();
+    if(!response.ok || !data.success) throw new Error(data.error || "Gilden konnten nicht geladen werden.");
+    const guilds=(data.guilds || []).slice().sort((a,b)=>displayGuildName(a).localeCompare(displayGuildName(b),"de"));
+    const options=guilds.map(guild=>{
+      const name=displayGuildName(guild);
+      return `<option value="${safeHtml(name)}">${safeHtml(name)}</option>`;
+    }).join("");
+    selects.forEach(select=>{
+      const previous=String(select.value || "").trim();
+      select.innerHTML=options;
+      const preferred=guilds.find(guild=>String(guild.slug || "").toLowerCase()===currentActiveGuildSlug());
+      const value=preferred ? displayGuildName(preferred) : previous;
+      if(value && [...select.options].some(option=>option.value===value)) select.value=value;
+    });
+    return guilds;
+  }catch(error){
+    console.error("Gildenliste konnte nicht geladen werden:",error);
+    return [];
+  }
+}
+
 async function resolveGuildInputValue(value){
   const raw=String(value || "").trim();
   if(!raw) return { slug: currentActiveGuildSlug(), name: activeGuildDisplayName() };
@@ -2194,13 +2223,23 @@ function renderGuildGateList(){
 
 async function reloadGuildGate(){
   const status=document.getElementById("guildGateStatus");
-  guildGateGuilds=[];
-  if(status) status.innerHTML='Aktuell ist die Gildenregistrierung noch nicht freigeschaltet.';
+  if(status) status.innerHTML='<span class="warn">Gilden werden geladen …</span>';
+  try{
+    const response=await fetch(LICHTLOOT_API_URL+"?action=listGuilds&t="+Date.now(),{cache:"no-store"});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok || !result.success) throw new Error(result.error || "Gilden konnten nicht geladen werden.");
+    guildGateGuilds=Array.isArray(result.guilds) ? result.guilds : [];
+    const list=document.getElementById("guildGateList");
+    if(list) renderGuildGateList();
+    if(status) status.innerHTML='<span class="ok">Gilde auswählen oder eine neue Freischaltung beantragen.</span>';
+  }catch(error){
+    guildGateGuilds=[];
+    if(status) status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilden konnten nicht geladen werden.")+'</span>';
+  }
 }
 
 async function registerGuildFromGate(){
-  const status=document.getElementById("guildGateStatus");
-  if(status) status.innerHTML='<span class="warn">Die Registrierung für weitere Gilden kommt bald.</span>';
+  window.location.href="gilde-anmelden.html";
 }
 
 let currentGuildInfo = null;
@@ -4702,6 +4741,7 @@ async function homePlayerLogin(){
 function homePlayerLoginEnter(event){ if(event.key==='Enter') homePlayerLogin(); }
 document.addEventListener('DOMContentLoaded',async function(){
   document.body.classList.remove('show-mylichtloot');
+  await loadGuildDropdowns();
   const raidLink=document.getElementById('dashboardRaidLink');
   if(raidLink) raidLink.href=withCurrentGuildUrl('start.html');
   if(!CURRENT_GUILD_SLUG){
