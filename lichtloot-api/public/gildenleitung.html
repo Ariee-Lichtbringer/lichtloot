@@ -6582,7 +6582,13 @@ const RAID_IMAGES = {
   "zg-prime":"images/raid-templates/zg.jpg",
   "zg-late":"images/raid-templates/zg.jpg",
   aq20:"images/raid-templates/aq20.jpg",
-  ony:"images/raid-templates/ony.jpg"
+  ony:"images/raid-templates/ony.jpg",
+  other:"images/raid-templates/wow-other-raids.png",
+  scholomance:"images/raid-templates/wow-other-raids.png",
+  lbrs:"images/raid-templates/wow-other-raids.png",
+  ubrs:"images/raid-templates/wow-other-raids.png",
+  brd:"images/raid-templates/wow-other-raids.png",
+  "strath-live":"images/raid-templates/wow-other-raids.png"
 };
 const LAYOUT_DEFAULT_RAID_IMAGES = {
   mc:"images/raid-templates/mc.jpg",
@@ -10074,7 +10080,7 @@ function renderRaidHelperCurrentRaidButton(raid){
   const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.signups || 0);
   const imageKey = key.startsWith("zg-") ? "zg" : key;
-  const imageUrl = `images/raid-templates/${imageKey}.jpg`;
+  const imageUrl = RAID_IMAGES[imageKey] || RAID_IMAGES.other;
   return `
     <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
       <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
@@ -10242,6 +10248,7 @@ async function renderRaidHelperCurrentDetail(raidId){
   document.body.classList.add("raid-unified-open");
   primeRaidHelperCurrentEditState(raid);
   const key = getRaidKey(raid);
+  const signupOnlyRaid = isSignupOnlyRaid(raid);
   const slots = [
     raid.maxPlayers ? "Gesamt " + raid.maxPlayers : "",
     raid.tankSlots ? "Tanks " + raid.tankSlots : "",
@@ -10249,14 +10256,14 @@ async function renderRaidHelperCurrentDetail(raidId){
     raid.ddSlots ? "DD " + raid.ddSlots : ""
   ].filter(Boolean).join(" · ");
   const imageKey = key.startsWith("zg-") ? "zg" : key;
-  const imageUrl = `images/raid-templates/${imageKey}.jpg`;
+  const imageUrl = RAID_IMAGES[imageKey] || RAID_IMAGES.other;
   box.innerHTML = `
     <div class="raid-unified-back"><button class="small-btn ghost" type="button" onclick="closeRaidHelperCurrentEvent()">← Zurück zur Raidliste</button></div>
     <div class="raid-helper-current-detail-head">
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
-        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b> · ${escapeHtml(slots || "Slots offen")}</span>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${signupOnlyRaid ? "Reiner Raidanmelder" : `Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b>`} · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
       <div class="raid-unified-toolbar">
         <div class="raid-unified-toolbar-group">
@@ -10272,7 +10279,7 @@ async function renderRaidHelperCurrentDetail(raidId){
             <label>Discord-Channel<select id="raidDiscordChannel-${escapeAttr(raidId)}">${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}</select></label>
             <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${raidHasDiscordSignupPost(raid) ? "Vorhandenen Post aktualisieren" : "Anmelder im Discord erstellen"}</button>
             ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Zusätzlichen Post erstellen</button>` : ""}
-            <label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox"><span>Den passenden PO-Anmelder ebenfalls im Discord veröffentlichen</span></label>
+            ${signupOnlyRaid ? "" : `<label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox"><span>Den passenden PO-Anmelder ebenfalls im Discord veröffentlichen</span></label>`}
           </div>
         </div>
       </div>
@@ -10307,13 +10314,13 @@ async function renderRaidHelperCurrentDetail(raidId){
       <div id="raidHelperCurrentSignups" class="raid-helper-signup-list"><div class="muted">Anmeldungen werden geladen ...</div></div>
     </div>
     </section>
-    <section class="raid-unified-pane po">
+    ${signupOnlyRaid ? "" : `<section class="raid-unified-pane po">
       <div class="raid-unified-pane-title"><div><h3>PO-Anmeldungen</h3><span>Items prüfen, korrigieren, freigeben und übertragen</span></div></div>
       <div id="raidHelperCurrentPoPanel"><div class="muted">Passender PO-Anmelder wird geladen ...</div></div>
-    </section>
+    </section>`}
     </div>
   `;
-  await Promise.all([loadRaidHelperCurrentEventSignups(raidId),renderRaidHelperCurrentPoPanel(raid)]);
+  await Promise.all([loadRaidHelperCurrentEventSignups(raidId),signupOnlyRaid ? Promise.resolve() : renderRaidHelperCurrentPoPanel(raid)]);
 }
 
 async function renderRaidHelperCurrentPoPanel(raid){
