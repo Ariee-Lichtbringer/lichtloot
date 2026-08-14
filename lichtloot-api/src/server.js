@@ -2537,7 +2537,10 @@ async function ensureRaidSchema() {
        add column if not exists loot_master_targets jsonb not null default '[]'::jsonb,
        add column if not exists status_notify_targets jsonb not null default '[]'::jsonb,
        add column if not exists announcement_notify_targets jsonb not null default '[]'::jsonb,
-       add column if not exists announcement_message text not null default ''`
+       add column if not exists announcement_message text not null default '',
+       add column if not exists link_url text not null default '',
+       add column if not exists link_text text not null default '',
+       add column if not exists link_icon text not null default ''`
   );
   await query(
     `alter table raid_signups
@@ -3266,6 +3269,9 @@ function normalizeRaidRow(row) {
     statusNotifyTargets: Array.isArray(row.status_notify_targets) ? row.status_notify_targets : [],
     announcementNotifyTargets: Array.isArray(row.announcement_notify_targets) ? row.announcement_notify_targets : [],
     announcementMessage: row.announcement_message || "",
+    linkUrl: row.link_url || "",
+    linkText: row.link_text || "",
+    linkIcon: row.link_icon || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -3433,7 +3439,6 @@ function normalizeWorldbuffDbRow(row) {
     notiz: row.entry_note || row.event_note || "",
     note: row.entry_note || row.event_note || "",
     source: row.entry_source || row.event_source || "railway",
-    updatedAt: row.event_updated_at || row.updated_at || "",
     key: `${formatGermanDate(row.event_date)}|${row.event_time || ""}|${normalizeWorldbuffName(row.buff || "")}|${guildName}`
   };
 }
@@ -4461,7 +4466,7 @@ async function getWorldbuffs({ guildId, query: params }) {
   }
 
   const result = await query(
-    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name, e.updated_at as event_updated_at,
+    `select e.id as event_id, e.buff, e.event_date, e.event_time, e.guild_name,
             e.status as event_status, e.note as event_note, e.source as event_source,
             we.id as entry_id, we.caster, we.discord_name,
             we.status as entry_status, we.note as entry_note, we.source as entry_source
@@ -4484,7 +4489,7 @@ async function getWorldbuffs({ guildId, query: params }) {
   );
 
   const posterResult = await query(
-    `select p.id as event_id, p.buff, p.event_date, p.event_time, p.guild_name, p.updated_at as event_updated_at,
+    `select p.id as event_id, p.buff, p.event_date, p.event_time, p.guild_name,
             'offen' as event_status, '' as event_note, p.source as event_source,
             null::uuid as entry_id, null::text as caster, null::text as discord_name,
             null::text as entry_status, null::text as entry_note, null::text as entry_source
@@ -16017,7 +16022,8 @@ async function createRaidRecord({ guildId, query: params }) {
     clean(params.createdBy || params.created_by || params.erstelltVon || params.ersteller) ||
     (creatorLogin ? `SpielerLogin ${creatorLogin}` : "");
 
-  if (raidType && raidDate && raidTime) {
+  const updateExisting = ["1", "true", "yes", "ja"].includes(clean(params.updateExisting).toLowerCase());
+  if (raidType && raidDate && raidTime && !updateExisting) {
     const existing = await query(
       `select *
        from raids
@@ -16043,10 +16049,11 @@ async function createRaidRecord({ guildId, query: params }) {
        guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
-       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets, announcement_message
+       discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets, announcement_message,
+       link_url, link_text, link_icon
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -16089,9 +16096,12 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
-           status_notify_targets = case when $29 then excluded.status_notify_targets else raids.status_notify_targets end,
-           announcement_notify_targets = case when $30 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
+           status_notify_targets = case when $32 then excluded.status_notify_targets else raids.status_notify_targets end,
+           announcement_notify_targets = case when $33 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
            announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
+           link_url = excluded.link_url,
+           link_text = excluded.link_text,
+           link_icon = excluded.link_icon,
            updated_at = now()
      returning *`,
     [
@@ -16137,6 +16147,9 @@ async function createRaidRecord({ guildId, query: params }) {
         }
       })(),
       clean(params.announcementMessage || params.notificationMessage),
+      clean(params.linkUrl),
+      clean(params.linkText || params.linkLabel),
+      clean(params.linkIcon),
       Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
       Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
     ]
