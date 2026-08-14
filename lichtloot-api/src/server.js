@@ -1087,7 +1087,15 @@ const defaultNewGuildLogoUrl = "images/guild-defaults/default-logo.png";
 
 function defaultGuildLayoutForSlug(slug) {
   if (String(slug || "").trim().toLowerCase() === "lichtloot") return {};
-  return { raidImages: {} };
+  return {
+    raidImages: {},
+    onboarding: {
+      status: "setup_required",
+      setupComplete: false,
+      discordConnected: false,
+      channelsSynced: false
+    }
+  };
 }
 
 function guildLogoUrlForSlug(slug, logoUrl) {
@@ -1130,7 +1138,10 @@ async function listGuilds() {
   );
   return {
     success: true,
-    guilds: result.rows.map(row => ({
+    guilds: result.rows.map(row => {
+      const layout = mergeGuildLayoutDefaults(row.slug, row.layout_json || {});
+      const onboarding = layout.onboarding && typeof layout.onboarding === "object" ? layout.onboarding : {};
+      return ({
       slug: row.slug,
       name: row.name,
       server: row.server || "",
@@ -1141,9 +1152,12 @@ async function listGuilds() {
       pointsLabel: row.points_label || "P0/P0+",
       primaryColor: row.primary_color || "#facc15",
       accentColor: row.accent_color || "#1d4ed8",
-      layout: mergeGuildLayoutDefaults(row.slug, row.layout_json || {}),
+      layout,
+      setupStatus: onboarding.status || (row.slug === "lichtloot" ? "ready" : "setup_required"),
+      ready: row.slug === "lichtloot" || onboarding.status === "ready",
       createdAt: row.created_at
-    }))
+      });
+    })
   };
 }
 
@@ -1309,7 +1323,7 @@ async function createGuild({ query: params }) {
   }
 }
 
-async function updateGuildConfig({ query: params, body = {} }) {
+async function updateGuildConfig({ query: params, body = {}, trustedSetup = false }) {
   await ensureGuildLayoutSchema();
   const values = { ...params, ...body };
   const slug = clean(values.guild || values.slug);
@@ -1320,6 +1334,9 @@ async function updateGuildConfig({ query: params, body = {} }) {
   }
 
   const guild = await requireGuild(resolveGuildSlug(slug));
+  if (!trustedSetup) {
+    requireMasterCodeForGuild(guild, values.masterCode, "updateGuildConfig", values);
+  }
   const name = clean(values.guildName || values.name);
   const server = clean(values.server);
   const logoUrl = clean(values.logoUrl || values.logo_url);
@@ -1821,7 +1838,8 @@ async function completeGuildSetup({ query: params, body = {} }) {
   const created = await createGuild({ query: { guildName, lootName, server, guildPin } });
   const saved = await updateGuildConfig({
     query: { guild: created.guild.slug },
-    body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor }
+    body: { guildName, server, logoUrl, backgroundUrl, primaryColor, accentColor },
+    trustedSetup: true
   });
 
   if (discordGuildId) {
@@ -1833,6 +1851,25 @@ async function completeGuildSetup({ query: params, body = {} }) {
       [created.guild.slug, discordGuildId]
     );
   }
+
+  await query(
+    `insert into guild_settings (guild_id, layout_json)
+     values ((select id from guilds where slug = $1), jsonb_build_object('onboarding', $2::jsonb))
+     on conflict (guild_id) do update
+       set layout_json = jsonb_set(
+         coalesce(guild_settings.layout_json, '{}'::jsonb),
+         '{onboarding}', $2::jsonb, true
+       ), updated_at = now()`,
+    [
+      created.guild.slug,
+      JSON.stringify({
+        status: discordGuildId ? "bot_connection_required" : "discord_required",
+        setupComplete: true,
+        discordConnected: false,
+        channelsSynced: false
+      })
+    ]
+  );
 
   const rowResult = await query(
     `update guild_applications
@@ -6502,6 +6539,21 @@ async function saveDiscordBotChannels({ guildId, query: params }) {
        where guild_id = $1
          and not (channel_id = any($2::text[]))`,
       [guildId, Array.from(seen)]
+    );
+  }
+
+  if (saved > 0) {
+    await query(
+      `insert into guild_settings (guild_id, layout_json)
+       values ($1, jsonb_build_object('onboarding', $2::jsonb))
+       on conflict (guild_id) do update
+         set layout_json = jsonb_set(
+           coalesce(guild_settings.layout_json, '{}'::jsonb),
+           '{onboarding}',
+           coalesce(guild_settings.layout_json->'onboarding', '{}'::jsonb) || $2::jsonb,
+           true
+         ), updated_at = now()`,
+      [guildId, JSON.stringify({ status: "layout_required", discordConnected: true, channelsSynced: true })]
     );
   }
 
@@ -22002,11 +22054,6 @@ async function getGuildPoItems({ guild, query: params = {} }) {
 
 async function setGuildPoItem({ guild, query: params = {} }) {
   requireMasterCodeForGuild(guild, params.masterCode);
-  if (clean(guild?.slug).toLowerCase() !== "nachtloot") {
-    const error = new Error("PO-Items werden nur für Nachtwächter verwaltet.");
-    error.statusCode = 403;
-    throw error;
-  }
   await ensureGuildPoItemsSchema();
   const itemId = clean(params.itemId || params.id);
   const enabled = String(params.enabled).toLowerCase() === "true" || String(params.enabled) === "1";
@@ -22039,7 +22086,6 @@ async function setGuildPoItem({ guild, query: params = {} }) {
 
 async function setGuildPoItemsBulk({ guild, query: params = {} }) {
   requireMasterCodeForGuild(guild, params.masterCode);
-  if (clean(guild?.slug).toLowerCase() !== "nachtloot") { const error=new Error("PO-Items werden nur für Nachtwächter verwaltet."); error.statusCode=403; throw error; }
   await ensureGuildPoItemsSchema();
   let itemIds=[];
   try { itemIds=typeof params.itemIds==="string"?JSON.parse(params.itemIds):params.itemIds; } catch {}
@@ -22061,9 +22107,9 @@ async function setGuildPoItemsBulk({ guild, query: params = {} }) {
 }
 
 async function requireGuildPoItem(guildId, itemId, itemName = "") {
-  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  if (guildResult.rows[0]?.slug !== "nachtloot") return { bypassed: true };
   await ensureGuildPoItemsSchema();
+  const configured = await query(`select 1 from guild_po_items where guild_id = $1 limit 1`, [guildId]);
+  if (!configured.rows.length) return { bypassed: true };
   const result = await query(
     `select i.id, i.name
      from items i
@@ -22081,10 +22127,6 @@ async function requireGuildPoItem(guildId, itemId, itemName = "") {
 }
 
 async function guildPoItemRequiresRelease(guildId, itemId, itemName = "") {
-  const guildResult = await query(`select lower(slug) as slug from guilds where id = $1 limit 1`, [guildId]);
-  // Other guilds keep their existing raid-wide release behaviour. Nachtloot
-  // controls the requirement per item through the PO+ selection in leadership.
-  if (guildResult.rows[0]?.slug !== "nachtloot") return true;
   await ensureGuildPoItemsSchema();
   const result = await query(
     `select coalesce(gpi.po_plus_enabled, false) as po_plus_enabled
@@ -22097,7 +22139,7 @@ async function guildPoItemRequiresRelease(guildId, itemId, itemName = "") {
      limit 1`,
     [guildId, clean(itemId), clean(itemName)]
   );
-  return Boolean(result.rows[0]?.po_plus_enabled);
+  return result.rows[0] ? Boolean(result.rows[0].po_plus_enabled) : true;
 }
 
 async function loadStaticLootItems(raidType) {
@@ -22366,6 +22408,7 @@ app.get("/api/apps-script", async (req, res, next) => {
     }
 
     if (action === "createGuild") {
+      requireMasterCode(req.query.masterCode);
       const created = await createGuild({ query: req.query });
       return res.json(created);
     }
