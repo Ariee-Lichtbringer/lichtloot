@@ -7373,7 +7373,13 @@ async function getQuickRaidTemplates({ guildId, query: params }) {
     templates: result.rows.map(row => ({
       id: row.id,
       raid: normalizeRaidType(row.raid_type),
-      title: row.title || displayRaidName(row.raid_type)
+      title: row.title || displayRaidName(row.raid_type),
+      description: row.description || "",
+      maxPlayers: row.max_players ?? "",
+      tankSlots: row.tank_slots ?? "",
+      healSlots: row.heal_slots ?? "",
+      ddSlots: row.dd_slots ?? "",
+      signupDeadline: row.signup_deadline || ""
     }))
   };
 }
