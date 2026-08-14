@@ -5389,6 +5389,11 @@ body.worldbuff-only .master-only{display:none!important}
               <label for="raidHelperDescription">Beschreibung / Regeln</label>
               <textarea id="raidHelperDescription" oninput="updateRaidHelperPreview()"></textarea>
             </div>
+            <div class="raid-helper-row" style="margin-top:12px">
+              <div class="field"><label for="raidHelperLinkUrl">Zusätzlicher Link</label><input id="raidHelperLinkUrl" type="url" placeholder="https://…" oninput="updateRaidHelperPreview()"></div>
+              <div class="field"><label for="raidHelperLinkText">Link-Schlüsselwort</label><input id="raidHelperLinkText" type="text" placeholder="z. B. Raidregeln" oninput="updateRaidHelperPreview()"></div>
+              <div class="field"><label for="raidHelperLinkIcon">Oder Symbol</label><select id="raidHelperLinkIcon" onchange="updateRaidHelperPreview()"><option value="">Schlüsselwort verwenden</option><option value="🔗">🔗 Link</option><option value="📜">📜 Dokument</option><option value="⚔️">⚔️ Raid</option><option value="🌐">🌐 Webseite</option><option value="📌">📌 Wichtig</option></select></div>
+            </div>
           </section>
 
           <section class="raid-helper-card">
@@ -5851,6 +5856,12 @@ body.worldbuff-only .master-only{display:none!important}
             <div class="field">
               <label for="poSignupNote">Beschreibung / Regeln</label>
               <textarea id="poSignupNote" oninput="updatePoSignupPreview()">Wähle unten dein Item aus und trage danach Charakter + Spielerlogin ein.</textarea>
+            </div>
+            <label class="layout-loot-toggle" style="margin-top:10px"><input id="poSignupTransferWarning" type="checkbox" checked onchange="updatePoSignupPreview()"><span><strong>Verbindlichen LichtLoot-Hinweis einfügen</strong><small>Weist darauf hin, dass LichtLoot bindend ist und jeder Spieler seine Prio vor dem Raid selbst kontrollieren muss.</small></span></label>
+            <div class="raid-helper-row" style="margin-top:10px">
+              <div class="field"><label for="poSignupLinkUrl">Zusätzlicher Link</label><input id="poSignupLinkUrl" type="url" placeholder="https://…" oninput="updatePoSignupPreview()"></div>
+              <div class="field"><label for="poSignupLinkText">Link-Schlüsselwort</label><input id="poSignupLinkText" type="text" placeholder="z. B. Prio-Regeln" oninput="updatePoSignupPreview()"></div>
+              <div class="field"><label for="poSignupLinkIcon">Oder Symbol</label><select id="poSignupLinkIcon" onchange="updatePoSignupPreview()"><option value="">Schlüsselwort verwenden</option><option value="🔗">🔗 Link</option><option value="📜">📜 Regeln</option><option value="⚔️">⚔️ Raid</option><option value="🌐">🌐 LichtLoot</option><option value="📌">📌 Wichtig</option></select></div>
             </div>
             <div class="po-signup-action-guide">
               <div class="po-signup-action-card po-signup-action-main">
@@ -10495,6 +10506,9 @@ async function saveRaidHelperEventFromCreate(){
     announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
     announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
     description:raidHelperValue("raidHelperDescription"),
+    linkUrl:raidHelperValue("raidHelperLinkUrl"),
+    linkText:raidHelperValue("raidHelperLinkText"),
+    linkIcon:raidHelperValue("raidHelperLinkIcon"),
     raidImageUrl:defaultRaidHelperImageUrl(raidKey)
   };
   if(!payload.raidId || !payload.raidDate || !payload.raidTime){
@@ -11957,6 +11971,9 @@ async function saveRaidHelperTemplateFromCreate(){
       raid:raidKey,
       title,
       description:raidHelperValue("raidHelperDescription"),
+      linkUrl:raidHelperValue("raidHelperLinkUrl"),
+      linkText:raidHelperValue("raidHelperLinkText"),
+      linkIcon:raidHelperValue("raidHelperLinkIcon"),
       maxPlayers:raidHelperValue("raidHelperMax"),
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
@@ -13061,6 +13078,9 @@ function getPoSignupConfig(){
   }
   const sourceChannelId = document.getElementById("poSignupSourceChannel")?.value || "";
   const prio = poSignupGeneratedLichtlootRaid;
+  const warning="Die in LichtLoot eingetragene Prio ist bindend; jeder Spieler ist selbst dafür verantwortlich, seine Prio vor jedem Raid zu kontrollieren und fehlende oder falsche Einträge rechtzeitig zu korrigieren.";
+  let note=document.getElementById("poSignupNote")?.value.trim() || "";
+  if(document.getElementById("poSignupTransferWarning")?.checked && !note.includes(warning)) note=[note,warning].filter(Boolean).join("\n\n");
   return {
     postKey,
     sourceChannelId,
@@ -13072,7 +13092,10 @@ function getPoSignupConfig(){
     raidTime: document.getElementById("poSignupTime")?.value || "",
     limit:"800",
     mode:"signup",
-    note:document.getElementById("poSignupNote")?.value.trim() || "",
+    note,
+    linkUrl:document.getElementById("poSignupLinkUrl")?.value.trim() || "",
+    linkText:document.getElementById("poSignupLinkText")?.value.trim() || "",
+    linkIcon:document.getElementById("poSignupLinkIcon")?.value || "",
     itemOptions:poSignupItemLines().join("\n"),
     createLichtlootRaid: true,
     lichtlootRaidId: prio?.raidId || "",
@@ -14594,6 +14617,9 @@ async function createPoSignupPost(){
       limit: config.limit,
       mode: config.mode,
       note: config.note,
+      linkUrl: config.linkUrl,
+      linkText: config.linkText,
+      linkIcon: config.linkIcon,
       itemOptions: config.itemOptions,
       postedEntries: JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
       restoreArchived: "true",
@@ -14658,6 +14684,9 @@ async function queuePoPost(){
       title: config.title,
       raid: config.raid,
       note: config.note,
+      linkUrl: config.linkUrl,
+      linkText: config.linkText,
+      linkIcon: config.linkIcon,
       limit: config.limit
     });
     if(!result.success) throw new Error(result.error || "PO Post konnte nicht queued werden.");
@@ -14920,6 +14949,9 @@ async function createRaidHelperSignup(){
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
+      linkUrl:raidHelperValue("raidHelperLinkUrl"),
+      linkText:raidHelperValue("raidHelperLinkText"),
+      linkIcon:raidHelperValue("raidHelperLinkIcon"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey)
     });
 
@@ -14950,6 +14982,9 @@ async function createRaidHelperSignup(){
       announcementNotifyTargets:JSON.stringify(raidHelperAnnouncementNotifyTargets()),
       announcementMessage:raidHelperValue("raidHelperAnnouncementMessage"),
       description:raidHelperValue("raidHelperDescription"),
+      linkUrl:raidHelperValue("raidHelperLinkUrl"),
+      linkText:raidHelperValue("raidHelperLinkText"),
+      linkIcon:raidHelperValue("raidHelperLinkIcon"),
       raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
       channelId:discordChannelId,
       discordChannelId
@@ -18111,7 +18146,7 @@ async function saveWorldbuffCaster(index){
       buff,
       datum:entry.datum || "",
       uhrzeit,
-      gilde:managedWorldbuffGuildName(),
+      gilde:entry.gilde || managedWorldbuffGuildName(),
       charakter,
       status
     });
