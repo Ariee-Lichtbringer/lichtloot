@@ -6369,12 +6369,9 @@ body.worldbuff-only .master-only{display:none!important}
 const API_URL = "https://script.google.com/macros/s/AKfycbzwRZ1908IawmEh3WdROu_TBwfu8Yr1YXJ1VicqEIf15eZ2zzRE3Yw9OaaeJ0ZADbye2g/exec";
 const LICHTLOOT_API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 const CURRENT_GUILD_SLUG = getCurrentGuildSlug();
-const WORLDBUFF_BACKUP_CHANNEL_ID = CURRENT_GUILD_SLUG === "nachtloot"
-  ? "1531288515994718318"
-  : "1529393614247952434";
-const P0PLUS_BACKUP_CHANNEL_ID = CURRENT_GUILD_SLUG === "nachtloot"
-  ? "1531288738326642828"
-  : "1529393614247952434";
+function configuredGuildChannelId(key){
+  return String(currentGuildInfo?.layout?.[key] || "").trim();
+}
 const CURRENT_GUILD_QUERY = "guild=" + encodeURIComponent(CURRENT_GUILD_SLUG);
 const MASTER_STORAGE_KEY = "lichtlootGuildMasterCode_" + CURRENT_GUILD_SLUG;
 const PO_POST_CONFIG_STORAGE_KEY = "lichtlootPoPostConfigs_" + CURRENT_GUILD_SLUG;
@@ -7817,6 +7814,14 @@ function renderLootLayoutPanel(){
           </div>
           <div class="layout-form-grid">
             <div class="field">
+              <label>Worldbuff-Hauptchannel</label>
+              <select id="layoutWorldbuffChannelId">${layoutChannelSelectOptions(layout.worldbuffChannelId || "")}</select>
+            </div>
+            <div class="field">
+              <label>Hordenbuff-/Rend-Channel</label>
+              <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>
+            </div>
+            <div class="field">
               <label>Logo-URL</label>
               <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
             </div>
@@ -7862,13 +7867,13 @@ function renderLootLayoutPanel(){
               </div>
             </div>
             <div class="layout-bot-card">
-              <h4>PO-Anmelder-Bot</h4>
-              <p>Erstellt PO-Anmelder im Discord, zeigt die Item-Auswahl und speichert freigegebene Spieler-Einträge passend zur Gilde.</p>
+              <h4>P0-Anmelder-Bot</h4>
+              <p>Erstellt P0-Anmelder im Discord, zeigt die Item-Auswahl und speichert freigegebene Spieler-Einträge passend zur Gilde.</p>
               <div class="button-row">
-                ${renderBotInviteButton("po", "PO-Anmelder-Bot einladen")}
+                ${renderBotInviteButton("po", "P0-Anmelder-Bot einladen")}
                 <button class="small-btn ghost" type="button" onclick="copyBotInviteLink('po')">Link kopieren</button>
               </div>
-              ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom PO-Anmelder-Bot eingetragen werden.</p>'}
+              ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom P0-Anmelder-Bot eingetragen werden.</p>'}
             </div>
           </div>
         </section>
@@ -7880,7 +7885,7 @@ function renderLootLayoutPanel(){
         </div>
         <div class="layout-note-box">
           <h4>Feste Bot-Channels</h4>
-          <p>Lege hier fest, wohin Ersatzsuche, Worldbuff-Sicherungen und PO+-Sicherungen für diese Gilde gepostet werden.</p>
+          <p>Lege hier fest, wohin Ersatzsuche, Worldbuff-Sicherungen und P0+-Sicherungen für diese Gilde gepostet werden.</p>
           <div class="layout-form-grid">
             <div class="field">
               <label>Worldbuff-Ersatz-Channel</label>
@@ -7891,18 +7896,23 @@ function renderLootLayoutPanel(){
               <select id="layoutWorldbuffBackupChannelId">${layoutChannelSelectOptions(layout.worldbuffBackupChannelId || layout.p0PlusBackupChannelId || "")}</select>
             </div>
             <div class="field">
-              <label>PO+-Backup-Channel</label>
+              <label>P0+-Backup-Channel</label>
               <select id="layoutP0PlusBackupChannelId">${layoutChannelSelectOptions(layout.p0PlusBackupChannelId || "")}</select>
             </div>
             <div class="field">
               <label>Warcraft-Logs Quellchannel</label>
-              <select id="layoutLogSourceChannelId">${layoutChannelSelectOptions(layout.logSourceChannelId || (CURRENT_GUILD_SLUG === "nachtloot" ? "1327712129444221040" : ""))}</select>
+              <select id="layoutLogSourceChannelId">${layoutChannelSelectOptions(layout.logSourceChannelId || "")}</select>
               <span class="muted">Neue Warcraft-Logs werden aus diesem Channel importiert.</span>
             </div>
             <div class="field">
               <label>Loganalyse Zielchannel</label>
-              <select id="layoutLogAnalysisChannelId">${layoutChannelSelectOptions(layout.logAnalysisChannelId || (CURRENT_GUILD_SLUG === "nachtloot" ? "1533914926190428393" : ""))}</select>
+              <select id="layoutLogAnalysisChannelId">${layoutChannelSelectOptions(layout.logAnalysisChannelId || "")}</select>
               <span class="muted">Hier kann die Gilde ihre Analyse-Threads und Ergebnisse sammeln.</span>
+            </div>
+            <div class="field">
+              <label>Warcraft-Logs Gilden-ID</label>
+              <input id="layoutWarcraftLogsGuildId" inputmode="numeric" value="${escapeAttr(layout.warcraftLogsGuildId || "")}" placeholder="z. B. 755306">
+              <span class="muted">Steht in der Adresse der Gildenseite bei Warcraft Logs.</span>
             </div>
           </div>
           </div>
@@ -8057,11 +8067,14 @@ async function saveLootLayoutPanel(){
     startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),poReleaseRequest:Boolean(document.getElementById("layoutStartPoReleaseRequest")?.checked),discordGuildId:layoutFieldValue("layoutStartDiscordGuildId").replace(/\D/g,""),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
     guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
+    worldbuffChannelId: layoutFieldValue("layoutWorldbuffChannelId"),
+    hordenbuffChannelId: layoutFieldValue("layoutHordenbuffChannelId"),
     worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
     logSourceChannelId: layoutFieldValue("layoutLogSourceChannelId"),
-    logAnalysisChannelId: layoutFieldValue("layoutLogAnalysisChannelId")
+    logAnalysisChannelId: layoutFieldValue("layoutLogAnalysisChannelId"),
+    warcraftLogsGuildId: layoutFieldValue("layoutWarcraftLogsGuildId").replace(/\D/g,"")
   };
   const payload = {
     action:"updateGuildConfig",
@@ -9309,13 +9322,16 @@ const RAID_HELPER_CURRENT_FILTER_GROUPS = {
 };
 const selectedRaidHelperIds = new Set();
 const selectedScheduledRaidHelperIds = new Set();
-const RAID_HELPER_WCL_GUILD_ID = CURRENT_GUILD_SLUG === "nachtloot" ? 703333 : 755306;
-const RAID_HELPER_WCL_ATTENDANCE_SOURCES = [
-  { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:`https://vanilla.warcraftlogs.com/guild/attendance/${RAID_HELPER_WCL_GUILD_ID}?zone=2002` },
-  { key:"mc", label:"MC Teilnahmen", zone:"2000", url:`https://vanilla.warcraftlogs.com/guild/attendance/${RAID_HELPER_WCL_GUILD_ID}?zone=2000` },
-  { key:"aq40", label:"AQ40 Teilnahmen", zone:"2005", url:`https://vanilla.warcraftlogs.com/guild/attendance/${RAID_HELPER_WCL_GUILD_ID}?zone=2005` },
-  { key:"naxx", label:"NAXX Teilnahmen", zone:"2006", url:`https://vanilla.warcraftlogs.com/guild/attendance/${RAID_HELPER_WCL_GUILD_ID}?zone=2006` }
-];
+function raidHelperWclAttendanceSources(){
+  const guildId=String(currentGuildInfo?.layout?.warcraftLogsGuildId || "").replace(/\D/g,"");
+  if(!guildId) return [];
+  return [
+    { key:"bwl", label:"BWL Teilnahmen", zone:"2002", url:`https://vanilla.warcraftlogs.com/guild/attendance/${guildId}?zone=2002` },
+    { key:"mc", label:"MC Teilnahmen", zone:"2000", url:`https://vanilla.warcraftlogs.com/guild/attendance/${guildId}?zone=2000` },
+    { key:"aq40", label:"AQ40 Teilnahmen", zone:"2005", url:`https://vanilla.warcraftlogs.com/guild/attendance/${guildId}?zone=2005` },
+    { key:"naxx", label:"NAXX Teilnahmen", zone:"2006", url:`https://vanilla.warcraftlogs.com/guild/attendance/${guildId}?zone=2006` }
+  ];
+}
 const RAID_HELPER_ATTENDANCE_TABS = [
   { key:"bwl", label:"BWL", detail:"Blackwing Lair" },
   { key:"mc", label:"MC", detail:"Molten Core" },
@@ -11476,12 +11492,13 @@ function renderRaidHelperAttendanceTabs(){
 function renderRaidHelperWarcraftLogsSources(){
   const box = document.getElementById("raidHelperAttendanceTabs");
   if(!box) return;
-  box.innerHTML = RAID_HELPER_WCL_ATTENDANCE_SOURCES.map(source => `
+  const sources=raidHelperWclAttendanceSources();
+  box.innerHTML = sources.length ? sources.map(source => `
     <button class="raid-helper-attendance-tab${source.key === raidHelperAttendanceRaidKey ? " active" : ""}" type="button" onclick="setRaidHelperAttendanceRaid('${escapeAttr(source.key)}')">
       <span><strong>${escapeHtml(RAID_OPTIONS[source.key]?.short || source.key.toUpperCase())}</strong><span>${escapeHtml(source.label)}</span></span>
       <span class="raid-helper-meta-pill">Zone ${escapeHtml(source.zone)}</span>
     </button>
-  `).join("");
+  `).join("") : '<div class="status">Bitte unter „Layout bearbeiten“ zuerst die Warcraft-Logs-Gilden-ID eintragen.</div>';
 }
 
 function raidHelperTemplateDefaults(raidKey){
@@ -16554,8 +16571,8 @@ async function queueP0PlusBackup(raidOverride, sourceId){
       action:"guildQueueP0PlusBackup",
       masterCode,
       raid,
-      channelId:P0PLUS_BACKUP_CHANNEL_ID,
-      targetChannelId:P0PLUS_BACKUP_CHANNEL_ID,
+      channelId:configuredGuildChannelId("p0PlusBackupChannelId"),
+      targetChannelId:configuredGuildChannelId("p0PlusBackupChannelId"),
       requestedAt:new Date().toISOString()
     });
 
@@ -18729,8 +18746,8 @@ async function queueWorldbuffBackup(){
       action:"guildQueueWorldbuffBackup",
       masterCode,
       days,
-      channelId:WORLDBUFF_BACKUP_CHANNEL_ID,
-      targetChannelId:WORLDBUFF_BACKUP_CHANNEL_ID
+      channelId:configuredGuildChannelId("worldbuffBackupChannelId"),
+      targetChannelId:configuredGuildChannelId("worldbuffBackupChannelId")
     });
     if(!result.success){
       setStatus(result.error || "Worldbuff-Sicherung konnte nicht vorbereitet werden.", "bad");
