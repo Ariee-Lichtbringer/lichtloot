@@ -7339,6 +7339,38 @@ async function getRaidHelperTemplates({ guildId, query: params }) {
   return { success: true, templates: result.rows.map(normalizeRaidHelperTemplateRow) };
 }
 
+async function getQuickRaidTemplates({ guildId, query: params }) {
+  const creatorLogin = clean(params.creatorPlayerLogin || params.spielerLogin || params.loginPin);
+  const creatorPlayer = creatorLogin ? await findPlayerByPin(guildId, creatorLogin) : null;
+  if (!creatorPlayer || !canPlayerRoleCreateRaid(creatorPlayer.role)) {
+    const error = new Error("Zum Erstellen von Raids wende dich an die Gildenleitung.");
+    error.statusCode = 403;
+    throw error;
+  }
+  await ensureRaidHelperTemplateSchema();
+  const raidType = normalizeRaidType(params.raid || params.raidType || "");
+  const values = [guildId];
+  let raidClause = "";
+  if (raidType) {
+    values.push(raidTypeSearchValues(raidType));
+    raidClause = `and lower(raid_type) = any($2)`;
+  }
+  const result = await query(
+    `select * from raid_helper_templates
+     where guild_id = $1 ${raidClause}
+     order by lower(title)`,
+    values
+  );
+  return {
+    success: true,
+    templates: result.rows.map(row => ({
+      id: row.id,
+      raid: normalizeRaidType(row.raid_type),
+      title: row.title || displayRaidName(row.raid_type)
+    }))
+  };
+}
+
 async function saveRaidHelperTemplate({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureRaidHelperTemplateSchema();
@@ -16233,15 +16265,90 @@ async function createRandomRaid({ guildId, query: params }) {
     throw error;
   }
 
-  return createRaidRecord({
+  const createDiscordSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createDiscordSignup).toLowerCase());
+  let quickTemplate = null;
+  if (createDiscordSignup) {
+    const templateId = clean(params.templateId || params.raidTemplateId);
+    if (!isUuid(templateId)) {
+      const error = new Error("Bitte eine Vorlage für den Discord-Raidanmelder auswählen.");
+      error.statusCode = 400;
+      throw error;
+    }
+    const templateResult = await query(
+      `select * from raid_helper_templates
+       where guild_id = $1 and id = $2 and lower(raid_type) = any($3)
+       limit 1`,
+      [guildId, templateId, raidTypeSearchValues(raidType)]
+    );
+    quickTemplate = templateResult.rows[0] || null;
+    if (!quickTemplate || !clean(quickTemplate.discord_channel_id)) {
+      const error = new Error(quickTemplate ? "In der Raidvorlage ist kein Discord-Channel gespeichert." : "Die ausgewählte Raidvorlage gehört nicht zu diesem Raid oder dieser Gilde.");
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  const created = await createRaidRecord({
     guildId,
     query: {
       ...params,
       raid: raidType,
+      raidHelperEnabled: clean(params.createDiscordSignup).toLowerCase() === "true" ? "true" : params.raidHelperEnabled,
       status: "geschlossen",
       p0PlusFreigabe: "geöffnet"
     }
   });
+
+  if (createDiscordSignup) {
+    const templateId = clean(params.templateId || params.raidTemplateId);
+    const template = quickTemplate;
+    const channelId = clean(template.discord_channel_id);
+    const createdRaidId = clean(created.raidId || created.RaidID || params.raidId);
+    const createdPlayerPin = clean(created.playerPin || created.prioPin || params.playerPin);
+    const createPoSignup = ["1", "true", "yes", "ja", "on"].includes(clean(params.createPoSignup).toLowerCase());
+    const postKey = `${raidType}-po-anmelder-${clean(params.raidDate || params.datum).replace(/\D/g, "")}-${clean(params.raidTime || params.uhrzeit).replace(/\D/g, "")}-${randomRaidCode(4).toLowerCase()}`;
+    const followupPoPost = createPoSignup ? {
+      postKey,
+      sourceChannelId: channelId,
+      targetChannelId: channelId,
+      title: `${raidType.toUpperCase()} P0-Anmelder`,
+      raid: raidType,
+      raidDate: clean(params.raidDate || params.datum),
+      raidTime: clean(params.raidTime || params.uhrzeit),
+      mode: "signup",
+      lichtlootRaidId: createdRaidId,
+      lichtlootPlayerPin: createdPlayerPin,
+      lichtlootLeadPin: clean(created.leadPin || params.leadPin)
+    } : null;
+    const internalMasterCode = clean(masterCodeOverrides.get(String(guildId)) || masterCode);
+    const announcement = await queueRaidAnnouncement({
+      guildId,
+      query: {
+        masterCode: internalMasterCode,
+        raidId: createdRaidId,
+        playerPin: createdPlayerPin,
+        raid: raidType,
+        raidName: clean(template.title) || clean(params.raidName),
+        raidDate: clean(params.raidDate || params.datum),
+        raidTime: clean(params.raidTime || params.uhrzeit),
+        createdBy: creator,
+        guild: clean(params.guild),
+        guildName: clean(params.guildName || params.gilde),
+        maxPlayers: template.max_players,
+        tankSlots: template.tank_slots,
+        healSlots: template.heal_slots,
+        ddSlots: template.dd_slots,
+        signupDeadline: clean(template.signup_deadline),
+        description: clean(template.description),
+        raidImageUrl: clean(template.raid_image_url),
+        channelId,
+        followupPoPost
+      }
+    });
+    return { ...created, quickRaid: { announcementQueued: Boolean(announcement?.success), poSignupQueued: createPoSignup, templateId } };
+  }
+
+  return created;
 }
 
 async function createRaidRecord({ guildId, query: params }) {
@@ -22560,6 +22667,10 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildGetRaidHelperTemplates") {
       const templates = await getRaidHelperTemplates({ guildId: guild.id, query: req.query });
+      return res.json({ ...templates, guild: guild.slug });
+    }
+    if (action === "getQuickRaidTemplates") {
+      const templates = await getQuickRaidTemplates({ guildId: guild.id, query: req.query });
       return res.json({ ...templates, guild: guild.slug });
     }
 
