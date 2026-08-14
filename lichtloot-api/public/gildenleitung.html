@@ -5247,6 +5247,7 @@ body.worldbuff-only .master-only{display:none!important}
                   <option value="mc">MC</option>
                   <option value="naxx">Naxxramas</option>
                   <option value="ony">Onyxia</option>
+                  <option value="other">Andere Instanz …</option>
                 </select>
               </div>
               <div class="field">
@@ -5254,6 +5255,11 @@ body.worldbuff-only .master-only{display:none!important}
                 <input id="raidHelperTitle" type="text" placeholder="ZG Raid 21 Uhr" oninput="updateRaidHelperPreview()">
               </div>
             </div>
+            <div id="raidHelperCustomInstanceField" class="field hidden" style="margin-bottom:12px">
+              <label for="raidHelperCustomInstance">Name der Instanz</label>
+              <input id="raidHelperCustomInstance" type="text" placeholder="z. B. Stratholme, Scholomance oder UBRS" oninput="syncRaidHelperCustomInstance()">
+            </div>
+            <label class="layout-loot-toggle" style="margin-bottom:12px"><input id="raidHelperSignupOnly" type="checkbox" onchange="toggleRaidHelperSignupOnly()"><span><strong>Nur Raidanmeldung – keine Prios</strong><small>Spieler melden Charakter, Klasse und Skillung an. Prio-PIN, Lootseiten-Hilfe und P0-Anmelder werden für diesen Raid ausgeblendet.</small></span></label>
             <div class="raid-helper-row">
               <div class="field">
                 <label for="raidHelperDate">Datum</label>
@@ -5291,13 +5297,23 @@ body.worldbuff-only .master-only{display:none!important}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
-            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt ab der folgenden Woche denselben Raid und postet ihn automatisch in den gewählten Discord-Channel.</small></span></label>
-              <div id="raidHelperWeeklyOptions" class="raid-helper-row hidden" style="margin-top:12px">
-                <div class="field"><label for="raidHelperWeeklyPostTime">Wöchentliche Erstellungs-/Posting-Uhrzeit</label><input id="raidHelperWeeklyPostTime" type="time" value="09:00"></div>
-                <label class="layout-loot-toggle"><input id="raidHelperWeeklyClearChannel" type="checkbox"><span><strong>Channel vorher leeren</strong><small>Löscht unmittelbar vor dem automatischen Post alle nicht angepinnten Nachrichten im ausgewählten Channel.</small></span></label>
+            <details id="raidHelperWeeklyDetails" class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
+              <summary style="cursor:pointer"><strong>↻ Wochenautomatik einrichten</strong><br><span class="muted">Aufklappen und ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</span></summary>
+              <div style="margin-top:14px">
+                <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt und postet wöchentlich den Raid sowie – falls aktiviert – den passenden P0-Anmelder.</small></span></label>
+                <div id="raidHelperWeeklyOptions" class="hidden" style="margin-top:12px">
+                  <div class="raid-helper-row">
+                    <div class="field"><label for="raidHelperWeeklyFirstDate">Erster automatischer Termin</label><input id="raidHelperWeeklyFirstDate" type="date" onchange="syncRaidHelperWeeklyWeekdayFromDate()"></div>
+                    <div class="field"><label for="raidHelperWeeklyWeekday">Wochentag</label><select id="raidHelperWeeklyWeekday" onchange="syncRaidHelperWeeklyDateFromWeekday()"><option value="1">Montag</option><option value="2">Dienstag</option><option value="3">Mittwoch</option><option value="4">Donnerstag</option><option value="5">Freitag</option><option value="6">Samstag</option><option value="7">Sonntag</option></select></div>
+                    <div class="field"><label for="raidHelperWeeklyPostTime">Erstellungs-/Posting-Uhrzeit</label><input id="raidHelperWeeklyPostTime" type="time" value="09:00"></div>
+                  </div>
+                  <div class="raid-helper-row" style="margin-top:10px">
+                    <div class="field"><label for="raidHelperWeeklyChannel">Discord-Channel für die Automatik</label><select id="raidHelperWeeklyChannel"></select></div>
+                    <label class="layout-loot-toggle"><input id="raidHelperWeeklyClearChannel" type="checkbox"><span><strong>Channel vorher leeren</strong><small>Löscht vor dem Wochenpost alle nicht angepinnten Nachrichten in diesem Channel.</small></span></label>
+                  </div>
+                </div>
               </div>
-            </div>
+            </details>
             <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
               <div class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">📣</span>
@@ -5434,8 +5450,8 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
             <div class="discord-preview-pills" id="raidHelperPreviewSlots"></div>
             <div class="discord-preview-meta" style="grid-template-columns:1fr 1fr;margin-top:14px">
-              <div><span>Prio-PIN</span><strong>Wird beim Erstellen erzeugt</strong></div>
-              <div><span>Webansicht</span><strong>https://lichtloot.de/</strong></div>
+              <div id="raidHelperPreviewPrio"><span>Prio-PIN</span><strong>Wird beim Erstellen erzeugt</strong></div>
+              <div id="raidHelperPreviewWeb"><span>Webansicht</span><strong>https://lichtloot.de/</strong></div>
             </div>
             <div class="discord-preview-section-title" style="margin-top:16px">Anmeldungen</div>
             <div class="discord-preview-pills" id="raidHelperPreviewRoles"></div>
@@ -5626,6 +5642,7 @@ body.worldbuff-only .master-only{display:none!important}
                 <option value="zg-prime">ZG PRIME</option>
                 <option value="zg-late">ZG LATE</option>
                 <option value="ony">Onyxia</option>
+                <option value="other">Andere Instanz</option>
               </select></label>
               <label>Titel <input id="raidHelperScheduleTitle" type="text" placeholder="Naxx Mittwoch 19:45"></label>
               <label>Raidlead <input id="raidHelperScheduleLead" type="text" placeholder="maxmustermagier"></label>
@@ -6374,7 +6391,8 @@ const RAID_OPTIONS = {
   "zg-prime":{ name:"ZG PRIME", short:"ZG PRIME" },
   "zg-late":{ name:"ZG LATE", short:"ZG LATE" },
   aq20:{ name:"Ahn'Qiraj 20", short:"AQ20" },
-  ony:{ name:"Onyxia", short:"ONY" }
+  ony:{ name:"Onyxia", short:"ONY" },
+  other:{ name:"Andere Instanz", short:"RAID" }
 };
 
 function getCurrentGuildSlug(){
@@ -8084,6 +8102,7 @@ function openPendingLoginReview(){
 function getRaidKey(raid){
   const directRaw = String(raid.raid || raid.raidType || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g,"");
   if(["zg-mittwoch","zg-prime","zg-late"].includes(directRaw)) return directRaw;
+  if(directRaw === "other") return "other";
   const directKey = directRaw.replace(/-/g, "");
   if(directKey === "aq20") return "aq20";
   if(directKey === "zg") return "zg";
@@ -10407,6 +10426,11 @@ async function editRaidHelperEvent(raidId){
   setRaidHelperEditValue("raidHelperHeals", raid.healSlots || "");
   setRaidHelperEditValue("raidHelperDds", raid.ddSlots || "");
   setRaidHelperEditValue("raidHelperDescription", raid.description || raid.beschreibung || "");
+  const signupOnly=raid.prioEnabled===false || String(raid.prioEnabled).toLowerCase()==="false";
+  const signupOnlyField=document.getElementById("raidHelperSignupOnly");
+  if(signupOnlyField)signupOnlyField.checked=signupOnly;
+  if(key==="other")setRaidHelperEditValue("raidHelperCustomInstance", String(raid.raidName||"").replace(/\s+Anmeldung$/i,""));
+  toggleRaidHelperSignupOnly();
   setRaidHelperLinks(raid);
   setRaidHelperEditValue("raidHelperAnnouncementMessage", raid.announcementMessage || "");
   setRaidHelperEditValue("raidHelperChannel", raid.discordChannelId || RAID_HELPER_CHANNEL_ID);
@@ -10516,6 +10540,7 @@ async function saveRaidHelperEventFromCreate(){
     createdBy:raidHelperValue("raidHelperLead") || getRaidCreatorName(existing),
     erstelltVon:raidHelperValue("raidHelperLead") || getRaidCreatorName(existing),
     raidHelperEnabled:"true",
+    prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
     maxPlayers:raidHelperValue("raidHelperMax"),
     tankSlots:raidHelperValue("raidHelperTanks"),
     healSlots:raidHelperValue("raidHelperHeals"),
@@ -12218,6 +12243,7 @@ function renderRaidHelperDiscordChannels(){
   }
   renderRaidHelperTemplateChannelSelect(document.getElementById("raidHelperTemplateChannel")?.value || RAID_HELPER_CHANNEL_ID);
   renderRaidHelperScheduleChannelSelect(document.getElementById("raidHelperScheduleChannel")?.value || RAID_HELPER_CHANNEL_ID);
+  renderRaidHelperWeeklyChannelSelect();
   renderPoPostChannelSelects();
   renderFreeEmbedChannelSelect();
   updateRaidHelperPreview();
@@ -14761,6 +14787,14 @@ async function loadRaidHelperDiscordChannels(){
 
 function updateRaidHelperDefaults(){
   const raidKey = document.getElementById("raidHelperRaid")?.value || "zg";
+  const customField=document.getElementById("raidHelperCustomInstanceField");
+  customField?.classList.toggle("hidden", raidKey!=="other");
+  if(raidKey==="other"){
+    document.getElementById("raidHelperSignupOnly").checked=true;
+    toggleRaidHelperSignupOnly();
+    syncRaidHelperCustomInstance();
+    return;
+  }
   const raid = RAID_OPTIONS[raidKey] || RAID_OPTIONS.zg;
   const title = document.getElementById("raidHelperTitle");
   const desc = document.getElementById("raidHelperDescription");
@@ -14773,12 +14807,56 @@ function updateRaidHelperDefaults(){
   updateRaidHelperPreview();
 }
 
+function syncRaidHelperCustomInstance(){
+  if(raidHelperValue("raidHelperRaid")!=="other")return;
+  const name=raidHelperValue("raidHelperCustomInstance");
+  const title=document.getElementById("raidHelperTitle");
+  if(title && name)title.value=name+" Anmeldung";
+  updateRaidHelperPreview();
+}
+
+function toggleRaidHelperSignupOnly(){
+  const signupOnly=document.getElementById("raidHelperSignupOnly")?.checked===true;
+  const po=document.getElementById("raidHelperCreatePoSignup");
+  if(po){po.checked=!signupOnly;po.disabled=signupOnly;}
+  document.getElementById("raidHelperPreviewPrio")?.classList.toggle("hidden", signupOnly);
+  document.getElementById("raidHelperPreviewWeb")?.classList.toggle("hidden", signupOnly);
+  updateRaidHelperPreview();
+}
+
 function raidHelperValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
 function toggleRaidHelperWeeklyOptions(){
-  document.getElementById("raidHelperWeeklyOptions")?.classList.toggle("hidden", !document.getElementById("raidHelperWeeklyEnabled")?.checked);
+  const enabled=document.getElementById("raidHelperWeeklyEnabled")?.checked===true;
+  document.getElementById("raidHelperWeeklyOptions")?.classList.toggle("hidden", !enabled);
+  if(enabled){
+    const date=document.getElementById("raidHelperWeeklyFirstDate");
+    if(date && !date.value)date.value=addDaysToIsoDate(raidHelperValue("raidHelperDate"),7) || addDaysToIsoDate(new Date().toISOString().slice(0,10),7);
+    syncRaidHelperWeeklyWeekdayFromDate();
+    renderRaidHelperWeeklyChannelSelect();
+  }
+}
+
+function syncRaidHelperWeeklyWeekdayFromDate(){
+  const date=raidHelperValue("raidHelperWeeklyFirstDate");
+  const weekday=document.getElementById("raidHelperWeeklyWeekday");
+  if(date&&weekday)weekday.value=isoWeekdayFromDate(date);
+}
+
+function syncRaidHelperWeeklyDateFromWeekday(){
+  const weekday=raidHelperValue("raidHelperWeeklyWeekday");
+  const date=document.getElementById("raidHelperWeeklyFirstDate");
+  if(date)date.value=nextIsoDateForWeekday(weekday);
+}
+
+function renderRaidHelperWeeklyChannelSelect(){
+  const select=document.getElementById("raidHelperWeeklyChannel");
+  if(!select)return;
+  const selected=String(select.value||raidHelperValue("raidHelperChannel")||RAID_HELPER_CHANNEL_ID).trim();
+  select.innerHTML=discordChannelSelectOptions(selected);
+  if([...select.options].some(option=>option.value===selected))select.value=selected;
 }
 
 function addDaysToIsoDate(value, days){
@@ -14847,6 +14925,7 @@ setRaidHelperLinks({});
 
 function defaultRaidHelperImageUrl(raidKey){
   const raw = String(raidKey || "").trim().toLowerCase();
+  if(raw === "other") return "";
   const key = raw.startsWith("zg-") ? "zg" : (["zg","aq20","aq40","bwl","mc","naxx","ony"].includes(raw) ? raw : "zg");
   if(CURRENT_GUILD_SLUG !== "lichtloot"){
     const images=currentGuildInfo?.layout?.raidImages || {};
@@ -15035,6 +15114,7 @@ async function createRaidHelperSignup(){
       createdBy:lead,
       erstelltVon:lead,
       raidHelperEnabled:"true",
+      prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
       maxPlayers:raidHelperValue("raidHelperMax"),
       tankSlots:raidHelperValue("raidHelperTanks"),
       healSlots:raidHelperValue("raidHelperHeals"),
@@ -15116,12 +15196,13 @@ async function createRaidHelperSignup(){
 
     let weeklyQueued = { success:true, skipped:true };
     if(document.getElementById("raidHelperWeeklyEnabled")?.checked){
-      const nextRaidDate=addDaysToIsoDate(raidDate, 7);
-      const weekday=isoWeekdayFromDate(nextRaidDate);
+      const nextRaidDate=raidHelperValue("raidHelperWeeklyFirstDate") || addDaysToIsoDate(raidDate, 7);
+      const weekday=raidHelperValue("raidHelperWeeklyWeekday") || isoWeekdayFromDate(nextRaidDate);
+      const weeklyChannelId=raidHelperValue("raidHelperWeeklyChannel") || discordChannelId;
       weeklyQueued=await railwayWrite({
         action:"guildSaveRaidHelperSchedule",
         masterCode,
-        scheduleKey:`weekly-create-${raidKey}-${weekday}-${raidTime}-${discordChannelId}`,
+        scheduleKey:`weekly-create-${raidKey}-${weekday}-${raidTime}-${weeklyChannelId}`,
         raid:raidKey,
         title,
         createdBy:lead,
@@ -15132,7 +15213,7 @@ async function createRaidHelperSignup(){
         nextRaidDate,
         nextPostDate:nextRaidDate,
         signupDeadline:"",
-        discordChannelId,
+        discordChannelId:weeklyChannelId,
         maxPlayers:raidHelperValue("raidHelperMax"),
         tankSlots:raidHelperValue("raidHelperTanks"),
         healSlots:raidHelperValue("raidHelperHeals"),
@@ -15142,6 +15223,7 @@ async function createRaidHelperSignup(){
         raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
         clearChannelBeforePost:document.getElementById("raidHelperWeeklyClearChannel")?.checked ? "true" : "false",
         createPoSignup:shouldCreatePoSignup ? "true" : "false",
+        prioEnabled:document.getElementById("raidHelperSignupOnly")?.checked ? "false" : "true",
         deferFirstRun:"true"
       });
     }
@@ -15150,10 +15232,13 @@ async function createRaidHelperSignup(){
       if(queued.success && poQueued.success && weeklyQueued.success){
         const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
         const weeklyText = document.getElementById("raidHelperWeeklyEnabled")?.checked ? " Der wöchentliche automatische Neuaufbau ist gespeichert." : "";
+        const accessText = document.getElementById("raidHelperSignupOnly")?.checked
+          ? 'Reine Anmeldung ohne Prios · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>'
+          : 'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>';
         const botText = shouldCreatePoSignup ? "PO-Bot und Anmelde-Bot sollten die Posts" : "Der Anmelde-Bot sollte den Post";
         status.innerHTML =
           '<span class="good">Raidanmelder' + poText + ' erstellt und für Discord vorgemerkt.</span><br>' +
-          'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
+          accessText +
           botText + ' innerhalb von ca. 30 Sekunden posten.' + weeklyText;
         status.className = "status good";
       }else{
