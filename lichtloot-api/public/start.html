@@ -3013,12 +3013,12 @@ html,body{max-width:100%;overflow-x:hidden}
 
 <div id="raidCreateBox" class="raid-create-box hidden">
   <div class="raid-create-head">
-    <h2>Neuen Raid erstellen</h2>
+    <h2>Schnell-Raid erstellen</h2>
     <button class="raidlead-close" onclick="toggleRaidCreate()">✕</button>
   </div>
 
   <label>Raid auswählen</label>
-  <select id="createRaidSelect">
+  <select id="createRaidSelect" onchange="loadQuickRaidTemplates()">
     <option value="mc">Molten Core</option>
     <option value="bwl">Blackwing Lair</option>
     <option value="aq40">Ahn'Qiraj 40</option>
@@ -3037,7 +3037,21 @@ html,body{max-width:100%;overflow-x:hidden}
   <label>Gilde</label>
   <input id="createRaidGuild" type="text" placeholder="Gilde wird automatisch gesetzt" readonly>
 
-  <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Raid jetzt erstellen</button>
+  <label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:14px;text-transform:none">
+    <input id="createDiscordSignup" type="checkbox" style="width:auto" onchange="toggleQuickRaidDiscordOptions()">
+    <span>Raidanmelder im Discord erstellen</span>
+  </label>
+  <div id="quickRaidDiscordOptions" class="hidden">
+    <label>Vorlage für diesen Raid</label>
+    <select id="createRaidTemplate"><option value="">Bitte zuerst Raidanmelder aktivieren …</option></select>
+    <label style="display:flex;grid-template-columns:auto 1fr;align-items:center;gap:10px;margin-top:12px;text-transform:none">
+      <input id="createPoSignup" type="checkbox" style="width:auto">
+      <span>Passenden P0-Anmelder ebenfalls erstellen</span>
+    </label>
+    <div id="quickRaidTemplateStatus" class="status">Vorlagen werden nach Aktivierung geladen.</div>
+  </div>
+
+  <button class="tool-btn" style="width:100%;margin-top:14px" onclick="createRaidFromStart()">Schnell-Raid jetzt erstellen</button>
 
   <div id="createRaidResult" class="status">
     Prio PIN und LeadPIN werden nach dem Erstellen angezeigt.
@@ -3089,7 +3103,7 @@ html,body{max-width:100%;overflow-x:hidden}
         <div class="start-side-group-items">
           <button class="start-side-link" data-start-nav="raidlead" onclick="toggleRaidleadLogin()"><img class="start-side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span>Plündermeister</span></button>
           <div id="sidebarRaidleadSlot" class="sidebar-drawer-slot"></div>
-          <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><img class="start-side-icon-img" src="images/dashboard-icons/raid-erstellen.svg" alt=""><span>Raid erstellen</span></button>
+          <button class="start-side-link" data-start-nav="create" onclick="toggleRaidCreate()"><img class="start-side-icon-img" src="images/dashboard-icons/raid-erstellen.svg" alt=""><span>Schnell-Raid erstellen</span></button>
           <div id="sidebarRaidCreateSlot" class="sidebar-drawer-slot"></div>
         </div>
       </div>
@@ -3528,6 +3542,11 @@ function applyStartPageLayout(){
   }
 }
 
+function startFeatureEnabled(key, legacyFallback=false){
+  const value=currentGuildInfo?.layout?.features?.[key];
+  return typeof value === "boolean" ? value : Boolean(legacyFallback);
+}
+
 function startRaidIsInsideConfiguredPeriod(raid){
   const configured=String(currentGuildInfo?.layout?.startPageSections?.raidCardDays || "all");
   if(configured === "all") return true;
@@ -3575,7 +3594,7 @@ function applyGuildBrand(){
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
   const raidRecords = document.getElementById("lichtlootRaidRecords");
-  if(raidRecords) raidRecords.classList.toggle("hidden", CURRENT_GUILD_SLUG !== "lichtloot");
+  if(raidRecords) raidRecords.classList.toggle("hidden", !startFeatureEnabled("raidRecords", CURRENT_GUILD_SLUG === "lichtloot"));
 }
 
 function guildLogoUrl(guild){
@@ -3785,6 +3804,47 @@ function toggleRaidCreate(){
   refreshRaidCreateAccess();
 }
 
+function toggleQuickRaidDiscordOptions(){
+  const enabled=Boolean(document.getElementById("createDiscordSignup")?.checked);
+  document.getElementById("quickRaidDiscordOptions")?.classList.toggle("hidden",!enabled);
+  if(enabled) loadQuickRaidTemplates();
+}
+
+async function loadQuickRaidTemplates(){
+  const enabled=Boolean(document.getElementById("createDiscordSignup")?.checked);
+  const select=document.getElementById("createRaidTemplate");
+  const status=document.getElementById("quickRaidTemplateStatus");
+  if(!enabled || !select) return;
+  const creatorContext=getRaidCreatorContextForStart();
+  const raid=document.getElementById("createRaidSelect")?.value || "";
+  if(!creatorContext.playerLogin){
+    select.innerHTML='<option value="">Zuerst mit Spielerlogin anmelden</option>';
+    if(status) status.innerHTML='<span class="warn">Für die Vorlagen bitte zuerst mit deinem Spielerlogin anmelden.</span>';
+    return;
+  }
+  select.disabled=true;
+  select.innerHTML='<option value="">Vorlagen werden geladen …</option>';
+  if(status) status.textContent="Passende Vorlagen werden geladen …";
+  try{
+    const params=new URLSearchParams({action:"getQuickRaidTemplates",guild:CURRENT_GUILD_SLUG,raid,creatorPlayerLogin:creatorContext.playerLogin,t:String(Date.now())});
+    const response=await fetch(LICHTLOOT_API_URL+"?"+params.toString(),{cache:"no-store"});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok || !result.success) throw new Error(result.error || "Vorlagen konnten nicht geladen werden.");
+    const templates=Array.isArray(result.templates)?result.templates:[];
+    select.innerHTML=templates.length
+      ? '<option value="">Vorlage auswählen …</option>'+templates.map(template=>`<option value="${safeAttr(template.id)}">${safeHtml(template.title || template.name || "Raidvorlage")}</option>`).join("")
+      : '<option value="">Keine Vorlage für diesen Raid vorhanden</option>';
+    if(status) status.innerHTML=templates.length
+      ? `<span class="ok">${templates.length} passende ${templates.length===1?"Vorlage":"Vorlagen"} gefunden.</span>`
+      : '<span class="warn">In der Gildenleitung muss zuerst eine Vorlage für diesen Raid angelegt werden.</span>';
+  }catch(error){
+    select.innerHTML='<option value="">Vorlagen nicht verfügbar</option>';
+    if(status) status.innerHTML=`<span class="bad">${safeHtml(error.message || "Vorlagen konnten nicht geladen werden.")}</span>`;
+  }finally{
+    select.disabled=false;
+  }
+}
+
 function getSelectedDashboardCharacterName(){
   const select=document.getElementById("dashboardCharSelect");
   if(select && select.value){
@@ -3857,6 +3917,9 @@ async function createRaidFromStart(){
   const raidDate=document.getElementById("createRaidDate").value;
   const raidTime=document.getElementById("createRaidTime").value;
   const guild=(currentGuildInfo?.name || document.getElementById("createRaidGuild").value || CURRENT_GUILD_BRAND.guildName).trim();
+  const createDiscordSignup=Boolean(document.getElementById("createDiscordSignup")?.checked);
+  const templateId=String(document.getElementById("createRaidTemplate")?.value || "").trim();
+  const createPoSignup=createDiscordSignup && Boolean(document.getElementById("createPoSignup")?.checked);
 
   const resultBox=document.getElementById("createRaidResult");
 
@@ -3872,6 +3935,10 @@ async function createRaidFromStart(){
 
   if(!raidTime){
     resultBox.innerHTML=`<span class="bad">Bitte Raid-Uhrzeit auswählen.</span>`;
+    return;
+  }
+  if(createDiscordSignup && !templateId){
+    resultBox.innerHTML=`<span class="bad">Bitte eine passende Vorlage für den Discord-Raidanmelder auswählen.</span>`;
     return;
   }
 
@@ -3915,7 +3982,10 @@ async function createRaidFromStart(){
     spielerLogin:creatorContext.playerLogin,
     createdAt:new Date().toISOString(),
     status:"geschlossen",
-    p0PlusFreigabe:"geöffnet"
+    p0PlusFreigabe:"geöffnet",
+    createDiscordSignup:createDiscordSignup ? "true" : "false",
+    templateId,
+    createPoSignup:createPoSignup ? "true" : "false"
   };
 
   resultBox.innerHTML=`<span class="warn">Raid wird erstellt …</span>`;
@@ -3935,7 +4005,9 @@ async function createRaidFromStart(){
     }
 
     resultBox.innerHTML=`
-      <span class="ok">✓ Raid wurde erstellt.</span><br><br>
+      <span class="ok">✓ Schnell-Raid wurde erstellt.</span><br>
+      ${result.quickRaid?.announcementQueued ? '<span class="ok">✓ Discord-Raidanmelder wurde vorgemerkt.</span><br>' : ''}
+      ${result.quickRaid?.poSignupQueued ? '<span class="ok">✓ Passender P0-Anmelder wurde vorgemerkt.</span><br>' : ''}<br>
 
       <strong>Raid:</strong><br>
       ${r.name}<br>
@@ -5032,8 +5104,12 @@ function showLogsDashboard(){
   loadDashboardLogAnalyses();
 }
 
+function startLogProvider(){
+  return CURRENT_GUILD_SLUG === "lichtloot" ? "lichtstats" : "analysis";
+}
+
 function configureDashboardLogView(){
-  const isLichtstats=CURRENT_GUILD_SLUG === "lichtloot";
+  const isLichtstats=startLogProvider() === "lichtstats";
   const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
   setText("logsNavLabel",isLichtstats ? "LichtStats" : "Logs & Analysen");
   const title=document.getElementById("logsDashboardTitle");
@@ -5156,7 +5232,7 @@ function dashboardLogMatchesSearch(entry,query){
 
 function renderDashboardLogAnalyses(entries){
   dashboardLogAnalysesCache = Array.isArray(entries) ? entries : [];
-  if(CURRENT_GUILD_SLUG === "lichtloot"){
+  if(startLogProvider() === "lichtstats"){
     renderLichtstatsReports(dashboardLogAnalysesCache);
     return;
   }
@@ -5244,16 +5320,17 @@ function renderLichtstatsReports(entries){
 async function loadDashboardLogAnalyses(){
   const rows=document.getElementById("logsDashboardRows");
   configureDashboardLogView();
-  if(rows) rows.innerHTML='<div class="status">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
+  const isLichtstats=startLogProvider() === "lichtstats";
+  if(rows) rows.innerHTML='<div class="status">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
   try{
-    const data=CURRENT_GUILD_SLUG === "lichtloot"
+    const data=isLichtstats
       ? await fetchRailwayApi("/api/lichtstats/reports?limit=100")
       : await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
-    dashboardLogAnalysesCache = CURRENT_GUILD_SLUG === "lichtloot" ? (data.reports || []) : (data.analyses || []);
+    dashboardLogAnalysesCache = isLichtstats ? (data.reports || []) : (data.analyses || []);
     renderDashboardLogAnalyses(dashboardLogAnalysesCache);
   }catch(error){
     console.warn("Raidauswertungen konnten nicht geladen werden:", error);
-    if(rows) rows.innerHTML='<div class="status bad">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
+    if(rows) rows.innerHTML='<div class="status bad">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
     dashboardLogAnalysesCache = [];
     renderDashboardLogAnalyses([]);
   }
