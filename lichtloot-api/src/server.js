@@ -2886,10 +2886,12 @@ async function ensureRaidHelperTemplateSchema() {
        signup_deadline text,
        discord_channel_id text,
        raid_image_url text,
+       settings_json jsonb not null default '{}'::jsonb,
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
   );
+  await query(`alter table raid_helper_templates add column if not exists settings_json jsonb not null default '{}'::jsonb`);
   await query(
     `create unique index if not exists idx_raid_helper_templates_guild_key
        on raid_helper_templates(guild_id, lower(template_key))
@@ -6654,6 +6656,9 @@ async function getDiscordBotMembers({ guildId, query: params }) {
 }
 
 function normalizeRaidHelperTemplateRow(row) {
+  const settings = row.settings_json && typeof row.settings_json === "object" && !Array.isArray(row.settings_json)
+    ? row.settings_json
+    : {};
   return {
     id: row.id || "",
     templateId: row.id || "",
@@ -6670,6 +6675,8 @@ function normalizeRaidHelperTemplateRow(row) {
     signupDeadline: row.signup_deadline || "",
     discordChannelId: row.discord_channel_id || "",
     raidImageUrl: row.raid_image_url || "",
+    ...settings,
+    settings,
     createdAt: row.created_at || "",
     updatedAt: row.updated_at || ""
   };
@@ -7378,6 +7385,15 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
   const templateKey = clean(params.templateKey || params.key);
   const raidType = normalizeRaidType(params.raid || params.raidType || params.raidName);
   const title = clean(params.title || params.name);
+  const settings = (() => {
+    const raw = params.settingsJson ?? params.settings ?? {};
+    try {
+      const value = typeof raw === "string" ? JSON.parse(raw || "{}") : raw;
+      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    } catch (_error) {
+      return {};
+    }
+  })();
 
   if (!raidType || !title) {
     const error = new Error("Raid und Titel sind für die Vorlage erforderlich.");
@@ -7397,7 +7413,8 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
     parseOptionalInteger(params.ddSlots),
     clean(params.signupDeadline || params.deadline),
     clean(params.discordChannelId || params.channelId),
-    clean(params.raidImageUrl || params.imageUrl)
+    clean(params.raidImageUrl || params.imageUrl),
+    settings
   ];
 
   let result;
@@ -7415,8 +7432,9 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
            signup_deadline = $10,
            discord_channel_id = $11,
            raid_image_url = $12,
+           settings_json = $13::jsonb,
            updated_at = now()
-       where guild_id = $1 and id = $13
+       where guild_id = $1 and id = $14
        returning *`,
       [...values, templateId]
     );
@@ -7442,8 +7460,9 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
              signup_deadline = $10,
              discord_channel_id = $11,
              raid_image_url = $12,
+             settings_json = $13::jsonb,
              updated_at = now()
-         where guild_id = $1 and id = $13
+         where guild_id = $1 and id = $14
          returning *`,
         [...values, existing.rows[0].id]
       );
@@ -7451,9 +7470,9 @@ async function saveRaidHelperTemplate({ guildId, query: params }) {
       result = await query(
         `insert into raid_helper_templates (
            guild_id, template_key, raid_type, title, description, max_players,
-           tank_slots, heal_slots, dd_slots, signup_deadline, discord_channel_id, raid_image_url
+           tank_slots, heal_slots, dd_slots, signup_deadline, discord_channel_id, raid_image_url, settings_json
          )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)
          returning *`,
         values
       );
