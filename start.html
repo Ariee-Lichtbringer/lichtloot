@@ -3528,6 +3528,11 @@ function applyStartPageLayout(){
   }
 }
 
+function startFeatureEnabled(key, legacyFallback=false){
+  const value=currentGuildInfo?.layout?.features?.[key];
+  return typeof value === "boolean" ? value : Boolean(legacyFallback);
+}
+
 function startRaidIsInsideConfiguredPeriod(raid){
   const configured=String(currentGuildInfo?.layout?.startPageSections?.raidCardDays || "all");
   if(configured === "all") return true;
@@ -3575,7 +3580,7 @@ function applyGuildBrand(){
   const createRaidGuild = document.getElementById("createRaidGuild");
   if(createRaidGuild) createRaidGuild.value = brand.guildName || guild?.name || CURRENT_GUILD_BRAND.guildName;
   const raidRecords = document.getElementById("lichtlootRaidRecords");
-  if(raidRecords) raidRecords.classList.toggle("hidden", CURRENT_GUILD_SLUG !== "lichtloot");
+  if(raidRecords) raidRecords.classList.toggle("hidden", !startFeatureEnabled("raidRecords", CURRENT_GUILD_SLUG === "lichtloot"));
 }
 
 function guildLogoUrl(guild){
@@ -5032,8 +5037,12 @@ function showLogsDashboard(){
   loadDashboardLogAnalyses();
 }
 
+function startLogProvider(){
+  return CURRENT_GUILD_SLUG === "lichtloot" ? "lichtstats" : "analysis";
+}
+
 function configureDashboardLogView(){
-  const isLichtstats=CURRENT_GUILD_SLUG === "lichtloot";
+  const isLichtstats=startLogProvider() === "lichtstats";
   const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
   setText("logsNavLabel",isLichtstats ? "LichtStats" : "Logs & Analysen");
   const title=document.getElementById("logsDashboardTitle");
@@ -5156,7 +5165,7 @@ function dashboardLogMatchesSearch(entry,query){
 
 function renderDashboardLogAnalyses(entries){
   dashboardLogAnalysesCache = Array.isArray(entries) ? entries : [];
-  if(CURRENT_GUILD_SLUG === "lichtloot"){
+  if(startLogProvider() === "lichtstats"){
     renderLichtstatsReports(dashboardLogAnalysesCache);
     return;
   }
@@ -5244,16 +5253,17 @@ function renderLichtstatsReports(entries){
 async function loadDashboardLogAnalyses(){
   const rows=document.getElementById("logsDashboardRows");
   configureDashboardLogView();
-  if(rows) rows.innerHTML='<div class="status">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
+  const isLichtstats=startLogProvider() === "lichtstats";
+  if(rows) rows.innerHTML='<div class="status">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' werden geladen …</div>';
   try{
-    const data=CURRENT_GUILD_SLUG === "lichtloot"
+    const data=isLichtstats
       ? await fetchRailwayApi("/api/lichtstats/reports?limit=100")
       : await fetchRailwayApi("/api/apps-script?action=getPublicLogAnalyses&limit=20");
-    dashboardLogAnalysesCache = CURRENT_GUILD_SLUG === "lichtloot" ? (data.reports || []) : (data.analyses || []);
+    dashboardLogAnalysesCache = isLichtstats ? (data.reports || []) : (data.analyses || []);
     renderDashboardLogAnalyses(dashboardLogAnalysesCache);
   }catch(error){
     console.warn("Raidauswertungen konnten nicht geladen werden:", error);
-    if(rows) rows.innerHTML='<div class="status bad">'+(CURRENT_GUILD_SLUG === "lichtloot" ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
+    if(rows) rows.innerHTML='<div class="status bad">'+(isLichtstats ? "LichtStats-Auswertungen" : "Loganalysen")+' konnten nicht geladen werden.</div>';
     dashboardLogAnalysesCache = [];
     renderDashboardLogAnalyses([]);
   }
