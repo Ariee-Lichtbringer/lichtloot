@@ -3067,8 +3067,10 @@ html,body{max-width:100%;overflow-x:hidden}
   </label>
   <div id="quickRaidDiscordOptions" class="hidden">
     <label>Vorlage für diesen Raid</label>
-    <select id="createRaidTemplate" onchange="renderQuickRaidPreview()"><option value="">Bitte zuerst Raidanmelder aktivieren …</option></select>
+    <select id="createRaidTemplate" onchange="syncQuickRaidTemplateChannel();renderQuickRaidPreview()"><option value="">Bitte zuerst Raidanmelder aktivieren …</option></select>
     <div id="quickRaidTemplateStatus" class="status">Vorlagen werden nach Aktivierung geladen.</div>
+    <label>Channel für den Raidanmelder</label>
+    <select id="createRaidChannel" onchange="renderQuickRaidPreview()"><option value="">Channel wird geladen …</option></select>
   </div>
   <label class="quick-raid-block">
     <input id="createPrioId" type="checkbox" style="width:auto" checked onchange="syncQuickRaidBuildingBlocks()">
@@ -3078,6 +3080,10 @@ html,body{max-width:100%;overflow-x:hidden}
     <input id="createPoSignup" type="checkbox" style="width:auto" onchange="syncQuickRaidBuildingBlocks()">
     <span>P0-Anmelder im Discord erstellen</span>
   </label>
+  <div id="quickRaidPoOptions" class="hidden">
+    <label>Channel für den P0-Anmelder</label>
+    <select id="createPoChannel" onchange="renderQuickRaidPreview()"><option value="">Channel wird geladen …</option></select>
+  </div>
   <div class="status">Die Bausteine können einzeln kombiniert werden. Ein P0-Anmelder aktiviert automatisch die dafür notwendige PrioID.</div>
 
   <button class="copy-btn" style="width:100%;margin-top:12px" type="button" onclick="toggleQuickRaidPreview()">👁 Vorschau anzeigen</button>
@@ -3833,13 +3839,15 @@ function renderQuickRaidPreview(){
   const discord=Boolean(document.getElementById("createDiscordSignup")?.checked);
   const prio=Boolean(document.getElementById("createPrioId")?.checked)||Boolean(document.getElementById("createPoSignup")?.checked);
   const po=Boolean(document.getElementById("createPoSignup")?.checked);
+  const raidChannel=document.getElementById("createRaidChannel")?.selectedOptions?.[0]?.textContent||"";
+  const poChannel=document.getElementById("createPoChannel")?.selectedOptions?.[0]?.textContent||"";
   const templateSelect=document.getElementById("createRaidTemplate"),templateId=templateSelect?.value||"";
   const template=(window.quickRaidTemplateRows||[]).find(item=>String(item.id)===String(templateId))||{};
   const templateLinks=(Array.isArray(template.links)?template.links:[]).filter(link=>/^https?:\/\//i.test(String(link?.url||"")));
   const previewLinks=["Webansicht","Comp","GCal"].map(label=>`<span>${safeHtml(label)}</span>`).concat(templateLinks.map(link=>`<a href="${safeAttr(link.url)}" target="_blank" rel="noopener">${safeHtml(link.icon||"🔗")} ${safeHtml(link.text||"Link")}</a>`)).join(" <b>|</b> ");
   const max=template.maxPlayers||"–",tanks=template.tankSlots||0,heals=template.healSlots||0,dds=template.ddSlots||0;
   const classes=[["🛡️ Tank",tanks],["⚔️ Krieger",0],["🐻 Druide",0],["✨ Paladin",0],["🗡️ Schurke",0],["🏹 Jäger",0],["🙏 Priester",0],["🔥 Magier",0],["👁️ Hexenmeister",0],["🌊 Schamane",0],["🚫 Abwesenheit",0]];
-  preview.innerHTML=`${discord?`<div class="quick-discord-embed"><div class="quick-discord-title">${safeHtml(template.title||raidName)}</div>${template.description?`<div class="quick-discord-description">${safeHtml(template.description)}</div>`:""}<div class="quick-discord-meta"><div class="quick-discord-field"><strong>Raidlead</strong>${safeHtml(getSelectedDashboardCharacterName()||"Gildenleitung")}</div><div class="quick-discord-field"><strong>Datum</strong>${safeHtml(date?formatRaidDateForDisplay(date):"Noch wählen")}</div><div class="quick-discord-field"><strong>Start</strong>${safeHtml(time?time+" Uhr":"Noch wählen")}</div><div class="quick-discord-field"><strong>PrioID</strong>${prio?"Wird beim Erstellen erzeugt":"Nicht aktiviert"}</div><div class="quick-discord-field"><strong>Webansicht</strong>https://lichtloot.de/</div></div><strong>Anmeldungen</strong><div class="quick-discord-pills"><span class="quick-discord-pill">👥 Gesamt ${safeHtml(String(max))}</span><span class="quick-discord-pill">🛡️ Tanks ${safeHtml(String(tanks))}</span><span class="quick-discord-pill">✨ Heiler ${safeHtml(String(heals))}</span><span class="quick-discord-pill">⚔️ DD ${safeHtml(String(dds))}</span></div><div class="quick-discord-classes">${classes.map(([name,count])=>`<div class="quick-discord-class"><strong>${name} (${count})</strong>${name.includes("Abwesenheit")?"Optional":"Char · Skillung"}</div>`).join("")}</div><div class="quick-discord-links">Webansicht | Comp | GCal</div></div>`:'<div class="quick-raid-preview-warning">Der Discord-Raidanmelder ist nicht ausgewählt.</div>'}${po?`<div class="quick-po-preview"><strong>✓ P0-Anmelder</strong>${safeHtml(raidName)} · ${safeHtml(date?formatRaidDateForDisplay(date):"Datum fehlt")} · ${safeHtml(time?time+" Uhr":"Uhrzeit fehlt")}<br>${prio?"Mit verknüpfter PrioID":"PrioID wird automatisch aktiviert"}</div>`:""}${discord&&!templateId?'<div class="quick-raid-preview-warning">⚠ Für den Raidanmelder fehlt noch eine passende Vorlage.</div>':""}`;
+  preview.innerHTML=`${discord?`<div class="quick-discord-embed"><div class="quick-discord-title">${safeHtml(template.title||raidName)}</div>${template.description?`<div class="quick-discord-description">${safeHtml(template.description)}</div>`:""}<div class="quick-discord-meta"><div class="quick-discord-field"><strong>Channel</strong>${safeHtml(raidChannel||"Nicht gewählt")}</div><div class="quick-discord-field"><strong>Raidlead</strong>${safeHtml(getSelectedDashboardCharacterName()||"Gildenleitung")}</div><div class="quick-discord-field"><strong>Datum</strong>${safeHtml(date?formatRaidDateForDisplay(date):"Noch wählen")}</div><div class="quick-discord-field"><strong>Start</strong>${safeHtml(time?time+" Uhr":"Noch wählen")}</div><div class="quick-discord-field"><strong>PrioID</strong>${prio?"Wird beim Erstellen erzeugt":"Nicht aktiviert"}</div><div class="quick-discord-field"><strong>Webansicht</strong>https://lichtloot.de/</div></div><strong>Anmeldungen</strong><div class="quick-discord-pills"><span class="quick-discord-pill">👥 Gesamt ${safeHtml(String(max))}</span><span class="quick-discord-pill">🛡️ Tanks ${safeHtml(String(tanks))}</span><span class="quick-discord-pill">✨ Heiler ${safeHtml(String(heals))}</span><span class="quick-discord-pill">⚔️ DD ${safeHtml(String(dds))}</span></div><div class="quick-discord-classes">${classes.map(([name,count])=>`<div class="quick-discord-class"><strong>${name} (${count})</strong>${name.includes("Abwesenheit")?"Optional":"Char · Skillung"}</div>`).join("")}</div><div class="quick-discord-links">Webansicht | Comp | GCal</div></div>`:'<div class="quick-raid-preview-warning">Der Discord-Raidanmelder ist nicht ausgewählt.</div>'}${po?`<div class="quick-po-preview"><strong>✓ P0-Anmelder</strong>${safeHtml(raidName)} · ${safeHtml(date?formatRaidDateForDisplay(date):"Datum fehlt")} · ${safeHtml(time?time+" Uhr":"Uhrzeit fehlt")}<br>Channel: ${safeHtml(poChannel||"Nicht gewählt")}<br>${prio?"Mit verknüpfter PrioID":"PrioID wird automatisch aktiviert"}</div>`:""}${discord&&!templateId?'<div class="quick-raid-preview-warning">⚠ Für den Raidanmelder fehlt noch eine passende Vorlage.</div>':""}`;
   const linksBox=preview.querySelector(".quick-discord-links");
   if(linksBox)linksBox.innerHTML=previewLinks;
 }
@@ -3932,14 +3940,17 @@ function syncQuickRaidBuildingBlocks(){
   const createPo=Boolean(document.getElementById("createPoSignup")?.checked);
   const createPrio=document.getElementById("createPrioId");
   if(createPo && createPrio) createPrio.checked=true;
+  document.getElementById("quickRaidPoOptions")?.classList.toggle("hidden",!createPo);
+  if(createPo) loadQuickRaidTemplates();
   if(!document.getElementById("quickRaidPreview")?.classList.contains("hidden"))renderQuickRaidPreview();
 }
 
 async function loadQuickRaidTemplates(){
   const enabled=Boolean(document.getElementById("createDiscordSignup")?.checked);
+  const poEnabled=Boolean(document.getElementById("createPoSignup")?.checked);
   const select=document.getElementById("createRaidTemplate");
   const status=document.getElementById("quickRaidTemplateStatus");
-  if(!enabled || !select) return;
+  if((!enabled && !poEnabled) || !select) return;
   const creatorContext=getRaidCreatorContextForStart();
   const raid=document.getElementById("createRaidSelect")?.value || "";
   if(!creatorContext.playerLogin){
@@ -3956,6 +3967,7 @@ async function loadQuickRaidTemplates(){
     const result=await response.json().catch(()=>({}));
     if(!response.ok || !result.success) throw new Error(result.error || "Vorlagen konnten nicht geladen werden.");
     const templates=Array.isArray(result.templates)?result.templates:[];
+    const channels=Array.isArray(result.channels)?result.channels:[];
     window.quickRaidTemplateRows=templates;
     select.innerHTML=templates.length
       ? '<option value="">Vorlage auswählen …</option>'+templates.map(template=>`<option value="${safeAttr(template.id)}">${safeHtml(template.title || template.name || "Raidvorlage")}</option>`).join("")
@@ -3963,6 +3975,13 @@ async function loadQuickRaidTemplates(){
     if(status) status.innerHTML=templates.length
       ? `<span class="ok">${templates.length} passende ${templates.length===1?"Vorlage":"Vorlagen"} gefunden.</span>`
       : '<span class="warn">In der Gildenleitung muss zuerst eine Vorlage für diesen Raid angelegt werden.</span>';
+    for(const channelSelect of [document.getElementById("createRaidChannel"),document.getElementById("createPoChannel")]){
+      if(!channelSelect)continue;
+      const previous=channelSelect.value;
+      channelSelect.innerHTML='<option value="">Channel auswählen …</option>'+channels.map(channel=>`<option value="${safeAttr(channel.id)}"># ${safeHtml(channel.name)}</option>`).join("");
+      if(channels.some(channel=>String(channel.id)===String(previous)))channelSelect.value=previous;
+    }
+    syncQuickRaidTemplateChannel();
   }catch(error){
     window.quickRaidTemplateRows=[];
     select.innerHTML='<option value="">Vorlagen nicht verfügbar</option>';
@@ -3970,6 +3989,15 @@ async function loadQuickRaidTemplates(){
   }finally{
     select.disabled=false;
     if(!document.getElementById("quickRaidPreview")?.classList.contains("hidden"))renderQuickRaidPreview();
+  }
+}
+
+function syncQuickRaidTemplateChannel(){
+  const templateId=document.getElementById("createRaidTemplate")?.value||"";
+  const template=(window.quickRaidTemplateRows||[]).find(item=>String(item.id)===String(templateId));
+  const channelSelect=document.getElementById("createRaidChannel");
+  if(template?.discordChannelId && channelSelect && Array.from(channelSelect.options).some(option=>option.value===String(template.discordChannelId))){
+    channelSelect.value=String(template.discordChannelId);
   }
 }
 
@@ -4049,6 +4077,8 @@ async function createRaidFromStart(){
   let createPrioId=Boolean(document.getElementById("createPrioId")?.checked);
   const templateId=String(document.getElementById("createRaidTemplate")?.value || "").trim();
   const createPoSignup=Boolean(document.getElementById("createPoSignup")?.checked);
+  const raidChannelId=String(document.getElementById("createRaidChannel")?.value||"").trim();
+  const poChannelId=String(document.getElementById("createPoChannel")?.value||"").trim();
   if(createPoSignup) createPrioId=true;
 
   const resultBox=document.getElementById("createRaidResult");
@@ -4069,6 +4099,14 @@ async function createRaidFromStart(){
   }
   if(createDiscordSignup && !templateId){
     resultBox.innerHTML=`<span class="bad">Bitte eine passende Vorlage für den Discord-Raidanmelder auswählen.</span>`;
+    return;
+  }
+  if(createDiscordSignup && !raidChannelId){
+    resultBox.innerHTML=`<span class="bad">Bitte den Channel für den Discord-Raidanmelder auswählen.</span>`;
+    return;
+  }
+  if(createPoSignup && !poChannelId){
+    resultBox.innerHTML=`<span class="bad">Bitte den Channel für den P0-Anmelder auswählen.</span>`;
     return;
   }
 
@@ -4117,7 +4155,10 @@ async function createRaidFromStart(){
     createPrioId:createPrioId ? "true" : "false",
     prioEnabled:createPrioId ? "true" : "false",
     templateId,
-    createPoSignup:createPoSignup ? "true" : "false"
+    createPoSignup:createPoSignup ? "true" : "false",
+    raidChannelId,
+    poChannelId,
+    discordChannelId:createDiscordSignup ? raidChannelId : ""
   };
 
   resultBox.innerHTML=`<span class="warn">Raid wird erstellt …</span>`;
