@@ -5292,6 +5292,13 @@ body.worldbuff-only .master-only{display:none!important}
               </div>
             </div>
             <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
+              <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt ab der folgenden Woche denselben Raid und postet ihn automatisch in den gewählten Discord-Channel.</small></span></label>
+              <div id="raidHelperWeeklyOptions" class="raid-helper-row hidden" style="margin-top:12px">
+                <div class="field"><label for="raidHelperWeeklyPostTime">Wöchentliche Erstellungs-/Posting-Uhrzeit</label><input id="raidHelperWeeklyPostTime" type="time" value="09:00"></div>
+                <label class="layout-loot-toggle"><input id="raidHelperWeeklyClearChannel" type="checkbox"><span><strong>Channel vorher leeren</strong><small>Löscht unmittelbar vor dem automatischen Post alle nicht angepinnten Nachrichten im ausgewählten Channel.</small></span></label>
+              </div>
+            </div>
+            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
               <div class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">📣</span>
                 <div><h3>Benachrichtigung bei Erstellung des Raidanmelders</h3><p>Diese Namen und Discord-Rollen erhalten beim Posten eine DM mit Raid, Termin, Channel und direktem Link zum Anmelder.</p></div>
@@ -14770,6 +14777,17 @@ function raidHelperValue(id){
   return String(document.getElementById(id)?.value || "").trim();
 }
 
+function toggleRaidHelperWeeklyOptions(){
+  document.getElementById("raidHelperWeeklyOptions")?.classList.toggle("hidden", !document.getElementById("raidHelperWeeklyEnabled")?.checked);
+}
+
+function addDaysToIsoDate(value, days){
+  const date=new Date(String(value||"")+"T12:00:00");
+  if(Number.isNaN(date.getTime()))return "";
+  date.setDate(date.getDate()+Number(days||0));
+  return date.toISOString().slice(0,10);
+}
+
 function raidHelperLinkIconOptions(selected=""){
   return [["","Schlüsselwort verwenden"],["🔗","🔗 Link"],["📜","📜 Dokument"],["⚔️","⚔️ Raid"],["🌐","🌐 Webseite"],["📌","📌 Wichtig"]]
     .map(([value,label])=>`<option value="${escapeAttr(value)}" ${value===selected?"selected":""}>${escapeHtml(label)}</option>`).join("");
@@ -15096,19 +15114,53 @@ async function createRaidHelperSignup(){
       });
     }
 
+    let weeklyQueued = { success:true, skipped:true };
+    if(document.getElementById("raidHelperWeeklyEnabled")?.checked){
+      const nextRaidDate=addDaysToIsoDate(raidDate, 7);
+      const weekday=isoWeekdayFromDate(nextRaidDate);
+      weeklyQueued=await railwayWrite({
+        action:"guildSaveRaidHelperSchedule",
+        masterCode,
+        scheduleKey:`weekly-create-${raidKey}-${weekday}-${raidTime}-${discordChannelId}`,
+        raid:raidKey,
+        title,
+        createdBy:lead,
+        weekday,
+        raidTime,
+        postTime:raidHelperValue("raidHelperWeeklyPostTime") || "09:00",
+        intervalWeeks:"1",
+        nextRaidDate,
+        nextPostDate:nextRaidDate,
+        signupDeadline:"",
+        discordChannelId,
+        maxPlayers:raidHelperValue("raidHelperMax"),
+        tankSlots:raidHelperValue("raidHelperTanks"),
+        healSlots:raidHelperValue("raidHelperHeals"),
+        ddSlots:raidHelperValue("raidHelperDds"),
+        description:raidHelperValue("raidHelperDescription"),
+        ...raidHelperLinkPayload(),
+        raidImageUrl:raidHelperValue("raidHelperImageUrl") || defaultRaidHelperImageUrl(raidKey),
+        clearChannelBeforePost:document.getElementById("raidHelperWeeklyClearChannel")?.checked ? "true" : "false",
+        createPoSignup:shouldCreatePoSignup ? "true" : "false",
+        deferFirstRun:"true"
+      });
+    }
+
     if(status){
-      if(queued.success && poQueued.success){
+      if(queued.success && poQueued.success && weeklyQueued.success){
         const poText = shouldCreatePoSignup ? " und PO-Anmelder" : "";
+        const weeklyText = document.getElementById("raidHelperWeeklyEnabled")?.checked ? " Der wöchentliche automatische Neuaufbau ist gespeichert." : "";
         const botText = shouldCreatePoSignup ? "PO-Bot und Anmelde-Bot sollten die Posts" : "Der Anmelde-Bot sollte den Post";
         status.innerHTML =
           '<span class="good">Raidanmelder' + poText + ' erstellt und für Discord vorgemerkt.</span><br>' +
           'Prio-PIN: <strong>' + escapeHtml(playerPin) + '</strong> · LeadPIN: <strong>' + escapeHtml(leadPin) + '</strong><br>' +
-          botText + ' innerhalb von ca. 30 Sekunden posten.';
+          botText + ' innerhalb von ca. 30 Sekunden posten.' + weeklyText;
         status.className = "status good";
       }else{
         const errors = [];
         if(!queued.success) errors.push("Raidanmelder: " + (queued.error || "unbekannter Fehler"));
         if(!poQueued.success) errors.push("PO-Anmelder: " + (poQueued.error || "unbekannter Fehler"));
+        if(!weeklyQueued.success) errors.push("Wochenautomatik: " + (weeklyQueued.error || "unbekannter Fehler"));
         status.innerHTML =
           '<span class="good">Raidanmelder erstellt.</span><br>' +
           'Mindestens ein Discord-Post konnte nicht vorgemerkt werden: <span class="bad">' + escapeHtml(errors.join(" · ")) + '</span><br>' +
