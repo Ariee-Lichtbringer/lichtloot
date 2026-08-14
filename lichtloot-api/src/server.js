@@ -8080,6 +8080,56 @@ async function reviewPoPostEntry({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  let prioSync = null;
+  if (approvalStatus === "approved") {
+    try {
+      const characterResult = await query(
+        `select c.name, c.server, c.class_name, p.player_pin
+         from characters c
+         join players p on p.id = c.player_id
+         left join discord_player_links dpl
+           on dpl.guild_id = p.guild_id
+          and dpl.character_id = c.id
+          and dpl.discord_user_id = $3
+         where p.guild_id = $1
+           and lower(c.name) = lower($2)
+           and coalesce(p.approval_status, 'approved') = 'approved'
+           and coalesce(p.is_blocked, false) = false
+         order by case when dpl.character_id is not null then 0 else 1 end,
+                  coalesce(c.is_main, false) desc,
+                  c.created_at asc
+         limit 1`,
+        [guildId, row.player_name, clean(row.discord_user_id)]
+      );
+      const character = characterResult.rows[0];
+      if (!character?.player_pin) throw new Error("SpielerLogin für diesen Charakter wurde nicht gefunden.");
+      prioSync = await savePoSignupPrioFromBot({
+        guildId,
+        query: {
+          ...params,
+          postKey: row.post_key || postKey,
+          raid: row.raid || params.raid,
+          raidDate: row.raid_date || params.raidDate,
+          raidTime: row.raid_time || params.raidTime,
+          raidPin: row.raid_pin || raidPin,
+          prioPin: row.raid_pin || raidPin,
+          playerPin: character.player_pin,
+          spielerLogin: character.player_pin,
+          player: character.name,
+          char: character.name,
+          server: character.server || clean(params.server || "Everlook"),
+          className: row.class_name || character.class_name,
+          item: normalizePoItemName(row.item_name),
+          itemName: normalizePoItemName(row.item_name),
+          itemId: row.item_game_id,
+          itemSlot: row.item_slot,
+          itemBoss: row.item_boss
+        }
+      });
+    } catch (error) {
+      prioSync = { success: false, error: error.message || String(error) };
+    }
+  }
   let prioDelete = null;
   if (approvalStatus === "rejected") {
     prioDelete = await deletePoSignupPrioForEntry(guildId, row, params).catch(error => ({
@@ -8189,6 +8239,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       approvedAt: row.approved_at || "",
       rejectionReason: row.rejection_reason || rejectionReason || ""
     },
+    prioSync,
     prioDelete,
     raidAnnouncementRefresh
   };
