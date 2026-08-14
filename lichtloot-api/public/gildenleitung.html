@@ -6393,13 +6393,19 @@ function withGuildUrl(url){
 
 function openRaidSetupPage(){
   const masterCode=document.getElementById("masterCode")?.value.trim() || "";
-  try{ if(masterCode) sessionStorage.setItem(MASTER_STORAGE_KEY,masterCode); }catch(_error){}
+  try{
+    if(masterCode) sessionStorage.setItem(MASTER_STORAGE_KEY,masterCode);
+    if(Array.isArray(guildData?.players) && guildData.players.length) sessionStorage.setItem(`lichtlootRaidSetupPlayers_${CURRENT_GUILD_SLUG}`,JSON.stringify(guildData.players));
+  }catch(_error){}
   window.location.href=withGuildUrl("raidaufstellung.html");
 }
 
 function openBwlRaidSetupTest(){
   const masterCode=document.getElementById("masterCode")?.value.trim() || "";
-  try{ if(masterCode) sessionStorage.setItem(MASTER_STORAGE_KEY,masterCode); }catch(_error){}
+  try{
+    if(masterCode) sessionStorage.setItem(MASTER_STORAGE_KEY,masterCode);
+    if(Array.isArray(guildData?.players) && guildData.players.length) sessionStorage.setItem(`lichtlootRaidSetupPlayers_${CURRENT_GUILD_SLUG}`,JSON.stringify(guildData.players));
+  }catch(_error){}
   window.location.href=withGuildUrl("raidaufstellung.html?template=BWL");
 }
 
