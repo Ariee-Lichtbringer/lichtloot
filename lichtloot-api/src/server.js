@@ -2135,11 +2135,10 @@ async function ensureWorldbuffRuleAgreementSchema() {
   await query(
     `create table if not exists worldbuff_rule_agreements (
        guild_id uuid not null references guilds(id) on delete cascade,
-       player_id uuid not null references players(id) on delete cascade,
        character_id uuid not null references characters(id) on delete cascade,
        raid_key text not null default '',
        agreed_at timestamptz not null default now(),
-       primary key (guild_id, player_id, character_id, raid_key)
+       primary key (guild_id, character_id, raid_key)
      )`
   );
 }
@@ -2163,11 +2162,7 @@ async function worldbuffRuleAgreementCharacter(guildId, params = {}) {
     error.statusCode = 403;
     throw error;
   }
-  const playerResult = await query(
-    "select id from players where guild_id=$1 and player_pin=$2 and approval_status='approved' and coalesce(is_blocked,false)=false limit 1",
-    [guildId, pin]
-  );
-  return { playerId: playerResult.rows[0].id, characterId: character.id };
+  return { characterId: character.id };
 }
 
 async function getWorldbuffRuleAgreement(guildId, params = {}) {
@@ -2176,8 +2171,8 @@ async function getWorldbuffRuleAgreement(guildId, params = {}) {
   await ensureWorldbuffRuleAgreementSchema();
   const result = await query(
     `select agreed_at from worldbuff_rule_agreements
-     where guild_id=$1 and player_id=$2 and character_id=$3 and raid_key=$4 limit 1`,
-    [guildId, identity.playerId, identity.characterId, raidKey]
+     where guild_id=$1 and character_id=$2 and raid_key=$3 limit 1`,
+    [guildId, identity.characterId, raidKey]
   );
   return { success: true, agreed: Boolean(result.rows[0]), agreedAt: result.rows[0]?.agreed_at || null };
 }
@@ -2187,12 +2182,12 @@ async function acceptWorldbuffRuleAgreement(guildId, params = {}) {
   const raidKey = clean(params.raidKey);
   await ensureWorldbuffRuleAgreementSchema();
   const result = await query(
-    `insert into worldbuff_rule_agreements (guild_id,player_id,character_id,raid_key,agreed_at)
-     values ($1,$2,$3,$4,now())
-     on conflict (guild_id,player_id,character_id,raid_key)
+    `insert into worldbuff_rule_agreements (guild_id,character_id,raid_key,agreed_at)
+     values ($1,$2,$3,now())
+     on conflict (guild_id,character_id,raid_key)
      do update set agreed_at=excluded.agreed_at
      returning agreed_at`,
-    [guildId, identity.playerId, identity.characterId, raidKey]
+    [guildId, identity.characterId, raidKey]
   );
   return { success: true, agreed: true, agreedAt: result.rows[0]?.agreed_at || null };
 }
@@ -2541,7 +2536,8 @@ async function ensureRaidSchema() {
        add column if not exists link_url text not null default '',
        add column if not exists link_text text not null default '',
        add column if not exists link_icon text not null default '',
-       add column if not exists prio_enabled boolean not null default true`
+       add column if not exists prio_enabled boolean not null default true,
+       add column if not exists show_worldbuffs boolean not null default true`
   );
   await query(
     `alter table raid_signups
@@ -2868,6 +2864,7 @@ async function ensureRaidHelperScheduleSchema() {
        clear_channel_before_post boolean not null default false,
        create_po_signup boolean not null default false,
        prio_enabled boolean not null default true,
+       show_worldbuffs boolean not null default true,
        last_raid_date date,
        last_raid_id uuid references raids(id) on delete set null,
        created_at timestamptz not null default now(),
@@ -2883,6 +2880,7 @@ async function ensureRaidHelperScheduleSchema() {
   await query(`alter table raid_helper_schedules add column if not exists clear_channel_before_post boolean not null default false`);
   await query(`alter table raid_helper_schedules add column if not exists create_po_signup boolean not null default false`);
   await query(`alter table raid_helper_schedules add column if not exists prio_enabled boolean not null default true`);
+  await query(`alter table raid_helper_schedules add column if not exists show_worldbuffs boolean not null default true`);
   await query(
     `create index if not exists idx_raid_helper_schedules_guild
        on raid_helper_schedules(guild_id, enabled, next_raid_date, raid_time)`
@@ -3286,6 +3284,7 @@ function normalizeRaidRow(row) {
     linkText: row.link_text || "",
     linkIcon: row.link_icon || "",
     prioEnabled: row.prio_enabled !== false,
+    showWorldbuffs: row.show_worldbuffs !== false,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -6583,6 +6582,7 @@ function normalizeRaidHelperScheduleRow(row) {
     clearChannelBeforePost: row.clear_channel_before_post === true,
     createPoSignup: row.create_po_signup === true,
     prioEnabled: row.prio_enabled !== false,
+    showWorldbuffs: row.show_worldbuffs !== false,
     lastRaidDate: scheduleDateIso(row.last_raid_date),
     lastRaidId: row.last_raid_id || "",
     currentRaidId: id ? `schedule-${id}` : "",
@@ -6747,6 +6747,7 @@ async function processRaidHelperSchedules({ guildId, force = false, scheduleId =
         createdBy: schedule.created_by || "Gildenleitung",
         raidHelperEnabled: "true",
         prioEnabled: schedule.prio_enabled === false ? "false" : "true",
+        showWorldbuffs: schedule.show_worldbuffs === false ? "false" : "true",
         maxPlayers: schedule.max_players,
         tankSlots: schedule.tank_slots,
         healSlots: schedule.heal_slots,
@@ -6898,7 +6899,8 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
     clean(params.linkIcon),
     ["1", "true", "yes", "ja"].includes(clean(params.clearChannelBeforePost).toLowerCase()),
     ["1", "true", "yes", "ja"].includes(clean(params.createPoSignup).toLowerCase()),
-    !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase())
+    !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
+    !["0", "false", "no", "nein"].includes(clean(params.showWorldbuffs).toLowerCase())
   ];
 
   let result;
@@ -6931,8 +6933,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
            clear_channel_before_post = $25,
            create_po_signup = $26,
            prio_enabled = $27,
+           show_worldbuffs = $28,
            updated_at = now()
-       where guild_id = $1 and id = $28
+       where guild_id = $1 and id = $29
        returning *`,
       [...values, scheduleId]
     );
@@ -6943,9 +6946,9 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          max_players, tank_slots, heal_slots, dd_slots, signup_deadline,
          discord_channel_id, raid_image_url, created_by, recurrence,
          interval_weeks, weekday, raid_time, post_time, next_raid_date, next_post_date,
-         link_url, link_text, link_icon, clear_channel_before_post, create_po_signup, prio_enabled
+         link_url, link_text, link_icon, clear_channel_before_post, create_po_signup, prio_enabled, show_worldbuffs
        )
-       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27)
+       values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
        on conflict (guild_id, schedule_key)
        do update set
          enabled = excluded.enabled,
@@ -6973,6 +6976,7 @@ async function saveRaidHelperSchedule({ guildId, query: params }) {
          clear_channel_before_post = excluded.clear_channel_before_post,
          create_po_signup = excluded.create_po_signup,
          prio_enabled = excluded.prio_enabled,
+         show_worldbuffs = excluded.show_worldbuffs,
          updated_at = now()
        returning *`,
       values
@@ -16114,10 +16118,10 @@ async function createRaidRecord({ guildId, query: params }) {
        lead_pin, raid_time, guild_name, player_link, status, p0plus_freigabe, created_by,
        raidhelper_enabled, signup_deadline, max_players, tank_slots, heal_slots, dd_slots,
        discord_channel_id, discord_message_id, description, raid_image_url, loot_master, loot_master_targets, status_notify_targets, announcement_notify_targets, announcement_message,
-       link_url, link_text, link_icon, prio_enabled
+       link_url, link_text, link_icon, prio_enabled, show_worldbuffs
      )
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32)
+             $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
      on conflict (guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''
      do update
@@ -16160,13 +16164,14 @@ async function createRaidRecord({ guildId, query: params }) {
            raid_image_url = coalesce(excluded.raid_image_url, raids.raid_image_url),
            loot_master = coalesce(nullif(excluded.loot_master, ''), raids.loot_master),
            loot_master_targets = case when excluded.loot_master_targets = '[]'::jsonb then raids.loot_master_targets else excluded.loot_master_targets end,
-           status_notify_targets = case when $33 then excluded.status_notify_targets else raids.status_notify_targets end,
-           announcement_notify_targets = case when $34 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
+           status_notify_targets = case when $34 then excluded.status_notify_targets else raids.status_notify_targets end,
+           announcement_notify_targets = case when $35 then excluded.announcement_notify_targets else raids.announcement_notify_targets end,
            announcement_message = case when excluded.announcement_message = '' then raids.announcement_message else excluded.announcement_message end,
            link_url = excluded.link_url,
            link_text = excluded.link_text,
            link_icon = excluded.link_icon,
            prio_enabled = excluded.prio_enabled,
+           show_worldbuffs = excluded.show_worldbuffs,
            updated_at = now()
      returning *`,
     [
@@ -16216,6 +16221,7 @@ async function createRaidRecord({ guildId, query: params }) {
       clean(params.linkText || params.linkLabel),
       clean(params.linkIcon),
       !["0", "false", "no", "nein"].includes(clean(params.prioEnabled).toLowerCase()),
+      !["0", "false", "no", "nein"].includes(clean(params.showWorldbuffs).toLowerCase()),
       Object.prototype.hasOwnProperty.call(params, "statusNotifyTargets"),
       Object.prototype.hasOwnProperty.call(params, "announcementNotifyTargets")
     ]
