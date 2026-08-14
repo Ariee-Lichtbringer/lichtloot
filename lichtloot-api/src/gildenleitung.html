@@ -2823,6 +2823,19 @@ tr.selected-row td{
   margin-top:3px;
 }
 
+.raid-helper-manual-signup{
+  display:grid;
+  grid-template-columns:minmax(220px,2fr) minmax(130px,1fr) minmax(150px,1fr) minmax(130px,1fr) auto;
+  gap:8px;
+  align-items:end;
+  padding:10px;
+  border:1px solid rgba(45,212,191,.3);
+  border-radius:10px;
+  background:rgba(13,148,136,.08);
+}
+.raid-helper-manual-signup label{display:grid;gap:5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
+@media(max-width:900px){.raid-helper-manual-signup{grid-template-columns:1fr 1fr}.raid-helper-manual-signup label:first-child{grid-column:1/-1}}
+
 .raid-helper-current-actions{
   display:flex;
   gap:7px;
@@ -3306,6 +3319,9 @@ tr.selected-row td{
   flex-wrap:wrap;
   justify-content:flex-end;
 }
+
+.raid-helper-loot-role-counter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.raid-helper-loot-role-counter span{display:inline-flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid #3b4961;border-radius:999px;background:#101a2c;color:#e2e8f0;font-weight:900}.raid-helper-loot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start;gap:10px}.raid-helper-loot-group{overflow:hidden;border:1px solid color-mix(in srgb,var(--group-color) 55%,#26364f);border-radius:14px;background:#07101f;box-shadow:inset 3px 0 0 var(--group-color)}.raid-helper-loot-group>header{display:flex;align-items:center;gap:9px;padding:9px 10px;border-bottom:1px solid color-mix(in srgb,var(--group-color) 35%,#26364f);background:linear-gradient(135deg,color-mix(in srgb,var(--group-color) 14%,#101c31),#0a1324)}.raid-helper-loot-group>header h3{margin:0;color:var(--group-color);font-size:14px}.raid-helper-loot-group>header small{display:block;color:#94a3b8}.raid-helper-loot-group .raid-helper-signup-row{border-radius:0;border-bottom:1px solid rgba(49,65,91,.55);background:#07101f;display:grid;gap:7px}.raid-helper-loot-group .raid-helper-signup-row:last-child{border-bottom:0}.raid-helper-loot-group .raid-helper-signup-actions{justify-content:flex-start}.raid-helper-loot-inactive{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px;padding-top:13px;border-top:1px solid #31415b}.raid-helper-loot-inactive .raid-helper-loot-group{--group-color:#94a3b8}.raid-helper-loot-inactive .status-bench{--group-color:#fde047}.raid-helper-loot-inactive .status-late{--group-color:#fb923c}.raid-helper-loot-inactive .status-tentative{--group-color:#c084fc}.raid-helper-loot-inactive .status-absent{--group-color:#f87171}@media(max-width:1050px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.raid-helper-loot-grid,.raid-helper-loot-inactive{grid-template-columns:1fr}}
+.raid-helper-loot-total{margin-bottom:10px;padding:9px 11px;border:1px solid #3b4961;border-radius:11px;background:#101a2c;color:#e2e8f0;font-size:14px;font-weight:950}.raid-helper-lootbag{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:2px 6px;border:1px solid #3b4961;border-radius:7px;background:#111827;color:#dbeafe;font-size:10px;vertical-align:middle}.raid-helper-lootbag img{width:20px;height:20px;border-radius:4px;object-fit:cover}
 
 .raid-helper-wcl-grid{
   display:grid;
@@ -5094,7 +5110,10 @@ body.worldbuff-only .master-only{display:none!important}
       <section id="raidDashboardSection" class="dashboard-card">
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
-          <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" onclick="restoreArchivedRaids()">Archivierte Raids wiederherstellen</button>
+            <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
+          </div>
         </div>
         <div id="activeRaidCards" class="active-raid-list">
           <div class="muted">Noch keine Daten geladen.</div>
@@ -5121,6 +5140,7 @@ body.worldbuff-only .master-only{display:none!important}
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="attendance" onclick="setRaidHelperTab('attendance')"><span class="raid-helper-tab-icon">▦</span><span class="raid-helper-tab-copy"><strong>Teilnahme</strong><span>Attendance</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="templates" onclick="setRaidHelperTab('templates')"><span class="raid-helper-tab-icon">▱</span><span class="raid-helper-tab-copy"><strong>Vorlagen</strong><span>Templates</span></span></button>
         <button class="raid-helper-tab" type="button" data-raid-helper-tab="poSignup" onclick="setRaidHelperTab('poSignup')"><span class="raid-helper-tab-icon">☰</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Prüfen</span></span></button>
+        <button class="raid-helper-tab" type="button" data-raid-helper-tab="poCreate" onclick="setRaidHelperTab('poCreate')"><span class="raid-helper-tab-icon">＋</span><span class="raid-helper-tab-copy"><strong>PO-Anmelder</strong><span>Erstellen</span></span></button>
       </div>
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
@@ -5283,10 +5303,6 @@ body.worldbuff-only .master-only{display:none!important}
                 </div>
               </div>
             </div>
-            <label class="po-signup-prio-option" for="raidHelperCreatePoSignup" style="margin-top:12px">
-              <input id="raidHelperCreatePoSignup" type="checkbox" checked disabled>
-              <span>PO-Anmelder automatisch mit erstellen</span>
-            </label>
             <input id="raidHelperImageUrl" type="hidden">
           </section>
 
@@ -5537,7 +5553,7 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <div id="raidHelperTab-attendance" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Attendance</h3><span>Teilnahme nach Raid und Charakter, direkt aus den Raidanmeldern</span></div>
+          <div><h3>Attendance</h3><span>Teilnahme aus Priolisten mit übertragener PO+‑Punktevergabe</span></div>
           <button class="small-btn ghost" type="button" onclick="loadRaidHelperAttendance()">Aktualisieren</button>
         </div>
         <div id="raidHelperAttendanceTabs" class="raid-helper-attendance-tabs"></div>
@@ -5647,6 +5663,7 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
         <div id="raidHelperPoSignupBox" class="raid-helper-list"></div>
       </div>
+      <div id="raidHelperTab-poCreate" class="raid-helper-tab-panel hidden"></div>
     </div>
   </details>
 
@@ -6009,6 +6026,14 @@ body.worldbuff-only .master-only{display:none!important}
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
       </div>
+      <div class="po-signup-list-toolbar raid-list-filter-toolbar">
+        <div class="po-signup-tier-tabs" role="tablist" aria-label="Raid-Größe">
+          <button class="small-btn" type="button" data-raid-list-tier="all" onclick="setRaidListTierFilter('all')">Alle</button>
+          <button class="small-btn" type="button" data-raid-list-tier="20" onclick="setRaidListTierFilter('20')">20er</button>
+          <button class="small-btn" type="button" data-raid-list-tier="40" onclick="setRaidListTierFilter('40')">40er</button>
+        </div>
+        <div id="raidListRaidTabs" class="po-signup-raid-tabs" aria-label="Raid-Auswahl"></div>
+      </div>
       <div id="raidBulkActions" class="raid-bulk-actions" hidden>
         <strong id="raidBulkSelectionText">0 Raids ausgewählt</strong>
         <div class="raid-bulk-action-buttons">
@@ -6364,6 +6389,8 @@ let poPostStoredEntries = [];
 let selectedPoPostKey = "";
 let poSignupListTierFilter = "all";
 let poSignupListRaidFilter = "";
+let raidListTierFilter = "all";
+let raidListRaidFilter = "";
 let raidHelperPoSignupSelectedPostKey = "";
 const selectedPoSignupPostKeys = new Set();
 let issueReports = [];
@@ -7049,7 +7076,8 @@ function openRaidleadPanelDirect(raidId){
 }
 
 function openPoPostPanel(){
-  openDetailsPanel("poPostPanel");
+  openDetailsPanel("raidHelperPanel");
+  setRaidHelperTab("poCreate");
 }
 
 function openPlayerPanel(){
@@ -7535,7 +7563,41 @@ function clearRaidFilters(shouldRender = true){
   document.getElementById("raidSearch").value = "";
   document.getElementById("raidDateSearch").value = "";
   document.getElementById("raidFilter").value = "";
+  raidListTierFilter = "all";
+  raidListRaidFilter = "";
   if(shouldRender) renderRaids();
+}
+
+function raidListRaidKeys(){
+  if(raidListTierFilter === "20") return ["aq20","zg"];
+  if(raidListTierFilter === "40") return ["naxx","aq40","bwl","mc","ony"];
+  return ["naxx","aq40","bwl","mc","ony","aq20","zg"];
+}
+
+function setRaidListTierFilter(tier){
+  raidListTierFilter = ["20","40"].includes(String(tier)) ? String(tier) : "all";
+  raidListRaidFilter = "";
+  renderRaids();
+}
+
+function setRaidListRaidFilter(raid){
+  const key = normalizePoSignupRaidKey(raid);
+  raidListRaidFilter = raidListRaidFilter === key ? "" : key;
+  renderRaids();
+}
+
+function renderRaidListFilters(){
+  document.querySelectorAll("[data-raid-list-tier]").forEach(button => {
+    button.classList.toggle("primary", button.dataset.raidListTier === raidListTierFilter);
+    button.classList.toggle("ghost", button.dataset.raidListTier !== raidListTierFilter);
+  });
+  const box = document.getElementById("raidListRaidTabs");
+  if(!box) return;
+  const allLabel = raidListTierFilter === "20" ? "Alle 20er" : raidListTierFilter === "40" ? "Alle 40er" : "Alle Raids";
+  box.innerHTML = [
+    `<button class="small-btn ${raidListRaidFilter ? "ghost" : "primary"}" type="button" onclick="setRaidListRaidFilter('')">${allLabel}</button>`,
+    ...raidListRaidKeys().map(raid => `<button class="small-btn ${raidListRaidFilter === raid ? "primary" : "ghost"}" type="button" onclick="setRaidListRaidFilter('${escapeAttr(raid)}')">${escapeHtml(poSignupRaidLabel(raid))}</button>`)
+  ].join("");
 }
 
 function renderSummary(){
@@ -7972,6 +8034,7 @@ function fillClassFilter(){
 
 function renderRaids(){
   const tbody = document.getElementById("raidRows");
+  renderRaidListFilters();
   const search = normalize(document.getElementById("raidSearch").value);
   const filter = normalize(document.getElementById("raidFilter").value);
   const dateSearch = document.getElementById("raidDateSearch").value;
@@ -7995,7 +8058,10 @@ function renderRaids(){
       filter ? status === filter :
       (!isArchived || isRaidInLastTwoWeeks(raid));
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
-    return filterMatches && dateMatches && (!search || haystack.includes(search));
+    const raidKey = normalizePoSignupRaidKey(raid.raid || raid.raidName);
+    const sizeMatches = raidListTierFilter === "all" || raidListRaidKeys().includes(raidKey);
+    const raidMatches = !raidListRaidFilter || raidKey === raidListRaidFilter;
+    return filterMatches && dateMatches && sizeMatches && raidMatches && (!search || haystack.includes(search));
   }).sort((a,b) => {
     const left = `${a.raidDate || ""} ${a.raidTime || ""}`;
     const right = `${b.raidDate || ""} ${b.raidTime || ""}`;
@@ -8866,6 +8932,7 @@ function setRaidHelperTab(tabName){
     attendance:"20,184,166",
     templates:"236,72,153",
     poSignup:"250,204,21",
+    poCreate:"34,197,94",
     settings:"100,116,139"
   };
   document.querySelector(".raid-helper-body")?.style.setProperty("--raid-helper-accent", tabAccents[target] || tabAccents.createEvent);
@@ -8880,6 +8947,7 @@ function setRaidHelperTab(tabName){
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
   if(target === "poSignup") refreshRaidHelperPoSignupTab();
+  if(target === "poCreate") mountPoSignupCreatorInRaidHelper();
   if(target === "scheduledEvents"){
     renderRaidHelperScheduleRules();
     renderRaidHelperScheduledEvents();
@@ -8890,6 +8958,15 @@ function setRaidHelperTab(tabName){
     loadRaidHelperAttendance();
   }
   if(target === "templates") loadRaidHelperTemplates();
+}
+
+function mountPoSignupCreatorInRaidHelper(){
+  const target = document.getElementById("raidHelperTab-poCreate");
+  const creator = document.getElementById("poPostTab-signup");
+  if(!target || !creator) return;
+  if(creator.parentElement !== target) target.appendChild(creator);
+  creator.classList.remove("hidden");
+  initPoPostPanel();
 }
 
 function raidHelperUpcomingRaids(){
@@ -9155,6 +9232,62 @@ function renderRaidHelperCurrentRaidButton(raid){
   `;
 }
 
+function raidHelperManualPlayerOptions(){
+  const unique = new Map();
+  for(const player of guildData.players || []){
+    const name = String(player.char || player.name || "").trim();
+    if(!name) continue;
+    const key = normalize(name);
+    if(!unique.has(key)) unique.set(key, {
+      name,
+      className:String(player.className || player.klasse || "").trim(),
+      server:String(player.server || "").trim()
+    });
+  }
+  return [...unique.values()]
+    .sort((a,b) => a.name.localeCompare(b.name,"de"))
+    .map(player => `<option value="${escapeAttr(player.name)}" data-class="${escapeAttr(player.className)}" data-server="${escapeAttr(player.server)}">${escapeHtml(player.name)}${player.className ? ` · ${escapeHtml(player.className)}` : ""}${player.server ? ` · ${escapeHtml(player.server)}` : ""}</option>`)
+    .join("");
+}
+
+const RAID_HELPER_MANUAL_SPECS = {
+  warrior:["Waffen","Furor","Tank"], krieger:["Waffen","Furor","Tank"],
+  druid:["Heilung","Tank","FeralDD","Eule"], druide:["Heilung","Tank","FeralDD","Eule"],
+  paladin:["Heilig","Vergeltung","Tank"],
+  rogue:["Assassination","Combat","Subtlety"], schurke:["Assassination","Combat","Subtlety"],
+  hunter:["Survival","Marksman","Beastmaster"], jäger:["Survival","Marksman","Beastmaster"], jaeger:["Survival","Marksman","Beastmaster"],
+  priest:["Disziplin","Heilig","Schatten"], priester:["Disziplin","Heilig","Schatten"],
+  mage:["Feuer","Frost","Arkan"], magier:["Feuer","Frost","Arkan"],
+  warlock:["Gebrechen","Dämonologie","Zerstörung"], hexenmeister:["Gebrechen","Dämonologie","Zerstörung"],
+  shaman:["Heilung","Elemental","Enhancement"], schamane:["Heilung","Elemental","Enhancement"]
+};
+
+function raidHelperManualRoleForSpec(spec){
+  const value = normalize(spec);
+  if(value === "tank") return "tank";
+  if(["heilung","heilig","disziplin"].includes(value)) return "heal";
+  return "dd";
+}
+
+function updateRaidHelperManualSpecs(raidId, syncRole=true){
+  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
+  const specField = document.getElementById(`raidHelperManualSpec-${raidId}`);
+  if(!specField) return;
+  const className = normalize(playerField?.selectedOptions?.[0]?.dataset.class || "");
+  const specs = RAID_HELPER_MANUAL_SPECS[className] || [];
+  specField.innerHTML = specs.length
+    ? specs.map(spec => `<option value="${escapeAttr(spec)}">${escapeHtml(spec)}</option>`).join("")
+    : '<option value="">Skillung wählen …</option>';
+  specField.disabled = !specs.length;
+  if(syncRole && specs.length) updateRaidHelperManualRoleFromSpec(raidId);
+}
+
+function updateRaidHelperManualRoleFromSpec(raidId){
+  const spec = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
+  const roleField = document.getElementById(`raidHelperManualRole-${raidId}`);
+  if(roleField && spec) roleField.value = raidHelperManualRoleForSpec(spec);
+}
+
 function toggleRaidHelperSelection(raidId, checked){
   const id = String(raidId || "");
   if(!id) return;
@@ -9244,10 +9377,16 @@ async function renderRaidHelperCurrentDetail(raidId){
       <img class="raid-helper-current-detail-banner" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
       <div class="raid-helper-current-detail-copy">
         <h4>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</h4>
-        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · ${escapeHtml(slots || "Slots offen")}</span>
+        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · Prio-PIN <b>${escapeHtml(raid.playerPin || raid.prioPin || raid.raidPin || "-")}</b> · Lead-PIN <b>${escapeHtml(raid.leadPin || "-")}</b> · ${escapeHtml(slots || "Slots offen")}</span>
       </div>
       <div class="raid-helper-current-actions">
         <button class="small-btn ghost" type="button" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">Bearbeiten</button>
+        <label class="raid-helper-meta-pill" title="Discord-Channel für diesen Post auswählen">
+          Channel
+          <select id="raidDiscordChannel-${escapeAttr(raidId)}" style="min-width:190px">
+            ${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}
+          </select>
+        </label>
         <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">In DC posten</button>
         <label class="raid-helper-meta-pill" title="Den passenden PO+-Anmelder ebenfalls erneut im Discord posten">
           <input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox">
@@ -9255,6 +9394,21 @@ async function renderRaidHelperCurrentDetail(raidId){
         </label>
         <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentDetail('${escapeAttr(raidId)}')">Liste neu laden</button>
       </div>
+    </div>
+    <div class="raid-helper-manual-signup">
+      <label>Spieler aus der Datenbank
+        <select id="raidHelperManualPlayer-${escapeAttr(raidId)}" onchange="updateRaidHelperManualSpecs('${escapeAttr(raidId)}')"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
+      </label>
+      <label>Rolle
+        <select id="raidHelperManualRole-${escapeAttr(raidId)}"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select>
+      </label>
+      <label>Skillung
+        <select id="raidHelperManualSpec-${escapeAttr(raidId)}" onchange="updateRaidHelperManualRoleFromSpec('${escapeAttr(raidId)}')" disabled><option value="">Erst Charakter wählen …</option></select>
+      </label>
+      <label>Status
+        <select id="raidHelperManualStatus-${escapeAttr(raidId)}"><option value="signed">Aktiv</option><option value="bench">Bank</option><option value="late">Verspätet</option><option value="tentative">Vorläufig</option><option value="absent">Abwesend</option></select>
+      </label>
+      <button class="small-btn good" type="button" onclick="addRaidHelperDatabasePlayer('${escapeAttr(raidId)}')">Spieler anmelden</button>
     </div>
     <div id="raidHelperCurrentSignupStatus" class="status"></div>
     <div>
@@ -9265,6 +9419,48 @@ async function renderRaidHelperCurrentDetail(raidId){
     </div>
   `;
   await loadRaidHelperCurrentEventSignups(raidId);
+}
+
+async function addRaidHelperDatabasePlayer(raidId){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const raid = findRaidByAnyId(raidId);
+  const playerField = document.getElementById(`raidHelperManualPlayer-${raidId}`);
+  const selected = playerField?.selectedOptions?.[0];
+  const player = String(playerField?.value || "").trim();
+  if(!masterCode){ setRaidHelperCurrentStatus("Bitte zuerst den Master-Code eingeben.", "bad"); return; }
+  if(!raid || !player){ setRaidHelperCurrentStatus("Bitte einen Charakter aus der Spielerdatenbank auswählen.", "bad"); return; }
+  const role = document.getElementById(`raidHelperManualRole-${raidId}`)?.value || "dd";
+  const specialization = document.getElementById(`raidHelperManualSpec-${raidId}`)?.value || "";
+  const status = document.getElementById(`raidHelperManualStatus-${raidId}`)?.value || "signed";
+  if(!specialization){ setRaidHelperCurrentStatus("Bitte eine Skillung auswählen.", "bad"); return; }
+  setRaidHelperCurrentStatus(`${player} wird angemeldet …`, "");
+  try{
+    const result = await railwayWrite({
+      action:"saveDiscordSignupRows",
+      masterCode,
+      raidId:raid.raidId || raid.id || raidId,
+      raid:raid.raid || getRaidKey(raid),
+      raidDate:raid.raidDate || "",
+      raidTime:raid.raidTime || "",
+      rows:[{
+        char:player,
+        spieler:player,
+        klasse:selected?.dataset.class || "",
+        server:selected?.dataset.server || "",
+        role,
+        status,
+        source:"loot_page",
+        note:`Skillung: ${specialization}`
+      }]
+    });
+    if(!result.success) throw new Error(result.error || "Spieler konnte nicht angemeldet werden.");
+    raidHelperAttendanceCache = null;
+    await loadRaidHelperCurrentEventSignups(raidId);
+    await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    setRaidHelperCurrentStatus(`${player} wurde für diesen Raid angemeldet.`, "good");
+  }catch(error){
+    setRaidHelperCurrentStatus(error.message || "Spieler konnte nicht angemeldet werden.", "bad");
+  }
 }
 
 function setRaidHelperCurrentStatus(message, type){
@@ -9291,7 +9487,7 @@ async function loadRaidHelperCurrentEventSignups(raidId = raidHelperCurrentSelec
       setRaidHelperCurrentStatus("Keine Anmeldungen gespeichert.", "");
       return;
     }
-    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
+    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
     setRaidHelperCurrentStatus(`${count} ${count === 1 ? "Anmeldung" : "Anmeldungen"} geladen.`, "good");
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
@@ -9649,7 +9845,7 @@ async function loadRaidHelperEventSignups(){
       box.innerHTML = '<div class="muted">Noch keine Anmeldungen vorhanden.</div>';
       return;
     }
-    box.innerHTML = rows.map(row => renderRaidHelperSignupAdminRow(row)).join("");
+    box.innerHTML = renderRaidHelperSignupAdminLayout(rows);
   }catch(error){
     box.innerHTML = `<div class="muted">${escapeHtml(error.message || "Anmeldungen konnten nicht geladen werden.")}</div>`;
   }
@@ -9664,7 +9860,7 @@ function renderRaidHelperSignupAdminRow(row){
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}</div>
+        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} ${escapeHtml(player)}${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
@@ -9678,6 +9874,60 @@ function renderRaidHelperSignupAdminRow(row){
       </div>
     </div>
   `;
+}
+
+function renderRaidHelperLootbag(row){
+  const po = normalize(row.poApprovalStatus || row.po_approval_status || "");
+  let file = "", label = "", type = "";
+  if(["approved","freigegeben"].includes(po)){ file = "beutegrun.jpg"; label = "PO freigegeben"; type = "approved"; }
+  else if(["pending","offen","wartet"].includes(po)){ file = "beuteorange.jpg"; label = "PO eingetragen"; type = "pending"; }
+  else if(row.hasPrio === true || ["true","1","yes","ja"].includes(normalize(row.hasPrio))){ file = "beutelilia.jpg"; label = "P1–P3 eingetragen"; type = "prio"; }
+  return file ? `<span class="raid-helper-lootbag ${type}" title="${escapeAttr(label)}"><img src="images/lootbags/${file}" alt="Lootbag"><span>${escapeHtml(label)}</span></span>` : "";
+}
+
+function renderRaidHelperSignupAdminLayout(rows){
+  const unique = [];
+  const seen = new Set();
+  for(const row of rows || []){
+    const key = normalize(row.player || row.char || row.playerName || "");
+    if(!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(row);
+  }
+  const canon = value => {
+    const name = normalize(value);
+    if(name.includes("krieger") || name.includes("warrior")) return "Warrior";
+    if(name.includes("paladin")) return "Paladin";
+    if(name.includes("schurke") || name.includes("rogue")) return "Rogue";
+    if(name.includes("jäger") || name.includes("jaeger") || name.includes("hunter")) return "Hunter";
+    if(name.includes("druide") || name.includes("druid")) return "Druid";
+    if(name.includes("priester") || name.includes("priest")) return "Priest";
+    if(name.includes("magier") || name.includes("mage")) return "Mage";
+    if(name.includes("hexenmeister") || name.includes("warlock")) return "Warlock";
+    if(name.includes("schamane") || name.includes("shaman")) return "Shaman";
+    return "Other";
+  };
+  const labels = {Tank:"Tanks",Warrior:"Krieger",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Druid:"Druiden",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Other:"Weitere"};
+  const colors = {Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Other:"#94a3b8"};
+  const order = ["Tank","Warrior","Paladin","Rogue","Hunter","Druid","Priest","Mage","Warlock","Shaman","Other"];
+  const statusKey = row => normalize(row.status || "signed");
+  const active = unique.filter(row => ["signed","aktiv","angemeldet"].includes(statusKey(row)));
+  const roleCounts = {tank:0,melee:0,ranged:0,heal:0};
+  active.forEach(row => {
+    const role = normalize(row.role || "");
+    const cls = canon(row.className || row.class || "");
+    if(role === "tank") roleCounts.tank++;
+    else if(role === "heal" || role === "healer") roleCounts.heal++;
+    else if(["Warrior","Paladin","Rogue","Druid"].includes(cls)) roleCounts.melee++;
+    else roleCounts.ranged++;
+  });
+  const group = (key, players, extraClass = "") => `<section class="raid-helper-loot-group ${extraClass}" style="--group-color:${colors[key] || colors.Other}"><header>${key === "Tank" ? '<span style="font-size:24px">🛡️</span>' : raidHelperClassIconMarkup(key,"◆")}<div><h3>${escapeHtml(labels[key] || key)}</h3><small>${players.length} ${players.length === 1 ? "Spieler" : "Spieler"}</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>`;
+  const activeGroups = new Map();
+  active.forEach(row => { const key = normalize(row.role) === "tank" ? "Tank" : canon(row.className || row.class); if(!activeGroups.has(key)) activeGroups.set(key,[]); activeGroups.get(key).push(row); });
+  const activeHtml = order.filter(key => activeGroups.has(key)).map(key => group(key,activeGroups.get(key))).join("");
+  const inactiveDefs = [["bench","🪑 Bank"],["late","🕒 Verspätet"],["tentative","⚖️ Vorläufig"],["absent","🚫 Abwesend"]];
+  const inactiveHtml = inactiveDefs.map(([status,label]) => { const players = unique.filter(row => statusKey(row) === status || (status === "late" && ["spät","spaet"].includes(statusKey(row)))); return players.length ? `<section class="raid-helper-loot-group status-${status}" style="--group-color:${status === "bench" ? "#fde047" : status === "late" ? "#fb923c" : status === "tentative" ? "#c084fc" : "#f87171"}"><header><span style="font-size:22px">${label.split(" ")[0]}</span><div><h3>${escapeHtml(label.substring(label.indexOf(" ") + 1))}</h3><small>${players.length} Spieler</small></div></header><div>${players.map(renderRaidHelperSignupAdminRow).join("")}</div></section>` : ""; }).join("");
+  return `<div class="raid-helper-loot-total">👥 Gesamt angemeldet: ${unique.length}</div><div class="raid-helper-loot-role-counter"><span>🛡️ Tanks <b>${roleCounts.tank}</b></span><span>⚔️ Nahkampf <b>${roleCounts.melee}</b></span><span>🏹 Fernkampf <b>${roleCounts.ranged}</b></span><span>✚ Heiler <b>${roleCounts.heal}</b></span></div><div class="raid-helper-loot-grid">${activeHtml || '<div class="muted">Keine aktiv Angemeldeten.</div>'}</div>${inactiveHtml ? `<div class="raid-helper-loot-inactive">${inactiveHtml}</div>` : ""}`;
 }
 
 function raidHelperSignupNotifyPrompt(action, player){
@@ -9817,7 +10067,7 @@ function renderRaidHelperPastEvents(){
 function raidHelperAttendanceRaids(raidKey = raidHelperAttendanceRaidKey){
   return (guildData.raids || [])
     .slice()
-    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey)
+    .filter(raid => (raid.raidId || raid.id) && getRaidKey(raid) === raidKey && hasP0PlusTransfer(raid))
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")))
     .slice(0,18);
 }
@@ -9834,7 +10084,7 @@ async function loadRaidHelperAttendance(){
   }
   const raids = raidHelperAttendanceRaids(raidKey);
   if(!raids.length){
-    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Raidanmelder für Attendance gefunden.</div>`;
+    box.innerHTML = `<div class="raid-helper-loading">Keine ${escapeHtml(RAID_OPTIONS[raidKey]?.short || raidKey.toUpperCase())}-Prioliste mit übertragener PO+‑Punktevergabe gefunden.</div>`;
     return;
   }
   box.innerHTML = '<div class="raid-helper-loading">Attendance wird geladen ...</div>';
@@ -9848,10 +10098,12 @@ async function loadRaidHelperAttendance(){
         playerPin:raid.playerPin || "",
         t:Date.now()
       });
-      rows.push({
-        raid:result.raid || raid,
-        signups:[...(result.signups || []), ...(result.externalSignups || [])]
-      });
+      if(result.p0PlusTransferred || hasP0PlusTransfer(raid)){
+        rows.push({
+          raid:{...(result.raid || raid),p0PlusTransferred:true,p0PlusTransferCount:Number(result.p0PlusTransferCount || raid.p0PlusTransferCount || 0)},
+          signups:Array.isArray(result.attendancePrios) ? result.attendancePrios : []
+        });
+      }
     }catch(error){
       rows.push({ raid, signups:[] });
     }
@@ -9908,7 +10160,7 @@ function renderRaidHelperAttendance(rows){
   });
   const playerList = Array.from(players.values()).sort((a,b) => b.signed - a.signed || a.name.localeCompare(b.name));
   if(!playerList.length){
-    box.innerHTML = '<div class="raid-helper-loading">Noch keine Anmeldungen in den letzten Raids gefunden.</div>';
+    box.innerHTML = '<div class="raid-helper-loading">In den übertragenen Priolisten wurden noch keine Spieler gefunden.</div>';
     return;
   }
   const head = `
@@ -12357,7 +12609,6 @@ function renderRaidHelperPoSignupDetail(postKey){
         <span>${escapeHtml(poSignupChannelShortLabel(row.targetChannelId || row.sourceChannelId))} · ${escapeHtml(String(count))} Einträge · ${escapeHtml(String(approved))} freigegeben</span>
       </div>
       <div class="raid-helper-current-actions">
-        <button class="small-btn primary" type="button" onclick="openRaidHelperPoSignup('${escapeAttr(row.postKey)}')">Öffnen</button>
         <button class="small-btn good" type="button" ${approved && !isArchivedOnly ? "" : "disabled"} onclick="syncPoSignupPriosForPost('${escapeAttr(row.postKey)}')">Übertragen</button>
         ${isArchivedOnly
           ? `<button class="small-btn ghost" type="button" onclick="restorePoPostEverywhere('${escapeAttr(row.postKey)}')">Wiederherstellen</button>`
@@ -12366,6 +12617,15 @@ function renderRaidHelperPoSignupDetail(postKey){
       </div>
     </div>
     <div class="status good">${escapeHtml(String(count))} Einträge geladen · ${escapeHtml(String(approved))} freigegeben${isArchivedOnly ? " · archiviert" : ""}</div>
+    <div class="raid-helper-manual-signup">
+      <label>Spieler aus der Datenbank
+        <select id="poManualPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select>
+      </label>
+      <label style="grid-column:span 2">PO-Item aus der Lootdatenbank
+        <select id="poManualItem"><option value="">Itemliste wird geladen …</option></select>
+      </label>
+      <button class="small-btn good" type="button" onclick="addManualPoSignup('${escapeAttr(row.postKey)}','${escapeAttr(raidKey)}')">PO hinzufügen</button>
+    </div>
     <div>
       <div class="raid-helper-view-head" style="padding:0 0 8px;border:0">
         <div><h3 style="font-size:16px">PO-Anmeldungen</h3><span id="raidHelperPoSignupDetailHint">Einträge dieses PO-Anmelders prüfen und freigeben.</span></div>
@@ -12384,6 +12644,41 @@ function renderRaidHelperPoSignupDetail(postKey){
     row.postKey,
     "Noch keine PO-Anmeldungen vorhanden."
   );
+  loadManualPoItemOptions(raidKey);
+}
+
+async function loadManualPoItemOptions(raidKey){
+  const select = document.getElementById("poManualItem");
+  if(!select) return;
+  try{
+    const items = await loadPoSignupLootItems(raidKey);
+    select.innerHTML = '<option value="">Item auswählen …</option>' + items.map(item => {
+      const name = typeof item === "string" ? item : item?.name || "";
+      return name ? `<option value="${escapeAttr(name)}">${escapeHtml(name)}</option>` : "";
+    }).join("");
+  }catch(error){
+    select.innerHTML = '<option value="">Itemliste konnte nicht geladen werden</option>';
+  }
+}
+
+async function addManualPoSignup(postKey, raidKey){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const player = document.getElementById("poManualPlayer")?.value.trim() || "";
+  const item = document.getElementById("poManualItem")?.value.trim() || "";
+  const hint = document.getElementById("raidHelperPoSignupDetailHint");
+  if(!masterCode || !player || !item){
+    if(hint) hint.textContent = !masterCode ? "Bitte zuerst den Master-Code eingeben." : "Bitte Spieler und PO-Item auswählen.";
+    return;
+  }
+  try{
+    const result = await railwayWrite({ action:"guildAddManualPoPostEntry", masterCode, postKey, raid:raidKey, player, item });
+    if(!result.success) throw new Error(result.error || "PO konnte nicht hinzugefügt werden.");
+    await loadPoPostEntries({ preserveSelection:true });
+    renderRaidHelperPoSignupDetail(postKey);
+    if(hint) hint.textContent = `${player}: ${item} wurde als offene PO-Anmeldung hinzugefügt.`;
+  }catch(error){
+    if(hint) hint.textContent = error.message || "PO konnte nicht hinzugefügt werden.";
+  }
 }
 
 function openRaidHelperPoSignup(postKey){
@@ -13378,7 +13673,7 @@ async function createRaidHelperSignup(){
   const lead = raidHelperValue("raidHelperLead") || "Gildenleitung";
   const guild = raidHelperValue("raidHelperGuild") || getCurrentGuildBrand().guildName;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
-  const shouldCreatePoSignup = true;
+  const shouldCreatePoSignup = false;
 
   if(!masterCode || !raidDate || !raidTime){
     if(status){
@@ -14190,6 +14485,18 @@ async function deleteRaidFromDashboard(raidId){
   }catch(error){
     setStatus(error.message || "Raid konnte nicht archiviert werden.", "bad");
   }
+}
+
+async function restoreArchivedRaids(){
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  if(!confirm("Alle archivierten Raids ab gestern für diese Gilde wiederherstellen?")) return;
+  try{
+    const result = await railwayApi({ action:"guildRestoreArchivedRaids", masterCode, t:Date.now() });
+    if(!result.success) throw new Error(result.error || "Raids konnten nicht wiederhergestellt werden.");
+    await loadOverview({ preserveStatus:true });
+    setStatus(`${Number(result.restored || 0)} Raid(s) wiederhergestellt.`, "good");
+  }catch(error){ setStatus(error.message || "Raids konnten nicht wiederhergestellt werden.", "bad"); }
 }
 
 async function hardDeleteRaidFromPage(raidId){
@@ -15108,8 +15415,9 @@ async function togglePoReleaseColumn(raid, visible){
 
 function poReleaseCheckHtml(entry, raid, index){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
+  const reviewed = checked && /geprüft|freigabeliste/i.test(String(entry?.approvedBy?.[raid] || ""));
   return checked
-    ? `<span class="po-release-state active" title="${escapeAttr(poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
+    ? `<span class="po-release-state active" title="${escapeAttr(poReleaseRaidLabel(raid))}">${reviewed ? "✓ geprüft" : "✓ Freigabe"}</span>`
     : `<button class="po-release-state empty" type="button" title="${escapeAttr(poReleaseRaidLabel(raid))} erteilen" onclick="setPoReleaseDirect(${Number(index)}, '${escapeAttr(raid)}', true)">offen</button>`;
 }
 
