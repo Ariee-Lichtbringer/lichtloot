@@ -44,6 +44,7 @@ const MISSING_RAID_HELPER_CACHE_TTL_MS = 5 * 60 * 1000;
 let p0ReleaseCache = null;
 let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
+const rpbSpellMetadataCache = new Map();
 let warcraftLogsNextRequestAt = 0;
 const externalRendSyncCache = new Map();
 const EXTERNAL_REND_SYNC_TTL_MS = 5 * 60 * 1000;
@@ -12611,6 +12612,47 @@ function translateRpbLabelToGerman(value) {
     .replace(/rank/gi, "Rang");
 }
 
+async function getRpbSpellMetadata(spellIds) {
+  const ids = Array.from(new Set((spellIds || []).map(Number).filter(id => id > 0)));
+  const missing = ids.filter(id => !rpbSpellMetadataCache.has(id));
+  let index = 0;
+  async function worker() {
+    while (index < missing.length) {
+      const id = missing[index++];
+      try {
+        const response = await fetch(`https://nether.wowhead.com/classic/tooltip/spell/${id}?locale=de`, {
+          headers: { "User-Agent": "LichtLoot/1.0" }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        rpbSpellMetadataCache.set(id, {
+          id,
+          name: clean(data?.name),
+          icon: clean(data?.icon),
+          tooltip: clean(String(data?.tooltip || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " "))
+        });
+      } catch (error) {
+        console.warn(`Wowhead-Zauberdaten für Spell ${id} konnten nicht geladen werden:`, error.message || error);
+        rpbSpellMetadataCache.set(id, { id, name: "", icon: "", tooltip: "" });
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(6, missing.length) }, () => worker()));
+  return new Map(ids.map(id => [id, rpbSpellMetadataCache.get(id) || { id, name: "", icon: "", tooltip: "" }]));
+}
+
+function localizedRpbCastLabel(cast, metadata) {
+  const original = clean(cast?.name);
+  const base = clean(metadata?.name) || translateRpbLabelToGerman(original.replace(/\s*\(.*/, ""));
+  const suffix = original.slice(original.indexOf("(") > -1 ? original.indexOf("(") : original.length)
+    .replace(/Faerie Fire/gi, "Feenfeuer")
+    .replace(/Feral/gi, "Wildtier")
+    .replace(/uptime/gi, "Uptime")
+    .replace(/overheal/gi, "Überheilung")
+    .replace(/rank/gi, "Rang");
+  return `${base}${suffix ? ` ${suffix}` : ""}`;
+}
+
 function matchingLabel(name, groups, id = 0) {
   const numericId = Number(id || 0);
   if (numericId) {
@@ -13412,7 +13454,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   bossCombatantEvents.forEach(event => {
     const player = playerNameFromEvent(event, true);
-    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const timestamp = Number(event.timestamp || event.time || 0);
+    const timestampFight = bossFightsForGear.find(fight => timestamp >= Number(fight.startTime || 0) - 2000
+      && timestamp <= Number(fight.endTime || 0));
+    const fightId = explicitFightId || Number(timestampFight?.id || 0);
     if (!player || !fightId) return;
     const buffs = Array.from(new Set((Array.isArray(event.auras) ? event.auras : []).map(aura => {
       const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
@@ -13430,6 +13476,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     });
   });
   const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+
+  const configuredSpellIds = players.flatMap(player => {
+    const config = rpbConfig.byClass?.[player.className] || {};
+    return [...(config.singleTarget || []), ...(config.aoe || []), ...(config.cooldowns || [])]
+      .map(cast => Number(cast.ids?.[0] || 0));
+  }).filter(Boolean);
+  const rpbSpellMetadata = await getRpbSpellMetadata(configuredSpellIds);
 
   const playerNames = players.map(player => player.name);
   const countRow = (label, table, options = {}) => ({
@@ -13451,6 +13504,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     spellId: Number(options.spellId || 0) || undefined,
     icon: clean(options.icon),
     originalLabel: clean(options.originalLabel),
+    tooltip: clean(options.tooltip),
     values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
   });
   const textRow = (label, values, options = {}) => customRow(label, values, { ...options, type: "text" });
@@ -13659,7 +13713,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   function configuredCastRow(className, cast, kind) {
     const isHealingRow = cast.hasOverheal || healerClasses.has(className);
-    return customRow(translateRpbLabelToGerman(cast.name), Object.fromEntries(playerNames.map(player => {
+    const spellId = Number(cast.ids?.[0] || 0);
+    const spellMetadata = rpbSpellMetadata.get(spellId) || {};
+    return customRow(localizedRpbCastLabel(cast, spellMetadata), Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
@@ -13683,19 +13739,23 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
       }
       return [player, formatCountValue(castCount)];
-    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId: cast.ids?.[0], icon: rpbSpellIconByName[cast.name], originalLabel: cast.name });
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
   }
 
   function configuredCooldownRows(className) {
     const cooldowns = rpbConfig.byClass?.[className]?.cooldowns || [];
     const rows = [];
     cooldowns.forEach(cooldown => {
-      rows.push(customRow(`${cooldown.name} auf Trash`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
-      rows.push(customRow(`${cooldown.name} auf Bossen`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
-      rows.push(customRow(`${cooldown.name} gesamt`, Object.fromEntries(playerNames.map(player => [
+      const spellId = Number(cooldown.ids?.[0] || 0);
+      const spellMetadata = rpbSpellMetadata.get(spellId) || {};
+      const label = localizedRpbCastLabel(cooldown, spellMetadata);
+      const rowOptions = { tone: "cooldown", spellId, icon: spellMetadata.icon, originalLabel: cooldown.name, tooltip: spellMetadata.tooltip };
+      rows.push(customRow(`${label} auf Trash`, Object.fromEntries(playerNames.map(player => [player, "0"])), rowOptions));
+      rows.push(customRow(`${label} auf Bossen`, Object.fromEntries(playerNames.map(player => [player, "0"])), rowOptions));
+      rows.push(customRow(`${label} gesamt`, Object.fromEntries(playerNames.map(player => [
         player,
         formatCountValue(classCooldowns[className]?.[cooldown.name]?.[player])
-      ])), { tone: "total" }));
+      ])), { ...rowOptions, tone: "total" }));
     });
     return rows;
   }
