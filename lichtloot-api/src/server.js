@@ -13297,8 +13297,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
       const name = clean(entry?.name);
       if (!name || !players.some(player => player.name === name)) return;
-      if (totals === healingTotals && healingTotalSource[name] === "character-fights") return;
-      if (totals === damageTotals && damageTotalSource[name] === "character-fights") return;
       const total = Number(entry.total || entry.amount || 0);
       if (total > 0) {
         totals[name] = total;
@@ -13467,20 +13465,24 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const bossMetrics = bossFightsForGear.map(fight => fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {});
     const bossDamage = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.damageDone || 0), 0);
     const bossHealing = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.healingDone || 0), 0);
-    if (bossDamage > 0) {
+    // Keep the complete report totals loaded above for the "Alle Kämpfe" view.
+    // Boss totals are stored on each fight and are used by the browser when the
+    // user selects "Nur Bosse" or individual encounters. Only use them here as
+    // a fallback when Warcraft Logs did not return a report-wide total.
+    if (!(Number(damageTotals[player.name] || 0) > 0) && bossDamage > 0) {
       damageTotals[player.name] = bossDamage;
-      damageTotalSource[player.name] = "boss-tables";
+      damageTotalSource[player.name] = "boss-tables-fallback";
     }
-    if (bossHealing > 0) {
+    if (!(Number(healingTotals[player.name] || 0) > 0) && bossHealing > 0) {
       healingTotals[player.name] = bossHealing;
-      healingTotalSource[player.name] = "boss-tables";
+      healingTotalSource[player.name] = "boss-tables-fallback";
     }
     const weightedActivity = bossFightsForGear.reduce((sum, fight) => {
       const metrics = fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {};
       const duration = Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
       return sum + Number(metrics.activityPercentOverride || 0) * duration;
     }, 0);
-    if (weightedActivity > 0 && completeBossDurationMs > 0) {
+    if (!wclActivePercent[player.name] && weightedActivity > 0 && completeBossDurationMs > 0) {
       wclActivePercent[player.name] = `${Math.min(100, Math.round(weightedActivity / completeBossDurationMs * 100) / 100)}%`;
     }
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
