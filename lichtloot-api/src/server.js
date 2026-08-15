@@ -11830,15 +11830,20 @@ function parseWarcraftLogsEventsData(raw) {
 
 function parseWarcraftLogsTableData(raw) {
   if (!raw) return {};
+  const unwrap = parsed => {
+    if (!parsed || typeof parsed !== "object") return {};
+    if (parsed.data && typeof parsed.data === "object" && !Array.isArray(parsed.data)) return parsed.data;
+    return parsed;
+  };
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
+      return unwrap(parsed);
     } catch {
       return {};
     }
   }
-  return raw && typeof raw === "object" ? raw : {};
+  return unwrap(raw);
 }
 
 function normalizeRpbClassName(value) {
