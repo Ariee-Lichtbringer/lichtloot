@@ -12757,7 +12757,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
   const bossFightsForGear = bossFightsForAnalysis(fights, report.zone?.name || analysis.raid || "");
   const performanceScope = bossFightsForGear.length ? bossFightsForGear.map(fight => Number(fight.id)) : rpbFightScope;
-  const performanceDurationMs = bossFightsForGear.length
+  let performanceDurationMs = bossFightsForGear.length
     ? bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0)
     : reportDurationMs;
   const lastBossFightForGear = bossFightsForGear[bossFightsForGear.length - 1] || rpbFights[rpbFights.length - 1] || fights[fights.length - 1];
@@ -12767,6 +12767,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const activityScope = performanceScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  if (Number(castsTable.totalTime || 0) > 0) performanceDurationMs = Number(castsTable.totalTime);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
   const deathEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Deaths", activityScope);
@@ -13029,15 +13030,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         });
         const healingFromEntries = healingEntries
           .reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
-        const healingFromTable = healingFromEntries || Number(
+        const healingFromTable = Number(
           healingTable.total || healingTable.totalHealing || healingTable.totalAmount || healingTable.amount || 0
-        );
+        ) || healingFromEntries;
         if (healingFromTable > 0) {
           healingTotals[player.name] = healingFromTable;
           healingTotalSource[player.name] = "table";
         }
-        const damageFromTable = (Array.isArray(damageTable.entries) ? damageTable.entries : [])
+        const damageFromEntries = (Array.isArray(damageTable.entries) ? damageTable.entries : [])
           .reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
+        const damageFromTable = Number(
+          damageTable.total || damageTable.totalDamage || damageTable.totalAmount || damageTable.amount || 0
+        ) || damageFromEntries;
         if (damageFromTable > 0) {
           damageTotals[player.name] = damageFromTable;
           damageTotalSource[player.name] = "table";
@@ -13048,7 +13052,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           .filter(value => value > 0);
         if (!wclActivePercent[player.name] && activeMsCandidates.length) {
           const activeMs = Math.max(...activeMsCandidates);
-          wclActivePercent[player.name] = `${Math.min(100, Math.round(activeMs * 100 / Math.max(1, reportDurationMs)))}%`;
+          const tableDuration = Number(table.totalTime || healingTable.totalTime || damageTable.totalTime || performanceDurationMs);
+          wclActivePercent[player.name] = `${Math.min(100, Math.round(activeMs * 100 / Math.max(1, tableDuration)))}%`;
         }
         if (!gearByPlayer.has(player.name)) {
           const summaryGear = normalizeWarcraftLogsGear(summaryTable?.combatantInfo?.gear || summaryTable?.gear || []);
