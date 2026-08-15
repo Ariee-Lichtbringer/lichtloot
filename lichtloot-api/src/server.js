@@ -12948,8 +12948,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     ? { startTime: Number(lastBossFightForGear.startTime || 0), endTime: Number(lastBossFightForGear.endTime || 0) }
     : fullReportScope;
   // The main analysis represents the complete logged raid (bosses + trash).
+  // Use the report's real time range here. Passing the collected fight IDs can
+  // make Warcraft Logs return only encounter tables, so the stored report-wide
+  // totals then equal the boss totals and do not change when the UI is filtered.
   // Individual boss tables below are still fetched separately for boss filters.
-  const activityScope = rpbFightScope;
+  const activityScope = fullReportScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
