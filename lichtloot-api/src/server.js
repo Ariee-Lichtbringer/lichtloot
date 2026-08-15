@@ -17463,43 +17463,46 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
     if (matches.length !== 1) continue;
 
     const character = matches[0];
-    const existingAccountSignup = await query(
-      `select rs.id, rs.character_id
-       from raid_signups rs
-       join characters c on c.id = rs.character_id
-       where rs.raid_id = $1 and c.player_id = $2
-       limit 1`,
-      [raidId, character.player_id]
+    // Ein SpielerLogin darf pro Raid nur einen Charakter enthalten. Ein
+    // manueller Eintrag aus der Leitungsseite ist dabei zugleich ein bewusster
+    // Charakterwechsel: Die alte Anmeldung muss ersetzt werden, statt den neu
+    // angelegten externen Datensatz anschließend kommentarlos zu verwerfen.
+    await query(
+      `delete from raid_signups rs
+       using characters c
+       where rs.character_id = c.id
+         and rs.raid_id = $1
+         and c.player_id = $2
+         and rs.character_id <> $3`,
+      [raidId, character.player_id, character.id]
     );
-    if (!existingAccountSignup.rows[0]) {
-      await query(
-        `insert into raid_signups (
-           raid_id, character_id, status, note, role, source,
-           discord_user_id, discord_name, created_at, updated_at
-         )
-         values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now())
-         on conflict (raid_id, character_id)
-         do update set
-           status = excluded.status,
-           note = coalesce(nullif(excluded.note, ''), raid_signups.note),
-           role = excluded.role,
-           source = excluded.source,
-           discord_user_id = coalesce(nullif(excluded.discord_user_id, ''), raid_signups.discord_user_id),
-           discord_name = coalesce(nullif(excluded.discord_name, ''), raid_signups.discord_name),
-           updated_at = now()`,
-        [
-          raidId,
-          character.id,
-          normalizeSignupStatus(external.status),
-          clean(external.note),
-          normalizeSignupRole(external.role),
-          clean(external.source) || "raid-helper-account-reconciled",
-          clean(external.discord_user_id),
-          clean(external.discord_name),
-          external.created_at || null
-        ]
-      );
-    }
+    await query(
+      `insert into raid_signups (
+         raid_id, character_id, status, note, role, source,
+         discord_user_id, discord_name, created_at, updated_at
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now())
+       on conflict (raid_id, character_id)
+       do update set
+         status = excluded.status,
+         note = coalesce(nullif(excluded.note, ''), raid_signups.note),
+         role = excluded.role,
+         source = excluded.source,
+         discord_user_id = coalesce(nullif(excluded.discord_user_id, ''), raid_signups.discord_user_id),
+         discord_name = coalesce(nullif(excluded.discord_name, ''), raid_signups.discord_name),
+         updated_at = now()`,
+      [
+        raidId,
+        character.id,
+        normalizeSignupStatus(external.status),
+        clean(external.note),
+        normalizeSignupRole(external.role),
+        clean(external.source) || "account-reconciled",
+        clean(external.discord_user_id),
+        clean(external.discord_name),
+        external.created_at || null
+      ]
+    );
     await query(
       `delete from raid_external_signups where guild_id = $1 and raid_id = $2 and id = $3`,
       [guildId, raidId, external.id]
