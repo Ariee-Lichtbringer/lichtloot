@@ -12934,6 +12934,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     : fullReportScope;
   const activityScope = performanceScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
   if (Number(castsTable.totalTime || 0) > 0) performanceDurationMs = Number(castsTable.totalTime);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
@@ -12973,6 +12974,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const claIgnites = {};
   const damageHitsByPlayerAndAbility = {};
   const classCooldowns = {};
+  const classCooldownsBoss = {};
+  const classCooldownsTrash = {};
   const gearByPlayer = new Map();
   const fightPlayerMetrics = {};
   const playerTableDiagnostics = [];
@@ -13108,6 +13111,17 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!classCooldowns[player.className]) classCooldowns[player.className] = {};
     if (!classCooldowns[player.className][cooldown.name]) classCooldowns[player.className][cooldown.name] = {};
     classCooldowns[player.className][cooldown.name][player.name] = (classCooldowns[player.className][cooldown.name][player.name] || 0) + 1;
+    const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const timestamp = Number(event.timestamp || event.time || 0);
+    const matchedFight = fights.find(fight => explicitFightId
+      ? Number(fight.id || 0) === explicitFightId
+      : timestamp >= Number(fight.startTime || 0) && timestamp <= Number(fight.endTime || 0));
+    const target = matchedFight && Number(matchedFight.encounterID || matchedFight.encounterId || 0) > 0
+      ? classCooldownsBoss
+      : classCooldownsTrash;
+    if (!target[player.className]) target[player.className] = {};
+    if (!target[player.className][cooldown.name]) target[player.className][cooldown.name] = {};
+    target[player.className][cooldown.name][player.name] = (target[player.className][cooldown.name][player.name] || 0) + 1;
   }
 
   function addDamageHit(event) {
@@ -13372,8 +13386,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   castEvents.forEach(event => {
     markActive(event);
     addClassCast(event);
-    addClassCooldown(event);
   });
+  cooldownCastEvents.forEach(event => addClassCooldown(event));
   damageDoneEvents.forEach(event => {
     markActive(event);
     addDamageHit(event);
@@ -13816,8 +13830,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const spellMetadata = rpbSpellMetadata.get(spellId) || {};
       const label = localizedRpbCastLabel(cooldown, spellMetadata);
       const rowOptions = { tone: "cooldown", spellId, icon: spellMetadata.icon, originalLabel: cooldown.name, tooltip: spellMetadata.tooltip };
-      rows.push(customRow(`${label} auf Trash`, Object.fromEntries(playerNames.map(player => [player, "0"])), rowOptions));
-      rows.push(customRow(`${label} auf Bossen`, Object.fromEntries(playerNames.map(player => [player, "0"])), rowOptions));
+      rows.push(customRow(`${label} auf Trash`, Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(classCooldownsTrash[className]?.[cooldown.name]?.[player])
+      ])), rowOptions));
+      rows.push(customRow(`${label} auf Bossen`, Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(classCooldownsBoss[className]?.[cooldown.name]?.[player])
+      ])), rowOptions));
       rows.push(customRow(`${label} gesamt`, Object.fromEntries(playerNames.map(player => [
         player,
         formatCountValue(classCooldowns[className]?.[cooldown.name]?.[player])
