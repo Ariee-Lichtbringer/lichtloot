@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-rpb-consumables-v3";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v5";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -947,6 +947,53 @@ function normalizeWarcraftLogsGear(gear) {
       gems: normalizeWarcraftLogsGems(item.gems || item.gem || item.socketedGems || [])
     };
   }).filter(item => item.id);
+}
+
+function hasRaidAnalysisPermanentEnchant(item) {
+  const enchantName = clean(item?.permanentEnchantName || item?.enchantName);
+  const hasNamedEnchant = Boolean(enchantName)
+    && !/^(?:0|none|no enchant|kein(?:e)? verzauberung|kein enchant)$/i.test(enchantName);
+  return hasNamedEnchant || Number(item?.permanentEnchant || item?.enchant || 0) > 0;
+}
+
+function isRaidAnalysisEnchantableItem(item, metadata = null) {
+  const slot = Number(item?.slot);
+  const text = clean([
+    item?.name,
+    item?.itemName,
+    item?.slotName,
+    metadata?.name,
+    metadata?.slot,
+    metadata?.type,
+    metadata?.category
+  ].filter(Boolean).join(" ")).toLowerCase();
+
+  // Relikte und zauberfokussierte Nebenhandgegenstände können in Classic nicht
+  // verzaubert werden. Die Namensprüfung schützt auch vor uneinheitlichen
+  // Slotnummern aus älteren Warcraft-Logs-Datensätzen.
+  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|fokus|focus|off.?hand frill|held in off/.test(text)) {
+    return false;
+  }
+  if ([0, 2, 4, 6, 7, 8, 9, 14, 15].includes(slot)) return true;
+  if (slot === 16) return /schild|shield|buckler/.test(text);
+  return false;
+}
+
+function raidAnalysisEnchantIssue(item, playerClass = "", metadata = null) {
+  const slot = Number(item?.slot);
+  const itemName = clean(item?.name || item?.itemName);
+  const enchantName = clean(item?.permanentEnchantName || item?.enchantName);
+  const lower = `${itemName} ${enchantName}`.toLowerCase();
+  if (lower.includes("undead") || lower.includes("scourge") || lower.includes("untot")) {
+    return "Untoten-Gegenstand oder -Verzauberung außerhalb passender Kämpfe";
+  }
+  if (isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item)) {
+    return "Fehlende Verzauberung";
+  }
+  if (slot === 9 && Number(item?.permanentEnchant) === 2617 && playerClass === "Priest") {
+    return "Auffällige oder möglicherweise ungeeignete Verzauberung";
+  }
+  return "";
 }
 
 function normalizeWarcraftLogsEnchantments(item) {
@@ -6310,21 +6357,50 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
          and (
            status in ('open', 'processing')
            or ($4::boolean and status = 'done')
-           or (not $4::boolean and status = 'done' and coalesce(resolved_at, created_at) > now() - interval '2 minutes')
          )
        order by created_at desc
        limit 1`,
       [guildId, type, raidId, fromSchedule]
     );
     if (existing.rows[0]) {
-      return {
-        success: true,
-        skipped: true,
-        reason: fromSchedule ? "scheduled_raid_announcement_already_queued" : "raid_announcement_recently_queued",
-        rowNumber: existing.rows[0].id,
-        type,
-        payload: existing.rows[0].payload || payload || {}
-      };
+      // Ein manueller Klick auf "Vorhandenen Post aktualisieren" ist ein
+      // neuer Auftrag. Ein bereits erledigter Auftrag darf ihn nicht fuer
+      // zwei Minuten verschlucken – insbesondere nicht, wenn erst beim
+      // zweiten Klick der gekoppelte P0-Anmelder ausgewaehlt wurde.
+      // Ist der vorherige Auftrag noch offen, bekommt er stattdessen immer
+      // den neuesten Snapshot samt followupPoPost.
+      if (!fromSchedule && existing.rows[0].status === "open") {
+        await query(
+          `update bot_update_queue
+           set payload = $2::jsonb,
+               created_at = now(),
+               claimed_at = null,
+               resolved_at = null
+           where id = $1`,
+          [existing.rows[0].id, JSON.stringify(payload || {})]
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "raid_announcement_open_payload_replaced",
+          rowNumber: existing.rows[0].id,
+          type,
+          payload: payload || {}
+        };
+      }
+      if (!fromSchedule && existing.rows[0].status === "processing") {
+        // Der laufende Auftrag wird nicht veraendert. Der neue manuelle
+        // Refresh wird unten als eigener Queue-Eintrag angelegt.
+      } else {
+        return {
+          success: true,
+          skipped: true,
+          reason: fromSchedule ? "scheduled_raid_announcement_already_queued" : "raid_announcement_recently_queued",
+          rowNumber: existing.rows[0].id,
+          type,
+          payload: existing.rows[0].payload || payload || {}
+        };
+      }
     }
   }
   if (type === "po_release_request_notice" && clean(payload?.requestId)) {
@@ -12876,6 +12952,12 @@ async function buildClaAnalysisRows(analysis) {
     if (gear.length) gearByPlayer.set(player, gear);
   });
 
+  const gearItemIds = Array.from(gearByPlayer.values())
+    .flat()
+    .map(item => item.itemId || item.id)
+    .filter(Boolean);
+  const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+
   const headerPlayers = players.map(player => player.name);
   const title = report.title || analysis.title || "";
   const zone = report.zone?.name || analysis.raid || "";
@@ -12896,7 +12978,7 @@ async function buildClaAnalysisRows(analysis) {
         row.push(index < headerPlayers.length ? "---------------------------------------------------------------" : "");
         return;
       }
-      const enchant = found.permanentEnchantName || found.permanentEnchant || "no enchant";
+      const enchant = found.permanentEnchantName || found.permanentEnchant || "keine Verzauberung";
       row.push(`${found.name || itemName} [${enchant}]`);
     });
     rows.push(row);
@@ -12905,8 +12987,11 @@ async function buildClaAnalysisRows(analysis) {
   headerPlayers.forEach((player, index) => {
     const gear = gearByPlayer.get(player) || [];
     const missing = gear
-      .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"].includes(item.slotName))
-      .map(item => `${item.name} [no enchant]`);
+      .filter(item => {
+        const metadata = itemMetaById.get(String(item.itemId || item.id)) || null;
+        return isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item);
+      })
+      .map(item => `${item.name} [keine Verzauberung]`);
     if (!missing.length) return;
     const row = ["", "", "", ""];
     headerPlayers.forEach((name, playerIndex) => row.push(playerIndex === index ? missing.join(", ") : ""));
@@ -13753,7 +13838,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
       const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
       const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
-      if (worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
       if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
     });
   });
@@ -13763,7 +13847,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const id = abilityId(event);
     const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
-    if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
   });
 
@@ -13794,6 +13877,20 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       .map(event => ({ kind: "aura", event, timestamp: Number(event.timestamp || event.time || 0) }))
   ].sort((left, right) => left.timestamp - right.timestamp || (left.kind === "snapshot" ? -1 : 1));
   let worldBuffEventIndex = 0;
+  const exactSnapshotsByFight = new Map();
+  combatantSnapshots.forEach(item => {
+    const event = item.event;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const player = playerNameFromEvent(event, true);
+    if (!fightId || !player || !fightStartById.has(fightId)) return;
+    if (!exactSnapshotsByFight.has(fightId)) exactSnapshotsByFight.set(fightId, new Map());
+    const detected = (event.auras || []).map(aura => {
+      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+      return labelForSpellId(id, claWorldBuffDefinitions);
+    }).filter(Boolean);
+    exactSnapshotsByFight.get(fightId).set(player, new Set(detected));
+  });
+  Object.keys(claWorldBuffs).forEach(label => delete claWorldBuffs[label]);
   bossFightsForGear
     .slice()
     .sort((left, right) => Number(left.startTime || 0) - Number(right.startTime || 0))
@@ -13827,12 +13924,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       const fightId = Number(fight.id || 0);
       if (!fightId) return;
       fightWorldBuffs[fightId] = {};
-      activeWorldBuffsByPlayer.forEach((state, player) => {
+      const fightStates = new Map(Array.from(activeWorldBuffsByPlayer, ([player, state]) => [player, new Set(state)]));
+      const exactSnapshots = exactSnapshotsByFight.get(fightId);
+      if (exactSnapshots) exactSnapshots.forEach((state, player) => fightStates.set(player, new Set(state)));
+      fightStates.forEach((state, player) => {
         const detected = Array.from(state);
         fightWorldBuffs[fightId][player] = detected;
         detected.forEach(label => {
-          if (!claWorldBuffs[label]) claWorldBuffs[label] = {};
-          claWorldBuffs[label][player] = Math.max(1, Number(claWorldBuffs[label][player] || 0));
+          addPlayerAmount(claWorldBuffs, player, label, 1);
         });
       });
     });
@@ -13902,13 +14001,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     player,
     Number(table[label]?.[player] || 0) > 0 ? "ja" : ""
   ])), options);
-  const gearEnchantIgnoredSlots = new Set(["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"]);
   const gearItemMeta = item => itemMetaById.get(String(item?.itemId || item?.id || "")) || null;
   const gearItemText = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
     const enchant = item.permanentEnchantName || item.permanentEnchant || "";
-    return `${meta?.name || item.name || item.itemId || "Item"}${enchant ? ` [${enchant}]` : " [kein Enchant]"}`;
+    return `${meta?.name || item.name || item.itemId || "Gegenstand"}${enchant ? ` [${enchant}]` : " [keine Verzauberung]"}`;
   };
   const gearItemCell = item => {
     if (!item) return "";
@@ -13936,7 +14034,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const gearListText = items => items.map(gearItemText).join(", ");
   const playerGear = player => gearByPlayer.get(player) || [];
   const playerMissingEnchants = playerGearItems => playerGearItems
-    .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !gearEnchantIgnoredSlots.has(item.slotName))
+    .filter(item => {
+      const metadata = itemMetaById.get(String(item.itemId || item.id)) || null;
+      return isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item);
+    })
     .map(item => gearItemText(item));
   const playerExcludedGear = playerGearItems => playerGearItems
     .filter(item => claExcludedGear.some(([itemId]) => String(item.itemId || item.id) === String(itemId)));
@@ -14927,19 +15028,7 @@ function raidImporterGearSlotName(slot) {
 }
 
 function raidImporterEnchantIssue(item, playerClass = "") {
-  const slot = Number(item?.slot);
-  const itemName = clean(item?.name);
-  const enchantName = clean(item?.permanentEnchantName || item?.permanentEnchant);
-  const lower = `${itemName} ${enchantName}`.toLowerCase();
-  if (lower.includes("undead") || lower.includes("scourge")) {
-    return "vs. undead item/enchant used on non-undead";
-  }
-  const enchantableSlots = new Set([0, 2, 4, 7, 8, 9, 14, 15]);
-  if (enchantableSlots.has(slot) && !enchantName) return "no enchant on this item";
-  if (slot === 9 && Number(item?.permanentEnchant) === 2617 && playerClass === "Priest") {
-    return "has an enchant that is considered suboptimal";
-  }
-  return "";
+  return raidAnalysisEnchantIssue(item, playerClass);
 }
 
 function raidImporterGearFromCombatantInfo(combatantInfo, playerClass = "") {
