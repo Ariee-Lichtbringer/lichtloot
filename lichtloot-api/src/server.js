@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v6";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v7";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -10767,6 +10767,36 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
 
   if (existing.rows.length) {
     const character = existing.rows[0];
+    if (className && clean(character.class_name).toLowerCase() !== className.toLowerCase()) {
+      const updated = await client.query(
+        `update characters
+         set class_name = $1, updated_at = now()
+         where id = $2
+         returning id, name, server, class_name, created_at`,
+        [className, character.id]
+      );
+      return updated.rows[0];
+    }
+    return character;
+  }
+
+  // Raidlead-Formulare und ältere Importe liefern teilweise noch den
+  // historischen Standardserver "Everlook", obwohl der Charakter inzwischen
+  // auf einem anderen Realm liegt. Ist der Name in der Gilde eindeutig, muss
+  // der vorhandene SpielerLogin verwendet werden. Andernfalls würde hier ein
+  // künstliches RL…-Konto für dieselbe Person entstehen.
+  const existingByUniqueName = await client.query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+     order by c.created_at asc
+     limit 2`,
+    [guildId, player]
+  );
+  if (existingByUniqueName.rows.length === 1) {
+    const character = existingByUniqueName.rows[0];
     if (className && clean(character.class_name).toLowerCase() !== className.toLowerCase()) {
       const updated = await client.query(
         `update characters
