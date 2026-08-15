@@ -12050,6 +12050,65 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
   }
 }
 
+function rankingPercentValue(entry) {
+  for (const key of ["historicalPercent", "rankPercent", "percentile", "percent"]) {
+    const value = Number(entry?.[key]);
+    if (Number.isFinite(value) && value >= 0 && value <= 100) return value;
+  }
+  return null;
+}
+
+function extractReportRankingEntries(raw, metric) {
+  const entries = [];
+  const visit = (value, context = {}) => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach(item => visit(item, context));
+      return;
+    }
+    const encounterId = Number(value.encounterID || value.encounterId || value.encounter?.id || context.encounterId || 0);
+    const fightId = Number(value.fightID || value.fightId || value.fight?.id || context.fightId || 0);
+    const nextContext = { encounterId, fightId };
+    const percent = rankingPercentValue(value);
+    const name = clean(value.name || value.characterName || value.playerName);
+    if (name && percent != null) {
+      entries.push({
+        name,
+        encounterId,
+        fightId,
+        metric,
+        percent: Math.max(0, Math.min(100, percent)),
+        spec: clean(value.spec || value.specName),
+        amount: Number(value.amount || value.total || 0)
+      });
+    }
+    Object.values(value).forEach(child => visit(child, nextContext));
+  };
+  visit(raw);
+  return entries;
+}
+
+async function fetchReportRankingsForAnalysis(token, reportCode, fightIds) {
+  if (!Array.isArray(fightIds) || !fightIds.length) return [];
+  const gqlQuery =
+    "query($code:String!,$fightIDs:[Int]){"+
+    "reportData{report(code:$code){"+
+    "damage:rankings(fightIDs:$fightIDs,playerMetric:dps) "+
+    "healing:rankings(fightIDs:$fightIDs,playerMetric:hps)"+
+    "}}}";
+  try {
+    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
+    const report = data.reportData?.report || {};
+    return [
+      ...extractReportRankingEntries(report.damage, "dps"),
+      ...extractReportRankingEntries(report.healing, "hps")
+    ];
+  } catch (error) {
+    console.warn("Warcraft-Logs-Parsewerte konnten nicht geladen werden:", error.message || error);
+    return [];
+  }
+}
+
 async function fetchPlayerFightTablesForAnalysis(token, reportCode, dataType, fights, sourceId) {
   const validFights = (Array.isArray(fights) ? fights : [])
     .map(fight => ({ ...fight, id: Number(fight?.id || 0) }))
@@ -12944,6 +13003,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
   const bossFightsForGear = bossFightsForAnalysis(fights, report.zone?.name || analysis.raid || "");
   const performanceScope = bossFightsForGear.length ? bossFightsForGear.map(fight => Number(fight.id)) : rpbFightScope;
+  const reportRankingEntries = await fetchReportRankingsForAnalysis(token, analysis.report_code, performanceScope);
   let performanceDurationMs = bossFightsForGear.length
     ? bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0)
     : reportDurationMs;
@@ -13012,10 +13072,27 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const fightPlayerMetrics = {};
   const playerTableDiagnostics = [];
   const fightWorldBuffs = {};
+  const parseByFightAndPlayer = new Map();
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
   const classCastSources = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
+  const bossFightByEncounter = new Map();
+  bossFightsForGear.forEach(fight => {
+    const encounterId = Number(fight.encounterID || fight.encounterId || 0);
+    if (encounterId && !bossFightByEncounter.has(encounterId)) bossFightByEncounter.set(encounterId, Number(fight.id));
+  });
+  reportRankingEntries.forEach(entry => {
+    const fightId = Number(entry.fightId || bossFightByEncounter.get(Number(entry.encounterId || 0)) || 0);
+    if (!fightId || !entry.name) return;
+    const player = players.find(candidate => clean(candidate.name).toLowerCase() === clean(entry.name).toLowerCase());
+    if (!player) return;
+    const isHealer = player.raidRole === "healer" || clean(player.signupRole).toLowerCase() === "heiler";
+    if ((isHealer && entry.metric !== "hps") || (!isHealer && entry.metric !== "dps")) return;
+    const key = `${fightId}:${clean(player.name).toLowerCase()}`;
+    const current = parseByFightAndPlayer.get(key);
+    if (!current || entry.percent > current.percent) parseByFightAndPlayer.set(key, entry);
+  });
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
   }, 0) / 1000));
@@ -14290,6 +14367,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       deaths: Number(deathTotals[player.name] || 0),
       worldBuffCount: claWorldBuffDefinitions.reduce((count, [label]) => count + (Number(claWorldBuffs[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
       preparationCount: rpbConsumables.reduce((count, [label]) => count + (Number(consumes[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
+      parsePercent: (() => {
+        let weighted = 0;
+        let duration = 0;
+        bossFightsForGear.forEach(fight => {
+          const parse = parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(player.name).toLowerCase()}`)?.percent;
+          if (parse == null) return;
+          const fightDuration = Math.max(1, Number(fight.endTime || 0) - Number(fight.startTime || 0));
+          weighted += parse * fightDuration;
+          duration += fightDuration;
+        });
+        return duration ? Math.round(weighted / duration) : null;
+      })(),
       gear: playerGear(player.name).map(item => ({
         ...gearItemCell(item),
         slot: item.slotName || gearItemCell(item).slot || "",
@@ -14313,6 +14402,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         threatAbilities: metrics.threatAbilities || {},
         deaths: Number(metrics.deaths || 0),
         activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
+        parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
@@ -14331,6 +14421,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         threatAbilities: metrics.threatAbilities || {},
         deaths: Number(metrics.deaths || 0),
         activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
+        parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
