@@ -5433,7 +5433,7 @@ function renderDashboardLogAnalyses(entries){
     const raidName=entry.raid || raids[raidKey]?.short || "Raid";
     const claUrl=dashboardLogUrl(entry,"cla");
     const rpbUrl=dashboardLogUrl(entry,"rpb");
-    const webUrl=entry.id ? `raid-analyse.html?id=${encodeURIComponent(entry.id)}&type=rpb` : "";
+    const webUrl=entry.id ? `raid-analyse.html?id=${encodeURIComponent(entry.id)}&type=rpb&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}` : "";
     const actions=[
       webUrl ? `<a class="rpb" href="${safeAttr(webUrl)}" target="_blank" rel="noopener">Neu</a>` : "",
       claUrl ? `<a href="${safeAttr(claUrl)}" target="_blank" rel="noopener">CLA</a>` : "",
