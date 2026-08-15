@@ -3748,6 +3748,17 @@ body.raid-unified-open .raid-helper-current-detail-head{display:grid;grid-templa
   border-radius:12px;
   background:rgba(8,18,36,.70);
 }
+.lead-log-select-all{display:flex;align-items:center;gap:8px;color:#94a3b8;font-size:12px;font-weight:800}
+.lead-log-card-list{display:grid;gap:10px;margin-top:10px}
+.lead-log-card{display:grid;grid-template-columns:36px 78px minmax(210px,1.15fr) minmax(180px,.8fr) minmax(170px,.75fr) minmax(210px,.8fr);min-height:94px;overflow:hidden;border:1px solid #263449;border-radius:8px;background:linear-gradient(100deg,rgba(17,26,39,.96),rgba(7,14,24,.98));transition:border-color .16s ease,transform .16s ease}
+.lead-log-card:hover{border-color:rgba(var(--gold-rgb),.48);transform:translateY(-1px)}
+.lead-log-check{display:grid;place-items:center}.lead-log-thumb{width:78px;height:94px;object-fit:cover;background:#080d14}
+.lead-log-main,.lead-log-progress,.lead-log-metrics,.lead-log-actions{display:flex;flex-direction:column;justify-content:center;padding:12px 16px}
+.lead-log-main strong{color:#f1f5f9;font-size:17px}.lead-log-main small{margin-top:6px;color:#94a3b8;font-size:11px}.lead-log-main span{margin-top:8px;color:#cbd5e1;font-size:11px}
+.lead-log-label{color:#7f8b9c;font-size:9px;font-weight:900;letter-spacing:.09em;text-transform:uppercase}.lead-log-progress strong{margin-top:6px;color:#e4bb59;font-size:20px;font-weight:650}.lead-log-progress-track{height:3px;margin-top:9px;background:#263449}.lead-log-progress-fill{height:100%;background:#d8ad45}
+.lead-log-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-left:1px solid rgba(148,163,184,.12)}.lead-log-metric strong{display:block;margin-top:7px;color:#e2e8f0;font-size:14px}.lead-log-actions{gap:7px;align-items:stretch}.lead-log-actions .small-btn{justify-content:center}
+.lead-log-empty{padding:24px;border:1px solid #263449;border-radius:8px;color:#94a3b8;text-align:center}
+@media(max-width:1100px){.lead-log-card{grid-template-columns:32px 64px minmax(180px,1fr) minmax(160px,.8fr) minmax(180px,.8fr)}.lead-log-thumb{width:64px}.lead-log-metrics{display:none}}
 
 .combatlog-upload-grid{
   display:grid;
@@ -6202,22 +6213,8 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
       </div>
       <div id="logAnalysisStatus" class="create-result">Logs aus dem überwachten Discord-Channel und manuell eingefügte Reports erscheinen hier.</div>
-      <div class="table-wrap log-analysis-table">
-        <table>
-          <thead>
-            <tr>
-              <th><input id="selectAllVisibleLogAnalyses" type="checkbox" aria-label="Alle sichtbaren Loganalysen auswählen" onchange="toggleVisibleLogAnalyses(this.checked)"></th>
-              <th>Raid</th>
-              <th>Datum</th>
-              <th>Status</th>
-              <th>Aktionen</th>
-            </tr>
-          </thead>
-          <tbody id="logAnalysisRows">
-            <tr><td colspan="5" class="muted">Noch keine Loganalysen geladen.</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <label class="lead-log-select-all"><input id="selectAllVisibleLogAnalyses" type="checkbox" aria-label="Alle sichtbaren Loganalysen auswählen" onchange="toggleVisibleLogAnalyses(this.checked)"> Alle sichtbaren Reports auswählen</label>
+      <div id="logAnalysisRows" class="lead-log-card-list"><div class="lead-log-empty">Noch keine Loganalysen geladen.</div></div>
       <div id="logAnalysisFooter" class="log-analysis-footer"></div>
     </div>
   </details>
@@ -19870,7 +19867,7 @@ function renderLogAnalyses(){
   if(count) count.textContent = String((logAnalyses || []).length);
   if(!tbody) return;
   if(!logAnalyses.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="log-analysis-empty">Noch keine Loganalysen vorhanden.</td></tr>';
+    tbody.innerHTML = '<div class="lead-log-empty">Noch keine Loganalysen vorhanden.</div>';
     selectedLogAnalysisIds.clear();
     updateSelectedLogAnalysisControls();
     renderLogAnalysisFooter(0, 0, 0);
@@ -19892,41 +19889,23 @@ function renderLogAnalyses(){
     const date = entry.raidDate || summary.raidDate || "";
     const raidKey = getLogAnalysisRaidKey(entry);
     const raidImage = RAID_IMAGES[raidKey] || RAID_IMAGES.aq40;
-    let claDownloadUrl = logAnalysisDownloadHref(entry.claDownloadUrl || summary.claDownloadUrl || "");
-    let rpbDownloadUrl = logAnalysisDownloadHref(entry.rpbDownloadUrl || summary.rpbDownloadUrl || "");
-    if(isLogAnalysisQueued(entry, "cla") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(claDownloadUrl)) claDownloadUrl = "";
-    if(isLogAnalysisQueued(entry, "rpb") && !/^https:\/\/docs\.google\.com\/spreadsheets\/d\//i.test(rpbDownloadUrl)) rpbDownloadUrl = "";
+    const expectedBosses = {naxx:15,mc:10,bwl:8,aq20:6,aq40:9,ony:1,zg:10}[String(raidKey || "").toLowerCase()] || null;
+    const rawKills = Number.isFinite(Number(summary.bossKills)) ? Number(summary.bossKills) : null;
+    const rawBosses = Number.isFinite(Number(summary.totalBosses)) ? Number(summary.totalBosses) : null;
+    const invalidLegacyProgress = Boolean(expectedBosses && ((rawBosses != null && rawBosses > expectedBosses) || (rawKills != null && rawKills > expectedBosses)));
+    const kills = invalidLegacyProgress ? null : rawKills;
+    const bosses = expectedBosses || rawBosses;
+    const progress = bosses ? Math.max(0,Math.min(100,Math.round((kills||0)*100/bosses))) : 0;
+    const players = Number(summary.playerCount || summary.players || 0) || 0;
     return `
-      <tr>
-        <td><input class="log-analysis-select" type="checkbox" aria-label="Loganalyse auswählen" value="${escapeAttr(entry.id || "")}" ${selectedLogAnalysisIds.has(String(entry.id || "")) ? "checked" : ""} onchange="toggleLogAnalysisSelection(this.value,this.checked)"></td>
-        <td>
-          <div class="log-raid-cell">
-            <img class="log-raid-image" src="${escapeAttr(raidImage)}" alt="">
-            <div>
-              <strong>${escapeHtml(raid)}</strong>
-              <span class="log-raid-code">${escapeHtml(entry.reportCode || "")}</span>
-            </div>
-          </div>
-        </td>
-        <td>
-          <div class="log-date-cell">
-            <span class="log-date-icon">▣</span>
-            <div>
-              <div class="log-date-main">${escapeHtml(formatLogAnalysisDate(date))}</div>
-              <div class="log-date-sub">${escapeHtml(formatLogAnalysisTime(entry))}</div>
-            </div>
-          </div>
-        </td>
-        <td><span class="badge open">Direktanalyse bereit</span></td>
-        <td>
-          <div class="log-action-stack">
-            <div class="log-action-row">
-              ${renderLogAnalysisDetailAction(entry)}
-              ${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""}
-            </div>
-          </div>
-        </td>
-      </tr>
+      <article class="lead-log-card">
+        <div class="lead-log-check"><input class="log-analysis-select" type="checkbox" aria-label="Loganalyse auswählen" value="${escapeAttr(entry.id || "")}" ${selectedLogAnalysisIds.has(String(entry.id || "")) ? "checked" : ""} onchange="toggleLogAnalysisSelection(this.value,this.checked)"></div>
+        <img class="lead-log-thumb" src="${escapeAttr(raidImage)}" alt="">
+        <div class="lead-log-main"><strong>${escapeHtml(raid)}</strong><small>▣ ${escapeHtml(formatLogAnalysisDate(date))} · ${escapeHtml(entry.reportCode || "")}</small><span>${players ? `${players} Spieler` : "Spielerzahl offen"}</span></div>
+        <div class="lead-log-progress"><span class="lead-log-label">Bossfortschritt</span><strong>${kills==null?"–":kills} / ${bosses==null?"–":bosses}</strong><div class="lead-log-progress-track"><div class="lead-log-progress-fill" style="width:${progress}%"></div></div></div>
+        <div class="lead-log-metrics"><div class="lead-log-metric"><span class="lead-log-label">Status</span><strong>Bereit</strong></div><div class="lead-log-metric"><span class="lead-log-label">Uhrzeit</span><strong>${escapeHtml(formatLogAnalysisTime(entry)||"–")}</strong></div></div>
+        <div class="lead-log-actions">${renderLogAnalysisDetailAction(entry)}${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL öffnen</a>` : ""}</div>
+      </article>
     `;
   }).join("");
   updateSelectedLogAnalysisControls();
