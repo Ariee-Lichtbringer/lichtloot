@@ -80,6 +80,7 @@
     .detail-nav button.active{border-bottom-color:var(--gold);color:#e4bb59}
     .fight-filter{display:grid;gap:10px;margin-bottom:14px;padding:13px;border:1px solid var(--line);border-radius:7px;background:rgba(13,20,31,.9)}.fight-scope,.boss-chips{display:flex;gap:7px;flex-wrap:wrap}.fight-chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;border:1px solid var(--line);border-radius:999px;background:#0a111b;color:#aeb8c7;padding:6px 11px;cursor:pointer}.fight-chip.active{border-color:#3b82f6;background:rgba(37,99,235,.14);color:#93c5fd}.fight-chip img{width:27px;height:27px;border-radius:50%;object-fit:cover;background:#111827}.fight-filter-label{color:#7f8b9c;font-size:10px;font-weight:750;letter-spacing:.1em;text-transform:uppercase}
     .dashboard-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:14px}
+    .overview-controls{grid-column:1/-1;display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:7px;background:#0b121c}.overview-metrics{display:flex;gap:4px;overflow:auto;border-bottom:1px solid var(--soft)}.overview-metrics button{min-height:43px;border:0;border-bottom:2px solid transparent;background:transparent;color:#a8b3c4;padding:0 12px;white-space:nowrap;cursor:pointer}.overview-metrics button.active{border-bottom-color:#e4bb59;color:#f1f5f9}.overview-subfilters{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.overview-subfilters button,.overview-subfilters select{min-height:36px;border:1px solid var(--line);border-radius:5px;background:#0a111b;color:#cbd5e1;padding:6px 10px}.overview-subfilters button.active{border-color:#3b82f6;color:#93c5fd}.overview-table-name{display:flex;align-items:center;gap:8px}.overview-table-name img{width:23px;height:23px;border-radius:3px}.share-cell{min-width:190px}.share-label{display:flex;justify-content:space-between;gap:10px}.share-bar{display:block;height:13px;margin-top:4px;background:#263142}.share-bar i{display:block;height:100%;background:var(--bar-color,#d8ad45)}
     .dashboard-column{display:grid;gap:14px;align-content:start}
     .data-card{overflow:hidden;border:1px solid var(--line);border-radius:7px;background:rgba(13,20,31,.9)}
     .data-card h2{margin:0;padding:12px 14px;border-bottom:1px solid var(--soft);font-size:14px;font-weight:650}
@@ -149,6 +150,7 @@
       <nav id="detailNav" class="detail-nav"></nav>
       <div id="overviewCards" class="overview"></div>
       <div id="dashboardView" class="dashboard-grid">
+        <section id="overviewControls" class="overview-controls"></section>
         <div class="dashboard-column">
           <section class="data-card"><h2>Bossverlauf</h2><div id="encounterList"></div></section>
           <section class="data-card"><h2>Spielerleistung</h2><div class="table-wrap" style="border:0;border-radius:0;max-height:none"><table id="playerPerformanceTable" class="data-table"></table></div></section>
@@ -166,7 +168,7 @@
   <script>
     const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
     const params = new URLSearchParams(location.search);
-    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", detailMode:"overview", rpbCategory:"overview", fightScope:"all", selectedFightIds:[], mode:params.get("id") ? "detail" : "list" };
+    const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", detailMode:"overview", rpbCategory:"overview", overviewCategory:"damage", overviewFilterType:"all", overviewFilterValue:"", fightScope:"all", selectedFightIds:[], mode:params.get("id") ? "detail" : "list" };
     let analysisProgressTimer=null;
     const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
     const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
@@ -385,14 +387,48 @@
       }
       renderDetail();
     }
+    const OVERVIEW_CATEGORIES=[
+      ["damage","Verursachter Schaden"],["damageTaken","Erlittener Schaden"],["healing","Heilung"],
+      ["threat","Bedrohung"],["buffs","Buffs"],["debuffs","Debuffs"],["deaths","Tode"],
+      ["interrupts","Unterbrechungen"],["dispels","Bannungen"],["resources","Ressourcen"],["abilities","Fähigkeiten"]
+    ];
+    function overviewSectionNumber(playerName,sectionPattern,rowPattern){
+      const value=playerSectionMetric(playerName,sectionPattern,rowPattern);return numericMetric(value);
+    }
+    function overviewMetric(player,category){
+      if(category==="damage")return Number(player.damageDone||0);
+      if(category==="healing")return Number(player.healingDone||0);
+      if(category==="deaths")return Number(player.deaths||0);
+      if(category==="buffs")return Number(player.worldBuffCount||0);
+      if(category==="abilities")return Number(player.activityPercent||0);
+      if(category==="interrupts")return overviewSectionNumber(player.name,/general|physical|caster|healer|tank/i,/interrupted spells|unterbrech/i);
+      if(category==="dispels")return overviewSectionNumber(player.name,/casts|zauber/i,/dispel|bannung|remove curse|cure poison|abolish/i);
+      if(category==="damageTaken")return overviewSectionNumber(player.name,/general|tank/i,/damage taken|erlittener schaden/i);
+      if(category==="threat")return overviewSectionNumber(player.name,/general|tank/i,/threat|bedrohung/i);
+      if(category==="debuffs")return overviewSectionNumber(player.name,/general|casts/i,/debuff/i);
+      if(category==="resources")return overviewSectionNumber(player.name,/general|casts/i,/mana|rage|energy|ressource/i);
+      return 0;
+    }
+    function selectOverviewCategory(category){state.overviewCategory=category||"damage";renderDetail();}
+    function setOverviewFilter(type,value=""){state.overviewFilterType=type||"all";state.overviewFilterValue=value||"";renderDetail();}
+    function renderOverviewControls(players){
+      const root=document.getElementById("overviewControls");if(!root)return players;
+      const classes=CLASS_ORDER.filter(cls=>cls!=="Unknown"&&players.some(player=>player.className===cls));
+      const playerOptions=players.slice().sort((a,b)=>a.name.localeCompare(b.name,"de"));
+      root.innerHTML=`<nav class="overview-metrics">${OVERVIEW_CATEGORIES.map(([id,label])=>`<button class="${state.overviewCategory===id?'active':''}" type="button" onclick="selectOverviewCategory('${id}')">${html(label)}</button>`).join("")}</nav><div class="overview-subfilters"><span class="fight-filter-label">Anzeigen</span><button class="${state.overviewFilterType==='all'?'active':''}" type="button" onclick="setOverviewFilter('all')">Alle Spieler</button><select aria-label="Klasse auswählen" onchange="setOverviewFilter('class',this.value)"><option value="">Klasse auswählen</option>${classes.map(cls=>`<option value="${attr(cls)}" ${state.overviewFilterType==='class'&&state.overviewFilterValue===cls?'selected':''}>${html(CLASS_LABEL[cls]||cls)}</option>`).join("")}</select><select aria-label="Spieler auswählen" onchange="setOverviewFilter('player',this.value)"><option value="">Spieler auswählen</option>${playerOptions.map(player=>`<option value="${attr(player.name)}" ${state.overviewFilterType==='player'&&state.overviewFilterValue===player.name?'selected':''}>${html(player.name)} · ${html(CLASS_LABEL[player.className]||player.className)}</option>`).join("")}</select></div>`;
+      if(state.overviewFilterType==="class"&&state.overviewFilterValue)return players.filter(player=>player.className===state.overviewFilterValue);
+      if(state.overviewFilterType==="player"&&state.overviewFilterValue)return players.filter(player=>player.name===state.overviewFilterValue);
+      return players;
+    }
     function renderDashboard(source,report,players,duration,deaths){
       const bossEncounters=visibleBossEncounters();const encounters=state.selectedFightIds.length?bossEncounters.filter(fight=>state.selectedFightIds.includes(Number(fight.id))):(state.fightScope==="trash"?[]:bossEncounters);
+      players=renderOverviewControls(players);
       document.getElementById("encounterList").innerHTML=encounters.length?encounters.map((fight,index)=>`<div class="encounter-row"><span class="kill-dot ${fight.kill===false?"wipe":""}"></span><strong>${index+1}. ${html(fight.name||"Boss")}</strong><span class="kill-time">${html(durationDisplay(fight.durationMs))}</span><span>${Number(fight.deaths||0)} Tode</span></div>`).join(""):'<div class="status">Keine Bosskämpfe erkannt.</div>';
       const seconds=Math.max(1,duration/1000);
-      const values=players.map(player=>({player,dps:Math.round(Number(player.damageDone||0)/seconds),hps:Math.round(Number(player.healingDone||0)/seconds)}));
+      const values=players.map(player=>({player,dps:Math.round(Number(player.damageDone||0)/seconds),hps:Math.round(Number(player.healingDone||0)/seconds),amount:overviewMetric(player,state.overviewCategory)}));
       const maxDps=Math.max(1,...values.map(item=>item.dps));const maxHps=Math.max(1,...values.map(item=>item.hps));
-      const sorted=values.sort((a,b)=>{const roleOrder={Tank:0,Heiler:1,DD:2};const roleDiff=(roleOrder[roleLabel(a.player)]??3)-(roleOrder[roleLabel(b.player)]??3);return roleDiff||((roleLabel(a.player)==="Heiler"?b.hps-a.hps:b.dps-a.dps));});
-      document.getElementById("playerPerformanceTable").innerHTML=`<thead><tr><th>Spieler</th><th>Klasse</th><th>Anmeldung</th><th>DPS</th><th>HPS</th><th>Aktivität</th><th>Tode</th><th>Worldbuffs</th><th>Vorbereitung</th></tr></thead><tbody>${sorted.map(({player,dps,hps})=>{const activity=Math.round(Number(player.activityPercent||0));const prep=Math.min(100,Math.round(Number(player.preparationCount||0)*100/8));return `<tr><td><button class="clickable-player" style="color:${CLASS_COLOR[player.className]||"#e2e8f0"}" type="button" onclick="openPlayerProfile(decodeURIComponent('${encodeURIComponent(player.name)}'))">${html(player.name)}</button></td><td>${html(CLASS_LABEL[player.className]||player.className||"–")}</td><td class="role-tag">${html(roleLabel(player))}</td><td>${shortNumber(dps)}<span class="metric-bar"><i style="width:${Math.round(dps*100/maxDps)}%"></i></span></td><td>${shortNumber(hps)}<span class="metric-bar"><i style="width:${Math.round(hps*100/maxHps)}%"></i></span></td><td>${activity}%</td><td>${Number(player.deaths||0)}</td><td>${Number(player.worldBuffCount||0)}</td><td>${prep}%</td></tr>`}).join("")}</tbody>`;
+      const sorted=values.sort((a,b)=>b.amount-a.amount||a.player.name.localeCompare(b.player.name,"de"));const totalAmount=sorted.reduce((sum,item)=>sum+Math.max(0,item.amount),0);const categoryLabel=OVERVIEW_CATEGORIES.find(item=>item[0]===state.overviewCategory)?.[1]||"Wert";const noData=!sorted.some(item=>item.amount>0);
+      document.getElementById("playerPerformanceTable").innerHTML=`<thead><tr><th>Spieler</th><th>Klasse</th><th>${html(categoryLabel)}</th><th>Anteil</th><th>DPS</th><th>HPS</th><th>Aktiv</th><th>Tode</th></tr></thead><tbody>${sorted.map(({player,dps,hps,amount})=>{const share=totalAmount>0?amount*100/totalAmount:0;return `<tr><td><span class="overview-table-name"><img src="${attr(CLASS_ICON[player.className]||CLASS_ICON.Unknown)}" alt=""><button class="clickable-player" style="color:${CLASS_COLOR[player.className]||"#e2e8f0"}" type="button" onclick="openPlayerProfile(decodeURIComponent('${encodeURIComponent(player.name)}'))">${html(player.name)}</button></span></td><td>${html(CLASS_LABEL[player.className]||player.className||"–")}</td><td>${state.overviewCategory==='abilities'?`${Math.round(amount)} %`:shortNumber(amount)}</td><td class="share-cell"><span class="share-label"><span>${share.toFixed(2).replace('.',',')} %</span></span><span class="share-bar"><i style="--bar-color:${CLASS_COLOR[player.className]||'#d8ad45'};width:${Math.min(100,share)}%"></i></span></td><td>${shortNumber(dps)}</td><td>${shortNumber(hps)}</td><td>${Math.round(Number(player.activityPercent||0))} %</td><td>${Number(player.deaths||0)}</td></tr>`}).join("")}${noData?`<tr><td colspan="8"><div class="status">Für „${html(categoryLabel)}“ liegen in diesem Bericht noch keine belastbaren Einzelspielerwerte vor.</div></td></tr>`:""}</tbody>`;
       const firstEncounter=encounters[0],lastEncounter=encounters[encounters.length-1];
       const durationLabel=(state.fightScope!=="all"||state.selectedFightIds.length)?"Dauer der Auswahl":"Bosskampf-Dauer";document.getElementById("raidSummary").innerHTML=[["Raid",report.raid||"–"],["Datum",dateDisplay(report.raidDate||report.raid_date)],["Erster Boss",firstEncounter?.name||"–"],["Letzter Boss",lastEncounter?.name||"–"],[durationLabel,durationDisplay(duration)],["Tode",deaths]].map(([label,value])=>`<div class="summary-item"><span>${html(label)}</span><strong>${html(value)}</strong></div>`).join("");
       const counts={};players.forEach(player=>counts[player.className||"Unknown"]=(counts[player.className||"Unknown"]||0)+1);document.getElementById("classDistribution").innerHTML=`<div class="class-chart"><div style="position:relative"><div class="donut"></div><span class="donut-value" style="inset:34px 0 0;text-align:center">${players.length}</span></div><div class="class-legend">${Object.entries(counts).map(([cls,count])=>`<span style="--class-color:${CLASS_COLOR[cls]||"#94a3b8"}">${html(CLASS_LABEL[cls]||cls)} · ${count}</span>`).join("")}</div></div>`;
