@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-auto-v1";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-icons-worldbuff-v2";
 const automaticLogAnalysisQueue = [];
 const automaticLogAnalysisQueueKeys = new Set();
 let automaticLogAnalysisWorkerRunning = false;
@@ -12665,6 +12665,10 @@ const rpbGermanSpellLabels = new Map(Object.entries({
   "Living Action Potion":"Trank der lebhaften Aktion","Free Action Potion":"Trank der freien Aktion",
   "Great Rage Potion":"Großer Wuttrank","Mighty Rage Potion":"Mächtiger Wuttrank",
   "Major Healing Potion":"Erheblicher Heiltrank","Major Mana Potion":"Erheblicher Manatrank",
+  "Living/Free Action Potion":"Trank der lebhaften/freien Aktion","all other Mana Potions":"Weitere Manatränke",
+  "Demonic Rune/Dark Rune":"Dämonische Rune/Dunkelrune","Major/Greater Healthstone":"Erheblicher/Großer Gesundheitsstein",
+  "Mana Ruby":"Manarubin","all other Mana Gems":"Weitere Manasteine",
+  "Elixir of Poison Resistance":"Elixier des Giftwiderstands",
   "Demonic Rune":"Dämonische Rune","Dark Rune":"Dunkelrune","Thistle Tea":"Disteltee",
   "Heavy Runecloth Bandage":"Schwerer Runenstoffverband","Dense Dynamite":"Dichtes Dynamit",
   "Goblin Sapper Charge":"Goblinpioniersprengladung","Stratholme Holy Water":"Weihwasser von Stratholme",
@@ -13657,35 +13661,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
     if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
-    if (player && worldBuff) {
-      const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
-      const timestamp = Number(event.timestamp || event.time || 0);
-      const timestampFight = bossFightsForGear.find(fight => timestamp >= Number(fight.startTime || 0) - 2000
-        && timestamp <= Number(fight.endTime || 0));
-      const fightId = explicitFightId || Number(timestampFight?.id || 0);
-      if (fightId) {
-        if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
-        const current = Array.isArray(fightWorldBuffs[fightId][player]) ? fightWorldBuffs[fightId][player] : [];
-        fightWorldBuffs[fightId][player] = Array.from(new Set([...current, worldBuff]));
-      }
-    }
-  });
-
-  bossCombatantEvents.forEach(event => {
-    const player = playerNameFromEvent(event, true);
-    const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
-    const timestamp = Number(event.timestamp || event.time || 0);
-    const timestampFight = bossFightsForGear.find(fight => timestamp >= Number(fight.startTime || 0) - 2000
-      && timestamp <= Number(fight.endTime || 0));
-    const fightId = explicitFightId || Number(timestampFight?.id || 0);
-    if (!player || !fightId) return;
-    const buffs = Array.from(new Set((Array.isArray(event.auras) ? event.auras : []).map(aura => {
-      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
-      return labelForSpellId(id, claWorldBuffDefinitions);
-    }).filter(Boolean)));
-    if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
-    const current = Array.isArray(fightWorldBuffs[fightId][player]) ? fightWorldBuffs[fightId][player] : [];
-    fightWorldBuffs[fightId][player] = Array.from(new Set([...current, ...buffs]));
   });
 
   // CombatantInfo contains the auras active when logging starts. Buff events then
@@ -13696,24 +13671,24 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!activeWorldBuffsByPlayer.has(player)) activeWorldBuffsByPlayer.set(player, new Set());
     return activeWorldBuffsByPlayer.get(player);
   };
-  reportCombatantEvents
-    .slice()
-    .sort((left, right) => Number(left.timestamp || left.time || 0) - Number(right.timestamp || right.time || 0))
-    .forEach(event => {
-      const player = playerNameFromEvent(event, true);
-      if (!player) return;
-      const state = ensureWorldBuffState(player);
-      (Array.isArray(event.auras) ? event.auras : []).forEach(aura => {
-        const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
-        const label = labelForSpellId(id, claWorldBuffDefinitions);
-        if (label) state.add(label);
-      });
-    });
-
-  const orderedWorldBuffEvents = buffEvents
-    .filter(event => labelForSpellId(abilityId(event), claWorldBuffDefinitions))
-    .slice()
-    .sort((left, right) => Number(left.timestamp || left.time || 0) - Number(right.timestamp || right.time || 0));
+  const fightStartById = new Map(bossFightsForGear.map(fight => [
+    Number(fight.id || 0),
+    Number(fight.startTime || 0)
+  ]));
+  const combatantSnapshots = [...reportCombatantEvents, ...bossCombatantEvents]
+    .filter(event => Array.isArray(event.auras))
+    .map(event => ({
+      kind: "snapshot",
+      event,
+      timestamp: Number(event.timestamp || event.time
+        || fightStartById.get(Number(event.fight || event.fightID || event.fightId || 0)) || 0)
+    }));
+  const orderedWorldBuffEvents = [
+    ...combatantSnapshots,
+    ...buffEvents
+      .filter(event => labelForSpellId(abilityId(event), claWorldBuffDefinitions))
+      .map(event => ({ kind: "aura", event, timestamp: Number(event.timestamp || event.time || 0) }))
+  ].sort((left, right) => left.timestamp - right.timestamp || (left.kind === "snapshot" ? -1 : 1));
   let worldBuffEventIndex = 0;
   bossFightsForGear
     .slice()
@@ -13721,25 +13696,36 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     .forEach(fight => {
       const fightStart = Number(fight.startTime || 0);
       while (worldBuffEventIndex < orderedWorldBuffEvents.length
-        && Number(orderedWorldBuffEvents[worldBuffEventIndex].timestamp || orderedWorldBuffEvents[worldBuffEventIndex].time || 0) <= fightStart) {
-        const event = orderedWorldBuffEvents[worldBuffEventIndex];
-        const player = playerNameFromBuffEvent(event);
-        const label = labelForSpellId(abilityId(event), claWorldBuffDefinitions);
-        const type = clean(event.type).toLowerCase();
-        if (player && label) {
-          const state = ensureWorldBuffState(player);
-          if (type.startsWith("remove")) state.delete(label);
-          else if (type.startsWith("apply") || type.startsWith("refresh")) state.add(label);
+        && orderedWorldBuffEvents[worldBuffEventIndex].timestamp <= fightStart) {
+        const item = orderedWorldBuffEvents[worldBuffEventIndex];
+        const event = item.event;
+        if (item.kind === "snapshot") {
+          const player = playerNameFromEvent(event, true);
+          if (player) {
+            const detected = (event.auras || []).map(aura => {
+              const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+              return labelForSpellId(id, claWorldBuffDefinitions);
+            }).filter(Boolean);
+            activeWorldBuffsByPlayer.set(player, new Set(detected));
+          }
+        } else {
+          const player = playerNameFromBuffEvent(event);
+          const label = labelForSpellId(abilityId(event), claWorldBuffDefinitions);
+          const type = clean(event.type).toLowerCase();
+          if (player && label) {
+            const state = ensureWorldBuffState(player);
+            if (type.startsWith("remove")) state.delete(label);
+            else if (type.startsWith("apply") || type.startsWith("refresh")) state.add(label);
+          }
         }
         worldBuffEventIndex += 1;
       }
       const fightId = Number(fight.id || 0);
       if (!fightId) return;
-      if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
+      fightWorldBuffs[fightId] = {};
       activeWorldBuffsByPlayer.forEach((state, player) => {
         const detected = Array.from(state);
-        const current = Array.isArray(fightWorldBuffs[fightId][player]) ? fightWorldBuffs[fightId][player] : [];
-        fightWorldBuffs[fightId][player] = Array.from(new Set([...current, ...detected]));
+        fightWorldBuffs[fightId][player] = detected;
         detected.forEach(label => {
           if (!claWorldBuffs[label]) claWorldBuffs[label] = {};
           claWorldBuffs[label][player] = Math.max(1, Number(claWorldBuffs[label][player] || 0));
@@ -13796,7 +13782,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const [label, , ids = []] = definition;
     const spellId = Number(ids[0] || 0);
     const metadata = rpbSpellMetadata.get(spellId) || {};
-    return customRow(translateRpbLabelToGerman(clean(metadata.name) || label), Object.fromEntries(playerNames.map(player => [
+    const displayLabel = options.preferDefinitionLabel ? label : (clean(metadata.name) || label);
+    return customRow(translateRpbLabelToGerman(displayLabel), Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(table[label]?.[player])
     ])), {
@@ -13952,29 +13939,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     customRow("Sekunden aktiv auf Einzelziel", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(stSecondsByPlayer[player])
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "inv_misc_pocketwatch_01" }),
     customRow("Aktiv auf Einzelziel %", Object.fromEntries(playerNames.map(player => [
       player,
       stSecondsByPlayer[player] ? `${Math.round((stSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "ability_marksmanship" }),
     customRow("Aktiv gesamt %", Object.fromEntries(playerNames.map(player => [
       player,
       (stSecondsByPlayer[player] || aoeSecondsByPlayer[player])
         ? `${Math.round(((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0)) * 100 / maxTotalActiveSeconds)}%`
         : ""
-    ])), { tone: "activityStrong" }),
+    ])), { tone: "activityStrong", icon: "spell_holy_borrowedtime" }),
     customRow("Aktiv auf AoE %", Object.fromEntries(playerNames.map(player => [
       player,
       aoeSecondsByPlayer[player] ? `${Math.round((aoeSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "spell_nature_chainlightning" }),
     customRow("Sekunden aktiv auf AoE", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(aoeSecondsByPlayer[player])
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "spell_nature_lightning" }),
     customRow("WCL-Aktivität gesamt", Object.fromEntries(playerNames.map(player => [
       player,
       wclActivePercent[player] || ""
-    ])), { tone: "activity" })
+    ])), { tone: "activity", icon: "inv_misc_spyglass_03" })
     ];
   };
   const activityRows = buildActivityRows(playerNames);
@@ -14151,10 +14138,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   };
 
   const generalRows = [
-    headerRow("Stats and Miscellaneous"),
+    headerRow("Statistik & Sonstiges"),
     ...activityRows,
-    headerRow("Consumables"),
-    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
+    headerRow("Verbrauchsgüter"),
+    ...rpbConsumables.map(definition => trackedSpellRow(definition, consumes, {
+      tone: generalConsumableTone(definition[0]),
+      preferDefinitionLabel: true
+    })),
     headerRow("Trinkets und Racials"),
     ...(rpbConfig.trinketsAndRacials || []).map(item => {
       const spellId = Number(item.ids?.[0] || 0);
@@ -14167,7 +14157,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     headerRow("Absorbierter Schaden"),
     ...rpbAbsorbs.map(definition => trackedSpellRow(definition, absorbs, { type: "amount", tone: absorbTone(definition[0]) })),
     totalAbsorbed,
-    headerRow("Engineering etc. (ø = Treffer pro Nutzung)"),
+    headerRow("Ingenieurskunst (ø = Treffer pro Nutzung)"),
     ...rpbEngineering.map(definition => trackedSpellRow(definition, engineeringCounts, { tone: "engineering" })),
     amountRow("Gesamtschaden durch Engineering etc.", engineeringDamage, { tone: "engineeringTotal" }),
     headerRow("Unterbrochene Zauber"),
