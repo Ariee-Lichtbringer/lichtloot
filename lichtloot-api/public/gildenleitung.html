@@ -19540,7 +19540,14 @@ async function loadLogAnalysisPanel(force, quiet){
     }
     logAnalyses = Array.isArray(result.analyses) ? result.analyses : [];
     renderLogAnalyses();
-    if(status && !quiet) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
+    if(status && !quiet){
+      const automatic = result.automaticAnalysis || {};
+      const queued = Number(automatic.activeOrWaiting || 0);
+      const added = Number(automatic.newlyQueued || 0);
+      status.innerHTML = queued > 0
+        ? `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen. Automatische Analyse läuft: ${queued} Report(s) in Bearbeitung oder Warteschlange${added ? `, davon ${added} neu vorgemerkt` : ""}.`
+        : `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen. Alle Reports sind aktuell analysiert.`;
+    }
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Loganalysen konnten nicht geladen werden.")}</span>`;
   }
@@ -19577,7 +19584,10 @@ async function saveManualLogAnalysis(){
     if(input) input.value = "";
     if(result.analysis) upsertLogAnalysis(result.analysis);
     renderLogAnalyses();
-    if(status) status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.`;
+    if(status){
+      const queued = Number(result.automaticAnalysis?.activeOrWaiting || 0);
+      status.innerHTML = `<span class="ok">${logAnalyses.length}</span> Loganalyse(n) geladen.${queued ? ` Automatische Analyse wurde gestartet (${queued} Report in der Warteschlange).` : ""}`;
+    }
     setStatus("Loganalyse wurde aufgenommen.", "good");
   }catch(error){
     if(status) status.innerHTML = `<span class="bad">${escapeHtml(error.message || "Log konnte nicht gespeichert werden.")}</span>`;
