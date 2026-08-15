@@ -17263,6 +17263,143 @@ async function findRaidForDiscordImport(guildId, params) {
   return null;
 }
 
+function importedRaidSignupAliases(value) {
+  const aliases = [];
+  const add = candidate => {
+    const name = clean(candidate);
+    if (name && !aliases.some(entry => entry.toLocaleLowerCase("de-DE") === name.toLocaleLowerCase("de-DE"))) {
+      aliases.push(name);
+    }
+  };
+  add(value);
+  for (const part of clean(value).split(/[\/|]/g)) {
+    add(part);
+    add(part.replace(/-(?:everlook|lakeshire)$/i, ""));
+  }
+  add(clean(value).replace(/-(?:everlook|lakeshire)$/i, ""));
+  return aliases;
+}
+
+async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
+  const [externalResult, characterResult, discordLinkResult] = await Promise.all([
+    query(
+      `select id, player_name, class_name, role, status, note, source,
+              discord_user_id, discord_name, created_at
+       from raid_external_signups
+       where guild_id = $1 and raid_id = $2`,
+      [guildId, raidId]
+    ),
+    query(
+      `select c.id, c.player_id, c.name, c.class_name
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false`,
+      [guildId]
+    ),
+    query(
+      `select c.id, c.player_id, c.name, c.class_name,
+              dbm.username, dbm.display_name, dbm.global_name, dpl.discord_name
+       from discord_player_links dpl
+       join characters c on c.id = dpl.character_id
+       join players p on p.id = c.player_id
+       left join discord_bot_members dbm
+         on dbm.guild_id = dpl.guild_id and dbm.user_id = dpl.discord_user_id
+       where dpl.guild_id = $1
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false`,
+      [guildId]
+    )
+  ]);
+  if (!externalResult.rows.length || !characterResult.rows.length) return 0;
+
+  const charactersByName = new Map();
+  for (const character of characterResult.rows) {
+    const key = clean(character.name).toLocaleLowerCase("de-DE");
+    if (!key) continue;
+    const matches = charactersByName.get(key) || [];
+    matches.push(character);
+    charactersByName.set(key, matches);
+  }
+  const charactersByDiscordName = new Map();
+  for (const link of discordLinkResult.rows || []) {
+    for (const value of [link.username, link.display_name, link.global_name, link.discord_name]) {
+      for (const alias of importedRaidSignupAliases(value)) {
+        const key = alias.toLocaleLowerCase("de-DE");
+        const matches = charactersByDiscordName.get(key) || [];
+        matches.push(link);
+        charactersByDiscordName.set(key, matches);
+      }
+    }
+  }
+
+  let reconciled = 0;
+  for (const external of externalResult.rows) {
+    let matches = [];
+    for (const alias of importedRaidSignupAliases(external.player_name)) {
+      matches.push(...(charactersByName.get(alias.toLocaleLowerCase("de-DE")) || []));
+    }
+    matches = [...new Map(matches.map(character => [character.id, character])).values()];
+    if (!matches.length) {
+      for (const alias of importedRaidSignupAliases(external.player_name)) {
+        matches.push(...(charactersByDiscordName.get(alias.toLocaleLowerCase("de-DE")) || []));
+      }
+      matches = [...new Map(matches.map(character => [character.id, character])).values()];
+    }
+    if (matches.length > 1 && clean(external.class_name)) {
+      const sameClass = matches.filter(character => clean(character.class_name).toLocaleLowerCase("de-DE") === clean(external.class_name).toLocaleLowerCase("de-DE"));
+      if (sameClass.length === 1) matches = sameClass;
+    }
+    if (matches.length !== 1) continue;
+
+    const character = matches[0];
+    const existingAccountSignup = await query(
+      `select rs.id, rs.character_id
+       from raid_signups rs
+       join characters c on c.id = rs.character_id
+       where rs.raid_id = $1 and c.player_id = $2
+       limit 1`,
+      [raidId, character.player_id]
+    );
+    if (!existingAccountSignup.rows[0]) {
+      await query(
+        `insert into raid_signups (
+           raid_id, character_id, status, note, role, source,
+           discord_user_id, discord_name, created_at, updated_at
+         )
+         values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now())
+         on conflict (raid_id, character_id)
+         do update set
+           status = excluded.status,
+           note = coalesce(nullif(excluded.note, ''), raid_signups.note),
+           role = excluded.role,
+           source = excluded.source,
+           discord_user_id = coalesce(nullif(excluded.discord_user_id, ''), raid_signups.discord_user_id),
+           discord_name = coalesce(nullif(excluded.discord_name, ''), raid_signups.discord_name),
+           updated_at = now()`,
+        [
+          raidId,
+          character.id,
+          normalizeSignupStatus(external.status),
+          clean(external.note),
+          normalizeSignupRole(external.role),
+          clean(external.source) || "raid-helper-account-reconciled",
+          clean(external.discord_user_id),
+          clean(external.discord_name),
+          external.created_at || null
+        ]
+      );
+    }
+    await query(
+      `delete from raid_external_signups where guild_id = $1 and raid_id = $2 and id = $3`,
+      [guildId, raidId, external.id]
+    );
+    reconciled += 1;
+  }
+  return reconciled;
+}
+
 async function getRaidHelper({ guildId, query: params }) {
   const lookupValue = clean(
     params.raidId
@@ -17304,6 +17441,14 @@ async function getRaidHelper({ guildId, query: params }) {
   // Termins übernehmen. Auch mehrere AQ20-/ZG-Raids am selben Tag bleiben
   // über ihre interne Raid-ID strikt voneinander getrennt.
   const relatedRaidIds = [raid.id];
+
+  // Alte RaidHelper-Importe enthielten oft nur den sichtbaren Discord-Namen
+  // (z. B. "Pacho/Zinzin" oder "Daedrym-Lakeshire"). Wenn darin ein
+  // eindeutiger, bereits zu einem SpielerLogin gehörender Charakter steckt,
+  // wird der lose Import beim Laden des Raids in eine echte Anmeldung
+  // umgewandelt. So greifen PO/P0+, Discord-Link und Account-Zuordnung wieder
+  // auf denselben Charakterdatensatz zu.
+  await reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raid.id);
 
   const signupResult = await query(
     `select
