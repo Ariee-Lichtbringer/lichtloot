@@ -7872,8 +7872,21 @@ async function queueRaidAnnouncementNotice({ guildId, query: params }) {
 async function queueRaidCalendar({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureRaidCalendarConfigSchema();
+  const enabled = !["0", "false", "no", "nein", "off"].includes(clean(params.enabled ?? "true").toLowerCase());
   const channelId = clean(params.channelId || params.discordChannelId);
   if (!channelId) return { success: false, error: "Discord-Channel fehlt." };
+  if (!enabled) {
+    await query(
+      `insert into guild_raid_calendar_configs (guild_id, channel_id, enabled, updated_at)
+       values ($1, $2, false, now())
+       on conflict (guild_id) do update
+         set channel_id = excluded.channel_id,
+             enabled = false,
+             updated_at = now()`,
+      [guildId, channelId]
+    );
+    return { success: true, enabled: false, channelId };
+  }
   let events = [];
   try {
     events = typeof params.events === "string" ? JSON.parse(params.events) : params.events;
@@ -7914,6 +7927,25 @@ async function ensureRaidCalendarConfigSchema() {
        updated_at timestamptz not null default now()
      )`
   );
+}
+
+async function getRaidCalendarConfig({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidCalendarConfigSchema();
+  const result = await query(
+    `select channel_id, enabled
+     from guild_raid_calendar_configs
+     where guild_id = $1
+     limit 1`,
+    [guildId]
+  );
+  const row = result.rows[0] || null;
+  return {
+    success: true,
+    configured: Boolean(row),
+    enabled: Boolean(row?.enabled),
+    channelId: clean(row?.channel_id)
+  };
 }
 
 async function getBotRaidCalendars({ query: params }) {
@@ -24361,6 +24393,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildQueueRaidCalendar") {
       const queued = await queueRaidCalendar({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildGetRaidCalendarConfig") {
+      const config = await getRaidCalendarConfig({ guildId: guild.id, query: postParams });
+      return res.json({ ...config, guild: guild.slug });
     }
 
     if (action === "guildQueueRaidAnnouncementRefresh") {
