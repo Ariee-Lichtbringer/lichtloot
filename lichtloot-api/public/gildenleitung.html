@@ -5018,6 +5018,29 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
   .action-row{grid-template-columns:1fr}
   table{min-width:760px}
 }
+.panem-gear-beta{display:inline-flex;margin-left:8px;padding:3px 8px;border:1px solid rgba(45,212,191,.55);border-radius:999px;color:#5eead4;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.panem-gear-body{display:grid;gap:16px;padding-top:16px}
+.panem-gear-head-actions{display:flex;gap:8px;flex-wrap:wrap}
+.panem-gear-toolbar{display:grid;grid-template-columns:minmax(190px,1.3fr) repeat(2,minmax(150px,.75fr)) auto;gap:10px;align-items:end;padding:14px;border:1px solid rgba(45,212,191,.28);border-radius:14px;background:rgba(5,18,30,.72)}
+.panem-gear-toolbar label{display:grid;gap:6px;color:#a7f3d0;font-size:.76rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.panem-gear-toolbar select{width:100%}
+.panem-gear-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(300px,.8fr);gap:14px;align-items:start}
+.panem-gear-summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.panem-gear-summary span{padding:7px 10px;border:1px solid #334155;border-radius:999px;background:#07111f;color:#cbd5e1;font-size:.82rem;font-weight:800}
+.panem-gear-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.panem-gear-slot{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:72px;padding:10px;border:1px solid #334155;border-radius:12px;background:linear-gradient(145deg,rgba(15,23,42,.96),rgba(4,12,23,.96));color:#e5e7eb;text-align:left;cursor:pointer}
+.panem-gear-slot:hover,.panem-gear-slot.active{border-color:#2dd4bf;box-shadow:0 0 0 1px rgba(45,212,191,.24)}
+.panem-gear-slot-icon{width:42px;height:42px;border:1px solid #475569;border-radius:8px;object-fit:cover;background:#020617}
+.panem-gear-slot-copy{min-width:0}.panem-gear-slot-copy small{display:block;color:#94a3b8;font-size:.68rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.panem-gear-slot-copy strong{display:block;overflow:hidden;color:#f8fafc;text-overflow:ellipsis;white-space:nowrap}.panem-gear-slot-copy em{display:block;overflow:hidden;color:#5eead4;font-size:.76rem;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
+.panem-gear-slot-score{color:#facc15;font-size:.78rem;font-weight:900;white-space:nowrap}
+.panem-gear-picker{position:sticky;top:14px;max-height:72vh;overflow:auto;border:1px solid #334155;border-radius:14px;background:rgba(4,12,23,.98)}
+.panem-gear-picker-empty{padding:28px;color:#94a3b8;text-align:center}
+.panem-gear-picker-head{position:sticky;z-index:2;top:0;padding:12px;border-bottom:1px solid #334155;background:#07111f}.panem-gear-picker-head h4{margin:0 0 8px;color:#f8fafc}.panem-gear-picker-head input{width:100%}
+.panem-gear-item{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;padding:10px 12px;border:0;border-bottom:1px solid rgba(51,65,85,.65);background:transparent;color:#e5e7eb;text-align:left;cursor:pointer}.panem-gear-item:hover{background:rgba(13,148,136,.14)}
+.panem-gear-item img{width:38px;height:38px;border-radius:7px;background:#020617}.panem-gear-item strong,.panem-gear-item small{display:block}.panem-gear-item small{color:#94a3b8}.panem-gear-item-score{color:#facc15;font-weight:950;white-space:nowrap}
+.panem-gear-planned{border-color:#0f766e;background:linear-gradient(145deg,rgba(6,78,69,.3),rgba(4,12,23,.96))}
+@media(max-width:980px){.panem-gear-toolbar{grid-template-columns:1fr 1fr}.panem-gear-layout{grid-template-columns:1fr}.panem-gear-picker{position:relative;top:auto;max-height:56vh}}
+@media(max-width:640px){.panem-gear-toolbar,.panem-gear-slots{grid-template-columns:1fr}.panem-gear-slot{grid-template-columns:42px minmax(0,1fr)}}
 </style>
 <style>
 body.worldbuff-only .side-nav>*{display:none!important}
@@ -5052,10 +5075,11 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
           <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
           <button id="bwlTestSetupSideButton" class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
+          <button id="panemGearPlannerSideButton" class="side-link" type="button" onclick="openPanemGearPlanner()" aria-label="Ausrüstungsplaner Beta" title="Ausrüstungsplaner Beta" style="display:none"><span class="side-icon">♜</span><span class="side-label">Ausrüstungsplaner</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">P0-Items festlegen</span></button>
-          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
+          <button id="logAnalysisSideButton" class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Plündermeister</span></button>
           <button class="side-link" type="button" onclick="openRaidMemberNoticePanel()" aria-label="Raidmitglieder informieren" title="Raidmitglieder informieren"><span class="side-icon">📣</span><span class="side-label">Mitglieder informieren</span></button>
         </div>
@@ -6093,6 +6117,38 @@ body.worldbuff-only .master-only{display:none!important}
     </div>
   </details>
 
+  <details id="panemGearPlannerPanel" class="panel panem-gear-planner" style="display:none" ontoggle="if(this.open) initPanemGearPlanner()">
+    <summary>♜ Ausrüstungsplaner <span class="panem-gear-beta">Panem Beta</span></summary>
+    <div class="panem-gear-body">
+      <div class="section-head compact">
+        <div>
+          <h3>Ausrüstung testen und Raidloot vergleichen</h3>
+          <p>Aktuelle Ausrüstung aus Warcraft Logs laden und geplante Raiditems pro Slot einsetzen.</p>
+        </div>
+        <div class="panem-gear-head-actions">
+          <button class="small-btn ghost" type="button" onclick="exportPanemGearBuild()">Build exportieren</button>
+          <button class="small-btn good" type="button" onclick="savePanemGearBuild()">Build speichern</button>
+        </div>
+      </div>
+      <div class="panem-gear-toolbar">
+        <label>Charakter<select id="panemGearCharacter" onchange="resetPanemGearCharacter()"><option value="">Charakter auswählen …</option></select></label>
+        <label>Bewertung<select id="panemGearProfile" onchange="renderPanemGearPlanner()"><option value="caster">Caster</option><option value="heal">Heilung</option><option value="melee">Nahkampf</option><option value="tank">Tank</option></select></label>
+        <label>Raidloot<select id="panemGearRaid" onchange="loadPanemGearLoot()"><option value="all">Alle Raids</option><option value="mc">Molten Core</option><option value="bwl">Blackwing Lair</option><option value="zg">Zul'Gurub</option><option value="aq20">Ahn'Qiraj 20</option><option value="aq40">Ahn'Qiraj 40</option><option value="naxx">Naxxramas</option><option value="ony">Onyxia</option></select></label>
+        <button id="panemGearWclButton" class="btn" type="button" onclick="loadPanemGearFromWcl()">WCL-Ausrüstung laden</button>
+      </div>
+      <div id="panemGearStatus" class="status">Charakter auswählen und die letzte geloggte Ausrüstung laden.</div>
+      <div class="panem-gear-layout">
+        <section>
+          <div class="panem-gear-summary" id="panemGearSummary"></div>
+          <div class="panem-gear-slots" id="panemGearSlots"></div>
+        </section>
+        <aside class="panem-gear-picker" id="panemGearPicker">
+          <div class="panem-gear-picker-empty">Einen Ausrüstungsplatz anklicken, um passende Raiditems zu vergleichen.</div>
+        </aside>
+      </div>
+    </div>
+  </details>
+
   <details id="logAnalysisPanel" class="panel log-analysis-panel" ontoggle="if(this.open) loadLogAnalysisPanel()">
     <summary>Loganalysen</summary>
     <div class="log-analysis-body">
@@ -6580,6 +6636,11 @@ function applyGuildBrand(){
   }
   const bwlTestButton=document.getElementById("bwlTestSetupSideButton");
   if(bwlTestButton)bwlTestButton.style.display=CURRENT_GUILD_SLUG === "lichtloot" ? "none" : "";
+  const panemGearButton=document.getElementById("panemGearPlannerSideButton");
+  const panemGearPanel=document.getElementById("panemGearPlannerPanel");
+  const showPanemGear=CURRENT_GUILD_SLUG === "panemloot";
+  if(panemGearButton)panemGearButton.style.display=showPanemGear ? "" : "none";
+  if(panemGearPanel)panemGearPanel.style.display=showPanemGear ? "" : "none";
 }
 
 function applyGuildManagementLayout(){
@@ -6588,6 +6649,8 @@ function applyGuildManagementLayout(){
   show(document.querySelector('.side-link[onclick*="scrollToDashboard"]'),settings.dashboard !== false);
   show(document.getElementById("sideGroupBuffs"),settings.buffs !== false);
   show(document.getElementById("sideGroupRaidorga"),settings.raidorga !== false);
+  const logAnalysesVisible=typeof settings.loganalysen === "boolean" ? settings.loganalysen : CURRENT_GUILD_SLUG !== "lichtloot";
+  show(document.getElementById("logAnalysisSideButton"),logAnalysesVisible);
   show(document.getElementById("sideGroupBackup"),settings.backup !== false);
   show(document.querySelector('.side-link[onclick*="openIssueInboxPanel"]'),settings.mailbox !== false);
   const admin=document.getElementById("sideGroupAdmin");
@@ -7306,6 +7369,199 @@ function openDetailsPanel(id){
 function openRaidPanel(){
   clearRaidFilters(false);
   openDetailsPanel("raidLeadPanel");
+}
+
+const PANEM_GEAR_SLOTS=["Kopf","Hals","Schultern","Rücken","Brust","Handgelenke","Hände","Taille","Beine","Füße","Ring 1","Ring 2","Schmuck 1","Schmuck 2","Waffenhand","Schildhand","Distanz"];
+const panemGearState={characters:[],current:{},planned:{},loot:[],lootCache:{},activeSlot:"",search:"",meta:null,initialized:false};
+
+function openPanemGearPlanner(){
+  if(CURRENT_GUILD_SLUG !== "panemloot") return;
+  openDetailsPanel("panemGearPlannerPanel");
+}
+
+function panemGearCharacterRows(){
+  const rows=Array.isArray(guildData?.players) ? guildData.players : [];
+  const seen=new Set();
+  return rows.filter(row=>{
+    const name=String(row.char || row.name || "").trim();
+    const server=String(row.server || "").trim();
+    const key=(name+"|"+server).toLowerCase();
+    if(!name || !server || /^spielerlogin\b/i.test(name) || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a,b)=>String(a.char || a.name).localeCompare(String(b.char || b.name),"de"));
+}
+
+function initPanemGearPlanner(){
+  if(CURRENT_GUILD_SLUG !== "panemloot") return;
+  panemGearState.characters=panemGearCharacterRows();
+  const select=document.getElementById("panemGearCharacter");
+  if(select){
+    const previous=select.value;
+    select.innerHTML='<option value="">Charakter auswählen …</option>'+panemGearState.characters.map((row,index)=>{
+      const name=String(row.char || row.name || "").trim();
+      return `<option value="${index}">${escapeHtml(name)} · ${escapeHtml(row.server || "")} · ${escapeHtml(row.className || row.Klasse || "")}</option>`;
+    }).join("");
+    if(previous && Number(previous)<panemGearState.characters.length)select.value=previous;
+  }
+  panemGearState.initialized=true;
+  renderPanemGearPlanner();
+}
+
+function selectedPanemGearCharacter(){
+  const raw=document.getElementById("panemGearCharacter")?.value;
+  if(raw==="" || raw===undefined || raw===null)return null;
+  const index=Number(raw);
+  return Number.isInteger(index) && index>=0 ? panemGearState.characters[index] : null;
+}
+
+function resetPanemGearCharacter(){
+  panemGearState.current={};panemGearState.planned={};panemGearState.meta=null;panemGearState.activeSlot="";
+  const character=selectedPanemGearCharacter();
+  if(character){
+    try{
+      const saved=JSON.parse(localStorage.getItem(`panemGearPlanner_${character.char || character.name}_${character.server}`) || "null");
+      if(saved){panemGearState.current=saved.current || {};panemGearState.planned=saved.planned || {};const profile=document.getElementById("panemGearProfile");if(profile && saved.profile)profile.value=saved.profile;}
+    }catch(_error){}
+  }
+  renderPanemGearPlanner();
+}
+
+function panemGearIcon(icon,itemId){
+  const value=String(icon || "").trim();
+  if(/^https?:\/\//i.test(value)) return value;
+  if(value) return `https://wow.zamimg.com/images/wow/icons/large/${encodeURIComponent(value.replace(/\.jpg$/i,""))}.jpg`;
+  return itemId ? `https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg` : "images/content.png";
+}
+
+function panemGearSlotFamily(value){
+  const slot=String(value || "").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g," ").trim();
+  if(slot.includes("ring") || slot.includes("finger"))return "ring";
+  if(slot.includes("schmuck") || slot.includes("trinket"))return "trinket";
+  if(slot.includes("kopf") || slot.includes("head"))return "head";
+  if(slot.includes("hals") || slot.includes("neck"))return "neck";
+  if(slot.includes("schulter"))return "shoulder";
+  if(slot.includes("ruecken") || slot.includes("umhang") || slot.includes("back"))return "back";
+  if(slot.includes("brust") || slot.includes("robe") || slot.includes("chest"))return "chest";
+  if(slot.includes("handgelenk") || slot.includes("armschiene") || slot.includes("bracer"))return "wrist";
+  if(slot.includes("haende") || slot.includes("hands") || slot.includes("glove"))return "hands";
+  if(slot.includes("taille") || slot.includes("guertel") || slot.includes("belt"))return "waist";
+  if(slot.includes("bein") || slot.includes("legs"))return "legs";
+  if(slot.includes("fuesse") || slot.includes("feet") || slot.includes("boot"))return "feet";
+  if(slot.includes("schildhand") || slot.includes("nebenhand") || slot.includes("schild") || slot.includes("off hand"))return "offhand";
+  if(slot.includes("waffenhand") || slot.includes("waffe") || slot.includes("einhaendig") || slot.includes("zweihand") || slot.includes("stab") || slot.includes("dolch") || slot.includes("schwert") || slot.includes("streitkolben") || slot.includes("axt"))return "mainhand";
+  if(slot.includes("distanz") || slot.includes("zauberstab") || slot.includes("bogen") || slot.includes("wurfwaffe"))return "ranged";
+  return slot;
+}
+
+function panemGearMatchesSlot(item,slot){
+  const wanted=panemGearSlotFamily(slot),itemSlot=panemGearSlotFamily(item.slot || item.type || item.category);
+  if(wanted===itemSlot)return true;
+  if(["mainhand","offhand"].includes(wanted) && ["mainhand","offhand"].includes(itemSlot))return true;
+  return false;
+}
+
+function panemGearScore(item){
+  if(!item)return 0;
+  const profile=document.getElementById("panemGearProfile")?.value || "caster";
+  const text=[item.statsText,item.stats_text,item.tooltip,item.equip,item.needed,item.name].filter(Boolean).join(" ").replace(/,/g,".");
+  const sum=patterns=>patterns.reduce((total,entry)=>{
+    const regex=new RegExp(entry[0],"gi");let match,value=0;
+    while((match=regex.exec(text)))value+=Number(match[1] || 0)*entry[1];
+    return total+value;
+  },0);
+  const common=[["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:alle Attribute|all stats)",1]];
+  const profiles={
+    caster:[["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Zauberschaden|Zaubermacht|spell damage|spell power|Naturmacht|Feuermacht|Frostmacht)",1],["\\+?(\\d+(?:\\.\\d+)?)%?\\s*(?:Zaubertreffer|spell hit)",12],["\\+?(\\d+(?:\\.\\d+)?)%?\\s*(?:kritischer Zaubertreffer|spell crit)",8],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Intelligenz|Intellect)",.2],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Mana pro 5|MP5)",1.5]],
+    heal:[["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Heilung|healing)",1],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Mana pro 5|MP5)",2],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Intelligenz|Intellect)",.25],["\\+?(\\d+(?:\\.\\d+)?)%?\\s*(?:kritischer Zaubertreffer|spell crit)",5]],
+    melee:[["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Angriffskraft|attack power)",1],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Stärke|Strength)",2],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Beweglichkeit|Agility)",1.5],["\\+?(\\d+(?:\\.\\d+)?)%?\\s*(?:Trefferchance|Nahkampftreffer|hit)",15],["\\+?(\\d+(?:\\.\\d+)?)%?\\s*(?:kritischer Treffer|crit)",12]],
+    tank:[["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Ausdauer|Stamina)",2],["(\\d+(?:\\.\\d+)?)\\s*Rüstung",.08],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Verteidigung|Defense)",5],["\\+?(\\d+(?:\\.\\d+)?)\\s*(?:Stärke|Strength)",1]]
+  };
+  return Math.round(sum(common.concat(profiles[profile] || profiles.caster))*10)/10;
+}
+
+function panemGearCurrentForSlot(slot){
+  const planned=panemGearState.planned[slot];
+  return planned || panemGearState.current[slot] || null;
+}
+
+function renderPanemGearPlanner(){
+  const slots=document.getElementById("panemGearSlots"),summary=document.getElementById("panemGearSummary");
+  if(!slots || !summary)return;
+  const character=selectedPanemGearCharacter();
+  const plannedCount=Object.keys(panemGearState.planned).length;
+  summary.innerHTML=`<span>${escapeHtml(character ? (character.char || character.name) : "Kein Charakter")}</span><span>${Object.keys(panemGearState.current).length} WCL-Slots</span><span>${plannedCount} geplante Änderungen</span>`;
+  slots.innerHTML=PANEM_GEAR_SLOTS.map(slot=>{
+    const item=panemGearCurrentForSlot(slot),planned=Boolean(panemGearState.planned[slot]);
+    const name=item?.name || "Leer";const enchant=item?.permanentEnchantName || item?.enchant || "";const score=panemGearScore(item);
+    return `<button class="panem-gear-slot ${planned?"panem-gear-planned":""} ${panemGearState.activeSlot===slot?"active":""}" type="button" onclick="openPanemGearSlot('${escapeAttr(slot)}')"><img class="panem-gear-slot-icon" src="${escapeAttr(panemGearIcon(item?.icon || item?.iconUrl || item?.icon_url,item?.itemId || item?.item_id))}" alt=""><span class="panem-gear-slot-copy"><small>${escapeHtml(slot)}${planned?" · geplant":""}</small><strong>${escapeHtml(name)}</strong><em>${escapeHtml(enchant || item?.boss || "Zum Vergleichen anklicken")}</em></span><span class="panem-gear-slot-score">${score?score+" PW":""}</span></button>`;
+  }).join("");
+  if(panemGearState.activeSlot)renderPanemGearPicker();
+}
+
+async function loadPanemGearFromWcl(){
+  const character=selectedPanemGearCharacter(),status=document.getElementById("panemGearStatus"),button=document.getElementById("panemGearWclButton");
+  if(!character){status.textContent="Bitte zuerst einen Charakter auswählen.";status.className="status bad";return;}
+  const name=character.char || character.name;button.disabled=true;status.textContent=`Letzte geloggte Ausrüstung von ${name} wird geladen …`;status.className="status";
+  try{
+    const result=await railwayApi({action:"getCharacterGearFromWCL",character:name,server:character.server,region:"EU"});
+    if(!result.success)throw new Error(result.error || "Keine Ausrüstung gefunden.");
+    panemGearState.current={};panemGearState.planned={};
+    (result.items || []).forEach(item=>{if(PANEM_GEAR_SLOTS.includes(item.slotName))panemGearState.current[item.slotName]=item;});
+    panemGearState.meta=result;
+    status.textContent=`${Object.keys(panemGearState.current).length} Slots aus „${result.report?.title || "Warcraft Logs"}“ geladen.`;status.className="status good";
+    renderPanemGearPlanner();
+  }catch(error){status.textContent=error.message || "WCL-Ausrüstung konnte nicht geladen werden.";status.className="status bad";}finally{button.disabled=false;}
+}
+
+async function loadPanemGearLoot(){
+  const raid=document.getElementById("panemGearRaid")?.value || "all";
+  const raids=raid==="all"?["mc","bwl","zg","aq20","aq40","naxx","ony"]:[raid];
+  const status=document.getElementById("panemGearStatus");status.textContent="Raidloot wird geladen …";status.className="status";
+  try{
+    const lists=await Promise.all(raids.map(async key=>{
+      if(panemGearState.lootCache[key])return panemGearState.lootCache[key];
+      const result=await railwayApi({action:"getLootItems",raid:key});
+      const rows=(result.items || []).map(item=>Object.assign({raidKey:key},item));panemGearState.lootCache[key]=rows;return rows;
+    }));
+    panemGearState.loot=lists.flat();status.textContent=`${panemGearState.loot.length} Raiditems für den Vergleich geladen.`;status.className="status good";
+    if(panemGearState.activeSlot)renderPanemGearPicker();
+  }catch(error){status.textContent=error.message || "Raidloot konnte nicht geladen werden.";status.className="status bad";}
+}
+
+async function openPanemGearSlot(slot){
+  panemGearState.activeSlot=slot;panemGearState.search="";
+  if(!panemGearState.loot.length)await loadPanemGearLoot();
+  renderPanemGearPlanner();
+}
+
+function renderPanemGearPicker(){
+  const box=document.getElementById("panemGearPicker");if(!box)return;
+  const slot=panemGearState.activeSlot,query=panemGearState.search.toLowerCase();
+  const candidates=panemGearState.loot.filter(item=>panemGearMatchesSlot(item,slot) && (!query || [item.name,item.boss,item.raidKey,item.statsText,item.stats_text].join(" ").toLowerCase().includes(query))).sort((a,b)=>panemGearScore(b)-panemGearScore(a)).slice(0,100);
+  box.innerHTML=`<div class="panem-gear-picker-head"><h4>${escapeHtml(slot)} ersetzen</h4><input type="search" value="${escapeAttr(panemGearState.search)}" placeholder="Item oder Boss suchen …" oninput="panemGearState.search=this.value;renderPanemGearPicker()"><button class="small-btn ghost" type="button" style="margin-top:8px" onclick="resetPanemGearSlot('${escapeAttr(slot)}')">Aktuelles WCL-Item verwenden</button></div>${candidates.length?candidates.map((item,index)=>`<button class="panem-gear-item" type="button" onclick="choosePanemGearItem(${index})"><img src="${escapeAttr(panemGearIcon(item.icon || item.iconUrl || item.icon_url,item.itemId || item.item_id))}" alt=""><span><strong>${escapeHtml(item.name || "Item")}</strong><small>${escapeHtml([String(item.raidKey || "").toUpperCase(),item.boss,item.slot || item.type].filter(Boolean).join(" · "))}</small></span><span class="panem-gear-item-score">${panemGearScore(item)} PW</span></button>`).join(""):'<div class="panem-gear-picker-empty">Keine passenden Items gefunden.</div>'}`;
+  box._candidates=candidates;
+}
+
+function choosePanemGearItem(index){
+  const box=document.getElementById("panemGearPicker"),item=box?._candidates?.[index];if(!item || !panemGearState.activeSlot)return;
+  panemGearState.planned[panemGearState.activeSlot]=item;renderPanemGearPlanner();
+}
+
+function resetPanemGearSlot(slot){delete panemGearState.planned[slot];renderPanemGearPlanner();}
+
+function panemGearBuildPayload(){
+  const character=selectedPanemGearCharacter();return {version:1,guild:"panemloot",character:character?{name:character.char || character.name,server:character.server,className:character.className || character.Klasse || ""}:null,profile:document.getElementById("panemGearProfile")?.value || "caster",current:panemGearState.current,planned:panemGearState.planned,updatedAt:new Date().toISOString()};
+}
+
+function savePanemGearBuild(){
+  const payload=panemGearBuildPayload();if(!payload.character){setStatus("Bitte zuerst einen Charakter auswählen.","bad");return;}
+  localStorage.setItem(`panemGearPlanner_${payload.character.name}_${payload.character.server}`,JSON.stringify(payload));
+  const status=document.getElementById("panemGearStatus");status.textContent="Test-Build wurde auf diesem Gerät gespeichert.";status.className="status good";
+}
+
+function exportPanemGearBuild(){
+  const payload=panemGearBuildPayload();const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=`panem-ausruestungsplan-${String(payload.character?.name || "build").replace(/[^a-z0-9_-]+/gi,"-")}.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function openRaidHelperPanel(tabName){
@@ -8048,6 +8304,7 @@ function renderLootLayoutPanel(){
               <label class="layout-loot-toggle"><input id="layoutGuildNavDashboard" type="checkbox" ${layout.guildManagementSections?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavBuffs" type="checkbox" ${layout.guildManagementSections?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavRaidorga" type="checkbox" ${layout.guildManagementSections?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavLoganalysen" type="checkbox" ${layout.guildManagementSections?.loganalysen === true || (layout.guildManagementSections?.loganalysen !== false && CURRENT_GUILD_SLUG !== "lichtloot") ? "checked" : ""}><span><strong>Loganalysen</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavBackup" type="checkbox" ${layout.guildManagementSections?.backup !== false ? "checked" : ""}><span><strong>Sicherung</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavMailbox" type="checkbox" ${layout.guildManagementSections?.mailbox !== false ? "checked" : ""}><span><strong>Postfach</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavAdmin" type="checkbox" ${layout.guildManagementSections?.admin !== false ? "checked" : ""}><span><strong>Admin</strong><small>Layout bearbeiten bleibt trotz dieses Schalters sichtbar.</small></span></label>
@@ -8111,7 +8368,7 @@ async function saveLootLayoutPanel(){
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
     lootPageSectionsByRaid,
     startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),poReleaseRequest:Boolean(document.getElementById("layoutStartPoReleaseRequest")?.checked),discordGuildId:layoutFieldValue("layoutStartDiscordGuildId").replace(/\D/g,""),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
-    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
+    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),loganalysen:Boolean(document.getElementById("layoutGuildNavLoganalysen")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
     worldbuffChannelId: layoutFieldValue("layoutWorldbuffChannelId"),
     hordenbuffChannelId: layoutFieldValue("layoutHordenbuffChannelId"),
