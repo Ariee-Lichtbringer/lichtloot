@@ -36,6 +36,7 @@ const nachtlootPoReleaseCsvUrl =
   "https://docs.google.com/spreadsheets/d/136_vXW_p3Z3CMGuXkRkv4hftcxW02p2QO_YMb7OaVfA/export?format=csv&gid=1207328819";
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
+const logAnalysisWebCache = new Map();
 const staticLootCache = new Map();
 const missingRaidHelperCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -14302,7 +14303,7 @@ async function buildLogAnalysisCsv(analysis, type) {
 }
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
-  await ensureLogAnalysisSheetExportsTable();
+  await ensureCombatLogImportsTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "combined").toLowerCase();
   if (!isUuid(id)) {
@@ -14327,57 +14328,63 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
-  if (type === "combined") {
-    const rpb = await buildStoredSheetWebAnalysis(result.rows[0], "rpb");
-    const cla = await buildStoredSheetWebAnalysis(result.rows[0], "cla");
-    if (rpb || cla) {
-      return {
-        success: true,
-        webAnalysis: {
-          type: "combined",
-          source: "sheet-export",
-          analysis: normalizeLogAnalysis(result.rows[0]),
-          report: (rpb || cla)?.report || {},
-          rpb,
-          cla
-        }
-      };
+  const analysis = result.rows[0];
+  const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(analysis, "rpb", guildId);
+  if (combatLogAnalysis) {
+    if (type === "cla") {
+      const error = new Error("Für hochgeladene Combatlogs ist die Ausrüstungsanalyse noch nicht verfügbar.");
+      error.statusCode = 404;
+      throw error;
     }
-    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], "rpb", guildId);
-    if (combatLogAnalysis) {
+    if (type === "combined") {
       return {
         success: true,
         webAnalysis: {
           type: "combined",
           source: "combat-log",
-          analysis: normalizeLogAnalysis(result.rows[0]),
+          analysis: normalizeLogAnalysis(analysis),
           report: combatLogAnalysis.report || {},
           rpb: combatLogAnalysis,
           cla: null
         }
       };
     }
-  } else {
-    const sheetAnalysis = await buildStoredSheetWebAnalysis(result.rows[0], type);
-    if (sheetAnalysis) {
-      return {
-        success: true,
-        webAnalysis: sheetAnalysis
-      };
-    }
-    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], type, guildId);
-    if (combatLogAnalysis) {
-      return {
-        success: true,
-        webAnalysis: combatLogAnalysis
-      };
-    }
+    return { success: true, webAnalysis: combatLogAnalysis };
   }
-  {
-    const error = new Error("Für diese Auswertung wurden noch keine Detaildaten gespeichert.");
-    error.statusCode = 404;
-    throw error;
+
+  const cacheKey = `${guildId}:${analysis.id}`;
+  const cached = logAnalysisWebCache.get(cacheKey);
+  let directAnalysis = cached && cached.expiresAt > Date.now() ? cached.value : null;
+  if (!directAnalysis) {
+    const classByName = await getGuildClassMap(guildId);
+    const roleByName = new Map(Object.entries(analysis.summary?.raidRoles || {}).map(([name, role]) => [
+      clean(name).toLowerCase(),
+      normalizeLogAnalysisRaidRole(role)
+    ]));
+    directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName });
+    directAnalysis.source = "warcraft-logs-direct";
+    logAnalysisWebCache.set(cacheKey, { value: directAnalysis, expiresAt: Date.now() + 5 * 60 * 1000 });
   }
+
+  const claSections = (directAnalysis.sections || []).filter(section => String(section.id || "").startsWith("cla-"));
+  const rpbSections = (directAnalysis.sections || []).filter(section => !String(section.id || "").startsWith("cla-"));
+  const rpb = { ...directAnalysis, type: "rpb", sections: rpbSections };
+  const cla = { ...directAnalysis, type: "cla", sections: claSections };
+
+  if (type === "combined") {
+    return {
+      success: true,
+      webAnalysis: {
+        type: "combined",
+        source: "warcraft-logs-direct",
+        analysis: normalizeLogAnalysis(analysis),
+        report: directAnalysis.report || {},
+        rpb,
+        cla
+      }
+    };
+  }
+  return { success: true, webAnalysis: type === "cla" ? cla : rpb };
 }
 
 async function getPublicLogAnalysisWebLegacy({ guildId, query: params }) {
