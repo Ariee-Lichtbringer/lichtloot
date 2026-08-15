@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>LichtLoot Web-Auswertung</title>
+  <title>LichtLoot Loganalyse</title>
   <style>
     :root{
       --bg:#070d16;--panel:#0d1624;--panel2:#111d2e;--line:#263449;--soft:rgba(148,163,184,.16);
@@ -54,9 +54,13 @@
     .pills{display:flex;gap:6px;flex-wrap:wrap}
     .pill{display:inline-flex;align-items:center;min-height:25px;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:950;background:rgba(6,11,19,.82)}
     .status{padding:16px;border:1px solid var(--line);border-radius:8px;background:rgba(13,22,36,.82);color:var(--muted);font-weight:850}
+    .overview{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+    .overview-card{padding:13px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,rgba(17,29,46,.96),rgba(9,17,29,.96))}
+    .overview-card span{display:block;color:var(--muted);font-size:11px;font-weight:950;text-transform:uppercase;letter-spacing:.05em}
+    .overview-card strong{display:block;margin-top:5px;font-size:21px;color:var(--text)}
     .error{border-color:rgba(248,113,113,.45);color:#fecdd3;background:rgba(248,113,113,.10)}
     .hidden{display:none}
-    @media(max-width:1050px){.grid,.top{grid-template-columns:1fr}.analysis-row{grid-template-columns:1fr}.table-wrap{max-height:none}}
+    @media(max-width:1050px){.grid,.top{grid-template-columns:1fr}.analysis-row{grid-template-columns:1fr}.table-wrap{max-height:none}.overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
   </style>
 </head>
 <body>
@@ -64,8 +68,8 @@
     <header class="top">
       <div>
         <div class="kicker">LichtLoot</div>
-        <h1 id="pageTitle">Web-Auswertung</h1>
-        <p id="pageLead" class="lead">Neu aufgebaut: Grundlage sind nur die gespeicherten Raidsheets. RPB-Cluster und CLA-Reiter liegen gemeinsam auf einer Seite.</p>
+        <h1 id="pageTitle">Loganalyse</h1>
+        <p id="pageLead" class="lead">Direkte Auswertung des Warcraft-Logs-Reports in LichtLoot – ohne Google Sheet.</p>
         <div id="meta" class="meta"></div>
       </div>
       <div class="actions">
@@ -84,6 +88,7 @@
 
     <section id="detailView" class="grid hidden">
       <div>
+        <div id="overviewCards" class="overview"></div>
         <div class="panel panel-pad section-tools">
           <div id="sectionTabs" class="tabs"></div>
           <div id="classTabs" class="classbar"></div>
@@ -132,7 +137,19 @@
     function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
     function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
     async function api(query){const url=API_URL+"?"+new URLSearchParams({...query,guild:params.get("guild")||"lichtloot",t:Date.now()});const res=await fetch(url,{cache:"no-store"});const data=await res.json().catch(()=>({}));if(!res.ok||data.success===false)throw new Error(data.error||"Daten konnten nicht geladen werden.");return data;}
-    function matrixValues(section){return section?.matrix?.values || section?.payload?.values || [];}
+    function sectionPlayers(section){
+      const players=allPlayers();
+      const allowed=new Set(Array.isArray(section?.playerFilter)?section.playerFilter:[]);
+      return allowed.size?players.filter(player=>allowed.has(player.name)):players;
+    }
+    function cellText(value){return value&&typeof value==="object"?(value.text||value.name||value.itemName||""):value;}
+    function matrixValues(section){
+      const stored=section?.matrix?.values || section?.payload?.values;
+      if(Array.isArray(stored))return stored;
+      if(!Array.isArray(section?.rows))return[];
+      const players=sectionPlayers(section);
+      return [["Kennzahl",...players.map(player=>player.name)],...section.rows.map(row=>[row.label||"",...players.map(player=>cellText(row.values?.[player.name]??""))])];
+    }
     function matrixBackgrounds(section){return section?.matrix?.backgrounds || section?.payload?.backgrounds || [];}
     function matrixFontColors(section){return section?.matrix?.fontColors || section?.payload?.fontColors || [];}
     function clusterFor(label,type){
@@ -170,7 +187,7 @@
     }
     async function loadList(){
       document.getElementById("listView").innerHTML='<div class="status">Auswertungen werden geladen...</div>';
-      const data=await api({action:"getPublicLogAnalyses",limit:60,sheetOnly:"1"});
+      const data=await api({action:"getPublicLogAnalyses",limit:60});
       state.analyses=Array.isArray(data.analyses)?data.analyses:[];
       const raids=[...new Set(state.analyses.map(raidName))].sort();
       document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
@@ -190,7 +207,7 @@
         document.getElementById("detailView").classList.add("hidden");
         document.getElementById("listView").classList.remove("hidden");
         await loadList();
-        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese alte Auswertung hat noch keine Raidsheet-Daten. Ich zeige dir unten nur Auswertungen mit gespeicherten Raidsheets.</div>`);
+        document.getElementById("listView").insertAdjacentHTML("afterbegin", `<div class="status error">Diese Auswertung konnte nicht direkt aus Warcraft Logs geladen werden.</div>`);
         return;
       }
       state.detail=data.webAnalysis;
@@ -211,7 +228,7 @@
       document.getElementById("listView").innerHTML=list.length?list.map(a=>`
         <article class="analysis-row">
           <div class="raid">${html(raidName(a))}</div>
-          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div><div class="meta"><span class="badge rpb">RPB ${Number(a.rpbSheetCount||0)}</span><span class="badge cla">CLA ${Number(a.claSheetCount||0)}</span></div></div>
+          <div><div class="title">${html(a.title||a.raid||"Auswertung")}</div><div class="sub">${html(dateDisplay(a.raidDate||a.summary?.raidDate))} · ${html(a.reportCode||"")}</div><div class="meta"><span class="badge rpb">Warcraft Logs</span><span class="badge cla">LichtLoot Analyse</span></div></div>
           <a class="btn primary" href="raid-analyse.html?id=${encodeURIComponent(a.id)}">Öffnen</a>
         </article>`).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
     }
@@ -221,19 +238,28 @@
       document.getElementById("meta").innerHTML=[
         `<span class="badge">${html(report.raid||"Raid")}</span>`,
         `<span class="badge">${html(dateDisplay(report.raidDate||report.raid_date))}</span>`,
-        state.detail?.rpb?'<span class="badge rpb">RPB Raidsheet</span>':'',
-        state.detail?.cla?'<span class="badge cla">CLA Raidsheet</span>':''
+        state.detail?.rpb?'<span class="badge rpb">Raidleistung</span>':'',
+        state.detail?.cla?'<span class="badge cla">Ausrüstung & Vorbereitung</span>':''
       ].filter(Boolean).join("");
+      const players=allPlayers();
+      const sections=state.sections.length;
+      document.getElementById("overviewCards").innerHTML=[
+        ["Raid",report.raid||"-"],
+        ["Datum",dateDisplay(report.raidDate||report.raid_date)],
+        ["Spieler",players.length],
+        ["Analysebereiche",sections],
+        ["Quelle","Warcraft Logs"]
+      ].map(([label,value])=>`<div class="overview-card"><span>${html(label)}</span><strong>${html(value)}</strong></div>`).join("");
       renderSectionTabs();
       renderClassTabs();
       renderTable();
       renderSide();
     }
     function renderSectionTabs(){
-      document.getElementById("sectionTabs").innerHTML=state.sections.map((section,index)=>`
+      document.getElementById("sectionTabs").innerHTML=state.sections.map(section=>`
         <button class="tab ${section.id===state.activeSection?'active':''}" data-type="${attr(section.type)}" type="button" onclick="selectSection('${attr(section.id)}')">
           ${html(sectionLabel(section))}<small>${html(section.type.toUpperCase())}${section.label&&sectionLabel(section)!==section.label?" · "+html(section.label):""}</small>
-        </button>`).join("") || '<div class="status">Keine Raidsheet-Reiter vorhanden.</div>';
+        </button>`).join("") || '<div class="status">Keine Analysedaten vorhanden.</div>';
     }
     function renderClassTabs(){
       const section=activeSection();
@@ -251,7 +277,7 @@
     function renderTable(){
       const section=activeSection();
       const table=document.getElementById("sheetTable");
-      if(!section){table.innerHTML='<tbody><tr><td>Keine Raidsheet-Daten vorhanden.</td></tr></tbody>';return;}
+      if(!section){table.innerHTML='<tbody><tr><td>Keine Analysedaten vorhanden.</td></tr></tbody>';return;}
       const values=matrixValues(section);
       const bgs=matrixBackgrounds(section);
       const fcs=matrixFontColors(section);

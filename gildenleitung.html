@@ -19733,12 +19733,9 @@ function renderLogAnalysisAction(entry, type, url){
 function renderLogAnalysisDetailAction(entry){
   if(!entry || !entry.id) return "";
   const summary = entry.summary && typeof entry.summary === "object" ? entry.summary : {};
-  const hasSheetData = getLogAnalysisSheetExportCount(entry, "cla") + getLogAnalysisSheetExportCount(entry, "rpb") > 0;
-  const href = hasSheetData
-    ? `web-auswertung.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`
-    : `raid-analyse.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
+  const href = `raid-analyse.html?id=${encodeURIComponent(entry.id)}&guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
   const isCombatLog = String(entry.reportUrl || "").startsWith("combat-log://") || summary.source === "combat-log" || summary.combatLog === true;
-  const label = isCombatLog ? "Combatlog öffnen" : hasSheetData ? "Auswertung öffnen" : "Analyse öffnen";
+  const label = isCombatLog ? "Combatlog öffnen" : "Analyse öffnen";
   return `<a class="small-btn ghost" href="${escapeAttr(href)}" target="_blank" rel="noopener">${label}</a>`;
 }
 
@@ -19898,15 +19895,13 @@ function renderLogAnalyses(){
             </div>
           </div>
         </td>
-        <td>${renderLogAnalysisStatus(entry)}${renderLogAnalysisProgress(entry)}</td>
+        <td><span class="badge open">Direktanalyse bereit</span></td>
         <td>
           <div class="log-action-stack">
             <div class="log-action-row">
               ${renderLogAnalysisDetailAction(entry)}
               ${entry.reportUrl && /^https?:\/\//i.test(entry.reportUrl) ? `<a class="small-btn ghost" href="${escapeAttr(entry.reportUrl)}" target="_blank" rel="noopener">WCL</a>` : ""}
             </div>
-            <div class="log-action-row">${renderLogAnalysisAction(entry, "cla", claDownloadUrl)}</div>
-            <div class="log-action-row">${renderLogAnalysisAction(entry, "rpb", rpbDownloadUrl)}</div>
           </div>
         </td>
       </tr>
