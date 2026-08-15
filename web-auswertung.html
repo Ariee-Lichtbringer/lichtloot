@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>LichtLoot Web-Auswertung</title>
+  <script>
+    location.replace("raid-analyse.html" + location.search + location.hash);
+  </script>
   <style>
     :root{
       --bg:#0b1220;--panel:#111827;--panel2:#182235;--line:#334155;--soft:rgba(148,163,184,.22);
@@ -12,7 +15,7 @@
       --rogue:#fff468;--shaman:#0070dd;--warlock:#8788ee;--warrior:#c69b6d;
     }
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;background:linear-gradient(180deg,rgba(11,18,32,.96),rgba(15,23,42,.94)),url("images/worldbuff-anleitung.jpg") center/cover fixed;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{margin:0;min-height:100vh;background:#080d14;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
     a{color:inherit}button,input,select{font:inherit}
     .shell{max-width:1760px;margin:0 auto;padding:22px}
     .top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;margin-bottom:14px}
