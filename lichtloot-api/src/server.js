@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v5";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v6";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -12271,29 +12271,64 @@ function abilityName(event) {
   return clean(event?.ability?.name || event?.ability || event?.sourceAbility?.name || "");
 }
 
+function auraAbilityId(aura) {
+  if (typeof aura === "number" || typeof aura === "string") {
+    const primitiveId = Number(aura);
+    if (Number.isFinite(primitiveId)) return primitiveId;
+  }
+  return Number(
+    aura?.guid ||
+    aura?.abilityGameID ||
+    aura?.abilityGameId ||
+    aura?.gameID ||
+    aura?.gameId ||
+    aura?.spellID ||
+    aura?.spellId ||
+    aura?.ability?.guid ||
+    aura?.ability?.abilityGameID ||
+    aura?.ability?.abilityGameId ||
+    aura?.ability?.gameID ||
+    aura?.ability?.gameId ||
+    aura?.ability?.spellID ||
+    aura?.ability?.spellId ||
+    aura?.ability?.id ||
+    aura?.id ||
+    0
+  ) || 0;
+}
+
 function abilityId(event) {
   return Number(
     event?.abilityGameID ||
     event?.abilityGameId ||
+    event?.gameID ||
+    event?.gameId ||
+    event?.spellID ||
+    event?.spellId ||
     event?.ability?.guid ||
+    event?.ability?.abilityGameID ||
+    event?.ability?.abilityGameId ||
+    event?.ability?.gameID ||
+    event?.ability?.gameId ||
+    event?.ability?.spellID ||
+    event?.ability?.spellId ||
     event?.ability?.id ||
     event?.sourceAbilityGameID ||
+    event?.sourceAbilityGameId ||
     event?.sourceAbility?.guid ||
+    event?.sourceAbility?.abilityGameID ||
+    event?.sourceAbility?.abilityGameId ||
+    event?.sourceAbility?.gameID ||
+    event?.sourceAbility?.gameId ||
+    event?.sourceAbility?.spellID ||
+    event?.sourceAbility?.spellId ||
     event?.sourceAbility?.id ||
     0
-  );
+  ) || 0;
 }
 
 function abilityIdFromTableEntry(entry) {
-  return Number(
-    entry?.guid ||
-    entry?.abilityGameID ||
-    entry?.abilityGameId ||
-    entry?.ability?.guid ||
-    entry?.ability?.id ||
-    entry?.id ||
-    0
-  );
+  return auraAbilityId(entry);
 }
 
 function extraAbilityName(event) {
@@ -13084,6 +13119,7 @@ async function buildRpbAnalysisRows(analysis) {
 }
 
 async function buildRpbWebAnalysis(analysis, options = {}) {
+  console.info(`[Loganalyse] Starte Warcraft-Logs-Auswertung ${analysis.report_code}.`);
   const rpbConfig = await loadRpbConfigAll();
   const base = await fetchReportBaseForAnalysis(analysis.report_code);
   const { token, report, fights, fightIds } = base;
@@ -13835,7 +13871,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const gear = normalizeWarcraftLogsGear(event.gear || []);
     if (gear.length && !gearByPlayer.has(player)) gearByPlayer.set(player, gear);
     (Array.isArray(event.auras) ? event.auras : []).forEach(aura => {
-      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+      const id = auraAbilityId(aura);
       const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
       const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
       if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
@@ -13885,7 +13921,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!fightId || !player || !fightStartById.has(fightId)) return;
     if (!exactSnapshotsByFight.has(fightId)) exactSnapshotsByFight.set(fightId, new Map());
     const detected = (event.auras || []).map(aura => {
-      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+      const id = auraAbilityId(aura);
       return labelForSpellId(id, claWorldBuffDefinitions);
     }).filter(Boolean);
     exactSnapshotsByFight.get(fightId).set(player, new Set(detected));
@@ -13904,7 +13940,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           const player = playerNameFromEvent(event, true);
           if (player) {
             const detected = (event.auras || []).map(aura => {
-              const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+              const id = auraAbilityId(aura);
               return labelForSpellId(id, claWorldBuffDefinitions);
             }).filter(Boolean);
             activeWorldBuffsByPlayer.set(player, new Set(detected));
@@ -14715,14 +14751,14 @@ function raidImporterCastOverhealText(castCount, summary) {
 function raidImporterAuraUptimePercent(table, ids, totalTime) {
   const wanted = new Set((ids || []).map(Number).filter(Boolean));
   const uptime = raidImporterTableAuras(table).reduce((sum, aura) => {
-    if (!wanted.has(Number(aura.guid || aura.id || 0))) return sum;
+    if (!wanted.has(auraAbilityId(aura))) return sum;
     return sum + Number(aura.totalUptime || 0);
   }, 0);
   return totalTime > 0 ? Math.round(uptime * 1000 / totalTime) / 10 : 0;
 }
 
 function raidImporterAuraNames(table, definitions) {
-  const ids = new Set(raidImporterTableAuras(table).map(aura => Number(aura.guid || aura.id || 0)));
+  const ids = new Set(raidImporterTableAuras(table).map(aura => auraAbilityId(aura)));
   return Object.entries(definitions)
     .filter(([, spellIds]) => spellIds.some(id => ids.has(Number(id))))
     .map(([label]) => label);
@@ -14869,7 +14905,7 @@ function raidProcessorDamageTakenResult(damageTakenTable, trackedAbilities) {
 function raidProcessorDebuffsAppliedResult(debuffsTable, trackedDebuffs) {
   return (trackedDebuffs || []).map(tracked => {
     const amount = raidImporterTableAuras(debuffsTable)
-      .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+      .filter(aura => tracked.ids.includes(auraAbilityId(aura)))
       .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0);
     return amount > 0 ? amount : "";
   });
@@ -15264,14 +15300,14 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
           consumables,
           worldBuffs,
           rawAuras: raidImporterTableAuras(buffsTable).map(aura => ({
-            id: Number(aura.guid || 0),
+            id: auraAbilityId(aura),
             name: clean(aura.name),
             totalUses: Number(aura.totalUses || 0),
             totalUptime: Number(aura.totalUptime || 0)
           }))
         },
         debuffs: raidImporterTableAuras(debuffsTable).map(aura => ({
-          id: Number(aura.guid || 0),
+          id: auraAbilityId(aura),
           name: clean(aura.name),
           totalUses: Number(aura.totalUses || 0),
           totalUptime: Number(aura.totalUptime || 0)
@@ -15279,7 +15315,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
         trackedDebuffs: Object.fromEntries((rpbConfig.debuffsTracked || []).map(tracked => [
           tracked.name,
           raidImporterTableAuras(debuffsTable)
-            .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+            .filter(aura => tracked.ids.includes(auraAbilityId(aura)))
             .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0)
         ])),
         general: {
