@@ -5092,7 +5092,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
-          <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
+          <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidsheet" title="Raidsheet"><span class="side-icon">⚔</span><span class="side-label">Raidsheet</span></button>
           <button id="bwlTestSetupSideButton" class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
           <button id="panemGearPlannerSideButton" class="side-link" type="button" onclick="openPanemGearPlanner()" aria-label="Ausrüstungsplaner Beta" title="Ausrüstungsplaner Beta" style="display:none"><span class="side-icon">♜</span><span class="side-label">Ausrüstungsplaner</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
@@ -6648,14 +6648,6 @@ function applyGuildBrand(){
   document.querySelectorAll("[data-guild-onclick]").forEach(el => {
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
-  const raidSetupButton=document.getElementById("raidSetupSideButton");
-  if(raidSetupButton){
-    const disabled=CURRENT_GUILD_SLUG === "lichtloot";
-    raidSetupButton.classList.toggle("feature-disabled",disabled);
-    raidSetupButton.disabled=disabled;
-    raidSetupButton.setAttribute("aria-disabled",disabled ? "true" : "false");
-    raidSetupButton.title=disabled ? "Raidaufstellung ist für Lichtbringer derzeit deaktiviert" : "Raidaufstellung";
-  }
   const bwlTestButton=document.getElementById("bwlTestSetupSideButton");
   if(bwlTestButton)bwlTestButton.style.display=CURRENT_GUILD_SLUG === "lichtloot" ? "none" : "";
   const panemGearButton=document.getElementById("panemGearPlannerSideButton");
@@ -6671,6 +6663,7 @@ function applyGuildManagementLayout(){
   show(document.querySelector('.side-link[onclick*="scrollToDashboard"]'),settings.dashboard !== false);
   show(document.getElementById("sideGroupBuffs"),settings.buffs !== false);
   show(document.getElementById("sideGroupRaidorga"),settings.raidorga !== false);
+  show(document.getElementById("raidSetupSideButton"),settings.raidSheet !== false);
   const logAnalysesVisible=typeof settings.loganalysen === "boolean" ? settings.loganalysen : CURRENT_GUILD_SLUG !== "lichtloot";
   show(document.getElementById("logAnalysisSideButton"),logAnalysesVisible);
   show(document.getElementById("lootMasterSideButton"),settings.lootMaster !== false);
@@ -8330,6 +8323,7 @@ function renderLootLayoutPanel(){
               <label class="layout-loot-toggle"><input id="layoutGuildNavDashboard" type="checkbox" ${layout.guildManagementSections?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavBuffs" type="checkbox" ${layout.guildManagementSections?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavRaidorga" type="checkbox" ${layout.guildManagementSections?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavRaidSheet" type="checkbox" ${layout.guildManagementSections?.raidSheet !== false ? "checked" : ""}><span><strong>Raidsheet</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavLoganalysen" type="checkbox" ${layout.guildManagementSections?.loganalysen === true || (layout.guildManagementSections?.loganalysen !== false && CURRENT_GUILD_SLUG !== "lichtloot") ? "checked" : ""}><span><strong>Loganalysen</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavLootMaster" type="checkbox" ${layout.guildManagementSections?.lootMaster !== false ? "checked" : ""}><span><strong>Plündermeister</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavP0Items" type="checkbox" ${layout.guildManagementSections?.p0Items !== false ? "checked" : ""}><span><strong>P0-Items festlegen</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
@@ -8396,7 +8390,7 @@ async function saveLootLayoutPanel(){
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
     lootPageSectionsByRaid,
     startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),poReleaseRequest:Boolean(document.getElementById("layoutStartPoReleaseRequest")?.checked),discordGuildId:layoutFieldValue("layoutStartDiscordGuildId").replace(/\D/g,""),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
-    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),loganalysen:Boolean(document.getElementById("layoutGuildNavLoganalysen")?.checked),lootMaster:Boolean(document.getElementById("layoutGuildNavLootMaster")?.checked),p0Items:Boolean(document.getElementById("layoutGuildNavP0Items")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
+    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),raidSheet:Boolean(document.getElementById("layoutGuildNavRaidSheet")?.checked),loganalysen:Boolean(document.getElementById("layoutGuildNavLoganalysen")?.checked),lootMaster:Boolean(document.getElementById("layoutGuildNavLootMaster")?.checked),p0Items:Boolean(document.getElementById("layoutGuildNavP0Items")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
     worldbuffChannelId: layoutFieldValue("layoutWorldbuffChannelId"),
     hordenbuffChannelId: layoutFieldValue("layoutHordenbuffChannelId"),
