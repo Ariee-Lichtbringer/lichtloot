@@ -2612,6 +2612,7 @@ function normalizeRaidType(value) {
     "aq-20": "aq20",
     "ahn-qiraj-20": "aq20",
     "ruins-of-ahn-qiraj": "aq20",
+    "naxxramas": "naxx",
     "onyxia": "ony",
     "onyxia-s-lair": "ony"
   };
@@ -11694,7 +11695,14 @@ async function getGuildLeadershipOverview(guildId, params) {
 }
 
 function normalizeLogAnalysis(row) {
-  const summary = row.summary || {};
+  const storedSummary = row.summary || {};
+  const summary = {
+    ...storedSummary,
+    bossKills: row.web_boss_kills == null ? storedSummary.bossKills : Number(row.web_boss_kills),
+    totalBosses: row.web_total_bosses == null ? storedSummary.totalBosses : Number(row.web_total_bosses),
+    playerCount: row.web_player_count == null ? (storedSummary.playerCount ?? storedSummary.players) : Number(row.web_player_count),
+    durationMs: row.web_duration_ms == null ? storedSummary.durationMs : Number(row.web_duration_ms)
+  };
   return {
     id: row.id,
     reportCode: row.report_code || "",
@@ -12734,6 +12742,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", activityScope);
   const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", activityScope);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", gearScope);
+  const bossCombatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", bossFightsForGear.map(fight => Number(fight.id)));
   const consumes = {};
   const trinketsAndRacials = {};
   const absorbs = {};
@@ -12760,6 +12769,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const classCooldowns = {};
   const gearByPlayer = new Map();
   const fightPlayerMetrics = {};
+  const fightWorldBuffs = {};
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
   const classCastSources = {};
@@ -13126,6 +13136,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
     if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+  });
+
+  bossCombatantEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (!player || !fightId) return;
+    const buffs = Array.from(new Set((Array.isArray(event.auras) ? event.auras : []).map(aura => {
+      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
+      return labelForSpellId(id, claWorldBuffDefinitions);
+    }).filter(Boolean)));
+    if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
+    fightWorldBuffs[fightId][player] = buffs;
   });
 
   const gearItemIds = [];
@@ -13514,17 +13536,35 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     ])), { type: "text", tone: "muted" })
   ];
 
+  const expectedBossesByRaid = { MC: 10, BWL: 8, AQ20: 6, AQ40: 9, NAXX: 15, ONY: 1, ZG: 10 };
+  const normalizedRaid = normalizeRaidType(report.zone?.name || analysis.raid || "").toUpperCase();
+  const bossNamesByRaid = {
+    MC: ["lucifron","magmadar","gehennas","garr","baron geddon","shazzrah","sulfuron","golemagg","majordomo","ragnaros"],
+    BWL: ["razorgore","vaelastrasz","broodlord","firemaw","ebonroc","flamegor","chromaggus","nefarian"],
+    AQ20: ["kurinnaxx","rajaxx","moam","buru","ayamiss","ossirian"],
+    AQ40: ["skeram","sartura","fankriss","huhuran","twin emperors","veknilash","veklor","cthun","c thun","viscidus","ouro"],
+    NAXX: ["anub rekhan","faerlina","maexxna","noth","heigan","loatheb","razuvious","gothik","four horsemen","patchwerk","grobbulus","gluth","thaddius","sapphiron","kel thuzad"],
+    ONY: ["onyxia"],
+    ZG: ["jeklik","venoxis","mar li","thekal","arlokk","hakkar","mandokir","jindo","gahz ranka","edge of madness"]
+  };
+  const normalizedBossName = value => clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const knownBossNames = bossNamesByRaid[normalizedRaid] || [];
+  const isKnownBossFight = fight => {
+    const name = normalizedBossName(fight?.name);
+    return knownBossNames.length
+      ? knownBossNames.some(boss => name.includes(normalizedBossName(boss)))
+      : Number(fight?.encounterID || 0) > 0;
+  };
   const bossEncountersById = new Map();
-  rpbFights.filter(fight => Number(fight.encounterID || 0) > 0).forEach(fight => {
+  rpbFights.filter(isKnownBossFight).forEach(fight => {
     const encounterId = Number(fight.encounterID || 0);
-    const current = bossEncountersById.get(encounterId);
+    const encounterKey = encounterId || normalizedBossName(fight.name);
+    const current = bossEncountersById.get(encounterKey);
     if (!current || (fight.kill !== false && current.kill === false) || Number(fight.endTime || 0) > Number(current.endTime || 0)) {
-      bossEncountersById.set(encounterId, fight);
+      bossEncountersById.set(encounterKey, fight);
     }
   });
   const bossEncounters = Array.from(bossEncountersById.values()).sort((a, b) => Number(a.startTime || 0) - Number(b.startTime || 0));
-  const expectedBossesByRaid = { MC: 10, BWL: 8, AQ20: 6, AQ40: 9, NAXX: 15, ONY: 1, ZG: 10 };
-  const normalizedRaid = normalizeRaidType(report.zone?.name || analysis.raid || "").toUpperCase();
   const expectedBossCount = expectedBossesByRaid[normalizedRaid] || bossEncounters.length;
 
   const sections = [
@@ -13667,8 +13707,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       name: player.name,
       server: player.server || "",
       className: player.className || "",
-      raidRole: player.raidRole || "",
-      signupRole: player.signupRole || "",
+      raidRole: player.raidRole || (Number(healingTotals[player.name] || 0) > 1000 && Number(healingTotals[player.name] || 0) >= Number(damageTotals[player.name] || 0) * 0.5 ? "healer" : ""),
+      signupRole: player.signupRole || (Number(healingTotals[player.name] || 0) > 1000 && Number(healingTotals[player.name] || 0) >= Number(damageTotals[player.name] || 0) * 0.5 ? "Heiler" : ""),
       damageDone: Math.round(damageTotals[player.name] || 0),
       healingDone: Math.round(healingTotals[player.name] || 0),
       activityPercent: Number.parseFloat(String(wclActivePercent[player.name] || "0").replace("%", "")) || Math.min(100, Math.round((activeSeconds[player.name]?.size || 0) * 100 / Math.max(1, reportDurationMs / 1000))),
@@ -13689,26 +13729,28 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       durationMs: Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)),
       deaths: deathEvents.filter(event => Number(event.fight || event.fightID || event.fightId || 0) === Number(fight.id || 0)).length,
       encounterId: Number(fight.encounterID || 0),
-      isBoss: Number(fight.encounterID || 0) > 0,
+      isBoss: true,
       players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
         deaths: Number(metrics.deaths || 0),
-        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))
+        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000))),
+        worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
     fights: rpbFights.map(fight => ({
       id: Number(fight.id || 0),
-      name: fight.name || (Number(fight.encounterID || 0) > 0 ? "Boss" : "Trash"),
+      name: fight.name || (isKnownBossFight(fight) ? "Boss" : "Trash"),
       kill: fight.kill !== false,
       durationMs: Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)),
       encounterId: Number(fight.encounterID || 0),
-      isBoss: Number(fight.encounterID || 0) > 0,
+      isBoss: isKnownBossFight(fight),
       players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
         deaths: Number(metrics.deaths || 0),
-        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))
+        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000))),
+        worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
     roleOptions: logAnalysisRaidRoleOptions,
@@ -15666,14 +15708,19 @@ async function ensureLogAnalysesTable() {
 
 async function getLogAnalyses({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  await ensureLogAnalysesTable();
+  await ensureLogAnalysisWebCacheTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 50), 1), 200);
   const result = await query(
-    `select *
-     from log_analyses
-     where guild_id = $1
-     order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
+    `select la.*,
+            nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
+            nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
+            nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count
+     from log_analyses la
+     left join log_analysis_web_cache c on c.analysis_id = la.id
+     where la.guild_id = $1
+     order by coalesce(la.raid_date, la.posted_at::date, la.created_at::date) desc, la.posted_at desc nulls last, la.created_at desc
      limit $2`,
     [guildId, limit]
   );
@@ -15685,13 +15732,17 @@ async function getLogAnalyses({ guildId, query: params }) {
 }
 
 async function getPublicLogAnalyses({ guildId, query: params }) {
-  await ensureLogAnalysesTable();
+  await ensureLogAnalysisWebCacheTable();
   await ensureLogAnalysisSheetExportsTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 12), 1), 40);
   const sheetOnly = ["1", "true", "ja", "yes"].includes(clean(params.sheetOnly || params.webReady).toLowerCase());
   const result = await query(
     `select la.*,
+            nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
+            nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
+            nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
             coalesce((
               select count(*)::int
               from log_analysis_sheet_exports se
@@ -15703,6 +15754,7 @@ async function getPublicLogAnalyses({ guildId, query: params }) {
               where se.analysis_id = la.id and se.analysis_type = 'cla'
             ), 0) as cla_sheet_count
      from log_analyses la
+     left join log_analysis_web_cache c on c.analysis_id = la.id
      where la.guild_id = $1
        and (
          $3::boolean = false
