@@ -37,7 +37,18 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-icons-worldbuff-v2";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-rpb-consumables-v3";
+const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
+
+function isCurrentLogAnalysisPayload(payload) {
+  return Boolean(
+    payload
+    && String(payload.schemaVersion || "").trim() === LOG_ANALYSIS_WEB_SCHEMA_VERSION
+    && String(payload.consumableSchemaVersion || "").trim() === LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
+    && payload.combatStatistics
+    && Array.isArray(payload.sections)
+  );
+}
 const automaticLogAnalysisQueue = [];
 const automaticLogAnalysisQueueKeys = new Set();
 let automaticLogAnalysisWorkerRunning = false;
@@ -15319,20 +15330,13 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     );
     directAnalysis = stored.rows[0]?.payload || null;
   }
-  if (
-    directAnalysis
-    && clean(directAnalysis.schemaVersion) !== LOG_ANALYSIS_WEB_SCHEMA_VERSION
-    && !forceRefresh
-  ) {
-    // Eine vorhandene Analyse bleibt sichtbar, waehrend die neue Schema-Version
-    // bereits durch die automatische Warteschlange im Hintergrund erzeugt wird.
-    // Ohne diesen Fallback blockiert jeder Aufruf bis zum kompletten WCL-Neuimport.
-    enqueueAutomaticLogAnalysis({
-      guildId,
-      analysisId: analysis.id,
-      forceRefresh: true,
-      source: "stale-web-cache-refresh"
-    });
+  if (directAnalysis && !isCurrentLogAnalysisPayload(directAnalysis)) {
+    // Unvollstaendige Alt-Datensaetze niemals an die Oberflaeche geben. Besonders
+    // bei neuen RPB-Bereichen wuerden sonst Spieler/Klassen sichtbar sein, waehrend
+    // die eigentlichen Kennzahlen fehlen. Der angeforderte Report wird sofort neu
+    // berechnet; weitere Alt-Datensaetze verarbeitet die Warteschlange.
+    directAnalysis = null;
+    logAnalysisWebCache.delete(cacheKey);
   }
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
@@ -15345,6 +15349,7 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName, signupRoleByName: new Map(signupRoles.signupRoles) });
     directAnalysis.source = "warcraft-logs-direct";
     directAnalysis.schemaVersion = LOG_ANALYSIS_WEB_SCHEMA_VERSION;
+    directAnalysis.consumableSchemaVersion = LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION;
     directAnalysis.signupRoleSource = "lichtloot-raid-signups";
     directAnalysis.persistedAt = new Date().toISOString();
     await query(
@@ -16626,7 +16631,8 @@ async function getLogAnalyses({ guildId, query: params }) {
             nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
             nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
             case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
-            c.payload->>'schemaVersion' as web_schema_version
+            c.payload->>'schemaVersion' as web_schema_version,
+            c.payload->>'consumableSchemaVersion' as web_consumable_schema_version
      from log_analyses la
      left join log_analysis_web_cache c on c.analysis_id = la.id
      where la.guild_id = $1
@@ -16638,7 +16644,10 @@ async function getLogAnalyses({ guildId, query: params }) {
   let newlyQueued = 0;
   for (const row of result.rows) {
     if (!isWarcraftLogsReportUrl(row.report_url)) continue;
-    if (clean(row.web_schema_version) === LOG_ANALYSIS_WEB_SCHEMA_VERSION) continue;
+    if (
+      clean(row.web_schema_version) === LOG_ANALYSIS_WEB_SCHEMA_VERSION
+      && clean(row.web_consumable_schema_version) === LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
+    ) continue;
     const queued = enqueueAutomaticLogAnalysis({
       guildId,
       analysisId: row.id,
@@ -16653,6 +16662,7 @@ async function getLogAnalyses({ guildId, query: params }) {
     analyses: result.rows.map(normalizeLogAnalysis),
     automaticAnalysis: {
       schemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+      consumableSchemaVersion: LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION,
       newlyQueued,
       ...automaticLogAnalysisQueueState()
     }
@@ -16667,8 +16677,9 @@ async function enqueueAllOutdatedLogAnalyses() {
        from log_analyses la
        left join log_analysis_web_cache c on c.analysis_id = la.id
       where coalesce(c.payload->>'schemaVersion', '') <> $1
+         or coalesce(c.payload->>'consumableSchemaVersion', '') <> $2
       order by coalesce(la.raid_date, la.posted_at::date, la.created_at::date), la.created_at`,
-    [LOG_ANALYSIS_WEB_SCHEMA_VERSION]
+    [LOG_ANALYSIS_WEB_SCHEMA_VERSION, LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION]
   );
 
   let queued = 0;
