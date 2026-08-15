@@ -13142,15 +13142,20 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     return pattern.test(combatOutcomeText(event));
   }
 
+  function hasCombatHitType(event, ...hitTypes) {
+    const hitType = Number(event?.hitType);
+    return Number.isFinite(hitType) && hitTypes.includes(hitType);
+  }
+
   function recordOutgoingCombatOutcome(event) {
     const playerName = playerNameFromEvent(event, true);
     if (!playerName || !isDirectCombatAttempt(event)) return;
     const stats = ensureCombatOutcomeStats(playerName);
     stats.outgoingAttempts += 1;
-    if (hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.outgoingDodge += 1;
-    if (hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.outgoingMiss += 1;
-    if (hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.outgoingParry += 1;
-    if (hasCombatOutcome(event, /resist|widerstand/, ["resisted"])) stats.values.outgoingResist += 1;
+    if (hasCombatHitType(event, 7) || hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.outgoingDodge += 1;
+    if (hasCombatHitType(event, 9) || hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.outgoingMiss += 1;
+    if (hasCombatHitType(event, 8) || hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.outgoingParry += 1;
+    if (hasCombatHitType(event, 14) || hasCombatOutcome(event, /resist|widerstand/, ["resisted"])) stats.values.outgoingResist += 1;
   }
 
   function recordIncomingMeleeOutcome(event) {
@@ -13158,13 +13163,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!playerName || !isDirectCombatAttempt(event) || !isMeleeCombatEvent(event)) return;
     const stats = ensureCombatOutcomeStats(playerName);
     stats.incomingMeleeAttempts += 1;
-    if (event?.critical === true || Number(event?.hitType) === 2 || /critical|kritisch/.test(combatOutcomeText(event))) stats.values.incomingCritical += 1;
-    if (hasCombatOutcome(event, /crushing|vernichtung/, ["crushing"])) stats.values.incomingCrushing += 1;
-    if (hasCombatOutcome(event, /block|geblockt/, ["blocked"])) stats.values.incomingBlocked += 1;
-    if (hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.incomingDodge += 1;
-    if (hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.incomingParry += 1;
-    if (hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.incomingMiss += 1;
-    if (hasCombatOutcome(event, /immune|immun/, ["immune"])) stats.values.incomingImmune += 1;
+    if (event?.critical === true || hasCombatHitType(event, 2, 5) || /critical|kritisch/.test(combatOutcomeText(event))) stats.values.incomingCritical += 1;
+    if (hasCombatHitType(event, 15) || hasCombatOutcome(event, /crushing|vernichtung/, ["crushing"])) stats.values.incomingCrushing += 1;
+    if (hasCombatHitType(event, 4, 5) || hasCombatOutcome(event, /block|geblockt/, ["blocked"])) stats.values.incomingBlocked += 1;
+    if (hasCombatHitType(event, 7) || hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.incomingDodge += 1;
+    if (hasCombatHitType(event, 8) || hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.incomingParry += 1;
+    if (hasCombatHitType(event, 9) || hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.incomingMiss += 1;
+    if (hasCombatHitType(event, 10) || hasCombatOutcome(event, /immune|immun/, ["immune"])) stats.values.incomingImmune += 1;
   }
   const bossFightByEncounter = new Map();
   bossFightsForGear.forEach(fight => {
