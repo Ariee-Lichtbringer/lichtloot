@@ -12947,7 +12947,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const gearScope = lastBossFightForGear
     ? { startTime: Number(lastBossFightForGear.startTime || 0), endTime: Number(lastBossFightForGear.endTime || 0) }
     : fullReportScope;
-  const activityScope = performanceScope;
+  // The main analysis represents the complete logged raid (bosses + trash).
+  // Individual boss tables below are still fetched separately for boss filters.
+  const activityScope = rpbFightScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
