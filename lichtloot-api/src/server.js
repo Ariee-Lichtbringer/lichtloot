@@ -11696,10 +11696,15 @@ async function getGuildLeadershipOverview(guildId, params) {
 
 function normalizeLogAnalysis(row) {
   const storedSummary = row.summary || {};
+  const normalizedRaidKey = normalizeRaidType(row.raid || storedSummary.raid || "").toUpperCase();
+  const expectedBossCount = { MC: 10, BWL: 8, AQ20: 6, AQ40: 9, NAXX: 15, ONY: 1, ZG: 10 }[normalizedRaidKey] || null;
+  const cachedBossKills = row.web_boss_kills == null ? storedSummary.bossKills : Number(row.web_boss_kills);
+  const cachedTotalBosses = row.web_total_bosses == null ? storedSummary.totalBosses : Number(row.web_total_bosses);
+  const invalidLegacyBossProgress = Boolean(expectedBossCount && (Number(cachedBossKills || 0) > expectedBossCount || Number(cachedTotalBosses || 0) > expectedBossCount));
   const summary = {
     ...storedSummary,
-    bossKills: row.web_boss_kills == null ? storedSummary.bossKills : Number(row.web_boss_kills),
-    totalBosses: row.web_total_bosses == null ? storedSummary.totalBosses : Number(row.web_total_bosses),
+    bossKills: invalidLegacyBossProgress ? null : cachedBossKills,
+    totalBosses: expectedBossCount || cachedTotalBosses,
     playerCount: row.web_player_count == null ? (storedSummary.playerCount ?? storedSummary.players) : Number(row.web_player_count),
     durationMs: row.web_duration_ms == null ? storedSummary.durationMs : Number(row.web_duration_ms)
   };
