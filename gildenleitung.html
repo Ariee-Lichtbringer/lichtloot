@@ -5079,7 +5079,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">P0-Items festlegen</span></button>
-          <button class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
+          <button id="logAnalysisSideButton" class="side-link" type="button" onclick="openLogAnalysisPanel()" aria-label="Loganalysen" title="Loganalysen"><img class="side-icon-img" src="images/dashboard-icons/loganalysen.jpg" alt=""><span class="side-label">Loganalysen</span></button>
           <button class="side-link" type="button" onclick="openRaidleadPanelDirect()" aria-label="Plündermeister" title="Plündermeister"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Plündermeister</span></button>
           <button class="side-link" type="button" onclick="openRaidMemberNoticePanel()" aria-label="Raidmitglieder informieren" title="Raidmitglieder informieren"><span class="side-icon">📣</span><span class="side-label">Mitglieder informieren</span></button>
         </div>
@@ -6649,6 +6649,8 @@ function applyGuildManagementLayout(){
   show(document.querySelector('.side-link[onclick*="scrollToDashboard"]'),settings.dashboard !== false);
   show(document.getElementById("sideGroupBuffs"),settings.buffs !== false);
   show(document.getElementById("sideGroupRaidorga"),settings.raidorga !== false);
+  const logAnalysesVisible=typeof settings.loganalysen === "boolean" ? settings.loganalysen : CURRENT_GUILD_SLUG !== "lichtloot";
+  show(document.getElementById("logAnalysisSideButton"),logAnalysesVisible);
   show(document.getElementById("sideGroupBackup"),settings.backup !== false);
   show(document.querySelector('.side-link[onclick*="openIssueInboxPanel"]'),settings.mailbox !== false);
   const admin=document.getElementById("sideGroupAdmin");
@@ -8302,6 +8304,7 @@ function renderLootLayoutPanel(){
               <label class="layout-loot-toggle"><input id="layoutGuildNavDashboard" type="checkbox" ${layout.guildManagementSections?.dashboard !== false ? "checked" : ""}><span><strong>Dashboard</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavBuffs" type="checkbox" ${layout.guildManagementSections?.buffs !== false ? "checked" : ""}><span><strong>Buffs</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavRaidorga" type="checkbox" ${layout.guildManagementSections?.raidorga !== false ? "checked" : ""}><span><strong>Raidorga</strong></span></label>
+              <label class="layout-loot-toggle"><input id="layoutGuildNavLoganalysen" type="checkbox" ${layout.guildManagementSections?.loganalysen === true || (layout.guildManagementSections?.loganalysen !== false && CURRENT_GUILD_SLUG !== "lichtloot") ? "checked" : ""}><span><strong>Loganalysen</strong><small>Blendet nur den Menüpunkt innerhalb von Raidorga ein oder aus.</small></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavBackup" type="checkbox" ${layout.guildManagementSections?.backup !== false ? "checked" : ""}><span><strong>Sicherung</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavMailbox" type="checkbox" ${layout.guildManagementSections?.mailbox !== false ? "checked" : ""}><span><strong>Postfach</strong></span></label>
               <label class="layout-loot-toggle"><input id="layoutGuildNavAdmin" type="checkbox" ${layout.guildManagementSections?.admin !== false ? "checked" : ""}><span><strong>Admin</strong><small>Layout bearbeiten bleibt trotz dieses Schalters sichtbar.</small></span></label>
@@ -8365,7 +8368,7 @@ async function saveLootLayoutPanel(){
     lootPagePoReleaseScope:layoutFieldValue("layoutLootPoReleaseScope") === "raid" ? "raid" : "all",
     lootPageSectionsByRaid,
     startPageSections:{navigation:{dashboard:Boolean(document.getElementById("layoutStartNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutStartNavBuffs")?.checked),raidinfos:Boolean(document.getElementById("layoutStartNavRaidinfos")?.checked),raidorga:Boolean(document.getElementById("layoutStartNavRaidorga")?.checked)},worldbuffs:Boolean(document.getElementById("layoutStartWorldbuffs")?.checked),poReleaseRequest:Boolean(document.getElementById("layoutStartPoReleaseRequest")?.checked),discordGuildId:layoutFieldValue("layoutStartDiscordGuildId").replace(/\D/g,""),raidCardDays:layoutFieldValue("layoutStartRaidCardDays") || "all"},
-    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
+    guildManagementSections:{dashboard:Boolean(document.getElementById("layoutGuildNavDashboard")?.checked),buffs:Boolean(document.getElementById("layoutGuildNavBuffs")?.checked),raidorga:Boolean(document.getElementById("layoutGuildNavRaidorga")?.checked),loganalysen:Boolean(document.getElementById("layoutGuildNavLoganalysen")?.checked),backup:Boolean(document.getElementById("layoutGuildNavBackup")?.checked),mailbox:Boolean(document.getElementById("layoutGuildNavMailbox")?.checked),admin:Boolean(document.getElementById("layoutGuildNavAdmin")?.checked)},
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
     worldbuffChannelId: layoutFieldValue("layoutWorldbuffChannelId"),
     hordenbuffChannelId: layoutFieldValue("layoutHordenbuffChannelId"),
