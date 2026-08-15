@@ -23,6 +23,11 @@
     .btn,.tab,.class-btn{min-height:40px;border:1px solid var(--line);border-radius:6px;background:rgba(13,20,31,.92);color:var(--text);padding:8px 14px;font-weight:600;text-decoration:none;cursor:pointer}
     .btn.primary,.tab.active,.class-btn.active{border-color:rgba(216,173,69,.7);background:rgba(216,173,69,.10);color:#f1c968}
     .btn.ghost{background:rgba(13,22,36,.48)}
+    .analysis-progress{margin:-10px 0 22px;padding:12px 14px;border:1px solid rgba(216,173,69,.38);border-radius:7px;background:rgba(216,173,69,.06)}
+    .analysis-progress-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:9px;color:#f1c968;font-size:12px;font-weight:650}.analysis-progress-head span:last-child{font-variant-numeric:tabular-nums}
+    .analysis-progress-track{height:8px;overflow:hidden;border-radius:999px;background:#202b3a}.analysis-progress-fill{height:100%;width:4%;border-radius:inherit;background:linear-gradient(90deg,#c9972f,#facc15,#f5d67e);box-shadow:0 0 16px rgba(250,204,21,.34);transition:width .8s ease}
+    .analysis-progress.running .analysis-progress-fill::after{content:"";display:block;width:35%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.52),transparent);animation:progressShimmer 1.2s linear infinite}
+    @keyframes progressShimmer{from{transform:translateX(-110%)}to{transform:translateX(300%)}}
     .filters{padding:14px;border:1px solid var(--line);border-radius:7px;background:rgba(13,20,31,.78);margin-bottom:18px}
     input,select{min-height:42px;border:1px solid var(--line);border-radius:6px;background:#080d14;color:var(--text);padding:0 13px;font-weight:500}
     input{min-width:260px;flex:1}
@@ -125,6 +130,11 @@
       </div>
     </header>
 
+    <div id="analysisProgress" class="analysis-progress hidden" role="status" aria-live="polite">
+      <div class="analysis-progress-head"><span id="analysisProgressText">Analyse wird vorbereitet …</span><span id="analysisProgressPercent">0 %</span></div>
+      <div class="analysis-progress-track"><div id="analysisProgressFill" class="analysis-progress-fill"></div></div>
+    </div>
+
     <section class="filters">
       <input id="search" type="search" placeholder="Suchen..." oninput="renderCurrent()">
       <select id="raidFilter" onchange="renderList()"><option value="">Alle Raids</option></select>
@@ -156,6 +166,7 @@
     const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
     const params = new URLSearchParams(location.search);
     const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", detailMode:"overview", fightScope:"all", selectedFightIds:[], mode:params.get("id") ? "detail" : "list" };
+    let analysisProgressTimer=null;
     const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
     const CLASS_LABEL = {Warrior:"Krieger",Druid:"Druiden",Paladin:"Paladine",Rogue:"Schurken",Hunter:"Jäger",Priest:"Priester",Mage:"Magier",Warlock:"Hexenmeister",Shaman:"Schamanen",Unknown:"Unbekannt"};
     const CLASS_COLOR = {Warrior:"var(--warrior)",Druid:"var(--druid)",Paladin:"var(--paladin)",Rogue:"var(--rogue)",Hunter:"var(--hunter)",Priest:"var(--priest)",Mage:"var(--mage)",Warlock:"var(--warlock)",Shaman:"var(--shaman)",Unknown:"#cbd5e1"};
@@ -178,6 +189,8 @@
     function html(value){return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
     function attr(value){return html(value);}
     function key(value){return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();}
+    function startAnalysisProgress(){const box=document.getElementById("analysisProgress"),fill=document.getElementById("analysisProgressFill"),label=document.getElementById("analysisProgressText"),percent=document.getElementById("analysisProgressPercent");const phases=[[8,"Report wird von Warcraft Logs geladen …"],[24,"Bosskämpfe werden erkannt …"],[43,"Schaden und Heilung werden ausgewertet …"],[61,"Rollen und Aktivität werden berechnet …"],[76,"Worldbuffs und Verbrauchsgüter werden geprüft …"],[88,"Ausrüstung und Verzauberungen werden geladen …"],[94,"Auswertung wird gespeichert …"]];let value=3,phase=0;clearInterval(analysisProgressTimer);box.classList.remove("hidden");box.classList.add("running");fill.style.width=value+"%";percent.textContent=value+" %";label.textContent="Analyse wird vorbereitet …";analysisProgressTimer=setInterval(()=>{if(phase<phases.length&&value>=phases[phase][0]){label.textContent=phases[phase][1];phase++;}value=Math.min(94,value+(value<60?3:value<84?2:1));fill.style.width=value+"%";percent.textContent=value+" %";},900);}
+    function finishAnalysisProgress(success=true){const box=document.getElementById("analysisProgress"),fill=document.getElementById("analysisProgressFill"),label=document.getElementById("analysisProgressText"),percent=document.getElementById("analysisProgressPercent");clearInterval(analysisProgressTimer);analysisProgressTimer=null;if(!box)return;if(success){box.classList.remove("running");fill.style.width="100%";percent.textContent="100 %";label.textContent="Analyse erfolgreich aktualisiert";setTimeout(()=>box.classList.add("hidden"),1400);}else{box.classList.remove("running");label.textContent="Aktualisierung fehlgeschlagen";percent.textContent="–";}}
     function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
     function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
     function raidDisplayName(value){return({MC:"Molten Core",BWL:"Blackwing Lair",AQ20:"Ruins of Ahn'Qiraj",AQ40:"Ahn'Qiraj 40",NAXX:"Naxxramas",ONY:"Onyxia",ZG:"Zul'Gurub"})[value]||value||"Raid";}
@@ -269,10 +282,12 @@
       if(backButton){backButton.classList.remove("hidden");backButton.href=`raid-analyse.html?guild=${encodeURIComponent(params.get("guild")||"lichtloot")}`;}
       const reloadButton=document.getElementById("reloadButton");
       if(reloadButton)reloadButton.textContent=forceRefresh?"Analyse wird aktualisiert …":"Analyse aktualisieren";
+      if(forceRefresh)startAnalysisProgress();
       let data;
       try{
         data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined",refresh:forceRefresh?"1":"0"});
       }catch(error){
+        if(forceRefresh)finishAnalysisProgress(false);
         if(reloadButton){reloadButton.disabled=false;reloadButton.textContent="Analyse aktualisieren";}
         state.mode="list";
         history.replaceState(null,"","raid-analyse.html");
@@ -290,6 +305,7 @@
       state.fightScope="all";
       state.selectedFightIds=[];
       if(reloadButton){reloadButton.disabled=false;reloadButton.textContent="Analyse aktualisieren";}
+      if(forceRefresh)finishAnalysisProgress(true);
       renderDetail();
     }
     function renderList(){
