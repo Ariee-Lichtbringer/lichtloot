@@ -545,9 +545,9 @@
       }else if(state.rpbCategory==="efficiency"){
         const duration=Number(state.detail?.rpb?.report?.performanceDurationMs||state.detail?.rpb?.report?.durationMs||0);const rows=rpbClassRows(castSections,row=>/gesamt/i.test(row.label||""));content=rpbRowsAsMatrix(cooldownEfficiencyRows(rows,duration),players);
       }else if(state.rpbCategory==="consumables"){
-        const rows=rowsFromGeneralGroup(general,(group)=>/consumables|trinkets|engineering/.test(group));content=rpbRowsAsMatrix(rows,players);
+        const rows=rowsFromGeneralGroup(general,(group)=>/consumables|verbrauchsguter|trinkets|engineering|ingenieurskunst/.test(group));content=rpbRowsAsMatrix(rows,players);
       }else if(state.rpbCategory==="statistics"){
-        const rows=rowsFromGeneralGroup(general,(group)=>/stats|absorb|unterbrochene/.test(group));content=rpbRowsAsMatrix(rows,players);
+        const rows=rowsFromGeneralGroup(general,(group)=>/stats|statistik|sonstiges|absorb|unterbrochene/.test(group));content=rpbRowsAsMatrix(rows,players);
       }else if(state.rpbCategory==="ranking"){
         const duration=Math.max(1,Number(state.detail?.rpb?.report?.performanceDurationMs||state.detail?.rpb?.report?.durationMs||0)/1000);const ranked=players.map(player=>({player,dps:Math.round(Number(player.damageDone||0)/duration),hps:Math.round(Number(player.healingDone||0)/duration)})).sort((a,b)=>Math.max(b.dps,b.hps)-Math.max(a.dps,a.hps));content=`<div class="rpb-rank-table"><table><thead><tr><th>Rang</th><th>Spieler</th><th>Rolle</th><th>DPS</th><th>HPS</th><th>Aktivität</th><th>Tode</th></tr></thead><tbody>${ranked.map((entry,index)=>`<tr><td>${index+1}</td><td><button class="clickable-player" style="color:${CLASS_COLOR[entry.player.className]||'#e2e8f0'}" onclick="openPlayerProfile(decodeURIComponent('${encodeURIComponent(entry.player.name)}'))">${html(entry.player.name)}</button></td><td>${html(roleLabel(entry.player))}</td><td>${shortNumber(entry.dps)}</td><td>${shortNumber(entry.hps)}</td><td>${Math.round(Number(entry.player.activityPercent||0))} %</td><td>${Number(entry.player.deaths||0)}</td></tr>`).join("")}</tbody></table></div>`;
       }else if(state.rpbCategory==="charts"){
