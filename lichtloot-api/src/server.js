@@ -12564,6 +12564,38 @@ const rpbSpellNamesById = {
   29166: "Innervate"
 };
 
+const rpbGermanSpellLabels = new Map(Object.entries({
+  "Battle Shout":"Schlachtruf","Berserker Rage":"Berserkerwut","Bloodrage":"Blutrausch",
+  "Overpower":"Überwältigen","Execute":"Hinrichten","Demoralizing Shout":"Demoralisierungsruf",
+  "Disarm":"Entwaffnen","Sunder Armor":"Rüstung zerreißen","Heroic Strike":"Heldenhafter Stoß",
+  "Cleave":"Spalten","Whirlwind":"Wirbelwind","Shield Slam":"Schildschlag","Shield Block":"Schildblock",
+  "Shield Bash":"Schildhieb","Revenge":"Rache","Mortal Strike":"Tödlicher Stoß","Thunder Clap":"Donnerknall",
+  "Hamstring":"Kniesehne","Charge":"Sturmangriff","Intercept":"Abfangen","Taunt":"Spott",
+  "Berserker Stance":"Berserkerhaltung","Defensive Stance":"Verteidigungshaltung","Battle Stance":"Kampfhaltung",
+  "Arcane Shot":"Arkaner Schuss","Aimed Shot":"Gezielter Schuss","Multi-Shot":"Mehrfachschuss",
+  "Frostbolt":"Frostblitz","Fireball":"Feuerball","Fire Blast":"Feuerschlag","Frost Nova":"Frostnova",
+  "Arcane Missiles":"Arkane Geschosse","Arcane Explosion":"Arkane Explosion","Counterspell":"Gegenzauber",
+  "Shadow Bolt":"Schattenblitz","Corruption":"Verderbnis","Immolate":"Feuerbrand","Drain Life":"Blutsauger",
+  "Power Word: Shield":"Machtwort: Schild","Renew":"Erneuerung","Flash Heal":"Blitzheilung",
+  "Greater Heal":"Große Heilung","Prayer of Healing":"Gebet der Heilung","Dispel Magic":"Magiebannung",
+  "Healing Touch":"Heilende Berührung","Rejuvenation":"Verjüngung","Regrowth":"Nachwachsen",
+  "Faerie Fire":"Feenfeuer","Innervate":"Anregen","Wrath":"Zorn","Moonfire":"Mondfeuer",
+  "Sinister Strike":"Finsterer Stoß","Backstab":"Meucheln","Eviscerate":"Ausweiden","Kick":"Tritt"
+}));
+
+function translateRpbLabelToGerman(value) {
+  let label = clean(value);
+  const suffix = label.match(/\s*\([^)]*\)\s*$/)?.[0] || "";
+  const base = label.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s+uptime.*$/i, "").trim();
+  const translated = rpbGermanSpellLabels.get(base);
+  if (translated) return `${translated}${suffix}`;
+  return label
+    .replace(/uptime by you total%/gi, "Uptime durch dich gesamt %")
+    .replace(/uptime on you%/gi, "Uptime auf dir %")
+    .replace(/overheal%/gi, "Überheilung %")
+    .replace(/rank/gi, "Rang");
+}
+
 function matchingLabel(name, groups, id = 0) {
   const numericId = Number(id || 0);
   if (numericId) {
@@ -12824,6 +12856,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const overhealTotals = {};
   const healingBySpell = {};
   const healingById = {};
+  const rpbSpellIconByName = {};
   const classCasts = {};
   const claCombatBuffs = {};
   const claWorldBuffs = {};
@@ -13054,6 +13087,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
           const configuredCast = configuredStCast || configuredAoeCast;
           if (!configuredCast) return;
+          if (entry.icon && !rpbSpellIconByName[configuredCast.name]) rpbSpellIconByName[configuredCast.name] = clean(entry.icon);
           addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", count, "table");
         });
         let playerHealing = 0;
@@ -13334,6 +13368,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     label,
     type: options.type || "count",
     tone: options.tone || "",
+    spellId: Number(options.spellId || 0) || undefined,
+    icon: clean(options.icon),
+    originalLabel: clean(options.originalLabel),
     values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
   });
   const textRow = (label, values, options = {}) => customRow(label, values, { ...options, type: "text" });
@@ -13542,7 +13579,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   function configuredCastRow(className, cast, kind) {
     const isHealingRow = cast.hasOverheal || healerClasses.has(className);
-    return customRow(cast.name, Object.fromEntries(playerNames.map(player => {
+    return customRow(translateRpbLabelToGerman(cast.name), Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
@@ -13566,7 +13603,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
       }
       return [player, formatCountValue(castCount)];
-    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast" });
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId: cast.ids?.[0], icon: rpbSpellIconByName[cast.name], originalLabel: cast.name });
   }
 
   function configuredCooldownRows(className) {
