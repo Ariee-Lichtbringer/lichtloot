@@ -13023,6 +13023,17 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767]],
     ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]]
   ];
+  const claWorldBuffFallbackMetadata = {
+    "Nef/Ony": { spellId: 22888, name: "Schlachtruf der Drachentöter", icon: "inv_misc_head_dragon_01" },
+    "Rend": { spellId: 16609, name: "Segen des Kriegshäuptlings", icon: "spell_arcane_teleportorgrimmar" },
+    "ZG Herz": { spellId: 24425, name: "Geist von Zandalar", icon: "ability_creature_poison_05" },
+    "Songflower": { spellId: 15366, name: "Liedblumenserenade", icon: "spell_holy_mindvision" },
+    "Mol'dar": { spellId: 22818, name: "Mol'dars Mut", icon: "spell_nature_massteleport" },
+    "Fengus": { spellId: 22817, name: "Fengus' Wildheit", icon: "spell_nature_undyingstrength" },
+    "Slip'kik": { spellId: 22820, name: "Slip'kiks Grips", icon: "spell_holy_lesserheal02" },
+    "DMF": { spellId: 23768, name: "Sayges dunkles Schicksal", icon: "inv_misc_orb_02" },
+    "Zanza/BL": { spellId: 10669, name: "Zanza- und Verwüstete-Lande-Buffs", icon: "spell_nature_forceofnature" }
+  };
   const claCombatBuffDefinitions = [
     ["Greater Fire Protection Potion", [17543]],
     ["Greater Frost Protection Potion", [17544]],
@@ -14318,13 +14329,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     })),
     roleOptions: logAnalysisRaidRoleOptions,
     worldBuffMetadata: Object.fromEntries(claWorldBuffDefinitions.map(([label, ids]) => {
-      const spellId = Number(ids[0] || 0);
+      const fallback = claWorldBuffFallbackMetadata[label] || {};
+      const spellId = Number(fallback.spellId || ids[0] || 0);
       const metadata = rpbSpellMetadata.get(spellId) || {};
       return [label, {
         spellId,
-        name: clean(metadata.name) || label,
-        icon: clean(metadata.icon),
-        tooltip: clean(metadata.tooltip)
+        name: clean(metadata.name) || fallback.name || label,
+        icon: clean(metadata.icon) || fallback.icon || "inv_misc_questionmark",
+        tooltip: clean(metadata.tooltip),
+        wowhead: `https://www.wowhead.com/classic/de/spell=${spellId}`
       }];
     })),
     diagnostics: {
