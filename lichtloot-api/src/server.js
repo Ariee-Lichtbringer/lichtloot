@@ -12058,7 +12058,17 @@ async function fetchPlayerFightTablesForAnalysis(token, reportCode, dataType, fi
       chunk.forEach((fight, index) => result.set(fight.id, parseWarcraftLogsTableData(report[`fight_${index}`])));
     } catch (error) {
       console.warn(`Warcraft-Logs-${dataType}-Charakterdaten konnten für Bossgruppe ${Math.floor(offset / chunkSize) + 1} nicht geladen werden:`, error.message || error);
+      for (const fight of chunk) {
+        const table = await fetchReportTableForAnalysis(token, reportCode, dataType, [fight.id], {
+          sourceId: Number(sourceId),
+          strict: true
+        });
+        result.set(fight.id, table);
+      }
     }
+  }
+  if (result.size !== validFights.length) {
+    throw new Error(`Warcraft Logs lieferte nur ${result.size} von ${validFights.length} benötigten ${dataType}-Bossdatensätzen.`);
   }
   return result;
 }
@@ -13068,14 +13078,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
         const wantsHealing = healerClasses.has(player.className);
-        const [table, healingFightTables, damageFightTables, summaryTable] = await Promise.all([
+        const [table, summaryTable] = await Promise.all([
           fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope, player.id),
-          wantsHealing
-            ? fetchPlayerFightTablesForAnalysis(token, analysis.report_code, "Healing", bossFightsForGear, player.id)
-            : Promise.resolve(new Map()),
-          fetchPlayerFightTablesForAnalysis(token, analysis.report_code, "DamageDone", bossFightsForGear, player.id),
           fetchReportTableForAnalysis(token, analysis.report_code, "Summary", gearScope, player.id)
         ]);
+        const healingFightTables = new Map();
+        const damageFightTables = new Map();
         const entries = Array.isArray(table.entries) ? table.entries : [];
         entries.forEach(entry => {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
@@ -13176,8 +13184,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         const fightId = Number(fight.id || 0);
         if (!fightId) continue;
         const [damageTable, healingTable] = await Promise.all([
-          fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", [fightId]),
-          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", [fightId])
+          fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", [fightId], { strict: true }),
+          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", [fightId], { strict: true })
         ]);
         if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
         const durationMs = Math.max(1, Number(damageTable.totalTime || healingTable.totalTime || 0) || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
@@ -13250,7 +13258,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     }
   });
 
+  await loadFightPerformanceTables();
+  const completeBossDurationMs = bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0);
+  if (completeBossDurationMs > 0) performanceDurationMs = completeBossDurationMs;
   players.forEach(player => {
+    const bossMetrics = bossFightsForGear.map(fight => fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {});
+    const bossDamage = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.damageDone || 0), 0);
+    const bossHealing = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.healingDone || 0), 0);
+    if (bossDamage > 0) {
+      damageTotals[player.name] = bossDamage;
+      damageTotalSource[player.name] = "boss-tables";
+    }
+    if (bossHealing > 0) {
+      healingTotals[player.name] = bossHealing;
+      healingTotalSource[player.name] = "boss-tables";
+    }
+    const weightedActivity = bossFightsForGear.reduce((sum, fight) => {
+      const metrics = fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {};
+      const duration = Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
+      return sum + Number(metrics.activityPercentOverride || 0) * duration;
+    }, 0);
+    if (weightedActivity > 0 && completeBossDurationMs > 0) {
+      wclActivePercent[player.name] = `${Math.min(100, Math.round(weightedActivity / completeBossDurationMs * 100) / 100)}%`;
+    }
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
     if (!player.className) player.className = "Unknown";
     player.raidRole = normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()) || player.raidRole);
