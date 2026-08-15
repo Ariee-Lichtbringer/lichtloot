@@ -179,6 +179,16 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
   color:var(--gold);
 }
 
+.side-link.feature-disabled,
+.side-link.feature-disabled:hover{
+  opacity:.42;
+  filter:grayscale(1);
+  cursor:not-allowed;
+  border-color:transparent;
+  background:rgba(15,23,42,.32);
+  color:#94a3b8;
+}
+
 .side-icon{
   width:22px;
   text-align:center;
@@ -5040,8 +5050,8 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="side-group-items">
           <button class="side-link" type="button" onclick="openRaidPanel()" aria-label="Raids" title="Raids"><span class="side-icon">⚔</span><span class="side-label">Raids</span></button>
           <button class="side-link" type="button" onclick="openRaidHelperPanel('currentEvents')" aria-label="Raidanmelder" title="Raidanmelder"><img class="side-icon-img" src="images/dashboard-icons/raidanmelder.jpg" alt=""><span class="side-label">Raidanmelder</span></button>
-          <button class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
-          <button class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
+          <button id="raidSetupSideButton" class="side-link" type="button" onclick="openRaidSetupPage()" aria-label="Raidaufstellung" title="Raidaufstellung"><span class="side-icon">⚔</span><span class="side-label">Raidaufstellung</span></button>
+          <button id="bwlTestSetupSideButton" class="side-link" type="button" onclick="openBwlRaidSetupTest()" aria-label="BWL-Testaufstellung" title="BWL-Testaufstellung"><span class="side-icon">🧪</span><span class="side-label">BWL-Testaufstellung</span></button>
           <button class="side-link" type="button" onclick="openP0PlusPanel()" aria-label="PO+ Liste" title="PO+ Liste"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">PO+ Liste</span></button>
           <button class="side-link" type="button" onclick="openP0ReleasePanel()" aria-label="P0+ Freigabe" title="P0+ Freigabe"><img class="side-icon-img" src="images/dashboard-icons/po-plus-liste.jpg" alt=""><span class="side-label">P0+ Freigabe</span></button>
           <button class="side-link" type="button" onclick="openPoItemSettingsPanel()" aria-label="P0-Items festlegen" title="P0-Items festlegen"><img class="side-icon-img" src="images/dashboard-icons/po-items.jpg" alt=""><span class="side-label">P0-Items festlegen</span></button>
@@ -5520,10 +5530,11 @@ body.worldbuff-only .master-only{display:none!important}
       <div id="raidHelperTab-calendar" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
           <div><h3 id="raidHelperCalendarTitle">Kalender</h3><span>Raidtermine aus LichtLoot</span></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn good" type="button" onclick="publishRaidHelperDiscordCalendar()">📅 In Discord veröffentlichen</button><button class="small-btn ghost" type="button" onclick="renderRaidHelperCalendar()">Aktualisieren</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="small-btn good" type="button" onclick="publishRaidHelperDiscordCalendar()">💾 Kalendereinstellung speichern</button><button class="small-btn ghost" type="button" onclick="renderRaidHelperCalendar()">Aktualisieren</button></div>
         </div>
-        <div class="p0-toolbar" style="margin-bottom:12px"><label style="display:grid;gap:6px;min-width:min(520px,100%)"><strong>Discord-Channel für den Terminkalender</strong><select id="raidHelperCalendarChannel"></select><small>Nach der ersten Veröffentlichung aktualisiert der P0-Bot diesen Kalender automatisch alle 5 Minuten. Es wird immer derselbe Discord-Post bearbeitet.</small></label></div>
-        <div id="raidHelperCalendarDiscordStatus" class="status">Der PO-Bot aktualisiert einen bereits vorhandenen Kalenderpost im ausgewählten Discord-Channel.</div>
+        <label class="layout-loot-toggle" style="margin-bottom:12px"><input id="raidHelperCalendarEnabled" type="checkbox" checked onchange="updateRaidHelperCalendarToggleUi()"><span><strong>Raidkalender automatisch in Discord posten</strong><small>Wenn der Haken entfernt wird, erstellt und aktualisiert der P0-Bot keinen Raidkalender.</small></span></label>
+        <div id="raidHelperCalendarChannelWrap" class="p0-toolbar" style="margin-bottom:12px"><label style="display:grid;gap:6px;min-width:min(520px,100%)"><strong>Discord-Channel für den Terminkalender</strong><select id="raidHelperCalendarChannel"></select><small>Bei aktivierter Veröffentlichung aktualisiert der P0-Bot immer denselben Kalenderpost alle 5 Minuten.</small></label></div>
+        <div id="raidHelperCalendarDiscordStatus" class="status">Kalendereinstellung wird geladen …</div>
         <div id="raidHelperCalendarGrid" class="raid-helper-calendar"></div>
       </div>
       <div id="raidHelperTab-currentEvents" class="raid-helper-tab-panel raid-helper-view hidden">
@@ -6559,6 +6570,16 @@ function applyGuildBrand(){
   document.querySelectorAll("[data-guild-onclick]").forEach(el => {
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
+  const raidSetupButton=document.getElementById("raidSetupSideButton");
+  if(raidSetupButton){
+    const disabled=CURRENT_GUILD_SLUG === "lichtloot";
+    raidSetupButton.classList.toggle("feature-disabled",disabled);
+    raidSetupButton.disabled=disabled;
+    raidSetupButton.setAttribute("aria-disabled",disabled ? "true" : "false");
+    raidSetupButton.title=disabled ? "Raidaufstellung ist für Lichtbringer derzeit deaktiviert" : "Raidaufstellung";
+  }
+  const bwlTestButton=document.getElementById("bwlTestSetupSideButton");
+  if(bwlTestButton)bwlTestButton.style.display=CURRENT_GUILD_SLUG === "lichtloot" ? "none" : "";
 }
 
 function applyGuildManagementLayout(){
@@ -9772,7 +9793,10 @@ function setRaidHelperTab(tabName){
     updateFreeEmbedBuilder();
     if(!raidHelperDiscordChannels.length) loadRaidHelperDiscordChannels();
   }
-  if(target === "calendar") renderRaidHelperCalendar();
+  if(target === "calendar"){
+    renderRaidHelperCalendar();
+    loadRaidHelperCalendarConfig();
+  }
   if(target === "currentEvents") renderRaidHelperCurrentEvents();
   if(target === "pastEvents") renderRaidHelperPastEvents();
   if(target === "poSignup") refreshRaidHelperPoSignupTab();
@@ -9874,18 +9898,49 @@ function renderRaidHelperCalendar(){
   grid.innerHTML = heads + days.join("");
 }
 
+function updateRaidHelperCalendarToggleUi(){
+  const enabled=Boolean(document.getElementById("raidHelperCalendarEnabled")?.checked);
+  document.getElementById("raidHelperCalendarChannelWrap")?.classList.toggle("hidden",!enabled);
+}
+
+async function loadRaidHelperCalendarConfig(){
+  const masterCode=document.getElementById("masterCode")?.value.trim();
+  const status=document.getElementById("raidHelperCalendarDiscordStatus");
+  if(!masterCode)return;
+  try{
+    const result=await railwayWrite({action:"guildGetRaidCalendarConfig",masterCode});
+    if(!result.success)throw new Error(result.error||"Kalendereinstellung konnte nicht geladen werden.");
+    const enabled=document.getElementById("raidHelperCalendarEnabled");
+    const channel=document.getElementById("raidHelperCalendarChannel");
+    if(enabled)enabled.checked=Boolean(result.enabled);
+    if(channel&&result.channelId&&[...channel.options].some(option=>option.value===String(result.channelId)))channel.value=String(result.channelId);
+    updateRaidHelperCalendarToggleUi();
+    if(status){
+      status.className="status "+(result.enabled?"good":"");
+      status.textContent=result.enabled
+        ? "Der Raidkalender wird automatisch in Discord aktualisiert."
+        : "Die automatische Veröffentlichung des Raidkalenders ist ausgeschaltet.";
+    }
+  }catch(error){
+    if(status){status.className="status bad";status.textContent=error.message||"Kalendereinstellung konnte nicht geladen werden.";}
+  }
+}
+
 async function publishRaidHelperDiscordCalendar(){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   const status=document.getElementById("raidHelperCalendarDiscordStatus");
+  const enabled=Boolean(document.getElementById("raidHelperCalendarEnabled")?.checked);
   const channelId=raidHelperValue("raidHelperCalendarChannel")||raidHelperValue("raidHelperChannel")||RAID_HELPER_CHANNEL_ID;
   if(!masterCode){if(status){status.className="status bad";status.textContent="Bitte zuerst den Master-Code eingeben.";}return;}
   const events=raidHelperUpcomingRaids().slice(0,50).map(raid=>{const key=getRaidKey(raid),lootKey=key.startsWith("zg")?"zg":key,pin=raid.playerPin||raid.prioPin||raid.raidPin||"";return {raidId:raid.raidId||raid.id||"",raid:key,name:raid.raidName||RAID_OPTIONS[key]?.name||raid.raid||"Raid",date:raid.raidDate||"",time:raid.raidTime||"",lead:getRaidCreatorName(raid),signups:Number(raid.signupCount||raid.registrationCount||(Array.isArray(raid.signups)?raid.signups.length:0))||0,maxPlayers:Number(raid.maxPlayers||0)||0,discordChannelId:raid.discordChannelId||channelId,prioUrl:`${location.origin}/loot/${lootKey}-loot.html?guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}&pin=${encodeURIComponent(pin)}`};});
-  if(!events.length){if(status){status.className="status bad";status.textContent="Keine kommenden Raidtermine gefunden.";}return;}
+  if(enabled&&!events.length){if(status){status.className="status bad";status.textContent="Keine kommenden Raidtermine gefunden.";}return;}
   try{
-    if(status){status.className="status";status.textContent="Discord-Terminkalender wird aktualisiert …";}
-    const result=await railwayWrite({action:"guildQueueRaidCalendar",masterCode,channelId,events:JSON.stringify(events)});
+    if(status){status.className="status";status.textContent="Kalendereinstellung wird gespeichert …";}
+    const result=await railwayWrite({action:"guildQueueRaidCalendar",masterCode,channelId,enabled:enabled?"true":"false",events:JSON.stringify(events)});
     if(!result.success)throw new Error(result.error||"Terminkalender konnte nicht vorgemerkt werden.");
-    if(status){status.className="status good";status.textContent="Terminkalender wurde gespeichert. Der P0-Bot aktualisiert denselben Kalenderpost ab jetzt automatisch alle 5 Minuten.";}
+    if(status){status.className="status good";status.textContent=enabled
+      ? "Raidkalender aktiviert. Der P0-Bot aktualisiert denselben Kalenderpost automatisch alle 5 Minuten."
+      : "Automatische Veröffentlichung des Raidkalenders deaktiviert. Der vorhandene Discord-Post wird nicht mehr aktualisiert.";}
   }catch(error){if(status){status.className="status bad";status.textContent=error.message||"Terminkalender konnte nicht vorgemerkt werden.";}}
 }
 
