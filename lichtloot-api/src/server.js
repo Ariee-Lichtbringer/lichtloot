@@ -11902,8 +11902,10 @@ function bossFightsForAnalysis(fights, raidName) {
   const raid = normalizeRaidType(raidName || "").toUpperCase();
   const names = analysisBossNamesByRaid[raid] || [];
   return (Array.isArray(fights) ? fights : []).filter(fight => {
+    const encounterId = Number(fight?.encounterID || fight?.encounterId || 0);
+    if (encounterId <= 0) return false;
     const name = normalizeAnalysisFightName(fight?.name);
-    return names.length ? names.some(boss => name.includes(normalizeAnalysisFightName(boss))) : Number(fight?.encounterID || 0) > 0;
+    return names.length ? names.some(boss => name.includes(normalizeAnalysisFightName(boss))) : true;
   });
 }
 
@@ -12035,6 +12037,30 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
     if (options.strict) throw error;
     return {};
   }
+}
+
+async function fetchPlayerFightTablesForAnalysis(token, reportCode, dataType, fights, sourceId) {
+  const validFights = (Array.isArray(fights) ? fights : [])
+    .map(fight => ({ ...fight, id: Number(fight?.id || 0) }))
+    .filter(fight => fight.id > 0);
+  if (!validFights.length || Number(sourceId) <= 0) return new Map();
+  const result = new Map();
+  const chunkSize = 5;
+  for (let offset = 0; offset < validFights.length; offset += chunkSize) {
+    const chunk = validFights.slice(offset, offset + chunkSize);
+    const fields = chunk.map((fight, index) =>
+      `fight_${index}:table(dataType:${dataType},fightIDs:[${fight.id}],sourceID:$sourceID)`
+    ).join(" ");
+    const gqlQuery = `query($code:String!,$sourceID:Int!){reportData{report(code:$code){${fields}}}}`;
+    try {
+      const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, sourceID: Number(sourceId) });
+      const report = data.reportData?.report || {};
+      chunk.forEach((fight, index) => result.set(fight.id, parseWarcraftLogsTableData(report[`fight_${index}`])));
+    } catch (error) {
+      console.warn(`Warcraft-Logs-${dataType}-Charakterdaten konnten für Bossgruppe ${Math.floor(offset / chunkSize) + 1} nicht geladen werden:`, error.message || error);
+    }
+  }
+  return result;
 }
 
 async function getRaidAnalysisItemMetadataByIds(itemIds) {
@@ -12793,6 +12819,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const healingTotalSource = {};
   const damageTotals = {};
   const damageTotalSource = {};
+  let characterPerformanceDurationMs = 0;
   const deathTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
@@ -13007,10 +13034,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     async function worker() {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
-        const [table, healingTable, damageTable, summaryTable] = await Promise.all([
+        const wantsHealing = healerClasses.has(player.className);
+        const [table, healingFightTables, damageFightTables, summaryTable] = await Promise.all([
           fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope, player.id),
-          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", activityScope, player.id),
-          fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", activityScope, player.id),
+          wantsHealing
+            ? fetchPlayerFightTablesForAnalysis(token, analysis.report_code, "Healing", bossFightsForGear, player.id)
+            : Promise.resolve(new Map()),
+          fetchPlayerFightTablesForAnalysis(token, analysis.report_code, "DamageDone", bossFightsForGear, player.id),
           fetchReportTableForAnalysis(token, analysis.report_code, "Summary", gearScope, player.id)
         ]);
         const entries = Array.isArray(table.entries) ? table.entries : [];
@@ -13026,37 +13056,51 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           if (!configuredCast) return;
           addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", count, "table");
         });
-        const healingEntries = Array.isArray(healingTable.entries) ? healingTable.entries : [];
-        healingEntries.forEach(entry => {
-          addHealingTableEntry(player.name, entry);
+        let playerHealing = 0;
+        let playerDamage = 0;
+        let playerActiveMs = 0;
+        let playerDurationMs = 0;
+        const tableAmount = result => {
+          const resultEntries = Array.isArray(result?.entries) ? result.entries : [];
+          return Number(result?.total || result?.totalHealing || result?.totalDamage || result?.totalAmount || result?.amount || 0)
+            || resultEntries.reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
+        };
+        bossFightsForGear.forEach(fight => {
+          const fightId = Number(fight.id || 0);
+          const healingTable = healingFightTables.get(fightId) || {};
+          const damageTable = damageFightTables.get(fightId) || {};
+          const healing = tableAmount(healingTable);
+          const damage = tableAmount(damageTable);
+          playerHealing += healing;
+          playerDamage += damage;
+          (Array.isArray(healingTable.entries) ? healingTable.entries : []).forEach(entry => addHealingTableEntry(player.name, entry));
+          if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+          if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, deaths: 0, activeSeconds: new Set() };
+          fightPlayerMetrics[fightId][player.name].damageDone = Math.round(damage);
+          fightPlayerMetrics[fightId][player.name].healingDone = Math.round(healing);
+          const relevantTable = wantsHealing && healing > 0 ? healingTable : damageTable;
+          const fightDurationMs = Math.max(1, Number(relevantTable.totalTime || damageTable.totalTime || healingTable.totalTime || 0)
+            || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
+          const activeMs = Math.max(0, ...(Array.isArray(relevantTable.entries) ? relevantTable.entries : [])
+            .map(entry => Number(entry.activeTime || entry.activeTimeReduced || 0)));
+          if (activeMs > 0) {
+            fightPlayerMetrics[fightId][player.name].activityPercentOverride = Math.min(100, Math.round(activeMs * 10000 / fightDurationMs) / 100);
+            playerActiveMs += activeMs;
+          }
+          playerDurationMs += fightDurationMs;
         });
-        const healingFromEntries = healingEntries
-          .reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
-        const healingFromTable = Number(
-          healingTable.total || healingTable.totalHealing || healingTable.totalAmount || healingTable.amount || 0
-        ) || healingFromEntries;
-        if (healingFromTable > 0) {
-          healingTotals[player.name] = healingFromTable;
-          healingTotalSource[player.name] = "table";
+        if (playerHealing > 0) {
+          healingTotals[player.name] = playerHealing;
+          healingTotalSource[player.name] = "character-fights";
         }
-        const damageFromEntries = (Array.isArray(damageTable.entries) ? damageTable.entries : [])
-          .reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
-        const damageFromTable = Number(
-          damageTable.total || damageTable.totalDamage || damageTable.totalAmount || damageTable.amount || 0
-        ) || damageFromEntries;
-        if (damageFromTable > 0) {
-          damageTotals[player.name] = damageFromTable;
-          damageTotalSource[player.name] = "table";
+        if (playerDamage > 0) {
+          damageTotals[player.name] = playerDamage;
+          damageTotalSource[player.name] = "character-fights";
         }
-        const activeMsCandidates = [table, healingTable, damageTable]
-          .flatMap(result => Array.isArray(result?.entries) ? result.entries : [])
-          .map(entry => Number(entry.activeTime || 0))
-          .filter(value => value > 0);
-        if (!wclActivePercent[player.name] && activeMsCandidates.length) {
-          const activeMs = Math.max(...activeMsCandidates);
-          const tableDuration = Number(table.totalTime || healingTable.totalTime || damageTable.totalTime || performanceDurationMs);
-          wclActivePercent[player.name] = `${Math.min(100, Math.round(activeMs * 100 / Math.max(1, tableDuration)))}%`;
+        if (playerActiveMs > 0 && playerDurationMs > 0) {
+          wclActivePercent[player.name] = `${Math.min(100, Math.round(playerActiveMs * 10000 / playerDurationMs) / 100)}%`;
         }
+        characterPerformanceDurationMs = Math.max(characterPerformanceDurationMs, playerDurationMs);
         if (!gearByPlayer.has(player.name)) {
           const summaryGear = normalizeWarcraftLogsGear(summaryTable?.combatantInfo?.gear || summaryTable?.gear || []);
           if (summaryGear.length) gearByPlayer.set(player.name, summaryGear);
@@ -13071,6 +13115,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
       const name = clean(entry?.name);
       if (!name || !players.some(player => player.name === name)) return;
+      if (totals === healingTotals && healingTotalSource[name] === "character-fights") return;
+      if (totals === damageTotals && damageTotalSource[name] === "character-fights") return;
       const total = Number(entry.total || entry.amount || 0);
       if (total > 0) {
         totals[name] = total;
@@ -13130,10 +13176,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   }
 
   await loadPlayerCastTables();
+  if (characterPerformanceDurationMs > 0) performanceDurationMs = characterPerformanceDurationMs;
   applyOverviewPerformanceTable(damageOverviewTable, damageTotals, "overview-table");
   applyOverviewPerformanceTable(healingOverviewTable, healingTotals, "overview-table");
   const overviewDurationMs = Number(damageOverviewTable.totalTime || healingOverviewTable.totalTime || 0);
-  if (overviewDurationMs > 0) performanceDurationMs = overviewDurationMs;
+  if (overviewDurationMs > 0 && characterPerformanceDurationMs <= 0) performanceDurationMs = overviewDurationMs;
 
   castEvents.forEach(event => {
     markActive(event);
@@ -13145,7 +13192,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     addDamageHit(event);
     const player = playerNameFromEvent(event, true);
     if (player) {
-      if (damageTotalSource[player] !== "table") damageTotals[player] = (damageTotals[player] || 0) + Number(event.amount || 0);
+      if (!damageTotalSource[player]) damageTotals[player] = (damageTotals[player] || 0) + Number(event.amount || 0);
       addFightPlayerMetric(event, player, "damageDone", Number(event.amount || 0));
     }
   });
@@ -13154,7 +13201,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playerNameFromEvent(event, true);
     if (player) {
       const amount = Number(event.amount || 0);
-      if (healingTotalSource[player] !== "table") {
+      if (!healingTotalSource[player]) {
         healingTotals[player] = (healingTotals[player] || 0) + amount;
         healingTotalSource[player] = "events";
       }
@@ -13168,8 +13215,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       addFightPlayerMetric(event, player, "deaths", 1);
     }
   });
-
-  await loadFightPerformanceTables();
 
   players.forEach(player => {
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
@@ -13663,10 +13708,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const normalizedBossName = value => clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
   const knownBossNames = bossNamesByRaid[normalizedRaid] || [];
   const isKnownBossFight = fight => {
+    if (Number(fight?.encounterID || fight?.encounterId || 0) <= 0) return false;
     const name = normalizedBossName(fight?.name);
     return knownBossNames.length
       ? knownBossNames.some(boss => name.includes(normalizedBossName(boss)))
-      : Number(fight?.encounterID || 0) > 0;
+      : true;
   };
   const bossEncountersById = new Map();
   rpbFights.filter(isKnownBossFight).forEach(fight => {
