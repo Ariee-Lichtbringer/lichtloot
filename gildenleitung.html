@@ -138,6 +138,25 @@ button,input,select{font:inherit}
   display:none;
 }
 
+.side-section-label{
+  margin:8px 8px 2px;
+  color:#64748b;
+  font-size:10px;
+  font-weight:950;
+  letter-spacing:.12em;
+  line-height:1;
+  text-transform:uppercase;
+}
+
+.side-section-label:first-child{
+  margin-top:3px;
+}
+
+.side-section-label:not(:first-child){
+  padding-top:10px;
+  border-top:1px solid rgba(148,163,184,.12);
+}
+
 .side-select{
   width:100%;
   min-height:38px;
@@ -5103,13 +5122,16 @@ body.worldbuff-only .master-only{display:none!important}
       <div class="side-group collapsed" id="sideGroupAdmin">
         <button class="side-group-toggle" type="button" onclick="toggleSideGroup('sideGroupAdmin')"><span>Admin</span></button>
         <div class="side-group-items">
+          <div class="side-section-label">Zugänge</div>
           <button class="side-link master-only" type="button" onclick="openWorldbuffPasswordDialog()" aria-label="Worldbuff-Passwort" title="Worldbuff-Passwort"><span class="side-icon">🔑</span><span class="side-label">Worldbuff-Passwort</span></button>
           <button class="side-link master-only" type="button" onclick="openLootMasterPasswordDialog()" aria-label="Plündermeister-Passwort" title="Plündermeister-Passwort"><span class="side-icon">🔑</span><span class="side-label">PM-Passwort</span></button>
+          <div class="side-section-label">Kommunikation</div>
           <button class="side-link master-only" type="button" onclick="openDiscordNotificationSettings()" aria-label="Discord-Benachrichtigungen" title="Discord-Benachrichtigungen"><img class="side-icon-img" src="images/discord.svg" alt=""><span class="side-label">DC-Benachrichtigungen</span></button>
-          <button class="side-link master-only" type="button" onclick="openP0PlusPointsUpdate()" aria-label="PO+ Punkte Update" title="PO+ Punkte Update"><span class="side-icon">⭐</span><span class="side-label">PO+ Punkte Update</span></button>
-          <button class="side-link master-only" type="button" onclick="openRaidSignupSettingsDialog()" aria-label="Raidanmelder-Einstellungen" title="Raidanmelder-Einstellungen"><img class="side-icon-img" src="images/dashboard-icons/raidlead.jpg" alt=""><span class="side-label">Anmelder-Einstellungen</span></button>
+          <div class="side-section-label">Loot &amp; Darstellung</div>
+          <button class="side-link master-only" type="button" onclick="openP0PlusPointsUpdate()" aria-label="P0+ Punkte aktualisieren" title="P0+ Punkte aktualisieren"><span class="side-icon">⭐</span><span class="side-label">P0+ Punkte aktualisieren</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
-          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogin" title="Spielerlogin"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogin</span></button>
+          <div class="side-section-label">Verwaltung</div>
+          <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
           <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
         </div>
