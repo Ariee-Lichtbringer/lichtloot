@@ -12769,10 +12769,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
   if (Number(castsTable.totalTime || 0) > 0) performanceDurationMs = Number(castsTable.totalTime);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
+  const damageOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
   const deathEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Deaths", activityScope);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", activityScope);
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", activityScope);
+  const healingOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Healing", activityScope);
   const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", activityScope);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", gearScope);
   const bossCombatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", bossFightsForGear.map(fight => Number(fight.id)));
@@ -13064,6 +13066,56 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     await Promise.all(Array.from({ length: Math.min(concurrency, limitedPlayers.length) }, () => worker()));
   }
 
+  function applyOverviewPerformanceTable(table, totals, sourceName) {
+    const totalTime = Number(table?.totalTime || 0);
+    (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
+      const name = clean(entry?.name);
+      if (!name || !players.some(player => player.name === name)) return;
+      const total = Number(entry.total || entry.amount || 0);
+      if (total > 0) {
+        totals[name] = total;
+        if (totals === healingTotals) healingTotalSource[name] = sourceName;
+        if (totals === damageTotals) damageTotalSource[name] = sourceName;
+      }
+      const activeMs = Number(entry.activeTime || entry.activeTimeReduced || 0);
+      if (activeMs > 0 && totalTime > 0) {
+        const percent = Math.min(100, Math.round(activeMs * 10000 / totalTime) / 100);
+        const current = Number.parseFloat(String(wclActivePercent[name] || "0").replace("%", "")) || 0;
+        if (percent > current) wclActivePercent[name] = `${percent}%`;
+      }
+    });
+  }
+
+  async function loadFightPerformanceTables() {
+    const bossFights = bossFightsForGear;
+    let index = 0;
+    const concurrency = Math.min(2, bossFights.length);
+    async function worker() {
+      while (index < bossFights.length) {
+        const fight = bossFights[index++];
+        const fightId = Number(fight.id || 0);
+        if (!fightId) continue;
+        const [damageTable, healingTable] = await Promise.all([
+          fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", [fightId]),
+          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", [fightId])
+        ]);
+        if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+        const durationMs = Math.max(1, Number(damageTable.totalTime || healingTable.totalTime || 0) || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
+        const apply = (table, field) => (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
+          const name = clean(entry?.name);
+          if (!name || !players.some(player => player.name === name)) return;
+          if (!fightPlayerMetrics[fightId][name]) fightPlayerMetrics[fightId][name] = { damageDone: 0, healingDone: 0, deaths: 0, activeSeconds: new Set() };
+          fightPlayerMetrics[fightId][name][field] = Math.round(Number(entry.total || entry.amount || 0));
+          const activeMs = Number(entry.activeTime || entry.activeTimeReduced || 0);
+          if (activeMs > 0) fightPlayerMetrics[fightId][name].activityPercentOverride = Math.min(100, Math.round(activeMs * 10000 / durationMs) / 100);
+        });
+        apply(damageTable, "damageDone");
+        apply(healingTable, "healingDone");
+      }
+    }
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  }
+
   if (castsTable && Array.isArray(castsTable.entries)) {
     const tableTotalTime = Number(castsTable.totalTime || 0);
     castsTable.entries.forEach(entry => {
@@ -13078,6 +13130,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   }
 
   await loadPlayerCastTables();
+  applyOverviewPerformanceTable(damageOverviewTable, damageTotals, "overview-table");
+  applyOverviewPerformanceTable(healingOverviewTable, healingTotals, "overview-table");
+  const overviewDurationMs = Number(damageOverviewTable.totalTime || healingOverviewTable.totalTime || 0);
+  if (overviewDurationMs > 0) performanceDurationMs = overviewDurationMs;
 
   castEvents.forEach(event => {
     markActive(event);
@@ -13112,6 +13168,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       addFightPlayerMetric(event, player, "deaths", 1);
     }
   });
+
+  await loadFightPerformanceTables();
 
   players.forEach(player => {
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
@@ -13790,7 +13848,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
         deaths: Number(metrics.deaths || 0),
-        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000))),
+        activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
@@ -13805,7 +13863,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
         deaths: Number(metrics.deaths || 0),
-        activityPercent: Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000))),
+        activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
       }]))
     })),
