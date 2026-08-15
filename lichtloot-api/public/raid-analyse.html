@@ -261,8 +261,44 @@
       return fights;
     }
     function allPlayers(){
-      const players=rawAllPlayers();if(state.fightScope==="all"&&!state.selectedFightIds.length)return players;
-      const fights=selectedFights();const duration=fights.reduce((sum,fight)=>sum+Number(fight.durationMs||0),0);return players.map(player=>{let metrics=fights.reduce((result,fight)=>{const value=fight.players?.[player.name]||{};result.damageDone+=Number(value.damageDone||0);result.healingDone+=Number(value.healingDone||0);result.damageTaken+=Number(value.damageTaken||0);result.threat+=Number(value.threat||0);Object.entries(value.threatAbilities||{}).forEach(([ability,amount])=>result.threatAbilities[ability]=(result.threatAbilities[ability]||0)+Number(amount||0));result.deaths+=Number(value.deaths||0);result.activityWeighted+=Number(value.activityPercent||0)*Number(fight.durationMs||0);return result;},{damageDone:0,healingDone:0,damageTaken:0,threat:0,threatAbilities:{},deaths:0,activityWeighted:0});if(state.fightScope==="trash"&&!state.selectedFightIds.length&&!Object.values(metrics).some(value=>typeof value==="number"&&value>0)){const bosses=(state.detail?.rpb?.fights||[]).filter(fight=>fight.isBoss!==false);const bossTotals=bosses.reduce((result,fight)=>{const value=fight.players?.[player.name]||{};["damageDone","healingDone","damageTaken","threat","deaths"].forEach(name=>result[name]+=Number(value[name]||0));Object.entries(value.threatAbilities||{}).forEach(([ability,amount])=>result.threatAbilities[ability]=(result.threatAbilities[ability]||0)+Number(amount||0));return result;},{damageDone:0,healingDone:0,damageTaken:0,threat:0,deaths:0,threatAbilities:{}});metrics={...metrics,damageDone:Math.max(0,Number(player.damageDone||0)-bossTotals.damageDone),healingDone:Math.max(0,Number(player.healingDone||0)-bossTotals.healingDone),damageTaken:Math.max(0,Number(player.damageTaken||0)-bossTotals.damageTaken),threat:Math.max(0,Number(player.threat||0)-bossTotals.threat),deaths:Math.max(0,Number(player.deaths||0)-bossTotals.deaths),threatAbilities:Object.fromEntries(Object.entries(player.threatAbilities||{}).map(([ability,amount])=>[ability,Math.max(0,Number(amount||0)-Number(bossTotals.threatAbilities[ability]||0))]).filter(([,amount])=>amount>0))};}return{...player,...metrics,activityPercent:duration?Math.round(metrics.activityWeighted/duration):0,selectedDurationMs:duration};});
+      const players=rawAllPlayers();
+      const fights=selectedFights();
+      const duration=fights.reduce((sum,fight)=>sum+Number(fight.durationMs||0),0);
+      return players.map(player=>{
+        let metrics=fights.reduce((result,fight)=>{
+          const value=fight.players?.[player.name]||{};
+          result.damageDone+=Number(value.damageDone||0);
+          result.healingDone+=Number(value.healingDone||0);
+          result.damageTaken+=Number(value.damageTaken||0);
+          result.threat+=Number(value.threat||0);
+          Object.entries(value.threatAbilities||{}).forEach(([ability,amount])=>result.threatAbilities[ability]=(result.threatAbilities[ability]||0)+Number(amount||0));
+          result.deaths+=Number(value.deaths||0);
+          result.activityWeighted+=Number(value.activityPercent||0)*Number(fight.durationMs||0);
+          return result;
+        },{damageDone:0,healingDone:0,damageTaken:0,threat:0,threatAbilities:{},deaths:0,activityWeighted:0});
+        const allScope=state.fightScope==="all"&&!state.selectedFightIds.length;
+        if(allScope){
+          ["damageDone","healingDone","damageTaken","threat","deaths"].forEach(name=>{
+            if(!(metrics[name]>0)&&Number(player[name]||0)>0)metrics[name]=Number(player[name]||0);
+          });
+          if(!Object.keys(metrics.threatAbilities).length)metrics.threatAbilities={...(player.threatAbilities||{})};
+        }
+        if(state.fightScope==="trash"&&!state.selectedFightIds.length){
+          const bosses=(state.detail?.rpb?.fights||[]).filter(fight=>fight.isBoss!==false);
+          const bossTotals=bosses.reduce((result,fight)=>{
+            const value=fight.players?.[player.name]||{};
+            ["damageDone","healingDone","damageTaken","threat","deaths"].forEach(name=>result[name]+=Number(value[name]||0));
+            Object.entries(value.threatAbilities||{}).forEach(([ability,amount])=>result.threatAbilities[ability]=(result.threatAbilities[ability]||0)+Number(amount||0));
+            return result;
+          },{damageDone:0,healingDone:0,damageTaken:0,threat:0,deaths:0,threatAbilities:{}});
+          ["damageDone","healingDone","damageTaken","threat","deaths"].forEach(name=>{
+            if(!(metrics[name]>0))metrics[name]=Math.max(0,Number(player[name]||0)-bossTotals[name]);
+          });
+          if(!Object.keys(metrics.threatAbilities).length)metrics.threatAbilities=Object.fromEntries(Object.entries(player.threatAbilities||{}).map(([ability,amount])=>[ability,Math.max(0,Number(amount||0)-Number(bossTotals.threatAbilities[ability]||0))]).filter(([,amount])=>amount>0));
+        }
+        const activityPercent=duration&&metrics.activityWeighted>0?Math.round(metrics.activityWeighted/duration):Number(player.activityPercent||0);
+        return{...player,...metrics,activityPercent,selectedDurationMs:duration};
+      });
     }
     function bossImage(fight){const normalized=key(fight?.name);for(const [name,path] of Object.entries(BOSS_IMAGES)){if(normalized.includes(key(name)))return path;}const raid=raidName(state.detail?.report||state.detail?.analysis||{});return RAID_IMAGES[raid]||RAID_IMAGES.Raid;}
     function visibleBossEncounters(){const source=state.detail?.rpb?.encounters||[];const raid=raidName(state.detail?.report||state.detail?.analysis||{});const names=RAID_BOSS_NAMES[raid]||[];const seen=new Set();return source.filter(fight=>{const value=key(fight.name);if(names.length&&!names.some(name=>value.includes(key(name))))return false;const marker=Number(fight.encounterId||0)||value;if(seen.has(marker))return false;seen.add(marker);return true;});}
@@ -362,13 +398,16 @@
       const players=allPlayers();
       const sections=state.sections.length;
       const source=state.detail?.rpb||state.detail?.cla||{};
-      const encounters=visibleBossEncounters();
+      const allEncounters=visibleBossEncounters();
+      const encounters=state.selectedFightIds.length
+        ? allEncounters.filter(fight=>state.selectedFightIds.includes(Number(fight.id)))
+        : (state.fightScope==="trash"?[]:allEncounters);
       const filteredDuration=selectedFights().reduce((sum,fight)=>sum+Number(fight.durationMs||0),0);const raidDuration=Number(report.durationMs||source.report?.durationMs||report.performanceDurationMs||source.report?.performanceDurationMs||0);const duration=(state.fightScope!=="all"||state.selectedFightIds.length)?filteredDuration:raidDuration;
       const deaths=players.reduce((sum,player)=>sum+Number(player.deaths||0),0);
       const worldBuffMax=Math.max(1,players.length*9);
       const worldBuffPercent=Math.round(players.reduce((sum,player)=>sum+Number(player.worldBuffCount||0),0)*100/worldBuffMax);
       document.getElementById("overviewCards").innerHTML=[
-        ["Bosse",`${encounters.filter(fight=>fight.kill!==false).length} / ${encounters.length||"–"}`],
+        ["Bosse",state.fightScope==="trash"?"0 / 0":`${encounters.filter(fight=>fight.kill!==false).length} / ${encounters.length||"–"}`],
         [state.fightScope==="all"&&!state.selectedFightIds.length?"Gesamter Raid":"Dauer der Auswahl",durationDisplay(duration)],
         ["Spieler",players.length],
         ["Tode",deaths],
