@@ -19889,8 +19889,12 @@ function renderLogAnalyses(){
     const date = entry.raidDate || summary.raidDate || "";
     const raidKey = getLogAnalysisRaidKey(entry);
     const raidImage = RAID_IMAGES[raidKey] || RAID_IMAGES.aq40;
-    const kills = Number.isFinite(Number(summary.bossKills)) ? Number(summary.bossKills) : null;
-    const bosses = Number.isFinite(Number(summary.totalBosses)) ? Number(summary.totalBosses) : null;
+    const expectedBosses = {naxx:15,mc:10,bwl:8,aq20:6,aq40:9,ony:1,zg:10}[String(raidKey || "").toLowerCase()] || null;
+    const rawKills = Number.isFinite(Number(summary.bossKills)) ? Number(summary.bossKills) : null;
+    const rawBosses = Number.isFinite(Number(summary.totalBosses)) ? Number(summary.totalBosses) : null;
+    const invalidLegacyProgress = Boolean(expectedBosses && ((rawBosses != null && rawBosses > expectedBosses) || (rawKills != null && rawKills > expectedBosses)));
+    const kills = invalidLegacyProgress ? null : rawKills;
+    const bosses = expectedBosses || rawBosses;
     const progress = bosses ? Math.max(0,Math.min(100,Math.round((kills||0)*100/bosses))) : 0;
     const players = Number(summary.playerCount || summary.players || 0) || 0;
     return `
