@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-enchants-v7";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-combatant-v8";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -10810,38 +10810,13 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
     return character;
   }
 
-  let createdPlayer = null;
-  for (let attempt = 0; attempt < 5 && !createdPlayer; attempt++) {
-    const generatedPin = normalizePin(
-      "RL" +
-      Date.now().toString(36) +
-      Math.random().toString(36).slice(2, 8)
-    );
-
-    const playerResult = await client.query(
-      `insert into players (guild_id, player_pin, security_question, security_answer)
-       values ($1, $2, $3, $4)
-       on conflict (guild_id, player_pin) do nothing
-       returning id, player_pin`,
-      [guildId, generatedPin, "Raidlead-Eintrag", "Raidlead-Eintrag"]
-    );
-    createdPlayer = playerResult.rows[0] || null;
-  }
-
-  if (!createdPlayer) {
-    const error = new Error("Interner SpielerLogin konnte nicht erzeugt werden.");
-    error.statusCode = 500;
-    throw error;
-  }
-
-  const characterResult = await client.query(
-    `insert into characters (player_id, name, server, class_name, is_main)
-     values ($1, $2, $3, $4, true)
-     returning id, name, server, class_name, created_at`,
-    [createdPlayer.id, player, server, className]
+  const error = new Error(
+    existingByUniqueName.rows.length > 1
+      ? "Der Charaktername ist mehrfach vorhanden. Bitte den richtigen Server des vorhandenen SpielerLogins angeben."
+      : "Für diesen Charakter wurde kein SpielerLogin gefunden. Der Spieler muss zuerst einen eigenen SpielerLogin anlegen und freigeben lassen."
   );
-
-  return characterResult.rows[0];
+  error.statusCode = 409;
+  throw error;
 }
 
 async function savePrioAsRaidlead({ guildId, query: params }) {
