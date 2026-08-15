@@ -103,7 +103,7 @@
       <div class="actions">
         <a id="analysisBackButton" class="btn ghost hidden" href="raid-analyse.html">← Zur Übersicht</a>
         <a class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
-        <button class="btn primary" type="button" onclick="reload()">Neu laden</button>
+        <button id="reloadButton" class="btn primary" type="button" onclick="reload()">Neu laden</button>
       </div>
     </header>
 
@@ -226,17 +226,20 @@
       document.getElementById("raidFilter").innerHTML='<option value="">Alle Raids</option>'+raids.map(r=>`<option>${html(r)}</option>`).join("");
       renderList();
     }
-    async function loadDetail(){
+    async function loadDetail(forceRefresh=false){
       const id=params.get("id")||params.get("analysisId")||"";
       if(!id){state.mode="list";return loadList();}
       document.getElementById("listView").classList.add("hidden");
       document.getElementById("detailView").classList.remove("hidden");
       const backButton=document.getElementById("analysisBackButton");
       if(backButton){backButton.classList.remove("hidden");backButton.href=`raid-analyse.html?guild=${encodeURIComponent(params.get("guild")||"lichtloot")}`;}
+      const reloadButton=document.getElementById("reloadButton");
+      if(reloadButton)reloadButton.textContent=forceRefresh?"Analyse wird aktualisiert …":"Analyse aktualisieren";
       let data;
       try{
-        data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined"});
+        data=await api({action:"getPublicLogAnalysisWeb",id,type:"combined",refresh:forceRefresh?"1":"0"});
       }catch(error){
+        if(reloadButton){reloadButton.disabled=false;reloadButton.textContent="Analyse aktualisieren";}
         state.mode="list";
         history.replaceState(null,"","raid-analyse.html");
         document.getElementById("detailView").classList.add("hidden");
@@ -250,6 +253,7 @@
       state.activeSection=state.sections[0]?.id||"";
       state.activeClass="";
       state.detailMode="overview";
+      if(reloadButton){reloadButton.disabled=false;reloadButton.textContent="Analyse aktualisieren";}
       renderDetail();
     }
     function renderList(){
@@ -257,6 +261,7 @@
       document.getElementById("detailView").classList.add("hidden");
       document.getElementById("listView").classList.remove("hidden");
       document.getElementById("analysisBackButton")?.classList.add("hidden");
+      const reloadButton=document.getElementById("reloadButton");if(reloadButton){reloadButton.disabled=false;reloadButton.textContent="Neu laden";}
       document.getElementById("pageTitle").textContent="Loganalysen";
       document.getElementById("meta").innerHTML="";
       const q=key(document.getElementById("search").value);
@@ -395,7 +400,7 @@
     function selectClass(cls){state.activeClass=cls||"";renderClassTabs();renderTable();}
     function resetFilters(){document.getElementById("search").value="";document.getElementById("raidFilter").value="";state.activeClass="";renderCurrent();}
     function renderCurrent(){state.mode==="detail"?renderDetail():renderList();}
-    function reload(){state.mode==="detail"?loadDetail().catch(showError):loadList().catch(showError);}
+    function reload(){const button=document.getElementById("reloadButton");if(button)button.disabled=true;state.mode==="detail"?loadDetail(true).catch(error=>{if(button){button.disabled=false;button.textContent="Analyse aktualisieren";}showError(error);}):loadList().then(()=>{if(button)button.disabled=false;}).catch(error=>{if(button)button.disabled=false;showError(error);});}
     function showError(error){const box=state.mode==="detail"?document.getElementById("sheetTable"):document.getElementById("listView");if(box.tagName==="TABLE")box.innerHTML=`<tbody><tr><td class="error">${html(error.message||"Fehler")}</td></tr></tbody>`;else box.innerHTML=`<div class="status error">${html(error.message||"Fehler")}</div>`;}
     (async()=>{try{state.mode==="detail"?await loadDetail():await loadList();}catch(error){showError(error);}})();
   </script>
