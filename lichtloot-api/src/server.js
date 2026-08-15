@@ -37,6 +37,10 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-auto-v1";
+const automaticLogAnalysisQueue = [];
+const automaticLogAnalysisQueueKeys = new Set();
+let automaticLogAnalysisWorkerRunning = false;
 const staticLootCache = new Map();
 const missingRaidHelperCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -15121,6 +15125,9 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     );
     directAnalysis = stored.rows[0]?.payload || null;
   }
+  if (directAnalysis && clean(directAnalysis.schemaVersion) !== LOG_ANALYSIS_WEB_SCHEMA_VERSION) {
+    directAnalysis = null;
+  }
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
     const signupRoles = await getLogAnalysisSignupRoles(guildId, analysis);
@@ -15131,6 +15138,7 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     ));
     directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName, signupRoleByName: new Map(signupRoles.signupRoles) });
     directAnalysis.source = "warcraft-logs-direct";
+    directAnalysis.schemaVersion = LOG_ANALYSIS_WEB_SCHEMA_VERSION;
     directAnalysis.signupRoleSource = "lichtloot-raid-signups";
     directAnalysis.persistedAt = new Date().toISOString();
     await query(
@@ -16301,6 +16309,106 @@ async function ensureLogAnalysesTable() {
   );
 }
 
+function automaticLogAnalysisQueueState() {
+  return {
+    running: automaticLogAnalysisWorkerRunning,
+    waiting: automaticLogAnalysisQueue.length,
+    activeOrWaiting: automaticLogAnalysisQueueKeys.size
+  };
+}
+
+function isWarcraftLogsReportUrl(value) {
+  return /(?:^|\.)warcraftlogs\.com\/reports\//i.test(clean(value).replace(/^https?:\/\//i, ""));
+}
+
+function enqueueAutomaticLogAnalysis({ guildId, analysisId, forceRefresh = true, source = "automatic" }) {
+  const normalizedGuildId = clean(guildId);
+  const normalizedAnalysisId = clean(analysisId);
+  if (!normalizedGuildId || !isUuid(normalizedAnalysisId)) {
+    return { queued: false, reason: "invalid-analysis" };
+  }
+
+  const key = `${normalizedGuildId}:${normalizedAnalysisId}`;
+  if (automaticLogAnalysisQueueKeys.has(key)) {
+    return { queued: false, reason: "already-queued", ...automaticLogAnalysisQueueState() };
+  }
+
+  automaticLogAnalysisQueueKeys.add(key);
+  automaticLogAnalysisQueue.push({
+    key,
+    guildId: normalizedGuildId,
+    analysisId: normalizedAnalysisId,
+    forceRefresh: Boolean(forceRefresh),
+    source: clean(source) || "automatic",
+    queuedAt: new Date().toISOString()
+  });
+  setImmediate(() => {
+    processAutomaticLogAnalysisQueue().catch(error => {
+      console.error("Automatische Loganalyse-Warteschlange ist fehlgeschlagen:", error.message || error);
+    });
+  });
+  return { queued: true, ...automaticLogAnalysisQueueState() };
+}
+
+async function updateAutomaticLogAnalysisState(job, status, extra = {}) {
+  const now = new Date().toISOString();
+  const state = {
+    webAnalysisStatus: status,
+    webAnalysisSource: job.source,
+    webAnalysisSchemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+    ...(status === "processing" ? { webAnalysisStartedAt: now, webAnalysisError: null } : {}),
+    ...(status === "completed" ? { webAnalysisCompletedAt: now, webAnalysisError: null } : {}),
+    ...(status === "failed" ? { webAnalysisFailedAt: now } : {}),
+    ...extra
+  };
+  await query(
+    `update log_analyses
+        set summary = coalesce(summary, '{}'::jsonb) || $3::jsonb,
+            analyzed_at = case when $4::boolean then now() else analyzed_at end,
+            updated_at = now()
+      where guild_id = $1 and id = $2`,
+    [job.guildId, job.analysisId, JSON.stringify(state), status === "completed"]
+  );
+}
+
+async function processAutomaticLogAnalysisQueue() {
+  if (automaticLogAnalysisWorkerRunning) return;
+  automaticLogAnalysisWorkerRunning = true;
+
+  try {
+    while (automaticLogAnalysisQueue.length) {
+      const job = automaticLogAnalysisQueue.shift();
+      try {
+        await updateAutomaticLogAnalysisState(job, "processing");
+        await getPublicLogAnalysisWeb({
+          guildId: job.guildId,
+          query: {
+            id: job.analysisId,
+            type: "combined",
+            refresh: job.forceRefresh ? "true" : "false"
+          }
+        });
+        await updateAutomaticLogAnalysisState(job, "completed");
+      } catch (error) {
+        const message = clean(error?.message || error || "Unbekannter Fehler").slice(0, 500);
+        console.warn(`Automatische Loganalyse ${job.analysisId} fehlgeschlagen:`, message);
+        await updateAutomaticLogAnalysisState(job, "failed", { webAnalysisError: message }).catch(() => {});
+      } finally {
+        automaticLogAnalysisQueueKeys.delete(job.key);
+      }
+    }
+  } finally {
+    automaticLogAnalysisWorkerRunning = false;
+    if (automaticLogAnalysisQueue.length) {
+      setImmediate(() => {
+        processAutomaticLogAnalysisQueue().catch(error => {
+          console.error("Automatische Loganalyse-Warteschlange ist fehlgeschlagen:", error.message || error);
+        });
+      });
+    }
+  }
+}
+
 async function getLogAnalyses({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureLogAnalysisWebCacheTable();
@@ -16311,7 +16419,8 @@ async function getLogAnalyses({ guildId, query: params }) {
             nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
             nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
             nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
-            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count
+            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
+            c.payload->>'schemaVersion' as web_schema_version
      from log_analyses la
      left join log_analysis_web_cache c on c.analysis_id = la.id
      where la.guild_id = $1
@@ -16320,10 +16429,58 @@ async function getLogAnalyses({ guildId, query: params }) {
     [guildId, limit]
   );
 
+  let newlyQueued = 0;
+  for (const row of result.rows) {
+    if (!isWarcraftLogsReportUrl(row.report_url)) continue;
+    if (clean(row.web_schema_version) === LOG_ANALYSIS_WEB_SCHEMA_VERSION) continue;
+    const queued = enqueueAutomaticLogAnalysis({
+      guildId,
+      analysisId: row.id,
+      forceRefresh: true,
+      source: "existing-reports-backfill"
+    });
+    if (queued.queued) newlyQueued += 1;
+  }
+
   return {
     success: true,
-    analyses: result.rows.map(normalizeLogAnalysis)
+    analyses: result.rows.map(normalizeLogAnalysis),
+    automaticAnalysis: {
+      schemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+      newlyQueued,
+      ...automaticLogAnalysisQueueState()
+    }
   };
+}
+
+async function enqueueAllOutdatedLogAnalyses() {
+  await ensureLogAnalysesTable();
+  await ensureLogAnalysisWebCacheTable();
+  const result = await query(
+    `select la.id, la.guild_id, la.report_url
+       from log_analyses la
+       left join log_analysis_web_cache c on c.analysis_id = la.id
+      where coalesce(c.payload->>'schemaVersion', '') <> $1
+      order by coalesce(la.raid_date, la.posted_at::date, la.created_at::date), la.created_at`,
+    [LOG_ANALYSIS_WEB_SCHEMA_VERSION]
+  );
+
+  let queued = 0;
+  let skipped = 0;
+  for (const row of result.rows) {
+    if (!isWarcraftLogsReportUrl(row.report_url)) {
+      skipped += 1;
+      continue;
+    }
+    const queueResult = enqueueAutomaticLogAnalysis({
+      guildId: row.guild_id,
+      analysisId: row.id,
+      forceRefresh: true,
+      source: "startup-existing-reports-backfill"
+    });
+    if (queueResult.queued) queued += 1;
+  }
+  return { found: result.rowCount, queued, skipped, ...automaticLogAnalysisQueueState() };
 }
 
 async function getPublicLogAnalyses({ guildId, query: params }) {
@@ -16435,9 +16592,17 @@ async function saveLogAnalysis({ guildId, query: params }) {
     ]
   );
 
+  const automaticAnalysis = enqueueAutomaticLogAnalysis({
+    guildId,
+    analysisId: result.rows[0].id,
+    forceRefresh: true,
+    source: "new-report"
+  });
+
   return {
     success: true,
-    analysis: normalizeLogAnalysis(result.rows[0])
+    analysis: normalizeLogAnalysis(result.rows[0]),
+    automaticAnalysis
   };
 }
 
@@ -25773,6 +25938,11 @@ async function runRaidHelperScheduleTick(){
 
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
+  setTimeout(() => {
+    enqueueAllOutdatedLogAnalyses()
+      .then(result => console.log(`Automatische Loganalyse: ${result.queued || 0} vorhandene Reports eingereiht; ${result.skipped || 0} Nicht-WCL-Imports übersprungen.`))
+      .catch(error => console.warn("Vorhandene Loganalysen konnten nicht automatisch eingereiht werden:", error.message || error));
+  }, 8000).unref();
   const syncNachtlootPoReleases = () => syncNachtlootPoReleasesFromSheet()
     .then(result => console.log(`NachtLoot-P0-Freigaben geprüft: ${result.releases || 0} Freigaben für ${result.matchedCharacters || 0} Charaktere; ${result.unmatchedNames?.length || 0} Namen ohne SpielerLogin`, result.unmatchedNames || []))
     .catch(error => console.warn("NachtLoot-P0-Freigaben konnten nicht aus der Wahrheitstabelle synchronisiert werden:", error.message || error));
