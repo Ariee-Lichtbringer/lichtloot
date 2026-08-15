@@ -15330,13 +15330,24 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     );
     directAnalysis = stored.rows[0]?.payload || null;
   }
-  if (directAnalysis && !isCurrentLogAnalysisPayload(directAnalysis)) {
-    // Unvollstaendige Alt-Datensaetze niemals an die Oberflaeche geben. Besonders
-    // bei neuen RPB-Bereichen wuerden sonst Spieler/Klassen sichtbar sein, waehrend
-    // die eigentlichen Kennzahlen fehlen. Der angeforderte Report wird sofort neu
-    // berechnet; weitere Alt-Datensaetze verarbeitet die Warteschlange.
-    directAnalysis = null;
-    logAnalysisWebCache.delete(cacheKey);
+  if (directAnalysis && !isCurrentLogAnalysisPayload(directAnalysis) && !forceRefresh) {
+    // Den letzten gespeicherten Stand weiterhin anzeigen, waehrend die aktuelle
+    // Schema-Version im Hintergrund erzeugt wird. So bleibt die Analyse nutzbar,
+    // selbst wenn viele Alt-Reports in der Warteschlange stehen oder Warcraft Logs
+    // voruebergehend langsam antwortet.
+    enqueueAutomaticLogAnalysis({
+      guildId,
+      analysisId: analysis.id,
+      forceRefresh: true,
+      source: "stale-web-cache-refresh",
+      priority: true
+    });
+    directAnalysis = {
+      ...directAnalysis,
+      refreshPending: true,
+      requestedSchemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+      requestedConsumableSchemaVersion: LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
+    };
   }
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
@@ -16532,7 +16543,7 @@ function isWarcraftLogsReportUrl(value) {
   return /(?:^|\.)warcraftlogs\.com\/reports\//i.test(clean(value).replace(/^https?:\/\//i, ""));
 }
 
-function enqueueAutomaticLogAnalysis({ guildId, analysisId, forceRefresh = true, source = "automatic" }) {
+function enqueueAutomaticLogAnalysis({ guildId, analysisId, forceRefresh = true, source = "automatic", priority = false }) {
   const normalizedGuildId = clean(guildId);
   const normalizedAnalysisId = clean(analysisId);
   if (!normalizedGuildId || !isUuid(normalizedAnalysisId)) {
@@ -16541,18 +16552,31 @@ function enqueueAutomaticLogAnalysis({ guildId, analysisId, forceRefresh = true,
 
   const key = `${normalizedGuildId}:${normalizedAnalysisId}`;
   if (automaticLogAnalysisQueueKeys.has(key)) {
+    if (priority) {
+      const queuedIndex = automaticLogAnalysisQueue.findIndex(job => job.key === key);
+      if (queuedIndex > 0) {
+        const [queuedJob] = automaticLogAnalysisQueue.splice(queuedIndex, 1);
+        automaticLogAnalysisQueue.unshift({
+          ...queuedJob,
+          forceRefresh: Boolean(forceRefresh) || queuedJob.forceRefresh,
+          source: clean(source) || queuedJob.source
+        });
+      }
+    }
     return { queued: false, reason: "already-queued", ...automaticLogAnalysisQueueState() };
   }
 
   automaticLogAnalysisQueueKeys.add(key);
-  automaticLogAnalysisQueue.push({
+  const queuedJob = {
     key,
     guildId: normalizedGuildId,
     analysisId: normalizedAnalysisId,
     forceRefresh: Boolean(forceRefresh),
     source: clean(source) || "automatic",
     queuedAt: new Date().toISOString()
-  });
+  };
+  if (priority) automaticLogAnalysisQueue.unshift(queuedJob);
+  else automaticLogAnalysisQueue.push(queuedJob);
   setImmediate(() => {
     processAutomaticLogAnalysisQueue().catch(error => {
       console.error("Automatische Loganalyse-Warteschlange ist fehlgeschlagen:", error.message || error);
@@ -16641,63 +16665,17 @@ async function getLogAnalyses({ guildId, query: params }) {
     [guildId, limit]
   );
 
-  let newlyQueued = 0;
-  for (const row of result.rows) {
-    if (!isWarcraftLogsReportUrl(row.report_url)) continue;
-    if (
-      clean(row.web_schema_version) === LOG_ANALYSIS_WEB_SCHEMA_VERSION
-      && clean(row.web_consumable_schema_version) === LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
-    ) continue;
-    const queued = enqueueAutomaticLogAnalysis({
-      guildId,
-      analysisId: row.id,
-      forceRefresh: true,
-      source: "existing-reports-backfill"
-    });
-    if (queued.queued) newlyQueued += 1;
-  }
-
   return {
     success: true,
     analyses: result.rows.map(normalizeLogAnalysis),
     automaticAnalysis: {
       schemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
       consumableSchemaVersion: LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION,
-      newlyQueued,
+      newlyQueued: 0,
+      backfillMode: "on-demand",
       ...automaticLogAnalysisQueueState()
     }
   };
-}
-
-async function enqueueAllOutdatedLogAnalyses() {
-  await ensureLogAnalysesTable();
-  await ensureLogAnalysisWebCacheTable();
-  const result = await query(
-    `select la.id, la.guild_id, la.report_url
-       from log_analyses la
-       left join log_analysis_web_cache c on c.analysis_id = la.id
-      where coalesce(c.payload->>'schemaVersion', '') <> $1
-         or coalesce(c.payload->>'consumableSchemaVersion', '') <> $2
-      order by coalesce(la.raid_date, la.posted_at::date, la.created_at::date), la.created_at`,
-    [LOG_ANALYSIS_WEB_SCHEMA_VERSION, LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION]
-  );
-
-  let queued = 0;
-  let skipped = 0;
-  for (const row of result.rows) {
-    if (!isWarcraftLogsReportUrl(row.report_url)) {
-      skipped += 1;
-      continue;
-    }
-    const queueResult = enqueueAutomaticLogAnalysis({
-      guildId: row.guild_id,
-      analysisId: row.id,
-      forceRefresh: true,
-      source: "startup-existing-reports-backfill"
-    });
-    if (queueResult.queued) queued += 1;
-  }
-  return { found: result.rowCount, queued, skipped, ...automaticLogAnalysisQueueState() };
 }
 
 async function getPublicLogAnalyses({ guildId, query: params }) {
@@ -26155,11 +26133,6 @@ async function runRaidHelperScheduleTick(){
 
 app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
-  setTimeout(() => {
-    enqueueAllOutdatedLogAnalyses()
-      .then(result => console.log(`Automatische Loganalyse: ${result.queued || 0} vorhandene Reports eingereiht; ${result.skipped || 0} Nicht-WCL-Imports übersprungen.`))
-      .catch(error => console.warn("Vorhandene Loganalysen konnten nicht automatisch eingereiht werden:", error.message || error));
-  }, 8000).unref();
   const syncNachtlootPoReleases = () => syncNachtlootPoReleasesFromSheet()
     .then(result => console.log(`NachtLoot-P0-Freigaben geprüft: ${result.releases || 0} Freigaben für ${result.matchedCharacters || 0} Charaktere; ${result.unmatchedNames?.length || 0} Namen ohne SpielerLogin`, result.unmatchedNames || []))
     .catch(error => console.warn("NachtLoot-P0-Freigaben konnten nicht aus der Wahrheitstabelle synchronisiert werden:", error.message || error));
