@@ -45,6 +45,7 @@ let p0ReleaseCache = null;
 let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
 const rpbSpellMetadataCache = new Map();
+let rpbSpellMetadataSchemaReady = false;
 let warcraftLogsNextRequestAt = 0;
 const externalRendSyncCache = new Map();
 const EXTERNAL_REND_SYNC_TTL_MS = 5 * 60 * 1000;
@@ -12612,8 +12613,42 @@ function translateRpbLabelToGerman(value) {
     .replace(/rank/gi, "Rang");
 }
 
+async function ensureRpbSpellMetadataSchema() {
+  if (rpbSpellMetadataSchemaReady) return;
+  await query(
+    `create table if not exists log_analysis_spell_metadata (
+       spell_id integer primary key,
+       locale text not null default 'de',
+       name text not null default '',
+       icon text not null default '',
+       tooltip text not null default '',
+       source text not null default 'wowhead',
+       updated_at timestamptz not null default now()
+     )`
+  );
+  rpbSpellMetadataSchemaReady = true;
+}
+
 async function getRpbSpellMetadata(spellIds) {
   const ids = Array.from(new Set((spellIds || []).map(Number).filter(id => id > 0)));
+  if (!ids.length) return new Map();
+  try {
+    await ensureRpbSpellMetadataSchema();
+    const stored = await query(
+      `select spell_id, name, icon, tooltip
+       from log_analysis_spell_metadata
+       where locale = 'de' and spell_id = any($1::int[])`,
+      [ids]
+    );
+    stored.rows.forEach(row => rpbSpellMetadataCache.set(Number(row.spell_id), {
+      id: Number(row.spell_id),
+      name: clean(row.name),
+      icon: clean(row.icon),
+      tooltip: clean(row.tooltip)
+    }));
+  } catch (error) {
+    console.warn("Gespeicherte Zauberdaten konnten nicht geladen werden:", error.message || error);
+  }
   const missing = ids.filter(id => !rpbSpellMetadataCache.has(id));
   let index = 0;
   async function worker() {
@@ -12625,12 +12660,30 @@ async function getRpbSpellMetadata(spellIds) {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        rpbSpellMetadataCache.set(id, {
+        const metadata = {
           id,
           name: clean(data?.name),
           icon: clean(data?.icon),
           tooltip: clean(String(data?.tooltip || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " "))
-        });
+        };
+        rpbSpellMetadataCache.set(id, metadata);
+        try {
+          await ensureRpbSpellMetadataSchema();
+          await query(
+            `insert into log_analysis_spell_metadata (spell_id, locale, name, icon, tooltip, source, updated_at)
+             values ($1, 'de', $2, $3, $4, 'wowhead', now())
+             on conflict (spell_id) do update set
+               locale = excluded.locale,
+               name = excluded.name,
+               icon = excluded.icon,
+               tooltip = excluded.tooltip,
+               source = excluded.source,
+               updated_at = now()`,
+            [id, metadata.name, metadata.icon, metadata.tooltip]
+          );
+        } catch (storeError) {
+          console.warn(`Wowhead-Zauberdaten für Spell ${id} konnten nicht gespeichert werden:`, storeError.message || storeError);
+        }
       } catch (error) {
         console.warn(`Wowhead-Zauberdaten für Spell ${id} konnten nicht geladen werden:`, error.message || error);
         rpbSpellMetadataCache.set(id, { id, name: "", icon: "", tooltip: "" });
@@ -13450,6 +13503,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
     if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+    if (player && worldBuff) {
+      const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
+      const timestamp = Number(event.timestamp || event.time || 0);
+      const timestampFight = bossFightsForGear.find(fight => timestamp >= Number(fight.startTime || 0) - 2000
+        && timestamp <= Number(fight.endTime || 0));
+      const fightId = explicitFightId || Number(timestampFight?.id || 0);
+      if (fightId) {
+        if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
+        const current = Array.isArray(fightWorldBuffs[fightId][player]) ? fightWorldBuffs[fightId][player] : [];
+        fightWorldBuffs[fightId][player] = Array.from(new Set([...current, worldBuff]));
+      }
+    }
   });
 
   bossCombatantEvents.forEach(event => {
@@ -13465,7 +13530,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       return labelForSpellId(id, claWorldBuffDefinitions);
     }).filter(Boolean)));
     if (!fightWorldBuffs[fightId]) fightWorldBuffs[fightId] = {};
-    fightWorldBuffs[fightId][player] = buffs;
+    const current = Array.isArray(fightWorldBuffs[fightId][player]) ? fightWorldBuffs[fightId][player] : [];
+    fightWorldBuffs[fightId][player] = Array.from(new Set([...current, ...buffs]));
   });
 
   const gearItemIds = [];
@@ -13481,7 +13547,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const config = rpbConfig.byClass?.[player.className] || {};
     return [...(config.singleTarget || []), ...(config.aoe || []), ...(config.cooldowns || [])]
       .map(cast => Number(cast.ids?.[0] || 0));
-  }).filter(Boolean);
+  }).concat(claWorldBuffDefinitions.flatMap(([, ids]) => ids)).filter(Boolean);
   const rpbSpellMetadata = await getRpbSpellMetadata(configuredSpellIds);
 
   const playerNames = players.map(player => player.name);
@@ -14091,6 +14157,16 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       }]))
     })),
     roleOptions: logAnalysisRaidRoleOptions,
+    worldBuffMetadata: Object.fromEntries(claWorldBuffDefinitions.map(([label, ids]) => {
+      const spellId = Number(ids[0] || 0);
+      const metadata = rpbSpellMetadata.get(spellId) || {};
+      return [label, {
+        spellId,
+        name: clean(metadata.name) || label,
+        icon: clean(metadata.icon),
+        tooltip: clean(metadata.tooltip)
+      }];
+    })),
     diagnostics: {
       playerActors: players
         .filter(player => clean(player.name).toLowerCase().startsWith("juksi"))
