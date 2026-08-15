@@ -13612,7 +13612,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       activityPercent: Number.parseFloat(String(wclActivePercent[player.name] || "0").replace("%", "")) || 0,
       deaths: Number(deathTotals[player.name] || 0),
       worldBuffCount: claWorldBuffDefinitions.reduce((count, [label]) => count + (Number(claWorldBuffs[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
-      preparationCount: rpbConsumables.reduce((count, [label]) => count + (Number(consumes[label]?.[player.name] || 0) > 0 ? 1 : 0), 0)
+      preparationCount: rpbConsumables.reduce((count, [label]) => count + (Number(consumes[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
+      gear: playerGear(player.name).map(item => ({
+        ...gearItemCell(item),
+        slot: item.slotName || gearItemCell(item).slot || "",
+        itemLevel: Number(item.itemLevel || item.ilvl || 0) || "",
+        enchant: clean(item.permanentEnchantName || item.permanentEnchant)
+      }))
     })),
     encounters: rpbFights.map(fight => ({
       id: Number(fight.id || 0),
@@ -14447,6 +14453,83 @@ async function ensureLogAnalysisWebCacheTable() {
        updated_at timestamptz not null default now()
      )`
   );
+}
+
+async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
+  await ensureLogAnalysisWebCacheTable();
+  const playerName = clean(params.playerName || params.player);
+  if (!playerName) {
+    const error = new Error("Spielername fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select la.id, la.raid, la.raid_date, la.title, la.report_url, c.payload, c.generated_at
+       from log_analysis_web_cache c
+       join log_analyses la on la.id = c.analysis_id
+      where la.guild_id = $1
+      order by la.raid_date asc nulls last, c.generated_at asc`,
+    [guildId]
+  );
+  const wanted = playerName.toLowerCase();
+  const history = [];
+  for (const row of result.rows) {
+    const payload = row.payload || {};
+    const player = (Array.isArray(payload.players) ? payload.players : []).find(entry => clean(entry?.name).toLowerCase() === wanted);
+    if (!player) continue;
+    const durationMs = Math.max(1, Number(payload.report?.durationMs || 0));
+    const seconds = Math.max(1, durationMs / 1000);
+    history.push({
+      analysisId: row.id,
+      raid: clean(payload.report?.raid || row.raid || "Raid"),
+      raidDate: clean(payload.report?.raidDate || (row.raid_date ? new Date(row.raid_date).toISOString().slice(0, 10) : "")),
+      reportUrl: clean(payload.report?.reportUrl || row.report_url),
+      className: clean(player.className),
+      server: clean(player.server),
+      raidRole: clean(player.raidRole),
+      signupRole: clean(player.signupRole),
+      dps: Math.round(Number(player.damageDone || 0) / seconds),
+      hps: Math.round(Number(player.healingDone || 0) / seconds),
+      damageDone: Math.round(Number(player.damageDone || 0)),
+      healingDone: Math.round(Number(player.healingDone || 0)),
+      activityPercent: Math.round(Number(player.activityPercent || 0)),
+      deaths: Number(player.deaths || 0),
+      worldBuffCount: Number(player.worldBuffCount || 0),
+      preparationCount: Number(player.preparationCount || 0),
+      gear: Array.isArray(player.gear) ? player.gear : []
+    });
+  }
+  if (!history.length) {
+    const error = new Error("Für diesen Spieler sind noch keine gespeicherten Analysen vorhanden.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const latest = history[history.length - 1];
+  const metric = latest.signupRole === "Heiler" || latest.raidRole === "healer" ? "hps" : "dps";
+  const latestPayload = result.rows.find(row => row.id === latest.analysisId)?.payload || {};
+  const latestSeconds = Math.max(1, Number(latestPayload.report?.durationMs || 0) / 1000);
+  const comparison = (Array.isArray(latestPayload.players) ? latestPayload.players : [])
+    .filter(entry => metric === "hps" ? (clean(entry.signupRole) === "Heiler" || clean(entry.raidRole) === "healer") : !(clean(entry.signupRole) === "Heiler" || clean(entry.raidRole) === "healer"))
+    .map(entry => Math.round(Number(metric === "hps" ? entry.healingDone : entry.damageDone) / latestSeconds))
+    .sort((a, b) => b - a);
+  const rank = Math.max(1, comparison.findIndex(value => value <= latest[metric]) + 1);
+  const topPercent = comparison.length ? Math.max(1, Math.ceil(rank * 100 / comparison.length)) : 100;
+  return {
+    success: true,
+    profile: {
+      name: playerName,
+      className: latest.className,
+      server: latest.server,
+      raidRole: latest.raidRole,
+      signupRole: latest.signupRole,
+      raidCount: history.length,
+      topPercent,
+      latest,
+      bestDps: Math.max(...history.map(entry => entry.dps)),
+      bestHps: Math.max(...history.map(entry => entry.hps)),
+      history
+    }
+  };
 }
 
 async function getLogAnalysisSignupRoles(guildId, analysis) {
@@ -23412,6 +23495,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicLogAnalysisWeb") {
       const webAnalysis = await getPublicLogAnalysisWeb({ guildId: guild.id, query: req.query });
       return res.json({ ...webAnalysis, guild: guild.slug });
+    }
+
+    if (action === "getPublicLogAnalysisPlayerProfile") {
+      const profile = await getPublicLogAnalysisPlayerProfile({ guildId: guild.id, query: req.query });
+      return res.json({ ...profile, guild: guild.slug });
     }
 
     if (action === "getPublicLogAnalysisWebLegacy") {
