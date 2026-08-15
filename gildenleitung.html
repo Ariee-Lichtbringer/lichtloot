@@ -6736,12 +6736,14 @@ function normalizedWorldbuffGuild(value){
 }
 
 function managedWorldbuffGuildName(){
+  if(CURRENT_GUILD_SLUG === "nachtloot") return "Nachtwächter";
   return getCurrentGuildBrand().guildName || titleFromSlug(CURRENT_GUILD_SLUG);
 }
 
 function isManagedGuildWorldbuff(entry){
   const entryGuild = normalizedWorldbuffGuild(entry && (entry.gilde || entry.guild || entry.fraktion));
   if(!entryGuild) return false;
+  if(CURRENT_GUILD_SLUG === "nachtloot") return entryGuild.includes("nachtwachter") || entryGuild.includes("nachtloot");
   const managedGuild = normalizedWorldbuffGuild(managedWorldbuffGuildName());
   const slugName = normalizedWorldbuffGuild(CURRENT_GUILD_SLUG);
   return entryGuild === managedGuild || entryGuild === slugName || entryGuild.includes(managedGuild);
