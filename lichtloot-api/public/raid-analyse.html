@@ -134,7 +134,7 @@
       </div>
       <div class="actions">
         <a id="analysisBackButton" class="btn ghost hidden" href="raid-analyse.html">← Zur Übersicht</a>
-        <a class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
+        <a id="leadershipLink" class="btn ghost" href="gildenleitung.html">Gildenleitung</a>
         <button class="btn my-performance-btn" type="button" onclick="openMyRaidPerformance()">Meine Raidleistung</button>
         <button id="reloadButton" class="btn primary" type="button" onclick="reload()">Neu laden</button>
       </div>
@@ -177,6 +177,9 @@
   <script>
     const API_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
     const params = new URLSearchParams(location.search);
+    const currentGuild=String(params.get("guild")||"lichtloot").trim().toLowerCase();
+    const leadershipLink=document.getElementById("leadershipLink");
+    if(leadershipLink)leadershipLink.href=`gildenleitung.html?guild=${encodeURIComponent(currentGuild)}`;
     const state = { analyses:[], detail:null, sections:[], activeSection:"", activeClass:"", detailMode:"overview", rpbCategory:"overview", overviewCategory:"damage", overviewFilterType:"all", overviewFilterValue:"", fightScope:"all", selectedFightIds:[], mode:params.get("id") ? "detail" : "list" };
     let analysisProgressTimer=null;
     const CLASS_ORDER = ["Warrior","Druid","Paladin","Rogue","Hunter","Priest","Mage","Warlock","Shaman","Unknown"];
@@ -504,7 +507,7 @@
     }
     function renderProfessionalView(){
       const root=document.getElementById("professionalView");if(!root||state.detailMode==="overview")return;
-      const source=state.detail?.rpb||state.detail?.cla||{};const duration=Number(source.report?.performanceDurationMs||state.detail?.report?.performanceDurationMs||source.report?.durationMs||state.detail?.report?.durationMs||0);const q=key(document.getElementById("search").value);let players=allPlayers().filter(player=>(!state.activeClass||player.className===state.activeClass)&&(!q||key([player.name,player.className,roleLabel(player)].join(" ")).includes(q)));
+      const source=state.detail?.rpb||state.detail?.cla||{};const fallbackDuration=Number(source.report?.performanceDurationMs||state.detail?.report?.performanceDurationMs||source.report?.durationMs||state.detail?.report?.durationMs||0);const q=key(document.getElementById("search").value);let players=allPlayers().filter(player=>(!state.activeClass||player.className===state.activeClass)&&(!q||key([player.name,player.className,roleLabel(player)].join(" ")).includes(q)));const selectedDuration=players.reduce((maximum,player)=>Math.max(maximum,Number(player.selectedDurationMs||0)),0);const filteredSelection=state.selectedFightIds.length>0||state.fightScope!=="all";const duration=filteredSelection&&selectedDuration>0?selectedDuration:fallbackDuration;
       if(state.detailMode==="summary"){renderRaidCompositionSummary(root,players,duration);return;}
       if(state.detailMode==="rpb"||state.detailMode==="cla"){renderAnalysisModule(root,state.detailMode);return;}
       const classes=CLASS_ORDER.filter(cls=>cls!=="Unknown"&&allPlayers().some(player=>player.className===cls));const modeLabel={players:"Spieler",performance:"Leistung",preparation:"Vorbereitung",gear:"Ausrüstung",deaths:"Tode"}[state.detailMode]||"Analyse";
