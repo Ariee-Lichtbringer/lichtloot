@@ -14334,6 +14334,7 @@ async function buildLogAnalysisCsv(analysis, type) {
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
   await ensureCombatLogImportsTable();
+  await ensureLogAnalysisWebCacheTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "combined").toLowerCase();
   if (!isUuid(id)) {
@@ -14382,9 +14383,17 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     return { success: true, webAnalysis: combatLogAnalysis };
   }
 
+  const forceRefresh = ["1", "true", "yes", "ja"].includes(clean(params.refresh || params.forceRefresh).toLowerCase());
   const cacheKey = `${guildId}:${analysis.id}`;
-  const cached = logAnalysisWebCache.get(cacheKey);
+  const cached = !forceRefresh ? logAnalysisWebCache.get(cacheKey) : null;
   let directAnalysis = cached && cached.expiresAt > Date.now() ? cached.value : null;
+  if (!directAnalysis && !forceRefresh) {
+    const stored = await query(
+      `select payload from log_analysis_web_cache where analysis_id = $1 limit 1`,
+      [analysis.id]
+    );
+    directAnalysis = stored.rows[0]?.payload || null;
+  }
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
     const signupRoles = await getLogAnalysisSignupRoles(guildId, analysis);
@@ -14396,6 +14405,14 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName, signupRoleByName: new Map(signupRoles.signupRoles) });
     directAnalysis.source = "warcraft-logs-direct";
     directAnalysis.signupRoleSource = "lichtloot-raid-signups";
+    directAnalysis.persistedAt = new Date().toISOString();
+    await query(
+      `insert into log_analysis_web_cache (analysis_id, payload, generated_at, updated_at)
+       values ($1,$2::jsonb,now(),now())
+       on conflict (analysis_id) do update
+         set payload = excluded.payload, generated_at = now(), updated_at = now()`,
+      [analysis.id, JSON.stringify(directAnalysis)]
+    );
     logAnalysisWebCache.set(cacheKey, { value: directAnalysis, expiresAt: Date.now() + 5 * 60 * 1000 });
   }
 
@@ -14418,6 +14435,18 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     };
   }
   return { success: true, webAnalysis: type === "cla" ? cla : rpb };
+}
+
+async function ensureLogAnalysisWebCacheTable() {
+  await ensureLogAnalysesTable();
+  await query(
+    `create table if not exists log_analysis_web_cache (
+       analysis_id uuid primary key references log_analyses(id) on delete cascade,
+       payload jsonb not null default '{}'::jsonb,
+       generated_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
 }
 
 async function getLogAnalysisSignupRoles(guildId, analysis) {
