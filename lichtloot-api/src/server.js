@@ -12875,6 +12875,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const classCooldowns = {};
   const gearByPlayer = new Map();
   const fightPlayerMetrics = {};
+  const playerTableDiagnostics = [];
   const fightWorldBuffs = {};
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
@@ -13176,6 +13177,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   async function loadFightPerformanceTables() {
     const bossFights = bossFightsForGear;
+    const playersByActorId = actorById(players);
+    const playersByExactName = new Map(players.map(player => [clean(player.name).toLowerCase(), player]));
+    const playersByNormalizedName = new Map(players.map(player => [normalizeAnalysisFightName(player.name), player]));
+    const resolveTablePlayer = entry => {
+      const rawName = clean(entry?.name);
+      const exact = playersByExactName.get(rawName.toLowerCase());
+      if (exact) return exact;
+      const withoutRealm = rawName.replace(/-[^-]+$/, "");
+      const normalized = playersByNormalizedName.get(normalizeAnalysisFightName(withoutRealm));
+      if (normalized) return normalized;
+      const actorId = Number(entry?.sourceID || entry?.sourceId || entry?.actorID || entry?.actorId || entry?.id || 0);
+      return playersByActorId.get(actorId) || null;
+    };
+    const diagnosticEntry = entry => ({
+      name: clean(entry?.name),
+      id: Number(entry?.id || 0) || null,
+      sourceID: Number(entry?.sourceID || entry?.sourceId || 0) || null,
+      actorID: Number(entry?.actorID || entry?.actorId || 0) || null,
+      total: Number(entry?.total || entry?.amount || 0),
+      activeTime: Number(entry?.activeTime || entry?.activeTimeReduced || 0),
+      type: clean(entry?.type),
+      icon: clean(entry?.icon)
+    });
     let index = 0;
     const concurrency = Math.min(2, bossFights.length);
     async function worker() {
@@ -13190,8 +13214,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
         const durationMs = Math.max(1, Number(damageTable.totalTime || healingTable.totalTime || 0) || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
         const apply = (table, field) => (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
-          const name = clean(entry?.name);
-          if (!name || !players.some(player => player.name === name)) return;
+          const matchedPlayer = resolveTablePlayer(entry);
+          const name = matchedPlayer?.name || "";
+          if (!name) return;
           if (!fightPlayerMetrics[fightId][name]) fightPlayerMetrics[fightId][name] = { damageDone: 0, healingDone: 0, deaths: 0, activeSeconds: new Set() };
           fightPlayerMetrics[fightId][name][field] = Math.round(Number(entry.total || entry.amount || 0));
           const activeMs = Number(entry.activeTime || entry.activeTimeReduced || 0);
@@ -13199,6 +13224,26 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         });
         apply(damageTable, "damageDone");
         apply(healingTable, "healingDone");
+        const healingEntries = Array.isArray(healingTable?.entries) ? healingTable.entries : [];
+        const damageEntries = Array.isArray(damageTable?.entries) ? damageTable.entries : [];
+        const juksiHealing = healingEntries.filter(entry => {
+          const matched = resolveTablePlayer(entry);
+          return matched?.name?.toLowerCase() === "juksi" || clean(entry?.name).toLowerCase().startsWith("juksi");
+        }).map(diagnosticEntry);
+        const juksiDamage = damageEntries.filter(entry => {
+          const matched = resolveTablePlayer(entry);
+          return matched?.name?.toLowerCase() === "juksi" || clean(entry?.name).toLowerCase().startsWith("juksi");
+        }).map(diagnosticEntry);
+        playerTableDiagnostics.push({
+          fightId,
+          fightName: clean(fight.name),
+          durationMs,
+          healingEntryCount: healingEntries.length,
+          damageEntryCount: damageEntries.length,
+          juksiHealing,
+          juksiDamage,
+          healingNames: healingEntries.map(entry => clean(entry?.name)).filter(Boolean)
+        });
       }
     }
     await Promise.all(Array.from({ length: concurrency }, () => worker()));
@@ -13981,6 +14026,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       }]))
     })),
     roleOptions: logAnalysisRaidRoleOptions,
+    diagnostics: {
+      playerActors: players
+        .filter(player => clean(player.name).toLowerCase().startsWith("juksi"))
+        .map(player => ({ id: player.id, name: player.name, server: player.server, className: player.className })),
+      juksiFightTables: playerTableDiagnostics.sort((a, b) => a.fightId - b.fightId)
+    },
     sections,
     warnings: (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length && !healingEvents.length)
       ? ["Keine Detail-Events von Warcraft Logs erhalten."]
