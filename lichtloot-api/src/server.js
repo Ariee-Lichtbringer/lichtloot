@@ -12707,10 +12707,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const { token, report, fights, fightIds } = base;
   const classByName = options.classByName instanceof Map ? options.classByName : new Map();
   const roleByName = options.roleByName instanceof Map ? options.roleByName : new Map();
+  const signupRoleByName = options.signupRoleByName instanceof Map ? options.signupRoleByName : new Map();
   const players = (base.players || []).map(player => ({
     ...player,
     className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || "",
-    raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
+    raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase())),
+    signupRole: signupRoleByName.get(clean(player.name).toLowerCase()) || ""
   }));
   const playersById = actorById(players);
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
@@ -12722,6 +12724,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
+  const deathEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Deaths", activityScope);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", activityScope);
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", activityScope);
   const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", activityScope);
@@ -12738,6 +12741,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const wclActiveSeconds = {};
   const wclActivePercent = {};
   const healingTotals = {};
+  const damageTotals = {};
+  const deathTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
   const healingById = {};
@@ -12983,9 +12988,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   damageDoneEvents.forEach(event => {
     markActive(event);
     addDamageHit(event);
+    const player = playerNameFromEvent(event, true);
+    if (player) damageTotals[player] = (damageTotals[player] || 0) + Number(event.amount || 0);
   });
   healingEvents.forEach(event => {
     markActive(event);
+  });
+  deathEvents.forEach(event => {
+    const player = playerNameFromEvent(event, false) || playerNameFromEvent(event, true);
+    if (player) deathTotals[player] = (deathTotals[player] || 0) + 1;
   });
 
   players.forEach(player => {
@@ -13582,14 +13593,33 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       raid: report.zone?.name || analysis.raid || "",
       raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : (analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : ""),
       reportCode: analysis.report_code || "",
-      reportUrl: analysis.report_url || ""
+      reportUrl: analysis.report_url || "",
+      durationMs: reportDurationMs,
+      fightCount: rpbFights.length,
+      bossKills: rpbFights.filter(fight => fight.kill !== false).length,
+      totalBosses: rpbFights.length,
+      deathCount: deathEvents.length
     },
     players: players.map(player => ({
       id: player.id,
       name: player.name,
       server: player.server || "",
       className: player.className || "",
-      raidRole: player.raidRole || ""
+      raidRole: player.raidRole || "",
+      signupRole: player.signupRole || "",
+      damageDone: Math.round(damageTotals[player.name] || 0),
+      healingDone: Math.round(healingTotals[player.name] || 0),
+      activityPercent: Number.parseFloat(String(wclActivePercent[player.name] || "0").replace("%", "")) || 0,
+      deaths: Number(deathTotals[player.name] || 0),
+      worldBuffCount: claWorldBuffDefinitions.reduce((count, [label]) => count + (Number(claWorldBuffs[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
+      preparationCount: rpbConsumables.reduce((count, [label]) => count + (Number(consumes[label]?.[player.name] || 0) > 0 ? 1 : 0), 0)
+    })),
+    encounters: rpbFights.map(fight => ({
+      id: Number(fight.id || 0),
+      name: fight.name || "Boss",
+      kill: fight.kill !== false,
+      durationMs: Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)),
+      deaths: deathEvents.filter(event => Number(event.fight || event.fightID || event.fightId || 0) === Number(fight.id || 0)).length
     })),
     roleOptions: logAnalysisRaidRoleOptions,
     sections,
@@ -14357,12 +14387,15 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
   let directAnalysis = cached && cached.expiresAt > Date.now() ? cached.value : null;
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
-    const roleByName = new Map(Object.entries(analysis.summary?.raidRoles || {}).map(([name, role]) => [
+    const signupRoles = await getLogAnalysisSignupRoles(guildId, analysis);
+    const roleByName = new Map(signupRoles.analysisRoles);
+    Object.entries(analysis.summary?.raidRoles || {}).forEach(([name, role]) => roleByName.set(
       clean(name).toLowerCase(),
       normalizeLogAnalysisRaidRole(role)
-    ]));
-    directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName });
+    ));
+    directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName, signupRoleByName: new Map(signupRoles.signupRoles) });
     directAnalysis.source = "warcraft-logs-direct";
+    directAnalysis.signupRoleSource = "lichtloot-raid-signups";
     logAnalysisWebCache.set(cacheKey, { value: directAnalysis, expiresAt: Date.now() + 5 * 60 * 1000 });
   }
 
@@ -14385,6 +14418,46 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     };
   }
   return { success: true, webAnalysis: type === "cla" ? cla : rpb };
+}
+
+async function getLogAnalysisSignupRoles(guildId, analysis) {
+  const raidDate = analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : clean(analysis.summary?.raidDate);
+  if (!raidDate) return { analysisRoles: [], signupRoles: [] };
+  const expectedRaid = normalizeRaidType(analysis.raid || analysis.summary?.raid || "");
+  const result = await query(
+    `select c.name as player_name, c.class_name, rs.role, r.raid_type
+       from raid_signups rs
+       join raids r on r.id = rs.raid_id
+       join characters c on c.id = rs.character_id
+      where r.guild_id = $1 and r.raid_date = $2::date
+        and lower(coalesce(rs.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')
+     union all
+     select res.player_name, res.class_name, res.role, coalesce(r.raid_type, res.raid_type)
+       from raid_external_signups res
+       left join raids r on r.id = res.raid_id
+      where res.guild_id = $1 and coalesce(res.raid_date, r.raid_date) = $2::date
+        and lower(coalesce(res.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')`,
+    [guildId, raidDate]
+  );
+  const rows = result.rows
+    .filter(row => !expectedRaid || normalizeRaidType(row.raid_type || "") === expectedRaid)
+    .concat(result.rows.filter(row => expectedRaid && normalizeRaidType(row.raid_type || "") !== expectedRaid));
+  const signupRoles = new Map();
+  const analysisRoles = new Map();
+  for (const row of rows) {
+    const name = clean(row.player_name).toLowerCase();
+    if (!name || signupRoles.has(name)) continue;
+    const signupRole = normalizeSignupRole(row.role);
+    if (!['tank','heal','dd'].includes(signupRole)) continue;
+    signupRoles.set(name, signupRole === 'heal' ? 'Heiler' : signupRole === 'tank' ? 'Tank' : 'DD');
+    if (signupRole === 'heal') analysisRoles.set(name, 'healer');
+    else if (signupRole === 'tank') analysisRoles.set(name, 'tank');
+    else {
+      const className = normalizeRpbClassName(row.class_name || "");
+      analysisRoles.set(name, className === 'Hunter' ? 'hunter' : ['Mage','Warlock','Priest','Shaman'].includes(className) ? 'caster' : 'melee');
+    }
+  }
+  return { analysisRoles: Array.from(analysisRoles.entries()), signupRoles: Array.from(signupRoles.entries()) };
 }
 
 async function getPublicLogAnalysisWebLegacy({ guildId, query: params }) {
