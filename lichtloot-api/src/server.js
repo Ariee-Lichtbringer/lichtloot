@@ -13058,6 +13058,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const damageTakenTotals = {};
   const threatTotals = {};
   const threatAbilitiesByPlayer = {};
+  const combatOutcomeStats = {};
   let characterPerformanceDurationMs = 0;
   const deathTotals = {};
   const overhealTotals = {};
@@ -13081,6 +13082,90 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const aoeSecondsByPlayer = {};
   const classCastSources = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
+  const combatOutcomeMetrics = [
+    ["outgoingDodge", "Ausweichen (ausgehend)", "outgoing"],
+    ["outgoingMiss", "Verfehlt (ausgehend)", "outgoing"],
+    ["outgoingParry", "Parieren (ausgehend)", "outgoing"],
+    ["outgoingResist", "Widerstand (ausgehend)", "outgoing"],
+    ["incomingCritical", "Kritisch erhalten", "incomingMelee"],
+    ["incomingCrushing", "Vernichtungsschlag erhalten", "incomingMelee"],
+    ["incomingBlocked", "Geblockt", "incomingMelee"],
+    ["incomingDodge", "Ausweichen erhalten", "incomingMelee"],
+    ["incomingParry", "Parieren erhalten", "incomingMelee"],
+    ["incomingMiss", "Verfehlt erhalten", "incomingMelee"],
+    ["incomingImmune", "Immun", "incomingMelee"]
+  ];
+
+  function ensureCombatOutcomeStats(playerName) {
+    if (!combatOutcomeStats[playerName]) {
+      combatOutcomeStats[playerName] = {
+        outgoingAttempts: 0,
+        incomingMeleeAttempts: 0,
+        values: Object.fromEntries(combatOutcomeMetrics.map(([key]) => [key, 0]))
+      };
+    }
+    return combatOutcomeStats[playerName];
+  }
+
+  function combatOutcomeText(event) {
+    return clean([
+      event?.type,
+      event?.hitType,
+      event?.missType,
+      event?.outcome,
+      event?.result,
+      event?.attackType
+    ].filter(value => value != null).join(" ")).toLowerCase();
+  }
+
+  function isPeriodicCombatEvent(event) {
+    const text = combatOutcomeText(event);
+    return event?.tick === true || event?.periodic === true || /periodic|tick/.test(text);
+  }
+
+  function isDirectCombatAttempt(event) {
+    if (isPeriodicCombatEvent(event)) return false;
+    const text = combatOutcomeText(event);
+    return Number(event?.amount || 0) > 0 || Number(event?.absorbed || event?.blocked || 0) > 0 ||
+      /damage|miss|dodge|parry|resist|immune|block|critical|crushing|hit/.test(text);
+  }
+
+  function isMeleeCombatEvent(event) {
+    const text = combatOutcomeText(event);
+    const name = clean(abilityName(event)).toLowerCase();
+    const id = Number(abilityId(event) || 0);
+    return event?.melee === true || id === 1 || /melee|nahkampf|swing|auto.?attack/.test(`${text} ${name}`);
+  }
+
+  function hasCombatOutcome(event, pattern, booleanFields = []) {
+    if (booleanFields.some(field => event?.[field] === true || Number(event?.[field] || 0) > 0)) return true;
+    return pattern.test(combatOutcomeText(event));
+  }
+
+  function recordOutgoingCombatOutcome(event) {
+    const playerName = playerNameFromEvent(event, true);
+    if (!playerName || !isDirectCombatAttempt(event)) return;
+    const stats = ensureCombatOutcomeStats(playerName);
+    stats.outgoingAttempts += 1;
+    if (hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.outgoingDodge += 1;
+    if (hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.outgoingMiss += 1;
+    if (hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.outgoingParry += 1;
+    if (hasCombatOutcome(event, /resist|widerstand/, ["resisted"])) stats.values.outgoingResist += 1;
+  }
+
+  function recordIncomingMeleeOutcome(event) {
+    const playerName = playerNameFromEvent(event, false);
+    if (!playerName || !isDirectCombatAttempt(event) || !isMeleeCombatEvent(event)) return;
+    const stats = ensureCombatOutcomeStats(playerName);
+    stats.incomingMeleeAttempts += 1;
+    if (event?.critical === true || Number(event?.hitType) === 2 || /critical|kritisch/.test(combatOutcomeText(event))) stats.values.incomingCritical += 1;
+    if (hasCombatOutcome(event, /crushing|vernichtung/, ["crushing"])) stats.values.incomingCrushing += 1;
+    if (hasCombatOutcome(event, /block|geblockt/, ["blocked"])) stats.values.incomingBlocked += 1;
+    if (hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.incomingDodge += 1;
+    if (hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.incomingParry += 1;
+    if (hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.incomingMiss += 1;
+    if (hasCombatOutcome(event, /immune|immun/, ["immune"])) stats.values.incomingImmune += 1;
+  }
   const bossFightByEncounter = new Map();
   bossFightsForGear.forEach(fight => {
     const encounterId = Number(fight.encounterID || fight.encounterId || 0);
@@ -13529,6 +13614,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   });
   cooldownCastEvents.forEach(event => addClassCooldown(event));
   damageDoneEvents.forEach(event => {
+    recordOutgoingCombatOutcome(event);
     markActive(event);
     addDamageHit(event);
     const player = playerNameFromEvent(event, true);
@@ -13561,6 +13647,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const completeBossDurationMs = bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0);
   if (completeBossDurationMs > 0) performanceDurationMs = completeBossDurationMs;
   players.forEach(player => {
+    ensureCombatOutcomeStats(player.name);
     const bossMetrics = bossFightsForGear.map(fight => fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {});
     const bossDamage = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.damageDone || 0), 0);
     const bossHealing = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.healingDone || 0), 0);
@@ -13602,6 +13689,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   });
 
   damageTakenEvents.forEach(event => {
+    recordIncomingMeleeOutcome(event);
     const player = playerNameFromEvent(event, false);
     const label = matchingLabel(
       extraAbilityName(event) || abilityName(event),
@@ -14428,6 +14516,26 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         wowhead: `https://www.wowhead.com/classic/de/spell=${spellId}`
       }];
     })),
+    combatStatistics: {
+      metrics: combatOutcomeMetrics.map(([key, label, denominator]) => ({ key, label, denominator })),
+      players: Object.fromEntries(players.map(player => {
+        const stats = ensureCombatOutcomeStats(player.name);
+        return [player.name, {
+          className: player.className || "Unknown",
+          outgoingAttempts: stats.outgoingAttempts,
+          incomingMeleeAttempts: stats.incomingMeleeAttempts,
+          values: Object.fromEntries(combatOutcomeMetrics.map(([key, , denominatorKey]) => {
+            const count = Number(stats.values[key] || 0);
+            const denominator = Number(stats[`${denominatorKey}Attempts`] || 0);
+            return [key, {
+              count,
+              denominator,
+              percentage: denominator > 0 ? Math.round(count * 1000 / denominator) / 10 : null
+            }];
+          }))
+        }];
+      }))
+    },
     diagnostics: {
       playerActors: players
         .filter(player => clean(player.name).toLowerCase().startsWith("juksi"))
@@ -15206,8 +15314,20 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     );
     directAnalysis = stored.rows[0]?.payload || null;
   }
-  if (directAnalysis && clean(directAnalysis.schemaVersion) !== LOG_ANALYSIS_WEB_SCHEMA_VERSION) {
-    directAnalysis = null;
+  if (
+    directAnalysis
+    && clean(directAnalysis.schemaVersion) !== LOG_ANALYSIS_WEB_SCHEMA_VERSION
+    && !forceRefresh
+  ) {
+    // Eine vorhandene Analyse bleibt sichtbar, waehrend die neue Schema-Version
+    // bereits durch die automatische Warteschlange im Hintergrund erzeugt wird.
+    // Ohne diesen Fallback blockiert jeder Aufruf bis zum kompletten WCL-Neuimport.
+    enqueueAutomaticLogAnalysis({
+      guildId,
+      analysisId: analysis.id,
+      forceRefresh: true,
+      source: "stale-web-cache-refresh"
+    });
   }
   if (!directAnalysis) {
     const classByName = await getGuildClassMap(guildId);
