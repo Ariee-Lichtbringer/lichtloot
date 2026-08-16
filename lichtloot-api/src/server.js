@@ -962,12 +962,12 @@ function hasRaidAnalysisPermanentEnchant(item) {
 
 function isRaidAnalysisEnchantableItem(item, metadata = null) {
   const slot = Number(item?.slot);
-  const text = clean([
+  if ([1, 3, 5, 10, 11, 12, 13, 17].includes(slot)) return false;
+
+  const itemText = clean([
     item?.name,
     item?.itemName,
-    item?.slotName,
     metadata?.name,
-    metadata?.slot,
     metadata?.type,
     metadata?.category
   ].filter(Boolean).join(" ")).toLowerCase();
@@ -975,12 +975,15 @@ function isRaidAnalysisEnchantableItem(item, metadata = null) {
   // Relikte und zauberfokussierte Nebenhandgegenstände können in Classic nicht
   // verzaubert werden. Die Namensprüfung schützt auch vor uneinheitlichen
   // Slotnummern aus älteren Warcraft-Logs-Datensätzen.
-  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in der schildhand getragen/.test(text)) {
+  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in der schildhand getragen/.test(itemText)) {
     return false;
   }
   if ([0, 2, 4, 6, 7, 8, 9, 14, 15].includes(slot)) return true;
   if (slot === 16) {
-    return /schild|shield|buckler|waffe|weapon|schwert|sword|axt|axe|streitkolben|mace|dolch|dagger|stab|staff|faustwaffe|fist/.test(text);
+    // Der generische WCL-Slotname "Schildhand" darf nicht als Schild gelten.
+    // Nur ein tatsächlich als Schild oder Waffe erkanntes Item ist verzauberbar;
+    // Caster-Offhands, Foki und gehaltene Gegenstände sind es nicht.
+    return /schild|shield|buckler|waffe|weapon|schwert|sword|axt|axe|streitkolben|mace|dolch|dagger|stab|staff|faustwaffe|fist/.test(itemText);
   }
   return false;
 }
