@@ -971,11 +971,13 @@ function isRaidAnalysisEnchantableItem(item, metadata = null) {
   // Relikte und zauberfokussierte Nebenhandgegenstände können in Classic nicht
   // verzaubert werden. Die Namensprüfung schützt auch vor uneinheitlichen
   // Slotnummern aus älteren Warcraft-Logs-Datensätzen.
-  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|fokus|focus|off.?hand frill|held in off/.test(text)) {
+  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in der schildhand getragen/.test(text)) {
     return false;
   }
   if ([0, 2, 4, 6, 7, 8, 9, 14, 15].includes(slot)) return true;
-  if (slot === 16) return /schild|shield|buckler/.test(text);
+  if (slot === 16) {
+    return /schild|shield|buckler|waffe|weapon|schwert|sword|axt|axe|streitkolben|mace|dolch|dagger|stab|staff|faustwaffe|fist/.test(text);
+  }
   return false;
 }
 
@@ -14240,23 +14242,31 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const gearItemCell = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
+    const name = meta?.name || item.name || item.itemId || "Gegenstand";
+    const statsText = clean(meta?.statsText);
+    const equip = clean(meta?.equip);
+    const tooltip = clean(meta?.tooltip || statsText || equip);
     return {
       text: gearItemText(item),
+      name,
       itemId: clean(item.itemId || item.id),
       quality: meta?.quality || clean(item.quality),
       iconUrl: meta?.iconUrl || clean(item.iconUrl || item.icon),
       slot: meta?.slot || item.slotName || "",
       boss: meta?.boss || "",
+      source: meta?.boss || "",
       type: meta?.type || "",
       wowhead: meta?.wowhead || "",
-      tooltip: meta?.tooltip || meta?.statsText || meta?.equip || "",
+      tooltip,
+      statsText,
+      equip,
       title: [
-        meta?.name || item.name || item.itemId || "Item",
+        name,
         meta?.quality ? `Qualität: ${meta.quality}` : "",
         meta?.slot || item.slotName ? `Slot: ${meta?.slot || item.slotName}` : "",
         meta?.boss ? `Quelle: ${meta.boss}` : "",
         meta?.type ? `Typ: ${meta.type}` : "",
-        meta?.tooltip || meta?.statsText || meta?.equip || ""
+        tooltip
       ].filter(Boolean).join("\n")
     };
   };
@@ -14809,12 +14819,21 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         });
         return duration ? Math.round(weighted / duration) : null;
       })(),
-      gear: playerGear(player.name).map(item => ({
-        ...gearItemCell(item),
-        slot: item.slotName || gearItemCell(item).slot || "",
-        itemLevel: Number(item.itemLevel || item.ilvl || 0) || "",
-        enchant: clean(item.permanentEnchantName || item.permanentEnchant)
-      }))
+      gear: playerGear(player.name).map(item => {
+        const cell = gearItemCell(item);
+        const metadata = gearItemMeta(item);
+        const enchantable = isRaidAnalysisEnchantableItem(item, metadata);
+        const hasEnchant = hasRaidAnalysisPermanentEnchant(item);
+        return {
+          ...cell,
+          slot: item.slotName || cell.slot || "",
+          itemLevel: Number(item.itemLevel || item.ilvl || 0) || "",
+          enchant: clean(item.permanentEnchantName || item.enchantName || item.permanentEnchant),
+          enchantable,
+          hasEnchant,
+          missingEnchant: enchantable && !hasEnchant
+        };
+      })
     })),
     encounters: bossEncounters.map(fight => ({
       id: Number(fight.id || 0),
