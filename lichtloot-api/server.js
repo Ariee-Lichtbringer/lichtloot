@@ -36,6 +36,22 @@ const nachtlootPoReleaseCsvUrl =
   "https://docs.google.com/spreadsheets/d/136_vXW_p3Z3CMGuXkRkv4hftcxW02p2QO_YMb7OaVfA/export?format=csv&gid=1207328819";
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
+const logAnalysisWebCache = new Map();
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v15";
+const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
+
+function isCurrentLogAnalysisPayload(payload) {
+  return Boolean(
+    payload
+    && String(payload.schemaVersion || "").trim() === LOG_ANALYSIS_WEB_SCHEMA_VERSION
+    && String(payload.consumableSchemaVersion || "").trim() === LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
+    && payload.combatStatistics
+    && Array.isArray(payload.sections)
+  );
+}
+const automaticLogAnalysisQueue = [];
+const automaticLogAnalysisQueueKeys = new Set();
+let automaticLogAnalysisWorkerRunning = false;
 const staticLootCache = new Map();
 const missingRaidHelperCache = new Map();
 const STATIC_LOOT_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -43,6 +59,8 @@ const MISSING_RAID_HELPER_CACHE_TTL_MS = 5 * 60 * 1000;
 let p0ReleaseCache = null;
 let p0ReleaseCacheUntil = 0;
 let rpbConfigAllCache = null;
+const rpbSpellMetadataCache = new Map();
+let rpbSpellMetadataSchemaReady = false;
 let warcraftLogsNextRequestAt = 0;
 const externalRendSyncCache = new Map();
 const EXTERNAL_REND_SYNC_TTL_MS = 5 * 60 * 1000;
@@ -931,6 +949,55 @@ function normalizeWarcraftLogsGear(gear) {
   }).filter(item => item.id);
 }
 
+function hasRaidAnalysisPermanentEnchant(item) {
+  const enchantName = clean(item?.permanentEnchantName || item?.enchantName);
+  const hasNamedEnchant = Boolean(enchantName)
+    && !/^(?:0|none|no enchant|kein(?:e)? verzauberung|kein enchant)$/i.test(enchantName);
+  return hasNamedEnchant || Number(item?.permanentEnchant || item?.enchant || 0) > 0;
+}
+
+function isRaidAnalysisEnchantableItem(item, metadata = null) {
+  const slot = Number(item?.slot);
+  const text = clean([
+    item?.name,
+    item?.itemName,
+    item?.slotName,
+    metadata?.name,
+    metadata?.slot,
+    metadata?.type,
+    metadata?.category
+  ].filter(Boolean).join(" ")).toLowerCase();
+
+  // Relikte und zauberfokussierte Nebenhandgegenstände können in Classic nicht
+  // verzaubert werden. Die Namensprüfung schützt auch vor uneinheitlichen
+  // Slotnummern aus älteren Warcraft-Logs-Datensätzen.
+  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in der schildhand getragen/.test(text)) {
+    return false;
+  }
+  if ([0, 2, 4, 6, 7, 8, 9, 14, 15].includes(slot)) return true;
+  if (slot === 16) {
+    return /schild|shield|buckler|waffe|weapon|schwert|sword|axt|axe|streitkolben|mace|dolch|dagger|stab|staff|faustwaffe|fist/.test(text);
+  }
+  return false;
+}
+
+function raidAnalysisEnchantIssue(item, playerClass = "", metadata = null) {
+  const slot = Number(item?.slot);
+  const itemName = clean(item?.name || item?.itemName);
+  const enchantName = clean(item?.permanentEnchantName || item?.enchantName);
+  const lower = `${itemName} ${enchantName}`.toLowerCase();
+  if (lower.includes("undead") || lower.includes("scourge") || lower.includes("untot")) {
+    return "Untoten-Gegenstand oder -Verzauberung außerhalb passender Kämpfe";
+  }
+  if (isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item)) {
+    return "Fehlende Verzauberung";
+  }
+  if (slot === 9 && Number(item?.permanentEnchant) === 2617 && playerClass === "Priest") {
+    return "Auffällige oder möglicherweise ungeeignete Verzauberung";
+  }
+  return "";
+}
+
 function normalizeWarcraftLogsEnchantments(item) {
   const enchants = [];
   if (item.permanentEnchant || item.permanentEnchantName || item.enchant || item.enchantName) {
@@ -1168,6 +1235,7 @@ async function listGuildsForBot({ query: params }) {
   requireMasterOrQueueToken(params);
   await ensureGuildDiscordConfigSchema();
   await ensureGuildLayoutSchema();
+  await ensureDiscordChannelSchema();
   const result = await query(
     `select g.slug,
             g.name,
@@ -1175,6 +1243,13 @@ async function listGuildsForBot({ query: params }) {
             g.discord_guild_id,
             coalesce(gs.layout_json, '{}'::jsonb) as layout_json,
             coalesce(nullif(g.discord_guild_id, ''), (
+              select nullif(dbc.discord_guild_id, '')
+              from discord_bot_channels dbc
+              where dbc.guild_id = g.id
+                and nullif(dbc.discord_guild_id, '') is not null
+              order by dbc.updated_at desc
+              limit 1
+            ), (
               select nullif(ga.discord_guild_id, '')
               from guild_applications ga
               where ga.guild_slug = g.slug
@@ -2603,6 +2678,7 @@ function normalizeRaidType(value) {
     "aq-20": "aq20",
     "ahn-qiraj-20": "aq20",
     "ruins-of-ahn-qiraj": "aq20",
+    "naxxramas": "naxx",
     "onyxia": "ony",
     "onyxia-s-lair": "ony"
   };
@@ -2811,7 +2887,8 @@ async function ensureRaidSchema() {
        add column if not exists role text not null default 'flex',
        add column if not exists source text not null default 'lichtloot',
        add column if not exists discord_user_id text,
-       add column if not exists discord_name text`
+       add column if not exists discord_name text,
+       add column if not exists signup_number integer`
   );
   await query(
     `create table if not exists raid_external_signups (
@@ -2832,6 +2909,7 @@ async function ensureRaidSchema() {
        discord_channel_id text,
        discord_message_id text,
        note text,
+       signup_number integer,
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
@@ -2852,6 +2930,7 @@ async function ensureRaidSchema() {
        on raid_external_signups(guild_id, raid_id, raid_date)`
   );
   await query(`alter table raid_external_signups add column if not exists player_pin text`);
+  await query(`alter table raid_external_signups add column if not exists signup_number integer`);
   await query(
     `create table if not exists p0_discord_signups (
        id uuid primary key default gen_random_uuid(),
@@ -6283,21 +6362,50 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
          and (
            status in ('open', 'processing')
            or ($4::boolean and status = 'done')
-           or (not $4::boolean and status = 'done' and coalesce(resolved_at, created_at) > now() - interval '2 minutes')
          )
        order by created_at desc
        limit 1`,
       [guildId, type, raidId, fromSchedule]
     );
     if (existing.rows[0]) {
-      return {
-        success: true,
-        skipped: true,
-        reason: fromSchedule ? "scheduled_raid_announcement_already_queued" : "raid_announcement_recently_queued",
-        rowNumber: existing.rows[0].id,
-        type,
-        payload: existing.rows[0].payload || payload || {}
-      };
+      // Ein manueller Klick auf "Vorhandenen Post aktualisieren" ist ein
+      // neuer Auftrag. Ein bereits erledigter Auftrag darf ihn nicht fuer
+      // zwei Minuten verschlucken – insbesondere nicht, wenn erst beim
+      // zweiten Klick der gekoppelte P0-Anmelder ausgewaehlt wurde.
+      // Ist der vorherige Auftrag noch offen, bekommt er stattdessen immer
+      // den neuesten Snapshot samt followupPoPost.
+      if (!fromSchedule && existing.rows[0].status === "open") {
+        await query(
+          `update bot_update_queue
+           set payload = $2::jsonb,
+               created_at = now(),
+               claimed_at = null,
+               resolved_at = null
+           where id = $1`,
+          [existing.rows[0].id, JSON.stringify(payload || {})]
+        );
+        return {
+          success: true,
+          skipped: true,
+          reason: "raid_announcement_open_payload_replaced",
+          rowNumber: existing.rows[0].id,
+          type,
+          payload: payload || {}
+        };
+      }
+      if (!fromSchedule && existing.rows[0].status === "processing") {
+        // Der laufende Auftrag wird nicht veraendert. Der neue manuelle
+        // Refresh wird unten als eigener Queue-Eintrag angelegt.
+      } else {
+        return {
+          success: true,
+          skipped: true,
+          reason: fromSchedule ? "scheduled_raid_announcement_already_queued" : "raid_announcement_recently_queued",
+          rowNumber: existing.rows[0].id,
+          type,
+          payload: existing.rows[0].payload || payload || {}
+        };
+      }
     }
   }
   if (type === "po_release_request_notice" && clean(payload?.requestId)) {
@@ -7864,8 +7972,21 @@ async function queueRaidAnnouncementNotice({ guildId, query: params }) {
 async function queueRaidCalendar({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   await ensureRaidCalendarConfigSchema();
+  const enabled = !["0", "false", "no", "nein", "off"].includes(clean(params.enabled ?? "true").toLowerCase());
   const channelId = clean(params.channelId || params.discordChannelId);
   if (!channelId) return { success: false, error: "Discord-Channel fehlt." };
+  if (!enabled) {
+    await query(
+      `insert into guild_raid_calendar_configs (guild_id, channel_id, enabled, updated_at)
+       values ($1, $2, false, now())
+       on conflict (guild_id) do update
+         set channel_id = excluded.channel_id,
+             enabled = false,
+             updated_at = now()`,
+      [guildId, channelId]
+    );
+    return { success: true, enabled: false, channelId };
+  }
   let events = [];
   try {
     events = typeof params.events === "string" ? JSON.parse(params.events) : params.events;
@@ -7906,6 +8027,25 @@ async function ensureRaidCalendarConfigSchema() {
        updated_at timestamptz not null default now()
      )`
   );
+}
+
+async function getRaidCalendarConfig({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensureRaidCalendarConfigSchema();
+  const result = await query(
+    `select channel_id, enabled
+     from guild_raid_calendar_configs
+     where guild_id = $1
+     limit 1`,
+    [guildId]
+  );
+  const row = result.rows[0] || null;
+  return {
+    success: true,
+    configured: Boolean(row),
+    enabled: Boolean(row?.enabled),
+    channelId: clean(row?.channel_id)
+  };
 }
 
 async function getBotRaidCalendars({ query: params }) {
@@ -10129,6 +10269,8 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const previousMessageId = clean(raid.discord_message_id);
+  const nextMessageId = clean(params.discordMessageId || params.messageId || params.raidHelperMessageId);
   const result = await query(
     `update raids
      set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
@@ -10143,6 +10285,27 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
       clean(params.discordMessageId || params.messageId || params.raidHelperMessageId)
     ]
   );
+  // Discord-Anmeldungen tragen die Message-ID in ihrer Quelle. Wird ein
+  // kombinierter Raid-/P0-Post ersetzt, gehören diese Einträge weiterhin zum
+  // selben Raid und müssen auf die neue Nachricht umgehängt werden.
+  if (previousMessageId && nextMessageId && previousMessageId !== nextMessageId) {
+    const previousSource = `discordSignup:${previousMessageId}`;
+    const nextSource = `discordSignup:${nextMessageId}`;
+    await Promise.all([
+      query(
+        `update raid_signups
+         set source = $3, updated_at = now()
+         where raid_id = $1 and source = $2`,
+        [raid.id, previousSource, nextSource]
+      ),
+      query(
+        `update raid_external_signups
+         set source = $4, updated_at = now()
+         where guild_id = $1 and raid_id = $2 and source = $3`,
+        [guildId, raid.id, previousSource, nextSource]
+      )
+    ]);
+  }
   return { success: true, raid: normalizeRaidRow(result.rows[0]) };
 }
 
@@ -10645,38 +10808,43 @@ async function findOrCreateRaidleadCharacter(client, guildId, params) {
     return character;
   }
 
-  let createdPlayer = null;
-  for (let attempt = 0; attempt < 5 && !createdPlayer; attempt++) {
-    const generatedPin = normalizePin(
-      "RL" +
-      Date.now().toString(36) +
-      Math.random().toString(36).slice(2, 8)
-    );
-
-    const playerResult = await client.query(
-      `insert into players (guild_id, player_pin, security_question, security_answer)
-       values ($1, $2, $3, $4)
-       on conflict (guild_id, player_pin) do nothing
-       returning id, player_pin`,
-      [guildId, generatedPin, "Raidlead-Eintrag", "Raidlead-Eintrag"]
-    );
-    createdPlayer = playerResult.rows[0] || null;
-  }
-
-  if (!createdPlayer) {
-    const error = new Error("Interner SpielerLogin konnte nicht erzeugt werden.");
-    error.statusCode = 500;
-    throw error;
-  }
-
-  const characterResult = await client.query(
-    `insert into characters (player_id, name, server, class_name, is_main)
-     values ($1, $2, $3, $4, true)
-     returning id, name, server, class_name, created_at`,
-    [createdPlayer.id, player, server, className]
+  // Raidlead-Formulare und ältere Importe liefern teilweise noch den
+  // historischen Standardserver "Everlook", obwohl der Charakter inzwischen
+  // auf einem anderen Realm liegt. Ist der Name in der Gilde eindeutig, muss
+  // der vorhandene SpielerLogin verwendet werden. Andernfalls würde hier ein
+  // künstliches RL…-Konto für dieselbe Person entstehen.
+  const existingByUniqueName = await client.query(
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.player_pin
+     from characters c
+     join players p on p.id = c.player_id
+     where p.guild_id = $1
+       and lower(c.name) = lower($2)
+     order by c.created_at asc
+     limit 2`,
+    [guildId, player]
   );
+  if (existingByUniqueName.rows.length === 1) {
+    const character = existingByUniqueName.rows[0];
+    if (className && clean(character.class_name).toLowerCase() !== className.toLowerCase()) {
+      const updated = await client.query(
+        `update characters
+         set class_name = $1, updated_at = now()
+         where id = $2
+         returning id, name, server, class_name, created_at`,
+        [className, character.id]
+      );
+      return updated.rows[0];
+    }
+    return character;
+  }
 
-  return characterResult.rows[0];
+  const error = new Error(
+    existingByUniqueName.rows.length > 1
+      ? "Der Charaktername ist mehrfach vorhanden. Bitte den richtigen Server des vorhandenen SpielerLogins angeben."
+      : "Für diesen Charakter wurde kein SpielerLogin gefunden. Der Spieler muss zuerst einen eigenen SpielerLogin anlegen und freigeben lassen."
+  );
+  error.statusCode = 409;
+  throw error;
 }
 
 async function savePrioAsRaidlead({ guildId, query: params }) {
@@ -11653,7 +11821,19 @@ async function getGuildLeadershipOverview(guildId, params) {
 }
 
 function normalizeLogAnalysis(row) {
-  const summary = row.summary || {};
+  const storedSummary = row.summary || {};
+  const normalizedRaidKey = normalizeRaidType(row.raid || storedSummary.raid || "").toUpperCase();
+  const expectedBossCount = { MC: 10, BWL: 8, AQ20: 6, AQ40: 9, NAXX: 15, ONY: 1, ZG: 10 }[normalizedRaidKey] || null;
+  const cachedBossKills = row.web_boss_kills == null ? storedSummary.bossKills : Number(row.web_boss_kills);
+  const cachedTotalBosses = row.web_total_bosses == null ? storedSummary.totalBosses : Number(row.web_total_bosses);
+  const invalidLegacyBossProgress = Boolean(expectedBossCount && (Number(cachedBossKills || 0) > expectedBossCount || Number(cachedTotalBosses || 0) > expectedBossCount));
+  const summary = {
+    ...storedSummary,
+    bossKills: invalidLegacyBossProgress ? null : cachedBossKills,
+    totalBosses: expectedBossCount || cachedTotalBosses,
+    playerCount: row.web_player_count == null ? (storedSummary.playerCount ?? storedSummary.players) : Number(row.web_player_count),
+    durationMs: row.web_duration_ms == null ? storedSummary.durationMs : Number(row.web_duration_ms)
+  };
   return {
     id: row.id,
     reportCode: row.report_code || "",
@@ -11776,15 +11956,20 @@ function parseWarcraftLogsEventsData(raw) {
 
 function parseWarcraftLogsTableData(raw) {
   if (!raw) return {};
+  const unwrap = parsed => {
+    if (!parsed || typeof parsed !== "object") return {};
+    if (parsed.data && typeof parsed.data === "object" && !Array.isArray(parsed.data)) return parsed.data;
+    return parsed;
+  };
   if (typeof raw === "string") {
     try {
       const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
+      return unwrap(parsed);
     } catch {
       return {};
     }
   }
-  return raw && typeof raw === "object" ? raw : {};
+  return unwrap(raw);
 }
 
 function normalizeRpbClassName(value) {
@@ -11828,6 +12013,31 @@ function playerActorsFromReport(report) {
     }))
     .filter(actor => actor.id && actor.name)
     .sort((a, b) => a.name.localeCompare(b.name, "de"));
+}
+
+const analysisBossNamesByRaid = {
+  MC: ["lucifron", "magmadar", "gehennas", "garr", "baron geddon", "shazzrah", "sulfuron", "golemagg", "majordomo", "ragnaros"],
+  BWL: ["razorgore", "vaelastrasz", "broodlord", "firemaw", "ebonroc", "flamegor", "chromaggus", "nefarian"],
+  AQ20: ["kurinnaxx", "rajaxx", "moam", "buru", "ayamiss", "ossirian"],
+  AQ40: ["skeram", "sartura", "fankriss", "huhuran", "twin emperors", "veknilash", "veklor", "cthun", "c thun", "viscidus", "ouro"],
+  NAXX: ["anub rekhan", "faerlina", "maexxna", "noth", "heigan", "loatheb", "razuvious", "gothik", "four horsemen", "patchwerk", "grobbulus", "gluth", "thaddius", "sapphiron", "kel thuzad"],
+  ONY: ["onyxia"],
+  ZG: ["jeklik", "venoxis", "mar li", "thekal", "arlokk", "hakkar", "mandokir", "jindo", "gahz ranka", "edge of madness"]
+};
+
+function normalizeAnalysisFightName(value) {
+  return clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function bossFightsForAnalysis(fights, raidName) {
+  const raid = normalizeRaidType(raidName || "").toUpperCase();
+  const names = analysisBossNamesByRaid[raid] || [];
+  return (Array.isArray(fights) ? fights : []).filter(fight => {
+    const encounterId = Number(fight?.encounterID || fight?.encounterId || 0);
+    if (encounterId <= 0) return false;
+    const name = normalizeAnalysisFightName(fight?.name);
+    return names.length ? names.some(boss => name.includes(normalizeAnalysisFightName(boss))) : true;
+  });
 }
 
 function rpbIncludedFightsForAnalysis(fights) {
@@ -11926,6 +12136,22 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
   }
 }
 
+async function fetchBossCombatantSnapshotsForAnalysis(token, reportCode, fights) {
+  const snapshots = [];
+  for (const fight of Array.isArray(fights) ? fights : []) {
+    const fightId = Number(fight?.id || 0);
+    if (!fightId) continue;
+    const events = await fetchReportEventsForAnalysis(token, reportCode, "CombatantInfo", [fightId]);
+    events.forEach((event) => {
+      snapshots.push({
+        ...event,
+        fight: Number(event?.fight || event?.fightID || event?.fightId || fightId)
+      });
+    });
+  }
+  return snapshots;
+}
+
 async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds, sourceId = null) {
   const hasFightScope = Array.isArray(fightIds);
   const hasTimeScope = fightIds && typeof fightIds === "object" && !Array.isArray(fightIds);
@@ -11958,6 +12184,99 @@ async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds
     if (options.strict) throw error;
     return {};
   }
+}
+
+function rankingPercentValue(entry) {
+  for (const key of ["historicalPercent", "rankPercent", "percentile", "percent"]) {
+    const value = Number(entry?.[key]);
+    if (Number.isFinite(value) && value >= 0 && value <= 100) return value;
+  }
+  return null;
+}
+
+function extractReportRankingEntries(raw, metric) {
+  const entries = [];
+  const visit = (value, context = {}) => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) {
+      value.forEach(item => visit(item, context));
+      return;
+    }
+    const encounterId = Number(value.encounterID || value.encounterId || value.encounter?.id || context.encounterId || 0);
+    const fightId = Number(value.fightID || value.fightId || value.fight?.id || context.fightId || 0);
+    const nextContext = { encounterId, fightId };
+    const percent = rankingPercentValue(value);
+    const name = clean(value.name || value.characterName || value.playerName);
+    if (name && percent != null) {
+      entries.push({
+        name,
+        encounterId,
+        fightId,
+        metric,
+        percent: Math.max(0, Math.min(100, percent)),
+        spec: clean(value.spec || value.specName),
+        amount: Number(value.amount || value.total || 0)
+      });
+    }
+    Object.values(value).forEach(child => visit(child, nextContext));
+  };
+  visit(raw);
+  return entries;
+}
+
+async function fetchReportRankingsForAnalysis(token, reportCode, fightIds) {
+  if (!Array.isArray(fightIds) || !fightIds.length) return [];
+  const gqlQuery =
+    "query($code:String!,$fightIDs:[Int]){"+
+    "reportData{report(code:$code){"+
+    "damage:rankings(fightIDs:$fightIDs,playerMetric:dps) "+
+    "healing:rankings(fightIDs:$fightIDs,playerMetric:hps)"+
+    "}}}";
+  try {
+    const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, fightIDs: fightIds });
+    const report = data.reportData?.report || {};
+    return [
+      ...extractReportRankingEntries(report.damage, "dps"),
+      ...extractReportRankingEntries(report.healing, "hps")
+    ];
+  } catch (error) {
+    console.warn("Warcraft-Logs-Parsewerte konnten nicht geladen werden:", error.message || error);
+    return [];
+  }
+}
+
+async function fetchPlayerFightTablesForAnalysis(token, reportCode, dataType, fights, sourceId) {
+  const validFights = (Array.isArray(fights) ? fights : [])
+    .map(fight => ({ ...fight, id: Number(fight?.id || 0) }))
+    .filter(fight => fight.id > 0);
+  if (!validFights.length || Number(sourceId) <= 0) return new Map();
+  const result = new Map();
+  const chunkSize = 5;
+  for (let offset = 0; offset < validFights.length; offset += chunkSize) {
+    const chunk = validFights.slice(offset, offset + chunkSize);
+    const fields = chunk.map((fight, index) =>
+      `fight_${index}:table(dataType:${dataType},fightIDs:[${fight.id}],sourceID:$sourceID)`
+    ).join(" ");
+    const gqlQuery = `query($code:String!,$sourceID:Int!){reportData{report(code:$code){${fields}}}}`;
+    try {
+      const data = await warcraftLogsGraphql(token, gqlQuery, { code: reportCode, sourceID: Number(sourceId) });
+      const report = data.reportData?.report || {};
+      chunk.forEach((fight, index) => result.set(fight.id, parseWarcraftLogsTableData(report[`fight_${index}`])));
+    } catch (error) {
+      console.warn(`Warcraft-Logs-${dataType}-Charakterdaten konnten für Bossgruppe ${Math.floor(offset / chunkSize) + 1} nicht geladen werden:`, error.message || error);
+      for (const fight of chunk) {
+        const table = await fetchReportTableForAnalysis(token, reportCode, dataType, [fight.id], {
+          sourceId: Number(sourceId),
+          strict: true
+        });
+        result.set(fight.id, table);
+      }
+    }
+  }
+  if (result.size !== validFights.length) {
+    throw new Error(`Warcraft Logs lieferte nur ${result.size} von ${validFights.length} benötigten ${dataType}-Bossdatensätzen.`);
+  }
+  return result;
 }
 
 async function getRaidAnalysisItemMetadataByIds(itemIds) {
@@ -12001,29 +12320,162 @@ function abilityName(event) {
   return clean(event?.ability?.name || event?.ability || event?.sourceAbility?.name || "");
 }
 
+function primitiveAbilityId(value) {
+  if (typeof value !== "number" && typeof value !== "string") return 0;
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0 ? id : 0;
+}
+
+function normalizedAbilityLookupName(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function auraAbilityName(aura) {
+  if (typeof aura === "string" && !primitiveAbilityId(aura)) return clean(aura);
+  return clean(
+    aura?.name ||
+    aura?.ability?.name ||
+    aura?.sourceAbility?.name ||
+    aura?.spell?.name ||
+    ""
+  );
+}
+
+function auraAbilityId(aura) {
+  const primitiveId = primitiveAbilityId(aura);
+  if (primitiveId) return primitiveId;
+  return Number(
+    aura?.guid ||
+    aura?.abilityGameID ||
+    aura?.abilityGameId ||
+    aura?.gameID ||
+    aura?.gameId ||
+    aura?.spellID ||
+    aura?.spellId ||
+    primitiveAbilityId(aura?.ability) ||
+    primitiveAbilityId(aura?.sourceAbility) ||
+    primitiveAbilityId(aura?.spell) ||
+    aura?.ability?.guid ||
+    aura?.ability?.abilityGameID ||
+    aura?.ability?.abilityGameId ||
+    aura?.ability?.gameID ||
+    aura?.ability?.gameId ||
+    aura?.ability?.spellID ||
+    aura?.ability?.spellId ||
+    aura?.ability?.id ||
+    aura?.id ||
+    0
+  ) || 0;
+}
+
+function normalizeCombatantAuras(event) {
+  const found = new Map();
+  const seen = new Set();
+  const add = (candidate) => {
+    const id = auraAbilityId(candidate);
+    const name = auraAbilityName(candidate);
+    const normalizedName = normalizedAbilityLookupName(name);
+    const key = id > 0 ? `id:${id}` : normalizedName ? `name:${normalizedName}` : "";
+    if (!key || found.has(key)) return;
+    found.set(
+      key,
+      candidate && typeof candidate === "object"
+        ? candidate
+        : id > 0
+          ? { abilityGameID: id }
+          : { name }
+    );
+  };
+  const visit = (value) => {
+    if (value == null) return;
+    if (typeof value === "string") {
+      const raw = value.trim();
+      if (raw.startsWith("[") || raw.startsWith("{")) {
+        try {
+          visit(JSON.parse(raw));
+          return;
+        } catch (_) {
+          // Fall through: some exports store a single numeric spell id as text.
+        }
+      }
+      add(primitiveAbilityId(raw) || { name: raw });
+      return;
+    }
+    if (typeof value === "number") {
+      add(value);
+      return;
+    }
+    if (typeof value !== "object" || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    const directId = auraAbilityId(value);
+    const directName = auraAbilityName(value);
+    add(value);
+    for (const key of ["auras", "data", "entries", "values", "combatantInfo"]) {
+      if (value[key] != null && value[key] !== value) visit(value[key]);
+    }
+    if (!directId && !directName) {
+      Object.entries(value).forEach(([key, nested]) => {
+        const keyId = primitiveAbilityId(key);
+        if (keyId > 100 && !auraAbilityId(nested)) {
+          if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+            add({ ...nested, abilityGameID: keyId });
+          } else {
+            add(keyId);
+          }
+        }
+        if (nested !== value) visit(nested);
+      });
+    }
+  };
+  [event?.auras, event?.combatantInfo?.auras, event?.data?.auras].forEach(visit);
+  return Array.from(found.values());
+}
+
 function abilityId(event) {
   return Number(
     event?.abilityGameID ||
     event?.abilityGameId ||
+    event?.gameID ||
+    event?.gameId ||
+    event?.spellID ||
+    event?.spellId ||
+    primitiveAbilityId(event?.ability) ||
+    primitiveAbilityId(event?.sourceAbility) ||
+    primitiveAbilityId(event?.spell) ||
     event?.ability?.guid ||
+    event?.ability?.abilityGameID ||
+    event?.ability?.abilityGameId ||
+    event?.ability?.gameID ||
+    event?.ability?.gameId ||
+    event?.ability?.spellID ||
+    event?.ability?.spellId ||
     event?.ability?.id ||
     event?.sourceAbilityGameID ||
+    event?.sourceAbilityGameId ||
     event?.sourceAbility?.guid ||
+    event?.sourceAbility?.abilityGameID ||
+    event?.sourceAbility?.abilityGameId ||
+    event?.sourceAbility?.gameID ||
+    event?.sourceAbility?.gameId ||
+    event?.sourceAbility?.spellID ||
+    event?.sourceAbility?.spellId ||
     event?.sourceAbility?.id ||
     0
-  );
+  ) || 0;
 }
 
 function abilityIdFromTableEntry(entry) {
-  return Number(
-    entry?.guid ||
-    entry?.abilityGameID ||
-    entry?.abilityGameId ||
-    entry?.ability?.guid ||
-    entry?.ability?.id ||
-    entry?.id ||
-    0
-  );
+  return auraAbilityId(entry);
 }
 
 function extraAbilityName(event) {
@@ -12133,6 +12585,17 @@ const holyNovaHealSpellMap = {
   27801: 27805,
   25331: 25329
 };
+
+function healingIdsForConfiguredCast(className, cast) {
+  const ids = new Set((cast?.ids || []).map(id => holyNovaHealSpellMap[id] || id));
+  if (className === "Paladin" && /Flash of Light.*all ranks/i.test(cast?.name || "")) {
+    [19750, 19939, 19940, 19941, 19942, 19943].forEach(id => ids.add(id));
+  }
+  if (className === "Paladin" && /Holy Light.*all ranks/i.test(cast?.name || "")) {
+    [635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292].forEach(id => ids.add(id));
+  }
+  return Array.from(ids);
+}
 
 const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
 
@@ -12461,6 +12924,150 @@ const rpbSpellNamesById = {
   29166: "Innervate"
 };
 
+const rpbGermanSpellLabels = new Map(Object.entries({
+  "Battle Shout":"Schlachtruf","Berserker Rage":"Berserkerwut","Bloodrage":"Blutrausch",
+  "Overpower":"Überwältigen","Execute":"Hinrichten","Demoralizing Shout":"Demoralisierungsruf",
+  "Disarm":"Entwaffnen","Sunder Armor":"Rüstung zerreißen","Heroic Strike":"Heldenhafter Stoß",
+  "Cleave":"Spalten","Whirlwind":"Wirbelwind","Shield Slam":"Schildschlag","Shield Block":"Schildblock",
+  "Shield Bash":"Schildhieb","Revenge":"Rache","Mortal Strike":"Tödlicher Stoß","Thunder Clap":"Donnerknall",
+  "Hamstring":"Kniesehne","Charge":"Sturmangriff","Intercept":"Abfangen","Taunt":"Spott",
+  "Berserker Stance":"Berserkerhaltung","Defensive Stance":"Verteidigungshaltung","Battle Stance":"Kampfhaltung",
+  "Arcane Shot":"Arkaner Schuss","Aimed Shot":"Gezielter Schuss","Multi-Shot":"Mehrfachschuss",
+  "Frostbolt":"Frostblitz","Fireball":"Feuerball","Fire Blast":"Feuerschlag","Frost Nova":"Frostnova",
+  "Arcane Missiles":"Arkane Geschosse","Arcane Explosion":"Arkane Explosion","Counterspell":"Gegenzauber",
+  "Shadow Bolt":"Schattenblitz","Corruption":"Verderbnis","Immolate":"Feuerbrand","Drain Life":"Blutsauger",
+  "Power Word: Shield":"Machtwort: Schild","Renew":"Erneuerung","Flash Heal":"Blitzheilung",
+  "Greater Heal":"Große Heilung","Prayer of Healing":"Gebet der Heilung","Dispel Magic":"Magiebannung",
+  "Healing Touch":"Heilende Berührung","Rejuvenation":"Verjüngung","Regrowth":"Nachwachsen",
+  "Faerie Fire":"Feenfeuer","Innervate":"Anregen","Wrath":"Zorn","Moonfire":"Mondfeuer",
+  "Sinister Strike":"Finsterer Stoß","Backstab":"Meucheln","Eviscerate":"Ausweiden","Kick":"Tritt"
+  ,"Greater Stoneshield Potion":"Großer Steinschildtrank","Limited Invulnerability Potion":"Begrenzter Unverwundbarkeitstrank",
+  "Living Action Potion":"Trank der lebhaften Aktion","Free Action Potion":"Trank der freien Aktion",
+  "Great Rage Potion":"Großer Wuttrank","Mighty Rage Potion":"Mächtiger Wuttrank",
+  "Major Healing Potion":"Erheblicher Heiltrank","Major Mana Potion":"Erheblicher Manatrank",
+  "Living/Free Action Potion":"Trank der lebhaften/freien Aktion","all other Mana Potions":"Weitere Manatränke",
+  "Demonic Rune/Dark Rune":"Dämonische Rune/Dunkelrune","Major/Greater Healthstone":"Erheblicher/Großer Gesundheitsstein",
+  "Mana Ruby":"Manarubin","all other Mana Gems":"Weitere Manasteine",
+  "Elixir of Poison Resistance":"Elixier des Giftwiderstands",
+  "Demonic Rune":"Dämonische Rune","Dark Rune":"Dunkelrune","Thistle Tea":"Disteltee",
+  "Heavy Runecloth Bandage":"Schwerer Runenstoffverband","Dense Dynamite":"Dichtes Dynamit",
+  "Goblin Sapper Charge":"Goblinpioniersprengladung","Stratholme Holy Water":"Weihwasser von Stratholme",
+  "Eye of the Dead":"Auge der Toten","Hazzarah's Charm of Healing":"Hazzarahs Amulett der Heilung",
+  "Scarab Brooch":"Skarabäusbrosche","Scroll of Binding Light":"Rolle des bindenden Lichts",
+  "Second Wind":"Zweiter Wind","Warmth of Forgiveness":"Wärme der Vergebung",
+  "Wushoolay's Charm of Nature":"Wushoolays Amulett der Natur","Draconic Infused Emblem":"Drachenblutdurchtränktes Emblem",
+  "Essence of Sapphiron":"Essenz Sapphirons","Mind Quickening Gem":"Gedankenschnelljuwel",
+  "Talisman of Ephemeral Power":"Talisman der flüchtigen Macht","Eye of Diminution":"Auge der Schwächung",
+  "Fetish of the Sand Reaver":"Fetisch des Sandhäschers","Earthstrike":"Erdschlag",
+  "Kiss of the Spider":"Kuss der Spinne","Slayer's Crest":"Wappen des Schlächters","Fear Ward":"Furchtzauberschutz"
+}));
+
+function translateRpbLabelToGerman(value) {
+  let label = clean(value);
+  const suffix = label.match(/\s*\([^)]*\)\s*$/)?.[0] || "";
+  const base = label.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s+uptime.*$/i, "").trim();
+  const translated = rpbGermanSpellLabels.get(base);
+  if (translated) return `${translated}${suffix}`;
+  return label
+    .replace(/uptime by you total%/gi, "Uptime durch dich gesamt %")
+    .replace(/uptime on you%/gi, "Uptime auf dir %")
+    .replace(/overheal%/gi, "Überheilung %")
+    .replace(/rank/gi, "Rang");
+}
+
+async function ensureRpbSpellMetadataSchema() {
+  if (rpbSpellMetadataSchemaReady) return;
+  await query(
+    `create table if not exists log_analysis_spell_metadata (
+       spell_id integer primary key,
+       locale text not null default 'de',
+       name text not null default '',
+       icon text not null default '',
+       tooltip text not null default '',
+       source text not null default 'wowhead',
+       updated_at timestamptz not null default now()
+     )`
+  );
+  rpbSpellMetadataSchemaReady = true;
+}
+
+async function getRpbSpellMetadata(spellIds) {
+  const ids = Array.from(new Set((spellIds || []).map(Number).filter(id => id > 0)));
+  if (!ids.length) return new Map();
+  try {
+    await ensureRpbSpellMetadataSchema();
+    const stored = await query(
+      `select spell_id, name, icon, tooltip
+       from log_analysis_spell_metadata
+       where locale = 'de' and spell_id = any($1::int[])`,
+      [ids]
+    );
+    stored.rows.forEach(row => rpbSpellMetadataCache.set(Number(row.spell_id), {
+      id: Number(row.spell_id),
+      name: clean(row.name),
+      icon: clean(row.icon),
+      tooltip: clean(row.tooltip)
+    }));
+  } catch (error) {
+    console.warn("Gespeicherte Zauberdaten konnten nicht geladen werden:", error.message || error);
+  }
+  const missing = ids.filter(id => !rpbSpellMetadataCache.has(id));
+  let index = 0;
+  async function worker() {
+    while (index < missing.length) {
+      const id = missing[index++];
+      try {
+        const response = await fetch(`https://nether.wowhead.com/classic/tooltip/spell/${id}?locale=de`, {
+          headers: { "User-Agent": "LichtLoot/1.0" }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const metadata = {
+          id,
+          name: clean(data?.name),
+          icon: clean(data?.icon),
+          tooltip: clean(String(data?.tooltip || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " "))
+        };
+        rpbSpellMetadataCache.set(id, metadata);
+        try {
+          await ensureRpbSpellMetadataSchema();
+          await query(
+            `insert into log_analysis_spell_metadata (spell_id, locale, name, icon, tooltip, source, updated_at)
+             values ($1, 'de', $2, $3, $4, 'wowhead', now())
+             on conflict (spell_id) do update set
+               locale = excluded.locale,
+               name = excluded.name,
+               icon = excluded.icon,
+               tooltip = excluded.tooltip,
+               source = excluded.source,
+               updated_at = now()`,
+            [id, metadata.name, metadata.icon, metadata.tooltip]
+          );
+        } catch (storeError) {
+          console.warn(`Wowhead-Zauberdaten für Spell ${id} konnten nicht gespeichert werden:`, storeError.message || storeError);
+        }
+      } catch (error) {
+        console.warn(`Wowhead-Zauberdaten für Spell ${id} konnten nicht geladen werden:`, error.message || error);
+        rpbSpellMetadataCache.set(id, { id, name: "", icon: "", tooltip: "" });
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(6, missing.length) }, () => worker()));
+  return new Map(ids.map(id => [id, rpbSpellMetadataCache.get(id) || { id, name: "", icon: "", tooltip: "" }]));
+}
+
+function localizedRpbCastLabel(cast, metadata) {
+  const original = clean(cast?.name);
+  const base = clean(metadata?.name) || translateRpbLabelToGerman(original.replace(/\s*\(.*/, ""));
+  const suffix = original.slice(original.indexOf("(") > -1 ? original.indexOf("(") : original.length)
+    .replace(/Faerie Fire/gi, "Feenfeuer")
+    .replace(/Feral/gi, "Wildtier")
+    .replace(/uptime/gi, "Uptime")
+    .replace(/overheal/gi, "Überheilung")
+    .replace(/rank/gi, "Rang");
+  return `${base}${suffix ? ` ${suffix}` : ""}`;
+}
+
 function matchingLabel(name, groups, id = 0) {
   const numericId = Number(id || 0);
   if (numericId) {
@@ -12538,6 +13145,12 @@ async function buildClaAnalysisRows(analysis) {
     if (gear.length) gearByPlayer.set(player, gear);
   });
 
+  const gearItemIds = Array.from(gearByPlayer.values())
+    .flat()
+    .map(item => item.itemId || item.id)
+    .filter(Boolean);
+  const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+
   const headerPlayers = players.map(player => player.name);
   const title = report.title || analysis.title || "";
   const zone = report.zone?.name || analysis.raid || "";
@@ -12558,7 +13171,7 @@ async function buildClaAnalysisRows(analysis) {
         row.push(index < headerPlayers.length ? "---------------------------------------------------------------" : "");
         return;
       }
-      const enchant = found.permanentEnchantName || found.permanentEnchant || "no enchant";
+      const enchant = found.permanentEnchantName || found.permanentEnchant || "keine Verzauberung";
       row.push(`${found.name || itemName} [${enchant}]`);
     });
     rows.push(row);
@@ -12567,8 +13180,11 @@ async function buildClaAnalysisRows(analysis) {
   headerPlayers.forEach((player, index) => {
     const gear = gearByPlayer.get(player) || [];
     const missing = gear
-      .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"].includes(item.slotName))
-      .map(item => `${item.name} [no enchant]`);
+      .filter(item => {
+        const metadata = itemMetaById.get(String(item.itemId || item.id)) || null;
+        return isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item);
+      })
+      .map(item => `${item.name} [keine Verzauberung]`);
     if (!missing.length) return;
     const row = ["", "", "", ""];
     headerPlayers.forEach((name, playerIndex) => row.push(playerIndex === index ? missing.join(", ") : ""));
@@ -12661,30 +13277,59 @@ async function buildRpbAnalysisRows(analysis) {
 }
 
 async function buildRpbWebAnalysis(analysis, options = {}) {
+  console.info(`[Loganalyse] Starte Warcraft-Logs-Auswertung ${analysis.report_code}.`);
   const rpbConfig = await loadRpbConfigAll();
   const base = await fetchReportBaseForAnalysis(analysis.report_code);
   const { token, report, fights, fightIds } = base;
   const classByName = options.classByName instanceof Map ? options.classByName : new Map();
   const roleByName = options.roleByName instanceof Map ? options.roleByName : new Map();
+  const signupRoleByName = options.signupRoleByName instanceof Map ? options.signupRoleByName : new Map();
   const players = (base.players || []).map(player => ({
     ...player,
     className: normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()) || player.className) || "",
-    raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()))
+    raidRole: normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase())),
+    signupRole: signupRoleByName.get(clean(player.name).toLowerCase()) || ""
   }));
   const playersById = actorById(players);
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
   const rpbFights = rpbIncludedFightsForAnalysis(fights);
   const rpbFightScope = rpbFights.length ? rpbFights.map(fight => Number(fight.id)) : (fightIds.length ? fightIds : fullReportScope);
+  const bossFightsForGear = bossFightsForAnalysis(fights, report.zone?.name || analysis.raid || "");
+  const performanceScope = bossFightsForGear.length ? bossFightsForGear.map(fight => Number(fight.id)) : rpbFightScope;
+  const reportRankingEntries = await fetchReportRankingsForAnalysis(token, analysis.report_code, performanceScope);
+  let performanceDurationMs = bossFightsForGear.length
+    ? bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0)
+    : reportDurationMs;
+  const lastBossFightForGear = bossFightsForGear[bossFightsForGear.length - 1] || rpbFights[rpbFights.length - 1] || fights[fights.length - 1];
+  const gearScope = lastBossFightForGear
+    ? { startTime: Number(lastBossFightForGear.startTime || 0), endTime: Number(lastBossFightForGear.endTime || 0) }
+    : fullReportScope;
+  // The main analysis represents the complete logged raid (bosses + trash).
+  // Use the report's real time range here. Passing the collected fight IDs can
+  // make Warcraft Logs return only encounter tables, so the stored report-wide
+  // totals then equal the boss totals and do not change when the UI is filtered.
+  // Individual boss tables below are still fetched separately for boss filters.
   const activityScope = fullReportScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
+  if (Number(castsTable.totalTime || 0) > 0) performanceDurationMs = Number(castsTable.totalTime);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
+  const damageOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
   const damageTakenEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
+  const damageTakenOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "DamageTaken", activityScope);
+  const threatOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Threat", activityScope);
+  const deathEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Deaths", activityScope);
   const interruptEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Interrupts", activityScope);
   const healingEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Healing", activityScope);
-  const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", activityScope);
-  const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fightIds.length ? fightIds : fullReportScope);
+  const healingOverviewTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Healing", activityScope);
+  // Worldbuffs are usually applied before the first boss and can disappear on trash.
+  // Read the complete report so their state can be reconstructed at every boss pull.
+  const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", fullReportScope);
+  const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", gearScope);
+  const reportCombatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fullReportScope);
+  const bossCombatantEvents = await fetchBossCombatantSnapshotsForAnalysis(token, analysis.report_code, bossFightsForGear);
   const consumes = {};
   const trinketsAndRacials = {};
   const absorbs = {};
@@ -12697,34 +13342,170 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const wclActiveSeconds = {};
   const wclActivePercent = {};
   const healingTotals = {};
+  const healingTotalSource = {};
+  const damageTotals = {};
+  const damageTotalSource = {};
+  const damageTakenTotals = {};
+  const threatTotals = {};
+  const threatAbilitiesByPlayer = {};
+  const combatOutcomeStats = {};
+  let characterPerformanceDurationMs = 0;
+  const deathTotals = {};
   const overhealTotals = {};
   const healingBySpell = {};
   const healingById = {};
+  const rpbSpellIconByName = {};
   const classCasts = {};
   const claCombatBuffs = {};
   const claWorldBuffs = {};
   const claIgnites = {};
   const damageHitsByPlayerAndAbility = {};
   const classCooldowns = {};
+  const classCooldownsBoss = {};
+  const classCooldownsTrash = {};
   const gearByPlayer = new Map();
+  const fightPlayerMetrics = {};
+  const fightConsumables = {};
+  const playerTableDiagnostics = [];
+  const fightWorldBuffs = {};
+  const parseByFightAndPlayer = new Map();
   const stSecondsByPlayer = {};
   const aoeSecondsByPlayer = {};
   const classCastSources = {};
   const healerClasses = new Set(["Druid", "Paladin", "Priest", "Shaman"]);
+  const combatOutcomeMetrics = [
+    ["outgoingDodge", "Ausweichen (ausgehend)", "outgoing"],
+    ["outgoingMiss", "Verfehlt (ausgehend)", "outgoing"],
+    ["outgoingParry", "Parieren (ausgehend)", "outgoing"],
+    ["outgoingResist", "Widerstand (ausgehend)", "outgoing"],
+    ["incomingCritical", "Kritisch erhalten", "incomingMelee"],
+    ["incomingCrushing", "Vernichtungsschlag erhalten", "incomingMelee"],
+    ["incomingBlocked", "Geblockt", "incomingMelee"],
+    ["incomingDodge", "Ausweichen erhalten", "incomingMelee"],
+    ["incomingParry", "Parieren erhalten", "incomingMelee"],
+    ["incomingMiss", "Verfehlt erhalten", "incomingMelee"],
+    ["incomingImmune", "Immun", "incomingMelee"]
+  ];
+
+  function ensureCombatOutcomeStats(playerName) {
+    if (!combatOutcomeStats[playerName]) {
+      combatOutcomeStats[playerName] = {
+        outgoingAttempts: 0,
+        incomingMeleeAttempts: 0,
+        values: Object.fromEntries(combatOutcomeMetrics.map(([key]) => [key, 0]))
+      };
+    }
+    return combatOutcomeStats[playerName];
+  }
+
+  function combatOutcomeText(event) {
+    return clean([
+      event?.type,
+      event?.hitType,
+      event?.missType,
+      event?.outcome,
+      event?.result,
+      event?.attackType
+    ].filter(value => value != null).join(" ")).toLowerCase();
+  }
+
+  function isPeriodicCombatEvent(event) {
+    const text = combatOutcomeText(event);
+    return event?.tick === true || event?.periodic === true || /periodic|tick/.test(text);
+  }
+
+  function isDirectCombatAttempt(event) {
+    if (isPeriodicCombatEvent(event)) return false;
+    const text = combatOutcomeText(event);
+    return Number(event?.amount || 0) > 0 || Number(event?.absorbed || event?.blocked || 0) > 0 ||
+      /damage|miss|dodge|parry|resist|immune|block|critical|crushing|hit/.test(text);
+  }
+
+  function isMeleeCombatEvent(event) {
+    const text = combatOutcomeText(event);
+    const name = clean(abilityName(event)).toLowerCase();
+    const id = Number(abilityId(event) || 0);
+    return event?.melee === true || id === 1 || /melee|nahkampf|swing|auto.?attack/.test(`${text} ${name}`);
+  }
+
+  function hasCombatOutcome(event, pattern, booleanFields = []) {
+    if (booleanFields.some(field => event?.[field] === true || Number(event?.[field] || 0) > 0)) return true;
+    return pattern.test(combatOutcomeText(event));
+  }
+
+  function hasCombatHitType(event, ...hitTypes) {
+    const hitType = Number(event?.hitType);
+    return Number.isFinite(hitType) && hitTypes.includes(hitType);
+  }
+
+  function recordOutgoingCombatOutcome(event) {
+    const playerName = playerNameFromEvent(event, true);
+    if (!playerName || !isDirectCombatAttempt(event)) return;
+    const stats = ensureCombatOutcomeStats(playerName);
+    stats.outgoingAttempts += 1;
+    if (hasCombatHitType(event, 7) || hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.outgoingDodge += 1;
+    if (hasCombatHitType(event, 9) || hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.outgoingMiss += 1;
+    if (hasCombatHitType(event, 8) || hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.outgoingParry += 1;
+    if (hasCombatHitType(event, 14) || hasCombatOutcome(event, /resist|widerstand/, ["resisted"])) stats.values.outgoingResist += 1;
+  }
+
+  function recordIncomingMeleeOutcome(event) {
+    const playerName = playerNameFromEvent(event, false);
+    if (!playerName || !isDirectCombatAttempt(event) || !isMeleeCombatEvent(event)) return;
+    const stats = ensureCombatOutcomeStats(playerName);
+    stats.incomingMeleeAttempts += 1;
+    if (event?.critical === true || hasCombatHitType(event, 2, 5) || /critical|kritisch/.test(combatOutcomeText(event))) stats.values.incomingCritical += 1;
+    if (hasCombatHitType(event, 15) || hasCombatOutcome(event, /crushing|vernichtung/, ["crushing"])) stats.values.incomingCrushing += 1;
+    if (hasCombatHitType(event, 4, 5) || hasCombatOutcome(event, /block|geblockt/, ["blocked"])) stats.values.incomingBlocked += 1;
+    if (hasCombatHitType(event, 7) || hasCombatOutcome(event, /dodge|ausweich/, ["dodged"])) stats.values.incomingDodge += 1;
+    if (hasCombatHitType(event, 8) || hasCombatOutcome(event, /parry|parier/, ["parried"])) stats.values.incomingParry += 1;
+    if (hasCombatHitType(event, 9) || hasCombatOutcome(event, /\bmiss(?:ed)?\b|verfehl/, ["missed"])) stats.values.incomingMiss += 1;
+    if (hasCombatHitType(event, 10) || hasCombatOutcome(event, /immune|immun/, ["immune"])) stats.values.incomingImmune += 1;
+  }
+  const bossFightByEncounter = new Map();
+  bossFightsForGear.forEach(fight => {
+    const encounterId = Number(fight.encounterID || fight.encounterId || 0);
+    if (encounterId && !bossFightByEncounter.has(encounterId)) bossFightByEncounter.set(encounterId, Number(fight.id));
+  });
+  reportRankingEntries.forEach(entry => {
+    const fightId = Number(entry.fightId || bossFightByEncounter.get(Number(entry.encounterId || 0)) || 0);
+    if (!fightId || !entry.name) return;
+    const player = players.find(candidate => clean(candidate.name).toLowerCase() === clean(entry.name).toLowerCase());
+    if (!player) return;
+    const isHealer = player.raidRole === "healer" || clean(player.signupRole).toLowerCase() === "heiler";
+    if ((isHealer && entry.metric !== "hps") || (!isHealer && entry.metric !== "dps")) return;
+    const key = `${fightId}:${clean(player.name).toLowerCase()}`;
+    const current = parseByFightAndPlayer.get(key);
+    if (!current || entry.percent > current.percent) parseByFightAndPlayer.set(key, entry);
+  });
   const totalFightSeconds = Math.max(1, Math.round((fights || []).reduce((sum, fight) => {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
   }, 0) / 1000));
   const claWorldBuffDefinitions = [
-    ["Nef/Ony", [22888, 355363]],
-    ["Rend", [16609, 355366, 460940]],
-    ["ZG Herz", [24425, 355365]],
-    ["Songflower", [15366]],
-    ["Mol'dar", [22818]],
-    ["Fengus", [22817]],
-    ["Slip'kik", [22820]],
-    ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767]],
-    ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]]
+    ["Nef/Ony", [22888, 355363], ["Rallying Cry of the Dragonslayer", "Schlachtruf der Drachentöter"]],
+    ["Rend", [16609, 355366, 460940], ["Warchief's Blessing", "Segen des Kriegshäuptlings"]],
+    ["ZG Herz", [24425, 355365], ["Spirit of Zandalar", "Geist von Zandalar"]],
+    ["Songflower", [15366], ["Songflower Serenade", "Liedblumenserenade"]],
+    ["Mol'dar", [22818], ["Mol'dar's Moxie", "Moldars Mut"]],
+    ["Fengus", [22817], ["Fengus' Ferocity", "Fengus' Wildheit"]],
+    ["Slip'kik", [22820], ["Slip'kik's Savvy", "Slip'kiks Grips"]],
+    ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767], ["Sayge's Dark Fortune", "Sayges dunkles Schicksal"]],
+    ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693], [
+      "Spirit of Zanza", "Geist von Zanza", "Ground Scorpok Assay", "Stoß des Skorpoks", "Stoss des Skorpoks",
+      "Cerebral Cortex Compound", "Lung Juice Cocktail", "ROIDS", "Gizzard Gum"
+    ]]
   ];
+  const claWorldBuffFallbackMetadata = {
+    "Nef/Ony": { spellId: 22888, name: "Schlachtruf der Drachentöter", icon: "inv_misc_head_dragon_01" },
+    "Rend": { spellId: 16609, name: "Segen des Kriegshäuptlings", icon: "spell_arcane_teleportorgrimmar" },
+    "ZG Herz": { spellId: 24425, name: "Geist von Zandalar", icon: "ability_creature_poison_05" },
+    "Songflower": { spellId: 15366, name: "Liedblumenserenade", icon: "spell_holy_mindvision" },
+    "Mol'dar": { spellId: 22818, name: "Mol'dars Mut", icon: "spell_nature_massteleport" },
+    "Fengus": { spellId: 22817, name: "Fengus' Wildheit", icon: "spell_nature_undyingstrength" },
+    "Slip'kik": { spellId: 22820, name: "Slip'kiks Grips", icon: "spell_holy_lesserheal02" },
+    "DMF": { spellId: 23768, name: "Sayges dunkles Schicksal", icon: "inv_misc_orb_02" },
+    "Zanza/BL": { spellId: 10669, name: "Zanza- und Verwüstete-Lande-Buffs", icon: "spell_nature_forceofnature" }
+  };
   const claCombatBuffDefinitions = [
     ["Greater Fire Protection Potion", [17543]],
     ["Greater Frost Protection Potion", [17544]],
@@ -12759,6 +13540,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     return found ? found[0] : "";
   }
 
+  function labelForWorldBuff(spellId, rawName = "") {
+    const byId = labelForSpellId(spellId, claWorldBuffDefinitions);
+    if (byId) return byId;
+    const name = normalizedAbilityLookupName(rawName);
+    if (!name) return "";
+    const found = claWorldBuffDefinitions.find(([, , aliases = []]) => aliases.some(alias => {
+      const normalizedAlias = normalizedAbilityLookupName(alias);
+      return normalizedAlias && (name === normalizedAlias || name.includes(normalizedAlias));
+    }));
+    return found ? found[0] : "";
+  }
+
   function markActive(event) {
     const player = playerNameFromEvent(event, true);
     if (!player) return;
@@ -12766,6 +13559,28 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const timestamp = Number(event.timestamp || event.time || 0);
     if (timestamp) activeSeconds[player].add(Math.floor(timestamp / 1000));
     activeEventCounts[player] = (activeEventCounts[player] || 0) + 1;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (fightId && timestamp) {
+      if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+      if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+      fightPlayerMetrics[fightId][player].activeSeconds.add(Math.floor(timestamp / 1000));
+    }
+  }
+
+  function addFightPlayerMetric(event, player, field, amount = 1) {
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (!fightId || !player) return;
+    if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+    if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+    fightPlayerMetrics[fightId][player][field] = Number(fightPlayerMetrics[fightId][player][field] || 0) + Number(amount || 0);
+  }
+
+  function markFightConsumable(event, player, label) {
+    const fightId = Number(event?.fight || event?.fightID || event?.fightId || 0);
+    if (!fightId || !player || !label || !bossFightsForGear.some(fight => Number(fight.id) === fightId)) return;
+    if (!fightConsumables[fightId]) fightConsumables[fightId] = {};
+    if (!fightConsumables[fightId][player]) fightConsumables[fightId][player] = new Set();
+    fightConsumables[fightId][player].add(label);
   }
 
   function addHealing(event) {
@@ -12775,19 +13590,36 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const overheal = Number(event.overheal || event.overhealing || event.overhealAmount || 0);
     const id = abilityId(event);
     const spell = displayAbilityName(event) || "Unbekannter Heal";
-    healingTotals[player] = (healingTotals[player] || 0) + amount;
+    if (!healingTotalSource[player]) {
+      healingTotals[player] = (healingTotals[player] || 0) + amount;
+      healingTotalSource[player] = "events";
+    }
     overhealTotals[player] = (overhealTotals[player] || 0) + overheal;
     if (!healingBySpell[spell]) healingBySpell[spell] = {};
-    if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0 };
+    if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
     healingBySpell[spell][player].amount += amount;
     healingBySpell[spell][player].overheal += overheal;
     healingBySpell[spell][player].hits += 1;
+    healingBySpell[spell][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
     if (id) {
       if (!healingById[id]) healingById[id] = {};
-      if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0 };
+      if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
       healingById[id][player].amount += amount;
       healingById[id][player].overheal += overheal;
       healingById[id][player].hits += 1;
+      healingById[id][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
+      const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+      if (fightId) {
+        if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+        if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+        const metrics = fightPlayerMetrics[fightId][player];
+        if (!metrics.healingSpells) metrics.healingSpells = {};
+        if (!metrics.healingSpells[id]) metrics.healingSpells[id] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
+        metrics.healingSpells[id].amount += amount;
+        metrics.healingSpells[id].overheal += overheal;
+        metrics.healingSpells[id].hits += 1;
+        metrics.healingSpells[id].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
+      }
     }
   }
 
@@ -12824,6 +13656,17 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!classCooldowns[player.className]) classCooldowns[player.className] = {};
     if (!classCooldowns[player.className][cooldown.name]) classCooldowns[player.className][cooldown.name] = {};
     classCooldowns[player.className][cooldown.name][player.name] = (classCooldowns[player.className][cooldown.name][player.name] || 0) + 1;
+    const explicitFightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const timestamp = Number(event.timestamp || event.time || 0);
+    const matchedFight = fights.find(fight => explicitFightId
+      ? Number(fight.id || 0) === explicitFightId
+      : timestamp >= Number(fight.startTime || 0) && timestamp <= Number(fight.endTime || 0));
+    const target = matchedFight && Number(matchedFight.encounterID || matchedFight.encounterId || 0) > 0
+      ? classCooldownsBoss
+      : classCooldownsTrash;
+    if (!target[player.className]) target[player.className] = {};
+    if (!target[player.className][cooldown.name]) target[player.className][cooldown.name] = {};
+    target[player.className][cooldown.name][player.name] = (target[player.className][cooldown.name][player.name] || 0) + 1;
   }
 
   function addDamageHit(event) {
@@ -12872,6 +13715,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!spell || /^\d+$/.test(spell)) return;
     if (!player.className) player.className = inferClassFromSpellName(spell);
     if (!player.className) return;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (fightId) {
+      if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+      if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+      const metrics = fightPlayerMetrics[fightId][player.name];
+      if (!metrics.abilityCasts) metrics.abilityCasts = {};
+      metrics.abilityCasts[configuredCast?.name || spell] = Number(metrics.abilityCasts[configuredCast?.name || spell] || 0) + 1;
+    }
     if (configuredCast) {
       addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", 1, "events");
     } else {
@@ -12894,10 +13745,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     async function worker() {
       while (index < limitedPlayers.length) {
         const player = limitedPlayers[index++];
-        const [table, healingTable] = await Promise.all([
+        const wantsHealing = healerClasses.has(player.className);
+        const [table, summaryTable] = await Promise.all([
           fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope, player.id),
-          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", activityScope, player.id)
+          fetchReportTableForAnalysis(token, analysis.report_code, "Summary", gearScope, player.id)
         ]);
+        const healingFightTables = new Map();
+        const damageFightTables = new Map();
         const entries = Array.isArray(table.entries) ? table.entries : [];
         entries.forEach(entry => {
           const count = Number(entry.total || entry.uses || entry.amount || entry.count || 0);
@@ -12909,14 +13763,164 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
           const configuredCast = configuredStCast || configuredAoeCast;
           if (!configuredCast) return;
+          if (entry.icon && !rpbSpellIconByName[configuredCast.name]) rpbSpellIconByName[configuredCast.name] = clean(entry.icon);
           addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", count, "table");
         });
-        (Array.isArray(healingTable.entries) ? healingTable.entries : []).forEach(entry => {
-          addHealingTableEntry(player.name, entry);
+        let playerHealing = 0;
+        let playerDamage = 0;
+        let playerActiveMs = 0;
+        let playerDurationMs = 0;
+        const tableAmount = result => {
+          const resultEntries = Array.isArray(result?.entries) ? result.entries : [];
+          return Number(result?.total || result?.totalHealing || result?.totalDamage || result?.totalAmount || result?.amount || 0)
+            || resultEntries.reduce((sum, entry) => sum + Number(entry.total || entry.amount || 0), 0);
+        };
+        bossFightsForGear.forEach(fight => {
+          const fightId = Number(fight.id || 0);
+          const healingTable = healingFightTables.get(fightId) || {};
+          const damageTable = damageFightTables.get(fightId) || {};
+          const healing = tableAmount(healingTable);
+          const damage = tableAmount(damageTable);
+          playerHealing += healing;
+          playerDamage += damage;
+          (Array.isArray(healingTable.entries) ? healingTable.entries : []).forEach(entry => addHealingTableEntry(player.name, entry));
+          if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+          if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+          fightPlayerMetrics[fightId][player.name].damageDone = Math.round(damage);
+          fightPlayerMetrics[fightId][player.name].healingDone = Math.round(healing);
+          const relevantTable = wantsHealing && healing > 0 ? healingTable : damageTable;
+          const fightDurationMs = Math.max(1, Number(relevantTable.totalTime || damageTable.totalTime || healingTable.totalTime || 0)
+            || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
+          const activeMs = Math.max(0, ...(Array.isArray(relevantTable.entries) ? relevantTable.entries : [])
+            .map(entry => Number(entry.activeTime || entry.activeTimeReduced || 0)));
+          if (activeMs > 0) {
+            fightPlayerMetrics[fightId][player.name].activityPercentOverride = Math.min(100, Math.round(activeMs * 10000 / fightDurationMs) / 100);
+            playerActiveMs += activeMs;
+          }
+          playerDurationMs += fightDurationMs;
         });
+        if (playerHealing > 0) {
+          healingTotals[player.name] = playerHealing;
+          healingTotalSource[player.name] = "character-fights";
+        }
+        if (playerDamage > 0) {
+          damageTotals[player.name] = playerDamage;
+          damageTotalSource[player.name] = "character-fights";
+        }
+        if (playerActiveMs > 0 && playerDurationMs > 0) {
+          wclActivePercent[player.name] = `${Math.min(100, Math.round(playerActiveMs * 10000 / playerDurationMs) / 100)}%`;
+        }
+        characterPerformanceDurationMs = Math.max(characterPerformanceDurationMs, playerDurationMs);
+        if (!gearByPlayer.has(player.name)) {
+          const summaryGear = normalizeWarcraftLogsGear(summaryTable?.combatantInfo?.gear || summaryTable?.gear || []);
+          if (summaryGear.length) gearByPlayer.set(player.name, summaryGear);
+        }
       }
     }
     await Promise.all(Array.from({ length: Math.min(concurrency, limitedPlayers.length) }, () => worker()));
+  }
+
+  function applyOverviewPerformanceTable(table, totals, sourceName) {
+    const totalTime = Number(table?.totalTime || 0);
+    (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
+      const name = clean(entry?.name);
+      if (!name || !players.some(player => player.name === name)) return;
+      const total = Number(entry.total || entry.amount || 0);
+      if (total > 0) {
+        totals[name] = total;
+        if (totals === healingTotals) healingTotalSource[name] = sourceName;
+        if (totals === damageTotals) damageTotalSource[name] = sourceName;
+      }
+      const activeMs = Number(entry.activeTime || entry.activeTimeReduced || 0);
+      if (activeMs > 0 && totalTime > 0) {
+        const percent = Math.min(100, Math.round(activeMs * 10000 / totalTime) / 100);
+        const current = Number.parseFloat(String(wclActivePercent[name] || "0").replace("%", "")) || 0;
+        if (percent > current) wclActivePercent[name] = `${percent}%`;
+      }
+    });
+  }
+
+  async function loadFightPerformanceTables() {
+    const bossFights = bossFightsForGear;
+    const playersByActorId = actorById(players);
+    const playersByExactName = new Map(players.map(player => [clean(player.name).toLowerCase(), player]));
+    const playersByNormalizedName = new Map(players.map(player => [normalizeAnalysisFightName(player.name), player]));
+    const resolveTablePlayer = entry => {
+      const rawName = clean(entry?.name);
+      const exact = playersByExactName.get(rawName.toLowerCase());
+      if (exact) return exact;
+      const withoutRealm = rawName.replace(/-[^-]+$/, "");
+      const normalized = playersByNormalizedName.get(normalizeAnalysisFightName(withoutRealm));
+      if (normalized) return normalized;
+      const actorId = Number(entry?.sourceID || entry?.sourceId || entry?.actorID || entry?.actorId || entry?.id || 0);
+      return playersByActorId.get(actorId) || null;
+    };
+    const diagnosticEntry = entry => ({
+      name: clean(entry?.name),
+      id: Number(entry?.id || 0) || null,
+      sourceID: Number(entry?.sourceID || entry?.sourceId || 0) || null,
+      actorID: Number(entry?.actorID || entry?.actorId || 0) || null,
+      total: Number(entry?.total || entry?.amount || 0),
+      activeTime: Number(entry?.activeTime || entry?.activeTimeReduced || 0),
+      type: clean(entry?.type),
+      icon: clean(entry?.icon)
+    });
+    let index = 0;
+    const concurrency = Math.min(2, bossFights.length);
+    async function worker() {
+      while (index < bossFights.length) {
+        const fight = bossFights[index++];
+        const fightId = Number(fight.id || 0);
+        if (!fightId) continue;
+        const [damageTable, healingTable, damageTakenTable, threatTable] = await Promise.all([
+          fetchReportTableForAnalysis(token, analysis.report_code, "DamageDone", [fightId], { strict: true }),
+          fetchReportTableForAnalysis(token, analysis.report_code, "Healing", [fightId], { strict: true }),
+          fetchReportTableForAnalysis(token, analysis.report_code, "DamageTaken", [fightId]),
+          fetchReportTableForAnalysis(token, analysis.report_code, "Threat", [fightId])
+        ]);
+        if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+        const durationMs = Math.max(1, Number(damageTable.totalTime || healingTable.totalTime || 0) || (Number(fight.endTime || 0) - Number(fight.startTime || 0)));
+        const apply = (table, field) => (Array.isArray(table?.entries) ? table.entries : []).forEach(entry => {
+          const matchedPlayer = resolveTablePlayer(entry);
+          const name = matchedPlayer?.name || "";
+          if (!name) return;
+          if (!fightPlayerMetrics[fightId][name]) fightPlayerMetrics[fightId][name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+          fightPlayerMetrics[fightId][name][field] = Math.round(Number(entry.total || entry.amount || 0));
+          if (field === "threat") {
+            fightPlayerMetrics[fightId][name].threatAbilities = Object.fromEntries((Array.isArray(entry.abilities) ? entry.abilities : [])
+              .map(ability => [clean(ability.name) || `Zauber ${ability.guid || ability.id || ""}`, Math.round(Number(ability.total || ability.amount || 0))])
+              .filter(([, amount]) => amount > 0));
+          }
+          const activeMs = Number(entry.activeTime || entry.activeTimeReduced || 0);
+          if (activeMs > 0) fightPlayerMetrics[fightId][name].activityPercentOverride = Math.min(100, Math.round(activeMs * 10000 / durationMs) / 100);
+        });
+        apply(damageTable, "damageDone");
+        apply(healingTable, "healingDone");
+        apply(damageTakenTable, "damageTaken");
+        apply(threatTable, "threat");
+        const healingEntries = Array.isArray(healingTable?.entries) ? healingTable.entries : [];
+        const damageEntries = Array.isArray(damageTable?.entries) ? damageTable.entries : [];
+        const juksiHealing = healingEntries.filter(entry => {
+          const matched = resolveTablePlayer(entry);
+          return matched?.name?.toLowerCase() === "juksi" || clean(entry?.name).toLowerCase().startsWith("juksi");
+        }).map(diagnosticEntry);
+        const juksiDamage = damageEntries.filter(entry => {
+          const matched = resolveTablePlayer(entry);
+          return matched?.name?.toLowerCase() === "juksi" || clean(entry?.name).toLowerCase().startsWith("juksi");
+        }).map(diagnosticEntry);
+        playerTableDiagnostics.push({
+          fightId,
+          fightName: clean(fight.name),
+          durationMs,
+          healingEntryCount: healingEntries.length,
+          damageEntryCount: damageEntries.length,
+          juksiHealing,
+          juksiDamage,
+          healingNames: healingEntries.map(entry => clean(entry?.name)).filter(Boolean)
+        });
+      }
+    }
+    await Promise.all(Array.from({ length: concurrency }, () => worker()));
   }
 
   if (castsTable && Array.isArray(castsTable.entries)) {
@@ -12933,21 +13937,81 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   }
 
   await loadPlayerCastTables();
+  if (characterPerformanceDurationMs > 0) performanceDurationMs = characterPerformanceDurationMs;
+  applyOverviewPerformanceTable(damageOverviewTable, damageTotals, "overview-table");
+  applyOverviewPerformanceTable(healingOverviewTable, healingTotals, "overview-table");
+  applyOverviewPerformanceTable(damageTakenOverviewTable, damageTakenTotals, "overview-table");
+  applyOverviewPerformanceTable(threatOverviewTable, threatTotals, "overview-table");
+  (Array.isArray(threatOverviewTable?.entries) ? threatOverviewTable.entries : []).forEach(entry => {
+    const player = players.find(item => clean(item.name).toLowerCase() === clean(entry?.name).toLowerCase());
+    if (!player) return;
+    threatAbilitiesByPlayer[player.name] = Object.fromEntries((Array.isArray(entry.abilities) ? entry.abilities : [])
+      .map(ability => [clean(ability.name) || `Zauber ${ability.guid || ability.id || ""}`, Math.round(Number(ability.total || ability.amount || 0))])
+      .filter(([, amount]) => amount > 0));
+  });
+  const overviewDurationMs = Number(damageOverviewTable.totalTime || healingOverviewTable.totalTime || 0);
+  if (overviewDurationMs > 0 && characterPerformanceDurationMs <= 0) performanceDurationMs = overviewDurationMs;
 
   castEvents.forEach(event => {
     markActive(event);
     addClassCast(event);
-    addClassCooldown(event);
   });
+  cooldownCastEvents.forEach(event => addClassCooldown(event));
   damageDoneEvents.forEach(event => {
+    recordOutgoingCombatOutcome(event);
     markActive(event);
     addDamageHit(event);
+    const player = playerNameFromEvent(event, true);
+    if (player) {
+      if (!damageTotalSource[player]) damageTotals[player] = (damageTotals[player] || 0) + Number(event.amount || 0);
+      addFightPlayerMetric(event, player, "damageDone", Number(event.amount || 0));
+    }
   });
   healingEvents.forEach(event => {
     markActive(event);
+    const player = playerNameFromEvent(event, true);
+    if (player) {
+      const amount = Number(event.amount || 0);
+      addHealing(event);
+      addFightPlayerMetric(event, player, "healingDone", amount);
+    }
+  });
+  deathEvents.forEach(event => {
+    const player = playerNameFromEvent(event, false) || playerNameFromEvent(event, true);
+    if (player) {
+      deathTotals[player] = (deathTotals[player] || 0) + 1;
+      addFightPlayerMetric(event, player, "deaths", 1);
+    }
   });
 
+  await loadFightPerformanceTables();
+  const completeBossDurationMs = bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0);
+  if (completeBossDurationMs > 0) performanceDurationMs = completeBossDurationMs;
   players.forEach(player => {
+    ensureCombatOutcomeStats(player.name);
+    const bossMetrics = bossFightsForGear.map(fight => fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {});
+    const bossDamage = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.damageDone || 0), 0);
+    const bossHealing = bossMetrics.reduce((sum, metrics) => sum + Number(metrics.healingDone || 0), 0);
+    // Keep the complete report totals loaded above for the "Alle Kämpfe" view.
+    // Boss totals are stored on each fight and are used by the browser when the
+    // user selects "Nur Bosse" or individual encounters. Only use them here as
+    // a fallback when Warcraft Logs did not return a report-wide total.
+    if (!(Number(damageTotals[player.name] || 0) > 0) && bossDamage > 0) {
+      damageTotals[player.name] = bossDamage;
+      damageTotalSource[player.name] = "boss-tables-fallback";
+    }
+    if (!(Number(healingTotals[player.name] || 0) > 0) && bossHealing > 0) {
+      healingTotals[player.name] = bossHealing;
+      healingTotalSource[player.name] = "boss-tables-fallback";
+    }
+    const weightedActivity = bossFightsForGear.reduce((sum, fight) => {
+      const metrics = fightPlayerMetrics[Number(fight.id || 0)]?.[player.name] || {};
+      const duration = Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
+      return sum + Number(metrics.activityPercentOverride || 0) * duration;
+    }, 0);
+    if (!wclActivePercent[player.name] && weightedActivity > 0 && completeBossDurationMs > 0) {
+      wclActivePercent[player.name] = `${Math.min(100, Math.round(weightedActivity / completeBossDurationMs * 100) / 100)}%`;
+    }
     if (!player.className) player.className = normalizeRpbClassName(classByName.get(clean(player.name).toLowerCase()));
     if (!player.className) player.className = "Unknown";
     player.raidRole = normalizeLogAnalysisRaidRole(roleByName.get(clean(player.name).toLowerCase()) || player.raidRole);
@@ -12962,10 +14026,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   castEvents.forEach(event => {
     const player = playerNameFromEvent(event, true);
     const label = labelForAbility(event, rpbConsumables);
-    if (player && label) addPlayerAmount(consumes, player, label, 1);
+    if (player && label) {
+      addPlayerAmount(consumes, player, label, 1);
+      markFightConsumable(event, player, label);
+    }
   });
 
   damageTakenEvents.forEach(event => {
+    recordIncomingMeleeOutcome(event);
     const player = playerNameFromEvent(event, false);
     const label = matchingLabel(
       extraAbilityName(event) || abilityName(event),
@@ -13004,16 +14072,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     interruptNames[player].add(interrupted);
   });
 
-  combatantEvents.forEach(event => {
+  [...reportCombatantEvents, ...combatantEvents].forEach(event => {
     const player = playerNameFromEvent(event, true);
-    if (!player || gearByPlayer.has(player)) return;
+    if (!player) return;
     const gear = normalizeWarcraftLogsGear(event.gear || []);
-    if (gear.length) gearByPlayer.set(player, gear);
-    (Array.isArray(event.auras) ? event.auras : []).forEach(aura => {
-      const id = Number(aura.guid || aura.abilityGameID || aura.abilityGameId || aura.id || 0);
-      const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+    if (gear.length && !gearByPlayer.has(player)) gearByPlayer.set(player, gear);
+    normalizeCombatantAuras(event).forEach(aura => {
+      const id = auraAbilityId(aura);
+      const worldBuff = labelForWorldBuff(id, auraAbilityName(aura));
       const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
-      if (worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
       if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
     });
   });
@@ -13021,11 +14088,109 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   buffEvents.forEach(event => {
     const player = playerNameFromBuffEvent(event);
     const id = abilityId(event);
-    const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+    const worldBuff = labelForWorldBuff(id, displayAbilityName(event));
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
-    if (player && worldBuff) addPlayerAmount(claWorldBuffs, player, worldBuff, 1);
-    if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+    if (player && combatBuff) {
+      addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+      markFightConsumable(event, player, combatBuff);
+    }
   });
+
+  bossCombatantEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    if (!player) return;
+    normalizeCombatantAuras(event).forEach(aura => {
+      const combatBuff = labelForSpellId(auraAbilityId(aura), claCombatBuffDefinitions);
+      if (combatBuff) markFightConsumable(event, player, combatBuff);
+    });
+  });
+
+  // CombatantInfo contains the auras active when logging starts. Buff events then
+  // update that state. Snapshotting immediately before each pull also detects
+  // buffs that were never applied during the boss fight itself.
+  const activeWorldBuffsByPlayer = new Map();
+  const ensureWorldBuffState = player => {
+    if (!activeWorldBuffsByPlayer.has(player)) activeWorldBuffsByPlayer.set(player, new Set());
+    return activeWorldBuffsByPlayer.get(player);
+  };
+  const fightStartById = new Map(bossFightsForGear.map(fight => [
+    Number(fight.id || 0),
+    Number(fight.startTime || 0)
+  ]));
+  const combatantSnapshots = [...reportCombatantEvents, ...bossCombatantEvents]
+    .map(event => ({
+      kind: "snapshot",
+      event,
+      auras: normalizeCombatantAuras(event),
+      timestamp: Number(event.timestamp || event.time
+        || fightStartById.get(Number(event.fight || event.fightID || event.fightId || 0)) || 0)
+    }))
+    .filter(item => item.auras.length > 0);
+  const orderedWorldBuffEvents = [
+    ...combatantSnapshots,
+    ...buffEvents
+      .filter(event => labelForWorldBuff(abilityId(event), displayAbilityName(event)))
+      .map(event => ({ kind: "aura", event, timestamp: Number(event.timestamp || event.time || 0) }))
+  ].sort((left, right) => left.timestamp - right.timestamp || (left.kind === "snapshot" ? -1 : 1));
+  let worldBuffEventIndex = 0;
+  const exactSnapshotsByFight = new Map();
+  combatantSnapshots.forEach(item => {
+    const event = item.event;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const player = playerNameFromEvent(event, true);
+    if (!fightId || !player || !fightStartById.has(fightId)) return;
+    if (!exactSnapshotsByFight.has(fightId)) exactSnapshotsByFight.set(fightId, new Map());
+    const detected = item.auras.map(aura => {
+      const id = auraAbilityId(aura);
+      return labelForWorldBuff(id, auraAbilityName(aura));
+    }).filter(Boolean);
+    exactSnapshotsByFight.get(fightId).set(player, new Set(detected));
+  });
+  Object.keys(claWorldBuffs).forEach(label => delete claWorldBuffs[label]);
+  bossFightsForGear
+    .slice()
+    .sort((left, right) => Number(left.startTime || 0) - Number(right.startTime || 0))
+    .forEach(fight => {
+      const fightStart = Number(fight.startTime || 0);
+      while (worldBuffEventIndex < orderedWorldBuffEvents.length
+        && orderedWorldBuffEvents[worldBuffEventIndex].timestamp <= fightStart) {
+        const item = orderedWorldBuffEvents[worldBuffEventIndex];
+        const event = item.event;
+        if (item.kind === "snapshot") {
+          const player = playerNameFromEvent(event, true);
+          if (player) {
+            const detected = item.auras.map(aura => {
+              const id = auraAbilityId(aura);
+              return labelForWorldBuff(id, auraAbilityName(aura));
+            }).filter(Boolean);
+            activeWorldBuffsByPlayer.set(player, new Set(detected));
+          }
+        } else {
+          const player = playerNameFromBuffEvent(event);
+          const label = labelForWorldBuff(abilityId(event), displayAbilityName(event));
+          const type = clean(event.type).toLowerCase();
+          if (player && label) {
+            const state = ensureWorldBuffState(player);
+            if (type.startsWith("remove")) state.delete(label);
+            else if (type.startsWith("apply") || type.startsWith("refresh")) state.add(label);
+          }
+        }
+        worldBuffEventIndex += 1;
+      }
+      const fightId = Number(fight.id || 0);
+      if (!fightId) return;
+      fightWorldBuffs[fightId] = {};
+      const fightStates = new Map(Array.from(activeWorldBuffsByPlayer, ([player, state]) => [player, new Set(state)]));
+      const exactSnapshots = exactSnapshotsByFight.get(fightId);
+      if (exactSnapshots) exactSnapshots.forEach((state, player) => fightStates.set(player, new Set(state)));
+      fightStates.forEach((state, player) => {
+        const detected = Array.from(state);
+        fightWorldBuffs[fightId][player] = detected;
+        detected.forEach(label => {
+          addPlayerAmount(claWorldBuffs, player, label, 1);
+        });
+      });
+    });
 
   const gearItemIds = [];
   gearByPlayer.forEach(items => {
@@ -13035,6 +14200,19 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     });
   });
   const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+
+  const configuredSpellIds = players.flatMap(player => {
+    const config = rpbConfig.byClass?.[player.className] || {};
+    return [...(config.singleTarget || []), ...(config.aoe || []), ...(config.cooldowns || [])]
+      .map(cast => Number(cast.ids?.[0] || 0));
+  }).concat(claWorldBuffDefinitions.flatMap(([, ids]) => ids))
+    .concat(claCombatBuffDefinitions.flatMap(([, ids]) => ids || []))
+    .concat(rpbConsumables.flatMap(([, , ids]) => ids || []))
+    .concat(rpbAbsorbs.flatMap(([, , ids]) => ids || []))
+    .concat(rpbEngineering.flatMap(([, , ids]) => ids || []))
+    .concat((rpbConfig.trinketsAndRacials || []).flatMap(item => item.ids || []))
+    .filter(Boolean);
+  const rpbSpellMetadata = await getRpbSpellMetadata(configuredSpellIds);
 
   const playerNames = players.map(player => player.name);
   const countRow = (label, table, options = {}) => ({
@@ -13053,48 +14231,78 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     label,
     type: options.type || "count",
     tone: options.tone || "",
+    spellId: Number(options.spellId || 0) || undefined,
+    icon: clean(options.icon),
+    originalLabel: clean(options.originalLabel),
+    tooltip: clean(options.tooltip),
     values: Object.fromEntries(playerNames.map(player => [player, values[player] || ""]))
   });
   const textRow = (label, values, options = {}) => customRow(label, values, { ...options, type: "text" });
+  const trackedSpellRow = (definition, table, options = {}) => {
+    const [label, , ids = []] = definition;
+    const spellId = Number(ids[0] || 0);
+    const metadata = rpbSpellMetadata.get(spellId) || {};
+    const displayLabel = options.preferDefinitionLabel ? label : (clean(metadata.name) || label);
+    return customRow(translateRpbLabelToGerman(displayLabel), Object.fromEntries(playerNames.map(player => [
+      player,
+      formatCountValue(table[label]?.[player])
+    ])), {
+      ...options,
+      spellId,
+      icon: metadata.icon,
+      originalLabel: label,
+      tooltip: metadata.tooltip
+    });
+  };
   const presenceRow = (label, table, options = {}) => textRow(label, Object.fromEntries(playerNames.map(player => [
     player,
     Number(table[label]?.[player] || 0) > 0 ? "ja" : ""
   ])), options);
-  const gearEnchantIgnoredSlots = new Set(["Hemd", "Schmuck 1", "Schmuck 2", "Ring 1", "Ring 2"]);
   const gearItemMeta = item => itemMetaById.get(String(item?.itemId || item?.id || "")) || null;
   const gearItemText = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
     const enchant = item.permanentEnchantName || item.permanentEnchant || "";
-    return `${meta?.name || item.name || item.itemId || "Item"}${enchant ? ` [${enchant}]` : " [kein Enchant]"}`;
+    return `${meta?.name || item.name || item.itemId || "Gegenstand"}${enchant ? ` [${enchant}]` : " [keine Verzauberung]"}`;
   };
   const gearItemCell = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
+    const name = meta?.name || item.name || item.itemId || "Gegenstand";
+    const statsText = clean(meta?.statsText);
+    const equip = clean(meta?.equip);
+    const tooltip = clean(meta?.tooltip || statsText || equip);
     return {
       text: gearItemText(item),
+      name,
       itemId: clean(item.itemId || item.id),
       quality: meta?.quality || clean(item.quality),
       iconUrl: meta?.iconUrl || clean(item.iconUrl || item.icon),
       slot: meta?.slot || item.slotName || "",
       boss: meta?.boss || "",
+      source: meta?.boss || "",
       type: meta?.type || "",
       wowhead: meta?.wowhead || "",
-      tooltip: meta?.tooltip || meta?.statsText || meta?.equip || "",
+      tooltip,
+      statsText,
+      equip,
       title: [
-        meta?.name || item.name || item.itemId || "Item",
+        name,
         meta?.quality ? `Qualität: ${meta.quality}` : "",
         meta?.slot || item.slotName ? `Slot: ${meta?.slot || item.slotName}` : "",
         meta?.boss ? `Quelle: ${meta.boss}` : "",
         meta?.type ? `Typ: ${meta.type}` : "",
-        meta?.tooltip || meta?.statsText || meta?.equip || ""
+        tooltip
       ].filter(Boolean).join("\n")
     };
   };
   const gearListText = items => items.map(gearItemText).join(", ");
   const playerGear = player => gearByPlayer.get(player) || [];
   const playerMissingEnchants = playerGearItems => playerGearItems
-    .filter(item => !item.permanentEnchant && !item.permanentEnchantName && !gearEnchantIgnoredSlots.has(item.slotName))
+    .filter(item => {
+      const metadata = itemMetaById.get(String(item.itemId || item.id)) || null;
+      return isRaidAnalysisEnchantableItem(item, metadata) && !hasRaidAnalysisPermanentEnchant(item);
+    })
     .map(item => gearItemText(item));
   const playerExcludedGear = playerGearItems => playerGearItems
     .filter(item => claExcludedGear.some(([itemId]) => String(item.itemId || item.id) === String(itemId)));
@@ -13163,7 +14371,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     headerRow("Combat Buffs"),
     ...claCombatBuffDefinitions.map(([label]) => countRow(label, claCombatBuffs, { tone: generalConsumableTone(label) })),
     headerRow("Consumables aus RPB"),
-    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
+    ...rpbConsumables.map(definition => trackedSpellRow(definition, consumes, { tone: generalConsumableTone(definition[0]) })),
     headerRow("Absorbs"),
     ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) }))
   ];
@@ -13201,29 +14409,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     customRow("Sekunden aktiv auf Einzelziel", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(stSecondsByPlayer[player])
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "inv_misc_pocketwatch_01" }),
     customRow("Aktiv auf Einzelziel %", Object.fromEntries(playerNames.map(player => [
       player,
       stSecondsByPlayer[player] ? `${Math.round((stSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "ability_marksmanship" }),
     customRow("Aktiv gesamt %", Object.fromEntries(playerNames.map(player => [
       player,
       (stSecondsByPlayer[player] || aoeSecondsByPlayer[player])
         ? `${Math.round(((stSecondsByPlayer[player] || 0) + (aoeSecondsByPlayer[player] || 0)) * 100 / maxTotalActiveSeconds)}%`
         : ""
-    ])), { tone: "activityStrong" }),
+    ])), { tone: "activityStrong", icon: "spell_holy_borrowedtime" }),
     customRow("Aktiv auf AoE %", Object.fromEntries(playerNames.map(player => [
       player,
       aoeSecondsByPlayer[player] ? `${Math.round((aoeSecondsByPlayer[player] || 0) * 100 / maxTotalActiveSeconds)}%` : ""
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "spell_nature_chainlightning" }),
     customRow("Sekunden aktiv auf AoE", Object.fromEntries(playerNames.map(player => [
       player,
       formatCountValue(aoeSecondsByPlayer[player])
-    ])), { tone: "activity" }),
+    ])), { tone: "activity", icon: "spell_nature_lightning" }),
     customRow("WCL-Aktivität gesamt", Object.fromEntries(playerNames.map(player => [
       player,
       wclActivePercent[player] || ""
-    ])), { tone: "activity" })
+    ])), { tone: "activity", icon: "inv_misc_spyglass_03" })
     ];
   };
   const activityRows = buildActivityRows(playerNames);
@@ -13261,22 +14469,24 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
 
   function configuredCastRow(className, cast, kind) {
     const isHealingRow = cast.hasOverheal || healerClasses.has(className);
-    return customRow(cast.name, Object.fromEntries(playerNames.map(player => {
+    const spellId = Number(cast.ids?.[0] || 0);
+    const spellMetadata = rpbSpellMetadata.get(spellId) || {};
+    const displayLabel = localizedRpbCastLabel(cast, spellMetadata).replace(/\s*\(Überheilung\s*%\)\s*$/i, "");
+    return customRow(displayLabel, Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
       if (cast.hasOverheal) {
-        const data = cast.ids.reduce((sum, id) => {
-          const healId = holyNovaHealSpellMap[id] || id;
+        const data = healingIdsForConfiguredCast(className, cast).reduce((sum, healId) => {
           const row = healingById[healId]?.[player];
           if (!row) return sum;
           sum.amount += Number(row.amount || 0);
           sum.overheal += Number(row.overheal || 0);
           return sum;
         }, { amount: 0, overheal: 0 });
-        if (!castCount) return [player, "0"];
+        if (!castCount) return [player, ""];
         const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
-        return [player, `${formatCountValue(castCount)} (${pct}%)`];
+        return [player, `${formatCountValue(castCount)} Einsätze · ${pct}% Overheal`];
       }
       if (kind === "aoe" && castCount > 0) {
         const ids = new Set(cast.ids || []);
@@ -13285,19 +14495,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
       }
       return [player, formatCountValue(castCount)];
-    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast" });
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
   }
 
   function configuredCooldownRows(className) {
     const cooldowns = rpbConfig.byClass?.[className]?.cooldowns || [];
     const rows = [];
     cooldowns.forEach(cooldown => {
-      rows.push(customRow(`${cooldown.name} auf Trash`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
-      rows.push(customRow(`${cooldown.name} auf Bossen`, Object.fromEntries(playerNames.map(player => [player, "0"])), { tone: "cooldown" }));
-      rows.push(customRow(`${cooldown.name} gesamt`, Object.fromEntries(playerNames.map(player => [
+      const spellId = Number(cooldown.ids?.[0] || 0);
+      const spellMetadata = rpbSpellMetadata.get(spellId) || {};
+      const label = localizedRpbCastLabel(cooldown, spellMetadata);
+      const rowOptions = { tone: "cooldown", spellId, icon: spellMetadata.icon, originalLabel: cooldown.name, tooltip: spellMetadata.tooltip };
+      rows.push(customRow(`${label} auf Trash`, Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(classCooldownsTrash[className]?.[cooldown.name]?.[player])
+      ])), rowOptions));
+      rows.push(customRow(`${label} auf Bossen`, Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(classCooldownsBoss[className]?.[cooldown.name]?.[player])
+      ])), rowOptions));
+      rows.push(customRow(`${label} gesamt`, Object.fromEntries(playerNames.map(player => [
         player,
         formatCountValue(classCooldowns[className]?.[cooldown.name]?.[player])
-      ])), { tone: "total" }));
+      ])), { ...rowOptions, tone: "total" }));
     });
     return rows;
   }
@@ -13388,17 +14608,27 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   };
 
   const generalRows = [
-    headerRow("Stats and Miscellaneous"),
+    headerRow("Statistik & Sonstiges"),
     ...activityRows,
-    headerRow("Consumables"),
-    ...rpbConsumables.map(([label]) => countRow(label, consumes, { tone: generalConsumableTone(label) })),
+    headerRow("Verbrauchsgüter"),
+    ...rpbConsumables.map(definition => trackedSpellRow(definition, consumes, {
+      tone: generalConsumableTone(definition[0]),
+      preferDefinitionLabel: true
+    })),
     headerRow("Trinkets und Racials"),
-    ...(rpbConfig.trinketsAndRacials || []).map(item => countRow(item.name, trinketsAndRacials, { tone: "trinket" })),
+    ...(rpbConfig.trinketsAndRacials || []).map(item => {
+      const spellId = Number(item.ids?.[0] || 0);
+      const metadata = rpbSpellMetadata.get(spellId) || {};
+      return customRow(translateRpbLabelToGerman(clean(metadata.name) || item.name), Object.fromEntries(playerNames.map(player => [
+        player,
+        formatCountValue(trinketsAndRacials[item.name]?.[player])
+      ])), { tone: "trinket", spellId, icon: metadata.icon, originalLabel: item.name, tooltip: metadata.tooltip });
+    }),
     headerRow("Absorbierter Schaden"),
-    ...rpbAbsorbs.map(([label]) => amountRow(label, absorbs, { tone: absorbTone(label) })),
+    ...rpbAbsorbs.map(definition => trackedSpellRow(definition, absorbs, { type: "amount", tone: absorbTone(definition[0]) })),
     totalAbsorbed,
-    headerRow("Engineering etc. (ø = Treffer pro Nutzung)"),
-    ...rpbEngineering.map(([label]) => countRow(label, engineeringCounts, { tone: "engineering" })),
+    headerRow("Ingenieurskunst (ø = Treffer pro Nutzung)"),
+    ...rpbEngineering.map(definition => trackedSpellRow(definition, engineeringCounts, { tone: "engineering" })),
     amountRow("Gesamtschaden durch Engineering etc.", engineeringDamage, { tone: "engineeringTotal" }),
     headerRow("Unterbrochene Zauber"),
     countRow("# unterbrochene Zauber", interrupts, { tone: "interrupt" }),
@@ -13412,6 +14642,38 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       "Noch nicht aus der CLA-Logik befüllt"
     ])), { type: "text", tone: "muted" })
   ];
+
+  const expectedBossesByRaid = { MC: 10, BWL: 8, AQ20: 6, AQ40: 9, NAXX: 15, ONY: 1, ZG: 10 };
+  const normalizedRaid = normalizeRaidType(report.zone?.name || analysis.raid || "").toUpperCase();
+  const bossNamesByRaid = {
+    MC: ["lucifron","magmadar","gehennas","garr","baron geddon","shazzrah","sulfuron","golemagg","majordomo","ragnaros"],
+    BWL: ["razorgore","vaelastrasz","broodlord","firemaw","ebonroc","flamegor","chromaggus","nefarian"],
+    AQ20: ["kurinnaxx","rajaxx","moam","buru","ayamiss","ossirian"],
+    AQ40: ["skeram","sartura","fankriss","huhuran","twin emperors","veknilash","veklor","cthun","c thun","viscidus","ouro"],
+    NAXX: ["anub rekhan","faerlina","maexxna","noth","heigan","loatheb","razuvious","gothik","four horsemen","patchwerk","grobbulus","gluth","thaddius","sapphiron","kel thuzad"],
+    ONY: ["onyxia"],
+    ZG: ["jeklik","venoxis","mar li","thekal","arlokk","hakkar","mandokir","jindo","gahz ranka","edge of madness"]
+  };
+  const normalizedBossName = value => clean(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const knownBossNames = bossNamesByRaid[normalizedRaid] || [];
+  const isKnownBossFight = fight => {
+    if (Number(fight?.encounterID || fight?.encounterId || 0) <= 0) return false;
+    const name = normalizedBossName(fight?.name);
+    return knownBossNames.length
+      ? knownBossNames.some(boss => name.includes(normalizedBossName(boss)))
+      : true;
+  };
+  const bossEncountersById = new Map();
+  rpbFights.filter(isKnownBossFight).forEach(fight => {
+    const encounterId = Number(fight.encounterID || 0);
+    const encounterKey = encounterId || normalizedBossName(fight.name);
+    const current = bossEncountersById.get(encounterKey);
+    if (!current || (fight.kill !== false && current.kill === false) || Number(fight.endTime || 0) > Number(current.endTime || 0)) {
+      bossEncountersById.set(encounterKey, fight);
+    }
+  });
+  const bossEncounters = Array.from(bossEncountersById.values()).sort((a, b) => Number(a.startTime || 0) - Number(b.startTime || 0));
+  const expectedBossCount = expectedBossesByRaid[normalizedRaid] || bossEncounters.length;
 
   const sections = [
     {
@@ -13541,16 +14803,198 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       raid: report.zone?.name || analysis.raid || "",
       raidDate: report.startTime ? formatDateInBerlin(new Date(Number(report.startTime))) : (analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : ""),
       reportCode: analysis.report_code || "",
-      reportUrl: analysis.report_url || ""
+      reportUrl: analysis.report_url || "",
+      durationMs: reportDurationMs,
+      performanceDurationMs,
+      fightCount: fights.length,
+      bossKills: bossEncounters.filter(fight => fight.kill !== false).length,
+      totalBosses: expectedBossCount,
+      deathCount: deathEvents.length
     },
     players: players.map(player => ({
       id: player.id,
       name: player.name,
       server: player.server || "",
       className: player.className || "",
-      raidRole: player.raidRole || ""
+      raidRole: player.raidRole || (Number(healingTotals[player.name] || 0) > 1000 && Number(healingTotals[player.name] || 0) >= Number(damageTotals[player.name] || 0) * 0.5 ? "healer" : ""),
+      signupRole: player.signupRole || (Number(healingTotals[player.name] || 0) > 1000 && Number(healingTotals[player.name] || 0) >= Number(damageTotals[player.name] || 0) * 0.5 ? "Heiler" : ""),
+      damageDone: Math.round(damageTotals[player.name] || 0),
+      healingDone: Math.round(healingTotals[player.name] || 0),
+      overheal: Math.round(overhealTotals[player.name] || 0),
+      overhealPercent: (() => {
+        const effective = Number(healingTotals[player.name] || 0);
+        const overheal = Number(overhealTotals[player.name] || 0);
+        return effective + overheal > 0 ? Math.round(overheal * 100 / (effective + overheal)) : 0;
+      })(),
+      damageTaken: Math.round(damageTakenTotals[player.name] || 0),
+      threat: Math.round(threatTotals[player.name] || 0),
+      threatAbilities: threatAbilitiesByPlayer[player.name] || {},
+      activityPercent: Number.parseFloat(String(wclActivePercent[player.name] || "0").replace("%", "")) || Math.min(100, Math.round((activeSeconds[player.name]?.size || 0) * 100 / Math.max(1, performanceDurationMs / 1000))),
+      deaths: Number(deathTotals[player.name] || 0),
+      worldBuffCount: claWorldBuffDefinitions.reduce((count, [label]) => count + (Number(claWorldBuffs[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
+      preparationCount: rpbConsumables.reduce((count, [label]) => count + (Number(consumes[label]?.[player.name] || 0) > 0 ? 1 : 0), 0),
+      parsePercent: (() => {
+        let weighted = 0;
+        let duration = 0;
+        bossFightsForGear.forEach(fight => {
+          const parse = parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(player.name).toLowerCase()}`)?.percent;
+          if (parse == null) return;
+          const fightDuration = Math.max(1, Number(fight.endTime || 0) - Number(fight.startTime || 0));
+          weighted += parse * fightDuration;
+          duration += fightDuration;
+        });
+        return duration ? Math.round(weighted / duration) : null;
+      })(),
+      gear: playerGear(player.name).map(item => {
+        const cell = gearItemCell(item);
+        const metadata = gearItemMeta(item);
+        const enchantable = isRaidAnalysisEnchantableItem(item, metadata);
+        const hasEnchant = hasRaidAnalysisPermanentEnchant(item);
+        return {
+          ...cell,
+          slot: item.slotName || cell.slot || "",
+          itemLevel: Number(item.itemLevel || item.ilvl || 0) || "",
+          enchant: clean(item.permanentEnchantName || item.enchantName || item.permanentEnchant),
+          enchantable,
+          hasEnchant,
+          missingEnchant: enchantable && !hasEnchant
+        };
+      })
+    })),
+    encounters: bossEncounters.map(fight => ({
+      id: Number(fight.id || 0),
+      name: fight.name || "Boss",
+      kill: fight.kill !== false,
+      durationMs: Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)),
+      deaths: deathEvents.filter(event => Number(event.fight || event.fightID || event.fightId || 0) === Number(fight.id || 0)).length,
+      encounterId: Number(fight.encounterID || 0),
+      isBoss: true,
+      players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
+        damageDone: Math.round(Number(metrics.damageDone || 0)),
+        healingDone: Math.round(Number(metrics.healingDone || 0)),
+        damageTaken: Math.round(Number(metrics.damageTaken || 0)),
+        threat: Math.round(Number(metrics.threat || 0)),
+        threatAbilities: metrics.threatAbilities || {},
+        deaths: Number(metrics.deaths || 0),
+        activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
+        parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
+        worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
+        ,abilityCasts: metrics.abilityCasts || {}, healingSpells: metrics.healingSpells || {}
+      }]))
+    })),
+    fights: rpbFights.map(fight => ({
+      id: Number(fight.id || 0),
+      name: fight.name || (isKnownBossFight(fight) ? "Boss" : "Trash"),
+      kill: fight.kill !== false,
+      durationMs: Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)),
+      encounterId: Number(fight.encounterID || 0),
+      isBoss: isKnownBossFight(fight),
+      players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
+        damageDone: Math.round(Number(metrics.damageDone || 0)),
+        healingDone: Math.round(Number(metrics.healingDone || 0)),
+        damageTaken: Math.round(Number(metrics.damageTaken || 0)),
+        threat: Math.round(Number(metrics.threat || 0)),
+        threatAbilities: metrics.threatAbilities || {},
+        deaths: Number(metrics.deaths || 0),
+        activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
+        parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
+        worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
+        ,abilityCasts: metrics.abilityCasts || {}, healingSpells: metrics.healingSpells || {}
+      }]))
     })),
     roleOptions: logAnalysisRaidRoleOptions,
+    worldBuffMetadata: Object.fromEntries(claWorldBuffDefinitions.map(([label, ids]) => {
+      const fallback = claWorldBuffFallbackMetadata[label] || {};
+      const spellId = Number(fallback.spellId || ids[0] || 0);
+      const metadata = rpbSpellMetadata.get(spellId) || {};
+      return [label, {
+        spellId,
+        name: clean(metadata.name) || fallback.name || label,
+        icon: clean(metadata.icon) || fallback.icon || "inv_misc_questionmark",
+        tooltip: clean(metadata.tooltip),
+        wowhead: `https://www.wowhead.com/classic/de/spell=${spellId}`
+      }];
+    })),
+    consumableUsage: (() => {
+      const definitions = [
+        ...rpbConsumables.map(([label, , ids]) => [label, ids || []]),
+        ...claCombatBuffDefinitions
+      ];
+      const bossCount = bossFightsForGear.length;
+      return {
+        bossCount,
+        players: Object.fromEntries(players.map(player => {
+          const fightsByLabel = {};
+          bossFightsForGear.forEach(fight => {
+            const labels = fightConsumables[Number(fight.id || 0)]?.[player.name] || new Set();
+            labels.forEach(label => fightsByLabel[label] = (fightsByLabel[label] || 0) + 1);
+          });
+          const items = Object.entries(fightsByLabel).map(([label, fightsUsed]) => {
+            const definition = definitions.find(([name]) => name === label) || [label, []];
+            const spellId = Number(definition[1]?.[0] || 0);
+            const metadata = rpbSpellMetadata.get(spellId) || {};
+            return {
+              label: translateRpbLabelToGerman(label),
+              originalLabel: label,
+              fightsUsed,
+              percent: bossCount ? Math.round(fightsUsed * 100 / bossCount) : 0,
+              spellId,
+              icon: clean(metadata.icon) || "inv_misc_questionmark"
+            };
+          }).sort((left, right) => right.fightsUsed - left.fightsUsed || left.label.localeCompare(right.label, "de"));
+          return [player.name, { items }];
+        }))
+      };
+    })(),
+    healingSummary: {
+      durationMs: performanceDurationMs,
+      players: Object.fromEntries(players.map(player => {
+        const spells = Object.entries(healingById).map(([spellId, byPlayer]) => {
+          const values = byPlayer?.[player.name];
+          if (!values || (!values.amount && !values.overheal)) return null;
+          const metadata = rpbSpellMetadata.get(Number(spellId)) || {};
+          const total = Number(values.amount || 0) + Number(values.overheal || 0);
+          return {
+            spellId: Number(spellId),
+            name: clean(metadata.name) || rpbSpellNamesById[Number(spellId)] || `Heilzauber ${spellId}`,
+            icon: clean(metadata.icon) || "spell_holy_heal",
+            amount: Math.round(Number(values.amount || 0)),
+            overheal: Math.round(Number(values.overheal || 0)),
+            overhealPercent: total > 0 ? Math.round(Number(values.overheal || 0) * 100 / total) : 0,
+            hits: Number(values.hits || 0),
+            crits: Number(values.crits || 0)
+          };
+        }).filter(Boolean).sort((left, right) => right.amount - left.amount);
+        const totalHealing = spells.reduce((sum, spell) => sum + spell.amount, 0);
+        return [player.name, { totalHealing, spells }];
+      }))
+    },
+    combatStatistics: {
+      metrics: combatOutcomeMetrics.map(([key, label, denominator]) => ({ key, label, denominator })),
+      players: Object.fromEntries(players.map(player => {
+        const stats = ensureCombatOutcomeStats(player.name);
+        return [player.name, {
+          className: player.className || "Unknown",
+          outgoingAttempts: stats.outgoingAttempts,
+          incomingMeleeAttempts: stats.incomingMeleeAttempts,
+          values: Object.fromEntries(combatOutcomeMetrics.map(([key, , denominatorKey]) => {
+            const count = Number(stats.values[key] || 0);
+            const denominator = Number(stats[`${denominatorKey}Attempts`] || 0);
+            return [key, {
+              count,
+              denominator,
+              percentage: denominator > 0 ? Math.round(count * 1000 / denominator) / 10 : null
+            }];
+          }))
+        }];
+      }))
+    },
+    diagnostics: {
+      playerActors: players
+        .filter(player => clean(player.name).toLowerCase().startsWith("juksi"))
+        .map(player => ({ id: player.id, name: player.name, server: player.server, className: player.className })),
+      juksiFightTables: playerTableDiagnostics.sort((a, b) => a.fightId - b.fightId)
+    },
     sections,
     warnings: (!castEvents.length && !damageDoneEvents.length && !damageTakenEvents.length && !interruptEvents.length && !healingEvents.length)
       ? ["Keine Detail-Events von Warcraft Logs erhalten."]
@@ -13607,14 +15051,14 @@ function raidImporterCastOverhealText(castCount, summary) {
 function raidImporterAuraUptimePercent(table, ids, totalTime) {
   const wanted = new Set((ids || []).map(Number).filter(Boolean));
   const uptime = raidImporterTableAuras(table).reduce((sum, aura) => {
-    if (!wanted.has(Number(aura.guid || aura.id || 0))) return sum;
+    if (!wanted.has(auraAbilityId(aura))) return sum;
     return sum + Number(aura.totalUptime || 0);
   }, 0);
   return totalTime > 0 ? Math.round(uptime * 1000 / totalTime) / 10 : 0;
 }
 
 function raidImporterAuraNames(table, definitions) {
-  const ids = new Set(raidImporterTableAuras(table).map(aura => Number(aura.guid || aura.id || 0)));
+  const ids = new Set(raidImporterTableAuras(table).map(aura => auraAbilityId(aura)));
   return Object.entries(definitions)
     .filter(([, spellIds]) => spellIds.some(id => ids.has(Number(id))))
     .map(([label]) => label);
@@ -13761,7 +15205,7 @@ function raidProcessorDamageTakenResult(damageTakenTable, trackedAbilities) {
 function raidProcessorDebuffsAppliedResult(debuffsTable, trackedDebuffs) {
   return (trackedDebuffs || []).map(tracked => {
     const amount = raidImporterTableAuras(debuffsTable)
-      .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+      .filter(aura => tracked.ids.includes(auraAbilityId(aura)))
       .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0);
     return amount > 0 ? amount : "";
   });
@@ -13920,19 +15364,7 @@ function raidImporterGearSlotName(slot) {
 }
 
 function raidImporterEnchantIssue(item, playerClass = "") {
-  const slot = Number(item?.slot);
-  const itemName = clean(item?.name);
-  const enchantName = clean(item?.permanentEnchantName || item?.permanentEnchant);
-  const lower = `${itemName} ${enchantName}`.toLowerCase();
-  if (lower.includes("undead") || lower.includes("scourge")) {
-    return "vs. undead item/enchant used on non-undead";
-  }
-  const enchantableSlots = new Set([0, 2, 4, 7, 8, 9, 14, 15]);
-  if (enchantableSlots.has(slot) && !enchantName) return "no enchant on this item";
-  if (slot === 9 && Number(item?.permanentEnchant) === 2617 && playerClass === "Priest") {
-    return "has an enchant that is considered suboptimal";
-  }
-  return "";
+  return raidAnalysisEnchantIssue(item, playerClass);
 }
 
 function raidImporterGearFromCombatantInfo(combatantInfo, playerClass = "") {
@@ -14168,14 +15600,14 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
           consumables,
           worldBuffs,
           rawAuras: raidImporterTableAuras(buffsTable).map(aura => ({
-            id: Number(aura.guid || 0),
+            id: auraAbilityId(aura),
             name: clean(aura.name),
             totalUses: Number(aura.totalUses || 0),
             totalUptime: Number(aura.totalUptime || 0)
           }))
         },
         debuffs: raidImporterTableAuras(debuffsTable).map(aura => ({
-          id: Number(aura.guid || 0),
+          id: auraAbilityId(aura),
           name: clean(aura.name),
           totalUses: Number(aura.totalUses || 0),
           totalUptime: Number(aura.totalUptime || 0)
@@ -14183,7 +15615,7 @@ async function importRaidLogAnalysis({ guildId, query: params }) {
         trackedDebuffs: Object.fromEntries((rpbConfig.debuffsTracked || []).map(tracked => [
           tracked.name,
           raidImporterTableAuras(debuffsTable)
-            .filter(aura => tracked.ids.includes(Number(aura.guid || aura.id || 0)))
+            .filter(aura => tracked.ids.includes(auraAbilityId(aura)))
             .reduce((sum, aura) => sum + Number(aura.totalUses || 0), 0)
         ])),
         general: {
@@ -14262,7 +15694,8 @@ async function buildLogAnalysisCsv(analysis, type) {
 }
 
 async function getPublicLogAnalysisWeb({ guildId, query: params }) {
-  await ensureLogAnalysisSheetExportsTable();
+  await ensureCombatLogImportsTable();
+  await ensureLogAnalysisWebCacheTable();
   const id = clean(params.id || params.analysisId);
   const type = clean(params.type || params.analysisType || "combined").toLowerCase();
   if (!isUuid(id)) {
@@ -14287,57 +15720,258 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
-  if (type === "combined") {
-    const rpb = await buildStoredSheetWebAnalysis(result.rows[0], "rpb");
-    const cla = await buildStoredSheetWebAnalysis(result.rows[0], "cla");
-    if (rpb || cla) {
-      return {
-        success: true,
-        webAnalysis: {
-          type: "combined",
-          source: "sheet-export",
-          analysis: normalizeLogAnalysis(result.rows[0]),
-          report: (rpb || cla)?.report || {},
-          rpb,
-          cla
-        }
-      };
+  const analysis = result.rows[0];
+  const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(analysis, "rpb", guildId);
+  if (combatLogAnalysis) {
+    if (type === "cla") {
+      const error = new Error("Für hochgeladene Combatlogs ist die Ausrüstungsanalyse noch nicht verfügbar.");
+      error.statusCode = 404;
+      throw error;
     }
-    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], "rpb", guildId);
-    if (combatLogAnalysis) {
+    if (type === "combined") {
       return {
         success: true,
         webAnalysis: {
           type: "combined",
           source: "combat-log",
-          analysis: normalizeLogAnalysis(result.rows[0]),
+          analysis: normalizeLogAnalysis(analysis),
           report: combatLogAnalysis.report || {},
           rpb: combatLogAnalysis,
           cla: null
         }
       };
     }
-  } else {
-    const sheetAnalysis = await buildStoredSheetWebAnalysis(result.rows[0], type);
-    if (sheetAnalysis) {
-      return {
-        success: true,
-        webAnalysis: sheetAnalysis
-      };
-    }
-    const combatLogAnalysis = await buildStoredCombatLogWebAnalysis(result.rows[0], type, guildId);
-    if (combatLogAnalysis) {
-      return {
-        success: true,
-        webAnalysis: combatLogAnalysis
-      };
-    }
+    return { success: true, webAnalysis: combatLogAnalysis };
   }
-  {
-    const error = new Error("Für diese Auswertung wurden noch keine Detaildaten gespeichert.");
+
+  const forceRefresh = ["1", "true", "yes", "ja"].includes(clean(params.refresh || params.forceRefresh).toLowerCase());
+  const cacheKey = `${guildId}:${analysis.id}`;
+  const cached = !forceRefresh ? logAnalysisWebCache.get(cacheKey) : null;
+  let directAnalysis = cached && cached.expiresAt > Date.now() ? cached.value : null;
+  if (!directAnalysis && !forceRefresh) {
+    const stored = await query(
+      `select payload from log_analysis_web_cache where analysis_id = $1 limit 1`,
+      [analysis.id]
+    );
+    directAnalysis = stored.rows[0]?.payload || null;
+  }
+  if (directAnalysis && !isCurrentLogAnalysisPayload(directAnalysis) && !forceRefresh) {
+    // Den letzten gespeicherten Stand weiterhin anzeigen, waehrend die aktuelle
+    // Schema-Version im Hintergrund erzeugt wird. So bleibt die Analyse nutzbar,
+    // selbst wenn viele Alt-Reports in der Warteschlange stehen oder Warcraft Logs
+    // voruebergehend langsam antwortet.
+    enqueueAutomaticLogAnalysis({
+      guildId,
+      analysisId: analysis.id,
+      forceRefresh: true,
+      source: "stale-web-cache-refresh",
+      priority: true
+    });
+    directAnalysis = {
+      ...directAnalysis,
+      refreshPending: true,
+      requestedSchemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+      requestedConsumableSchemaVersion: LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION
+    };
+  }
+  if (!directAnalysis) {
+    const classByName = await getGuildClassMap(guildId);
+    const signupRoles = await getLogAnalysisSignupRoles(guildId, analysis);
+    const roleByName = new Map(signupRoles.analysisRoles);
+    Object.entries(analysis.summary?.raidRoles || {}).forEach(([name, role]) => roleByName.set(
+      clean(name).toLowerCase(),
+      normalizeLogAnalysisRaidRole(role)
+    ));
+    directAnalysis = await buildRpbWebAnalysis(analysis, { classByName, roleByName, signupRoleByName: new Map(signupRoles.signupRoles) });
+    directAnalysis.source = "warcraft-logs-direct";
+    directAnalysis.schemaVersion = LOG_ANALYSIS_WEB_SCHEMA_VERSION;
+    directAnalysis.consumableSchemaVersion = LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION;
+    directAnalysis.signupRoleSource = "lichtloot-raid-signups";
+    directAnalysis.persistedAt = new Date().toISOString();
+    await query(
+      `insert into log_analysis_web_cache (analysis_id, payload, generated_at, updated_at)
+       values ($1,$2::jsonb,now(),now())
+       on conflict (analysis_id) do update
+         set payload = excluded.payload, generated_at = now(), updated_at = now()`,
+      [analysis.id, JSON.stringify(directAnalysis)]
+    );
+    logAnalysisWebCache.set(cacheKey, { value: directAnalysis, expiresAt: Date.now() + 5 * 60 * 1000 });
+  }
+
+  const bestTimeRows = await query(
+    `select c.payload
+       from log_analysis_web_cache c
+       join log_analyses la on la.id = c.analysis_id
+      where la.guild_id = $1`,
+    [guildId]
+  );
+  const guildBossBestTimes = { byEncounterId: {}, byName: {} };
+  bestTimeRows.rows.forEach(row => {
+    const encounters = Array.isArray(row.payload?.encounters) ? row.payload.encounters : [];
+    encounters.forEach(fight => {
+      if (fight?.kill === false) return;
+      const durationMs = Math.max(0, Number(fight?.durationMs || 0));
+      if (!durationMs) return;
+      const encounterId = Number(fight?.encounterId || 0);
+      const name = clean(fight?.name).toLowerCase();
+      if (encounterId && (!guildBossBestTimes.byEncounterId[encounterId] || durationMs < guildBossBestTimes.byEncounterId[encounterId])) {
+        guildBossBestTimes.byEncounterId[encounterId] = durationMs;
+      }
+      if (name && (!guildBossBestTimes.byName[name] || durationMs < guildBossBestTimes.byName[name])) {
+        guildBossBestTimes.byName[name] = durationMs;
+      }
+    });
+  });
+  directAnalysis = { ...directAnalysis, guildBossBestTimes };
+
+  const claSections = (directAnalysis.sections || []).filter(section => String(section.id || "").startsWith("cla-"));
+  const rpbSections = (directAnalysis.sections || []).filter(section => !String(section.id || "").startsWith("cla-"));
+  const rpb = { ...directAnalysis, type: "rpb", sections: rpbSections };
+  const cla = { ...directAnalysis, type: "cla", sections: claSections };
+
+  if (type === "combined") {
+    return {
+      success: true,
+      webAnalysis: {
+        type: "combined",
+        source: "warcraft-logs-direct",
+        analysis: normalizeLogAnalysis(analysis),
+        report: directAnalysis.report || {},
+        rpb,
+        cla
+      }
+    };
+  }
+  return { success: true, webAnalysis: type === "cla" ? cla : rpb };
+}
+
+async function ensureLogAnalysisWebCacheTable() {
+  await ensureLogAnalysesTable();
+  await query(
+    `create table if not exists log_analysis_web_cache (
+       analysis_id uuid primary key references log_analyses(id) on delete cascade,
+       payload jsonb not null default '{}'::jsonb,
+       generated_at timestamptz not null default now(),
+       updated_at timestamptz not null default now()
+     )`
+  );
+}
+
+async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
+  await ensureLogAnalysisWebCacheTable();
+  const playerName = clean(params.playerName || params.player);
+  if (!playerName) {
+    const error = new Error("Spielername fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `select la.id, la.raid, la.raid_date, la.title, la.report_url, c.payload, c.generated_at
+       from log_analysis_web_cache c
+       join log_analyses la on la.id = c.analysis_id
+      where la.guild_id = $1
+      order by la.raid_date asc nulls last, c.generated_at asc`,
+    [guildId]
+  );
+  const wanted = playerName.toLowerCase();
+  const history = [];
+  for (const row of result.rows) {
+    const payload = row.payload || {};
+    const player = (Array.isArray(payload.players) ? payload.players : []).find(entry => clean(entry?.name).toLowerCase() === wanted);
+    if (!player) continue;
+    const durationMs = Math.max(1, Number(payload.report?.performanceDurationMs || payload.report?.durationMs || 0));
+    const seconds = Math.max(1, durationMs / 1000);
+    history.push({
+      analysisId: row.id,
+      raid: clean(payload.report?.raid || row.raid || "Raid"),
+      raidDate: clean(payload.report?.raidDate || (row.raid_date ? new Date(row.raid_date).toISOString().slice(0, 10) : "")),
+      reportUrl: clean(payload.report?.reportUrl || row.report_url),
+      className: clean(player.className),
+      server: clean(player.server),
+      raidRole: clean(player.raidRole),
+      signupRole: clean(player.signupRole),
+      dps: Math.round(Number(player.damageDone || 0) / seconds),
+      hps: Math.round(Number(player.healingDone || 0) / seconds),
+      damageDone: Math.round(Number(player.damageDone || 0)),
+      healingDone: Math.round(Number(player.healingDone || 0)),
+      activityPercent: Math.round(Number(player.activityPercent || 0)),
+      deaths: Number(player.deaths || 0),
+      worldBuffCount: Number(player.worldBuffCount || 0),
+      preparationCount: Number(player.preparationCount || 0),
+      gear: Array.isArray(player.gear) ? player.gear : []
+    });
+  }
+  if (!history.length) {
+    const error = new Error("Für diesen Spieler sind noch keine gespeicherten Analysen vorhanden.");
     error.statusCode = 404;
     throw error;
   }
+  const latest = history[history.length - 1];
+  const metric = latest.signupRole === "Heiler" || latest.raidRole === "healer" ? "hps" : "dps";
+  const latestPayload = result.rows.find(row => row.id === latest.analysisId)?.payload || {};
+  const latestSeconds = Math.max(1, Number(latestPayload.report?.durationMs || 0) / 1000);
+  const comparison = (Array.isArray(latestPayload.players) ? latestPayload.players : [])
+    .filter(entry => metric === "hps" ? (clean(entry.signupRole) === "Heiler" || clean(entry.raidRole) === "healer") : !(clean(entry.signupRole) === "Heiler" || clean(entry.raidRole) === "healer"))
+    .map(entry => Math.round(Number(metric === "hps" ? entry.healingDone : entry.damageDone) / latestSeconds))
+    .sort((a, b) => b - a);
+  const rank = Math.max(1, comparison.findIndex(value => value <= latest[metric]) + 1);
+  const topPercent = latest[metric] > 0 && comparison.length ? Math.max(1, Math.ceil(rank * 100 / comparison.length)) : null;
+  return {
+    success: true,
+    profile: {
+      name: playerName,
+      className: latest.className,
+      server: latest.server,
+      raidRole: latest.raidRole,
+      signupRole: latest.signupRole,
+      raidCount: history.length,
+      topPercent,
+      latest,
+      bestDps: Math.max(...history.map(entry => entry.dps)),
+      bestHps: Math.max(...history.map(entry => entry.hps)),
+      history
+    }
+  };
+}
+
+async function getLogAnalysisSignupRoles(guildId, analysis) {
+  const raidDate = analysis.raid_date ? new Date(analysis.raid_date).toISOString().slice(0, 10) : clean(analysis.summary?.raidDate);
+  if (!raidDate) return { analysisRoles: [], signupRoles: [] };
+  const expectedRaid = normalizeRaidType(analysis.raid || analysis.summary?.raid || "");
+  const result = await query(
+    `select c.name as player_name, c.class_name, rs.role, r.raid_type
+       from raid_signups rs
+       join raids r on r.id = rs.raid_id
+       join characters c on c.id = rs.character_id
+      where r.guild_id = $1 and r.raid_date = $2::date
+        and lower(coalesce(rs.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')
+     union all
+     select res.player_name, res.class_name, res.role, coalesce(r.raid_type, res.raid_type)
+       from raid_external_signups res
+       left join raids r on r.id = res.raid_id
+      where res.guild_id = $1 and coalesce(res.raid_date, r.raid_date) = $2::date
+        and lower(coalesce(res.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')`,
+    [guildId, raidDate]
+  );
+  const rows = result.rows
+    .filter(row => !expectedRaid || normalizeRaidType(row.raid_type || "") === expectedRaid)
+    .concat(result.rows.filter(row => expectedRaid && normalizeRaidType(row.raid_type || "") !== expectedRaid));
+  const signupRoles = new Map();
+  const analysisRoles = new Map();
+  for (const row of rows) {
+    const name = clean(row.player_name).toLowerCase();
+    if (!name || signupRoles.has(name)) continue;
+    const signupRole = normalizeSignupRole(row.role);
+    if (!['tank','heal','dd'].includes(signupRole)) continue;
+    signupRoles.set(name, signupRole === 'heal' ? 'Heiler' : signupRole === 'tank' ? 'Tank' : 'DD');
+    if (signupRole === 'heal') analysisRoles.set(name, 'healer');
+    else if (signupRole === 'tank') analysisRoles.set(name, 'tank');
+    else {
+      const className = normalizeRpbClassName(row.class_name || "");
+      analysisRoles.set(name, className === 'Hunter' ? 'hunter' : ['Mage','Warlock','Priest','Shaman'].includes(className) ? 'caster' : 'melee');
+    }
+  }
+  return { analysisRoles: Array.from(analysisRoles.entries()), signupRoles: Array.from(signupRoles.entries()) };
 }
 
 async function getPublicLogAnalysisWebLegacy({ guildId, query: params }) {
@@ -15348,34 +16982,165 @@ async function ensureLogAnalysesTable() {
   );
 }
 
+function automaticLogAnalysisQueueState() {
+  return {
+    running: automaticLogAnalysisWorkerRunning,
+    waiting: automaticLogAnalysisQueue.length,
+    activeOrWaiting: automaticLogAnalysisQueueKeys.size
+  };
+}
+
+function isWarcraftLogsReportUrl(value) {
+  return /(?:^|\.)warcraftlogs\.com\/reports\//i.test(clean(value).replace(/^https?:\/\//i, ""));
+}
+
+function enqueueAutomaticLogAnalysis({ guildId, analysisId, forceRefresh = true, source = "automatic", priority = false }) {
+  const normalizedGuildId = clean(guildId);
+  const normalizedAnalysisId = clean(analysisId);
+  if (!normalizedGuildId || !isUuid(normalizedAnalysisId)) {
+    return { queued: false, reason: "invalid-analysis" };
+  }
+
+  const key = `${normalizedGuildId}:${normalizedAnalysisId}`;
+  if (automaticLogAnalysisQueueKeys.has(key)) {
+    if (priority) {
+      const queuedIndex = automaticLogAnalysisQueue.findIndex(job => job.key === key);
+      if (queuedIndex > 0) {
+        const [queuedJob] = automaticLogAnalysisQueue.splice(queuedIndex, 1);
+        automaticLogAnalysisQueue.unshift({
+          ...queuedJob,
+          forceRefresh: Boolean(forceRefresh) || queuedJob.forceRefresh,
+          source: clean(source) || queuedJob.source
+        });
+      }
+    }
+    return { queued: false, reason: "already-queued", ...automaticLogAnalysisQueueState() };
+  }
+
+  automaticLogAnalysisQueueKeys.add(key);
+  const queuedJob = {
+    key,
+    guildId: normalizedGuildId,
+    analysisId: normalizedAnalysisId,
+    forceRefresh: Boolean(forceRefresh),
+    source: clean(source) || "automatic",
+    queuedAt: new Date().toISOString()
+  };
+  if (priority) automaticLogAnalysisQueue.unshift(queuedJob);
+  else automaticLogAnalysisQueue.push(queuedJob);
+  setImmediate(() => {
+    processAutomaticLogAnalysisQueue().catch(error => {
+      console.error("Automatische Loganalyse-Warteschlange ist fehlgeschlagen:", error.message || error);
+    });
+  });
+  return { queued: true, ...automaticLogAnalysisQueueState() };
+}
+
+async function updateAutomaticLogAnalysisState(job, status, extra = {}) {
+  const now = new Date().toISOString();
+  const state = {
+    webAnalysisStatus: status,
+    webAnalysisSource: job.source,
+    webAnalysisSchemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+    ...(status === "processing" ? { webAnalysisStartedAt: now, webAnalysisError: null } : {}),
+    ...(status === "completed" ? { webAnalysisCompletedAt: now, webAnalysisError: null } : {}),
+    ...(status === "failed" ? { webAnalysisFailedAt: now } : {}),
+    ...extra
+  };
+  await query(
+    `update log_analyses
+        set summary = coalesce(summary, '{}'::jsonb) || $3::jsonb,
+            analyzed_at = case when $4::boolean then now() else analyzed_at end,
+            updated_at = now()
+      where guild_id = $1 and id = $2`,
+    [job.guildId, job.analysisId, JSON.stringify(state), status === "completed"]
+  );
+}
+
+async function processAutomaticLogAnalysisQueue() {
+  if (automaticLogAnalysisWorkerRunning) return;
+  automaticLogAnalysisWorkerRunning = true;
+
+  try {
+    while (automaticLogAnalysisQueue.length) {
+      const job = automaticLogAnalysisQueue.shift();
+      try {
+        await updateAutomaticLogAnalysisState(job, "processing");
+        await getPublicLogAnalysisWeb({
+          guildId: job.guildId,
+          query: {
+            id: job.analysisId,
+            type: "combined",
+            refresh: job.forceRefresh ? "true" : "false"
+          }
+        });
+        await updateAutomaticLogAnalysisState(job, "completed");
+      } catch (error) {
+        const message = clean(error?.message || error || "Unbekannter Fehler").slice(0, 500);
+        console.warn(`Automatische Loganalyse ${job.analysisId} fehlgeschlagen:`, message);
+        await updateAutomaticLogAnalysisState(job, "failed", { webAnalysisError: message }).catch(() => {});
+      } finally {
+        automaticLogAnalysisQueueKeys.delete(job.key);
+      }
+    }
+  } finally {
+    automaticLogAnalysisWorkerRunning = false;
+    if (automaticLogAnalysisQueue.length) {
+      setImmediate(() => {
+        processAutomaticLogAnalysisQueue().catch(error => {
+          console.error("Automatische Loganalyse-Warteschlange ist fehlgeschlagen:", error.message || error);
+        });
+      });
+    }
+  }
+}
+
 async function getLogAnalyses({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  await ensureLogAnalysesTable();
+  await ensureLogAnalysisWebCacheTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 50), 1), 200);
   const result = await query(
-    `select *
-     from log_analyses
-     where guild_id = $1
-     order by coalesce(raid_date, posted_at::date, created_at::date) desc, posted_at desc nulls last, created_at desc
+    `select la.*,
+            nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
+            nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
+            nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
+            c.payload->>'schemaVersion' as web_schema_version,
+            c.payload->>'consumableSchemaVersion' as web_consumable_schema_version
+     from log_analyses la
+     left join log_analysis_web_cache c on c.analysis_id = la.id
+     where la.guild_id = $1
+     order by coalesce(la.raid_date, la.posted_at::date, la.created_at::date) desc, la.posted_at desc nulls last, la.created_at desc
      limit $2`,
     [guildId, limit]
   );
 
   return {
     success: true,
-    analyses: result.rows.map(normalizeLogAnalysis)
+    analyses: result.rows.map(normalizeLogAnalysis),
+    automaticAnalysis: {
+      schemaVersion: LOG_ANALYSIS_WEB_SCHEMA_VERSION,
+      consumableSchemaVersion: LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION,
+      newlyQueued: 0,
+      backfillMode: "on-demand",
+      ...automaticLogAnalysisQueueState()
+    }
   };
 }
 
 async function getPublicLogAnalyses({ guildId, query: params }) {
-  await ensureLogAnalysesTable();
+  await ensureLogAnalysisWebCacheTable();
   await ensureLogAnalysisSheetExportsTable();
 
   const limit = Math.min(Math.max(Number(params.limit || 12), 1), 40);
   const sheetOnly = ["1", "true", "ja", "yes"].includes(clean(params.sheetOnly || params.webReady).toLowerCase());
   const result = await query(
     `select la.*,
+            nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
+            nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
+            nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
             coalesce((
               select count(*)::int
               from log_analysis_sheet_exports se
@@ -15387,6 +17152,7 @@ async function getPublicLogAnalyses({ guildId, query: params }) {
               where se.analysis_id = la.id and se.analysis_type = 'cla'
             ), 0) as cla_sheet_count
      from log_analyses la
+     left join log_analysis_web_cache c on c.analysis_id = la.id
      where la.guild_id = $1
        and (
          $3::boolean = false
@@ -15472,9 +17238,17 @@ async function saveLogAnalysis({ guildId, query: params }) {
     ]
   );
 
+  const automaticAnalysis = enqueueAutomaticLogAnalysis({
+    guildId,
+    analysisId: result.rows[0].id,
+    forceRefresh: true,
+    source: "new-report"
+  });
+
   return {
     success: true,
-    analysis: normalizeLogAnalysis(result.rows[0])
+    analysis: normalizeLogAnalysis(result.rows[0]),
+    automaticAnalysis
   };
 }
 
@@ -17063,6 +18837,7 @@ function normalizeRaidSignupRow(row) {
     source: row.source || "lichtloot",
     discordName: row.discord_name || "",
     discordUserId: row.discord_user_id || "",
+    signupNumber: Number.isInteger(Number(row.signup_number)) && Number(row.signup_number) > 0 ? Number(row.signup_number) : null,
     hasPrio: row.has_prio === true || row.has_prio === "true",
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -17223,6 +18998,146 @@ async function findRaidForDiscordImport(guildId, params) {
   return null;
 }
 
+function importedRaidSignupAliases(value) {
+  const aliases = [];
+  const add = candidate => {
+    const name = clean(candidate);
+    if (name && !aliases.some(entry => entry.toLocaleLowerCase("de-DE") === name.toLocaleLowerCase("de-DE"))) {
+      aliases.push(name);
+    }
+  };
+  add(value);
+  for (const part of clean(value).split(/[\/|]/g)) {
+    add(part);
+    add(part.replace(/-(?:everlook|lakeshire)$/i, ""));
+  }
+  add(clean(value).replace(/-(?:everlook|lakeshire)$/i, ""));
+  return aliases;
+}
+
+async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
+  const [externalResult, characterResult, discordLinkResult] = await Promise.all([
+    query(
+      `select id, player_name, class_name, role, status, note, source,
+              discord_user_id, discord_name, created_at
+       from raid_external_signups
+       where guild_id = $1 and raid_id = $2`,
+      [guildId, raidId]
+    ),
+    query(
+      `select c.id, c.player_id, c.name, c.class_name
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false`,
+      [guildId]
+    ),
+    query(
+      `select c.id, c.player_id, c.name, c.class_name,
+              dbm.username, dbm.display_name, dbm.global_name, dpl.discord_name
+       from discord_player_links dpl
+       join characters c on c.id = dpl.character_id
+       join players p on p.id = c.player_id
+       left join discord_bot_members dbm
+         on dbm.guild_id = dpl.guild_id and dbm.user_id = dpl.discord_user_id
+       where dpl.guild_id = $1
+         and p.approval_status = 'approved'
+         and coalesce(p.is_blocked, false) = false`,
+      [guildId]
+    )
+  ]);
+  if (!externalResult.rows.length || !characterResult.rows.length) return 0;
+
+  const charactersByName = new Map();
+  for (const character of characterResult.rows) {
+    const key = clean(character.name).toLocaleLowerCase("de-DE");
+    if (!key) continue;
+    const matches = charactersByName.get(key) || [];
+    matches.push(character);
+    charactersByName.set(key, matches);
+  }
+  const charactersByDiscordName = new Map();
+  for (const link of discordLinkResult.rows || []) {
+    for (const value of [link.username, link.display_name, link.global_name, link.discord_name]) {
+      for (const alias of importedRaidSignupAliases(value)) {
+        const key = alias.toLocaleLowerCase("de-DE");
+        const matches = charactersByDiscordName.get(key) || [];
+        matches.push(link);
+        charactersByDiscordName.set(key, matches);
+      }
+    }
+  }
+
+  let reconciled = 0;
+  for (const external of externalResult.rows) {
+    let matches = [];
+    for (const alias of importedRaidSignupAliases(external.player_name)) {
+      matches.push(...(charactersByName.get(alias.toLocaleLowerCase("de-DE")) || []));
+    }
+    matches = [...new Map(matches.map(character => [character.id, character])).values()];
+    if (!matches.length) {
+      for (const alias of importedRaidSignupAliases(external.player_name)) {
+        matches.push(...(charactersByDiscordName.get(alias.toLocaleLowerCase("de-DE")) || []));
+      }
+      matches = [...new Map(matches.map(character => [character.id, character])).values()];
+    }
+    if (matches.length > 1 && clean(external.class_name)) {
+      const sameClass = matches.filter(character => clean(character.class_name).toLocaleLowerCase("de-DE") === clean(external.class_name).toLocaleLowerCase("de-DE"));
+      if (sameClass.length === 1) matches = sameClass;
+    }
+    if (matches.length !== 1) continue;
+
+    const character = matches[0];
+    // Ein SpielerLogin darf pro Raid nur einen Charakter enthalten. Ein
+    // manueller Eintrag aus der Leitungsseite ist dabei zugleich ein bewusster
+    // Charakterwechsel: Die alte Anmeldung muss ersetzt werden, statt den neu
+    // angelegten externen Datensatz anschließend kommentarlos zu verwerfen.
+    await query(
+      `delete from raid_signups rs
+       using characters c
+       where rs.character_id = c.id
+         and rs.raid_id = $1
+         and c.player_id = $2
+         and rs.character_id <> $3`,
+      [raidId, character.player_id, character.id]
+    );
+    await query(
+      `insert into raid_signups (
+         raid_id, character_id, status, note, role, source,
+         discord_user_id, discord_name, created_at, updated_at
+       )
+       values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),now())
+       on conflict (raid_id, character_id)
+       do update set
+         status = excluded.status,
+         note = coalesce(nullif(excluded.note, ''), raid_signups.note),
+         role = excluded.role,
+         source = excluded.source,
+         discord_user_id = coalesce(nullif(excluded.discord_user_id, ''), raid_signups.discord_user_id),
+         discord_name = coalesce(nullif(excluded.discord_name, ''), raid_signups.discord_name),
+         updated_at = now()`,
+      [
+        raidId,
+        character.id,
+        normalizeSignupStatus(external.status),
+        clean(external.note),
+        normalizeSignupRole(external.role),
+        clean(external.source) || "account-reconciled",
+        clean(external.discord_user_id),
+        clean(external.discord_name),
+        external.created_at || null
+      ]
+    );
+    await query(
+      `delete from raid_external_signups where guild_id = $1 and raid_id = $2 and id = $3`,
+      [guildId, raidId, external.id]
+    );
+    reconciled += 1;
+  }
+  return reconciled;
+}
+
 async function getRaidHelper({ guildId, query: params }) {
   const lookupValue = clean(
     params.raidId
@@ -17265,9 +19180,17 @@ async function getRaidHelper({ guildId, query: params }) {
   // über ihre interne Raid-ID strikt voneinander getrennt.
   const relatedRaidIds = [raid.id];
 
+  // Alte RaidHelper-Importe enthielten oft nur den sichtbaren Discord-Namen
+  // (z. B. "Pacho/Zinzin" oder "Daedrym-Lakeshire"). Wenn darin ein
+  // eindeutiger, bereits zu einem SpielerLogin gehörender Charakter steckt,
+  // wird der lose Import beim Laden des Raids in eine echte Anmeldung
+  // umgewandelt. So greifen PO/P0+, Discord-Link und Account-Zuordnung wieder
+  // auf denselben Charakterdatensatz zu.
+  await reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raid.id);
+
   const signupResult = await query(
     `select
-       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source, rs.signup_number,
        coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
        coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
        rs.created_at, rs.updated_at,
@@ -17296,13 +19219,14 @@ async function getRaidHelper({ guildId, query: params }) {
      where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
+       rs.signup_number asc nulls last,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
     [relatedRaidIds]
   );
 
   const externalResult = await query(
-    `select res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
+    `select res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source, res.signup_number,
             res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
             exists(
               select 1
@@ -17316,7 +19240,7 @@ async function getRaidHelper({ guildId, query: params }) {
      from raid_external_signups res
      where res.guild_id = $1
        and res.raid_id = any($2)
-     order by res.player_name asc`,
+     order by res.signup_number asc nulls last, res.player_name asc`,
     [guildId, relatedRaidIds]
   );
 
@@ -17336,10 +19260,27 @@ async function getRaidHelper({ guildId, query: params }) {
     if (!expectedDiscordMessageId) return false;
     return clean(source.split(":").pop()) === expectedDiscordMessageId;
   };
-  const signups = signupResult.rows.map(normalizeRaidSignupRow).filter(belongsToSelectedDiscordPost);
-  const externalSignups = externalResult.rows
-    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }))
-    .filter(belongsToSelectedDiscordPost);
+  const normalizedSignups = signupResult.rows.map(normalizeRaidSignupRow);
+  const normalizedExternalSignups = externalResult.rows
+    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  const hasCurrentDiscordSignup = [...normalizedSignups, ...normalizedExternalSignups].some(row => {
+    const source = clean(row?.source);
+    return source.toLowerCase().startsWith("discordsignup:")
+      && clean(source.split(":").pop()) === expectedDiscordMessageId;
+  });
+  // Nach dem Ersetzen eines Discord-Posts können bestehende Anmeldungen noch
+  // dessen alte Message-ID tragen. Gibt es für diesen Raid noch keinen
+  // einzigen Eintrag mit der neuen ID, ist das ein Postwechsel und kein
+  // anderer Termin. Die strikt über raid_id zugeordneten Einträge bleiben
+  // deshalb sichtbar. Sobald neue Anmeldungen zur aktuellen Nachricht
+  // existieren, gilt wieder der strenge Message-ID-Filter.
+  const includeSignup = row => {
+    const sourceLower = clean(row?.source).toLowerCase();
+    if (!hasCurrentDiscordSignup && sourceLower.startsWith("discordsignup:")) return true;
+    return belongsToSelectedDiscordPost(row);
+  };
+  const signups = normalizedSignups.filter(includeSignup);
+  const externalSignups = normalizedExternalSignups.filter(includeSignup);
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
@@ -17742,18 +19683,28 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const editedClassName = clean(params.className || params.klasse);
   const editedRole = clean(params.role).toLowerCase();
   const editedSpecialization = clean(params.specialization || params.spec);
+  const hasSignupNumber = Object.prototype.hasOwnProperty.call(params, "signupNumber") || Object.prototype.hasOwnProperty.call(params, "registrationNumber");
+  const signupNumberRaw = clean(params.signupNumber ?? params.registrationNumber);
+  const editedSignupNumber = signupNumberRaw ? Number.parseInt(signupNumberRaw, 10) : null;
+  if (hasSignupNumber && signupNumberRaw && (!Number.isInteger(editedSignupNumber) || editedSignupNumber < 1 || editedSignupNumber > 9999)) {
+    const error = new Error("Die Anmeldenummer muss zwischen 1 und 9999 liegen oder leer sein.");
+    error.statusCode = 400;
+    throw error;
+  }
   const editedNote = clean(params.note) || (editedSpecialization ? `Skillung: ${editedSpecialization}` : "");
-  if (editedPlayerName || editedSpecialization || editedRole) {
+  if (editedPlayerName || editedSpecialization || editedRole || hasSignupNumber) {
     const nextRole = ["tank", "heal", "dd"].includes(editedRole) ? editedRole : clean(existingSignup.role || "dd");
     const nextPlayerName = editedPlayerName || clean(existingSignup.player || existingSignup.playerName);
     const nextClassName = editedClassName || clean(existingSignup.className);
     const nextNote = editedNote || clean(existingSignup.note);
     const externalUpdate = await query(
       `update raid_external_signups
-       set player_name=$3, class_name=$4, role=$5, note=$6, updated_at=now()
+       set player_name=$3, class_name=$4, role=$5, note=$6,
+           signup_number=case when $7::boolean then $8::integer else signup_number end,
+           updated_at=now()
        where guild_id=$1 and id=$2
        returning *`,
-      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote]
+      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote, hasSignupNumber, editedSignupNumber]
     );
     if (externalUpdate.rows[0]) {
       const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
@@ -17761,7 +19712,12 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
       return { success:true, signup, queued:true, ...sideEffects };
     }
     const characterResult = await query(
-      `select id, name, class_name from characters where guild_id=$1 and lower(name)=lower($2) order by updated_at desc nulls last limit 1`,
+      `select c.id, c.name, c.class_name
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1 and lower(c.name) = lower($2)
+       order by c.updated_at desc nulls last
+       limit 1`,
       [guildId, nextPlayerName]
     );
     if (!characterResult.rows[0]) {
@@ -17770,9 +19726,11 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
       throw error;
     }
     const localUpdate = await query(
-      `update raid_signups rs set character_id=$3, role=$4, note=$5, updated_at=now()
+      `update raid_signups rs set character_id=$3, role=$4, note=$5,
+          signup_number=case when $6::boolean then $7::integer else rs.signup_number end,
+          updated_at=now()
        from raids r where rs.raid_id=r.id and r.guild_id=$1 and rs.id=$2 returning rs.*`,
-      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote]
+      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote, hasSignupNumber, editedSignupNumber]
     );
     if (localUpdate.rows[0]) {
       const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
@@ -17839,7 +19797,7 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
 async function findRaidHelperSignupForAdmin(guildId, signupId) {
   const external = await query(
     `select
-       res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
+       res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source, res.signup_number,
        res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
        r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
@@ -17868,7 +19826,7 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
 
   const local = await query(
     `select
-       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source, rs.signup_number,
        coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
        coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
        rs.created_at, rs.updated_at,
@@ -22525,7 +24483,8 @@ async function ensureGuildPoItemsSchema() {
 }
 
 async function getGuildPoItems({ guild, query: params = {} }) {
-  requireMasterCodeForGuild(guild, params.masterCode);
+  if (clean(params.queueToken)) requireMasterOrQueueToken(params);
+  else requireMasterCodeForGuild(guild, params.masterCode);
   await ensureGuildPoItemsSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guild.id];
@@ -23114,6 +25073,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getPublicLogAnalysisWeb") {
       const webAnalysis = await getPublicLogAnalysisWeb({ guildId: guild.id, query: req.query });
       return res.json({ ...webAnalysis, guild: guild.slug });
+    }
+
+    if (action === "getPublicLogAnalysisPlayerProfile") {
+      const profile = await getPublicLogAnalysisPlayerProfile({ guildId: guild.id, query: req.query });
+      return res.json({ ...profile, guild: guild.slug });
     }
 
     if (action === "getPublicLogAnalysisWebLegacy") {
@@ -24352,6 +26316,11 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "guildQueueRaidCalendar") {
       const queued = await queueRaidCalendar({ guildId: guild.id, query: postParams });
       return res.json({ ...queued, guild: guild.slug });
+    }
+
+    if (action === "guildGetRaidCalendarConfig") {
+      const config = await getRaidCalendarConfig({ guildId: guild.id, query: postParams });
+      return res.json({ ...config, guild: guild.slug });
     }
 
     if (action === "guildQueueRaidAnnouncementRefresh") {
