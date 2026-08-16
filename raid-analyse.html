@@ -677,7 +677,7 @@ function renderClaGearModule(root,sections,section){const problems=section.id===
     const RPB_CATEGORIES=[
       ["overview","▦","Übersicht"],["abilities","⇄","Fähigkeiten"],["cooldowns","◷","Klassen-Cooldowns"],
       ["consumables","♙","Verbrauchsgüter & Buffs"],["statistics","%","Statistik & Sonstiges"],
-      ["charts","⌁","Diagramme"],["ranking","♕","Rangliste"],["efficiency","ϟ","Cooldown-Effizienz"]
+      ["efficiency","ϟ","Cooldown-Effizienz"]
     ];
     function rpbCategoryMenu(){return `<nav class="module-menu rpb-category-menu">${RPB_CATEGORIES.map(([id,icon,label])=>`<button class="${state.rpbCategory===id?'active':''}" type="button" onclick="selectRpbCategory('${id}')"><span>${icon}</span><span>${html(label)}</span></button>`).join("")}</nav>`;}
     function spellIconUrl(row){const value=String(row?.icon||"").trim();if(/^https?:\/\//i.test(value))return value;if(value)return `https://wow.zamimg.com/images/wow/icons/large/${value.replace(/\.jpg$/i,"")}.jpg`;return "https://wow.zamimg.com/images/wow/icons/large/inv_misc_questionmark.jpg";}
