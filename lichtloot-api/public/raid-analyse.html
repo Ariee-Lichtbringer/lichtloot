@@ -652,7 +652,7 @@
     function renderRpbModule(root,sections){
       const players=allPlayers();const general=sections.find(section=>section.id==="general")||sections[0];const castSections=sections.filter(section=>/-casts$/.test(section.id));let title=RPB_CATEGORIES.find(item=>item[0]===state.rpbCategory)?.[2]||"Übersicht";let content="";
       if(state.rpbCategory==="abilities"){
-        const rows=scopedAbilityRows(rpbClassRows(castSections,row=>!/aktiv|sekunden|wcl|auf trash|auf bossen|gesamt/i.test(row.label||"")),players);content=rpbRowsAsMatrix(rows,players)+renderHealingCharacterSummary(players);
+        const rows=rpbClassRows(castSections,row=>!/aktiv|sekunden|wcl|auf trash|auf bossen|gesamt/i.test(row.label||""));content=rpbRowsAsMatrix(rows,players)+renderHealingCharacterSummary(players);
       }else if(state.rpbCategory==="cooldowns"){
         const rows=rpbClassRows(castSections,row=>/auf trash|auf bossen|gesamt/i.test(row.label||""));content=rpbRowsAsMatrix(rows,players);
       }else if(state.rpbCategory==="efficiency"){
