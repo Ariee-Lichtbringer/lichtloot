@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-player-career-v16";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-timeline-v17";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13589,6 +13589,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const damageTakenTotals = {};
   const threatTotals = {};
   const threatAbilitiesByPlayer = {};
+  const threatTimelineByFight = {};
+  let threatValuesEstimated = false;
   const combatOutcomeStats = {};
   let characterPerformanceDurationMs = 0;
   const deathTotals = {};
@@ -14256,6 +14258,64 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   });
 
   await loadFightPerformanceTables();
+  // Warcraft Logs does not expose a populated Threat table for every Classic
+  // report. Build a time-resolved fallback from effective damage and healing so
+  // the UI can still compare threat generation. Existing WCL threat totals win.
+  const bossFightById = new Map(bossFightsForGear.map(fight => [Number(fight.id), fight]));
+  const threatBuckets = {};
+  const addThreatSample = (event, factor) => {
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const fight = bossFightById.get(fightId);
+    const player = playerNameFromEvent(event, true);
+    if (!fight || !player) return;
+    const amount = Math.max(0, Number(event.amount || 0)) * factor;
+    if (!amount) return;
+    const second = Math.max(0, Math.floor((Number(event.timestamp || event.time || 0) - Number(fight.startTime || 0)) / 2000) * 2);
+    if (!threatBuckets[fightId]) threatBuckets[fightId] = {};
+    if (!threatBuckets[fightId][player]) threatBuckets[fightId][player] = {};
+    threatBuckets[fightId][player][second] = Number(threatBuckets[fightId][player][second] || 0) + amount;
+  };
+  damageDoneEvents.forEach(event => addThreatSample(event, 1));
+  healingEvents.forEach(event => addThreatSample(event, 0.5));
+  bossFightsForGear.forEach(fight => {
+    const fightId = Number(fight.id || 0);
+    const durationSeconds = Math.max(1, Math.round((Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000));
+    threatTimelineByFight[fightId] = {};
+    players.forEach(player => {
+      if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+      if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+      const metrics = fightPlayerMetrics[fightId][player.name];
+      const buckets = threatBuckets[fightId]?.[player.name] || {};
+      const rawTotal = Object.values(buckets).reduce((sum, value) => sum + Number(value || 0), 0);
+      const wclTotal = Number(metrics?.threat || 0);
+      const total = wclTotal > 0 ? wclTotal : rawTotal;
+      if (!total) return;
+      if (!(wclTotal > 0)) {
+        threatValuesEstimated = true;
+        metrics.threat = Math.round(total);
+        const abilityName = Number(metrics.damageDone || 0) > 0 ? "Schaden (berechnet)" : "Heilung (berechnet)";
+        metrics.threatAbilities = { [abilityName]: Math.round(total) };
+      }
+      const scale = rawTotal > 0 ? total / rawTotal : 1;
+      let cumulative = 0;
+      const points = [{ time: 0, value: 0 }];
+      Object.keys(buckets).map(Number).sort((a, b) => a - b).forEach(second => {
+        cumulative += Number(buckets[second] || 0) * scale;
+        points.push({ time: Math.min(durationSeconds, second), value: Math.round(cumulative) });
+      });
+      if (points[points.length - 1].time < durationSeconds) points.push({ time: durationSeconds, value: Math.round(total) });
+      threatTimelineByFight[fightId][player.name] = points;
+    });
+  });
+  if (!Object.values(threatTotals).some(value => Number(value) > 0)) {
+    players.forEach(player => {
+      const total = bossFightsForGear.reduce((sum, fight) => sum + Number(fightPlayerMetrics[Number(fight.id)]?.[player.name]?.threat || 0), 0);
+      if (total > 0) {
+        threatTotals[player.name] = Math.round(total);
+        threatAbilitiesByPlayer[player.name] = { "Bosskämpfe (berechnet)": Math.round(total) };
+      }
+    });
+  }
   const completeBossDurationMs = bossFightsForGear.reduce((sum, fight) => sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0)), 0);
   if (completeBossDurationMs > 0) performanceDurationMs = completeBossDurationMs;
   players.forEach(player => {
@@ -15176,6 +15236,11 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         ,abilityCasts: metrics.abilityCasts || {}, healingSpells: metrics.healingSpells || {}
       }]))
     })),
+    threatAnalysis: {
+      estimated: threatValuesEstimated,
+      method: threatValuesEstimated ? "Schaden × 1 + effektive Heilung × 0,5; vorhandene WCL-Threat-Werte werden bevorzugt." : "Warcraft-Logs-Bedrohungswerte",
+      timelines: threatTimelineByFight
+    },
     fights: rpbFights.map(fight => ({
       id: Number(fight.id || 0),
       name: fight.name || (isKnownBossFight(fight) ? "Boss" : "Trash"),
