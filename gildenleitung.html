@@ -15416,7 +15416,68 @@ async function deletePoReleaseRequest(index){
     setStatus(error.message||"Antrag konnte nicht gelöscht werden.","bad");
   }
 }
-function openPoReleaseRequestReview(index){const entry=poReleaseRequests[index];if(!entry)return;const req=entry.requirements||{};const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="width:min(1800px,96vw);max-width:none;max-height:96vh;overflow:auto"><h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3><p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p><div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}<br>${(req.checks||[]).map(check=>`☐ ${escapeHtml(check)}`).join("<br>")}</div>${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:""}${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="muted">Kein Screenshot hochgeladen.</p>'}<label style="display:grid;gap:6px;margin-top:12px">Notiz<textarea id="poRequestReviewNote" rows="4">${escapeHtml(entry.reviewNote||"")}</textarea></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?'<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved">Freigeben</button>':""}</div></div>`;backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{try{const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");backdrop.remove();setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");await loadP0ReleasePanel();}catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}}));document.body.appendChild(backdrop);}
+function openPoReleaseRequestReview(index){
+  const entry=poReleaseRequests[index];
+  if(!entry)return;
+  const req=entry.requirements||{};
+  const checks=Array.isArray(req.checks)?req.checks:[];
+  const preset=entry.status==="approved"?"yes":entry.status==="rejected"?"no":"";
+  const backdrop=document.createElement("div");
+  backdrop.className="raid-helper-notify-backdrop";
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="width:min(1800px,96vw);max-width:none;max-height:96vh;overflow:auto">
+    <h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3>
+    <p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p>
+    <div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}</div>
+    <div data-requirements style="display:grid;gap:8px;margin:10px 0 14px">
+      ${checks.map((check,checkIndex)=>`<div data-requirement data-result="${preset}" style="display:grid;grid-template-columns:minmax(260px,1fr) auto auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #334155;border-radius:10px;background:#07101f">
+        <strong>${escapeHtml(check)}</strong>
+        <button class="small-btn ${preset==="yes"?"good":"ghost"}" type="button" data-check="yes" data-check-index="${checkIndex}" aria-pressed="${preset==="yes"}">✓ Erfüllt</button>
+        <button class="small-btn ${preset==="no"?"danger":"ghost"}" type="button" data-check="no" data-check-index="${checkIndex}" aria-pressed="${preset==="no"}">✕ Nicht erfüllt</button>
+      </div>`).join("")}
+    </div>
+    <div id="poRequestCheckSummary" class="status">Noch nicht vollständig geprüft.</div>
+    ${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:""}
+    ${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="muted">Kein Screenshot hochgeladen.</p>'}
+    <label style="display:grid;gap:6px;margin-top:12px">Notiz<textarea id="poRequestReviewNote" rows="4">${escapeHtml(entry.reviewNote||"")}</textarea></label>
+    <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?'<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved">Freigeben</button>':""}</div>
+  </div>`;
+  const updateCheckSummary=()=>{
+    const rows=Array.from(backdrop.querySelectorAll("[data-requirement]"));
+    const results=rows.map(row=>row.dataset.result||"");
+    const allPassed=rows.length>0&&results.every(result=>result==="yes");
+    const failed=results.filter(result=>result==="no").length;
+    const open=results.filter(result=>!result).length;
+    const summary=backdrop.querySelector("#poRequestCheckSummary");
+    if(summary){
+      summary.className=`status ${allPassed?"good":failed?"bad":""}`;
+      summary.textContent=allPassed?"✓ Alle Voraussetzungen erfüllt.":failed?`✕ ${failed} Voraussetzung${failed===1?"":"en"} nicht erfüllt.${open?` ${open} noch ungeprüft.`:""}`:`${open} Voraussetzung${open===1?" ist":"en sind"} noch ungeprüft.`;
+    }
+  };
+  backdrop.querySelectorAll("[data-check]").forEach(button=>button.addEventListener("click",()=>{
+    const row=button.closest("[data-requirement]");
+    if(!row)return;
+    row.dataset.result=button.dataset.check;
+    row.querySelectorAll("[data-check]").forEach(choice=>{
+      const selected=choice.dataset.check===row.dataset.result;
+      choice.className=`small-btn ${selected?(choice.dataset.check==="yes"?"good":"danger"):"ghost"}`;
+      choice.setAttribute("aria-pressed",String(selected));
+    });
+    updateCheckSummary();
+  }));
+  backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});
+  backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{
+    try{
+      const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});
+      if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");
+      backdrop.remove();
+      setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");
+      await loadP0ReleasePanel();
+    }catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}
+  }));
+  document.body.appendChild(backdrop);
+  updateCheckSummary();
+}
 
 function poReleaseRaidLabel(raid){
   const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
