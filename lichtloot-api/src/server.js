@@ -947,6 +947,8 @@ function normalizeWarcraftLogsGear(gear) {
       itemLevel: item.itemLevel || item.ilvl || "",
       permanentEnchant: item.permanentEnchant || item.permanentEnchantName || item.enchant || "",
       permanentEnchantName: item.permanentEnchantName || item.enchantName || "",
+      temporaryEnchant: item.temporaryEnchant || item.temporaryEnchantId || "",
+      temporaryEnchantName: item.temporaryEnchantName || "",
       enchantments: normalizeWarcraftLogsEnchantments(item),
       gems: normalizeWarcraftLogsGems(item.gems || item.gem || item.socketedGems || [])
     };
@@ -13123,6 +13125,16 @@ const rpbGermanSpellLabels = new Map(Object.entries({
   "Mana Ruby":"Manarubin","all other Mana Gems":"Weitere Manasteine",
   "Elixir of Poison Resistance":"Elixier des Giftwiderstands",
   "Demonic Rune":"Dämonische Rune","Dark Rune":"Dunkelrune","Thistle Tea":"Disteltee",
+  "Flask of the Titans":"Fläschchen der Titanen","Supreme Power":"Oberste Macht",
+  "Distilled Wisdom":"Destillierte Weisheit","Chromatic Resistance":"Chromatischer Widerstand",
+  "Mageblood Elixir":"Magierbluttrank","Major Troll's Blood Elixir":"Erheblicher Trollbluttrank",
+  "Elixir of Fortitude":"Elixier der Seelenstärke","Greater Arcane Elixir":"Großes Arkanelixier",
+  "Elixir of Greater Firepower":"Elixier der großen Feuermacht",
+  "Elixir of Superior Defense":"Elixier der überragenden Verteidigung",
+  "Elixir of the Mongoose":"Elixier des Mungos","Elixir of Shadow Power":"Elixier der Schattenmacht",
+  "Juju Chill":"Kälte des Juju","Juju Ember":"Glut des Juju","Juju Might":"Macht des Juju",
+  "Juju Power":"Kraft des Juju","Winterfall Firewater":"Feuerwasser der Winterfelle",
+  "Weapon Enhancement":"Waffenverzauberung",
   "Heavy Runecloth Bandage":"Schwerer Runenstoffverband","Dense Dynamite":"Dichtes Dynamit",
   "Goblin Sapper Charge":"Goblinpioniersprengladung","Stratholme Holy Water":"Weihwasser von Stratholme",
   "Eye of the Dead":"Auge der Toten","Hazzarah's Charm of Healing":"Hazzarahs Amulett der Heilung",
@@ -13694,7 +13706,21 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     ["Flask of the Titans", [17626]],
     ["Supreme Power", [17628]],
     ["Distilled Wisdom", [17627]],
-    ["Chromatic Resistance", [17629]]
+    ["Chromatic Resistance", [17629]],
+    ["Mageblood Elixir", [24363], ["Mageblood Potion"]],
+    ["Major Troll's Blood Elixir", [24361], ["Major Troll's Blood Potion"]],
+    ["Elixir of Fortitude", [3593]],
+    ["Greater Arcane Elixir", [17539]],
+    ["Elixir of Greater Firepower", [26276], ["Greater Firepower"]],
+    ["Elixir of Superior Defense", [11348]],
+    ["Elixir of the Mongoose", [17538]],
+    ["Elixir of Shadow Power", [11474], ["Shadow Power"]],
+    ["Juju Chill", [16325]],
+    ["Juju Ember", [16326]],
+    ["Juju Might", [16329]],
+    ["Juju Power", [16323]],
+    ["Winterfall Firewater", [17038]],
+    ["Weapon Enhancement", [], ["Weapon Enhancement"]]
   ];
 
   function playerNameFromEvent(event, source = true) {
@@ -13710,6 +13736,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const id = Number(spellId || 0);
     if (!id) return "";
     const found = definitions.find(([, ids]) => ids.includes(id));
+    return found ? found[0] : "";
+  }
+
+  function labelForCombatBuff(spellId, rawName = "") {
+    const byId = labelForSpellId(spellId, claCombatBuffDefinitions);
+    if (byId) return byId;
+    const name = normalizedAbilityLookupName(rawName);
+    if (!name) return "";
+    const found = claCombatBuffDefinitions.find(([label, , aliases = []]) => [label, ...aliases].some(alias => {
+      const normalizedAlias = normalizedAbilityLookupName(alias);
+      return normalizedAlias && (name === normalizedAlias || name.includes(normalizedAlias));
+    }));
     return found ? found[0] : "";
   }
 
@@ -14256,7 +14294,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     normalizeCombatantAuras(event).forEach(aura => {
       const id = auraAbilityId(aura);
       const worldBuff = labelForWorldBuff(id, auraAbilityName(aura));
-      const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
+      const combatBuff = labelForCombatBuff(id, auraAbilityName(aura));
       if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
     });
   });
@@ -14265,7 +14303,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playerNameFromBuffEvent(event);
     const id = abilityId(event);
     const worldBuff = labelForWorldBuff(id, displayAbilityName(event));
-    const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
+    const combatBuff = labelForCombatBuff(id, displayAbilityName(event));
     if (player && combatBuff) {
       addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
       markFightConsumable(event, player, combatBuff);
@@ -14276,9 +14314,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playerNameFromEvent(event, true);
     if (!player) return;
     normalizeCombatantAuras(event).forEach(aura => {
-      const combatBuff = labelForSpellId(auraAbilityId(aura), claCombatBuffDefinitions);
+      const combatBuff = labelForCombatBuff(auraAbilityId(aura), auraAbilityName(aura));
       if (combatBuff) markFightConsumable(event, player, combatBuff);
     });
+    const hasWeaponEnhancement = normalizeWarcraftLogsGear(event.gear || []).some(item => {
+      if (![15, 16].includes(Number(item.slot))) return false;
+      return Number(item.temporaryEnchant || 0) > 0 || Boolean(clean(item.temporaryEnchantName));
+    });
+    if (hasWeaponEnhancement) markFightConsumable(event, player, "Weapon Enhancement");
   });
 
   // CombatantInfo contains the auras active when logging starts. Buff events then
