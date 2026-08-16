@@ -2887,8 +2887,9 @@ body.raid-unified-open .raid-helper-current-detail-head{display:grid;grid-templa
 .raid-helper-manual-signup label{display:grid;gap:5px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
 .raid-helper-signup-name-button{appearance:none;background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:900;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(94,234,212,.45);text-underline-offset:3px}
 .raid-helper-signup-name-button:hover{color:#5eead4;text-decoration-color:#5eead4}
+.raid-helper-signup-number{display:inline-flex;align-items:center;justify-content:center;min-width:28px;padding:2px 7px;border:1px solid rgba(250,204,21,.55);border-radius:999px;background:rgba(250,204,21,.1);color:#fde047;font-size:11px;font-weight:950;vertical-align:middle}
 .raid-helper-spec-icon{width:24px;height:24px;display:inline-block;vertical-align:middle;object-fit:cover;border:1px solid rgba(148,163,184,.5);border-radius:5px;box-shadow:0 0 0 1px rgba(2,6,23,.7);margin-left:5px}
-.raid-helper-signup-edit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:16px 0}
+.raid-helper-signup-edit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr .7fr;gap:12px;margin:16px 0}
 .raid-helper-signup-edit-grid label{display:grid;gap:6px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
 @media(max-width:700px){.raid-helper-signup-edit-grid{grid-template-columns:1fr}}
 @media(max-width:900px){.raid-helper-manual-signup{grid-template-columns:1fr 1fr}.raid-helper-manual-signup label:first-child{grid-column:1/-1}}
@@ -11250,10 +11251,11 @@ function renderRaidHelperSignupAdminRow(row){
   const status = normalize(row.status || "signed") || "signed";
   const statusLabel = status === "bench" ? "Bank" : status === "late" || status === "spät" || status === "spaet" ? "Verspätet" : status === "absent" ? "Abwesend" : status === "tentative" ? "Vorläufig" : "Aktiv";
   const statusIcon = status === "bench" ? "🪑" : status === "late" || status === "spät" || status === "spaet" ? "🕒" : status === "absent" ? "🚫" : status === "tentative" ? "⚖️" : "✅";
+  const signupNumber = Number(row.signupNumber || 0);
   return `
     <div class="raid-helper-signup-row">
       <div>
-        <div class="raid-helper-signup-name">${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter oder Skillung ändern">${escapeHtml(player)}</button>${raidHelperSignupSpecIconMarkup(row.className || "", specialization)}${renderRaidHelperLootbag(row)}</div>
+        <div class="raid-helper-signup-name">${signupNumber > 0 ? `<span class="raid-helper-signup-number" title="Anmeldenummer">#${signupNumber}</span> ` : ""}${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter, Skillung oder Anmeldenummer ändern">${escapeHtml(player)}</button>${raidHelperSignupSpecIconMarkup(row.className || "", specialization)}${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
       </div>
@@ -11317,6 +11319,7 @@ function openRaidHelperSignupEdit(signupId){
       <label>Charakter<select id="raidHelperSignupEditPlayer"><option value="">Charakter auswählen …</option>${raidHelperManualPlayerOptions()}</select></label>
       <label>Skillung<select id="raidHelperSignupEditSpec" data-current="${escapeAttr(currentSpec)}"></select></label>
       <label>Rolle<select id="raidHelperSignupEditRole"><option value="dd">DD</option><option value="tank">Tank</option><option value="heal">Heiler</option></select></label>
+      <label>Anmeldenummer<input id="raidHelperSignupEditNumber" type="number" min="1" max="9999" step="1" value="${escapeAttr(row.signupNumber || "")}" placeholder="z. B. 12"></label>
     </div>
     <div id="raidHelperSignupEditStatus" class="status"></div>
     <div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Abbrechen</button><button class="small-btn good" data-save>Änderungen speichern</button></div>
@@ -11342,10 +11345,13 @@ async function saveRaidHelperSignupEdit(signupId, backdrop){
   const playerField = backdrop.querySelector("#raidHelperSignupEditPlayer");
   const specField = backdrop.querySelector("#raidHelperSignupEditSpec");
   const roleField = backdrop.querySelector("#raidHelperSignupEditRole");
+  const numberField = backdrop.querySelector("#raidHelperSignupEditNumber");
   const status = backdrop.querySelector("#raidHelperSignupEditStatus");
   const player = playerField?.value || "";
   const specialization = specField?.value || "";
+  const signupNumber = numberField?.value.trim() || "";
   if(!masterCode || !player || !specialization){ status.textContent = "Bitte Charakter und Skillung vollständig auswählen."; status.className = "status bad"; return; }
+  if(signupNumber && (!/^\d+$/.test(signupNumber) || Number(signupNumber) < 1 || Number(signupNumber) > 9999)){ status.textContent = "Die Anmeldenummer muss zwischen 1 und 9999 liegen oder leer sein."; status.className = "status bad"; return; }
   status.textContent = "Änderung wird gespeichert …";
   status.className = "status";
   const saveButton = backdrop.querySelector("[data-save]");
@@ -11360,6 +11366,7 @@ async function saveRaidHelperSignupEdit(signupId, backdrop){
       server:playerField.selectedOptions?.[0]?.dataset.server || "",
       role:roleField.value || "dd",
       specialization,
+      signupNumber,
       note:`Skillung: ${specialization}`
     });
     if(!result.success) throw new Error(result.error || "Anmeldung konnte nicht geändert werden.");
@@ -11439,6 +11446,14 @@ function renderRaidHelperSignupAdminLayout(rows){
     seen.add(key);
     unique.push(row);
   }
+  unique.sort((a,b) => {
+    const aNumber = Number(a.signupNumber || 0);
+    const bNumber = Number(b.signupNumber || 0);
+    if(aNumber > 0 && bNumber > 0 && aNumber !== bNumber) return aNumber - bNumber;
+    if(aNumber > 0) return -1;
+    if(bNumber > 0) return 1;
+    return 0;
+  });
   const canon = value => {
     const name = normalize(value);
     if(name.includes("krieger") || name.includes("warrior")) return "Warrior";
