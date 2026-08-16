@@ -84,8 +84,11 @@
     .dashboard-column{display:grid;gap:14px;align-content:start}
     .data-card{overflow:hidden;border:1px solid var(--line);border-radius:7px;background:rgba(13,20,31,.9)}
     .data-card h2{margin:0;padding:12px 14px;border-bottom:1px solid var(--soft);font-size:14px;font-weight:650}
-    .encounter-row{display:grid;grid-template-columns:28px minmax(150px,1fr) 105px 70px;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--soft);font-size:12px}
+    .encounter-row{display:grid;grid-template-columns:12px 34px minmax(150px,1fr) 105px 90px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--soft);font-size:12px}
     .encounter-row:last-child{border-bottom:0}.kill-dot{width:11px;height:11px;border-radius:50%;background:#5fca7b;box-shadow:0 0 0 3px rgba(95,202,123,.1)}.kill-dot.wipe{background:#ef6b73}
+    .encounter-boss-icon{width:30px;height:30px;border:1px solid #3a485b;border-radius:50%;background:#080d14;object-fit:cover}
+    .encounter-name{display:flex;align-items:baseline;gap:7px;min-width:0}.encounter-name strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.encounter-best{color:#7f91a8;font-size:10px;font-weight:650;white-space:nowrap}.encounter-best.is-record{color:#f2c85f}
+    .encounter-summary-count{margin-left:auto;margin-right:10px;padding:3px 8px;border:1px solid #2d3c50;border-radius:999px;color:#91a0b4;font-size:10px;font-weight:650}
     .encounter-card summary{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:700;list-style:none}.encounter-card summary::-webkit-details-marker{display:none}.encounter-card summary::after{content:'▾';color:#d8ad45}.encounter-card:not([open]) summary::after{content:'▸'}.encounter-card[open] summary{border-bottom:1px solid var(--soft)}
     .kill-time{color:#72d58c}.data-table{width:100%;min-width:760px}.data-table th,.data-table td{position:static!important;min-width:0!important;background:transparent;padding:9px 11px;font-weight:500;white-space:nowrap}.data-table th{color:#94a3b8;font-size:10px;font-weight:650;text-transform:uppercase}.player-name{font-weight:650}.role-tag{color:#cbd5e1}.metric-bar{display:inline-block;width:50px;height:4px;margin-left:7px;background:#273244;vertical-align:middle}.metric-bar i{display:block;height:100%;background:#d8ad45}
     .summary-list{display:grid}.summary-item{display:flex;justify-content:space-between;gap:14px;padding:8px 13px;border-bottom:1px solid var(--soft);color:#a8b3c4;font-size:12px}.summary-item:last-child{border-bottom:0}.summary-item strong{color:#e2e8f0;font-weight:550}
@@ -205,7 +208,7 @@
       <div id="dashboardView" class="dashboard-grid">
         <section id="overviewControls" class="overview-controls"></section>
         <div class="dashboard-column">
-          <details class="data-card encounter-card" open><summary>Bossverlauf</summary><div id="encounterList"></div></details>
+          <details class="data-card encounter-card"><summary><span>Bossverlauf</span><span id="encounterSummaryCount" class="encounter-summary-count">Bosse</span></summary><div id="encounterList"></div></details>
           <section class="data-card"><h2>Spielerleistung</h2><div class="table-wrap" style="border:0;border-radius:0;max-height:none"><table id="playerPerformanceTable" class="data-table"></table></div></section>
           <section id="threatDetailCard" class="data-card hidden"><h2>Bedrohung nach Fähigkeiten</h2><div id="threatDetails" class="threat-details"></div></section>
         </div>
@@ -457,8 +460,11 @@
       const deaths=players.reduce((sum,player)=>sum+Number(player.deaths||0),0);
       const worldBuffMax=Math.max(1,players.length*9);
       const worldBuffPercent=Math.round(players.reduce((sum,player)=>sum+Number(player.worldBuffCount||0),0)*100/worldBuffMax);
+      const selectedBosses=state.selectedFightIds.length>0;
+      const bossKills=selectedBosses?encounters.filter(fight=>fight.kill!==false).length:Number(report.bossKills??source.report?.bossKills??encounters.filter(fight=>fight.kill!==false).length);
+      const bossTotal=selectedBosses?encounters.length:Number(report.totalBosses||source.report?.totalBosses||allEncounters.length);
       document.getElementById("overviewCards").innerHTML=[
-        ["Bosse",state.fightScope==="trash"?"0 / 0":`${encounters.filter(fight=>fight.kill!==false).length} / ${encounters.length||"–"}`],
+        ["Bosse",state.fightScope==="trash"?"0 / 0":`${bossKills} / ${bossTotal||"–"}`],
         [state.fightScope==="all"&&!state.selectedFightIds.length?"Gesamter Raid":"Dauer der Auswahl",durationDisplay(duration)],
         ["Spieler",players.length],
         ["Tode",deaths],
@@ -522,7 +528,10 @@
     function renderDashboard(source,report,players,duration,deaths){
       const bossEncounters=visibleBossEncounters();const encounters=state.selectedFightIds.length?bossEncounters.filter(fight=>state.selectedFightIds.includes(Number(fight.id))):(state.fightScope==="trash"?[]:bossEncounters);
       players=renderOverviewControls(players);
-      document.getElementById("encounterList").innerHTML=encounters.length?encounters.map((fight,index)=>`<div class="encounter-row"><span class="kill-dot ${fight.kill===false?"wipe":""}"></span><strong>${index+1}. ${html(fight.name||"Boss")}</strong><span class="kill-time">${html(durationDisplay(fight.durationMs))}</span><span>${Number(fight.deaths||0)} Tode</span></div>`).join(""):'<div class="status">Keine Bosskämpfe erkannt.</div>';
+      const bestTimes=source.guildBossBestTimes||{};
+      const bestTime=fight=>Number(bestTimes.byEncounterId?.[Number(fight.encounterId||0)]||bestTimes.byName?.[String(fight.name||"").trim().toLowerCase()]||0);
+      const encounterSummary=document.getElementById("encounterSummaryCount");if(encounterSummary)encounterSummary.textContent=`${encounters.length} von ${Number(report.totalBosses||source.report?.totalBosses||encounters.length)} Bossen`;
+      document.getElementById("encounterList").innerHTML=encounters.length?encounters.map((fight,index)=>{const record=bestTime(fight);const isRecord=record>0&&Number(fight.durationMs||0)<=record;return `<div class="encounter-row"><span class="kill-dot ${fight.kill===false?"wipe":""}"></span><img class="encounter-boss-icon" src="${attr(bossImage(fight))}" alt=""><span class="encounter-name"><strong>${index+1}. ${html(fight.name||"Boss")}</strong><span class="encounter-best ${isRecord?'is-record':''}">(${record?`Bestzeit ${html(durationDisplay(record))}`:'keine Bestzeit'})</span></span><span class="kill-time">${html(durationDisplay(fight.durationMs))}</span><span>${Number(fight.deaths||0)} Tode</span></div>`}).join(""):'<div class="status">Keine Bosskämpfe erkannt.</div>';
       const seconds=Math.max(1,duration/1000);
       const values=players.map(player=>({player,dps:Math.round(Number(player.damageDone||0)/seconds),hps:Math.round(Number(player.healingDone||0)/seconds),amount:overviewMetric(player,state.overviewCategory)}));
       const maxDps=Math.max(1,...values.map(item=>item.dps));const maxHps=Math.max(1,...values.map(item=>item.hps));
