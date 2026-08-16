@@ -34,7 +34,7 @@ const p0ReleaseCsvUrl =
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-wowhead-gear-fallback-v21";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-fight-scoped-cooldowns-v22";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13619,7 +13619,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   // Individual boss tables below are still fetched separately for boss filters.
   const activityScope = fullReportScope;
   const castEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
-  const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", rpbFightScope);
+  // Cooldown totals must use the same complete report scope that Warcraft Logs
+  // shows for "All fights". rpbFightScope intentionally drops failed boss
+  // attempts, which made cooldown totals smaller than the WCL cast table.
+  const cooldownCastEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Casts", activityScope);
   const castsTable = await fetchReportTableForAnalysis(token, analysis.report_code, "Casts", activityScope);
   if (Number(castsTable.totalTime || 0) > 0) performanceDurationMs = Number(castsTable.totalTime);
   const damageDoneEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "DamageDone", activityScope);
@@ -14052,7 +14055,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const id = abilityId(event);
     const configuredStCast = findConfiguredCast(rpbConfig, player.className, id, "singleTarget");
     const configuredAoeCast = findConfiguredCast(rpbConfig, player.className, id, "aoe");
-    const configuredCast = configuredStCast || configuredAoeCast;
+    const configuredCooldown = findConfiguredCast(rpbConfig, player.className, id, "cooldowns");
+    // Keep the configured name for per-fight data. This makes boss filtering
+    // independent of WCL's localized or rank-specific ability label.
+    const configuredCast = configuredStCast || configuredAoeCast || configuredCooldown;
     const spell = configuredCast?.name || displayAbilityName(event);
     if (!spell || /^\d+$/.test(spell)) return;
     if (!player.className) player.className = inferClassFromSpellName(spell);
@@ -14065,9 +14071,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       if (!metrics.abilityCasts) metrics.abilityCasts = {};
       metrics.abilityCasts[configuredCast?.name || spell] = Number(metrics.abilityCasts[configuredCast?.name || spell] || 0) + 1;
     }
-    if (configuredCast) {
+    if (configuredStCast || configuredAoeCast) {
       addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", 1, "events");
-    } else {
+    } else if (!configuredCooldown) {
       if (!classCasts[player.className]) classCasts[player.className] = {};
       if (!classCasts[player.className][spell]) classCasts[player.className][spell] = {};
       classCasts[player.className][spell][player.name] = (classCasts[player.className][spell][player.name] || 0) + 1;
