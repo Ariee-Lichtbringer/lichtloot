@@ -167,6 +167,10 @@ await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensurePoPostEntriesSchema().catch(error => {
+  console.warn("P0-Anmelder-Zuordnung konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await purgeExpiredDeletedRaids().catch(error => {
   console.warn("Abgelaufene gelöschte Raids konnten nicht bereinigt werden:", error.message || error);
 });
@@ -2932,6 +2936,24 @@ async function ensureRaidSchema() {
        on raids(guild_id, external_raid_id)
        where external_raid_id is not null and external_raid_id <> ''`
   );
+  const legacyFortyPlayerRaids = await query(
+    `update raids
+     set external_raid_id = concat(
+           'legacy-',
+           lower(raid_type),
+           '-',
+           coalesce(to_char(raid_date, 'YYYYMMDD'), 'ohne-datum'),
+           '-',
+           id::text
+         ),
+         updated_at = now()
+     where lower(raid_type) in ('mc', 'bwl', 'aq40', 'naxx')
+       and coalesce(external_raid_id, '') = ''
+     returning id`
+  );
+  if (legacyFortyPlayerRaids.rowCount) {
+    console.log(`${legacyFortyPlayerRaids.rowCount} alte 40er-Raid(s) mit eindeutiger Raid-ID versehen.`);
+  }
   await query(`create index if not exists idx_raid_signups_raid_status on raid_signups(raid_id, status)`);
   await query(`create index if not exists idx_raids_deleted_retention on raids(deleted_at) where deleted_at is not null`);
   await query(
@@ -8254,7 +8276,18 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 async function queuePoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
-  const linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId);
+  let linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId);
+  if (!linkedRaidId) {
+    const resolvedRaid = await findRaid(guildId, {
+      prioPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin),
+      raidPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin),
+      playerPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin),
+      raid: clean(params.raid || params.raidName),
+      raidDate: clean(params.raidDate || params.date || params.datum),
+      raidTime: clean(params.raidTime || params.time || params.uhrzeit)
+    }).catch(() => null);
+    linkedRaidId = clean(resolvedRaid && raidPublicId(resolvedRaid));
+  }
   if (linkedRaidId) {
     const linkedRaid = await query(
       `select prio_enabled from raids
@@ -8503,6 +8536,26 @@ async function ensurePoPostEntriesSchema() {
        end if;
      end;
      $$`
+  );
+  await query(
+    `update po_post_entries p
+     set raid_id = candidate.raid_id,
+         updated_at = now()
+     from (
+       select ppe.id as po_entry_id,
+              coalesce(nullif(r.external_raid_id, ''), r.id::text) as raid_id,
+              count(*) over (partition by ppe.id) as candidate_count
+       from po_post_entries ppe
+       join raids r
+         on r.guild_id = ppe.guild_id
+        and r.deleted_at is null
+        and ppe.raid_pin <> ''
+        and r.raid_pin = ppe.raid_pin
+        and lower(r.raid_type) = lower(ppe.raid)
+       where ppe.raid_id = '' or ppe.raid_id = ppe.raid_pin
+     ) candidate
+     where p.id = candidate.po_entry_id
+       and candidate.candidate_count = 1`
   );
   await query(
     `update po_post_entries p
@@ -10430,13 +10483,34 @@ async function removePoPostEntryAfterPrioDelete(guildId, raid, playerName, sourc
     `update po_post_entries
      set archived_at = now(), updated_at = now()
      where guild_id = $1
-       and raid_id = any($2::text[])
+       and (
+         raid_id = any($2::text[])
+         or (
+           raid_pin <> ''
+           and raid_pin = $4
+           and lower(raid) = lower($5)
+         )
+         or (
+           raid_date <> ''
+           and left(raid_date, 10) = $6
+           and lower(raid) = lower($5)
+           and ($7 = '' or raid_time = '' or raid_time = $7)
+         )
+       )
        and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
        and archived_at is null
        and config_only = false
      returning post_key, source_channel_id, target_channel_id, discord_message_id,
                raid, title, raid_id, raid_pin, raid_date, raid_time`,
-    [guildId, raidIds, normalizedPlayer]
+    [
+      guildId,
+      raidIds,
+      normalizedPlayer,
+      clean(raid?.raid_pin),
+      normalizeRaidType(raid?.raid_type).toUpperCase(),
+      clean(raid?.raid_date).slice(0, 10),
+      clean(raid?.raid_time)
+    ]
   );
 
   const seen = new Set();
