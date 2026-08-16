@@ -9283,7 +9283,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
     }
   }).catch(error => console.warn("PO-Post konnte nach Freigabe nicht queued werden:", error.message || error));
   const linkedRaid = await findRaid(guildId, {
-    raidId: row.post_key || postKey,
+    raidId: row.raid_id || row.post_key || postKey,
     raid: row.raid || params.raid || params.raidName,
     raidDate: row.raid_date || params.raidDate || params.date || params.datum,
     raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
@@ -9371,7 +9371,7 @@ async function deletePoSignupPrioForEntry(guildId, entry, params = {}) {
 
   const raid = await findRaid(guildId, {
     ...params,
-    raidId: entry.post_key || params.raidId || params.postKey,
+    raidId: entry.raid_id || entry.post_key || params.raidId || params.postKey,
     raid: entry.raid || params.raid || params.raidName,
     raidDate: entry.raid_date || params.raidDate || params.date || params.datum,
     raidTime: entry.raid_time || params.raidTime || params.time || params.uhrzeit,
@@ -9725,6 +9725,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
       raid: row.raid || "",
       raidPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
       prioPin: row.raid_pin || clean(params.raidPin || params.prioPin || ""),
+      lichtlootRaidId: row.raid_id || "",
       title: row.title || "PO Liste",
       mode: "po-anmelder",
       source: "po_entry_delete",
@@ -9740,7 +9741,7 @@ async function deletePoPostEntry({ guildId, query: params }) {
   const refreshedRaidIds = new Set();
   for (const row of result.rows || []) {
     const linkedRaid = await findRaid(guildId, {
-      raidId: row.post_key || postKey,
+      raidId: row.raid_id || row.post_key || postKey,
       raid: row.raid || params.raid || params.raidName,
       raidDate: row.raid_date || params.raidDate || params.date || params.datum,
       raidTime: row.raid_time || params.raidTime || params.time || params.uhrzeit,
@@ -10262,7 +10263,7 @@ async function syncPoPostEntryFromPrio(client, guildId, { raid, character, item,
 
   const configsResult = await client.query(
     `select distinct on (post_key, source_channel_id, target_channel_id)
-       post_key, source_channel_id, target_channel_id, raid, title, raid_pin, discord_message_id
+       post_key, source_channel_id, target_channel_id, raid, title, raid_id, raid_pin, discord_message_id
      from po_post_entries
      where guild_id = $1
        and raid_pin = $2
@@ -10368,7 +10369,7 @@ async function syncPoPostEntryFromPrio(client, guildId, { raid, character, item,
       raid: normalizeRaidType(raid?.raid_type || config.raid).toUpperCase(),
       raidPin,
       prioPin: raidPin,
-      lichtlootRaidId: raidPin,
+      lichtlootRaidId: clean(raid?.external_raid_id || raid?.id || config.raid_id),
       lichtlootPlayerPin: raidPin,
       title: config.title || "PO Liste",
       mode: "signup",
@@ -20967,9 +20968,9 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   }
 
   const signup = result.rows[0];
+  const raidResult = await query(`select * from raids where id = $1 and guild_id = $2 limit 1`, [signup.raid_id, guildId]);
+  const raid = raidResult.rows[0] || {};
   if (clean(signup.discord_channel_id)) {
-    const raidResult = await query(`select * from raids where id = $1 and guild_id = $2 limit 1`, [signup.raid_id, guildId]);
-    const raid = raidResult.rows[0] || {};
     await enqueueBotUpdate({
       guildId,
       type: "p0_post_refresh",
@@ -20978,12 +20979,18 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
         raidId: raidPublicId(raid),
         raidDate: raid.raid_date || "",
         raidTime: raid.raid_time || "",
-        raidPin: raid.player_link || "",
+        raidPin: raid.raid_pin || "",
+        prioPin: raid.raid_pin || "",
         channelId: signup.discord_channel_id,
         source: "p0_review"
       }
     }).catch(error => console.warn("P0 Discordpost konnte nicht queued werden:", error.message || error));
   }
+  const raidAnnouncementRefresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
+    guildId,
+    raid,
+    "p0_review"
+  );
   const itemSignupResult = await query(
     `select *
      from p0_discord_signups
@@ -20999,7 +21006,8 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   return {
     success: true,
     signup: normalizeP0SignupRow(signup),
-    itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow)
+    itemSignups: itemSignupResult.rows.map(normalizeP0SignupRow),
+    raidAnnouncementRefresh
   };
 }
 
