@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-ability-overheal-v14";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v16";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -12558,6 +12558,17 @@ const holyNovaHealSpellMap = {
   25331: 25329
 };
 
+function healingIdsForConfiguredCast(className, cast) {
+  const ids = new Set((cast?.ids || []).map(id => holyNovaHealSpellMap[id] || id));
+  if (className === "Paladin" && /Flash of Light.*all ranks/i.test(cast?.name || "")) {
+    [19750, 19939, 19940, 19941, 19942, 19943].forEach(id => ids.add(id));
+  }
+  if (className === "Paladin" && /Holy Light.*all ranks/i.test(cast?.name || "")) {
+    [635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292].forEach(id => ids.add(id));
+  }
+  return Array.from(ids);
+}
+
 const rpbClassOrder = ["Druid", "Hunter", "Mage", "Paladin", "Priest", "Rogue", "Shaman", "Warlock", "Warrior"];
 
 function parseRpbConfigCsvRows(text) {
@@ -13557,16 +13568,30 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     }
     overhealTotals[player] = (overhealTotals[player] || 0) + overheal;
     if (!healingBySpell[spell]) healingBySpell[spell] = {};
-    if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0 };
+    if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
     healingBySpell[spell][player].amount += amount;
     healingBySpell[spell][player].overheal += overheal;
     healingBySpell[spell][player].hits += 1;
+    healingBySpell[spell][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
     if (id) {
       if (!healingById[id]) healingById[id] = {};
-      if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0 };
+      if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
       healingById[id][player].amount += amount;
       healingById[id][player].overheal += overheal;
       healingById[id][player].hits += 1;
+      healingById[id][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
+      const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+      if (fightId) {
+        if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+        if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+        const metrics = fightPlayerMetrics[fightId][player];
+        if (!metrics.healingSpells) metrics.healingSpells = {};
+        if (!metrics.healingSpells[id]) metrics.healingSpells[id] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
+        metrics.healingSpells[id].amount += amount;
+        metrics.healingSpells[id].overheal += overheal;
+        metrics.healingSpells[id].hits += 1;
+        metrics.healingSpells[id].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
+      }
     }
   }
 
@@ -13662,6 +13687,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!spell || /^\d+$/.test(spell)) return;
     if (!player.className) player.className = inferClassFromSpellName(spell);
     if (!player.className) return;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (fightId) {
+      if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+      if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+      const metrics = fightPlayerMetrics[fightId][player.name];
+      if (!metrics.abilityCasts) metrics.abilityCasts = {};
+      metrics.abilityCasts[configuredCast?.name || spell] = Number(metrics.abilityCasts[configuredCast?.name || spell] || 0) + 1;
+    }
     if (configuredCast) {
       addConfiguredCastCount(player, configuredCast, configuredAoeCast ? "aoe" : "singleTarget", 1, "events");
     } else {
@@ -14171,6 +14204,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     type: options.type || "count",
     tone: options.tone || "",
     spellId: Number(options.spellId || 0) || undefined,
+    spellIds: Array.from(new Set((options.spellIds || []).map(Number).filter(id => id > 0))),
     icon: clean(options.icon),
     originalLabel: clean(options.originalLabel),
     tooltip: clean(options.tooltip),
@@ -14408,8 +14442,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
       if (cast.hasOverheal) {
-        const data = cast.ids.reduce((sum, id) => {
-          const healId = holyNovaHealSpellMap[id] || id;
+        const data = healingIdsForConfiguredCast(className, cast).reduce((sum, healId) => {
           const row = healingById[healId]?.[player];
           if (!row) return sum;
           sum.amount += Number(row.amount || 0);
@@ -14427,7 +14460,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
       }
       return [player, formatCountValue(castCount)];
-    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, spellIds: healingIdsForConfiguredCast(className, cast), icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
   }
 
   function configuredCooldownRows(className) {
@@ -14802,6 +14835,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
         parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
+        ,abilityCasts: metrics.abilityCasts || {}, healingSpells: metrics.healingSpells || {}
       }]))
     })),
     fights: rpbFights.map(fight => ({
@@ -14821,6 +14855,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         activityPercent: Number(metrics.activityPercentOverride ?? Math.min(100, Math.round((metrics.activeSeconds?.size || 0) * 100 / Math.max(1, (Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000)))),
         parsePercent: parseByFightAndPlayer.get(`${Number(fight.id)}:${clean(name).toLowerCase()}`)?.percent ?? null,
         worldBuffs: fightWorldBuffs[Number(fight.id || 0)]?.[name] || []
+        ,abilityCasts: metrics.abilityCasts || {}, healingSpells: metrics.healingSpells || {}
       }]))
     })),
     roleOptions: logAnalysisRaidRoleOptions,
@@ -14867,6 +14902,29 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         }))
       };
     })(),
+    healingSummary: {
+      durationMs: performanceDurationMs,
+      players: Object.fromEntries(players.map(player => {
+        const spells = Object.entries(healingById).map(([spellId, byPlayer]) => {
+          const values = byPlayer?.[player.name];
+          if (!values || (!values.amount && !values.overheal)) return null;
+          const metadata = rpbSpellMetadata.get(Number(spellId)) || {};
+          const total = Number(values.amount || 0) + Number(values.overheal || 0);
+          return {
+            spellId: Number(spellId),
+            name: clean(metadata.name) || rpbSpellNamesById[Number(spellId)] || `Heilzauber ${spellId}`,
+            icon: clean(metadata.icon) || "spell_holy_heal",
+            amount: Math.round(Number(values.amount || 0)),
+            overheal: Math.round(Number(values.overheal || 0)),
+            overhealPercent: total > 0 ? Math.round(Number(values.overheal || 0) * 100 / total) : 0,
+            hits: Number(values.hits || 0),
+            crits: Number(values.crits || 0)
+          };
+        }).filter(Boolean).sort((left, right) => right.amount - left.amount);
+        const totalHealing = spells.reduce((sum, spell) => sum + spell.amount, 0);
+        return [player.name, { totalHealing, spells }];
+      }))
+    },
     combatStatistics: {
       metrics: combatOutcomeMetrics.map(([key, label, denominator]) => ({ key, label, denominator })),
       players: Object.fromEntries(players.map(player => {
