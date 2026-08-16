@@ -2869,6 +2869,7 @@ async function ensureRaidSchema() {
        add column if not exists dd_slots integer,
        add column if not exists discord_channel_id text,
        add column if not exists discord_message_id text,
+       add column if not exists signup_post_id text,
        add column if not exists description text,
        add column if not exists raid_image_url text,
        add column if not exists loot_master text,
@@ -3610,6 +3611,8 @@ function normalizeRaidRow(row) {
     ddSlots: row.dd_slots === null || row.dd_slots === undefined ? "" : Number(row.dd_slots),
     discordChannelId: row.discord_channel_id || "",
     discordMessageId: row.discord_message_id || "",
+    signupPostId: row.signup_post_id || "",
+    postId: row.signup_post_id || "",
     description: row.description || "",
     raidImageUrl: row.raid_image_url || "",
     imageUrl: row.raid_image_url || "",
@@ -10269,10 +10272,14 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+  const previousMessageId = clean(raid.discord_message_id);
+  const nextMessageId = clean(params.discordMessageId || params.messageId || params.raidHelperMessageId);
+  const signupPostId = clean(params.signupPostId || params.postKey || params.postId);
   const result = await query(
     `update raids
      set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
          discord_message_id = coalesce(nullif($4, ''), discord_message_id),
+         signup_post_id = coalesce(nullif($5, ''), signup_post_id),
          updated_at = now()
      where guild_id = $1 and id = $2
      returning *`,
@@ -10280,9 +10287,31 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
       guildId,
       raid.id,
       clean(params.discordChannelId || params.channelId),
-      clean(params.discordMessageId || params.messageId || params.raidHelperMessageId)
+      nextMessageId,
+      signupPostId
     ]
   );
+  // Discord-Anmeldungen tragen die Message-ID in ihrer Quelle. Wird ein
+  // kombinierter Raid-/P0-Post ersetzt, gehören diese Einträge weiterhin zum
+  // selben Raid und müssen auf die neue Nachricht umgehängt werden.
+  if (previousMessageId && nextMessageId && previousMessageId !== nextMessageId) {
+    const previousSource = `discordSignup:${previousMessageId}`;
+    const nextSource = `discordSignup:${nextMessageId}`;
+    await Promise.all([
+      query(
+        `update raid_signups
+         set source = $3, updated_at = now()
+         where raid_id = $1 and source = $2`,
+        [raid.id, previousSource, nextSource]
+      ),
+      query(
+        `update raid_external_signups
+         set source = $4, updated_at = now()
+         where guild_id = $1 and raid_id = $2 and source = $3`,
+        [guildId, raid.id, previousSource, nextSource]
+      )
+    ]);
+  }
   return { success: true, raid: normalizeRaidRow(result.rows[0]) };
 }
 
@@ -19237,10 +19266,27 @@ async function getRaidHelper({ guildId, query: params }) {
     if (!expectedDiscordMessageId) return false;
     return clean(source.split(":").pop()) === expectedDiscordMessageId;
   };
-  const signups = signupResult.rows.map(normalizeRaidSignupRow).filter(belongsToSelectedDiscordPost);
-  const externalSignups = externalResult.rows
-    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }))
-    .filter(belongsToSelectedDiscordPost);
+  const normalizedSignups = signupResult.rows.map(normalizeRaidSignupRow);
+  const normalizedExternalSignups = externalResult.rows
+    .map(row => normalizeRaidSignupRow({ ...row, source: row.source || "discord" }));
+  const hasCurrentDiscordSignup = [...normalizedSignups, ...normalizedExternalSignups].some(row => {
+    const source = clean(row?.source);
+    return source.toLowerCase().startsWith("discordsignup:")
+      && clean(source.split(":").pop()) === expectedDiscordMessageId;
+  });
+  // Nach dem Ersetzen eines Discord-Posts können bestehende Anmeldungen noch
+  // dessen alte Message-ID tragen. Gibt es für diesen Raid noch keinen
+  // einzigen Eintrag mit der neuen ID, ist das ein Postwechsel und kein
+  // anderer Termin. Die strikt über raid_id zugeordneten Einträge bleiben
+  // deshalb sichtbar. Sobald neue Anmeldungen zur aktuellen Nachricht
+  // existieren, gilt wieder der strenge Message-ID-Filter.
+  const includeSignup = row => {
+    const sourceLower = clean(row?.source).toLowerCase();
+    if (!hasCurrentDiscordSignup && sourceLower.startsWith("discordsignup:")) return true;
+    return belongsToSelectedDiscordPost(row);
+  };
+  const signups = normalizedSignups.filter(includeSignup);
+  const externalSignups = normalizedExternalSignups.filter(includeSignup);
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
