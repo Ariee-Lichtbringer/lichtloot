@@ -2887,7 +2887,8 @@ async function ensureRaidSchema() {
        add column if not exists role text not null default 'flex',
        add column if not exists source text not null default 'lichtloot',
        add column if not exists discord_user_id text,
-       add column if not exists discord_name text`
+       add column if not exists discord_name text,
+       add column if not exists signup_number integer`
   );
   await query(
     `create table if not exists raid_external_signups (
@@ -2908,6 +2909,7 @@ async function ensureRaidSchema() {
        discord_channel_id text,
        discord_message_id text,
        note text,
+       signup_number integer,
        created_at timestamptz not null default now(),
        updated_at timestamptz not null default now()
      )`
@@ -2928,6 +2930,7 @@ async function ensureRaidSchema() {
        on raid_external_signups(guild_id, raid_id, raid_date)`
   );
   await query(`alter table raid_external_signups add column if not exists player_pin text`);
+  await query(`alter table raid_external_signups add column if not exists signup_number integer`);
   await query(
     `create table if not exists p0_discord_signups (
        id uuid primary key default gen_random_uuid(),
@@ -18811,6 +18814,7 @@ function normalizeRaidSignupRow(row) {
     source: row.source || "lichtloot",
     discordName: row.discord_name || "",
     discordUserId: row.discord_user_id || "",
+    signupNumber: Number.isInteger(Number(row.signup_number)) && Number(row.signup_number) > 0 ? Number(row.signup_number) : null,
     hasPrio: row.has_prio === true || row.has_prio === "true",
     createdAt: row.created_at,
     updatedAt: row.updated_at
@@ -19163,7 +19167,7 @@ async function getRaidHelper({ guildId, query: params }) {
 
   const signupResult = await query(
     `select
-       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source, rs.signup_number,
        coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
        coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
        rs.created_at, rs.updated_at,
@@ -19192,13 +19196,14 @@ async function getRaidHelper({ guildId, query: params }) {
      where rs.raid_id = any($1)
      order by
        case rs.status when 'signed' then 0 when 'tentative' then 1 when 'bench' then 2 else 3 end,
+       rs.signup_number asc nulls last,
        case rs.role when 'tank' then 0 when 'heal' then 1 when 'dd' then 2 else 3 end,
        c.name asc`,
     [relatedRaidIds]
   );
 
   const externalResult = await query(
-    `select res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
+    `select res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source, res.signup_number,
             res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
             exists(
               select 1
@@ -19212,7 +19217,7 @@ async function getRaidHelper({ guildId, query: params }) {
      from raid_external_signups res
      where res.guild_id = $1
        and res.raid_id = any($2)
-     order by res.player_name asc`,
+     order by res.signup_number asc nulls last, res.player_name asc`,
     [guildId, relatedRaidIds]
   );
 
@@ -19638,18 +19643,28 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
   const editedClassName = clean(params.className || params.klasse);
   const editedRole = clean(params.role).toLowerCase();
   const editedSpecialization = clean(params.specialization || params.spec);
+  const hasSignupNumber = Object.prototype.hasOwnProperty.call(params, "signupNumber") || Object.prototype.hasOwnProperty.call(params, "registrationNumber");
+  const signupNumberRaw = clean(params.signupNumber ?? params.registrationNumber);
+  const editedSignupNumber = signupNumberRaw ? Number.parseInt(signupNumberRaw, 10) : null;
+  if (hasSignupNumber && signupNumberRaw && (!Number.isInteger(editedSignupNumber) || editedSignupNumber < 1 || editedSignupNumber > 9999)) {
+    const error = new Error("Die Anmeldenummer muss zwischen 1 und 9999 liegen oder leer sein.");
+    error.statusCode = 400;
+    throw error;
+  }
   const editedNote = clean(params.note) || (editedSpecialization ? `Skillung: ${editedSpecialization}` : "");
-  if (editedPlayerName || editedSpecialization || editedRole) {
+  if (editedPlayerName || editedSpecialization || editedRole || hasSignupNumber) {
     const nextRole = ["tank", "heal", "dd"].includes(editedRole) ? editedRole : clean(existingSignup.role || "dd");
     const nextPlayerName = editedPlayerName || clean(existingSignup.player || existingSignup.playerName);
     const nextClassName = editedClassName || clean(existingSignup.className);
     const nextNote = editedNote || clean(existingSignup.note);
     const externalUpdate = await query(
       `update raid_external_signups
-       set player_name=$3, class_name=$4, role=$5, note=$6, updated_at=now()
+       set player_name=$3, class_name=$4, role=$5, note=$6,
+           signup_number=case when $7::boolean then $8::integer else signup_number end,
+           updated_at=now()
        where guild_id=$1 and id=$2
        returning *`,
-      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote]
+      [guildId, signupId, nextPlayerName, nextClassName, nextRole, nextNote, hasSignupNumber, editedSignupNumber]
     );
     if (externalUpdate.rows[0]) {
       const signup = normalizeRaidSignupRow({ ...externalUpdate.rows[0], source: externalUpdate.rows[0].source || "discord" });
@@ -19666,9 +19681,11 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
       throw error;
     }
     const localUpdate = await query(
-      `update raid_signups rs set character_id=$3, role=$4, note=$5, updated_at=now()
+      `update raid_signups rs set character_id=$3, role=$4, note=$5,
+          signup_number=case when $6::boolean then $7::integer else rs.signup_number end,
+          updated_at=now()
        from raids r where rs.raid_id=r.id and r.guild_id=$1 and rs.id=$2 returning rs.*`,
-      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote]
+      [guildId, signupId, characterResult.rows[0].id, nextRole, nextNote, hasSignupNumber, editedSignupNumber]
     );
     if (localUpdate.rows[0]) {
       const signup = normalizeRaidSignupRow(localUpdate.rows[0]);
@@ -19735,7 +19752,7 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
 async function findRaidHelperSignupForAdmin(guildId, signupId) {
   const external = await query(
     `select
-       res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source,
+       res.id, res.player_name, res.class_name, res.role, res.status, res.note, res.source, res.signup_number,
        res.discord_user_id, res.discord_name, res.created_at, res.updated_at,
        r.id as raid_uuid, r.external_raid_id, r.name as raid_name, r.raid_type, r.raid_date, r.raid_time,
        r.discord_channel_id, r.discord_message_id, r.created_by, r.loot_master, r.status_notify_targets, r.lead_pin
@@ -19764,7 +19781,7 @@ async function findRaidHelperSignupForAdmin(guildId, signupId) {
 
   const local = await query(
     `select
-       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source,
+       rs.id, rs.character_id, rs.status, rs.note, rs.role, rs.source, rs.signup_number,
        coalesce(nullif(rs.discord_user_id, ''), dpl.discord_user_id, '') as discord_user_id,
        coalesce(nullif(rs.discord_name, ''), dpl.discord_name, '') as discord_name,
        rs.created_at, rs.updated_at,
