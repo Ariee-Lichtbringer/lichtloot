@@ -8532,6 +8532,7 @@ async function ensurePoPostEntriesSchema() {
   );
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
   await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
+  await query(`create index if not exists idx_po_post_entries_raid_id on po_post_entries(guild_id, raid_id) where archived_at is null and raid_id <> ''`);
 }
 
 async function resolvePoPostPlayerName(client, guildId, entry) {
@@ -10259,17 +10260,21 @@ async function savePoPostEntry({ guildId, query: params }) {
 
 async function syncPoPostEntryFromPrio(client, guildId, { raid, character, item, source = "lichtloot_prio_saved" }) {
   const raidPin = clean(raid?.raid_pin || raid?.player_link || "");
-  if (!raidPin || !character?.id || !item?.id) return [];
+  const raidIds = Array.from(new Set([
+    clean(raid?.external_raid_id),
+    clean(raid?.id)
+  ].filter(Boolean)));
+  if (!raidPin || !raidIds.length || !character?.id || !item?.id) return [];
 
   const configsResult = await client.query(
     `select distinct on (post_key, source_channel_id, target_channel_id)
        post_key, source_channel_id, target_channel_id, raid, title, raid_id, raid_pin, discord_message_id
      from po_post_entries
      where guild_id = $1
-       and raid_pin = $2
+       and raid_id = any($2::text[])
        and archived_at is null
      order by post_key, source_channel_id, target_channel_id, updated_at desc`,
-    [guildId, raidPin]
+    [guildId, raidIds]
   );
 
   const payloads = [];
@@ -10367,6 +10372,8 @@ async function syncPoPostEntryFromPrio(client, guildId, { raid, character, item,
       messageId: clean(config.discord_message_id),
       discordMessageId: clean(config.discord_message_id),
       raid: normalizeRaidType(raid?.raid_type || config.raid).toUpperCase(),
+      raidDate: clean(raid?.raid_date),
+      raidTime: clean(raid?.raid_time),
       raidPin,
       prioPin: raidPin,
       lichtlootRaidId: clean(raid?.external_raid_id || raid?.id || config.raid_id),
@@ -20528,20 +20535,27 @@ async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
     return { success: true, skipped: true, reason: "unsupported_raid" };
   }
 
-  const signupChannelResult = await query(
-    `select discord_channel_id, discord_message_id
-     from p0_discord_signups
+  const raidIds = Array.from(new Set([
+    clean(raid.external_raid_id),
+    clean(raid.id)
+  ].filter(Boolean)));
+  const linkedPostResult = await query(
+    `select post_key, source_channel_id, target_channel_id, discord_message_id, title, mode
+     from po_post_entries
      where guild_id = $1
-       and raid_id = $2
-       and coalesce(discord_channel_id, '') <> ''
-     order by updated_at desc, created_at desc
+       and raid_id = any($2::text[])
+       and archived_at is null
+       and coalesce(post_key, '') <> ''
+       and coalesce(nullif(target_channel_id, ''), source_channel_id, '') <> ''
+     order by config_only desc, updated_at desc, created_at desc
      limit 1`,
-    [guildId, raid.id]
+    [guildId, raidIds]
   );
-  const signupChannel = signupChannelResult.rows[0] || {};
-  const channelId = clean(signupChannel.discord_channel_id || raid.discord_channel_id || "");
-  if (!channelId) {
-    return { success: true, skipped: true, reason: "missing_channel" };
+  const linkedPost = linkedPostResult.rows[0] || {};
+  const postKey = clean(linkedPost.post_key);
+  const channelId = clean(linkedPost.target_channel_id || linkedPost.source_channel_id);
+  if (!postKey || !channelId) {
+    return { success: true, skipped: true, reason: "missing_linked_po_post" };
   }
   const normalizedRaid = normalizeRaidRow(raid);
 
@@ -20549,6 +20563,8 @@ async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
     guildId,
     type: "p0_post_refresh",
     payload: {
+      postKey,
+      poPostKey: postKey,
       raid: raid.raid_type || "",
       raidId: raidPublicId(raid),
       raidDate: normalizedRaid.raidDate,
@@ -20556,10 +20572,14 @@ async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
       raidPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
       prioPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
       playerPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+      sourceChannelId: clean(linkedPost.source_channel_id || channelId),
+      targetChannelId: channelId,
       channelId,
       discordChannelId: channelId,
-      messageId: clean(signupChannel.discord_message_id || ""),
-      discordMessageId: clean(signupChannel.discord_message_id || ""),
+      messageId: clean(linkedPost.discord_message_id || ""),
+      discordMessageId: clean(linkedPost.discord_message_id || ""),
+      title: clean(linkedPost.title || `${normalizeRaidType(raid.raid_type).toUpperCase()} P0-Anmelder`),
+      mode: clean(linkedPost.mode || "signup"),
       source
     }
   });
