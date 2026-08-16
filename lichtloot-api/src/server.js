@@ -10415,6 +10415,60 @@ async function enqueuePoPostRefreshPayloads(guildId, payloads, source) {
   };
 }
 
+async function removePoPostEntryAfterPrioDelete(guildId, raid, playerName, source = "player_prio_deleted") {
+  const normalizedPlayer = clean(playerName);
+  const raidIds = Array.from(new Set([
+    clean(raid?.external_raid_id),
+    clean(raid?.id)
+  ].filter(Boolean)));
+  if (!normalizedPlayer || !raidIds.length) {
+    return { success: true, deleted: 0, refresh: { success: true, queued: 0, skipped: 0, results: [] } };
+  }
+
+  await ensurePoPostEntriesSchema();
+  const removed = await query(
+    `update po_post_entries
+     set archived_at = now(), updated_at = now()
+     where guild_id = $1
+       and raid_id = any($2::text[])
+       and regexp_replace(lower(player_name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($3), '[^a-z0-9]+', '', 'g')
+       and archived_at is null
+       and config_only = false
+     returning post_key, source_channel_id, target_channel_id, discord_message_id,
+               raid, title, raid_id, raid_pin, raid_date, raid_time`,
+    [guildId, raidIds, normalizedPlayer]
+  );
+
+  const seen = new Set();
+  const payloads = [];
+  for (const row of removed.rows) {
+    const key = [row.post_key, row.source_channel_id, row.target_channel_id, row.discord_message_id].join("|");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    payloads.push({
+      postKey: row.post_key,
+      sourceChannelId: row.source_channel_id,
+      targetChannelId: row.target_channel_id,
+      messageId: clean(row.discord_message_id),
+      discordMessageId: clean(row.discord_message_id),
+      raid: normalizeRaidType(row.raid || raid?.raid_type).toUpperCase(),
+      raidDate: clean(row.raid_date || raid?.raid_date),
+      raidTime: clean(row.raid_time || raid?.raid_time),
+      raidPin: clean(row.raid_pin || raid?.raid_pin),
+      prioPin: clean(row.raid_pin || raid?.raid_pin),
+      lichtlootRaidId: clean(raid?.external_raid_id || raid?.id || row.raid_id),
+      lichtlootPlayerPin: clean(row.raid_pin || raid?.raid_pin),
+      title: row.title || "PO Liste",
+      mode: "signup",
+      source,
+      queuedAt: new Date().toISOString()
+    });
+  }
+
+  const refresh = await enqueuePoPostRefreshPayloads(guildId, payloads, source);
+  return { success: refresh.success, deleted: removed.rowCount || 0, refresh };
+}
+
 async function archivePoPostEntriesForRaid(client, guildId, raidType) {
   await ensurePoPostEntriesSchema();
   const raidKey = normalizeRaidType(raidType).toLowerCase();
@@ -11661,8 +11715,9 @@ async function deletePrio({ guildId, query: params }) {
       values
     );
 
+    const poPostRefresh = await removePoPostEntryAfterPrioDelete(guildId, raid, player, "raidlead_prio_deleted");
     const refresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, "raidlead_prio_deleted");
-    return { success: true, deleted: result.rowCount, raidAnnouncementRefresh: refresh };
+    return { success: true, deleted: result.rowCount, poPostRefresh, raidAnnouncementRefresh: refresh };
   }
 
   const character = await findCharacterForPin(guildId, pin, player, params.server);
@@ -11689,6 +11744,12 @@ async function deletePrio({ guildId, query: params }) {
           "delete from prios where id = $1 returning id, raid_id",
           [directPrio.id]
         );
+        const poPostRefresh = await removePoPostEntryAfterPrioDelete(
+          guildId,
+          directRaid,
+          player,
+          "player_prio_deleted"
+        );
         const refresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(
           guildId,
           directRaid,
@@ -11697,6 +11758,7 @@ async function deletePrio({ guildId, query: params }) {
         return {
           success: true,
           deleted: directDelete.rowCount,
+          poPostRefresh,
           raidAnnouncementRefreshes: [refresh]
         };
       }
@@ -11835,13 +11897,20 @@ async function deletePrio({ guildId, query: params }) {
 
   const raidIds = Array.from(new Set(result.rows.map(row => clean(row.raid_id)).filter(Boolean)));
   const refreshes = [];
+  const poPostRefreshes = [];
   for (const deletedRaidId of raidIds) {
     const deletedRaid = await findRaid(guildId, { raidId: deletedRaidId });
     if (deletedRaid) {
+      poPostRefreshes.push(await removePoPostEntryAfterPrioDelete(
+        guildId,
+        deletedRaid,
+        character.name,
+        "player_prio_deleted"
+      ));
       refreshes.push(await enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, deletedRaid, "player_prio_deleted"));
     }
   }
-  return { success: true, deleted: result.rowCount, raidAnnouncementRefreshes: refreshes };
+  return { success: true, deleted: result.rowCount, poPostRefreshes, raidAnnouncementRefreshes: refreshes };
 }
 
 async function enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, source) {
