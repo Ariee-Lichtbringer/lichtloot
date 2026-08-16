@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-performance-timelines-v20";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-wowhead-gear-fallback-v21";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13537,6 +13537,23 @@ async function buildClaAnalysisRows(analysis) {
     .map(item => item.itemId || item.id)
     .filter(Boolean);
   const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+  const wowheadItemMetaById = await getWowheadGermanItemMetadataByIds(gearItemIds);
+  Array.from(new Set(gearItemIds.map(id => String(id)))).forEach(id => {
+    const stored = itemMetaById.get(id) || {};
+    const wowhead = wowheadItemMetaById.get(id) || {};
+    if (!Object.keys(stored).length && !Object.keys(wowhead).length) return;
+    itemMetaById.set(id, {
+      ...wowhead,
+      ...stored,
+      name: clean(stored.name) || clean(wowhead.name),
+      quality: stored.quality || wowhead.quality || "",
+      iconUrl: clean(stored.iconUrl) || clean(wowhead.iconUrl),
+      wowhead: clean(stored.wowhead) || clean(wowhead.wowhead),
+      tooltip: clean(stored.tooltip) || clean(wowhead.tooltip),
+      statsText: clean(stored.statsText) || clean(wowhead.statsText),
+      equip: clean(stored.equip) || clean(wowhead.equip)
+    });
+  });
 
   const headerPlayers = players.map(player => player.name);
   const title = report.title || analysis.title || "";
@@ -14748,6 +14765,23 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     });
   });
   const itemMetaById = await getRaidAnalysisItemMetadataByIds(gearItemIds);
+  const wowheadItemMetaById = await getWowheadGermanItemMetadataByIds(gearItemIds);
+  Array.from(new Set(gearItemIds.map(id => String(id)))).forEach(id => {
+    const stored = itemMetaById.get(id) || {};
+    const wowhead = wowheadItemMetaById.get(id) || {};
+    if (!Object.keys(stored).length && !Object.keys(wowhead).length) return;
+    itemMetaById.set(id, {
+      ...wowhead,
+      ...stored,
+      name: clean(stored.name) || clean(wowhead.name),
+      quality: stored.quality || wowhead.quality || "",
+      iconUrl: clean(stored.iconUrl) || clean(wowhead.iconUrl),
+      wowhead: clean(stored.wowhead) || clean(wowhead.wowhead),
+      tooltip: clean(stored.tooltip) || clean(wowhead.tooltip),
+      statsText: clean(stored.statsText) || clean(wowhead.statsText),
+      equip: clean(stored.equip) || clean(wowhead.equip)
+    });
+  });
 
   const configuredSpellIds = players.flatMap(player => {
     const config = rpbConfig.byClass?.[player.className] || {};
