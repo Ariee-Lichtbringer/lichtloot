@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-consumable-fight-coverage-v12";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-ability-overheal-v14";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13551,7 +13551,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const overheal = Number(event.overheal || event.overhealing || event.overhealAmount || 0);
     const id = abilityId(event);
     const spell = displayAbilityName(event) || "Unbekannter Heal";
-    healingTotals[player] = (healingTotals[player] || 0) + amount;
+    if (!healingTotalSource[player]) {
+      healingTotals[player] = (healingTotals[player] || 0) + amount;
+      healingTotalSource[player] = "events";
+    }
     overhealTotals[player] = (overhealTotals[player] || 0) + overheal;
     if (!healingBySpell[spell]) healingBySpell[spell] = {};
     if (!healingBySpell[spell][player]) healingBySpell[spell][player] = { amount: 0, overheal: 0, hits: 0 };
@@ -13908,10 +13911,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playerNameFromEvent(event, true);
     if (player) {
       const amount = Number(event.amount || 0);
-      if (!healingTotalSource[player]) {
-        healingTotals[player] = (healingTotals[player] || 0) + amount;
-        healingTotalSource[player] = "events";
-      }
+      addHealing(event);
       addFightPlayerMetric(event, player, "healingDone", amount);
     }
   });
@@ -14402,7 +14402,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const isHealingRow = cast.hasOverheal || healerClasses.has(className);
     const spellId = Number(cast.ids?.[0] || 0);
     const spellMetadata = rpbSpellMetadata.get(spellId) || {};
-    return customRow(localizedRpbCastLabel(cast, spellMetadata), Object.fromEntries(playerNames.map(player => {
+    const displayLabel = localizedRpbCastLabel(cast, spellMetadata).replace(/\s*\(Überheilung\s*%\)\s*$/i, "");
+    return customRow(displayLabel, Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
@@ -14415,9 +14416,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
           sum.overheal += Number(row.overheal || 0);
           return sum;
         }, { amount: 0, overheal: 0 });
-        if (!castCount) return [player, "0"];
+        if (!castCount) return [player, ""];
         const pct = data.amount + data.overheal > 0 ? Math.round(data.overheal * 100 / (data.amount + data.overheal)) : 0;
-        return [player, `${formatCountValue(castCount)} (${pct}%)`];
+        return [player, `${formatCountValue(castCount)} Einsätze · ${pct}% Overheal`];
       }
       if (kind === "aoe" && castCount > 0) {
         const ids = new Set(cast.ids || []);
@@ -14751,6 +14752,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       signupRole: player.signupRole || (Number(healingTotals[player.name] || 0) > 1000 && Number(healingTotals[player.name] || 0) >= Number(damageTotals[player.name] || 0) * 0.5 ? "Heiler" : ""),
       damageDone: Math.round(damageTotals[player.name] || 0),
       healingDone: Math.round(healingTotals[player.name] || 0),
+      overheal: Math.round(overhealTotals[player.name] || 0),
+      overhealPercent: (() => {
+        const effective = Number(healingTotals[player.name] || 0);
+        const overheal = Number(overhealTotals[player.name] || 0);
+        return effective + overheal > 0 ? Math.round(overheal * 100 / (effective + overheal)) : 0;
+      })(),
       damageTaken: Math.round(damageTakenTotals[player.name] || 0),
       threat: Math.round(threatTotals[player.name] || 0),
       threatAbilities: threatAbilitiesByPlayer[player.name] || {},
