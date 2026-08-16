@@ -10652,7 +10652,7 @@ async function renderRaidHelperCurrentDetail(raidId){
             <label>Discord-Channel<select id="raidDiscordChannel-${escapeAttr(raidId)}">${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}</select></label>
             <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${raidHasDiscordSignupPost(raid) ? "Vorhandenen Post aktualisieren" : "Anmelder im Discord erstellen"}</button>
             ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Zusätzlichen Post erstellen</button>` : ""}
-            ${signupOnlyRaid ? "" : `<label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox"><span>Den passenden PO-Anmelder ebenfalls im Discord veröffentlichen</span></label>`}
+            ${signupOnlyRaid ? "" : `<label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox" ${matchingPoSignupForRaid(raid)||matchingPoPostConfigForRaid(raid)?"checked":""}><span>Den passenden P0-Anmelder ebenfalls im Discord veröffentlichen</span></label>`}
           </div>
         </div>
       </div>
@@ -10705,6 +10705,8 @@ async function renderRaidHelperCurrentPoPanel(raid){
     box.innerHTML=`<div class="status">Für diesen Raid wurde noch kein PO-Anmelder gefunden.</div><button class="small-btn good" type="button" onclick="createPoSignupForSelectedRaid('${escapeAttr(raid.raidId||raid.id)}')">Passenden PO-Anmelder erstellen</button>`;
     return;
   }
+  const repostCheckbox=document.getElementById(`repostPoWithRaid-${String(raid.raidId||raid.id||"")}`);
+  if(repostCheckbox)repostCheckbox.checked=true;
   const postKey=String(row.postKey||"");
   const raidKey=normalizePoSignupRaidKey(row.raid||raid.raid||raid.raidName);
   const count=Number(row.count||0),approved=Number(row.approvedCount||0);
