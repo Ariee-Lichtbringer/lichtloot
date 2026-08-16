@@ -20558,7 +20558,7 @@ async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
 }
 
 async function getP0DiscordSignupList({ guildId, query: params }) {
-  requireMasterCode(params.masterCode);
+  requireMasterOrQueueToken(params);
   await ensureRaidSchema();
   const rawStatus = clean(params.status || "pending").toLowerCase();
   const statusFilter = rawStatus === "all" ? "" : rawStatus;
@@ -20574,6 +20574,11 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
   if (raidFilter) {
     values.push(raidTypeSearchValues(raidFilter));
     raidClause = `and lower(r.raid_type) = any($${values.length})`;
+  }
+  const raidId = clean(params.raidId || params.lichtlootRaidId);
+  if (raidId) {
+    values.push(raidId);
+    raidClause += ` and (r.id::text = $${values.length} or r.external_raid_id = $${values.length})`;
   }
 
   const result = await query(
