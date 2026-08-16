@@ -37,8 +37,8 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-worldbuff-ability-id-v11";
-const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-consumable-fight-coverage-v12";
+const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
 
 function isCurrentLogAnalysisPayload(payload) {
   return Boolean(
@@ -13326,6 +13326,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const classCooldownsTrash = {};
   const gearByPlayer = new Map();
   const fightPlayerMetrics = {};
+  const fightConsumables = {};
   const playerTableDiagnostics = [];
   const fightWorldBuffs = {};
   const parseByFightAndPlayer = new Map();
@@ -13533,6 +13534,14 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
     if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
     fightPlayerMetrics[fightId][player][field] = Number(fightPlayerMetrics[fightId][player][field] || 0) + Number(amount || 0);
+  }
+
+  function markFightConsumable(event, player, label) {
+    const fightId = Number(event?.fight || event?.fightID || event?.fightId || 0);
+    if (!fightId || !player || !label || !bossFightsForGear.some(fight => Number(fight.id) === fightId)) return;
+    if (!fightConsumables[fightId]) fightConsumables[fightId] = {};
+    if (!fightConsumables[fightId][player]) fightConsumables[fightId][player] = new Set();
+    fightConsumables[fightId][player].add(label);
   }
 
   function addHealing(event) {
@@ -13956,7 +13965,10 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   castEvents.forEach(event => {
     const player = playerNameFromEvent(event, true);
     const label = labelForAbility(event, rpbConsumables);
-    if (player && label) addPlayerAmount(consumes, player, label, 1);
+    if (player && label) {
+      addPlayerAmount(consumes, player, label, 1);
+      markFightConsumable(event, player, label);
+    }
   });
 
   damageTakenEvents.forEach(event => {
@@ -14017,7 +14029,19 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const id = abilityId(event);
     const worldBuff = labelForWorldBuff(id, displayAbilityName(event));
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
-    if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+    if (player && combatBuff) {
+      addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
+      markFightConsumable(event, player, combatBuff);
+    }
+  });
+
+  bossCombatantEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    if (!player) return;
+    normalizeCombatantAuras(event).forEach(aura => {
+      const combatBuff = labelForSpellId(auraAbilityId(aura), claCombatBuffDefinitions);
+      if (combatBuff) markFightConsumable(event, player, combatBuff);
+    });
   });
 
   // CombatantInfo contains the auras active when logging starts. Buff events then
@@ -14121,6 +14145,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     return [...(config.singleTarget || []), ...(config.aoe || []), ...(config.cooldowns || [])]
       .map(cast => Number(cast.ids?.[0] || 0));
   }).concat(claWorldBuffDefinitions.flatMap(([, ids]) => ids))
+    .concat(claCombatBuffDefinitions.flatMap(([, ids]) => ids || []))
     .concat(rpbConsumables.flatMap(([, , ids]) => ids || []))
     .concat(rpbAbsorbs.flatMap(([, , ids]) => ids || []))
     .concat(rpbEngineering.flatMap(([, , ids]) => ids || []))
@@ -14804,6 +14829,37 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         wowhead: `https://www.wowhead.com/classic/de/spell=${spellId}`
       }];
     })),
+    consumableUsage: (() => {
+      const definitions = [
+        ...rpbConsumables.map(([label, , ids]) => [label, ids || []]),
+        ...claCombatBuffDefinitions
+      ];
+      const bossCount = bossFightsForGear.length;
+      return {
+        bossCount,
+        players: Object.fromEntries(players.map(player => {
+          const fightsByLabel = {};
+          bossFightsForGear.forEach(fight => {
+            const labels = fightConsumables[Number(fight.id || 0)]?.[player.name] || new Set();
+            labels.forEach(label => fightsByLabel[label] = (fightsByLabel[label] || 0) + 1);
+          });
+          const items = Object.entries(fightsByLabel).map(([label, fightsUsed]) => {
+            const definition = definitions.find(([name]) => name === label) || [label, []];
+            const spellId = Number(definition[1]?.[0] || 0);
+            const metadata = rpbSpellMetadata.get(spellId) || {};
+            return {
+              label: translateRpbLabelToGerman(label),
+              originalLabel: label,
+              fightsUsed,
+              percent: bossCount ? Math.round(fightsUsed * 100 / bossCount) : 0,
+              spellId,
+              icon: clean(metadata.icon) || "inv_misc_questionmark"
+            };
+          }).sort((left, right) => right.fightsUsed - left.fightsUsed || left.label.localeCompare(right.label, "de"));
+          return [player.name, { items }];
+        }))
+      };
+    })(),
     combatStatistics: {
       metrics: combatOutcomeMetrics.map(([key, label, denominator]) => ({ key, label, denominator })),
       players: Object.fromEntries(players.map(player => {
