@@ -11259,7 +11259,7 @@ function renderRaidHelperSignupAdminRow(row){
         <div class="raid-helper-signup-name">${signupNumber > 0 ? `<span class="raid-helper-signup-number" title="Anmeldenummer">#${signupNumber}</span> ` : ""}${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter, Skillung oder Anmeldenummer ändern">${escapeHtml(player)}</button>${raidHelperSignupSpecIconMarkup(row.className || "", specialization)}${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
-        <div class="raid-helper-signup-number-edit"><label for="raidSignupNumber-${escapeAttr(id)}">Anmeldenr.</label><input id="raidSignupNumber-${escapeAttr(id)}" type="number" min="1" max="9999" step="1" value="${signupNumber > 0 ? signupNumber : ""}" placeholder="–"><button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupNumber('${escapeAttr(id)}','${escapeAttr(player)}')">Speichern</button></div>
+        <div class="raid-helper-signup-number-edit"><label for="raidSignupNumber-${escapeAttr(id)}">Anmeldenr.</label><input id="raidSignupNumber-${escapeAttr(id)}" type="number" min="1" max="9999" step="1" value="${signupNumber > 0 ? signupNumber : ""}" placeholder="–"><button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupNumber('${escapeAttr(id)}','${escapeAttr(player)}',this)">Speichern</button></div>
       </div>
       <div class="raid-helper-signup-actions">
         <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Aktiv</button>
@@ -11593,10 +11593,11 @@ async function updateRaidHelperSignupRole(signupId, role, player = ""){
   }
 }
 
-async function updateRaidHelperSignupNumber(signupId, player = ""){
+async function updateRaidHelperSignupNumber(signupId, player = "", button = null){
   const masterCode = document.getElementById("masterCode")?.value.trim();
   const raidId = getRaidHelperEditRaidId();
-  const field = document.getElementById(`raidSignupNumber-${signupId}`);
+  const field = button?.closest(".raid-helper-signup-number-edit")?.querySelector("input") || document.getElementById(`raidSignupNumber-${signupId}`);
+  if(!field){ setRaidHelperEditStatus("Das Feld für die Anmeldenummer wurde nicht gefunden.", "bad"); return; }
   const signupNumber = field?.value.trim() || "";
   if(!masterCode){ setRaidHelperEditStatus("Bitte Master-Code eingeben.", "bad"); return; }
   if(signupNumber && (!/^\d+$/.test(signupNumber) || Number(signupNumber) < 1 || Number(signupNumber) > 9999)){
