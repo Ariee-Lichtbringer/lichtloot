@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-15-worldbuffs-combatant-v8";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-worldbuff-ability-id-v11";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-15-consumables-v1";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -12108,6 +12108,22 @@ async function fetchReportEventsForAnalysis(token, reportCode, dataType, fightId
   }
 }
 
+async function fetchBossCombatantSnapshotsForAnalysis(token, reportCode, fights) {
+  const snapshots = [];
+  for (const fight of Array.isArray(fights) ? fights : []) {
+    const fightId = Number(fight?.id || 0);
+    if (!fightId) continue;
+    const events = await fetchReportEventsForAnalysis(token, reportCode, "CombatantInfo", [fightId]);
+    events.forEach((event) => {
+      snapshots.push({
+        ...event,
+        fight: Number(event?.fight || event?.fightID || event?.fightId || fightId)
+      });
+    });
+  }
+  return snapshots;
+}
+
 async function fetchReportTableForAnalysis(token, reportCode, dataType, fightIds, sourceId = null) {
   const hasFightScope = Array.isArray(fightIds);
   const hasTimeScope = fightIds && typeof fightIds === "object" && !Array.isArray(fightIds);
@@ -12276,11 +12292,36 @@ function abilityName(event) {
   return clean(event?.ability?.name || event?.ability || event?.sourceAbility?.name || "");
 }
 
+function primitiveAbilityId(value) {
+  if (typeof value !== "number" && typeof value !== "string") return 0;
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0 ? id : 0;
+}
+
+function normalizedAbilityLookupName(value) {
+  return clean(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function auraAbilityName(aura) {
+  if (typeof aura === "string" && !primitiveAbilityId(aura)) return clean(aura);
+  return clean(
+    aura?.name ||
+    aura?.ability?.name ||
+    aura?.sourceAbility?.name ||
+    aura?.spell?.name ||
+    ""
+  );
+}
+
 function auraAbilityId(aura) {
-  if (typeof aura === "number" || typeof aura === "string") {
-    const primitiveId = Number(aura);
-    if (Number.isFinite(primitiveId)) return primitiveId;
-  }
+  const primitiveId = primitiveAbilityId(aura);
+  if (primitiveId) return primitiveId;
   return Number(
     aura?.guid ||
     aura?.abilityGameID ||
@@ -12289,6 +12330,9 @@ function auraAbilityId(aura) {
     aura?.gameId ||
     aura?.spellID ||
     aura?.spellId ||
+    primitiveAbilityId(aura?.ability) ||
+    primitiveAbilityId(aura?.sourceAbility) ||
+    primitiveAbilityId(aura?.spell) ||
     aura?.ability?.guid ||
     aura?.ability?.abilityGameID ||
     aura?.ability?.abilityGameId ||
@@ -12302,6 +12346,73 @@ function auraAbilityId(aura) {
   ) || 0;
 }
 
+function normalizeCombatantAuras(event) {
+  const found = new Map();
+  const seen = new Set();
+  const add = (candidate) => {
+    const id = auraAbilityId(candidate);
+    const name = auraAbilityName(candidate);
+    const normalizedName = normalizedAbilityLookupName(name);
+    const key = id > 0 ? `id:${id}` : normalizedName ? `name:${normalizedName}` : "";
+    if (!key || found.has(key)) return;
+    found.set(
+      key,
+      candidate && typeof candidate === "object"
+        ? candidate
+        : id > 0
+          ? { abilityGameID: id }
+          : { name }
+    );
+  };
+  const visit = (value) => {
+    if (value == null) return;
+    if (typeof value === "string") {
+      const raw = value.trim();
+      if (raw.startsWith("[") || raw.startsWith("{")) {
+        try {
+          visit(JSON.parse(raw));
+          return;
+        } catch (_) {
+          // Fall through: some exports store a single numeric spell id as text.
+        }
+      }
+      add(primitiveAbilityId(raw) || { name: raw });
+      return;
+    }
+    if (typeof value === "number") {
+      add(value);
+      return;
+    }
+    if (typeof value !== "object" || seen.has(value)) return;
+    seen.add(value);
+    if (Array.isArray(value)) {
+      value.forEach(visit);
+      return;
+    }
+    const directId = auraAbilityId(value);
+    const directName = auraAbilityName(value);
+    add(value);
+    for (const key of ["auras", "data", "entries", "values", "combatantInfo"]) {
+      if (value[key] != null && value[key] !== value) visit(value[key]);
+    }
+    if (!directId && !directName) {
+      Object.entries(value).forEach(([key, nested]) => {
+        const keyId = primitiveAbilityId(key);
+        if (keyId > 100 && !auraAbilityId(nested)) {
+          if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+            add({ ...nested, abilityGameID: keyId });
+          } else {
+            add(keyId);
+          }
+        }
+        if (nested !== value) visit(nested);
+      });
+    }
+  };
+  [event?.auras, event?.combatantInfo?.auras, event?.data?.auras].forEach(visit);
+  return Array.from(found.values());
+}
+
 function abilityId(event) {
   return Number(
     event?.abilityGameID ||
@@ -12310,6 +12421,9 @@ function abilityId(event) {
     event?.gameId ||
     event?.spellID ||
     event?.spellId ||
+    primitiveAbilityId(event?.ability) ||
+    primitiveAbilityId(event?.sourceAbility) ||
+    primitiveAbilityId(event?.spell) ||
     event?.ability?.guid ||
     event?.ability?.abilityGameID ||
     event?.ability?.abilityGameId ||
@@ -13176,7 +13290,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const buffEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "Buffs", fullReportScope);
   const combatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", gearScope);
   const reportCombatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", fullReportScope);
-  const bossCombatantEvents = await fetchReportEventsForAnalysis(token, analysis.report_code, "CombatantInfo", bossFightsForGear.map(fight => Number(fight.id)));
+  const bossCombatantEvents = await fetchBossCombatantSnapshotsForAnalysis(token, analysis.report_code, bossFightsForGear);
   const consumes = {};
   const trinketsAndRacials = {};
   const absorbs = {};
@@ -13328,15 +13442,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     return sum + Math.max(0, Number(fight.endTime || 0) - Number(fight.startTime || 0));
   }, 0) / 1000));
   const claWorldBuffDefinitions = [
-    ["Nef/Ony", [22888, 355363]],
-    ["Rend", [16609, 355366, 460940]],
-    ["ZG Herz", [24425, 355365]],
-    ["Songflower", [15366]],
-    ["Mol'dar", [22818]],
-    ["Fengus", [22817]],
-    ["Slip'kik", [22820]],
-    ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767]],
-    ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693]]
+    ["Nef/Ony", [22888, 355363], ["Rallying Cry of the Dragonslayer", "Schlachtruf der Drachentöter"]],
+    ["Rend", [16609, 355366, 460940], ["Warchief's Blessing", "Segen des Kriegshäuptlings"]],
+    ["ZG Herz", [24425, 355365], ["Spirit of Zandalar", "Geist von Zandalar"]],
+    ["Songflower", [15366], ["Songflower Serenade", "Liedblumenserenade"]],
+    ["Mol'dar", [22818], ["Mol'dar's Moxie", "Moldars Mut"]],
+    ["Fengus", [22817], ["Fengus' Ferocity", "Fengus' Wildheit"]],
+    ["Slip'kik", [22820], ["Slip'kik's Savvy", "Slip'kiks Grips"]],
+    ["DMF", [23736, 23735, 23737, 23738, 23769, 23766, 23768, 23767], ["Sayge's Dark Fortune", "Sayges dunkles Schicksal"]],
+    ["Zanza/BL", [24417, 24382, 24383, 10667, 10668, 10669, 10692, 10693], [
+      "Spirit of Zanza", "Geist von Zanza", "Ground Scorpok Assay", "Stoß des Skorpoks", "Stoss des Skorpoks",
+      "Cerebral Cortex Compound", "Lung Juice Cocktail", "ROIDS", "Gizzard Gum"
+    ]]
   ];
   const claWorldBuffFallbackMetadata = {
     "Nef/Ony": { spellId: 22888, name: "Schlachtruf der Drachentöter", icon: "inv_misc_head_dragon_01" },
@@ -13380,6 +13497,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const id = Number(spellId || 0);
     if (!id) return "";
     const found = definitions.find(([, ids]) => ids.includes(id));
+    return found ? found[0] : "";
+  }
+
+  function labelForWorldBuff(spellId, rawName = "") {
+    const byId = labelForSpellId(spellId, claWorldBuffDefinitions);
+    if (byId) return byId;
+    const name = normalizedAbilityLookupName(rawName);
+    if (!name) return "";
+    const found = claWorldBuffDefinitions.find(([, , aliases = []]) => aliases.some(alias => {
+      const normalizedAlias = normalizedAbilityLookupName(alias);
+      return normalizedAlias && (name === normalizedAlias || name.includes(normalizedAlias));
+    }));
     return found ? found[0] : "";
   }
 
@@ -13875,9 +14004,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!player) return;
     const gear = normalizeWarcraftLogsGear(event.gear || []);
     if (gear.length && !gearByPlayer.has(player)) gearByPlayer.set(player, gear);
-    (Array.isArray(event.auras) ? event.auras : []).forEach(aura => {
+    normalizeCombatantAuras(event).forEach(aura => {
       const id = auraAbilityId(aura);
-      const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+      const worldBuff = labelForWorldBuff(id, auraAbilityName(aura));
       const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
       if (combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
     });
@@ -13886,7 +14015,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   buffEvents.forEach(event => {
     const player = playerNameFromBuffEvent(event);
     const id = abilityId(event);
-    const worldBuff = labelForSpellId(id, claWorldBuffDefinitions);
+    const worldBuff = labelForWorldBuff(id, displayAbilityName(event));
     const combatBuff = labelForSpellId(id, claCombatBuffDefinitions);
     if (player && combatBuff) addPlayerAmount(claCombatBuffs, player, combatBuff, 1);
   });
@@ -13904,17 +14033,18 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     Number(fight.startTime || 0)
   ]));
   const combatantSnapshots = [...reportCombatantEvents, ...bossCombatantEvents]
-    .filter(event => Array.isArray(event.auras))
     .map(event => ({
       kind: "snapshot",
       event,
+      auras: normalizeCombatantAuras(event),
       timestamp: Number(event.timestamp || event.time
         || fightStartById.get(Number(event.fight || event.fightID || event.fightId || 0)) || 0)
-    }));
+    }))
+    .filter(item => item.auras.length > 0);
   const orderedWorldBuffEvents = [
     ...combatantSnapshots,
     ...buffEvents
-      .filter(event => labelForSpellId(abilityId(event), claWorldBuffDefinitions))
+      .filter(event => labelForWorldBuff(abilityId(event), displayAbilityName(event)))
       .map(event => ({ kind: "aura", event, timestamp: Number(event.timestamp || event.time || 0) }))
   ].sort((left, right) => left.timestamp - right.timestamp || (left.kind === "snapshot" ? -1 : 1));
   let worldBuffEventIndex = 0;
@@ -13925,9 +14055,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const player = playerNameFromEvent(event, true);
     if (!fightId || !player || !fightStartById.has(fightId)) return;
     if (!exactSnapshotsByFight.has(fightId)) exactSnapshotsByFight.set(fightId, new Map());
-    const detected = (event.auras || []).map(aura => {
+    const detected = item.auras.map(aura => {
       const id = auraAbilityId(aura);
-      return labelForSpellId(id, claWorldBuffDefinitions);
+      return labelForWorldBuff(id, auraAbilityName(aura));
     }).filter(Boolean);
     exactSnapshotsByFight.get(fightId).set(player, new Set(detected));
   });
@@ -13944,15 +14074,15 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (item.kind === "snapshot") {
           const player = playerNameFromEvent(event, true);
           if (player) {
-            const detected = (event.auras || []).map(aura => {
+            const detected = item.auras.map(aura => {
               const id = auraAbilityId(aura);
-              return labelForSpellId(id, claWorldBuffDefinitions);
+              return labelForWorldBuff(id, auraAbilityName(aura));
             }).filter(Boolean);
             activeWorldBuffsByPlayer.set(player, new Set(detected));
           }
         } else {
           const player = playerNameFromBuffEvent(event);
-          const label = labelForSpellId(abilityId(event), claWorldBuffDefinitions);
+          const label = labelForWorldBuff(abilityId(event), displayAbilityName(event));
           const type = clean(event.type).toLowerCase();
           if (player && label) {
             const state = ensureWorldBuffState(player);
