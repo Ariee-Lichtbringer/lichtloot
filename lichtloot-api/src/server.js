@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v16";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v15";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -14204,7 +14204,6 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     type: options.type || "count",
     tone: options.tone || "",
     spellId: Number(options.spellId || 0) || undefined,
-    spellIds: Array.from(new Set((options.spellIds || []).map(Number).filter(id => id > 0))),
     icon: clean(options.icon),
     originalLabel: clean(options.originalLabel),
     tooltip: clean(options.tooltip),
@@ -14460,7 +14459,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
         if (hits > 0) return [player, `${formatCountValue(castCount)} (${(hits / castCount).toFixed(2)})`];
       }
       return [player, formatCountValue(castCount)];
-    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, spellIds: healingIdsForConfiguredCast(className, cast), icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
+    })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
   }
 
   function configuredCooldownRows(className) {
