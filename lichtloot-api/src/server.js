@@ -12756,10 +12756,13 @@ const holyNovaHealSpellMap = {
 function healingIdsForConfiguredCast(className, cast) {
   const ids = new Set((cast?.ids || []).map(id => holyNovaHealSpellMap[id] || id));
   if (className === "Paladin" && /Flash of Light.*all ranks/i.test(cast?.name || "")) {
-    [19750, 19939, 19940, 19941, 19942, 19943].forEach(id => ids.add(id));
+    // Warcraft Logs reports the healing event for every rank under spell 19993,
+    // while cast events retain their rank-specific spell IDs.
+    [19750, 19939, 19940, 19941, 19942, 19943, 19993].forEach(id => ids.add(id));
   }
   if (className === "Paladin" && /Holy Light.*all ranks/i.test(cast?.name || "")) {
-    [635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292].forEach(id => ids.add(id));
+    // Warcraft Logs uses spell 19968 for the corresponding Holy Light heals.
+    [635, 639, 647, 1026, 1042, 3472, 10328, 10329, 25292, 19968].forEach(id => ids.add(id));
   }
   return Array.from(ids);
 }
