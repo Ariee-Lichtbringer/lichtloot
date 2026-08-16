@@ -37,7 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v15";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-player-career-v16";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -16187,6 +16187,37 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
     if (!player) continue;
     const durationMs = Math.max(1, Number(payload.report?.performanceDurationMs || payload.report?.durationMs || 0));
     const seconds = Math.max(1, durationMs / 1000);
+    const encounters = (Array.isArray(payload.encounters) ? payload.encounters : []).filter(fight => fight?.isBoss !== false);
+    const playerEncounters = encounters.map(fight => {
+      const metrics = fight.players?.[player.name] || {};
+      const fightSeconds = Math.max(1, Number(fight.durationMs || 0) / 1000);
+      return {
+        id: Number(fight.id || 0),
+        name: clean(fight.name || "Boss"),
+        kill: fight.kill !== false,
+        durationMs: Number(fight.durationMs || 0),
+        dps: Math.round(Number(metrics.damageDone || 0) / fightSeconds),
+        hps: Math.round(Number(metrics.healingDone || 0) / fightSeconds),
+        damageDone: Math.round(Number(metrics.damageDone || 0)),
+        healingDone: Math.round(Number(metrics.healingDone || 0)),
+        damageTaken: Math.round(Number(metrics.damageTaken || 0)),
+        deaths: Number(metrics.deaths || 0),
+        parsePercent: metrics.parsePercent == null ? null : Number(metrics.parsePercent),
+        abilityCasts: metrics.abilityCasts || {}
+      };
+    });
+    const abilityCasts = {};
+    playerEncounters.forEach(fight => Object.entries(fight.abilityCasts || {}).forEach(([ability, count]) => {
+      abilityCasts[ability] = Number(abilityCasts[ability] || 0) + Number(count || 0);
+    }));
+    const consumables = (payload.consumableUsage?.players?.[player.name]?.items || []).map(item => ({
+      label: clean(item.label || item.originalLabel),
+      originalLabel: clean(item.originalLabel),
+      uses: Number(item.uses || 0),
+      fightsUsed: Number(item.fightsUsed || 0),
+      icon: clean(item.icon),
+      spellId: Number(item.spellId || 0)
+    }));
     history.push({
       analysisId: row.id,
       raid: clean(payload.report?.raid || row.raid || "Raid"),
@@ -16200,11 +16231,19 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
       hps: Math.round(Number(player.healingDone || 0) / seconds),
       damageDone: Math.round(Number(player.damageDone || 0)),
       healingDone: Math.round(Number(player.healingDone || 0)),
+      overheal: Math.round(Number(player.overheal || 0)),
+      damageTaken: Math.round(Number(player.damageTaken || 0)),
+      threat: Math.round(Number(player.threat || 0)),
+      parsePercent: player.parsePercent == null ? null : Number(player.parsePercent),
       activityPercent: Math.round(Number(player.activityPercent || 0)),
       deaths: Number(player.deaths || 0),
       worldBuffCount: Number(player.worldBuffCount || 0),
       preparationCount: Number(player.preparationCount || 0),
-      gear: Array.isArray(player.gear) ? player.gear : []
+      gear: Array.isArray(player.gear) ? player.gear : [],
+      encounters: playerEncounters,
+      abilityCasts,
+      totalCasts: Object.values(abilityCasts).reduce((sum, count) => sum + Number(count || 0), 0),
+      consumables
     });
   }
   if (!history.length) {
@@ -16222,6 +16261,21 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
     .sort((a, b) => b - a);
   const rank = Math.max(1, comparison.findIndex(value => value <= latest[metric]) + 1);
   const topPercent = latest[metric] > 0 && comparison.length ? Math.max(1, Math.ceil(rank * 100 / comparison.length)) : null;
+  const career = history.reduce((totals, entry) => {
+    ["damageDone", "healingDone", "overheal", "damageTaken", "threat", "deaths", "totalCasts"].forEach(key => {
+      totals[key] += Number(entry[key] || 0);
+    });
+    Object.entries(entry.abilityCasts || {}).forEach(([ability, count]) => {
+      totals.abilityCasts[ability] = Number(totals.abilityCasts[ability] || 0) + Number(count || 0);
+    });
+    (entry.consumables || []).forEach(item => {
+      const key = item.originalLabel || item.label;
+      if (!totals.consumables[key]) totals.consumables[key] = { ...item, uses: 0, fightsUsed: 0 };
+      totals.consumables[key].uses += Number(item.uses || 0);
+      totals.consumables[key].fightsUsed += Number(item.fightsUsed || 0);
+    });
+    return totals;
+  }, { damageDone: 0, healingDone: 0, overheal: 0, damageTaken: 0, threat: 0, deaths: 0, totalCasts: 0, abilityCasts: {}, consumables: {} });
   let rankingsByRaid = {};
   try {
     const token = await getWarcraftLogsAccessToken();
@@ -16244,6 +16298,7 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
       latest,
       bestDps: Math.max(...history.map(entry => entry.dps)),
       bestHps: Math.max(...history.map(entry => entry.hps)),
+      career,
       rankingsByRaid,
       history
     }
