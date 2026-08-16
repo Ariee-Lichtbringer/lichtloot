@@ -2888,6 +2888,7 @@ body.raid-unified-open .raid-helper-current-detail-head{display:grid;grid-templa
 .raid-helper-signup-name-button{appearance:none;background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:900;cursor:pointer;text-align:left;text-decoration:underline;text-decoration-color:rgba(94,234,212,.45);text-underline-offset:3px}
 .raid-helper-signup-name-button:hover{color:#5eead4;text-decoration-color:#5eead4}
 .raid-helper-signup-number{display:inline-flex;align-items:center;justify-content:center;min-width:28px;padding:2px 7px;border:1px solid rgba(250,204,21,.55);border-radius:999px;background:rgba(250,204,21,.1);color:#fde047;font-size:11px;font-weight:950;vertical-align:middle}
+.raid-helper-signup-number-edit{display:flex;align-items:center;gap:7px;margin-top:7px}.raid-helper-signup-number-edit label{color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}.raid-helper-signup-number-edit input{width:82px;min-height:32px;padding:5px 8px;border:1px solid #40516d;border-radius:8px;background:#081222;color:#f8fafc;font-weight:900}.raid-helper-signup-number-edit button{min-height:32px;padding:5px 10px}
 .raid-helper-spec-icon{width:24px;height:24px;display:inline-block;vertical-align:middle;object-fit:cover;border:1px solid rgba(148,163,184,.5);border-radius:5px;box-shadow:0 0 0 1px rgba(2,6,23,.7);margin-left:5px}
 .raid-helper-signup-edit-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr .7fr;gap:12px;margin:16px 0}
 .raid-helper-signup-edit-grid label{display:grid;gap:6px;color:#94a3b8;font-size:11px;font-weight:900;text-transform:uppercase}
@@ -11258,6 +11259,7 @@ function renderRaidHelperSignupAdminRow(row){
         <div class="raid-helper-signup-name">${signupNumber > 0 ? `<span class="raid-helper-signup-number" title="Anmeldenummer">#${signupNumber}</span> ` : ""}${raidHelperClassIconMarkup(row.className || "", "◆")} <button class="raid-helper-signup-name-button" type="button" onclick="openRaidHelperSignupEdit('${escapeAttr(id)}')" title="Charakter, Skillung oder Anmeldenummer ändern">${escapeHtml(player)}</button>${raidHelperSignupSpecIconMarkup(row.className || "", specialization)}${renderRaidHelperLootbag(row)}</div>
         <div class="raid-helper-signup-status">${statusIcon} Status: ${escapeHtml(statusLabel)}</div>
         <div class="raid-helper-signup-meta">${escapeHtml(row.className || "-")} · ${escapeHtml(row.role || "flex")} · ${escapeHtml(row.note || "")} · ${escapeHtml(row.source || "")}</div>
+        <div class="raid-helper-signup-number-edit"><label for="raidSignupNumber-${escapeAttr(id)}">Anmeldenr.</label><input id="raidSignupNumber-${escapeAttr(id)}" type="number" min="1" max="9999" step="1" value="${signupNumber > 0 ? signupNumber : ""}" placeholder="–"><button class="small-btn ghost" type="button" onclick="updateRaidHelperSignupNumber('${escapeAttr(id)}','${escapeAttr(player)}')">Speichern</button></div>
       </div>
       <div class="raid-helper-signup-actions">
         <button class="small-btn good" type="button" onclick="updateRaidHelperSignupStatus('${escapeAttr(id)}','signed','${escapeAttr(player)}')">Aktiv</button>
@@ -11588,6 +11590,34 @@ async function updateRaidHelperSignupRole(signupId, role, player = ""){
   }catch(error){
     setRaidHelperEditStatus(error.message || "Multi Char konnte nicht gespeichert werden.", "bad");
     setRaidHelperCurrentStatus(error.message || "Multi Char konnte nicht gespeichert werden.", "bad");
+  }
+}
+
+async function updateRaidHelperSignupNumber(signupId, player = ""){
+  const masterCode = document.getElementById("masterCode")?.value.trim();
+  const raidId = getRaidHelperEditRaidId();
+  const field = document.getElementById(`raidSignupNumber-${signupId}`);
+  const signupNumber = field?.value.trim() || "";
+  if(!masterCode){ setRaidHelperEditStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  if(signupNumber && (!/^\d+$/.test(signupNumber) || Number(signupNumber) < 1 || Number(signupNumber) > 9999)){
+    setRaidHelperEditStatus("Die Anmeldenummer muss zwischen 1 und 9999 liegen oder leer sein.", "bad");
+    field?.focus();
+    return;
+  }
+  setRaidHelperEditStatus(`Anmeldenummer für ${player || "Spieler"} wird gespeichert …`, "");
+  try{
+    const result = await railwayWrite({ action:"guildUpdateRaidHelperSignup", masterCode, signupId, signupNumber });
+    if(!result.success) throw new Error(result.error || "Anmeldenummer konnte nicht gespeichert werden.");
+    raidHelperAttendanceCache = null;
+    await loadRaidHelperEventSignups();
+    await loadRaidHelperCurrentEventSignups(raidId);
+    const refreshResult = await queueRaidHelperDiscordRefresh(raidId, { quiet:true });
+    if(!result.refreshQueued && !refreshResult?.success) throw new Error("Anmeldenummer wurde gespeichert, aber der Discord-Anmelder konnte nicht aktualisiert werden.");
+    setRaidHelperEditStatus(signupNumber ? `Anmeldenummer #${signupNumber} gespeichert.` : "Anmeldenummer entfernt.", "good");
+    setRaidHelperCurrentStatus(signupNumber ? `Anmeldenummer #${signupNumber} gespeichert.` : "Anmeldenummer entfernt.", "good");
+  }catch(error){
+    setRaidHelperEditStatus(error.message || "Anmeldenummer konnte nicht gespeichert werden.", "bad");
+    setRaidHelperCurrentStatus(error.message || "Anmeldenummer konnte nicht gespeichert werden.", "bad");
   }
 }
 
