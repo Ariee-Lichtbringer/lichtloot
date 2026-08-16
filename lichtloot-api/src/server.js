@@ -8248,7 +8248,7 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 async function queuePoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
-  const linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid);
+  const linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId);
   if (linkedRaidId) {
     const linkedRaid = await query(
       `select prio_enabled from raids
@@ -8325,7 +8325,7 @@ async function queuePoPost({ guildId, query: params }) {
      where guild_id = $1 and post_key = $2 and archived_at is null`,
     [guildId, postKey, sourceChannelId, targetChannelId, normalizeRaidType(raid).toUpperCase(),
       clean(params.title) || "PO Liste",
-      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid),
+      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin),
       clean(params.raidDate || params.date || params.datum), clean(params.raidTime || params.time || params.uhrzeit),
       clean(params.mode || params.poMode) || "signup"]
   );
@@ -8349,11 +8349,17 @@ async function queuePoPost({ guildId, query: params }) {
       targetChannelId,
       normalizeRaidType(raid).toUpperCase(),
       clean(params.title) || "PO Liste",
-      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || params.lichtlootRaidId || params.lichtlootRaid),
+      clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin),
       clean(params.raidDate || params.date || params.datum),
       clean(params.raidTime || params.time || params.uhrzeit),
       clean(params.mode || params.poMode) || "signup"
     ]
+  );
+  await query(
+    `update po_post_entries
+     set raid_id = coalesce(nullif($3, ''), raid_id), updated_at = now()
+     where guild_id = $1 and post_key = $2 and archived_at is null`,
+    [guildId, postKey, linkedRaidId]
   );
   const queued = await enqueueBotUpdate({
     guildId,
@@ -8380,7 +8386,7 @@ async function queuePoPost({ guildId, query: params }) {
       restoreArchived: ["1", "true", "yes", "ja"].includes(clean(params.restoreArchived || params.restore || params.repost || "").toLowerCase()) ? "true" : "",
       forceNewMessage: ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()) ? "true" : "",
       createLichtlootRaid: clean(params.createLichtlootRaid || params.createRaid || ""),
-      lichtlootRaidId: clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId || ""),
+      lichtlootRaidId: linkedRaidId,
       lichtlootPlayerPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || ""),
       lichtlootLeadPin: clean(params.lichtlootLeadPin || params.leadPin || ""),
       limit,
@@ -8428,6 +8434,7 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists archived_at timestamptz`);
   await query(`alter table po_post_entries add column if not exists created_at timestamptz not null default now()`);
   await query(`alter table po_post_entries add column if not exists raid_pin text not null default ''`);
+  await query(`alter table po_post_entries add column if not exists raid_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_game_id text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_slot text not null default ''`);
   await query(`alter table po_post_entries add column if not exists item_boss text not null default ''`);
@@ -8435,6 +8442,94 @@ async function ensurePoPostEntriesSchema() {
   await query(`alter table po_post_entries add column if not exists raid_time text not null default ''`);
   await query(`alter table po_post_entries add column if not exists mode text not null default ''`);
   await query(`alter table po_post_entries add column if not exists config_only boolean not null default false`);
+  await query(
+    `create or replace function fill_po_post_entry_raid_id()
+     returns trigger
+     language plpgsql
+     as $$
+     begin
+       if coalesce(new.raid_id, '') = '' then
+         select p.raid_id into new.raid_id
+         from po_post_entries p
+         where p.guild_id = new.guild_id
+           and p.post_key = new.post_key
+           and p.raid_id <> ''
+         order by p.config_only desc, p.updated_at desc
+         limit 1;
+       end if;
+       if coalesce(new.raid_id, '') = '' then
+         select coalesce(nullif(r.external_raid_id, ''), r.id::text) into new.raid_id
+         from raids r
+         where r.guild_id = new.guild_id
+           and r.deleted_at is null
+           and (
+             (coalesce(new.raid_pin, '') <> '' and r.raid_pin = new.raid_pin)
+             or (
+               coalesce(new.raid_pin, '') = ''
+               and coalesce(new.raid_date, '') <> ''
+               and r.raid_date::text = left(new.raid_date, 10)
+               and lower(r.raid_type) = lower(new.raid)
+             )
+           )
+         order by case when coalesce(new.raid_pin, '') <> '' and r.raid_pin = new.raid_pin then 0 else 1 end,
+                  r.created_at desc
+         limit 1;
+       end if;
+       new.raid_id := coalesce(new.raid_id, '');
+       return new;
+     end;
+     $$`
+  );
+  await query(
+    `do $$
+     begin
+       if not exists (
+         select 1 from pg_trigger
+         where tgname = 'trg_fill_po_post_entry_raid_id'
+           and tgrelid = 'po_post_entries'::regclass
+       ) then
+         create trigger trg_fill_po_post_entry_raid_id
+         before insert or update of raid_id, raid_pin, raid_date, raid, post_key
+         on po_post_entries
+         for each row execute function fill_po_post_entry_raid_id();
+       end if;
+     end;
+     $$`
+  );
+  await query(
+    `update po_post_entries p
+     set raid_id = coalesce((
+       select coalesce(nullif(r.external_raid_id, ''), r.id::text)
+       from raids r
+       where r.guild_id = p.guild_id
+         and r.deleted_at is null
+         and (
+           (p.raid_pin <> '' and r.raid_pin = p.raid_pin)
+           or (
+             p.raid_pin = ''
+             and p.raid_date <> ''
+             and r.raid_date::text = left(p.raid_date, 10)
+             and lower(r.raid_type) = lower(p.raid)
+           )
+         )
+       order by case when p.raid_pin <> '' and r.raid_pin = p.raid_pin then 0 else 1 end, r.created_at desc
+       limit 1
+     ), p.raid_id)
+     where p.raid_id = ''`
+  );
+  await query(
+    `update po_post_entries p
+     set raid_id = shared.raid_id
+     from (
+       select guild_id, post_key, max(raid_id) as raid_id
+       from po_post_entries
+       where raid_id <> ''
+       group by guild_id, post_key
+     ) shared
+     where p.guild_id = shared.guild_id
+       and p.post_key = shared.post_key
+       and p.raid_id = ''`
+  );
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
   await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
 }
@@ -8755,7 +8850,8 @@ async function getPoPostEntries({ guildId, query: params }) {
       raidTime: row.raid_time || "",
       raidPin: row.raid_pin || "",
       prioPin: row.raid_pin || "",
-      lichtlootRaidId: row.raid_pin || "",
+      raidId: row.raid_id || "",
+      lichtlootRaidId: row.raid_id || "",
       lichtlootPlayerPin: row.raid_pin || "",
       player: row.player_name || "",
       className: row.class_name || "",
@@ -8791,7 +8887,7 @@ async function getActivePoPostChannels({ guildId, query: params }) {
   const result = await query(
     `select distinct on (post_key, source_channel_id, target_channel_id)
        post_key, source_channel_id, target_channel_id, discord_message_id,
-       raid, title, raid_pin, raid_date, raid_time, mode, updated_at
+       raid, title, raid_id, raid_pin, raid_date, raid_time, mode, updated_at
      from po_post_entries
      where guild_id = $1
        and archived_at is null
@@ -8811,7 +8907,9 @@ async function getActivePoPostChannels({ guildId, query: params }) {
       title: row.title || "PO-Anmelder",
       raidPin: row.raid_pin || "",
       prioPin: row.raid_pin || "",
-      lichtlootRaidId: row.raid_pin || "",
+      raidId: row.raid_id || "",
+      lichtlootRaidId: row.raid_id || "",
+      lichtlootPlayerPin: row.raid_pin || "",
       raidDate: row.raid_date || "",
       raidTime: row.raid_time || "",
       mode: row.mode || "",
@@ -8829,7 +8927,8 @@ async function setPoPostDiscordMessage({ guildId, query: params }) {
   const discordMessageId = clean(params.discordMessageId || params.messageId || "");
   const raidKey = normalizeRaidType(params.raid || params.raidName).toUpperCase();
   const title = clean(params.title) || "PO-Anmelder";
-  const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.lichtlootRaidId || params.playerLinkPin);
+  const raidId = clean(params.raidId || params.lichtlootRaidId || params.lichtlootRaid);
+  const raidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin || params.playerLinkPin);
   const raidDate = clean(params.raidDate || params.date || params.datum);
   const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
   const mode = clean(params.mode || params.poMode || "signup");
@@ -8871,6 +8970,12 @@ async function setPoPostDiscordMessage({ guildId, query: params }) {
       [guildId, postKey, sourceChannelId, targetChannelId || sourceChannelId, discordMessageId, raidKey, title, raidPin, raidDate, raidTime, mode]
     );
   }
+  await query(
+    `update po_post_entries
+     set raid_id = coalesce(nullif($3, ''), raid_id), updated_at = now()
+     where guild_id = $1 and post_key = $2 and archived_at is null`,
+    [guildId, postKey, raidId]
+  );
   return {
     success: true,
     updated: result.rowCount || 0,
@@ -9164,7 +9269,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       raid: row.raid,
       raidPin: row.raid_pin || raidPin,
       prioPin: row.raid_pin || raidPin,
-      lichtlootRaidId: row.raid_pin || raidPin,
+      lichtlootRaidId: row.raid_id || "",
       lichtlootPlayerPin: row.raid_pin || raidPin,
       title: row.title,
       mode: clean(params.mode || params.poMode) || "signup",
@@ -9237,7 +9342,7 @@ async function reviewPoPostEntry({ guildId, query: params }) {
       title: row.title || "PO Liste",
       raidPin: row.raid_pin || "",
       prioPin: row.raid_pin || "",
-      lichtlootRaidId: row.raid_pin || "",
+      lichtlootRaidId: row.raid_id || "",
       lichtlootPlayerPin: row.raid_pin || "",
       player: row.player_name || "",
       className: row.class_name || "",
@@ -9879,7 +9984,7 @@ async function restorePoPost({ guildId, query: params }) {
       raid: row.raid || "",
       raidPin: row.raid_pin || "",
       prioPin: row.raid_pin || "",
-      lichtlootRaidId: row.raid_pin || "",
+      lichtlootRaidId: row.raid_id || "",
       lichtlootPlayerPin: row.raid_pin || "",
       raidDate: row.raid_date || "",
       raidTime: row.raid_time || "",
@@ -10126,7 +10231,7 @@ async function savePoPostEntry({ guildId, query: params }) {
         title: row.title || "PO Liste",
         raidPin: row.raid_pin || "",
         prioPin: row.raid_pin || "",
-        lichtlootRaidId: row.raid_pin || "",
+        lichtlootRaidId: row.raid_id || "",
         lichtlootPlayerPin: row.raid_pin || "",
         player: row.player_name || "",
         className: row.class_name || "",
