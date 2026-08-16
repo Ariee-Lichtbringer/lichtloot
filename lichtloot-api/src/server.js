@@ -19672,7 +19672,12 @@ async function adminUpdateRaidHelperSignup({ guildId, query: params }) {
       return { success:true, signup, queued:true, ...sideEffects };
     }
     const characterResult = await query(
-      `select id, name, class_name from characters where guild_id=$1 and lower(name)=lower($2) order by updated_at desc nulls last limit 1`,
+      `select c.id, c.name, c.class_name
+       from characters c
+       join players p on p.id = c.player_id
+       where p.guild_id = $1 and lower(c.name) = lower($2)
+       order by c.updated_at desc nulls last
+       limit 1`,
       [guildId, nextPlayerName]
     );
     if (!characterResult.rows[0]) {
