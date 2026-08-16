@@ -13750,7 +13750,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const overheal = Number(event.overheal || event.overhealing || event.overhealAmount || 0);
     const id = abilityId(event);
     const spell = displayAbilityName(event) || "Unbekannter Heal";
-    if (!healingTotalSource[player]) {
+    if (!healingTotalSource[player] || healingTotalSource[player] === "events") {
       healingTotals[player] = (healingTotals[player] || 0) + amount;
       healingTotalSource[player] = "events";
     }
@@ -13761,6 +13761,12 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     healingBySpell[spell][player].overheal += overheal;
     healingBySpell[spell][player].hits += 1;
     healingBySpell[spell][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    if (fightId) {
+      if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
+      if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
+      fightPlayerMetrics[fightId][player].overheal = Number(fightPlayerMetrics[fightId][player].overheal || 0) + overheal;
+    }
     if (id) {
       if (!healingById[id]) healingById[id] = {};
       if (!healingById[id][player]) healingById[id][player] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
@@ -13768,10 +13774,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       healingById[id][player].overheal += overheal;
       healingById[id][player].hits += 1;
       healingById[id][player].crits += Number(event.hitType || event.hit_type || 0) === 2 ? 1 : 0;
-      const fightId = Number(event.fight || event.fightID || event.fightId || 0);
       if (fightId) {
-        if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
-        if (!fightPlayerMetrics[fightId][player]) fightPlayerMetrics[fightId][player] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
         const metrics = fightPlayerMetrics[fightId][player];
         if (!metrics.healingSpells) metrics.healingSpells = {};
         if (!metrics.healingSpells[id]) metrics.healingSpells[id] = { amount: 0, overheal: 0, hits: 0, crits: 0 };
@@ -14647,7 +14650,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const spellId = Number(cast.ids?.[0] || 0);
     const spellMetadata = rpbSpellMetadata.get(spellId) || {};
     const displayLabel = localizedRpbCastLabel(cast, spellMetadata).replace(/\s*\(Überheilung\s*%\)\s*$/i, "");
-    return customRow(displayLabel, Object.fromEntries(playerNames.map(player => {
+    const row = customRow(displayLabel, Object.fromEntries(playerNames.map(player => {
       const classPlayers = players.filter(item => item.className === className).map(item => item.name);
       if (!classPlayers.includes(player)) return [player, ""];
       const castCount = Number(classCasts[className]?.[cast.name]?.[player] || 0);
@@ -14671,6 +14674,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       }
       return [player, formatCountValue(castCount)];
     })), { type: cast.hasOverheal ? "text" : "count", tone: isHealingRow ? "healing" : kind === "aoe" ? "aoeCast" : "classCast", spellId, icon: rpbSpellIconByName[cast.name] || spellMetadata.icon, originalLabel: cast.name, tooltip: spellMetadata.tooltip });
+    if (cast.hasOverheal) row.spellIds = healingIdsForConfiguredCast(className, cast);
+    return row;
   }
 
   function configuredCooldownRows(className) {
@@ -15047,6 +15052,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
+        overheal: Math.round(Number(metrics.overheal || 0)),
         damageTaken: Math.round(Number(metrics.damageTaken || 0)),
         threat: Math.round(Number(metrics.threat || 0)),
         threatAbilities: metrics.threatAbilities || {},
@@ -15067,6 +15073,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       players: Object.fromEntries(Object.entries(fightPlayerMetrics[Number(fight.id || 0)] || {}).map(([name, metrics]) => [name, {
         damageDone: Math.round(Number(metrics.damageDone || 0)),
         healingDone: Math.round(Number(metrics.healingDone || 0)),
+        overheal: Math.round(Number(metrics.overheal || 0)),
         damageTaken: Math.round(Number(metrics.damageTaken || 0)),
         threat: Math.round(Number(metrics.threat || 0)),
         threatAbilities: metrics.threatAbilities || {},
