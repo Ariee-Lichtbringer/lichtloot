@@ -15633,6 +15633,32 @@ async function getPublicLogAnalysisWeb({ guildId, query: params }) {
     logAnalysisWebCache.set(cacheKey, { value: directAnalysis, expiresAt: Date.now() + 5 * 60 * 1000 });
   }
 
+  const bestTimeRows = await query(
+    `select c.payload
+       from log_analysis_web_cache c
+       join log_analyses la on la.id = c.analysis_id
+      where la.guild_id = $1`,
+    [guildId]
+  );
+  const guildBossBestTimes = { byEncounterId: {}, byName: {} };
+  bestTimeRows.rows.forEach(row => {
+    const encounters = Array.isArray(row.payload?.encounters) ? row.payload.encounters : [];
+    encounters.forEach(fight => {
+      if (fight?.kill === false) return;
+      const durationMs = Math.max(0, Number(fight?.durationMs || 0));
+      if (!durationMs) return;
+      const encounterId = Number(fight?.encounterId || 0);
+      const name = clean(fight?.name).toLowerCase();
+      if (encounterId && (!guildBossBestTimes.byEncounterId[encounterId] || durationMs < guildBossBestTimes.byEncounterId[encounterId])) {
+        guildBossBestTimes.byEncounterId[encounterId] = durationMs;
+      }
+      if (name && (!guildBossBestTimes.byName[name] || durationMs < guildBossBestTimes.byName[name])) {
+        guildBossBestTimes.byName[name] = durationMs;
+      }
+    });
+  });
+  directAnalysis = { ...directAnalysis, guildBossBestTimes };
+
   const claSections = (directAnalysis.sections || []).filter(section => String(section.id || "").startsWith("cla-"));
   const rpbSections = (directAnalysis.sections || []).filter(section => !String(section.id || "").startsWith("cla-"));
   const rpb = { ...directAnalysis, type: "rpb", sections: rpbSections };
