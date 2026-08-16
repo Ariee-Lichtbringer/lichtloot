@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-target-timeline-v18";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-gear-offhand-v19";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -976,13 +976,16 @@ function isRaidAnalysisEnchantableItem(item, metadata = null) {
     item?.itemName,
     metadata?.name,
     metadata?.type,
-    metadata?.category
+    metadata?.category,
+    metadata?.tooltip,
+    metadata?.statsText,
+    metadata?.equip
   ].filter(Boolean).join(" ")).toLowerCase();
 
   // Relikte und zauberfokussierte Nebenhandgegenstände können in Classic nicht
   // verzaubert werden. Die Namensprüfung schützt auch vor uneinheitlichen
   // Slotnummern aus älteren Warcraft-Logs-Datensätzen.
-  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in der schildhand getragen/.test(itemText)) {
+  if (/buchband|libram|götze|goetze|idol|totem|relikt|relic|zauberstab|wand|bogen|bow|gewehr|gun|armbrust|crossbow|wurf|thrown|fokus|focus|off.?hand frill|held in off|in (?:der )?schildhand (?:getragen|geführt|gefuehrt)/.test(itemText)) {
     return false;
   }
   if ([0, 2, 4, 6, 7, 8, 9, 14, 15].includes(slot)) return true;
