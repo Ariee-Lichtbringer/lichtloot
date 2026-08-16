@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-timeline-v17";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-target-timeline-v18";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13675,6 +13675,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     signupRole: signupRoleByName.get(clean(player.name).toLowerCase()) || ""
   }));
   const playersById = actorById(players);
+  const reportActorsById = new Map((Array.isArray(report.masterData?.actors) ? report.masterData.actors : [])
+    .map(actor => [Number(actor.id || 0), actor])
+    .filter(([id]) => id));
   const reportDurationMs = Math.max(0, Number(report.endTime || 0) - Number(report.startTime || 0));
   const fullReportScope = reportDurationMs > 0 ? { startTime: 0, endTime: reportDurationMs } : fightIds;
   const rpbFights = rpbIncludedFightsForAnalysis(fights);
@@ -13733,6 +13736,8 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const threatTotals = {};
   const threatAbilitiesByPlayer = {};
   const threatTimelineByFight = {};
+  const threatTargetTimelineByFight = {};
+  const threatTargetsByFight = {};
   let threatValuesEstimated = false;
   const combatOutcomeStats = {};
   let characterPerformanceDurationMs = 0;
@@ -14406,6 +14411,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   // the UI can still compare threat generation. Existing WCL threat totals win.
   const bossFightById = new Map(bossFightsForGear.map(fight => [Number(fight.id), fight]));
   const threatBuckets = {};
+  const threatTargetBuckets = {};
   const addThreatSample = (event, factor) => {
     const fightId = Number(event.fight || event.fightID || event.fightId || 0);
     const fight = bossFightById.get(fightId);
@@ -14417,6 +14423,16 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     if (!threatBuckets[fightId]) threatBuckets[fightId] = {};
     if (!threatBuckets[fightId][player]) threatBuckets[fightId][player] = {};
     threatBuckets[fightId][player][second] = Number(threatBuckets[fightId][player][second] || 0) + amount;
+    const targetId = factor === 1 ? Number(eventTargetId(event) || 0) : 0;
+    const targetActor = reportActorsById.get(targetId);
+    if (targetActor && !playersById.has(targetId)) {
+      if (!threatTargetBuckets[fightId]) threatTargetBuckets[fightId] = {};
+      if (!threatTargetBuckets[fightId][targetId]) threatTargetBuckets[fightId][targetId] = {};
+      if (!threatTargetBuckets[fightId][targetId][player]) threatTargetBuckets[fightId][targetId][player] = {};
+      threatTargetBuckets[fightId][targetId][player][second] = Number(threatTargetBuckets[fightId][targetId][player][second] || 0) + amount;
+      if (!threatTargetsByFight[fightId]) threatTargetsByFight[fightId] = {};
+      threatTargetsByFight[fightId][targetId] = clean(targetActor.name) || `Ziel ${targetId}`;
+    }
   };
   damageDoneEvents.forEach(event => addThreatSample(event, 1));
   healingEvents.forEach(event => addThreatSample(event, 0.5));
@@ -14424,6 +14440,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     const fightId = Number(fight.id || 0);
     const durationSeconds = Math.max(1, Math.round((Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000));
     threatTimelineByFight[fightId] = {};
+    threatTargetTimelineByFight[fightId] = {};
     players.forEach(player => {
       if (!fightPlayerMetrics[fightId]) fightPlayerMetrics[fightId] = {};
       if (!fightPlayerMetrics[fightId][player.name]) fightPlayerMetrics[fightId][player.name] = { damageDone: 0, healingDone: 0, damageTaken: 0, threat: 0, threatAbilities: {}, deaths: 0, activeSeconds: new Set() };
@@ -14448,6 +14465,19 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       });
       if (points[points.length - 1].time < durationSeconds) points.push({ time: durationSeconds, value: Math.round(total) });
       threatTimelineByFight[fightId][player.name] = points;
+    });
+    Object.entries(threatTargetBuckets[fightId] || {}).forEach(([targetId, playerBuckets]) => {
+      threatTargetTimelineByFight[fightId][targetId] = {};
+      Object.entries(playerBuckets).forEach(([playerName, buckets]) => {
+        let cumulative = 0;
+        const points = [{ time: 0, value: 0 }];
+        Object.keys(buckets).map(Number).sort((a, b) => a - b).forEach(second => {
+          cumulative += Number(buckets[second] || 0);
+          points.push({ time: Math.min(durationSeconds, second), value: Math.round(cumulative) });
+        });
+        if (points[points.length - 1].time < durationSeconds) points.push({ time: durationSeconds, value: Math.round(cumulative) });
+        threatTargetTimelineByFight[fightId][targetId][playerName] = points;
+      });
     });
   });
   if (!Object.values(threatTotals).some(value => Number(value) > 0)) {
@@ -15382,7 +15412,9 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
     threatAnalysis: {
       estimated: threatValuesEstimated,
       method: threatValuesEstimated ? "Schaden × 1 + effektive Heilung × 0,5; vorhandene WCL-Threat-Werte werden bevorzugt." : "Warcraft-Logs-Bedrohungswerte",
-      timelines: threatTimelineByFight
+      timelines: threatTimelineByFight,
+      targetTimelines: threatTargetTimelineByFight,
+      targets: threatTargetsByFight
     },
     fights: rpbFights.map(fight => ({
       id: Number(fight.id || 0),
