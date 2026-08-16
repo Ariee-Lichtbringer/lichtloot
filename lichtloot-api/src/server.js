@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-threat-gear-offhand-v19";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-performance-timelines-v20";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -13741,6 +13741,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const threatTimelineByFight = {};
   const threatTargetTimelineByFight = {};
   const threatTargetsByFight = {};
+  const performanceTimelines = { damage: {}, healing: {}, overhealPercent: {}, damageTaken: {} };
   let threatValuesEstimated = false;
   const combatOutcomeStats = {};
   let characterPerformanceDurationMs = 0;
@@ -14413,6 +14414,41 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   // report. Build a time-resolved fallback from effective damage and healing so
   // the UI can still compare threat generation. Existing WCL threat totals win.
   const bossFightById = new Map(bossFightsForGear.map(fight => [Number(fight.id), fight]));
+  const performanceBuckets = { damage: {}, healing: {}, overhealPercent: {}, damageTaken: {} };
+  const addPerformanceSample = (metric, event, player, amount) => {
+    const fightId = Number(event.fight || event.fightID || event.fightId || 0);
+    const fight = bossFightById.get(fightId);
+    amount = Math.max(0, Number(amount || 0));
+    if (!fight || !player || !amount) return;
+    const second = Math.max(0, Math.floor((Number(event.timestamp || event.time || 0) - Number(fight.startTime || 0)) / 2000) * 2);
+    if (!performanceBuckets[metric][fightId]) performanceBuckets[metric][fightId] = {};
+    if (!performanceBuckets[metric][fightId][player]) performanceBuckets[metric][fightId][player] = {};
+    performanceBuckets[metric][fightId][player][second] = Number(performanceBuckets[metric][fightId][player][second] || 0) + amount;
+  };
+  damageDoneEvents.forEach(event => addPerformanceSample("damage", event, playerNameFromEvent(event, true), event.amount));
+  damageTakenEvents.forEach(event => addPerformanceSample("damageTaken", event, playerNameFromEvent(event, false), event.amount));
+  healingEvents.forEach(event => {
+    const player = playerNameFromEvent(event, true);
+    addPerformanceSample("healing", event, player, event.amount);
+    addPerformanceSample("overhealPercent", event, player, event.overheal || event.overhealAmount);
+  });
+  bossFightsForGear.forEach(fight => {
+    const fightId = Number(fight.id || 0);
+    const durationSeconds = Math.max(1, Math.round((Number(fight.endTime || 0) - Number(fight.startTime || 0)) / 1000));
+    Object.keys(performanceTimelines).forEach(metric => {
+      performanceTimelines[metric][fightId] = {};
+      Object.entries(performanceBuckets[metric][fightId] || {}).forEach(([playerName, buckets]) => {
+        let cumulative = 0;
+        const points = [{ time: 0, value: 0 }];
+        Object.keys(buckets).map(Number).sort((a, b) => a - b).forEach(second => {
+          cumulative += Number(buckets[second] || 0);
+          points.push({ time: Math.min(durationSeconds, second), value: Math.round(cumulative) });
+        });
+        if (points[points.length - 1].time < durationSeconds) points.push({ time: durationSeconds, value: Math.round(cumulative) });
+        performanceTimelines[metric][fightId][playerName] = points;
+      });
+    });
+  });
   const threatBuckets = {};
   const threatTargetBuckets = {};
   const addThreatSample = (event, factor) => {
@@ -15419,6 +15455,7 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       targetTimelines: threatTargetTimelineByFight,
       targets: threatTargetsByFight
     },
+    performanceTimelines,
     fights: rpbFights.map(fight => ({
       id: Number(fight.id || 0),
       name: fight.name || (isKnownBossFight(fight) ? "Boss" : "Trash"),
