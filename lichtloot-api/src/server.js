@@ -38,7 +38,7 @@ const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-scoped-abilities-healing-v15";
-const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v2";
+const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
   return Boolean(
@@ -15173,14 +15173,26 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
             const labels = fightConsumables[Number(fight.id || 0)]?.[player.name] || new Set();
             labels.forEach(label => fightsByLabel[label] = (fightsByLabel[label] || 0) + 1);
           });
-          const items = Object.entries(fightsByLabel).map(([label, fightsUsed]) => {
+          const trackedLabels = new Set(Object.keys(fightsByLabel));
+          definitions.forEach(([label]) => {
+            if (Number(claCombatBuffs[label]?.[player.name] || 0) > 0 || Number(consumes[label]?.[player.name] || 0) > 0) {
+              trackedLabels.add(label);
+            }
+          });
+          const items = Array.from(trackedLabels).map(label => {
+            const fightsUsed = Number(fightsByLabel[label] || 0);
             const definition = definitions.find(([name]) => name === label) || [label, []];
             const spellId = Number(definition[1]?.[0] || 0);
             const metadata = rpbSpellMetadata.get(spellId) || {};
+            const uses = Math.max(
+              Number(claCombatBuffs[label]?.[player.name] || 0),
+              Number(consumes[label]?.[player.name] || 0)
+            );
             return {
               label: translateRpbLabelToGerman(label),
               originalLabel: label,
               fightsUsed,
+              uses,
               percent: bossCount ? Math.round(fightsUsed * 100 / bossCount) : 0,
               spellId,
               icon: clean(metadata.icon) || "inv_misc_questionmark"
@@ -16101,6 +16113,56 @@ async function ensureLogAnalysisWebCacheTable() {
   );
 }
 
+const warcraftLogsClassicZoneIds = {
+  MC: 1000, "Molten Core": 1000, ONY: 1001, Onyxia: 1001,
+  BWL: 1002, "Blackwing Lair": 1002, ZG: 1003, "Zul'Gurub": 1003,
+  AQ20: 1004, "Ruins of Ahn'Qiraj": 1004, AQ40: 1005, "Temple of Ahn'Qiraj": 1005,
+  NAXX: 1006, Naxxramas: 1006
+};
+
+function summarizeWarcraftLogsZoneRankings(raw) {
+  const summary = { bestPerformanceAverage: null, currentPerformanceAverage: null, serverRank: null, serverRankOutOf: null, regionRank: null, worldRank: null };
+  const visit = value => {
+    if (!value || typeof value !== "object") return;
+    if (Array.isArray(value)) return value.forEach(visit);
+    Object.entries(value).forEach(([key, child]) => {
+      const number = Number(child);
+      if (Number.isFinite(number)) {
+        if (/^bestPerformanceAverage$/i.test(key)) summary.bestPerformanceAverage = number;
+        if (/^(?:current|median|recent)PerformanceAverage$/i.test(key) && summary.currentPerformanceAverage == null) summary.currentPerformanceAverage = number;
+        if (/^serverRank$/i.test(key) && number > 0 && (summary.serverRank == null || number < summary.serverRank)) summary.serverRank = number;
+        if (/^serverRankOutOf$/i.test(key) && number > 0) summary.serverRankOutOf = Math.max(summary.serverRankOutOf || 0, number);
+        if (/^regionRank$/i.test(key) && number > 0 && (summary.regionRank == null || number < summary.regionRank)) summary.regionRank = number;
+        if (/^worldRank$/i.test(key) && number > 0 && (summary.worldRank == null || number < summary.worldRank)) summary.worldRank = number;
+      } else visit(child);
+    });
+  };
+  visit(raw);
+  return summary;
+}
+
+async function fetchWarcraftLogsZoneRankingSummary(token, playerName, server, raid, metric) {
+  const zoneID = warcraftLogsClassicZoneIds[clean(raid)] || 0;
+  if (!zoneID || !playerName || !server) return null;
+  const gqlQuery =
+    "query($name:String!,$serverSlug:String!,$serverRegion:String!,$zoneID:Int!,$metric:CharacterPageRankingMetricType){"+
+    "characterData{character(name:$name,serverSlug:$serverSlug,serverRegion:$serverRegion){zoneRankings(zoneID:$zoneID,metric:$metric)}}}";
+  try {
+    const data = await warcraftLogsGraphql(token, gqlQuery, {
+      name: playerName,
+      serverSlug: toWarcraftLogsSlug(server),
+      serverRegion: clean(process.env.WCL_REGION || "EU").toUpperCase(),
+      zoneID,
+      metric
+    });
+    const raw = data.characterData?.character?.zoneRankings;
+    return raw ? { zoneID, metric, ...summarizeWarcraftLogsZoneRankings(raw) } : null;
+  } catch (error) {
+    console.warn(`Aktuelle Warcraft-Logs-Rangliste für ${playerName} (${raid}) konnte nicht geladen werden:`, error.message || error);
+    return null;
+  }
+}
+
 async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
   await ensureLogAnalysisWebCacheTable();
   const playerName = clean(params.playerName || params.player);
@@ -16160,6 +16222,15 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
     .sort((a, b) => b - a);
   const rank = Math.max(1, comparison.findIndex(value => value <= latest[metric]) + 1);
   const topPercent = latest[metric] > 0 && comparison.length ? Math.max(1, Math.ceil(rank * 100 / comparison.length)) : null;
+  let rankingsByRaid = {};
+  try {
+    const token = await getWarcraftLogsAccessToken();
+    const raids = Array.from(new Set(history.map(entry => entry.raid).filter(raid => warcraftLogsClassicZoneIds[raid])));
+    const rankings = await Promise.all(raids.map(raid => fetchWarcraftLogsZoneRankingSummary(token, playerName, latest.server, raid, metric)));
+    rankingsByRaid = Object.fromEntries(raids.map((raid, index) => [raid, rankings[index]]).filter(([, value]) => value));
+  } catch (error) {
+    console.warn(`Aktuelle Warcraft-Logs-Ranglisten für ${playerName} konnten nicht geladen werden:`, error.message || error);
+  }
   return {
     success: true,
     profile: {
@@ -16173,6 +16244,7 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
       latest,
       bestDps: Math.max(...history.map(entry => entry.dps)),
       bestHps: Math.max(...history.map(entry => entry.hps)),
+      rankingsByRaid,
       history
     }
   };
