@@ -34,7 +34,7 @@ const p0ReleaseCsvUrl =
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
 const wowheadGermanItemCache = new Map();
-const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-fight-scoped-cooldowns-v22";
+const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-cooldown-class-owners-v23";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
 function isCurrentLogAnalysisPayload(payload) {
@@ -10935,7 +10935,19 @@ async function savePrio({ guildId, query: params }) {
     await client.query("commit");
     const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, savedRaid, "lichtloot_prio_saved")
       .catch(error => ({ success: false, error: error.message || String(error) }));
-    const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "lichtloot_prio_saved");
+    // Ein Speichern auf der LichtLoot-Seite darf nicht gleichzeitig einen
+    // p0_post_refresh und einen po_post für denselben Raid erzeugen. Der
+    // zweite Auftrag war die Ursache der doppelten Discord-P0-Anmelder.
+    // Nur wenn der kanonische Raid-Refresh für diesen Raidtyp bzw. mangels
+    // verknüpftem Post nicht möglich ist, wird der alte po_post als Fallback
+    // verwendet.
+    const needsLegacyPoRefresh = !p0PostRefresh?.success || [
+      "unsupported_raid",
+      "missing_linked_po_post"
+    ].includes(clean(p0PostRefresh?.reason));
+    const poPostRefresh = needsLegacyPoRefresh
+      ? await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads.slice(0, 1), "lichtloot_prio_saved")
+      : { success: true, queued: 0, skipped: poPostRefreshPayloads.length, results: [], reason: "canonical_p0_refresh_queued" };
     // P1/P2/P3 werden direkt auf LichtLoot gespeichert. Der zugehörige
     // Discord-Raidanmelder muss danach genauso aktualisiert werden wie beim
     // Löschen einer Prio. Lade den vollständigen Raid erneut, weil die
@@ -11116,7 +11128,13 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     await client.query("commit");
     const p0PostRefresh = await enqueueP0PostRefreshForRaid(guildId, raid, "raidlead_prio_saved")
       .catch(error => ({ success: false, error: error.message || String(error) }));
-    const poPostRefresh = await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads, "raidlead_prio_saved");
+    const needsLegacyPoRefresh = !p0PostRefresh?.success || [
+      "unsupported_raid",
+      "missing_linked_po_post"
+    ].includes(clean(p0PostRefresh?.reason));
+    const poPostRefresh = needsLegacyPoRefresh
+      ? await enqueuePoPostRefreshPayloads(guildId, poPostRefreshPayloads.slice(0, 1), "raidlead_prio_saved")
+      : { success: true, queued: 0, skipped: poPostRefreshPayloads.length, results: [], reason: "canonical_p0_refresh_queued" };
     return {
       success: true,
       prioId: prioResult.rows[0].id,
@@ -12956,11 +12974,16 @@ async function loadRpbConfigAll() {
   const csv = await readFile(new URL("./rpb-configAll.csv", import.meta.url), "utf8");
   const rows = parseRpbConfigCsvRows(csv);
   const byClass = {};
+  const cooldownOwnerClassBySpellId = new Map([
+    [29166, "Druid"], // Innervate / Anregen
+    [10060, "Priest"] // Power Infusion / Seele der Macht
+  ]);
   rpbClassOrder.forEach(className => {
     byClass[className] = {
       singleTarget: readRpbConfigList(rows, `singleTargetCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean),
       aoe: readRpbConfigList(rows, `aoeCasts tracked ${className}`).map(parseRpbConfigCast).filter(Boolean),
       cooldowns: readRpbConfigList(rows, `classCooldowns tracked ${className}`).map(parseRpbConfigCast).filter(Boolean)
+        .filter(cooldown => cooldown.ids.every(id => !cooldownOwnerClassBySpellId.has(id) || cooldownOwnerClassBySpellId.get(id) === className))
     };
   });
   rpbConfigAllCache = {
