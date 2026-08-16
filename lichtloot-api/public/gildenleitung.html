@@ -8120,14 +8120,6 @@ function renderLootLayoutPanel(){
           </div>
           <div class="layout-form-grid">
             <div class="field">
-              <label>Worldbuff-Hauptchannel</label>
-              <select id="layoutWorldbuffChannelId">${layoutChannelSelectOptions(layout.worldbuffChannelId || "")}</select>
-            </div>
-            <div class="field">
-              <label>Hordenbuff-/Rend-Channel</label>
-              <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>
-            </div>
-            <div class="field">
               <label>Logo-URL</label>
               <input id="layoutLogoUrl" value="${escapeAttr(guild.logoUrl || "")}" placeholder="images/guild-defaults/default-logo.png">
             </div>
@@ -8191,11 +8183,17 @@ function renderLootLayoutPanel(){
         </div>
         <div class="layout-note-box">
           <h4>Feste Bot-Channels</h4>
-          <p>Lege hier fest, wohin Ersatzsuche, Worldbuff-Sicherungen und P0+-Sicherungen für diese Gilde gepostet werden.</p>
+          <p>Lege hier die Zielchannels für Hordenbuffs, Worldbuffs und Sicherungen dieser Gilde fest.</p>
           <div class="layout-form-grid">
             <div class="field">
-              <label>Worldbuff-Ersatz-Channel</label>
-              <select id="layoutWorldbuffReplacementChannelId">${layoutChannelSelectOptions(layout.worldbuffReplacementChannelId || "")}</select>
+              <label>Hordenbuff-Channel</label>
+              <select id="layoutHordenbuffChannelId">${layoutChannelSelectOptions(layout.hordenbuffChannelId || "")}</select>
+              <span class="muted">Hier wird die Hordenbuff-/Rend-Anmeldung veröffentlicht.</span>
+            </div>
+            <div class="field">
+              <label>Worldbuff-Channel</label>
+              <select id="layoutWorldbuffChannelId">${layoutChannelSelectOptions(layout.worldbuffChannelId || "")}</select>
+              <span class="muted">Hier werden Worldbuff-Übersicht und Ersatzsuche veröffentlicht.</span>
             </div>
             <div class="field">
               <label>Worldbuff-Backup-Channel</label>
@@ -8393,7 +8391,7 @@ async function saveLootLayoutPanel(){
     lichtbuffSelfSignupButtons:Boolean(document.getElementById("layoutLichtbuffSelfSignupButtons")?.checked),
     worldbuffChannelId: layoutFieldValue("layoutWorldbuffChannelId"),
     hordenbuffChannelId: layoutFieldValue("layoutHordenbuffChannelId"),
-    worldbuffReplacementChannelId: layoutFieldValue("layoutWorldbuffReplacementChannelId"),
+    worldbuffReplacementChannelId: "",
     worldbuffBackupChannelId: layoutFieldValue("layoutWorldbuffBackupChannelId") || layoutFieldValue("layoutP0PlusBackupChannelId"),
     p0PlusBackupChannelId: layoutFieldValue("layoutP0PlusBackupChannelId"),
     logSourceChannelId: layoutFieldValue("layoutLogSourceChannelId"),
@@ -19060,7 +19058,7 @@ async function requestWorldbuffReplacement(index){
   const targetChoice = (prompt("Wohin posten? worldbuff, intern oder beide", "beide") || "beide").toLowerCase().trim();
   const target = targetChoice.includes("intern") ? "guild" : targetChoice.includes("world") ? "worldbuff" : "both";
   const note = prompt("Notiz für die Ersatzsuche", "Bitte Ersatz melden.") || "";
-  const targetChannelId = String(currentGuildInfo?.layout?.worldbuffReplacementChannelId || "").trim();
+  const targetChannelId = String(currentGuildInfo?.layout?.worldbuffChannelId || "").trim();
 
   try{
     const result = await railwayWrite({
