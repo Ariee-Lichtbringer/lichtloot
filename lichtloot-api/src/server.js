@@ -166,6 +166,10 @@ await ensureRaidSchema().catch(error => {
   console.warn("Raid-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await purgeExpiredDeletedRaids().catch(error => {
+  console.warn("Abgelaufene gelöschte Raids konnten nicht bereinigt werden:", error.message || error);
+});
+
 await ensurePrioSchema().catch(error => {
   console.warn("Prio-Schema konnte nicht vorbereitet werden:", error.message || error);
 });
@@ -2870,6 +2874,7 @@ async function ensureRaidSchema() {
        add column if not exists discord_channel_id text,
        add column if not exists discord_message_id text,
        add column if not exists signup_post_id text,
+       add column if not exists deleted_at timestamptz,
        add column if not exists description text,
        add column if not exists raid_image_url text,
        add column if not exists loot_master text,
@@ -2922,6 +2927,7 @@ async function ensureRaidSchema() {
        where external_raid_id is not null and external_raid_id <> ''`
   );
   await query(`create index if not exists idx_raid_signups_raid_status on raid_signups(raid_id, status)`);
+  await query(`create index if not exists idx_raids_deleted_retention on raids(deleted_at) where deleted_at is not null`);
   await query(
     `create unique index if not exists idx_raid_external_signups_unique_source
        on raid_external_signups(guild_id, coalesce(raid_id::text, ''), lower(player_name), source)`
@@ -2995,6 +3001,47 @@ async function ensureRaidSchema() {
     `create unique index if not exists idx_discord_player_links_user_char
        on discord_player_links(guild_id, discord_user_id, character_id)`
   );
+}
+
+async function purgeExpiredDeletedRaids() {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const expired = await client.query(
+      `select id, guild_id, raid_pin, external_raid_id
+       from raids
+       where deleted_at is not null
+         and deleted_at <= now() - interval '3 months'
+       for update`
+    );
+    const poTable = await client.query(`select to_regclass('public.po_post_entries') as table_name`);
+    if (poTable.rows[0]?.table_name) {
+      for (const raid of expired.rows) {
+        const raidKeys = [raid.id, raid.raid_pin, raid.external_raid_id].map(clean).filter(Boolean);
+        if (raidKeys.length) {
+          await client.query(
+            `delete from po_post_entries
+             where guild_id = $1
+               and raid_pin = any($2::text[])`,
+            [raid.guild_id, raidKeys]
+          );
+        }
+      }
+    }
+    const deleted = await client.query(
+      `delete from raids
+       where deleted_at is not null
+         and deleted_at <= now() - interval '3 months'
+       returning id`
+    );
+    await client.query("commit");
+    return { deleted: deleted.rowCount || 0 };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function ensurePrioSchema() {
@@ -3613,6 +3660,7 @@ function normalizeRaidRow(row) {
     discordMessageId: row.discord_message_id || "",
     signupPostId: row.signup_post_id || "",
     postId: row.signup_post_id || "",
+    deletedAt: row.deleted_at || "",
     description: row.description || "",
     raidImageUrl: row.raid_image_url || "",
     imageUrl: row.raid_image_url || "",
@@ -18278,13 +18326,25 @@ async function deleteRaid({ guildId, query: params }) {
   }
 
   const result = await query(
-    `delete from raids
+    `update raids
+     set status = 'gelöscht',
+         deleted_at = coalesce(deleted_at, now()),
+         updated_at = now()
      where guild_id = $1
        and (${clauses.join(" or ")})
-     returning id, external_raid_id, name`,
+     returning id, external_raid_id, name, deleted_at`,
     values
   );
-  return { success: true, deleted: result.rowCount, raid: result.rows[0] || null, cleanup };
+  return {
+    success: true,
+    deleted: result.rowCount,
+    softDeleted: result.rowCount,
+    retainedUntil: result.rows[0]?.deleted_at
+      ? new Date(new Date(result.rows[0].deleted_at).setMonth(new Date(result.rows[0].deleted_at).getMonth() + 3)).toISOString()
+      : "",
+    raid: result.rows[0] || null,
+    cleanup
+  };
 }
 
 async function restoreArchivedRaids({ guildId, query: params }) {
@@ -18803,9 +18863,11 @@ async function archiveLinkedRaidSignups(guildId, raid, source = "raid_archived")
       }
     });
   }
-  const raidSignups = await query(`delete from raid_signups where raid_id = $1`, [raid.id]);
-  const externalSignups = await query(`delete from raid_external_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
-  const p0Signups = await query(`delete from p0_discord_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
+  // Archivierte oder gelöschte Raids bleiben samt Anmeldungen mindestens
+  // drei Monate als wiederherstellbare Datenbanksicherung erhalten.
+  const raidSignups = await query(`select count(*)::int as count from raid_signups where raid_id = $1`, [raid.id]);
+  const externalSignups = await query(`select count(*)::int as count from raid_external_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
+  const p0Signups = await query(`select count(*)::int as count from p0_discord_signups where guild_id = $1 and raid_id = $2`, [guildId, raid.id]);
   const queueJobs = raidKeys.length
     ? await query(
         `delete from bot_update_queue
@@ -18820,9 +18882,9 @@ async function archiveLinkedRaidSignups(guildId, raid, source = "raid_archived")
       )
     : { rowCount: 0 };
   return {
-    raidSignups: raidSignups.rowCount || 0,
-    externalSignups: externalSignups.rowCount || 0,
-    p0Signups: p0Signups.rowCount || 0,
+    raidSignups: Number(raidSignups.rows[0]?.count || 0),
+    externalSignups: Number(externalSignups.rows[0]?.count || 0),
+    p0Signups: Number(p0Signups.rows[0]?.count || 0),
     poEntries: poRows.rowCount || 0,
     poPosts: poPosts.size,
     queueJobs: queueJobs.rowCount || 0
@@ -18912,7 +18974,7 @@ async function findRaid(guildId, params) {
     identityClauses.push(`lower(raid_type) = any($${values.length})`);
   }
 
-  const clauses = ["guild_id = $1"];
+  const clauses = ["guild_id = $1", "deleted_at is null"];
   if (identityClauses.length) clauses.push(`(${identityClauses.join(" or ")})`);
   if (raidType && (leadPin || prioPin) && !raidId) {
     values.push(raidTypeSearchValues(raidType));
@@ -18934,6 +18996,7 @@ async function findRaid(guildId, params) {
        from raids
        where guild_id = $1
          and raid_pin = $2
+         and deleted_at is null
        order by raid_date desc, created_at desc
        limit 1`,
       [guildId, prioPin]
@@ -24993,6 +25056,7 @@ app.get("/api/apps-script", async (req, res, next) => {
                 ) as p0plus_transfer_count
          from raids r
          where r.guild_id = $1
+           and r.deleted_at is null
            and raid_date >= current_date - interval '1 day'
            and coalesce(status, '') not in ('archiviert', 'archive')
          order by
@@ -26250,7 +26314,7 @@ app.post("/api/apps-script", async (req, res, next) => {
       const targetChannelId = clean(
         postParams.targetChannelId
         || postParams.channelId
-        || await getGuildLayoutValue(guild.id, "worldbuffReplacementChannelId")
+        || await getGuildLayoutValue(guild.id, "worldbuffChannelId")
       );
       const queued = await enqueueBotUpdate({
         guildId: guild.id,
@@ -26633,6 +26697,13 @@ app.listen(port, () => {
   setInterval(syncNachtlootPoReleases, NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS).unref();
   setTimeout(runRaidHelperScheduleTick, 5000).unref();
   setInterval(runRaidHelperScheduleTick, 60000).unref();
+  setInterval(() => {
+    purgeExpiredDeletedRaids()
+      .then(result => {
+        if (result.deleted) console.log(`Raid-Aufbewahrung: ${result.deleted} Raid(s) nach drei Monaten endgültig gelöscht.`);
+      })
+      .catch(error => console.warn("Raid-Aufbewahrung konnte nicht bereinigt werden:", error.message || error));
+  }, 24 * 60 * 60 * 1000).unref();
   runRequestedArieeJuksiPrioCleanupOnce()
     .then(result => console.log(`Manuelle Prio-Bereinigung Ariee/Juksi: ${result.deleted || 0} gelöscht`, result.entries || []))
     .catch(error => console.warn("Manuelle Prio-Bereinigung Ariee/Juksi fehlgeschlagen:", error.message || error));
