@@ -8448,32 +8448,34 @@ async function ensurePoPostEntriesSchema() {
      language plpgsql
      as $$
      begin
-       if coalesce(new.raid_id, '') = '' then
+       if coalesce(new.raid_id, '') = '' or new.raid_id = coalesce(new.raid_pin, '') then
+         new.raid_id := '';
          select p.raid_id into new.raid_id
          from po_post_entries p
          where p.guild_id = new.guild_id
            and p.post_key = new.post_key
            and p.raid_id <> ''
+           and p.raid_id <> p.raid_pin
          order by p.config_only desc, p.updated_at desc
          limit 1;
        end if;
        if coalesce(new.raid_id, '') = '' then
-         select coalesce(nullif(r.external_raid_id, ''), r.id::text) into new.raid_id
-         from raids r
-         where r.guild_id = new.guild_id
-           and r.deleted_at is null
-           and (
-             (coalesce(new.raid_pin, '') <> '' and r.raid_pin = new.raid_pin)
-             or (
-               coalesce(new.raid_pin, '') = ''
-               and coalesce(new.raid_date, '') <> ''
-               and r.raid_date::text = left(new.raid_date, 10)
-               and lower(r.raid_type) = lower(new.raid)
+         select candidate.raid_id into new.raid_id
+         from (
+           select coalesce(nullif(r.external_raid_id, ''), r.id::text) as raid_id,
+                  count(*) over () as candidate_count
+           from raids r
+           where r.guild_id = new.guild_id
+             and r.deleted_at is null
+             and coalesce(new.raid_date, '') <> ''
+             and r.raid_date::text = left(new.raid_date, 10)
+             and lower(r.raid_type) = lower(new.raid)
+             and (
+               coalesce(new.raid_time, '') = ''
+               or coalesce(r.raid_time, '') = new.raid_time
              )
-           )
-         order by case when coalesce(new.raid_pin, '') <> '' and r.raid_pin = new.raid_pin then 0 else 1 end,
-                  r.created_at desc
-         limit 1;
+         ) candidate
+         where candidate.candidate_count = 1;
        end if;
        new.raid_id := coalesce(new.raid_id, '');
        return new;
@@ -8499,23 +8501,21 @@ async function ensurePoPostEntriesSchema() {
   await query(
     `update po_post_entries p
      set raid_id = coalesce((
-       select coalesce(nullif(r.external_raid_id, ''), r.id::text)
-       from raids r
-       where r.guild_id = p.guild_id
-         and r.deleted_at is null
-         and (
-           (p.raid_pin <> '' and r.raid_pin = p.raid_pin)
-           or (
-             p.raid_pin = ''
-             and p.raid_date <> ''
-             and r.raid_date::text = left(p.raid_date, 10)
-             and lower(r.raid_type) = lower(p.raid)
-           )
-         )
-       order by case when p.raid_pin <> '' and r.raid_pin = p.raid_pin then 0 else 1 end, r.created_at desc
-       limit 1
+       select candidate.raid_id
+       from (
+         select coalesce(nullif(r.external_raid_id, ''), r.id::text) as raid_id,
+                count(*) over () as candidate_count
+         from raids r
+         where r.guild_id = p.guild_id
+           and r.deleted_at is null
+           and p.raid_date <> ''
+           and r.raid_date::text = left(p.raid_date, 10)
+           and lower(r.raid_type) = lower(p.raid)
+           and (p.raid_time = '' or coalesce(r.raid_time, '') = p.raid_time)
+       ) candidate
+       where candidate.candidate_count = 1
      ), p.raid_id)
-     where p.raid_id = ''`
+     where p.raid_id = '' or p.raid_id = p.raid_pin`
   );
   await query(
     `update po_post_entries p
@@ -8528,7 +8528,7 @@ async function ensurePoPostEntriesSchema() {
      ) shared
      where p.guild_id = shared.guild_id
        and p.post_key = shared.post_key
-       and p.raid_id = ''`
+       and (p.raid_id = '' or p.raid_id = p.raid_pin)`
   );
   await query(`create index if not exists idx_po_post_entries_guild on po_post_entries(guild_id, post_key, source_channel_id)`);
   await query(`create index if not exists idx_po_post_entries_active_raid on po_post_entries(guild_id, lower(raid)) where archived_at is null`);
@@ -14421,13 +14421,21 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
   const gearItemText = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
-    const enchant = item.permanentEnchantName || item.permanentEnchant || "";
-    return `${meta?.name || item.name || item.itemId || "Gegenstand"}${enchant ? ` [${enchant}]` : " [keine Verzauberung]"}`;
+    const enchantable = isRaidAnalysisEnchantableItem(item, meta);
+    const hasEnchant = hasRaidAnalysisPermanentEnchant(item);
+    const enchant = clean(item.permanentEnchantName || item.enchantName)
+      || (hasEnchant ? clean(item.permanentEnchant || item.enchant) : "");
+    const suffix = enchant ? ` [${enchant}]` : (enchantable ? " [keine Verzauberung]" : "");
+    return `${meta?.name || item.name || item.itemId || "Gegenstand"}${suffix}`;
   };
   const gearItemCell = item => {
     if (!item) return "";
     const meta = gearItemMeta(item);
     const name = meta?.name || item.name || item.itemId || "Gegenstand";
+    const enchantable = isRaidAnalysisEnchantableItem(item, meta);
+    const hasEnchant = hasRaidAnalysisPermanentEnchant(item);
+    const enchantName = clean(item.permanentEnchantName || item.enchantName);
+    const enchantId = Number(item.permanentEnchant || item.enchant || 0) || 0;
     const statsText = clean(meta?.statsText);
     const equip = clean(meta?.equip);
     const tooltip = clean(meta?.tooltip || statsText || equip);
@@ -14438,6 +14446,13 @@ async function buildRpbWebAnalysis(analysis, options = {}) {
       quality: meta?.quality || clean(item.quality),
       iconUrl: meta?.iconUrl || clean(item.iconUrl || item.icon),
       slot: meta?.slot || item.slotName || "",
+      rawSlot: item.slot,
+      itemLevel: meta?.itemLevel || item.itemLevel || item.ilvl || "",
+      enchant: enchantName || (hasEnchant ? "Verzauberung vorhanden" : ""),
+      enchantId,
+      enchantable,
+      hasEnchant,
+      missingEnchant: enchantable && !hasEnchant,
       boss: meta?.boss || "",
       source: meta?.boss || "",
       type: meta?.type || "",
