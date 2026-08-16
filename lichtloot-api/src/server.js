@@ -37,6 +37,7 @@ const nachtlootPoReleaseCsvUrl =
 const NACHTLOOT_PO_RELEASE_SYNC_INTERVAL_MS = 30 * 60 * 1000;
 const warcraftLogsTokenCache = new Map();
 const logAnalysisWebCache = new Map();
+const wowheadGermanItemCache = new Map();
 const LOG_ANALYSIS_WEB_SCHEMA_VERSION = "2026-08-16-player-career-v16";
 const LOG_ANALYSIS_CONSUMABLE_SCHEMA_VERSION = "2026-08-16-consumables-v3";
 
@@ -12488,6 +12489,56 @@ async function getRaidAnalysisItemMetadataByIds(itemIds) {
   }
 }
 
+function decodeWowheadXmlText(value) {
+  return clean(value)
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+async function getWowheadGermanItemMetadataByIds(itemIds) {
+  const ids = Array.from(new Set((itemIds || []).map(id => Number(id)).filter(id => id > 0)));
+  const missing = ids.filter(id => !wowheadGermanItemCache.has(id));
+  for (let offset = 0; offset < missing.length; offset += 8) {
+    await Promise.all(missing.slice(offset, offset + 8).map(async id => {
+      try {
+        const response = await fetch(`https://www.wowhead.com/classic/de/item=${id}&xml`, {
+          headers: { "user-agent": "LichtLoot/1.0 item-metadata" },
+          signal: AbortSignal.timeout(8000)
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const xml = await response.text();
+        const name = decodeWowheadXmlText(xml.match(/<name><!\[CDATA\[([\s\S]*?)\]\]><\/name>/i)?.[1] || "");
+        const icon = clean(xml.match(/<icon[^>]*>([\s\S]*?)<\/icon>/i)?.[1] || "");
+        const qualityId = Number(xml.match(/<quality\s+id="(\d+)"/i)?.[1] || 0);
+        const htmlTooltip = xml.match(/<htmlTooltip><!\[CDATA\[([\s\S]*?)\]\]><\/htmlTooltip>/i)?.[1] || "";
+        const tooltip = decodeWowheadXmlText(htmlTooltip
+          .replace(/<br\s*\/?\s*>/gi, "\n")
+          .replace(/<\/tr>/gi, "\n")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/[ \t]+/g, " ")
+          .replace(/\n\s+/g, "\n"));
+        wowheadGermanItemCache.set(id, {
+          itemId: id,
+          name,
+          quality: qualityId,
+          iconUrl: icon,
+          tooltip,
+          statsText: tooltip,
+          wowhead: `https://www.wowhead.com/classic/de/item=${id}`
+        });
+      } catch (error) {
+        console.warn(`Deutsche Wowhead-Daten für Item ${id} konnten nicht geladen werden:`, error.message || error);
+        wowheadGermanItemCache.set(id, null);
+      }
+    }));
+  }
+  return new Map(ids.map(id => [String(id), wowheadGermanItemCache.get(id)]).filter(([, value]) => value));
+}
+
 function abilityName(event) {
   return clean(event?.ability?.name || event?.ability || event?.sourceAbility?.name || "");
 }
@@ -16180,6 +16231,12 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
     [guildId]
   );
   const wanted = playerName.toLowerCase();
+  const profileGearIds = result.rows.flatMap(row => {
+    const payloadPlayers = Array.isArray(row.payload?.players) ? row.payload.players : [];
+    const payloadPlayer = payloadPlayers.find(entry => clean(entry?.name).toLowerCase() === wanted);
+    return (Array.isArray(payloadPlayer?.gear) ? payloadPlayer.gear : []).map(item => Number(item.itemId || item.id || 0));
+  }).filter(id => id > 0);
+  const germanItemMeta = await getWowheadGermanItemMetadataByIds(profileGearIds);
   const history = [];
   for (const row of result.rows) {
     const payload = row.payload || {};
@@ -16239,7 +16296,17 @@ async function getPublicLogAnalysisPlayerProfile({ guildId, query: params }) {
       deaths: Number(player.deaths || 0),
       worldBuffCount: Number(player.worldBuffCount || 0),
       preparationCount: Number(player.preparationCount || 0),
-      gear: Array.isArray(player.gear) ? player.gear : [],
+      gear: Array.isArray(player.gear) ? player.gear.map(item => {
+        const localized = germanItemMeta.get(String(item.itemId || item.id || ""));
+        return localized ? {
+          ...item,
+          ...localized,
+          slot: item.slot || localized.slot || "",
+          type: item.type || localized.type || "",
+          boss: item.boss || localized.boss || "",
+          source: item.source || localized.source || ""
+        } : item;
+      }) : [],
       encounters: playerEncounters,
       abilityCasts,
       totalCasts: Object.values(abilityCasts).reduce((sum, count) => sum + Number(count || 0), 0),
