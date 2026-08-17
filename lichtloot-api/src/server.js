@@ -12069,7 +12069,10 @@ function normalizeLogAnalysis(row) {
     bossKills: invalidLegacyBossProgress ? null : cachedBossKills,
     totalBosses: expectedBossCount || cachedTotalBosses,
     playerCount: row.web_player_count == null ? (storedSummary.playerCount ?? storedSummary.players) : Number(row.web_player_count),
-    durationMs: row.web_duration_ms == null ? storedSummary.durationMs : Number(row.web_duration_ms)
+    durationMs: row.web_duration_ms == null ? storedSummary.durationMs : Number(row.web_duration_ms),
+    deathCount: row.web_death_count == null
+      ? (storedSummary.deathCount ?? storedSummary.deaths ?? storedSummary.totalDeaths)
+      : Number(row.web_death_count)
   };
   return {
     id: row.id,
@@ -17786,6 +17789,7 @@ async function getLogAnalyses({ guildId, query: params }) {
             nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
             nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
             nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            nullif(c.payload->'report'->>'deathCount','')::int as web_death_count,
             case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
             c.payload->>'schemaVersion' as web_schema_version,
             c.payload->>'consumableSchemaVersion' as web_consumable_schema_version
@@ -17821,6 +17825,7 @@ async function getPublicLogAnalyses({ guildId, query: params }) {
             nullif(c.payload->'report'->>'bossKills','')::int as web_boss_kills,
             nullif(c.payload->'report'->>'totalBosses','')::int as web_total_bosses,
             nullif(c.payload->'report'->>'durationMs','')::bigint as web_duration_ms,
+            nullif(c.payload->'report'->>'deathCount','')::int as web_death_count,
             case when jsonb_typeof(c.payload->'players') = 'array' then jsonb_array_length(c.payload->'players') end as web_player_count,
             coalesce((
               select count(*)::int
