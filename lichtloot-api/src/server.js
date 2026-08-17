@@ -4232,7 +4232,18 @@ function poRequestRequirements(type, raid, className, specialization) {
 
 const classicArmoryCheckCache=new Map();
 function classicArmoryRequestParams(value){
-  try{const url=new URL(clean(value));if(!/(^|\.)classic-armory\.org$/i.test(url.hostname))return null;const parts=url.pathname.split("/").filter(Boolean);if(parts[0]!=="character"||parts.length<5)return null;return{region:decodeURIComponent(parts[1]).toLowerCase(),flavor:parts[2]==="classic"?"classic-era":decodeURIComponent(parts[2]),realm:decodeURIComponent(parts[3]),name:decodeURIComponent(parts.slice(4).join("/"))};}catch{return null;}
+  try{
+    const url=new URL(clean(value));
+    if(!/(^|\.)classic-armory\.org$/i.test(url.hostname))return null;
+    const parts=url.pathname.split("/").filter(Boolean).map(part=>decodeURIComponent(part));
+    if(!["character","char"].includes(String(parts[0]||"").toLowerCase()))return null;
+    let region="",flavor="classic-era",realm="",name="";
+    if(parts.length>=5){region=parts[1];flavor=parts[2];realm=parts[3];name=parts.slice(4).join("/");}
+    else if(parts.length>=4){region=parts[1];realm=parts[2];name=parts.slice(3).join("/");}
+    if(!region||!realm||!name)return null;
+    if(["classic","vanilla","era"].includes(String(flavor).toLowerCase()))flavor="classic-era";
+    return{region:String(region).toLowerCase(),flavor:String(flavor).toLowerCase(),realm:String(realm).toLowerCase(),name};
+  }catch{return null;}
 }
 async function classicArmoryPost(endpoint,params){const response=await fetch(`https://classic-armory.org/api/v1/character${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`ClassicArmory antwortet mit HTTP ${response.status}.`);return response.json();}
 function armoryNumber(value){return Number(value?.effective??value?.value??value??0)||0;}
