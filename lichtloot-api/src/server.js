@@ -4225,9 +4225,9 @@ async function requireNachtlootGuild(guildId) {
 
 function poRequestRequirements(type, raid, className, specialization) {
   const source = "https://docs.google.com/spreadsheets/d/136_vXW_p3Z3CMGuXkRkv4hftcxW02p2QO_YMb7OaVfA/edit?gid=1777084015#gid=1777084015";
-  if (type === "recruit") return { title:"Aufhebung Rekrutenstatus", rule:"Verzauberungen Rekrut (P2/P3)", source, checks:["Armory oder Screenshot prüfen", "Vorgeschriebene Rekruten-Verzauberungen für Klasse und Raid erfüllt"] };
-  if (type === "p1p3") return { title:"P1–P3 Freigabe", rule:"Verzauberungen Fullraider (P1–P3)", source, checks:["Armory oder Screenshot prüfen", "Fullraider-Verzauberungen für Klasse und Raid erfüllt"] };
-  return { title:`P0 Freigabe ${String(raid || "").toUpperCase()}`, rule:"P0 Gear-Voraussetzungen und bestmögliche Verzauberungen", source, className:clean(className), specialization:clean(specialization), checks:["Armory oder Screenshot prüfen", "Gear-Voraussetzungen für Klasse/Skillung erfüllt", "Bestmögliche Verzauberungen auf allen relevanten Slots"] };
+  if (type === "recruit") return { title:"Aufhebung Rekrutenstatus", rule:"Verzauberungen Rekrut (P2/P3)", source, checks:["Armory-Link und Screenshot prüfen", "Vorgeschriebene Rekruten-Verzauberungen für Klasse und Raid erfüllt"] };
+  if (type === "p1p3") return { title:"P1–P3 Freigabe", rule:"Verzauberungen Fullraider (P1–P3)", source, checks:["Armory-Link und Screenshot prüfen", "Fullraider-Verzauberungen für Klasse und Raid erfüllt"] };
+  return { title:`P0 Freigabe ${String(raid || "").toUpperCase()}`, rule:"P0 Gear-Voraussetzungen und bestmögliche Verzauberungen", source, className:clean(className), specialization:clean(specialization), checks:["Armory-Link und Screenshot prüfen", "Gear-Voraussetzungen für Klasse/Skillung erfüllt", "Bestmögliche Verzauberungen auf allen relevanten Slots"] };
 }
 
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
@@ -4247,7 +4247,8 @@ async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   }
   const armoryUrl = clean(params.armoryUrl);
   const screenshotData = clean(params.screenshotData);
-  if (!armoryUrl && !screenshotData) { const error = new Error("Bitte Armory-Link oder Screenshot angeben."); error.statusCode = 400; throw error; }
+  if (!armoryUrl) { const error = new Error("Bitte den Armory-Link angeben."); error.statusCode = 400; throw error; }
+  if (!screenshotData) { const error = new Error("Bitte einen Screenshot hochladen."); error.statusCode = 400; throw error; }
   if (screenshotData && !/^data:image\/(png|jpe?g|webp);base64,/i.test(screenshotData)) { const error = new Error("Screenshot-Format ist ungültig."); error.statusCode = 400; throw error; }
   const requirements = poRequestRequirements(requestType, selectedRaid, clean(params.className) || character.class_name, params.specialization);
   const result = await query(
@@ -4294,6 +4295,11 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   await authorizePoClassManagement(guildId, params, request.class_name);
   const reviewer=clean(params.reviewedBy || params.reviewer || "Gildenleitung");
   if (decision === "approved") {
+    if (!clean(request.armory_url) || !clean(request.screenshot_data)) {
+      const error = new Error("Freigabe nicht möglich: Armory-Link und Screenshot müssen vollständig vorliegen.");
+      error.statusCode = 400;
+      throw error;
+    }
     if (request.request_type === "recruit" || request.request_type === "p1p3") {
       const raid=normalizePoReleaseRaid(request.raid_type);
       if(!isNachtlootRecruitRaid(raid)){const error=new Error("Der Rekrutenstatus gilt nur für BWL, AQ40 und Naxx.");error.statusCode=400;throw error;}
