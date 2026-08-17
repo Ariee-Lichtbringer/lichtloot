@@ -17568,7 +17568,59 @@ function poRequestAttendanceOverview(entry){
   if(!character)return '<div class="status">Keine Attendance-Daten für diesen Charakter gefunden.</div>';
   return `<div style="margin:10px 0"><strong>Attendance · Warcraft Logs</strong><div style="display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:8px;margin-top:7px">${raids.map(([raid,label])=>{const value=character.attendance16?.[raid];const attended=Number(value?.attended||0),total=Number(value?.total||0),bench=Number(value?.bench||0);return `<div style="display:grid;gap:2px;padding:9px 11px;border:1px solid #334155;border-radius:9px;background:#07101f"><strong>${label}</strong><span style="color:${total&&attended<=6?'#f87171':'#5eead4'};font-weight:900">${total?`${attended}/${total}`:"keine Daten"}</span>${bench?`<small class="muted">davon ${bench} Bank</small>`:""}</div>`;}).join("")}</div></div>`;
 }
-function openPoReleaseRequestReview(index){const entry=poReleaseRequests[index];if(!entry)return;const req=entry.requirements||{};const evidenceComplete=Boolean(entry.armoryUrl&&entry.screenshotData);const backdrop=document.createElement("div");backdrop.className="raid-helper-notify-backdrop";backdrop.innerHTML=`<div class="raid-helper-notify-modal po-request-review-modal" role="dialog" aria-modal="true"><h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3><p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p>${poRequestAttendanceOverview(entry)}<div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}<div class="po-request-review-requirements">${(req.checks||[]).map(check=>{const label=String(check||"").replace("Armory oder Screenshot prüfen","Armory-Link und Screenshot prüfen");return `<label class="po-request-review-check"><input type="checkbox" onchange="this.nextElementSibling.textContent=this.checked?\'✓ Erfüllt – ${escapeHtml(label)}\':\'✕ Nicht erfüllt – ${escapeHtml(label)}\';this.nextElementSibling.style.color=this.checked?\'#4ade80\':\'#f87171\'"><strong style="color:#f87171">✕ Nicht erfüllt – ${escapeHtml(label)}</strong></label>`;}).join("")}</div></div>${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:'<p class="status bad">Armory-Link fehlt.</p>'}${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="status bad">Screenshot fehlt.</p>'}<label style="display:grid;gap:6px;margin-top:12px">Notiz<textarea id="poRequestReviewNote" rows="4">${escapeHtml(entry.reviewNote||"")}</textarea></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?`<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved" ${evidenceComplete?"":"disabled title=\"Armory-Link und Screenshot fehlen oder sind unvollständig.\""}>Freigeben</button>`:""}</div></div>`;backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{try{const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");backdrop.remove();setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");await loadP0ReleasePanel();}catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}}));document.body.appendChild(backdrop);}
+function poReleaseRecruitAttendanceRule(entry){
+  if(!["recruit","p1p3"].includes(entry?.requestType))return null;
+  const character=(poReleaseCharacters||[]).find(item=>normalize(item.name||item.char)===normalize(entry?.name)&&(!entry?.server||!item.server||normalize(item.server)===normalize(entry.server)));
+  const raid=String(entry?.raid||"").toLowerCase();
+  const attendance=character?.attendance16?.[raid];
+  const attended=Number(attendance?.attended||0),total=Number(attendance?.total||0);
+  return {raid:raid.toUpperCase(),attended,total,met:total>0&&attended>=3};
+}
+function updatePoReleaseReviewApprovalState(backdrop){
+  if(!backdrop)return;
+  const approve=backdrop.querySelector('[data-decision="approved"]');
+  if(!approve)return;
+  const requirements=[...backdrop.querySelectorAll("[data-review-requirement]")];
+  const evidenceComplete=backdrop.dataset.evidenceComplete==="true";
+  const manualOverride=Boolean(backdrop.querySelector("[data-manual-override]")?.checked);
+  const screenshotConfirmed=Boolean(backdrop.querySelector("[data-screenshot-confirmed]")?.checked);
+  const note=String(backdrop.querySelector("#poRequestReviewNote")?.value||"").trim();
+  approve.disabled=manualOverride?(!evidenceComplete||!screenshotConfirmed||!note):(!evidenceComplete||!requirements.length||requirements.some(input=>!input.checked));
+  approve.title=approve.disabled?(manualOverride?"Für die Ausnahme Screenshot bestätigen und Begründung eintragen.":"Alle Voraussetzungen müssen erfüllt und bestätigt sein."):"Antrag freigeben";
+}
+function poReleaseArmoryEvaluationHtml(entry){
+  const evaluation=entry?.armoryEvaluation;
+  if(!evaluation?.success)return `<label class="po-request-review-check"><input data-review-requirement data-automatic-requirement type="checkbox" disabled><strong style="color:#f87171">✕ Armory-Prüfung fehlgeschlagen – ${escapeHtml(evaluation?.error||"Keine auswertbaren Armory-Daten gefunden.")}</strong></label>`;
+  return (evaluation.checks||[]).map(check=>`<label class="po-request-review-check"><input data-review-requirement data-automatic-requirement type="checkbox" disabled ${check.met?"checked":""}><strong style="color:${check.met?"#4ade80":"#f87171"}">${check.met?"✓ Erfüllt":"✕ Nicht erfüllt"} – ${escapeHtml(check.label||"")}${check.actual!==undefined?` <span class="muted">(Ist: ${escapeHtml(String(check.actual))}${check.minimum!==undefined?` · Soll: ${escapeHtml(String(check.minimum))}`:""})</span>`:""}</strong></label>`).join("");
+}
+function openPoReleaseRequestReview(index){
+  const entry=poReleaseRequests[index];
+  if(!entry)return;
+  const req=entry.requirements||{};
+  const evidenceComplete=Boolean(entry.armoryUrl&&entry.screenshotData);
+  const attendanceRule=poReleaseRecruitAttendanceRule(entry);
+  const backdrop=document.createElement("div");
+  backdrop.className="raid-helper-notify-backdrop";
+  backdrop.dataset.evidenceComplete=String(evidenceComplete);
+  const attendanceRequirement=attendanceRule?`<label class="po-request-review-check"><input data-review-requirement data-automatic-requirement type="checkbox" disabled ${attendanceRule.met?"checked":""}><strong style="color:${attendanceRule.met?"#4ade80":"#f87171"}">${attendanceRule.met?"✓ Erfüllt":"✕ Nicht erfüllt"} – Rekrutenstatus kann ab 3 Teilnahmen in ${escapeHtml(attendanceRule.raid)} aufgehoben werden (aktuell ${attendanceRule.attended}/${attendanceRule.total||0})</strong></label>`:"";
+  const screenshotLabel="Screenshot stimmt mit der automatisch geprüften Armory-Ausrüstung überein";
+  const manualRequirements=`<label class="po-request-review-check"><input data-review-requirement data-screenshot-confirmed type="checkbox" onchange="this.nextElementSibling.textContent=this.checked?\'✓ Erfüllt – ${screenshotLabel}\':\'✕ Nicht erfüllt – ${screenshotLabel}\';this.nextElementSibling.style.color=this.checked?\'#4ade80\':\'#f87171\';updatePoReleaseReviewApprovalState(this.closest(\'.raid-helper-notify-backdrop\'))"><strong style="color:#f87171">✕ Nicht erfüllt – ${screenshotLabel}</strong></label>`;
+  const armoryRequirements=poReleaseArmoryEvaluationHtml(entry);
+  backdrop.innerHTML=`<div class="raid-helper-notify-modal po-request-review-modal" role="dialog" aria-modal="true"><h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3><p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p>${poRequestAttendanceOverview(entry)}<div class="status"><strong>Automatische Prüfung nach Nachtwächter-Raidregeln:</strong><div class="po-request-review-requirements">${attendanceRequirement}${armoryRequirements}${manualRequirements}</div></div><label class="po-request-review-check" style="margin-top:10px;border-color:#f59e0b!important"><input data-manual-override type="checkbox" onchange="updatePoReleaseReviewApprovalState(this.closest('.raid-helper-notify-backdrop'))"><strong style="color:#fbbf24">Manuelle Ausnahme durch die Gildenleitung – rote Prüfpunkte bewusst übergehen</strong></label>${entry.armoryUrl?`<p><a class="small-btn primary" href="${escapeAttr(entry.armoryUrl)}" target="_blank" rel="noopener">Armory öffnen ↗</a></p>`:'<p class="status bad">Armory-Link fehlt.</p>'}${entry.screenshotData?`<img src="${escapeAttr(entry.screenshotData)}" alt="Ausrüstungs-Screenshot" style="display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #334;border-radius:10px">`:'<p class="status bad">Screenshot fehlt.</p>'}<label style="display:grid;gap:6px;margin-top:12px">Notiz / Begründung der Ausnahme<textarea id="poRequestReviewNote" rows="4" oninput="updatePoReleaseReviewApprovalState(this.closest('.raid-helper-notify-backdrop'))">${escapeHtml(entry.reviewNote||"")}</textarea></label><div class="raid-helper-notify-actions"><button class="small-btn ghost" data-close>Schließen</button>${entry.status==="pending"?'<button class="small-btn danger" data-decision="rejected">Ablehnen</button><button class="small-btn good" data-decision="approved" disabled>Freigeben</button>':""}</div></div>`;
+  backdrop.querySelector("[data-close]")?.addEventListener("click",()=>backdrop.remove());
+  backdrop.addEventListener("click",event=>{if(event.target===backdrop)backdrop.remove();});
+  backdrop.querySelectorAll("[data-decision]").forEach(button=>button.addEventListener("click",async()=>{
+    try{
+      const result=await railwayWrite({action:"guildReviewPoReleaseRequest",masterCode:document.getElementById("masterCode").value.trim(),requestId:entry.id,decision:button.dataset.decision,screenshotConfirmed:Boolean(backdrop.querySelector("[data-screenshot-confirmed]")?.checked),manualOverride:Boolean(backdrop.querySelector("[data-manual-override]")?.checked),reviewNote:backdrop.querySelector("#poRequestReviewNote")?.value||"",reviewedBy:"Gildenleitung"});
+      if(!result.success)throw new Error(result.error||"Antrag konnte nicht bearbeitet werden.");
+      backdrop.remove();
+      setStatus(button.dataset.decision==="approved"?"Antrag freigegeben und Tabelle aktualisiert.":"Antrag abgelehnt.","good");
+      await loadP0ReleasePanel();
+    }catch(error){setStatus(error.message||"Antrag konnte nicht bearbeitet werden.","bad");}
+  }));
+  document.body.appendChild(backdrop);
+  updatePoReleaseReviewApprovalState(backdrop);
+}
 
 function poReleaseRaidLabel(raid){
   const labels = { recruit:"Rekrutenstatus", mc:"P0+ Freigabe MC", bwl:"P0+ Freigabe BWL", aq40:"P0+ Freigabe AQ40", aq20:"P0+ Freigabe AQ20", naxx:"P0+ Freigabe NAXX", "zg-mittwoch":"P0+ ZG Mittwoch", "zg-prime":"P0+ ZG PRIME", "zg-late":"P0+ ZG LATE" };
