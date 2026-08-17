@@ -8108,7 +8108,43 @@ async function getBotRaidCalendars({ query: params }) {
                 select count(*)::int from raid_external_signups res
                 where res.guild_id = r.guild_id and res.raid_id = r.id
                   and lower(coalesce(res.status, 'signed')) not in ('absent','declined','rejected','abgemeldet','abwesend','nein','verworfen')
-              ) as signup_count
+              ) as signup_count,
+              (
+                select count(*)::int from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) in ('bench','bank')
+              ) + (
+                select count(*)::int from raid_external_signups res
+                where res.guild_id = r.guild_id and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) in ('bench','bank')
+              ) as bank_count,
+              (
+                select count(*)::int from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) in ('absent','declined','abgemeldet','abwesend')
+              ) + (
+                select count(*)::int from raid_external_signups res
+                where res.guild_id = r.guild_id and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) in ('absent','declined','abgemeldet','abwesend')
+              ) as absent_count,
+              (
+                select count(*)::int from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) in ('late','spät','spaet')
+              ) + (
+                select count(*)::int from raid_external_signups res
+                where res.guild_id = r.guild_id and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) in ('late','spät','spaet')
+              ) as late_count,
+              (
+                select count(*)::int from raid_signups rs
+                where rs.raid_id = r.id
+                  and lower(coalesce(rs.status, 'signed')) in ('tentative','vorläufig','vorlaeufig')
+              ) + (
+                select count(*)::int from raid_external_signups res
+                where res.guild_id = r.guild_id and res.raid_id = r.id
+                  and lower(coalesce(res.status, 'signed')) in ('tentative','vorläufig','vorlaeufig')
+              ) as tentative_count
        from raids r
        where r.guild_id = $1
          and r.raid_date >= current_date
@@ -8134,6 +8170,12 @@ async function getBotRaidCalendars({ query: params }) {
         time: raid.raidTime,
         lead: raid.createdBy,
         signups: Number(row.signup_count || 0),
+        signupStatusCounts: {
+          bank: Number(row.bank_count || 0),
+          absent: Number(row.absent_count || 0),
+          late: Number(row.late_count || 0),
+          tentative: Number(row.tentative_count || 0)
+        },
         maxPlayers: Number(raid.maxPlayers || 0),
         discordChannelId: raid.discordChannelId || config.channel_id,
         prioUrl: prioUrl.toString()
