@@ -4372,8 +4372,8 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   if (decision === "approved") {
     const manualOverride=["true","1","yes","ja"].includes(clean(params.manualOverride).toLowerCase());
     if(manualOverride&&!clean(params.reviewNote)){const error=new Error("Für eine manuelle Ausnahme muss eine Begründung eingetragen werden.");error.statusCode=400;throw error;}
-    if(!["true","1","yes","ja"].includes(clean(params.screenshotConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass Screenshot und Armory-Ausrüstung übereinstimmen.");error.statusCode=400;throw error;}
-    if (!clean(request.armory_url) || !clean(request.screenshot_data)) {
+    if(!manualOverride&&!["true","1","yes","ja"].includes(clean(params.screenshotConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass Screenshot und Armory-Ausrüstung übereinstimmen.");error.statusCode=400;throw error;}
+    if (!manualOverride&&(!clean(request.armory_url) || !clean(request.screenshot_data))) {
       const error = new Error("Freigabe nicht möglich: Armory-Link und Screenshot müssen vollständig vorliegen.");
       error.statusCode = 400;
       throw error;
@@ -4402,9 +4402,21 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
       }
     }
   }
+  const sendRejectionDm=decision==="rejected"&&["true","1","yes","ja"].includes(clean(params.sendRejectionDm).toLowerCase());
+  let rejectionDmTarget=null;
+  if(sendRejectionDm){
+    if(!clean(params.reviewNote)){const error=new Error("Bitte einen Ablehnungsgrund für die Discord-Nachricht eintragen.");error.statusCode=400;throw error;}
+    const linked=await query(`select dpl.discord_user_id,dpl.discord_name,g.slug,g.name as guild_name,c.server from characters c join players p on p.id=c.player_id join guilds g on g.id=p.guild_id left join lateral (select discord_user_id,discord_name from discord_player_links where guild_id=p.guild_id and character_id=c.id order by updated_at desc,created_at desc limit 1) dpl on true where p.guild_id=$1 and c.id=$2 limit 1`,[guildId,request.character_id]);
+    rejectionDmTarget=linked.rows[0]||null;
+    if(!clean(rejectionDmTarget?.discord_user_id)){const error=new Error("Für diesen Charakter ist kein Discord-Account verknüpft. Der Antrag wurde noch nicht abgelehnt.");error.statusCode=400;throw error;}
+  }
   const updated=await query(`update po_release_requests set status=$3,review_note=$4,reviewed_by=$5,reviewed_at=now(),updated_at=now() where guild_id=$1 and id=$2 returning *`,[guildId,id,decision,clean(params.reviewNote),reviewer]);
+  if(sendRejectionDm&&rejectionDmTarget){
+    const raid=normalizePoReleaseRaid(request.raid_type),requestLabel=request.request_type==="recruit"?`Aufhebung Rekrutenstatus ${raid.toUpperCase()}`:request.request_type==="p1p3"?`P1–P3 Freigabe ${raid.toUpperCase()}`:`P0-Freigabe ${raid.toUpperCase()}`;
+    await enqueueBotUpdate({guildId,type:"po_rejection_notice",payload:{guildSlug:rejectionDmTarget.slug,guildName:rejectionDmTarget.guild_name||rejectionDmTarget.slug,discordUserId:rejectionDmTarget.discord_user_id,discordName:rejectionDmTarget.discord_name||"",player:request.name||"",server:rejectionDmTarget.server||"",item:requestLabel,raid,reason:clean(params.reviewNote),requestId:id,createdAt:new Date().toISOString()}});
+  }
   p0ReleaseCache=null;
-  return { success:true, request:updated.rows[0] };
+  return { success:true,request:updated.rows[0],rejectionDmQueued:Boolean(sendRejectionDm) };
 }
 
 async function deletePoReleaseRequest({ guildId, query: params = {} }) {
