@@ -4234,12 +4234,13 @@ const classicArmoryCheckCache=new Map();
 function classicArmoryRequestParams(value){
   try{
     const url=new URL(clean(value));
-    if(!/(^|\.)classic-armory\.org$/i.test(url.hostname))return null;
     const parts=url.pathname.split("/").filter(Boolean).map(part=>decodeURIComponent(part));
-    if(!["character","char"].includes(String(parts[0]||"").toLowerCase()))return null;
     let region="",flavor="classic-era",realm="",name="";
-    if(parts.length>=5){region=parts[1];flavor=parts[2];realm=parts[3];name=parts.slice(4).join("/");}
-    else if(parts.length>=4){region=parts[1];realm=parts[2];name=parts.slice(3).join("/");}
+    const queryRegion=url.searchParams.get("region")||url.searchParams.get("locale")||"",queryRealm=url.searchParams.get("realm")||url.searchParams.get("server")||"",queryName=url.searchParams.get("name")||url.searchParams.get("character")||url.searchParams.get("char")||"";
+    if(queryRegion&&queryRealm&&queryName){region=queryRegion;realm=queryRealm;name=queryName;flavor=url.searchParams.get("flavor")||url.searchParams.get("version")||flavor;}
+    else if(["character","char"].includes(String(parts[0]||"").toLowerCase())&&parts.length>=5){region=parts[1];flavor=parts[2];realm=parts[3];name=parts.slice(4).join("/");}
+    else if(["character","char"].includes(String(parts[0]||"").toLowerCase())&&parts.length>=4){region=parts[1];realm=parts[2];name=parts.slice(3).join("/");}
+    else {const regionIndex=parts.findIndex(part=>["eu","us","kr","tw"].includes(String(part).toLowerCase()));if(regionIndex>=0){region=parts[regionIndex];const tail=parts.slice(regionIndex+1).filter(part=>!["classic","classic-era","vanilla","era","armory","character","char"].includes(String(part).toLowerCase()));if(tail.length>=2){realm=tail[tail.length-2];name=tail[tail.length-1];}}}
     if(!region||!realm||!name)return null;
     if(["classic","vanilla","era"].includes(String(flavor).toLowerCase()))flavor="classic-era";
     return{region:String(region).toLowerCase(),flavor:String(flavor).toLowerCase(),realm:String(realm).toLowerCase(),name};
