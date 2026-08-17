@@ -4716,6 +4716,10 @@ tr:hover td{background:rgba(var(--gold-rgb),.035)}
 .po-release-column-toggle{display:inline-flex;flex:0 0 auto;align-items:center;justify-content:center;gap:6px;min-width:72px;min-height:32px;padding:5px 11px;border:1px solid rgba(148,163,184,.24);border-radius:999px;color:#cbd5e1;background:rgba(2,6,23,.45);font-size:12px;font-weight:800;line-height:1.15;white-space:nowrap;cursor:pointer}
 .po-release-column-toggle:has(input:checked){color:#fde047;border-color:rgba(250,204,21,.48);background:rgba(250,204,21,.08)}
 .po-release-column-toggle input{flex:0 0 auto;width:16px;height:16px;margin:0;accent-color:#eab308}
+.po-release-filter-picker{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.po-release-filter-picker > span{color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap}
+.po-release-filter-button{min-height:32px;padding:5px 11px;border:1px solid rgba(148,163,184,.24);border-radius:999px;color:#cbd5e1;background:rgba(2,6,23,.45);font-size:12px;font-weight:800;cursor:pointer}
+.po-release-filter-button.active{color:#fff1f2;border-color:rgba(248,113,113,.68);background:rgba(127,29,29,.42);box-shadow:0 0 12px rgba(239,68,68,.16)}
 .po-release-state{
   display:inline-flex;
   align-items:center;
@@ -6648,7 +6652,7 @@ function applyGuildBrand(){
     el.setAttribute("onclick", "window.location.href='" + withGuildUrl(el.getAttribute("data-guild-onclick")) + "'");
   });
   const bwlTestButton=document.getElementById("bwlTestSetupSideButton");
-  if(bwlTestButton)bwlTestButton.style.display=CURRENT_GUILD_SLUG === "lichtloot" ? "none" : "";
+  if(bwlTestButton)bwlTestButton.style.display=["lichtloot","nachtloot"].includes(CURRENT_GUILD_SLUG) ? "none" : "";
   const panemGearButton=document.getElementById("panemGearPlannerSideButton");
   const panemGearPanel=document.getElementById("panemGearPlannerPanel");
   const showPanemGear=CURRENT_GUILD_SLUG === "panemloot";
@@ -6718,6 +6722,7 @@ let poReleaseCharacters = [];
 let poReleaseRequests = [];
 let selectedPoReleaseRequestIds = new Set();
 let poReleaseSearch = "";
+let poReleaseAttendanceFilter = "all";
 const PO_RELEASE_RAIDS = [["recruit","Rekrutenstatus"],["mc","MC"],["bwl","BWL"],["aq40","AQ40"],["aq20","AQ20"],["naxx","NAXX"],["zg-mittwoch","ZG Mittwoch"],["zg-prime","ZG PRIME"],["zg-late","ZG LATE"]];
 const PO_RELEASE_COLUMNS_KEY = `lichtloot:p0-release-columns:${CURRENT_GUILD_SLUG}`;
 const raidleadStorageKey = key => `lichtloot:${CURRENT_GUILD_SLUG}:raidlead:${key}`;
@@ -7938,7 +7943,7 @@ function openLootLayoutPanel(){
 }
 
 function openLogAnalysisPanel(){
-  openDetailsPanel("logAnalysisPanel");
+  window.location.href=`raid-analyse.html?guild=${encodeURIComponent(CURRENT_GUILD_SLUG)}`;
 }
 
 function openCombatlogUploadPanel(){
@@ -17455,6 +17460,12 @@ function renderP0ReleasePanelContent(){
       </div>
       <div class="p0-toolbar">
         <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
+        <div class="po-release-filter-picker" aria-label="Anwesenheit filtern">
+          <span>Anwesenheit:</span>
+          <button class="po-release-filter-button${poReleaseAttendanceFilter==="all"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="all"}" onclick="setPoReleaseAttendanceFilter('all')">Alle</button>
+          <button class="po-release-filter-button${poReleaseAttendanceFilter==="critical"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="critical"}" onclick="setPoReleaseAttendanceFilter('critical')">Anwesenheit kritisch</button>
+          <button class="po-release-filter-button${poReleaseAttendanceFilter==="zero"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="zero"}" onclick="setPoReleaseAttendanceFilter('zero')">Ohne Teilnahme</button>
+        </div>
         <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span>Spalten anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
       </div>
       <div class="table-wrap">
@@ -17542,6 +17553,20 @@ function setPoReleaseSearch(value){
   renderPoReleaseRows();
 }
 
+function setPoReleaseAttendanceFilter(filter){
+  poReleaseAttendanceFilter = ["critical","zero"].includes(filter) ? filter : "all";
+  renderP0ReleasePanelContent();
+}
+
+function poReleaseMatchesAttendanceFilter(entry){
+  if(poReleaseAttendanceFilter === "all") return true;
+  const attendanceEntries = Object.entries(entry?.attendance16 || {}).filter(([,attendance])=>Number(attendance?.total)>0);
+  if(poReleaseAttendanceFilter === "zero"){
+    return attendanceEntries.length > 0 && attendanceEntries.every(([,attendance])=>Number(attendance?.attended||0)===0);
+  }
+  return attendanceEntries.some(([raid,attendance])=>Boolean(entry?.releases?.[raid]) && Number(attendance?.attended||0)<=6);
+}
+
 async function togglePoReleaseColumn(raid, visible){
   if(visible) poReleaseVisibleColumns.add(raid); else poReleaseVisibleColumns.delete(raid);
   try{localStorage.setItem(PO_RELEASE_COLUMNS_KEY,JSON.stringify(Array.from(poReleaseVisibleColumns)));}catch(_error){}
@@ -17589,6 +17614,7 @@ function renderPoReleaseRows(){
   // Datensätze und müssen getrennt freigegeben werden können.
   const displayCharacters = poReleaseCharacters || [];
   const rows = displayCharacters.filter(entry => {
+    if(!poReleaseMatchesAttendanceFilter(entry)) return false;
     if(!needle) return true;
     return [entry.name, entry.server, entry.className, entry.playerPin].some(value => normalize(value).includes(needle));
   });
