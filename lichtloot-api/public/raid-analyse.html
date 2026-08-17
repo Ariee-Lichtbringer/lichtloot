@@ -50,6 +50,7 @@
     th:first-child,td:first-child{position:sticky;left:0;z-index:2;background:#111827;min-width:220px}
     thead th:first-child{z-index:4}
     .list{display:grid;gap:11px}
+    .analysis-group{display:grid;gap:11px}.analysis-group+.analysis-group{margin-top:17px}.analysis-group-title{display:flex;align-items:center;gap:10px;margin:0;padding:8px 2px 5px;color:#e4bb59;font-size:15px}.analysis-group-title::after{content:"";height:1px;flex:1;background:var(--line)}
     .analysis-row{display:grid;grid-template-columns:82px minmax(230px,1.3fr) minmax(210px,.9fr) minmax(260px,1fr) 80px;min-height:92px;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:linear-gradient(100deg,rgba(17,26,39,.96),rgba(10,16,25,.98));transition:border-color .16s ease,transform .16s ease}
     .analysis-row:hover{border-color:rgba(216,173,69,.48);transform:translateY(-1px)}
     .raid-thumb{position:relative;min-height:92px;overflow:hidden;background:#080d14}
@@ -65,7 +66,7 @@
     .progress-percent{margin-top:7px;color:#94a3b8;font-size:11px}
     .report-stats{display:grid;grid-template-columns:repeat(3,minmax(65px,1fr));gap:18px;border-left:1px solid var(--soft)}
     .report-stat strong{display:block;margin-top:8px;color:#e2e8f0;font-size:17px;font-weight:500}
-    .report-open{align-items:flex-end}.details-link{color:#e4bb59;font-size:13px;font-weight:600;text-decoration:none}.details-link:hover{color:#f1d17e}
+    .report-open{align-items:flex-end;gap:9px}.details-link{color:#e4bb59;font-size:13px;font-weight:600;text-decoration:none}.details-link:hover{color:#f1d17e}.wcl-link{color:#c084fc;font-size:12px;font-weight:700;text-decoration:none}.wcl-link:hover{color:#d8b4fe}
     .side{display:grid;gap:14px}
     .side h2{margin:0 0 10px;font-size:16px}
     .pills{display:flex;gap:6px;flex-wrap:wrap}
@@ -360,7 +361,7 @@
     function startAnalysisProgress(){const box=document.getElementById("analysisProgress"),fill=document.getElementById("analysisProgressFill"),label=document.getElementById("analysisProgressText"),percent=document.getElementById("analysisProgressPercent");const phases=[[8,"Report wird von Warcraft Logs geladen …"],[24,"Bosskämpfe werden erkannt …"],[43,"Schaden und Heilung werden ausgewertet …"],[61,"Rollen und Aktivität werden berechnet …"],[76,"Worldbuffs und Verbrauchsgüter werden geprüft …"],[88,"Ausrüstung und Verzauberungen werden geladen …"],[94,"Auswertung wird gespeichert …"]];let value=3,phase=0;clearInterval(analysisProgressTimer);box.classList.remove("hidden");box.classList.add("running");fill.style.width=value+"%";percent.textContent=value+" %";label.textContent="Analyse wird vorbereitet …";analysisProgressTimer=setInterval(()=>{if(phase<phases.length&&value>=phases[phase][0]){label.textContent=phases[phase][1];phase++;}value=Math.min(94,value+(value<60?3:value<84?2:1));fill.style.width=value+"%";percent.textContent=value+" %";},900);}
     function finishAnalysisProgress(success=true){const box=document.getElementById("analysisProgress"),fill=document.getElementById("analysisProgressFill"),label=document.getElementById("analysisProgressText"),percent=document.getElementById("analysisProgressPercent");clearInterval(analysisProgressTimer);analysisProgressTimer=null;if(!box)return;if(success){box.classList.remove("running");fill.style.width="100%";percent.textContent="100 %";label.textContent="Analyse erfolgreich aktualisiert";setTimeout(()=>box.classList.add("hidden"),1400);}else{box.classList.remove("running");label.textContent="Aktualisierung fehlgeschlagen";percent.textContent="–";}}
     function dateDisplay(value){const m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}.${m[2]}.${m[1]}`:(value||"-");}
-    function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq40")||text.includes("ahn qiraj"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
+    function raidName(entry){const text=key([entry?.raid,entry?.title,entry?.summary?.raid].join(" "));if(text.includes("blackwing")||text.includes("bwl"))return"BWL";if(text.includes("molten")||text.includes("mc"))return"MC";if(text.includes("aq20")||text.includes("ruins of ahn")||text.includes("ruinen von ahn"))return"AQ20";if(text.includes("aq40")||text.includes("temple of ahn")||text.includes("ahn qiraj 40"))return"AQ40";if(text.includes("naxx"))return"NAXX";if(text.includes("ony"))return"ONY";if(text.includes("zg")||text.includes("zul gurub"))return"ZG";return entry?.raid||"Raid";}
     function raidDisplayName(value){return({MC:"Molten Core",BWL:"Blackwing Lair",AQ20:"Ruins of Ahn'Qiraj",AQ40:"Ahn'Qiraj 40",NAXX:"Naxxramas",ONY:"Onyxia",ZG:"Zul'Gurub"})[value]||value||"Raid";}
     function summaryNumber(summary,keys){for(const name of keys){const value=Number(summary?.[name]);if(Number.isFinite(value)&&value>=0)return value;}return null;}
     function durationDisplay(value){const ms=Number(value||0);if(!ms)return"–";const total=Math.round(ms>10000?ms/1000:ms);const h=Math.floor(total/3600);const m=Math.floor(total%3600/60);const s=total%60;return h?`${h}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`:`${m}:${String(s).padStart(2,"0")}`;}
@@ -532,7 +533,7 @@
       const q=key(document.getElementById("search").value);
       const raid=document.getElementById("raidFilter").value;
       const list=state.analyses.filter(a=>(!raid||raidName(a)===raid)&&(!q||key([a.title,a.raid,a.reportCode,raidName(a)].join(" ")).includes(q)));
-      document.getElementById("listView").innerHTML=list.length?list.map(a=>{
+      const reportCard=a=>{
         const summary=a.summary||{};
         const raidKey=raidName(a);
         const kills=summaryNumber(summary,["bossKills","kills","bossesKilled"]);
@@ -542,14 +543,31 @@
         const deaths=summaryNumber(summary,["deathCount","deaths","totalDeaths"]);
         const bestPull=summary.bestPull||summary.bestFight||"–";
         const guild=encodeURIComponent(params.get("guild")||"lichtloot");
+        const reportUrl=/^https?:\/\//i.test(String(a.reportUrl||""))?a.reportUrl:(a.reportCode?`https://vanilla.warcraftlogs.com/reports/${encodeURIComponent(a.reportCode)}`:"");
         return `<article class="analysis-row">
           <div class="raid-thumb"><img src="${attr(RAID_IMAGES[raidKey]||RAID_IMAGES.Raid)}" alt=""></div>
           <div class="report-main"><div class="title">${html(raidDisplayName(raidKey))}</div><div class="sub">▣ ${html(dateDisplay(a.raidDate||summary.raidDate))}${a.reportCode?` &nbsp;·&nbsp; ${html(a.reportCode)}`:""}</div><div class="roster-dots"><i style="--dot:#c69b6d"></i><i style="--dot:#f48cba"></i><i style="--dot:#3fc7eb"></i><i style="--dot:#aad372"></i><i style="--dot:#8788ee"></i><span>${players==null?"Spielerzahl offen":`${players} Spieler`}</span></div></div>
           <div class="report-progress"><span class="metric-label">Bossfortschritt</span><div class="progress-value"><strong>${kills==null?"–":kills}</strong> / ${total==null?"–":total} &nbsp;Bosse</div><div class="progress-track"><div class="progress-fill" style="width:${percent}%"></div></div><div class="progress-percent">${total?percent+" %":"Noch nicht ermittelt"}</div></div>
           <div class="report-stats"><div class="report-stat"><span class="metric-label">Dauer</span><strong>${html(durationDisplay(summary.durationMs||summary.duration))}</strong></div><div class="report-stat"><span class="metric-label">Tode</span><strong>${deaths==null?"–":deaths}</strong></div><div class="report-stat"><span class="metric-label">Bester Pull</span><strong>${html(bestPull)}</strong></div></div>
-          <div class="report-open"><a class="details-link" href="raid-analyse.html?id=${encodeURIComponent(a.id)}&guild=${guild}">Details&nbsp; ›</a></div>
+          <div class="report-open"><a class="details-link" href="raid-analyse.html?id=${encodeURIComponent(a.id)}&guild=${guild}">Details&nbsp; ›</a>${reportUrl?`<a class="wcl-link" href="${attr(reportUrl)}" target="_blank" rel="noopener">WCL ↗</a>`:""}</div>
         </article>`;
-      }).join(""):'<div class="status">Keine Auswertungen gefunden.</div>';
+      };
+      const groups=[
+        ["40er-Raids",new Set(["MC","BWL","AQ40","NAXX","ONY"])],
+        ["20er-Raids",new Set(["ZG","AQ20"])],
+        ["Weitere Raids",null]
+      ];
+      const assigned=new Set();
+      const groupHtml=groups.map(([label,keys])=>{
+        const rows=list.filter(entry=>{
+          const keyName=raidName(entry);
+          const matches=keys?keys.has(keyName):!assigned.has(entry);
+          if(matches)assigned.add(entry);
+          return matches;
+        });
+        return rows.length?`<section class="analysis-group"><h2 class="analysis-group-title">${label} <span class="sub">(${rows.length})</span></h2>${rows.map(reportCard).join("")}</section>`:"";
+      }).join("");
+      document.getElementById("listView").innerHTML=list.length?groupHtml:'<div class="status">Keine Auswertungen gefunden.</div>';
     }
     function renderDetail(){
       const report=state.detail?.report||state.detail?.analysis||{};

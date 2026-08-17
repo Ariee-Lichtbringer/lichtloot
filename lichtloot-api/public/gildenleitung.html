@@ -15400,6 +15400,19 @@ function renderP0ReleasePanelContent(){
 }
 
 function poRequestTypeLabel(entry){if(entry?.requestType==="recruit"||entry?.requestType==="p1p3")return `Aufhebung Rekrutenstatus ${(entry?.raid||"").toUpperCase()}`;return `P0 Freigabe ${(entry?.raid||"").toUpperCase()}`;}
+function poReleaseAttendanceHtml(entry, raid, compact=false){
+  const attendance=entry?.attendance16?.[raid];
+  if(!attendance)return compact?'':'<span class="muted">Keine Attendance</span>';
+  const attended=Number(attendance.attended||0),total=Number(attendance.total||0),bench=Number(attendance.bench||0);
+  const label=total?`${attended}/${total}`:`${attended}/–`;
+  return compact
+    ? `<span class="muted" title="Attendance der letzten ${total||16} Warcraft-Logs-Raids">Attendance ${escapeHtml(label)}${bench?` · Bank ${bench}`:""}</span>`
+    : `<div style="display:grid;gap:2px;padding:8px 10px;border:1px solid #334155;border-radius:9px;background:#07101f"><strong>${escapeHtml(raid.toUpperCase())}</strong><span style="color:#5eead4;font-weight:900">${escapeHtml(label)} Attendance</span>${bench?`<small class="muted">davon ${bench} Bank</small>`:""}</div>`;
+}
+function poReleaseAttendanceOverview(entry){
+  if(!entry)return '<div class="status">Keine Attendance-Daten für diesen Charakter gefunden.</div>';
+  return `<div><strong>Attendance · letzte Warcraft-Logs-Raids</strong><div style="display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px;margin-top:7px">${["mc","bwl","aq40","naxx"].map(raid=>poReleaseAttendanceHtml(entry,raid)).join("")}</div></div>`;
+}
 function renderPoReleaseRequestsBlock(){const pending=poReleaseRequests.filter(entry=>entry.status==="pending");return `<div class="p0-review-block" style="border-color:#21c77a"><div class="section-head"><div><h3>PO-Freigabeanträge <span class="badge warn">${pending.length} offen</span></h3><p>Armory, Screenshot und Voraussetzungen prüfen. Eine Freigabe aktualisiert die Tabelle automatisch.</p></div></div><div class="table-wrap"><table class="p0-table"><thead><tr><th>Status</th><th>Charakter</th><th>Antrag</th><th>Eingang</th><th>Aktion</th></tr></thead><tbody>${poReleaseRequests.length?poReleaseRequests.map((entry,index)=>`<tr><td><span class="badge ${entry.status==="approved"?"open":entry.status==="rejected"?"closed":"warn"}">${escapeHtml(entry.status==="approved"?"freigegeben":entry.status==="rejected"?"abgelehnt":"offen")}</span></td><td><strong>${escapeHtml(entry.name||"-")}</strong><br><span class="muted">${escapeHtml([entry.className,entry.server].filter(Boolean).join(" · "))}</span></td><td>${escapeHtml(poRequestTypeLabel(entry))}</td><td>${escapeHtml(entry.createdAt?new Date(entry.createdAt).toLocaleString("de-DE"):"-")}</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="small-btn primary" type="button" onclick="openPoReleaseRequestReview(${index})">Prüfen</button><button class="small-btn danger" type="button" onclick="deletePoReleaseRequest(${index})">Löschen</button></div></td></tr>`).join(""):'<tr><td colspan="5" class="muted">Keine Anträge vorhanden.</td></tr>'}</tbody></table></div></div>`;}
 
 async function deletePoReleaseRequest(index){
@@ -15422,11 +15435,13 @@ function openPoReleaseRequestReview(index){
   const req=entry.requirements||{};
   const checks=Array.isArray(req.checks)?req.checks:[];
   const preset=entry.status==="approved"?"yes":entry.status==="rejected"?"no":"";
+  const attendanceEntry=(poReleaseCharacters||[]).find(character=>normalize(character.name||character.char)===normalize(entry.name)&&(!entry.server||!character.server||normalize(character.server)===normalize(entry.server)));
   const backdrop=document.createElement("div");
   backdrop.className="raid-helper-notify-backdrop";
   backdrop.innerHTML=`<div class="raid-helper-notify-modal" role="dialog" aria-modal="true" style="width:min(1800px,96vw);max-width:none;max-height:96vh;overflow:auto">
     <h3>${escapeHtml(poRequestTypeLabel(entry))} – ${escapeHtml(entry.name||"")}</h3>
     <p><strong>Klasse:</strong> ${escapeHtml(entry.className||"-")} ${entry.specialization?`· <strong>Skillung:</strong> ${escapeHtml(entry.specialization)}`:""}</p>
+    ${poReleaseAttendanceOverview(attendanceEntry)}
     <div class="status"><strong>Prüfregel:</strong> ${escapeHtml(req.rule||"")}</div>
     <div data-requirements style="display:grid;gap:8px;margin:10px 0 14px">
       ${checks.map((check,checkIndex)=>`<div data-requirement data-result="${preset}" style="display:grid;grid-template-columns:minmax(260px,1fr) auto auto;align-items:center;gap:8px;padding:10px 12px;border:1px solid #334155;border-radius:10px;background:#07101f">
@@ -15565,7 +15580,7 @@ function renderPoReleaseRows(){
             ${CURRENT_GUILD_SLUG === "nachtloot" ? recruitStatusLiftHtml(entry,index) : lichtbringerRecruitStatusHtml(entry)}
           </td>
         ` : ""}
-        ${PO_RELEASE_RAIDS.filter(([raid])=>raid!=="recruit"&&poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td>${poReleaseCheckHtml(entry,raid,index)}</td>`).join("")}
+        ${PO_RELEASE_RAIDS.filter(([raid])=>raid!=="recruit"&&poReleaseVisibleColumns.has(raid)).map(([raid])=>`<td><div style="display:grid;gap:4px">${poReleaseCheckHtml(entry,raid,index)}${poReleaseAttendanceHtml(entry,raid,true)}</div></td>`).join("")}
         <td>
           <div class="po-release-actions">
             <button class="small-btn good" type="button" onclick="openPoReleasePopup(${index})">P0+ freigeben</button>
