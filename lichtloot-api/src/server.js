@@ -4230,6 +4230,41 @@ function poRequestRequirements(type, raid, className, specialization) {
   return { title:`P0 Freigabe ${String(raid || "").toUpperCase()}`, rule:"P0 Gear-Voraussetzungen und bestmögliche Verzauberungen", source, className:clean(className), specialization:clean(specialization), checks:["Armory-Link und Screenshot prüfen", "Gear-Voraussetzungen für Klasse/Skillung erfüllt", "Bestmögliche Verzauberungen auf allen relevanten Slots"] };
 }
 
+const classicArmoryCheckCache=new Map();
+function classicArmoryRequestParams(value){
+  try{const url=new URL(clean(value));if(!/(^|\.)classic-armory\.org$/i.test(url.hostname))return null;const parts=url.pathname.split("/").filter(Boolean);if(parts[0]!=="character"||parts.length<5)return null;return{region:decodeURIComponent(parts[1]).toLowerCase(),flavor:parts[2]==="classic"?"classic-era":decodeURIComponent(parts[2]),realm:decodeURIComponent(parts[3]),name:decodeURIComponent(parts.slice(4).join("/"))};}catch{return null;}
+}
+async function classicArmoryPost(endpoint,params){const response=await fetch(`https://classic-armory.org/api/v1/character${endpoint}`,{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify(params),signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`ClassicArmory antwortet mit HTTP ${response.status}.`);return response.json();}
+function armoryNumber(value){return Number(value?.effective??value?.value??value??0)||0;}
+function armoryGearText(equipment){return (equipment||[]).flatMap(item=>[item.name,...(item.spells||[]).map(spell=>spell.description),...(item.enchant_display||[])]).join(" ");}
+function armoryPercentFromGear(text,pattern){let total=0;for(const match of text.matchAll(pattern))total+=Number(match[1]||0);return total;}
+function armoryClassKey(value){const key=clean(value).toLowerCase();return({magier:"mage",mage:"mage",hexer:"warlock",hexenmeister:"warlock",warlock:"warlock",schurke:"rogue",rogue:"rogue",krieger:"warrior",warrior:"warrior",jäger:"hunter",jager:"hunter",hunter:"hunter",paladin:"paladin",priester:"priest",priest:"priest",druide:"druid",druid:"druid"})[key]||key;}
+function nachtlootP0Thresholds(raid,className,specialization){
+  const cls=armoryClassKey(className),spec=clean(specialization).toLowerCase(),healer=/heil|holy|diszi|resto|wiederher/.test(spec),tank=/tank|schutz/.test(spec),feral=/feral|wildheit/.test(spec);
+  const table={
+    bwl:{mage:{spellDamage:500,spellHit:10},warlock:{spellDamage:500,spellHit:10},rogue:{meleeHit:9,crit:20,attackPower:950},warrior:{meleeHit:9,crit:20,attackPower:1100},hunter:{setPieces:8},paladin:{healing:850},priest:{healing:/holy|heil/.test(spec)?870:850},druid:feral?{armor:10000,crit:22,attackPower:700}:{healing:850}},
+    aq40:{mage:{spellDamage:520,spellHit:10},warlock:{spellDamage:520,spellHit:10},rogue:{meleeHit:9,crit:25,attackPower:1000},warrior:tank?{setPieces:5}:{meleeHit:9,crit:25,attackPower:1100},hunter:{meleeHit:9,crit:20,attackPower:1300},paladin:{healing:880},priest:{healing:/diszi/.test(spec)?880:910},druid:feral?{armor:10000,crit:25,attackPower:1000}:{healing:880}},
+    naxx:{mage:{spellDamage:600,spellHit:10},warlock:{spellDamage:600,spellHit:10},rogue:{meleeHit:9,crit:25,attackPower:1100},warrior:tank?{setPieces:6}:{meleeHit:9,crit:26,attackPower:1200},hunter:{setPieces:6,attackPower:1330},paladin:{healing:1100},priest:{healing:1150},druid:feral?{armor:11500,crit:25,attackPower:1050}:{healing:1100}}
+  };
+  return table[raid]?.[cls]||{};
+}
+function evaluateNachtlootArmoryData({entry,character,equipment,stats,spellBonuses}){
+  const raid=normalizePoReleaseRaid(entry.raid),cls=armoryClassKey(entry.className),gearText=armoryGearText(equipment),checks=[];
+  const actualClass=armoryClassKey(character?.class_name);checks.push({key:"identity",label:"Armory-Charakter und Klasse stimmen mit dem Antrag überein",actual:`${character?.name||"?"} · ${character?.class_name||"?"}`,met:normalizeAttendanceName(character?.name)===normalizeAttendanceName(entry.name)&&actualClass===cls});
+  const enchantable=new Set(["HEAD","SHOULDERS","BACK","CHEST","WRIST","HANDS","LEGS","FEET","MAIN_HAND","OFF_HAND"]),missing=(equipment||[]).filter(item=>enchantable.has(item.slot_type||item.slot?.type)&&!(item.enchant_ids||[]).length).map(item=>item.slot?.name||item.slot_type);
+  checks.push({key:"enchants",label:"Alle ausgerüsteten verzauberbaren Slots besitzen eine Verzauberung",actual:missing.length?`Fehlt: ${missing.join(", ")}`:"vollständig",met:missing.length===0});
+  if(entry.requestType==="p0"){
+    const limits=nachtlootP0Thresholds(raid,entry.className,entry.specialization),values={attackPower:armoryNumber(stats.attack_power),armor:armoryNumber(stats.armor),crit:Math.max(armoryNumber(stats.melee_crit),armoryNumber(stats.ranged_crit)),healing:armoryNumber(spellBonuses?.bonus_healing),spellDamage:armoryNumber(spellBonuses?.bonus_damage)||armoryNumber(stats.spell_power),meleeHit:armoryPercentFromGear(gearText,/chance to hit[^0-9]*(\d+(?:\.\d+)?)%/gi),spellHit:armoryPercentFromGear(gearText,/chance (?:for your spells )?to hit[^0-9]*(\d+(?:\.\d+)?)%/gi),setPieces:Math.max(0,...(equipment||[]).map(item=>Number(String(item.set?.display_string||"").match(/\((\d+)\//)?.[1]||0)))};
+    const labels={attackPower:"Angriffskraft",armor:"Rüstung",crit:"Krit",healing:"Heilkraft",spellDamage:"Zauberschaden",meleeHit:"Trefferwertung",spellHit:"Zaubertrefferwertung",setPieces:"vorgeschriebene Setteile"};
+    for(const [key,minimum]of Object.entries(limits))checks.push({key:`stat:${key}`,label:`${labels[key]} mindestens ${minimum}${["crit","meleeHit","spellHit"].includes(key)?" %":""}`,actual:values[key],minimum,met:values[key]>=minimum});
+  }
+  return{success:true,checkedAt:new Date().toISOString(),characterUpdatedAt:character?.updated_at||"",checks,passed:checks.length>0&&checks.every(check=>check.met)};
+}
+async function evaluateNachtlootArmory(entry){
+  const params=classicArmoryRequestParams(entry.armoryUrl);if(!params)return{success:false,passed:false,error:"Kein gültiger ClassicArmory-Charakterlink."};const cacheKey=entry.armoryUrl;const cached=classicArmoryCheckCache.get(cacheKey);if(cached&&cached.expiresAt>Date.now())return cached.value;
+  try{const [characterData,equipmentData,statsData]=await Promise.all([classicArmoryPost("",params),classicArmoryPost("/equipment",params),classicArmoryPost("/stats",params)]);const value=evaluateNachtlootArmoryData({entry,character:characterData.character,equipment:equipmentData.equipment||[],stats:statsData.stats||{},spellBonuses:equipmentData.spell_bonuses||{}});classicArmoryCheckCache.set(cacheKey,{value,expiresAt:Date.now()+10*60*1000});return value;}catch(error){return{success:false,passed:false,error:error.message||"ClassicArmory konnte nicht geprüft werden."};}
+}
+
 async function submitPoReleaseRequest({ guildId, query: params = {} }) {
   await ensureCharacterPoReleaseSchema();
   const pin = normalizePin(params.playerPin || params.pin);
@@ -4282,7 +4317,8 @@ async function getPoReleaseRequests({ guildId, query: params = {}, management = 
     `select r.*, c.name, c.server, c.class_name from po_release_requests r join characters c on c.id=r.character_id
      where r.guild_id=$1 ${clause} order by case when r.status='pending' then 0 else 1 end, r.created_at desc`, values
   );
-  return { success:true, entries:result.rows.map(row=>({ id:row.id, characterId:row.character_id, name:row.name, server:row.server, className:row.class_name, requestType:row.request_type, raid:row.raid_type||"", specialization:row.specialization||"", armoryUrl:row.armory_url||"", screenshotData:row.screenshot_data||"", requirements:row.requirements||{}, status:row.status, reviewNote:row.review_note||"", reviewedBy:row.reviewed_by||"", reviewedAt:row.reviewed_at||"", createdAt:row.created_at })) };
+  const entries=await Promise.all(result.rows.map(async row=>{const entry={id:row.id,characterId:row.character_id,name:row.name,server:row.server,className:row.class_name,requestType:row.request_type,raid:row.raid_type||"",specialization:row.specialization||"",armoryUrl:row.armory_url||"",screenshotData:row.screenshot_data||"",requirements:row.requirements||{},status:row.status,reviewNote:row.review_note||"",reviewedBy:row.reviewed_by||"",reviewedAt:row.reviewed_at||"",createdAt:row.created_at};entry.armoryEvaluation=entry.armoryUrl?await evaluateNachtlootArmory(entry):{success:false,passed:false,error:"Armory-Link fehlt."};return entry;}));
+  return { success:true,entries };
 }
 
 async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
@@ -4290,15 +4326,29 @@ async function reviewPoReleaseRequest({ guildId, query: params = {} }) {
   const id = clean(params.id || params.requestId);
   const decision = clean(params.decision || params.status).toLowerCase();
   if (!isUuid(id) || !["approved","rejected"].includes(decision)) { const error = new Error("Antrag oder Entscheidung ist ungültig."); error.statusCode=400; throw error; }
-  const found = await query(`select r.*,c.class_name from po_release_requests r join characters c on c.id=r.character_id where r.guild_id=$1 and r.id=$2 limit 1`, [guildId,id]);
+  const found = await query(`select r.*,c.name,c.class_name from po_release_requests r join characters c on c.id=r.character_id where r.guild_id=$1 and r.id=$2 limit 1`, [guildId,id]);
   const request = found.rows[0]; if (!request) { const error=new Error("Antrag wurde nicht gefunden."); error.statusCode=404; throw error; }
   await authorizePoClassManagement(guildId, params, request.class_name);
   const reviewer=clean(params.reviewedBy || params.reviewer || "Gildenleitung");
   if (decision === "approved") {
+    const manualOverride=["true","1","yes","ja"].includes(clean(params.manualOverride).toLowerCase());
+    if(manualOverride&&!clean(params.reviewNote)){const error=new Error("Für eine manuelle Ausnahme muss eine Begründung eingetragen werden.");error.statusCode=400;throw error;}
+    if(!["true","1","yes","ja"].includes(clean(params.screenshotConfirmed).toLowerCase())){const error=new Error("Bitte bestätigen, dass Screenshot und Armory-Ausrüstung übereinstimmen.");error.statusCode=400;throw error;}
     if (!clean(request.armory_url) || !clean(request.screenshot_data)) {
       const error = new Error("Freigabe nicht möglich: Armory-Link und Screenshot müssen vollständig vorliegen.");
       error.statusCode = 400;
       throw error;
+    }
+    if(!manualOverride){const armoryEvaluation=await evaluateNachtlootArmory({name:request.name,className:request.class_name,requestType:request.request_type,raid:request.raid_type||"",specialization:request.specialization||"",armoryUrl:request.armory_url});if(!armoryEvaluation.success||!armoryEvaluation.passed){const failed=(armoryEvaluation.checks||[]).filter(check=>!check.met).map(check=>check.label).join(", ");const error=new Error(armoryEvaluation.error||`Armory-Voraussetzungen nicht erfüllt${failed?`: ${failed}`:"."}`);error.statusCode=400;throw error;}}
+    if (!manualOverride&&(request.request_type === "recruit" || request.request_type === "p1p3")) {
+      const raid=normalizePoReleaseRaid(request.raid_type);
+      const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
+      const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
+      const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
+      const stats=await getWclPoAttendance(raid,wclGuildId);
+      const player=stats.players[normalizeAttendanceName(request.name)]||{attended:0,bench:0};
+      const attended=Number(player.attended||0)+Number(player.bench||0);
+      if(attended<3){const error=new Error(`Rekrutenstatus kann erst ab 3 Teilnahmen in ${raid.toUpperCase()} aufgehoben werden. Aktuell: ${attended}.`);error.statusCode=400;throw error;}
     }
     if (request.request_type === "recruit" || request.request_type === "p1p3") {
       const raid=normalizePoReleaseRaid(request.raid_type);
