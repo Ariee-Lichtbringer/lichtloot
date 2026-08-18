@@ -25363,8 +25363,11 @@ async function ensureGuildPoItemsSchema() {
 }
 
 async function getGuildPoItems({ guild, query: params = {} }) {
+  const enabledOnly = clean(params.enabledOnly).toLowerCase() === "true" || clean(params.enabledOnly) === "1";
   if (clean(params.queueToken)) requireMasterOrQueueToken(params);
-  else requireMasterCodeForGuild(guild, params.masterCode);
+  else if (clean(params.masterCode)) requireMasterCodeForGuild(guild, params.masterCode);
+  // Lootseiten müssen die gildenbezogenen P0-/P0+-Schalter öffentlich lesen
+  // können. Schreibaktionen bleiben weiterhin durch den Master-Code geschützt.
   await ensureGuildPoItemsSchema();
   const raidType = normalizeRaidType(params.raid || params.raidType || "");
   const values = [guild.id];
@@ -25384,7 +25387,6 @@ async function getGuildPoItems({ guild, query: params = {} }) {
      order by lower(i.raid_type), lower(i.name)`,
     values
   );
-  const enabledOnly = clean(params.enabledOnly).toLowerCase() === "true" || clean(params.enabledOnly) === "1";
   const rows = enabledOnly ? result.rows.filter(row => Boolean(row.po_enabled)) : result.rows;
   return {
     success: true,
