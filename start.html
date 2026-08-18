@@ -6094,10 +6094,14 @@ async function switchMeinLichtLootGuild(value){
     const listedGuild=availableLootGuilds.find(entry => String(entry.slug || "").toLowerCase() === normalizedSelection);
     const guild=listedGuild || await resolveGuildPin(selection);
     if(!guild?.slug) throw new Error("Gilde wurde nicht gefunden.");
-    const target=new URL(window.location.href);
-    target.searchParams.set("guild", guild.slug);
-    try{ sessionStorage.setItem("lichtlootStartMenuAction","account"); }catch(error){}
-    window.location.href=target.href;
+    const targetSlug=normalizeCurrentGuildSlug(guild.slug);
+    const target=new URL("/start.html", window.location.origin);
+    target.searchParams.set("guild", targetSlug);
+    try{
+      sessionStorage.setItem("lichtlootStartMenuAction","account");
+      sessionStorage.setItem("lichtlootExplicitGuildSwitch",targetSlug);
+    }catch(error){}
+    window.location.assign(target.href);
   }catch(error){
     const status=document.getElementById("dashboardMyStatus");
     if(status) status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
@@ -9648,6 +9652,10 @@ async function submitMobileLootLogin(event){
 }
 
 document.addEventListener("DOMContentLoaded",async ()=>{
+  try{
+    const explicitSwitch=normalizeCurrentGuildSlug(sessionStorage.getItem("lichtlootExplicitGuildSwitch") || "");
+    if(explicitSwitch === CURRENT_GUILD_SLUG) sessionStorage.removeItem("lichtlootExplicitGuildSwitch");
+  }catch(error){}
   await fetchCurrentGuildInfo();
   applyGuildBrand();
   applyStartPageLayout();
