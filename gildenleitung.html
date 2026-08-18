@@ -5812,7 +5812,10 @@ body.worldbuff-only .master-only{display:none!important}
       <div id="raidHelperTab-templates" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
           <div><h3>Raid-Vorlagen</h3><span>Eine Vorlage auswählen, bearbeiten oder direkt für einen neuen Raidanmelder verwenden.</span></div>
-          <button class="small-btn ghost" type="button" onclick="loadRaidHelperTemplates()">Aktualisieren</button>
+          <div class="raid-helper-template-actions">
+            <button class="small-btn good" type="button" onclick="newRaidHelperTemplate()">Neue Vorlage erstellen</button>
+            <button class="small-btn ghost" type="button" onclick="loadRaidHelperTemplates()">Aktualisieren</button>
+          </div>
         </div>
         <div class="raid-helper-template-editor">
           <section class="raid-helper-card">
@@ -5883,7 +5886,7 @@ body.worldbuff-only .master-only{display:none!important}
               <button class="small-btn primary" type="button" onclick="saveRaidHelperTemplate()">Speichern</button>
               <button class="small-btn good" type="button" onclick="applyRaidHelperTemplateFromEditor()">Vorlage nutzen</button>
               <button class="small-btn ghost" type="button" onclick="planRaidHelperTemplateRepostFromEditor()">Repost planen</button>
-              <button class="small-btn ghost" type="button" onclick="newRaidHelperTemplate()">Neu</button>
+              <button class="small-btn ghost" type="button" onclick="newRaidHelperTemplate()">Neue Vorlage</button>
               <button class="small-btn danger" type="button" onclick="deleteRaidHelperTemplate()">Löschen</button>
             </div>
             <div id="raidHelperTemplateStatus" class="status raid-helper-template-status">Bereit.</div>
@@ -12548,6 +12551,7 @@ function renderRaidHelperTemplates(){
             <button class="small-btn ghost" type="button" onclick="editRaidHelperTemplate('${escapeAttr(key)}')">Bearbeiten</button>
             <button class="small-btn primary" type="button" onclick="applyRaidHelperTemplate('${escapeAttr(key)}')">Vorlage nutzen</button>
             <button class="small-btn ghost" type="button" onclick="planRaidHelperTemplateRepost('${escapeAttr(key)}')">Repost planen</button>
+            ${item.builtin ? "" : `<button class="small-btn danger" type="button" onclick="deleteRaidHelperTemplateById('${escapeAttr(item.id)}')">Löschen</button>`}
           </div>
         </div>
       </article>
@@ -12795,6 +12799,11 @@ async function saveRaidHelperTemplate(){
 
 async function deleteRaidHelperTemplate(){
   const templateId = raidHelperValue("raidHelperTemplateId");
+  return deleteRaidHelperTemplateById(templateId);
+}
+
+async function deleteRaidHelperTemplateById(templateId){
+  const template = raidHelperTemplates.find(item => String(item.id) === String(templateId));
   const masterCode = document.getElementById("masterCode")?.value.trim();
   if(!templateId){
     setRaidHelperTemplateStatus("Standard-Vorlagen können nicht gelöscht werden.", "bad");
@@ -12804,15 +12813,16 @@ async function deleteRaidHelperTemplate(){
     setRaidHelperTemplateStatus("Bitte Master-Code eingeben.", "bad");
     return;
   }
-  if(!confirm("Vorlage wirklich löschen?")) return;
+  const title = template?.title || "diese Vorlage";
+  if(!confirm(`Vorlage „${title}“ wirklich löschen?`)) return;
   setRaidHelperTemplateStatus("Vorlage wird gelöscht ...", "");
   try{
     const result = await railwayWrite({ action:"guildDeleteRaidHelperTemplate", masterCode, templateId });
     if(!result.success) throw new Error(result.error || "Vorlage konnte nicht gelöscht werden.");
     raidHelperTemplates = raidHelperTemplates.filter(item => String(item.id) !== String(templateId));
-    newRaidHelperTemplate();
+    if(String(raidHelperValue("raidHelperTemplateId")) === String(templateId)) newRaidHelperTemplate();
     renderRaidHelperTemplates();
-    setRaidHelperTemplateStatus("Vorlage gelöscht.", "good");
+    setRaidHelperTemplateStatus(`Vorlage „${title}“ gelöscht.`, "good");
   }catch(error){
     setRaidHelperTemplateStatus(error.message || "Vorlage konnte nicht gelöscht werden.", "bad");
   }
