@@ -71,6 +71,9 @@
       const p2=document.getElementById("p2")?.value || "";
       const p3=document.getElementById("p3")?.value || "";
       const selected=Boolean(window.p0WasClicked) && p1 && p1===p2 && p2===p3;
+      // MC enthält die neuen Parameter bereits direkt. Doppelte Query-Parameter
+      // würden von Express als Array gelesen und dadurch als "nein" gewertet.
+      if(/[?&]p0Selected=/.test(base)) return base;
       const joiner=base.includes("?") ? "&" : "?";
       return base+joiner+"p0Selected="+encodeURIComponent(selected ? "ja" : "nein")+
         "&p0Item="+encodeURIComponent(selected ? p1 : "");
