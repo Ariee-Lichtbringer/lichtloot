@@ -2312,6 +2312,7 @@ let prioCheckTimer = null;
 let p0DeadlineTimer = null;
 
 window.p0PlusWasClicked = false;
+window.p0WasClicked = false;
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
 
 
@@ -3114,10 +3115,10 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(currentGuildSlug()==="nachtloot"&&GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))&&!GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
+    if(GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))&&!GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name)))){
+    if(SUPPORTS_P0PLUS && GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -3144,12 +3145,27 @@ function renderLootList(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
+  window.p0WasClicked = false;
   window.lastSavedPrioSignature = "";
 
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML=
     `<span class="ok">✓ ${itemName} wurde auf ${slot.toUpperCase()} gesetzt.</span>`;
 
+  autoSaveDraft();
+  updateActiveButtons();
+}
+
+function setP0(itemName){
+  window.p0WasClicked = true;
+  window.p0PlusWasClicked = false;
+  window.lastSavedPrioSignature = "";
+  document.getElementById("p1").value=itemName;
+  document.getElementById("p2").value=itemName;
+  document.getElementById("p3").value=itemName;
+  document.getElementById("playerStatus").innerHTML =
+    '<span class="ok">✓ '+safe(itemName)+' wurde als P0 gesetzt. P1–P3 wurden automatisch übernommen.</span>';
+  renderSelectedPrioPreviews();
   autoSaveDraft();
   updateActiveButtons();
 }
@@ -3164,6 +3180,7 @@ function setP0Plus(itemName){
     return;
   }
 
+  window.p0WasClicked = true;
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
 
@@ -3180,6 +3197,7 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0WasClicked = false;
   window.lastSavedPrioSignature = "";
   autoSaveDraft();
   updateActiveButtons();
@@ -3207,6 +3225,19 @@ function updateActiveButtons(){
   if(window.p0PlusWasClicked && p1 && p1===p2 && p2===p3){
     document
       .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0plus"]`)
+      .forEach(btn=>btn.classList.add("p0active"));
+    renderCurrentPrios();
+    return;
+  }
+
+  if(window.p0WasClicked && p1 && p1===p2 && p2===p3){
+    ["p1", "p2", "p3"].forEach(slot=>{
+      document
+        .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="${slot}"]`)
+        .forEach(btn=>btn.classList.add("active"));
+    });
+    document
+      .querySelectorAll(`.mini-btn[data-item="${cssEscape(p1)}"][data-prio="p0"]`)
       .forEach(btn=>btn.classList.add("p0active"));
     renderCurrentPrios();
     return;
@@ -3253,6 +3284,7 @@ function autoSaveDraft(){
     p3:document.getElementById("p3").value,
     playerPin:document.getElementById("playerPin").value,
     p0PlusWasClicked:window.p0PlusWasClicked,
+    p0WasClicked:window.p0WasClicked,
     timestamp:new Date().toLocaleString("de-DE")
   };
 
@@ -3279,6 +3311,7 @@ function loadPlayerData(){
   document.getElementById("p3").value=data.p3||"";
   if(data.playerPin && !document.getElementById("playerPin").value.trim()) document.getElementById("playerPin").value=data.playerPin;
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0WasClicked = Boolean(data.p0WasClicked || data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML=
     `<span class="warn">Gespeicherte Auswahl für ${data.player} wurde geladen.</span>`;
@@ -3628,6 +3661,7 @@ function buildSavePrioUrl(savePin, oldPin){
     p1 &&
     p1 === p2 &&
     p2 === p3;
+  const isP0 = Boolean(window.p0WasClicked) && p1 && p1 === p2 && p2 === p3;
 
   const saveApiUrl=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL);
   let url=saveApiUrl+
@@ -3646,6 +3680,8 @@ function buildSavePrioUrl(savePin, oldPin){
     "&p1="+encodeURIComponent(p1)+
     "&p2="+encodeURIComponent(p2)+
     "&p3="+encodeURIComponent(p3)+
+    "&p0Selected="+encodeURIComponent(isP0 ? "ja" : "nein")+
+    "&p0Item="+encodeURIComponent(isP0 ? p1 : "")+
     "&p0Plus="+encodeURIComponent(isP0Plus ? "ja" : "nein");
 
   if(oldPin && oldPin !== savePin){
@@ -3701,6 +3737,7 @@ async function savePrio(){
     p1 &&
     p1 === p2 &&
     p2 === p3;
+  const isP0 = Boolean(window.p0WasClicked) && p1 && p1 === p2 && p2 === p3;
 
   if(isP0Plus && isP0DeadlineClosed()){
     status.innerHTML=`<span class="bad">${safe(getP0DeadlineClosedMessage())}</span>`;
@@ -3756,15 +3793,16 @@ async function savePrio(){
       P1:p1,
       P2:p2,
       P3:p3,
+      P0Selected:isP0 ? "ja" : "nein",
       P0Plus:isP0Plus ? "ja" : "nein",
-      P0Item:isP0Plus ? p1 : ""
+      P0Item:isP0 ? p1 : ""
     });
 
     const displayedPin = result.tempPin || result.characterPin || playerPin;
 
     status.innerHTML =
       `<span class="ok">✓ Deine Prios wurden gespeichert.</span><br>`+
-      `P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
+      `P0: <strong>${isP0 ? "ja" : "nein"}</strong> · P0+: <strong>${isP0Plus ? "ja" : "nein"}</strong><br>`+
       `<span class="warn">Teilnehmer-PIN:</span> <strong>${displayedPin}</strong><br>`+
       `Diesen PIN kannst du für alle Raids und deine Twinks verwenden.`;
 
@@ -6000,6 +6038,7 @@ async function loadGearPlanner(){
 
 function setPrio(slot,itemName){
   window.p0PlusWasClicked = false;
+  window.p0WasClicked = false;
   window.lastSavedPrioSignature = "";
   document.getElementById(slot).value=itemName;
   document.getElementById("playerStatus").innerHTML =
@@ -6019,6 +6058,7 @@ function setP0Plus(itemName){
     return;
   }
 
+  window.p0WasClicked = true;
   window.p0PlusWasClicked = true;
   window.lastSavedPrioSignature = "";
   document.getElementById("p1").value=itemName;
@@ -6033,6 +6073,7 @@ function setP0Plus(itemName){
 
 function manualSelectChanged(){
   window.p0PlusWasClicked = false;
+  window.p0WasClicked = false;
   window.lastSavedPrioSignature = "";
   renderSelectedPrioPreviews();
   autoSaveDraft();
@@ -6059,6 +6100,7 @@ function loadPlayerData(){
   document.getElementById("p2").value=data.p2||"";
   document.getElementById("p3").value=data.p3||"";
   window.p0PlusWasClicked = Boolean(data.p0PlusWasClicked);
+  window.p0WasClicked = Boolean(data.p0WasClicked || data.p0PlusWasClicked);
 
   document.getElementById("playerStatus").innerHTML =
     '<span class="warn">Gespeicherte Auswahl für '+safe(data.player || "")+' wurde geladen.</span>';
@@ -9590,7 +9632,7 @@ function renderPrioP0Points(prio){
 /* === FINAL FIX: P0-Auswahl sichtbar + P0+-Punkte getrennt und nur aktueller Raid === */
 function lichtlootPrioIsP0(prio){
   const value = String(
-    (prio && (prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po)) ||
+    (prio && (prio.P0Selected || prio.p0Selected || prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po)) ||
     ""
   ).trim().toLowerCase();
 
@@ -10197,6 +10239,7 @@ function getLiveDraftPrio(){
     p1 &&
     p1 === p2 &&
     p2 === p3;
+  const isP0 = Boolean(window.p0WasClicked) && p1 && p1 === p2 && p2 === p3;
 
   return {
     __liveDraft:true,
@@ -10206,8 +10249,9 @@ function getLiveDraftPrio(){
     P1:p1,
     P2:p2,
     P3:p3,
+    P0Selected:isP0 ? "ja" : "nein",
     P0Plus:isP0Plus ? "ja" : "nein",
-    P0Item:isP0Plus ? p1 : ""
+    P0Item:isP0 ? p1 : ""
   };
 }
 
@@ -10534,5 +10578,6 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="../pin-visibility.js"></script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260814-0015"></script>
+<script src="p0-selection-fix.js?v=20260818-1400"></script>
 </body>
 </html>
