@@ -11505,7 +11505,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     const previousMeta = commentMeta(existing.rows[0]?.comment);
     const comment = JSON.stringify({
       ...previousMeta,
-      p0Plus: "ja",
+      // Der P0-Bot darf auch normale, von der Gildenleitung erlaubte
+      // P0-Items speichern. Nur explizit als P0+ markierte Items sammeln
+      // Punkte und benötigen gegebenenfalls die zusätzliche Freigabe.
+      p0Selected: "ja",
+      p0Plus: itemRequiresRelease ? "ja" : "nein",
       p0Item: item.name,
       raidTime: raid.raid_time || clean(params.raidTime || params.uhrzeit),
       source: "po-bot",
@@ -21527,7 +21531,8 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
     }
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
     const comment = JSON.stringify({
-      p0Plus: "ja",
+      p0Selected: "ja",
+      p0Plus: itemRequiresRelease ? "ja" : "nein",
       p0Item: item.name,
       raidTime: raid.raid_time || "",
       source: "discord-p0",
@@ -21536,11 +21541,11 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
 
     await client.query(
       `insert into prios (raid_id, character_id, p1_item_id, p2_item_id, p3_item_id, comment)
-       values ($1, $2, $3, null, null, $4)
+       values ($1, $2, $3, $3, $3, $4)
        on conflict (raid_id, character_id) do update
          set p1_item_id = excluded.p1_item_id,
-             p2_item_id = null,
-             p3_item_id = null,
+             p2_item_id = excluded.p2_item_id,
+             p3_item_id = excluded.p3_item_id,
              comment = excluded.comment,
              updated_at = now()`,
       [raid.id, character.id, item.id, comment]
