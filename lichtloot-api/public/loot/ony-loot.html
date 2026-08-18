@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>Lichtloot - Onyxia</title>
 
 <style>
@@ -2162,6 +2163,8 @@ function openRaidStartAction(action){
 const RAID_NAME = "ony";
 const APPS_SCRIPT_URL = "https://lichtloot-production.up.railway.app/api/apps-script";
 function currentGuildSlug(){ return new URLSearchParams(window.location.search).get("guild") || "lichtloot"; }
+function raidleadStorageKey(key){ return `lichtloot:${currentGuildSlug()}:raidlead:${key}`; }
+function guildLocalStorageKey(key){ return `lichtloot:${currentGuildSlug()}:${RAID_NAME}:${key}`; }
 let currentGuildInfo = null;
 function currentGuildQueryPart(){ return "&guild=" + encodeURIComponent(currentGuildSlug()); }
 function titleFromSlug(slug){
@@ -2263,6 +2266,16 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = false;
+let GUILD_PO_ITEM_KEYS = new Set();
+function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
+async function loadGuildPoItems(){
+  try{
+    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    const data=await response.json();
+    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name)));
+  }catch(error){GUILD_PO_ITEM_KEYS=new Set();}
+}
 const PRIO_COUNT = 1;
 
 
@@ -2855,7 +2868,7 @@ async function loadLootFromSheet(){
       throw new Error("Keine Naxx-Lootdaten gefunden.");
     }
 
-    await loadP0PlusFromSheet();
+    await Promise.all([loadP0PlusFromSheet(),loadGuildPoItems()]);
 
     fillItems();
     renderLootList();
@@ -3097,6 +3110,9 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
+    if(currentGuildSlug()==="nachtloot"&&GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))){
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
+    }
     if(SUPPORTS_P0PLUS){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
@@ -3267,7 +3283,7 @@ function loadPlayerData(){
 }
 
 function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
-  let data=JSON.parse(localStorage.getItem("aq40_prios")||"[]");
+  let data=JSON.parse(localStorage.getItem(guildLocalStorageKey("prios"))||"[]");
 
   data=data.filter(entry=>
     !(
@@ -3287,7 +3303,7 @@ function updateLocalRaidleadData(player,server,playerClass,p1,p2,p3,p0Plus){
     timestamp:new Date().toISOString()
   });
 
-  localStorage.setItem("aq40_prios",JSON.stringify(data));
+  localStorage.setItem(guildLocalStorageKey("prios"),JSON.stringify(data));
 }
 
 
@@ -3788,8 +3804,8 @@ async function raidleadLogin(){
   }
 
   if(raidleadAccounts[pin]){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole",raidleadAccounts[pin]);
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),raidleadAccounts[pin]);
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -3807,12 +3823,12 @@ async function raidleadLogin(){
   const result = await response.json();
 
   if(result.success){
-    sessionStorage.setItem("raidlead","true");
-    sessionStorage.setItem("raidleadRole","master");
-    sessionStorage.setItem("raidleadRaidId",result.raidId);
-    sessionStorage.setItem("raidleadPrioPin",result.leadPin || pin);
-    if(result.managerMode === "lootmaster") sessionStorage.setItem("raidleadLootMasterPin",pin);
-    else sessionStorage.removeItem("raidleadLootMasterPin");
+    sessionStorage.setItem(raidleadStorageKey("active"),"true");
+    sessionStorage.setItem(raidleadStorageKey("role"),"master");
+    sessionStorage.setItem(raidleadStorageKey("raidId"),result.raidId);
+    sessionStorage.setItem(raidleadStorageKey("prioPin"),result.leadPin || pin);
+    if(result.managerMode === "lootmaster") sessionStorage.setItem(raidleadStorageKey("lootMasterPin"),pin);
+    else sessionStorage.removeItem(raidleadStorageKey("lootMasterPin"));
     window.location.href = guildUrl("../raidlead-panel.html");
     return;
   }
@@ -4177,7 +4193,7 @@ function saveCharacterProfile(){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     c.player.toLowerCase() !== player.toLowerCase()
@@ -4189,7 +4205,7 @@ function saveCharacterProfile(){
     server
   });
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -4197,7 +4213,7 @@ function renderCharacterButtons(){
   const container=document.getElementById("characterButtons");
   if(!container) return;
 
-  const chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  const chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   container.className="character-list";
   container.innerHTML="";
@@ -4258,7 +4274,7 @@ function deleteCharacterProfile(player, server){
     return;
   }
 
-  let chars=JSON.parse(localStorage.getItem("aq40_characters") || "[]");
+  let chars=JSON.parse(localStorage.getItem(guildLocalStorageKey("characters")) || "[]");
 
   chars=chars.filter(c =>
     !(
@@ -4268,7 +4284,7 @@ function deleteCharacterProfile(player, server){
     )
   );
 
-  localStorage.setItem("aq40_characters",JSON.stringify(chars));
+  localStorage.setItem(guildLocalStorageKey("characters"),JSON.stringify(chars));
   renderCharacterButtons();
 }
 
@@ -10468,6 +10484,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
+<script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260805-1700"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
