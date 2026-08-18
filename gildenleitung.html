@@ -4,6 +4,7 @@
 <script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>LichtLoot - Gildenleitung</title>
 <style>
 :root{
@@ -7865,10 +7866,11 @@ function renderPoItemSettingsPanel(){
       <div><h3>P0- und P0+-Items für ${escapeHtml(guildName)} festlegen</h3><p><strong>P0</strong> erlaubt das Item ohne P0+-Punkte. <strong>P0 + P0+</strong> erlaubt das Item und vergibt dafür P0+-Punkte. P0+ kann nicht ohne P0 aktiv sein.</p></div>
       <button class="small-btn ghost" type="button" onclick="loadPoItemSettingsPanel()">Neu laden</button>
     </div>
-    <div class="p0-toolbar" style="display:grid;grid-template-columns:minmax(180px,260px) 1fr auto auto;gap:10px">
+    <div class="p0-toolbar" style="display:grid;grid-template-columns:minmax(180px,260px) 1fr auto auto auto;gap:10px">
       <select onchange="poItemSettingsRaid=this.value;loadPoItemSettingsPanel()">${raidOptions}</select>
       <input id="poItemSettingsSearchInput" type="search" value="${escapeAttr(poItemSettingsSearch)}" placeholder="Item, Boss oder Slot suchen ..." oninput="setPoItemSettingsSearch(this)">
-      <button class="small-btn good" type="button" onclick="setAllVisiblePoItems(true)" ${rows.length ? "" : "disabled"}>Alle auswählen</button>
+      <button class="small-btn good" type="button" onclick="setAllVisiblePoItems(true)" ${rows.length ? "" : "disabled"}>Alle für P0 auswählen</button>
+      <button class="small-btn" type="button" onclick="setAllVisiblePoPlusItems()" ${rows.length ? "" : "disabled"} style="border-color:#f5b82e;background:rgba(245,184,46,.16);color:#ffd34f">Alle für P0+ auswählen</button>
       <button class="small-btn danger" type="button" onclick="setAllVisiblePoItems(false)" ${rows.length ? "" : "disabled"}>Alle abwählen</button>
     </div>
     <div class="table-wrap"><table class="p0-table"><thead><tr><th>P0 erlaubt</th><th>mit P0+-Punkten</th><th>Item</th><th>Boss</th><th>Slot</th></tr></thead><tbody>
@@ -7924,26 +7926,41 @@ async function setPoItemEnabled(itemId, enabled, checkbox){
 }
 
 async function setAllVisiblePoItems(enabled){
+  return setAllVisiblePoItemSetting("po",enabled);
+}
+
+async function setAllVisiblePoPlusItems(){
+  return setAllVisiblePoItemSetting("poplus",true);
+}
+
+async function setAllVisiblePoItemSetting(setting,enabled){
   const masterCode=document.getElementById("masterCode")?.value.trim();
   const needle=normalize(poItemSettingsSearch);
   const visibleRows=poItemSettingsRows.filter(item=>!needle||normalize([item.name,item.boss,item.slot,item.itemId].join(" ")).includes(needle));
   const itemIds=visibleRows.map(item=>String(item.id||item.itemId||"")).filter(Boolean);
   if(!itemIds.length) return;
+  const isPoPlus=setting==="poplus";
+  const label=isPoPlus?"P0+":"P0";
   const action=enabled?"auswählen":"abwählen";
-  if(!confirm(`${itemIds.length} sichtbare PO-Items wirklich alle ${action}?`)) return;
+  if(!confirm(`${itemIds.length} sichtbare ${label}-Items wirklich alle ${action}?${isPoPlus?" P0 wird dabei ebenfalls aktiviert.":""}`)) return;
   try{
-    setStatus(`PO-Items werden ${enabled?"freigegeben":"abgewählt"} ...`,"");
-    const result=await railwayWrite({action:"guildSetPoItemsBulk",masterCode,itemIds:JSON.stringify(itemIds),enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
-    if(!result.success) throw new Error(result.error||"PO-Items konnten nicht gespeichert werden.");
+    setStatus(`${label}-Items werden ${enabled?"freigegeben":"abgewählt"} ...`,"");
+    const result=await railwayWrite({action:"guildSetPoItemsBulk",masterCode,itemIds:JSON.stringify(itemIds),setting,enabled:enabled?"true":"false",updatedBy:"Gildenleitung"});
+    if(!result.success) throw new Error(result.error||`${label}-Items konnten nicht gespeichert werden.`);
     const selected=new Set(itemIds);
     poItemSettingsRows.forEach(item=>{
       if(!selected.has(String(item.id||item.itemId||""))) return;
-      item.poEnabled=Boolean(enabled);
-      if(!enabled) item.poPlusEnabled=false;
+      if(isPoPlus){
+        item.poPlusEnabled=Boolean(enabled);
+        if(enabled) item.poEnabled=true;
+      }else{
+        item.poEnabled=Boolean(enabled);
+        if(!enabled) item.poPlusEnabled=false;
+      }
     });
     renderPoItemSettingsPanel();
-    setStatus(`${itemIds.length} PO-Items wurden ${enabled?"ausgewählt":"abgewählt"}.`,"good");
-  }catch(error){setStatus(error.message||"PO-Items konnten nicht gespeichert werden.","bad");}
+    setStatus(`${itemIds.length} ${label}-Items wurden ${enabled?"ausgewählt":"abgewählt"}.`,"good");
+  }catch(error){setStatus(error.message||`${label}-Items konnten nicht gespeichert werden.`,"bad");}
 }
 
 function openIssueInboxPanel(){
