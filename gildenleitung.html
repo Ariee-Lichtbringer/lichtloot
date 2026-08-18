@@ -10726,7 +10726,7 @@ async function renderRaidHelperCurrentDetail(raidId){
           <div class="raid-unified-discord-grid">
             <label>Discord-Channel<select id="raidDiscordChannel-${escapeAttr(raidId)}">${discordChannelSelectOptions(raid.discordChannelId || RAID_HELPER_CHANNEL_ID)}</select></label>
             <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">${raidHasDiscordSignupPost(raid) ? "Vorhandenen Post aktualisieren" : "Anmelder im Discord erstellen"}</button>
-            ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Zusätzlichen Post erstellen</button>` : ""}
+            ${raidHasDiscordSignupPost(raid) ? `<button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}', {forceNew:true})">Gelöschten Anmelder neu erstellen</button>` : ""}
             ${signupOnlyRaid ? "" : `<label class="raid-unified-repost"><input id="repostPoWithRaid-${escapeAttr(raidId)}" type="checkbox" ${matchingPoSignupForRaid(raid)||matchingPoPostConfigForRaid(raid)?"checked":""}><span>Den passenden P0-Anmelder ebenfalls im Discord veröffentlichen</span></label>`}
           </div>
         </div>
