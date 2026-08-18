@@ -10914,6 +10914,7 @@ async function savePrio({ guildId, query: params }) {
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID);
   const prioPin = clean(params.raidPin || params.prioPin || params.PrioPIN || params.playerLinkPin);
   const p0Plus = clean(params.p0Plus).toLowerCase();
+  const p0Requested = clean(params.p0Selected || params.p0 || params.po).toLowerCase();
   const client = await pool.connect();
 
   try {
@@ -11000,7 +11001,8 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
 
-    const p0Selected = p0Plus === "ja" || p0Plus === "true";
+    const p0PlusSelected = p0Plus === "ja" || p0Plus === "true";
+    const p0Selected = p0PlusSelected || ["ja", "true", "1", "p0", "po"].includes(p0Requested);
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let nachtlootRecruitRestricted = false;
     if (isNachtlootRecruitRaid(releaseRaid)) {
@@ -11016,13 +11018,13 @@ async function savePrio({ guildId, query: params }) {
       nachtlootRecruitRestricted = recruitResult.rows[0]?.guild_slug === "nachtloot"
         && !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
     }
-    if (nachtlootRecruitRestricted && p0Selected) {
+    if (nachtlootRecruitRestricted && p0PlusSelected) {
       const error = new Error("Als Nachtwächter-Rekrut kannst du kein P0+ und keine P1 setzen. P1 wird automatisch mit Kaese belegt.");
       error.statusCode = 403;
       throw error;
     }
     const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
-    if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0Selected && releaseRaid) {
+    if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0PlusSelected && releaseRaid) {
       const releaseResult = await client.query(
         `select 1
          from character_po_releases
@@ -11058,7 +11060,8 @@ async function savePrio({ guildId, query: params }) {
     }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
     const comment = JSON.stringify({
-      p0Plus: p0Selected ? "ja" : "nein",
+      p0Selected: p0Selected ? "ja" : "nein",
+      p0Plus: p0PlusSelected ? "ja" : "nein",
       p0Item: p0Selected ? (p1?.name || "") : "",
       raidTime: clean(params.raidTime || params.uhrzeit),
       source: "railway"
@@ -11789,7 +11792,9 @@ async function getPlayerPrioHistory(guildId, params) {
       p1: row.p1 || "",
       p2: row.p2 || "",
       p3: row.p3 || "",
+      p0Selected: meta.p0Selected || (meta.p0Item ? "ja" : "nein"),
       p0Plus: meta.p0Plus || "nein",
+      p0Item: meta.p0Item || "",
       current: raidDay ? raidDay >= today : true,
       pinType: "Railway"
     };
@@ -21089,8 +21094,12 @@ async function getPublishedPrios({ guildId, query: params }) {
         p3: row.p3 || "",
         P3ItemId: row.p3_item_id || "",
         p3ItemId: row.p3_item_id || "",
+        P0Selected: meta.p0Selected || (meta.p0Item ? "ja" : "nein"),
+        p0Selected: meta.p0Selected || (meta.p0Item ? "ja" : "nein"),
         P0Plus: meta.p0Plus || "nein",
         p0Plus: meta.p0Plus || "nein",
+        P0Item: meta.p0Item || "",
+        p0Item: meta.p0Item || "",
         Bench: row.bench || "",
         bench: row.bench || ""
       };
@@ -22389,6 +22398,7 @@ async function getRaidP0PlusAudit({ guildId, query: params }) {
       p1: row.p1 || "",
       p2: row.p2 || "",
       p3: row.p3 || "",
+      p0Selected: meta.p0Selected || (meta.p0Item ? "ja" : "nein"),
       p0Plus: meta.p0Plus || "nein",
       p0Item: meta.p0Item || "",
       prioCreatedAt: row.prio_created_at,
@@ -23233,6 +23243,7 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
       p1: row.p1 || "",
       p2: row.p2 || "",
       p3: row.p3 || "",
+      p0Selected: meta.p0Selected || (meta.p0Item ? "ja" : "nein"),
       p0Plus: meta.p0Plus || "nein",
       p0Item: meta.p0Item || "",
       bench: row.bench || "",
