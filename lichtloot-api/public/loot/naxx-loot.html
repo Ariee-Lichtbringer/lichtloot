@@ -3144,10 +3144,10 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(currentGuildSlug()==="nachtloot"&&GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))&&!GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
+    if(GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))&&!GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
     }
-    if(SUPPORTS_P0PLUS && (currentGuildSlug() !== "nachtloot" || GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name)))){
+    if(SUPPORTS_P0PLUS && GUILD_PO_PLUS_ITEM_KEYS.has(guildPoItemKey(item.name))){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
@@ -10565,5 +10565,6 @@ function lichtlootFilterCurrentGuildP0Stores(){
 <script src="po-release-status.js?v=20260814-0015"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
+<script src="p0-selection-fix.js?v=20260818-1400"></script>
 </body>
 </html>
