@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>Lichtloot - Onyxia</title>
 
 <style>
@@ -2265,6 +2266,16 @@ const AQ40_LOOT_CSV_URL = "https://docs.google.com/spreadsheets/d/10_Rkl1biYanx7
 // Dadurch kommen P0+ Übersicht, Tooltips und Mein LichtLoot aus derselben Quelle.
 const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = false;
+let GUILD_PO_ITEM_KEYS = new Set();
+function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
+async function loadGuildPoItems(){
+  try{
+    const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
+    const response=await fetch(url,{cache:"no-store"});
+    const data=await response.json();
+    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name)));
+  }catch(error){GUILD_PO_ITEM_KEYS=new Set();}
+}
 const PRIO_COUNT = 1;
 
 
@@ -2857,7 +2868,7 @@ async function loadLootFromSheet(){
       throw new Error("Keine Naxx-Lootdaten gefunden.");
     }
 
-    await loadP0PlusFromSheet();
+    await Promise.all([loadP0PlusFromSheet(),loadGuildPoItems()]);
 
     fillItems();
     renderLootList();
@@ -3098,6 +3109,9 @@ function renderLootList(){
     }
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
+    }
+    if(currentGuildSlug()==="nachtloot"&&GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))){
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
     }
     if(SUPPORTS_P0PLUS){
       prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
@@ -10470,6 +10484,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
+<script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260805-1700"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>

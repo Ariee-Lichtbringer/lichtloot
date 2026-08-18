@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>Lichtloot - Ahn'Qiraj 20</title>
 
 <style>
@@ -71,7 +72,7 @@ input,select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid rg
 
 .prio-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .mini-btn{padding:6px 8px;border-radius:8px;border:1px solid rgba(var(--gold-rgb),.24);background:rgba(15,23,42,.9);color:#f8fafc;font-size:10px;font-weight:900;cursor:pointer}
-.mini-btn.plus{color:var(--gold)}
+.mini-btn.plus{color:#241500;background:linear-gradient(135deg,#fde68a,#f59e0b);border-color:#fbbf24;box-shadow:0 0 0 1px rgba(251,191,36,.28)}
 .mini-btn.active{background:linear-gradient(135deg,rgba(var(--gold-rgb),.65),rgba(180,83,9,.75));color:#111827;border-color:var(--gold)}
 .mini-btn.p0active{background:linear-gradient(135deg,rgba(168,85,247,.70),rgba(var(--gold-rgb),.55));color:white;border-color:var(--gold)}
 
@@ -3108,8 +3109,11 @@ function renderLootList(){
     if(PRIO_COUNT >= 3){
       prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p3" onclick="setPrio('p3','${escapeQuotes(item.name)}')">P3</button>`);
     }
-    if(SUPPORTS_P0PLUS){
-      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" ${poPlusLocked?'disabled title="PO+-Freigabe fehlt"':''} onclick="setP0Plus('${escapeQuotes(item.name)}')">${isPoPlusItem?'PO+':'PO'}</button>`);
+    if(currentGuildSlug()==="nachtloot"&&GUILD_PO_ITEM_KEYS.has(guildPoItemKey(item.name))){
+      prioButtonParts.push(`<button class="mini-btn" data-item="${htmlSafe(item.name)}" data-prio="p0" onclick="setP0('${escapeQuotes(item.name)}')">P0</button>`);
+    }
+    if(SUPPORTS_P0PLUS&&(currentGuildSlug()!=="nachtloot"||isPoPlusItem)){
+      prioButtonParts.push(`<button class="mini-btn plus" data-item="${htmlSafe(item.name)}" data-prio="p0plus" ${poPlusLocked?'disabled title="P0+-Freigabe fehlt"':''} onclick="setP0Plus('${escapeQuotes(item.name)}')">P0+</button>`);
     }
     prioButtonParts.push(reportButtonHtml({
       source:String(RAID_NAME || "").toUpperCase()+" Lootseite",
@@ -10485,6 +10489,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
+<script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260805-1700"></script>
 <script src="raid-signup-mirror.js?v=20260814-1630"></script>
 <script src="../pin-visibility.js"></script>
