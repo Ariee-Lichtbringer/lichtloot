@@ -9849,6 +9849,29 @@ async function deletePoPostEntry({ guildId, query: params }) {
       queuedAt: new Date().toISOString()
     });
   }
+  // Der LichtLoot-Eintrag kann bereits entfernt worden sein, waehrend der
+  // Discord-Post noch den alten Snapshot zeigt. Dann trotzdem genau die vom
+  // Bot uebermittelte bestehende Nachricht aktualisieren.
+  if (!payloads.size && postKey && clean(params.discordMessageId || params.messageId)) {
+    const discordMessageId = clean(params.discordMessageId || params.messageId);
+    payloads.set([postKey, sourceChannelId, targetChannelId, discordMessageId].join("|"), {
+      postKey,
+      sourceChannelId,
+      targetChannelId: targetChannelId || sourceChannelId,
+      messageId: discordMessageId,
+      discordMessageId,
+      raid: normalizeRaidType(params.raid || params.raidName).toUpperCase(),
+      raidDate: clean(params.raidDate || params.date || params.datum),
+      raidTime: clean(params.raidTime || params.time || params.uhrzeit),
+      raidPin: clean(params.raidPin || params.prioPin),
+      prioPin: clean(params.raidPin || params.prioPin),
+      lichtlootRaidId: clean(params.lichtlootRaidId || params.raidId),
+      title: clean(params.title) || "P0-Anmelder",
+      mode: "signup",
+      source: "po_entry_delete_already_missing",
+      queuedAt: new Date().toISOString()
+    });
+  }
   for (const payload of payloads.values()) {
     await enqueueBotUpdate({ guildId, type: "p0_post_refresh", payload })
       .catch(error => console.warn("PO-Post konnte nach Eintrag-Löschung nicht queued werden:", error.message || error));
