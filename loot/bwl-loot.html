@@ -2275,7 +2275,7 @@ async function loadGuildPoItems(){
     const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&enabledOnly=true&t="+Date.now();
     const response=await fetch(url,{cache:"no-store"});
     const data=await response.json();
-    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).map(item=>guildPoItemKey(item.name)));
+    GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name)));
   }catch(error){ GUILD_PO_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
