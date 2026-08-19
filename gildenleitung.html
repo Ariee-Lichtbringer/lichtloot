@@ -13874,17 +13874,17 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const raidName = raid.name || config.title || raidKey.toUpperCase();
   const playerPin = randomCode(3);
   const leadPin = randomCode(4);
-  const raidId = createRaidIdForGuildPage(raidKey);
+  const raidId = `P0-${createRaidIdForGuildPage(raidKey)}`;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
   const createdBy = poSignupLichtlootCreatorName();
 
   if(status && !options.silent){
-    status.textContent = "LichtLoot-Prio-ID wird erstellt ...";
+    status.textContent = "Separate P0-ID wird erstellt ...";
     status.className = "status";
   }
 
   const result = await railwayWrite({
-    action:"createRaid",
+    action:"createP0OnlyEvent",
     masterCode,
     raidId,
     raid:raidKey,
@@ -13907,7 +13907,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     description:config.note || ""
   });
   if(!result.success){
-    throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
+    throw new Error(result.error || "Separate P0-ID konnte nicht erstellt werden.");
   }
 
   const resultRaidId = result.raidId || result.RaidID || raidId;
@@ -13916,7 +13916,7 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
   updatePoSignupPreview();
   if(status && !options.silent){
-    status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
+    status.innerHTML = `<span class="good">Separate P0-ID <strong>${escapeHtml(resultRaidId)}</strong> wurde in der P0-Datenbank erstellt. P0-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
