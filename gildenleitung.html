@@ -7347,7 +7347,12 @@ async function loadOverview(options){
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
     guildData = {
-      raids: Array.isArray(result.raids) ? result.raids : [],
+      raids: Array.isArray(result.raids)
+        ? result.raids.filter(raid => {
+            const status = normalize(raid?.status || "");
+            return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
+          })
+        : [],
       players: Array.isArray(result.players) ? result.players : []
     };
     try{
@@ -16469,6 +16474,7 @@ async function queueRaidToDiscord(raidId, options = {}){
       statusNotifyTargets:JSON.stringify(raid?.statusNotifyTargets || raid?.status_notify_targets || []),
       announcementNotifyTargets:JSON.stringify(raid?.announcementNotifyTargets || raid?.announcement_notify_targets || []),
       forceNewMessage:forceNew ? "true" : "false",
+      updateExistingOnly:alreadyPosted ? "true" : "false",
       followupPoPost:followupPoPayload ? JSON.stringify(followupPoPayload) : ""
     });
 
