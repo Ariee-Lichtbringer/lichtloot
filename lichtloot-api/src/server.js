@@ -20175,9 +20175,6 @@ async function findRaid(guildId, params) {
     } else {
       identityClauses.push(`external_raid_id = $${values.length}`);
     }
-  } else if (publicId) {
-    // Nicht mit einem kombinierten Raid/P0-Anmelder gleichen Datums kreuzen.
-    return null;
   } else if (raidType && raidDate) {
     values.push(raidTypeSearchValues(raidType));
     identityClauses.push(`lower(raid_type) = any($${values.length})`);
@@ -21609,6 +21606,10 @@ async function findP0OnlyEvent(guildId, params) {
   if (publicId && publicId.toUpperCase().startsWith("P0-")) {
     values.push(publicId);
     where = `and external_p0_id = $${values.length}`;
+  } else if (publicId) {
+    // Eine normale Raid-ID darf niemals auf einen P0-only-Anmelder gleichen
+    // Datums zurückfallen.
+    return null;
   } else if (raidType && raidDate) {
     values.push(raidTypeSearchValues(raidType), raidDate);
     where = `and lower(raid_type) = any($${values.length - 1}) and raid_date = $${values.length}`;
