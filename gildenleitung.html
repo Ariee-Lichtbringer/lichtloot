@@ -9046,7 +9046,7 @@ function renderRaids(){
       filter === "alle" ? true :
       filter === "archiviert" ? (isArchived || isPast) :
       filter ? status === filter :
-      (!isArchived || isRaidInLastTwoWeeks(raid));
+      !isArchived;
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     const raidKey = normalizePoSignupRaidKey(raid.raid || raid.raidName);
     const sizeMatches = raidListTierFilter === "all" || raidListRaidKeys().includes(raidKey);
