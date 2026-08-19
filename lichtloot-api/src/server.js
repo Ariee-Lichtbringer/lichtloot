@@ -9049,8 +9049,18 @@ async function getPoPostEntries({ guildId, query: params }) {
     clauses.push(`target_channel_id = $${values.length}`);
   }
   const result = await query(
-    `select *
-     from po_post_entries
+    `select ppe.*,
+            coalesce((
+              select sum(pp.points)
+              from p0plus_points pp
+              join characters c on c.id = pp.character_id
+              join items point_item on point_item.id = pp.item_id
+              where pp.guild_id = ppe.guild_id
+                and lower(c.name) = lower(ppe.player_name)
+                and regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
+                    regexp_replace(lower(ppe.item_name), '[^a-z0-9]+', '', 'g')
+            ), 0)::numeric as p0plus_points
+     from po_post_entries ppe
      where ${clauses.join(" and ")}
      order by updated_at desc, lower(player_name) asc, lower(item_name) asc
      limit 500`,
@@ -9087,6 +9097,7 @@ async function getPoPostEntries({ guildId, query: params }) {
       createdAt: row.po_created_at || row.updated_at || "",
       poCreatedAt: row.po_created_at || "",
       approvalStatus: row.approval_status || "pending",
+      p0PlusPoints: Number(row.p0plus_points || 0),
       approved: row.approval_status === "approved",
       approvedBy: row.approved_by || "",
       approvedAt: row.approved_at || "",
@@ -21590,9 +21601,15 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
             coalesce((
               select sum(pp.points)
               from p0plus_points pp
+              join items point_item on point_item.id = pp.item_id
+              join items signup_item on signup_item.id = p0s.item_id
               where pp.guild_id = p0s.guild_id
                 and pp.character_id = p0s.character_id
-                and pp.item_id = p0s.item_id
+                and (
+                  pp.item_id = p0s.item_id
+                  or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
+                     regexp_replace(lower(signup_item.name), '[^a-z0-9]+', '', 'g')
+                )
             ), 0)::numeric as p0plus_points
      from p0_discord_signups p0s
      where p0s.guild_id = $1 and p0s.raid_id = $2
@@ -21613,9 +21630,14 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
        coalesce((
          select sum(pp.points)
          from p0plus_points pp
+         join items point_item on point_item.id = pp.item_id
          where pp.guild_id = $1
            and pp.character_id = pr.character_id
-           and pp.item_id = i.id
+           and (
+             pp.item_id = i.id
+             or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
+                regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
+           )
        ), 0)::numeric as p0plus_points
      from prios pr
      join characters c on c.id = pr.character_id
