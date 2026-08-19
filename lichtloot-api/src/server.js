@@ -9091,7 +9091,11 @@ async function getPoPostEntries({ guildId, query: params }) {
   const clauses = ["guild_id = $1"];
   const requestedRaidId = clean(params.raidId || params.lichtlootRaidId);
   if (requestedRaidId) {
-    const requestedRaid = await findRaid(guildId, { raidId: requestedRaidId });
+    const requestedRaid = await findP0DiscordRaid(guildId, {
+      raidId: requestedRaidId,
+      raid: raidKey,
+      playerPin: params.raidPin || params.prioPin || params.lichtlootPlayerPin
+    });
     if (!requestedRaid) {
       const error = new Error("Raid wurde nicht gefunden.");
       error.statusCode = 404;
