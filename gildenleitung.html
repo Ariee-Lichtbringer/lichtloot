@@ -8781,6 +8781,26 @@ function renderDashboardCards(){
   const renderRaidCard = raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
+    if(raid.p0Only) return `
+      <article class="active-raid-card active-raid-p0-only-card">
+        <div class="active-raid-visual">
+          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
+        </div>
+        <div class="active-raid-body">
+          <div>
+            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")} P0-Anmelder</div>
+            <div class="active-raid-topline">
+              <div class="active-raid-meta">
+                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
+                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
+              </div>
+              <div class="active-raid-info"><span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
+            </div>
+          </div>
+          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openPoPostPanel()">Unter Alle P0-Anmelder öffnen</button></div></div>
+        </div>
+      </article>`;
     if(isSignupOnlyRaid(raid)) return `
       <article class="active-raid-card active-raid-signup-only-card">
         <div class="active-raid-visual">
