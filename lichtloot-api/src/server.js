@@ -12410,19 +12410,6 @@ async function getGuildLeadershipOverview(guildId, params) {
     [guildId]
   );
 
-  let p0OnlyRaids = [];
-  if (p0Pool) {
-    await ensureP0OnlySchema();
-    const p0OnlyResult = await p0Query(
-      `select *
-       from p0_only_events
-       where guild_id = $1 and deleted_at is null
-       order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
-      [guildId]
-    );
-    p0OnlyRaids = p0OnlyResult.rows.map(row => normalizeRaidRow(normalizeP0OnlyEventRow(row)));
-  }
-
   const playersResult = await query(
     `select
        c.id,
@@ -12480,11 +12467,7 @@ async function getGuildLeadershipOverview(guildId, params) {
 
   return {
     success: true,
-    raids: [...raidsResult.rows.map(normalizeRaidRow), ...p0OnlyRaids].sort((left, right) => {
-      const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
-      const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
-      return rightDate.localeCompare(leftDate);
-    }),
+    raids: raidsResult.rows.map(normalizeRaidRow),
     players: playersResult.rows.map((row, index) => ({
       id: row.id,
       playerId: row.player_id,
@@ -19411,6 +19394,31 @@ async function deleteRaid({ guildId, query: params }) {
     throw error;
   }
 
+  const p0Raid = await findP0OnlyEvent(guildId, {
+    raidId: raidId || id,
+    playerPin: prioPin,
+    leadPin
+  });
+  if (p0Raid) {
+    const cleanup = await archiveLinkedP0OnlyEvent(guildId, p0Raid, "p0_only_deleted");
+    const deletedResult = await p0Query(
+      `update p0_only_events
+       set status='gelöscht', deleted_at=coalesce(deleted_at,now()), updated_at=now()
+       where guild_id=$1 and id=$2
+       returning id, external_p0_id, raid_name, deleted_at`,
+      [guildId, p0Raid.id]
+    );
+    return {
+      success: true,
+      deleted: deletedResult.rowCount,
+      softDeleted: deletedResult.rowCount,
+      retainedUntil: "",
+      raid: deletedResult.rows[0] || null,
+      cleanup: [cleanup],
+      p0Only: true
+    };
+  }
+
   const linkedRaids = await query(
     `select * from raids
      where guild_id = $1
@@ -20089,6 +20097,74 @@ async function archiveLinkedRaidSignups(guildId, raid, source = "raid_archived")
   return {
     raidSignups: Number(raidSignups.rows[0]?.count || 0),
     externalSignups: Number(externalSignups.rows[0]?.count || 0),
+    p0Signups: Number(p0Signups.rows[0]?.count || 0),
+    poEntries: poRows.rowCount || 0,
+    poPosts: poPosts.size,
+    queueJobs: queueJobs.rowCount || 0
+  };
+}
+
+async function archiveLinkedP0OnlyEvent(guildId, raid, source = "p0_only_archived") {
+  if (!raid?.id) return { p0Signups: 0, poEntries: 0, poPosts: 0, queueJobs: 0 };
+  await ensurePoPostEntriesSchema();
+  const raidKeys = [...new Set([raid.id, raid.external_p0_id, raid.player_pin, raid.raid_pin].map(clean).filter(Boolean))];
+  const poRows = await query(
+    `update po_post_entries
+     set archived_at=coalesce(archived_at,now()), updated_at=now()
+     where guild_id=$1 and archived_at is null
+       and (raid_id=any($2::text[]) or raid_pin=any($2::text[]))
+     returning post_key, source_channel_id, target_channel_id, discord_message_id, title, raid`,
+    [guildId, raidKeys]
+  );
+  const poPosts = new Map();
+  for (const row of poRows.rows || []) {
+    const key = [row.post_key, row.source_channel_id, row.target_channel_id, row.discord_message_id || ""].join("|");
+    poPosts.set(key, row);
+  }
+  if (clean(raid.discord_message_id)) {
+    const key = [raid.external_p0_id, raid.discord_channel_id, raid.discord_channel_id, raid.discord_message_id].join("|");
+    if (!poPosts.has(key)) {
+      poPosts.set(key, {
+        post_key: raid.external_p0_id,
+        source_channel_id: raid.discord_channel_id,
+        target_channel_id: raid.discord_channel_id,
+        discord_message_id: raid.discord_message_id,
+        title: `${normalizeRaidType(raid.raid_type).toUpperCase()} P0-Anmelder`,
+        raid: raid.raid_type
+      });
+    }
+  }
+  for (const row of poPosts.values()) {
+    await enqueueBotUpdate({
+      guildId,
+      type: "po_post_delete",
+      payload: {
+        postKey: row.post_key || raid.external_p0_id || "",
+        sourceChannelId: row.source_channel_id || raid.discord_channel_id || "",
+        targetChannelId: row.target_channel_id || row.source_channel_id || raid.discord_channel_id || "",
+        messageId: row.discord_message_id || raid.discord_message_id || "",
+        discordMessageId: row.discord_message_id || raid.discord_message_id || "",
+        raid: row.raid || raid.raid_type || "",
+        raidId: raid.external_p0_id || raid.id,
+        raidPin: raid.player_pin || raid.raid_pin || "",
+        source
+      }
+    });
+  }
+  const p0Signups = await p0Query(
+    `select count(*)::int as count from p0_only_signups where guild_id=$1 and event_id=$2`,
+    [guildId, raid.id]
+  );
+  const queueJobs = raidKeys.length ? await query(
+    `delete from bot_update_queue
+     where guild_id=$1 and status in ('open','processing') and type <> 'po_post_delete'
+       and (coalesce(payload->>'raidId','')=any($2::text[])
+         or coalesce(payload->>'lichtlootRaidId','')=any($2::text[])
+         or coalesce(payload->>'raidPin','')=any($2::text[])
+         or coalesce(payload->>'prioPin','')=any($2::text[]))`,
+    [guildId, raidKeys]
+  ) : { rowCount: 0 };
+  return {
     p0Signups: Number(p0Signups.rows[0]?.count || 0),
     poEntries: poRows.rowCount || 0,
     poPosts: poPosts.size,
@@ -22624,7 +22700,7 @@ async function setRaidStatus({ guildId, query: params }) {
   const master = clean(params.masterCode);
   if (master) requireMasterCode(master);
 
-  const raid = await findRaid(guildId, params);
+  const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
@@ -22639,6 +22715,25 @@ async function setRaidStatus({ guildId, query: params }) {
   }
 
   const status = normalizeStatus(params.status || raid.status);
+  if (raid.p0_only) {
+    const archiveRequested = ["archiviert", "archive"].includes(status);
+    const result = await p0Query(
+      `update p0_only_events
+       set status=$1, updated_at=now()
+       where guild_id=$2 and id=$3
+       returning *`,
+      [status, guildId, raid.id]
+    );
+    const cleanup = archiveRequested
+      ? await archiveLinkedP0OnlyEvent(guildId, result.rows[0], "p0_only_archived")
+      : null;
+    return {
+      success: true,
+      ...normalizeRaidRow(normalizeP0OnlyEventRow(result.rows[0])),
+      cleanup,
+      p0Only: true
+    };
+  }
   if (status === "geöffnet") {
     const raidDateText = raid.raid_date instanceof Date
       ? raid.raid_date.toISOString().slice(0, 10)
