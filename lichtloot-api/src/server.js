@@ -10856,7 +10856,7 @@ async function archivePoPostEntriesForRaid(client, guildId, raidType) {
 
 async function setRaidDiscordMessage({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
-  const raid = await findRaid(guildId, params);
+  const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
@@ -10866,6 +10866,31 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
   const nextMessageId = clean(params.discordMessageId || params.messageId || params.raidHelperMessageId);
   const signupPostId = clean(params.signupPostId || params.postKey || params.postId);
   const claimOnly = ["1", "true", "yes", "ja"].includes(clean(params.claimOnly).toLowerCase());
+  if (raid.p0_only) {
+    const p0Result = await p0Query(
+      `update p0_only_events
+       set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
+           discord_message_id = coalesce(nullif($4, ''), discord_message_id),
+           updated_at = now()
+       where guild_id = $1 and id = $2
+         and ($5::boolean = false or coalesce(discord_message_id, '') = '')
+       returning *`,
+      [
+        guildId,
+        raid.id,
+        clean(params.discordChannelId || params.channelId),
+        nextMessageId,
+        claimOnly
+      ]
+    );
+    const savedRaid = p0Result.rows[0] || raid;
+    return {
+      success: true,
+      claimed: Boolean(p0Result.rows[0]),
+      raid: normalizeRaidRow(normalizeP0OnlyEventRow(savedRaid)),
+      signupPostId
+    };
+  }
   const result = await query(
     `update raids
      set discord_channel_id = coalesce(nullif($3, ''), discord_channel_id),
@@ -12385,6 +12410,19 @@ async function getGuildLeadershipOverview(guildId, params) {
     [guildId]
   );
 
+  let p0OnlyRaids = [];
+  if (p0Pool) {
+    await ensureP0OnlySchema();
+    const p0OnlyResult = await p0Query(
+      `select *
+       from p0_only_events
+       where guild_id = $1 and deleted_at is null
+       order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
+      [guildId]
+    );
+    p0OnlyRaids = p0OnlyResult.rows.map(row => normalizeRaidRow(normalizeP0OnlyEventRow(row)));
+  }
+
   const playersResult = await query(
     `select
        c.id,
@@ -12442,7 +12480,11 @@ async function getGuildLeadershipOverview(guildId, params) {
 
   return {
     success: true,
-    raids: raidsResult.rows.map(normalizeRaidRow),
+    raids: [...raidsResult.rows.map(normalizeRaidRow), ...p0OnlyRaids].sort((left, right) => {
+      const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
+      const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
+      return rightDate.localeCompare(leftDate);
+    }),
     players: playersResult.rows.map((row, index) => ({
       id: row.id,
       playerId: row.player_id,
@@ -19580,7 +19622,10 @@ async function createRandomRaid({ guildId, query: params }) {
         createdBy: creator
       }
     });
-    const postKey = `${raidType}-p0-anmelder-${clean(params.raidDate || params.datum).replace(/\D/g, "")}-${clean(params.raidTime || params.uhrzeit).replace(/\D/g, "")}-${randomRaidCode(4).toLowerCase()}`;
+    const postKey = clean(p0Event.external_p0_id)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
     const internalMasterCode = clean(masterCodeOverrides.get(String(guildId)) || masterCode);
     const poPost = await queuePoPost({
       guildId,
@@ -19594,6 +19639,7 @@ async function createRandomRaid({ guildId, query: params }) {
         mode: "signup",
         postMode: "p0_only",
         raidSignupEnabled: false,
+        forceNewMessage: "true",
         lichtlootRaidId: p0Event.external_p0_id,
         lichtlootPlayerPin: p0Event.player_pin,
         lichtlootLeadPin: p0Event.lead_pin,
@@ -20450,7 +20496,7 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (missingUntil) missingRaidHelperCache.delete(missingCacheKey);
 
-  const raid = await findRaid(guildId, params);
+  const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     if (lookupValue) {
       missingRaidHelperCache.set(
@@ -20466,6 +20512,27 @@ async function getRaidHelper({ guildId, query: params }) {
     };
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
+
+  if (raid.p0_only) {
+    const normalizedRaid = normalizeRaidRow(raid);
+    return {
+      success: true,
+      raid: {
+        ...normalizedRaid,
+        signupCount: 0,
+        prioCount: 0,
+        warnings: []
+      },
+      signups: [],
+      externalSignups: [],
+      attendancePrios: [],
+      p0PlusTransferred: false,
+      p0PlusTransferCount: 0,
+      counts: buildSignupCounts([], []),
+      prioCount: 0,
+      warnings: []
+    };
+  }
 
   // Die Detailansicht eines Raids darf niemals Anmeldungen eines anderen
   // Termins übernehmen. Auch mehrere AQ20-/ZG-Raids am selben Tag bleiben
