@@ -8794,6 +8794,37 @@ async function getPoLinkedCharacters({ guildId, query: params }) {
   };
 }
 
+async function linkPoDiscordAccount({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const discordUserId = clean(params.discordUserId || params.userId);
+  const discordName = clean(params.discordName);
+  const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
+  const characterName = clean(params.character || params.char || params.player);
+  if (!discordUserId || !playerPin || !characterName) {
+    const error = new Error("Discord-ID, SpielerLogin/PIN und Charakter sind erforderlich.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const character = await findCharacterForPin(guildId, playerPin, characterName, params.server);
+  if (!character) {
+    const error = new Error("SpielerLogin/PIN oder Charakter ist nicht korrekt.");
+    error.statusCode = 403;
+    throw error;
+  }
+  if (normalizePlayerApprovalStatus(character.approval_status) !== "approved") {
+    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
+    error.statusCode = 403;
+    throw error;
+  }
+  const client = await pool.connect();
+  try {
+    await linkDiscordUserToPlayer(client, guildId, discordUserId, discordName, character);
+  } finally {
+    client.release();
+  }
+  return getPoLinkedCharacters({ guildId, query: { ...params, discordUserId } });
+}
+
 async function savePoPostEntries({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
@@ -9223,8 +9254,10 @@ async function canReviewPoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePlayerRoleSchema();
   await ensureRaidSchema();
+  await ensureGuildNotificationSettingsSchema();
   const discordUserId = clean(params.discordUserId || params.userId);
   const discordName = clean(params.discordName || params.userName || params.displayName);
+  const discordUsername = clean(params.discordUsername || params.username);
   const normalizedDiscordName = normalizeReviewName(discordName);
   const allowlistedByName = Boolean(normalizedDiscordName && poReviewOfficerNames.has(normalizedDiscordName));
   if (!discordUserId && !discordName) return { success: true, allowed: false, roles: [], roleLabels: [] };
@@ -9249,12 +9282,30 @@ async function canReviewPoPost({ guildId, query: params }) {
   );
   const roles = result.rows.map(row => normalizePlayerRole(row.role)).filter(Boolean);
   const allowedByRole = roles.some(role => raidCreateRoles.has(role));
+  let suppliedRoleIds = [];
+  try {
+    const parsed = typeof params.discordRoleIds === "string" ? JSON.parse(params.discordRoleIds) : params.discordRoleIds;
+    suppliedRoleIds = Array.isArray(parsed) ? parsed.map(clean).filter(Boolean) : [];
+  } catch {}
+  const configuredResult = await query(
+    `select targets from guild_notification_settings where guild_id=$1 and notification_key='po_reviewers'`,
+    [guildId]
+  );
+  const configuredTargets = Array.isArray(configuredResult.rows[0]?.targets) ? configuredResult.rows[0].targets : [];
+  const configuredRoles = new Set(configuredTargets.filter(target => clean(target?.type).toLowerCase() === "role").map(target => clean(target?.value)));
+  const configuredNames = new Set(configuredTargets.filter(target => clean(target?.type).toLowerCase() === "name").map(target => normalizeReviewName(target?.value)));
+  const allowedByConfiguredRole = suppliedRoleIds.some(roleId => configuredRoles.has(roleId));
+  const allowedByConfiguredName = [discordName, discordUsername]
+    .map(normalizeReviewName)
+    .some(name => name && configuredNames.has(name));
   return {
     success: true,
-    allowed: allowedByRole || allowlistedByName,
+    allowed: allowedByRole || allowlistedByName || allowedByConfiguredRole || allowedByConfiguredName,
     roles: allowlistedByName && !roles.length ? ["offiziersliste"] : roles,
     roleLabels: allowlistedByName && !roles.length ? ["Offiziersliste"] : roles.map(role => playerRoleLabel(role)),
-    allowlistedByName
+    allowlistedByName,
+    allowedByConfiguredRole,
+    allowedByConfiguredName
   };
 }
 
@@ -21316,10 +21367,7 @@ async function findP0DiscordRaid(guildId, params) {
       prioPin,
       raidPin: prioPin
     });
-    if (raid) {
-      const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
-      return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
-    }
+    if (raid) return raid;
   }
 
   const rawRaidDate = clean(params.raidDate || params.date || params.datum);
@@ -21347,9 +21395,7 @@ async function findP0DiscordRaid(guildId, params) {
   }
 
   const raid = await findRaid(guildId, params);
-  if (!raid) return null;
-  const allowed = new Set(["mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"]);
-  return allowed.has(normalizeRaidType(raid.raid_type)) ? raid : null;
+  return raid || null;
 }
 
 function normalizeP0SignupRow(row) {
@@ -26178,7 +26224,8 @@ app.get("/api/apps-script", async (req, res, next) => {
       return res.json({ ...overview, guild: guild.slug });
     }
 
-    if (action === "getActiveRaids") {
+    if (action === "getActiveRaids" || action === "lichtbotGetActiveRaids") {
+      const historyDays = action === "lichtbotGetActiveRaids" ? 0 : 1;
       const result = await query(
         `select r.*,
                 (
@@ -26195,7 +26242,7 @@ app.get("/api/apps-script", async (req, res, next) => {
          from raids r
          where r.guild_id = $1
            and r.deleted_at is null
-           and raid_date >= current_date - interval '1 day'
+           and raid_date >= current_date - ($2::int * interval '1 day')
            and lower(coalesce(status, '')) not in (
              'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
              'abgesagt', 'cancelled', 'canceled'
@@ -26207,7 +26254,7 @@ app.get("/api/apps-script", async (req, res, next) => {
            coalesce(raid_time, '') asc,
            created_at desc
          limit 50`,
-        [guild.id]
+        [guild.id, historyDays]
       );
       const raids = result.rows.map(row => {
         const raid = normalizeRaidRow(row);
@@ -27228,6 +27275,11 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
       const linked = await getPoLinkedCharacters({ guildId: guild.id, query: postParams });
+      return res.json({ ...linked, guild: guild.slug, guildId: guild.id });
+    }
+
+    if (action === "lichtbotLinkDiscordAccount") {
+      const linked = await linkPoDiscordAccount({ guildId: guild.id, query: postParams });
       return res.json({ ...linked, guild: guild.slug, guildId: guild.id });
     }
 
