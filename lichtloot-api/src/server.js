@@ -3750,6 +3750,7 @@ function normalizeRaidRow(row) {
     guildId: row.guild_id || "",
     raidId: raidPublicId(row),
     RaidID: raidPublicId(row),
+    p0Only: Boolean(row.p0_only),
     raid: row.raid_type,
     raidName: row.name || displayRaidName(row.raid_type),
     raidDate,
@@ -12409,6 +12410,7 @@ async function getGuildLeadershipOverview(guildId, params) {
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
+  const managedP0OnlyRaids = await getManagedP0OnlyEvents(guildId, { historyDays: 0 });
 
   const playersResult = await query(
     `select
@@ -12467,7 +12469,7 @@ async function getGuildLeadershipOverview(guildId, params) {
 
   return {
     success: true,
-    raids: raidsResult.rows.map(normalizeRaidRow),
+    raids: [...raidsResult.rows.map(normalizeRaidRow), ...managedP0OnlyRaids],
     players: playersResult.rows.map((row, index) => ({
       id: row.id,
       playerId: row.player_id,
@@ -21699,6 +21701,7 @@ function normalizeP0OnlyEventRow(row) {
   return {
     ...row,
     p0_only: true,
+    name: row.raid_name,
     external_raid_id: row.external_p0_id,
     raid_pin: row.player_pin,
     player_link: row.player_pin,
@@ -21706,6 +21709,43 @@ function normalizeP0OnlyEventRow(row) {
     prio_enabled: true,
     p0plus_freigabe: "geöffnet"
   };
+}
+
+async function getManagedP0OnlyEvents(guildId, { historyDays = 0 } = {}) {
+  if (!p0Pool) return [];
+  await ensureP0OnlySchema();
+  await ensurePoPostEntriesSchema();
+  const configs = await query(
+    `select distinct raid_id
+     from po_post_entries
+     where guild_id=$1
+       and archived_at is null
+       and config_only=true
+       and raid_id <> ''
+       and upper(raid_id) like 'P0-%'`,
+    [guildId]
+  );
+  const managedIds = configs.rows.map(row => clean(row.raid_id)).filter(Boolean);
+  if (!managedIds.length) return [];
+  const result = await p0Query(
+    `with clock as (
+       select timezone('Europe/Berlin', now())::date as local_today
+     )
+     select e.*
+     from p0_only_events e
+     cross join clock
+     where e.guild_id=$1
+       and e.external_p0_id=any($2::text[])
+       and e.deleted_at is null
+       and e.raid_date >= clock.local_today - ($3::int * interval '1 day')
+       and lower(coalesce(e.status,'')) not in (
+         'archiviert','archive','archived','gelöscht','geloescht','deleted',
+         'abgesagt','cancelled','canceled'
+       )
+     order by e.raid_date asc, coalesce(e.raid_time,'') asc, e.created_at desc`,
+    [guildId, managedIds, historyDays]
+  );
+  return result.rows.map(row => normalizeRaidRow(normalizeP0OnlyEventRow(row)));
 }
 
 async function createP0OnlyEvent({ guildId, params }) {
@@ -26822,31 +26862,12 @@ app.get("/api/apps-script", async (req, res, next) => {
         return { ...raid, leadPin: "", LeadPin: "" };
       });
       let p0OnlyRaids = [];
-      if (p0Pool) {
-        await ensureP0OnlySchema();
-        const p0Result = await p0Query(
-          `with clock as (
-             select timezone('Europe/Berlin', now())::date as local_today
-           )
-           select e.*
-           from p0_only_events e
-           cross join clock
-           where e.guild_id=$1
-             and e.deleted_at is null
-             and e.raid_date >= clock.local_today - ($2::int * interval '1 day')
-             and lower(coalesce(e.status,'')) not in (
-               'archiviert','archive','archived','gelöscht','geloescht','deleted',
-               'abgesagt','cancelled','canceled'
-             )
-           order by e.raid_date asc, coalesce(e.raid_time,'') asc, e.created_at desc
-           limit 50`,
-          [guild.id, historyDays]
-        );
-        p0OnlyRaids = p0Result.rows.map(row => {
-          const raid = normalizeRaidRow(normalizeP0OnlyEventRow(row));
-          return { ...raid, leadPin: "", LeadPin: "", p0Only: true };
-        });
-      }
+      p0OnlyRaids = (await getManagedP0OnlyEvents(guild.id, { historyDays })).map(raid => ({
+        ...raid,
+        leadPin: "",
+        LeadPin: "",
+        p0Only: true
+      }));
       const activeRaids = [...raids, ...p0OnlyRaids].sort((left, right) => {
         const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
         const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
