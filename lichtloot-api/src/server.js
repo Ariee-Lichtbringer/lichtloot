@@ -26887,7 +26887,7 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "reviewPoPostEntry" || action === "guildReviewPoPostEntry") {
       const reviewed = await reviewPoPostEntry({ guildId: guild.id, query: req.query });
-      return res.json({ ...reviewed, guild: guild.slug });
+      return res.json({ ...reviewed, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "updatePoPostEntry" || action === "guildUpdatePoPostEntry") {
@@ -27425,7 +27425,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "reviewPoPostEntry" || action === "guildReviewPoPostEntry") {
       const reviewed = await reviewPoPostEntry({ guildId: guild.id, query: postParams });
-      return res.json({ ...reviewed, guild: guild.slug });
+      return res.json({ ...reviewed, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "updatePoPostEntry" || action === "guildUpdatePoPostEntry") {
