@@ -359,8 +359,12 @@ app.get("/api/dashboard", async (req, res, next) => {
               ) as p0plus_transfer_count
        from raids r
        where r.guild_id = $1
+         and r.deleted_at is null
          and raid_date >= current_date - interval '1 day'
-         and coalesce(status, '') not in ('archiviert', 'archive')
+         and lower(coalesce(status, '')) not in (
+           'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
+           'abgesagt', 'cancelled', 'canceled'
+         )
        order by
          case when raid_date >= current_date then 0 else 1 end,
          case when raid_date >= current_date then raid_date end asc,
@@ -405,9 +409,13 @@ app.get("/api/public/raids", async (req, res, next) => {
               ) as signup_count
        from raids r
        where r.guild_id = $1
+         and r.deleted_at is null
          and r.raid_date >= current_date
          and r.raid_date <= current_date + $2::int
-         and coalesce(r.status, '') not in ('archiviert', 'archive')
+         and lower(coalesce(r.status, '')) not in (
+           'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
+           'abgesagt', 'cancelled', 'canceled'
+         )
        order by r.raid_date asc, coalesce(r.raid_time, '') asc, r.created_at asc
        limit $3`,
       [guild.id, days, limit]
@@ -12167,6 +12175,7 @@ async function getGuildLeadershipOverview(guildId, params) {
             ) as p0plus_transfer_count
      from raids r
      where r.guild_id = $1
+       and r.deleted_at is null
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
@@ -19733,6 +19742,70 @@ async function archiveLinkedRaidSignups(guildId, raid, source = "raid_archived")
   };
 }
 
+let autoArchiveTwentyPlayerRaidsRunning = false;
+async function autoArchiveFinishedTwentyPlayerRaids() {
+  if (autoArchiveTwentyPlayerRaidsRunning) return { archived: 0, skipped: true };
+  autoArchiveTwentyPlayerRaidsRunning = true;
+  try {
+    await ensureRaidSchema();
+    await ensurePoPostEntriesSchema();
+    const candidates = await query(
+      `select *
+       from raids r
+       where r.deleted_at is null
+         and lower(coalesce(r.status, '')) not in (
+           'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
+           'abgesagt', 'cancelled', 'canceled'
+         )
+         and (
+           lower(coalesce(r.raid_type, '')) = 'aq20'
+           or lower(coalesce(r.raid_type, '')) = 'zg'
+           or lower(coalesce(r.raid_type, '')) like 'zg-%'
+         )
+         and r.raid_date is not null
+         and coalesce(r.raid_time, '') ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+         and r.raid_date + r.raid_time::time + interval '2 hours'
+             <= timezone('Europe/Berlin', now())
+       order by r.raid_date, r.raid_time, r.created_at`,
+      []
+    );
+    const archivedRaids = [];
+    for (const candidate of candidates.rows || []) {
+      const archived = await query(
+        `update raids
+         set status = 'archiviert', updated_at = now()
+         where id = $1
+           and deleted_at is null
+           and lower(coalesce(status, '')) not in (
+             'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted'
+           )
+         returning *`,
+        [candidate.id]
+      );
+      if (!archived.rowCount) continue;
+      const raid = archived.rows[0];
+      try {
+        const cleanup = await archiveLinkedRaidSignups(raid.guild_id, raid, "raid_auto_archived_20");
+        archivedRaids.push({ raidId: raidPublicId(raid), raidPin: raid.raid_pin || "", cleanup });
+      } catch (error) {
+        // Bei einem vorübergehenden Fehler darf der nächste Intervalllauf
+        // die Archivierung samt Discord-Aufräumjobs erneut versuchen.
+        await query(
+          `update raids set status = $2, updated_at = now() where id = $1`,
+          [candidate.id, candidate.status || ""]
+        );
+        console.warn(
+          `20er-Raid ${raidPublicId(raid)} konnte nicht vollständig archiviert werden:`,
+          error.message || error
+        );
+      }
+    }
+    return { archived: archivedRaids.length, raids: archivedRaids };
+  } finally {
+    autoArchiveTwentyPlayerRaidsRunning = false;
+  }
+}
+
 function normalizeRaidSignupRow(row) {
   return {
     id: row.id,
@@ -25928,7 +26001,10 @@ app.get("/api/apps-script", async (req, res, next) => {
          where r.guild_id = $1
            and r.deleted_at is null
            and raid_date >= current_date - interval '1 day'
-           and coalesce(status, '') not in ('archiviert', 'archive')
+           and lower(coalesce(status, '')) not in (
+             'archiviert', 'archive', 'archived', 'gelöscht', 'geloescht', 'deleted',
+             'abgesagt', 'cancelled', 'canceled'
+           )
          order by
            case when raid_date >= current_date then 0 else 1 end,
            case when raid_date >= current_date then raid_date end asc,
@@ -27562,6 +27638,20 @@ app.listen(port, () => {
   console.log(`LichtLoot API listening on port ${port}`);
   setTimeout(runRaidHelperScheduleTick, 5000).unref();
   setInterval(runRaidHelperScheduleTick, 60000).unref();
+  setTimeout(() => {
+    autoArchiveFinishedTwentyPlayerRaids()
+      .then(result => {
+        if (result.archived) console.log(`20er-Raid-Archivierung: ${result.archived} Raid(s) automatisch archiviert.`);
+      })
+      .catch(error => console.warn("20er-Raid-Archivierung fehlgeschlagen:", error.message || error));
+  }, 10000).unref();
+  setInterval(() => {
+    autoArchiveFinishedTwentyPlayerRaids()
+      .then(result => {
+        if (result.archived) console.log(`20er-Raid-Archivierung: ${result.archived} Raid(s) automatisch archiviert.`);
+      })
+      .catch(error => console.warn("20er-Raid-Archivierung fehlgeschlagen:", error.message || error));
+  }, 60000).unref();
   setInterval(() => {
     purgeExpiredDeletedRaids()
       .then(result => {
