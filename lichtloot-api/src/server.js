@@ -20483,15 +20483,34 @@ async function saveRaidSignup({ guildId, query: params }) {
 
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const charName = clean(params.char || params.character || params.player);
-  if (!playerPin || !charName) {
-    const error = new Error("SpielerLogin und Charakter fehlen.");
+  const discordUserId = clean(params.discordUserId);
+  if (!charName) {
+    const error = new Error("Charakter fehlt.");
     error.statusCode = 400;
     throw error;
   }
 
-  const character = await findCharacterForPin(guildId, playerPin, charName, params.server);
+  let character = playerPin
+    ? await findCharacterForPin(guildId, playerPin, charName, params.server)
+    : null;
+  if (!character && !playerPin && discordUserId) {
+    const linkedCharacter = await query(
+      `select c.*, p.approval_status
+       from discord_player_links dpl
+       join characters c on c.id = dpl.character_id
+       join players p on p.id = c.player_id
+       where dpl.guild_id = $1
+         and dpl.discord_user_id = $2
+         and p.guild_id = $1
+         and lower(c.name) = lower($3)
+       order by dpl.updated_at desc
+       limit 1`,
+      [guildId, discordUserId, charName]
+    );
+    character = linkedCharacter.rows[0] || null;
+  }
   if (!character) {
-    const error = new Error("Dieser Charakter gehört nicht zu deinem SpielerLogin.");
+    const error = new Error("Dieser Charakter ist nicht mit deinem LichtLoot-Account verknüpft. Bitte SpielerLogin/PIN einmalig eingeben.");
     error.statusCode = 403;
     throw error;
   }
@@ -20505,7 +20524,6 @@ async function saveRaidSignup({ guildId, query: params }) {
   const role = normalizeSignupRole(params.signupRole || params.role);
   const note = clean(params.note || params.comment);
   const source = clean(params.source || "lichtloot");
-  const discordUserId = clean(params.discordUserId);
   const discordName = clean(params.discordName);
 
   if (discordUserId) {
@@ -21828,14 +21846,32 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
   const discordUserId = clean(params.discordUserId);
   const playerPin = normalizePin(params.playerPin || params.pin);
   const characterName = clean(params.char || params.character || params.player);
-  if (!discordUserId || !playerPin || !characterName) {
-    const error = new Error("Discord-User, SpielerLogin und Charakter sind erforderlich.");
+  if (!discordUserId || !characterName) {
+    const error = new Error("Discord-User und Charakter sind erforderlich.");
     error.statusCode = 400;
     throw error;
   }
-  const character = await findCharacterForPin(guildId, playerPin, characterName, params.server);
+  let character = playerPin
+    ? await findCharacterForPin(guildId, playerPin, characterName, params.server)
+    : null;
+  if (!character && !playerPin) {
+    const linkedCharacter = await query(
+      `select c.*
+       from discord_player_links dpl
+       join characters c on c.id = dpl.character_id
+       join players p on p.id = c.player_id
+       where dpl.guild_id = $1
+         and dpl.discord_user_id = $2
+         and p.guild_id = $1
+         and lower(c.name) = lower($3)
+       order by dpl.updated_at desc
+       limit 1`,
+      [guildId, discordUserId, characterName]
+    );
+    character = linkedCharacter.rows[0] || null;
+  }
   if (!character) {
-    const error = new Error("Dieser Charakter gehört nicht zu deinem SpielerLogin.");
+    const error = new Error("Dieser Charakter ist nicht mit deinem LichtLoot-Account verknüpft. Bitte SpielerLogin/PIN einmalig eingeben.");
     error.statusCode = 403;
     throw error;
   }
@@ -26589,7 +26625,7 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
       const linked = await getPoLinkedCharacters({ guildId: guild.id, query: req.query });
-      return res.json({ ...linked, guild: guild.slug });
+      return res.json({ ...linked, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
@@ -27192,7 +27228,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotGetPoLinkedCharacters" || action === "getDiscordLinkedCharacters") {
       const linked = await getPoLinkedCharacters({ guildId: guild.id, query: postParams });
-      return res.json({ ...linked, guild: guild.slug });
+      return res.json({ ...linked, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "getP0DiscordSignups" || action === "guildGetP0DiscordSignups") {
