@@ -27557,7 +27557,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotSetRaidDiscordMessage") {
       const saved = await setRaidDiscordMessage({ guildId: guild.id, query: postParams });
-      return res.json({ ...saved, guild: guild.slug });
+      return res.json({ ...saved, guild: guild.slug, guildId: guild.id });
     }
 
     if (action === "guildQueueLogAnalysisPost") {
