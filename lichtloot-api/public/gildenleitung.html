@@ -8254,6 +8254,11 @@ function renderLootLayoutPanel(){
               ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom P0-Anmelder-Bot eingetragen werden.</p>'}
             </div>
           </div>
+          <div class="field" style="margin-top:16px">
+            <label>Discord-Server-ID</label>
+            <input id="layoutDiscordGuildId" inputmode="numeric" value="${escapeAttr(guild.discordGuildId || "")}" placeholder="z. B. 1327701882138923099">
+            <span class="muted">Pflichtfeld für Raid- und P0-Anmelder. In Discord den Entwicklermodus aktivieren, den Servernamen rechtsklicken und „Server-ID kopieren“ wählen.</span>
+          </div>
         </section>
 
         <div class="layout-note-row">
@@ -8486,6 +8491,7 @@ async function saveLootLayoutPanel(){
     backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
     primaryColor:layoutFieldValue("layoutPrimaryColor"),
     accentColor:layoutFieldValue("layoutAccentColor"),
+    discordGuildId:layoutFieldValue("layoutDiscordGuildId").replace(/\D/g,""),
     layout:JSON.stringify(nextLayout)
   };
   if(status) status.textContent = "Layout wird gespeichert ...";
@@ -8775,6 +8781,26 @@ function renderDashboardCards(){
   const renderRaidCard = raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
+    if(raid.p0Only) return `
+      <article class="active-raid-card active-raid-p0-only-card">
+        <div class="active-raid-visual">
+          <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
+        </div>
+        <div class="active-raid-body">
+          <div>
+            <div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")} P0-Anmelder</div>
+            <div class="active-raid-topline">
+              <div class="active-raid-meta">
+                <span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span>
+                <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+                <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
+              </div>
+              <div class="active-raid-info"><span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
+            </div>
+          </div>
+          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openPoPostPanel()">Unter Alle P0-Anmelder öffnen</button></div></div>
+        </div>
+      </article>`;
     if(isSignupOnlyRaid(raid)) return `
       <article class="active-raid-card active-raid-signup-only-card">
         <div class="active-raid-visual">
@@ -13868,17 +13894,17 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const raidName = raid.name || config.title || raidKey.toUpperCase();
   const playerPin = randomCode(3);
   const leadPin = randomCode(4);
-  const raidId = createRaidIdForGuildPage(raidKey);
+  const raidId = `P0-${createRaidIdForGuildPage(raidKey)}`;
   const discordChannelId = raidHelperValue("raidHelperChannel") || RAID_HELPER_CHANNEL_ID;
   const createdBy = poSignupLichtlootCreatorName();
 
   if(status && !options.silent){
-    status.textContent = "LichtLoot-Prio-ID wird erstellt ...";
+    status.textContent = "Separate P0-ID wird erstellt ...";
     status.className = "status";
   }
 
   const result = await railwayWrite({
-    action:"createRaid",
+    action:"createP0OnlyEvent",
     masterCode,
     raidId,
     raid:raidKey,
@@ -13901,19 +13927,22 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
     description:config.note || ""
   });
   if(!result.success){
-    throw new Error(result.error || "LichtLoot-Prio-ID konnte nicht erstellt werden.");
+    throw new Error(result.error || "Separate P0-ID konnte nicht erstellt werden.");
   }
 
   const resultRaidId = result.raidId || result.RaidID || raidId;
   const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
   const resultLeadPin = result.leadPin || leadPin;
-  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
+  const p0PostKey = String(resultRaidId || raidId).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  setValue("poSignupPostKey", p0PostKey);
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy, postKey:p0PostKey };
   updatePoSignupPreview();
   if(status && !options.silent){
-    status.innerHTML = `<span class="good">LichtLoot-Prio-ID ${result.reused ? "wiederverwendet" : "erstellt"}. Prio-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
+    status.innerHTML = `<span class="good">Separate P0-ID <strong>${escapeHtml(resultRaidId)}</strong> wurde in der P0-Datenbank erstellt. P0-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
+    postKey:p0PostKey,
     lichtlootRaidId:resultRaidId,
     lichtlootPlayerPin:resultPlayerPin,
     lichtlootLeadPin:resultLeadPin
@@ -14574,6 +14603,8 @@ async function refreshPoSignupDiscordPost(postKey, button){
       raidDate:row.raidDate || "",
       raidTime:row.raidTime || "",
       mode:row.mode || "signup",
+      postMode:String(row.lichtlootRaidId || row.raidId || "").toUpperCase().startsWith("P0-") ? "p0_only" : "",
+      forceNewMessage:String(row.lichtlootRaidId || row.raidId || "").toUpperCase().startsWith("P0-") ? "true" : "",
       note:row.note || "",
       itemOptions:row.itemOptions || "",
       lichtlootRaidId:row.lichtlootRaidId || row.raidPin || row.prioPin || "",
@@ -15368,6 +15399,8 @@ async function createPoSignupPost(){
       itemOptions: config.itemOptions,
       postedEntries: JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
       restoreArchived: "true",
+      forceNewMessage: String(config.lichtlootRaidId || "").toUpperCase().startsWith("P0-") ? "true" : "",
+      postMode: String(config.lichtlootRaidId || "").toUpperCase().startsWith("P0-") ? "p0_only" : "",
       createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
       lichtlootRaidId: config.lichtlootRaidId || "",
       lichtlootPlayerPin: config.lichtlootPlayerPin || "",
