@@ -11425,6 +11425,16 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
+  const suppliedRaidDate = clean(params.raidDate || params.date || params.datum);
+  if (suppliedRaidDate) {
+    const normalizedRaidDate = parseDateValue(suppliedRaidDate);
+    params = {
+      ...params,
+      raidDate: normalizedRaidDate,
+      date: normalizedRaidDate,
+      datum: normalizedRaidDate
+    };
+  }
   const postKey = clean(params.postKey || params.poPostKey || params.postId);
   const requestedRaidPin = clean(params.raidPin || params.prioPin || params.lichtlootPlayerPin);
   // Ein PO-Post besitzt eine eigene postKey-ID, die nicht zwingend der
