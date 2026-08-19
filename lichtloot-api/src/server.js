@@ -26821,7 +26821,38 @@ app.get("/api/apps-script", async (req, res, next) => {
         const raid = normalizeRaidRow(row);
         return { ...raid, leadPin: "", LeadPin: "" };
       });
-      return res.json({ success: true, guild: guild.slug, guildId: guild.id, raids, allRaids: raids, activeRaids: raids });
+      let p0OnlyRaids = [];
+      if (p0Pool) {
+        await ensureP0OnlySchema();
+        const p0Result = await p0Query(
+          `with clock as (
+             select timezone('Europe/Berlin', now())::date as local_today
+           )
+           select e.*
+           from p0_only_events e
+           cross join clock
+           where e.guild_id=$1
+             and e.deleted_at is null
+             and e.raid_date >= clock.local_today - ($2::int * interval '1 day')
+             and lower(coalesce(e.status,'')) not in (
+               'archiviert','archive','archived','gelöscht','geloescht','deleted',
+               'abgesagt','cancelled','canceled'
+             )
+           order by e.raid_date asc, coalesce(e.raid_time,'') asc, e.created_at desc
+           limit 50`,
+          [guild.id, historyDays]
+        );
+        p0OnlyRaids = p0Result.rows.map(row => {
+          const raid = normalizeRaidRow(normalizeP0OnlyEventRow(row));
+          return { ...raid, leadPin: "", LeadPin: "", p0Only: true };
+        });
+      }
+      const activeRaids = [...raids, ...p0OnlyRaids].sort((left, right) => {
+        const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
+        const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
+        return leftDate.localeCompare(rightDate);
+      });
+      return res.json({ success: true, guild: guild.slug, guildId: guild.id, raids: activeRaids, allRaids: activeRaids, activeRaids });
     }
 
     if (action === "getRaidHelper" || action === "getRaidSignups") {
