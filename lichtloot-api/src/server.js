@@ -19470,11 +19470,26 @@ async function createRandomRaid({ guildId, query: params }) {
       ...params,
       raid: raidType,
       prioEnabled: createPrioId ? "true" : "false",
-      raidHelperEnabled: clean(params.createDiscordSignup).toLowerCase() === "true" ? "true" : params.raidHelperEnabled,
+      // Der Schnell-Raid-Dialog ist hier maßgeblich: Ist der Baustein
+      // „Raidanmelder im Discord erstellen“ nicht gewählt, muss der Raid
+      // ausdrücklich als P0-only gespeichert werden. Ein fehlender Wert
+      // würde in createRaidRecord sonst als aktiv interpretiert.
+      raidHelperEnabled: createDiscordSignup ? "true" : "false",
       status: "geschlossen",
       p0PlusFreigabe: "geöffnet"
     }
   });
+
+  // Auch ein bereits vorhandener Raid kann von der Schnell-Erstellung
+  // wiederverwendet werden. In diesem Fall muss die aktuell gewählte
+  // Baustein-Konfiguration trotzdem übernommen werden.
+  await query(
+    `update raids
+     set raidhelper_enabled = $3, updated_at = now()
+     where guild_id = $1 and external_raid_id = $2`,
+    [guildId, clean(created.raidId || created.RaidID), createDiscordSignup]
+  );
+  created.raidHelperEnabled = createDiscordSignup;
 
   if (createDiscordSignup) {
     const templateId = clean(params.templateId || params.raidTemplateId);
