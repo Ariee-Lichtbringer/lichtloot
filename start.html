@@ -6,6 +6,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="images/app-icon-180.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="stylesheet" href="/scroll-performance.css">
 <meta name="theme-color" content="#05070b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4140,7 +4141,8 @@ async function createRaidFromStart(){
     return;
   }
 
-  const raidId=createRaidId(raid);
+  const baseRaidId=createRaidId(raid);
+  const raidId=createPoSignup&&!createDiscordSignup ? `P0-${baseRaidId}` : baseRaidId;
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
   const createdBy=creatorContext.createdBy;
