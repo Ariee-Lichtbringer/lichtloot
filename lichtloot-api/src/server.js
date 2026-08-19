@@ -1487,6 +1487,7 @@ async function createGuild({ query: params }) {
 
 async function updateGuildConfig({ query: params, body = {}, trustedSetup = false }) {
   await ensureGuildLayoutSchema();
+  await ensureGuildDiscordConfigSchema();
   const values = { ...params, ...body };
   const slug = clean(values.guild || values.slug);
   if (!slug) {
@@ -1506,6 +1507,14 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
   const pointsLabel = clean(values.pointsLabel || values.points_label);
   const primaryColor = clean(values.primaryColor || values.primary_color);
   const accentColor = clean(values.accentColor || values.accent_color);
+  const hasDiscordGuildId = Object.prototype.hasOwnProperty.call(values, "discordGuildId")
+    || Object.prototype.hasOwnProperty.call(values, "discord_guild_id");
+  const discordGuildId = clean(values.discordGuildId ?? values.discord_guild_id).replace(/\D/g, "");
+  if (hasDiscordGuildId && discordGuildId && !/^\d{15,22}$/.test(discordGuildId)) {
+    const error = new Error("Die Discord-Server-ID ist ungültig.");
+    error.statusCode = 400;
+    throw error;
+  }
   let layoutJson = values.layout || values.layoutJson || values.layout_json || null;
   if (typeof layoutJson === "string") {
     try {
@@ -1549,10 +1558,11 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
            server = coalesce(nullif($3, ''), server),
            logo_url = coalesce(nullif($4, ''), logo_url),
            background_url = coalesce(nullif($5, ''), background_url),
+           discord_guild_id = case when $6::boolean then $7 else discord_guild_id end,
            updated_at = now()
        where id = $1
-       returning slug, name, server, logo_url, background_url, created_at`,
-      [guild.id, name, server, logoUrl, backgroundUrl]
+       returning slug, name, server, logo_url, background_url, discord_guild_id, created_at`,
+      [guild.id, name, server, logoUrl, backgroundUrl, hasDiscordGuildId, discordGuildId]
     );
 
     await client.query(
@@ -1582,6 +1592,7 @@ async function updateGuildConfig({ query: params, body = {}, trustedSetup = fals
         server: row.server || "",
         logoUrl: guildLogoUrlForSlug(row.slug, row.logo_url),
         backgroundUrl: row.background_url || "",
+        discordGuildId: row.discord_guild_id || "",
         pointsLabel: settingsResult.rows[0]?.points_label || "P0/P0+",
         primaryColor: settingsResult.rows[0]?.primary_color || "#facc15",
         accentColor: settingsResult.rows[0]?.accent_color || "#1d4ed8",
