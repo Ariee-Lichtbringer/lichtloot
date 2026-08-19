@@ -6776,15 +6776,17 @@ async function getBotQueueAllGuilds({ query: params }) {
   await ensurePendingPlayerLoginNoticesQueued();
   await query(`alter table bot_update_queue add column if not exists payload jsonb not null default '{}'::jsonb`);
   await query(`alter table bot_update_queue add column if not exists claimed_at timestamptz`);
-  // Wurde der Bot während eines Versands beendet, darf der Auftrag beim
-  // Neustart zeitnah erneut übernommen werden. Kurze Unterbrechungen werden
-  // damit nach einer Minute statt erst nach fünf Minuten fortgesetzt.
+  // Wurde ein Bot während der Verarbeitung beendet, wird sein Auftrag nach
+  // einer Sicherheitsfrist erneut freigegeben. P0+-Punkte-DMs dürfen wegen
+  // ihrer bestehenden Wiederholungslogik bereits nach einer Minute weiterlaufen.
   await query(
     `update bot_update_queue
         set status = 'open', claimed_at = null
       where status = 'processing'
-        and type = 'p0plus_points_update_dm'
-        and claimed_at < now() - interval '1 minute'`
+        and claimed_at < now() - case
+          when type = 'p0plus_points_update_dm' then interval '1 minute'
+          else interval '5 minutes'
+        end`
   );
   await query(
     `update bot_update_queue q
@@ -6826,25 +6828,38 @@ async function getBotQueueAllGuilds({ query: params }) {
     .filter(Boolean);
   const limit = Math.max(1, Math.min(500, Number(params.limit || 50) || 50));
   const result = await query(
-    `select q.id, q.type, q.payload, q.created_at, g.slug as guild_slug, g.name as guild_name
-     from bot_update_queue q
-     join guilds g on g.id = q.guild_id
-     where q.status = 'open'
-       and ($1::text[] is null or q.type = any($1::text[]))
-     order by case
-       when q.type = 'player_login_approval_notice' then 0
-       when q.type in (
-         'po_release_request_notice',
-         'raid_status_staff_notice',
-         'loot_master_leadpin_notice',
-         'p0plus_transfer_export',
-         'p0plus_backup_export',
-         'log_analysis_post'
-       ) then 1
-       when q.type in ('worldbuff_update', 'hordenbuff_update') then 3
-       else 2
-     end, q.created_at asc
-     limit $2`,
+    `with candidates as (
+       select q.id
+       from bot_update_queue q
+       where q.status = 'open'
+         and ($1::text[] is null or q.type = any($1::text[]))
+       order by case
+         when q.type = 'player_login_approval_notice' then 0
+         when q.type in (
+           'po_release_request_notice',
+           'raid_status_staff_notice',
+           'loot_master_leadpin_notice',
+           'p0plus_transfer_export',
+           'p0plus_backup_export',
+           'log_analysis_post'
+         ) then 1
+         when q.type in ('worldbuff_update', 'hordenbuff_update') then 3
+         else 2
+       end, q.created_at asc
+       for update skip locked
+       limit $2
+     ), claimed as (
+       update bot_update_queue q
+       set status = 'processing', claimed_at = now()
+       from candidates c
+       where q.id = c.id
+       returning q.id, q.guild_id, q.type, q.payload, q.created_at
+     )
+     select c.id, c.type, c.payload, c.created_at,
+            g.slug as guild_slug, g.name as guild_name
+     from claimed c
+     join guilds g on g.id = c.guild_id
+     order by c.created_at asc`,
     [requestedTypes.length ? requestedTypes : null, limit]
   );
   return {
