@@ -7959,6 +7959,13 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
     snapshot?.raid?.discord_message_id ||
     ""
   );
+  const forceNewMessage = ["1", "true", "yes", "ja"].includes(
+    clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()
+  );
+  const updateExistingOnly = !forceNewMessage && (
+    ["1", "true", "yes", "ja"].includes(clean(params.updateExistingOnly).toLowerCase()) ||
+    Boolean(existingDiscordMessageId)
+  );
   const announcement = await queueBotUpdate({
     guildId,
     query: {
@@ -7994,7 +8001,8 @@ async function queueRaidAnnouncement({ guildId, query: params }) {
         discordChannelId: channelId,
         messageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
         discordMessageId: clean(params.messageId || params.discordMessageId || snapshot?.raid?.discordMessageId || ""),
-        forceNewMessage: ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()) ? "true" : "false",
+        forceNewMessage: forceNewMessage ? "true" : "false",
+        updateExistingOnly: updateExistingOnly ? "true" : "false",
         raidSnapshot: snapshot?.raid || null,
         signups: snapshot?.signups || [],
         externalSignups: snapshot?.externalSignups || [],
@@ -19423,10 +19431,11 @@ async function createRaidRecord({ guildId, query: params }) {
       `select *
        from raids
        where guild_id = $1
+         and deleted_at is null
          and lower(raid_type) = any($2)
          and raid_date = $3
          and coalesce(raid_time, '') = $4
-         and coalesce(status, '') <> 'archiviert'
+         and coalesce(status, '') not in ('archiviert', 'archive', 'gelöscht', 'geloescht')
        order by
          case when external_raid_id = $5 then 0 else 1 end,
          case when raidhelper_enabled = true then 0 else 1 end,
@@ -20871,16 +20880,10 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
     raid.discord_message_id = incomingMessageId || raid.discord_message_id;
   }
 
-  const replaceSnapshot = ["1", "true", "yes", "ja", "on"].includes(clean(params.replaceSnapshot).toLowerCase());
-  if (replaceSnapshot && incomingMessageId) {
-    await query(
-      `delete from raid_external_signups
-       where guild_id = $1
-         and raid_id = $2
-         and discord_message_id = $3`,
-      [guildId, raid.id, incomingMessageId]
-    );
-  }
+  // Discord kann beim Refresh einen unvollständigen Snapshot liefern (z. B.
+  // während Komponenten neu geladen werden). Deshalb bestehende Anmeldungen
+  // niemals vorab löschen. Eingehende Zeilen werden ausschließlich
+  // zusammengeführt; echte Abmeldungen laufen über die Status-/Löschaktionen.
 
   const guildCharactersResult = await query(
     `select c.name, c.class_name
