@@ -8254,6 +8254,11 @@ function renderLootLayoutPanel(){
               ${PO_ANMELDER_BOT_CLIENT_ID ? "" : '<p class="muted">Hinweis: Für diesen Link muss noch die Discord-Client-ID vom P0-Anmelder-Bot eingetragen werden.</p>'}
             </div>
           </div>
+          <div class="field" style="margin-top:16px">
+            <label>Discord-Server-ID</label>
+            <input id="layoutDiscordGuildId" inputmode="numeric" value="${escapeAttr(guild.discordGuildId || "")}" placeholder="z. B. 1327701882138923099">
+            <span class="muted">Pflichtfeld für Raid- und P0-Anmelder. In Discord den Entwicklermodus aktivieren, den Servernamen rechtsklicken und „Server-ID kopieren“ wählen.</span>
+          </div>
         </section>
 
         <div class="layout-note-row">
@@ -8486,6 +8491,7 @@ async function saveLootLayoutPanel(){
     backgroundUrl:layoutFieldValue("layoutBackgroundUrl"),
     primaryColor:layoutFieldValue("layoutPrimaryColor"),
     accentColor:layoutFieldValue("layoutAccentColor"),
+    discordGuildId:layoutFieldValue("layoutDiscordGuildId").replace(/\D/g,""),
     layout:JSON.stringify(nextLayout)
   };
   if(status) status.textContent = "Layout wird gespeichert ...";
