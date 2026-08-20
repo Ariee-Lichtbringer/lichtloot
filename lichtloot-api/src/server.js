@@ -8874,14 +8874,27 @@ async function linkPoDiscordAccount({ guildId, query: params }) {
   const discordName = clean(params.discordName);
   const playerPin = normalizePin(params.playerPin || params.pin || params.spielerLogin);
   const characterName = clean(params.character || params.char || params.player);
-  if (!discordUserId || !playerPin || !characterName) {
-    const error = new Error("Discord-ID, SpielerLogin/PIN und Charakter sind erforderlich.");
+  if (!discordUserId || !playerPin) {
+    const error = new Error("Discord-ID und SpielerLogin/PIN sind erforderlich.");
     error.statusCode = 400;
     throw error;
   }
-  const character = await findCharacterForPin(guildId, playerPin, characterName, params.server);
+  const character = characterName
+    ? await findCharacterForPin(guildId, playerPin, characterName, params.server)
+    : (await query(
+        `select c.id, c.name, c.server, c.class_name, c.created_at,
+                p.id as player_id, p.player_pin, p.approval_status, p.is_blocked
+         from players p
+         join characters c on c.player_id = p.id
+         where p.guild_id=$1
+           and p.player_pin=$2
+           and coalesce(p.is_blocked,false)=false
+         order by coalesce(c.is_main,false) desc, c.created_at asc, lower(c.name)
+         limit 1`,
+        [guildId, playerPin]
+      )).rows[0];
   if (!character) {
-    const error = new Error("SpielerLogin/PIN oder Charakter ist nicht korrekt.");
+    const error = new Error("SpielerLogin/PIN ist nicht korrekt oder besitzt keinen Charakter.");
     error.statusCode = 403;
     throw error;
   }
@@ -21788,6 +21801,7 @@ async function findP0OnlyEvent(guildId, params) {
   const raidType = normalizeRaidType(params.raid || params.raidName);
   const raidDate = clean(params.raidDate || params.date || params.datum) ? parseDateValue(params.raidDate || params.date || params.datum) : "";
   const raidTime = clean(params.raidTime || params.time || params.uhrzeit);
+  const playerPin = clean(params.playerPin || params.prioPin || params.raidPin || params.pin);
   const values = [guildId];
   let where = "";
   if (publicId && publicId.toUpperCase().startsWith("P0-")) {
@@ -21803,6 +21817,13 @@ async function findP0OnlyEvent(guildId, params) {
     if (raidTime) {
       values.push(raidTime);
       where += ` and coalesce(raid_time,'') = $${values.length}`;
+    }
+  } else if (playerPin) {
+    values.push(playerPin);
+    where = `and upper(player_pin) = upper($${values.length})`;
+    if (raidType) {
+      values.push(raidTypeSearchValues(raidType));
+      where += ` and lower(raid_type) = any($${values.length})`;
     }
   } else {
     return null;
@@ -21887,7 +21908,11 @@ function normalizeP0SignupRow(row) {
     approvedAt: row.approved_at || "",
     p0PlusPoints: Number(row.p0plus_points || 0),
     updatedAt: row.updated_at,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    p0Only: Boolean(row.p0_only || row.event_id || clean(row.raid_public_id).toUpperCase().startsWith("P0-")),
+    storage: row.p0_only || row.event_id || clean(row.raid_public_id).toUpperCase().startsWith("P0-")
+      ? "separate-p0-database"
+      : "raid-database"
   };
 }
 
@@ -22011,7 +22036,7 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
     p0OnlyRaidClause += ` and (e.id::text=$${p0OnlyValues.length} or e.external_p0_id=$${p0OnlyValues.length})`;
   }
   const p0OnlyResult = p0Pool ? await p0Query(
-    `select s.*, e.raid_type, e.raid_name, e.raid_date, e.raid_time,
+    `select s.*, true as p0_only, e.raid_type, e.raid_name, e.raid_date, e.raid_time,
             e.player_pin, e.external_p0_id as raid_public_id
      from p0_only_signups s join p0_only_events e on e.id=s.event_id
      where s.guild_id=$1 and e.deleted_at is null ${p0OnlyStatusClause} ${p0OnlyRaidClause}
@@ -22532,7 +22557,21 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   }
 
   const approvalStatus = approvedValues.has(rawStatus) ? "approved" : "rejected";
-  let result = await query(
+  const requestedStorage = clean(params.storage || params.signupStorage || params.sourceDatabase).toLowerCase();
+  const p0OnlyRequested = ["separate-p0-database", "p0_only", "p0-only"].includes(requestedStorage)
+    || clean(params.p0Only).toLowerCase() === "true";
+  let p0OnlyReview = p0OnlyRequested;
+  let result = p0OnlyRequested ? await p0Query(
+    `update p0_only_signups
+     set approval_status=$3, approved_by_discord_id=$4,
+         approved_by_discord_name=$5,
+         approved_at=case when $3='approved' then now() else null end,
+         updated_at=now()
+     where guild_id=$1 and id=$2 returning *`,
+    [guildId, signupId, approvalStatus,
+      clean(params.reviewerDiscordId || params.discordUserId),
+      clean(params.reviewerDiscordName || params.discordName || params.reviewer)]
+  ) : await query(
     `update p0_discord_signups
      set approval_status = $3,
          approved_by_discord_id = $4,
@@ -22550,8 +22589,9 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
     ]
   );
 
-  let p0OnlyReview = false;
-  if (!result.rows[0] && p0Pool) {
+  // Alte Clients senden noch keine Speicherkennung. Nur für diese bleibt der
+  // abwärtskompatible zweite Versuch erlaubt; neue Clients routen eindeutig.
+  if (!result.rows[0] && p0Pool && !requestedStorage) {
     result = await p0Query(
       `update p0_only_signups
        set approval_status=$3, approved_by_discord_id=$4,
@@ -22621,6 +22661,57 @@ async function reviewP0DiscordSignup({ guildId, query: params }) {
   };
 }
 
+async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
+  requireMasterOrQueueToken(params);
+  const signupId = clean(params.signupId || params.id);
+  const requestedStorage = clean(params.storage || params.signupStorage || params.sourceDatabase).toLowerCase();
+  const p0OnlyRequested = ["separate-p0-database", "p0_only", "p0-only"].includes(requestedStorage)
+    || clean(params.p0Only).toLowerCase() === "true";
+  if (!isUuid(signupId)) {
+    const error = new Error("P0-Anmeldung fehlt.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (p0OnlyRequested) {
+    const deleted = await p0Query(
+      `delete from p0_only_signups where guild_id=$1 and id=$2 returning *`,
+      [guildId, signupId]
+    );
+    if (!deleted.rows[0]) {
+      const error = new Error("P0-Anmeldung wurde in der separaten P0-Datenbank nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    return { success: true, deleted: 1, storage: "separate-p0-database" };
+  }
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const deleted = await client.query(
+      `delete from p0_discord_signups where guild_id=$1 and id=$2 returning *`,
+      [guildId, signupId]
+    );
+    if (!deleted.rows[0]) {
+      const error = new Error("P0-Anmeldung wurde in der Raid-Datenbank nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    await client.query(
+      `delete from prios
+       where raid_id=$1 and character_id=$2
+         and comment::text like '%"source":"discord-p0"%'`,
+      [deleted.rows[0].raid_id, deleted.rows[0].character_id]
+    );
+    await client.query("commit");
+    return { success: true, deleted: 1, storage: "raid-database" };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 async function getPublicPrioCharacters({ guildId }) {
   const result = await query(
     `select
@@ -22654,7 +22745,7 @@ async function getPublicPrioCharacters({ guildId }) {
 }
 
 async function getPrioCheck({ guildId, query: params }) {
-  const raid = await findRaid(guildId, params);
+  const raid = await findP0DiscordRaid(guildId, params);
   if (!raid) {
     return { success: true, check: null };
   }
@@ -22732,7 +22823,7 @@ async function findRaidByPrioPin({ guildId, query: params }) {
     return { success: false, error: "Bitte Random PrioPIN eingeben." };
   }
 
-  const raid = await findRaid(guildId, { playerPin: prioPin });
+  const raid = await findP0DiscordRaid(guildId, { playerPin: prioPin, raid: params.raid });
   if (!raid || !clean(raid.raid_pin)) {
     return { success: false, error: "Kein Raid zu dieser Random PrioPIN gefunden." };
   }
@@ -27462,6 +27553,10 @@ app.get("/api/apps-script", async (req, res, next) => {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: req.query });
       return res.json({ ...reviewed, guild: guild.slug });
     }
+    if (action === "guildDeleteP0DiscordSignup") {
+      const deleted = await managementDeleteP0DiscordSignup({ guildId: guild.id, query: req.query });
+      return res.json({ ...deleted, guild: guild.slug });
+    }
 
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
       const saved = await savePoPostEntries({ guildId: guild.id, query: req.query });
@@ -28005,6 +28100,10 @@ app.post("/api/apps-script", async (req, res, next) => {
     if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: postParams });
       return res.json({ ...reviewed, guild: guild.slug });
+    }
+    if (action === "guildDeleteP0DiscordSignup") {
+      const deleted = await managementDeleteP0DiscordSignup({ guildId: guild.id, query: postParams });
+      return res.json({ ...deleted, guild: guild.slug });
     }
 
     if (action === "lichtbotSavePoPostEntries" || action === "savePoPostEntries") {
