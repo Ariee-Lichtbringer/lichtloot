@@ -9620,12 +9620,9 @@ function renderPrioP0Points(prio){
 
 /* === FINAL FIX: P0-Auswahl sichtbar + P0+-Punkte getrennt und nur aktueller Raid === */
 function lichtlootPrioIsP0(prio){
-  const value = String(
-    (prio && (prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po)) ||
-    ""
-  ).trim().toLowerCase();
-
-  return value === "ja" || value === "yes" || value === "true" || value === "1" || value === "p0" || value === "po";
+  if(!prio) return false;
+  const value = String(prio.P0Selected || prio.p0Selected || prio.POSelected || prio.poSelected || prio.P0Plus || prio.p0Plus || prio.P0 || prio.p0 || prio.PO || prio.po || "").trim().toLowerCase();
+  return ["ja","yes","true","1","p0","po"].includes(value) || Boolean(String(prio.P0Item || prio.p0Item || prio.POItem || prio.poItem || "").trim());
 }
 
 function lichtlootPrioP0Item(prio){
