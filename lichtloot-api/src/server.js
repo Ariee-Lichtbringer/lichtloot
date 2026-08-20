@@ -21642,6 +21642,74 @@ async function saveDiscordSignupRows({ guildId, query: params }) {
 async function getPublishedPrios({ guildId, query: params }) {
   const raid = await findRaid(guildId, params);
   if (!raid) {
+    const p0OnlyRaid = await findP0OnlyEvent(guildId, params);
+    if (p0OnlyRaid) {
+      const signupResult = await p0Query(
+        `select s.*
+         from p0_only_signups s
+         where s.guild_id = $1
+           and s.event_id = $2
+           and lower(coalesce(s.approval_status, 'pending')) = 'approved'
+         order by lower(s.player_name) asc, s.created_at asc`,
+        [guildId, p0OnlyRaid.id]
+      );
+      const characterIds = signupResult.rows.map(row => row.character_id).filter(Boolean);
+      const characterResult = characterIds.length
+        ? await query(
+          `select c.id, c.class_name, c.is_main, c.created_at
+           from characters c
+           join players p on p.id = c.player_id
+           where p.guild_id = $1 and c.id = any($2::uuid[])`,
+          [guildId, characterIds]
+        )
+        : { rows: [] };
+      const charactersById = new Map(characterResult.rows.map(row => [String(row.id), row]));
+      const normalizedRaid = normalizeRaidRow(p0OnlyRaid);
+      const raidStatus = normalizeStatus(p0OnlyRaid.status);
+      const published = ["geöffnet", "veröffentlicht", "published"].includes(raidStatus.toLowerCase());
+      return {
+        success: true,
+        ...normalizedRaid,
+        published,
+        open: raidStatus !== "geöffnet" && !published,
+        p0Only: true,
+        prios: signupResult.rows.map((row, index) => {
+          const character = charactersById.get(String(row.character_id)) || {};
+          return {
+            id: row.id,
+            rowNumber: index + 1,
+            Spieler: row.player_name || "",
+            player: row.player_name || "",
+            Server: row.server || "",
+            server: row.server || "",
+            Klasse: character.class_name || "",
+            className: character.class_name || "",
+            isMain: Boolean(character.is_main),
+            main: Boolean(character.is_main),
+            P1: row.item_name || "",
+            p1: row.item_name || "",
+            P1ItemId: row.item_id || "",
+            p1ItemId: row.item_id || "",
+            P2: row.item_name || "",
+            p2: row.item_name || "",
+            P2ItemId: row.item_id || "",
+            p2ItemId: row.item_id || "",
+            P3: row.item_name || "",
+            p3: row.item_name || "",
+            P3ItemId: row.item_id || "",
+            p3ItemId: row.item_id || "",
+            P0Selected: "ja",
+            p0Selected: "ja",
+            P0Plus: "nein",
+            p0Plus: "nein",
+            P0Item: row.item_name || "",
+            p0Item: row.item_name || "",
+            Bench: "",
+            bench: ""
+          };
+        })
+      };
+    }
     return { success: true, prios: [], published: false, status: "geschlossen" };
   }
 
