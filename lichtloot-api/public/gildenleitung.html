@@ -861,9 +861,9 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 /* Geordneter Zugangskopf: drei klar getrennte Funktionsspalten. */
-.compact-auth{max-width:1120px}
+.compact-auth{max-width:none}
 .unlock{
-  grid-template-columns:repeat(3,minmax(240px,1fr));
+  grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) minmax(280px,1.08fr) minmax(270px,.95fr) minmax(270px,.95fr);
   grid-template-rows:auto auto;
   gap:8px 14px;
   align-items:stretch;
@@ -884,12 +884,48 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .unlock>.field:nth-child(3){grid-column:2;grid-row:1}
 .unlock>.btn:nth-child(4){grid-column:2;grid-row:2}
 .unlock>.login-summary-card:nth-child(5){grid-column:3;grid-row:1 / span 2;min-height:0;padding:14px}
+.unlock>.dashboard-quick-action-p0{grid-column:4;grid-row:1 / span 2}
+.unlock>.dashboard-quick-action-raid{grid-column:5;grid-row:1 / span 2}
 .unlock>#pendingLoginCard{grid-column:3;grid-row:3}
 .compact-auth>#status{max-width:100%;margin-top:10px!important}
+@media(max-width:1500px){
+  .unlock{grid-template-columns:repeat(3,minmax(240px,1fr))}
+  .unlock>.dashboard-quick-action-p0{grid-column:1 / span 1;grid-row:3}
+  .unlock>.dashboard-quick-action-raid{grid-column:2 / span 1;grid-row:3}
+}
 @media(max-width:900px){
   .unlock{grid-template-columns:1fr;grid-template-rows:auto}
   .unlock>*{grid-column:1!important;grid-row:auto!important}
 }
+
+.dashboard-quick-action{
+  position:relative;
+  min-height:0;
+  display:grid;
+  grid-template-columns:58px 1fr;
+  grid-template-rows:auto 1fr auto;
+  gap:7px 12px;
+  align-items:center;
+  padding:14px;
+  border:1px solid rgba(168,85,247,.72);
+  border-radius:10px;
+  overflow:hidden;
+  color:#f8fafc;
+  text-align:left;
+  cursor:pointer;
+  background:linear-gradient(135deg,rgba(88,28,135,.56),rgba(15,23,42,.9));
+  box-shadow:inset 0 0 24px rgba(168,85,247,.12),0 8px 22px rgba(0,0,0,.22);
+}
+.dashboard-quick-action:hover{transform:translateY(-1px);border-color:#d8b4fe;box-shadow:inset 0 0 30px rgba(168,85,247,.18),0 10px 28px rgba(0,0,0,.3)}
+.dashboard-quick-action-raid{border-color:rgba(14,165,233,.72);background:linear-gradient(135deg,rgba(3,105,161,.54),rgba(15,23,42,.9));box-shadow:inset 0 0 24px rgba(14,165,233,.12),0 8px 22px rgba(0,0,0,.22)}
+.dashboard-quick-action-raid:hover{border-color:#7dd3fc;box-shadow:inset 0 0 30px rgba(14,165,233,.18),0 10px 28px rgba(0,0,0,.3)}
+.dashboard-quick-action-icon{grid-column:1;grid-row:1 / span 2;display:flex;width:58px;height:58px;align-items:center;justify-content:center;border-radius:14px;background:rgba(2,6,23,.48);font-size:32px;box-shadow:inset 0 0 16px rgba(255,255,255,.08)}
+.dashboard-quick-action-copy{grid-column:2;align-self:end}
+.dashboard-quick-action-copy strong{display:block;color:#e9d5ff;font-size:17px;font-weight:1000;letter-spacing:.02em}
+.dashboard-quick-action-raid .dashboard-quick-action-copy strong{color:#bae6fd}
+.dashboard-quick-action-copy span{display:block;margin-top:4px;color:#f8fafc;font-size:12px;font-weight:800;line-height:1.35}
+.dashboard-quick-action-cta{grid-column:1 / -1;display:flex;min-height:38px;align-items:center;justify-content:center;border:1px solid rgba(216,180,254,.7);border-radius:7px;background:rgba(126,34,206,.5);color:#fff;font-size:13px;font-weight:1000;white-space:nowrap}
+.dashboard-quick-action-raid .dashboard-quick-action-cta{border-color:rgba(125,211,252,.7);background:rgba(2,132,199,.46)}
 
 .login-summary-card{
   min-height:132px;
@@ -5223,6 +5259,16 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
         <button type="button" onclick="openPlayerPanel()">Spielerlogins anzeigen →</button>
       </div>
+      <button class="dashboard-quick-action dashboard-quick-action-p0" type="button" onclick="openP0OnlyCreatorFromDashboard()">
+        <span class="dashboard-quick-action-icon" aria-hidden="true">🔮</span>
+        <span class="dashboard-quick-action-copy"><strong>P0-ANMELDER</strong><span>Neuen P0-Anmelder direkt erstellen</span></span>
+        <span class="dashboard-quick-action-cta">P0-Anmelder erstellen →</span>
+      </button>
+      <button class="dashboard-quick-action dashboard-quick-action-raid" type="button" onclick="openRaidCreatorFromDashboard()">
+        <span class="dashboard-quick-action-icon" aria-hidden="true">⚔️</span>
+        <span class="dashboard-quick-action-copy"><strong>RAIDANMELDER</strong><span>Neuen Raidanmelder direkt erstellen</span></span>
+        <span class="dashboard-quick-action-cta">Raidanmelder erstellen →</span>
+      </button>
       <button id="pendingLoginCard" class="login-summary-card pending-login-card hidden" type="button" onclick="openPendingLoginReview()" style="border-color:#f59e0b;text-align:left;cursor:pointer">
         <div><div class="stat-icon">!</div><span>Neue SpielerLogins</span><strong id="pendingLoginCount">0</strong><div class="stat-subline">warten auf Freigabe</div></div>
         <span style="color:#facc15;font-weight:950">Jetzt prüfen →</span>
@@ -7639,6 +7685,17 @@ function exportPanemGearBuild(){
 function openRaidHelperPanel(tabName){
   openDetailsPanel("raidHelperPanel");
   if(tabName) setRaidHelperTab(tabName);
+}
+
+function openP0OnlyCreatorFromDashboard(){
+  openRaidHelperPanel("poCreate");
+  document.getElementById("raidHelperTab-poCreate")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function openRaidCreatorFromDashboard(){
+  openRaidHelperPanel("createEvent");
+  openNewRaidHelperForm();
+  document.getElementById("raidHelperTab-createEvent")?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
 function openNewRaidHelperForm(){
