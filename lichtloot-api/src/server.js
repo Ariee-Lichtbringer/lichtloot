@@ -21649,11 +21649,38 @@ async function getPublishedPrios({ guildId, query: params }) {
          from p0_only_signups s
          where s.guild_id = $1
            and s.event_id = $2
-           and lower(coalesce(s.approval_status, 'pending')) = 'approved'
+           and lower(coalesce(s.approval_status, 'pending')) in ('pending', 'approved')
          order by lower(s.player_name) asc, s.created_at asc`,
         [guildId, p0OnlyRaid.id]
       );
-      const characterIds = signupResult.rows.map(row => row.character_id).filter(Boolean);
+      const p0PublicId = clean(p0OnlyRaid.external_raid_id);
+      const p0PostKey = p0PublicId.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const manualResult = await query(
+        `select ppe.id, null::uuid as character_id, ppe.item_game_id as item_id,
+                ppe.player_name, ''::text as server, ppe.item_name, ppe.class_name,
+                ppe.approval_status, ppe.created_at
+         from po_post_entries ppe
+         where ppe.guild_id = $1
+           and ppe.archived_at is null
+           and ppe.config_only = false
+           and lower(coalesce(ppe.approval_status, 'pending')) in ('pending', 'approved')
+           and (
+             ppe.raid_id = any($2::text[])
+             or upper(coalesce(ppe.raid_pin, '')) = upper($3)
+             or ppe.post_key = $4
+           )
+         order by lower(ppe.player_name) asc, ppe.created_at asc`,
+        [guildId, [p0PublicId, clean(p0OnlyRaid.id)].filter(Boolean), clean(p0OnlyRaid.raid_pin), p0PostKey]
+      );
+      const combinedRows = [];
+      const combinedKeys = new Set();
+      for (const row of [...signupResult.rows, ...manualResult.rows]) {
+        const key = `${clean(row.player_name).toLowerCase()}|${itemLookupKey(row.item_name)}`;
+        if (!clean(row.player_name) || !clean(row.item_name) || combinedKeys.has(key)) continue;
+        combinedKeys.add(key);
+        combinedRows.push(row);
+      }
+      const characterIds = combinedRows.map(row => row.character_id).filter(Boolean);
       const characterResult = characterIds.length
         ? await query(
           `select c.id, c.class_name, c.is_main, c.created_at
@@ -21673,7 +21700,7 @@ async function getPublishedPrios({ guildId, query: params }) {
         published,
         open: raidStatus !== "geöffnet" && !published,
         p0Only: true,
-        prios: signupResult.rows.map((row, index) => {
+        prios: combinedRows.map((row, index) => {
           const character = charactersById.get(String(row.character_id)) || {};
           return {
             id: row.id,
@@ -21682,8 +21709,8 @@ async function getPublishedPrios({ guildId, query: params }) {
             player: row.player_name || "",
             Server: row.server || "",
             server: row.server || "",
-            Klasse: character.class_name || "",
-            className: character.class_name || "",
+            Klasse: row.class_name || character.class_name || "",
+            className: row.class_name || character.class_name || "",
             isMain: Boolean(character.is_main),
             main: Boolean(character.is_main),
             P1: row.item_name || "",
@@ -21704,6 +21731,8 @@ async function getPublishedPrios({ guildId, query: params }) {
             p0Plus: "nein",
             P0Item: row.item_name || "",
             p0Item: row.item_name || "",
+            approvalStatus: row.approval_status || "pending",
+            approved: clean(row.approval_status).toLowerCase() === "approved",
             Bench: "",
             bench: ""
           };
@@ -27644,7 +27673,7 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: req.query });
-      return res.json({ ...reviewed, guild: guild.slug });
+      return res.json({ ...reviewed, guild: guild.slug, guildId: guild.id });
     }
     if (action === "guildDeleteP0DiscordSignup") {
       const deleted = await managementDeleteP0DiscordSignup({ guildId: guild.id, query: req.query });
@@ -28192,7 +28221,7 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "lichtbotReviewP0Signup" || action === "reviewP0DiscordSignup") {
       const reviewed = await reviewP0DiscordSignup({ guildId: guild.id, query: postParams });
-      return res.json({ ...reviewed, guild: guild.slug });
+      return res.json({ ...reviewed, guild: guild.slug, guildId: guild.id });
     }
     if (action === "guildDeleteP0DiscordSignup") {
       const deleted = await managementDeleteP0DiscordSignup({ guildId: guild.id, query: postParams });
