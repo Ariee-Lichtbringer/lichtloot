@@ -8449,6 +8449,9 @@ async function resolveGuildPoPostChannelId({ guildId, requestedChannelId = "", r
 async function queuePoPost({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
+  const forceNewMessage = ["1", "true", "yes", "ja"].includes(
+    clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()
+  );
   let linkedRaidId = clean(params.lichtlootRaidId || params.lichtlootRaid || params.raidId);
   let linkedRaidSignupEnabled = null;
   if (!linkedRaidId) {
@@ -8585,6 +8588,27 @@ async function queuePoPost({ guildId, query: params }) {
      where guild_id = $1 and post_key = $2 and archived_at is null`,
     [guildId, postKey, linkedRaidId]
   );
+  // Ein ausdruecklicher Neuversand eines reinen P0-Anmelders darf nicht an
+  // einer veralteten Discord-ID haengen bleiben. Die ID wird erst wieder vom
+  // Bot gespeichert, nachdem Discord den neuen Post wirklich angenommen hat.
+  if (forceNewMessage && linkedRaidId.toUpperCase().startsWith("P0-") && p0Pool) {
+    await ensureP0OnlySchema();
+    await p0Query(
+      `update p0_only_events
+       set discord_message_id = null, updated_at = now()
+       where guild_id = $1 and external_p0_id = $2 and deleted_at is null`,
+      [guildId, linkedRaidId]
+    );
+    await query(
+      `update po_post_entries
+       set discord_message_id = '', updated_at = now()
+       where guild_id = $1 and post_key = $2 and archived_at is null`,
+      [guildId, postKey]
+    );
+  }
+  const manualQueueRequestId = forceNewMessage
+    ? `manual-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+    : "";
   const queued = await enqueueBotUpdate({
     guildId,
     type: "po_post",
@@ -8608,7 +8632,8 @@ async function queuePoPost({ guildId, query: params }) {
       itemOptions: clean(params.itemOptions || params.items || params.itemList),
       postedEntries: typeof params.postedEntries === "string" ? params.postedEntries : JSON.stringify(params.postedEntries || []),
       restoreArchived: ["1", "true", "yes", "ja"].includes(clean(params.restoreArchived || params.restore || params.repost || "").toLowerCase()) ? "true" : "",
-      forceNewMessage: ["1", "true", "yes", "ja"].includes(clean(params.forceNewMessage || params.forceRepost || "").toLowerCase()) ? "true" : "",
+      forceNewMessage: forceNewMessage ? "true" : "",
+      queueRequestId: manualQueueRequestId,
       createLichtlootRaid: clean(params.createLichtlootRaid || params.createRaid || ""),
       lichtlootRaidId: linkedRaidId,
       lichtlootPlayerPin: clean(params.lichtlootPlayerPin || params.lichtlootPrioPin || params.prioPin || params.raidPin || ""),
