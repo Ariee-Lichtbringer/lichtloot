@@ -20493,15 +20493,28 @@ function importedRaidSignupAliases(value) {
 }
 
 async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
-  const [externalResult, characterResult, discordLinkResult] = await Promise.all([
-    query(
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    // Die Leitungsseite lädt Raid- und P0-Bereich parallel. Außerdem können
+    // mehrere API-Instanzen denselben Raid gleichzeitig ausliefern. Da diese
+    // eigentlich lesende Funktion historische externe Anmeldungen in echte
+    // SpielerLogin-Anmeldungen umwandelt, müssen diese Schreibzugriffe pro
+    // Gilde/Raid serialisiert werden. Sonst aktualisieren zwei Requests
+    // dieselben Tupel und PostgreSQL bricht mit "tuple concurrently updated" ab.
+    await client.query(
+      "select pg_advisory_xact_lock(hashtext($1), hashtext($2))",
+      [clean(guildId), clean(raidId)]
+    );
+    const [externalResult, characterResult, discordLinkResult] = await Promise.all([
+    client.query(
       `select id, player_name, class_name, role, status, note, source,
               discord_user_id, discord_name, created_at
        from raid_external_signups
        where guild_id = $1 and raid_id = $2`,
       [guildId, raidId]
     ),
-    query(
+    client.query(
       `select c.id, c.player_id, c.name, c.class_name
        from characters c
        join players p on p.id = c.player_id
@@ -20510,7 +20523,7 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
          and coalesce(p.is_blocked, false) = false`,
       [guildId]
     ),
-    query(
+    client.query(
       `select c.id, c.player_id, c.name, c.class_name,
               dbm.username, dbm.display_name, dbm.global_name, dpl.discord_name
        from discord_player_links dpl
@@ -20523,8 +20536,11 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
          and coalesce(p.is_blocked, false) = false`,
       [guildId]
     )
-  ]);
-  if (!externalResult.rows.length || !characterResult.rows.length) return 0;
+    ]);
+    if (!externalResult.rows.length || !characterResult.rows.length) {
+      await client.query("commit");
+      return 0;
+    }
 
   const charactersByName = new Map();
   for (const character of characterResult.rows) {
@@ -20570,7 +20586,7 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
     // manueller Eintrag aus der Leitungsseite ist dabei zugleich ein bewusster
     // Charakterwechsel: Die alte Anmeldung muss ersetzt werden, statt den neu
     // angelegten externen Datensatz anschließend kommentarlos zu verwerfen.
-    await query(
+    await client.query(
       `delete from raid_signups rs
        using characters c
        where rs.character_id = c.id
@@ -20579,7 +20595,7 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
          and rs.character_id <> $3`,
       [raidId, character.player_id, character.id]
     );
-    await query(
+    await client.query(
       `insert into raid_signups (
          raid_id, character_id, status, note, role, source,
          discord_user_id, discord_name, created_at, updated_at
@@ -20606,13 +20622,20 @@ async function reconcileExternalRaidSignupsWithPlayerAccounts(guildId, raidId) {
         external.created_at || null
       ]
     );
-    await query(
+    await client.query(
       `delete from raid_external_signups where guild_id = $1 and raid_id = $2 and id = $3`,
       [guildId, raidId, external.id]
     );
     reconciled += 1;
   }
-  return reconciled;
+    await client.query("commit");
+    return reconciled;
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 async function getRaidHelper({ guildId, query: params }) {
