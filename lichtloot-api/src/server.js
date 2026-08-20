@@ -20972,7 +20972,8 @@ async function saveRaidSignup({ guildId, query: params }) {
     const linkedCharacter = await query(
       `select c.*, p.approval_status
        from discord_player_links dpl
-       join characters c on c.id = dpl.character_id
+       join characters linked_character on linked_character.id = dpl.character_id
+       join characters c on c.player_id = linked_character.player_id
        join players p on p.id = c.player_id
        where dpl.guild_id = $1
          and dpl.discord_user_id = $2
@@ -22441,7 +22442,8 @@ async function findOrCreateDiscordP0Character(client, guildId, params) {
     const linked = await client.query(
       `select c.id, c.name, c.server, c.class_name, c.created_at
        from discord_player_links dpl
-       join characters c on c.id = dpl.character_id
+       join characters linked_character on linked_character.id = dpl.character_id
+       join characters c on c.player_id = linked_character.player_id
        join players p on p.id = c.player_id
        where dpl.guild_id = $1
          and dpl.discord_user_id = $2
@@ -22666,7 +22668,8 @@ async function deleteP0DiscordSignup({ guildId, query: params }) {
     const linkedCharacter = await query(
       `select c.*
        from discord_player_links dpl
-       join characters c on c.id = dpl.character_id
+       join characters linked_character on linked_character.id = dpl.character_id
+       join characters c on c.player_id = linked_character.player_id
        join players p on p.id = c.player_id
        where dpl.guild_id = $1
          and dpl.discord_user_id = $2
