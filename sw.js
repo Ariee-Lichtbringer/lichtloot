@@ -1,4 +1,4 @@
-const LICHTLOOT_CACHE = "lichtloot-app-v1";
+const LICHTLOOT_CACHE = "lichtloot-app-v2";
 const STATIC_ASSETS = [
   "./",
   "start.html",
@@ -34,11 +34,23 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // HTML-Navigationen immer frisch laden. So koennen weder eine alte
+  // Weiterleitung noch GitHub-Fehlerseiten dauerhaft im App-Cache landen.
+  if(request.mode === "navigate"){
+    event.respondWith(
+      fetch(request, { cache:"no-store", redirect:"follow" })
+        .catch(() => caches.match("start.html"))
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(request)
       .then(response => {
-        const copy = response.clone();
-        caches.open(LICHTLOOT_CACHE).then(cache => cache.put(request, copy));
+        if(response.ok && !response.redirected){
+          const copy = response.clone();
+          caches.open(LICHTLOOT_CACHE).then(cache => cache.put(request, copy));
+        }
         return response;
       })
       .catch(() => caches.match(request).then(response => response || caches.match("start.html")))
