@@ -11330,6 +11330,67 @@ async function savePrio({ guildId, query: params }) {
     }
 
     if (!raidResult || !raidResult.rows.length) {
+      let p0OnlyEvent = null;
+      if (externalRaidId.toUpperCase().startsWith("P0-")) {
+        p0OnlyEvent = await findP0OnlyEvent(guildId, { raidId: externalRaidId });
+      }
+      if (!p0OnlyEvent && prioPin) {
+        p0OnlyEvent = await findP0OnlyEvent(guildId, {
+          playerPin: prioPin,
+          raid: raidType
+        });
+      }
+      if (p0OnlyEvent) {
+        // Reine P0-Anmelder liegen absichtlich in einer separaten Tabelle. Für
+        // P1-P3 benötigen die bestehenden Prios jedoch weiterhin eine raids.id.
+        // Diese interne Referenz besitzt keine Discord-Nachricht und erzeugt
+        // deshalb keinen zusätzlichen Raidanmelder.
+        raidResult = await client.query(
+          `insert into raids (
+             guild_id, name, raid_type, raid_date, external_raid_id, raid_pin,
+             lead_pin, raid_time, guild_name, player_link, status,
+             p0plus_freigabe, created_by, raidhelper_enabled, prio_enabled,
+             show_worldbuffs
+           ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,false,true,false)
+           on conflict (guild_id, external_raid_id)
+             where external_raid_id is not null and external_raid_id <> ''
+           do update set
+             name=excluded.name,
+             raid_type=excluded.raid_type,
+             raid_date=excluded.raid_date,
+             raid_pin=excluded.raid_pin,
+             lead_pin=excluded.lead_pin,
+             raid_time=excluded.raid_time,
+             guild_name=coalesce(nullif(excluded.guild_name,''),raids.guild_name),
+             player_link=excluded.player_link,
+             status=excluded.status,
+             raidhelper_enabled=false,
+             prio_enabled=true,
+             show_worldbuffs=false,
+             deleted_at=null,
+             updated_at=now()
+           returning id, external_raid_id, name, raid_type, raid_date, raid_time,
+                     raid_pin, player_link, discord_channel_id, status`,
+          [
+            guildId,
+            clean(p0OnlyEvent.raid_name || p0OnlyEvent.name) || displayRaidName(p0OnlyEvent.raid_type || raidType),
+            normalizeRaidType(p0OnlyEvent.raid_type || raidType),
+            p0OnlyEvent.raid_date || null,
+            clean(p0OnlyEvent.external_p0_id || p0OnlyEvent.external_raid_id),
+            clean(p0OnlyEvent.player_pin || p0OnlyEvent.raid_pin || prioPin),
+            clean(p0OnlyEvent.lead_pin),
+            clean(p0OnlyEvent.raid_time),
+            clean(params.guild || params.gilde),
+            clean(p0OnlyEvent.player_pin || p0OnlyEvent.player_link || prioPin),
+            normalizeStatus(p0OnlyEvent.status || "geschlossen"),
+            "geöffnet",
+            `P0-Prioreferenz: ${clean(p0OnlyEvent.created_by) || "Gildenleitung"}`
+          ]
+        );
+      }
+    }
+
+    if (!raidResult || !raidResult.rows.length) {
       const error = new Error("Raid oder Prio-PIN wurde nicht gefunden. Bitte nutze den aktuellen Raid-Link.");
       error.statusCode = 404;
       throw error;
