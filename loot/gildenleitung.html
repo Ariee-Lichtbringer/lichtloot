@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+// Diese URL war eine alte, unvollstaendige Kopie der Gildenleitungsseite.
+// Bestehende Lesezeichen bleiben gueltig, werden aber auf die einzige aktuelle
+// Verwaltung weitergeleitet. Query-Parameter (insbesondere guild) und Hash
+// bleiben dabei erhalten.
+(() => {
+  const target = new URL("../gildenleitung.html", window.location.href);
+  target.search = window.location.search;
+  target.hash = window.location.hash;
+  window.location.replace(target.href);
+})();
+</script>
 <script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7818,6 +7830,11 @@ function renderDashboardCards(){
   const renderRaidCard = raid => {
     const key = getRaidKey(raid);
     const createdBy = getRaidCreatorName(raid);
+    if(raid.p0Only) return `
+      <article class="active-raid-card active-raid-p0-only-card">
+        <div class="active-raid-visual"><div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div></div>
+        <div class="active-raid-body"><div><div class="active-raid-title">${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "-")} P0-Anmelder</div><div class="active-raid-topline"><div class="active-raid-meta"><span class="active-raid-weekday">${escapeHtml(formatRaidWeekday(raid.raidDate))}</span><span>${escapeHtml(formatRaidDate(raid.raidDate))}</span><span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span></div><div class="active-raid-info"><span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div></div></div><div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openPoPostPanel()">Unter Alle P0-Anmelder öffnen</button></div></div></div>
+      </article>`;
     return `
       <article class="active-raid-card">
         <div class="active-raid-visual">
@@ -12028,13 +12045,16 @@ async function ensurePoSignupLichtlootRaid(config, options={}){
   const resultRaidId = result.raidId || result.RaidID || raidId;
   const resultPlayerPin = result.playerPin || result.prioPin || playerPin;
   const resultLeadPin = result.leadPin || leadPin;
-  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy };
+  const p0PostKey = String(resultRaidId || raidId).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  setValue("poSignupPostKey", p0PostKey);
+  poSignupGeneratedLichtlootRaid = { fingerprint, raidId:resultRaidId, playerPin:resultPlayerPin, leadPin:resultLeadPin, createdBy, postKey:p0PostKey };
   updatePoSignupPreview();
   if(status && !options.silent){
     status.innerHTML = `<span class="good">Separate P0-ID <strong>${escapeHtml(resultRaidId)}</strong> wurde in der P0-Datenbank erstellt. P0-PIN: <strong>${escapeHtml(resultPlayerPin)}</strong></span>`;
     status.className = "status good";
   }
   return Object.assign({}, config, {
+    postKey:p0PostKey,
     lichtlootRaidId:resultRaidId,
     lichtlootPlayerPin:resultPlayerPin,
     lichtlootLeadPin:resultLeadPin
@@ -13411,6 +13431,8 @@ async function createPoSignupPost(){
       itemOptions: config.itemOptions,
       postedEntries: JSON.stringify(poSignupEntriesForDiscordPost(config.postKey)),
       restoreArchived: "true",
+      forceNewMessage: String(config.lichtlootRaidId || "").toUpperCase().startsWith("P0-") ? "true" : "",
+      postMode: String(config.lichtlootRaidId || "").toUpperCase().startsWith("P0-") ? "p0_only" : "",
       createLichtlootRaid: config.createLichtlootRaid ? "true" : "",
       lichtlootRaidId: config.lichtlootRaidId || "",
       lichtlootPlayerPin: config.lichtlootPlayerPin || "",
@@ -16071,6 +16093,7 @@ function renderP0ReviewRows(){
           <div class="actions">
             <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'approved')">Freigeben</button>
             <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'rejected')">Ablehnen</button>
+            <button class="small-btn danger" type="button" onclick="deleteP0DiscordSignupFromGuild(${index})">Löschen</button>
           </div>
         </td>
       </tr>
@@ -16092,6 +16115,8 @@ async function reviewP0DiscordSignupFromGuild(index, status){
       action:"reviewP0DiscordSignup",
       masterCode,
       signupId:entry.id,
+      storage:entry.storage || (entry.p0Only ? "separate-p0-database" : "raid-database"),
+      p0Only:entry.p0Only ? "true" : "false",
       status,
       reviewer:"Gildenleitung"
     });
@@ -16107,6 +16132,24 @@ async function reviewP0DiscordSignupFromGuild(index, status){
   }catch(error){
     setStatus(error.message || "P0+-Freigabe konnte nicht gespeichert werden.", "bad");
   }
+}
+
+async function deleteP0DiscordSignupFromGuild(index){
+  const entry = p0ReviewEntries[index];
+  if(!entry || !confirm(`P0-Anmeldung von ${entry.player || "diesem Spieler"} wirklich löschen?`)) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  try{
+    const result = await railwayWrite({
+      action:"guildDeleteP0DiscordSignup", masterCode, signupId:entry.id,
+      storage:entry.storage || (entry.p0Only ? "separate-p0-database" : "raid-database"),
+      p0Only:entry.p0Only ? "true" : "false"
+    });
+    if(!result.success) throw new Error(result.error || "P0-Anmeldung konnte nicht gelöscht werden.");
+    p0ReviewEntries.splice(index, 1);
+    renderP0ReviewRows();
+    setStatus("P0-Anmeldung wurde im richtigen Datensatz gelöscht.", "good");
+  }catch(error){ setStatus(error.message || "P0-Anmeldung konnte nicht gelöscht werden.", "bad"); }
 }
 
 function renderP0PlusRows(){
