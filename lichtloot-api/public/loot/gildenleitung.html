@@ -16081,6 +16081,7 @@ function renderP0ReviewRows(){
           <div class="actions">
             <button class="small-btn good" type="button" ${status === "approved" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'approved')">Freigeben</button>
             <button class="small-btn danger" type="button" ${status === "rejected" ? "disabled" : ""} onclick="reviewP0DiscordSignupFromGuild(${index},'rejected')">Ablehnen</button>
+            <button class="small-btn danger" type="button" onclick="deleteP0DiscordSignupFromGuild(${index})">Löschen</button>
           </div>
         </td>
       </tr>
@@ -16102,6 +16103,8 @@ async function reviewP0DiscordSignupFromGuild(index, status){
       action:"reviewP0DiscordSignup",
       masterCode,
       signupId:entry.id,
+      storage:entry.storage || (entry.p0Only ? "separate-p0-database" : "raid-database"),
+      p0Only:entry.p0Only ? "true" : "false",
       status,
       reviewer:"Gildenleitung"
     });
@@ -16117,6 +16120,24 @@ async function reviewP0DiscordSignupFromGuild(index, status){
   }catch(error){
     setStatus(error.message || "P0+-Freigabe konnte nicht gespeichert werden.", "bad");
   }
+}
+
+async function deleteP0DiscordSignupFromGuild(index){
+  const entry = p0ReviewEntries[index];
+  if(!entry || !confirm(`P0-Anmeldung von ${entry.player || "diesem Spieler"} wirklich löschen?`)) return;
+  const masterCode = document.getElementById("masterCode").value.trim();
+  if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
+  try{
+    const result = await railwayWrite({
+      action:"guildDeleteP0DiscordSignup", masterCode, signupId:entry.id,
+      storage:entry.storage || (entry.p0Only ? "separate-p0-database" : "raid-database"),
+      p0Only:entry.p0Only ? "true" : "false"
+    });
+    if(!result.success) throw new Error(result.error || "P0-Anmeldung konnte nicht gelöscht werden.");
+    p0ReviewEntries.splice(index, 1);
+    renderP0ReviewRows();
+    setStatus("P0-Anmeldung wurde im richtigen Datensatz gelöscht.", "good");
+  }catch(error){ setStatus(error.message || "P0-Anmeldung konnte nicht gelöscht werden.", "bad"); }
 }
 
 function renderP0PlusRows(){
