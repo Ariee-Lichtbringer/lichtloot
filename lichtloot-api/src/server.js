@@ -2923,6 +2923,7 @@ async function ensureP0OnlySchema() {
        unique(guild_id, external_p0_id)
      )`
   );
+  await p0Query(`alter table p0_only_events add column if not exists loot_master_targets jsonb not null default '[]'::jsonb`);
   await p0Query(
     `create table if not exists p0_only_signups (
        id uuid primary key default gen_random_uuid(),
@@ -20015,13 +20016,15 @@ async function createRaidRecord({ guildId, query: params }) {
 
 async function setRaidLootMasterTargets({guildId,query:params}){
   requireMasterCode(params.masterCode);
-  const raid=await findRaid(guildId,params);
+  const raid=await findP0DiscordRaid(guildId,params);
   if(!raid){const error=new Error("Raid wurde nicht gefunden.");error.statusCode=404;throw error;}
   let targets=[];
   try{const parsed=typeof params.targets==="string"?JSON.parse(params.targets):params.targets;targets=Array.isArray(parsed)?parsed:[];}catch{}
   targets=targets.map(target=>({type:clean(target?.type).toLowerCase()==="role"?"role":"name",value:clean(target?.value||target?.name),label:clean(target?.label||target?.value||target?.name)})).filter(target=>target.value);
-  const result=await query(`update raids set loot_master_targets=$1::jsonb,updated_at=now() where id=$2 returning *`,[JSON.stringify(targets),raid.id]);
-  const saved=result.rows[0];
+  const result=raid.p0_only
+    ? await p0Query(`update p0_only_events set loot_master_targets=$1::jsonb,updated_at=now() where guild_id=$2 and id=$3 returning *`,[JSON.stringify(targets),guildId,raid.id])
+    : await query(`update raids set loot_master_targets=$1::jsonb,updated_at=now() where guild_id=$2 and id=$3 returning *`,[JSON.stringify(targets),guildId,raid.id]);
+  const saved=raid.p0_only ? normalizeP0OnlyEventRow(result.rows[0]) : result.rows[0];
   let queued=false;
   if(targets.length&&clean(saved.lead_pin)){
     const guildRow=(await query(`select name,slug from guilds where id=$1 limit 1`,[guildId])).rows[0]||{};
