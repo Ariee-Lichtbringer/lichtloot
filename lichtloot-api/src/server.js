@@ -9120,6 +9120,7 @@ async function addManualPoPostEntry({ guildId, query: params }) {
 async function getPoPostEntries({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   await ensurePoPostEntriesSchema();
+  await ensureUnlinkedP0PlusSchema();
   const rawRaidKey = clean(params.raid || params.raidName);
   const raidKey = rawRaidKey ? normalizeRaidType(rawRaidKey).toLowerCase() : "";
   const postKey = clean(params.postKey || params.poPostKey || params.postId);
@@ -9167,7 +9168,7 @@ async function getPoPostEntries({ guildId, query: params }) {
   }
   const result = await query(
     `select ppe.*,
-            coalesce((
+            (coalesce((
               select sum(pp.points)
               from p0plus_points pp
               join characters c on c.id = pp.character_id
@@ -9176,7 +9177,22 @@ async function getPoPostEntries({ guildId, query: params }) {
                 and lower(c.name) = lower(ppe.player_name)
                 and regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
                     regexp_replace(lower(ppe.item_name), '[^a-z0-9]+', '', 'g')
-            ), 0)::numeric as p0plus_points
+            ), 0) + coalesce((
+              select sum(up.points)
+              from unlinked_p0plus_points up
+              join items unlinked_item on unlinked_item.id = up.item_id
+              where up.guild_id = ppe.guild_id
+                and lower(up.player_name) = lower(ppe.player_name)
+                and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
+                    regexp_replace(lower(ppe.item_name), '[^a-z0-9]+', '', 'g')
+                and 1 = (
+                  select count(distinct lower(coalesce(unique_character.server, '')))
+                  from characters unique_character
+                  join players unique_player on unique_player.id = unique_character.player_id
+                  where unique_player.guild_id = ppe.guild_id
+                    and lower(unique_character.name) = lower(ppe.player_name)
+                )
+            ), 0))::numeric as p0plus_points
      from po_post_entries ppe
      where ${clauses.join(" and ")}
      order by updated_at desc, lower(player_name) asc, lower(item_name) asc
@@ -22179,6 +22195,7 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
 async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
   await ensureGuildPoItemsSchema();
+  await ensureUnlinkedP0PlusSchema();
   const configuredPoItemsResult = await query(
     `select count(*)::int as count
      from guild_po_items
@@ -22224,7 +22241,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     )
     : await query(
     `select p0s.*,
-            coalesce((
+            (coalesce((
               select sum(pp.points)
               from p0plus_points pp
               join items point_item on point_item.id = pp.item_id
@@ -22236,7 +22253,22 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
                   or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
                      regexp_replace(lower(signup_item.name), '[^a-z0-9]+', '', 'g')
                 )
-            ), 0)::numeric as p0plus_points
+            ), 0) + coalesce((
+              select sum(up.points)
+              from unlinked_p0plus_points up
+              join items unlinked_item on unlinked_item.id = up.item_id
+              where up.guild_id = p0s.guild_id
+                and lower(up.player_name) = lower(p0s.player_name)
+                and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
+                    regexp_replace(lower(p0s.item_name), '[^a-z0-9]+', '', 'g')
+                and 1 = (
+                  select count(distinct lower(coalesce(unique_character.server, '')))
+                  from characters unique_character
+                  join players unique_player on unique_player.id = unique_character.player_id
+                  where unique_player.guild_id = p0s.guild_id
+                    and lower(unique_character.name) = lower(p0s.player_name)
+                )
+            ), 0))::numeric as p0plus_points
      from p0_discord_signups p0s
      where p0s.guild_id = $1 and p0s.raid_id = $2
      order by p0s.item_name asc, p0s.player_name asc`,
@@ -22253,7 +22285,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
        c.server,
        i.id as item_id,
        i.name as item_name,
-       coalesce((
+       (coalesce((
          select sum(pp.points)
          from p0plus_points pp
          join items point_item on point_item.id = pp.item_id
@@ -22264,7 +22296,22 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
              or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
                 regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
            )
-       ), 0)::numeric as p0plus_points
+       ), 0) + coalesce((
+         select sum(up.points)
+         from unlinked_p0plus_points up
+         join items unlinked_item on unlinked_item.id = up.item_id
+         where up.guild_id = $1
+           and lower(up.player_name) = lower(c.name)
+           and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
+               regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
+           and 1 = (
+             select count(distinct lower(coalesce(unique_character.server, '')))
+             from characters unique_character
+             join players unique_player on unique_player.id = unique_character.player_id
+             where unique_player.guild_id = $1
+               and lower(unique_character.name) = lower(c.name)
+           )
+       ), 0))::numeric as p0plus_points
      from prios pr
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
