@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+// Diese URL war eine alte, unvollstaendige Kopie der Gildenleitungsseite.
+// Bestehende Lesezeichen bleiben gueltig, werden aber auf die einzige aktuelle
+// Verwaltung weitergeleitet. Query-Parameter (insbesondere guild) und Hash
+// bleiben dabei erhalten.
+(() => {
+  const target = new URL("../gildenleitung.html", window.location.href);
+  target.search = window.location.search;
+  target.hash = window.location.hash;
+  window.location.replace(target.href);
+})();
+</script>
 <script src="guild-page-boot.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
