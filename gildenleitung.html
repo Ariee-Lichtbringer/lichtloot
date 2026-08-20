@@ -2464,12 +2464,14 @@ tr.selected-row td{
 }
 .raid-helper-create-accordion > summary::-webkit-details-marker{display:none}
 .raid-helper-create-accordion > summary::after{
-  content:"▾";
+  content:"▾"!important;
   margin-left:auto;
   color:rgb(var(--accordion-accent));
   font-size:20px;
   font-weight:1000;
   transition:transform .18s ease;
+  writing-mode:horizontal-tb!important;
+  white-space:nowrap;
 }
 .raid-helper-create-accordion:not([open]) > summary::after{transform:rotate(-90deg)}
 .raid-helper-create-accordion > summary .raid-helper-card-icon{
@@ -2484,6 +2486,43 @@ tr.selected-row td{
 .raid-helper-create-accordion.accent-teal{--accordion-accent:45,212,191}
 .raid-helper-create-accordion.accent-violet{--accordion-accent:192,132,252}
 .raid-helper-create-accordion.accent-green{--accordion-accent:74,222,128}
+
+.raid-helper-wizard-progress{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  padding:10px;
+  border:1px solid rgba(96,165,250,.28);
+  border-radius:10px;
+  background:rgba(2,6,23,.6);
+}
+.raid-helper-wizard-step{
+  display:flex;
+  min-height:48px;
+  align-items:center;
+  gap:9px;
+  padding:8px 10px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(15,23,42,.56);
+  color:#94a3b8;
+  font-weight:900;
+  cursor:pointer;
+}
+.raid-helper-wizard-step b{display:grid;width:27px;height:27px;flex:0 0 27px;place-items:center;border:1px solid currentColor;border-radius:50%;font-size:12px}
+.raid-helper-wizard-step.active{border-color:#60a5fa;background:rgba(37,99,235,.2);color:#dbeafe;box-shadow:inset 0 -2px #60a5fa}
+.raid-helper-wizard-step.complete{border-color:rgba(74,222,128,.48);color:#86efac;background:rgba(22,101,52,.16)}
+.raid-helper-wizard-step.complete b{font-size:0;background:#16a34a;color:#fff}.raid-helper-wizard-step.complete b::after{content:"✓";font-size:14px}
+.raid-helper-wizard-nav{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:8px;z-index:25;padding:10px;border:1px solid rgba(96,165,250,.24);border-radius:9px;background:rgba(2,6,23,.94);box-shadow:0 -8px 24px rgba(0,0,0,.3)}
+.raid-helper-wizard-nav .btn{min-width:190px}
+.raid-helper-wizard-review{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.72fr);gap:14px}
+.raid-helper-wizard-checklist{display:grid;gap:8px}
+.raid-helper-wizard-check{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(148,163,184,.18);border-radius:8px;background:rgba(2,6,23,.38);color:#e2e8f0;font-weight:850}
+.raid-helper-wizard-check b{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:#16a34a;color:#fff}
+.raid-helper-wizard-check.warn{border-color:rgba(251,191,36,.42);background:rgba(120,53,15,.18);color:#fde68a}.raid-helper-wizard-check.warn b{background:#f59e0b;color:#111827}
+.raid-helper-wizard-summary{display:grid;gap:9px;padding:14px;border:1px solid rgba(74,222,128,.34);border-radius:9px;background:rgba(20,83,45,.15)}
+.raid-helper-wizard-summary h4{margin:0;color:#86efac}.raid-helper-wizard-summary span{color:#cbd5e1;font-size:12px}.raid-helper-wizard-summary strong{color:#fff}
+@media(max-width:1000px){.raid-helper-wizard-progress{grid-template-columns:1fr}.raid-helper-wizard-step{min-height:40px}.raid-helper-wizard-review{grid-template-columns:1fr}}
 
 .raid-helper-slots .field{
   border:1px solid rgba(148,163,184,.14);
@@ -5376,6 +5415,13 @@ body.worldbuff-only .master-only{display:none!important}
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
+          <nav class="raid-helper-wizard-progress" aria-label="Schritte zum Raidanmelder">
+            <button class="raid-helper-wizard-step active" type="button" data-wizard-step="1" onclick="setRaidHelperWizardStep(1)"><b>1</b><span>Raid &amp; Termin</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="2" onclick="setRaidHelperWizardStep(2)"><b>2</b><span>Plätze &amp; Regeln</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="3" onclick="setRaidHelperWizardStep(3)"><b>3</b><span>Discord</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="4" onclick="setRaidHelperWizardStep(4)"><b>4</b><span>P0-Anmelder</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="5" onclick="setRaidHelperWizardStep(5)"><b>5</b><span>Prüfen</span></button>
+          </nav>
           <div id="raidHelperRaidEditMode" class="raid-helper-edit-mode hidden">
             <div>
               <strong>Raid wird bearbeitet</strong>
@@ -5402,7 +5448,7 @@ body.worldbuff-only .master-only{display:none!important}
               <button class="small-btn ghost" type="button" onclick="cancelRaidHelperTemplateEdit()">Abbrechen</button>
             </div>
           </div>
-          <details class="raid-helper-card raid-helper-create-accordion accent-blue" open>
+          <details class="raid-helper-card raid-helper-create-accordion accent-blue" data-wizard-panel="1" open>
             <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">⚔</span>
               <div>
@@ -5491,7 +5537,7 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
             </div>
           </details>
-          <details id="raidHelperWeeklyDetails" class="raid-helper-card raid-helper-create-accordion accent-orange">
+          <details id="raidHelperWeeklyDetails" class="raid-helper-card raid-helper-create-accordion accent-orange hidden" data-wizard-panel="3">
               <summary class="raid-helper-card-head"><span class="raid-helper-card-icon">↻</span><div><h3>Wochenautomatik einrichten</h3><p>Ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</p></div></summary>
               <div class="raid-helper-accordion-content">
                 <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt und postet wöchentlich den Raid sowie – falls aktiviert – den passenden P0-Anmelder.</small></span></label>
@@ -5508,7 +5554,7 @@ body.worldbuff-only .master-only{display:none!important}
                 </div>
               </div>
             </details>
-          <details class="raid-helper-card raid-helper-create-accordion accent-pink">
+          <details class="raid-helper-card raid-helper-create-accordion accent-pink hidden" data-wizard-panel="3">
               <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">📣</span>
                 <div><h3>Benachrichtigung bei Erstellung des Raidanmelders</h3><p>Diese Namen und Discord-Rollen erhalten beim Posten eine DM mit Raid, Termin, Channel und direktem Link zum Anmelder.</p></div>
@@ -5545,7 +5591,7 @@ body.worldbuff-only .master-only{display:none!important}
               </div>
               </div>
           </details>
-          <details class="raid-helper-card raid-helper-create-accordion accent-teal">
+          <details class="raid-helper-card raid-helper-create-accordion accent-teal hidden" data-wizard-panel="3">
               <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">🔔</span>
                 <div><h3>Interne Benachrichtigungen bei Statusänderungen</h3><p>Raidlead und Plündermeister werden automatisch informiert. Weitere Namen oder Discord-Rollen kannst du hier ergänzen. Diese Auswahl erscheint nicht im Anmeldertext.</p></div>
@@ -5580,7 +5626,7 @@ body.worldbuff-only .master-only{display:none!important}
           </details>
             <input id="raidHelperImageUrl" type="hidden">
 
-          <details class="raid-helper-card raid-helper-create-accordion accent-violet">
+          <details class="raid-helper-card raid-helper-create-accordion accent-violet hidden" data-wizard-panel="2">
             <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">☷</span>
               <div>
@@ -5616,7 +5662,7 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
           </details>
 
-          <details class="raid-helper-card raid-helper-create-accordion accent-green">
+          <details class="raid-helper-card raid-helper-create-accordion accent-green hidden" data-wizard-panel="4">
             <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▤</span>
               <div>
@@ -5632,7 +5678,19 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
           </details>
 
-          <div class="tools">
+          <section class="raid-helper-card raid-helper-create-accordion accent-green hidden" data-wizard-panel="5">
+            <div class="raid-helper-accordion-content raid-helper-wizard-review">
+              <div><div class="raid-helper-card-head"><span class="raid-helper-card-icon">✓</span><div><h3>Vor dem Erstellen</h3><p>Kontrolliere die Pflichtangaben. Gelbe Punkte müssen noch geprüft werden.</p></div></div><div id="raidHelperWizardChecklist" class="raid-helper-wizard-checklist"></div></div>
+              <div id="raidHelperWizardSummary" class="raid-helper-wizard-summary"></div>
+            </div>
+          </section>
+
+          <div class="raid-helper-wizard-nav">
+            <button id="raidHelperWizardBack" class="btn ghost" type="button" onclick="moveRaidHelperWizard(-1)">← Zurück</button>
+            <button id="raidHelperWizardNext" class="btn" type="button" onclick="moveRaidHelperWizard(1)">Weiter →</button>
+          </div>
+
+          <div id="raidHelperLegacyCreateTools" class="tools hidden">
             <button id="raidHelperCreateSubmitButton" class="btn" type="button" onclick="submitRaidHelperCreateOrEdit()">Raidanmelder erstellen</button>
             <button class="btn ghost" type="button" onclick="copyRaidHelperPreview()">Vorschau kopieren</button>
           </div>
@@ -7737,6 +7795,80 @@ function openRaidHelperPanel(tabName){
   if(tabName) setRaidHelperTab(tabName);
 }
 
+let raidHelperWizardStep = 1;
+
+function raidHelperWizardChecks(){
+  const raid = raidHelperValue("raidHelperRaid");
+  const date = raidHelperValue("raidHelperDate");
+  const time = raidHelperValue("raidHelperTime");
+  const lead = raidHelperValue("raidHelperLead");
+  const channel = raidHelperValue("raidHelperChannel");
+  const p0Enabled = document.getElementById("raidHelperCreatePoSignup")?.checked !== false && document.getElementById("raidHelperSignupOnly")?.checked !== true;
+  return [
+    {ok:Boolean(raid),label:raid ? "Raid ausgewählt" : "Raid auswählen"},
+    {ok:Boolean(date && time),label:date && time ? "Datum und Uhrzeit eingetragen" : "Datum und Uhrzeit fehlen"},
+    {ok:Boolean(lead),label:lead ? "Raidlead eingetragen" : "Raidlead prüfen"},
+    {ok:Boolean(channel),label:channel ? "Discord-Channel ausgewählt" : "Discord-Channel auswählen"},
+    {ok:true,label:p0Enabled ? "P0-Anmelder wird mit erstellt" : "Kein P0-Anmelder ausgewählt"}
+  ];
+}
+
+function renderRaidHelperWizardReview(){
+  const checks = raidHelperWizardChecks();
+  const checklist = document.getElementById("raidHelperWizardChecklist");
+  if(checklist) checklist.innerHTML = checks.map(item=>`<div class="raid-helper-wizard-check ${item.ok ? "" : "warn"}"><b>${item.ok ? "✓" : "!"}</b><span>${escapeHtml(item.label)}</span></div>`).join("");
+  const summary = document.getElementById("raidHelperWizardSummary");
+  if(summary) summary.innerHTML = `<h4>Zusammenfassung</h4><span>Raid <strong>${escapeHtml(RAID_OPTIONS[raidHelperValue("raidHelperRaid")]?.name || raidHelperValue("raidHelperRaid") || "–")}</strong></span><span>Termin <strong>${escapeHtml(formatRaidDate(raidHelperValue("raidHelperDate")) || "–")} · ${escapeHtml(raidHelperValue("raidHelperTime") || "–")} Uhr</strong></span><span>Raidlead <strong>${escapeHtml(raidHelperValue("raidHelperLead") || "–")}</strong></span><span>Discord-Channel <strong>${escapeHtml(raidHelperValue("raidHelperChannelSelect") || raidHelperValue("raidHelperChannel") || "–")}</strong></span><span>${document.getElementById("raidHelperCreatePoSignup")?.checked !== false && document.getElementById("raidHelperSignupOnly")?.checked !== true ? "P0-Anmelder wird automatisch mit erstellt." : "Es wird kein P0-Anmelder mit erstellt."}</span>`;
+}
+
+function setRaidHelperWizardStep(step){
+  raidHelperWizardStep = Math.max(1,Math.min(5,Number(step)||1));
+  document.querySelectorAll("#raidHelperTab-createEvent [data-wizard-panel]").forEach(panel=>{
+    const active = Number(panel.dataset.wizardPanel) === raidHelperWizardStep;
+    panel.classList.toggle("hidden",!active);
+    if(active && panel.tagName === "DETAILS" && raidHelperWizardStep !== 3) panel.open = true;
+  });
+  document.querySelectorAll("#raidHelperTab-createEvent [data-wizard-step]").forEach(button=>{
+    const value=Number(button.dataset.wizardStep);
+    button.classList.toggle("active",value===raidHelperWizardStep);
+    button.classList.toggle("complete",value<raidHelperWizardStep);
+  });
+  const back=document.getElementById("raidHelperWizardBack");
+  const next=document.getElementById("raidHelperWizardNext");
+  if(back) back.disabled=raidHelperWizardStep===1;
+  if(next){
+    next.textContent=raidHelperWizardStep===5 ? "Raidanmelder jetzt erstellen" : "Weiter →";
+    next.classList.toggle("good",raidHelperWizardStep===5);
+  }
+  if(raidHelperWizardStep===5) renderRaidHelperWizardReview();
+  document.querySelector(".raid-helper-wizard-progress")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function moveRaidHelperWizard(direction){
+  if(raidHelperWizardStep===1 && Number(direction)>0){
+    const missing=raidHelperWizardChecks().slice(0,4).filter(item=>!item.ok);
+    if(missing.length){
+      setStatus("Schritt 1 ist noch nicht vollständig: "+missing.map(item=>item.label).join(", "),"bad");
+      return;
+    }
+  }
+  if(raidHelperWizardStep===2 && Number(direction)>0 && Number(raidHelperValue("raidHelperMax"))<1){
+    setStatus("Bitte mindestens einen Gesamtplatz eintragen.","bad");
+    return;
+  }
+  if(raidHelperWizardStep===5 && Number(direction)>0){
+    const missing=raidHelperWizardChecks().filter(item=>!item.ok);
+    if(missing.length){
+      setStatus("Bitte vor dem Erstellen prüfen: "+missing.map(item=>item.label).join(", "),"bad");
+      renderRaidHelperWizardReview();
+      return;
+    }
+    submitRaidHelperCreateOrEdit();
+    return;
+  }
+  setRaidHelperWizardStep(raidHelperWizardStep+Number(direction||0));
+}
+
 function openP0OnlyCreatorFromDashboard(){
   openRaidHelperPanel("poCreate");
   document.getElementById("raidHelperTab-poCreate")?.scrollIntoView({behavior:"smooth",block:"start"});
@@ -7752,6 +7884,7 @@ function openNewRaidHelperForm(){
   document.querySelectorAll("#raidHelperTab-createEvent .raid-helper-create-accordion").forEach((section,index)=>{
     section.open = index === 0;
   });
+  setRaidHelperWizardStep(1);
   raidHelperEditingRaidIdentifier = "";
   raidHelperEditingData = null;
   raidHelperEditingTemplateIdentifier = "";
