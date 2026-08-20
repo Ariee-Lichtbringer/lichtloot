@@ -2445,6 +2445,46 @@ tr.selected-row td{
   font-weight:700;
 }
 
+.raid-helper-create-accordion{
+  --accordion-accent:148,163,184;
+  padding:0;
+  overflow:hidden;
+  border-color:rgba(var(--accordion-accent),.42);
+  background:linear-gradient(135deg,rgba(var(--accordion-accent),.09),rgba(2,6,23,.58));
+}
+.raid-helper-create-accordion > summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px;
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+  background:linear-gradient(90deg,rgba(var(--accordion-accent),.16),rgba(15,23,42,.28));
+}
+.raid-helper-create-accordion > summary::-webkit-details-marker{display:none}
+.raid-helper-create-accordion > summary::after{
+  content:"▾";
+  margin-left:auto;
+  color:rgb(var(--accordion-accent));
+  font-size:20px;
+  font-weight:1000;
+  transition:transform .18s ease;
+}
+.raid-helper-create-accordion:not([open]) > summary::after{transform:rotate(-90deg)}
+.raid-helper-create-accordion > summary .raid-helper-card-icon{
+  border-color:rgba(var(--accordion-accent),.62);
+  background:rgba(var(--accordion-accent),.2);
+}
+.raid-helper-create-accordion > summary h3{color:rgb(var(--accordion-accent))}
+.raid-helper-create-accordion > .raid-helper-accordion-content{padding:14px;border-top:1px solid rgba(var(--accordion-accent),.24)}
+.raid-helper-create-accordion.accent-blue{--accordion-accent:96,165,250}
+.raid-helper-create-accordion.accent-orange{--accordion-accent:251,146,60}
+.raid-helper-create-accordion.accent-pink{--accordion-accent:244,114,182}
+.raid-helper-create-accordion.accent-teal{--accordion-accent:45,212,191}
+.raid-helper-create-accordion.accent-violet{--accordion-accent:192,132,252}
+.raid-helper-create-accordion.accent-green{--accordion-accent:74,222,128}
+
 .raid-helper-slots .field{
   border:1px solid rgba(148,163,184,.14);
   border-radius:8px;
@@ -5362,14 +5402,15 @@ body.worldbuff-only .master-only{display:none!important}
               <button class="small-btn ghost" type="button" onclick="cancelRaidHelperTemplateEdit()">Abbrechen</button>
             </div>
           </div>
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-blue" open>
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">⚔</span>
               <div>
                 <h3>Raid und Termin</h3>
                 <p>Grunddaten für den Discord-Post und die LichtLoot-Anmeldung.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="field" style="margin-bottom:14px">
               <label for="raidHelperQuickTemplate">Vorlage nutzen</label>
               <select id="raidHelperQuickTemplate" onchange="applyRaidHelperQuickTemplate(this.value)">
@@ -5448,9 +5489,11 @@ body.worldbuff-only .master-only{display:none!important}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
-            <details id="raidHelperWeeklyDetails" class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <summary style="cursor:pointer"><strong>↻ Wochenautomatik einrichten</strong><br><span class="muted">Aufklappen und ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</span></summary>
-              <div style="margin-top:14px">
+            </div>
+          </details>
+          <details id="raidHelperWeeklyDetails" class="raid-helper-card raid-helper-create-accordion accent-orange">
+              <summary class="raid-helper-card-head"><span class="raid-helper-card-icon">↻</span><div><h3>Wochenautomatik einrichten</h3><p>Ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</p></div></summary>
+              <div class="raid-helper-accordion-content">
                 <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt und postet wöchentlich den Raid sowie – falls aktiviert – den passenden P0-Anmelder.</small></span></label>
                 <div id="raidHelperWeeklyOptions" class="hidden" style="margin-top:12px">
                   <div class="raid-helper-row">
@@ -5465,11 +5508,12 @@ body.worldbuff-only .master-only{display:none!important}
                 </div>
               </div>
             </details>
-            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-pink">
+              <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">📣</span>
                 <div><h3>Benachrichtigung bei Erstellung des Raidanmelders</h3><p>Diese Namen und Discord-Rollen erhalten beim Posten eine DM mit Raid, Termin, Channel und direktem Link zum Anmelder.</p></div>
-              </div>
+              </summary>
+              <div class="raid-helper-accordion-content">
               <div class="raid-helper-row">
                 <div class="field">
                   <label for="raidHelperAnnouncementNotifyMemberSelect">Discord-Namen</label>
@@ -5499,12 +5543,14 @@ body.worldbuff-only .master-only{display:none!important}
                 <textarea id="raidHelperAnnouncementMessage" placeholder="Zum Beispiel: Bitte testweise anmelden und auf NachtLoot eine Fantasie-Prio erstellen. Bei Problemen gerne Ariee im Discord oder ingame anschreiben."></textarea>
                 <span class="muted">Der Standardtext mit Raid, Termin, Channel und Anmeldelink wird automatisch erstellt. Dieser Text erscheint zusätzlich als eigener Hinweis.</span>
               </div>
-            </div>
-            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <div class="raid-helper-card-head">
+              </div>
+          </details>
+          <details class="raid-helper-card raid-helper-create-accordion accent-teal">
+              <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">🔔</span>
                 <div><h3>Interne Benachrichtigungen bei Statusänderungen</h3><p>Raidlead und Plündermeister werden automatisch informiert. Weitere Namen oder Discord-Rollen kannst du hier ergänzen. Diese Auswahl erscheint nicht im Anmeldertext.</p></div>
-              </div>
+              </summary>
+              <div class="raid-helper-accordion-content">
               <div class="raid-helper-row">
                 <div class="field">
                   <label for="raidHelperNotifyMemberSelect">Discord-Namen</label>
@@ -5530,18 +5576,19 @@ body.worldbuff-only .master-only{display:none!important}
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+          </details>
             <input id="raidHelperImageUrl" type="hidden">
-          </section>
 
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-violet">
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">☷</span>
               <div>
                 <h3>Slots und Regeln</h3>
                 <p>Diese Werte steuern die Rollenübersicht im Discord-Embed.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="raid-helper-slots">
               <div class="field">
                 <label for="raidHelperMax">Gesamt</label>
@@ -5566,21 +5613,24 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
             <div id="raidHelperLinks" style="display:grid;gap:10px;margin-top:12px"></div>
             <button class="small-btn ghost" type="button" style="margin-top:10px" onclick="addRaidHelperLinkRow()">＋ Weiteren Link hinzufügen</button>
-          </section>
+            </div>
+          </details>
 
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-green">
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▤</span>
               <div>
                 <h3>Discord-Anmeldung</h3>
                 <p>Spieler wählen im Discord ihre Klasse und tragen Charakter plus Skillung ein.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="raid-helper-class-grid" id="raidHelperClassGrid"></div>
             <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Krieger, Druide, Paladin, Schurke, Jäger, Priester, Magier, Hexenmeister und Schamane. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
             <label class="layout-loot-toggle" style="margin-top:14px"><input id="raidHelperCreatePoSignup" type="checkbox" checked><span><strong>Passenden P0-Anmelder automatisch erstellen</strong><small>Erstellt zusammen mit dem Raidanmelder einen P0-Anmelder für denselben Raid und Discord-Channel.</small></span></label>
             <label class="layout-loot-toggle" style="margin-top:10px"><input id="raidHelperPoBindingNotice" type="checkbox" checked><span><strong>Verbindlichen LichtLoot-Hinweis im P0-Anmelder anzeigen</strong><small>Weist darauf hin, dass LichtLoot bindend ist und jeder Spieler seine Prio vor dem Raid selbst kontrollieren muss.</small></span></label>
-          </section>
+            </div>
+          </details>
 
           <div class="tools">
             <button id="raidHelperCreateSubmitButton" class="btn" type="button" onclick="submitRaidHelperCreateOrEdit()">Raidanmelder erstellen</button>
@@ -7699,6 +7749,9 @@ function openRaidCreatorFromDashboard(){
 }
 
 function openNewRaidHelperForm(){
+  document.querySelectorAll("#raidHelperTab-createEvent .raid-helper-create-accordion").forEach((section,index)=>{
+    section.open = index === 0;
+  });
   raidHelperEditingRaidIdentifier = "";
   raidHelperEditingData = null;
   raidHelperEditingTemplateIdentifier = "";
