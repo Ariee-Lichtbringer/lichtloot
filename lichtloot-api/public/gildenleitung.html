@@ -7789,6 +7789,22 @@ function openPoPostPanel(){
   setRaidHelperTab("poCreate");
 }
 
+async function openP0OnlySignupFromDashboard(raidId){
+  const raid=findRaidByAnyId(raidId);
+  if(!raid){setStatus("P0-Anmelder wurde nicht gefunden.","bad");return;}
+  try{
+    await loadPoPostStoredEntries();
+    const po=matchingPoSignupForRaid(raid);
+    openDetailsPanel("raidHelperPanel");
+    setRaidHelperTab("poSignup");
+    if(po?.postKey) raidHelperPoSignupSelectedPostKey=String(po.postKey);
+    renderRaidHelperPoSignupTab();
+    if(!po) setStatus("Die P0-Anmelder-Konfiguration konnte nicht eindeutig zugeordnet werden.","bad");
+  }catch(error){
+    setStatus(error.message||"P0-Anmelder konnte nicht geöffnet werden.","bad");
+  }
+}
+
 function openPlayerPanel(){
   openDetailsPanel("playerLoginPanel");
 }
@@ -8785,6 +8801,8 @@ function renderDashboardCards(){
       <article class="active-raid-card active-raid-p0-only-card">
         <div class="active-raid-visual">
           <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
+          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
+          <button class="active-raid-pm-send active-raid-copy" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">DC-Nachricht kopieren</button>
         </div>
         <div class="active-raid-body">
           <div>
@@ -8795,10 +8813,21 @@ function renderDashboardCards(){
                 <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
                 <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
               </div>
-              <div class="active-raid-info"><span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
+              <div class="active-raid-info">${statusBadge(raid.status || "geschlossen")}<span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
             </div>
           </div>
-          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openPoPostPanel()">Unter Alle P0-Anmelder öffnen</button></div></div>
+          <div class="active-raid-side">
+            <div class="active-raid-lead-card">
+              <span class="active-raid-lead-label">LeadPIN</span>
+              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
+              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
+            </div>
+            <div class="active-raid-actions">
+              <button class="small-btn primary" type="button" onclick="openP0OnlySignupFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">P0-Anmelder öffnen</button>
+              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
+            </div>
+          </div>
         </div>
       </article>`;
     if(isSignupOnlyRaid(raid)) return `
