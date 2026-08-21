@@ -331,12 +331,7 @@ app.get("/api/foerderverein/contracts/:sha256/download", async (req, res, next) 
 
 app.get(["/sicherung", "/sicherung.html"], async (req, res, next) => {
   try {
-    let html = "";
-    try {
-      html = await readFile(new URL("./sicherung.html", import.meta.url), "utf8");
-    } catch {
-      html = await readFile(new URL("../public/sicherung.html", import.meta.url), "utf8");
-    }
+    const html = await readFile(new URL("../public/sicherung.html", import.meta.url), "utf8");
     res.type("html").send(html);
   } catch (error) {
     next(error);
