@@ -22063,6 +22063,15 @@ async function findP0OnlyEvent(guildId, params) {
 }
 
 async function findP0DiscordRaid(guildId, params) {
+  const explicitRaidId = clean(params.raidId || params.id || params.externalRaidId);
+  if (explicitRaidId) {
+    // Gekoppelte normale Raids koennen ebenfalls eine oeffentliche P0-ID
+    // tragen. Statusaenderungen muessen dann den Raid mit der Prioliste
+    // treffen und duerfen nicht beim gleichnamigen P0-Anmelder landen.
+    const regularRaid = await findRaid(guildId, params);
+    if (regularRaid) return regularRaid;
+  }
+
   const p0OnlyEvent = await findP0OnlyEvent(guildId, params);
   if (p0OnlyEvent) return p0OnlyEvent;
   const raidType = normalizeRaidType(params.raid || params.raidName);
