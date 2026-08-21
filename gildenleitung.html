@@ -1781,6 +1781,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   color:#052e16;
 }
 
+
 .po-post-config-table,
 .po-post-entry-table{
   min-width:0;
@@ -7500,13 +7501,24 @@ async function loadOverview(options){
     }catch(_error){}
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
+    const leadershipRaids = Array.isArray(result.raids)
+      ? result.raids.filter(raid => {
+          const status = normalize(raid?.status || "");
+          return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
+        })
+      : [];
+    const linkedRaidIds = new Set(
+      leadershipRaids
+        .filter(raid => !raid?.p0Only)
+        .map(raid => String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toUpperCase())
+        .filter(Boolean)
+    );
     guildData = {
-      raids: Array.isArray(result.raids)
-        ? result.raids.filter(raid => {
-            const status = normalize(raid?.status || "");
-            return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
-          })
-        : [],
+      raids: leadershipRaids.filter(raid => {
+        if(!raid?.p0Only) return true;
+        const raidId = String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toUpperCase();
+        return !raidId || !linkedRaidIds.has(raidId);
+      }),
       players: Array.isArray(result.players) ? result.players : []
     };
     try{
