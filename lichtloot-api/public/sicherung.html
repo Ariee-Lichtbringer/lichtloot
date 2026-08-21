@@ -279,6 +279,14 @@
         <input id="masterCode" type="password" autocomplete="current-password" required>
       </label>
       <label>
+        Gilde
+        <select id="guildFilter">
+          <option value="all">Alle</option>
+          <option value="lichtloot">Lichtbringer</option>
+          <option value="nachtloot">Nachtwächter</option>
+        </select>
+      </label>
+      <label>
         Raid
         <select id="raidFilter">
           <option value="">Alle</option>
@@ -312,6 +320,7 @@
     const API_BASE = "https://lichtloot-production.up.railway.app/api/apps-script";
     const form = document.getElementById("backupForm");
     const masterCodeInput = document.getElementById("masterCode");
+    const guildFilterInput = document.getElementById("guildFilter");
     const raidFilterInput = document.getElementById("raidFilter");
     const limitInput = document.getElementById("limit");
     const statusEl = document.getElementById("status");
@@ -319,6 +328,7 @@
     const generatedEl = document.getElementById("generated");
     const loadButton = document.getElementById("loadButton");
     const downloadButton = document.getElementById("downloadButton");
+    const BACKUP_GUILDS = ["lichtloot", "nachtloot"];
     let lastBackup = null;
 
     function escapeHtml(value) {
@@ -441,6 +451,7 @@
             <div>
               <div class="raid-title">
                 <span>${escapeHtml(raid.raidName || raid.raid || "Raid")}</span>
+                <span class="badge violet">${escapeHtml(raid.guildName || raid.guild || "")}</span>
                 <span class="badge gold">${escapeHtml((raid.raid || "").toUpperCase())}</span>
                 <span class="badge">${escapeHtml(raid.status || "")}</span>
               </div>
@@ -500,22 +511,42 @@
         return;
       }
 
-      const params = new URLSearchParams({
-        guild: "lichtloot",
-        action: "guildRaidBackupSnapshot",
-        masterCode,
-        limit: limitInput.value
-      });
-      if (raidFilterInput.value) params.set("raid", raidFilterInput.value);
-
       loadButton.disabled = true;
       setStatus("Sicherung wird geladen ...");
       try {
-        const response = await fetch(`${API_BASE}?${params.toString()}`, { cache: "no-store" });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok || data.success === false) {
-          throw new Error(data.error || `Fehler ${response.status}`);
-        }
+        const selectedGuilds = guildFilterInput.value === "all"
+          ? BACKUP_GUILDS
+          : [guildFilterInput.value];
+        const guildBackups = await Promise.all(selectedGuilds.map(async guild => {
+          const params = new URLSearchParams({
+            guild,
+            action: "guildRaidBackupSnapshot",
+            masterCode,
+            limit: limitInput.value
+          });
+          if (raidFilterInput.value) params.set("raid", raidFilterInput.value);
+
+          const response = await fetch(`${API_BASE}?${params.toString()}`, { cache: "no-store" });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || data.success === false) {
+            throw new Error(data.error || `Fehler ${response.status}`);
+          }
+          return data;
+        }));
+        const raids = guildBackups
+          .flatMap(data => (data.raids || []).map(raid => ({
+            ...raid,
+            guild: data.guild || "",
+            guildName: data.guild === "nachtloot" ? "Nachtwächter" : "Lichtbringer"
+          })))
+          .sort((left, right) => `${right.raidDate || ""} ${right.raidTime || ""}`.localeCompare(`${left.raidDate || ""} ${left.raidTime || ""}`));
+        const data = {
+          success: true,
+          generatedAt: new Date().toISOString(),
+          count: raids.length,
+          guilds: guildBackups.map(entry => entry.guild).filter(Boolean),
+          raids
+        };
         renderBackup(data);
         setStatus(`${data.count || 0} Raids geladen.`, "good");
       } catch (error) {
@@ -543,6 +574,9 @@
     }
 
     form.addEventListener("submit", loadBackup);
+    guildFilterInput.addEventListener("change", () => {
+      if (masterCodeInput.value.trim()) form.requestSubmit();
+    });
     downloadButton.addEventListener("click", downloadBackup);
   </script>
 </body>
