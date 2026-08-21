@@ -27222,6 +27222,16 @@ app.get("/api/apps-script", async (req, res, next) => {
         LeadPin: "",
         p0Only: true
       }));
+      // Ein an einen normalen Raid gekoppelter P0-Anmelder verwendet dieselbe
+      // oeffentliche Raid-ID. Er darf nicht zusaetzlich als "reiner
+      // P0-Anmelder" erscheinen, sonst zeigt die Leitung zwei Karten und die
+      // Auswahl markiert wegen der identischen ID beide zugleich.
+      const regularRaidIds = new Set(
+        raids.map(raid => clean(raid.raidId || raid.RaidID || raid.id)).filter(Boolean)
+      );
+      p0OnlyRaids = p0OnlyRaids.filter(raid =>
+        !regularRaidIds.has(clean(raid.raidId || raid.RaidID || raid.id))
+      );
       const activeRaids = [...raids, ...p0OnlyRaids].sort((left, right) => {
         const leftDate = `${left.raidDate || ""} ${left.raidTime || ""}`;
         const rightDate = `${right.raidDate || ""} ${right.raidTime || ""}`;
