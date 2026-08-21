@@ -12530,7 +12530,13 @@ async function getGuildLeadershipOverview(guildId, params) {
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
-  const managedP0OnlyRaids = await getManagedP0OnlyEvents(guildId, { historyDays: 0 });
+  const regularRaidIds = new Set(
+    raidsResult.rows
+      .map(row => clean(row.external_raid_id || row.id))
+      .filter(Boolean)
+  );
+  const managedP0OnlyRaids = (await getManagedP0OnlyEvents(guildId, { historyDays: 0 }))
+    .filter(raid => !regularRaidIds.has(clean(raid.raidId || raid.RaidID || raid.id)));
 
   const playersResult = await query(
     `select
