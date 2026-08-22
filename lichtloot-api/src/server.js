@@ -11252,7 +11252,6 @@ async function removeDuplicatePriosForCharacterName(client, raidId, character) {
   const existing = await client.query(
     `select pr.id, c.name
      from prios pr
-     join raids prio_raid on prio_raid.id = pr.raid_id
      join characters c on c.id = pr.character_id
      where pr.raid_id = $1
        and pr.character_id <> $2`,
@@ -23356,7 +23355,19 @@ function bossTokenNoticeForRaid(raidType) {
 }
 
 async function queueRaidleadBossTokenNotice({ guildId, query: params }) {
-  const raid = await findRaid(guildId, params);
+  let raid = await findRaid(guildId, params);
+  if (!raid && clean(params.leadPin || params.raidleadPin)) {
+    raid = await findRaid(guildId, {
+      ...params,
+      raidId: "",
+      RaidID: "",
+      raidID: "",
+      raidDate: "",
+      date: "",
+      datum: ""
+    });
+  }
+  if (!raid) raid = await findP0OnlyEvent(guildId, params);
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
@@ -23364,7 +23375,8 @@ async function queueRaidleadBossTokenNotice({ guildId, query: params }) {
   }
 
   const leadPin = clean(params.leadPin || params.raidleadPin);
-  if (raid.lead_pin && leadPin !== raid.lead_pin) {
+  const savedLeadPin = clean(raid.lead_pin || raid.leadPin);
+  if (savedLeadPin && leadPin !== savedLeadPin) {
     const error = new Error("LeadPIN passt nicht zu diesem Raid.");
     error.statusCode = 403;
     throw error;
@@ -24831,8 +24843,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
      where pr.raid_id = any($2::uuid[])
-     order by case when pr.raid_id = $3 then 0 when lower(coalesce(prio_raid.status, '')) = 'gelöscht' then 2 else 1 end,
-              pr.updated_at desc`,
+     order by case when pr.raid_id = $3 then 0 else 1 end, pr.updated_at desc`,
     [guildId, relatedRaidIds, raid.id]
   );
 
