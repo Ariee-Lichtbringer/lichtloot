@@ -4628,19 +4628,26 @@ async function getCharacterPoReleaseRows(guildId) {
 async function getCharacterPoReleases({ guildId, query: params = {} }) {
   requireMasterCode(params.masterCode);
   const search = clean(params.search || params.q).toLowerCase();
+  const includeAttendance = !["false", "0", "no", "nein"].includes(clean(params.includeAttendance).toLowerCase());
   let characters = await getCharacterPoReleaseRows(guildId);
   if (search) {
     characters = characters.filter(entry =>
       [entry.name, entry.server, entry.className, entry.playerPin].some(value => clean(value).toLowerCase().includes(search))
     );
   }
-  try {
+  if (includeAttendance) try {
     const guildResult=await query(`select lower(slug) as slug from guilds where id=$1 limit 1`,[guildId]);
     const guildSlug=clean(guildResult.rows[0]?.slug).toLowerCase();
     const wclGuildId=WCL_PO_ATTENDANCE_GUILD_IDS[guildSlug]||WCL_PO_ATTENDANCE_GUILD_IDS.lichtbringer;
-    const attendance=Object.fromEntries(await Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId)])));
+    const attendancePromise=Promise.all(Object.keys(WCL_PO_ATTENDANCE_ZONES).map(async raid=>[raid,await getWclPoAttendance(raid,wclGuildId)]));
+    let attendanceTimer;
+    const attendance=Object.fromEntries(await Promise.race([
+      attendancePromise,
+      new Promise((_,reject)=>{attendanceTimer=setTimeout(()=>reject(new Error("Warcraft-Logs-Anwesenheit Zeitüberschreitung")),8000);})
+    ]).finally(()=>clearTimeout(attendanceTimer)));
     characters.forEach(entry=>{const key=normalizeAttendanceName(entry.name);entry.attendance16={};Object.entries(attendance).forEach(([raid,stats])=>{const player=stats.players[key]||{attended:0,bench:0};entry.attendance16[raid]={attended:Number(player.attended||0)+Number(player.bench||0),bench:Number(player.bench||0),total:Number(stats.total||0)};});});
   } catch(error) { console.warn("Warcraft-Logs-Attendance konnte nicht geladen werden:",error.message||error); characters.forEach(entry=>{entry.attendance16={};}); }
+  else characters.forEach(entry=>{entry.attendance16={};});
   return { success: true, characters, entries: characters, count: characters.length };
 }
 
@@ -23041,7 +23048,34 @@ async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
       error.statusCode = 404;
       throw error;
     }
-    return { success: true, deleted: 1, storage: "separate-p0-database" };
+    const eventResult = await p0Query(
+      `select * from p0_only_events where guild_id=$1 and id=$2 limit 1`,
+      [guildId, deleted.rows[0].event_id]
+    );
+    const event = eventResult.rows[0] || {};
+    const linkedRaid = clean(event.external_p0_id)
+      ? await findRaid(guildId, { raidId: event.external_p0_id })
+      : null;
+    const refresh = await (linkedRaid
+      ? enqueueP0PostRefreshForRaid(guildId, linkedRaid, "p0_management_delete")
+      : enqueueBotUpdate({
+        guildId,
+        type: "p0_post_refresh",
+        payload: {
+          raidId: clean(event.external_p0_id || event.id),
+          raid: clean(event.raid_type),
+          raidDate: event.raid_date ? formatCsvDateTime(event.raid_date).slice(0, 10) : "",
+          raidTime: clean(event.raid_time),
+          source: "p0_management_delete"
+        }
+      })).catch(error => ({ success: false, error: error.message || String(error) }));
+    return {
+      success: true,
+      deleted: 1,
+      storage: "separate-p0-database",
+      refreshQueued: Boolean(refresh?.success && !refresh?.skipped),
+      refresh
+    };
   }
   const client = await pool.connect();
   try {
@@ -23062,7 +23096,22 @@ async function managementDeleteP0DiscordSignup({ guildId, query: params }) {
       [deleted.rows[0].raid_id, deleted.rows[0].character_id]
     );
     await client.query("commit");
-    return { success: true, deleted: 1, storage: "raid-database" };
+    const raidResult = await query(
+      `select * from raids where guild_id=$1 and id=$2 limit 1`,
+      [guildId, deleted.rows[0].raid_id]
+    );
+    const refresh = await enqueueP0PostRefreshForRaid(
+      guildId,
+      raidResult.rows[0] || null,
+      "p0_management_delete"
+    ).catch(error => ({ success: false, error: error.message || String(error) }));
+    return {
+      success: true,
+      deleted: 1,
+      storage: "raid-database",
+      refreshQueued: Boolean(refresh?.success && !refresh?.skipped),
+      refresh
+    };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
