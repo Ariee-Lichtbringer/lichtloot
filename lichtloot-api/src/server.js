@@ -2919,6 +2919,9 @@ async function ensureP0OnlySchema() {
      )`
   );
   await p0Query(`alter table p0_only_events add column if not exists loot_master_targets jsonb not null default '[]'::jsonb`);
+  await p0Query(`alter table p0_only_events add column if not exists post_title text not null default ''`);
+  await p0Query(`alter table p0_only_events add column if not exists post_mode text not null default 'signup'`);
+  await p0Query(`alter table p0_only_events add column if not exists description text not null default ''`);
   await p0Query(
     `create table if not exists p0_only_signups (
        id uuid primary key default gen_random_uuid(),
@@ -8509,6 +8512,51 @@ async function queuePoPost({ guildId, query: params }) {
     const error = new Error("PO-Zielchannel fehlt.");
     error.statusCode = 400;
     throw error;
+  }
+  if (linkedRaidId.toUpperCase().startsWith("P0-")) {
+    await ensureP0OnlySchema();
+    const saved = await p0Query(
+      `update p0_only_events
+       set discord_channel_id=$3,
+           post_title=coalesce(nullif($4,''),post_title),
+           post_mode=coalesce(nullif($5,''),post_mode),
+           description=coalesce(nullif($6,''),description),
+           updated_at=now()
+       where guild_id=$1 and external_p0_id=$2 and deleted_at is null
+       returning *`,
+      [guildId, linkedRaidId, targetChannelId, clean(params.title),
+        clean(params.mode || params.poMode) || "signup",
+        clean(params.note || params.message || params.raidleadMessage || params.extraMessage)]
+    );
+    if (!saved.rows[0]) {
+      const error = new Error("P0-Anmelder wurde in der separaten P0-Datenbank nicht gefunden.");
+      error.statusCode = 404;
+      throw error;
+    }
+    const queued = await enqueueBotUpdate({
+      guildId,
+      type: "p0_post_refresh",
+      payload: {
+        sourceChannelId,
+        targetChannelId,
+        channelId: targetChannelId,
+        discordChannelId: targetChannelId,
+        postKey: postKey || linkedRaidId,
+        title: clean(params.title) || saved.rows[0].post_title || "P0-Anmelder",
+        raid: raid || saved.rows[0].raid_type || "",
+        raidId: linkedRaidId,
+        lichtlootRaidId: linkedRaidId,
+        raidDate: clean(params.raidDate || params.date || params.datum) || saved.rows[0].raid_date || "",
+        raidTime: clean(params.raidTime || params.time || params.uhrzeit) || saved.rows[0].raid_time || "",
+        raidPin: clean(params.lichtlootPlayerPin || params.prioPin || params.raidPin) || saved.rows[0].player_pin || "",
+        prioPin: clean(params.lichtlootPlayerPin || params.prioPin || params.raidPin) || saved.rows[0].player_pin || "",
+        forceNewMessage: forceNewMessage ? "true" : "",
+        postMode: "p0_only",
+        raidSignupEnabled: "false",
+        source: "gildenleitung"
+      }
+    });
+    return { ...queued, storage: "separate-p0-database" };
   }
   const limit = Math.max(50, Math.min(2000, Number(params.limit || 800) || 800));
   let restoredEntries = 0;
@@ -21951,26 +21999,16 @@ function normalizeP0OnlyEventRow(row) {
     player_link: row.player_pin,
     raidhelper_enabled: false,
     prio_enabled: true,
-    p0plus_freigabe: "geöffnet"
+    p0plus_freigabe: "geöffnet",
+    postTitle: row.post_title || row.raid_name || "",
+    postMode: row.post_mode || "signup",
+    description: row.description || ""
   };
 }
 
 async function getManagedP0OnlyEvents(guildId, { historyDays = 0 } = {}) {
   if (!p0Pool) return [];
   await ensureP0OnlySchema();
-  await ensurePoPostEntriesSchema();
-  const configs = await query(
-    `select distinct raid_id
-     from po_post_entries
-     where guild_id=$1
-       and archived_at is null
-       and config_only=true
-       and raid_id <> ''
-       and upper(raid_id) like 'P0-%'`,
-    [guildId]
-  );
-  const managedIds = configs.rows.map(row => clean(row.raid_id)).filter(Boolean);
-  if (!managedIds.length) return [];
   const result = await p0Query(
     `with clock as (
        select timezone('Europe/Berlin', now())::date as local_today
@@ -21979,15 +22017,14 @@ async function getManagedP0OnlyEvents(guildId, { historyDays = 0 } = {}) {
      from p0_only_events e
      cross join clock
      where e.guild_id=$1
-       and e.external_p0_id=any($2::text[])
        and e.deleted_at is null
-       and e.raid_date >= clock.local_today - ($3::int * interval '1 day')
+       and e.raid_date >= clock.local_today - ($2::int * interval '1 day')
        and lower(coalesce(e.status,'')) not in (
          'archiviert','archive','archived','gelöscht','geloescht','deleted',
          'abgesagt','cancelled','canceled'
        )
      order by e.raid_date asc, coalesce(e.raid_time,'') asc, e.created_at desc`,
-    [guildId, managedIds, historyDays]
+    [guildId, historyDays]
   );
   return result.rows.map(row => normalizeRaidRow(normalizeP0OnlyEventRow(row)));
 }
@@ -22004,20 +22041,26 @@ async function createP0OnlyEvent({ guildId, params }) {
   const result = await p0Query(
     `insert into p0_only_events (
        guild_id, external_p0_id, raid_type, raid_name, raid_date, raid_time,
-       player_pin, lead_pin, created_by, status, discord_channel_id
-     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       player_pin, lead_pin, created_by, status, discord_channel_id,
+       post_title, post_mode, description
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      on conflict (guild_id, external_p0_id) do update
        set raid_type=excluded.raid_type, raid_name=excluded.raid_name,
            raid_date=excluded.raid_date, raid_time=excluded.raid_time,
            player_pin=excluded.player_pin, lead_pin=excluded.lead_pin,
            created_by=excluded.created_by, status=excluded.status,
            discord_channel_id=coalesce(nullif(excluded.discord_channel_id,''),p0_only_events.discord_channel_id),
+           post_title=coalesce(nullif(excluded.post_title,''),p0_only_events.post_title),
+           post_mode=coalesce(nullif(excluded.post_mode,''),p0_only_events.post_mode),
+           description=coalesce(nullif(excluded.description,''),p0_only_events.description),
            deleted_at=null, updated_at=now()
      returning *`,
     [guildId, externalP0Id, raidType, clean(params.raidName) || displayRaidName(raidType), raidDate || null,
       raidTime, clean(params.playerPin || params.prioPin || params.raidPin), clean(params.leadPin || params.raidleadPin),
       clean(params.createdBy || params.erstelltVon) || "Gildenleitung", normalizeStatus(params.status || "geschlossen"),
-      clean(params.poChannelId || params.targetChannelId || params.channelId)]
+      clean(params.poChannelId || params.targetChannelId || params.channelId),
+      clean(params.title || params.postTitle), clean(params.mode || params.postMode) || "signup",
+      clean(params.description || params.note || params.message)]
   );
   return normalizeP0OnlyEventRow(result.rows[0]);
 }
