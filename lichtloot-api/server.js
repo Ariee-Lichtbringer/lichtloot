@@ -23355,7 +23355,18 @@ function bossTokenNoticeForRaid(raidType) {
 }
 
 async function queueRaidleadBossTokenNotice({ guildId, query: params }) {
-  const raid = await findRaid(guildId, params);
+  let raid = await findRaid(guildId, params);
+  if (!raid && clean(params.leadPin || params.raidleadPin)) {
+    raid = await findRaid(guildId, {
+      ...params,
+      raidId: "",
+      RaidID: "",
+      raidID: "",
+      raidDate: "",
+      date: "",
+      datum: ""
+    });
+  }
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
