@@ -22513,48 +22513,54 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   );
   const allSignupDatabaseRows = [...signupResult.rows, ...linkedP0OnlySignupResult.rows];
   const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
-  const signupCharacterIds = new Set(allSignupDatabaseRows.map(row => clean(row.character_id)).filter(Boolean));
-  const signupPlayerKeys = new Set(signupRows.map(row => `${clean(row.player).toLowerCase()}|${clean(row.server).toLowerCase()}`));
+  const signupByPlayerItem = new Map();
+  for (const signup of signupRows) {
+    const key = `${clean(signup.player).toLowerCase()}|${clean(signup.server).toLowerCase()}|${itemLookupKey(signup.item)}`;
+    signupByPlayerItem.set(key, signup);
+  }
   const normalizedRaid = normalizeRaidRow(raid);
   const lichtlootP0Rows = prioResult.rows
     .filter(row => {
       const meta = commentMeta(row.comment);
-      return clean(meta.p0Plus).toLowerCase() === "ja" && clean(row.item_name);
+      return (
+        clean(meta.p0Selected).toLowerCase() === "ja"
+        || clean(meta.p0Plus).toLowerCase() === "ja"
+      ) && clean(row.item_name);
     })
-    .filter(row => {
-      const characterId = clean(row.character_id);
-      const playerKey = `${clean(row.player_name).toLowerCase()}|${clean(row.server).toLowerCase()}`;
-      return !signupCharacterIds.has(characterId) && !signupPlayerKeys.has(playerKey);
-    })
-    .map(row => ({
-      id: row.id,
-      raidId: raidPublicId(raid),
-      raid: normalizeRaidType(raid.raid_type).toUpperCase(),
-      raidName: normalizedRaid.raidName,
-      raidDate: normalizedRaid.raidDate,
-      raidTime: normalizedRaid.raidTime,
-      prioPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
-      player: row.player_name || "",
-      char: row.player_name || "",
-      server: row.server || "",
-      item: row.item_name || "",
-      itemName: row.item_name || "",
-      itemId: row.item_id || "",
-      discordUserId: "",
-      discordName: "LichtLoot",
-      discordChannelId: "",
-      discordMessageId: "",
-      approvalStatus: "approved",
-      approved: true,
-      rejected: false,
-      approvedByDiscordId: "",
-      approvedByDiscordName: "LichtLoot",
-      approvedAt: row.updated_at || row.created_at || "",
-      updatedAt: row.updated_at,
-      createdAt: row.created_at,
-      p0PlusPoints: Number(row.p0plus_points || 0),
-      source: "lichtloot"
-    }));
+    .map(row => {
+      const signupKey = `${clean(row.player_name).toLowerCase()}|${clean(row.server).toLowerCase()}|${itemLookupKey(row.item_name)}`;
+      const matchingSignup = signupByPlayerItem.get(signupKey) || {};
+      const approvalStatus = clean(matchingSignup.approvalStatus || "approved") || "approved";
+      return {
+        id: row.id,
+        raidId: raidPublicId(raid),
+        raid: normalizeRaidType(raid.raid_type).toUpperCase(),
+        raidName: normalizedRaid.raidName,
+        raidDate: normalizedRaid.raidDate,
+        raidTime: normalizedRaid.raidTime,
+        prioPin: normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+        player: row.player_name || "",
+        char: row.player_name || "",
+        server: row.server || "",
+        item: row.item_name || "",
+        itemName: row.item_name || "",
+        itemId: row.item_id || "",
+        discordUserId: matchingSignup.discordUserId || "",
+        discordName: matchingSignup.discordName || "LichtLoot",
+        discordChannelId: matchingSignup.discordChannelId || "",
+        discordMessageId: matchingSignup.discordMessageId || "",
+        approvalStatus,
+        approved: approvalStatus === "approved",
+        rejected: approvalStatus === "rejected",
+        approvedByDiscordId: matchingSignup.approvedByDiscordId || "",
+        approvedByDiscordName: matchingSignup.approvedByDiscordName || "LichtLoot",
+        approvedAt: matchingSignup.approvedAt || row.updated_at || row.created_at || "",
+        updatedAt: row.updated_at,
+        createdAt: row.created_at,
+        p0PlusPoints: Number(row.p0plus_points || 0),
+        source: "lichtloot"
+      };
+    });
 
   return {
     success: true,
@@ -22565,7 +22571,10 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       p0PlusPoints: Number(row.p0plus_points || 0),
       p0PlusCount: Number(row.p0plus_count || 0)
     })),
-    signups: [...signupRows, ...lichtlootP0Rows].sort((a, b) => {
+    // Bei normalen Raids ist NachtLoot die führende Quelle. Die separate
+    // Discord-Anmeldedatenbank darf Spieler oder Items nicht ergänzen bzw.
+    // überschreiben; sie liefert nur oben den Status eines exakten Treffers.
+    signups: (raid.p0_only ? signupRows : lichtlootP0Rows).sort((a, b) => {
       const itemCompare = String(a.item || "").localeCompare(String(b.item || ""));
       if (itemCompare) return itemCompare;
       return String(a.player || "").localeCompare(String(b.player || ""));
