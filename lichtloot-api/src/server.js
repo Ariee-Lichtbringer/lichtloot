@@ -22442,6 +22442,22 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by p0s.item_name asc, p0s.player_name asc`,
     [guildId, raid.id]
   );
+  // Eine öffentliche P0-ID kann einen normalen Raid mit einem historischen
+  // Eintrag in der separaten P0-Datenbank verbinden. Der Discord-Post muss in
+  // diesem Fall beide Speicher lesen; andernfalls verschwinden die dort
+  // erfassten Anmeldungen, sobald findP0DiscordRaid den normalen Raid findet.
+  const linkedP0OnlyEvent = raid.p0_only ? null : await findP0OnlyEvent(guildId, params);
+  const linkedP0OnlySignupResult = linkedP0OnlyEvent && p0Pool
+    ? await p0Query(
+      `select p0s.*, e.raid_type, e.raid_name, e.raid_date, e.raid_time,
+              e.player_pin, e.external_p0_id as raid_public_id, true as p0_only
+       from p0_only_signups p0s
+       join p0_only_events e on e.id = p0s.event_id
+       where p0s.guild_id = $1 and p0s.event_id = $2
+       order by p0s.item_name asc, p0s.player_name asc`,
+      [guildId, linkedP0OnlyEvent.id]
+    )
+    : { rows: [] };
   const prioResult = raid.p0_only ? { rows: [] } : await query(
     `select
        pr.id,
@@ -22488,8 +22504,9 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by lower(coalesce(i.name, '')) asc, lower(c.name) asc`,
     [guildId, raid.id]
   );
-  const signupRows = signupResult.rows.map(normalizeP0SignupRow);
-  const signupCharacterIds = new Set(signupResult.rows.map(row => clean(row.character_id)).filter(Boolean));
+  const allSignupDatabaseRows = [...signupResult.rows, ...linkedP0OnlySignupResult.rows];
+  const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
+  const signupCharacterIds = new Set(allSignupDatabaseRows.map(row => clean(row.character_id)).filter(Boolean));
   const signupPlayerKeys = new Set(signupRows.map(row => `${clean(row.player).toLowerCase()}|${clean(row.server).toLowerCase()}`));
   const normalizedRaid = normalizeRaidRow(raid);
   const lichtlootP0Rows = prioResult.rows
