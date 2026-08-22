@@ -19648,7 +19648,37 @@ async function restoreArchivedRaids({ guildId, query: params }) {
 
 async function createRaid({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
-  return createRaidRecord({ guildId, query: params });
+  const created = await createRaidRecord({ guildId, query: params });
+  const raidHelperEnabled = !["0", "false", "no", "nein", "off"].includes(
+    clean(params.raidHelperEnabled ?? params.raidhelperEnabled ?? "true").toLowerCase()
+  );
+  const channelId = clean(params.discordChannelId || params.channelId);
+  if (!raidHelperEnabled || !channelId) return created;
+
+  const announcement = await queueRaidAnnouncement({
+    guildId,
+    query: {
+      ...params,
+      raidId: clean(created.raidId || created.RaidID || params.raidId),
+      playerPin: clean(created.playerPin || created.prioPin || params.playerPin),
+      prioPin: clean(created.playerPin || created.prioPin || params.prioPin || params.playerPin),
+      raid: clean(created.raid || params.raid),
+      raidName: clean(created.raidName || params.raidName),
+      raidDate: clean(created.raidDate || params.raidDate || params.datum),
+      raidTime: clean(created.raidTime || params.raidTime || params.uhrzeit),
+      channelId,
+      discordChannelId: channelId,
+      source: "create_raid_atomic"
+    }
+  });
+  if (!announcement.success || !clean(announcement.rowNumber)) {
+    const error = new Error(
+      `Raid wurde gespeichert, aber der Discord-Auftrag fehlt: ${clean(announcement.error || announcement.reason) || "Queue ohne Auftrags-ID"}`
+    );
+    error.statusCode = 502;
+    throw error;
+  }
+  return { ...created, announcementQueued: true, announcementQueueId: announcement.rowNumber };
 }
 
 async function createP0OnlyEventForGuild({ guildId, query: params }) {
