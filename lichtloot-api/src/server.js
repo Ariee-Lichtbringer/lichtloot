@@ -11252,6 +11252,7 @@ async function removeDuplicatePriosForCharacterName(client, raidId, character) {
   const existing = await client.query(
     `select pr.id, c.name
      from prios pr
+     join raids prio_raid on prio_raid.id = pr.raid_id
      join characters c on c.id = pr.character_id
      where pr.raid_id = $1
        and pr.character_id <> $2`,
@@ -24796,11 +24797,24 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     }
   }
 
-  const transferNotes = Array.from(new Set([
-    `RaidID: ${raidPublicId(raid)}`,
-    `RaidID: ${raid.id}`,
-    raid.raid_pin ? `RaidID: ${raid.raid_pin}` : ""
-  ].filter(Boolean)));
+  const relatedRaidResult = await query(
+    `select r.*
+     from raids r
+     where r.guild_id = $1
+       and lower(r.raid_type) = any($2)
+       and r.raid_date = $3`,
+    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+  );
+  const relatedRaids = [
+    raid,
+    ...relatedRaidResult.rows.filter(row => clean(row.id) !== clean(raid.id))
+  ];
+  const relatedRaidIds = [...new Set(relatedRaids.map(row => row.id).filter(Boolean))];
+  const transferNotes = Array.from(new Set(relatedRaids.flatMap(row => [
+    `RaidID: ${raidPublicId(row)}`,
+    `RaidID: ${row.id}`,
+    row.raid_pin ? `RaidID: ${row.raid_pin}` : ""
+  ]).filter(Boolean)));
   const transferNote = transferNotes[0];
 
   const priosResult = await query(
@@ -24813,12 +24827,13 @@ async function transferP0PlusPoints({ guildId, query: params }) {
        i.name as item_name,
        pr.comment
      from prios pr
-     join raids r on r.id = pr.raid_id
      join characters c on c.id = pr.character_id
      join players p on p.id = c.player_id and p.guild_id = $1
      join items i on i.id = pr.p1_item_id
-     where ${raidClause}`,
-    values
+     where pr.raid_id = any($2::uuid[])
+     order by case when pr.raid_id = $3 then 0 when lower(coalesce(prio_raid.status, '')) = 'gelöscht' then 2 else 1 end,
+              pr.updated_at desc`,
+    [guildId, relatedRaidIds, raid.id]
   );
 
   const normalizeTransferKey = value => clean(value)
@@ -24832,21 +24847,21 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      where guild_id = $1
        and action = 'item_received_clear'
        and (
-         raid_id = $2
+         raid_id = any($2::uuid[])
          or (
            raid_id is null
            and lower(coalesce(raid_type, '')) = any($3)
            and (created_at at time zone 'Europe/Berlin')::date = $4::date
          )
        )`,
-    [guildId, raid.id, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    [guildId, relatedRaidIds, raidTypeSearchValues(raid.raid_type), raid.raid_date]
   );
   const receivedCharacters = new Set(receivedResult.rows.map(row => clean(row.character_id)));
   const candidates = priosResult.rows.filter(row =>
     commentMeta(row.comment).p0Plus === "ja" &&
     !receivedCharacters.has(clean(row.character_id))
   );
-  const dedupedCandidates = [];
+  let dedupedCandidates = [];
   const seenCharacters = new Set();
   const skipped = [];
 
@@ -24868,24 +24883,33 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     await client.query("begin");
     await client.query(
       "select pg_advisory_xact_lock(hashtext($1), hashtext($2))",
-      [clean(guildId), clean(raid.id)]
+      [clean(guildId), `${normalizeRaidType(raid.raid_type)}:${raid.raid_date?.toISOString?.().slice(0, 10) || clean(raid.raid_date)}`]
     );
     const existingTransfer = await client.query(
-      `select count(*)::int as count
+      `select character_id, count(*)::int as count
        from p0plus_points
-       where guild_id = $1 and source = 'Raidlead Transfer' and note = any($2::text[])`,
+       where guild_id = $1 and source = 'Raidlead Transfer' and note = any($2::text[])
+       group by character_id`,
       [guildId, transferNotes]
     );
-    const existingTransferCount = Number(existingTransfer.rows[0]?.count || 0);
-    if (existingTransferCount > 0) {
+    const existingTransferCount = existingTransfer.rows.reduce((sum, row) => sum + Number(row.count || 0), 0);
+    const transferredCharacters = new Set(existingTransfer.rows.map(row => clean(row.character_id)));
+    const missingCandidates = dedupedCandidates.filter(row => !transferredCharacters.has(clean(row.character_id)));
+    for (const row of dedupedCandidates) {
+      if (transferredCharacters.has(clean(row.character_id))) {
+        skipped.push({ player: row.player || "", item: row.item_name || "", reason: "bereits-übertragen" });
+      }
+    }
+    dedupedCandidates = missingCandidates;
+    if (!dedupedCandidates.length) {
       await client.query("commit");
       return {
         success: true,
         alreadyTransferred: true,
         awarded: 0,
         candidates: candidates.length,
-        skipped: 0,
-        skippedEntries: [],
+        skipped: skipped.length,
+        skippedEntries: skipped,
         p0PlusTransferred: true,
         p0PlusTransferCount: existingTransferCount,
         exportQueued: false
