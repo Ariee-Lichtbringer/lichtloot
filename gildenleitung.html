@@ -16227,6 +16227,9 @@ async function createRaidHelperSignup(){
     if(!created.success){
       throw new Error(created.error || "Raidanmelder konnte nicht erstellt werden.");
     }
+    if(created.raidHelperEnabled !== false && !created.announcementQueued){
+      throw new Error("Raid wurde gespeichert, aber nicht für Discord vorgemerkt. Bitte erneut versuchen.");
+    }
 
     const queued = await railwayWrite({
       action:"guildQueueRaidAnnouncement",
