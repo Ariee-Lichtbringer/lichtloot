@@ -3870,6 +3870,35 @@ async function savePrio(){
     }
 
     await refreshAfterPrioSave();
+    // Die API hat den Schreibvorgang bereits bestätigt. Falls der direkt
+    // folgende GET noch den vorherigen Snapshot liefert, darf die Oberfläche
+    // den erfolgreich gespeicherten P0/P0+-Eintrag nicht wieder als lokalen
+    // Entwurf („Noch nicht gespeichert“) anzeigen.
+    const confirmedPrio={
+      id:result.prioId || "",
+      Spieler:player,
+      Server:server,
+      Klasse:playerClass,
+      P1:p1,
+      P1ItemId:getSelectedPrioItemId("p1"),
+      P2:p2,
+      P2ItemId:PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "",
+      P3:p3,
+      P3ItemId:PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "",
+      P0Selected:isP0Plus ? "ja" : "nein",
+      P0Plus:isP0Plus ? "ja" : "nein",
+      P0Item:isP0Plus ? p1 : ""
+    };
+    const confirmedSignature=prioDraftSignature(confirmedPrio);
+    const serverConfirmed=(currentPublishedPrios||[]).some(prio=>
+      samePrioCharacter(prio,confirmedPrio) && prioDraftSignature(prio)===confirmedSignature
+    );
+    if(!serverConfirmed){
+      currentPublishedPrios=sortPriosWithOwnFirst([
+        confirmedPrio,
+        ...(currentPublishedPrios||[]).filter(prio=>!samePrioCharacter(prio,confirmedPrio))
+      ]);
+    }
     renderCurrentPrios();
 
   }catch(error){
