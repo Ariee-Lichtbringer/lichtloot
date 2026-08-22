@@ -15278,8 +15278,59 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", limit:"5000", t:Date.now() });
-    poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
+    const [raidResult,p0Result] = await Promise.all([
+      railwayApi({ action:"getActiveRaids", masterCode, t:Date.now() }),
+      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all", t:Date.now() })
+    ]);
+    const p0Raids = raidResult && raidResult.success && Array.isArray(raidResult.raids)
+      ? raidResult.raids.filter(raid=>raid.p0Only || String(raid.raidId || raid.id || "").toUpperCase().startsWith("P0-"))
+      : [];
+    const postEntries = p0Raids.map(raid=>{
+      const raidId = String(raid.raidId || raid.id || "").trim();
+      return {
+        postKey:raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""),
+        sourceChannelId:raid.discordChannelId || "",
+        targetChannelId:raid.discordChannelId || "",
+        discordMessageId:raid.discordMessageId || "",
+        raid:raid.raid || raid.raidType || "",
+        title:raid.postTitle || raid.raidName || `${String(raid.raid || raid.raidType || "P0").toUpperCase()} P0-Anmelder`,
+        raidDate:raid.raidDate || "",
+        raidTime:raid.raidTime || "",
+        raidPin:raid.playerPin || raid.prioPin || "",
+        prioPin:raid.playerPin || raid.prioPin || "",
+        lichtlootRaidId:raidId,
+        raidId,
+        mode:raid.postMode || "signup",
+        configOnly:true,
+        p0Only:true,
+        storage:"separate-p0-database",
+        updatedAt:raid.updatedAt || ""
+      };
+    });
+    const p0Entries = p0Result && p0Result.success && Array.isArray(p0Result.entries) ? p0Result.entries : [];
+    const configsByRaidId = new Map();
+    postEntries.filter(entry=>entry.configOnly).forEach(entry=>{
+      const raidId = String(entry.lichtlootRaidId || entry.raidId || "").trim();
+      if(!raidId) return;
+      const previous = configsByRaidId.get(raidId);
+      if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByRaidId.set(raidId,entry);
+    });
+    const canonicalEntries = p0Entries.map(entry=>{
+      const raidId = String(entry.raidId || "").trim();
+      const config = configsByRaidId.get(raidId) || {};
+      const fallbackPostKey = raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+      return Object.assign({},entry,{
+        postKey:config.postKey || fallbackPostKey,
+        sourceChannelId:config.sourceChannelId || entry.discordChannelId || "",
+        targetChannelId:config.targetChannelId || entry.discordChannelId || "",
+        title:config.title || `${String(entry.raid || "P0").toUpperCase()} P0-Anmelder`,
+        raid:config.raid || entry.raid || "",
+        raidDate:config.raidDate || entry.raidDate || "",
+        raidTime:config.raidTime || entry.raidTime || "",
+        entrySource:"p0_database"
+      });
+    });
+    poPostStoredEntries = postEntries.concat(canonicalEntries);
     await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
     poPostStoredEntries = [];
@@ -18431,10 +18482,13 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
     const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
     const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
+    const isP0DatabaseEntry = entry.entrySource === "p0_database";
     const result = await railwayWrite({
-      action:"guildReviewPoPostEntry",
+      action:isP0DatabaseEntry ? "reviewP0DiscordSignup" : "guildReviewPoPostEntry",
       masterCode,
       id:entry.id || "",
+      signupId:isP0DatabaseEntry ? (entry.id || "") : "",
+      storage:isP0DatabaseEntry ? (entry.storage || "separate-p0-database") : "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
@@ -18555,9 +18609,12 @@ async function deletePoPostEntryFromPostPanel(index){
   }
   try{
     setStatus("PO-Eintrag wird gelöscht ...", "");
+    const isP0DatabaseEntry = entry.entrySource === "p0_database";
     const result = await railwayWrite({
-      action:"deletePoPostEntry",
+      action:isP0DatabaseEntry ? "guildDeleteP0DiscordSignup" : "deletePoPostEntry",
       masterCode,
+      signupId:isP0DatabaseEntry ? (entry.id || "") : "",
+      storage:isP0DatabaseEntry ? (entry.storage || "separate-p0-database") : "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
