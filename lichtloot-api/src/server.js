@@ -2477,7 +2477,7 @@ async function getCharactersByPin(guildId, pin) {
     throw error;
   }
   if (playerResult.rows[0] && normalizePlayerApprovalStatus(playerResult.rows[0]?.approval_status) !== "approved") {
-    const error = new Error("Dieser SpielerLogin wartet noch auf Freigabe durch die Gildenleitung.");
+    const error = new Error("Der SpielerAccount ist noch nicht durch die Gildenleitung freigegeben.");
     error.statusCode = 403;
     throw error;
   }
