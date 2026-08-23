@@ -861,9 +861,9 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 }
 
 /* Geordneter Zugangskopf: drei klar getrennte Funktionsspalten. */
-.compact-auth{max-width:1120px}
+.compact-auth{max-width:none}
 .unlock{
-  grid-template-columns:repeat(3,minmax(240px,1fr));
+  grid-template-columns:minmax(240px,1fr) minmax(240px,1fr) minmax(280px,1.08fr) minmax(270px,.95fr) minmax(270px,.95fr);
   grid-template-rows:auto auto;
   gap:8px 14px;
   align-items:stretch;
@@ -884,12 +884,48 @@ body:not(.guild-lichtloot) .lichtloot-admin-only{
 .unlock>.field:nth-child(3){grid-column:2;grid-row:1}
 .unlock>.btn:nth-child(4){grid-column:2;grid-row:2}
 .unlock>.login-summary-card:nth-child(5){grid-column:3;grid-row:1 / span 2;min-height:0;padding:14px}
+.unlock>.dashboard-quick-action-p0{grid-column:4;grid-row:1 / span 2}
+.unlock>.dashboard-quick-action-raid{grid-column:5;grid-row:1 / span 2}
 .unlock>#pendingLoginCard{grid-column:3;grid-row:3}
 .compact-auth>#status{max-width:100%;margin-top:10px!important}
+@media(max-width:1500px){
+  .unlock{grid-template-columns:repeat(3,minmax(240px,1fr))}
+  .unlock>.dashboard-quick-action-p0{grid-column:1 / span 1;grid-row:3}
+  .unlock>.dashboard-quick-action-raid{grid-column:2 / span 1;grid-row:3}
+}
 @media(max-width:900px){
   .unlock{grid-template-columns:1fr;grid-template-rows:auto}
   .unlock>*{grid-column:1!important;grid-row:auto!important}
 }
+
+.dashboard-quick-action{
+  position:relative;
+  min-height:0;
+  display:grid;
+  grid-template-columns:58px 1fr;
+  grid-template-rows:auto 1fr auto;
+  gap:7px 12px;
+  align-items:center;
+  padding:14px;
+  border:1px solid rgba(168,85,247,.72);
+  border-radius:10px;
+  overflow:hidden;
+  color:#f8fafc;
+  text-align:left;
+  cursor:pointer;
+  background:linear-gradient(135deg,rgba(88,28,135,.56),rgba(15,23,42,.9));
+  box-shadow:inset 0 0 24px rgba(168,85,247,.12),0 8px 22px rgba(0,0,0,.22);
+}
+.dashboard-quick-action:hover{transform:translateY(-1px);border-color:#d8b4fe;box-shadow:inset 0 0 30px rgba(168,85,247,.18),0 10px 28px rgba(0,0,0,.3)}
+.dashboard-quick-action-raid{border-color:rgba(14,165,233,.72);background:linear-gradient(135deg,rgba(3,105,161,.54),rgba(15,23,42,.9));box-shadow:inset 0 0 24px rgba(14,165,233,.12),0 8px 22px rgba(0,0,0,.22)}
+.dashboard-quick-action-raid:hover{border-color:#7dd3fc;box-shadow:inset 0 0 30px rgba(14,165,233,.18),0 10px 28px rgba(0,0,0,.3)}
+.dashboard-quick-action-icon{grid-column:1;grid-row:1 / span 2;display:flex;width:58px;height:58px;align-items:center;justify-content:center;border-radius:14px;background:rgba(2,6,23,.48);font-size:32px;box-shadow:inset 0 0 16px rgba(255,255,255,.08)}
+.dashboard-quick-action-copy{grid-column:2;align-self:end}
+.dashboard-quick-action-copy strong{display:block;color:#e9d5ff;font-size:17px;font-weight:1000;letter-spacing:.02em}
+.dashboard-quick-action-raid .dashboard-quick-action-copy strong{color:#bae6fd}
+.dashboard-quick-action-copy span{display:block;margin-top:4px;color:#f8fafc;font-size:12px;font-weight:800;line-height:1.35}
+.dashboard-quick-action-cta{grid-column:1 / -1;display:flex;min-height:38px;align-items:center;justify-content:center;border:1px solid rgba(216,180,254,.7);border-radius:7px;background:rgba(126,34,206,.5);color:#fff;font-size:13px;font-weight:1000;white-space:nowrap}
+.dashboard-quick-action-raid .dashboard-quick-action-cta{border-color:rgba(125,211,252,.7);background:rgba(2,132,199,.46)}
 
 .login-summary-card{
   min-height:132px;
@@ -1745,6 +1781,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   color:#052e16;
 }
 
+
 .po-post-config-table,
 .po-post-entry-table{
   min-width:0;
@@ -2408,6 +2445,85 @@ tr.selected-row td{
   font-size:12px;
   font-weight:700;
 }
+
+.raid-helper-create-accordion{
+  --accordion-accent:148,163,184;
+  padding:0;
+  overflow:hidden;
+  border-color:rgba(var(--accordion-accent),.42);
+  background:linear-gradient(135deg,rgba(var(--accordion-accent),.09),rgba(2,6,23,.58));
+}
+.raid-helper-create-accordion > summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px;
+  cursor:pointer;
+  list-style:none;
+  user-select:none;
+  background:linear-gradient(90deg,rgba(var(--accordion-accent),.16),rgba(15,23,42,.28));
+}
+.raid-helper-create-accordion > summary::-webkit-details-marker{display:none}
+.raid-helper-create-accordion > summary::after{
+  content:"▾"!important;
+  margin-left:auto;
+  color:rgb(var(--accordion-accent));
+  font-size:20px;
+  font-weight:1000;
+  transition:transform .18s ease;
+  writing-mode:horizontal-tb!important;
+  white-space:nowrap;
+}
+.raid-helper-create-accordion:not([open]) > summary::after{transform:rotate(-90deg)}
+.raid-helper-create-accordion > summary .raid-helper-card-icon{
+  border-color:rgba(var(--accordion-accent),.62);
+  background:rgba(var(--accordion-accent),.2);
+}
+.raid-helper-create-accordion > summary h3{color:rgb(var(--accordion-accent))}
+.raid-helper-create-accordion > .raid-helper-accordion-content{padding:14px;border-top:1px solid rgba(var(--accordion-accent),.24)}
+.raid-helper-create-accordion.accent-blue{--accordion-accent:96,165,250}
+.raid-helper-create-accordion.accent-orange{--accordion-accent:251,146,60}
+.raid-helper-create-accordion.accent-pink{--accordion-accent:244,114,182}
+.raid-helper-create-accordion.accent-teal{--accordion-accent:45,212,191}
+.raid-helper-create-accordion.accent-violet{--accordion-accent:192,132,252}
+.raid-helper-create-accordion.accent-green{--accordion-accent:74,222,128}
+
+.raid-helper-wizard-progress{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  padding:10px;
+  border:1px solid rgba(96,165,250,.28);
+  border-radius:10px;
+  background:rgba(2,6,23,.6);
+}
+.raid-helper-wizard-step{
+  display:flex;
+  min-height:48px;
+  align-items:center;
+  gap:9px;
+  padding:8px 10px;
+  border:1px solid rgba(148,163,184,.18);
+  border-radius:8px;
+  background:rgba(15,23,42,.56);
+  color:#94a3b8;
+  font-weight:900;
+  cursor:pointer;
+}
+.raid-helper-wizard-step b{display:grid;width:27px;height:27px;flex:0 0 27px;place-items:center;border:1px solid currentColor;border-radius:50%;font-size:12px}
+.raid-helper-wizard-step.active{border-color:#60a5fa;background:rgba(37,99,235,.2);color:#dbeafe;box-shadow:inset 0 -2px #60a5fa}
+.raid-helper-wizard-step.complete{border-color:rgba(74,222,128,.48);color:#86efac;background:rgba(22,101,52,.16)}
+.raid-helper-wizard-step.complete b{font-size:0;background:#16a34a;color:#fff}.raid-helper-wizard-step.complete b::after{content:"✓";font-size:14px}
+.raid-helper-wizard-nav{display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:8px;z-index:25;padding:10px;border:1px solid rgba(96,165,250,.24);border-radius:9px;background:rgba(2,6,23,.94);box-shadow:0 -8px 24px rgba(0,0,0,.3)}
+.raid-helper-wizard-nav .btn{min-width:190px}
+.raid-helper-wizard-review{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.72fr);gap:14px}
+.raid-helper-wizard-checklist{display:grid;gap:8px}
+.raid-helper-wizard-check{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid rgba(148,163,184,.18);border-radius:8px;background:rgba(2,6,23,.38);color:#e2e8f0;font-weight:850}
+.raid-helper-wizard-check b{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:#16a34a;color:#fff}
+.raid-helper-wizard-check.warn{border-color:rgba(251,191,36,.42);background:rgba(120,53,15,.18);color:#fde68a}.raid-helper-wizard-check.warn b{background:#f59e0b;color:#111827}
+.raid-helper-wizard-summary{display:grid;gap:9px;padding:14px;border:1px solid rgba(74,222,128,.34);border-radius:9px;background:rgba(20,83,45,.15)}
+.raid-helper-wizard-summary h4{margin:0;color:#86efac}.raid-helper-wizard-summary span{color:#cbd5e1;font-size:12px}.raid-helper-wizard-summary strong{color:#fff}
+@media(max-width:1000px){.raid-helper-wizard-progress{grid-template-columns:1fr}.raid-helper-wizard-step{min-height:40px}.raid-helper-wizard-review{grid-template-columns:1fr}}
 
 .raid-helper-slots .field{
   border:1px solid rgba(148,163,184,.14);
@@ -5223,6 +5339,16 @@ body.worldbuff-only .master-only{display:none!important}
         </div>
         <button type="button" onclick="openPlayerPanel()">Spielerlogins anzeigen →</button>
       </div>
+      <button class="dashboard-quick-action dashboard-quick-action-p0" type="button" onclick="openP0OnlyCreatorFromDashboard()">
+        <span class="dashboard-quick-action-icon" aria-hidden="true">🔮</span>
+        <span class="dashboard-quick-action-copy"><strong>P0-ANMELDER</strong><span>Neuen P0-Anmelder direkt erstellen</span></span>
+        <span class="dashboard-quick-action-cta">P0-Anmelder erstellen →</span>
+      </button>
+      <button class="dashboard-quick-action dashboard-quick-action-raid" type="button" onclick="openRaidCreatorFromDashboard()">
+        <span class="dashboard-quick-action-icon" aria-hidden="true">⚔️</span>
+        <span class="dashboard-quick-action-copy"><strong>RAIDANMELDER</strong><span>Neuen Raidanmelder direkt erstellen</span></span>
+        <span class="dashboard-quick-action-cta">Raidanmelder erstellen →</span>
+      </button>
       <button id="pendingLoginCard" class="login-summary-card pending-login-card hidden" type="button" onclick="openPendingLoginReview()" style="border-color:#f59e0b;text-align:left;cursor:pointer">
         <div><div class="stat-icon">!</div><span>Neue SpielerLogins</span><strong id="pendingLoginCount">0</strong><div class="stat-subline">warten auf Freigabe</div></div>
         <span style="color:#facc15;font-weight:950">Jetzt prüfen →</span>
@@ -5290,6 +5416,13 @@ body.worldbuff-only .master-only{display:none!important}
 
       <div id="raidHelperTab-createEvent" class="raid-helper-tab-panel raid-helper-layout">
         <div class="raid-helper-form">
+          <nav class="raid-helper-wizard-progress" aria-label="Schritte zum Raidanmelder">
+            <button class="raid-helper-wizard-step active" type="button" data-wizard-step="1" onclick="setRaidHelperWizardStep(1)"><b>1</b><span>Raid &amp; Termin</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="2" onclick="setRaidHelperWizardStep(2)"><b>2</b><span>Plätze &amp; Regeln</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="3" onclick="setRaidHelperWizardStep(3)"><b>3</b><span>Discord</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="4" onclick="setRaidHelperWizardStep(4)"><b>4</b><span>P0-Anmelder</span></button>
+            <button class="raid-helper-wizard-step" type="button" data-wizard-step="5" onclick="setRaidHelperWizardStep(5)"><b>5</b><span>Prüfen</span></button>
+          </nav>
           <div id="raidHelperRaidEditMode" class="raid-helper-edit-mode hidden">
             <div>
               <strong>Raid wird bearbeitet</strong>
@@ -5316,14 +5449,15 @@ body.worldbuff-only .master-only{display:none!important}
               <button class="small-btn ghost" type="button" onclick="cancelRaidHelperTemplateEdit()">Abbrechen</button>
             </div>
           </div>
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-blue" data-wizard-panel="1" open>
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">⚔</span>
               <div>
                 <h3>Raid und Termin</h3>
                 <p>Grunddaten für den Discord-Post und die LichtLoot-Anmeldung.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="field" style="margin-bottom:14px">
               <label for="raidHelperQuickTemplate">Vorlage nutzen</label>
               <select id="raidHelperQuickTemplate" onchange="applyRaidHelperQuickTemplate(this.value)">
@@ -5402,9 +5536,11 @@ body.worldbuff-only .master-only{display:none!important}
                 <div id="raidHelperChannelHint" class="raid-helper-channel-id">Bot-Channel werden nach Bot-Neustart geladen.</div>
               </div>
             </div>
-            <details id="raidHelperWeeklyDetails" class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <summary style="cursor:pointer"><strong>↻ Wochenautomatik einrichten</strong><br><span class="muted">Aufklappen und ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</span></summary>
-              <div style="margin-top:14px">
+            </div>
+          </details>
+          <details id="raidHelperWeeklyDetails" class="raid-helper-card raid-helper-create-accordion accent-orange hidden" data-wizard-panel="3">
+              <summary class="raid-helper-card-head"><span class="raid-helper-card-icon">↻</span><div><h3>Wochenautomatik einrichten</h3><p>Ersten Termin, Wochentag, Uhrzeit und Channel festlegen.</p></div></summary>
+              <div class="raid-helper-accordion-content">
                 <label class="layout-loot-toggle"><input id="raidHelperWeeklyEnabled" type="checkbox" onchange="toggleRaidHelperWeeklyOptions()"><span><strong>Raid automatisch jede Woche neu erstellen</strong><small>Erstellt und postet wöchentlich den Raid sowie – falls aktiviert – den passenden P0-Anmelder.</small></span></label>
                 <div id="raidHelperWeeklyOptions" class="hidden" style="margin-top:12px">
                   <div class="raid-helper-row">
@@ -5419,11 +5555,12 @@ body.worldbuff-only .master-only{display:none!important}
                 </div>
               </div>
             </details>
-            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-pink hidden" data-wizard-panel="3">
+              <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">📣</span>
                 <div><h3>Benachrichtigung bei Erstellung des Raidanmelders</h3><p>Diese Namen und Discord-Rollen erhalten beim Posten eine DM mit Raid, Termin, Channel und direktem Link zum Anmelder.</p></div>
-              </div>
+              </summary>
+              <div class="raid-helper-accordion-content">
               <div class="raid-helper-row">
                 <div class="field">
                   <label for="raidHelperAnnouncementNotifyMemberSelect">Discord-Namen</label>
@@ -5453,12 +5590,14 @@ body.worldbuff-only .master-only{display:none!important}
                 <textarea id="raidHelperAnnouncementMessage" placeholder="Zum Beispiel: Bitte testweise anmelden und auf NachtLoot eine Fantasie-Prio erstellen. Bei Problemen gerne Ariee im Discord oder ingame anschreiben."></textarea>
                 <span class="muted">Der Standardtext mit Raid, Termin, Channel und Anmeldelink wird automatisch erstellt. Dieser Text erscheint zusätzlich als eigener Hinweis.</span>
               </div>
-            </div>
-            <div class="raid-helper-card" style="margin-top:12px;background:rgba(30,41,59,.38)">
-              <div class="raid-helper-card-head">
+              </div>
+          </details>
+          <details class="raid-helper-card raid-helper-create-accordion accent-teal hidden" data-wizard-panel="3">
+              <summary class="raid-helper-card-head">
                 <span class="raid-helper-card-icon">🔔</span>
                 <div><h3>Interne Benachrichtigungen bei Statusänderungen</h3><p>Raidlead und Plündermeister werden automatisch informiert. Weitere Namen oder Discord-Rollen kannst du hier ergänzen. Diese Auswahl erscheint nicht im Anmeldertext.</p></div>
-              </div>
+              </summary>
+              <div class="raid-helper-accordion-content">
               <div class="raid-helper-row">
                 <div class="field">
                   <label for="raidHelperNotifyMemberSelect">Discord-Namen</label>
@@ -5484,18 +5623,19 @@ body.worldbuff-only .master-only{display:none!important}
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
+          </details>
             <input id="raidHelperImageUrl" type="hidden">
-          </section>
 
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-violet hidden" data-wizard-panel="2">
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">☷</span>
               <div>
                 <h3>Slots und Regeln</h3>
                 <p>Diese Werte steuern die Rollenübersicht im Discord-Embed.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="raid-helper-slots">
               <div class="field">
                 <label for="raidHelperMax">Gesamt</label>
@@ -5520,23 +5660,38 @@ body.worldbuff-only .master-only{display:none!important}
             </div>
             <div id="raidHelperLinks" style="display:grid;gap:10px;margin-top:12px"></div>
             <button class="small-btn ghost" type="button" style="margin-top:10px" onclick="addRaidHelperLinkRow()">＋ Weiteren Link hinzufügen</button>
-          </section>
+            </div>
+          </details>
 
-          <section class="raid-helper-card">
-            <div class="raid-helper-card-head">
+          <details class="raid-helper-card raid-helper-create-accordion accent-green hidden" data-wizard-panel="4">
+            <summary class="raid-helper-card-head">
               <span class="raid-helper-card-icon">▤</span>
               <div>
                 <h3>Discord-Anmeldung</h3>
                 <p>Spieler wählen im Discord ihre Klasse und tragen Charakter plus Skillung ein.</p>
               </div>
-            </div>
+            </summary>
+            <div class="raid-helper-accordion-content">
             <div class="raid-helper-class-grid" id="raidHelperClassGrid"></div>
             <div class="raid-helper-note">Die Meldung wird nach jeder Anmeldung automatisch gruppiert: Tank zuerst, danach Krieger, Druide, Paladin, Schurke, Jäger, Priester, Magier, Hexenmeister und Schamane. Der Discord-Name wird nur als technische Zuordnung gespeichert.</div>
             <label class="layout-loot-toggle" style="margin-top:14px"><input id="raidHelperCreatePoSignup" type="checkbox" checked><span><strong>Passenden P0-Anmelder automatisch erstellen</strong><small>Erstellt zusammen mit dem Raidanmelder einen P0-Anmelder für denselben Raid und Discord-Channel.</small></span></label>
             <label class="layout-loot-toggle" style="margin-top:10px"><input id="raidHelperPoBindingNotice" type="checkbox" checked><span><strong>Verbindlichen LichtLoot-Hinweis im P0-Anmelder anzeigen</strong><small>Weist darauf hin, dass LichtLoot bindend ist und jeder Spieler seine Prio vor dem Raid selbst kontrollieren muss.</small></span></label>
+            </div>
+          </details>
+
+          <section class="raid-helper-card raid-helper-create-accordion accent-green hidden" data-wizard-panel="5">
+            <div class="raid-helper-accordion-content raid-helper-wizard-review">
+              <div><div class="raid-helper-card-head"><span class="raid-helper-card-icon">✓</span><div><h3>Vor dem Erstellen</h3><p>Kontrolliere die Pflichtangaben. Gelbe Punkte müssen noch geprüft werden.</p></div></div><div id="raidHelperWizardChecklist" class="raid-helper-wizard-checklist"></div></div>
+              <div id="raidHelperWizardSummary" class="raid-helper-wizard-summary"></div>
+            </div>
           </section>
 
-          <div class="tools">
+          <div class="raid-helper-wizard-nav">
+            <button id="raidHelperWizardBack" class="btn ghost" type="button" onclick="moveRaidHelperWizard(-1)">← Zurück</button>
+            <button id="raidHelperWizardNext" class="btn" type="button" onclick="moveRaidHelperWizard(1)">Weiter →</button>
+          </div>
+
+          <div id="raidHelperLegacyCreateTools" class="tools hidden">
             <button id="raidHelperCreateSubmitButton" class="btn" type="button" onclick="submitRaidHelperCreateOrEdit()">Raidanmelder erstellen</button>
             <button class="btn ghost" type="button" onclick="copyRaidHelperPreview()">Vorschau kopieren</button>
           </div>
@@ -7093,9 +7248,12 @@ function apiWrite(params){
   });
 }
 
-async function railwayApi(params){
+async function railwayApi(params, timeoutMs = 20000){
   const query = new URLSearchParams(Object.assign({}, params, { guild: CURRENT_GUILD_SLUG, guildSlug: CURRENT_GUILD_SLUG, t: Date.now() }));
-  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), {
+    cache:"no-store",
+    signal:AbortSignal.timeout(timeoutMs)
+  });
   if(!response.ok){
     const text = await response.text().catch(() => "");
     throw new Error(text || ("Railway API HTTP " + response.status));
@@ -7346,13 +7504,24 @@ async function loadOverview(options){
     }catch(_error){}
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
+    const leadershipRaids = Array.isArray(result.raids)
+      ? result.raids.filter(raid => {
+          const status = normalize(raid?.status || "");
+          return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
+        })
+      : [];
+    const linkedRaidIds = new Set(
+      leadershipRaids
+        .filter(raid => !raid?.p0Only)
+        .map(raid => String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toUpperCase())
+        .filter(Boolean)
+    );
     guildData = {
-      raids: Array.isArray(result.raids)
-        ? result.raids.filter(raid => {
-            const status = normalize(raid?.status || "");
-            return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
-          })
-        : [],
+      raids: leadershipRaids.filter(raid => {
+        if(!raid?.p0Only) return true;
+        const raidId = String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toUpperCase();
+        return !raidId || !linkedRaidIds.has(raidId);
+      }),
       players: Array.isArray(result.players) ? result.players : []
     };
     try{
@@ -7641,7 +7810,96 @@ function openRaidHelperPanel(tabName){
   if(tabName) setRaidHelperTab(tabName);
 }
 
+let raidHelperWizardStep = 1;
+
+function raidHelperWizardChecks(){
+  const raid = raidHelperValue("raidHelperRaid");
+  const date = raidHelperValue("raidHelperDate");
+  const time = raidHelperValue("raidHelperTime");
+  const lead = raidHelperValue("raidHelperLead");
+  const channel = raidHelperValue("raidHelperChannel");
+  const p0Enabled = document.getElementById("raidHelperCreatePoSignup")?.checked !== false && document.getElementById("raidHelperSignupOnly")?.checked !== true;
+  return [
+    {ok:Boolean(raid),label:raid ? "Raid ausgewählt" : "Raid auswählen"},
+    {ok:Boolean(date && time),label:date && time ? "Datum und Uhrzeit eingetragen" : "Datum und Uhrzeit fehlen"},
+    {ok:Boolean(lead),label:lead ? "Raidlead eingetragen" : "Raidlead prüfen"},
+    {ok:Boolean(channel),label:channel ? "Discord-Channel ausgewählt" : "Discord-Channel auswählen"},
+    {ok:true,label:p0Enabled ? "P0-Anmelder wird mit erstellt" : "Kein P0-Anmelder ausgewählt"}
+  ];
+}
+
+function renderRaidHelperWizardReview(){
+  const checks = raidHelperWizardChecks();
+  const checklist = document.getElementById("raidHelperWizardChecklist");
+  if(checklist) checklist.innerHTML = checks.map(item=>`<div class="raid-helper-wizard-check ${item.ok ? "" : "warn"}"><b>${item.ok ? "✓" : "!"}</b><span>${escapeHtml(item.label)}</span></div>`).join("");
+  const summary = document.getElementById("raidHelperWizardSummary");
+  if(summary) summary.innerHTML = `<h4>Zusammenfassung</h4><span>Raid <strong>${escapeHtml(RAID_OPTIONS[raidHelperValue("raidHelperRaid")]?.name || raidHelperValue("raidHelperRaid") || "–")}</strong></span><span>Termin <strong>${escapeHtml(formatRaidDate(raidHelperValue("raidHelperDate")) || "–")} · ${escapeHtml(raidHelperValue("raidHelperTime") || "–")} Uhr</strong></span><span>Raidlead <strong>${escapeHtml(raidHelperValue("raidHelperLead") || "–")}</strong></span><span>Discord-Channel <strong>${escapeHtml(raidHelperValue("raidHelperChannelSelect") || raidHelperValue("raidHelperChannel") || "–")}</strong></span><span>${document.getElementById("raidHelperCreatePoSignup")?.checked !== false && document.getElementById("raidHelperSignupOnly")?.checked !== true ? "P0-Anmelder wird automatisch mit erstellt." : "Es wird kein P0-Anmelder mit erstellt."}</span>`;
+}
+
+function setRaidHelperWizardStep(step){
+  raidHelperWizardStep = Math.max(1,Math.min(5,Number(step)||1));
+  document.querySelectorAll("#raidHelperTab-createEvent [data-wizard-panel]").forEach(panel=>{
+    const active = Number(panel.dataset.wizardPanel) === raidHelperWizardStep;
+    panel.classList.toggle("hidden",!active);
+    if(active && panel.tagName === "DETAILS" && raidHelperWizardStep !== 3) panel.open = true;
+  });
+  document.querySelectorAll("#raidHelperTab-createEvent [data-wizard-step]").forEach(button=>{
+    const value=Number(button.dataset.wizardStep);
+    button.classList.toggle("active",value===raidHelperWizardStep);
+    button.classList.toggle("complete",value<raidHelperWizardStep);
+  });
+  const back=document.getElementById("raidHelperWizardBack");
+  const next=document.getElementById("raidHelperWizardNext");
+  if(back) back.disabled=raidHelperWizardStep===1;
+  if(next){
+    next.textContent=raidHelperWizardStep===5 ? "Raidanmelder jetzt erstellen" : "Weiter →";
+    next.classList.toggle("good",raidHelperWizardStep===5);
+  }
+  if(raidHelperWizardStep===5) renderRaidHelperWizardReview();
+  document.querySelector(".raid-helper-wizard-progress")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function moveRaidHelperWizard(direction){
+  if(raidHelperWizardStep===1 && Number(direction)>0){
+    const missing=raidHelperWizardChecks().slice(0,4).filter(item=>!item.ok);
+    if(missing.length){
+      setStatus("Schritt 1 ist noch nicht vollständig: "+missing.map(item=>item.label).join(", "),"bad");
+      return;
+    }
+  }
+  if(raidHelperWizardStep===2 && Number(direction)>0 && Number(raidHelperValue("raidHelperMax"))<1){
+    setStatus("Bitte mindestens einen Gesamtplatz eintragen.","bad");
+    return;
+  }
+  if(raidHelperWizardStep===5 && Number(direction)>0){
+    const missing=raidHelperWizardChecks().filter(item=>!item.ok);
+    if(missing.length){
+      setStatus("Bitte vor dem Erstellen prüfen: "+missing.map(item=>item.label).join(", "),"bad");
+      renderRaidHelperWizardReview();
+      return;
+    }
+    submitRaidHelperCreateOrEdit();
+    return;
+  }
+  setRaidHelperWizardStep(raidHelperWizardStep+Number(direction||0));
+}
+
+function openP0OnlyCreatorFromDashboard(){
+  openRaidHelperPanel("poCreate");
+  document.getElementById("raidHelperTab-poCreate")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function openRaidCreatorFromDashboard(){
+  openRaidHelperPanel("createEvent");
+  openNewRaidHelperForm();
+  document.getElementById("raidHelperTab-createEvent")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 function openNewRaidHelperForm(){
+  document.querySelectorAll("#raidHelperTab-createEvent .raid-helper-create-accordion").forEach((section,index)=>{
+    section.open = index === 0;
+  });
+  setRaidHelperWizardStep(1);
   raidHelperEditingRaidIdentifier = "";
   raidHelperEditingData = null;
   raidHelperEditingTemplateIdentifier = "";
@@ -7787,6 +8045,22 @@ function openRaidleadPanelDirect(raidId){
 function openPoPostPanel(){
   openDetailsPanel("raidHelperPanel");
   setRaidHelperTab("poCreate");
+}
+
+async function openP0OnlySignupFromDashboard(raidId){
+  const raid=findRaidByAnyId(raidId);
+  if(!raid){setStatus("P0-Anmelder wurde nicht gefunden.","bad");return;}
+  try{
+    await loadPoPostStoredEntries();
+    const po=matchingPoSignupForRaid(raid);
+    openDetailsPanel("raidHelperPanel");
+    setRaidHelperTab("poSignup");
+    if(po?.postKey) raidHelperPoSignupSelectedPostKey=String(po.postKey);
+    renderRaidHelperPoSignupTab();
+    if(!po) setStatus("Die P0-Anmelder-Konfiguration konnte nicht eindeutig zugeordnet werden.","bad");
+  }catch(error){
+    setStatus(error.message||"P0-Anmelder konnte nicht geöffnet werden.","bad");
+  }
 }
 
 function openPlayerPanel(){
@@ -8785,6 +9059,8 @@ function renderDashboardCards(){
       <article class="active-raid-card active-raid-p0-only-card">
         <div class="active-raid-visual">
           <div class="active-raid-image" style="--raid-image:url('${RAID_IMAGES[key] || "images/raid-templates/wow-other-raids.png"}')"></div>
+          <button class="active-raid-pm-send" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">LeadPIN an PM schicken</button>
+          <button class="active-raid-pm-send active-raid-copy" type="button" onclick="copyRaidDiscordText('${escapeAttr(raid.raidId || raid.id)}')"><img src="images/discord.svg" alt="">DC-Nachricht kopieren</button>
         </div>
         <div class="active-raid-body">
           <div>
@@ -8795,10 +9071,21 @@ function renderDashboardCards(){
                 <span>${escapeHtml(formatRaidDate(raid.raidDate))}</span>
                 <span class="active-raid-time">${escapeHtml(raid.raidTime || "")} Uhr</span>
               </div>
-              <div class="active-raid-info"><span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
+              <div class="active-raid-info">${statusBadge(raid.status || "geschlossen")}<span class="status good">reiner P0-Anmelder</span><div class="active-raid-stats"><span class="active-raid-stat">${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</span><span class="active-raid-stat">Erstellt von <strong>${escapeHtml(createdBy)}</strong></span><span class="active-raid-stat">Prio-PIN <strong>${escapeHtml(raid.playerPin || "-")}</strong></span></div></div>
             </div>
           </div>
-          <div class="active-raid-side"><div class="active-raid-actions"><button class="small-btn primary" type="button" onclick="openPoPostPanel()">Unter Alle P0-Anmelder öffnen</button></div></div>
+          <div class="active-raid-side">
+            <div class="active-raid-lead-card">
+              <span class="active-raid-lead-label">LeadPIN</span>
+              <strong class="active-raid-lead-pin">${escapeHtml(raid.leadPin || "-")}</strong>
+              <span class="active-raid-id">${escapeHtml(raid.raidId || "")}</span>
+            </div>
+            <div class="active-raid-actions">
+              <button class="small-btn primary" type="button" onclick="openP0OnlySignupFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">P0-Anmelder öffnen</button>
+              <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
+              <button class="small-btn danger" type="button" onclick="deleteRaidFromDashboard('${escapeAttr(raid.raidId || raid.id)}')">Archivieren</button>
+            </div>
+          </div>
         </div>
       </article>`;
     if(isSignupOnlyRaid(raid)) return `
@@ -14994,8 +15281,59 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const result = await railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"false", limit:"5000", t:Date.now() });
-    poPostStoredEntries = result && result.success && Array.isArray(result.entries) ? result.entries : [];
+    const [raidResult,p0Result] = await Promise.all([
+      railwayApi({ action:"getActiveRaids", masterCode, t:Date.now() }),
+      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all", t:Date.now() })
+    ]);
+    const p0Raids = raidResult && raidResult.success && Array.isArray(raidResult.raids)
+      ? raidResult.raids.filter(raid=>raid.p0Only || String(raid.raidId || raid.id || "").toUpperCase().startsWith("P0-"))
+      : [];
+    const postEntries = p0Raids.map(raid=>{
+      const raidId = String(raid.raidId || raid.id || "").trim();
+      return {
+        postKey:raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""),
+        sourceChannelId:raid.discordChannelId || "",
+        targetChannelId:raid.discordChannelId || "",
+        discordMessageId:raid.discordMessageId || "",
+        raid:raid.raid || raid.raidType || "",
+        title:raid.postTitle || raid.raidName || `${String(raid.raid || raid.raidType || "P0").toUpperCase()} P0-Anmelder`,
+        raidDate:raid.raidDate || "",
+        raidTime:raid.raidTime || "",
+        raidPin:raid.playerPin || raid.prioPin || "",
+        prioPin:raid.playerPin || raid.prioPin || "",
+        lichtlootRaidId:raidId,
+        raidId,
+        mode:raid.postMode || "signup",
+        configOnly:true,
+        p0Only:true,
+        storage:"separate-p0-database",
+        updatedAt:raid.updatedAt || ""
+      };
+    });
+    const p0Entries = p0Result && p0Result.success && Array.isArray(p0Result.entries) ? p0Result.entries : [];
+    const configsByRaidId = new Map();
+    postEntries.filter(entry=>entry.configOnly).forEach(entry=>{
+      const raidId = String(entry.lichtlootRaidId || entry.raidId || "").trim();
+      if(!raidId) return;
+      const previous = configsByRaidId.get(raidId);
+      if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByRaidId.set(raidId,entry);
+    });
+    const canonicalEntries = p0Entries.map(entry=>{
+      const raidId = String(entry.raidId || "").trim();
+      const config = configsByRaidId.get(raidId) || {};
+      const fallbackPostKey = raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+      return Object.assign({},entry,{
+        postKey:config.postKey || fallbackPostKey,
+        sourceChannelId:config.sourceChannelId || entry.discordChannelId || "",
+        targetChannelId:config.targetChannelId || entry.discordChannelId || "",
+        title:config.title || `${String(entry.raid || "P0").toUpperCase()} P0-Anmelder`,
+        raid:config.raid || entry.raid || "",
+        raidDate:config.raidDate || entry.raidDate || "",
+        raidTime:config.raidTime || entry.raidTime || "",
+        entrySource:"p0_database"
+      });
+    });
+    poPostStoredEntries = postEntries.concat(canonicalEntries);
     await ensurePoSignupCorrectionDataForEntries();
   }catch(error){
     poPostStoredEntries = [];
@@ -15891,6 +16229,9 @@ async function createRaidHelperSignup(){
 
     if(!created.success){
       throw new Error(created.error || "Raidanmelder konnte nicht erstellt werden.");
+    }
+    if(created.raidHelperEnabled !== false && !created.announcementQueued){
+      throw new Error("Raid wurde gespeichert, aber nicht für Discord vorgemerkt. Bitte erneut versuchen.");
     }
 
     const queued = await railwayWrite({
@@ -17533,29 +17874,48 @@ async function loadP0ReleasePanel(){
       if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
       return;
     }
-    const [releaseResult, reviewResult, requestResult, displayResult] = await Promise.all([
-      railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
-      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" }),
-      railwayApi({ action:"guildGetPoReleaseRequests", masterCode }),
-      railwayApi({ action:"getPoReleaseDisplaySettings" })
-    ]);
+    const releaseResult = await railwayApi({ action:"guildGetCharacterPoReleases", masterCode, includeAttendance:"false" });
     if(!releaseResult.success){
       if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
       return;
     }
-    if(reviewResult && !reviewResult.success){
-      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "Discord P0+ Anmeldungen konnten nicht geladen werden.")}</div>`;
-      return;
-    }
     poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
-    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
-    poReleaseRequests = Array.isArray(requestResult.entries) ? requestResult.entries : [];
-    if(displayResult.configured && Array.isArray(displayResult.visibleRaids)){
-      poReleaseVisibleColumns = new Set(displayResult.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
-    }else{
-      await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
-    }
+    p0ReviewEntries = [];
+    poReleaseRequests = [];
     renderP0ReleasePanelContent();
+
+    const attendanceTask = railwayApi(
+      { action:"guildGetCharacterPoReleases", masterCode, includeAttendance:"true" },
+      12000
+    ).then(result=>{
+      if(result?.success && Array.isArray(result.entries)){
+        poReleaseCharacters = result.entries;
+        renderP0ReleasePanelContent();
+      }
+    });
+    const reviewTask = railwayApi(
+      { action:"guildGetP0DiscordSignups", masterCode, status:"all" },
+      12000
+    ).then(result=>{
+      p0ReviewEntries = result?.success && Array.isArray(result.entries) ? result.entries : [];
+      renderP0ReleasePanelContent();
+    });
+    const requestTask = railwayApi(
+      { action:"guildGetPoReleaseRequests", masterCode },
+      15000
+    ).then(result=>{
+      poReleaseRequests = result?.success && Array.isArray(result.entries) ? result.entries : [];
+      renderP0ReleasePanelContent();
+    });
+    const displayTask = railwayApi({ action:"getPoReleaseDisplaySettings" }, 10000).then(async result=>{
+      if(result?.configured && Array.isArray(result.visibleRaids)){
+        poReleaseVisibleColumns = new Set(result.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
+      }else if(result?.success){
+        await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+      }
+      renderP0ReleasePanelContent();
+    });
+    await Promise.allSettled([attendanceTask, reviewTask, requestTask, displayTask]);
   }catch(error){
     if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
   }
@@ -18147,10 +18507,13 @@ async function reviewPoPostEntryFromPostPanel(index, status){
     setStatus(status === "approved" ? "PO-Eintrag wird freigegeben ..." : "PO-Eintrag wird abgelehnt ...", "");
     const reviewConfig = poSignupConfigForKey(entry.postKey || "") || getPoSignupConfig();
     const raidPin = poSignupLichtlootPinForConfig(reviewConfig);
+    const isP0DatabaseEntry = entry.entrySource === "p0_database";
     const result = await railwayWrite({
-      action:"guildReviewPoPostEntry",
+      action:isP0DatabaseEntry ? "reviewP0DiscordSignup" : "guildReviewPoPostEntry",
       masterCode,
       id:entry.id || "",
+      signupId:isP0DatabaseEntry ? (entry.id || "") : "",
+      storage:isP0DatabaseEntry ? (entry.storage || "separate-p0-database") : "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
@@ -18271,9 +18634,12 @@ async function deletePoPostEntryFromPostPanel(index){
   }
   try{
     setStatus("PO-Eintrag wird gelöscht ...", "");
+    const isP0DatabaseEntry = entry.entrySource === "p0_database";
     const result = await railwayWrite({
-      action:"deletePoPostEntry",
+      action:isP0DatabaseEntry ? "guildDeleteP0DiscordSignup" : "deletePoPostEntry",
       masterCode,
+      signupId:isP0DatabaseEntry ? (entry.id || "") : "",
+      storage:isP0DatabaseEntry ? (entry.storage || "separate-p0-database") : "",
       postKey:entry.postKey || "",
       sourceChannelId:entry.sourceChannelId || "",
       targetChannelId:entry.targetChannelId || "",
