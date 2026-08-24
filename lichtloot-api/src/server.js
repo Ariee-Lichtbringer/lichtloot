@@ -20949,6 +20949,20 @@ async function getRaidHelper({ guildId, query: params }) {
   };
   const signups = normalizedSignups.filter(includeSignup);
   const externalSignups = normalizedExternalSignups.filter(includeSignup);
+  // Die sichtbare Anmeldenummer bildet die tatsächliche Reihenfolge der
+  // Anmeldung ab. Status- oder Rollenänderungen dürfen sie nicht verändern.
+  // Beide Anmeldetabellen werden gemeinsam gezählt, damit es im Discord-Post
+  // keine doppelten Nummern gibt.
+  [...signups, ...externalSignups]
+    .sort((left, right) => {
+      const leftTime = new Date(left.createdAt || 0).getTime();
+      const rightTime = new Date(right.createdAt || 0).getTime();
+      if (leftTime !== rightTime) return leftTime - rightTime;
+      return clean(left.id).localeCompare(clean(right.id));
+    })
+    .forEach((row, index) => {
+      row.signupNumber = index + 1;
+    });
   await ensurePoPostEntriesSchema();
   const poPins = [raid.raid_pin, raid.external_raid_id, raid.id].map(clean).filter(Boolean);
   const poApprovalResult = poPins.length ? await query(
