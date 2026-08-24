@@ -22532,7 +22532,11 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       const matchingSignup = signupByPlayerItem.get(signupKey) || {};
       const approvalStatus = clean(matchingSignup.approvalStatus || "approved") || "approved";
       return {
-        id: row.id,
+        // Für die Discord-Prüfung muss die ID aus der Anmeldetabelle
+        // zurückgegeben werden. row.id gehört zum NachtLoot-Prioeintrag und
+        // kann von reviewP0DiscordSignup nicht freigegeben werden.
+        id: matchingSignup.id || row.id,
+        signupId: matchingSignup.id || "",
         raidId: raidPublicId(raid),
         raid: normalizeRaidType(raid.raid_type).toUpperCase(),
         raidName: normalizedRaid.raidName,
@@ -22558,7 +22562,8 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
         updatedAt: row.updated_at,
         createdAt: row.created_at,
         p0PlusPoints: Number(row.p0plus_points || 0),
-        source: "lichtloot"
+        source: "lichtloot",
+        storage: matchingSignup.storage || "raid-database"
       };
     });
 
