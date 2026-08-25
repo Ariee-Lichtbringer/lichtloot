@@ -9225,6 +9225,7 @@ async function getPoPostEntries({ guildId, query: params }) {
               join items point_item on point_item.id = pp.item_id
               where pp.guild_id = ppe.guild_id
                 and lower(c.name) = lower(ppe.player_name)
+                and lower(point_item.raid_type) = lower(ppe.raid)
                 and regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
                     regexp_replace(lower(ppe.item_name), '[^a-z0-9]+', '', 'g')
             ), 0) + coalesce((
@@ -9233,6 +9234,7 @@ async function getPoPostEntries({ guildId, query: params }) {
               join items unlinked_item on unlinked_item.id = up.item_id
               where up.guild_id = ppe.guild_id
                 and lower(up.player_name) = lower(ppe.player_name)
+                and lower(unlinked_item.raid_type) = lower(ppe.raid)
                 and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
                     regexp_replace(lower(ppe.item_name), '[^a-z0-9]+', '', 'g')
                 and 1 = (
@@ -22470,6 +22472,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
               join items signup_item on signup_item.id = p0s.item_id
               where pp.guild_id = p0s.guild_id
                 and pp.character_id = p0s.character_id
+                and lower(point_item.raid_type) = lower(signup_item.raid_type)
                 and (
                   pp.item_id = p0s.item_id
                   or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
@@ -22479,8 +22482,10 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
               select sum(up.points)
               from unlinked_p0plus_points up
               join items unlinked_item on unlinked_item.id = up.item_id
+              join items signup_item_unlinked on signup_item_unlinked.id = p0s.item_id
               where up.guild_id = p0s.guild_id
                 and lower(up.player_name) = lower(p0s.player_name)
+                and lower(unlinked_item.raid_type) = lower(signup_item_unlinked.raid_type)
                 and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
                     regexp_replace(lower(p0s.item_name), '[^a-z0-9]+', '', 'g')
                 and 1 = (
@@ -22529,6 +22534,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
          join items point_item on point_item.id = pp.item_id
          where pp.guild_id = $1
            and pp.character_id = pr.character_id
+           and lower(point_item.raid_type) = lower(i.raid_type)
            and (
              pp.item_id = i.id
              or regexp_replace(lower(point_item.name), '[^a-z0-9]+', '', 'g') =
@@ -22540,6 +22546,7 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
          join items unlinked_item on unlinked_item.id = up.item_id
          where up.guild_id = $1
            and lower(up.player_name) = lower(c.name)
+           and lower(unlinked_item.raid_type) = lower(i.raid_type)
            and regexp_replace(lower(unlinked_item.name), '[^a-z0-9]+', '', 'g') =
                regexp_replace(lower(i.name), '[^a-z0-9]+', '', 'g')
            and 1 = (
