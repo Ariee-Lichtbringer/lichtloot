@@ -7830,9 +7830,13 @@ function renderMyPrios(data){
       };
       const deletePayload=safeAttr(JSON.stringify({
         rowId:rowId,
+        prioId:entry.id || entry.prioId || entry.prio_id || '',
         raidId:entry.raidId || entry.RaidID || entry.id || '',
+        raidPin:entry.raidPin || entry.prioPin || '',
         raid:entry.raid || '',
         raidName:entry.raidName || entry.raid || 'Raid',
+        raidDate:entry.raidDate || '',
+        raidTime:entry.raidTime || '',
         player:entry.player || data.player || '',
         server:entry.server || data.server || '',
         createdAt:entry.createdAt || ''
@@ -8003,13 +8007,16 @@ async function deleteOwnPrio(payload){
     '&playerPin='+encodeURIComponent(pin)+
     '&characterPin='+encodeURIComponent(pin)+
     '&masterCharacterPin='+encodeURIComponent(pin)+
-    '&prioPin='+encodeURIComponent(document.getElementById("raidPin")?.value.trim() || '')+
+    '&prioPin='+encodeURIComponent(payload.raidPin || document.getElementById("raidPin")?.value.trim() || '')+
+    '&prioId='+encodeURIComponent(payload.prioId || '')+
     '&player='+encodeURIComponent(playerName)+
     '&char='+encodeURIComponent(playerName)+
     '&spieler='+encodeURIComponent(playerName)+
     '&server='+encodeURIComponent(payload.server || '')+
     '&raidId='+encodeURIComponent(deleteRaidId)+
     '&raid='+encodeURIComponent(payload.raid || '')+
+    '&raidDate='+encodeURIComponent(payload.raidDate || '')+
+    '&raidTime='+encodeURIComponent(payload.raidTime || '')+
     '&createdAt='+encodeURIComponent(payload.createdAt || '')+
     '&t='+Date.now();
 
@@ -10747,9 +10754,13 @@ function prioReportPayload(prio){
 function publishedPrioDeletePayload(prio,index){
   return {
     rowId:"published-prio-row-"+index,
-    raidId:currentRaidId || prio.raidId || prio.RaidID || "",
+    prioId:prio.id || prio.prioId || prio.prio_id || "",
+    raidId:prio.raidId || prio.RaidID || currentRaidId || "",
+    raidPin:prio.raidPin || prio.prioPin || document.getElementById("raidPin")?.value.trim() || "",
     raid:RAID_NAME,
     raidName:RAID_NAME,
+    raidDate:prio.raidDate || currentRaidDate || "",
+    raidTime:prio.raidTime || currentRaidTime || "",
     player:prio.Spieler || prio.player || "",
     server:prio.Server || prio.server || "",
     createdAt:prio.createdAt || prio.CreatedAt || ""
