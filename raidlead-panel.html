@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>Lichtloot – Raidlead</title>
 
 <style>
@@ -1900,6 +1901,7 @@ async function loadPriosFromSheet(leadPin){
 
 
     currentPrios = (result.prios || []).map(p => ({
+      prioId: p.id || p.prioId || p.prio_id || "",
       rowNumber: Number(p.rowNumber || p.RowNumber || p.zeile || p.Zeile || 0),
       player: p.Spieler || "",
       server: p.Server || "",
@@ -2758,7 +2760,7 @@ function renderRows(){
     const actionButtons = `
       ${renderBenchButton(entry)}
       <button class="btn danger small-btn"
-        onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}')">
+        onclick="deleteSinglePrio('${escapeQuotes(entry.player)}','${escapeQuotes(entry.server)}','${escapeQuotes(entry.prioId)}')">
         Löschen
       </button>
       ${clearButton}
@@ -3111,7 +3113,7 @@ async function saveRaidleadPrioForPlayer(){
     if(saveButton) saveButton.disabled = false;
   }
 }
-async function deleteSinglePrio(player,server){
+async function deleteSinglePrio(player,server,prioId){
   if(!currentRaidData || !currentRaidData.raidId){
     alert("Kein aktiver Raid gefunden.");
     return;
@@ -3126,6 +3128,7 @@ async function deleteSinglePrio(player,server){
     "?guild=" + encodeURIComponent(currentGuildSlug()) + "&action=deletePrio" +
     "&raidId=" + encodeURIComponent(currentRaidData.raidId) +
     "&leadPin=" + encodeURIComponent(currentRaidData.leadPin || "") +
+    "&prioId=" + encodeURIComponent(prioId || "") +
     "&player=" + encodeURIComponent(player) +
     "&server=" + encodeURIComponent(server || "") +
     "&t=" + Date.now();
