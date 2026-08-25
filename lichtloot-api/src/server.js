@@ -12309,6 +12309,39 @@ async function deletePrio({ guildId, query: params }) {
       throw error;
     }
 
+    if (isUuid(prioId)) {
+      const exactValues = [guildId, clean(player), prioId, raid.raid_type, raid.raid_date];
+      let exactServerClause = "";
+      if (clean(params.server)) {
+        exactValues.push(clean(params.server));
+        exactServerClause = `and lower(c.server) = lower($${exactValues.length})`;
+      }
+      const exactResult = await query(
+        `delete from prios pr
+         using characters c, raids target_raid
+         where pr.character_id = c.id
+           and pr.raid_id = target_raid.id
+           and pr.id = $3
+           and c.player_id in (select id from players where guild_id = $1)
+           and lower(c.name) = lower($2)
+           ${exactServerClause}
+           and target_raid.guild_id = $1
+           and lower(target_raid.raid_type) = lower($4)
+           and target_raid.raid_date = $5::date
+         returning pr.id, pr.raid_id`,
+        exactValues
+      );
+      if (!exactResult.rowCount) {
+        const error = new Error("Die Prio wurde nicht gefunden und deshalb nicht gelöscht. Bitte die Plündermeisterseite neu laden und erneut versuchen.");
+        error.statusCode = 404;
+        throw error;
+      }
+      const deletedRaid = await findRaid(guildId, { raidId: exactResult.rows[0].raid_id }) || raid;
+      const poPostRefresh = await removePoPostEntryAfterPrioDelete(guildId, deletedRaid, player, "raidlead_prio_deleted");
+      const refresh = await enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, deletedRaid, "raidlead_prio_deleted");
+      return { success: true, deleted: exactResult.rowCount, poPostRefresh, raidAnnouncementRefresh: refresh };
+    }
+
     const values = [guildId, raid.id, clean(player)];
     let serverClause = "";
     if (clean(params.server)) {
