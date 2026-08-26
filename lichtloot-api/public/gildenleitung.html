@@ -5376,7 +5376,7 @@ body.worldbuff-only .master-only{display:none!important}
         <div class="dashboard-card-head">
           <h2>⚔ Raids der kommenden 2 Wochen</h2>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" onclick="restoreArchivedRaids()">Archivierte Raids wiederherstellen</button>
+            <button type="button" onclick="restoreArchivedRaids()">Archivierte/gelöschte Raids wiederherstellen</button>
             <button type="button" onclick="openRaidPanel()">Alle Raids anzeigen →</button>
           </div>
         </div>
@@ -5865,7 +5865,7 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <div id="raidHelperTab-pastEvents" class="raid-helper-tab-panel raid-helper-view hidden">
         <div class="raid-helper-view-head">
-          <div><h3>Past Events</h3><span>Archiv der vergangenen Raids</span></div>
+          <div><h3>Archiv</h3><span>Archivierte und gelöschte Raids</span></div>
           <button class="small-btn ghost" type="button" onclick="renderRaidHelperPastEvents()">Aktualisieren</button>
         </div>
         <div id="raidHelperPastEventsList" class="raid-helper-list"></div>
@@ -6462,12 +6462,10 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
       <div class="tools">
         <select id="raidFilter" onchange="renderRaids()">
-          <option value="">Alle offenen & geschlossenen</option>
+          <option value="">Alle aktiven Raids</option>
           <option value="offen">Offen</option>
           <option value="geöffnet">Geöffnet</option>
           <option value="geschlossen">Geschlossen</option>
-          <option value="archiviert">Archiv / vergangene</option>
-          <option value="alle">Alle anzeigen</option>
         </select>
         <button class="btn ghost" type="button" onclick="clearRaidFilters()">Filter löschen</button>
       </div>
@@ -7504,12 +7502,7 @@ async function loadOverview(options){
     }catch(_error){}
     setWorldbuffOnlyMode(false);
     setGuildLocked(false);
-    const leadershipRaids = Array.isArray(result.raids)
-      ? result.raids.filter(raid => {
-          const status = normalize(raid?.status || "");
-          return !raid?.deletedAt && status !== "gelöscht" && status !== "geloescht";
-        })
-      : [];
+    const leadershipRaids = Array.isArray(result.raids) ? result.raids : [];
     const linkedRaidIds = new Set(
       leadershipRaids
         .filter(raid => !raid?.p0Only)
@@ -8831,7 +8824,10 @@ function renderRaidListFilters(){
 }
 
 function renderSummary(){
-  const raids = guildData.raids || [];
+  const raids = (guildData.raids || []).filter(raid => {
+    const status = normalize(raid.status || "");
+    return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt;
+  });
   const players = guildData.players || [];
   const linked = players.filter(player => Number(player.linkedCharacters || 0) > 1).length;
 
@@ -9182,7 +9178,7 @@ function getDashboardActiveRaids(){
   return (guildData.raids || [])
     .filter(raid => {
       const status = normalize(raid.status || "");
-      return status !== "archiviert" && status !== "archive" && isRaidInNextTwoWeeks(raid);
+      return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt && isRaidInNextTwoWeeks(raid);
     })
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
@@ -9353,13 +9349,9 @@ function renderRaids(){
       raid.status,
       raid.guild
     ].join(" "));
-    const isArchived = status === "archiviert" || status === "archive";
-    const isPast = String(raid.raidDate || "") < todayIsoDate();
+    const isArchived = ["archiviert","archive","gelöscht","geloescht"].includes(status) || Boolean(raid.deletedAt);
     const filterMatches =
-      filter === "alle" ? true :
-      filter === "archiviert" ? (isArchived || isPast) :
-      filter ? status === filter :
-      !isArchived;
+      !isArchived && (filter ? status === filter : true);
     const dateMatches = !dateSearch || String(raid.raidDate || "") === dateSearch;
     const raidKey = normalizePoSignupRaidKey(raid.raid || raid.raidName);
     const sizeMatches = raidListTierFilter === "all" || raidListRaidKeys().includes(raidKey);
@@ -9529,7 +9521,7 @@ async function deleteSelectedRaids(){
   if(failed.length){
     setStatus(`${deleted} gelöscht. ${failed.length} konnten nicht gelöscht werden: ${failed.join(", ")}.`, "bad");
   }else{
-    setStatus(`${deleted} ${deleted === 1 ? "Raid wurde" : "Raids wurden"} endgültig gelöscht.`, "good");
+    setStatus(`${deleted} ${deleted === 1 ? "Raid wurde" : "Raids wurden"} als gelöscht in das Archiv verschoben.`, "good");
   }
   await loadOverview({ preserveStatus:true });
 }
@@ -10493,7 +10485,7 @@ function mountPoSignupCreatorInRaidHelper(){
 
 function raidHelperUpcomingRaids(){
   return (guildData.raids || [])
-    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
+    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive","gelöscht","geloescht"].includes(normalize(raid.status || "")) && !raid.deletedAt)
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
 }
 
@@ -10534,7 +10526,10 @@ function renderRaidHelperCalendar(){
   if(title) title.textContent = monthName(first);
 
   const raidsByDate = new Map();
-  (guildData.raids || []).forEach(raid => {
+  (guildData.raids || []).filter(raid => {
+    const status = normalize(raid.status || "");
+    return !["archiviert","archive","gelöscht","geloescht"].includes(status) && !raid.deletedAt;
+  }).forEach(raid => {
     const date = String(raid.raidDate || "").trim();
     if(!date) return;
     if(!raidsByDate.has(date)) raidsByDate.set(date, []);
@@ -10702,13 +10697,16 @@ async function deleteSelectedScheduledRaidHelpers(){
 
 function raidHelperPastRaids(){
   return (guildData.raids || [])
-    .filter(raid => String(raid.raidDate || "") < todayIsoDate() || ["archiviert","archive"].includes(normalize(raid.status || "")))
+    .filter(raid => {
+      const status = normalize(raid.status || "");
+      return String(raid.raidDate || "") < todayIsoDate() || ["archiviert","archive","gelöscht","geloescht"].includes(status) || Boolean(raid.deletedAt);
+    })
     .sort((a,b) => String(b.raidDate || "").localeCompare(String(a.raidDate || "")) || String(b.raidTime || "").localeCompare(String(a.raidTime || "")));
 }
 
 function raidHelperCurrentRaids(){
   return (guildData.raids || [])
-    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive"].includes(normalize(raid.status || "")))
+    .filter(raid => String(raid.raidDate || "") >= todayIsoDate() && !["archiviert","archive","gelöscht","geloescht"].includes(normalize(raid.status || "")) && !raid.deletedAt)
     .filter(raid => {
       const key = getRaidKey(raid);
       if(raidHelperCurrentRaidFilter){
@@ -10777,7 +10775,7 @@ function renderRaidHelperEventCard(raid, mode){
   ].filter(Boolean).join(" · ");
   const description = String(raid.description || raid.beschreibung || "").trim();
   const raidId = raid.raidId || raid.id || "";
-  const isArchived = ["archiviert","archive"].includes(normalize(statusText));
+  const isArchived = ["archiviert","archive","gelöscht","geloescht"].includes(normalize(statusText)) || Boolean(raid.deletedAt);
   const prioEnabled = raid.prioEnabled !== false && String(raid.prioEnabled).toLowerCase() !== "false";
   return `
     <article class="raid-helper-event-detail" style="--raid-color:${raidHelperRaidColor(key)}">
@@ -17078,7 +17076,7 @@ async function deleteRaidFromDashboard(raidId){
 async function restoreArchivedRaids(){
   const masterCode = document.getElementById("masterCode").value.trim();
   if(!masterCode){ setStatus("Bitte Master-Code eingeben.", "bad"); return; }
-  if(!confirm("Alle archivierten Raids ab gestern für diese Gilde wiederherstellen?")) return;
+  if(!confirm("Alle archivierten und gelöschten Raids dieser Gilde wiederherstellen?")) return;
   try{
     const result = await railwayApi({ action:"guildRestoreArchivedRaids", masterCode, t:Date.now() });
     if(!result.success) throw new Error(result.error || "Raids konnten nicht wiederhergestellt werden.");
@@ -17129,7 +17127,7 @@ async function hardDeleteRaidFromPage(raidId){
     renderRaids();
     renderRaidHelperCurrentEvents();
     renderRaidHelperPastEvents();
-    setStatus("Raid endgültig gelöscht; zugehörige Raid- und P0-Anmelder wurden im gesamten Gildenbereich aufgeräumt.", "good");
+    setStatus("Raid wurde als gelöscht in das Archiv verschoben; zugehörige Raid- und P0-Anmelder wurden aufgeräumt.", "good");
     await loadOverview({ preserveStatus:true });
   }catch(error){
     setStatus(error.message || "Raid konnte nicht gelöscht werden.", "bad");
