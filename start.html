@@ -4471,7 +4471,7 @@ function dashboardPrioLabel(raid){
 }
 
 function dashboardPrioHint(raid){
-  if(raidIsInProgress(raid)) return "Der Raid läuft bereits. Neue Einträge sind geschlossen.";
+  if(raidIsInProgress(raid)) return "Der Raid läuft bereits. P0-Einträge sind weiterhin möglich.";
   return prioIsOpen(raid) ? "Eintragen ist möglich." : "Eintragen ist möglich, Liste wird noch nicht veröffentlicht.";
 }
 

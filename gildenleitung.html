@@ -17936,13 +17936,15 @@ function renderP0ReleasePanelContent(){
       </div>
       <div class="p0-toolbar">
         <input id="poReleaseSearch" type="search" placeholder="Charakter suchen..." value="${escapeAttr(poReleaseSearch)}" oninput="setPoReleaseSearch(this.value)">
-        <div class="po-release-filter-picker" aria-label="Anwesenheit filtern">
+        <label class="po-release-filter-picker" aria-label="Anwesenheit filtern">
           <span>Anwesenheit:</span>
-          <button class="po-release-filter-button${poReleaseAttendanceFilter==="all"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="all"}" onclick="setPoReleaseAttendanceFilter('all')">Alle</button>
-          <button class="po-release-filter-button${poReleaseAttendanceFilter==="active"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="active"}" onclick="setPoReleaseAttendanceFilter('active')">Aktuelle P0-Freigaben</button>
-          <button class="po-release-filter-button${poReleaseAttendanceFilter==="critical"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="critical"}" onclick="setPoReleaseAttendanceFilter('critical')">Anwesenheit kritisch</button>
-          <button class="po-release-filter-button${poReleaseAttendanceFilter==="zero"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="zero"}" onclick="setPoReleaseAttendanceFilter('zero')">Ohne Teilnahme</button>
-        </div>
+          <select onchange="setPoReleaseAttendanceFilter(this.value)">
+            <option value="all" ${poReleaseAttendanceFilter==="all"?"selected":""}>Alle</option>
+            <option value="active" ${poReleaseAttendanceFilter==="active"?"selected":""}>Aktuelle P0-Freigaben</option>
+            <option value="participation" ${poReleaseAttendanceFilter==="participation"?"selected":""}>Mit Teilnahme</option>
+            <option value="zero" ${poReleaseAttendanceFilter==="zero"?"selected":""}>Ohne Teilnahme</option>
+          </select>
+        </label>
         <div class="po-release-column-picker" aria-label="Sichtbare Freigabe-Spalten"><span>Spalten anzeigen:</span>${PO_RELEASE_RAIDS.map(([raid,label])=>`<label class="po-release-column-toggle"><input type="checkbox" ${poReleaseVisibleColumns.has(raid)?"checked":""} onchange="togglePoReleaseColumn('${escapeAttr(raid)}', this.checked)"> ${escapeHtml(label)}</label>`).join("")}</div>
       </div>
       <div class="table-wrap">
@@ -18100,7 +18102,7 @@ function setPoReleaseSearch(value){
 }
 
 function setPoReleaseAttendanceFilter(filter){
-  poReleaseAttendanceFilter = ["active","critical","zero"].includes(filter) ? filter : "all";
+  poReleaseAttendanceFilter = ["active","participation","zero"].includes(filter) ? filter : "all";
   renderP0ReleasePanelContent();
 }
 
@@ -18111,6 +18113,9 @@ function poReleaseMatchesAttendanceFilter(entry){
     const hasActiveRelease = Object.entries(entry?.releases || {}).some(([raid,released])=>raid!=="p1p3"&&Boolean(released));
     const hasRaidParticipation = attendanceEntries.some(([,attendance])=>Number(attendance?.attended||0)>0);
     return hasActiveRelease && hasRaidParticipation;
+  }
+  if(poReleaseAttendanceFilter === "participation"){
+    return attendanceEntries.some(([,attendance])=>Number(attendance?.attended||0)>0);
   }
   if(poReleaseAttendanceFilter === "zero"){
     return attendanceEntries.length > 0 && attendanceEntries.every(([,attendance])=>Number(attendance?.attended||0)===0);
@@ -18133,8 +18138,10 @@ function poReleaseCheckHtml(entry, raid, index){
   const checked = Boolean(entry && entry.releases && entry.releases[raid]);
   const attendance = entry?.attendance16?.[raid];
   const lowAttendance = Boolean(attendance && Number(attendance.total) > 0 && Number(attendance.attended) <= 6);
+  const attended=Number(attendance?.attended||0);
+  const attendanceColor=attended<=3?"#f87171":attended<=7?"#fbbf24":"#4ade80";
   const attendanceHtml = attendance && Number(attendance.total) > 0
-    ? `<span class="po-release-attendance" title="Warcraft Logs · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${Number(attendance.attended)}/${Number(attendance.total)} Teilnahmen</span>`
+    ? `<span class="po-release-attendance" style="color:${attendanceColor}" title="Warcraft Logs · letzte ${Number(attendance.total)} Raidtermine${Number(attendance.bench)>0?` · davon ${Number(attendance.bench)} Bank`:""}">${attended}/${Number(attendance.total)} Teilnahmen</span>`
     : (["mc","bwl","aq40","naxx"].includes(raid) ? '<span class="po-release-attendance muted">keine WCL-Daten</span>' : '');
   const stateHtml = checked
     ? `<span class="po-release-state active${lowAttendance ? " low-attendance" : ""}" title="${escapeAttr(lowAttendance ? `${poReleaseRaidLabel(raid)} · Warnung: nur ${Number(attendance.attended)}/${Number(attendance.total)} Teilnahmen` : poReleaseRaidLabel(raid))}">✓ Freigabe</span>`
