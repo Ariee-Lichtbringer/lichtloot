@@ -11448,8 +11448,46 @@ async function savePrio({ guildId, query: params }) {
       throw error;
     }
 
+    const savedRaidForSignupCheck = raidResult.rows[0];
+    const pureP0Event = clean(savedRaidForSignupCheck.external_raid_id).toUpperCase().startsWith("P0-")
+      ? await findP0OnlyEvent(guildId, { raidId: savedRaidForSignupCheck.external_raid_id })
+      : null;
+    if (!pureP0Event) {
+      const signupRaidResult = await client.query(
+        `select id
+         from raids
+         where guild_id = $1
+           and lower(raid_type) = any($2)
+           and raid_date = $3`,
+        [guildId, raidTypeSearchValues(savedRaidForSignupCheck.raid_type), savedRaidForSignupCheck.raid_date]
+      );
+      const signupRaidIds = signupRaidResult.rows.map(row => row.id);
+      const signupResult = await client.query(
+        `select 1
+         from raid_signups rs
+         join characters signup_character on signup_character.id = rs.character_id
+         where rs.raid_id = any($1)
+           and signup_character.player_id = $2
+           and lower(coalesce(rs.status, 'signed')) not in (
+             'absent','declined','rejected','abgemeldet','abwesend','nein','verworfen'
+           )
+         limit 1`,
+        [signupRaidIds, character.player_id]
+      );
+      if (!signupResult.rows[0]) {
+        const error = new Error("Du musst dich zuerst mit einem Charakter deines LichtLoot-Accounts für diesen Raid anmelden, bevor du eine Prio speichern kannst.");
+        error.statusCode = 403;
+        throw error;
+      }
+    }
+
     const p0PlusSelected = p0Plus === "ja" || p0Plus === "true";
-    const p0Selected = p0PlusSelected || ["ja", "true", "1", "p0", "po"].includes(p0Requested);
+    const submittedPrios = [params.p1, params.p2, params.p3].map(value => clean(value));
+    const sameItemInAllThreePrios = submittedPrios.every(Boolean)
+      && new Set(submittedPrios.map(value => value.toLocaleLowerCase("de-DE"))).size === 1;
+    const p0Selected = p0PlusSelected
+      || sameItemInAllThreePrios
+      || ["ja", "true", "1", "p0", "po"].includes(p0Requested);
     const releaseRaid = normalizePoReleaseRaid(raidResult.rows[0].raid_type || raidType);
     let nachtlootRecruitRestricted = false;
     if (isNachtlootRecruitRaid(releaseRaid)) {
@@ -11466,7 +11504,7 @@ async function savePrio({ guildId, query: params }) {
         && !Boolean(recruitResult.rows[0]?.recruit_status_lifted);
     }
     if (nachtlootRecruitRestricted && p0PlusSelected) {
-      const error = new Error("Als Nachtwächter-Rekrut kannst du kein P0+ und keine P1 setzen. P1 wird automatisch mit Kaese belegt.");
+      const error = new Error("Als Nachtwächter-Rekrut kannst du kein P0+ und keine P1 setzen. Bitte wähle nur P2 und P3.");
       error.statusCode = 403;
       throw error;
     }
@@ -11488,7 +11526,7 @@ async function savePrio({ guildId, query: params }) {
       }
     }
     if (nachtlootRecruitRestricted && (!clean(params.p2) || !clean(params.p3))) {
-      const error = new Error("Als Nachtwächter-Rekrut musst du P2 und P3 auswählen. P1 wird automatisch mit Kaese belegt.");
+      const error = new Error("Als Nachtwächter-Rekrut musst du P2 und P3 auswählen. P1 darf leer bleiben.");
       error.statusCode = 400;
       throw error;
     }
@@ -11497,8 +11535,8 @@ async function savePrio({ guildId, query: params }) {
     const p1 = await upsertItem(
       client,
       raidType,
-      nachtlootRecruitRestricted ? "Kaese" : (p0Selected ? p0ItemName : params.p1),
-      nachtlootRecruitRestricted ? "133993" : (p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID))
+      nachtlootRecruitRestricted ? "" : (p0Selected ? p0ItemName : params.p1),
+      nachtlootRecruitRestricted ? "" : (p0Selected ? p0ItemId : (params.p1ItemId || params.p1_item_id || params.p1ItemID))
     );
     const p2 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p2, p0Selected ? p0ItemId : (params.p2ItemId || params.p2_item_id || params.p2ItemID));
     const p3 = await upsertItem(client, raidType, p0Selected ? p0ItemName : params.p3, p0Selected ? p0ItemId : (params.p3ItemId || params.p3_item_id || params.p3ItemID));
