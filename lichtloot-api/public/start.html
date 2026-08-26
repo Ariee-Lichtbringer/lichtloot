@@ -6,6 +6,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="images/app-icon-180.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="stylesheet" href="/scroll-performance.css">
 <meta name="theme-color" content="#05070b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4140,7 +4141,8 @@ async function createRaidFromStart(){
     return;
   }
 
-  const raidId=createRaidId(raid);
+  const baseRaidId=createRaidId(raid);
+  const raidId=createPoSignup&&!createDiscordSignup ? `P0-${baseRaidId}` : baseRaidId;
   const playerPin=randomCode(3);
   const leadPin=randomCode(4);
   const createdBy=creatorContext.createdBy;
@@ -4198,7 +4200,7 @@ async function createRaidFromStart(){
     resultBox.innerHTML=`
       <span class="ok">✓ Schnell-Raid wurde erstellt.</span><br>
       ${result.quickRaid?.announcementQueued ? '<span class="ok">✓ Discord-Raidanmelder wurde vorgemerkt.</span><br>' : ''}
-      ${result.quickRaid?.poSignupQueued ? '<span class="ok">✓ Passender P0-Anmelder wurde vorgemerkt.</span><br>' : ''}<br>
+      ${result.quickRaid?.poSignupQueued ? '<span class="ok">✓ P0-Anmelder wurde gespeichert und an den Discord-Bot übergeben.</span><br>' : ''}<br>
 
       <strong>Raid:</strong><br>
       ${r.name}<br>
@@ -4469,7 +4471,7 @@ function dashboardPrioLabel(raid){
 }
 
 function dashboardPrioHint(raid){
-  if(raidIsInProgress(raid)) return "Der Raid läuft bereits. Neue Einträge sind geschlossen.";
+  if(raidIsInProgress(raid)) return "Der Raid läuft bereits. P0-Einträge sind weiterhin möglich.";
   return prioIsOpen(raid) ? "Eintragen ist möglich." : "Eintragen ist möglich, Liste wird noch nicht veröffentlicht.";
 }
 
@@ -6094,10 +6096,14 @@ async function switchMeinLichtLootGuild(value){
     const listedGuild=availableLootGuilds.find(entry => String(entry.slug || "").toLowerCase() === normalizedSelection);
     const guild=listedGuild || await resolveGuildPin(selection);
     if(!guild?.slug) throw new Error("Gilde wurde nicht gefunden.");
-    const target=new URL(window.location.href);
-    target.searchParams.set("guild", guild.slug);
-    try{ sessionStorage.setItem("lichtlootStartMenuAction","account"); }catch(error){}
-    window.location.href=target.href;
+    const targetSlug=normalizeCurrentGuildSlug(guild.slug);
+    const target=new URL("/start.html", window.location.origin);
+    target.searchParams.set("guild", targetSlug);
+    try{
+      sessionStorage.setItem("lichtlootStartMenuAction","account");
+      sessionStorage.setItem("lichtlootExplicitGuildSwitch",targetSlug);
+    }catch(error){}
+    window.location.assign(target.href);
   }catch(error){
     const status=document.getElementById("dashboardMyStatus");
     if(status) status.innerHTML='<span class="bad">'+safeHtml(error.message || "Gilde wurde nicht gefunden.")+'</span>';
@@ -9648,6 +9654,10 @@ async function submitMobileLootLogin(event){
 }
 
 document.addEventListener("DOMContentLoaded",async ()=>{
+  try{
+    const explicitSwitch=normalizeCurrentGuildSlug(sessionStorage.getItem("lichtlootExplicitGuildSwitch") || "");
+    if(explicitSwitch === CURRENT_GUILD_SLUG) sessionStorage.removeItem("lichtlootExplicitGuildSwitch");
+  }catch(error){}
   await fetchCurrentGuildInfo();
   applyGuildBrand();
   applyStartPageLayout();
