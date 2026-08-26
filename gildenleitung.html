@@ -15309,6 +15309,29 @@ async function loadPoPostStoredEntries(){
       };
     });
     const p0Entries = p0Result && p0Result.success && Array.isArray(p0Result.entries) ? p0Result.entries : [];
+    const contextResults = await Promise.all(p0Raids.map(raid => railwayApi({
+      action:"lichtbotGetP0SignupContext",
+      masterCode,
+      raidId:raid.raidId || raid.id || "",
+      t:Date.now()
+    }).catch(() => null)));
+    const combinedEntries = new Map();
+    const addCombinedEntry = entry => {
+      const raidId = String(entry?.raidId || "").trim();
+      const key = [raidId, normalize(entry?.player || entry?.char || ""), normalize(entry?.server || ""), itemKey(entry?.item || entry?.itemName || "")].join("|");
+      if(!raidId || !String(entry?.player || entry?.char || "").trim() || !String(entry?.item || entry?.itemName || "").trim()) return;
+      combinedEntries.set(key, entry);
+    };
+    p0Entries.forEach(addCombinedEntry);
+    contextResults.forEach((context,index) => {
+      const raid = p0Raids[index] || {};
+      (Array.isArray(context?.signups) ? context.signups : []).forEach(entry => addCombinedEntry(Object.assign({},entry,{
+        raidId:entry.raidId || raid.raidId || raid.id || "",
+        raid:entry.raid || raid.raid || raid.raidType || "",
+        raidDate:entry.raidDate || raid.raidDate || "",
+        raidTime:entry.raidTime || raid.raidTime || ""
+      })));
+    });
     const configsByRaidId = new Map();
     postEntries.filter(entry=>entry.configOnly).forEach(entry=>{
       const raidId = String(entry.lichtlootRaidId || entry.raidId || "").trim();
@@ -15316,7 +15339,7 @@ async function loadPoPostStoredEntries(){
       const previous = configsByRaidId.get(raidId);
       if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByRaidId.set(raidId,entry);
     });
-    const canonicalEntries = p0Entries.map(entry=>{
+    const canonicalEntries = [...combinedEntries.values()].map(entry=>{
       const raidId = String(entry.raidId || "").trim();
       const config = configsByRaidId.get(raidId) || {};
       const fallbackPostKey = raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
