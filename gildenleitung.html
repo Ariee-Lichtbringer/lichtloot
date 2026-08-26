@@ -17939,6 +17939,7 @@ function renderP0ReleasePanelContent(){
         <div class="po-release-filter-picker" aria-label="Anwesenheit filtern">
           <span>Anwesenheit:</span>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="all"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="all"}" onclick="setPoReleaseAttendanceFilter('all')">Alle</button>
+          <button class="po-release-filter-button${poReleaseAttendanceFilter==="active"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="active"}" onclick="setPoReleaseAttendanceFilter('active')">Aktuelle P0-Freigaben</button>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="critical"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="critical"}" onclick="setPoReleaseAttendanceFilter('critical')">Anwesenheit kritisch</button>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="zero"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="zero"}" onclick="setPoReleaseAttendanceFilter('zero')">Ohne Teilnahme</button>
         </div>
@@ -18099,13 +18100,18 @@ function setPoReleaseSearch(value){
 }
 
 function setPoReleaseAttendanceFilter(filter){
-  poReleaseAttendanceFilter = ["critical","zero"].includes(filter) ? filter : "all";
+  poReleaseAttendanceFilter = ["active","critical","zero"].includes(filter) ? filter : "all";
   renderP0ReleasePanelContent();
 }
 
 function poReleaseMatchesAttendanceFilter(entry){
   if(poReleaseAttendanceFilter === "all") return true;
   const attendanceEntries = Object.entries(entry?.attendance16 || {}).filter(([,attendance])=>Number(attendance?.total)>0);
+  if(poReleaseAttendanceFilter === "active"){
+    const hasActiveRelease = Object.entries(entry?.releases || {}).some(([raid,released])=>raid!=="p1p3"&&Boolean(released));
+    const hasRaidParticipation = attendanceEntries.some(([,attendance])=>Number(attendance?.attended||0)>0);
+    return hasActiveRelease && hasRaidParticipation;
+  }
   if(poReleaseAttendanceFilter === "zero"){
     return attendanceEntries.length > 0 && attendanceEntries.every(([,attendance])=>Number(attendance?.attended||0)===0);
   }
