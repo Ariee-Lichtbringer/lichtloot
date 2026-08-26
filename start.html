@@ -3220,7 +3220,7 @@ html,body{max-width:100%;overflow-x:hidden}
           </div>
           <div class="mein-lichtloot-tiles" aria-label="Account-Bereiche">
             <button class="mein-lichtloot-tile is-active" type="button" data-mein-lichtloot-tile="chars" onclick="showMeinLichtLootSection('chars')"><img src="images/dashboard-icons/charakterverwaltung-icon-512.png" alt=""><span>Charaktere & Prios</span><small>Charakter wählen, Prios ansehen und Twinks verwalten.</small></button>
-            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="showMeinLichtLootSection('raidcalendar')"><img src="images/dashboard-icons/raidkalender-icon-512.png" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
+            <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="raidcalendar" onclick="openRaidCalendarModal()"><img src="images/dashboard-icons/raidkalender-icon-512.png" alt=""><span>Raidkalender</span><small>Deine Termine und externe Gilden-Raids im Kalender.</small></button>
             <button class="mein-lichtloot-tile" type="button" data-mein-lichtloot-tile="worldbuffs" onclick="showMeinLichtLootSection('worldbuffs')"><img src="images/dashboard-icons/worldbuffs.jpg" alt=""><span>Worldbuffs</span><small>Eigene Buff-Termine prüfen, eintragen und verschieben.</small></button>
           </div>
           <div class="mein-lichtloot-section is-active" data-mein-lichtloot-section="chars">
@@ -4396,12 +4396,14 @@ function renderActiveRaidCardHtml(raidKey,raid){
   const pin=activeRaidPin(raid);
   const guild=activeRaidGuild(raid);
   const raidName=raid.raidName || raid.name || raids[raidKey].name;
+  const ownSignup=dashboardOwnRaidSignup(raid);
 
   return `
     <div class="raid-active-line"><span>Raid</span><strong>${safeHtml(raidName)}</strong></div>
     <div class="raid-active-line"><span>Datum</span><strong>${safeHtml(formatRaidDateForDisplay(date))}</strong></div>
     <div class="raid-active-line"><span>Uhrzeit</span><strong>${safeHtml(formatRaidTimeForDisplay(time))}</strong></div>
     <div class="raid-active-line"><span>Gilde</span><strong>${safeHtml(guild || "-")}</strong></div>
+    ${ownSignup ? `<div class="raid-active-line"><span>Angemeldet mit</span><strong>${safeHtml(ownSignup.character)}</strong></div>` : ""}
     <div class="raid-active-pin">
       <span>Prio Pin: <strong>${safeHtml(pin || "-")}</strong></span>
     </div>
@@ -4409,6 +4411,7 @@ function renderActiveRaidCardHtml(raidKey,raid){
 }
 
 function renderActiveRaidCards(entries){
+  window.activeRaidDashboardEntries=Array.isArray(entries) ? entries.slice() : [];
   resetActiveRaidCards();
   const activeByRaid={};
 
@@ -4475,6 +4478,32 @@ function dashboardPrioHint(raid){
   return prioIsOpen(raid) ? "Eintragen ist möglich." : "Eintragen ist möglich, Liste wird noch nicht veröffentlicht.";
 }
 
+function dashboardOwnRaidSignup(raid){
+  const list=Array.isArray(window.myDashboardRaidSignups) ? window.myDashboardRaidSignups : [];
+  const raidId=String(raid?.raidId || raid?.RaidID || raid?.id || "").trim().toLowerCase();
+  const raidKey=normalizeRaidKey(raid?.raid || raid?.raidName || raidId || "");
+  const raidDate=String(activeRaidDate(raid) || "").slice(0,10);
+  return list.find(signup=>{
+    const signupId=String(signup?.raidId || "").trim().toLowerCase();
+    if(raidId && signupId && raidId===signupId) return true;
+    return normalizeRaidKey(signup?.raid || "")===raidKey && String(signup?.raidDate || "").slice(0,10)===raidDate;
+  }) || null;
+}
+
+async function loadDashboardRaidSignups(pin){
+  window.myDashboardRaidSignups=[];
+  if(!pin) return;
+  try{
+    const url=LICHTLOOT_API_URL+'?action=getMyRaidSignups&guild='+encodeURIComponent(CURRENT_GUILD_SLUG)+'&pin='+encodeURIComponent(pin)+'&t='+Date.now();
+    const response=await fetch(url);
+    const data=await response.json();
+    if(data?.success) window.myDashboardRaidSignups=Array.isArray(data.signups)?data.signups:[];
+  }catch(error){
+    console.warn("Eigene Raidanmeldungen konnten nicht geladen werden:",error);
+  }
+  renderStartDashboard(window.activeRaidDashboardEntries || []);
+}
+
 function setDashboardText(id,value){
   const el=document.getElementById(id);
   if(el) el.textContent=value;
@@ -4525,7 +4554,8 @@ function renderStartDashboard(entries){
       if(raidsForKey.length){
         summaryEl.innerHTML=raidsForKey.slice(0,3).map(entry=>{
           const dateTime=[formatRaidDateForDisplay(activeRaidDate(entry)), formatRaidTimeForDisplay(activeRaidTime(entry))].filter(Boolean).join(" · ");
-          return safeHtml(dateTime)+'<span class="dash-prio-pin">PrioPIN: '+safeHtml(activeRaidPin(entry) || "-")+'</span>';
+          const ownSignup=dashboardOwnRaidSignup(entry);
+          return safeHtml(dateTime)+'<span class="dash-prio-pin">PrioPIN: '+safeHtml(activeRaidPin(entry) || "-")+'</span>'+(ownSignup?'<span class="dash-prio-pin">Angemeldet mit: '+safeHtml(ownSignup.character)+'</span>':'');
         }).join("<br>") + (raidsForKey.length > 3 ? '<br><span class="dash-prio-pin">+'+safeHtml(String(raidsForKey.length - 3))+' weitere</span>' : '');
       }else{
         summaryEl.textContent="Kein aktiver Raid";
@@ -4574,6 +4604,7 @@ function renderUpcomingRaidCards(list){
     const time=formatRaidTimeForDisplay(activeRaidTime(entry));
     const guild=activeRaidGuild(entry) || CURRENT_GUILD_BRAND.guildName;
     const isOther=raidSize(raidKey)==="other";
+    const ownSignup=dashboardOwnRaidSignup(entry);
     const buttonLabel=isOther?"Zum Anmelder":"Zur Prio";
 
     return '<article class="dash-panel instance-card">'+
@@ -4582,6 +4613,7 @@ function renderUpcomingRaidCards(list){
         '<h3>'+safeHtml(name)+'</h3>'+
         '<p class="raid-card-date">⌚ '+safeHtml(date)+' · '+safeHtml(time)+' Uhr</p>'+
         '<p>Gilde: '+safeHtml(guild)+'</p>'+
+        (ownSignup?'<p class="instance-status">Angemeldet mit: '+safeHtml(ownSignup.character)+'</p>':'')+
         (isOther?'':'<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p><p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>')+
       '</div>'+
       '<button class="raid-btn loot-btn" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button>'+
@@ -7457,6 +7489,7 @@ async function loadLichtLootCharacters(){
     });
 
     myLichtlootCharacters=chars.slice();
+    loadDashboardRaidSignups(pin);
     myWorldbuffDisplayCharacterName="";
     const roleSource=chars.find(char=>char && char.playerRole) || chars[0] || {};
     window.currentPlayerLoginRole=normalizePlayerLoginRole(roleSource.playerRole || roleSource.role);

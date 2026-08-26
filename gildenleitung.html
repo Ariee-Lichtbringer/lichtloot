@@ -9532,7 +9532,7 @@ function duplicatePlayerApprovalConflicts(players){
   (players||[]).forEach(player=>{
     const name=String(player.char||player.name||"").trim();
     const server=String(player.server||"").trim();
-    const login=String(player.playerPin||player.playerId||"").trim();
+    const login=String(player.playerPin||"").trim();
     if(!name||!login)return;
     const key=characterKey(name);
     if(!byCharacter.has(key))byCharacter.set(key,{name,spellings:new Set(),server,servers:new Set(),entries:[]});
