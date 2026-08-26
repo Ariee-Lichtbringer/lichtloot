@@ -2510,6 +2510,45 @@ async function getCharactersByPin(guildId, pin) {
   return result.rows.map(normalizeCharacter);
 }
 
+async function getMyRaidSignups(guildId, pin) {
+  const normalizedPin = normalizePin(pin);
+  if (!normalizedPin) return { success: true, signups: [] };
+  const result = await query(
+    `select
+       coalesce(r.external_raid_id, r.id::text) as raid_id,
+       r.raid_type,
+       r.raid_date,
+       c.name as character_name,
+       c.server,
+       rs.status,
+       rs.role
+     from players p
+     join characters c on c.player_id = p.id
+     join raid_signups rs on rs.character_id = c.id
+     join raids r on r.id = rs.raid_id
+     where p.guild_id = $1
+       and p.player_pin = $2
+       and coalesce(p.is_blocked, false) = false
+       and p.approval_status = 'approved'
+       and r.deleted_at is null
+       and lower(coalesce(r.status, '')) not in ('archiviert','archive','gelöscht','geloescht','deleted')
+     order by r.raid_date asc, coalesce(r.raid_time, '') asc, rs.updated_at desc`,
+    [guildId, normalizedPin]
+  );
+  return {
+    success: true,
+    signups: result.rows.map(row => ({
+      raidId: row.raid_id || "",
+      raid: row.raid_type || "",
+      raidDate: row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "",
+      character: row.character_name || "",
+      server: row.server || "",
+      status: row.status || "signed",
+      role: row.role || "dd"
+    }))
+  };
+}
+
 async function ensureWorldbuffRuleAgreementSchema() {
   await query(
     `create table if not exists worldbuff_rule_agreements (
@@ -8922,15 +8961,30 @@ async function getPoLinkedCharacters({ guildId, query: params }) {
   );
   const playerId = linkedPlayer.rows[0]?.player_id;
   if (!playerId) return { success: true, linked: false, characters: [] };
+  const raid = clean(params.raidId) ? await findRaid(guildId, params) : null;
+  const selectedSignup = raid ? await query(
+    `select rs.character_id
+     from raid_signups rs
+     join characters c on c.id = rs.character_id
+     where rs.raid_id = $1 and c.player_id = $2
+     order by rs.updated_at desc nulls last, rs.created_at desc
+     limit 1`,
+    [raid.id, playerId]
+  ) : { rows: [] };
+  const selectedCharacterId = selectedSignup.rows[0]?.character_id || null;
   const result = await query(
-    `select c.name, c.server, c.class_name, p.player_pin
+    `select c.id, c.name, c.server, c.class_name, c.is_main, p.player_pin
      from characters c
      join players p on p.id = c.player_id
      where c.player_id = $1
        and p.guild_id = $2
        and coalesce(p.approval_status, 'approved') = 'approved'
-     order by coalesce(c.is_main, false) desc, c.created_at asc, lower(c.name)`,
-    [playerId, guildId]
+     order by
+       case when c.id = $3::uuid then 0 else 1 end,
+       coalesce(c.is_main, false) desc,
+       c.created_at asc,
+       lower(c.name)`,
+    [playerId, guildId, selectedCharacterId]
   );
   return {
     success: true,
@@ -8939,6 +8993,10 @@ async function getPoLinkedCharacters({ guildId, query: params }) {
       name: row.name || "",
       server: row.server || "",
       className: row.class_name || "",
+      isMain: Boolean(row.is_main),
+      preselected: selectedCharacterId
+        ? String(row.id) === String(selectedCharacterId)
+        : Boolean(row.is_main),
       playerPin: row.player_pin || ""
     }))
   };
@@ -22658,6 +22716,13 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       };
     });
 
+  const combinedSignupRows = new Map();
+  for (const signup of [...signupRows, ...lichtlootP0Rows]) {
+    const key = `${clean(signup.player).toLowerCase()}|${clean(signup.server).toLowerCase()}|${itemLookupKey(signup.item)}`;
+    if (!clean(signup.player) || !clean(signup.item)) continue;
+    combinedSignupRows.set(key, signup);
+  }
+
   return {
     success: true,
     raid: normalizedRaid,
@@ -22667,10 +22732,10 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       p0PlusPoints: Number(row.p0plus_points || 0),
       p0PlusCount: Number(row.p0plus_count || 0)
     })),
-    // Bei normalen Raids ist NachtLoot die führende Quelle. Die separate
-    // Discord-Anmeldedatenbank darf Spieler oder Items nicht ergänzen bzw.
-    // überschreiben; sie liefert nur oben den Status eines exakten Treffers.
-    signups: (raid.p0_only ? signupRows : lichtlootP0Rows).sort((a, b) => {
+    // Discord-Post und Leitungsseite müssen dieselben Einträge zeigen. Darum
+    // werden LichtLoot-Prios und die separate P0-Anmeldedatenbank anhand von
+    // Spieler, Server und Item zusammengeführt.
+    signups: [...combinedSignupRows.values()].sort((a, b) => {
       const itemCompare = String(a.item || "").localeCompare(String(b.item || ""));
       if (itemCompare) return itemCompare;
       return String(a.player || "").localeCompare(String(b.player || ""));
@@ -27432,6 +27497,11 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "getCharactersByPin") {
       const characters = await getCharactersByPin(guild.id, req.query.pin);
       return res.json({ success: true, guild: guild.slug, characters, entries: characters, chars: characters });
+    }
+
+    if (action === "getMyRaidSignups") {
+      const signups = await getMyRaidSignups(guild.id, req.query.pin);
+      return res.json({ ...signups, guild: guild.slug });
     }
 
     if (action === "getWorldbuffRuleAgreement") {
