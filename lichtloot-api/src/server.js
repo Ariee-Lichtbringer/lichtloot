@@ -12649,7 +12649,7 @@ async function getGuildLeadershipOverview(guildId, params) {
             ) as p0plus_transfer_count
      from raids r
      where r.guild_id = $1
-       and r.deleted_at is null
+       and (r.deleted_at is null or r.deleted_at > now() - interval '3 months')
      order by raid_date desc, coalesce(raid_time, '') desc, created_at desc`,
     [guildId]
   );
@@ -19707,10 +19707,9 @@ async function restoreArchivedRaids({ guildId, query: params }) {
   requireMasterCode(params.masterCode);
   const result = await query(
     `update raids
-     set status = 'geschlossen', updated_at = now()
+     set status = 'geschlossen', deleted_at = null, updated_at = now()
      where guild_id = $1
-       and coalesce(status, '') in ('archiviert', 'archive')
-       and raid_date >= current_date - interval '1 day'
+       and (coalesce(status, '') in ('archiviert', 'archive', 'gelöscht', 'geloescht') or deleted_at is not null)
      returning id, external_raid_id, name, raid_date`,
     [guildId]
   );
