@@ -10179,10 +10179,30 @@ function samePrioCharacter(a,b){
   return aPlayer && bPlayer && aPlayer === bPlayer && (!aServer || !bServer || aServer === bServer);
 }
 
+function isPrioFromCurrentLichtLootAccount(prio){
+  if(!prio) return false;
+  const player=normalizeOwnPrioText(prio.Spieler || prio.player || prio.Player);
+  const server=normalizeOwnPrioText(prio.Server || prio.server || prio.Realm);
+  return Boolean(player) && (lichtlootLoggedInCharacters || []).some(char=>{
+    const accountPlayer=normalizeOwnPrioText(char?.name);
+    const accountServer=normalizeOwnPrioText(char?.server);
+    return accountPlayer === player && (!server || !accountServer || accountServer === server);
+  });
+}
+
 function priosWithLiveDraft(prios){
   const draft=getLiveDraftPrio();
   const list=Array.isArray(prios) ? prios : [];
   if(!draft) return list;
+
+  // Ist bereits ein anderer Charakter desselben LichtLoot-Accounts für den
+  // Raid eingetragen, darf die aktuelle Charakterauswahl nicht zusätzlich
+  // als ungespeicherter Entwurf in der Prioliste erscheinen.
+  const selectedCharacterIsSaved=list.some(prio=>samePrioCharacter(prio,draft));
+  const otherAccountCharacterIsSaved=!selectedCharacterIsSaved && list.some(prio=>
+    isPrioFromCurrentLichtLootAccount(prio)
+  );
+  if(otherAccountCharacterIsSaved) return list;
 
   const draftSignature=prioDraftSignature(draft);
   const savedMatch=list.find(prio => samePrioCharacter(prio,draft) && prioDraftSignature(prio) === draftSignature);

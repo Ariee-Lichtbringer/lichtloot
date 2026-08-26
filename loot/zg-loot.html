@@ -3890,6 +3890,11 @@ async function savePrio(){
       P0Item:isP0Plus ? p1 : ""
     };
     const confirmedSignature=prioDraftSignature(confirmedPrio);
+    // refreshAfterPrioSave kann Auswahlfelder und Item-IDs noch einmal
+    // normalisieren. Ab jetzt ist genau dieser sichtbare Stand von der API
+    // bestätigt und darf nicht erneut als ungespeicherter Live-Entwurf
+    // oberhalb der Prioliste erscheinen.
+    window.lastSavedPrioSignature=confirmedSignature;
     const serverConfirmed=(currentPublishedPrios||[]).some(prio=>
       samePrioCharacter(prio,confirmedPrio) && prioDraftSignature(prio)===confirmedSignature
     );
@@ -10342,10 +10347,32 @@ function samePrioCharacter(a,b){
   return aPlayer && bPlayer && aPlayer === bPlayer && (!aServer || !bServer || aServer === bServer);
 }
 
+function isPrioFromCurrentLichtLootAccount(prio){
+  if(!prio) return false;
+  const player=normalizeOwnPrioText(prio.Spieler || prio.player || prio.Player);
+  const server=normalizeOwnPrioText(prio.Server || prio.server || prio.Realm);
+  return Boolean(player) && (lichtlootLoggedInCharacters || []).some(char=>{
+    const accountPlayer=normalizeOwnPrioText(char?.name);
+    const accountServer=normalizeOwnPrioText(char?.server);
+    return accountPlayer === player && (!server || !accountServer || accountServer === server);
+  });
+}
+
 function priosWithLiveDraft(prios){
   const draft=getLiveDraftPrio();
   const list=Array.isArray(prios) ? prios : [];
   if(!draft) return list;
+
+  // Pro LichtLoot-Account darf in der sichtbaren Raid-Prioliste nicht noch
+  // automatisch ein zweiter Charakter als ungespeicherter Entwurf ergänzt
+  // werden. Beispiel: Bimm ist bereits eingetragen und Immobimm gehört zum
+  // selben Spielerlogin. Eine echte Änderung am bereits eingetragenen
+  // Charakter bleibt dagegen weiterhin als Live-Entwurf sichtbar.
+  const selectedCharacterIsSaved=list.some(prio=>samePrioCharacter(prio,draft));
+  const otherAccountCharacterIsSaved=!selectedCharacterIsSaved && list.some(prio=>
+    isPrioFromCurrentLichtLootAccount(prio)
+  );
+  if(otherAccountCharacterIsSaved) return list;
 
   const draftSignature=prioDraftSignature(draft);
   const savedMatch=list.find(prio => samePrioCharacter(prio,draft) && prioDraftSignature(prio) === draftSignature);
