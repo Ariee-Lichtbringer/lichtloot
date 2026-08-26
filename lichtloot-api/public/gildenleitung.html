@@ -7248,9 +7248,12 @@ function apiWrite(params){
   });
 }
 
-async function railwayApi(params){
+async function railwayApi(params, timeoutMs = 20000){
   const query = new URLSearchParams(Object.assign({}, params, { guild: CURRENT_GUILD_SLUG, guildSlug: CURRENT_GUILD_SLUG, t: Date.now() }));
-  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), { cache:"no-store" });
+  const response = await fetch(LICHTLOOT_API_URL + "?" + query.toString(), {
+    cache:"no-store",
+    signal:AbortSignal.timeout(timeoutMs)
+  });
   if(!response.ok){
     const text = await response.text().catch(() => "");
     throw new Error(text || ("Railway API HTTP " + response.status));
@@ -16227,6 +16230,9 @@ async function createRaidHelperSignup(){
     if(!created.success){
       throw new Error(created.error || "Raidanmelder konnte nicht erstellt werden.");
     }
+    if(created.raidHelperEnabled !== false && !created.announcementQueued){
+      throw new Error("Raid wurde gespeichert, aber nicht für Discord vorgemerkt. Bitte erneut versuchen.");
+    }
 
     const queued = await railwayWrite({
       action:"guildQueueRaidAnnouncement",
@@ -17868,29 +17874,48 @@ async function loadP0ReleasePanel(){
       if(box) box.innerHTML = '<div class="status bad">Bitte Master-Code eingeben, um P0+ Freigaben zu laden.</div>';
       return;
     }
-    const [releaseResult, reviewResult, requestResult, displayResult] = await Promise.all([
-      railwayApi({ action:"guildGetCharacterPoReleases", masterCode }),
-      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all" }),
-      railwayApi({ action:"guildGetPoReleaseRequests", masterCode }),
-      railwayApi({ action:"getPoReleaseDisplaySettings" })
-    ]);
+    const releaseResult = await railwayApi({ action:"guildGetCharacterPoReleases", masterCode, includeAttendance:"false" });
     if(!releaseResult.success){
       if(box) box.innerHTML = `<div class="status bad">${escapeHtml(releaseResult.error || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
       return;
     }
-    if(reviewResult && !reviewResult.success){
-      if(box) box.innerHTML = `<div class="status bad">${escapeHtml(reviewResult.error || "Discord P0+ Anmeldungen konnten nicht geladen werden.")}</div>`;
-      return;
-    }
     poReleaseCharacters = Array.isArray(releaseResult.entries) ? releaseResult.entries : [];
-    p0ReviewEntries = Array.isArray(reviewResult.entries) ? reviewResult.entries : [];
-    poReleaseRequests = Array.isArray(requestResult.entries) ? requestResult.entries : [];
-    if(displayResult.configured && Array.isArray(displayResult.visibleRaids)){
-      poReleaseVisibleColumns = new Set(displayResult.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
-    }else{
-      await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
-    }
+    p0ReviewEntries = [];
+    poReleaseRequests = [];
     renderP0ReleasePanelContent();
+
+    const attendanceTask = railwayApi(
+      { action:"guildGetCharacterPoReleases", masterCode, includeAttendance:"true" },
+      12000
+    ).then(result=>{
+      if(result?.success && Array.isArray(result.entries)){
+        poReleaseCharacters = result.entries;
+        renderP0ReleasePanelContent();
+      }
+    });
+    const reviewTask = railwayApi(
+      { action:"guildGetP0DiscordSignups", masterCode, status:"all" },
+      12000
+    ).then(result=>{
+      p0ReviewEntries = result?.success && Array.isArray(result.entries) ? result.entries : [];
+      renderP0ReleasePanelContent();
+    });
+    const requestTask = railwayApi(
+      { action:"guildGetPoReleaseRequests", masterCode },
+      15000
+    ).then(result=>{
+      poReleaseRequests = result?.success && Array.isArray(result.entries) ? result.entries : [];
+      renderP0ReleasePanelContent();
+    });
+    const displayTask = railwayApi({ action:"getPoReleaseDisplaySettings" }, 10000).then(async result=>{
+      if(result?.configured && Array.isArray(result.visibleRaids)){
+        poReleaseVisibleColumns = new Set(result.visibleRaids.filter(raid=>PO_RELEASE_RAIDS.some(([key])=>key===raid)));
+      }else if(result?.success){
+        await railwayWrite({action:"guildSetPoReleaseDisplaySettings",masterCode,visibleRaids:JSON.stringify(Array.from(poReleaseVisibleColumns))});
+      }
+      renderP0ReleasePanelContent();
+    });
+    await Promise.allSettled([attendanceTask, reviewTask, requestTask, displayTask]);
   }catch(error){
     if(box) box.innerHTML = `<div class="status bad">${escapeHtml(error.message || "P0+ Freigaben konnten nicht geladen werden.")}</div>`;
   }
@@ -17914,6 +17939,7 @@ function renderP0ReleasePanelContent(){
         <div class="po-release-filter-picker" aria-label="Anwesenheit filtern">
           <span>Anwesenheit:</span>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="all"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="all"}" onclick="setPoReleaseAttendanceFilter('all')">Alle</button>
+          <button class="po-release-filter-button${poReleaseAttendanceFilter==="active"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="active"}" onclick="setPoReleaseAttendanceFilter('active')">Aktuelle P0-Freigaben</button>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="critical"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="critical"}" onclick="setPoReleaseAttendanceFilter('critical')">Anwesenheit kritisch</button>
           <button class="po-release-filter-button${poReleaseAttendanceFilter==="zero"?" active":""}" type="button" aria-pressed="${poReleaseAttendanceFilter==="zero"}" onclick="setPoReleaseAttendanceFilter('zero')">Ohne Teilnahme</button>
         </div>
@@ -18074,13 +18100,18 @@ function setPoReleaseSearch(value){
 }
 
 function setPoReleaseAttendanceFilter(filter){
-  poReleaseAttendanceFilter = ["critical","zero"].includes(filter) ? filter : "all";
+  poReleaseAttendanceFilter = ["active","critical","zero"].includes(filter) ? filter : "all";
   renderP0ReleasePanelContent();
 }
 
 function poReleaseMatchesAttendanceFilter(entry){
   if(poReleaseAttendanceFilter === "all") return true;
   const attendanceEntries = Object.entries(entry?.attendance16 || {}).filter(([,attendance])=>Number(attendance?.total)>0);
+  if(poReleaseAttendanceFilter === "active"){
+    const hasActiveRelease = Object.entries(entry?.releases || {}).some(([raid,released])=>raid!=="p1p3"&&Boolean(released));
+    const hasRaidParticipation = attendanceEntries.some(([,attendance])=>Number(attendance?.attended||0)>0);
+    return hasActiveRelease && hasRaidParticipation;
+  }
   if(poReleaseAttendanceFilter === "zero"){
     return attendanceEntries.length > 0 && attendanceEntries.every(([,attendance])=>Number(attendance?.attended||0)===0);
   }
