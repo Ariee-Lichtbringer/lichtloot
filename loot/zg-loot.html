@@ -3273,9 +3273,18 @@ function manualSelectChanged(){
 }
 
 function updateActiveButtons(){
-  const p1=document.getElementById("p1").value;
-  const p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
-  const p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  let p1=document.getElementById("p1").value;
+  let p2=PRIO_COUNT >= 2 ? document.getElementById("p2").value : "";
+  let p3=PRIO_COUNT >= 3 ? document.getElementById("p3").value : "";
+  if((!p1 && !(currentGuildSlug()==="nachtloot" && p2 && p3)) || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
+    try{
+      const draft=JSON.parse(localStorage.getItem(getPlayerKey())||"{}");
+      p1=p1||String(draft.p1||""); p2=p2||String(draft.p2||""); p3=p3||String(draft.p3||"");
+      if(p1) document.getElementById("p1").value=p1;
+      if(PRIO_COUNT >= 2 && p2) document.getElementById("p2").value=p2;
+      if(PRIO_COUNT >= 3 && p3) document.getElementById("p3").value=p3;
+    }catch(_error){}
+  }
   const p1ItemId=getSelectedPrioItemId("p1");
   const p2ItemId=PRIO_COUNT >= 2 ? getSelectedPrioItemId("p2") : "";
   const p3ItemId=PRIO_COUNT >= 3 ? getSelectedPrioItemId("p3") : "";
