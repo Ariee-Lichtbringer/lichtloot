@@ -2043,12 +2043,13 @@ function openRaidStartAction(action){
 <span class="search-icon">🔎</span>
 <input id="itemSearch" type="text" placeholder="Item suchen..." oninput="renderLootList()">
 </div>
+<select id="lootClassFilter" aria-label="Loot nach Klasse filtern" onchange="renderLootList()" style="width:100%;margin-top:8px"><option value="">Alle Klassen</option><option value="krieger">Krieger</option><option value="paladin">Paladin</option><option value="jäger">Jäger</option><option value="schurke">Schurke</option><option value="priester">Priester</option><option value="schamane">Schamane</option><option value="magier">Magier</option><option value="hexenmeister">Hexenmeister</option><option value="druide">Druide</option></select>
 
 <div class="status">Suche nach Itemname, Slot, Typ, Boss oder Kategorie.</div>
 <div class="loot-save-area">
   <button class="btn" onclick="savePrio()">Prios speichern</button>
 </div>
-<div class="loot-hint">Hinweis: Wenn du nur P2 oder P3 auswählst, dann gönn dir einen <a href="https://www.wowhead.com/classic/item=521" target="_blank" rel="noopener">Kaese</a>.</div>
+<div class="loot-hint">Hinweis für Nachtwächter-Rekruten: P1 darf leer bleiben; bitte P2 und P3 vollständig auswählen.</div>
 
 
 <div id="lootList" class="loot-list">
@@ -2421,14 +2422,11 @@ function getP0Deadline(){
 }
 
 function isP0DeadlineClosed(){
-  return Boolean(currentPublishedMode);
+  return false;
 }
 
 function getP0DeadlineClosedMessage(){
-  if(currentPublishedMode){
-    return "P0+ ist geschlossen, weil die Prioliste bereits geöffnet ist.";
-  }
-  return "P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.";
+  return "P0 kann auch nach dem Öffnen der Prioliste weiterhin gesetzt werden.";
 }
 
 function formatRaidDate(value){
@@ -2464,9 +2462,9 @@ function updateRaidTimeDisplay(){
   timeEl.textContent=formatTime(currentRaidTime);
 
   if(currentPublishedMode){
-    deadlineEl.innerHTML='<span class="raidtime-closed">🔴 P0+ geschlossen</span><br>P0+ kann nicht mehr gesetzt werden, weil die Prioliste geöffnet ist.';
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 offen</span><br>Weitere Prio-Anmeldungen bleiben auch bei geöffneter Prioliste möglich.';
   }else{
-    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0+ offen</span><br>P0+ kann gesetzt werden, bis die Prioliste geöffnet wird.';
+    deadlineEl.innerHTML='<span class="raidtime-open">🟢 P0 offen</span><br>Prio-Anmeldungen sind weiterhin möglich.';
   }
 
   updateActiveButtons();
@@ -3190,6 +3188,17 @@ function fillItems(){
   });
 }
 
+function lootItemMatchesClassFilter(item){
+  const classFilter=document.getElementById("lootClassFilter")?.value || "";
+  if(!classFilter) return true;
+  const classText=[item.classes,item.className,item.class,item.klasse,item.tooltipText,item.tooltip,item.statsText]
+    .flat().filter(Boolean).join(" ").toLowerCase();
+  const hasClassRestriction=/klassen?\s*:/.test(classText) || Boolean(item.classes||item.className||item.klasse);
+  if(!hasClassRestriction) return true;
+  const aliases={"jäger":["jäger","jaeger","hunter"],krieger:["krieger","warrior"],paladin:["paladin"],schurke:["schurke","rogue"],priester:["priester","priest"],schamane:["schamane","shaman"],magier:["magier","mage"],hexenmeister:["hexenmeister","warlock"],druide:["druide","druid"]};
+  return (aliases[classFilter]||[classFilter]).some(name=>classText.includes(name));
+}
+
 function renderLootList(){
   const list=document.getElementById("lootList");
   const query=document.getElementById("itemSearch").value.trim().toLowerCase();
@@ -3204,7 +3213,7 @@ function renderLootList(){
       item.boss,
       item.category,
       item.quality
-    ].join(" ").toLowerCase().includes(query);
+    ].join(" ").toLowerCase().includes(query) && lootItemMatchesClassFilter(item);
   });
 
   if(filteredLoot.length===0){
@@ -3842,7 +3851,8 @@ async function savePrio(){
     return;
   }
 
-  if(!player||!server||!playerClass||!p1 || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
+  const nachtlootP1MayStayEmpty=currentGuildSlug()==="nachtloot" && !p1 && Boolean(p2) && Boolean(p3);
+  if(!player||!server||!playerClass||(!p1 && !nachtlootP1MayStayEmpty) || (PRIO_COUNT >= 2 && !p2) || (PRIO_COUNT >= 3 && !p3)){
     status.innerHTML=`<span class="bad">Bitte Charakter und benötigte Prios vollständig ausfüllen.</span>`;
     return;
   }
@@ -4726,7 +4736,7 @@ function dropCharacterOnZone(event){
   if(!isNaN(index)) selectLoggedInCharacter(index);
 }
 
-+function poReleaseStatusKey(entry){
+function poReleaseStatusKey(entry){
   if(entry?.requestType === "recruit") return "recruit";
   if(entry?.requestType === "p1p3") return "p1p3";
   return String(entry?.raid || "").trim().toLowerCase();
