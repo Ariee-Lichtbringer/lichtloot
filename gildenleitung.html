@@ -1436,7 +1436,7 @@ select:focus{border-color:rgba(var(--blue-rgb),.75)}
   gap:10px;
 }
 .layout-loot-toggle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.layout-loot-toggle{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:10px;padding:13px;border:1px solid rgba(148,163,184,.22);border-radius:10px;background:rgba(2,6,23,.62);cursor:pointer}.layout-loot-toggle:hover{border-color:rgba(var(--gold-rgb),.5)}.layout-loot-toggle input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--gold)}.layout-loot-toggle span{display:grid;gap:3px}.layout-loot-toggle strong{color:#f8fafc}.layout-loot-toggle small{color:#94a3b8;line-height:1.35}@media(max-width:800px){.layout-loot-toggle-grid{grid-template-columns:1fr}}
-.layout-loot-matrix-wrap{margin-top:16px;overflow:auto;border:1px solid rgba(148,163,184,.22);border-radius:12px}.layout-loot-matrix{display:grid;grid-template-columns:minmax(150px,1.35fr) repeat(5,minmax(110px,1fr));min-width:830px;background:rgba(2,6,23,.5)}.layout-loot-matrix>div{min-height:48px;padding:10px 12px;border-right:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14);display:flex;align-items:center}.layout-loot-matrix>div:nth-child(6n){border-right:0}.layout-loot-matrix-head{color:#facc15;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.04em;background:rgba(var(--gold-rgb),.08)}.layout-loot-matrix-raid{font-weight:900;color:#f8fafc}.layout-loot-matrix-check{justify-content:center;cursor:pointer}.layout-loot-matrix-check input{width:21px;height:21px;accent-color:var(--gold)}
+.layout-loot-matrix-wrap{margin-top:16px;overflow:auto;border:1px solid rgba(148,163,184,.22);border-radius:12px}.layout-loot-matrix{display:grid;grid-template-columns:minmax(150px,1.35fr) repeat(6,minmax(110px,1fr));min-width:980px;background:rgba(2,6,23,.5)}.layout-loot-matrix>div{min-height:48px;padding:10px 12px;border-right:1px solid rgba(148,163,184,.14);border-bottom:1px solid rgba(148,163,184,.14);display:flex;align-items:center}.layout-loot-matrix>div:nth-child(7n){border-right:0}.layout-loot-matrix-head{color:#facc15;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.04em;background:rgba(var(--gold-rgb),.08)}.layout-loot-matrix-raid{font-weight:900;color:#f8fafc}.layout-loot-matrix-check{justify-content:center;cursor:pointer}.layout-loot-matrix-check input{width:21px;height:21px;accent-color:var(--gold)}
 
 .layout-raid-image-grid{
   display:grid;
@@ -8635,14 +8635,14 @@ function renderLootLayoutPanel(){
               <select id="layoutLootPoReleaseScope"><option value="all" ${layout.lootPagePoReleaseScope !== "raid" ? "selected" : ""}>Alle PO-Freigaben anzeigen</option><option value="raid" ${layout.lootPagePoReleaseScope === "raid" ? "selected" : ""}>Nur die zum angezeigten Raid passende PO-Freigabe</option></select>
               <span class="muted">Beispiel: Auf der AQ40-Seite wird bei der zweiten Auswahl nur die AQ40-Freigabe gezeigt.</span>
             </div>
-            <h4 style="margin:18px 0 5px">Anzeige je Lootseite</h4>
-            <p class="muted" style="margin:0">Hier kannst du die Bereiche zusätzlich pro Raid ein- oder ausblenden. Der jeweilige Hauptschalter oben muss dafür eingeschaltet sein.</p>
+            <h4 style="margin:18px 0 5px">Einstellungen je Lootseite</h4>
+            <p class="muted" style="margin:0">Hier kannst du Bereiche pro Raid ein- oder ausblenden und festlegen, ob eine Prio nur nach vorheriger Raidanmeldung gespeichert werden darf. Für die sichtbaren Bereiche muss außerdem der jeweilige Hauptschalter oben eingeschaltet sein.</p>
             <div class="layout-loot-matrix-wrap"><div class="layout-loot-matrix">
-              <div class="layout-loot-matrix-head">Lootseite</div><div class="layout-loot-matrix-head">Worldbuffs</div><div class="layout-loot-matrix-head">Raidanmelder</div><div class="layout-loot-matrix-head">PO-Freigaben</div><div class="layout-loot-matrix-head">Mini-Raids</div><div class="layout-loot-matrix-head">Ausrüstungsplaner</div>
+              <div class="layout-loot-matrix-head">Lootseite</div><div class="layout-loot-matrix-head">Worldbuffs</div><div class="layout-loot-matrix-head">Raidanmelder</div><div class="layout-loot-matrix-head">P0-Freigaben</div><div class="layout-loot-matrix-head">Mini-Raids</div><div class="layout-loot-matrix-head">Ausrüstungsplaner</div><div class="layout-loot-matrix-head">Prio nur mit Raidanmeldung</div>
               ${lootPageRaidKeys.map(key => {
                 const raidSettings = layout.lootPageSectionsByRaid?.[key] || {};
                 const cell = section => `<div class="layout-loot-matrix-check"><input type="checkbox" aria-label="${escapeAttr(lootPageRaidNames[key])}: ${escapeAttr(section)}" data-loot-raid-setting data-raid="${key}" data-section="${section}" ${raidSettings[section] !== false ? "checked" : ""}></div>`;
-                return `<div class="layout-loot-matrix-raid">${escapeHtml(lootPageRaidNames[key])}</div>${cell("worldbuffs")}${cell("raidSignup")}${cell("poReleases")}${cell("miniRaids")}${cell("gearPlanner")}`;
+                return `<div class="layout-loot-matrix-raid">${escapeHtml(lootPageRaidNames[key])}</div>${cell("worldbuffs")}${cell("raidSignup")}${cell("poReleases")}${cell("miniRaids")}${cell("gearPlanner")}${cell("prioRequiresSignup")}`;
               }).join("")}
             </div></div>
           </section>
