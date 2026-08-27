@@ -22389,17 +22389,21 @@ async function enqueueP0PostRefreshForRaid(guildId, raid, source) {
     clean(raid.external_raid_id),
     clean(raid.id)
   ].filter(Boolean)));
+  const raidPins = Array.from(new Set([
+    clean(raid.raid_pin),
+    clean(raid.player_link)
+  ].filter(Boolean)));
   const linkedPostResult = await query(
     `select post_key, source_channel_id, target_channel_id, discord_message_id, title, mode
      from po_post_entries
      where guild_id = $1
-       and raid_id = any($2::text[])
+       and (raid_id = any($2::text[]) or raid_pin = any($3::text[]))
        and archived_at is null
        and coalesce(post_key, '') <> ''
        and coalesce(nullif(target_channel_id, ''), source_channel_id, '') <> ''
      order by config_only desc, updated_at desc, created_at desc
      limit 1`,
-    [guildId, raidIds]
+    [guildId, raidIds, raidPins]
   );
   const linkedPost = linkedPostResult.rows[0] || {};
   const postKey = clean(linkedPost.post_key);
