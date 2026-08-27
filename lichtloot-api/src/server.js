@@ -11522,26 +11522,20 @@ async function savePrio({ guildId, query: params }) {
     // sie im Layout gezielt für einzelne Lootseiten ausschalten.
     const prioRequiresSignup = raidLayout.prioRequiresSignup !== false;
     if (!pureP0Event && prioRequiresSignup) {
-      const signupRaidResult = await client.query(
-        `select id
-         from raids
-         where guild_id = $1
-           and lower(raid_type) = any($2)
-           and raid_date = $3`,
-        [guildId, raidTypeSearchValues(savedRaidForSignupCheck.raid_type), savedRaidForSignupCheck.raid_date]
-      );
-      const signupRaidIds = signupRaidResult.rows.map(row => row.id);
       const signupResult = await client.query(
         `select 1
          from raid_signups rs
+         join raids signup_raid on signup_raid.id = rs.raid_id
          join characters signup_character on signup_character.id = rs.character_id
-         where rs.raid_id = any($1)
-           and signup_character.player_id = $2
+         where signup_raid.guild_id = $1
+           and lower(signup_raid.raid_type) = any($2)
+           and signup_raid.raid_date = $3
+           and signup_character.player_id = $4
            and lower(coalesce(rs.status, 'signed')) not in (
              'absent','declined','rejected','abgemeldet','abwesend','nein','verworfen'
            )
          limit 1`,
-        [signupRaidIds, character.player_id]
+        [guildId, raidTypeSearchValues(savedRaidForSignupCheck.raid_type), savedRaidForSignupCheck.raid_date, character.player_id]
       );
       if (!signupResult.rows[0]) {
         const error = new Error("Du musst dich zuerst mit einem Charakter deines LichtLoot-Accounts für diesen Raid anmelden, bevor du eine Prio speichern kannst.");
@@ -25310,6 +25304,106 @@ async function createPlayerWithCharacter({
   }
 }
 
+async function adminCreatePlayerLogin({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  await ensurePlayerRoleSchema();
+  const charName = clean(params.charName || params.char || params.player);
+  const server = clean(params.server);
+  const className = clean(params.className || params.class || params.klasse);
+  if (!charName || !server || !className) {
+    const error = new Error("Bitte Main-Charakter, Server und Klasse vollständig ausfüllen.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const requestedPin = normalizePin(params.playerPin || params.pin);
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    let playerPin = requestedPin;
+    if (!playerPin) {
+      for (let attempt = 0; attempt < 10 && !playerPin; attempt += 1) {
+        const candidate = randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase();
+        const existing = await client.query(
+          `select 1 from players where guild_id=$1 and player_pin=$2 limit 1`,
+          [guildId, candidate]
+        );
+        if (!existing.rows[0]) playerPin = candidate;
+      }
+    }
+    if (!playerPin) throw new Error("Es konnte kein freier SpielerLogin erzeugt werden.");
+
+    const duplicatePin = await client.query(
+      `select 1 from players where guild_id=$1 and player_pin=$2 limit 1`,
+      [guildId, playerPin]
+    );
+    if (duplicatePin.rows[0]) {
+      const error = new Error("Dieser SpielerLogin ist bereits vergeben.");
+      error.statusCode = 409;
+      throw error;
+    }
+    const duplicateCharacter = await client.query(
+      `select 1
+       from characters c join players p on p.id=c.player_id
+       where p.guild_id=$1 and lower(c.name)=lower($2) and lower(c.server)=lower($3)
+       limit 1`,
+      [guildId, charName, server]
+    );
+    if (duplicateCharacter.rows[0]) {
+      const error = new Error("Für diesen Charakter existiert bereits ein SpielerLogin.");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    const playerResult = await client.query(
+      `insert into players (guild_id,player_pin,role,approval_status,approved_at,approved_by)
+       values ($1,$2,'member','approved',now(),'Gildenleitung')
+       returning id,player_pin,role,approval_status,created_at`,
+      [guildId, playerPin]
+    );
+    const characterResult = await client.query(
+      `insert into characters (player_id,name,server,class_name,is_main)
+       values ($1,$2,$3,$4,true)
+       returning id,name,server,class_name,is_main,created_at`,
+      [playerResult.rows[0].id, charName, server, className]
+    );
+    await mergeUnlinkedP0PlusForCharacter(client, guildId, characterResult.rows[0]);
+    await client.query("commit");
+    return {
+      success: true,
+      playerPin,
+      player: playerResult.rows[0],
+      character: normalizeCharacter({ ...characterResult.rows[0], approval_status: "approved" })
+    };
+  } catch (error) {
+    await client.query("rollback").catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function adminAddTwink({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const playerPin = normalizePin(params.playerPin || params.pin);
+  const charName = clean(params.charName || params.char);
+  const server = clean(params.server);
+  const className = clean(params.className || params.class || params.klasse);
+  if (!playerPin || !charName || !server || !className) {
+    const error = new Error("Bitte SpielerLogin, Charaktername, Server und Klasse vollständig ausfüllen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const character = await addCharacterToPlayer({
+    guildId,
+    pin: playerPin,
+    charName,
+    server,
+    className
+  });
+  return { success: true, character };
+}
+
 async function addCharacterToPlayer({ guildId, pin, charName, server, className }) {
   const player = await findPlayerByPin(guildId, pin);
   if (!player) {
@@ -28558,6 +28652,14 @@ app.post("/api/apps-script", async (req, res, next) => {
 
     if (action === "guildSetPlayerLoginRole") {
       const saved = await setPlayerLoginRole({ guildId: guild.id, query: postParams });
+      return res.json({ ...saved, guild: guild.slug });
+    }
+    if (action === "guildAdminCreatePlayerLogin") {
+      const created = await adminCreatePlayerLogin({ guildId: guild.id, query: postParams });
+      return res.json({ ...created, guild: guild.slug });
+    }
+    if (action === "guildAdminAddTwink") {
+      const saved = await adminAddTwink({ guildId: guild.id, query: postParams });
       return res.json({ ...saved, guild: guild.slug });
     }
     if(action==="guildVerifyWorldbuffAccess") return res.json({success:true,scope:"manage_worldbuffs",guild:guild.slug});
