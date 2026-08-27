@@ -11510,7 +11510,18 @@ async function savePrio({ guildId, query: params }) {
     const pureP0Event = clean(savedRaidForSignupCheck.external_raid_id).toUpperCase().startsWith("P0-")
       ? await findP0OnlyEvent(guildId, { raidId: savedRaidForSignupCheck.external_raid_id })
       : null;
-    if (!pureP0Event) {
+    const layoutResult = await client.query(
+      `select coalesce(layout_json, '{}'::jsonb) as layout_json
+       from guild_settings where guild_id = $1 limit 1`,
+      [guildId]
+    );
+    const guildLayout = layoutResult.rows[0]?.layout_json || {};
+    const lootPageRaidKey = lootSourceRaidType(savedRaidForSignupCheck.raid_type);
+    const raidLayout = guildLayout.lootPageSectionsByRaid?.[lootPageRaidKey] || {};
+    // Standardmäßig bleibt die bisherige Pflicht aktiv. Die Gildenleitung kann
+    // sie im Layout gezielt für einzelne Lootseiten ausschalten.
+    const prioRequiresSignup = raidLayout.prioRequiresSignup !== false;
+    if (!pureP0Event && prioRequiresSignup) {
       const signupRaidResult = await client.query(
         `select id
          from raids
