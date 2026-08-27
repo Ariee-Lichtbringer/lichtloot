@@ -15279,14 +15279,19 @@ async function loadPoPostStoredEntries(){
   }
   try{
     await ensureLootDataLoaded();
-    const [raidResult,p0Result] = await Promise.all([
+    const [raidResult,p0Result,poPostResult] = await Promise.all([
       railwayApi({ action:"getActiveRaids", masterCode, t:Date.now() }),
-      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all", t:Date.now() })
+      railwayApi({ action:"guildGetP0DiscordSignups", masterCode, status:"all", t:Date.now() }),
+      railwayApi({ action:"guildGetPoPostEntries", masterCode, includeArchived:"true", t:Date.now() })
     ]);
-    const p0Raids = raidResult && raidResult.success && Array.isArray(raidResult.raids)
-      ? raidResult.raids.filter(raid=>raid.p0Only || String(raid.raidId || raid.id || "").toUpperCase().startsWith("P0-"))
+    const activeRaids = raidResult && raidResult.success && Array.isArray(raidResult.raids)
+      ? raidResult.raids
       : [];
-    const postEntries = p0Raids.map(raid=>{
+    const p0Raids = activeRaids.filter(raid=>raid.p0Only || String(raid.raidId || raid.id || "").toUpperCase().startsWith("P0-"));
+    const storedPostEntries = poPostResult && poPostResult.success && Array.isArray(poPostResult.entries)
+      ? poPostResult.entries
+      : [];
+    const syntheticP0PostEntries = p0Raids.map(raid=>{
       const raidId = String(raid.raidId || raid.id || "").trim();
       return {
         postKey:raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,""),
@@ -15308,8 +15313,17 @@ async function loadPoPostStoredEntries(){
         updatedAt:raid.updatedAt || ""
       };
     });
+    const postEntries = storedPostEntries.concat(syntheticP0PostEntries.filter(entry=>
+      !storedPostEntries.some(stored=>
+        String(stored.raidId || stored.lichtlootRaidId || "").trim() === String(entry.raidId || "").trim()
+        && String(stored.postKey || "").trim() === String(entry.postKey || "").trim()
+      )
+    ));
     const p0Entries = p0Result && p0Result.success && Array.isArray(p0Result.entries) ? p0Result.entries : [];
-    const contextResults = await Promise.all(p0Raids.map(raid => railwayApi({
+    // Auch gekoppelte P0-Anmelder normaler Raids müssen die direkt auf der
+    // Lootseite gespeicherten P0-Prios erhalten. Zuvor wurden hier nur reine
+    // P0-Raids abgefragt, weshalb Verwaltung und Discord hinterherhinkten.
+    const contextResults = await Promise.all(activeRaids.map(raid => railwayApi({
       action:"lichtbotGetP0SignupContext",
       masterCode,
       raidId:raid.raidId || raid.id || "",
@@ -15324,7 +15338,7 @@ async function loadPoPostStoredEntries(){
     };
     p0Entries.forEach(addCombinedEntry);
     contextResults.forEach((context,index) => {
-      const raid = p0Raids[index] || {};
+      const raid = activeRaids[index] || {};
       (Array.isArray(context?.signups) ? context.signups : []).forEach(entry => addCombinedEntry(Object.assign({},entry,{
         raidId:entry.raidId || raid.raidId || raid.id || "",
         raid:entry.raid || raid.raid || raid.raidType || "",
@@ -15333,15 +15347,23 @@ async function loadPoPostStoredEntries(){
       })));
     });
     const configsByRaidId = new Map();
+    const configsByPin = new Map();
     postEntries.filter(entry=>entry.configOnly).forEach(entry=>{
       const raidId = String(entry.lichtlootRaidId || entry.raidId || "").trim();
-      if(!raidId) return;
-      const previous = configsByRaidId.get(raidId);
-      if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByRaidId.set(raidId,entry);
+      const raidPin = String(entry.lichtlootPlayerPin || entry.prioPin || entry.raidPin || "").trim();
+      if(raidId){
+        const previous = configsByRaidId.get(raidId);
+        if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByRaidId.set(raidId,entry);
+      }
+      if(raidPin){
+        const previous = configsByPin.get(raidPin);
+        if(!previous || String(entry.updatedAt || "") > String(previous.updatedAt || "")) configsByPin.set(raidPin,entry);
+      }
     });
     const canonicalEntries = [...combinedEntries.values()].map(entry=>{
       const raidId = String(entry.raidId || "").trim();
-      const config = configsByRaidId.get(raidId) || {};
+      const raidPin = String(entry.lichtlootPlayerPin || entry.prioPin || entry.raidPin || "").trim();
+      const config = configsByRaidId.get(raidId) || configsByPin.get(raidPin) || {};
       const fallbackPostKey = raidId.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
       return Object.assign({},entry,{
         postKey:config.postKey || fallbackPostKey,
