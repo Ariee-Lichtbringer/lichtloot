@@ -1306,11 +1306,18 @@ function requireMatchingGuildId(guild, params) {
   }
 }
 
+let ensureGuildLayoutSchemaPromise = null;
 async function ensureGuildLayoutSchema() {
-  await query(
-    `alter table guild_settings
-       add column if not exists layout_json jsonb not null default '{}'::jsonb`
-  );
+  if (!ensureGuildLayoutSchemaPromise) {
+    ensureGuildLayoutSchemaPromise = query(
+      `alter table guild_settings
+         add column if not exists layout_json jsonb not null default '{}'::jsonb`
+    ).catch(error => {
+      ensureGuildLayoutSchemaPromise = null;
+      throw error;
+    });
+  }
+  await ensureGuildLayoutSchemaPromise;
 }
 
 async function evaluateGuildReadiness(slug) {
@@ -3195,7 +3202,18 @@ async function purgeExpiredDeletedRaids() {
   }
 }
 
+let prioSchemaReadyPromise = null;
 async function ensurePrioSchema() {
+  if (!prioSchemaReadyPromise) {
+    prioSchemaReadyPromise = ensurePrioSchemaNow().catch(error => {
+      prioSchemaReadyPromise = null;
+      throw error;
+    });
+  }
+  return prioSchemaReadyPromise;
+}
+
+async function ensurePrioSchemaNow() {
   await query(
     `alter table prios
        add column if not exists created_at timestamptz not null default now(),
@@ -3499,17 +3517,27 @@ async function notificationMessageTemplate(guildId,notificationKey){
 
 const ALL_PO_RELEASE_DISPLAY_RAIDS = ["recruit", "p1p3", "mc", "bwl", "aq40", "naxx", "zg-mittwoch", "zg-prime", "zg-late"];
 
-async function getPoReleaseDisplaySettings(guildId) {
-  await ensureGuildLayoutSchema();
-  const result = await query(`select layout_json from guild_settings where guild_id=$1`, [guildId]);
-  const saved = result.rows[0]?.layout_json?.poReleaseVisibleRaids;
+function poReleaseDisplaySettingsFromLayout(layout = {}) {
+  const saved = layout?.poReleaseVisibleRaids;
   const configured = Array.isArray(saved);
-  const settingVersion = Number(result.rows[0]?.layout_json?.poReleaseDisplayVersion || 0);
-  const visibleRaids = Array.isArray(saved)
+  const settingVersion = Number(layout?.poReleaseDisplayVersion || 0);
+  const visibleRaids = configured
     ? saved.map(value => clean(value).toLowerCase()).filter(value => ALL_PO_RELEASE_DISPLAY_RAIDS.includes(value))
     : [...ALL_PO_RELEASE_DISPLAY_RAIDS];
   if (configured && settingVersion < 2 && !visibleRaids.includes("recruit")) visibleRaids.unshift("recruit");
-  return { success:true, visibleRaids, configured, poReleasesEnabled:result.rows[0]?.layout_json?.lootPageSections?.poReleases !== false, poReleaseSectionsByRaid:result.rows[0]?.layout_json?.lootPageSectionsByRaid || {} };
+  return {
+    success: true,
+    visibleRaids,
+    configured,
+    poReleasesEnabled: layout?.lootPageSections?.poReleases !== false,
+    poReleaseSectionsByRaid: layout?.lootPageSectionsByRaid || {}
+  };
+}
+
+async function getPoReleaseDisplaySettings(guildId) {
+  await ensureGuildLayoutSchema();
+  const result = await query(`select layout_json from guild_settings where guild_id=$1`, [guildId]);
+  return poReleaseDisplaySettingsFromLayout(result.rows[0]?.layout_json || {});
 }
 
 function poReleasesRequiredForRaid(settings, raidType) {
@@ -4282,7 +4310,18 @@ function isNachtlootRecruitRaid(value) {
   return ["bwl", "aq40", "naxx"].includes(normalizePoReleaseRaid(value));
 }
 
+let characterPoReleaseSchemaReadyPromise = null;
 async function ensureCharacterPoReleaseSchema() {
+  if (!characterPoReleaseSchemaReadyPromise) {
+    characterPoReleaseSchemaReadyPromise = ensureCharacterPoReleaseSchemaNow().catch(error => {
+      characterPoReleaseSchemaReadyPromise = null;
+      throw error;
+    });
+  }
+  return characterPoReleaseSchemaReadyPromise;
+}
+
+async function ensureCharacterPoReleaseSchemaNow() {
   await ensureRaidSchema();
   await query(`alter table characters add column if not exists recruit_status_lifted boolean not null default false`);
   await query(`alter table characters add column if not exists recruit_status_lifted_at timestamptz`);
@@ -8737,7 +8776,18 @@ async function queuePoPost({ guildId, query: params }) {
   return { ...queued, restoredEntries };
 }
 
+let poPostEntriesSchemaReadyPromise = null;
 async function ensurePoPostEntriesSchema() {
+  if (!poPostEntriesSchemaReadyPromise) {
+    poPostEntriesSchemaReadyPromise = ensurePoPostEntriesSchemaNow().catch(error => {
+      poPostEntriesSchemaReadyPromise = null;
+      throw error;
+    });
+  }
+  return poPostEntriesSchemaReadyPromise;
+}
+
+async function ensurePoPostEntriesSchemaNow() {
   await query(
     `create table if not exists po_post_entries (
        id uuid primary key default gen_random_uuid(),
@@ -11533,7 +11583,10 @@ async function savePrio({ guildId, query: params }) {
       error.statusCode = 403;
       throw error;
     }
-    const poReleaseSettings = await getPoReleaseDisplaySettings(guildId);
+    // guildLayout wurde innerhalb derselben Transaktion bereits geladen. Hier
+    // darf keine Pool-Abfrage samt ALTER TABLE gestartet werden: Sie würde auf
+    // die von dieser Transaktion gehaltene guild_settings-Sperre warten.
+    const poReleaseSettings = poReleaseDisplaySettingsFromLayout(guildLayout);
     if (poReleasesRequiredForRaid(poReleaseSettings, releaseRaid) && p0PlusSelected && releaseRaid) {
       const releaseResult = await client.query(
         `select 1
