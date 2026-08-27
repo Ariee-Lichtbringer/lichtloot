@@ -5292,6 +5292,7 @@ body.worldbuff-only .master-only{display:none!important}
           <button class="side-link master-only" type="button" onclick="openP0PlusPointsUpdate()" aria-label="P0+ Punkte aktualisieren" title="P0+ Punkte aktualisieren"><span class="side-icon">⭐</span><span class="side-label">P0+ Punkte aktualisieren</span></button>
           <button class="side-link" type="button" onclick="openLootLayoutPanel()" aria-label="Layout bearbeiten" title="Layout bearbeiten"><span class="side-icon">▧</span><span class="side-label">Layout bearbeiten</span></button>
           <div class="side-section-label">Verwaltung</div>
+          <button class="side-link master-only" type="button" onclick="openRaidArchivePanel()" aria-label="Raid-Archiv" title="Raid-Archiv"><span class="side-icon">🗄</span><span class="side-label">Raid-Archiv</span></button>
           <button class="side-link" type="button" onclick="openPlayerPanel()" aria-label="Spielerlogins verwalten" title="Spielerlogins verwalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Spielerlogins</span></button>
           <button class="side-link lichtloot-admin-only" type="button" onclick="openGuildApplicationsPanel()" aria-label="Gilden freischalten" title="Gilden freischalten"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Gilden freischalten</span><span id="guildApplicationCount" class="side-count">0</span></button>
           <button class="side-link" type="button" data-guild-onclick="admin-spielerlogin-suche.html" onclick="location.href='admin-spielerlogin-suche.html'" aria-label="Admin-Werkzeuge" title="Admin-Werkzeuge"><img class="side-icon-img" src="images/dashboard-icons/admin.jpg" alt=""><span class="side-label">Admin-Werkzeuge</span></button>
@@ -6509,6 +6510,25 @@ body.worldbuff-only .master-only{display:none!important}
       </div>
     </details>
 
+    <details id="raidArchivePanel" class="panel raid-panel">
+      <summary>Raid-Archiv</summary>
+      <div class="raid-panel-body">
+        <div class="section-head">
+          <div>
+            <h3>Archivierte und gelöschte Raids</h3>
+            <p>Archivierte Raids sind aus den aktiven Übersichten entfernt. Gelöschte Raids werden getrennt als gelöscht aufgeführt.</p>
+          </div>
+          <button class="small-btn ghost" type="button" onclick="restoreArchivedRaids()">Alle wiederherstellen</button>
+        </div>
+        <div class="tools">
+          <input id="raidArchiveSearch" type="search" placeholder="Raid, Datum oder PIN suchen..." oninput="renderRaidArchive()">
+        </div>
+        <div id="raidArchiveContent" class="active-raid-list">
+          <div class="muted">Noch keine Daten geladen.</div>
+        </div>
+      </div>
+    </details>
+
     <details id="playerLoginPanel" class="panel player-panel">
       <summary>Spielerlogins</summary>
       <div class="player-panel-body">
@@ -7557,6 +7577,7 @@ function renderAll(){
   renderRaidHelperWarcraftLogsSources();
   renderPlayerMiniList();
   renderRaids();
+  renderRaidArchive();
   renderPlayers();
 }
 
@@ -7603,6 +7624,11 @@ function openDetailsPanel(id){
 function openRaidPanel(){
   clearRaidFilters(false);
   openDetailsPanel("raidLeadPanel");
+}
+
+function openRaidArchivePanel(){
+  renderRaidArchive();
+  openDetailsPanel("raidArchivePanel");
 }
 
 const PANEM_GEAR_SLOTS=["Kopf","Hals","Schultern","Rücken","Brust","Handgelenke","Hände","Taille","Beine","Füße","Ring 1","Ring 2","Schmuck 1","Schmuck 2","Waffenhand","Schildhand","Distanz"];
@@ -9407,7 +9433,7 @@ function renderRaids(){
             <button class="small-btn ghost" type="button" onclick="openRaidleadPanelDirect('${escapeAttr(raid.raidId || raid.id)}')">Plündermeister</button>
             <button class="small-btn ghost" type="button" onclick="openLootMasterTargetsDialog('${escapeAttr(raid.raidId || raid.id)}')">LeadPIN an PM</button>
             ${isAllowedP0RaidForRaid(raid) ? `<button class="small-btn ${hasP0PlusTransfer(raid) ? "ghost" : "good"}" type="button" onclick="transferP0PlusFromGuild('${escapeAttr(raid.raidId)}')">P0+</button><button class="small-btn ghost" type="button" onclick="queueP0PlusBackup('${escapeAttr(getRaidKey(raid))}')">Sichern</button>` : ""}
-            ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">PO+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archiv</button>`}
+            ${needsP0PlusTransferBeforeArchive(raid) ? `<button class="small-btn ghost" type="button" disabled title="${escapeAttr(p0PlusArchiveBlockMessage(raid))}">P0+ offen</button>` : `<button class="small-btn danger" type="button" onclick="archiveRaidFromPage('${escapeAttr(raid.raidId)}')">Archivieren</button>`}
             <button class="small-btn danger" type="button" onclick="hardDeleteRaidFromPage('${escapeAttr(raid.raidId)}')">Löschen</button>
           </div>
         </td>
@@ -9415,6 +9441,58 @@ function renderRaids(){
     `;
   }).join("");
   updateRaidBulkActions();
+}
+
+function renderRaidArchive(){
+  const box = document.getElementById("raidArchiveContent");
+  if(!box) return;
+  const search = normalize(document.getElementById("raidArchiveSearch")?.value || "");
+  const archived = [];
+  const deleted = [];
+
+  (guildData.raids || []).forEach(raid => {
+    const status = normalize(raid.status || "");
+    const isDeleted = ["gelöscht","geloescht","deleted"].includes(status) || Boolean(raid.deletedAt);
+    const isArchived = ["archiviert","archive","archived"].includes(status);
+    if(!isArchived && !isDeleted) return;
+    const haystack = normalize([
+      raid.raidName, raid.raid, raid.raidDate, raid.raidTime,
+      raid.playerPin, raid.leadPin, raid.raidId, raid.guild
+    ].join(" "));
+    if(search && !haystack.includes(search)) return;
+    (isDeleted ? deleted : archived).push(raid);
+  });
+
+  const sortRaids = raids => raids.sort((a,b) =>
+    `${b.raidDate || ""} ${b.raidTime || ""}`.localeCompare(`${a.raidDate || ""} ${a.raidTime || ""}`)
+  );
+  sortRaids(archived);
+  sortRaids(deleted);
+
+  const renderRows = (raids, deletedGroup) => {
+    if(!raids.length) return `<tr><td colspan="7" class="muted">Keine ${deletedGroup ? "gelöschten" : "archivierten"} Raids vorhanden.</td></tr>`;
+    return raids.map(raid => `
+      <tr>
+        <td><strong>${escapeHtml(raid.raidName || raid.raid || "Raid")}</strong><div class="muted">${escapeHtml(raid.raidId || raid.id || "")}</div></td>
+        <td>${escapeHtml(formatRaidDate(raid.raidDate))}<br><span class="muted">${escapeHtml(raid.raidTime || "")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.playerPin || "-")}</span></td>
+        <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
+        <td>${statusBadge(deletedGroup ? "gelöscht" : "archiviert")}</td>
+        <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
+        <td><button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Ansehen</button></td>
+      </tr>
+    `).join("");
+  };
+  const section = (title, raids, deletedGroup) => `
+    <section class="active-raid-group">
+      <h3 class="active-raid-group-title">${escapeHtml(title)} (${raids.length})</h3>
+      <div class="table-wrap"><table class="player-login-table">
+        <thead><tr><th>Raid</th><th>Datum</th><th>Prio-PIN</th><th>LeadPIN</th><th>Status</th><th>Gilde</th><th>Aktion</th></tr></thead>
+        <tbody>${renderRows(raids, deletedGroup)}</tbody>
+      </table></div>
+    </section>`;
+
+  box.innerHTML = section("Archiviert", archived, false) + section("Gelöscht", deleted, true);
 }
 
 function toggleRaidSelection(raidId, checked){
