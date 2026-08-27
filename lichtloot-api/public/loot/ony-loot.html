@@ -3752,7 +3752,7 @@ async function savePrio(){
   try{
     const pinInfo = await Promise.race([
       ensurePlayerPinForSave(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
     ]);
     if(!pinInfo.success){
       throw new Error(pinInfo.error || "Teilnehmer-PIN konnte nicht geprüft werden.");
@@ -3763,7 +3763,7 @@ async function savePrio(){
 
     let result=await Promise.race([
       submitPrioWithPin(playerPin, ""),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 5000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Railway-Zeitüberschreitung")), 15000))
     ]);
 
     if(result.error){
