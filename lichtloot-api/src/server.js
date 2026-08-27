@@ -22087,6 +22087,8 @@ async function getPublishedPrios({ guildId, query: params }) {
             p0Item: row.item_name || "",
             approvalStatus: row.approval_status || "pending",
             approved: clean(row.approval_status).toLowerCase() === "approved",
+            PrioCreatedAt: row.created_at || "",
+            prioCreatedAt: row.created_at || "",
             Bench: "",
             bench: ""
           };
@@ -22111,6 +22113,8 @@ async function getPublishedPrios({ guildId, query: params }) {
        pr.id,
        pr.comment,
        pr.bench,
+       pr.created_at as prio_created_at,
+       pr.updated_at as prio_updated_at,
        c.name as player,
        c.server,
        c.class_name,
@@ -22182,6 +22186,10 @@ async function getPublishedPrios({ guildId, query: params }) {
         p0Plus: meta.p0Plus || "nein",
         P0Item: meta.p0Item || "",
         p0Item: meta.p0Item || "",
+        PrioCreatedAt: row.prio_created_at || "",
+        prioCreatedAt: row.prio_created_at || "",
+        PrioUpdatedAt: row.prio_updated_at || "",
+        prioUpdatedAt: row.prio_updated_at || "",
         Bench: row.bench || "",
         bench: row.bench || ""
       };
