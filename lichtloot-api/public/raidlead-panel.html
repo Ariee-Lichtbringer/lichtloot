@@ -499,6 +499,8 @@ th{
 .p0plus-points-list strong{display:block;color:var(--gold);margin-bottom:4px}
 .p0plus-points-list .empty{color:#94a3b8;font-weight:700}
 .p0plus-points-list .player-row{white-space:nowrap}
+.prio-player-server{color:#94a3b8;font-weight:700}
+.prio-entry-time{display:block;margin-top:5px;color:#fb923c;font-size:12px;font-weight:850;white-space:nowrap}
 
 
 }
@@ -1914,6 +1916,8 @@ async function loadPriosFromSheet(leadPin){
       p3ItemId: p.P3ItemId || p.p3ItemId || p.p3_item_id || "",
       p0Plus: p.P0Plus || p.p0Plus || p.P0 || p.p0 || "",
       worldbuffRulesAccepted: Boolean(p.WorldbuffRulesAccepted || p.worldbuffRulesAccepted),
+      prioCreatedAt: p.PrioCreatedAt || p.prioCreatedAt || p.createdAt || p.created_at || "",
+      prioUpdatedAt: p.PrioUpdatedAt || p.prioUpdatedAt || p.updatedAt || p.updated_at || "",
       bench: p.Bench || p.bench || p.Gebencht || ""
     }));
 
@@ -2498,7 +2502,19 @@ function isBenchPrio(entry){
 }
 
 function renderBenchName(entry){
-  return `${safe(entry.player || "-")}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}`;
+  const server = String(entry.server || "").trim();
+  const timestamp = formatPrioEntryTimestamp(entry.prioCreatedAt || entry.prioUpdatedAt);
+  return `<strong>${safe(entry.player || "-")}</strong>${server ? ` <span class="prio-player-server">(${safe(server)})</span>` : ""}${isBenchPrio(entry) ? '<span class="bench-label">Bench</span>' : ""}${timestamp ? `<span class="prio-entry-time">Eingetragen am ${safe(timestamp.date)} um ${safe(timestamp.time)} Uhr</span>` : ""}`;
+}
+
+function formatPrioEntryTimestamp(value){
+  if(!value) return null;
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return null;
+  return {
+    date: date.toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric"}),
+    time: date.toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"})
+  };
 }
 
 function renderBenchButton(entry){
@@ -2674,12 +2690,14 @@ function renderP0PlusOverviewModal(){
     `).join("");
 }
 
-function renderP0PlusPoints(itemName,isActiveP0Plus){
+function renderP0PlusPoints(itemName,isActiveP0Plus,playerName){
   if(!String(itemName || "").trim()){
     return '<div class="p0plus-points-list"><span class="empty">-</span></div>';
   }
 
-  const entries = getP0PlusEntriesForItem(itemName);
+  const wantedPlayer = normalizeP0Text(playerName);
+  const entries = getP0PlusEntriesForItem(itemName)
+    .filter(entry => !wantedPlayer || normalizeP0Text(entry.player) === wantedPlayer);
 
   if(!entries.length){
     return `<div class="p0plus-points-list">${isActiveP0Plus ? '<strong>Preraid</strong>' : ''}<span class="empty">Keine Punkte</span></div>`;
@@ -2788,7 +2806,7 @@ function renderRows(){
           <td>${entry.p1 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p2 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
           <td>${entry.p3 ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
-          <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
+          <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
           <td>${actionButtons}</td>
         </tr>
       `;
@@ -2814,7 +2832,7 @@ function renderRows(){
         <td>${renderItem(entry.p1)}</td>
         <td>${renderItem(entry.p2)}</td>
         <td>${renderItem(entry.p3)}</td>
-        <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>PO</strong><span class="empty">keine PO+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
+        <td>${isAllowedP0Raid() ? (isPo&&!isP0Plus?'<div class="p0plus-points-list"><strong>P0</strong><span class="empty">keine P0+-Punkte</span></div>':renderP0PlusPoints(entry.p1,isP0Plus,entry.player)) : renderPlainP0Cell(entry,currentReleased,isPo)}</td>
         <td>${actionButtons}</td>
       </tr>
     `;
