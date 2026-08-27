@@ -9479,7 +9479,7 @@ function renderRaidArchive(){
         <td><span class="pin">${escapeHtml(raid.leadPin || "-")}</span></td>
         <td>${statusBadge(deletedGroup ? "gelöscht" : "archiviert")}</td>
         <td>${escapeHtml(displayGuildNameForRaid(raid.guild || raid.gilde))}</td>
-        <td><button class="small-btn primary" type="button" onclick="openRaidInUnifiedOverview('${escapeAttr(raid.raidId || raid.id)}')">Ansehen</button></td>
+        <td><button class="small-btn primary" type="button" onclick="openPrioModal('${escapeAttr(raid.raidId || raid.id)}',true)">Prioliste ansehen</button></td>
       </tr>
     `).join("");
   };
@@ -17311,14 +17311,14 @@ async function archiveRaidFromPage(raidId){
   await setRaidStatusFromPage(raidId, "archiviert");
 }
 
-async function openPrioModal(raidId){
+async function openPrioModal(raidId, fromArchive = false){
   const raid = (guildData.raids || []).find(entry => String(entry.raidId) === String(raidId));
   if(!raid){
     setStatus("Raid wurde nicht gefunden.", "bad");
     return;
   }
   const prioAccess=raidPrioAccessWindow(raid);
-  if(!prioAccess.allowed){
+  if(!fromArchive && !prioAccess.allowed){
     setStatus(prioAccess.message,"bad");
     alert(prioAccess.message);
     return;
@@ -17348,7 +17348,7 @@ async function openPrioModal(raidId){
       return;
     }
 
-    renderPrioModalContent(result, raid);
+    renderPrioModalContent(result, raid, fromArchive);
   }catch(error){
     document.getElementById("prioModalContent").innerHTML = `<div class="status bad">${escapeHtml(error.message || "Prioliste konnte nicht geladen werden.")}</div>`;
   }
@@ -17371,9 +17371,9 @@ function closePrioModal(){
   document.getElementById("prioModal").classList.add("hidden");
 }
 
-function renderPrioModalContent(result, raid){
+function renderPrioModalContent(result, raid, forceListOpen = false){
   const prios = sortPriosWithMainFirst(Array.isArray(result.prios) ? result.prios : []);
-  const listOpen = isPrioListVisibleForGuild(result, raid);
+  const listOpen = forceListOpen || isPrioListVisibleForGuild(result, raid);
   const raidStatus = listOpen ? "geöffnet" : "geschlossen";
   const benchCount = prios.filter(isBenchPrio).length;
   const transferState = { ...raid, ...result, raid: raid.raid, raidName: raid.raidName, raidId: raid.raidId };
