@@ -9103,24 +9103,43 @@ async function p0V9FetchCsv(){
   return [];
 }
 
+let p0V9LoadPromise = null;
+let p0V9LoadedAt = 0;
+
 async function loadP0PlusFromSheet(){
-  let entries = [];
+  const cachedEntries = Array.isArray(window.p0plusEntries) ? window.p0plusEntries : [];
+  if(p0V9LoadedAt && Date.now() - p0V9LoadedAt < 8000){
+    return cachedEntries;
+  }
+  if(p0V9LoadPromise) return p0V9LoadPromise;
 
-  try{ entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API"); }catch(error){ console.warn("P0+ V9 Live-API fetch fehlgeschlagen:", error); }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJsonp(P0PLUS_API_URL,"oldapi"); }catch(error){ console.warn("P0+ V9 Live-API JSONP fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJson(APPS_SCRIPT_URL,"Haupt-API"); }catch(error){ console.warn("P0+ V9 Haupt-API fetch fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    try{ entries = await p0V9FetchJsonp(APPS_SCRIPT_URL,"mainapi"); }catch(error){ console.warn("P0+ V9 Haupt-API JSONP fehlgeschlagen:", error); }
-  }
-  if(!entries.length){
-    entries = await p0V9FetchCsv();
-  }
+  p0V9LoadPromise = (async () => {
+    let entries = [];
 
-  return p0V9Store(entries);
+    try{ entries = await p0V9FetchJson(P0PLUS_API_URL,"P0+ Live-API"); }catch(error){ console.warn("P0+ V9 Live-API fetch fehlgeschlagen:", error); }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJsonp(P0PLUS_API_URL,"oldapi"); }catch(error){ console.warn("P0+ V9 Live-API JSONP fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJson(APPS_SCRIPT_URL,"Haupt-API"); }catch(error){ console.warn("P0+ V9 Haupt-API fetch fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      try{ entries = await p0V9FetchJsonp(APPS_SCRIPT_URL,"mainapi"); }catch(error){ console.warn("P0+ V9 Haupt-API JSONP fehlgeschlagen:", error); }
+    }
+    if(!entries.length){
+      entries = await p0V9FetchCsv();
+    }
+
+    const stored = p0V9Store(entries);
+    p0V9LoadedAt = Date.now();
+    return stored;
+  })();
+
+  try{
+    return await p0V9LoadPromise;
+  }finally{
+    p0V9LoadPromise = null;
+  }
 }
 
 function getP0PlusEntriesForItem(itemName){
