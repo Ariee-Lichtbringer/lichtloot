@@ -11352,9 +11352,6 @@ async function savePrio({ guildId, query: params }) {
   }
 
   const raidType = normalizeRaidType(params.raid || params.raidName);
-  const incomingRaidName = clean(params.raidName);
-  const defaultRaidName = displayRaidName(raidType);
-  const raidName = incomingRaidName && incomingRaidName !== defaultRaidName ? incomingRaidName : "";
   const externalRaidId = clean(params.raidId || params.RaidID || params.raidID);
   const prioPin = clean(params.raidPin || params.prioPin || params.PrioPIN || params.playerLinkPin);
   const p0Plus = clean(params.p0Plus).toLowerCase();
@@ -11367,75 +11364,40 @@ async function savePrio({ guildId, query: params }) {
     let raidResult;
     if (externalRaidId) {
       raidResult = await client.query(
-        `update raids
-         set name = coalesce(nullif($3, ''), name),
-             raid_pin = coalesce(nullif($4, ''), raid_pin),
-             raid_time = coalesce(nullif($5, ''), raid_time),
-             guild_name = coalesce(nullif($6, ''), guild_name),
-             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
-             updated_at = now()
+        `select id, external_raid_id, name, raid_type, raid_date, raid_time,
+                raid_pin, player_link, discord_channel_id, status
+         from raids
          where guild_id = $1
            and (external_raid_id = $2 or id::text = $2)
-         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
-        [
-          guildId,
-          externalRaidId,
-          raidName,
-          prioPin || "",
-          clean(params.raidTime || params.uhrzeit),
-          clean(params.guild || params.gilde),
-          clean(params.p0PlusFreigabe || params.p0PlusOverride)
-        ]
+         limit 1`,
+        [guildId, externalRaidId]
       );
     }
 
     if ((!raidResult || !raidResult.rows.length) && prioPin) {
       raidResult = await client.query(
-        `update raids
-         set name = coalesce(nullif($3, ''), name),
-             raid_pin = coalesce(nullif($4, ''), raid_pin),
-             raid_time = coalesce(nullif($5, ''), raid_time),
-             guild_name = coalesce(nullif($6, ''), guild_name),
-             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
-             updated_at = now()
+        `select id, external_raid_id, name, raid_type, raid_date, raid_time,
+                raid_pin, player_link, discord_channel_id, status
+         from raids
          where guild_id = $1
            and raid_pin = $2
-           and lower(raid_type) = any($8)
-         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
-        [
-          guildId,
-          prioPin,
-          raidName,
-          prioPin || "",
-          clean(params.raidTime || params.uhrzeit),
-          clean(params.guild || params.gilde),
-          clean(params.p0PlusFreigabe || params.p0PlusOverride),
-          raidTypeSearchValues(raidType)
-        ]
+           and lower(raid_type) = any($3)
+         order by updated_at desc
+         limit 1`,
+        [guildId, prioPin, raidTypeSearchValues(raidType)]
       );
     }
 
     if ((!raidResult || !raidResult.rows.length) && prioPin) {
       raidResult = await client.query(
-        `update raids
-         set name = coalesce(nullif($3, ''), name),
-             raid_pin = coalesce(nullif($4, ''), raid_pin),
-             raid_time = coalesce(nullif($5, ''), raid_time),
-             guild_name = coalesce(nullif($6, ''), guild_name),
-             p0plus_freigabe = coalesce(nullif($7, ''), p0plus_freigabe),
-             updated_at = now()
+        `select id, external_raid_id, name, raid_type, raid_date, raid_time,
+                raid_pin, player_link, discord_channel_id, status
+         from raids
          where guild_id = $1
            and raid_pin = $2
-         returning id, external_raid_id, name, raid_type, raid_date, raid_time, raid_pin, player_link, discord_channel_id, status`,
-        [
-          guildId,
-          prioPin,
-          raidName,
-          prioPin || "",
-          clean(params.raidTime || params.uhrzeit),
-          clean(params.guild || params.gilde),
-          clean(params.p0PlusFreigabe || params.p0PlusOverride)
-        ]
+         order by updated_at desc
+         limit 1`,
+        [guildId, prioPin]
       );
     }
 
