@@ -743,6 +743,7 @@ th{
   padding:2px 7px;
   font-size:11px;
 }
+.missing-player-chip>img{width:28px;height:28px;border-radius:6px;object-fit:cover}.missing-player-chip>span{display:grid;gap:1px}.missing-player-chip b{font-size:12px}.missing-player-chip small{color:#94a3b8;font-size:9px;font-weight:700}
 .missing-player-chip.unknown{color:#cbd5e1}
 @media(max-width:1000px){.raid-actions,.raid-status-grid{grid-template-columns:1fr}.entry-status-line{align-items:stretch;flex-direction:column}.main-nav{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap}.nav-btn{white-space:nowrap}.logo-banner-mini{max-height:110px}}
 
@@ -2000,19 +2001,36 @@ function raidleadMissingPrioNames(){
   return raidleadSignupNames().filter(name=>!prioNames.has(normalizeDcPlayerName(name)));
 }
 
+function raidleadMissingPrioRows(){
+  const missing=new Set(raidleadMissingPrioNames().map(normalizeDcPlayerName)),seen=new Set();
+  return (currentRaidSignupRows||[]).filter(row=>{const key=normalizeDcPlayerName(row.player||row.char);if(!key||seen.has(key)||!missing.has(key))return false;seen.add(key);return true;});
+}
+
+function raidleadSignupSpec(row){
+  const label=String(row?.note||row?.spec||row?.specialization||row?.role||"").replace(/^\s*Skillung\s*:\s*/i,"").trim()||"Skillung unbekannt",key=label.toLowerCase();
+  let icon="inv_misc_questionmark";
+  if(/tank|schutz/.test(key))icon="inv_shield_06";else if(/heil|heal|disziplin/.test(key))icon="spell_holy_flashheal";else if(/feuer/.test(key))icon="spell_fire_firebolt02";else if(/frost/.test(key))icon="spell_frost_frostbolt02";else if(/arkan/.test(key))icon="spell_holy_magicalsentry";else if(/schatten|gebrechen/.test(key))icon="spell_shadow_shadowwordpain";else if(/kampf|nahkampf|meuchel/.test(key))icon="ability_rogue_eviscerate";else if(/tierherrschaft/.test(key))icon="ability_hunter_beasttaming";else if(/treffsicherheit/.test(key))icon="ability_marksmanship";else if(/gleichgewicht/.test(key))icon="spell_nature_starfall";else if(/wildheit/.test(key))icon="ability_druid_catform";else if(/zerstörung/.test(key))icon="spell_shadow_rainoffire";else if(/verstärkung/.test(key))icon="ability_shaman_stormstrike";
+  return {label,icon};
+}
+
+function renderRaidleadMissingPrioChips(rows){
+  if(!rows.length)return "Keine – alle angemeldeten Charaktere haben einen Prioeintrag.";
+  return `<span class="missing-prio-list">${rows.map(row=>{const name=String(row.player||row.char||""),className=String(row.className||row.class||""),spec=raidleadSignupSpec(row);return `<span class="missing-player-chip"><img src="${getIconUrl(spec.icon)}" alt=""><span><b class="${getClassColorClass(className)}">${safe(name)}</b><small>${safe(spec.label)}</small></span></span>`;}).join("")}</span>`;
+}
+
 function renderEntryMetrics(){
   if(!currentRaidHasSignupHelper){
     return `<div class="entry-metrics"><span class="entry-metric">Prios <strong>${currentPrios.length}</strong></span></div>`;
   }
-  const signupNames=raidleadSignupNames(),missingNames=raidleadMissingPrioNames(),missingClass=missingNames.length?"warn":"ok";
+  const signupNames=raidleadSignupNames(),missingRows=raidleadMissingPrioRows(),missingClass=missingRows.length?"warn":"ok";
 
   return `
     <div class="entry-metrics">
       <span class="entry-metric">Prios <strong>${currentPrios.length}</strong></span>
       <span class="entry-metric">Angemeldet <strong>${signupNames.length}</strong></span>
-      <span class="entry-metric">Fehlende Prioeinträge <strong class="${missingClass}">${missingNames.length}</strong></span>
+      <span class="entry-metric">Fehlende Prioeinträge <strong class="${missingClass}">${missingRows.length}</strong></span>
     </div>
-    <div class="status" style="margin-top:7px"><strong>Angemeldete Charaktere:</strong> ${signupNames.length?signupNames.map(safe).join(", "):"Keine Anmeldungen gefunden."}<br><strong>Prio fehlt:</strong> ${missingNames.length?missingNames.map(safe).join(", "):"Keine – alle angemeldeten Charaktere haben einen Prioeintrag."}</div>
+    <div class="status" style="margin-top:7px"><strong>Fehlende Prioeinträge:</strong> ${renderRaidleadMissingPrioChips(missingRows)}</div>
   `;
 }
 
