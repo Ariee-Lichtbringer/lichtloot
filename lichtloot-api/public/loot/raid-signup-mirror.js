@@ -1,5 +1,5 @@
 (function(){
-  let allSignupRows=[],raidSignupEnabled=null,raidLeadAuthenticated=false,raidLeadPin="",raidLeadMaster=false;
+  let allSignupRows=[],raidSignupEnabled=null,raidLeadAuthenticated=false,raidLeadPin="",raidLeadMaster=false,activeCharacterPickerOpen=false;
   const CLASS_ICONS={warrior:"classicon_warrior",krieger:"classicon_warrior",druid:"classicon_druid",druide:"classicon_druid",paladin:"classicon_paladin",rogue:"classicon_rogue",schurke:"classicon_rogue",hunter:"classicon_hunter",jäger:"classicon_hunter",jaeger:"classicon_hunter",priest:"classicon_priest",priester:"classicon_priest",mage:"classicon_mage",magier:"classicon_mage",warlock:"classicon_warlock",hexenmeister:"classicon_warlock",shaman:"classicon_shaman",schamane:"classicon_shaman"};
   const CLASS_COLORS={Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Unbekannt:"#94a3b8"};
   const CLASS_CANON={warrior:"Warrior",krieger:"Warrior",paladin:"Paladin",pala:"Paladin",rogue:"Rogue",schurke:"Rogue",hunter:"Hunter",jäger:"Hunter",jaeger:"Hunter",druid:"Druid",druide:"Druid",priest:"Priest",priester:"Priest",mage:"Mage",magier:"Mage",warlock:"Warlock",hexenmeister:"Warlock",shaman:"Shaman",schamane:"Shaman"};
@@ -10,7 +10,7 @@
   const norm=value=>String(value||"").trim().toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]/g,"");
   const activeSignupRaidId=()=>{const params=new URLSearchParams(location.search);return params.get("signupOnly")==="1"?(params.get("raidId")||""):(typeof currentRaidId!=="undefined"?currentRaidId:"");};
   const roleInfo=value=>ROLE_INFO[String(value||"flex").trim().toLowerCase()]||ROLE_INFO.flex;
-  const statusInfo=value=>{const key=String(value||"signed").toLowerCase();if(key==="bench")return["🪑","Bank","bench",1];if(["late","spät","spaet"].includes(key))return["🕒","Verspätet","late",2];if(["absent","abgemeldet"].includes(key))return["🚫","Abgemeldet","absent",3];if(key==="tentative")return["⚖️","Vorläufig","late",1];return["✅","Angemeldet","signed",0];};
+  const statusInfo=value=>{const key=String(value||"signed").toLowerCase();if(key==="bench")return["🪑","Bank","bench",1];if(key==="tentative")return["⚖️","Vorläufig","tentative",1];if(["late","spät","spaet"].includes(key))return["🕒","Verspätet","late",2];if(["absent","abgemeldet"].includes(key))return["🚫","Abgemeldet","absent",3];return["✅","Angemeldet","signed",0];};
   const prioInfo=row=>{const po=String(row.poApprovalStatus||"").toLowerCase();if(["approved","freigegeben"].includes(po))return["../images/lootbags/beutegrun.jpg","PO freigegeben","approved"];if(["pending","offen","wartet"].includes(po))return["../images/lootbags/beuteorange.jpg","PO eingetragen – wartet auf Freigabe","pending"];if(row.hasPrio===true||String(row.hasPrio).toLowerCase()==="true")return["../images/lootbags/beutelilia.jpg","P1–P3 eingetragen","prio"];return null;};
   const roleBadge=value=>{const info=roleInfo(value);return `<span class="raid-signup-role-badge role-${esc(String(value||"flex").toLowerCase())}" title="Skillung/Rolle: ${esc(info[1])}"><span aria-hidden="true">${info[0]}</span><span>${esc(info[1])}</span></span>`;};
   function specializationInfo(row){const raw=String(row.note||row.spec||row.specialization||"").replace(/^\s*Skillung\s*:\s*/i,"").trim(),specs=CLASS_SPECS[String(row.className||row.class||"").trim().toLowerCase()]||[],match=specs.find(item=>norm(item[0])===norm(raw));return match?{label:match[0],role:match[1],icon:match[2]}:raw?{label:raw,role:String(row.role||"flex"),icon:"inv_misc_questionmark"}:null;}
@@ -19,6 +19,65 @@
   function currentPlayer(){return norm(document.getElementById("playerName")?.value||document.getElementById("myPriosChar")?.value||"");}
   function currentPlayerName(){return String(document.querySelector("#raidSignupMirrorCharacters [data-character].is-selected")?.dataset.character||document.getElementById("raidSignupPageCharacter")?.value||document.getElementById("playerName")?.value||document.getElementById("myPriosChar")?.value||"").trim();}
   function currentPlayerPin(){return String((typeof getStoredLichtLootPlayerPin==="function"?getStoredLichtLootPlayerPin():"")||document.getElementById("playerPin")?.value||"").trim();}
+  function activeCharacterData(){
+    const selected=typeof lichtlootSelectedCharacter!=="undefined"&&lichtlootSelectedCharacter ? lichtlootSelectedCharacter : null;
+    const characters=typeof lichtlootLoggedInCharacters!=="undefined"&&Array.isArray(lichtlootLoggedInCharacters) ? lichtlootLoggedInCharacters : [];
+    const currentName=String(document.getElementById("playerName")?.value||"").trim();
+    return selected || characters.find(char=>norm(char?.name)===norm(currentName)) || null;
+  }
+  function activePrioPin(){return String(document.getElementById("raidPin")?.value||new URLSearchParams(location.search).get("pin")||"").trim();}
+  function activeRaidLabel(){return String(typeof RAID_NAME!=="undefined"?RAID_NAME:new URLSearchParams(location.search).get("raid")||"Raid").trim().toUpperCase();}
+  function changeActiveCharacter(){
+    activeCharacterPickerOpen=!activeCharacterPickerOpen;
+    const panel=document.getElementById("lootActiveCharacterPanel");
+    if(panel) panel.dataset.signature="";
+    renderActiveCharacterPanel();
+  }
+  function chooseActiveCharacter(index){
+    if(typeof selectLoggedInCharacter!=="function") return;
+    selectLoggedInCharacter(index);
+    activeCharacterPickerOpen=false;
+    const panel=document.getElementById("lootActiveCharacterPanel");
+    if(panel) panel.dataset.signature="";
+    renderActiveCharacterPanel();
+  }
+  function hideLegacyCharacterSelection(){
+    document.querySelector(".login-character-panel")?.classList.add("loot-legacy-character-panel");
+    const drop=document.getElementById("selectedCharacterDrop");
+    drop?.classList.add("loot-legacy-character-drop");
+    if(drop?.previousElementSibling?.tagName==="LABEL") drop.previousElementSibling.classList.add("loot-legacy-character-label");
+  }
+  function renderActiveCharacterPanel(){
+    const panel=document.getElementById("lootActiveCharacterPanel");
+    if(!panel) return;
+    const char=activeCharacterData();
+    const name=String(char?.name||currentPlayerName()||"").trim();
+    const className=String(char?.className||char?.class||document.getElementById("playerClass")?.value||"").trim();
+    const server=String(char?.server||document.getElementById("playerServer")?.value||"").trim();
+    const playerLogin=currentPlayerPin();
+    const raid=activeRaidLabel();
+    const prioPin=activePrioPin();
+    const icon=CLASS_ICONS[className.toLowerCase()]||"inv_misc_questionmark";
+    const characters=typeof lichtlootLoggedInCharacters!=="undefined"&&Array.isArray(lichtlootLoggedInCharacters)?lichtlootLoggedInCharacters:[];
+    const signature=[name,className,server,playerLogin,raid,prioPin,activeCharacterPickerOpen,characters.map(item=>[item?.name,item?.className,item?.server].join("~")).join(",")].join("|");
+    if(panel.dataset.signature===signature) return;
+    panel.dataset.signature=signature;
+    const choices=activeCharacterPickerOpen?`<div class="loot-active-character-picker"><div class="loot-active-character-picker-title">Hauptcharakter und Twinks</div>${characters.length?characters.map((item,index)=>{const itemName=String(item?.name||"").trim(),itemClass=String(item?.className||item?.class||"").trim(),itemServer=String(item?.server||"").trim(),itemIcon=CLASS_ICONS[itemClass.toLowerCase()]||"inv_misc_questionmark",selected=norm(itemName)===norm(name),isMain=item?.mainChar&&norm(item.mainChar)===norm(itemName);return `<button type="button" class="loot-active-character-option${selected?" is-selected":""}" data-character-index="${index}"><img src="${specIconUrl(itemIcon)}" alt=""><span><strong style="color:${characterColor(itemClass)}">${esc(itemName)}</strong><small>${esc([itemClass,itemServer].filter(Boolean).join(" · ")||"Charakter")}</small></span>${selected?'<b>✓</b>':isMain?'<em>MAIN</em>':'<em>TWINK</em>'}</button>`;}).join(""):'<div class="loot-active-character-empty">Keine Charaktere gefunden. Bitte zuerst mit dem SpielerLogin anmelden.</div>'}</div>`:"";
+    panel.innerHTML=`<div class="loot-active-character-title">Aktiver Charakter</div>${name?`<div class="loot-active-character-state">✓ Für diese Prio ausgewählt</div><div class="loot-active-character-main"><img src="${specIconUrl(icon)}" alt="${esc(className||"Klasse")}"><div><strong>${esc(name)}</strong><span>${esc([className,server].filter(Boolean).join(" · ")||"Charakter")}</span></div><b aria-label="Ausgewählt">✓</b></div><div class="loot-active-character-meta"><span>SpielerLogin: <strong>${esc(playerLogin||"aktiv")}</strong></span><span>${esc(raid)}${prioPin?` · PrioPIN: ${esc(prioPin)}`:""}</span></div>`:`<div class="loot-active-character-empty">Noch kein Charakter ausgewählt. Bitte zuerst mit deinem SpielerLogin anmelden.</div>`}<button type="button" class="loot-active-character-change">${activeCharacterPickerOpen?"Auswahl schließen":"↪ Charakter wechseln"}</button>${choices}`;
+    panel.querySelector(".loot-active-character-change").onclick=changeActiveCharacter;
+    panel.querySelectorAll("[data-character-index]").forEach(button=>button.onclick=()=>chooseActiveCharacter(Number(button.dataset.characterIndex)));
+  }
+  function mountActiveCharacterPanel(){
+    if(document.getElementById("lootActiveCharacterPanel")) return;
+    const panel=document.createElement("aside");
+    panel.id="lootActiveCharacterPanel";
+    panel.className="loot-active-character-panel";
+    panel.setAttribute("aria-live","polite");
+    const host=document.querySelector("body > .overlay")||document.body;
+    host.insertBefore(panel,host.firstChild);
+    hideLegacyCharacterSelection();
+    renderActiveCharacterPanel();
+  }
   function signupRow(row){
     const name=row.player||row.char||row.playerName||"-",status=statusInfo(row.status),prio=prioInfo(row),own=currentPlayer()&&norm(name)===currentPlayer();
     const attendance=status[2]==="signed"?"":`<span class="raid-signup-attendance ${status[2]}" title="Anmeldestatus: ${esc(status[1])}">${status[0]} ${esc(status[1])}</span>`,spec=specializationInfo(row);
@@ -56,9 +115,10 @@
       const playerRows=players.map(signupRow).join("");
       return `<section class="raid-signup-class-group" style="--class-color:${CLASS_COLORS[key]||CLASS_COLORS.Unbekannt}"><header>${key==="Tank"?'<span class="raid-signup-shield">🛡️</span>':iconFor(key)}<div><h3>${esc(labels[key])}</h3><span>${players.length} ${players.length===1?'Spieler':'Spieler'}</span></div></header><div class="raid-signup-class-players">${playerRows}</div></section>`;
     }).join("");
-    const statusOrder=[["bench","🪑 Bank"],["late","🕒 Verspätet"],["absent","🚫 Abwesend"]];
+    const statusOrder=[["bench","🪑 Bank"],["tentative","⚖️ Vorläufig"],["late","🕒 Verspätet"],["absent","🚫 Abwesend"]];
     const inactiveSections=statusOrder.map(([status,label])=>{const players=inactive.filter(row=>statusInfo(row.status)[2]===status).sort((a,b)=>String(a.player||a.char||"").localeCompare(String(b.player||b.char||""),"de"));return players.length?`<section class="raid-signup-inactive-group status-${status}"><h3>${label} (${players.length})</h3><div>${players.map(signupRow).join("")}</div></section>`:"";}).join("");
-    box.innerHTML=`<div class="raid-signup-total">👥 Gesamt angemeldet: <b>${unique.length}</b></div>${roleSummary}<div class="raid-signup-summary">${summary||'<span class="raid-signup-muted">Keine regulär Angemeldeten in dieser Auswahl.</span>'}</div><div class="raid-signup-status-legend"><span><b class="raid-signup-prio-state prio"><img src="../images/lootbags/beutelilia.jpg" alt=""></b> P1–P3 eingetragen</span><span><b class="raid-signup-prio-state pending"><img src="../images/lootbags/beuteorange.jpg" alt=""></b> PO eingetragen</span><span><b class="raid-signup-prio-state approved"><img src="../images/lootbags/beutegrun.jpg" alt=""></b> PO freigegeben</span><span>🪑 Bank</span><span>🕒 Verspätet</span><span>🚫 Abwesend</span></div><div class="raid-signup-class-grid">${sections}</div>${inactiveSections?`<div class="raid-signup-inactive">${inactiveSections}</div>`:""}`;
+    const bankCount=unique.filter(row=>statusInfo(row.status)[2]==="bench").length,tentativeCount=unique.filter(row=>statusInfo(row.status)[2]==="tentative").length,lateCount=unique.filter(row=>statusInfo(row.status)[2]==="late").length;
+    box.innerHTML=`<div class="raid-signup-total">👥 Fest angemeldet: <b>${active.length}</b> · 🪑 Bank <b>(${bankCount})</b> · ⚖️ Vorläufig <b>(${tentativeCount})</b>${lateCount?` · 🕒 Verspätet <b>(${lateCount})</b>`:""}</div>${roleSummary}<div class="raid-signup-summary">${summary||'<span class="raid-signup-muted">Keine fest Angemeldeten in dieser Auswahl.</span>'}</div><div class="raid-signup-status-legend"><span><b class="raid-signup-prio-state prio"><img src="../images/lootbags/beutelilia.jpg" alt=""></b> P1–P3 eingetragen</span><span><b class="raid-signup-prio-state pending"><img src="../images/lootbags/beuteorange.jpg" alt=""></b> PO eingetragen</span><span><b class="raid-signup-prio-state approved"><img src="../images/lootbags/beutegrun.jpg" alt=""></b> PO freigegeben</span><span>🪑 Bank</span><span>⚖️ Vorläufig</span><span>🕒 Verspätet</span><span>🚫 Abwesend</span></div><div class="raid-signup-class-grid">${sections}</div>${inactiveSections?`<div class="raid-signup-inactive">${inactiveSections}</div>`:""}`;
   }
   async function load(){const box=document.getElementById("raidSignupMirrorList"),raidId=activeSignupRaidId(),raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";if(!box||!raidId)return;box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';try{const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");allSignupRows=[...(result.signups||[]),...(result.externalSignups||[])];render(allSignupRows);}catch(error){box.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;}}
   async function raidLeadLogin(){const pin=document.getElementById("raidSignupLeadPin")?.value.trim()||"",feedback=document.getElementById("raidSignupLeadFeedback"),raidId=String(activeSignupRaidId());if(!pin){if(feedback)feedback.textContent="Bitte LeadPIN eingeben.";return;}if(feedback)feedback.textContent="PIN wird geprüft …";try{const result=await apiJsonp({action:"validateLeadPin",leadPin:pin,raidId,allowMaster:"true",t:Date.now()});if(!result?.success)throw new Error(result?.error||"Gildenleiter-/LeadPIN ist nicht gültig.");raidLeadAuthenticated=true;raidLeadPin=pin;raidLeadMaster=result.managerMode==="master";sessionStorage.setItem(`raidSignupLeadPin_${raidId}`,pin);if(feedback)feedback.textContent=raidLeadMaster?"✓ Gildenleiter-Funktionen freigeschaltet.":"✓ Raidlead-Funktionen freigeschaltet.";document.getElementById("raidSignupLeadLogin")?.classList.add("is-authenticated");render(allSignupRows);}catch(error){raidLeadAuthenticated=false;raidLeadPin="";raidLeadMaster=false;if(feedback)feedback.textContent=error.message||"PIN konnte nicht geprüft werden.";}}
@@ -189,8 +249,8 @@
     const backdrop=document.querySelector(".raid-signup-modal-backdrop"),tools=document.querySelector(".header-tools")||document.querySelector(".header");
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
-  function init(){mountPageSignup();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
-  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();applyLootPageSectionSettings();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+  function init(){mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
+  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();applyLootPageSectionSettings();hideLegacyCharacterSelection();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 
 /* Raidregeln direkt im Inhaltsbereich der Lootseite anzeigen. */
