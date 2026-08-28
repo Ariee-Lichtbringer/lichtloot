@@ -2619,7 +2619,7 @@ tr.selected-row td{
 .raid-helper-current-card{display:grid;grid-template-columns:116px minmax(0,1fr);gap:14px;min-height:214px;padding:14px;border:1px solid rgba(148,163,184,.18);border-left:4px solid var(--raid-color,#a78bfa);border-radius:12px;background:linear-gradient(145deg,rgba(15,23,42,.82),rgba(2,6,23,.7));box-shadow:0 12px 30px rgba(0,0,0,.16);color:#f8fafc;position:relative;overflow:hidden}
 .raid-helper-current-card::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 8%,color-mix(in srgb,var(--raid-color,#a78bfa) 14%,transparent),transparent 45%);pointer-events:none}
 .raid-helper-current-card-image{width:116px;height:146px;border-radius:10px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.32);box-shadow:0 10px 24px rgba(0,0,0,.34);position:relative;z-index:1}
-.raid-helper-current-card-body{display:flex;min-width:0;flex-direction:column;position:relative;z-index:1}.raid-helper-current-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.raid-helper-current-card-head h4{margin:0;color:#f8fafc;font-size:16px;line-height:1.25}.raid-helper-current-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;color:#bfdbfe;font-size:11px;font-weight:850}.raid-helper-current-card-meta span{white-space:nowrap}.raid-helper-current-card-status{margin-top:9px}.raid-helper-current-card-count{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:12px;color:#cbd5e1;font-size:12px;font-weight:850}.raid-helper-current-card-count b{font-size:18px;color:#fff}.raid-helper-current-card-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;position:relative;z-index:1}.raid-helper-current-card-actions .small-btn{min-height:38px}.raid-helper-current-card .raid-select-checkbox{width:20px;height:20px;margin:0;accent-color:#8b5cf6}
+.raid-helper-current-card-body{display:flex;min-width:0;flex-direction:column;position:relative;z-index:1}.raid-helper-current-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.raid-helper-current-card-head h4{margin:0;color:#f8fafc;font-size:16px;line-height:1.25}.raid-helper-current-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;color:#bfdbfe;font-size:11px;font-weight:850}.raid-helper-current-card-meta span{white-space:nowrap}.raid-helper-current-card-status{margin-top:9px}.raid-helper-current-card-counts{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:12px}.raid-helper-current-card-count{display:flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid rgba(148,163,184,.17);border-radius:7px;background:rgba(15,23,42,.55);color:#cbd5e1;font-size:11px;font-weight:850}.raid-helper-current-card-count.p0{border-color:rgba(168,85,247,.36);background:rgba(88,28,135,.16);color:#e9d5ff}.raid-helper-current-card-count b{font-size:17px;color:#fff}.raid-helper-current-card-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;position:relative;z-index:1}.raid-helper-current-card-actions .small-btn{min-height:38px}.raid-helper-current-card .raid-select-checkbox{width:20px;height:20px;margin:0;accent-color:#8b5cf6}
 @media(max-width:1250px){.raid-helper-current-grid{grid-template-columns:repeat(2,minmax(280px,1fr))}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:repeat(4,minmax(150px,1fr))}}
 @media(max-width:760px){.raid-helper-current-toolbar{grid-template-columns:1fr}.raid-helper-current-filter-stack{justify-items:start}.raid-helper-current-filter-stack .po-signup-filter-row{justify-content:flex-start}.raid-helper-current-grid{grid-template-columns:1fr}.raid-helper-current-card{grid-template-columns:86px minmax(0,1fr);min-height:190px}.raid-helper-current-card-image{width:86px;height:112px}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:1fr 1fr}}
 .raid-center-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}
@@ -10953,6 +10953,7 @@ function renderRaidHelperCurrentRaidButton(raid){
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
   const selected = selectedRaidHelperIds.has(raidId);
   const count = Number(raid.signupCount || raid.registrationCount || (Array.isArray(raid.signups) ? raid.signups.length : raid.signups) || 0) || 0;
+  const p0Count = Number(raid.p0SignupCount || 0) || 0;
   const imageKey = key.startsWith("zg-") ? "zg" : key;
   const imageUrl = RAID_IMAGES[imageKey] || RAID_IMAGES.other;
   const raidName = raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid";
@@ -10971,7 +10972,10 @@ function renderRaidHelperCurrentRaidButton(raid){
           <span>PIN ${escapeHtml(raid.playerPin || "-")}</span>
         </div>
         <div class="raid-helper-current-card-status">${statusBadge(statusText)}</div>
-        <div class="raid-helper-current-card-count"><span>👥</span><b>${escapeHtml(String(count))}</b><span>${count === 1 ? "Anmeldung" : "Anmeldungen"}</span></div>
+        <div class="raid-helper-current-card-counts">
+          <div class="raid-helper-current-card-count"><span>👥</span><b>${escapeHtml(String(count))}</b><span>${count === 1 ? "Raidanmeldung" : "Raidanmeldungen"}</span></div>
+          <div class="raid-helper-current-card-count p0"><span>🟣</span><b>${escapeHtml(String(p0Count))}</b><span>${p0Count === 1 ? "P0-Anmeldung" : "P0-Anmeldungen"}</span></div>
+        </div>
       </div>
       <div class="raid-helper-current-card-actions">
         <button class="small-btn primary" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">Öffnen</button>
