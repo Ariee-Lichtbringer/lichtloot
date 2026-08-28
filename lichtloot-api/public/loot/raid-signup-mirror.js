@@ -88,6 +88,19 @@
     const button=document.querySelector(".plundermeister-login-btn"),raids=document.getElementById("lootSidebarCurrentRaids");
     if(button&&raids&&!raids.querySelector(".loot-sidebar-raids-loading")&&button.parentElement!==raids){button.classList.add("loot-sidebar-plundermeister");raids.appendChild(button);}
   }
+  function compactLootReleaseSummary(){
+    const box=document.getElementById("selectedCharacterPoReleases");
+    if(!box)return;
+    const raidKey=String([...document.body.classList].find(name=>name.startsWith("raid-"))||"").slice(5).toUpperCase();
+    const aliases={NAXX:["NAXX","NAXXRAMAS"],MC:["MC","MOLTEN CORE"],BWL:["BWL","BLACKWING LAIR"],AQ40:["AQ40","AHN'QIRAJ 40"],AQ20:["AQ20","AHN'QIRAJ 20"],ZG:["ZG","ZUL GURUB"],ONY:["ONY","ONYXIA"]}[raidKey]||[raidKey];
+    box.querySelectorAll(".loot-release-list").forEach(list=>{
+      const chips=[...list.querySelectorAll(".loot-release-chip")];
+      chips.forEach(chip=>chip.classList.toggle("loot-release-current",aliases.some(alias=>String(chip.textContent||"").trim().toUpperCase().startsWith(alias))));
+    });
+    const titles=[...box.querySelectorAll(".loot-release-title")];
+    const releaseTitle=titles.find(title=>!title.classList.contains("loot-attendance-title"));
+    if(releaseTitle)releaseTitle.textContent="P0-Freigabe";
+  }
   function renderActiveCharacterPanel(){
     const panel=document.getElementById("lootActiveCharacterPanel");
     if(!panel) return;
@@ -298,7 +311,7 @@
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
   function init(){mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
-  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();bindPageCharacterSync();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();refreshPageSignupState();autoSelectRaidCharacter();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();bindPageCharacterSync();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();compactLootReleaseSummary();refreshPageSignupState();autoSelectRaidCharacter();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 
 /* Raidregeln direkt im Inhaltsbereich der Lootseite anzeigen. */
