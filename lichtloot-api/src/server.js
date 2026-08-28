@@ -27900,11 +27900,55 @@ app.get("/api/apps-script", async (req, res, next) => {
 
     if (action === "getActiveRaids" || action === "lichtbotGetActiveRaids") {
       const historyDays = action === "lichtbotGetActiveRaids" ? 0 : 1;
+      await ensurePoPostEntriesSchema();
       const result = await query(
         `with clock as (
            select timezone('Europe/Berlin', now())::date as local_today
          )
          select r.*,
+                (
+                  (select count(*) from raid_signups rs where rs.raid_id = r.id)
+                  +
+                  (select count(*) from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id)
+                )::int as signup_count,
+                (
+                  select jsonb_build_object(
+                    'signed', count(*) filter (where signup_status in ('signed','active','aktiv','angemeldet','dabei','yes','confirmed','bestaetigt','bestätigt')),
+                    'bench', count(*) filter (where signup_status in ('bench','bank','ersatz')),
+                    'late', count(*) filter (where signup_status in ('late','spät','spaet','verspätet','verspaetet')),
+                    'tentative', count(*) filter (where signup_status in ('tentative','vorläufig','vorlaeufig','vielleicht')),
+                    'absent', count(*) filter (where signup_status in ('absent','abwesend','declined','rejected','nein','abgemeldet')),
+                    'other', count(*) filter (where signup_status not in (
+                      'signed','active','aktiv','angemeldet','dabei','yes','confirmed','bestaetigt','bestätigt',
+                      'bench','bank','ersatz','late','spät','spaet','verspätet','verspaetet',
+                      'tentative','vorläufig','vorlaeufig','vielleicht',
+                      'absent','abwesend','declined','rejected','nein','abgemeldet'
+                    ))
+                  )
+                  from (
+                    select lower(coalesce(rs.status, 'signed')) as signup_status from raid_signups rs where rs.raid_id = r.id
+                    union all
+                    select lower(coalesce(res.status, 'signed')) as signup_status from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id
+                  ) signup_rows
+                ) as signup_counts,
+                (
+                  select count(*)::int
+                  from (
+                    select concat(coalesce(nullif(lower(ppe.discord_user_id), ''), lower(ppe.player_name)), '|', lower(coalesce(ppe.item_name, ''))) as signup_key
+                    from po_post_entries ppe
+                    where ppe.guild_id = r.guild_id
+                      and ppe.archived_at is null
+                      and not coalesce(ppe.config_only, false)
+                      and coalesce(ppe.player_name, '') <> ''
+                      and (
+                        ppe.raid_id in (r.id::text, coalesce(r.external_raid_id, ''))
+                        or ppe.raid_pin in (r.id::text, coalesce(r.external_raid_id, ''), coalesce(r.raid_pin, ''))
+                      )
+                    union
+                    select concat(coalesce(nullif(lower(pds.discord_user_id), ''), lower(pds.player_name)), '|', lower(coalesce(pds.item_name, ''))) as signup_key
+                    from p0_discord_signups pds where pds.guild_id = r.guild_id and pds.raid_id = r.id
+                  ) p0_signups
+                ) as p0_signup_count,
                 (
                   select count(*)
                   from p0plus_points pp
