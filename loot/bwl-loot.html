@@ -3825,6 +3825,31 @@ async function savePrio(){
     }
 
     await refreshAfterPrioSave();
+    // Die API hat die Speicherung bestätigt. Ein eventuell noch gecachter
+    // Listenabruf darf den Eintrag deshalb nicht als lokalen Entwurf zeigen.
+    const confirmedPrio={
+      id:result.prioId || "",
+      Spieler:player,
+      Server:server,
+      Klasse:playerClass,
+      P1:p1,
+      P2:p2,
+      P3:p3,
+      P0Selected:isP0Plus ? "ja" : "nein",
+      P0Plus:isP0Plus ? "ja" : "nein",
+      P0Item:isP0Plus ? p1 : ""
+    };
+    const confirmedSignature=prioDraftSignature(confirmedPrio);
+    window.lastSavedPrioSignature=confirmedSignature;
+    const serverConfirmed=(currentPublishedPrios||[]).some(prio=>
+      samePrioCharacter(prio,confirmedPrio) && prioDraftSignature(prio)===confirmedSignature
+    );
+    if(!serverConfirmed){
+      currentPublishedPrios=sortPriosWithOwnFirst([
+        confirmedPrio,
+        ...(currentPublishedPrios||[]).filter(prio=>!samePrioCharacter(prio,confirmedPrio))
+      ]);
+    }
     renderCurrentPrios();
 
   }catch(error){
