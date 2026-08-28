@@ -3863,6 +3863,8 @@ function normalizeRaidRow(row) {
     raidImageUrl: row.raid_image_url || "",
     imageUrl: row.raid_image_url || "",
     signupCounts: row.signup_counts || null,
+    signupCount: Number(row.signup_count || 0),
+    p0SignupCount: Number(row.p0_signup_count || 0),
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
     playerLink: row.player_link || "",
@@ -12773,6 +12775,7 @@ async function enqueueRaidAnnouncementRefreshAfterPrioChange(guildId, raid, sour
 async function getGuildLeadershipOverview(guildId, params) {
   requireMasterCode(params.masterCode);
   await ensurePlayerRoleSchema();
+  await ensurePoPostEntriesSchema();
   const repairedLogins = await repairEmptyCrossGuildPlayerLogins(guildId);
   if (repairedLogins) {
     console.log(`${repairedLogins} leer(e) gildenuebergreifende SpielerLogin(s) repariert.`);
@@ -12783,6 +12786,36 @@ async function getGuildLeadershipOverview(guildId, params) {
 
   const raidsResult = await query(
     `select r.*,
+            (
+              (select count(*) from raid_signups rs where rs.raid_id = r.id)
+              +
+              (select count(*) from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id)
+            )::int as signup_count,
+            (
+              select count(*)::int
+              from (
+                select concat(
+                  coalesce(nullif(lower(ppe.discord_user_id), ''), lower(ppe.player_name)),
+                  '|', lower(coalesce(ppe.item_name, ''))
+                ) as signup_key
+                from po_post_entries ppe
+                where ppe.guild_id = r.guild_id
+                  and ppe.archived_at is null
+                  and not coalesce(ppe.config_only, false)
+                  and coalesce(ppe.player_name, '') <> ''
+                  and (
+                    ppe.raid_id in (r.id::text, coalesce(r.external_raid_id, ''))
+                    or ppe.raid_pin in (r.id::text, coalesce(r.external_raid_id, ''), coalesce(r.raid_pin, ''))
+                  )
+                union
+                select concat(
+                  coalesce(nullif(lower(pds.discord_user_id), ''), lower(pds.player_name)),
+                  '|', lower(coalesce(pds.item_name, ''))
+                ) as signup_key
+                from p0_discord_signups pds
+                where pds.guild_id = r.guild_id and pds.raid_id = r.id
+              ) p0_signups
+            ) as p0_signup_count,
             (
               select count(*)
               from p0plus_points pp
@@ -22294,7 +22327,9 @@ async function getManagedP0OnlyEvents(guildId, { historyDays = 0 } = {}) {
     `with clock as (
        select timezone('Europe/Berlin', now())::date as local_today
      )
-     select e.*
+     select e.*,
+            0::int as signup_count,
+            (select count(*)::int from p0_only_signups s where s.guild_id=e.guild_id and s.event_id=e.id) as p0_signup_count
      from p0_only_events e
      cross join clock
      where e.guild_id=$1
