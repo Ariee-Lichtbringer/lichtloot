@@ -9272,7 +9272,30 @@ async function addManualPoPostEntry({ guildId, query: params }) {
       config.raid, config.title, character.name, itemName, character.class_name,
       config.raid_pin, config.raid_date, config.raid_time, config.mode]
   );
-  return { success: true, saved: result.rowCount || 0, player: character.name, item: itemName };
+  let discordRefresh = { success: true, skipped: true, reason: "entry_already_exists" };
+  if (result.rowCount) {
+    const linkedRaid = await findP0DiscordRaid(guildId, {
+      raidId: clean(config.raid_id || postKey),
+      raid: config.raid,
+      raidDate: config.raid_date,
+      raidTime: config.raid_time,
+      raidPin: config.raid_pin,
+      prioPin: config.raid_pin,
+      playerPin: config.raid_pin
+    }).catch(() => null);
+    discordRefresh = await enqueueP0PostRefreshForRaid(
+      guildId,
+      linkedRaid,
+      "po_manual_entry_added"
+    ).catch(error => ({ success: false, error: error.message || String(error) }));
+  }
+  return {
+    success: true,
+    saved: result.rowCount || 0,
+    player: character.name,
+    item: itemName,
+    discordRefresh
+  };
 }
 
 async function getPoPostEntries({ guildId, query: params }) {
@@ -22545,6 +22568,7 @@ async function getP0DiscordSignupList({ guildId, query: params }) {
 
 async function getP0DiscordSignupContext({ guildId, query: params }) {
   await ensureRaidSchema();
+  await ensurePoPostEntriesSchema();
   await ensureGuildPoItemsSchema();
   await ensureUnlinkedP0PlusSchema();
   const configuredPoItemsResult = await query(
@@ -22644,6 +22668,35 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
       [guildId, linkedP0OnlyEvent.id]
     )
     : { rows: [] };
+  const raidIdentityValues = Array.from(new Set([
+    clean(raid.id),
+    clean(raid.external_raid_id),
+    clean(raid.external_p0_id),
+    clean(params.raidId),
+    clean(params.lichtlootRaidId)
+  ].filter(Boolean)));
+  const raidPinValues = Array.from(new Set([
+    clean(raid.raid_pin),
+    clean(raid.player_link),
+    clean(raid.player_pin),
+    clean(params.raidPin),
+    clean(params.prioPin),
+    clean(params.playerPin)
+  ].filter(Boolean)));
+  const poPostSignupResult = await query(
+    `select *
+     from po_post_entries
+     where guild_id = $1
+       and archived_at is null
+       and coalesce(config_only, false) = false
+       and (
+         raid_id = any($2::text[])
+         or raid_pin = any($3::text[])
+         or post_key = any($2::text[])
+       )
+     order by updated_at asc, created_at asc`,
+    [guildId, raidIdentityValues, raidPinValues]
+  );
   const prioResult = raid.p0_only ? { rows: [] } : await query(
     `select
        pr.id,
@@ -22694,12 +22747,42 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   );
   const allSignupDatabaseRows = [...signupResult.rows, ...linkedP0OnlySignupResult.rows];
   const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
+  const normalizedRaid = normalizeRaidRow(raid);
+  const poPostSignupRows = poPostSignupResult.rows.map(row => ({
+    id: row.id,
+    signupId: row.id,
+    raidId: raidPublicId(raid),
+    raid: normalizeRaidType(row.raid || raid.raid_type).toUpperCase(),
+    raidName: normalizedRaid.raidName,
+    raidDate: row.raid_date || normalizedRaid.raidDate,
+    raidTime: row.raid_time || normalizedRaid.raidTime,
+    prioPin: row.raid_pin || normalizedRaid.playerPin || normalizedRaid.prioPin || "",
+    player: row.player_name || "",
+    char: row.player_name || "",
+    server: row.server || "",
+    item: normalizePoItemName(row.item_name || ""),
+    itemName: normalizePoItemName(row.item_name || ""),
+    itemId: row.item_game_id || "",
+    discordUserId: row.discord_user_id || "",
+    discordName: row.discord_name || "LichtLoot",
+    discordChannelId: row.target_channel_id || row.source_channel_id || "",
+    discordMessageId: row.discord_message_id || "",
+    approvalStatus: row.approval_status || "pending",
+    approved: row.approval_status === "approved",
+    rejected: row.approval_status === "rejected",
+    approvedByDiscordName: row.approved_by || "",
+    approvedAt: row.approved_at || "",
+    updatedAt: row.updated_at,
+    createdAt: row.po_created_at || row.created_at,
+    p0PlusPoints: 0,
+    entrySource: "po_post",
+    storage: "po_post_entries"
+  }));
   const signupByPlayerItem = new Map();
   for (const signup of signupRows) {
     const key = `${clean(signup.player).toLowerCase()}|${clean(signup.server).toLowerCase()}|${itemLookupKey(signup.item)}`;
     signupByPlayerItem.set(key, signup);
   }
-  const normalizedRaid = normalizeRaidRow(raid);
   const lichtlootP0Rows = prioResult.rows
     .filter(row => {
       const meta = commentMeta(row.comment);
@@ -22749,9 +22832,21 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     });
 
   const combinedSignupRows = new Map();
-  for (const signup of [...signupRows, ...lichtlootP0Rows]) {
+  for (const signup of [...signupRows, ...lichtlootP0Rows, ...poPostSignupRows]) {
     const key = `${clean(signup.player).toLowerCase()}|${clean(signup.server).toLowerCase()}|${itemLookupKey(signup.item)}`;
     if (!clean(signup.player) || !clean(signup.item)) continue;
+    // Ältere Leitungs-Einträge haben keinen Server. Sie sind trotzdem
+    // dieselbe Anmeldung und ersetzen den älteren Snapshot nach Spieler+Item.
+    if (!clean(signup.server)) {
+      const playerKey = clean(signup.player).toLowerCase();
+      const itemKey = itemLookupKey(signup.item);
+      for (const existingKey of combinedSignupRows.keys()) {
+        const [existingPlayer, , existingItem] = existingKey.split("|");
+        if (existingPlayer === playerKey && existingItem === itemKey) {
+          combinedSignupRows.delete(existingKey);
+        }
+      }
+    }
     combinedSignupRows.set(key, signup);
   }
 
@@ -22910,7 +23005,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
                approved_by_discord_name=null, approved_at=null, updated_at=now()
          returning *`,
         [guildId, raid.id, character.id, item.id, character.name, character.server, item.name,
-          discordUserId, clean(params.discordName), clean(params.discordChannelId), clean(params.discordMessageId)]
+          discordUserId, clean(params.discordName), clean(params.discordChannelId || raid.discord_channel_id), clean(params.discordMessageId || raid.discord_message_id)]
       );
       const itemSignupResult = await p0Query(
         `select s.*, e.external_p0_id as raid_public_id, e.raid_type, e.raid_name, e.raid_date, e.raid_time, e.player_pin
@@ -22983,8 +23078,8 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         item.name,
         discordUserId,
         clean(params.discordName),
-        clean(params.discordChannelId),
-        clean(params.discordMessageId)
+        clean(params.discordChannelId || raid.discord_channel_id),
+        clean(params.discordMessageId || raid.discord_message_id)
       ]
     );
     const itemSignupResult = await client.query(
