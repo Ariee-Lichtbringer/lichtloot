@@ -10294,6 +10294,8 @@ function prioActionCellHtml(prio,index,ownRow){
 }
 
 function getLiveDraftPrio(){
+  // Automatisch geladene gespeicherte Werte sind kein neuer Entwurf.
+  if(window.prioDraftDirty !== true) return null;
   if(currentPublishedMode) return null;
 
   const player=document.getElementById("playerName")?.value.trim() || "";
@@ -10665,7 +10667,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
   setTimeout(lichtlootFilterCurrentGuildP0Stores,0);
 })();
 </script>
-<script src="raid-signup-mirror.js?v=20260828-1335"></script>
+<script src="raid-signup-mirror.js?v=20260828-1705"></script>
 <script src="../pin-visibility.js"></script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260814-0015"></script>
