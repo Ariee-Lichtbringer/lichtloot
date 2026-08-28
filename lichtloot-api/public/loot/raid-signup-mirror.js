@@ -93,15 +93,58 @@
       guildButton.type="button";
       guildButton.className="loot-sidebar-guild-switch";
       guildButton.textContent="LootGilde wechseln";
-      guildButton.onclick=()=>{
-        try{sessionStorage.setItem("lichtlootStartMenuAction","account");}catch(error){}
-        const guild=typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot";
-        const target=new URL("../start.html",window.location.href);
-        if(guild)target.searchParams.set("guild",guild);
-        window.location.assign(target.href);
-      };
+      guildButton.onclick=openLootGuildSwitchPopup;
       raids.appendChild(guildButton);
     }
+  }
+
+  function storedLoginForGuild(slug){
+    const key=`lichtlootPlayerPin_${String(slug||"").trim().toLowerCase()}`;
+    try{return String(sessionStorage.getItem(key)||localStorage.getItem(key)||"").trim();}catch(error){return "";}
+  }
+  function closeLootGuildSwitchPopup(){document.getElementById("lootGuildSwitchBackdrop")?.remove();}
+  async function openSelectedLootGuild(slug){
+    const feedback=document.getElementById("lootGuildSwitchFeedback"),button=document.getElementById("lootGuildSwitchConfirm");
+    if(!slug)return;
+    if(button)button.disabled=true;
+    if(feedback)feedback.textContent="Aktive Raids werden geladen …";
+    try{
+      const result=await apiJsonp({action:"getActiveRaids",guild:slug,t:Date.now()});
+      if(!result?.success)throw new Error(result?.error||"Raids konnten nicht geladen werden.");
+      const today=new Date();today.setHours(0,0,0,0);
+      const rows=[...(result.allRaids||result.raids||result.entries||result.activeRaids||[])]
+        .map(row=>({row,key:sidebarRaidKey(row.raid||row.raidName||row.name||row.raidId||row.id)}))
+        .filter(item=>item.key&&(!sidebarRaidDate(item.row)||sidebarRaidTimestamp(item.row)>=today.getTime()))
+        .sort((a,b)=>sidebarRaidTimestamp(a.row)-sidebarRaidTimestamp(b.row));
+      if(!rows.length)throw new Error("In dieser LootGilde gibt es aktuell keinen offenen Raid.");
+      const selected=rows[0],freeKeys=["other","scholomance","lbrs","ubrs","brd","strath-live"],isFree=freeKeys.includes(selected.key);
+      const target=new URL(isFree?"bwl-loot.html":`${selected.key}-loot.html`,window.location.href);
+      target.searchParams.set("guild",slug);
+      if(isFree){target.searchParams.set("signupOnly","1");target.searchParams.set("raidId",String(selected.row.raidId||selected.row.id||sidebarRaidPin(selected.row)||""));}
+      else if(sidebarRaidPin(selected.row))target.searchParams.set("pin",sidebarRaidPin(selected.row));
+      window.location.assign(target.href);
+    }catch(error){if(feedback)feedback.textContent=error.message||"LootGilde konnte nicht geöffnet werden.";if(button)button.disabled=false;}
+  }
+  async function openLootGuildSwitchPopup(){
+    closeLootGuildSwitchPopup();
+    const backdrop=document.createElement("div");
+    backdrop.id="lootGuildSwitchBackdrop";
+    backdrop.className="loot-guild-switch-backdrop";
+    backdrop.innerHTML='<section class="loot-guild-switch-modal" role="dialog" aria-modal="true" aria-labelledby="lootGuildSwitchTitle"><button class="loot-guild-switch-close" type="button" aria-label="Schließen">×</button><h2 id="lootGuildSwitchTitle">LootGilde wechseln</h2><p>Es werden nur LootGilden angezeigt, für die in diesem Browser ein SpielerLogin gespeichert ist.</p><select id="lootGuildSwitchSelect"><option value="">Gilden werden geladen …</option></select><button id="lootGuildSwitchConfirm" type="button" disabled>LootGilde öffnen</button><div id="lootGuildSwitchFeedback" class="loot-guild-switch-feedback"></div></section>';
+    document.body.appendChild(backdrop);
+    backdrop.querySelector(".loot-guild-switch-close").onclick=closeLootGuildSwitchPopup;
+    backdrop.onclick=event=>{if(event.target===backdrop)closeLootGuildSwitchPopup();};
+    const select=backdrop.querySelector("#lootGuildSwitchSelect"),confirm=backdrop.querySelector("#lootGuildSwitchConfirm"),feedback=backdrop.querySelector("#lootGuildSwitchFeedback");
+    confirm.onclick=()=>openSelectedLootGuild(select.value);
+    try{
+      const result=await apiJsonp({action:"listGuilds",t:Date.now()});
+      const current=String(typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot").toLowerCase();
+      const guilds=(result?.guilds||[]).filter(guild=>{const slug=String(guild?.slug||"").toLowerCase();return storedLoginForGuild(slug)||(slug===current&&typeof getStoredLichtLootPlayerPin==="function"&&getStoredLichtLootPlayerPin());});
+      select.innerHTML=guilds.length?'<option value="">LootGilde auswählen</option>'+guilds.map(guild=>`<option value="${esc(guild.slug)}"${String(guild.slug).toLowerCase()===current?" selected":""}>${esc(guild.name||guild.lootName||guild.slug)}</option>`).join(""):'<option value="">Keine weiteren LootGilden gefunden</option>';
+      confirm.disabled=!select.value;
+      select.onchange=()=>{confirm.disabled=!select.value;feedback.textContent="";};
+      if(!guilds.length)feedback.textContent="In diesem Browser ist kein SpielerLogin für eine weitere LootGilde gespeichert.";
+    }catch(error){select.innerHTML='<option value="">Gilden konnten nicht geladen werden</option>';feedback.textContent=error.message||"Gilden konnten nicht geladen werden.";}
   }
 
   function installProtectedPrioSearch(){
