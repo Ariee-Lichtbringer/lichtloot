@@ -12792,6 +12792,28 @@ async function getGuildLeadershipOverview(guildId, params) {
               (select count(*) from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id)
             )::int as signup_count,
             (
+              select jsonb_build_object(
+                'signed', count(*) filter (where signup_status in ('signed','active','aktiv','angemeldet','dabei','yes','confirmed','bestaetigt','bestätigt')),
+                'bench', count(*) filter (where signup_status in ('bench','bank','ersatz')),
+                'late', count(*) filter (where signup_status in ('late','spät','spaet','verspätet','verspaetet')),
+                'tentative', count(*) filter (where signup_status in ('tentative','vorläufig','vorlaeufig','vielleicht')),
+                'absent', count(*) filter (where signup_status in ('absent','abwesend','declined','rejected','nein','abgemeldet')),
+                'other', count(*) filter (where signup_status not in (
+                  'signed','active','aktiv','angemeldet','dabei','yes','confirmed','bestaetigt','bestätigt',
+                  'bench','bank','ersatz','late','spät','spaet','verspätet','verspaetet',
+                  'tentative','vorläufig','vorlaeufig','vielleicht',
+                  'absent','abwesend','declined','rejected','nein','abgemeldet'
+                ))
+              )
+              from (
+                select lower(coalesce(rs.status, 'signed')) as signup_status
+                from raid_signups rs where rs.raid_id = r.id
+                union all
+                select lower(coalesce(res.status, 'signed')) as signup_status
+                from raid_external_signups res where res.guild_id = r.guild_id and res.raid_id = r.id
+              ) signup_rows
+            ) as signup_counts,
+            (
               select count(*)::int
               from (
                 select concat(
