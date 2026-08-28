@@ -2817,6 +2817,7 @@ html,body{max-width:100%;overflow-x:hidden}
 .dashboard-left,.dashboard-right,.raid-instance-section,.raid-card-group,.instance-grid,.instance-card{min-width:0}
 .instance-grid{grid-template-columns:repeat(auto-fill,340px)!important;justify-content:start}
 .instance-card{width:340px;min-height:214px!important;grid-template-columns:max-content minmax(0,1fr)!important}
+.start-raid-signups{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}.start-raid-signup-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid #334155;border-radius:999px;background:rgba(15,23,42,.78);color:#cbd5e1;font-size:10px;font-weight:900}.start-raid-signup-chip.total{border-color:rgba(148,163,184,.38);color:#f8fafc}.start-raid-signup-chip.p0{border-color:rgba(168,85,247,.55);background:rgba(88,28,135,.22);color:#e9d5ff}.start-raid-signup-chip.signed{border-color:rgba(34,197,94,.5);color:#bbf7d0}.start-raid-signup-chip.bench{border-color:rgba(245,158,11,.5);color:#fde68a}.start-raid-signup-chip.late{border-color:rgba(249,115,22,.56);color:#fed7aa}.start-raid-signup-chip.tentative{border-color:rgba(59,130,246,.5);color:#bfdbfe}.start-raid-signup-chip.absent{border-color:rgba(239,68,68,.55);color:#fecaca}
 .raid-card-image-actions{width:max-content;justify-items:start}
 .raid-card-image-actions button{width:max-content!important;min-width:0;padding:5px 9px;border-color:rgba(var(--gold-rgb),.72);background:linear-gradient(135deg,rgba(var(--gold-rgb),.34),rgba(var(--blue-rgb),.32));color:#fff;white-space:nowrap}
 .start-current-guild-switch{justify-content:flex-start}
@@ -4583,6 +4584,29 @@ function renderStartDashboard(entries){
   }
 }
 
+function renderStartRaidSignupSummary(entry){
+  const total=Number(entry?.signupCount || 0) || 0;
+  const p0Total=Number(entry?.p0SignupCount || 0) || 0;
+  const counts=entry?.signupCounts && typeof entry.signupCounts === "object" ? entry.signupCounts : {};
+  const definitions=[
+    ["signed","✓","Angemeldet"],
+    ["bench","⌛","Bank"],
+    ["late","🕒","Spät"],
+    ["tentative","?","Vorläufig"],
+    ["absent","✕","Abwesend"],
+    ["other","•","Sonstige"]
+  ];
+  const statusChips=definitions.map(([key,icon,label])=>{
+    const value=Number(counts[key] || 0) || 0;
+    return value ? '<span class="start-raid-signup-chip '+key+'">'+icon+' '+safeHtml(String(value))+' '+label+'</span>' : '';
+  }).join('');
+  return '<div class="start-raid-signups">'+
+    '<span class="start-raid-signup-chip total">👥 '+safeHtml(String(total))+' Raid</span>'+
+    '<span class="start-raid-signup-chip p0">🟣 '+safeHtml(String(p0Total))+' P0</span>'+
+    statusChips+
+  '</div>';
+}
+
 function renderUpcomingRaidCards(list){
   const container=document.getElementById("upcomingRaidCards");
   if(!container) return;
@@ -4616,6 +4640,7 @@ function renderUpcomingRaidCards(list){
         (ownSignup?'<p class="instance-status">Angemeldet mit: '+safeHtml(ownSignup.character)+'</p>':'')+
         (isOther?'':'<p class="dash-prio-pin">PrioPIN: '+safeHtml(pin || "-")+'</p><p class="instance-status">'+safeHtml(dashboardPrioLabel(entry))+'</p>')+
       '</div>'+
+      renderStartRaidSignupSummary(entry)+
       '<button class="raid-btn loot-btn" onclick="openUpcomingRaidCard('+index+')">'+safeHtml(buttonLabel)+'</button>'+
     '</article>';
   }).join("");
