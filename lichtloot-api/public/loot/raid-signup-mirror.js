@@ -167,20 +167,24 @@
     const excluded=new Set(["absent","abgemeldet","declined"]),seen=new Set();
     return (prioSignupSummaryRows||[]).filter(row=>!excluded.has(String(row?.status||row?.signupStatus||"").toLowerCase())).map(row=>String(row?.player||row?.char||row?.playerName||row?.characterName||row?.name||"").trim()).filter(name=>{const key=norm(name);if(!key||seen.has(key))return false;seen.add(key);return true;});
   }
+  function activeRaidMissingSignupRows(){
+    const prioNames=new Set((typeof currentPublishedPrios!=="undefined"?currentPublishedPrios:[]).map(prio=>norm(prio?.Spieler||prio?.player||prio?.char)).filter(Boolean)),seen=new Set(),excluded=new Set(["absent","abgemeldet","declined"]);
+    return (prioSignupSummaryRows||[]).filter(row=>{const name=String(row?.player||row?.char||row?.playerName||row?.characterName||row?.name||"").trim(),key=norm(name);if(!key||seen.has(key)||excluded.has(String(row?.status||row?.signupStatus||"").toLowerCase())||prioNames.has(key))return false;seen.add(key);return true;});
+  }
   function renderPrioSignupSummary(){
     const existing=document.getElementById("lootPrioSignupSummary");
     if(!prioSignupSummaryEnabled){existing?.remove();return;}
     const title=document.querySelector("#prioCard h2");
     if(!title)return;
-    const signupNames=activeRaidSignupNames(),prioNames=new Set((typeof currentPublishedPrios!=="undefined"?currentPublishedPrios:[]).map(prio=>norm(prio?.Spieler||prio?.player||prio?.char)).filter(Boolean)),missing=signupNames.filter(name=>!prioNames.has(norm(name)));
-    const signature=`${signupNames.join("|")}:${missing.join("|")}`;
+    const missingRows=activeRaidMissingSignupRows();
+    const signature=missingRows.map(row=>[row?.player||row?.char,row?.className||row?.class,row?.note||row?.spec].join("|")).join(":");
     if(existing?.dataset.signature===signature)return;
     existing?.remove();
     const box=document.createElement("section");
     box.id="lootPrioSignupSummary";
     box.className="loot-prio-signup-summary";
     box.dataset.signature=signature;
-    box.innerHTML=`<div><strong>Angemeldet (${signupNames.length})</strong><span>${signupNames.length?signupNames.map(esc).join(", "):"Noch keine Charaktere angemeldet."}</span></div><div class="${missing.length?"has-missing":"complete"}"><strong>Fehlende Prioeinträge (${missing.length})</strong><span>${missing.length?missing.map(esc).join(", "):"Alle angemeldeten Charaktere haben eine Prio."}</span></div>`;
+    box.innerHTML=`<div class="${missingRows.length?"has-missing":"complete"}"><strong>Fehlende Prioeinträge (${missingRows.length})</strong><span class="loot-missing-prio-chips">${missingRows.length?missingRows.map(row=>{const name=String(row?.player||row?.char||row?.playerName||row?.characterName||row?.name||""),className=String(row?.className||row?.class||""),spec=specializationInfo(row);return `<span class="loot-missing-prio-chip"><img src="${specIconUrl(spec?.icon||"inv_misc_questionmark")}" alt=""><span><b style="color:${characterColor(className)}">${esc(name)}</b><small>${esc(spec?.label||className||"Skillung unbekannt")}</small></span></span>`;}).join(""):"Alle angemeldeten Charaktere haben eine Prio."}</span></div>`;
     title.insertAdjacentElement("afterend",box);
   }
   async function loadPrioSignupSummary(){
