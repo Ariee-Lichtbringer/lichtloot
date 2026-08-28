@@ -2608,6 +2608,20 @@ tr.selected-row td{
 .raid-helper-tools{margin:0 0 14px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:rgba(2,6,23,.28)}
 .raid-helper-tools>summary{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;color:#cbd5e1;font-size:12px;font-weight:900;cursor:pointer;list-style:none}.raid-helper-tools>summary::-webkit-details-marker{display:none}.raid-helper-tools>summary::after{content:"anzeigen +";color:#7dd3fc}.raid-helper-tools[open]>summary::after{content:"schließen −"}
 .raid-helper-tools .raid-helper-tabs{padding:0 10px 10px;margin:0;grid-template-columns:repeat(3,minmax(0,1fr))}
+.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:repeat(8,minmax(120px,1fr));overflow-x:auto}
+.raid-helper-tools .raid-helper-tab{min-height:54px;padding:8px}
+.raid-helper-tools .raid-helper-tab-copy strong{font-size:12px}
+.raid-helper-tools .raid-helper-tab-copy span{font-size:10px}
+.raid-helper-current-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:center;margin:0 0 12px;padding:12px;border:1px solid rgba(148,163,184,.16);border-radius:10px;background:rgba(2,6,23,.34)}
+.raid-helper-current-search{position:relative;min-width:0}.raid-helper-current-search::before{content:"⌕";position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#7dd3fc;font-size:18px;pointer-events:none}.raid-helper-current-search input{width:100%;min-height:42px;padding-left:38px;border-color:rgba(96,165,250,.3);background:rgba(15,23,42,.72)}
+.raid-helper-current-filter-stack{display:grid;gap:8px;justify-items:end}.raid-helper-current-filter-stack .po-signup-filter-row{justify-content:flex-end}
+.raid-helper-current-grid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:12px}
+.raid-helper-current-card{display:grid;grid-template-columns:116px minmax(0,1fr);gap:14px;min-height:214px;padding:14px;border:1px solid rgba(148,163,184,.18);border-left:4px solid var(--raid-color,#a78bfa);border-radius:12px;background:linear-gradient(145deg,rgba(15,23,42,.82),rgba(2,6,23,.7));box-shadow:0 12px 30px rgba(0,0,0,.16);color:#f8fafc;position:relative;overflow:hidden}
+.raid-helper-current-card::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 12% 8%,color-mix(in srgb,var(--raid-color,#a78bfa) 14%,transparent),transparent 45%);pointer-events:none}
+.raid-helper-current-card-image{width:116px;height:146px;border-radius:10px;object-fit:cover;border:1px solid rgba(var(--gold-rgb),.32);box-shadow:0 10px 24px rgba(0,0,0,.34);position:relative;z-index:1}
+.raid-helper-current-card-body{display:flex;min-width:0;flex-direction:column;position:relative;z-index:1}.raid-helper-current-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.raid-helper-current-card-head h4{margin:0;color:#f8fafc;font-size:16px;line-height:1.25}.raid-helper-current-card-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;color:#bfdbfe;font-size:11px;font-weight:850}.raid-helper-current-card-meta span{white-space:nowrap}.raid-helper-current-card-status{margin-top:9px}.raid-helper-current-card-count{display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:12px;color:#cbd5e1;font-size:12px;font-weight:850}.raid-helper-current-card-count b{font-size:18px;color:#fff}.raid-helper-current-card-actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;position:relative;z-index:1}.raid-helper-current-card-actions .small-btn{min-height:38px}.raid-helper-current-card .raid-select-checkbox{width:20px;height:20px;margin:0;accent-color:#8b5cf6}
+@media(max-width:1250px){.raid-helper-current-grid{grid-template-columns:repeat(2,minmax(280px,1fr))}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:repeat(4,minmax(150px,1fr))}}
+@media(max-width:760px){.raid-helper-current-toolbar{grid-template-columns:1fr}.raid-helper-current-filter-stack{justify-items:start}.raid-helper-current-filter-stack .po-signup-filter-row{justify-content:flex-start}.raid-helper-current-grid{grid-template-columns:1fr}.raid-helper-current-card{grid-template-columns:86px minmax(0,1fr);min-height:190px}.raid-helper-current-card-image{width:86px;height:112px}.raid-helper-tools[open] .raid-helper-tabs{grid-template-columns:1fr 1fr}}
 .raid-center-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;background:rgba(2,6,23,.78);backdrop-filter:blur(7px)}
 .raid-center-modal{width:min(760px,100%);max-height:92vh;overflow:auto;border:1px solid rgba(56,189,248,.38);border-radius:16px;background:linear-gradient(145deg,#111c32,#060c19);box-shadow:0 28px 80px rgba(0,0,0,.55);padding:20px}
 .raid-center-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}.raid-center-head h2{margin:0;color:#f8fafc}.raid-center-head p{margin:5px 0 0;color:#94a3b8}.raid-center-close{width:38px;height:38px;border:1px solid #334155;border-radius:9px;background:#0f172a;color:#e2e8f0;cursor:pointer}
@@ -5789,14 +5803,19 @@ body.worldbuff-only .master-only{display:none!important}
           <div><h3>Erstellte Raids</h3><span>Raid auswählen und alle Anmeldungen gemeinsam bearbeiten</span></div>
           <button class="small-btn ghost" type="button" onclick="renderRaidHelperCurrentEvents()">Aktualisieren</button>
         </div>
-        <div class="po-signup-list-toolbar" aria-label="Aktuelle Raids filtern">
-          <div class="po-signup-filter-row">
-            <button class="small-btn primary" type="button" data-raid-helper-current-tier="all" onclick="setRaidHelperCurrentTierFilter('all')">Alle</button>
-            <button class="small-btn ghost" type="button" data-raid-helper-current-tier="20" onclick="setRaidHelperCurrentTierFilter('20')">20er</button>
-            <button class="small-btn ghost" type="button" data-raid-helper-current-tier="40" onclick="setRaidHelperCurrentTierFilter('40')">40er</button>
-            <button class="small-btn ghost" type="button" data-raid-helper-current-tier="free" onclick="setRaidHelperCurrentTierFilter('free')">Freie Raids</button>
+        <div class="raid-helper-current-toolbar" aria-label="Aktuelle Raids suchen und filtern">
+          <label class="raid-helper-current-search">
+            <input id="raidHelperCurrentSearch" type="search" aria-label="Raid suchen" placeholder="Raid, Datum, PIN oder Raidlead suchen …" oninput="setRaidHelperCurrentSearch(this.value)">
+          </label>
+          <div class="raid-helper-current-filter-stack">
+            <div class="po-signup-filter-row">
+              <button class="small-btn primary" type="button" data-raid-helper-current-tier="all" onclick="setRaidHelperCurrentTierFilter('all')">Alle</button>
+              <button class="small-btn ghost" type="button" data-raid-helper-current-tier="20" onclick="setRaidHelperCurrentTierFilter('20')">20er</button>
+              <button class="small-btn ghost" type="button" data-raid-helper-current-tier="40" onclick="setRaidHelperCurrentTierFilter('40')">40er</button>
+              <button class="small-btn ghost" type="button" data-raid-helper-current-tier="free" onclick="setRaidHelperCurrentTierFilter('free')">Freie Raids</button>
+            </div>
+            <div id="raidHelperCurrentRaidTabs" class="po-signup-filter-row"></div>
           </div>
-          <div id="raidHelperCurrentRaidTabs" class="po-signup-filter-row"></div>
         </div>
         <div id="raidHelperBulkActions" class="raid-bulk-actions" hidden>
           <strong id="raidHelperBulkSelectionText">0 Raidanmelder ausgewählt</strong>
@@ -10101,6 +10120,7 @@ let raidHelperEditingData = null;
 let raidHelperCurrentSelectedRaidId = "";
 let raidHelperCurrentTierFilter = "all";
 let raidHelperCurrentRaidFilter = "";
+let raidHelperCurrentSearch = "";
 const RAID_HELPER_CURRENT_FILTER_GROUPS = {
   "20":["aq20","zg","zg-mittwoch","zg-prime","zg-late"],
   "40":["naxx","aq40","bwl","mc","ony"],
@@ -10793,7 +10813,21 @@ function raidHelperCurrentRaids(){
       if(raidHelperCurrentTierFilter === "all") return true;
       return (RAID_HELPER_CURRENT_FILTER_GROUPS[raidHelperCurrentTierFilter] || []).includes(key);
     })
+    .filter(raid => {
+      const needle = normalize(raidHelperCurrentSearch);
+      if(!needle) return true;
+      return normalize([
+        raid.raidName, raid.name, raid.raid, raid.raidDate, raid.raidTime,
+        raid.playerPin, raid.prioPin, raid.createdBy, raid.erstelltVon,
+        raid.status, getRaidKey(raid)
+      ].join(" ")).includes(needle);
+    })
     .sort((a,b) => String(a.raidDate || "").localeCompare(String(b.raidDate || "")) || String(a.raidTime || "").localeCompare(String(b.raidTime || "")));
+}
+
+function setRaidHelperCurrentSearch(value){
+  raidHelperCurrentSearch = String(value || "").trim();
+  renderRaidHelperCurrentEvents();
 }
 
 function setRaidHelperCurrentTierFilter(tier){
@@ -10906,10 +10940,8 @@ function renderRaidHelperCurrentEvents(){
     return;
   }
   box.innerHTML = `
-    <div>
-      <div class="raid-helper-current-rail" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px">
-        ${visibleRaids.map(raid => renderRaidHelperCurrentRaidButton(raid)).join("")}
-      </div>
+    <div class="raid-helper-current-grid">
+      ${visibleRaids.map(raid => renderRaidHelperCurrentRaidButton(raid)).join("")}
     </div>
   `;
   updateRaidHelperBulkActions();
@@ -10920,19 +10952,33 @@ function renderRaidHelperCurrentRaidButton(raid){
   const raidId = String(raid.raidId || raid.id || "");
   const active = raidId === String(raidHelperCurrentSelectedRaidId || "");
   const selected = selectedRaidHelperIds.has(raidId);
-  const count = Number(raid.signupCount || raid.signups || 0);
+  const count = Number(raid.signupCount || raid.registrationCount || (Array.isArray(raid.signups) ? raid.signups.length : raid.signups) || 0) || 0;
   const imageKey = key.startsWith("zg-") ? "zg" : key;
   const imageUrl = RAID_IMAGES[imageKey] || RAID_IMAGES.other;
+  const raidName = raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid";
+  const statusText = raid.status || "geschlossen";
   return `
-    <button class="raid-helper-current-raid${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">
-      <img class="raid-helper-current-raid-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(RAID_OPTIONS[key]?.name || "Raid")}">
-      <span>
-        <strong>${escapeHtml(raid.raidName || RAID_OPTIONS[key]?.name || raid.raid || "Raid")}</strong>
-        <span>${escapeHtml(formatRaidDate(raid.raidDate))} · ${escapeHtml(raid.raidTime || "-")} · PIN ${escapeHtml(raid.playerPin || "-")}</span>
-      </span>
-      <span class="raid-helper-current-count">${escapeHtml(String(count))}</span>
-      <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raid.raidName || raid.raid || "Raidanmelder")} zum Löschen auswählen" ${selected ? "checked" : ""} onclick="event.stopPropagation()" onchange="toggleRaidHelperSelection('${escapeAttr(raidId)}', this.checked)">
-    </button>
+    <article class="raid-helper-current-card${active ? " active" : ""}" style="--raid-color:${raidHelperRaidColor(key)}">
+      <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}">
+      <div class="raid-helper-current-card-body">
+        <div class="raid-helper-current-card-head">
+          <h4>${escapeHtml(raidName)}</h4>
+          <input class="raid-select-checkbox" type="checkbox" aria-label="${escapeAttr(raidName)} zum Löschen auswählen" ${selected ? "checked" : ""} onchange="toggleRaidHelperSelection('${escapeAttr(raidId)}', this.checked)">
+        </div>
+        <div class="raid-helper-current-card-meta">
+          <span>▣ ${escapeHtml(formatRaidDate(raid.raidDate))}</span>
+          <span>◷ ${escapeHtml(raid.raidTime || "-")}</span>
+          <span>PIN ${escapeHtml(raid.playerPin || "-")}</span>
+        </div>
+        <div class="raid-helper-current-card-status">${statusBadge(statusText)}</div>
+        <div class="raid-helper-current-card-count"><span>👥</span><b>${escapeHtml(String(count))}</b><span>${count === 1 ? "Anmeldung" : "Anmeldungen"}</span></div>
+      </div>
+      <div class="raid-helper-current-card-actions">
+        <button class="small-btn primary" type="button" onclick="selectRaidHelperCurrentEvent('${escapeAttr(raidId)}')">Öffnen</button>
+        <button class="small-btn ghost" type="button" onclick="queueRaidToDiscord('${escapeAttr(raidId)}')">Discord</button>
+        <button class="small-btn ghost" type="button" title="Raid bearbeiten" aria-label="${escapeAttr(raidName)} bearbeiten" onclick="editRaidHelperEvent('${escapeAttr(raidId)}')">✎</button>
+      </div>
+    </article>
   `;
 }
 
