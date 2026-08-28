@@ -1,5 +1,5 @@
 (function(){
-  let allSignupRows=[],raidSignupEnabled=null,raidLeadAuthenticated=false,raidLeadPin="",raidLeadMaster=false,activeCharacterPickerOpen=false,lastPageSignupLoadKey="",lastPageSignupLoadAt=0;
+  let allSignupRows=[],raidSignupEnabled=null,raidLeadAuthenticated=false,raidLeadPin="",raidLeadMaster=false,activeCharacterPickerOpen=false,lastPageSignupLoadKey="",lastPageSignupLoadAt=0,pageSignupLoadedRaidId="",manualCharacterSelection=false,characterSyncInProgress=false,autoCharacterSelectionKey="";
   const CLASS_ICONS={warrior:"classicon_warrior",krieger:"classicon_warrior",druid:"classicon_druid",druide:"classicon_druid",paladin:"classicon_paladin",rogue:"classicon_rogue",schurke:"classicon_rogue",hunter:"classicon_hunter",jäger:"classicon_hunter",jaeger:"classicon_hunter",priest:"classicon_priest",priester:"classicon_priest",mage:"classicon_mage",magier:"classicon_mage",warlock:"classicon_warlock",hexenmeister:"classicon_warlock",shaman:"classicon_shaman",schamane:"classicon_shaman"};
   const CLASS_COLORS={Tank:"#2dd4bf",Warrior:"#c79c6e",Paladin:"#f58cba",Rogue:"#fff569",Hunter:"#abd473",Druid:"#ff7d0a",Priest:"#ffffff",Mage:"#69ccf0",Warlock:"#9482c9",Shaman:"#0070de",Unbekannt:"#94a3b8"};
   const CLASS_CANON={warrior:"Warrior",krieger:"Warrior",paladin:"Paladin",pala:"Paladin",rogue:"Rogue",schurke:"Rogue",hunter:"Hunter",jäger:"Hunter",jaeger:"Hunter",druid:"Druid",druide:"Druid",priest:"Priest",priester:"Priest",mage:"Mage",magier:"Mage",warlock:"Warlock",hexenmeister:"Warlock",shaman:"Shaman",schamane:"Shaman"};
@@ -38,13 +38,44 @@
     if(panel) panel.dataset.signature="";
     renderActiveCharacterPanel();
   }
-  function chooseActiveCharacter(index){
+  function applyLoggedInCharacter(index,manual=false){
     if(typeof selectLoggedInCharacter!=="function") return;
+    const characters=typeof lichtlootLoggedInCharacters!=="undefined"&&Array.isArray(lichtlootLoggedInCharacters)?lichtlootLoggedInCharacters:[],char=characters[index];
+    if(!char)return;
+    characterSyncInProgress=true;
     selectLoggedInCharacter(index);
+    const signupSelect=document.getElementById("raidSignupPageCharacter");
+    if(signupSelect&&signupSelect.value!==char.name){signupSelect.value=char.name;signupSelect.dispatchEvent(new Event("change",{bubbles:true}));}
+    syncPageSignupState();
+    characterSyncInProgress=false;
+    if(manual)manualCharacterSelection=true;
+  }
+  function chooseActiveCharacter(index){
+    applyLoggedInCharacter(index,true);
     activeCharacterPickerOpen=false;
     const panel=document.getElementById("lootActiveCharacterPanel");
     if(panel) panel.dataset.signature="";
     renderActiveCharacterPanel();
+  }
+  function bindPageCharacterSync(){
+    const select=document.getElementById("raidSignupPageCharacter");
+    if(!select||select.dataset.activeCharacterSyncBound)return;
+    select.dataset.activeCharacterSyncBound="true";
+    select.addEventListener("change",()=>{if(characterSyncInProgress)return;const characters=typeof lichtlootLoggedInCharacters!=="undefined"&&Array.isArray(lichtlootLoggedInCharacters)?lichtlootLoggedInCharacters:[],index=characters.findIndex(char=>norm(char?.name)===norm(select.value));if(index>=0)applyLoggedInCharacter(index,true);});
+  }
+  function autoSelectRaidCharacter(){
+    if(manualCharacterSelection)return;
+    const raidId=activeSignupRaidId(),characters=typeof lichtlootLoggedInCharacters!=="undefined"&&Array.isArray(lichtlootLoggedInCharacters)?lichtlootLoggedInCharacters:[];
+    if(!raidId||pageSignupLoadedRaidId!==String(raidId)||!characters.length)return;
+    const signupNames=new Set(allSignupRows.filter(row=>statusInfo(row.status||row.signupStatus)[2]!=="absent").map(row=>norm(row.player||row.char||row.playerName||row.characterName)).filter(Boolean));
+    const withSignup=characters.map((char,index)=>({char,index,hasSignup:signupNames.has(norm(char.name)),hasPrio:activeCharacterPrioState(char.name).exists})).filter(item=>item.hasSignup);
+    const withPrio=characters.map((char,index)=>({char,index,hasSignup:false,hasPrio:activeCharacterPrioState(char.name).exists})).filter(item=>item.hasPrio);
+    const selected=(withSignup.sort((a,b)=>Number(b.hasPrio)-Number(a.hasPrio))[0])||withPrio[0];
+    if(!selected)return;
+    const key=`${raidId}|${norm(selected.char.name)}`;
+    if(autoCharacterSelectionKey===key)return;
+    autoCharacterSelectionKey=key;
+    applyLoggedInCharacter(selected.index,false);
   }
   function hideLegacyCharacterSelection(){
     document.querySelector(".login-character-panel")?.classList.add("loot-legacy-character-panel");
@@ -137,7 +168,7 @@
   }
   function syncPageSignupState(){const select=document.getElementById("raidSignupPageStatus"),character=document.getElementById("raidSignupPageCharacter"),feedback=document.getElementById("raidSignupPageFeedback");if(!select||!character)return;if(!select.querySelector('option[value=""]'))select.insertAdjacentHTML("afterbegin",'<option value="">⚪ Nicht angemeldet</option>');const row=allSignupRows.find(item=>norm(item.player||item.char||item.playerName||item.characterName)===norm(character.value));if(row){const status=statusInfo(row.status||row.signupStatus);select.value=status[2];if(feedback)feedback.innerHTML=`Aktueller Status: <strong>${status[0]} ${esc(status[1])}</strong>`;}else{select.value="";if(feedback)feedback.innerHTML='<strong>⚪ Nicht angemeldet</strong> – beim Speichern wird eine neue Anmeldung erstellt.';}}
   function refreshPageSignupState(){const raidId=activeSignupRaidId(),now=Date.now();if(!raidId)return;if(raidId!==lastPageSignupLoadKey||now-lastPageSignupLoadAt>30000){lastPageSignupLoadKey=raidId;lastPageSignupLoadAt=now;load();}}
-  async function load(){const box=document.getElementById("raidSignupMirrorList"),raidId=activeSignupRaidId(),raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";if(!raidId)return;if(box)box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';try{const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");allSignupRows=[...(result.signups||[]),...(result.externalSignups||[])];syncPageSignupState();if(box)render(allSignupRows);}catch(error){if(box)box.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;}}
+  async function load(){const box=document.getElementById("raidSignupMirrorList"),raidId=activeSignupRaidId(),raidName=typeof RAID_NAME!=="undefined"?RAID_NAME:"";if(!raidId)return;if(box)box.innerHTML='<div class="raid-signup-mirror-empty">Anmeldungen werden geladen …</div>';try{const result=await apiJsonp({action:"getRaidHelper",raidId,playerPin:document.getElementById("raidPin")?.value||raidId,raid:raidName,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Raid nicht gefunden");allSignupRows=[...(result.signups||[]),...(result.externalSignups||[])];pageSignupLoadedRaidId=String(raidId);syncPageSignupState();autoSelectRaidCharacter();if(box)render(allSignupRows);}catch(error){if(box)box.innerHTML=`<div class="raid-signup-mirror-empty">${esc(error.message||"Anmeldungen konnten nicht geladen werden.")}</div>`;}}
   async function raidLeadLogin(){const pin=document.getElementById("raidSignupLeadPin")?.value.trim()||"",feedback=document.getElementById("raidSignupLeadFeedback"),raidId=String(activeSignupRaidId());if(!pin){if(feedback)feedback.textContent="Bitte LeadPIN eingeben.";return;}if(feedback)feedback.textContent="PIN wird geprüft …";try{const result=await apiJsonp({action:"validateLeadPin",leadPin:pin,raidId,allowMaster:"true",t:Date.now()});if(!result?.success)throw new Error(result?.error||"Gildenleiter-/LeadPIN ist nicht gültig.");raidLeadAuthenticated=true;raidLeadPin=pin;raidLeadMaster=result.managerMode==="master";sessionStorage.setItem(`raidSignupLeadPin_${raidId}`,pin);if(feedback)feedback.textContent=raidLeadMaster?"✓ Gildenleiter-Funktionen freigeschaltet.":"✓ Raidlead-Funktionen freigeschaltet.";document.getElementById("raidSignupLeadLogin")?.classList.add("is-authenticated");render(allSignupRows);}catch(error){raidLeadAuthenticated=false;raidLeadPin="";raidLeadMaster=false;if(feedback)feedback.textContent=error.message||"PIN konnte nicht geprüft werden.";}}
   async function setRaidLeadStatus(signupId,status){if(!raidLeadAuthenticated||!raidLeadPin)return;const feedback=document.getElementById("raidSignupLeadFeedback"),labels={signed:"angemeldet",bench:"auf die Bank gesetzt",late:"als verspätet markiert",absent:"als abwesend markiert"};if(feedback)feedback.textContent="Status wird gespeichert …";try{const auth=raidLeadMaster?{masterCode:raidLeadPin}:{leadPin:raidLeadPin},result=await apiJsonp({action:"guildUpdateRaidHelperSignup",signupId,signupStatus:status,...auth,notifyMessage:`${raidLeadMaster?"Gildenleitung":"Raidlead"} hat den Status auf ${labels[status]||status} geändert.`,t:Date.now()});if(!result?.success)throw new Error(result?.error||"Status konnte nicht gespeichert werden.");if(feedback)feedback.textContent=result.noticeQueued?"✓ Status gespeichert und Spieler im Discord informiert.":"✓ Status gespeichert. Discord-Raidanmelder wird aktualisiert.";await load();}catch(error){if(feedback)feedback.textContent=error.message||"Status konnte nicht gespeichert werden.";}}
   async function saveOwnSignup(){
@@ -267,7 +298,7 @@
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
   function init(){mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
-  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();refreshPageSignupState();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+  window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();bindPageCharacterSync();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();refreshPageSignupState();autoSelectRaidCharacter();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 
 /* Raidregeln direkt im Inhaltsbereich der Lootseite anzeigen. */
