@@ -10866,6 +10866,8 @@ function prioActionCellHtml(prio,index,ownRow){
 }
 
 function getLiveDraftPrio(){
+  // Automatisch geladene gespeicherte Werte sind kein neuer Entwurf.
+  if(window.prioDraftDirty !== true) return null;
   const player=document.getElementById("playerName")?.value.trim() || "";
   const server=document.getElementById("playerServer")?.value.trim() || "";
   const playerClass=document.getElementById("playerClass")?.value.trim() || "";
@@ -11235,7 +11237,7 @@ function lichtlootFilterCurrentGuildP0Stores(){
 </script>
 <script src="p0-item-buttons.js?v=20260818-1240"></script>
 <script src="po-release-status.js?v=20260814-0015"></script>
-<script src="raid-signup-mirror.js?v=20260828-1335"></script>
+<script src="raid-signup-mirror.js?v=20260828-1705"></script>
 <script src="../pin-visibility.js"></script>
 <script src="p0-selection-fix.js?v=20260818-1415"></script>
 </body>
