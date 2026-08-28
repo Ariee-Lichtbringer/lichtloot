@@ -211,6 +211,10 @@ await ensureItemIdentitySchema().catch(error => {
   console.warn("Item-Eindeutigkeit konnte nicht vorbereitet werden:", error.message || error);
 });
 
+await ensureSystemErrorSchema().catch(error => {
+  console.warn("Systemfehler-Schema konnte nicht vorbereitet werden:", error.message || error);
+});
+
 await seedDefaultLootItemsOnce().catch(error => {
   console.warn("Standard-Lootdaten konnten nicht importiert werden:", error.message || error);
 });
@@ -19327,6 +19331,16 @@ async function clearLogAnalysisType({ guildId, query: params }) {
   };
 }
 
+async function ensureSystemErrorSchema() {
+  await query(`alter table issue_reports add column if not exists status text not null default 'new'`);
+  await query(`alter table issue_reports add column if not exists reference_id text`);
+  await query(`alter table issue_reports add column if not exists technical_details text`);
+  await query(`alter table issue_reports add column if not exists action_name text`);
+  await query(`alter table issue_reports add column if not exists http_status text`);
+  await query(`alter table issue_reports add column if not exists updated_at timestamptz not null default now()`);
+  await query(`create index if not exists idx_issue_reports_system_errors on issue_reports(guild_id, category, created_at desc)`);
+}
+
 function normalizeIssueReportRow(row, index = 0) {
   return {
     id: row.id,
@@ -19344,7 +19358,14 @@ function normalizeIssueReportRow(row, index = 0) {
     server: row.server || "",
     note: row.note || "",
     page: row.page || "",
-    originalDate: row.original_date || ""
+    originalDate: row.original_date || "",
+    status: row.resolved_at ? "resolved" : row.status || "new",
+    referenceId: row.reference_id || "",
+    technicalDetails: row.technical_details || "",
+    actionName: row.action_name || "",
+    httpStatus: row.http_status || "",
+    updatedAt: row.updated_at ? row.updated_at.toISOString() : "",
+    resolvedAt: row.resolved_at ? row.resolved_at.toISOString() : ""
   };
 }
 
@@ -19363,12 +19384,22 @@ async function reportIssue({ guildId, query: params }) {
     }
   }
 
+  const requestedReferenceId = clean(params.referenceId);
+  if (requestedReferenceId && clean(params.category).toLowerCase() === "system_error") {
+    const existing = await query(
+      `select * from issue_reports where guild_id = $1 and reference_id = $2 limit 1`,
+      [guildId, requestedReferenceId]
+    );
+    if (existing.rows[0]) return { success: true, duplicate: true, report: normalizeIssueReportRow(existing.rows[0]) };
+  }
+
   const result = await query(
     `insert into issue_reports (
        guild_id, type, source, category, raid, item, slot, points,
-       player, server, note, page, original_date
+       player, server, note, page, original_date, status, reference_id,
+       technical_details, action_name, http_status, updated_at
      )
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,now())
      returning *`,
     [
       guildId,
@@ -19383,7 +19414,12 @@ async function reportIssue({ guildId, query: params }) {
       reportServer,
       clean(params.note),
       clean(params.page),
-      clean(params.createdAt || params.originalDate)
+      clean(params.createdAt || params.originalDate),
+      clean(params.status) || "new",
+      requestedReferenceId || `LL-${randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+      clean(params.technicalDetails || params.details).slice(0, 12000),
+      clean(params.actionName || params.actionContext),
+      clean(params.httpStatus)
     ]
   );
   return { success: true, report: normalizeIssueReportRow(result.rows[0]) };
@@ -19394,11 +19430,45 @@ async function getIssueReports({ guildId, query: params }) {
   const result = await query(
     `select *
      from issue_reports
-     where guild_id = $1 and resolved_at is null
+     where guild_id = $1 and resolved_at is null and coalesce(category, '') <> 'system_error'
      order by created_at desc`,
     [guildId]
   );
   return { success: true, reports: result.rows.map(normalizeIssueReportRow) };
+}
+
+async function getSystemErrors({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const result = await query(
+    `select * from issue_reports
+     where guild_id = $1 and category = 'system_error'
+     order by created_at desc
+     limit 250`,
+    [guildId]
+  );
+  return { success: true, errors: result.rows.map(normalizeIssueReportRow) };
+}
+
+async function updateSystemError({ guildId, query: params }) {
+  requireMasterCode(params.masterCode);
+  const id = clean(params.id || params.rowNumber);
+  const status = clean(params.status).toLowerCase();
+  if (!id || !["new", "checked", "resolved"].includes(status)) {
+    const error = new Error("Ungültiger Fehlerstatus.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const result = await query(
+    `update issue_reports
+     set status = $3,
+         resolved_at = case when $3 = 'resolved' then coalesce(resolved_at, now()) else null end,
+         updated_at = now()
+     where guild_id = $1 and id = $2 and category = 'system_error'
+     returning *`,
+    [guildId, id, status]
+  );
+  if (!result.rows.length) return { success: false, error: "Systemfehler wurde nicht gefunden." };
+  return { success: true, errorEntry: normalizeIssueReportRow(result.rows[0]) };
 }
 
 async function resolveIssueReport({ guildId, query: params }) {
@@ -28060,6 +28130,16 @@ app.get("/api/apps-script", async (req, res, next) => {
     if (action === "guildGetIssueReports") {
       const reports = await getIssueReports({ guildId: guild.id, query: req.query });
       return res.json({ ...reports, guild: guild.slug });
+    }
+
+    if (action === "guildGetSystemErrors") {
+      const errors = await getSystemErrors({ guildId: guild.id, query: req.query });
+      return res.json({ ...errors, guild: guild.slug });
+    }
+
+    if (action === "guildUpdateSystemError") {
+      const updated = await updateSystemError({ guildId: guild.id, query: req.query });
+      return res.json({ ...updated, guild: guild.slug });
     }
 
     if (action === "guildGetLogAnalyses") {
