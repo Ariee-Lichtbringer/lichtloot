@@ -7562,6 +7562,8 @@ async function loadOverview(options){
     }catch(error){ playerAccessDiscordRoles=[]; }
     refreshEmergencyImportRaids();
     raidHelperAttendanceCache = null;
+    raidHelperCurrentSignupStats.clear();
+    raidHelperCurrentSignupStatsPending.clear();
     lastOverviewLoadedAt = new Date();
     fillClassFilter();
     showRaidDashboard();
@@ -10121,6 +10123,8 @@ let raidHelperCurrentSelectedRaidId = "";
 let raidHelperCurrentTierFilter = "all";
 let raidHelperCurrentRaidFilter = "";
 let raidHelperCurrentSearch = "";
+const raidHelperCurrentSignupStats = new Map();
+const raidHelperCurrentSignupStatsPending = new Set();
 const RAID_HELPER_CURRENT_FILTER_GROUPS = {
   "20":["aq20","zg","zg-mittwoch","zg-prime","zg-late"],
   "40":["naxx","aq40","bwl","mc","ony"],
@@ -10945,10 +10949,56 @@ function renderRaidHelperCurrentEvents(){
     </div>
   `;
   updateRaidHelperBulkActions();
+  hydrateRaidHelperCurrentSignupStats(visibleRaids);
+}
+
+function raidHelperSignupStatusBucket(value){
+  const status = normalize(value || "signed");
+  if(["signed","active","aktiv","angemeldet","dabei","yes","confirmed","bestaetigt","bestätigt"].includes(status)) return "signed";
+  if(["bench","bank","ersatz"].includes(status)) return "bench";
+  if(["late","spät","spaet","verspätet","verspaetet"].includes(status)) return "late";
+  if(["tentative","vorläufig","vorlaeufig","vielleicht"].includes(status)) return "tentative";
+  if(["absent","abwesend","declined","rejected","nein","abgemeldet"].includes(status)) return "absent";
+  return "other";
+}
+
+function raidHelperSignupStatsFromRows(rows){
+  const counts = {signed:0,bench:0,late:0,tentative:0,absent:0,other:0};
+  (rows || []).forEach(row => { counts[raidHelperSignupStatusBucket(row?.status)] += 1; });
+  return counts;
+}
+
+async function hydrateRaidHelperCurrentSignupStats(raids){
+  let changed = false;
+  await Promise.all((raids || []).map(async raid => {
+    const raidId = String(raid?.raidId || raid?.id || "");
+    if(!raidId || raidHelperCurrentSignupStats.has(raidId) || raidHelperCurrentSignupStatsPending.has(raidId)) return;
+    const supplied = raid?.signupCounts && typeof raid.signupCounts === "object" ? raid.signupCounts : null;
+    const suppliedTotal = supplied ? ["signed","bench","late","tentative","absent","other"].reduce((sum,key)=>sum+(Number(supplied[key]||0)||0),0) : 0;
+    if(supplied && (suppliedTotal > 0 || Number(raid.signupCount || 0) === 0)){
+      raidHelperCurrentSignupStats.set(raidId, supplied);
+      changed = true;
+      return;
+    }
+    raidHelperCurrentSignupStatsPending.add(raidId);
+    try{
+      const helper = await railwayApi({action:"getRaidHelper",raidId,t:Date.now()});
+      if(helper?.success){
+        raidHelperCurrentSignupStats.set(raidId, raidHelperSignupStatsFromRows([...(helper.signups || []), ...(helper.externalSignups || [])]));
+        changed = true;
+      }
+    }catch(error){
+      console.warn(`Anmeldestatus für ${raidId} konnte nicht geladen werden:`, error);
+    }finally{
+      raidHelperCurrentSignupStatsPending.delete(raidId);
+    }
+  }));
+  if(changed && !raidHelperCurrentSelectedRaidId) renderRaidHelperCurrentEvents();
 }
 
 function renderRaidHelperSignupBreakdown(raid){
-  const counts = raid?.signupCounts || {};
+  const raidId = String(raid?.raidId || raid?.id || "");
+  const counts = raidHelperCurrentSignupStats.get(raidId) || raid?.signupCounts || {};
   const definitions = [
     ["signed", "✓", "Angemeldet"],
     ["bench", "⌛", "Bank"],
