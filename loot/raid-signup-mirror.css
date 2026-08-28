@@ -41,3 +41,48 @@
 @media(max-width:1100px){.grid>.loot-active-character-panel{position:relative;left:auto;top:auto;width:auto;grid-column:1/-1}.grid>.loot-active-character-panel:before{content:"⌄";right:auto;left:calc(50% - 12px);top:-17px}}
 .loot-status-source{display:none!important}.loot-active-character-hint{padding:8px 9px;border:1px solid #34425a;border-radius:9px;background:rgba(2,6,23,.68);color:#cbd5e1;font-size:10px;line-height:1.4}.loot-active-character-hint .ok{color:#4ade80;font-weight:900}.loot-active-character-hint+.loot-active-character-state{display:none}.loot-sidebar-current-raids>.loot-sidebar-plundermeister{position:static!important;width:100%!important;min-height:38px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;margin:8px 0 0!important;padding:7px 9px!important;border:1px solid rgba(var(--gold-rgb),.72)!important;border-radius:10px!important;background:linear-gradient(90deg,rgba(13,148,136,.48),rgba(var(--gold-rgb),.36))!important;color:#fff!important;font-size:10px!important;font-weight:950!important;cursor:pointer}.loot-sidebar-current-raids>.loot-sidebar-plundermeister img{width:25px!important;height:25px!important;border-radius:6px!important;object-fit:cover!important}
 .loot-active-character-prio{padding:7px 8px;border:1px solid;border-radius:8px;font-size:10px;font-weight:950;line-height:1.3}.loot-active-character-prio.has-prio{border-color:rgba(74,222,128,.48);background:rgba(21,128,61,.14);color:#4ade80}.loot-active-character-prio.no-prio{border-color:rgba(251,146,60,.52);background:rgba(154,52,18,.14);color:#fdba74}
+
+/* Kompakter Raidkopf: alle spielbaren Informationen ohne grossen Leerraum. */
+body:not(.raid-signup-only-page) .header{padding:20px 22px!important;margin-bottom:18px!important;border-radius:18px!important}
+body:not(.raid-signup-only-page) .raid-page-title{gap:12px!important;margin-bottom:3px!important;font-size:clamp(28px,3.2vw,44px)!important}
+body:not(.raid-signup-only-page) .raid-page-title-icon{width:58px!important;height:58px!important;flex-basis:58px!important;border-radius:10px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-date{margin:-2px 0 7px 70px!important;font-size:14px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buffs{margin:0 0 10px 70px!important;gap:4px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buffs-list{gap:5px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buff{min-height:34px!important;grid-template-columns:23px auto!important;gap:5px!important;padding:4px 7px 4px 4px!important;border-radius:8px!important;font-size:9px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buff>img{width:23px!important;height:23px!important;border-radius:5px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buff strong{font-size:9px!important}
+body:not(.raid-signup-only-page) .loot-raid-header-buff small{max-width:135px!important;font-size:8px!important}
+body:not(.raid-signup-only-page) .subtitle{font-size:12px!important;line-height:1.35!important}
+body:not(.raid-signup-only-page) .header-tools{margin-top:10px!important}
+body:not(.raid-signup-only-page) .player-input-card{padding:11px 12px!important;margin-top:9px!important;border-radius:14px!important;box-shadow:none!important;background:rgba(3,10,27,.58)!important}
+body:not(.raid-signup-only-page) .player-card-layout{display:grid!important;grid-template-columns:minmax(125px,170px) minmax(0,1fr)!important;grid-template-areas:"pin releases"!important;gap:12px!important;align-items:stretch!important}
+body:not(.raid-signup-only-page) .player-input-grid>div:nth-child(1){display:flex!important;flex-direction:column!important;justify-content:center!important}
+body:not(.raid-signup-only-page) .player-input-grid>div:nth-child(1) label{margin:0 0 5px!important;font-size:9px!important}
+body:not(.raid-signup-only-page) #raidPin{height:35px!important;padding:7px 10px!important;border-radius:8px!important;font-weight:900!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases{grid-template-columns:auto minmax(280px,1fr) auto minmax(100px,150px)!important;gap:7px 10px!important;min-height:56px!important;padding:7px 10px!important;border-radius:10px!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-release-title{font-size:9px!important;white-space:nowrap!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-attendance-list{display:grid!important;grid-template-columns:repeat(4,minmax(58px,1fr))!important;gap:5px!important;margin:0!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-attendance-chip{min-height:34px!important;padding:4px 6px!important;border-radius:7px!important;font-size:8px!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-attendance-chip strong{font-size:10px!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-release-list{display:block!important;min-width:0!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-release-chip{display:none!important}
+body:not(.raid-signup-only-page) #selectedCharacterPoReleases .loot-release-chip.loot-release-current{display:grid!important;min-height:34px!important;padding:5px 7px!important;border-radius:7px!important;font-size:9px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-box{margin-top:9px!important;padding:10px 12px!important;border-radius:12px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-title{margin-bottom:7px!important;font-size:14px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-grid{grid-template-columns:minmax(190px,1.45fr) minmax(150px,.8fr) minmax(155px,.8fr) auto!important;gap:7px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-grid label{gap:3px!important;font-size:9px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-grid select,
+body:not(.raid-signup-only-page) .raid-signup-page-grid button{min-height:34px!important;padding:5px 8px!important;border-radius:8px!important}
+body:not(.raid-signup-only-page) .raid-signup-page-feedback{margin-top:5px!important;font-size:9px!important}
+body:not(.raid-signup-only-page) .header-actions{margin-top:9px!important}
+body:not(.raid-signup-only-page) .header-actions .btn{min-width:170px!important;margin:0!important;padding:9px 12px!important;border-radius:10px!important;font-size:10px!important}
+@media(max-width:900px){
+  body:not(.raid-signup-only-page) .header{padding:15px!important}
+  body:not(.raid-signup-only-page) .loot-raid-header-date,body:not(.raid-signup-only-page) .loot-raid-header-buffs{margin-left:0!important}
+  body:not(.raid-signup-only-page) .player-card-layout{grid-template-columns:1fr!important;grid-template-areas:"pin" "releases"!important}
+  body:not(.raid-signup-only-page) #selectedCharacterPoReleases{grid-template-columns:1fr!important}
+  body:not(.raid-signup-only-page) .raid-signup-page-grid{grid-template-columns:1fr 1fr!important}
+  body:not(.raid-signup-only-page) .raid-signup-page-grid label:first-child{grid-column:1/-1!important}
+  body:not(.raid-signup-only-page) .raid-signup-page-grid>button{grid-column:1/-1!important}
+}
