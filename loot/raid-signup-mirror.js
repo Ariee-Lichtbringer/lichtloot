@@ -73,8 +73,10 @@
     panel.id="lootActiveCharacterPanel";
     panel.className="loot-active-character-panel";
     panel.setAttribute("aria-live","polite");
-    const host=document.querySelector("body > .overlay")||document.body;
-    host.insertBefore(panel,host.firstChild);
+    const lootCard=document.getElementById("lootCard");
+    const host=document.getElementById("mainGrid")||document.querySelector("body > .overlay")||document.body;
+    if(lootCard?.parentElement===host) lootCard.insertAdjacentElement("afterend",panel);
+    else host.insertBefore(panel,host.firstChild);
     hideLegacyCharacterSelection();
     renderActiveCharacterPanel();
   }
