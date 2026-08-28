@@ -3235,6 +3235,22 @@ async function ensurePrioSchemaNow() {
      )`
   );
   await query(
+    `delete from prios
+     where id in (
+       select id
+       from (
+         select pr.id,
+                row_number() over (
+                  partition by pr.raid_id, c.player_id
+                  order by coalesce(pr.updated_at, pr.created_at) desc, pr.created_at desc, pr.id desc
+                ) as rn
+         from prios pr
+         join characters c on c.id = pr.character_id
+       ) duplicate_player_logins
+       where rn > 1
+     )`
+  );
+  await query(
     `create unique index if not exists idx_prios_raid_character_unique
        on prios(raid_id, character_id)`
   );
@@ -11408,6 +11424,27 @@ async function removeDuplicatePriosForCharacterName(client, raidId, character) {
   return deleted.rowCount || 0;
 }
 
+async function removeDuplicatePriosForPlayerLogin(client, raidId, character) {
+  if (!raidId || !character?.id) return 0;
+  const playerResult = await client.query(
+    `select player_id from characters where id = $1 limit 1`,
+    [character.id]
+  );
+  const playerId = playerResult.rows[0]?.player_id;
+  if (!playerId) return 0;
+  const deleted = await client.query(
+    `delete from prios pr
+     using characters duplicate_character
+     where pr.raid_id = $1
+       and pr.character_id = duplicate_character.id
+       and duplicate_character.player_id = $2
+       and pr.character_id <> $3
+     returning pr.id`,
+    [raidId, playerId, character.id]
+  );
+  return deleted.rowCount || 0;
+}
+
 async function savePrio({ guildId, query: params }) {
   await ensurePoPostEntriesSchema();
   await ensurePrioSchema();
@@ -11647,6 +11684,7 @@ async function savePrio({ guildId, query: params }) {
       await requireGuildPoItem(guildId, p1?.id || p0ItemId, p1?.name || p0ItemName);
     }
     await removeDuplicatePriosForCharacterName(client, raidResult.rows[0].id, character);
+    await removeDuplicatePriosForPlayerLogin(client, raidResult.rows[0].id, character);
     const comment = JSON.stringify({
       p0Selected: p0Selected ? "ja" : "nein",
       p0Plus: p0PlusSelected ? "ja" : "nein",
@@ -11842,6 +11880,7 @@ async function savePrioAsRaidlead({ guildId, query: params }) {
     const p2 = await upsertItem(client, raidType, params.p2, params.p2ItemId || params.p2_item_id || params.p2ItemID);
     const p3 = await upsertItem(client, raidType, params.p3, params.p3ItemId || params.p3_item_id || params.p3ItemID);
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
+    await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
     const comment = JSON.stringify({
       p0Plus: clean(params.p0Plus).toLowerCase() === "ja" ? "ja" : "nein",
       p0Item: clean(params.p0Plus).toLowerCase() === "ja" ? (p1?.name || "") : "",
@@ -12083,7 +12122,11 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
   try {
     await client.query("begin");
 
-    const character = await findOrCreateRaidleadCharacter(client, guildId, params);
+    // Der Discord-P0-Weg hat den Charakter bereits über den SpielerLogin
+    // verifiziert. Ausschließlich diese kanonische Charakter-ID verwenden;
+    // eine erneute Namens-/Server-Suche könnte sonst einen zweiten Datensatz
+    // desselben Spielers treffen.
+    const character = verifiedCharacter;
     const item = await upsertItem(client, raidType, itemName, params.itemId || params.itemGameId || params.p1ItemId);
     if (!item) {
       const error = new Error("Item wurde nicht gefunden.");
@@ -12092,6 +12135,7 @@ async function savePoSignupPrioFromBot({ guildId, query: params }) {
     }
     await requireGuildPoItem(guildId, item.id, item.name);
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
+    await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
 
     const existing = await client.query(
       `select p1_item_id, p2_item_id, p3_item_id, comment
@@ -22123,42 +22167,45 @@ async function getPublishedPrios({ guildId, query: params }) {
     return { success: true, prios: [], published: false, status: "geschlossen" };
   }
 
-  const relatedRaidResult = await query(
-    `select id
-     from raids
-     where guild_id = $1
-       and lower(raid_type) = any($2)
-       and raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
-  );
-  const relatedRaidIds = [...new Set([raid.id, ...relatedRaidResult.rows.map(row => row.id)].filter(Boolean))];
+  // Die öffentliche Prioliste gehört exakt zur ausgewählten Raid-ID. Raids
+  // desselben Typs und Datums dürfen ihre Prios nicht gegenseitig einblenden.
+  const relatedRaidIds = [raid.id];
 
   const result = await query(
-    `select
-       pr.id,
-       pr.comment,
-       pr.bench,
-       pr.created_at as prio_created_at,
-       pr.updated_at as prio_updated_at,
-       c.name as player,
-       c.server,
-       c.class_name,
-       c.is_main,
-       c.created_at as character_created_at,
-       i1.name as p1,
-       i1.item_id as p1_item_id,
-       i2.name as p2,
-       i2.item_id as p2_item_id,
-       i3.name as p3,
-       i3.item_id as p3_item_id
-     from prios pr
-     join characters c on c.id = pr.character_id
-     left join items i1 on i1.id = pr.p1_item_id
-     left join items i2 on i2.id = pr.p2_item_id
-     left join items i3 on i3.id = pr.p3_item_id
-     where pr.raid_id = any($1)
-     order by c.is_main desc, ${prioClassOrderSql("c.class_name")} asc, lower(c.name) asc, c.created_at asc`,
-    [relatedRaidIds]
+    `select *
+     from (
+       select
+         pr.id,
+         pr.comment,
+         pr.bench,
+         pr.created_at as prio_created_at,
+         pr.updated_at as prio_updated_at,
+         c.name as player,
+         c.server,
+         c.class_name,
+         c.is_main,
+         c.created_at as character_created_at,
+         i1.name as p1,
+         i1.item_id as p1_item_id,
+         i2.name as p2,
+         i2.item_id as p2_item_id,
+         i3.name as p3,
+         i3.item_id as p3_item_id,
+         row_number() over (
+           partition by p.id
+           order by coalesce(pr.updated_at, pr.created_at) desc, pr.created_at desc, pr.id desc
+         ) as player_login_rank
+       from prios pr
+       join characters c on c.id = pr.character_id
+       join players p on p.id = c.player_id and p.guild_id = $2
+       left join items i1 on i1.id = pr.p1_item_id
+       left join items i2 on i2.id = pr.p2_item_id
+       left join items i3 on i3.id = pr.p3_item_id
+       where pr.raid_id = any($1)
+     ) ranked
+     where player_login_rank = 1
+     order by is_main desc, ${prioClassOrderSql("class_name")} asc, lower(player) asc, character_created_at asc`,
+    [relatedRaidIds, guildId]
   );
 
   const normalizedRaid = normalizeRaidRow(raid);
@@ -22907,7 +22954,7 @@ async function findOrCreateDiscordP0Character(client, guildId, params) {
 
   if (discordUserId) {
     const linked = await client.query(
-      `select c.id, c.name, c.server, c.class_name, c.created_at
+    `select c.id, c.name, c.server, c.class_name, c.created_at, p.id as player_id
        from discord_player_links dpl
        join characters linked_character on linked_character.id = dpl.character_id
        join characters c on c.player_id = linked_character.player_id
@@ -23009,6 +23056,21 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         [guildId, raid.id, character.id, item.id, character.name, character.server, item.name,
           discordUserId, clean(params.discordName), clean(params.discordChannelId || raid.discord_channel_id), clean(params.discordMessageId || raid.discord_message_id)]
       );
+      const accountCharacterResult = await client.query(
+        `select id from characters where player_id = $1`,
+        [character.player_id]
+      );
+      const accountCharacterIds = accountCharacterResult.rows.map(row => row.id).filter(Boolean);
+      if (accountCharacterIds.length) {
+        await p0Query(
+          `delete from p0_only_signups
+           where guild_id = $1
+             and event_id = $2
+             and character_id = any($3::uuid[])
+             and id <> $4`,
+          [guildId, raid.id, accountCharacterIds, signupResult.rows[0].id]
+        );
+      }
       const itemSignupResult = await p0Query(
         `select s.*, e.external_p0_id as raid_public_id, e.raid_type, e.raid_name, e.raid_date, e.raid_time, e.player_pin
          from p0_only_signups s join p0_only_events e on e.id=s.event_id
@@ -23027,6 +23089,7 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
       };
     }
     await removeDuplicatePriosForCharacterName(client, raid.id, character);
+    await removeDuplicatePriosForPlayerLogin(client, raid.id, character);
     const comment = JSON.stringify({
       p0Selected: "ja",
       p0Plus: itemRequiresRelease ? "ja" : "nein",
@@ -23084,6 +23147,21 @@ async function saveP0DiscordSignup({ guildId, query: params }) {
         clean(params.discordMessageId || raid.discord_message_id)
       ]
     );
+    const accountCharacterResult = await client.query(
+      `select id from characters where player_id = $1`,
+      [character.player_id]
+    );
+    const accountCharacterIds = accountCharacterResult.rows.map(row => row.id).filter(Boolean);
+    if (accountCharacterIds.length) {
+      await client.query(
+        `delete from p0_discord_signups
+         where guild_id = $1
+           and raid_id = $2
+           and character_id = any($3::uuid[])
+           and id <> $4`,
+        [guildId, raid.id, accountCharacterIds, signupResult.rows[0].id]
+      );
+    }
     const itemSignupResult = await client.query(
       `select *
        from p0_discord_signups
