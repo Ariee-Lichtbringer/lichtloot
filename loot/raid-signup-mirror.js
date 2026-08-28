@@ -87,7 +87,39 @@
     document.getElementById("playerStatus")?.classList.add("loot-status-source");
     const button=document.querySelector(".plundermeister-login-btn"),raids=document.getElementById("lootSidebarCurrentRaids");
     if(button&&raids&&!raids.querySelector(".loot-sidebar-raids-loading")&&button.parentElement!==raids){button.classList.add("loot-sidebar-plundermeister");raids.appendChild(button);}
+    if(raids&&!document.getElementById("lootGuildSwitchButton")){
+      const guildButton=document.createElement("button");
+      guildButton.id="lootGuildSwitchButton";
+      guildButton.type="button";
+      guildButton.className="loot-sidebar-guild-switch";
+      guildButton.textContent="LootGilde wechseln";
+      guildButton.onclick=()=>{
+        try{sessionStorage.setItem("lichtlootStartMenuAction","account");}catch(error){}
+        const guild=typeof currentGuildSlug==="function"?currentGuildSlug():"lichtloot";
+        const target=new URL("../start.html",window.location.href);
+        if(guild)target.searchParams.set("guild",guild);
+        window.location.assign(target.href);
+      };
+      raids.appendChild(guildButton);
+    }
   }
+
+  function installProtectedPrioSearch(){
+    const original=window.filterPriosBySearch;
+    if(typeof original!=="function"||original.__protectedPrioSearch)return;
+    const protectedFilter=function(prios){
+      if(currentPublishedMode)return original.call(this,prios);
+      const query=String(document.getElementById("prioSearch")?.value||"").trim().toLowerCase();
+      if(!query)return prios;
+      return (prios||[]).filter(prio=>{
+        const p0Item=typeof lichtlootPrioIsP0==="function"&&lichtlootPrioIsP0(prio)&&typeof lichtlootPrioP0Item==="function"?lichtlootPrioP0Item(prio):"";
+        return [prio?.Spieler,prio?.Server,prio?.Klasse,p0Item].join(" ").toLowerCase().includes(query);
+      });
+    };
+    protectedFilter.__protectedPrioSearch=true;
+    window.filterPriosBySearch=protectedFilter;
+  }
+
   function compactLootReleaseSummary(){
     const box=document.getElementById("selectedCharacterPoReleases");
     if(!box)return;
@@ -310,7 +342,7 @@
     const backdrop=document.querySelector(".raid-signup-modal-backdrop"),tools=document.querySelector(".header-tools")||document.querySelector(".header");
     if(backdrop&&tools)tools.appendChild(backdrop);
   }
-  function init(){window.prioDraftDirty=false;document.addEventListener("click",event=>{if(event.target.closest(".mini-btn[data-prio]"))window.prioDraftDirty=true;},true);document.addEventListener("change",event=>{if(["p1","p2","p3"].includes(event.target?.id))window.prioDraftDirty=true;},true);mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
+  function init(){window.prioDraftDirty=false;document.addEventListener("click",event=>{if(event.target.closest(".mini-btn[data-prio]"))window.prioDraftDirty=true;},true);document.addEventListener("change",event=>{if(["p1","p2","p3"].includes(event.target?.id))window.prioDraftDirty=true;},true);installProtectedPrioSearch();mountPageSignup();mountActiveCharacterPanel();const groups=[...document.querySelectorAll(".raid-start-group")],group=groups.find(item=>item.querySelector(".raid-start-group-toggle")?.textContent.includes("Raidorga"));let raidSignupButton=document.querySelector(".raid-signup-nav-tab");if(group&&!raidSignupButton){raidSignupButton=document.createElement("button");raidSignupButton.type="button";raidSignupButton.className="raid-signup-nav-tab";raidSignupButton.innerHTML='<span><img src="../images/dashboard-icons/raidlead.jpg" alt="">Raidanmeldungen</span><span>›</span>';raidSignupButton.onclick=open;group.insertAdjacentElement("afterend",raidSignupButton);}mountSidebarCurrentRaids(raidSignupButton);applyLootPageSectionSettings();loadLootPageSectionSettings();const original=window.loadPrioCheck;if(typeof original==="function")window.loadPrioCheck=async function(){const result=await original.apply(this,arguments);if(document.getElementById("raidSignupMirrorList"))await load();return result;};if(new URLSearchParams(location.search).get("signupOnly")==="1")openSignupOnlyPage();}
   window.setInterval(()=>{decorateCharacterControls();upgradeSignupCharacterPicker();bindPageCharacterSync();applyLootPageSectionSettings();hideLegacyCharacterSelection();reorganizeLootHeaderControls();compactLootReleaseSummary();refreshPageSignupState();autoSelectRaidCharacter();renderActiveCharacterPanel();},500);window.openRaidSignupMirror=open;window.loadRaidSignupMirror=load;window.chooseRaidSignupSpec=choosePageSpec;window.chooseRaidSignupMirrorSpec=chooseMirrorSpec;window.raidSignupLeadStatus=setRaidLeadStatus;if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
 
