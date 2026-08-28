@@ -2,8 +2,10 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<script src="guild-page-boot.js?v=20260828-1235"></script>
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/scroll-performance.css">
 <title>LichtLoot</title>
 <style>
 :root{
@@ -1246,6 +1248,7 @@ body{background:linear-gradient(rgba(8,17,31,.80),rgba(8,17,31,.93)),url('./imag
 .login-input{width:100%;padding:14px 15px;border-radius:14px;border:1px solid rgba(250,204,21,.42);background:rgba(2,6,23,.85);color:white;font-size:16px;font-weight:800;outline:none;margin-bottom:10px;}
 .login-input:focus{border-color:rgba(250,204,21,.78);box-shadow:0 0 0 2px rgba(250,204,21,.16);}
 .login-actions{display:grid;grid-template-columns:1fr;gap:10px;}
+.pending-approval-notice{display:block;margin-top:12px;padding:13px 15px;border:2px solid #f59e0b;border-radius:12px;background:rgba(245,158,11,.14);color:#fb923c;font-size:20px;line-height:1.35;font-weight:950;text-align:center;letter-spacing:.01em;}
 .big-btn{width:100%;padding:14px 16px;border-radius:14px;border:1px solid rgba(250,204,21,.45);background:linear-gradient(135deg,rgba(250,204,21,.34),rgba(96,165,250,.22));color:#fff;font-weight:900;cursor:pointer;font-size:15px;}
 .big-btn:hover{border-color:rgba(250,204,21,.78);transform:translateY(-1px);}
 .myprios-box{position:static!important;width:100%!important;max-height:none!important;overflow:visible!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;}
@@ -2872,7 +2875,7 @@ async function createPlayerPinFromSheet(){
     }
 
     showPlayerPinValue(result.pin);
-    status.innerHTML='<span class="ok">✓ SpielerLogin wurde gespeichert.</span><br><strong>Bitte diesen Pin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.';
+    status.innerHTML='<span class="ok">✓ Dein SpielerAccount wurde erstellt.</span><br><strong>Bitte diesen SpielerLogin jetzt kopieren oder notieren.</strong> Er wird später nicht mehr angezeigt.<span class="pending-approval-notice">Dein SpielerAccount muss durch die Gildenleitung erst noch freigegeben werden.</span>';
     document.getElementById("createPlayerPinBtn").classList.add("hidden");
     document.getElementById("resetPinArea").classList.remove("hidden");
 
@@ -4690,8 +4693,9 @@ async function loadDashboardForPin(pin){
     const key=playerLoginStorageKey();
     localStorage.removeItem(key);
     sessionStorage.removeItem(key);
-    if(status) status.innerHTML='<span class="bad">Dieser SpielerLogin wurde nicht gefunden.</span>';
-    if(charsBox) charsBox.innerHTML='<span class="bad">Keine Charaktere gefunden.</span>';
+    const loginError=String(data.error || data.message || "Dieser SpielerLogin wurde nicht gefunden.");
+    if(status) status.innerHTML='<span class="bad">'+safeHtml(loginError)+'</span>';
+    if(charsBox) charsBox.innerHTML='<span class="bad">'+safeHtml(loginError)+'</span>';
     return false;
   }
 
