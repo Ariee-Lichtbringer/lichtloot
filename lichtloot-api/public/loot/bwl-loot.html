@@ -2993,6 +2993,7 @@ function mapAq40JsonLoot(items){
     Slot_DE: obj.slot || obj.Slot_DE || "",
     Typ_DE: obj.type || obj.Typ_DE || "",
     Boss: obj.boss || obj.Boss || "",
+    Klassen: obj.classes || obj.Classes || obj.Klassen || obj.klasse || obj.Klasse || "",
     Stats_DE: Array.isArray(obj.stats) ? obj.stats.join("|") : (obj.statsText || obj.Stats_DE || ""),
     Tooltip_DE: obj.tooltip || obj.Tooltip_DE || "",
     Dropchance: obj.dropChance || obj.Dropchance || "",
@@ -3019,6 +3020,7 @@ function mapAq40SheetLootRow(obj){
     boss: obj.Boss || "",
     category: obj.Kategorie || obj.Category || "",
     wowhead: obj.Wowhead || obj.WowheadLink || "",
+    classes: obj.Klassen || obj.Classes || obj.classes || obj.Klasse || obj.klasse || "",
     p0: [],
     stats: String(obj.Stats_DE || obj.Tooltip_DE || "")
       .split("|")
@@ -3097,9 +3099,9 @@ function renderLootList(){
     ].join(" ").toLowerCase().includes(query);
     if(!matchesSearch) return false;
     if(!classFilter) return true;
-    const classText=[item.classes,item.className,item.class,item.klasse,item.tooltipText,item.tooltip,item.statsText]
+  const classText=[item.classes,item.className,item.class,item.klasse,item.tooltipText,item.tooltip,item.statsText,item.stats]
       .flat().filter(Boolean).join(" ").toLowerCase();
-    const hasClassRestriction=/klassen?\s*:/.test(classText) || Boolean(item.classes||item.className||item.klasse);
+    const hasClassRestriction=/(?:klassen?|classes)\s*:/.test(classText) || Boolean(item.classes||item.className||item.klasse);
     if(!hasClassRestriction) return true;
     const aliases={"jäger":["jäger","jaeger","hunter"],krieger:["krieger","warrior"],paladin:["paladin"],schurke:["schurke","rogue"],priester:["priester","priest"],schamane:["schamane","shaman"],magier:["magier","mage"],hexenmeister:["hexenmeister","warlock"],druide:["druide","druid"]};
     return (aliases[classFilter]||[classFilter]).some(name=>classText.includes(name));
