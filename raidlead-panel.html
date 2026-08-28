@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<script src="guild-page-boot.js"></script>
+<script src="guild-page-boot.js?v=20260828-1235"></script>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="favicon.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1597,6 +1597,8 @@ let raidleadItemOptionMap = {};
 let raidleadItemOptionsRaidKey = "";
 let currentP0PlusEntries = [];
 let currentPrioCheck = null;
+let currentRaidSignupRows = [];
+let currentRaidHasSignupHelper = false;
 let prioCheckTimer = null;
 
 const classOrder = ["Krieger","Paladin","Jäger","Schurke","Priester","Schamane","Magier","Hexenmeister","Druide"];
@@ -1775,6 +1777,8 @@ async function loadRaidByPin(){
   currentPrios = [];
   currentReleased = false;
   currentPrioCheck = null;
+  currentRaidSignupRows = [];
+  currentRaidHasSignupHelper = false;
   itemVisualMap = {};
   updateRaidBackground();
 
@@ -1963,48 +1967,52 @@ async function loadRaidPrioCheck(){
     "&t=" + Date.now();
 
   try{
-    const response = await fetch(url,{cache:"no-store"});
-    const result = await response.json();
+    const [checkResponse,signupResponse] = await Promise.all([
+      fetch(url,{cache:"no-store"}),
+      fetch(RAID_API_URL+"?"+new URLSearchParams({guild:currentGuildSlug(),action:"getRaidHelper",raidId:currentRaidData.raidId,playerPin:currentRaidData.playerPin||currentRaidData.raidId,t:Date.now()}).toString(),{cache:"no-store"})
+    ]);
+    const result = await checkResponse.json();
+    const signupResult = await signupResponse.json().catch(()=>({}));
 
     currentPrioCheck =
       result && result.success
         ? (result.check || null)
         : null;
+    currentRaidHasSignupHelper=Boolean(signupResult?.success&&signupResult?.raid?.raidHelperEnabled!==false&&!signupResult?.raid?.p0Only);
+    currentRaidSignupRows = currentRaidHasSignupHelper ? [...(signupResult.signups||[]),...(signupResult.externalSignups||[])] : [];
   }catch(error){
-    console.warn("DC Abgleich konnte nicht geladen werden:", error);
+    console.warn("Raidanmelder-Abgleich konnte nicht geladen werden:", error);
     currentPrioCheck = null;
+    currentRaidSignupRows = [];
+    currentRaidHasSignupHelper = false;
   }
 
   return currentPrioCheck;
 }
 
-function getDcMissingPrioCount(){
-  const check = currentPrioCheck || {};
-  const counts = check.counts || {};
-  const signups = Number(counts.signups || counts.signup || counts.angemeldet || 0);
-  const localPrios = localPrioPlayerCount();
+function raidleadSignupNames(){
+  const excluded=new Set(["absent","abgemeldet","declined"]),seen=new Set();
+  return (currentRaidSignupRows||[]).filter(row=>!excluded.has(String(row.status||row.signupStatus||"").toLowerCase())).map(row=>String(row.player||row.char||row.playerName||row.characterName||row.name||"").trim()).filter(name=>{const key=normalizeDcPlayerName(name);if(!key||seen.has(key))return false;seen.add(key);return true;});
+}
 
-  if(signups > 0){
-    return Math.max(0, signups - localPrios);
-  }
-
-  if(Array.isArray(check.missingPrio)){
-    return check.missingPrio.length;
-  }
-
-  return null;
+function raidleadMissingPrioNames(){
+  const prioNames=new Set((currentPrios||[]).map(entry=>normalizeDcPlayerName(entry.player||entry.Spieler)).filter(Boolean));
+  return raidleadSignupNames().filter(name=>!prioNames.has(normalizeDcPlayerName(name)));
 }
 
 function renderEntryMetrics(){
-  const missing = getDcMissingPrioCount();
-  const missingText = missing === null ? "-" : String(missing);
-  const missingClass = missing === null ? "" : (missing > 0 ? "warn" : "ok");
+  if(!currentRaidHasSignupHelper){
+    return `<div class="entry-metrics"><span class="entry-metric">Prios <strong>${currentPrios.length}</strong></span></div>`;
+  }
+  const signupNames=raidleadSignupNames(),missingNames=raidleadMissingPrioNames(),missingClass=missingNames.length?"warn":"ok";
 
   return `
     <div class="entry-metrics">
       <span class="entry-metric">Prios <strong>${currentPrios.length}</strong></span>
-      <span class="entry-metric">DC fehlen <strong class="${missingClass}">${missingText}</strong></span>
+      <span class="entry-metric">Angemeldet <strong>${signupNames.length}</strong></span>
+      <span class="entry-metric">Fehlende Prioeinträge <strong class="${missingClass}">${missingNames.length}</strong></span>
     </div>
+    <div class="status" style="margin-top:7px"><strong>Angemeldete Charaktere:</strong> ${signupNames.length?signupNames.map(safe).join(", "):"Keine Anmeldungen gefunden."}<br><strong>Prio fehlt:</strong> ${missingNames.length?missingNames.map(safe).join(", "):"Keine – alle angemeldeten Charaktere haben einen Prioeintrag."}</div>
   `;
 }
 
@@ -2158,7 +2166,7 @@ function renderRaidView(){
       <button class="btn ${currentReleased ? "action-close" : "action-open"}" onclick="${currentReleased ? "closeList()" : "releaseList()"}" ${releaseBlocked ? `disabled title="${safe(prioAccess.message)}" style="opacity:.45;cursor:not-allowed"` : ""}>
         ${currentReleased ? "Prio schließen" : "Prio öffnen"}
       </button>
-      <button class="btn action-soft" onclick="downloadPrio3ReforgedExport()">Prio3 Reforged Export</button>
+      <button class="btn action-soft" onclick="downloadPrio3ReforgedExport()" ${currentReleased ? "" : 'disabled title="Download erst verfügbar, wenn die Prioliste geöffnet ist." style="opacity:.45;cursor:not-allowed"'}>Prio3 Reforged Export</button>
       ${transferButton}
     </div>
 
