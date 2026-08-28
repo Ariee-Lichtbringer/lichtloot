@@ -6700,7 +6700,7 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
       return { success: true, skipped: true, reason: "po_release_notice_already_open", rowNumber: existing.rows[0].id, type, payload };
     }
   }
-  if (type === "raid_announcement_role_notice") {
+  if (type === "raid_announcement_role_notice" || type === "loot_master_leadpin_notice") {
     const raidId = clean(payload?.raidId || "");
     if (raidId) {
       const existing = await query(
@@ -6725,7 +6725,9 @@ async function enqueueBotUpdate({ guildId, type, payload }) {
         return {
           success: true,
           skipped: true,
-          reason: "raid_announcement_notice_already_open",
+          reason: type === "loot_master_leadpin_notice"
+            ? "loot_master_leadpin_notice_already_open"
+            : "raid_announcement_notice_already_open",
           rowNumber: existing.rows[0].id,
           type,
           payload: payload || {}
