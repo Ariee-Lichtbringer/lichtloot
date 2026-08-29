@@ -25308,11 +25308,12 @@ async function getRaidBackupSnapshot({ guildId, query: params }) {
 }
 
 async function transferP0PlusPoints({ guildId, query: params }) {
-  const raidType = normalizeRaidType(params.raid);
-  await requireConfiguredSpecialRaidType(guildId, raidType);
+  const requestedRaidType = normalizeRaidType(params.raid);
+  const targetRaidType = normalizeRaidType(params.targetRaid || params.targetRaidType || params.raid);
+  await requireConfiguredSpecialRaidType(guildId, targetRaidType);
   const raidId = clean(params.raidId);
-  const values = [guildId, raidType];
-  let raidClause = "r.guild_id = $1 and r.raid_type = $2";
+  const values = [guildId];
+  let raidClause = "r.guild_id = $1";
 
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raidId)) {
     values.push(raidId);
@@ -25320,6 +25321,9 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   } else if (raidId) {
     values.push(raidId);
     raidClause += ` and (r.external_raid_id = $${values.length} or r.raid_pin = $${values.length})`;
+  } else {
+    values.push(requestedRaidType);
+    raidClause += ` and r.raid_type = $${values.length}`;
   }
 
   const raidResult = await query(
@@ -25335,6 +25339,13 @@ async function transferP0PlusPoints({ guildId, query: params }) {
   if (!raid) {
     const error = new Error("Raid wurde nicht gefunden.");
     error.statusCode = 404;
+    throw error;
+  }
+  const sourceRaidType = normalizeRaidType(raid.raid_type);
+  const isGenericZgSource = sourceRaidType === "zg";
+  if (isGenericZgSource && !["zg-prime", "zg-late", "zg-mittwoch"].includes(targetRaidType)) {
+    const error = new Error("Für einen allgemeinen ZG-Raid muss ZG Prime, ZG Late-Night oder ZG Mittwoch als Ziel gewählt werden.");
+    error.statusCode = 400;
     throw error;
   }
 
@@ -25356,7 +25367,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
      where r.guild_id = $1
        and lower(r.raid_type) = any($2)
        and r.raid_date = $3`,
-    [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date]
+    [guildId, isGenericZgSource ? [sourceRaidType] : raidTypeSearchValues(sourceRaidType), raid.raid_date]
   );
   const relatedRaids = [
     raid,
@@ -25435,14 +25446,18 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     await client.query("begin");
     await client.query(
       "select pg_advisory_xact_lock(hashtext($1), hashtext($2))",
-      [clean(guildId), `${normalizeRaidType(raid.raid_type)}:${raid.raid_date?.toISOString?.().slice(0, 10) || clean(raid.raid_date)}`]
+      [clean(guildId), `${targetRaidType}:${raid.raid_date?.toISOString?.().slice(0, 10) || clean(raid.raid_date)}`]
     );
     const existingTransfer = await client.query(
-      `select character_id, count(*)::int as count
-       from p0plus_points
-       where guild_id = $1 and source = 'Raidlead Transfer' and note = any($2::text[])
-       group by character_id`,
-      [guildId, transferNotes]
+      `select pp.character_id, count(*)::int as count
+       from p0plus_points pp
+       join items i on i.id = pp.item_id
+       where pp.guild_id = $1
+         and pp.source = 'Raidlead Transfer'
+         and pp.note = any($2::text[])
+         and lower(i.raid_type) = any($3)
+       group by pp.character_id`,
+      [guildId, transferNotes, raidTypeSearchValues(targetRaidType)]
     );
     const existingTransferCount = existingTransfer.rows.reduce((sum, row) => sum + Number(row.count || 0), 0);
     const transferredCharacters = new Set(existingTransfer.rows.map(row => clean(row.character_id)));
@@ -25471,7 +25486,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     for (const row of dedupedCandidates) {
       const targetItem = await upsertItem(
         client,
-        raid.raid_type,
+        targetRaidType,
         row.item_name,
         row.item_game_id
       );
@@ -25516,7 +25531,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
         characterId: row.character_id,
         itemId: row.target_item_id,
         raidId: raid.id,
-        raidType: raid.raid_type,
+        raidType: targetRaidType,
         playerName: row.player || "",
         server: row.server || "",
         itemName: row.item_name || "",
@@ -25539,16 +25554,18 @@ async function transferP0PlusPoints({ guildId, query: params }) {
 
   const transferResult = await query(
     `select count(*)::int as count
-     from p0plus_points
-     where guild_id = $1
-       and source = 'Raidlead Transfer'
-       and note = any($2::text[])`,
-    [guildId, transferNotes]
+     from p0plus_points pp
+     join items i on i.id = pp.item_id
+     where pp.guild_id = $1
+       and pp.source = 'Raidlead Transfer'
+       and pp.note = any($2::text[])
+       and lower(i.raid_type) = any($3)`,
+    [guildId, transferNotes, raidTypeSearchValues(targetRaidType)]
   );
   const p0PlusTransferCount = Number(transferResult.rows[0]?.count || 0);
   const exportResult = await queueP0PlusTransferCsvExport({
     guildId,
-    raid,
+    raid: { ...raid, raid_type: targetRaidType },
     awardedRows: dedupedCandidates,
     skippedRows: skipped
   }).catch(error => ({ success: false, error: error.message || String(error) }));
@@ -25562,6 +25579,7 @@ async function transferP0PlusPoints({ guildId, query: params }) {
     archivedPoPostEntries: Number(raid.archived_po_post_entries || 0),
     p0PlusTransferred: p0PlusTransferCount > 0,
     p0PlusTransferCount,
+    targetRaid: targetRaidType,
     exportQueued: Boolean(exportResult && exportResult.success && !exportResult.skipped),
     exportResult
   };
