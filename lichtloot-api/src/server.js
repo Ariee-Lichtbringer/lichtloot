@@ -2829,6 +2829,12 @@ function lootSourceRaidType(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(raid) ? "zg" : raid;
 }
 
+function poItemSettingsRaidTypes(value) {
+  const raid = normalizeRaidType(value);
+  if (raid === "zg") return ["zg", "zg-mittwoch", "zg-prime", "zg-late"];
+  return [raid];
+}
+
 function isOptionalSpecialRaid(value) {
   return ["zg-mittwoch", "zg-prime", "zg-late"].includes(normalizeRaidType(value));
 }
@@ -22941,16 +22947,16 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
        coalesce(sum(pp.points), 0)::numeric as p0plus_points,
        count(pp.id)::int as p0plus_count
      from items i
-     ${restrictToConfiguredPoItems
-       ? "join guild_po_items gpi on gpi.guild_id = $2 and gpi.item_id = i.id and gpi.raid_type = $3 and gpi.enabled = true"
-       : ""}
      left join p0plus_points pp on pp.guild_id = $2 and pp.item_id = i.id
-     where lower(i.raid_type) = any($1)
-        or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1)
+     where (lower(i.raid_type) = any($1)
+        or lower(regexp_replace(i.raid_type, '[^a-z0-9]+', '-', 'g')) = any($1))
+     ${restrictToConfiguredPoItems
+       ? "and exists (select 1 from guild_po_items gpi where gpi.guild_id = $2 and gpi.item_id = i.id and lower(gpi.raid_type) = any($3) and gpi.enabled = true)"
+       : ""}
      group by i.id
      order by i.name asc`,
     restrictToConfiguredPoItems
-      ? [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId, normalizeRaidType(raid.raid_type)]
+      ? [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId, poItemSettingsRaidTypes(raid.raid_type)]
       : [raidTypeSearchValues(lootSourceRaidType(raid.raid_type)), guildId]
   );
 
