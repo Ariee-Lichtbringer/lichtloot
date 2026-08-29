@@ -2272,9 +2272,15 @@ const P0PLUS_API_URL = APPS_SCRIPT_URL;
 const SUPPORTS_P0PLUS = true;
 let GUILD_PO_ITEM_KEYS = new Set();
 let GUILD_PO_PLUS_ITEM_KEYS = new Set();
+let currentPoItemRaid = RAID_NAME;
 function guildPoItemKey(value){ return String(value || "").trim().toLowerCase().replace(/\s+/g," "); }
+function poItemRaidFromPublishedRaid(value){
+  const normalized=String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+  if(["zg-prime","zg-late","zg-mittwoch"].includes(normalized)) return normalized;
+  return RAID_NAME;
+}
 async function loadGuildPoItems(){
-  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(RAID_NAME)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
+  try{ const url=(typeof RAID_API_URL !== "undefined" ? RAID_API_URL : APPS_SCRIPT_URL)+"?action=getGuildPoItems&guild="+encodeURIComponent(currentGuildSlug())+"&raid="+encodeURIComponent(currentPoItemRaid)+"&t="+Date.now(); const response=await fetch(url,{cache:"no-store"}); const data=await response.json(); GUILD_PO_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poEnabled).map(item=>guildPoItemKey(item.name))); GUILD_PO_PLUS_ITEM_KEYS=new Set((data.items||[]).filter(item=>item.poPlusEnabled).map(item=>guildPoItemKey(item.name))); }catch(error){ GUILD_PO_ITEM_KEYS=new Set();GUILD_PO_PLUS_ITEM_KEYS=new Set(); }
 }
 const PRIO_COUNT = 3;
 
@@ -4096,6 +4102,12 @@ async function loadPublishedPrios(){
     currentRaidId = result.raidId || result.RaidID || result.raidID || currentRaidId || "";
     currentRaidDate = result.raidDate || result.datum || result.Datum || "";
     currentRaidTime = result.raidTime || result.uhrzeit || result.Uhrzeit || "";
+    const nextPoItemRaid=poItemRaidFromPublishedRaid(result.raidType || result.raid_type || result.raid || "");
+    if(nextPoItemRaid !== currentPoItemRaid){
+      currentPoItemRaid=nextPoItemRaid;
+      await loadGuildPoItems();
+      renderLootList();
+    }
     currentP0PlusOverride = Boolean(result.p0PlusOverride) || ["ja","true","1","aktiv","freigeschaltet","geöffnet","geoeffnet","offen","open","published","veröffentlicht"].includes(String(result.p0PlusFreigabe || "").trim().toLowerCase());
 
     const prios=sortPrios(result.prios||[]);
