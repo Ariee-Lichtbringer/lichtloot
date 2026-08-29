@@ -3826,6 +3826,15 @@ function displayStoredGuildName(value) {
   return raw.toLowerCase() === "lichtloot" ? "Lichtbringer" : raw;
 }
 
+function canonicalRaidImageUrl(raidType, storedUrl = "") {
+  let key = normalizeRaidType(raidType);
+  if (key.startsWith("zg")) key = "zg";
+  if (["mc", "bwl", "ony", "aq40", "aq20", "naxx", "zg"].includes(key)) {
+    return `https://lichtloot-production.up.railway.app/images/raid-templates/${key}.jpg?v=20260829`;
+  }
+  return clean(storedUrl);
+}
+
 function normalizeRaidRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
   const p0PlusTransferCount = Number(row.p0plus_transfer_count || 0);
@@ -3864,8 +3873,8 @@ function normalizeRaidRow(row) {
     postId: row.signup_post_id || "",
     deletedAt: row.deleted_at || "",
     description: row.description || "",
-    raidImageUrl: row.raid_image_url || "",
-    imageUrl: row.raid_image_url || "",
+    raidImageUrl: canonicalRaidImageUrl(row.raid_type, row.raid_image_url),
+    imageUrl: canonicalRaidImageUrl(row.raid_type, row.raid_image_url),
     signupCounts: row.signup_counts || null,
     signupCount: Number(row.signup_count || 0),
     p0SignupCount: Number(row.p0_signup_count || 0),
@@ -27038,7 +27047,7 @@ async function applyLootRaidAssignmentCorrectionsOnce() {
 }
 
 async function applyEterniumLockboxRaidItemsOnce() {
-  const markerKey = "eternium-lockbox-raid-items-v2";
+  const markerKey = "eternium-lockbox-raid-items-v3-bottomless-bag";
   const raidTypes = ["mc", "bwl", "naxx"];
   const client = await pool.connect();
   try {
@@ -27072,6 +27081,26 @@ async function applyEterniumLockboxRaidItemsOnce() {
       if (result) upserted += 1;
     }
 
+    const bottomlessBagPattern = await upsertLootItemRecord(client, {
+      raid: "bwl",
+      itemId: "14510",
+      name: "Muster: Bodenlose Tasche",
+      quality: "rare",
+      iconName: "inv_scroll_03",
+      slot: "",
+      type: "Schneiderei",
+      boss: "Nefarian",
+      bind: "",
+      category: "Rezept",
+      wowhead: "https://www.wowhead.com/classic/de/item=14510/muster-bodenlose-tasche",
+      statsText: "Benötigt Schneiderei (300) | Benutzen: Lehrt Euch, wie man eine bodenlose Tasche näht.",
+      tooltip: "Muster: Bodenlose Tasche | Gegenstandsstufe 62 | Benötigt Schneiderei (300) | Benutzen: Lehrt Euch, wie man eine bodenlose Tasche näht. | Bodenlose Tasche | 18 Platz Behälter",
+      needed: "Benötigt Schneiderei (300)",
+      equip: "Benutzen: Lehrt Euch, wie man eine bodenlose Tasche näht.",
+      dropchance: "0,3 %"
+    }, { preserveExisting: false });
+    if (bottomlessBagPattern) upserted += 1;
+
     await client.query(
       `insert into app_state (key, value, updated_at)
        values ($1, $2, now())
@@ -27079,7 +27108,7 @@ async function applyEterniumLockboxRaidItemsOnce() {
       [markerKey, JSON.stringify({ raidTypes, upserted })]
     );
     await client.query("commit");
-    console.log("Eterniumschließkassette für MC, BWL und Naxx ergänzt");
+    console.log("Eterniumschließkassette sowie Muster: Bodenlose Tasche für BWL ergänzt");
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
