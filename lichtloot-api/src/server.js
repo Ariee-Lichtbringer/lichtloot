@@ -25283,8 +25283,7 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
        from items
        where lower(raid_type) = any($1)
          and lower(name) = lower($2)
-       order by created_at asc
-       limit 1`,
+       order by created_at asc`,
       [raidTypeSearchValues(raidType), itemName]
     );
     if (!itemResult.rowCount) {
@@ -25293,21 +25292,28 @@ async function clearP0PlusForPlayer({ guildId, query: params }) {
          from items
          where lower(raid_type) = any($1)
            and regexp_replace(lower(name), '[^a-z0-9]+', '', 'g') = regexp_replace(lower($2), '[^a-z0-9]+', '', 'g')
-         order by created_at asc
-         limit 1`,
+         order by created_at asc`,
         [raidTypeSearchValues(raidType), itemName]
       );
     }
     const item = itemResult.rows[0] || await upsertItem(client, raidType, itemName);
+    const matchingItemIds = itemResult.rows.map(row => row.id).filter(Boolean);
+    if (!matchingItemIds.length && item?.id) matchingItemIds.push(item.id);
     let deleted = 0;
     let oldPoints = 0;
     if (item) {
-      oldPoints = await getP0PlusPointTotal(client, guildId, character.id, item.id);
+      const oldPointsResult = await client.query(
+        `select coalesce(sum(points),0)::numeric as points
+         from p0plus_points
+         where guild_id=$1 and character_id=$2 and item_id=any($3::uuid[])`,
+        [guildId, character.id, matchingItemIds]
+      );
+      oldPoints = Number(oldPointsResult.rows[0]?.points || 0);
       const result = await client.query(
         `delete from p0plus_points
-         where guild_id = $1 and character_id = $2 and item_id = $3
+         where guild_id = $1 and character_id = $2 and item_id = any($3::uuid[])
          returning id`,
-        [guildId, character.id, item.id]
+        [guildId, character.id, matchingItemIds]
       );
       deleted = result.rowCount;
       // Der Erhalt muss auch dann protokolliert werden, wenn vor dem Transfer
