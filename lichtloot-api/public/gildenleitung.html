@@ -2685,10 +2685,12 @@ body.raid-unified-open .raid-helper-current-detail-head{display:grid;grid-templa
 .raid-helper-schedule-head{align-items:center;padding:18px 20px;border:1px solid rgba(249,115,22,.28);border-radius:16px;background:linear-gradient(135deg,rgba(249,115,22,.12),rgba(15,23,42,.72))}
 .raid-helper-schedule-intro{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap;padding:14px 16px;margin:14px 0;border:1px solid rgba(148,163,184,.2);border-radius:12px;background:rgba(2,6,23,.5)}
 .raid-helper-schedule-intro b{color:#fb923c}.raid-helper-schedule-intro span{color:#cbd5e1}
-.raid-helper-schedule-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.raid-helper-schedule-grid .raid-helper-list-item{grid-template-columns:auto minmax(0,1fr);align-items:start;padding:16px;border-color:color-mix(in srgb,var(--raid-color) 45%,rgba(148,163,184,.2));background:linear-gradient(145deg,rgba(15,23,42,.95),rgba(2,6,23,.78))}
-.raid-helper-schedule-grid .raid-helper-template-actions{grid-column:1/-1;justify-content:flex-end;padding-top:10px;border-top:1px solid rgba(148,163,184,.14)}
-@media(max-width:1050px){.raid-helper-schedule-grid{grid-template-columns:1fr}.raid-helper-schedule-head{align-items:flex-start}}
+.raid-helper-schedule-grid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:12px}
+.raid-helper-schedule-card .raid-helper-current-card-counts{gap:6px}
+.raid-helper-schedule-card .raid-helper-current-card-count{font-size:10px}
+.raid-helper-schedule-card .raid-helper-current-card-actions{grid-template-columns:1fr 1fr auto}
+@media(max-width:1250px){.raid-helper-schedule-grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
+@media(max-width:760px){.raid-helper-schedule-grid{grid-template-columns:1fr}.raid-helper-schedule-head{align-items:flex-start}}
 
 .raid-helper-tab-copy{
   min-width:0;
@@ -12934,25 +12936,32 @@ function renderRaidHelperScheduleRules(){
   box.innerHTML = activeSchedules.map(schedule => {
     const raidKey = String(schedule.raid || schedule.raidType || "raid").toLowerCase();
     const scheduleId=String(schedule.id || schedule.scheduleId || "");
+    const raidName=schedule.title || RAID_OPTIONS[raidKey]?.name || "Raid";
     const weekday = ["","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"][Number(schedule.weekday || 0)] || "Wochentag offen";
     const channel = raidHelperDiscordChannels.find(item => String(item.channelId || item.id) === String(schedule.discordChannelId || ""));
     const channelLabel = channel ? "# " + (channel.channelName || channel.name) : (schedule.discordChannelId ? "# " + schedule.discordChannelId : "Channel offen");
+    const imageKey=raidKey.startsWith("zg-") ? "zg" : raidKey;
+    const imageUrl=defaultRaidHelperImageUrl(raidKey) || schedule.raidImageUrl || schedule.imageUrl || RAID_IMAGES[imageKey] || RAID_IMAGES.other;
+    const interval=String(schedule.intervalWeeks || 1);
     return `
-      <article class="raid-helper-list-item" style="--raid-color:${raidHelperRaidColor(raidKey)}">
-        <div class="raid-helper-list-icon">${escapeHtml(RAID_OPTIONS[raidKey]?.short || "R")}</div>
-        <div>
-          <div class="raid-helper-list-title">${escapeHtml(schedule.title || RAID_OPTIONS[raidKey]?.name || "Raid")}</div>
-          <div class="raid-helper-list-meta">
-            <span class="raid-helper-meta-pill">↻ ${escapeHtml(weekday)} · alle ${escapeHtml(String(schedule.intervalWeeks || 1))} Woche(n)</span>
-            <span class="raid-helper-meta-pill">▣ ${escapeHtml(formatRaidDate(schedule.nextRaidDate))}</span>
-            <span class="raid-helper-meta-pill">◷ ${escapeHtml(schedule.raidTime || "-")}</span>
-            <span class="raid-helper-meta-pill">${escapeHtml(channelLabel)}</span>
+      <article class="raid-helper-current-card raid-helper-schedule-card" style="--raid-color:${raidHelperRaidColor(raidKey)}">
+        <img class="raid-helper-current-card-image" src="${escapeAttr(imageUrl)}" alt="${escapeAttr(raidName)}">
+        <div class="raid-helper-current-card-body">
+          <div class="raid-helper-current-card-head"><h4>${escapeHtml(raidName)}</h4></div>
+          <div class="raid-helper-current-card-meta">
+            <span>▣ ${escapeHtml(formatRaidDate(schedule.nextRaidDate))}</span>
+            <span>◷ ${escapeHtml(schedule.raidTime || "-")}</span>
+          </div>
+          <div class="raid-helper-current-card-status"><span class="status-badge open">↻ Automatischer Rhythmus</span></div>
+          <div class="raid-helper-current-card-counts">
+            <div class="raid-helper-current-card-count"><span>↻</span><b>${escapeHtml(interval)}</b><span>${interval === "1" ? "Woche" : "Wochen"} · ${escapeHtml(weekday)}</span></div>
+            <div class="raid-helper-current-card-count"><span>#</span><span>${escapeHtml(channelLabel)}</span></div>
           </div>
         </div>
-        <div class="raid-helper-template-actions">
-          <button class="small-btn ghost" type="button" onclick="editRaidHelperSchedule('${escapeAttr(scheduleId)}')">Vollständig bearbeiten</button>
+        <div class="raid-helper-current-card-actions">
+          <button class="small-btn primary" type="button" onclick="editRaidHelperSchedule('${escapeAttr(scheduleId)}')">Öffnen / Bearbeiten</button>
           <button class="small-btn primary" type="button" onclick="queueRaidToDiscord('${escapeAttr(schedule.currentRaidId || ("schedule-" + scheduleId))}')">Jetzt posten</button>
-          <button class="small-btn danger" type="button" onclick="deleteRaidHelperSchedule('${escapeAttr(scheduleId)}')">Rhythmus löschen</button>
+          <button class="small-btn danger" type="button" title="Rhythmus löschen" aria-label="${escapeAttr(raidName)} Rhythmus löschen" onclick="deleteRaidHelperSchedule('${escapeAttr(scheduleId)}')">✕</button>
         </div>
       </article>
     `;
