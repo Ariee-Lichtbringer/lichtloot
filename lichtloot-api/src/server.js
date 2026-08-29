@@ -3826,15 +3826,6 @@ function displayStoredGuildName(value) {
   return raw.toLowerCase() === "lichtloot" ? "Lichtbringer" : raw;
 }
 
-function canonicalRaidImageUrl(raidType, storedUrl = "") {
-  let key = normalizeRaidType(raidType);
-  if (key.startsWith("zg")) key = "zg";
-  if (["mc", "bwl", "ony", "aq40", "aq20", "naxx", "zg"].includes(key)) {
-    return `https://lichtloot-production.up.railway.app/images/raid-templates/${key}.jpg?v=20260829`;
-  }
-  return clean(storedUrl);
-}
-
 function normalizeRaidRow(row) {
   const raidDate = row.raid_date ? row.raid_date.toISOString().slice(0, 10) : "";
   const p0PlusTransferCount = Number(row.p0plus_transfer_count || 0);
@@ -3873,8 +3864,8 @@ function normalizeRaidRow(row) {
     postId: row.signup_post_id || "",
     deletedAt: row.deleted_at || "",
     description: row.description || "",
-    raidImageUrl: canonicalRaidImageUrl(row.raid_type, row.raid_image_url),
-    imageUrl: canonicalRaidImageUrl(row.raid_type, row.raid_image_url),
+    raidImageUrl: row.raid_image_url || "",
+    imageUrl: row.raid_image_url || "",
     signupCounts: row.signup_counts || null,
     signupCount: Number(row.signup_count || 0),
     p0SignupCount: Number(row.p0_signup_count || 0),
@@ -5954,6 +5945,27 @@ async function getGuildLayoutValue(guildId, key) {
   const layout = result.rows[0]?.layout_json || {};
   if (!layout || typeof layout !== "object" || Array.isArray(layout)) return "";
   return clean(layout[key]);
+}
+
+async function getGuildRaidImageUrl(guildId, raidType, fallback = "") {
+  await ensureGuildLayoutSchema();
+  const result = await query(
+    `select coalesce(layout_json, '{}'::jsonb) as layout_json
+     from guild_settings
+     where guild_id = $1`,
+    [guildId]
+  );
+  const layout = result.rows[0]?.layout_json || {};
+  const raidImages = layout?.raidImages && typeof layout.raidImages === "object"
+    ? layout.raidImages
+    : {};
+  let raidKey = normalizeRaidType(raidType);
+  if (raidKey.startsWith("zg")) raidKey = "zg";
+  const configured = clean(raidImages[raidKey]);
+  const selected = configured || clean(fallback);
+  if (!selected) return "";
+  if (/^https?:\/\//i.test(selected)) return selected;
+  return new URL(selected.replace(/^\.\//, ""), "https://lichtloot-production.up.railway.app/").href;
 }
 
 async function resolveDefaultGuildId() {
@@ -21175,12 +21187,23 @@ async function getRaidHelper({ guildId, query: params }) {
   }
   if (lookupValue) missingRaidHelperCache.delete(missingCacheKey);
 
+  const normalizedRaid = normalizeRaidRow(raid);
+  const guildRaidImageUrl = await getGuildRaidImageUrl(
+    guildId,
+    raid.raid_type,
+    normalizedRaid.raidImageUrl
+  );
+  const raidForHelper = {
+    ...normalizedRaid,
+    raidImageUrl: guildRaidImageUrl,
+    imageUrl: guildRaidImageUrl
+  };
+
   if (raid.p0_only) {
-    const normalizedRaid = normalizeRaidRow(raid);
     return {
       success: true,
       raid: {
-        ...normalizedRaid,
+        ...raidForHelper,
         signupCount: 0,
         prioCount: 0,
         warnings: []
@@ -21386,7 +21409,7 @@ async function getRaidHelper({ guildId, query: params }) {
   return {
     success: true,
     raid: {
-      ...normalizeRaidRow(raid),
+      ...raidForHelper,
       signupCount,
       prioCount,
       warnings
