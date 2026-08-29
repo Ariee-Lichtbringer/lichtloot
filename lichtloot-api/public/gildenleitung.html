@@ -18179,7 +18179,18 @@ function renderP0PlusModalContent(){
           <label for="newP0Raid">Raid</label>
           <select id="newP0Raid">
             <option value="">Raid wählen</option>
-            ${["mc","bwl","aq40","naxx","zg","aq20","ony"].map(raid => `<option value="${raid}">${raid.toUpperCase()}</option>`).join("")}
+            ${[
+              { value:"mc", label:"MC" },
+              { value:"bwl", label:"BWL" },
+              { value:"aq40", label:"AQ40" },
+              { value:"naxx", label:"NAXX" },
+              { value:"zg", label:"ZG (allgemein)" },
+              { value:"zg-mittwoch", label:"ZG Mittwoch" },
+              { value:"zg-prime", label:"ZG Prime" },
+              { value:"zg-late", label:"ZG Late" },
+              { value:"aq20", label:"AQ20" },
+              { value:"ony", label:"ONY" }
+            ].map(raid => `<option value="${raid.value}">${raid.label}</option>`).join("")}
           </select>
         </div>
         <div>
