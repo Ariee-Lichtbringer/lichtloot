@@ -11198,6 +11198,7 @@ async function setRaidDiscordMessage({ guildId, query: params }) {
     error.statusCode = 404;
     throw error;
   }
+
   const previousMessageId = clean(raid.discord_message_id);
   const nextMessageId = clean(params.discordMessageId || params.messageId || params.raidHelperMessageId);
   const signupPostId = clean(params.signupPostId || params.postKey || params.postId);
@@ -22972,6 +22973,35 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     throw error;
   }
 
+  // Reine P0-Anmelder liegen in einer separaten Datenbank und besitzen eine
+  // eigene P0-* ID. Für den Discord-Post muss trotzdem die P0/P0+-Auswahl des
+  // zeitgleichen normalen Lootseiten-Raids einfließen. Die Kopplung erfolgt
+  // bewusst nur bei identischem Raidtyp, Datum und (falls vorhanden) Uhrzeit,
+  // damit zwei Raids desselben Typs nicht vermischt werden.
+  let linkedRegularRaid = null;
+  if (raid.p0_only && raid.raid_date) {
+    const linkedValues = [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date];
+    let linkedTimeClause = "";
+    if (clean(raid.raid_time)) {
+      linkedValues.push(clean(raid.raid_time));
+      linkedTimeClause = `and coalesce(raid_time, '') = $${linkedValues.length}`;
+    }
+    const linkedResult = await query(
+      `select *
+       from raids
+       where guild_id = $1
+         and lower(raid_type) = any($2)
+         and raid_date = $3
+         ${linkedTimeClause}
+         and lower(coalesce(status, '')) not in
+           ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+       order by created_at desc
+       limit 1`,
+      linkedValues
+    );
+    linkedRegularRaid = linkedResult.rows[0] || null;
+  }
+
   const itemResult = await query(
     `select
        i.id, i.raid_type, i.item_id, i.name, i.quality, i.icon_url,
@@ -23041,6 +23071,15 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by p0s.item_name asc, p0s.player_name asc`,
     [guildId, raid.id]
   );
+  const linkedRegularSignupResult = linkedRegularRaid
+    ? await query(
+      `select p0s.*
+       from p0_discord_signups p0s
+       where p0s.guild_id = $1 and p0s.raid_id = $2
+       order by p0s.item_name asc, p0s.player_name asc`,
+      [guildId, linkedRegularRaid.id]
+    )
+    : { rows: [] };
   // Eine öffentliche P0-ID kann einen normalen Raid mit einem historischen
   // Eintrag in der separaten P0-Datenbank verbinden. Der Discord-Post muss in
   // diesem Fall beide Speicher lesen; andernfalls verschwinden die dort
@@ -23061,6 +23100,8 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     clean(raid.id),
     clean(raid.external_raid_id),
     clean(raid.external_p0_id),
+    clean(linkedRegularRaid?.id),
+    clean(linkedRegularRaid?.external_raid_id),
     clean(params.raidId),
     clean(params.lichtlootRaidId)
   ].filter(Boolean)));
@@ -23068,6 +23109,8 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
     clean(raid.raid_pin),
     clean(raid.player_link),
     clean(raid.player_pin),
+    clean(linkedRegularRaid?.raid_pin),
+    clean(linkedRegularRaid?.player_link),
     clean(params.raidPin),
     clean(params.prioPin),
     clean(params.playerPin)
@@ -23086,7 +23129,8 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      order by updated_at asc, created_at asc`,
     [guildId, raidIdentityValues, raidPinValues]
   );
-  const prioResult = raid.p0_only ? { rows: [] } : await query(
+  const prioSourceRaid = linkedRegularRaid || (!raid.p0_only ? raid : null);
+  const prioResult = prioSourceRaid ? await query(
     `select
        pr.id,
        pr.character_id,
@@ -23132,9 +23176,13 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
      left join items i on i.id = pr.p1_item_id
      where pr.raid_id = $2
      order by lower(coalesce(i.name, '')) asc, lower(c.name) asc`,
-    [guildId, raid.id]
-  );
-  const allSignupDatabaseRows = [...signupResult.rows, ...linkedP0OnlySignupResult.rows];
+    [guildId, prioSourceRaid.id]
+  ) : { rows: [] };
+  const allSignupDatabaseRows = [
+    ...signupResult.rows,
+    ...linkedRegularSignupResult.rows,
+    ...linkedP0OnlySignupResult.rows
+  ];
   const signupRows = allSignupDatabaseRows.map(normalizeP0SignupRow);
   const normalizedRaid = normalizeRaidRow(raid);
   const poPostSignupRows = poPostSignupResult.rows.map(row => ({
