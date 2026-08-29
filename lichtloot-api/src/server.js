@@ -2982,6 +2982,7 @@ async function ensureP0OnlySchema() {
   await p0Query(`alter table p0_only_events add column if not exists post_title text not null default ''`);
   await p0Query(`alter table p0_only_events add column if not exists post_mode text not null default 'signup'`);
   await p0Query(`alter table p0_only_events add column if not exists description text not null default ''`);
+  await p0Query(`alter table p0_only_events add column if not exists linked_raid_id text not null default ''`);
   await p0Query(
     `create table if not exists p0_only_signups (
        id uuid primary key default gen_random_uuid(),
@@ -3007,6 +3008,7 @@ async function ensureP0OnlySchema() {
      )`
   );
   await p0Query(`create index if not exists idx_p0_only_events_lookup on p0_only_events(guild_id, raid_type, raid_date, raid_time)`);
+  await p0Query(`create index if not exists idx_p0_only_events_linked_raid on p0_only_events(guild_id, linked_raid_id) where linked_raid_id <> ''`);
   await p0Query(`create index if not exists idx_p0_only_signups_event on p0_only_signups(guild_id, event_id)`);
 }
 
@@ -22620,7 +22622,8 @@ function normalizeP0OnlyEventRow(row) {
     p0plus_freigabe: "geöffnet",
     postTitle: row.post_title || row.raid_name || "",
     postMode: row.post_mode || "signup",
-    description: row.description || ""
+    description: row.description || "",
+    linkedRaidId: row.linked_raid_id || ""
   };
 }
 
@@ -22658,12 +22661,13 @@ async function createP0OnlyEvent({ guildId, params }) {
   const externalP0Id = (requestedId || `P0-${raidType}-${Date.now()}`).toUpperCase().startsWith("P0-")
     ? requestedId || `P0-${raidType}-${Date.now()}`
     : `P0-${requestedId}`;
+  const requestedLinkedRaidId = clean(params.linkedRaidId || params.linked_raid_id || params.normalRaidId);
   const result = await p0Query(
     `insert into p0_only_events (
        guild_id, external_p0_id, raid_type, raid_name, raid_date, raid_time,
        player_pin, lead_pin, created_by, status, discord_channel_id,
-       post_title, post_mode, description
-     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       post_title, post_mode, description, linked_raid_id
+     ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
      on conflict (guild_id, external_p0_id) do update
        set raid_type=excluded.raid_type, raid_name=excluded.raid_name,
            raid_date=excluded.raid_date, raid_time=excluded.raid_time,
@@ -22673,6 +22677,7 @@ async function createP0OnlyEvent({ guildId, params }) {
            post_title=coalesce(nullif(excluded.post_title,''),p0_only_events.post_title),
            post_mode=coalesce(nullif(excluded.post_mode,''),p0_only_events.post_mode),
            description=coalesce(nullif(excluded.description,''),p0_only_events.description),
+           linked_raid_id=coalesce(nullif(excluded.linked_raid_id,''),p0_only_events.linked_raid_id),
            deleted_at=null, updated_at=now()
      returning *`,
     [guildId, externalP0Id, raidType, clean(params.raidName) || displayRaidName(raidType), raidDate || null,
@@ -22680,9 +22685,55 @@ async function createP0OnlyEvent({ guildId, params }) {
       clean(params.createdBy || params.erstelltVon) || "Gildenleitung", normalizeStatus(params.status || "geschlossen"),
       clean(params.poChannelId || params.targetChannelId || params.channelId),
       clean(params.title || params.postTitle), clean(params.mode || params.postMode) || "signup",
-      clean(params.description || params.note || params.message)]
+      clean(params.description || params.note || params.message), requestedLinkedRaidId]
   );
-  return normalizeP0OnlyEventRow(result.rows[0]);
+  const savedEvent = normalizeP0OnlyEventRow(result.rows[0]);
+  await resolveLinkedRegularRaidForP0Event(guildId, savedEvent, { persist: true });
+  const refreshed = await p0Query(
+    `select * from p0_only_events where guild_id=$1 and id=$2 limit 1`,
+    [guildId, savedEvent.id]
+  );
+  return normalizeP0OnlyEventRow(refreshed.rows[0] || result.rows[0]);
+}
+
+async function resolveLinkedRegularRaidForP0Event(guildId, event, { persist = false } = {}) {
+  if (!event) return null;
+  const explicitLinkedId = clean(event.linked_raid_id || event.linkedRaidId);
+  if (explicitLinkedId) {
+    const explicitRaid = await findRaid(guildId, { raidId: explicitLinkedId });
+    if (explicitRaid) return explicitRaid;
+  }
+  if (!event.raid_type || !event.raid_date) return null;
+  const values = [guildId, raidTypeSearchValues(event.raid_type), event.raid_date];
+  let timeClause = "";
+  if (clean(event.raid_time)) {
+    values.push(clean(event.raid_time));
+    timeClause = `and coalesce(raid_time, '') = $${values.length}`;
+  }
+  const matches = await query(
+    `select *
+     from raids
+     where guild_id = $1
+       and lower(raid_type) = any($2)
+       and raid_date = $3
+       ${timeClause}
+       and lower(coalesce(status, '')) not in
+         ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
+     order by created_at desc
+     limit 2`,
+    values
+  );
+  if (matches.rows.length !== 1) return null;
+  const linkedRaid = matches.rows[0];
+  if (persist && event.id) {
+    await p0Query(
+      `update p0_only_events
+       set linked_raid_id=$3, updated_at=now()
+       where guild_id=$1 and id=$2 and coalesce(linked_raid_id,'') <> $3`,
+      [guildId, event.id, raidPublicId(linkedRaid)]
+    );
+  }
+  return linkedRaid;
 }
 
 async function findP0OnlyEvent(guildId, params) {
@@ -22698,9 +22749,8 @@ async function findP0OnlyEvent(guildId, params) {
     values.push(publicId);
     where = `and external_p0_id = $${values.length}`;
   } else if (publicId) {
-    // Eine normale Raid-ID darf niemals auf einen P0-only-Anmelder gleichen
-    // Datums zurückfallen.
-    return null;
+    values.push(publicId);
+    where = `and linked_raid_id = $${values.length}`;
   } else if (raidType && raidDate) {
     values.push(raidTypeSearchValues(raidType), raidDate);
     where = `and lower(raid_type) = any($${values.length - 1}) and raid_date = $${values.length}`;
@@ -22978,29 +23028,9 @@ async function getP0DiscordSignupContext({ guildId, query: params }) {
   // zeitgleichen normalen Lootseiten-Raids einfließen. Die Kopplung erfolgt
   // bewusst nur bei identischem Raidtyp, Datum und (falls vorhanden) Uhrzeit,
   // damit zwei Raids desselben Typs nicht vermischt werden.
-  let linkedRegularRaid = null;
-  if (raid.p0_only && raid.raid_date) {
-    const linkedValues = [guildId, raidTypeSearchValues(raid.raid_type), raid.raid_date];
-    let linkedTimeClause = "";
-    if (clean(raid.raid_time)) {
-      linkedValues.push(clean(raid.raid_time));
-      linkedTimeClause = `and coalesce(raid_time, '') = $${linkedValues.length}`;
-    }
-    const linkedResult = await query(
-      `select *
-       from raids
-       where guild_id = $1
-         and lower(raid_type) = any($2)
-         and raid_date = $3
-         ${linkedTimeClause}
-         and lower(coalesce(status, '')) not in
-           ('archiviert','archive','archived','gelöscht','geloescht','deleted','abgesagt','cancelled','canceled')
-       order by created_at desc
-       limit 1`,
-      linkedValues
-    );
-    linkedRegularRaid = linkedResult.rows[0] || null;
-  }
+  const linkedRegularRaid = raid.p0_only
+    ? await resolveLinkedRegularRaidForP0Event(guildId, raid, { persist: true })
+    : null;
 
   const itemResult = await query(
     `select
