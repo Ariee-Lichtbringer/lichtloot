@@ -9052,6 +9052,39 @@ async function linkDiscordUserToPlayer(client, guildId, discordUserId, discordNa
   );
 }
 
+async function linkOptionalDiscordNameToPlayer(client, guildId, discordName, character) {
+  const requestedName = clean(discordName).replace(/^@+/, "");
+  if (!requestedName) return { status: "not_provided" };
+  const matches = await client.query(
+    `select user_id, username, display_name, global_name
+     from discord_bot_members
+     where guild_id = $1
+       and bot = false
+       and (
+         lower(username) = lower($2)
+         or lower(coalesce(display_name, '')) = lower($2)
+         or lower(coalesce(global_name, '')) = lower($2)
+       )
+     order by updated_at desc
+     limit 3`,
+    [guildId, requestedName]
+  );
+  const uniqueUsers = [...new Map(matches.rows.map(row => [clean(row.user_id), row])).values()]
+    .filter(row => clean(row.user_id));
+  if (uniqueUsers.length !== 1) {
+    return { status: uniqueUsers.length ? "ambiguous" : "not_found" };
+  }
+  const member = uniqueUsers[0];
+  await linkDiscordUserToPlayer(
+    client,
+    guildId,
+    member.user_id,
+    member.display_name || member.global_name || member.username || requestedName,
+    character
+  );
+  return { status: "linked" };
+}
+
 async function getPoLinkedCharacters({ guildId, query: params }) {
   requireMasterOrQueueToken(params);
   const discordUserId = clean(params.discordUserId || params.userId);
@@ -25789,7 +25822,8 @@ async function createPlayerWithCharacter({
   securityAnswer,
   charName,
   server,
-  className
+  className,
+  discordName
 }) {
   const pin = normalizePin(playerPin);
   const client = await pool.connect();
@@ -25831,7 +25865,9 @@ async function createPlayerWithCharacter({
          returning id, name, server, class_name, created_at`,
         [existingPlayer.rows[0].id, clean(charName), clean(server), clean(className)]
       );
-      await mergeUnlinkedP0PlusForCharacter(client, guildId, characterResult.rows[0]);
+      const createdCharacter = { ...characterResult.rows[0], player_id: existingPlayer.rows[0].id };
+      await mergeUnlinkedP0PlusForCharacter(client, guildId, createdCharacter);
+      const discordLink = await linkOptionalDiscordNameToPlayer(client, guildId, discordName, createdCharacter);
       const playerResult = await client.query(
         `select id, player_pin, approval_status, created_at
          from players
@@ -25839,7 +25875,7 @@ async function createPlayerWithCharacter({
         [existingPlayer.rows[0].id]
       );
       await client.query("commit");
-      return { player: playerResult.rows[0], character: normalizeCharacter({ ...characterResult.rows[0], approval_status: playerResult.rows[0]?.approval_status || "pending" }) };
+      return { player: playerResult.rows[0], character: normalizeCharacter({ ...createdCharacter, approval_status: playerResult.rows[0]?.approval_status || "pending" }), discordLink };
     }
 
     const existingCharacter = await client.query(
@@ -25869,10 +25905,12 @@ async function createPlayerWithCharacter({
        returning id, name, server, class_name, created_at`,
       [playerResult.rows[0].id, clean(charName), clean(server), clean(className)]
     );
-    await mergeUnlinkedP0PlusForCharacter(client, guildId, characterResult.rows[0]);
+    const createdCharacter = { ...characterResult.rows[0], player_id: playerResult.rows[0].id };
+    await mergeUnlinkedP0PlusForCharacter(client, guildId, createdCharacter);
+    const discordLink = await linkOptionalDiscordNameToPlayer(client, guildId, discordName, createdCharacter);
 
     await client.query("commit");
-    return { player: playerResult.rows[0], character: normalizeCharacter({ ...characterResult.rows[0], approval_status: "pending" }) };
+    return { player: playerResult.rows[0], character: normalizeCharacter({ ...createdCharacter, approval_status: "pending" }), discordLink };
   } catch (error) {
     await client.query("rollback").catch(() => {});
     throw error;
@@ -29084,7 +29122,8 @@ app.get("/api/apps-script", async (req, res, next) => {
         securityAnswer: req.query.securityAnswer,
         charName: req.query.char,
         server: req.query.server,
-        className: req.query.className
+        className: req.query.className,
+        discordName: req.query.discordName
       });
       if (normalizePlayerApprovalStatus(result.player.approval_status) !== "approved") {
         const notificationTargets=await notificationTargetsForPermissions(guild.id,"notify_player_logins");
@@ -29115,6 +29154,7 @@ app.get("/api/apps-script", async (req, res, next) => {
         guild: guild.slug,
         pin: result.player.player_pin,
         character: result.character,
+        discordLinkStatus: result.discordLink?.status || "not_provided",
         approvalStatus: normalizePlayerApprovalStatus(result.player.approval_status),
         needsApproval: normalizePlayerApprovalStatus(result.player.approval_status) !== "approved"
       });
